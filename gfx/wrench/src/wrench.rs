@@ -10,7 +10,7 @@ use crossbeam::sync::chase_lev;
 use dwrote;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use font_loader::system_fonts;
-use glutin::EventsLoopProxy;
+use winit::EventsLoopProxy;
 use json_frame_writer::JsonFrameWriter;
 use ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;

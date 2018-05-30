@@ -4020,6 +4020,10 @@ pub trait SceneBuilderHooks {
     /// the updated epochs and pipelines removed in the new scene compared to
     /// the old scene.
     fn post_scene_swap(&self, info: PipelineInfo);
+    /// This is called after a resource update operation on the scene builder
+    /// thread, in the case where resource updates were applied without a scene
+    /// build.
+    fn post_resource_update(&self);
     /// This is a generic callback which provides an opportunity to run code
     /// on the scene builder thread. This is called as part of the main message
     /// loop of the scene builder thread, but outside of any specific message

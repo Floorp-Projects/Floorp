@@ -192,6 +192,7 @@ public:
 
   // Platform dependent
   virtual int32_t StartCapture(const VideoCaptureCapability& capability) override;
+  virtual bool FocusOnSelectedSource() override;
   virtual int32_t StopCapture() override;
   virtual bool CaptureStarted() override;
   virtual int32_t CaptureSettings(VideoCaptureCapability& settings) override;

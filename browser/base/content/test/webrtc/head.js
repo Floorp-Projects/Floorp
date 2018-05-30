@@ -5,6 +5,7 @@ const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";
 const PREF_AUDIO_LOOPBACK = "media.audio_loopback_dev";
 const PREF_VIDEO_LOOPBACK = "media.video_loopback_dev";
 const PREF_FAKE_STREAMS = "media.navigator.streams.fake";
+const PREF_FOCUS_SOURCE = "media.getusermedia.window.focus_source.enabled";
 const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
 
 const STATE_CAPTURE_ENABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED;
@@ -574,7 +575,8 @@ async function runTests(tests, options = {}) {
     [PREF_PERMISSION_FAKE, true],
     [PREF_AUDIO_LOOPBACK, ""],
     [PREF_VIDEO_LOOPBACK, ""],
-    [PREF_FAKE_STREAMS, true]
+    [PREF_FAKE_STREAMS, true],
+    [PREF_FOCUS_SOURCE, false]
   ];
   await SpecialPowers.pushPrefEnv({"set": prefs});
 

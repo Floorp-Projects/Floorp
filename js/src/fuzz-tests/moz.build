@@ -34,9 +34,8 @@ if CONFIG['LIBFUZZER']:
         'static:fuzzer',
     ]
 
-    # Add trace-pc coverage for libfuzzer
-    CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
-    CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+    # Add libFuzzer configuration directives
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 USE_LIBS += [
     'static:js',

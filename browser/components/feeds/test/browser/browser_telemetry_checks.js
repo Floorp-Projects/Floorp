@@ -42,7 +42,7 @@ add_task(async function() {
   registerCleanupFunction(() => PlacesCommandHook.addLiveBookmark = old);
   await BrowserTestUtils.synthesizeMouseAtCenter("#subscribeButton", {}, tab.linkedBrowser);
   let bmArgs = await createBMPromise;
-  Assert.deepEqual(bmArgs, [FEED_URI, "Example Feed", ""], "Should have been trying to subscribe");
+  Assert.deepEqual(bmArgs, [FEED_URI, "Example Feed"], "Should have been trying to subscribe");
   let snapshot = getSnapShot();
   Assert.equal(snapshot.parent[kSubscribed], 1, "Should have subscribed once.");
 
@@ -94,4 +94,3 @@ add_task(async function() {
   popup.hidePopup();
   BrowserTestUtils.removeTab(tab);
 });
-

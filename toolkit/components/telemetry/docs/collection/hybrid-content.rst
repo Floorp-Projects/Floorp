@@ -57,9 +57,13 @@ granting permissions to a Mozilla page, it can do so by using the `permission ma
 
 Including the library
 ---------------------
-To use hybrid content telemetry the relative content JS library needs to be included in the page. We don't have a CDN hosted version that can be readily included in the page. For this reason, each consumer will need to fetch the latest version of the library from `here <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/hybrid-content/HybridContentTelemetry-lib.js>`_ and add it to the page repository. Then this file can be deployed along with the page.
+To use hybrid content telemetry the related content JS library needs to be included in the page. We have different integration options:
 
-Example:
+* Add ``mozilla-hybrid-content-telemetry`` as a dependency to the project and require it in the code.
+* Load it directly from the external unpkg CDN.
+* Manually fetch the latest version from the `main repository <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/hybrid-content/HybridContentTelemetry-lib.js>`_ and add it to the page repository. Then this file can be deployed along with the page.
+
+Example (manual inclusion):
 
 .. code-block:: html
 

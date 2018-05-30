@@ -1624,3 +1624,13 @@ add_gcc_flag(
 add_gcc_flag(
     '-D_GLIBCXX_USE_CXX11_ABI=0', host_cxx_compiler,
     when=libstdcxx_version('MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler))
+
+
+@depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
+         check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'))
+def have_libfuzzer_flag_fuzzer_no_link(value):
+    if value:
+        return True
+
+
+set_config('HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK', have_libfuzzer_flag_fuzzer_no_link)

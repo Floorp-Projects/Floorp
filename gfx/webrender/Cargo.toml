@@ -15,6 +15,7 @@ capture = ["webrender_api/serialize", "ron", "serde", "debug_renderer"]
 replay = ["webrender_api/deserialize", "ron", "serde"]
 debug_renderer = []
 pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_partitioner", "pathfinder_path_utils"]
+serialize_program = ["serde"]
 
 [dependencies]
 app_units = "0.6"
@@ -64,7 +65,8 @@ optional = true
 mozangle = "0.1"
 env_logger = "0.5"
 rand = "0.3"                # for the benchmarks
-glutin = "0.13"             # for the example apps
+glutin = "0.15"             # for the example apps
+winit = "0.13"              # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.4", default-features = false }

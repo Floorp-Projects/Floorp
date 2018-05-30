@@ -36,10 +36,11 @@ PYC_TAIL = "." + PYTEST_TAG + PYC_EXT
 REWRITE_NEWLINES = sys.version_info[:2] != (2, 7) and sys.version_info < (3, 2)
 ASCII_IS_DEFAULT_ENCODING = sys.version_info[0] < 3
 
-if sys.version_info >= (3,5):
+if sys.version_info >= (3, 5):
     ast_Call = ast.Call
 else:
-    ast_Call = lambda a,b,c: ast.Call(a, b, c, None, None)
+    def ast_Call(a, b, c):
+        return ast.Call(a, b, c, None, None)
 
 
 class AssertionRewritingHook(object):
@@ -209,13 +210,11 @@ class AssertionRewritingHook(object):
             mod.__cached__ = pyc
             mod.__loader__ = self
             py.builtin.exec_(co, mod.__dict__)
-        except:
+        except:  # noqa
             if name in sys.modules:
                 del sys.modules[name]
             raise
         return sys.modules[name]
-
-
 
     def is_package(self, name):
         try:
@@ -261,7 +260,7 @@ def _write_pyc(state, co, source_stat, pyc):
         fp = open(pyc, "wb")
     except IOError:
         err = sys.exc_info()[1].errno
-        state.trace("error writing pyc file at %s: errno=%s" %(pyc, err))
+        state.trace("error writing pyc file at %s: errno=%s" % (pyc, err))
         # we ignore any failure to write the cache file
         # there are many reasons, permission-denied, __pycache__ being a
         # file etc.
@@ -282,6 +281,7 @@ N = "\n".encode("utf-8")
 
 cookie_re = re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*[-\w.]+")
 BOM_UTF8 = '\xef\xbb\xbf'
+
 
 def _rewrite_test(config, fn):
     """Try to read and rewrite *fn* and return the code object."""
@@ -307,7 +307,7 @@ def _rewrite_test(config, fn):
         end2 = source.find("\n", end1 + 1)
         if (not source.startswith(BOM_UTF8) and
             cookie_re.match(source[0:end1]) is None and
-            cookie_re.match(source[end1 + 1:end2]) is None):
+                cookie_re.match(source[end1 + 1:end2]) is None):
             if hasattr(state, "_indecode"):
                 # encodings imported us again, so don't rewrite.
                 return None, None
@@ -340,6 +340,7 @@ def _rewrite_test(config, fn):
         return None, None
     return stat, co
 
+
 def _make_rewritten_pyc(state, source_stat, pyc, co):
     """Try to dump rewritten code to *pyc*."""
     if sys.platform.startswith("win"):
@@ -352,6 +353,7 @@ def _make_rewritten_pyc(state, source_stat, pyc, co):
         proc_pyc = pyc + "." + str(os.getpid())
         if _write_pyc(state, co, source_stat, proc_pyc):
             os.rename(proc_pyc, pyc)
+
 
 def _read_pyc(source, pyc, trace=lambda x: None):
     """Possibly read a pytest pyc containing rewritten code.
@@ -410,7 +412,8 @@ def _saferepr(obj):
     return repr.replace(t("\n"), t("\\n"))
 
 
-from _pytest.assertion.util import format_explanation as _format_explanation # noqa
+from _pytest.assertion.util import format_explanation as _format_explanation  # noqa
+
 
 def _format_assertmsg(obj):
     """Format the custom assertion message given.
@@ -439,8 +442,10 @@ def _format_assertmsg(obj):
         s = s.replace(t("\\n"), t("\n~"))
     return s
 
+
 def _should_repr_global_name(obj):
     return not hasattr(obj, "__name__") and not py.builtin.callable(obj)
+
 
 def _format_boolop(explanations, is_or):
     explanation = "(" + (is_or and " or " or " and ").join(explanations) + ")"
@@ -449,6 +454,7 @@ def _format_boolop(explanations, is_or):
     else:
         t = py.builtin.bytes
     return explanation.replace(t('%'), t('%%'))
+
 
 def _call_reprcompare(ops, results, expls, each_obj):
     for i, res, expl in zip(range(len(ops)), results, expls):
@@ -483,7 +489,7 @@ binop_map = {
     ast.Mult: "*",
     ast.Div: "/",
     ast.FloorDiv: "//",
-    ast.Mod: "%%", # escaped for string formatting
+    ast.Mod: "%%",  # escaped for string formatting
     ast.Eq: "==",
     ast.NotEq: "!=",
     ast.Lt: "<",
@@ -589,23 +595,26 @@ class AssertionRewriter(ast.NodeVisitor):
         # docstrings and __future__ imports.
         aliases = [ast.alias(py.builtin.builtins.__name__, "@py_builtins"),
                    ast.alias("_pytest.assertion.rewrite", "@pytest_ar")]
-        expect_docstring = True
+        doc = getattr(mod, "docstring", None)
+        expect_docstring = doc is None
+        if doc is not None and self.is_rewrite_disabled(doc):
+            return
         pos = 0
-        lineno = 0
+        lineno = 1
         for item in mod.body:
             if (expect_docstring and isinstance(item, ast.Expr) and
                     isinstance(item.value, ast.Str)):
                 doc = item.value.s
-                if "PYTEST_DONT_REWRITE" in doc:
-                    # The module has disabled assertion rewriting.
+                if self.is_rewrite_disabled(doc):
                     return
-                lineno += len(doc) - 1
                 expect_docstring = False
             elif (not isinstance(item, ast.ImportFrom) or item.level > 0 or
                   item.module != "__future__"):
                 lineno = item.lineno
                 break
             pos += 1
+        else:
+            lineno = item.lineno
         imports = [ast.Import([alias], lineno=lineno, col_offset=0)
                    for alias in aliases]
         mod.body[pos:pos] = imports
@@ -630,6 +639,9 @@ class AssertionRewriter(ast.NodeVisitor):
                       # asserts.
                       not isinstance(field, ast.expr)):
                     nodes.append(field)
+
+    def is_rewrite_disabled(self, docstring):
+        return "PYTEST_DONT_REWRITE" in docstring
 
     def variable(self):
         """Get a new variable."""
@@ -723,7 +735,7 @@ class AssertionRewriter(ast.NodeVisitor):
         if isinstance(assert_.test, ast.Tuple) and self.config is not None:
             fslocation = (self.module_path, assert_.lineno)
             self.config.warn('R1', 'assertion is always true, perhaps '
-                              'remove parentheses?', fslocation=fslocation)
+                             'remove parentheses?', fslocation=fslocation)
         self.statements = []
         self.variables = []
         self.variable_counter = itertools.count()
@@ -787,7 +799,7 @@ class AssertionRewriter(ast.NodeVisitor):
             if i:
                 fail_inner = []
                 # cond is set in a prior loop iteration below
-                self.on_failure.append(ast.If(cond, fail_inner, [])) # noqa
+                self.on_failure.append(ast.If(cond, fail_inner, []))  # noqa
                 self.on_failure = fail_inner
             self.push_format_context()
             res, expl = self.visit(v)
@@ -839,7 +851,7 @@ class AssertionRewriter(ast.NodeVisitor):
             new_kwargs.append(ast.keyword(keyword.arg, res))
             if keyword.arg:
                 arg_expls.append(keyword.arg + "=" + expl)
-            else: ## **args have `arg` keywords with an .arg of None
+            else:  # **args have `arg` keywords with an .arg of None
                 arg_expls.append("**" + expl)
 
         expl = "%s(%s)" % (func_expl, ', '.join(arg_expls))
@@ -892,7 +904,6 @@ class AssertionRewriter(ast.NodeVisitor):
         visit_Call = visit_Call_35
     else:
         visit_Call = visit_Call_legacy
-
 
     def visit_Attribute(self, attr):
         if not isinstance(attr.ctx, ast.Load):

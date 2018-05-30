@@ -540,6 +540,22 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
 }
 
 int
+CamerasChild::FocusOnSelectedSource(CaptureEngine aCapEngine,
+                                    const int aCaptureId)
+{
+  LOG((__PRETTY_FUNCTION__));
+  nsCOMPtr<nsIRunnable> runnable =
+    mozilla::NewRunnableMethod<CaptureEngine, int>(
+      "camera::PCamerasChild::SendFocusOnSelectedSource",
+      this,
+      &CamerasChild::SendFocusOnSelectedSource,
+      aCapEngine,
+      aCaptureId);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
+  return dispatcher.ReturnValue();
+}
+
+int
 CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
 {
   LOG((__PRETTY_FUNCTION__));
