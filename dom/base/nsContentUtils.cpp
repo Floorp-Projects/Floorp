@@ -3476,11 +3476,11 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
   }
 
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-    new LoadInfo(aLoadingPrincipal,
-                 aLoadingPrincipal, // triggering principal
-                 aNode,
-                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                 nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+    new mozilla::net::LoadInfo(aLoadingPrincipal,
+                               aLoadingPrincipal, // triggering principal
+                               aNode,
+                               nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                               nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
 

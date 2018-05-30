@@ -293,6 +293,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NamedPipeService, Init)
 #include "nsResProtocolHandler.h"
 #include "ExtensionProtocolHandler.h"
 #include "SubstitutingProtocolHandler.h"
+typedef mozilla::net::ExtensionProtocolHandler ExtensionProtocolHandler;
 typedef mozilla::net::SubstitutingURL::Mutator SubstitutingURLMutator;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 

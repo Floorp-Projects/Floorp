@@ -275,7 +275,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
                                               uint32_t aFlags,
                                               nsIAsyncVerifyRedirectCallback* aCallback)
 {
-  nsAsyncRedirectAutoCallback autoCallback(aCallback);
+  mozilla::net::nsAsyncRedirectAutoCallback autoCallback(aCallback);
 
   if (!aOldChannel) {
     NS_ERROR("No channel when evaluating mixed content!");

@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
-[ref] native OptionalCorsPreflightArgsRef(mozilla::OptionalCorsPreflightArgs);
+[ref] native OptionalCorsPreflightArgsRef(mozilla::net::OptionalCorsPreflightArgs);
 
 interface nsIPrincipal;
 interface nsIURI;

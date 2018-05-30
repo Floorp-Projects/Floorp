@@ -54,8 +54,6 @@ class ParentLoadInfoForwarderArgs;
 class RedirectHistoryEntryInfo;
 } // namespace net
 
-using namespace mozilla::net;
-
 namespace ipc {
 
 class PrincipalInfo;
@@ -90,7 +88,7 @@ IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
  */
 
 already_AddRefed<nsIRedirectHistoryEntry>
-RHEntryInfoToRHEntry(const RedirectHistoryEntryInfo& aRHEntryInfo);
+RHEntryInfoToRHEntry(const mozilla::net::RedirectHistoryEntryInfo& aRHEntryInfo);
 
 /**
  * Convert an nsIRedirectHistoryEntry to a RedirectHistoryEntryInfo.
@@ -98,20 +96,20 @@ RHEntryInfoToRHEntry(const RedirectHistoryEntryInfo& aRHEntryInfo);
 
 nsresult
 RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
-                     RedirectHistoryEntryInfo* aRHEntryInfo);
+                     mozilla::net::RedirectHistoryEntryInfo* aRHEntryInfo);
 
 /**
  * Convert a LoadInfo to LoadInfoArgs struct.
  */
 nsresult
 LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
-                       OptionalLoadInfoArgs* outOptionalLoadInfoArgs);
+                       mozilla::net::OptionalLoadInfoArgs* outOptionalLoadInfoArgs);
 
 /**
  * Convert LoadInfoArgs to a LoadInfo.
  */
 nsresult
-LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
+LoadInfoArgsToLoadInfo(const mozilla::net::OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                        nsILoadInfo** outLoadInfo);
 
 /**
@@ -119,14 +117,14 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
  */
 void
 LoadInfoToParentLoadInfoForwarder(nsILoadInfo *aLoadInfo,
-                                  ParentLoadInfoForwarderArgs* outLoadInfoChildForwardArgs);
+                                  mozilla::net::ParentLoadInfoForwarderArgs* outLoadInfoChildForwardArgs);
 
 /**
  * Merges (replaces) properties of an existing LoadInfo on a child process
  * with properties carried down through ParentLoadInfoForwarderArgs.
  */
 nsresult
-MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& outLoadInfoChildForwardArgs,
+MergeParentLoadInfoForwarder(mozilla::net::ParentLoadInfoForwarderArgs const& outLoadInfoChildForwardArgs,
                              nsILoadInfo *aLoadInfo);
 
 } // namespace ipc
