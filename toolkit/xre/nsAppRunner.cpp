@@ -3765,11 +3765,11 @@ static void SetShutdownChecks() {
   // too.
 
 #ifdef DEBUG
-#if defined(MOZ_CODE_COVERAGE) && defined(XP_WIN)
+#if defined(MOZ_CODE_COVERAGE)
   gShutdownChecks = SCM_NOTHING;
 #else
   gShutdownChecks = SCM_CRASH;
-#endif // MOZ_CODE_COVERAGE && XP_WIN
+#endif // MOZ_CODE_COVERAGE
 #else
   const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
   if (strcmp(releaseChannel, "nightly") == 0 ||
