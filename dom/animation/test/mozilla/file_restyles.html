@@ -132,16 +132,16 @@ function waitForWheelEvent(aTarget) {
   });
 }
 
-function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
+async function waitForAnimationReadyToRestyle(aAnimation) {
+  await aAnimation.ready;
   // If |aAnimation| begins at the current timeline time, we will not process
   // restyling in the initial frame because of aligning with the refresh driver,
   // the animation frame in which the ready promise is resolved happens to
   // coincide perfectly with the start time of the animation.  In this case no
-  // restyling is needed so we won't observe an additional restyle.
+  // restyling is needed in the frame so we have to wait one more frame.
   if (animationStartsRightNow(aAnimation)) {
-    return aExpectedRestyleCount - 1;
+    await waitForNextFrame();
   }
-  return aExpectedRestyleCount;
 }
 
 var omtaEnabled = isOMTAEnabled();
@@ -165,14 +165,12 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
+
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    // We need to tweak expected restyle count depending on animation state and
-    // micro task handling.
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations running on the main-thread should update style ' +
        'on the main thread');
     await ensureElementRemoval(div);
@@ -479,13 +477,11 @@ waitForAllPaints(() => {
                   100 * MS_PER_SEC);
     parentElement.appendChild(div);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 20);
-
     var markers = await observeStyling(20);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 20,
        'Finite transform animation in out-of-view element should never be ' +
        'throttled');
 
@@ -1225,12 +1221,11 @@ waitForAllPaints(() => {
         div.animate([{ visibility: 'visible' }],
                     { duration: 100 * MS_PER_SEC, composite: 'add' });
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
 
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'Additive animation has no keyframe whose offset is 0 or 1 in an ' +
          'out-of-view element should not be throttled');
       await ensureElementRemoval(div);
@@ -1243,12 +1238,11 @@ waitForAllPaints(() => {
     var animation =
       div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
 
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
        'out-of-view element should not be throttled');
     await ensureElementRemoval(div);
@@ -1263,11 +1257,10 @@ waitForAllPaints(() => {
                               'visibility: collapse;' });
       var animation =
         div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'visibility animation has no keyframe whose offset is 0 or 1 in an ' +
          'out-of-view element and produces change hint other than paint-only ' +
          'change hint should not be throttled');
@@ -1319,11 +1312,10 @@ waitForAllPaints(() => {
                                             height: '10',
                                             fill:   'red' });
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations on an in-view svg element with post-transform should ' +
        'not be throttled.');
 
@@ -1342,11 +1334,10 @@ waitForAllPaints(() => {
                                             height: '1250',
                                             fill:   'red' });
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations on an in-view svg element which is inside transformed ' +
        'parent should not be throttled.');
 
@@ -1383,11 +1374,10 @@ waitForAllPaints(() => {
     scrollDiv.appendChild(targetDiv);
 
     var animation = targetDiv.getAnimations()[0];
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animation on an in-view element with pre-transform should not ' +
        'be throttled.');
 
@@ -1529,11 +1519,10 @@ waitForAllPaints(() => {
       parent.appendChild(target);
 
       var animation = target.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'Animation on position:absolute element in collapsed element ' +
          'should not be throttled');
 
