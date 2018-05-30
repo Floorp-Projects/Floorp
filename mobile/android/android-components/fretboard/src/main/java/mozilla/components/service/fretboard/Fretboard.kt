@@ -20,6 +20,7 @@ class Fretboard(
     /**
      * Loads experiments from local storage
      */
+    @Synchronized
     fun loadExperiments() {
         experiments = storage.retrieve()
         experimentsLoaded = true
@@ -29,9 +30,11 @@ class Fretboard(
      * Requests new experiments from the server and
      * saves them to local storage
      */
+    @Synchronized
     fun updateExperiments() {
-        if (!experimentsLoaded)
+        if (!experimentsLoaded) {
             loadExperiments()
+        }
         try {
             val serverExperiments = source.getExperiments(experiments)
             experiments = serverExperiments

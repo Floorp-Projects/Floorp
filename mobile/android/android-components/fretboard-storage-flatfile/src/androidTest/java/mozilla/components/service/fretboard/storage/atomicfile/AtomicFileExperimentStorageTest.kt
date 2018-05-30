@@ -53,4 +53,11 @@ class AtomicFileExperimentStorageTest {
         assertEquals(0, experiments[0].bucket?.min)
         assertEquals(1526991669, experiments[0].lastModified)
     }
+
+    @Test
+    fun testRetrieveFileNotFound() {
+        val file = File(InstrumentationRegistry.getContext().filesDir, "missingFile.json")
+        val experiments = AtomicFileExperimentStorage(AtomicFile(file)).retrieve()
+        assertEquals(0, experiments.size)
+    }
 }

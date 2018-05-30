@@ -7,11 +7,16 @@ package mozilla.components.service.fretboard.storage.atomicfile
 import android.util.AtomicFile
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentStorage
+import java.io.FileNotFoundException
 
 class AtomicFileExperimentStorage(private val atomicFile: AtomicFile) : ExperimentStorage {
     override fun retrieve(): List<Experiment> {
-        val experimentsJson = String(atomicFile.readFully())
-        return ExperimentsSerializer().fromJson(experimentsJson)
+        try {
+            val experimentsJson = String(atomicFile.readFully())
+            return ExperimentsSerializer().fromJson(experimentsJson)
+        } catch (e: FileNotFoundException) {
+            return listOf()
+        }
     }
 
     override fun save(experiments: List<Experiment>) {
