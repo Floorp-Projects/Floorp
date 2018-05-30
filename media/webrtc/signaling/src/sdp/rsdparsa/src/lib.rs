@@ -101,6 +101,7 @@ pub struct SdpSession {
     pub timing: Option<SdpTiming>,
     pub attribute: Vec<SdpAttribute>,
     pub media: Vec<SdpMedia>,
+    pub warnings: Vec<SdpParserError>
     // unsupported values:
     // information: Option<String>,
     // uri: Option<String>,
@@ -122,6 +123,7 @@ impl SdpSession {
             timing: None,
             attribute: Vec::new(),
             media: Vec::new(),
+            warnings: Vec::new(),
         }
     }
 
@@ -885,18 +887,23 @@ pub fn parse_sdp(sdp: &str, fail_on_warning: bool) -> Result<SdpSession, SdpPars
             }
         };
     }
-    for warning in warnings {
-        if fail_on_warning {
-            return Err(warning);
-        } else {
-            println!("Warning: {}", warning);
-        };
+
+    if fail_on_warning && (warnings.len() > 0) {
+        return Err(warnings[0].clone());
     }
+
     // We just return the last of the errors here
     if let Some(e) = errors.pop() {
         return Err(e);
     };
-    let session = parse_sdp_vector(&sdp_lines)?;
+
+    let mut session = parse_sdp_vector(&sdp_lines)?;
+    session.warnings = warnings;
+
+    for warning in &session.warnings {
+        println!("Warning: {}", &warning);
+    }
+
     Ok(session)
 }
 

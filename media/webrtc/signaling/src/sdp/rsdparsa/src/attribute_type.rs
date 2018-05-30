@@ -240,9 +240,47 @@ pub struct SdpAttributeExtmap {
 
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
+pub struct SdpAttributeFmtpParameters {
+    // H264
+    // TODO(bug 1466859): Support sprop-parameter-sets
+    // pub static const max_sprop_len: u32 = 128,
+    // pub sprop_parameter_sets: [u8, max_sprop_len],
+    pub packetization_mode: u32,
+    pub level_asymmetry_allowed: bool,
+    pub profile_level_id: u32,
+    pub max_fs: u32,
+    pub max_cpb: u32,
+    pub max_dpb: u32,
+    pub max_br: u32,
+    pub max_mbps: u32,
+
+    // VP8 and VP9
+    // max_fs, already defined in H264
+    pub max_fr: u32,
+
+    // Opus
+    pub maxplaybackrate: u32,
+    pub usedtx: bool,
+    pub stereo: bool,
+    pub useinbandfec: bool,
+    pub cbr: bool,
+
+    // Red
+    pub encodings: Vec<u8>,
+
+    // telephone-event
+    pub dtmf_tones: String,
+
+    // Unknown
+    pub unknown_tokens: Vec<String>,
+}
+
+
+#[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeFmtp {
     pub payload_type: u8,
-    pub tokens: Vec<String>,
+    pub parameters: SdpAttributeFmtpParameters,
 }
 
 #[derive(Clone)]
@@ -870,19 +908,175 @@ fn parse_fingerprint(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalEr
 }
 
 fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
-    let tokens: Vec<&str> = to_parse.split_whitespace().collect();
+    let tokens: Vec<&str> = to_parse.splitn(2," ").collect();
+
     if tokens.len() != 2 {
-        return Err(SdpParserInternalError::Generic("Fmtp needs to have two tokens".to_string()));
+        return Err(SdpParserInternalError::Unsupported(
+            "Fmtp attributes require a payload type and a parameter block.".to_string()
+        ));
     }
+
+    let payload_token = tokens[0];
+    let parameter_token = tokens[1];
+
+
+    // Default initiliaze SdpAttributeFmtpParameters
+    let mut parameters = SdpAttributeFmtpParameters{
+        packetization_mode: 0,
+        level_asymmetry_allowed: false,
+        profile_level_id: 0x420010,
+        max_fs: 0,
+        max_cpb: 0,
+        max_dpb: 0,
+        max_br: 0,
+        max_mbps: 0,
+        usedtx: false,
+        stereo: false,
+        useinbandfec: false,
+        cbr: false,
+        max_fr: 0,
+        maxplaybackrate: 48000,
+        encodings: Vec::new(),
+        dtmf_tones: "".to_string(),
+        unknown_tokens: Vec::new(),
+    };
+
+    if parameter_token.contains("=") {
+        let parameter_tokens: Vec<&str> = parameter_token.split(";").collect();
+
+        for parameter_token in parameter_tokens.iter() {
+            let name_value_pair: Vec<&str> = parameter_token.splitn(2,"=").collect();
+
+            if name_value_pair.len() != 2 {
+                return Err(SdpParserInternalError::Generic(
+                    "A fmtp parameter must be either a telephone event, a parameter list or
+                                                                    a red codec list".to_string()
+                ))
+            }
+
+            let parse_bool = |val: &str, param_name: &str| -> Result<bool,SdpParserInternalError> {
+                match val.parse::<u8>()? {
+                    0 => Ok(false),
+                    1 => Ok(true),
+                    _ => return Err(SdpParserInternalError::Generic(
+                        format!("The fmtp parameter '{:}' must be 0 or 1", param_name)
+                        .to_string()
+                    ))
+                }
+            };
+
+            let parameter_name = name_value_pair[0];
+            let parameter_val = name_value_pair[1];
+
+            match parameter_name.to_uppercase().as_str() {
+                // H264
+                "PROFILE-LEVEL-ID" => parameters.profile_level_id =
+                                                match u32::from_str_radix(parameter_val,16)? {
+                    x @ 0 ... 0xffffff => x,
+                    _ => return Err(SdpParserInternalError::Generic(
+                        "The fmtp parameter 'profile-level-id' must be in range [0,0xffffff]"
+                        .to_string()
+                    ))
+                },
+                "PACKETIZATION-MODE" => parameters.packetization_mode =
+                                                   match parameter_val.parse::<u32>()? {
+                    x @ 0...2 => x,
+                    _ => return Err(SdpParserInternalError::Generic(
+                        "The fmtp parameter 'packetization-mode' must be 0,1 or 2"
+                        .to_string()
+                    ))
+                },
+                "LEVEL-ASYMMETRY-ALLOWED" => parameters.level_asymmetry_allowed =
+                                             parse_bool(parameter_val,"level-asymmetry-allowed")?,
+                "MAX-MBPS" => parameters.max_mbps = parameter_val.parse::<u32>()?,
+                "MAX-FS" => parameters.max_fs = parameter_val.parse::<u32>()?,
+                "MAX-CPB" => parameters.max_cpb = parameter_val.parse::<u32>()?,
+                "MAX-DPB" => parameters.max_dpb = parameter_val.parse::<u32>()?,
+                "MAX-BR" => parameters.max_br = parameter_val.parse::<u32>()?,
+
+                // VP8 and VP9
+                "MAX-FR" => parameters.max_fr = parameter_val.parse::<u32>()?,
+
+                //Opus
+                "MAXPLAYBACKRATE" => parameters.maxplaybackrate = parameter_val.parse::<u32>()?,
+                "USEDTX" => parameters.usedtx = parse_bool(parameter_val,"usedtx")?,
+                "STEREO" => parameters.stereo = parse_bool(parameter_val,"stereo")?,
+                "USEINBANDFEC" => parameters.useinbandfec =
+                                             parse_bool(parameter_val,"useinbandfec")?,
+                "CBR" => parameters.cbr = parse_bool(parameter_val,"cbr")?,
+                _ => {
+                    parameters.unknown_tokens.push(parameter_token.to_string())
+                }
+            }
+        }
+    } else {
+        if parameter_token.contains("/") {
+            let encodings: Vec<&str> = parameter_token.split("/").collect();
+
+            for encoding in encodings {
+                match encoding.parse::<u8>()? {
+                    x @ 0...128 => parameters.encodings.push(x),
+                    _ => return Err(SdpParserInternalError::Generic(
+                        "Red codec must be in range [0,128]".to_string()
+                    ))
+                }
+            }
+        } else { // This is the case for the 'telephone-event' codec
+            let dtmf_tones: Vec<&str> = parameter_token.split(",").collect();
+            let mut dtmf_tone_is_ok = true;
+
+            // This closure verifies the output of some_number_as_string.parse::<u8>().ok() like calls
+            let validate_digits = |digit_option: Option<u8> | -> Option<u8> {
+                match digit_option{
+                    Some(x) => match x {
+                        0...100 => Some(x),
+                        _ => None,
+                    },
+                    None => None,
+                }
+            };
+
+            // This loop does some sanity checking on the passed dtmf tones
+            for dtmf_tone in dtmf_tones {
+                let dtmf_tone_range: Vec<&str> = dtmf_tone.splitn(2,"-").collect();
+
+                dtmf_tone_is_ok = match dtmf_tone_range.len() {
+                    // In this case the dtmf tone is a range
+                    2 => {
+                        match validate_digits(dtmf_tone_range[0].parse::<u8>().ok()) {
+                            Some(l) => match validate_digits(dtmf_tone_range[1].parse::<u8>().ok()) {
+                                Some(u) => {
+                                    // Check that the first part of the range is smaller than the second part
+                                    l < u
+                                },
+                                None => false
+                            },
+                            None => false,
+                        }
+                    },
+                     // In this case the dtmf tone is a single tone
+                    1 => validate_digits(dtmf_tone.parse::<u8>().ok()).is_some(),
+                    _ => false
+                };
+
+                if !dtmf_tone_is_ok {
+                    break ;
+                }
+            }
+
+            // Set the parsed dtmf tones or in case the parsing was insuccessfull, set it to the default "0-15"
+            parameters.dtmf_tones = match dtmf_tone_is_ok{
+                true => parameter_token.to_string(),
+                false => "0-15".to_string()
+            }
+        }
+    }
+
     Ok(SdpAttribute::Fmtp(SdpAttributeFmtp {
-                              // TODO check for dynamic PT range
-                              payload_type: tokens[0].parse::<u8>()?,
-                              // TODO this should probably be slit into known tokens
-                              // plus a list of unknown tokens
-                              tokens: to_parse.split(';').map(|x| x.to_string()).collect(),
+                              payload_type: payload_token.parse::<u8>()?,
+                              parameters: parameters,
                           }))
 }
-
 fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let semantics = match tokens.next() {
@@ -1405,7 +1599,18 @@ fn test_parse_attribute_fingerprint() {
 
 #[test]
 fn test_parse_attribute_fmtp() {
-    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1").is_ok())
+    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1").is_ok());
+    assert!(parse_attribute("fmtp:66 0-15").is_ok());
+    assert!(parse_attribute("fmtp:109 0-15,66").is_ok());
+    assert!(parse_attribute("fmtp:66 111/115").is_ok());
+    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1").is_ok());
+    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000; stereo=1; useinbandfec=1").is_ok());
+    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000; stereo=1;useinbandfec=1").is_ok());
+    assert!(parse_attribute("fmtp:8 maxplaybackrate=48000").is_ok());
+
+    assert!(parse_attribute("fmtp:77 ").is_err());
+    assert!(parse_attribute("fmtp:109 maxplaybackrate=48000stereo=1;").is_err());
+    assert!(parse_attribute("fmtp:8 ;maxplaybackrate=48000").is_err());
 }
 
 #[test]

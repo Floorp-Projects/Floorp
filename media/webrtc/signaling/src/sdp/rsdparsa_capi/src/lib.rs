@@ -57,8 +57,11 @@ pub unsafe extern "C" fn parse_sdp(sdp: *const u8, length: u32,
     let parser_result = rsdparsa::parse_sdp(sdp_str_slice, fail_on_warning);
     match parser_result {
         Ok(parsed) => {
+            *error = match parsed.warnings.len(){
+                0 => ptr::null(),
+                _ => Box::into_raw(Box::new(parsed.warnings[0].clone())),
+            };
             *session = Rc::into_raw(Rc::new(parsed));
-            *error = ptr::null();
             NS_OK
         },
         Err(e) => {
