@@ -48,6 +48,7 @@ function createFxAccounts() {
       },
       async signOut() {},
     },
+    updateDeviceRegistration() {},
     _getDeviceName() {
       return "mock device name";
     },

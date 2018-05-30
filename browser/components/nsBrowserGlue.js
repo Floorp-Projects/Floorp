@@ -486,7 +486,7 @@ BrowserGlue.prototype = {
           this._onDeviceDisconnected();
         }
         break;
-      case "fxaccounts:messages:display-tabs":
+      case "fxaccounts:commands:open-uri":
       case "weave:engine:clients:display-uris":
         this._onDisplaySyncURIs(subject);
         break;
@@ -637,7 +637,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "fxaccounts:device_connected");
     os.addObserver(this, "fxaccounts:verify_login");
     os.addObserver(this, "fxaccounts:device_disconnected");
-    os.addObserver(this, "fxaccounts:messages:display-tabs");
+    os.addObserver(this, "fxaccounts:commands:open-uri");
     os.addObserver(this, "weave:engine:clients:display-uris");
     os.addObserver(this, "session-save");
     os.addObserver(this, "places-init-complete");
@@ -680,7 +680,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "fxaccounts:device_connected");
     os.removeObserver(this, "fxaccounts:verify_login");
     os.removeObserver(this, "fxaccounts:device_disconnected");
-    os.removeObserver(this, "fxaccounts:messages:display-tabs");
+    os.removeObserver(this, "fxaccounts:commands:open-uri");
     os.removeObserver(this, "weave:engine:clients:display-uris");
     os.removeObserver(this, "session-save");
     if (this._bookmarksBackupIdleTime) {

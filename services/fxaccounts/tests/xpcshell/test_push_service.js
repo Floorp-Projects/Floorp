@@ -409,11 +409,14 @@ add_test(function observePushTopicPasswordReset() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
-add_task(async function messagesTickle() {
+add_task(async function commandReceived() {
   let msg = {
     data: {
       json: () => ({
-        topic: "sendtab"
+        command: "fxaccounts:command_received",
+        data: {
+          url: "https://api.accounts.firefox.com/auth/v1/account/device/commands?index=42&limit=1"
+        }
       })
     },
     QueryInterface() {
@@ -423,8 +426,8 @@ add_task(async function messagesTickle() {
 
   let fxAccountsMock = {};
   const promiseConsumeRemoteMessagesCalled = new Promise(res => {
-    fxAccountsMock.messages = {
-      consumeRemoteMessages() {
+    fxAccountsMock.commands = {
+      consumeRemoteCommand() {
         res();
       }
     };
