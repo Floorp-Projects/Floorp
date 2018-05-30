@@ -59,6 +59,8 @@ public:
            bool aFinishWhenEnded);
   // Remove the output stream from the collection.
   void Remove(MediaStream* aStream);
+  // Clear all output streams from the collection.
+  void Clear();
   // The next TrackID that will not cause a collision in aOutputStream.
   TrackID NextAvailableTrackIDFor(MediaStream* aOutputStream) const;
   // Return true if the collection empty.
