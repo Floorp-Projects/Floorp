@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const { a, article, footer, h1, ul } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -19,13 +20,11 @@ class WorkerList extends Component {
     return {
       client: PropTypes.object.isRequired,
       workers: PropTypes.object.isRequired,
-      serviceContainer: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { workers, client, serviceContainer } = this.props;
-    const { openTrustedLink } = serviceContainer;
+    const { workers, client } = this.props;
 
     return [
       article({ className: "workers-container" },

@@ -234,7 +234,7 @@ Editor.prototype = {
 
   /**
    * Appends the current Editor instance to the element specified by
-   * 'el'. You can also provide your won iframe to host the editor as
+   * 'el'. You can also provide your own iframe to host the editor as
    * an optional second parameter. This method actually creates and
    * loads CodeMirror and all its dependencies.
    *

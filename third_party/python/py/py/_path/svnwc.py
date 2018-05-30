@@ -94,7 +94,7 @@ def _getsvnversion(ver=[]):
 
 def _escape_helper(text):
     text = str(text)
-    if py.std.sys.platform != 'win32':
+    if sys.platform != 'win32':
         text = str(text).replace('$', '\\$')
     return text
 
@@ -354,7 +354,7 @@ def path_to_fspath(path, addat=True):
 
 def url_from_path(path):
     fspath = path_to_fspath(path, False)
-    quote = py.std.urllib.quote
+    from urllib import quote
     if ISWINDOWS:
         match = _reg_allow_disk.match(fspath)
         fspath = fspath.replace('\\', '/')
@@ -504,7 +504,7 @@ class SvnWCCommandPath(common.PathBase):
         if url is None:
             url = self.url
         if rev is None or rev == -1:
-            if (py.std.sys.platform != 'win32' and
+            if (sys.platform != 'win32' and
                     _getsvnversion() == '1.3'):
                 url += "@HEAD"
         else:
@@ -785,7 +785,7 @@ recursively. """
             info = InfoSvnWCCommand(output)
 
             # Can't reliably compare on Windows without access to win32api
-            if py.std.sys.platform != 'win32':
+            if sys.platform != 'win32':
                 if info.path != self.localpath:
                     raise py.error.ENOENT(self, "not a versioned resource:" +
                             " %s != %s" % (info.path, self.localpath))

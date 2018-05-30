@@ -37,6 +37,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate time;
 extern crate webrender;
+extern crate winit;
 extern crate yaml_rust;
 
 mod angle;
@@ -61,7 +62,7 @@ mod cgfont_to_data;
 
 use binary_frame_reader::BinaryFrameReader;
 use gleam::gl;
-use glutin::{GlContext, VirtualKeyCode};
+use glutin::GlContext;
 use perf::PerfHarness;
 use png::save_flipped;
 use rawtest::RawtestHarness;
@@ -78,6 +79,7 @@ use std::rc::Rc;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use webrender::DebugFlags;
 use webrender::api::*;
+use winit::VirtualKeyCode;
 use wrench::{Wrench, WrenchThing};
 use yaml_frame_reader::YamlFrameReader;
 
@@ -163,7 +165,7 @@ impl HeadlessContext {
 
 pub enum WindowWrapper {
     Window(glutin::GlWindow, Rc<gl::Gl>),
-    Angle(glutin::Window, angle::Context, Rc<gl::Gl>),
+    Angle(winit::Window, angle::Context, Rc<gl::Gl>),
     Headless(HeadlessContext, Rc<gl::Gl>),
 }
 
@@ -181,13 +183,13 @@ impl WindowWrapper {
     fn get_inner_size(&self) -> DeviceUintSize {
         //HACK: `winit` needs to figure out its hidpi story...
         #[cfg(target_os = "macos")]
-        fn inner_size(window: &glutin::Window) -> (u32, u32) {
+        fn inner_size(window: &winit::Window) -> (u32, u32) {
             let (w, h) = window.get_inner_size().unwrap();
             let factor = window.hidpi_factor();
             ((w as f32 * factor) as _, (h as f32 * factor) as _)
         }
         #[cfg(not(target_os = "macos"))]
-        fn inner_size(window: &glutin::Window) -> (u32, u32) {
+        fn inner_size(window: &winit::Window) -> (u32, u32) {
             window.get_inner_size().unwrap()
         }
         let (w, h) = match *self {
@@ -243,7 +245,7 @@ fn make_window(
     size: DeviceUintSize,
     dp_ratio: Option<f32>,
     vsync: bool,
-    events_loop: &Option<glutin::EventsLoop>,
+    events_loop: &Option<winit::EventsLoop>,
     angle: bool,
 ) -> WindowWrapper {
     let wrapper = match *events_loop {
@@ -254,7 +256,7 @@ fn make_window(
                     opengles_version: (3, 0),
                 })
                 .with_vsync(vsync);
-            let window_builder = glutin::WindowBuilder::new()
+            let window_builder = winit::WindowBuilder::new()
                 .with_title("WRech")
                 .with_multitouch()
                 .with_dimensions(size.width, size.height);
@@ -401,7 +403,7 @@ fn main() {
     let mut events_loop = if args.is_present("headless") {
         None
     } else {
-        Some(glutin::EventsLoop::new())
+        Some(winit::EventsLoop::new())
     };
 
     let mut window = make_window(
@@ -510,7 +512,7 @@ fn main() {
     wrench.update(dim);
     thing.do_frame(&mut wrench);
 
-    let mut body = |wrench: &mut Wrench, global_event: glutin::Event| {
+    let mut body = |wrench: &mut Wrench, global_event: winit::Event| {
         if let Some(window_title) = wrench.take_title() {
             if !cfg!(windows) { //TODO: calling `set_title` from inside the `run_forever` loop is illegal...
                 window.set_title(&window_title);
@@ -521,31 +523,31 @@ fn main() {
         let mut do_render = false;
 
         match global_event {
-            glutin::Event::Awakened => {
+            winit::Event::Awakened => {
                 do_render = true;
             }
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::Closed => {
-                    return glutin::ControlFlow::Break;
+            winit::Event::WindowEvent { event, .. } => match event {
+                winit::WindowEvent::CloseRequested => {
+                    return winit::ControlFlow::Break;
                 }
-                glutin::WindowEvent::Refresh |
-                glutin::WindowEvent::Focused(..) => {
+                winit::WindowEvent::Refresh |
+                winit::WindowEvent::Focused(..) => {
                     do_render = true;
                 }
-                glutin::WindowEvent::CursorMoved { position: (x, y), .. } => {
+                winit::WindowEvent::CursorMoved { position: (x, y), .. } => {
                     cursor_position = WorldPoint::new(x as f32, y as f32);
                     do_render = true;
                 }
-                glutin::WindowEvent::KeyboardInput {
-                    input: glutin::KeyboardInput {
-                        state: glutin::ElementState::Pressed,
+                winit::WindowEvent::KeyboardInput {
+                    input: winit::KeyboardInput {
+                        state: winit::ElementState::Pressed,
                         virtual_keycode: Some(vk),
                         ..
                     },
                     ..
                 } => match vk {
                     VirtualKeyCode::Escape => {
-                        return glutin::ControlFlow::Break;
+                        return winit::ControlFlow::Break;
                     }
                     VirtualKeyCode::P => {
                         wrench.renderer.toggle_debug_flags(DebugFlags::PROFILER_DBG);
@@ -634,7 +636,7 @@ fn main() {
                 }
                 _ => {}
             },
-            _ => return glutin::ControlFlow::Continue,
+            _ => return winit::ControlFlow::Continue,
         };
 
         let dim = window.get_inner_size();
@@ -660,12 +662,12 @@ fn main() {
             }
         }
 
-        glutin::ControlFlow::Continue
+        winit::ControlFlow::Continue
     };
 
     match events_loop {
         None => {
-            while body(&mut wrench, glutin::Event::Awakened) == glutin::ControlFlow::Continue {}
+            while body(&mut wrench, winit::Event::Awakened) == winit::ControlFlow::Continue {}
             let rect = DeviceUintRect::new(DeviceUintPoint::zero(), size);
             let pixels = wrench.renderer.read_pixels_rgba8(rect);
             save_flipped("screenshot.png", pixels, size);

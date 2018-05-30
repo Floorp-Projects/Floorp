@@ -152,6 +152,19 @@ public:
   virtual nsresult Start(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
   /**
+   * This brings focus to the selected source, e.g. to bring a captured window
+   * to the front.
+   *
+   * We return one of the following:
+   * NS_OK                    - Success.
+   * NS_ERROR_NOT_AVAILABLE   - For backends where focusing does not make sense.
+   * NS_ERROR_NOT_IMPLEMENTED - For backends where focusing makes sense, but
+   *                            is not yet implemented.
+   * NS_ERROR_FAILURE         - Failures reported from underlying code.
+   */
+  virtual nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) = 0;
+
+  /**
    * Applies new constraints to the capability selection for the underlying
    * device.
    *
@@ -278,6 +291,9 @@ public:
 
   // Not scary by default.
   bool GetScary() const override;
+
+  // Returns NS_ERROR_NOT_AVAILABLE by default.
+  nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) override;
 
   // Shutdown does nothing by default.
   void Shutdown() override;

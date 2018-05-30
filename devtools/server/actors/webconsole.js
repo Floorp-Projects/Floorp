@@ -1643,7 +1643,7 @@ WebConsoleActor.prototype =
     let packet = {
       from: this.actorID,
       type: "networkEvent",
-      eventActor: actor.grip()
+      eventActor: actor.form()
     };
 
     this.conn.send(packet);
@@ -1735,7 +1735,7 @@ WebConsoleActor.prototype =
 
     return {
       from: this.actorID,
-      eventActor: actor.grip()
+      eventActor: actor.form()
     };
   },
 

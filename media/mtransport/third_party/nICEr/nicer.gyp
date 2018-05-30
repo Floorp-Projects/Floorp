@@ -239,9 +239,14 @@
                   "DONT_HAVE_ETHTOOL_SPEED_HI",
                ]
              }],
-        ['libfuzzer == 1', {
+        ['(libfuzzer == 1) and (libfuzzer_fuzzer_no_link_flag == 1)', {
           'cflags_mozilla': [
-            '-fsanitize-coverage=trace-pc-guard',
+            '-fsanitize=fuzzer-no-link'
+         ],
+        }],
+        ['(libfuzzer == 1) and (libfuzzer_fuzzer_no_link_flag == 0)', {
+          'cflags_mozilla': [
+            '-fsanitize-coverage=trace-pc-guard,trace-cmp'
          ],
         }],
           ],

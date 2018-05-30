@@ -113,13 +113,9 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
             'trunk/gtest',
         ]
 
-    if CONFIG['FUZZING']:
-        if CONFIG['LIBFUZZER']:
-            # Add trace-pc coverage for LibFuzzer
-            CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
-            CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
-
-        if CONFIG['FUZZING_INTERFACES']:
-            TEST_DIRS += [
-                'signaling/fuzztest'
-            ]
+    # Add libFuzzer configuration directives
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'signaling/fuzztest'
+        ]

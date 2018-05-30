@@ -22,9 +22,9 @@ add_task(async function test_returns_all_without_target() {
   await createRecords([{
     passwordSelector: "#pass-signin"
   }, {
-    filters: null,
+    filter_expression: null,
   }, {
-    filters: "",
+    filter_expression: "",
   }]);
 
   const list = await client.get();
@@ -35,7 +35,7 @@ add_task(async function test_filters_can_be_disabled() {
   const c = RemoteSettings("no-jexl", { filterFunc: null });
   const collection = await c.openCollection();
   await collection.create({
-    filters: "1 == 2"
+    filter_expression: "1 == 2"
   });
   await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
 
@@ -46,25 +46,25 @@ add_task(async function test_filters_can_be_disabled() {
 add_task(async function test_returns_entries_where_jexl_is_true() {
   await createRecords([{
     willMatch: true,
-    filters: "1"
+    filter_expression: "1"
   }, {
     willMatch: true,
-    filters: "[42]"
+    filter_expression: "[42]"
   }, {
     willMatch: true,
-    filters: "1 == 2 || 1 == 1"
+    filter_expression: "1 == 2 || 1 == 1"
   }, {
     willMatch: true,
-    filters: 'environment.appID == "xpcshell@tests.mozilla.org"'
+    filter_expression: 'environment.appID == "xpcshell@tests.mozilla.org"'
   }, {
     willMatch: false,
-    filters: "environment.version == undefined"
+    filter_expression: "environment.version == undefined"
   }, {
     willMatch: true,
-    filters: "environment.unknown == undefined"
+    filter_expression: "environment.unknown == undefined"
   }, {
     willMatch: false,
-    filters: "1 == 2"
+    filter_expression: "1 == 2"
   }]);
 
   const list = await client.get();
@@ -74,9 +74,9 @@ add_task(async function test_returns_entries_where_jexl_is_true() {
 
 add_task(async function test_ignores_entries_where_jexl_is_invalid() {
   await createRecords([{
-    filters: "true === true"  // JavaScript Error: "Invalid expression token: ="
+    filter_expression: "true === true"  // JavaScript Error: "Invalid expression token: ="
   }, {
-    filters: "Objects.keys({}) == []" // Token ( (openParen) unexpected in expression
+    filter_expression: "Objects.keys({}) == []" // Token ( (openParen) unexpected in expression
   }]);
 
   const list = await client.get();
@@ -86,10 +86,10 @@ add_task(async function test_ignores_entries_where_jexl_is_invalid() {
 add_task(async function test_support_of_date_filters() {
   await createRecords([{
     willMatch: true,
-    filters: '"1982-05-08"|date < "2016-03-22"|date'
+    filter_expression: '"1982-05-08"|date < "2016-03-22"|date'
   }, {
     willMatch: false,
-    filters: '"2000-01-01"|date < "1970-01-01"|date'
+    filter_expression: '"2000-01-01"|date < "1970-01-01"|date'
   }]);
 
   const list = await client.get();
@@ -100,16 +100,16 @@ add_task(async function test_support_of_date_filters() {
 add_task(async function test_support_of_preferences_filters() {
   await createRecords([{
     willMatch: true,
-    filters: '"services.settings.last_etag"|preferenceValue == 42'
+    filter_expression: '"services.settings.last_etag"|preferenceValue == 42'
   }, {
     willMatch: true,
-    filters: '"services.settings.changes.path"|preferenceExists == true'
+    filter_expression: '"services.settings.changes.path"|preferenceExists == true'
   }, {
     willMatch: true,
-    filters: '"services.settings.changes.path"|preferenceIsUserSet == false'
+    filter_expression: '"services.settings.changes.path"|preferenceIsUserSet == false'
   }, {
     willMatch: true,
-    filters: '"services.settings.last_etag"|preferenceIsUserSet == true'
+    filter_expression: '"services.settings.last_etag"|preferenceIsUserSet == true'
   }]);
 
   // Set a pref for the user.
@@ -123,16 +123,16 @@ add_task(async function test_support_of_preferences_filters() {
 add_task(async function test_support_of_intersect_operator() {
   await createRecords([{
     willMatch: true,
-    filters: '{foo: 1, bar: 2}|keys intersect ["foo"]'
+    filter_expression: '{foo: 1, bar: 2}|keys intersect ["foo"]'
   }, {
     willMatch: true,
-    filters: '(["a", "b"] intersect ["a", 1, 4]) == "a"'
+    filter_expression: '(["a", "b"] intersect ["a", 1, 4]) == "a"'
   }, {
     willMatch: false,
-    filters: '(["a", "b"] intersect [3, 1, 4]) == "c"'
+    filter_expression: '(["a", "b"] intersect [3, 1, 4]) == "c"'
   }, {
     willMatch: true,
-    filters: `
+    filter_expression: `
       [1, 2, 3]
         intersect
       [3, 4, 5]
@@ -147,22 +147,22 @@ add_task(async function test_support_of_intersect_operator() {
 add_task(async function test_support_of_samples() {
   await createRecords([{
     willMatch: true,
-    filters: '"always-true"|stableSample(1)'
+    filter_expression: '"always-true"|stableSample(1)'
   }, {
     willMatch: false,
-    filters: '"always-false"|stableSample(0)'
+    filter_expression: '"always-false"|stableSample(0)'
   }, {
     willMatch: true,
-    filters: '"turns-to-true-0"|stableSample(0.5)'
+    filter_expression: '"turns-to-true-0"|stableSample(0.5)'
   }, {
     willMatch: false,
-    filters: '"turns-to-false-1"|stableSample(0.5)'
+    filter_expression: '"turns-to-false-1"|stableSample(0.5)'
   }, {
     willMatch: true,
-    filters: '"turns-to-true-0"|bucketSample(0, 50, 100)'
+    filter_expression: '"turns-to-true-0"|bucketSample(0, 50, 100)'
   }, {
     willMatch: false,
-    filters: '"turns-to-false-1"|bucketSample(0, 50, 100)'
+    filter_expression: '"turns-to-false-1"|bucketSample(0, 50, 100)'
   }]);
 
   const list = await client.get();

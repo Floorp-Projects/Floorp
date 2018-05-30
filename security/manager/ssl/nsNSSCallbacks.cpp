@@ -282,12 +282,6 @@ OCSPRequest::Run()
     }
   }
 
-  // If we don't set a load group, the above origin attributes won't be honored
-  // by necko. This seems to be a bug or at least an API confusion issue, hence
-  // bug 1456742.
-  nsCOMPtr<nsILoadGroup> lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  channel->SetLoadGroup(lg);
-
   nsCOMPtr<nsIInputStream> uploadStream;
   rv = NS_NewByteInputStream(getter_AddRefs(uploadStream),
                              reinterpret_cast<const char*>(mPOSTData.begin()),

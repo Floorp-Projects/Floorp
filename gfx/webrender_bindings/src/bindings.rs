@@ -729,6 +729,10 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { wr_schedule_render(self.window_id) }
     }
 
+    fn post_resource_update(&self) {
+        unsafe { wr_schedule_render(self.window_id) }
+    }
+
     fn poke(&self) {
         unsafe { apz_run_updater(self.window_id) }
     }
@@ -827,7 +831,7 @@ pub struct WrProgramCache(Rc<ProgramCache>);
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_program_cache_new() -> *mut WrProgramCache {
-    let program_cache = ProgramCache::new();
+    let program_cache = ProgramCache::new(None);
     Box::into_raw(Box::new(WrProgramCache(program_cache)))
 }
 

@@ -22,6 +22,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const { getStr } = require("./utils/l10n");
+const { parseFontVariationAxes } = require("./utils/font-utils");
 const { updateFonts } = require("./actions/fonts");
 const {
   applyInstance,
@@ -579,6 +580,12 @@ class FontInspector {
     for (let font of fonts) {
       font.used = declaredFontNames.includes(font.CSSFamilyName);
     }
+
+    // Assign writer methods to each axis defined in font-variation-settings.
+    const axes = parseFontVariationAxes(properties["font-variation-settings"]);
+    Object.keys(axes).map(axis => {
+      this.writers.set(axis, this.getWriterForAxis(axis));
+    });
 
     // Update the font editor state only if property values differ from the ones in store.
     // This can happen when a user makes manual changes in the Rule view.

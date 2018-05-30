@@ -26,6 +26,7 @@ DevToolsModules(
     'inspector.js',
     'layout.js',
     'memory.js',
+    'network-event.js',
     'node.js',
     'perf.js',
     'performance-recording.js',

@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { openWebLink, openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { Component } = require("devtools/client/shared/vendor/react");
 const { a, article, h1, li, p, ul } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -30,11 +31,11 @@ class WorkerListEmpty extends Component {
   }
 
   openAboutDebugging() {
-    this.props.serviceContainer.openTrustedLink("about:debugging#workers");
+    openTrustedLink("about:debugging#workers");
   }
 
   openDocumentation() {
-    this.props.serviceContainer.openWebLink(DOC_URL);
+    openWebLink(DOC_URL);
   }
 
   render() {

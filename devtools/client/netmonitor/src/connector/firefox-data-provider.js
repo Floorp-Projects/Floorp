@@ -493,7 +493,9 @@ class FirefoxDataProvider {
         // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
         this.webConsoleClient[clientMethodName](actor.replace("-clone", ""), (res) => {
           if (res.error) {
-            reject(new Error(res.message));
+            reject(
+              new Error(`Error while calling method ${clientMethodName}: ${res.message}`)
+            );
           }
           resolve(res);
         });

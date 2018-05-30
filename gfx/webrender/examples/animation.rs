@@ -14,6 +14,7 @@ extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
+extern crate winit;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
@@ -74,25 +75,25 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, win_event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, win_event: winit::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
         match win_event {
-            glutin::WindowEvent::KeyboardInput {
-                input: glutin::KeyboardInput {
-                    state: glutin::ElementState::Pressed,
+            winit::WindowEvent::KeyboardInput {
+                input: winit::KeyboardInput {
+                    state: winit::ElementState::Pressed,
                     virtual_keycode: Some(key),
                     ..
                 },
                 ..
             } => {
                 let (offset_x, offset_y, angle, delta_opacity) = match key {
-                    glutin::VirtualKeyCode::Down => (0.0, 10.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Up => (0.0, -10.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Right => (10.0, 0.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Left => (-10.0, 0.0, 0.0, 0.0),
-                    glutin::VirtualKeyCode::Comma => (0.0, 0.0, 0.1, 0.0),
-                    glutin::VirtualKeyCode::Period => (0.0, 0.0, -0.1, 0.0),
-                    glutin::VirtualKeyCode::Z => (0.0, 0.0, 0.0, -0.1),
-                    glutin::VirtualKeyCode::X => (0.0, 0.0, 0.0, 0.1),
+                    winit::VirtualKeyCode::Down => (0.0, 10.0, 0.0, 0.0),
+                    winit::VirtualKeyCode::Up => (0.0, -10.0, 0.0, 0.0),
+                    winit::VirtualKeyCode::Right => (10.0, 0.0, 0.0, 0.0),
+                    winit::VirtualKeyCode::Left => (-10.0, 0.0, 0.0, 0.0),
+                    winit::VirtualKeyCode::Comma => (0.0, 0.0, 0.1, 0.0),
+                    winit::VirtualKeyCode::Period => (0.0, 0.0, -0.1, 0.0),
+                    winit::VirtualKeyCode::Z => (0.0, 0.0, 0.0, -0.1),
+                    winit::VirtualKeyCode::X => (0.0, 0.0, 0.0, 0.1),
                     _ => return false,
                 };
                 // Update the transform based on the keyboard input and push it to

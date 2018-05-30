@@ -770,10 +770,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
         max_per_test_time = timedelta(minutes=60)
         max_per_test_tests = 10
         executed_tests = 0
+        executed_too_many_tests = False
 
         if suites:
             self.info('#### Running %s suites' % suite_category)
             for suite in suites:
+                if executed_too_many_tests and not self.per_test_coverage:
+                    return False
+
                 abs_base_cmd = self._query_abs_base_cmd(suite_category, suite)
                 cmd = abs_base_cmd[:]
                 replace_dict = {
@@ -849,7 +853,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
                 summary = {}
-                executed_too_many_tests = False
                 for per_test_args in self.query_args(suite):
                     # Make sure baseline code coverage tests are never
                     # skipped and that having them run has no influence
@@ -923,8 +926,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)
 
-                if executed_too_many_tests:
-                    return False
+            if executed_too_many_tests:
+                return False
         else:
             self.debug('There were no suites to run for %s' % suite_category)
         return True

@@ -39,6 +39,11 @@ def main(output, file):
     if 'Crash Reporter:serverurl' not in appdata:
         appdata['Crash Reporter:serverurl'] = ''
 
+    if 'App:sourcerepository' in appdata and 'App:sourcestamp' in appdata:
+        appdata['App:sourceurl'] = '"%(App:sourcerepository)s/rev/%(App:sourcestamp)s"' % appdata
+    else:
+        appdata['App:sourceurl'] = 'NULL'
+
     output.write('''#include "mozilla/XREAppData.h"
              static const mozilla::StaticXREAppData sAppData = {
                  "%(App:vendor)s",
@@ -52,7 +57,9 @@ def main(output, file):
                  "%(Gecko:minversion)s",
                  "%(Gecko:maxversion)s",
                  "%(Crash Reporter:serverurl)s",
-                 %(App:profile)s
+                 %(App:profile)s,
+                 NULL, // UAName
+                 %(App:sourceurl)s
              };''' % appdata)
 
 
