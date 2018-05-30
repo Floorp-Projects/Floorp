@@ -589,6 +589,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #appMenu-tp-toggle {
+  -moz-appearance: none;
   box-sizing: border-box;
   min-width: 26px;
   height: 10px;
