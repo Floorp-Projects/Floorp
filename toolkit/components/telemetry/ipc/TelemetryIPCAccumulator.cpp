@@ -191,8 +191,8 @@ TelemetryIPCAccumulator::RecordChildScalarAction(uint32_t aId, bool aDynamic,
   if (gChildScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
     DispatchIPCTimerFired();
   }
-  // Store the action. The ProcessID will be determined by the receiver.
-  gChildScalarsActions->AppendElement(ScalarAction{aId, aDynamic, aAction, Some(aValue), Telemetry::ProcessID::Count});
+  // Store the action.
+  gChildScalarsActions->AppendElement(ScalarAction{aId, aDynamic, aAction, Some(aValue)});
   ArmIPCTimer(locker);
 }
 
@@ -215,9 +215,9 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(uint32_t aId, bool aDynami
   if (gChildKeyedScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
     DispatchIPCTimerFired();
   }
-  // Store the action. The ProcessID will be determined by the receiver.
+  // Store the action.
   gChildKeyedScalarsActions->AppendElement(
-    KeyedScalarAction{aId, aDynamic, aAction, NS_ConvertUTF16toUTF8(aKey), Some(aValue), Telemetry::ProcessID::Count});
+    KeyedScalarAction{aId, aDynamic, aAction, NS_ConvertUTF16toUTF8(aKey), Some(aValue)});
   ArmIPCTimer(locker);
 }
 
