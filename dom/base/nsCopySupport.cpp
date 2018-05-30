@@ -501,7 +501,7 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
                               nsIDocumentEncoder::OutputEncodeBasicEntities);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = docEncoder->SetNativeNode(aDOMNode);
+  rv = docEncoder->SetNode(aDOMNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // serialize to string

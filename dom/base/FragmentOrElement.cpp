@@ -2242,9 +2242,9 @@ FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (aIncludeSelf) {
-    docEncoder->SetNativeNode(this);
+    docEncoder->SetNode(this);
   } else {
-    docEncoder->SetNativeContainerNode(this);
+    docEncoder->SetContainerNode(this);
   }
   rv = docEncoder->EncodeToString(aMarkup);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
