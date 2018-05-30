@@ -11,24 +11,20 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  ms.addEventListener("sourceopen", function() {
-    ok(true, "Receive a sourceopen event");
-    is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
-    const sb = ms.addSourceBuffer("audio/mp4; codecs=\"flac\"");
-    ok(sb, "Create a SourceBuffer");
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
+  const sb = ms.addSourceBuffer("audio/mp4; codecs=\"flac\"");
+  ok(sb, "Create a SourceBuffer");
 
-    fetchAndLoad(sb, "flac/IS", [ "" ], ".mp4")
-    .then(fetchAndLoad.bind(null, sb, "flac/0000", range(1, 3), ".m4s"))
-    .then(function() {
-      el.play();
-      ms.endOfStream();
-      return once(el, "ended");
-    }).then(function() {
-      SimpleTest.finish();
-    });
-  });
+  await fetchAndLoad(sb, "flac/IS", [ "" ], ".mp4");
+  await fetchAndLoad(sb, "flac/0000", range(1, 3), ".m4s");
+  el.play();
+  ms.endOfStream();
+  await once(el, "ended");
+  SimpleTest.finish();
 });
 
 </script>

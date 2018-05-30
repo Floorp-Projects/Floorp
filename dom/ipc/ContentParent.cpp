@@ -1624,7 +1624,7 @@ ContentParent::RecvDeallocateLayerTreeId(const ContentParentId& aCpId,
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
-  if (!contentParent->CanCommunicateWith(ChildID())) {
+  if (!contentParent || !contentParent->CanCommunicateWith(ChildID())) {
     return IPC_FAIL(this, "Spoofed DeallocateLayerTreeId call");
   }
 

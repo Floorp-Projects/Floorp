@@ -1083,24 +1083,6 @@ or run without that action (ie: --no-{action})"
             )
         return revision.encode('ascii', 'replace') if revision else None
 
-    def _count_ctors(self):
-        """count num of ctors and set testresults."""
-        dirs = self.query_abs_dirs()
-        python_path = os.path.join(dirs['abs_work_dir'], 'venv', 'bin',
-                                   'python')
-        abs_count_ctors_path = os.path.join(dirs['abs_src_dir'],
-                                            'build',
-                                            'util',
-                                            'count_ctors.py')
-        abs_libxul_path = os.path.join(dirs['abs_obj_dir'],
-                                       'dist',
-                                       'bin',
-                                       'libxul.so')
-
-        cmd = [python_path, abs_count_ctors_path, abs_libxul_path]
-        self.get_output_from_command(cmd, cwd=dirs['abs_src_dir'],
-                                     throw_exception=True)
-
     def _query_props_set_by_mach(self, console_output=True, error_level=FATAL):
         mach_properties_path = os.path.join(
             self.query_abs_dirs()['abs_obj_dir'], 'dist', 'mach_build_properties.json'
@@ -1716,12 +1698,6 @@ or run without that action (ie: --no-{action})"
             return
 
         c = self.config
-
-        if c.get('enable_count_ctors'):
-            self.info("counting ctors...")
-            self._count_ctors()
-        else:
-            self.info("ctors counts are disabled for this build.")
 
         # Report some important file sizes for display in treeherder
 

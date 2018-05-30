@@ -12,51 +12,28 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  function initEvent(e) {
-    v["got" + e] = false;
-  }
-  function receiveEvent(e) {
-    v["got" + e] = true;
-  }
+runWithMSE(async (ms, v) => {
+  const receiveEvent = e => v["got" + e] = true;
+
   const msevents = [ "onsourceopen", "onsourceended" ];
-  msevents.forEach(function(e) {
-    initEvent(e);
-    ms[e] = function() { receiveEvent(e); };
-  });
+  msevents.forEach(e => ms[e] = () => receiveEvent(e));
 
   const sblistevents = [ "onaddsourcebuffer", "onremovesourcebuffer" ];
-  sblistevents.forEach(function(e) {
-    initEvent(e);
-    ms.sourceBuffers[e] = function() { receiveEvent(e); };
-  });
+  sblistevents.forEach(e => ms.sourceBuffers[e] = () => receiveEvent(e));
 
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    const sbevents = [ "onupdatestart", "onupdate", "onupdateend", "onabort" ];
-    sbevents.forEach(function(e) {
-      initEvent(e);
-      sb[e] = function() { receiveEvent(e); };
-    });
+  const sbevents = [ "onupdatestart", "onupdate", "onupdateend", "onabort" ];
+  sbevents.forEach(e => sb[e] = () => receiveEvent(e));
 
-    fetchAndLoad(sb, "seek", [ "" ], ".webm")
-    .then(function() {
-      fetchWithXHR("seek.webm")
-      .then(function(arrayBuffer) {
-        sb.appendBuffer(arrayBuffer);
-        ms.removeSourceBuffer(sb); // will fire abort and removesourcebuffer
-        ms.endOfStream(); // will fire sourceended
-        once(ms, "sourceended").then(function() {
-          const events = [ "onsourceopen", "onsourceended", "onupdatestart", "onupdate", "onupdateend", "onabort", "onaddsourcebuffer", "onremovesourcebuffer" ];
-          events.forEach(function(e) {
-            ok(v["got" + e], "got " + e);
-          });
-          SimpleTest.finish();
-        });
-      });
-    });
-  });
+  await fetchAndLoad(sb, "seek", [ "" ], ".webm");
+  sb.appendBuffer(await fetchWithXHR("seek.webm"));
+  ms.removeSourceBuffer(sb); // will fire abort and removesourcebuffer
+  ms.endOfStream(); // will fire sourceended
+  await once(ms, "sourceended");
+  [ ...msevents, ...sbevents, ...sblistevents ].forEach(e => ok(v["got" + e], "got " + e));
+  SimpleTest.finish();
 });
 
 </script>

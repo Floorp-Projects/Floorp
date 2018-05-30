@@ -33,7 +33,7 @@ var window1, window2;
 
 function openWindow(id) {
   var w = window.open("file_fullscreen-multiple-inner.html", "", "width=500,height=500");
-  w.addEventListener("load", function onload() {
+  waitForLoadAndPaint(w, function() {
     w.focus();
     SimpleTest.waitForFocus(function(){w.begin(id)}, w);
   });
