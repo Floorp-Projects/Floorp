@@ -12,9 +12,9 @@
 SimpleTest.waitForExplicitFinish();
 
 addMSEPrefs(
-  [ "media.mediasource.eviction_threshold.audio", 524288 ],
-  [ "media.dormant-on-pause-timeout-ms", -1 ], // FIXME: bug 1319292
-  [ "media.mediasource.experimental.enabled", true ]
+  ["media.mediasource.eviction_threshold.audio", 524288],
+  ["media.dormant-on-pause-timeout-ms", -1], // FIXME: bug 1319292
+  ["media.mediasource.experimental.enabled", true]
 );
 
 // We fill up the source buffer with audio data until the buffer is full.

@@ -21,8 +21,8 @@ runWithMSE(async (ms, el) => {
   // always fired (bug 1233639).
   audiosb.appendWindowEnd = 3.9;
   videosb.appendWindowEnd = 3.9;
-  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
   // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM

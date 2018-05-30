@@ -14,7 +14,7 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(async (ms, el) => {
   el.controls = true;
-  const events = [ "seeked", "loadeddata", "playing" ];
+  const events = ["seeked", "loadeddata", "playing"];
   let eventCount = 0;
   events.forEach(type => el.addEventListener(type,
       () => is(events[eventCount++], type, "events must come in order")));
@@ -23,20 +23,20 @@ runWithMSE(async (ms, el) => {
   const videosb = ms.addSourceBuffer("video/mp4");
   is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
   let p = once(el, "loadedmetadata");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await p;
   el.play();
   videosb.timestampOffset = 2;
   is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
   // Load [2, 3.606).
   p = once(el, "play");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["1"], ".m4s");
   await p;
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "2" ], ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["2"], ".m4s");
   // TODO: readyState should be at least HAVE_CURRENTDATA, see bug 1367993.
   ok(el.readyState >= el.HAVE_METADATA, "readyState is HAVE_METADATA");
   el.currentTime = 2;
-  await Promise.all([ once(el, "seeked"), once(el, "playing") ]);
+  await Promise.all([once(el, "seeked"), once(el, "playing")]);
   ok(true, "completed seek");
   is(eventCount, events.length, "Received expected number of events");
   SimpleTest.finish();

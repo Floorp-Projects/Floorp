@@ -29,7 +29,7 @@ runWithMSE(async (ms, el) => {
   const videosb = ms.addSourceBuffer("video/mp4");
   is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
   let p = once(el, "loadedmetadata");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await p;
   videosb.appendWindowStart = 2;
   videosb.appendWindowEnd = 4;

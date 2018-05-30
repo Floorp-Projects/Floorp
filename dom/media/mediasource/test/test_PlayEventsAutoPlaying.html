@@ -39,12 +39,12 @@ runWithMSE(async (ms, el) => {
   });
   is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
   let p = once(el, "loadedmetadata");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await p;
   ok(true, "got loadedmetadata event");
   // We're only adding 1.6s worth of data, not enough for readyState to change to HAVE_ENOUGH_DATA
   // So we end the media source so that all the playable data is available.
-  p = Promise.all([ "loadeddata", "canplay", "play", "playing", "ended" ].map(e => once(el, e)));
+  p = Promise.all(["loadeddata", "canplay", "play", "playing", "ended"].map(e => once(el, e)));
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
   ms.endOfStream();
   await p;
