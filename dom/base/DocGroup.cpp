@@ -184,5 +184,17 @@ DocGroup::MoveSignalSlotListTo(nsTArray<RefPtr<HTMLSlotElement>>& aDest)
   mSignalSlotList.Clear();
 }
 
+bool
+DocGroup::IsActive() const
+{
+  for (nsIDocument* doc : mDocuments) {
+    if (doc->IsCurrentActiveDocument()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }
 }
