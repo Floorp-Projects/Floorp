@@ -413,8 +413,8 @@ CodeGeneratorShared::isGlobalObject(JSObject* object)
 {
     // Calling object->is<GlobalObject>() is racy because this relies on
     // checking the group and this can be changed while we are compiling off the
-    // main thread.
-    return object == gen->compartment->maybeGlobal();
+    // main thread. Note that we only check for the script realm's global here.
+    return object == gen->realm->maybeGlobal();
 }
 
 } // namespace jit
