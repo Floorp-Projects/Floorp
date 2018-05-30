@@ -3,7 +3,17 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.showLoading = exports.showErrorMessage = exports.showSourceText = exports.clearEditor = exports.updateDocument = exports.updateLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.hasDocument = exports.setDocument = exports.getDocument = undefined;
+exports.getDocument = getDocument;
+exports.hasDocument = hasDocument;
+exports.setDocument = setDocument;
+exports.removeDocument = removeDocument;
+exports.clearDocuments = clearDocuments;
+exports.updateLineNumberFormat = updateLineNumberFormat;
+exports.updateDocument = updateDocument;
+exports.clearEditor = clearEditor;
+exports.showLoading = showLoading;
+exports.showErrorMessage = showErrorMessage;
+exports.showSourceText = showSourceText;
 
 var _source = require("../source");
 
@@ -169,15 +179,3 @@ function showSourceText(editor, source, symbols) {
   editor.setMode((0, _source.getMode)(source, symbols));
   updateLineNumberFormat(editor, source.id);
 }
-
-exports.getDocument = getDocument;
-exports.setDocument = setDocument;
-exports.hasDocument = hasDocument;
-exports.removeDocument = removeDocument;
-exports.clearDocuments = clearDocuments;
-exports.updateLineNumberFormat = updateLineNumberFormat;
-exports.updateDocument = updateDocument;
-exports.clearEditor = clearEditor;
-exports.showSourceText = showSourceText;
-exports.showErrorMessage = showErrorMessage;
-exports.showLoading = showLoading;

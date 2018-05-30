@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.scrollList = undefined;
+exports.scrollList = scrollList;
 
 var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
 
@@ -54,5 +54,3 @@ function chromeScrollList(elem, index) {
   const scroll = positionsToScroll * (itemHeight + 2) + itemOffset;
   resultsEl.scrollTop = Math.max(0, scroll);
 }
-
-exports.scrollList = scrollList;
