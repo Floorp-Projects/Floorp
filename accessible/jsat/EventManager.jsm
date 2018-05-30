@@ -19,6 +19,10 @@ ChromeUtils.defineModuleGetter(this, "Events",
   "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "States",
   "resource://gre/modules/accessibility/Constants.jsm");
+ChromeUtils.defineModuleGetter(this, "clearTimeout",
+  "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
 
 var EXPORTED_SYMBOLS = ["EventManager"];
 
@@ -447,7 +451,7 @@ this.EventManager.prototype = {
       let queue = this._liveEventQueue.get(domNode);
       let nextEvent = queue[0];
       if (nextEvent.eventType === aEventType) {
-        Utils.win.clearTimeout(nextEvent.timeoutID);
+        clearTimeout(nextEvent.timeoutID);
         queue.shift();
         if (queue.length === 0) {
           this._liveEventQueue.delete(domNode);
@@ -462,7 +466,7 @@ this.EventManager.prototype = {
     }
     let eventHandler = {
       eventType: aEventType,
-      timeoutID: Utils.win.setTimeout(this.present.bind(this),
+      timeoutID: setTimeout(this.present.bind(this),
         20, // Wait for a possible EVENT_SHOW or EVENT_TEXT_INSERTED event.
         Presentation.liveRegion(aLiveRegion, aIsPolite, true, aModifiedText))
     };
