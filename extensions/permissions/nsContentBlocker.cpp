@@ -159,14 +159,14 @@ nsContentBlocker::ShouldLoad(nsIURI           *aContentLocation,
                              const nsACString &aMimeGuess,
                              int16_t          *aDecision)
 {
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  nsCOMPtr<nsIURI> aRequestingLocation;
+  nsCOMPtr<nsIURI> requestingLocation;
   if (loadingPrincipal) {
-    loadingPrincipal->GetURI(getter_AddRefs(aRequestingLocation));
+    loadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
   }
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -174,7 +174,7 @@ nsContentBlocker::ShouldLoad(nsIURI           *aContentLocation,
 
   // Ony support NUMBER_OF_TYPES content types. that all there is at the
   // moment, but you never know...
-  if (aContentType > NUMBER_OF_TYPES)
+  if (contentType > NUMBER_OF_TYPES)
     return NS_OK;
 
   // we can't do anything without this
@@ -183,7 +183,7 @@ nsContentBlocker::ShouldLoad(nsIURI           *aContentLocation,
 
   // The final type of an object tag may mutate before it reaches
   // shouldProcess, so we cannot make any sane blocking decisions here
-  if (aContentType == nsIContentPolicy::TYPE_OBJECT)
+  if (contentType == nsIContentPolicy::TYPE_OBJECT)
     return NS_OK;
 
   // we only want to check http, https, ftp
@@ -196,7 +196,7 @@ nsContentBlocker::ShouldLoad(nsIURI           *aContentLocation,
     return NS_OK;
 
   bool shouldLoad, fromPrefs;
-  rv = TestPermission(aContentLocation, aRequestingLocation, aContentType,
+  rv = TestPermission(aContentLocation, requestingLocation, contentType,
                       &shouldLoad, &fromPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!shouldLoad) {
@@ -216,22 +216,22 @@ nsContentBlocker::ShouldProcess(nsIURI           *aContentLocation,
                                 const nsACString &aMimeGuess,
                                 int16_t          *aDecision)
 {
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  nsCOMPtr<nsIURI> aRequestingLocation;
+  nsCOMPtr<nsIURI> requestingLocation;
   if (loadingPrincipal) {
-    loadingPrincipal->GetURI(getter_AddRefs(aRequestingLocation));
+    loadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
   }
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
-  // For loads where aRequestingContext is chrome, we should just
+  // For loads where requesting context is chrome, we should just
   // accept.  Those are most likely toplevel loads in windows, and
   // chrome generally knows what it's doing anyway.
   nsCOMPtr<nsIDocShellTreeItem> item =
-    do_QueryInterface(NS_CP_GetDocShellFromContext(aRequestingContext));
+    do_QueryInterface(NS_CP_GetDocShellFromContext(requestingContext));
 
   if (item && item->ItemType() == nsIDocShellTreeItem::typeChrome) {
     *aDecision = nsIContentPolicy::ACCEPT;
@@ -244,12 +244,12 @@ nsContentBlocker::ShouldProcess(nsIURI           *aContentLocation,
   // NOTE that this bypasses the aContentLocation checks in ShouldLoad - this is
   // intentional, as aContentLocation may be null for plugins that load by type
   // (e.g. java)
-  if (aContentType == nsIContentPolicy::TYPE_OBJECT) {
+  if (contentType == nsIContentPolicy::TYPE_OBJECT) {
     *aDecision = nsIContentPolicy::ACCEPT;
 
     bool shouldLoad, fromPrefs;
-    nsresult rv = TestPermission(aContentLocation, aRequestingLocation,
-                                 aContentType, &shouldLoad, &fromPrefs);
+    nsresult rv = TestPermission(aContentLocation, requestingLocation,
+                                 contentType, &shouldLoad, &fromPrefs);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!shouldLoad) {
       if (fromPrefs) {
