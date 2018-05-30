@@ -911,11 +911,21 @@ public:
 
     page = firstPage;
     int ret = mprotect(page, length, prot | PROT_WRITE);
-    success = ret == 0;
+    if (ret != 0) {
+      success = false;
+      WARN("mprotect(%p, %zu, %o) = %d (errno=%d; %s)",
+           page, length, prot | PROT_WRITE, ret, errno, strerror(errno));
+      return;
+    }
+
+    // XXX bug 1460989: on some devices, mprotect appears to return 0 for
+    // success even after _failing_ to make the page writable. Therefore, check
+    // for write access again instead of relying on the mprotect return value.
+    int newProt = getProt(start, &end);
+    success = (newProt != -1) && (newProt & PROT_WRITE);
     if (!success) {
-      ERROR("mprotect(%p, %zu, %d) = %d (errno=%d; %s)",
-            page, length, prot | PROT_WRITE, ret,
-            errno, strerror(errno));
+      WARN("mprotect(%p, %zu, %o) returned 0 but page is not writable: %o",
+           page, length, prot | PROT_WRITE, newProt);
     }
   }
 
