@@ -9,8 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/DeclarationBlockInlines.h"
-#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
@@ -1176,7 +1174,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         nsIDocument* document = aElement->OwnerDoc();
         RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
         RefPtr<DeclarationBlock> decl =
-          ServoDeclarationBlock::FromCssText(
+          DeclarationBlock::FromCssText(
             value,
             urlExtra,
             document->GetCompatibilityMode(),

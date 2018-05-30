@@ -11,10 +11,10 @@
 
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/ServoSpecifiedValues.h"
 
 using namespace mozilla;
@@ -54,7 +54,7 @@ nsMappedAttributes::nsMappedAttributes(const nsMappedAttributes& aCopy)
     mSheet(aCopy.mSheet),
     mRuleMapper(aCopy.mRuleMapper),
     // This is only called by ::Clone, which is used to create independent
-    // nsMappedAttributes objects which should not share a ServoDeclarationBlock
+    // nsMappedAttributes objects which should not share a DeclarationBlock
     mServoStyle(nullptr)
 {
   NS_ASSERTION(mBufferSize >= aCopy.mAttrCount, "can't fit attributes");

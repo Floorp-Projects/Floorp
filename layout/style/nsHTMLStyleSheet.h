@@ -55,7 +55,7 @@ public:
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
   // For each mapped presentation attribute in the cache, resolve
-  // the attached ServoDeclarationBlock by running the mapping
+  // the attached DeclarationBlock by running the mapping
   // and converting the ruledata to Servo specified values.
   void CalculateMappedServoDeclarations();
 
