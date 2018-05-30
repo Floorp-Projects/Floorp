@@ -3501,11 +3501,41 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
                            aSelectionData, aInfo, aTime);
 }
 
+nsWindow*
+nsWindow::GetTransientForWindowIfPopup()
+{
+    if (mWindowType != eWindowType_popup) {
+        return nullptr;
+    }
+    GtkWindow* toplevel = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+    if (toplevel) {
+        return get_window_for_gtk_widget(GTK_WIDGET(toplevel));
+    }
+    return nullptr;
+}
+
+bool
+nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence)
+{
+    return mHandleTouchEvent && mTouches.Contains(aSequence);
+}
+
 #if GTK_CHECK_VERSION(3,4,0)
 gboolean
 nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
 {
     if (!mHandleTouchEvent) {
+        // If a popup window was spawned (e.g. as the result of a long-press)
+        // and touch events got diverted to that window within a touch sequence,
+        // ensure the touch event gets sent to the original window instead. We
+        // keep the checks here very conservative so that we only redirect
+        // events in this specific scenario.
+        nsWindow* targetWindow = GetTransientForWindowIfPopup();
+        if (targetWindow &&
+            targetWindow->IsHandlingTouchSequence(aEvent->sequence)) {
+            return targetWindow->OnTouchEvent(aEvent);
+        }
+
         return FALSE;
     }
 
@@ -4843,12 +4873,16 @@ nsWindow::GrabPointer(guint32 aTime)
     }
 
     gint retval;
+    // Note that we need GDK_TOUCH_MASK below to work around a GDK/X11 bug that
+    // causes touch events that would normally be received by this client on
+    // other windows to be discarded during the grab.
     retval = gdk_pointer_grab(mGdkWindow, TRUE,
                               (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
-                                             GDK_POINTER_MOTION_MASK),
+                                             GDK_POINTER_MOTION_MASK |
+                                             GDK_TOUCH_MASK),
                               (GdkWindow *)nullptr, nullptr, aTime);
 
     if (retval == GDK_GRAB_NOT_VIEWABLE) {
