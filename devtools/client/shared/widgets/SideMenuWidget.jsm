@@ -25,7 +25,7 @@ var L10N = new LocalizationHelper(SHARED_STRINGS_URI);
  * Note: this widget should be used in tandem with the WidgetMethods in
  * view-helpers.js.
  *
- * @param nsIDOMNode aNode
+ * @param Node aNode
  *        The element associated with the widget.
  * @param Object aOptions
  *        - contextMenu: optional element or element ID that serves as a context menu.
@@ -90,14 +90,14 @@ SideMenuWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @param nsIDOMNode aContents
+   * @param Node aContents
    *        The node displayed in the container.
    * @param object aAttachment [optional]
    *        Some attached primitive/object. Custom options supported:
    *          - group: a string specifying the group to place this item into
    *          - checkboxState: the checked state of the checkbox, if shown
    *          - checkboxTooltip: the tooltip text for the checkbox, if shown
-   * @return nsIDOMNode
+   * @return Node
    *         The element associated with the displayed item.
    */
   insertItemAt: function(aIndex, aContents, aAttachment = {}) {
@@ -143,7 +143,7 @@ SideMenuWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @return nsIDOMNode
+   * @return Node
    *         The element associated with the displayed item.
    */
   getItemAtIndex: function(aIndex) {
@@ -153,7 +153,7 @@ SideMenuWidget.prototype = {
   /**
    * Removes the specified child node from this container.
    *
-   * @param nsIDOMNode aChild
+   * @param Node aChild
    *        The element associated with the displayed item.
    */
   removeChild: function(aChild) {
@@ -189,7 +189,7 @@ SideMenuWidget.prototype = {
 
   /**
    * Gets the currently selected child node in this container.
-   * @return nsIDOMNode
+   * @return Node
    */
   get selectedItem() {
     return this._selectedItem;
@@ -197,7 +197,7 @@ SideMenuWidget.prototype = {
 
   /**
    * Sets the currently selected child node in this container.
-   * @param nsIDOMNode aChild
+   * @param Node aChild
    */
   set selectedItem(aChild) {
     let menuArray = this._orderedMenuElementsArray;
@@ -218,7 +218,7 @@ SideMenuWidget.prototype = {
   /**
    * Ensures the specified element is visible.
    *
-   * @param nsIDOMNode aElement
+   * @param Node aElement
    *        The element to make visible.
    */
   ensureElementIsVisible: function(aElement) {
@@ -288,7 +288,7 @@ SideMenuWidget.prototype = {
   /**
    * Set the checkbox state for the item associated with the given node.
    *
-   * @param nsIDOMNode aNode
+   * @param Node aNode
    *        The dom node for an item we want to check.
    * @param boolean aCheckState
    *        True to check, false to uncheck.
@@ -371,7 +371,7 @@ SideMenuWidget.prototype = {
    *
    * @param SideMenuGroup aGroup
    *        The group to contain the menu item.
-   * @param nsIDOMNode aContents
+   * @param Node aContents
    *        The node displayed in the container.
    * @param object aAttachment [optional]
    *        Some attached primitive/object.
@@ -389,9 +389,9 @@ SideMenuWidget.prototype = {
    * these child items, in which case we need to be careful on which nodes
    * .selected class names are added, or which nodes are removed.
    *
-   * @param nsIDOMNode aChild
+   * @param Node aChild
    *        An element which is the target node of a SideMenuItem.
-   * @return nsIDOMNode
+   * @return Node
    *         The wrapper node if there is one, or the same child otherwise.
    */
   _getNodeForContents: function(aChild) {
@@ -559,7 +559,7 @@ SideMenuGroup.prototype = {
  *
  * @param SideMenuGroup aGroup
  *        The group to contain this menu item.
- * @param nsIDOMNode aContents
+ * @param Node aContents
  *        The node displayed in the container.
  * @param object aAttachment [optional]
  *        The attachment object.
@@ -621,7 +621,7 @@ SideMenuItem.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @return nsIDOMNode
+   * @return Node
    *         The element associated with the displayed item.
    */
   insertSelfAt: function(aIndex) {
@@ -658,7 +658,7 @@ SideMenuItem.prototype = {
   /**
    * Sets the contents displayed in this item's view.
    *
-   * @param string | nsIDOMNode aContents
+   * @param string | Node aContents
    *        The string or node displayed in the container.
    */
   set contents(aContents) {
@@ -684,7 +684,7 @@ SideMenuItem.prototype = {
  * Creates a checkbox to a specified parent node. Emits a "check" event
  * whenever the checkbox is checked or unchecked by the user.
  *
- * @param nsIDOMNode aParentNode
+ * @param Node aParentNode
  *        The parent node to contain this checkbox.
  * @param object aOptions
  *        An object containing some or all of the following properties:

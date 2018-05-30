@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
@@ -651,7 +650,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     const options = {matchedSelectors: true, inherited: true};
     let entries = [];
     let parent = this.walker.parentNode(node);
-    while (parent && parent.rawNode.nodeType != Ci.nsIDOMNode.DOCUMENT_NODE) {
+    while (parent && parent.rawNode.nodeType != Node.DOCUMENT_NODE) {
       entries = entries.concat(this._getAllElementRules(parent, parent,
                                                         options));
       parent = this.walker.parentNode(parent);
@@ -685,7 +684,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   getAppliedProps: function(node, entries, options) {
     if (options.inherited) {
       let parent = this.walker.parentNode(node);
-      while (parent && parent.rawNode.nodeType != Ci.nsIDOMNode.DOCUMENT_NODE) {
+      while (parent && parent.rawNode.nodeType != Node.DOCUMENT_NODE) {
         entries = entries.concat(this._getAllElementRules(parent, parent,
                                                           options));
         parent = this.walker.parentNode(parent);

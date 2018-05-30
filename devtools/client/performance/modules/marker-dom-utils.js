@@ -22,7 +22,7 @@ exports.MarkerDOMUtils = {
    *
    * @param document doc
    * @param object marker
-   * @return array<nsIDOMNode>
+   * @return array<Node>
    */
   buildFields: function(doc, marker) {
     let fields = MarkerBlueprintUtils.getMarkerFields(marker);
@@ -34,7 +34,7 @@ exports.MarkerDOMUtils = {
    *
    * @param document doc
    * @param object marker
-   * @return nsIDOMNode
+   * @return Node
    */
   buildTitle: function(doc, marker) {
     let blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
@@ -61,7 +61,7 @@ exports.MarkerDOMUtils = {
    *
    * @param document doc
    * @param object marker
-   * @return nsIDOMNode
+   * @return Node
    */
   buildDuration: function(doc, marker) {
     let label = L10N.getStr("marker.field.duration");
@@ -84,7 +84,7 @@ exports.MarkerDOMUtils = {
    * @param document doc
    * @param string field
    * @param string value
-   * @return nsIDOMNode
+   * @return Node
    */
   buildNameValueLabel: function(doc, field, value) {
     let hbox = doc.createElement("hbox");
@@ -215,7 +215,7 @@ exports.MarkerDOMUtils = {
    * @param document doc
    * @param object marker
    * @param object options
-   * @return array<nsIDOMNode>
+   * @return array<Node>
    */
   buildCustom: function(doc, marker, options) {
     let elements = [];

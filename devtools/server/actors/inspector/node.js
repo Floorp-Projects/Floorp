@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Ci, Cu} = require("chrome");
+const {Cu} = require("chrome");
 
 const protocol = require("devtools/shared/protocol");
 const {nodeSpec, nodeListSpec} = require("devtools/shared/specs/node");
@@ -177,13 +177,13 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   get isShadowRoot() {
-    let isFragment = this.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
+    let isFragment = this.rawNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
     return isFragment && !!this.rawNode.host;
   },
 
   get isShadowHost() {
     let shadowRoot = this.rawNode.shadowRoot;
-    return shadowRoot && shadowRoot.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
+    return shadowRoot && shadowRoot.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
   },
 
   get isDirectShadowHostChild() {
@@ -207,7 +207,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     let rawNode = this.rawNode;
     let numChildren = rawNode.childNodes.length;
-    let hasAnonChildren = rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+    let hasAnonChildren = rawNode.nodeType === Node.ELEMENT_NODE &&
                           rawNode.ownerDocument.getAnonymousNodes(rawNode);
 
     let hasContentDocument = rawNode.contentDocument;
@@ -239,7 +239,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get displayType() {
     // Consider all non-element nodes as displayed.
     if (InspectorActorUtils.isNodeDead(this) ||
-        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+        this.rawNode.nodeType !== Node.ELEMENT_NODE ||
         this.isAfterPseudoElement ||
         this.isBeforePseudoElement) {
       return null;
@@ -306,7 +306,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   writePseudoClassLocks: function() {
-    if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+    if (this.rawNode.nodeType !== Node.ELEMENT_NODE) {
       return undefined;
     }
     let ret = undefined;

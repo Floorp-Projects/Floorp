@@ -39,6 +39,7 @@ const {
   FormData,
   indexedDB,
   InspectorUtils,
+  Node,
   TextDecoder,
   TextEncoder,
   URL,
@@ -56,9 +57,10 @@ const {
     "FileReader",
     "FormData",
     "indexedDB",
+    "InspectorUtils",
+    "Node",
     "TextDecoder",
     "TextEncoder",
-    "InspectorUtils",
     "URL",
     "XMLHttpRequest",
   ]
@@ -281,7 +283,7 @@ exports.globals = {
     // Defined by Loader.jsm
     id: null
   },
-  Node: Ci.nsIDOMNode,
+  Node,
   reportError: Cu.reportError,
   StructuredCloneHolder,
   TextDecoder,
