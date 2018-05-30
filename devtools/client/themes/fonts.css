@@ -28,7 +28,6 @@
   grid-template-columns: 1fr auto;
   grid-column-gap: 10px;
   padding: 10px 20px;
-  overflow: auto;
 }
 
 #font-container .theme-twisty {
@@ -77,21 +76,11 @@
   color: transparent;
 }
 
-.font-name,
-.font-family-name {
+.font-name {
+  margin: 0;
+  font-size: 1.2em;
   font-weight: normal;
   white-space: nowrap;
-}
-
-.font-name {
-  margin-bottom: 0.6em;
-  font-size: 1em;
-  color: var(--grey-50);
-}
-
-.font-family-name {
-  margin-bottom: 0.2em;
-  font-size: 1.2em;
 }
 
 .font-css-code {
