@@ -125,6 +125,13 @@ OutputStreamManager::Remove(MediaStream* aStream)
   }
 }
 
+void
+OutputStreamManager::Clear()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mStreams.Clear();
+}
+
 TrackID
 OutputStreamManager::NextAvailableTrackIDFor(MediaStream* aOutputStream) const
 {
