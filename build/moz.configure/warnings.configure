@@ -86,6 +86,12 @@ check_and_add_gcc_warning('-Wno-inline-new-delete', cxx_compiler)
 # too many false positives
 check_and_add_gcc_warning('-Wno-error=maybe-uninitialized')
 
+# Turned on by -Wall, but needs changes to be turned into an error
+# (bug 1465060).
+check_and_add_gcc_warning('-Wno-error=pessimizing-move')
+# This one is probably easier, it's only triggered by tests.
+check_and_add_gcc_warning('-Wno-error=self-move')
+
 # we don't want our builds held hostage when a platform-specific API
 # becomes deprecated.
 check_and_add_gcc_warning('-Wno-error=deprecated-declarations')
