@@ -94,7 +94,7 @@ function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2) 
             target != aEvent.accessible)
           return;
 
-        if (target instanceof nsIDOMNode &&
+        if (Node.isInstance(target) &&
             target != aEvent.DOMNode)
           return;
       }

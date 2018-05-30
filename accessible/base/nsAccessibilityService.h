@@ -121,7 +121,7 @@ public:
   Accessible* AddNativeRootAccessible(void* aAtkAccessible);
   void RemoveNativeRootAccessible(Accessible* aRootAccessible);
 
-  bool HasAccessible(nsIDOMNode* aDOMNode);
+  bool HasAccessible(nsINode* aDOMNode);
 
   /**
    * Get a string equivalent for an accessible role value.

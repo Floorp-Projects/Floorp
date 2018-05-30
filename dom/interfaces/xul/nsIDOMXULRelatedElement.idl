@@ -5,6 +5,9 @@
 
 #include "domstubs.idl"
 
+webidl Element;
+webidl Node;
+
 [scriptable, uuid(9fbac05a-fb27-470d-8e5f-028b2dc54ad0)]
 interface nsIDOMXULRelatedElement : nsISupports
 {
@@ -14,5 +17,5 @@ interface nsIDOMXULRelatedElement : nsISupports
    * this interface is implemented by XUL tabs and XUL tabpanels elements
    * and used to get XUL tab element by linked tab panel and vice versa.
    */
-  nsIDOMNode getRelatedElement(in nsIDOMNode aElement);
+  Element getRelatedElement(in Node aElement);
 };
