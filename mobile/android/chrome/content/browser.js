@@ -3153,7 +3153,7 @@ var NativeWindow = {
     },
 
     _getLink: function(aElement) {
-      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+      if (aElement.nodeType == aElement.ELEMENT_NODE &&
           ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
            (ChromeUtils.getClassName(aElement) === "HTMLAreaElement" && aElement.href) ||
            ChromeUtils.getClassName(aElement) === "HTMLLinkElement" ||
@@ -4891,7 +4891,7 @@ var BrowserEventHandler = {
   },
 
   _getLinkURI: function(aElement) {
-    if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+    if (aElement.nodeType == aElement.ELEMENT_NODE &&
         ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
          (ChromeUtils.getClassName(aElement) === "HTMLAreaElement" && aElement.href))) {
       try {
