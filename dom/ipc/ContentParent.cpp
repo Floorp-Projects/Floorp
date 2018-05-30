@@ -2319,10 +2319,9 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
     nsCString UAName(gAppData->UAName);
     nsCString ID(gAppData->ID);
     nsCString vendor(gAppData->vendor);
-    nsCString sourceURL(gAppData->sourceURL);
 
     // Sending all information to content process.
-    Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor, sourceURL);
+    Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
   }
 
   // Send the child its remote type. On Mac, this needs to be sent prior

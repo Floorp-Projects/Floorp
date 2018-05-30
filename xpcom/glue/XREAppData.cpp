@@ -25,7 +25,6 @@ XREAppData::operator=(const StaticXREAppData& aOther)
   crashReporterURL = aOther.crashReporterURL;
   profile = aOther.profile;
   UAName = aOther.UAName;
-  sourceURL = aOther.sourceURL;
 
   return *this;
 }
@@ -48,7 +47,6 @@ XREAppData::operator=(const XREAppData& aOther)
   crashReporterURL = aOther.crashReporterURL;
   profile = aOther.profile;
   UAName = aOther.UAName;
-  sourceURL = aOther.sourceURL;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   sandboxBrokerServices = aOther.sandboxBrokerServices;
   sandboxPermissionsService = aOther.sandboxPermissionsService;
