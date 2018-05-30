@@ -45,8 +45,6 @@ public:
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   bool Disabled() const
   {
     return GetBoolAttr(nsGkAtoms::disabled);

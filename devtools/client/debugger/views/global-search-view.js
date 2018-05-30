@@ -318,7 +318,7 @@ GlobalSearchView.prototype = extend(WidgetMethods, {
   /**
    * Scrolls a match into view if not already visible.
    *
-   * @param nsIDOMNode aMatch
+   * @param Node aMatch
    *        The match to scroll into view.
    */
   _scrollMatchIntoViewIfNeeded: function (aMatch) {
@@ -328,7 +328,7 @@ GlobalSearchView.prototype = extend(WidgetMethods, {
   /**
    * Starts a bounce animation for a match.
    *
-   * @param nsIDOMNode aMatch
+   * @param Node aMatch
    *        The match to start a bounce animation for.
    */
   _bounceMatch: function (aMatch) {
@@ -454,7 +454,7 @@ SourceResults.prototype = {
 
   /**
    * Gets the element associated with this item.
-   * @return nsIDOMNode
+   * @return Node
    */
   get target() {
     return this._target;
@@ -463,7 +463,7 @@ SourceResults.prototype = {
   /**
    * Customization function for creating this item's UI.
    *
-   * @param nsIDOMNode aElementNode
+   * @param Node aElementNode
    *        The element associated with the displayed item.
    * @param object aCallbacks
    *        An object containing all the necessary callback functions:
@@ -568,7 +568,7 @@ LineResults.prototype = {
 
   /**
    * Gets the element associated with this item.
-   * @return nsIDOMNode
+   * @return Node
    */
   get target() {
     return this._target;
@@ -577,7 +577,7 @@ LineResults.prototype = {
   /**
    * Customization function for creating this item's UI.
    *
-   * @param nsIDOMNode aElementNode
+   * @param Node aElementNode
    *        The element associated with the displayed item.
    * @param object aCallbacks
    *        An object containing all the necessary callback functions:
@@ -636,7 +636,7 @@ LineResults.prototype = {
 
   /**
    * Handles a match while creating the view.
-   * @param nsIDOMNode aNode
+   * @param Node aNode
    * @param object aMatchChunk
    */
   _entangleMatch: function (aNode, aMatchChunk) {
@@ -648,8 +648,8 @@ LineResults.prototype = {
 
   /**
    * Handles a line while creating the view.
-   * @param nsIDOMNode aNode
-   * @param nsIDOMNode aFirstMatch
+   * @param Node aNode
+   * @param Node aFirstMatch
    */
   _entangleLine: function (aNode, aFirstMatch) {
     LineResults._itemsByElement.set(aNode, {
@@ -660,7 +660,7 @@ LineResults.prototype = {
   },
 
   /**
-   * An nsIDOMNode label with an ellipsis value.
+   * A Node label with an ellipsis value.
    */
   _ellipsis: (function () {
     let label = document.createElement("label");
@@ -687,7 +687,7 @@ LineResults.prototype[Symbol.iterator] = function* () {
 /**
  * Gets the item associated with the specified element.
  *
- * @param nsIDOMNode aElement
+ * @param Node aElement
  *        The element used to identify the item.
  * @return object
  *         The matched item, or null if nothing is found.
@@ -702,7 +702,7 @@ LineResults.getItemForElement = function (aElement) {
  *
  * @param number aIndex
  *        The index used to identify the item.
- * @return nsIDOMNode
+ * @return Node
  *         The matched element, or null if nothing is found.
  */
 SourceResults.getElementAtIndex =
@@ -718,7 +718,7 @@ LineResults.getElementAtIndex = function (aIndex) {
 /**
  * Gets the index of an item associated with the specified element.
  *
- * @param nsIDOMNode aElement
+ * @param Node aElement
  *        The element to get the index for.
  * @return number
  *         The index of the matched element, or -1 if nothing is found.

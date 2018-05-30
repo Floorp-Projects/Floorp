@@ -56,7 +56,7 @@ SVGLineElement::MaybeAdjustForZeroLength(float aX1, float aY1,
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGLineElement)
 

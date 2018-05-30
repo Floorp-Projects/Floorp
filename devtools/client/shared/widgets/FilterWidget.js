@@ -106,7 +106,7 @@ const SPECIAL_VALUES = new Set(["none", "unset", "initial", "inherit"]);
  * You can, however, use add/remove/update methods manually.
  * See each method's comments for more details
  *
- * @param {nsIDOMNode} el
+ * @param {Node} el
  *        The widget container.
  * @param {String} value
  *        CSS filter value

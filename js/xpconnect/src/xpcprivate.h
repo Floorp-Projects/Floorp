@@ -2542,6 +2542,7 @@ struct GlobalProperties {
     bool FormData : 1;
     bool InspectorUtils : 1;
     bool MessageChannel: 1;
+    bool Node : 1;
     bool NodeFilter : 1;
     bool TextDecoder : 1;
     bool TextEncoder : 1;

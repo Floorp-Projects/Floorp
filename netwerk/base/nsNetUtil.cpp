@@ -365,8 +365,7 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
   nsCOMPtr<nsIChannel> channel;
   rv = aIoService->NewChannelFromURIWithClientAndController(
          aUri,
-         aLoadingNode ?
-           aLoadingNode->AsDOMNode() : nullptr,
+         aLoadingNode,
          aLoadingPrincipal,
          aTriggeringPrincipal,
          aLoadingClientInfo,

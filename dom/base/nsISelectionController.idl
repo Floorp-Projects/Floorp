@@ -16,9 +16,9 @@ class Selection;
 %}
 
 interface nsIContent;
-interface nsIDOMNode;
 interface nsISelectionDisplay;
 
+webidl Node;
 webidl Selection;
 
 [scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
@@ -285,7 +285,7 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aEndOffset    offset in dom to last char of textnode to test
    *  @param aReturnBool   boolean returned TRUE if visible FALSE if not
    */
-    boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
+    boolean checkVisibility(in Node node, in short startOffset, in short endOffset);
     [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
 };
 %{ C++

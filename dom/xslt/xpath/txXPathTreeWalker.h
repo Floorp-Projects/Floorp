@@ -98,10 +98,6 @@ public:
                                         bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIDocument* aDocument);
     static nsINode* getNode(const txXPathNode& aNode);
-    static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
-    {
-        return CallQueryInterface(getNode(aNode), aResult);
-    }
     static nsIContent* getContent(const txXPathNode& aNode);
     static nsIDocument* getDocument(const txXPathNode& aNode);
     static void addRef(const txXPathNode& aNode)

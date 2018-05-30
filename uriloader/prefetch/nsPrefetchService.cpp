@@ -33,7 +33,6 @@
 #include "mozilla/Logging.h"
 #include "plstr.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIDOMNode.h"
 #include "nsINode.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
@@ -84,7 +83,7 @@ PRTimeToSeconds(PRTime t_usec)
 nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
                                nsIURI *aURI,
                                nsIURI *aReferrerURI,
-                               nsIDOMNode *aSource,
+                               nsINode *aSource,
                                nsContentPolicyType aPolicyType,
                                bool aPreload)
     : mURI(aURI)
@@ -567,7 +566,7 @@ nsPrefetchService::RemoveProgressListener()
 nsresult
 nsPrefetchService::EnqueueURI(nsIURI *aURI,
                               nsIURI *aReferrerURI,
-                              nsIDOMNode *aSource,
+                              nsINode *aSource,
                               nsPrefetchNode **aNode)
 {
     RefPtr<nsPrefetchNode> node = new nsPrefetchNode(this, aURI, aReferrerURI,
@@ -704,7 +703,7 @@ NS_IMPL_ISUPPORTS(nsPrefetchService,
 nsresult
 nsPrefetchService::Preload(nsIURI *aURI,
                            nsIURI *aReferrerURI,
-                           nsIDOMNode *aSource,
+                           nsINode *aSource,
                            nsContentPolicyType aPolicyType)
 {
     NS_ENSURE_ARG_POINTER(aURI);
@@ -790,7 +789,7 @@ nsPrefetchService::Preload(nsIURI *aURI,
 nsresult
 nsPrefetchService::Prefetch(nsIURI *aURI,
                             nsIURI *aReferrerURI,
-                            nsIDOMNode *aSource,
+                            nsINode *aSource,
                             bool aExplicit)
 {
     NS_ENSURE_ARG_POINTER(aURI);
@@ -889,7 +888,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
 
 NS_IMETHODIMP
 nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
-                                            nsIDOMNode* aSource)
+                                            nsINode* aSource)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
@@ -932,7 +931,7 @@ nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
 
 #ifdef DEBUG
                 int32_t inx = node->mSources.IndexOf(source);
-                nsCOMPtr<nsIDOMNode> domNode =
+                nsCOMPtr<nsINode> domNode =
                     do_QueryReferent(node->mSources.ElementAt(inx));
                 MOZ_ASSERT(domNode);
 #endif
@@ -954,7 +953,7 @@ nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
 NS_IMETHODIMP
 nsPrefetchService::PreloadURI(nsIURI *aURI,
                               nsIURI *aReferrerURI,
-                              nsIDOMNode *aSource,
+                              nsINode *aSource,
                               nsContentPolicyType aPolicyType)
 {
     return Preload(aURI, aReferrerURI, aSource, aPolicyType);
@@ -963,7 +962,7 @@ nsPrefetchService::PreloadURI(nsIURI *aURI,
 NS_IMETHODIMP
 nsPrefetchService::PrefetchURI(nsIURI *aURI,
                                nsIURI *aReferrerURI,
-                               nsIDOMNode *aSource,
+                               nsINode *aSource,
                                bool aExplicit)
 {
     return Prefetch(aURI, aReferrerURI, aSource, aExplicit);

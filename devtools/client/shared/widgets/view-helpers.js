@@ -95,7 +95,7 @@ const ViewHelpers = exports.ViewHelpers = {
   /**
    * Convenience method, dispatching a custom event.
    *
-   * @param nsIDOMNode target
+   * @param Node target
    *        A custom target element to dispatch the event from.
    * @param string type
    *        The name of the event.
@@ -123,7 +123,7 @@ const ViewHelpers = exports.ViewHelpers = {
    *
    * @param object widget
    *        The widget to assign the methods to.
-   * @param nsIDOMNode node
+   * @param Node node
    *        A node to delegate the methods to.
    */
   delegateWidgetAttributeMethods: function(widget, node) {
@@ -140,7 +140,7 @@ const ViewHelpers = exports.ViewHelpers = {
    *
    * @param object widget
    *        The widget to assign the methods to.
-   * @param nsIDOMNode node
+   * @param Node node
    *        A node to delegate the methods to.
    */
   delegateWidgetEventMethods: function(widget, node) {
@@ -215,7 +215,7 @@ const ViewHelpers = exports.ViewHelpers = {
    *        - animated: true to display an animation on toggle
    *        - delayed: true to wait a few cycles before toggle
    *        - callback: a function to invoke when the toggle finishes
-   * @param nsIDOMNode pane
+   * @param Node pane
    *        The element representing the pane to toggle.
    */
   togglePane: function(flags, pane) {
@@ -313,7 +313,7 @@ const ViewHelpers = exports.ViewHelpers = {
 /**
  * A generic Item is used to describe children present in a Widget.
  *
- * This is basically a very thin wrapper around an nsIDOMNode, with a few
+ * This is basically a very thin wrapper around a Node, with a few
  * characteristics, like a `value` and an `attachment`.
  *
  * The characteristics are optional, and their meaning is entirely up to you.
@@ -324,7 +324,7 @@ const ViewHelpers = exports.ViewHelpers = {
  *
  * @param object ownerView
  *        The owner view creating this item.
- * @param nsIDOMNode element
+ * @param Node element
  *        A prebuilt node to be wrapped.
  * @param string value
  *        A string identifying the node.
@@ -353,8 +353,8 @@ Item.prototype = {
   /**
    * Immediately appends a child item to this item.
    *
-   * @param nsIDOMNode element
-   *        An nsIDOMNode representing the child element to append.
+   * @param Node element
+   *        A Node representing the child element to append.
    * @param object options [optional]
    *        Additional options or flags supported by this operation:
    *          - attachment: some attached primitive/object for the item
@@ -402,7 +402,7 @@ Item.prototype = {
    *
    * @param Item item
    *        The item describing a target element.
-   * @param nsIDOMNode element
+   * @param Node element
    *        The element displaying the item.
    */
   _entangleItem: function(item, element) {
@@ -479,17 +479,17 @@ Item.prototype = {
  *
  * Language:
  *   - An "item" is an instance of an Item.
- *   - An "element" or "node" is a nsIDOMNode.
+ *   - An "element" or "node" is a Node.
  *
  * The supplied widget can be any object implementing the following
  * methods:
- *   - function:nsIDOMNode insertItemAt(aIndex:number, aNode:nsIDOMNode,
+ *   - function:Node insertItemAt(aIndex:number, aNode:Node,
  *                                      aValue:string)
- *   - function:nsIDOMNode getItemAtIndex(aIndex:number)
- *   - function removeChild(aChild:nsIDOMNode)
+ *   - function:Node getItemAtIndex(aIndex:number)
+ *   - function removeChild(aChild:Node)
  *   - function removeAllItems()
- *   - get:nsIDOMNode selectedItem()
- *   - set selectedItem(aChild:nsIDOMNode)
+ *   - get:Node selectedItem()
+ *   - set selectedItem(aChild:Node)
  *   - function getAttribute(aName:string)
  *   - function setAttribute(aName:string, aValue:string)
  *   - function removeAttribute(aName:string)
@@ -499,7 +499,7 @@ Item.prototype = {
  *                                  aBubbleFlag:boolean)
  *
  * Optional methods that can be implemented by the widget:
- *   - function ensureElementIsVisible(aChild:nsIDOMNode)
+ *   - function ensureElementIsVisible(aChild:Node)
  *
  * Optional attributes that may be handled (when calling
  * get/set/removeAttribute):
@@ -514,7 +514,7 @@ Item.prototype = {
 const WidgetMethods = exports.WidgetMethods = {
   /**
    * Sets the element node or widget associated with this container.
-   * @param nsIDOMNode | object widget
+   * @param Node | object widget
    */
   set widget(widget) {
     this._widget = widget;
@@ -534,7 +534,7 @@ const WidgetMethods = exports.WidgetMethods = {
 
   /**
    * Gets the element node or widget associated with this container.
-   * @return nsIDOMNode | object
+   * @return Node | object
    */
   get widget() {
     return this._widget;
@@ -555,7 +555,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * "index" flags are mutually exclusive, meaning that all staged items
    * will always be appended.
    *
-   * @param nsIDOMNode element
+   * @param Node element
    *        A prebuilt node to be wrapped.
    * @param string value
    *        A string identifying the node.
@@ -1169,7 +1169,7 @@ const WidgetMethods = exports.WidgetMethods = {
   /**
    * Gets the currently focused element in this container.
    *
-   * @return nsIDOMNode
+   * @return Node
    *         The focused element, or null if nothing is found.
    */
   get _focusedElement() {
@@ -1207,7 +1207,7 @@ const WidgetMethods = exports.WidgetMethods = {
   /**
    * Gets the item in the container associated with the specified element.
    *
-   * @param nsIDOMNode element
+   * @param Node element
    *        The element used to identify the item.
    * @param object flags [optional]
    *        Additional options for showing the source. Supported options:
@@ -1288,7 +1288,7 @@ const WidgetMethods = exports.WidgetMethods = {
   /**
    * Finds the index of an element in the container.
    *
-   * @param nsIDOMNode element
+   * @param Node element
    *        The element get the index for.
    * @return number
    *         The index of the matched element, or -1 if nothing is found.
@@ -1450,7 +1450,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *
    * @param Item item
    *        The item describing a target element.
-   * @param nsIDOMNode element
+   * @param Node element
    *        The element displaying the item.
    */
   _entangleItem: function(item, element) {
