@@ -53,18 +53,18 @@ private:
 
     nsresult Prefetch(nsIURI *aURI,
                       nsIURI *aReferrerURI,
-                      nsIDOMNode *aSource,
+                      nsINode *aSource,
                       bool aExplicit);
 
     nsresult Preload(nsIURI *aURI,
                      nsIURI *aReferrerURI,
-                     nsIDOMNode *aSource,
+                     nsINode *aSource,
                      nsContentPolicyType aPolicyType);
 
     void     AddProgressListener();
     void     RemoveProgressListener();
     nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI,
-                        nsIDOMNode *aSource, nsPrefetchNode **node);
+                        nsINode *aSource, nsPrefetchNode **node);
     void     EmptyPrefetchQueue();
 
     void     StartPrefetching();
@@ -108,7 +108,7 @@ public:
     nsPrefetchNode(nsPrefetchService *aPrefetchService,
                    nsIURI *aURI,
                    nsIURI *aReferrerURI,
-                   nsIDOMNode *aSource,
+                   nsINode *aSource,
                    nsContentPolicyType aPolicyType,
                    bool aPreload);
 

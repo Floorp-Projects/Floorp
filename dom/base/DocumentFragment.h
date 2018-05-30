@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
-#include "nsIDOMNode.h"
 #include "nsStringFwd.h"
 
 class nsAtom;
@@ -22,8 +21,7 @@ namespace dom {
 
 class Element;
 
-class DocumentFragment : public FragmentOrElement,
-                         public nsIDOMNode
+class DocumentFragment : public FragmentOrElement
 {
 private:
   void Init()
@@ -64,8 +62,6 @@ public:
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
-
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

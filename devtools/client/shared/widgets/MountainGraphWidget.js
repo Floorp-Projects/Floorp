@@ -50,7 +50,7 @@ const GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
  *   ]
  * where the [ymn] values is assumed to aready be normalized from [0..1].
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the graph.
  */
 this.MountainGraphWidget = function(parent, ...args) {

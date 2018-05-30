@@ -82,7 +82,7 @@ StackFramesClassicListView.prototype = extend(WidgetMethods, {
    *        The frame line number.
    * @param number aDepth
    *        The frame depth in the stack.
-   * @return nsIDOMNode
+   * @return Node
    *         The stack frame view.
    */
   _createFrameView: function (aTitle, aUrl, aLine, aDepth) {

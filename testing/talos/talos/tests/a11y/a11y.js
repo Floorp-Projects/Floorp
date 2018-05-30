@@ -1,11 +1,10 @@
-/* globals acc:true, gAccService:true, nsIAccessible:true, nsIDOMNode:true */
+/* globals gAccService:true, nsIAccessible:true */
 gAccService = 0;
 
 // Make sure not to touch Components before potentially invoking enablePrivilege,
 // because otherwise it won't be there.
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 nsIAccessible = Ci.nsIAccessible;
-nsIDOMNode = Ci.nsIDOMNode;
 
 function initAccessibility() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -20,64 +19,38 @@ function initAccessibility() {
   return gAccService;
 }
 
-function getAccessible(aAccOrElmOrID, aInterfaces) {
-  if (!aAccOrElmOrID) {
-    return null;
-  }
-
-  var elm = null;
-
-  if (aAccOrElmOrID instanceof nsIAccessible) {
-    elm = aAccOrElmOrID.DOMNode;
-
-  } else if (aAccOrElmOrID instanceof nsIDOMNode) {
-    elm = aAccOrElmOrID;
-
-  } else {
-    elm = document.getElementById(aAccOrElmOrID);
-  }
-
-  var acc = (aAccOrElmOrID instanceof nsIAccessible) ? aAccOrElmOrID : null;
-  if (!acc) {
-    try {
-      acc = gAccService.getAccessibleFor(elm);
-    } catch (e) {
-    }
-  }
-
-  if (!aInterfaces) {
-    return acc;
-  }
-
-  if (aInterfaces instanceof Array) {
-    for (var index = 0; index < aInterfaces.length; index++) {
-      try {
-        acc.QueryInterface(aInterfaces[index]);
-      } catch (e) {
-      }
-    }
-    return acc;
-  }
-
+function getAccessible(aNode) {
   try {
-    acc.QueryInterface(aInterfaces);
+    return gAccService.getAccessibleFor(aNode);
   } catch (e) {
   }
 
-  return acc;
+  return null;
 }
 
-// Walk accessible tree of the given identifier to ensure tree creation
-function ensureAccessibleTree(aAccOrElmOrID) {
-  acc = getAccessible(aAccOrElmOrID);
+function ensureAccessibleTreeForNode(aNode) {
+  var acc = getAccessible(aNode);
 
-  var child = acc.firstChild;
+  ensureAccessibleTreeForAccessible(acc);
+}
+
+function ensureAccessibleTreeForAccessible(aAccessible) {
+  var child = aAccessible.firstChild;
   while (child) {
-    ensureAccessibleTree(child);
+    ensureAccessibleTreeForAccessible(child);
     try {
       child = child.nextSibling;
     } catch (e) {
       child = null;
     }
   }
+}
+
+// Walk accessible tree of the given identifier to ensure tree creation
+function ensureAccessibleTreeForId(aID) {
+  var node = document.getElementById(aID);
+  if (!node) {
+    return;
+  }
+  ensureAccessibleTreeForNode(node);
 }

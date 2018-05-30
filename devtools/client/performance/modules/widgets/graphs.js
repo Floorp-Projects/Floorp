@@ -48,7 +48,7 @@ const OPTIMIZATIONS_GRAPH_RESOLUTION = 100;
 /**
  * A base class for performance graphs to inherit from.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the overview.
  * @param string metric
  *        The unit of measurement for this graph.
@@ -100,7 +100,7 @@ PerformanceGraph.prototype = extend(LineGraphWidget.prototype, {
 /**
  * Constructor for the framerate graph. Inherits from PerformanceGraph.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the overview.
  */
 function FramerateGraph(parent) {
@@ -118,7 +118,7 @@ FramerateGraph.prototype = extend(PerformanceGraph.prototype, {
 /**
  * Constructor for the memory graph. Inherits from PerformanceGraph.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the overview.
  */
 function MemoryGraph(parent) {
@@ -428,7 +428,7 @@ GraphsController.prototype = {
 /**
  * A base class for performance graphs to inherit from.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the overview.
  * @param string metric
  *        The unit of measurement for this graph.

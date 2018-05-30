@@ -16,6 +16,8 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
+
 public final class GeckoRuntimeSettings implements Parcelable {
     /**
      * Settings builder used to construct the settings object.
@@ -197,6 +199,21 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mCookieLifetimeDays.set(days);
             return this;
         }
+
+        /**
+         * Set tracking protection blocking categories.
+         *
+         * @param categories The categories of trackers that should be blocked.
+         *                   Use one or more of the
+         *                   {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
+         * @return This Builder instance.
+         **/
+        public @NonNull Builder trackingProtectionCategories(
+                @TrackingProtectionDelegate.Category int categories) {
+            mSettings.mTrackingProtection
+                     .set(TrackingProtection.buildPrefValue(categories));
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -246,14 +263,16 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "network.cookie.lifetimePolicy", COOKIE_LIFETIME_NORMAL);
     /* package */ Pref<Integer> mCookieLifetimeDays = new Pref<Integer>(
         "network.cookie.lifetime.days", 90);
+    /* package */ Pref<String> mTrackingProtection = new Pref<String>(
+        "urlclassifier.trackingTable", "");
 
     /* package */ boolean mNativeCrashReporting;
     /* package */ boolean mJavaCrashReporting;
     /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mJavaScript, mRemoteDebugging, mWebFonts,
-        mCookieBehavior, mCookieLifetime, mCookieLifetimeDays
+        mCookieBehavior, mCookieLifetime, mCookieLifetimeDays, mJavaScript,
+        mRemoteDebugging, mTrackingProtection, mWebFonts
     };
 
     /* package */ GeckoRuntimeSettings() {
@@ -517,6 +536,31 @@ public final class GeckoRuntimeSettings implements Parcelable {
                 "Setting expiration days for incompatible cookie lifetime");
         }
         mCookieLifetimeDays.set(days);
+        return this;
+    }
+
+    /**
+     * Get the set tracking protection blocking categories.
+     *
+     * @return categories The categories of trackers that are set to be blocked.
+     *                    Use one or more of the
+     *                    {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
+     **/
+    public @TrackingProtectionDelegate.Category int getTrackingProtectionCategories() {
+        return TrackingProtection.listToCategory(mTrackingProtection.get());
+    }
+
+    /**
+     * Set tracking protection blocking categories.
+     *
+     * @param categories The categories of trackers that should be blocked.
+     *                   Use one or more of the
+     *                   {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
+     * @return This GeckoRuntimeSettings instance.
+     **/
+    public @NonNull GeckoRuntimeSettings setTrackingProtectionCategories(
+            @TrackingProtectionDelegate.Category int categories) {
+        mTrackingProtection.set(TrackingProtection.buildPrefValue(categories));
         return this;
     }
 

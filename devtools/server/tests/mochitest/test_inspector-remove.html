@@ -28,7 +28,7 @@ function assertOwnership() {
 
 function ignoreNode(node) {
   // Duplicate the walker logic to skip blank nodes...
-  return node.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+  return node.nodeType === Node.TEXT_NODE &&
     !/[^\s]/.test(node.nodeValue);
 }
 

@@ -133,7 +133,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDragService.h"
 #include "nsIFormControl.h"
@@ -2071,10 +2070,7 @@ nsContentUtils::Shutdown()
 
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
- * considered 'safe' in that a user can operate on it and that it isn't
- * a js-object that implements nsIDOMNode.
- * Never call this function with the first node provided by script, it
- * must always be known to be a 'real' node!
+ * considered 'safe' in that a user can operate on it.
  */
 // static
 nsresult
@@ -2122,15 +2118,6 @@ nsContentUtils::CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
   // The subject doesn't subsume aPrincipal. Allow access only if the subject
   // is chrome.
   return IsCallerChrome();
-}
-
-// static
-bool
-nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, false);
-  return CanCallerAccess(node);
 }
 
 // static
@@ -2597,18 +2584,17 @@ nsContentUtils::GetAncestors(nsINode* aNode,
 
 // static
 nsresult
-nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
+nsContentUtils::GetAncestorsAndOffsets(nsINode* aNode,
                                        int32_t aOffset,
                                        nsTArray<nsIContent*>* aAncestorNodes,
                                        nsTArray<int32_t>* aAncestorOffsets)
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-
-  if (!content) {
+  if (!aNode->IsContent()) {
     return NS_ERROR_FAILURE;
   }
+  nsIContent* content = aNode->AsContent();
 
   if (!aAncestorNodes->IsEmpty()) {
     NS_WARNING("aAncestorNodes is not empty");
@@ -2621,7 +2607,7 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   }
 
   // insert the node itself
-  aAncestorNodes->AppendElement(content.get());
+  aAncestorNodes->AppendElement(content);
   aAncestorOffsets->AppendElement(aOffset);
 
   // insert all the ancestors
@@ -2635,25 +2621,6 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   }
 
   return NS_OK;
-}
-
-// static
-nsresult
-nsContentUtils::GetCommonAncestor(nsIDOMNode *aNode,
-                                  nsIDOMNode *aOther,
-                                  nsIDOMNode** aCommonAncestor)
-{
-  *aCommonAncestor = nullptr;
-
-  nsCOMPtr<nsINode> node1 = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> node2 = do_QueryInterface(aOther);
-
-  NS_ENSURE_TRUE(node1 && node2, NS_ERROR_UNEXPECTED);
-
-  nsINode* common = GetCommonAncestor(node1, node2);
-  NS_ENSURE_TRUE(common, NS_ERROR_NOT_AVAILABLE);
-
-  return CallQueryInterface(common, aCommonAncestor);
 }
 
 template <typename Node, typename GetParentFunc>
@@ -2800,18 +2767,6 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
   // XXX aOffset2 may be -1 as mentioned above.  So, why does this return it's
   //     *after* of the valid DOM point?
   return parent->ComputeIndexOf(child1) < aOffset2 ? -1 : 1;
-}
-
-/* static */
-int32_t
-nsContentUtils::ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
-                              nsIDOMNode* aParent2, int32_t aOffset2,
-                              bool* aDisconnected)
-{
-  nsCOMPtr<nsINode> parent1 = do_QueryInterface(aParent1);
-  nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
-  NS_ENSURE_TRUE(parent1 && parent2, -1);
-  return ComparePoints(parent1, aOffset1, parent2, aOffset2);
 }
 
 /* static */
@@ -4800,7 +4755,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent)
   if (HasMutationListeners(aChild,
         NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent)) {
     InternalMutationEvent mutation(true, eLegacyNodeRemoved);
-    mutation.mRelatedNode = do_QueryInterface(aParent);
+    mutation.mRelatedNode = aParent;
 
     mozAutoSubtreeModified subtree(aParent->OwnerDoc(), aParent);
     EventDispatcher::Dispatch(aChild, nullptr, &mutation);

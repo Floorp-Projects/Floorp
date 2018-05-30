@@ -14,7 +14,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
 #include "mozilla/BasicEvents.h"

@@ -6,7 +6,6 @@
 
 #include "nsTraversal.h"
 
-#include "nsIDOMNode.h"
 #include "nsError.h"
 #include "nsINode.h"
 #include "mozilla/AutoRestore.h"

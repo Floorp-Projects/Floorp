@@ -119,7 +119,7 @@ function getOffsetParent(node) {
  * Get the list of geometry properties that are actually set on the provided
  * node.
  *
- * @param {nsIDOMNode} node The node to analyze.
+ * @param {Node} node The node to analyze.
  * @return {Map} A map indexed by property name and where the value is an
  * object having the cssRule property.
  */

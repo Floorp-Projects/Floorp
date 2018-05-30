@@ -59,7 +59,6 @@
 #include "nsContainerFrame.h"
 #include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsWindowSizes.h"
 #include "nsCOMPtr.h"
@@ -2453,7 +2452,7 @@ DoCheckVisibility(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-PresShell::CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool *_retval)
+PresShell::CheckVisibility(nsINode *node, int16_t startOffset, int16_t EndOffset, bool *_retval)
 {
   if (!node || startOffset>EndOffset || !_retval || startOffset<0 || EndOffset<0)
     return NS_ERROR_INVALID_ARG;
@@ -5103,7 +5102,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
 }
 
 already_AddRefed<SourceSurface>
-PresShell::RenderNode(nsIDOMNode* aNode,
+PresShell::RenderNode(nsINode* aNode,
                       nsIntRegion* aRegion,
                       const LayoutDeviceIntPoint aPoint,
                       LayoutDeviceIntRect* aScreenRect,
@@ -5115,13 +5114,12 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   nsTArray<UniquePtr<RangePaintInfo>> rangeItems;
 
   // nothing to draw if the node isn't in a document
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node->IsInUncomposedDoc())
+  if (!aNode->IsInUncomposedDoc())
     return nullptr;
 
-  RefPtr<nsRange> range = new nsRange(node);
+  RefPtr<nsRange> range = new nsRange(aNode);
   IgnoredErrorResult rv;
-  range->SelectNode(*node, rv);
+  range->SelectNode(*aNode, rv);
   if (rv.Failed()) {
     return nullptr;
   }

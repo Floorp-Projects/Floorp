@@ -16,7 +16,7 @@ this.EXPORTED_SYMBOLS = ["SimpleListWidget"];
  * Note: this widget should be used in tandem with the WidgetMethods in
  * view-helpers.js.
  *
- * @param nsIDOMNode aNode
+ * @param Node aNode
  *        The element associated with the widget.
  */
 function SimpleListWidget(aNode) {
@@ -44,9 +44,9 @@ SimpleListWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @param nsIDOMNode aContents
+   * @param Node aContents
    *        The node displayed in the container.
-   * @return nsIDOMNode
+   * @return Node
    *         The element associated with the displayed item.
    */
   insertItemAt: function(aIndex, aContents) {
@@ -61,7 +61,7 @@ SimpleListWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @return nsIDOMNode
+   * @return Node
    *         The element associated with the displayed item.
    */
   getItemAtIndex: function(aIndex) {
@@ -71,7 +71,7 @@ SimpleListWidget.prototype = {
   /**
    * Immediately removes the specified child node from this container.
    *
-   * @param nsIDOMNode aChild
+   * @param Node aChild
    *        The element associated with the displayed item.
    */
   removeChild: function(aChild) {
@@ -100,7 +100,7 @@ SimpleListWidget.prototype = {
 
   /**
    * Gets the currently selected child node in this container.
-   * @return nsIDOMNode
+   * @return Node
    */
   get selectedItem() {
     return this._selectedItem;
@@ -108,7 +108,7 @@ SimpleListWidget.prototype = {
 
   /**
    * Sets the currently selected child node in this container.
-   * @param nsIDOMNode aChild
+   * @param Node aChild
    */
   set selectedItem(aChild) {
     let childNodes = this._list.childNodes;
@@ -161,7 +161,7 @@ SimpleListWidget.prototype = {
   /**
    * Ensures the specified element is visible.
    *
-   * @param nsIDOMNode aElement
+   * @param Node aElement
    *        The element to make visible.
    */
   ensureElementIsVisible: function(aElement) {

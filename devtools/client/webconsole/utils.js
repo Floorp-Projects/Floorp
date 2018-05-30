@@ -90,9 +90,9 @@ var WebConsoleUtils = {
   /**
    * Copies certain style attributes from one element to another.
    *
-   * @param nsIDOMNode from
+   * @param Node from
    *        The target node.
-   * @param nsIDOMNode to
+   * @param Node to
    *        The destination node.
    */
   copyTextStyles: function(from, to) {

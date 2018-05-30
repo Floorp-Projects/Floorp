@@ -1122,7 +1122,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLInputElement,
                                              nsIDOMNSEditableElement,
                                              nsIConstraintValidation)
 
-// nsIDOMNode
+// nsINode
 
 nsresult
 HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,

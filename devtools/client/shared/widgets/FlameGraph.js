@@ -123,7 +123,7 @@ const COLOR_PALLETTE = Array.from(Array(PALLETTE_SIZE)).map((_, i) => "hsla" +
  * Use `FlameGraphUtils` to convert profiler data (or any other data source)
  * into a drawable format.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the graph.
  * @param number sharpness [optional]
  *        Defaults to the current device pixel ratio.

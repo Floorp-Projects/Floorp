@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CharacterData.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsString.h"
 
@@ -26,8 +25,7 @@ namespace dom {
 // data. This is done simply for convenience and should be changed if
 // this restricts what should be done for character data.
 
-class DocumentType final : public CharacterData,
-                           public nsIDOMNode
+class DocumentType final : public CharacterData
 {
 public:
   DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
@@ -36,10 +34,7 @@ public:
                const nsAString& aInternalSubset);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  // Forwarded by base class
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(DocumentType, CharacterData)
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
@@ -58,8 +53,6 @@ public:
   virtual already_AddRefed<CharacterData>
     CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                   bool aCloneText) const override;
-
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
 
   // WebIDL API
   void GetName(nsAString& aName) const;

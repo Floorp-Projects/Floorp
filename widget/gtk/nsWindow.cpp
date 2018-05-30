@@ -26,7 +26,7 @@
 #include "prlink.h"
 #include "nsGTKToolkit.h"
 #include "nsIRollupListener.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 
 #include "nsWidgetsCID.h"
 #include "nsDragService.h"
@@ -2898,7 +2898,7 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
         bool shouldRollup = !dragSession;
         if (!shouldRollup) {
             // we also roll up when a drag is from a different application
-            nsCOMPtr<nsIDOMNode> sourceNode;
+            nsCOMPtr<nsINode> sourceNode;
             dragSession->GetSourceNode(getter_AddRefs(sourceNode));
             shouldRollup = (sourceNode == nullptr);
         }

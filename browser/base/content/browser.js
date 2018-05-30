@@ -6871,9 +6871,9 @@ var IndexedDBPromptHelper = {
       throw new Error("Unexpected topic!");
     }
 
-    var requestor = subject.QueryInterface(Ci.nsIInterfaceRequestor);
+    var request = subject.QueryInterface(Ci.nsIIDBPermissionsRequest);
 
-    var browser = requestor.getInterface(Ci.nsIDOMNode);
+    var browser = request.browserElement;
     if (browser.ownerGlobal != window) {
       // Only listen for notifications for browsers in our chrome window.
       return;
@@ -6890,7 +6890,7 @@ var IndexedDBPromptHelper = {
       responseTopic = this._permissionsResponse;
     }
 
-    var observer = requestor.getInterface(Ci.nsIObserver);
+    var observer = request.responseObserver;
 
     var mainAction = {
       label: gNavigatorBundle.getString("offlineApps.allowStoring.label"),

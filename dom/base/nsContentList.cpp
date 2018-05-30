@@ -12,7 +12,6 @@
 
 #include "nsContentList.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Element.h"
 #include "nsWrapperCacheInlines.h"
