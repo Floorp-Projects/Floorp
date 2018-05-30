@@ -229,6 +229,16 @@ public:
                   RecursiveMutex& aTreeMutex);
   void Clear();
 
+  // Convenience operators to simplify the using code.
+  explicit operator bool() const { return !!mNode; }
+  bool operator!() const { return !mNode; }
+  HitTestingTreeNode* operator->() const { return mNode.get(); }
+
+  // Allow getting back a raw pointer to the node, but only inside the scope
+  // of the tree lock. The caller is responsible for ensuring that they do not
+  // use the raw pointer outside that scope.
+  HitTestingTreeNode* Get(mozilla::RecursiveMutexAutoLock& aProofOfTreeLock) const { return mNode.get(); }
+
 private:
   RefPtr<HitTestingTreeNode> mNode;
   RecursiveMutex* mTreeMutex;
