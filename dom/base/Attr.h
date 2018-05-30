@@ -79,8 +79,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
                                                                    nsIAttribute)
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

@@ -269,8 +269,6 @@ public:
   MOZ_CAN_RUN_SCRIPT
   nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
 public:
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
