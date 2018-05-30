@@ -273,23 +273,6 @@ PaymentRequestManager::GetPaymentChild(PaymentRequest* aRequest,
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
 
-  // Only one payment request can interact with user at the same time.
-  // Before we create a new PaymentRequestChild, make sure there is no other
-  // payment request are interacting on the same tab.
-  for (auto iter = mPaymentChildHash.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<PaymentRequest> request = iter.Key();
-    if (request->Equals(requestId)) {
-      continue;
-    }
-    nsPIDOMWindowInner* requestOwner = request->GetOwner();
-    NS_ENSURE_TRUE(requestOwner, NS_ERROR_FAILURE);
-    TabChild* tmpChild = TabChild::GetFrom(requestOwner->GetDocShell());
-    NS_ENSURE_TRUE(tmpChild, NS_ERROR_FAILURE);
-    if (tmpChild->GetTabId() == tabChild->GetTabId()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   paymentChild = new PaymentRequestChild();
   tabChild->SendPPaymentRequestConstructor(paymentChild);
   if (!mPaymentChildHash.Put(aRequest, paymentChild, mozilla::fallible) ) {
