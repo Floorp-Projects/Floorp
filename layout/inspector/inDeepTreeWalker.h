@@ -10,7 +10,7 @@
 #include "inIDeepTreeWalker.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsTArray.h"
 
 class nsINodeList;
@@ -23,13 +23,13 @@ public:
 
   inDeepTreeWalker();
 
-  nsresult SetCurrentNode(nsIDOMNode* aCurrentNode,
+  nsresult SetCurrentNode(nsINode* aCurrentNode,
                           nsINodeList* aSiblings);
 protected:
   virtual ~inDeepTreeWalker();
 
-  already_AddRefed<nsIDOMNode> GetParent();
-  nsresult EdgeChild(nsIDOMNode** _retval, bool aReverse);
+  already_AddRefed<nsINode> GetParent();
+  nsresult EdgeChild(nsINode** _retval, bool aReverse);
 
   bool mShowAnonymousContent;
   bool mShowSubDocuments;
@@ -37,8 +37,8 @@ protected:
 
   // The root node. previousNode and parentNode will return
   // null from here.
-  nsCOMPtr<nsIDOMNode> mRoot;
-  nsCOMPtr<nsIDOMNode> mCurrentNode;
+  nsCOMPtr<nsINode> mRoot;
+  nsCOMPtr<nsINode> mCurrentNode;
 
   // We cache the siblings of mCurrentNode as a list of nodes.
   // Notes: normally siblings are all the children of the parent

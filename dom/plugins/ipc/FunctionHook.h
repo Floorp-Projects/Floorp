@@ -100,7 +100,7 @@ public:
   BasicFunctionHook(const char* aModuleName,
                     const char* aFunctionName, FunctionType* aOldFunction,
                     FunctionType* aNewFunction) :
-    mOldFunction(aOldFunction), mIsHooked(false), mModuleName(aModuleName),
+    mOldFunction(aOldFunction), mRegistration(UNREGISTERED), mModuleName(aModuleName),
     mFunctionName(aFunctionName), mNewFunction(aNewFunction)
   {
     MOZ_ASSERT(mOldFunction);
@@ -129,8 +129,9 @@ protected:
   // a function that performs the old behavior.  Before that, it is a pointer to
   // the original function.
   FunctionType* mOldFunction;
-  // True if we have already hooked the function.
-  bool mIsHooked;
+
+  enum RegistrationStatus { UNREGISTERED, FAILED, SUCCEEDED };
+  RegistrationStatus mRegistration;
 
   // The name of the module containing the function to hook.  E.g. "user32.dll".
   const nsCString mModuleName;
@@ -153,10 +154,14 @@ BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
 {
   MOZ_RELEASE_ASSERT(XRE_IsPluginProcess());
 
-  // If we have already hooked or if quirks tell us not to then don't hook.
-  if (mIsHooked || !mShouldHook(aQuirks)) {
+  // If we have already attempted to hook this function or if quirks tell us
+  // not to then don't hook.
+  if (mRegistration != UNREGISTERED || !mShouldHook(aQuirks)) {
     return true;
   }
+
+  bool isHooked = false;
+  mRegistration = FAILED;
 
 #if defined(XP_WIN)
   WindowsDllInterceptor* dllInterceptor =
@@ -165,16 +170,19 @@ BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
     return false;
   }
 
-  mIsHooked =
+  isHooked =
     dllInterceptor->AddHook(mFunctionName.Data(), reinterpret_cast<intptr_t>(mNewFunction),
                             reinterpret_cast<void**>(&mOldFunction));
 #endif
 
+  if (isHooked) {
+    mRegistration = SUCCEEDED;
+  }
   HOOK_LOG(LogLevel::Debug,
            ("Registering to intercept function '%s' : '%s'", mFunctionName.Data(),
-            SuccessMsg(mIsHooked)));
+            SuccessMsg(isHooked)));
 
-  return mIsHooked;
+  return isHooked;
 }
 
 }

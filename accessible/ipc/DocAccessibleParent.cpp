@@ -94,7 +94,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   uint32_t type = nsIAccessibleEvent::EVENT_SHOW;
   xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-  nsIDOMNode* node = nullptr;
+  nsINode* node = nullptr;
   RefPtr<xpcAccEvent> event = new xpcAccEvent(type, xpcAcc, doc, node,
                                               aFromUser);
   nsCoreUtils::DispatchAccEvent(Move(event));
@@ -185,7 +185,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
     ProxyAccessible* prev = root->PrevSibling();
     xpcAccessibleGeneric* xpcPrev = prev ? GetXPCAccessible(prev) : nullptr;
     xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-    nsIDOMNode* node = nullptr;
+    nsINode* node = nullptr;
     event = new xpcAccHideEvent(type, xpcAcc, doc, node, aFromUser, xpcParent,
                                 xpcNext, xpcPrev);
   }
@@ -223,7 +223,7 @@ DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
 
   xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-  nsIDOMNode* node = nullptr;
+  nsINode* node = nullptr;
   bool fromUser = true; // XXX fix me
   RefPtr<xpcAccEvent> event = new xpcAccEvent(aEventType, xpcAcc, doc, node,
                                               fromUser);
@@ -259,7 +259,7 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
   bool extra;
   uint32_t state = nsAccUtils::To32States(aState, &extra);
   bool fromUser = true; // XXX fix this
-  nsIDOMNode* node = nullptr; // XXX can we do better?
+  nsINode* node = nullptr; // XXX can we do better?
   RefPtr<xpcAccStateChangeEvent> event =
     new xpcAccStateChangeEvent(type, xpcAcc, doc, node, fromUser, state, extra,
                                aEnabled);
@@ -297,7 +297,7 @@ DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID,
 
   xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-  nsIDOMNode* node = nullptr;
+  nsINode* node = nullptr;
   bool fromUser = true; // XXX fix me
   uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED;
   RefPtr<xpcAccCaretMoveEvent> event =
@@ -335,7 +335,7 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
   uint32_t type = aIsInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED :
                               nsIAccessibleEvent::EVENT_TEXT_REMOVED;
-  nsIDOMNode* node = nullptr;
+  nsINode* node = nullptr;
   RefPtr<xpcAccTextChangeEvent> event =
     new xpcAccTextChangeEvent(type, xpcAcc, doc, node, aFromUser, aStart, aLen,
                               aIsInsert, aStr);
@@ -745,7 +745,7 @@ DocAccessibleParent::RecvFocusEvent(const uint64_t& aID,
 
   xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-  nsIDOMNode* node = nullptr;
+  nsINode* node = nullptr;
   bool fromUser = true; // XXX fix me
   RefPtr<xpcAccEvent> event = new xpcAccEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                               xpcAcc, doc, node, fromUser);

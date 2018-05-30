@@ -12,7 +12,6 @@
 #include "nsBindingManager.h"
 #include "nsEscape.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsIDOMNode.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {

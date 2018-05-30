@@ -10,9 +10,10 @@ interface nsILoadGroup;
 interface nsIWebSocketListener;
 interface nsIInputStream;
 interface nsILoadInfo;
-interface nsIDOMNode;
 interface nsIPrincipal;
 interface nsITransportProvider;
+
+webidl Node;
 
 #include "nsISupports.idl"
 
@@ -88,7 +89,7 @@ interface nsIWebSocketChannel : nsISupports
      * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
      * But less error prone is to just supply a loadingNode.
      */
-     [must_use] void initLoadInfo(in nsIDOMNode aLoadingNode,
+     [must_use] void initLoadInfo(in Node aLoadingNode,
                                   in nsIPrincipal aLoadingPrincipal,
                                   in nsIPrincipal aTriggeringPrincipal,
                                   in unsigned long aSecurityFlags,

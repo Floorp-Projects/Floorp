@@ -1257,11 +1257,10 @@ function Update(update) {
     return;
   }
 
-  const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
   let patch;
   for (let i = 0; i < update.childNodes.length; ++i) {
     let patchElement = update.childNodes.item(i);
-    if (patchElement.nodeType != ELEMENT_NODE ||
+    if (patchElement.nodeType != patchElement.ELEMENT_NODE ||
         patchElement.localName != "patch") {
       continue;
     }
@@ -2589,11 +2588,10 @@ UpdateManager.prototype = {
       var doc = parser.parseFromStream(fileStream, "UTF-8",
                                        fileStream.available(), "text/xml");
 
-      const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
       var updateCount = doc.documentElement.childNodes.length;
       for (var i = 0; i < updateCount; ++i) {
         var updateElement = doc.documentElement.childNodes.item(i);
-        if (updateElement.nodeType != ELEMENT_NODE ||
+        if (updateElement.nodeType != updateElement.ELEMENT_NODE ||
             updateElement.localName != "update")
           continue;
 
@@ -3022,11 +3020,10 @@ Checker.prototype = {
                       updatesElement.nodeName);
     }
 
-    const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
     var updates = [];
     for (var i = 0; i < updatesElement.childNodes.length; ++i) {
       var updateElement = updatesElement.childNodes.item(i);
-      if (updateElement.nodeType != ELEMENT_NODE ||
+      if (updateElement.nodeType != updateElement.ELEMENT_NODE ||
           updateElement.localName != "update")
         continue;
 

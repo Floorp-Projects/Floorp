@@ -25,6 +25,7 @@ class Row;
 namespace mozilla {
 namespace dom {
 class DataTransfer;
+class Element;
 class TreeBoxObject;
 } // namespace dom
 } // namespace mozilla
@@ -36,6 +37,7 @@ class nsTreeContentView final : public nsITreeView,
                                 public nsStubDocumentObserver,
                                 public nsWrapperCache
 {
+  typedef mozilla::dom::Element Element;
   public:
     nsTreeContentView(void);
 
@@ -112,9 +114,8 @@ class nsTreeContentView final : public nsITreeView,
                              nsTreeColumn& aColumn)
     {
     }
-    mozilla::dom::Element* GetItemAtIndex(int32_t aRow,
-                                          mozilla::ErrorResult& aError);
-    int32_t GetIndexOfItem(mozilla::dom::Element* aItem);
+    Element* GetItemAtIndex(int32_t aRow, mozilla::ErrorResult& aError);
+    int32_t GetIndexOfItem(Element* aItem);
 
     NS_DECL_NSITREEVIEW
 
@@ -172,14 +173,14 @@ class nsTreeContentView final : public nsITreeView,
     void Drop(int32_t aRow, int32_t aOrientation, mozilla::ErrorResult& aError);
 
     // Content helpers.
-    mozilla::dom::Element* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
+    Element* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
 
   private:
     bool IsValidRowIndex(int32_t aRowIndex);
 
     nsCOMPtr<nsITreeBoxObject>          mBoxObject;
     nsCOMPtr<nsITreeSelection>          mSelection;
-    nsCOMPtr<nsIContent>                mRoot;
+    nsCOMPtr<Element>                   mRoot;
     nsCOMPtr<nsIContent>                mBody;
     nsIDocument*                        mDocument;      // WEAK
     nsTArray<mozilla::UniquePtr<Row>>   mRows;

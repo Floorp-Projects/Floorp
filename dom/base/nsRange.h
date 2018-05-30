@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsINode.h"
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsLayoutUtils.h"
 #include "prmon.h"
 #include "nsStubMutationObserver.h"

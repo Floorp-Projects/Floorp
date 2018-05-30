@@ -80,7 +80,6 @@ class nsIContentViewer;
 class nsIController;
 class nsIDocShellTreeOwner;
 class nsIDocument;
-class nsIDOMNode;
 class nsIGlobalHistory2;
 class nsIHttpChannel;
 class nsIMutableArray;

@@ -25,7 +25,6 @@
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"

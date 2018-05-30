@@ -10,9 +10,8 @@
 #include "nsIScriptableRegion.idl"
 #include "nsIContentPolicy.idl"
 
-interface nsIDOMNode;
-
 webidl DragEvent;
+webidl Node;
 webidl Selection;
 
 %{C++
@@ -54,7 +53,7 @@ interface nsIDragService : nsISupports
     *           passed to the loadInfo when creating a new channel
     *           (defaults to TYPE_OTHER)
     */
-  void invokeDragSession (in nsIDOMNode aDOMNode,
+  void invokeDragSession (in Node aDOMNode,
                           in AUTF8String aPrincipalURISpec,
                           in nsIArray aTransferables, 
                           in nsIScriptableRegion aRegion,
@@ -89,12 +88,12 @@ interface nsIDragService : nsISupports
    * event are needed to calculate the image location.
    */
   [noscript]
-  void invokeDragSessionWithImage(in nsIDOMNode aDOMNode,
+  void invokeDragSessionWithImage(in Node aDOMNode,
                                   in AUTF8String aPrincipalURISpec,
                                   in nsIArray aTransferableArray,
                                   in nsIScriptableRegion aRegion,
                                   in unsigned long aActionType,
-                                  in nsIDOMNode aImage,
+                                  in Node aImage,
                                   in long aImageX,
                                   in long aImageY,
                                   in DragEvent aDragEvent,

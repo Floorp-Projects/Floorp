@@ -67,7 +67,7 @@ add_task(async function() {
   function hoverComment() {
     info("Hovering the comment node in the markup view");
     for (let [node, container] of markupView._containers) {
-      if (node.nodeType === Ci.nsIDOMNode.COMMENT_NODE) {
+      if (node.nodeType === Node.COMMENT_NODE) {
         return hoverContainer(container);
       }
     }
@@ -77,7 +77,7 @@ add_task(async function() {
   function hoverTextNode(text) {
     info(`Hovering the text node "${text}" in the markup view`);
     let container = [...markupView._containers].filter(([nodeFront]) => {
-      return nodeFront.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+      return nodeFront.nodeType === Node.TEXT_NODE &&
              nodeFront._form.nodeValue.trim() === text.trim();
     })[0][1];
     return hoverContainer(container);

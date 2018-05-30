@@ -13,12 +13,14 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 function handleThreadState(toolbox, event, packet) {
   // Suppress interrupted events by default because the thread is
   // paused/resumed a lot for various actions.
-  if (event !== "paused" || packet.why.type !== "interrupted") {
-    // TODO: Bug 1225492, we continue emitting events on the target
-    // like we used to, but we should emit these only on the
-    // threadClient now.
-    toolbox.target.emit("thread-" + event);
+  if (event === "paused" && packet.why.type === "interrupted") {
+    return;
   }
+
+  // TODO: Bug 1225492, we continue emitting events on the target
+  // like we used to, but we should emit these only on the
+  // threadClient now.
+  toolbox.target.emit("thread-" + event);
 
   if (event === "paused") {
     toolbox.highlightTool("jsdebugger");

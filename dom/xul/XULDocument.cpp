@@ -1503,7 +1503,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 
 //----------------------------------------------------------------------
 //
-// nsIDOMNode interface
+// nsINode interface
 //
 
 nsresult

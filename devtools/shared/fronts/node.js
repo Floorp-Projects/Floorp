@@ -226,7 +226,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     }
   },
 
-  // Some accessors to make NodeFront feel more like an nsIDOMNode
+  // Some accessors to make NodeFront feel more like a Node
 
   get id() {
     return this.getAttribute("id");
@@ -453,7 +453,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   },
 
   /**
-   * Get an nsIDOMNode for the given node front.  This only works locally,
+   * Get a Node for the given node front.  This only works locally,
    * and is only intended as a stopgap during the transition to the remote
    * protocol.  If you depend on this you're likely to break soon.
    */

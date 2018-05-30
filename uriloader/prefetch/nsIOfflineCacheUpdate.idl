@@ -7,7 +7,6 @@
 
 interface mozIDOMWindow;
 interface nsIURI;
-interface nsIDOMNode;
 interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;

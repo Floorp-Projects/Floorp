@@ -177,7 +177,7 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent)
 }
 
 NS_IMETHODIMP
-xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
+xpcAccessible::GetDOMNode(nsINode** aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nullptr;
@@ -185,9 +185,8 @@ xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
   if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsINode* node = Intl()->GetNode();
-  if (node)
-    CallQueryInterface(node, aDOMNode);
+  nsCOMPtr<nsINode> node = Intl()->GetNode();
+  node.forget(aDOMNode);
 
   return NS_OK;
 }

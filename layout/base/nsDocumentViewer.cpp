@@ -2885,7 +2885,7 @@ NS_IMETHODIMP nsDocumentViewer::GetCanGetContents(bool *aCanGetContents)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsIDOMNode* aNode)
+NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsINode* aNode)
 {
   nsIDocument* document = GetDocument();
   NS_ENSURE_STATE(document);
@@ -2896,12 +2896,11 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsIDOMNode* aNode)
   nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
   NS_ENSURE_STATE(root);
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  root->SetPopupNode(node);
+  root->SetPopupNode(aNode);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsIDOMNode* aNode)
+NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsINode* aNode)
 {
   NS_ENSURE_ARG(aNode);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);

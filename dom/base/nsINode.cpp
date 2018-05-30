@@ -1377,7 +1377,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
     if (nsContentUtils::HasMutationListeners(aKid,
           NS_EVENT_BITS_MUTATION_NODEINSERTED, this)) {
       InternalMutationEvent mutation(true, eLegacyNodeInserted);
-      mutation.mRelatedNode = do_QueryInterface(this);
+      mutation.mRelatedNode = this;
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
       (new AsyncEventDispatcher(aKid, mutation))->RunDOMEventWhenSafe();

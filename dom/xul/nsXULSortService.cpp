@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -339,23 +338,18 @@ XULSortServiceImpl::CompareValues(const nsAString& aLeft,
 }
 
 NS_IMETHODIMP
-XULSortServiceImpl::Sort(nsIDOMNode* aNode,
+XULSortServiceImpl::Sort(Element* aNode,
                          const nsAString& aSortKey,
                          const nsAString& aSortHints)
 {
-  // get root content node
-  nsCOMPtr<Element> sortNode = do_QueryInterface(aNode);
-  if (!sortNode)
-    return NS_ERROR_FAILURE;
-
   nsSortState sortState;
-  nsresult rv = InitializeSortState(sortNode, sortNode,
+  nsresult rv = InitializeSortState(aNode, aNode,
                                     aSortKey, aSortHints, &sortState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // store sort info in attributes on content
-  SetSortHints(sortNode, &sortState);
-  rv = SortContainer(sortNode, &sortState);
+  SetSortHints(aNode, &sortState);
+  rv = SortContainer(aNode, &sortState);
 
   return rv;
 }

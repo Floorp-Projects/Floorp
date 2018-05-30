@@ -5,7 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsIDOMNode;
+
+webidl Node;
 
 /**
  * nsISessionStore keeps track of the current browsing state.
@@ -41,13 +42,13 @@ interface nsISessionStore : nsISupports
    * @param aCloseTabData is the data of the tab to be restored.
    * @returns a reference to the reopened tab.
    */
-  nsIDOMNode undoCloseTab(in nsIDOMWindow aWindow, in jsval aCloseTabData);
+  Node undoCloseTab(in nsIDOMWindow aWindow, in jsval aCloseTabData);
 
   /**
    * @param aWindow is the browser window associated with the closed tab.
    * @param aIndex  is the index of the closed tab to be removed (FIFO ordered).
    */
-  nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+  Node forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
 
   /**
    * Whether the "Undo close tab" message should be shown or not after a tab has been closed.

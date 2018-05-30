@@ -53,7 +53,7 @@ function dumpFragment(aFragment) {
  * @param aContextNode The context node to apply the XPath to.
  * @param aPath        The XPath to use.
  *
- * @return nsIDOMNode  The target node retrieved from the XPath.
+ * @return Node  The target node retrieved from the XPath.
  */
 function evalXPathInDocumentFragment(aContextNode, aPath) {
   Assert.equal(ChromeUtils.getClassName(aContextNode), "DocumentFragment");
@@ -241,7 +241,7 @@ function do_extract_test(doc) {
        them.
 
        After the range's extraction or deletion is done, we use
-       nsIDOMNode.isEqualNode() between the altered source fragment and the
+       Node.isEqualNode() between the altered source fragment and the
        result fragment.  We also run isEqualNode() between the extracted
        fragment and the fragment from the baseExtract node.  If they are not
        equal, we have failed a test.

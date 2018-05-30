@@ -108,7 +108,7 @@ xpcAccessibilityService::GetApplicationAccessible(nsIAccessible** aAccessibleApp
 }
 
 NS_IMETHODIMP
-xpcAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
+xpcAccessibilityService::GetAccessibleFor(nsINode *aNode,
                                           nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
@@ -117,19 +117,14 @@ xpcAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  if (!node) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   nsAccessibilityService* accService = GetAccService();
   if (!accService) {
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
   }
 
-  DocAccessible* document = accService->GetDocAccessible(node->OwnerDoc());
+  DocAccessible* document = accService->GetDocAccessible(aNode->OwnerDoc());
   if (document) {
-    NS_IF_ADDREF(*aAccessible = ToXPC(document->GetAccessible(node)));
+    NS_IF_ADDREF(*aAccessible = ToXPC(document->GetAccessible(aNode)));
   }
 
   return NS_OK;
@@ -187,18 +182,13 @@ xpcAccessibilityService::GetStringRelationType(uint32_t aRelationType,
 }
 
 NS_IMETHODIMP
-xpcAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
+xpcAccessibilityService::GetAccessibleFromCache(nsINode* aNode,
                                                 nsIAccessible** aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
   if (!aNode) {
     return NS_OK;
-  }
-
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  if (!node) {
-    return NS_ERROR_INVALID_ARG;
   }
 
   nsAccessibilityService* accService = GetAccService();
@@ -212,9 +202,9 @@ xpcAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   // document accessibles are not stored in the document cache, however an
   // "unofficially" shutdown document (i.e. not from DocManager) can still
   // exist in the document cache.
-  Accessible* accessible = accService->FindAccessibleInCache(node);
+  Accessible* accessible = accService->FindAccessibleInCache(aNode);
   if (!accessible) {
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(aNode));
     if (document) {
       accessible = mozilla::a11y::GetExistingDocAccessible(document);
     }
