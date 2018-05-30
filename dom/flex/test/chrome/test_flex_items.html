@@ -41,7 +41,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
+const TEXT_NODE = Node.TEXT_NODE;
 
 function testItemMatchesExpectedValues(item, values, index) {
   if (typeof(values.node) != "undefined") {
