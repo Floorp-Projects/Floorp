@@ -13,7 +13,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
-#include "nsIDOMNode.h"
 #include "nsDebug.h"
 
 class nsNodeInfoManager;
@@ -21,8 +20,7 @@ class nsNodeInfoManager;
 /**
  * Class used to implement DOM text nodes
  */
-class nsTextNode : public mozilla::dom::Text,
-                   public nsIDOMNode
+class nsTextNode : public mozilla::dom::Text
 {
 private:
   void Init()

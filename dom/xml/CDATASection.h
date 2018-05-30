@@ -9,13 +9,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
-#include "nsIDOMNode.h"
 
 namespace mozilla {
 namespace dom {
 
-class CDATASection final : public Text,
-                           public nsIDOMNode
+class CDATASection final : public Text
 {
 private:
   void Init()
@@ -42,7 +40,7 @@ public:
   }
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CDATASection, Text)
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

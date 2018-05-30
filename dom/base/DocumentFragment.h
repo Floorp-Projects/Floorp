@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
-#include "nsIDOMNode.h"
 #include "nsStringFwd.h"
 
 class nsAtom;
@@ -22,8 +21,7 @@ namespace dom {
 
 class Element;
 
-class DocumentFragment : public FragmentOrElement,
-                         public nsIDOMNode
+class DocumentFragment : public FragmentOrElement
 {
 private:
   void Init()

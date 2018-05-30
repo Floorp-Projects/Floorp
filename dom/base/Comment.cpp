@@ -23,8 +23,6 @@ Comment::~Comment()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode)
-
 already_AddRefed<CharacterData>
 Comment::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {

@@ -9,13 +9,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CharacterData.h"
-#include "nsIDOMNode.h"
 
 namespace mozilla {
 namespace dom {
 
-class Comment final : public CharacterData,
-                      public nsIDOMNode
+class Comment final : public CharacterData
 {
 private:
   void Init()
@@ -42,7 +40,7 @@ public:
   NS_IMPL_FROMNODE_HELPER(Comment, IsComment())
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(Comment, CharacterData)
 
   virtual already_AddRefed<CharacterData>
     CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
