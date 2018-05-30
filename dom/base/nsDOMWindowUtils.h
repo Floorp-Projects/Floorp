@@ -44,7 +44,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRANSLATIONNODELIST
 
-  void AppendElement(nsIDOMNode* aElement, bool aIsRoot)
+  void AppendElement(nsINode* aElement, bool aIsRoot)
   {
     mNodes.AppendElement(aElement);
     mNodeIsRoot.AppendElement(aIsRoot);
@@ -54,7 +54,7 @@ public:
 private:
   ~nsTranslationNodeList() {}
 
-  nsTArray<nsCOMPtr<nsIDOMNode> > mNodes;
+  nsTArray<nsCOMPtr<nsINode> > mNodes;
   nsTArray<bool> mNodeIsRoot;
   uint32_t mLength;
 };
