@@ -118,6 +118,8 @@ module.exports = {
       case "AssignmentExpression":
         return this.getASTSource(node.left) + " = " +
           this.getASTSource(node.right);
+      case "BinaryExpression":
+        return this.getASTSource(node.left) + " " + node.operator + " " + this.getASTSource(node.right);
       default:
         throw new Error("getASTSource unsupported node type: " + node.type);
     }
