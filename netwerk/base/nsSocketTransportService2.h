@@ -254,6 +254,15 @@ private:
     Atomic<int32_t, Relaxed>        mMaxTimePerPollIter;
     Atomic<bool, Relaxed>           mTelemetryEnabledPref;
     Atomic<PRIntervalTime, Relaxed> mMaxTimeForPrClosePref;
+    // Timestamp of the last network link change event, tracked
+    // also on child processes.
+    Atomic<PRIntervalTime, Relaxed> mLastNetworkLinkChangeTime;
+    // Preference for how long we do busy wait after network link
+    // change has been detected.
+    Atomic<PRIntervalTime, Relaxed> mNetworkLinkChangeBusyWaitPeriod;
+    // Preference for the value of timeout for poll() we use during
+    // the network link change event period.
+    Atomic<PRIntervalTime, Relaxed> mNetworkLinkChangeBusyWaitTimeout;
 
     // Between a computer going to sleep and waking up the PR_*** telemetry
     // will be corrupted - so do not record it.
