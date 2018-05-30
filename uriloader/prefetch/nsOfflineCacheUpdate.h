@@ -12,7 +12,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
-#include "nsIDOMNode.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMutableArray.h"
 #include "nsIObserver.h"
