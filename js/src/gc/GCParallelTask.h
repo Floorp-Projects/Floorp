@@ -141,7 +141,7 @@ class GCParallelTaskHelper : public GCParallelTask
     explicit GCParallelTaskHelper(JSRuntime* runtime)
       : GCParallelTask(runtime, &runTaskTyped)
     {}
-    GCParallelTaskHelper(GCParallelTask&& other)
+    GCParallelTaskHelper(GCParallelTaskHelper&& other)
       : GCParallelTask(mozilla::Move(other))
     {}
 
