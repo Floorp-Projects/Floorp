@@ -525,6 +525,7 @@ CSS_KEY(sideways-lr, sideways_lr)
 CSS_KEY(sideways-right, sideways_right) /* alias for 'sideways' */
 CSS_KEY(sideways-rl, sideways_rl)
 CSS_KEY(simplified, simplified)
+CSS_KEY(size, size)
 CSS_KEY(skew, skew)
 CSS_KEY(skewx, skewx)
 CSS_KEY(skewy, skewy)
