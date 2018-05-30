@@ -6965,10 +6965,13 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
 
 namespace {
 
-class AutoGCSlice {
+/*
+ * Temporarily disable barriers during GC slices.
+ */
+class AutoDisableBarriers {
   public:
-    explicit AutoGCSlice(JSRuntime* rt);
-    ~AutoGCSlice();
+    explicit AutoDisableBarriers(JSRuntime* rt);
+    ~AutoDisableBarriers();
 
   private:
     JSRuntime* runtime;
@@ -6977,7 +6980,7 @@ class AutoGCSlice {
 
 } /* anonymous namespace */
 
-AutoGCSlice::AutoGCSlice(JSRuntime* rt)
+AutoDisableBarriers::AutoDisableBarriers(JSRuntime* rt)
   : runtime(rt)
 {
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -6985,7 +6988,7 @@ AutoGCSlice::AutoGCSlice(JSRuntime* rt)
          * Clear needsIncrementalBarrier early so we don't do any write
          * barriers during GC. We don't need to update the Ion barriers (which
          * is expensive) because Ion code doesn't run during GC. If need be,
-         * we'll update the Ion barriers in ~AutoGCSlice.
+         * we'll update the Ion barriers in ~AutoDisableBarriers.
          */
         if (zone->isGCMarking()) {
             MOZ_ASSERT(zone->needsIncrementalBarrier());
@@ -6995,7 +6998,7 @@ AutoGCSlice::AutoGCSlice(JSRuntime* rt)
     }
 }
 
-AutoGCSlice::~AutoGCSlice()
+AutoDisableBarriers::~AutoDisableBarriers()
 {
     /* We can't use GCZonesIter if this is the end of the last slice. */
     for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
@@ -7052,7 +7055,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
     if (isIncrementalGCInProgress() && !atomsZone->isCollecting())
         session.maybeLock.reset();
 
-    AutoGCSlice slice(rt);
+    AutoDisableBarriers disableBarriers(rt);
 
     bool destroyingRuntime = (reason == JS::gcreason::DESTROY_RUNTIME);
 
