@@ -1465,7 +1465,7 @@ class Extension extends ExtensionData {
     if (this.dontSaveStartupData) {
       return;
     }
-    AddonManagerPrivate.setStartupData(this.id, this.startupData);
+    XPIProvider.setStartupData(this.id, this.startupData);
   }
 
   async _parseManifest() {
