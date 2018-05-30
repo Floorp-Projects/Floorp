@@ -215,7 +215,7 @@ class AbstractFramePtr
     template <typename SpecificEnvironment>
     inline void popOffEnvironmentChain();
 
-    inline JSCompartment* compartment() const;
+    inline JS::Realm* realm() const;
 
     inline bool hasInitialEnvironment() const;
     inline bool isGlobalFrame() const;
