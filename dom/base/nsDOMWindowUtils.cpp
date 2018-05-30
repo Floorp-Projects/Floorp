@@ -4275,13 +4275,6 @@ nsDOMWindowUtils::EnsureDirtyRootFrame()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetIsStyledByServo(bool* aStyledByServo)
-{
-  *aStyledByServo = true;
-  return NS_OK;
-}
-
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)

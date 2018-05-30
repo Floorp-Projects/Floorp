@@ -1,0 +1,47 @@
+{
+    "en-CA": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
+    "he": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
+    "it": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
+    "ja": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
+    "ja-JP-mac": {
+        "platforms": [
+            "macosx64"
+        ], 
+        "revision": "default"
+    }
+}

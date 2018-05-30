@@ -51,8 +51,11 @@ static Atomic<PRThread*, Relaxed> gSocketThread;
 #define SOCKET_LIMIT_MIN      50U
 #define INTERVAL_PREF "network.activity.intervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
+#define POLL_BUSY_WAIT_PERIOD "network.sts.poll_busy_wait_period"
+#define POLL_BUSY_WAIT_PERIOD_TIMEOUT "network.sts.poll_busy_wait_period_timeout"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
 #define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN "network.sts.max_time_for_pr_close_during_shutdown"
+#define POLLABLE_EVENT_TIMEOUT "network.sts.pollable_event_timeout"
 
 #define REPAIR_POLLABLE_EVENT_TIME 10
 
@@ -135,10 +138,14 @@ nsSocketTransportService::nsSocketTransportService()
     , mKeepaliveRetryIntervalS(1)
     , mKeepaliveProbeCount(kDefaultTCPKeepCount)
     , mKeepaliveEnabledPref(false)
+    , mPollableEventTimeout(TimeDuration::FromSeconds(6))
     , mServingPendingQueue(false)
     , mMaxTimePerPollIter(100)
     , mTelemetryEnabledPref(false)
     , mMaxTimeForPrClosePref(PR_SecondsToInterval(5))
+    , mLastNetworkLinkChangeTime(0)
+    , mNetworkLinkChangeBusyWaitPeriod(PR_SecondsToInterval(50))
+    , mNetworkLinkChangeBusyWaitTimeout(PR_SecondsToInterval(7))
     , mSleepPhase(false)
     , mProbedMaxCount(false)
 #if defined(XP_WIN)
@@ -539,6 +546,16 @@ nsSocketTransportService::Poll(TimeDuration *pollDuration,
             pendingEvents ? PR_INTERVAL_NO_WAIT : PR_MillisecondsToInterval(25);
     }
 
+    if ((ts - mLastNetworkLinkChangeTime) < mNetworkLinkChangeBusyWaitPeriod) {
+        // Being here means we are few seconds after a network change has
+        // been detected.
+        PRIntervalTime to = mNetworkLinkChangeBusyWaitTimeout;
+        if (to) {
+            pollTimeout = std::min(to, pollTimeout);
+            SOCKET_LOG(("  timeout shorthened after network change event"));
+        }
+    }
+
     TimeStamp pollStart;
     if (mTelemetryEnabledPref) {
         pollStart = TimeStamp::NowLoRes();
@@ -606,6 +623,7 @@ nsSocketTransportService::Init()
         tmpPrefService->AddObserver(MAX_TIME_BETWEEN_TWO_POLLS, this, false);
         tmpPrefService->AddObserver(TELEMETRY_PREF, this, false);
         tmpPrefService->AddObserver(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN, this, false);
+        tmpPrefService->AddObserver(POLLABLE_EVENT_TIMEOUT, this, false);
     }
     UpdatePrefs();
 
@@ -616,6 +634,7 @@ nsSocketTransportService::Init()
         obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
         obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
         obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+        obsSvc->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
     mInitialized = true;
@@ -684,6 +703,7 @@ nsSocketTransportService::ShutdownThread()
         obsSvc->RemoveObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC);
         obsSvc->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
         obsSvc->RemoveObserver(this, "xpcom-shutdown-threads");
+        obsSvc->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
     }
 
     if (mAfterWakeUpTimer) {
@@ -1159,6 +1179,20 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
             MoveToPollList(&mIdleList[i]);
     }
 
+    {
+        MutexAutoLock lock(mLock);
+        if (mPollableEvent) {
+            // we want to make sure the timeout is measured from the time
+            // we enter poll().  This method resets the timestamp to 'now',
+            // if we were first signalled between leaving poll() and here.
+            // If we didn't do this and processing events took longer than
+            // the allowed signal timeout, we would detect it as a
+            // false-positive.  AdjustFirstSignalTimestamp is then a no-op
+            // until mPollableEvent->Clear() is called.
+            mPollableEvent->AdjustFirstSignalTimestamp();
+        }
+    }
+
     SOCKET_LOG(("  calling PR_Poll [active=%u idle=%u]\n", mActiveCount, mIdleCount));
 
 #if defined(XP_WIN)
@@ -1230,29 +1264,26 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
                 DetachSocket(mActiveList, &mActiveList[i]);
         }
 
-        if (n != 0 && (mPollList[0].out_flags & (PR_POLL_READ | PR_POLL_EXCEPT))) {
+        {
             MutexAutoLock lock(mLock);
-
             // acknowledge pollable event (should not block)
-            if (mPollableEvent &&
-                ((mPollList[0].out_flags & PR_POLL_EXCEPT) ||
-                 !mPollableEvent->Clear())) {
+            if (n != 0 &&
+                (mPollList[0].out_flags & (PR_POLL_READ | PR_POLL_EXCEPT)) &&
+                mPollableEvent &&
+                ((mPollList[0].out_flags & PR_POLL_EXCEPT) || !mPollableEvent->Clear())) {
                 // On Windows, the TCP loopback connection in the
                 // pollable event may become broken when a laptop
                 // switches between wired and wireless networks or
                 // wakes up from hibernation.  We try to create a
                 // new pollable event.  If that fails, we fall back
                 // on "busy wait".
-                NS_WARNING("Trying to repair mPollableEvent");
-                mPollableEvent.reset(new PollableEvent());
-                if (!mPollableEvent->Valid()) {
-                    mPollableEvent = nullptr;
-                }
-                SOCKET_LOG(("running socket transport thread without "
-                            "a pollable event now valid=%d", !!mPollableEvent));
-                mPollList[0].fd = mPollableEvent ? mPollableEvent->PollableFD() : nullptr;
-                mPollList[0].in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
-                mPollList[0].out_flags = 0;
+                TryRepairPollableEvent();
+            }
+
+            if (mPollableEvent &&
+                !mPollableEvent->IsSignallingAlive(mPollableEventTimeout)) {
+                SOCKET_LOG(("Pollable event signalling failed/timed out"));
+                TryRepairPollableEvent();
             }
         }
     }
@@ -1322,6 +1353,18 @@ nsSocketTransportService::UpdatePrefs()
             mMaxTimePerPollIter = maxTimePref;
         }
 
+        int32_t pollBusyWaitPeriod;
+        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD, &pollBusyWaitPeriod);
+        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriod > 0) {
+            mNetworkLinkChangeBusyWaitPeriod = PR_SecondsToInterval(pollBusyWaitPeriod);
+        }
+
+        int32_t pollBusyWaitPeriodTimeout;
+        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD_TIMEOUT, &pollBusyWaitPeriodTimeout);
+        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriodTimeout > 0) {
+            mNetworkLinkChangeBusyWaitTimeout = PR_SecondsToInterval(pollBusyWaitPeriodTimeout);
+        }
+
         bool telemetryPref = false;
         rv = tmpPrefService->GetBoolPref(TELEMETRY_PREF,
                                          &telemetryPref);
@@ -1334,6 +1377,14 @@ nsSocketTransportService::UpdatePrefs()
                                         &maxTimeForPrClosePref);
         if (NS_SUCCEEDED(rv) && maxTimeForPrClosePref >=0) {
             mMaxTimeForPrClosePref = PR_MillisecondsToInterval(maxTimeForPrClosePref);
+        }
+
+        int32_t pollableEventTimeout;
+        rv = tmpPrefService->GetIntPref(POLLABLE_EVENT_TIMEOUT,
+                                        &pollableEventTimeout);
+        if (NS_SUCCEEDED(rv) && pollableEventTimeout >= 0) {
+            MutexAutoLock lock(mLock);
+            mPollableEventTimeout = TimeDuration::FromSeconds(pollableEventTimeout);
         }
     }
 
@@ -1387,6 +1438,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
                                   const char *topic,
                                   const char16_t *data)
 {
+    SOCKET_LOG(("nsSocketTransportService::Observe topic=%s", topic));
+
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         UpdatePrefs();
         return NS_OK;
@@ -1436,6 +1489,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
         }
     } else if (!strcmp(topic, "xpcom-shutdown-threads")) {
         ShutdownThread();
+    } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
+        mLastNetworkLinkChangeTime = PR_IntervalNow();
     }
 
     return NS_OK;
@@ -1695,7 +1750,24 @@ nsSocketTransportService::EndPolling()
         mPollRepairTimer->Cancel();
     }
 }
+
 #endif
+
+void nsSocketTransportService::TryRepairPollableEvent()
+{
+    mLock.AssertCurrentThreadOwns();
+
+    NS_WARNING("Trying to repair mPollableEvent");
+    mPollableEvent.reset(new PollableEvent());
+    if (!mPollableEvent->Valid()) {
+        mPollableEvent = nullptr;
+    }
+    SOCKET_LOG(("running socket transport thread without "
+                "a pollable event now valid=%d", !!mPollableEvent));
+    mPollList[0].fd = mPollableEvent ? mPollableEvent->PollableFD() : nullptr;
+    mPollList[0].in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
+    mPollList[0].out_flags = 0;
+}
 
 } // namespace net
 } // namespace mozilla

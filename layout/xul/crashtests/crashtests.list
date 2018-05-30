@@ -55,7 +55,7 @@ load 391974-1.html
 load 394120-1.xhtml
 load 397293.xhtml # bug 1323652
 load 397304-1.html
-asserts-if(stylo,0-2) load 398326-1.xhtml # bug 1324660
+load 398326-1.xhtml
 load 399013.xul
 load 400779-1.xhtml
 load 402912-1.xhtml
@@ -76,7 +76,7 @@ load 433429.xul
 load 452185.html
 load 460900-1.xul
 load 464149-1.xul
-asserts-if(winWidget,1) asserts-if(Android,0-1) asserts-if(stylo,0-1) load 464407-1.xhtml # Bug 450974 on win, Bug 1267054 on Android, bug 718883 for stylo
+asserts(0-1) load 464407-1.xhtml # Bugs 450974, 1267054, 718883
 load 467080.xul
 load 467481-1.xul
 load 470063-1.html

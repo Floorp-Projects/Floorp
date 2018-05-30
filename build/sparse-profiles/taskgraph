@@ -3,7 +3,9 @@
 [include]
 # These files are read as part of generating the taskgraph.
 path:browser/locales/l10n-changesets.json
+path:browser/locales/l10n-onchange-changesets.json
 path:mobile/locales/l10n-changesets.json
+path:mobile/locales/l10n-onchange-changesets.json
 path:browser/locales/shipped-locales
 path:browser/config/version_display.txt
 path:browser/config/version.txt

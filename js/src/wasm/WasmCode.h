@@ -507,8 +507,6 @@ class LazyStubSegment : public CodeSegment
     CodeRangeVector codeRanges_;
     size_t usedBytes_;
 
-    static constexpr size_t MPROTECT_PAGE_SIZE = 4 * 1024;
-
   public:
     LazyStubSegment(UniqueCodeBytes bytes, size_t length)
       : CodeSegment(Move(bytes), length, CodeSegment::Kind::LazyStubs),
@@ -517,7 +515,7 @@ class LazyStubSegment : public CodeSegment
 
     static UniqueLazyStubSegment create(const CodeTier& codeTier, size_t codeLength);
 
-    static size_t AlignBytesNeeded(size_t bytes) { return AlignBytes(bytes, MPROTECT_PAGE_SIZE); }
+    static size_t AlignBytesNeeded(size_t bytes) { return AlignBytes(bytes, gc::SystemPageSize()); }
 
     bool hasSpace(size_t bytes) const;
     bool addStubs(size_t codeLength, const Uint32Vector& funcExportIndices,

@@ -784,8 +784,8 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 {
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 
-    Realm* realm = JS::GetRealmForCompartment(this);
-    realm->sweepAfterMinorGC();
+    for (RealmsInCompartmentIter r(this); !r.done(); r.next())
+        r->sweepAfterMinorGC();
 }
 
 void
@@ -943,8 +943,8 @@ JSCompartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
-    Realm* realm = JS::GetRealmForCompartment(this);
-    realm->fixupAfterMovingGC();
+    for (RealmsInCompartmentIter r(this); !r.done(); r.next())
+        r->fixupAfterMovingGC();
 
     // Sweep the wrapper map to update values (wrapper objects) in this
     // compartment that may have been moved.

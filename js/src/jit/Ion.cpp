@@ -103,11 +103,11 @@ jit::MaybeGetJitContext()
     return CurrentJitContext();
 }
 
-JitContext::JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocator* temp)
+JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator* temp)
   : cx(nullptr),
     temp(temp),
     runtime(rt),
-    compartment(comp),
+    realm(realm),
     prev_(CurrentJitContext()),
     assemblerCount_(0)
 {
@@ -118,7 +118,7 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
   : cx(cx),
     temp(temp),
     runtime(CompileRuntime::get(cx->runtime())),
-    compartment(CompileCompartment::get(cx->compartment())),
+    realm(CompileRealm::get(cx->realm())),
     prev_(CurrentJitContext()),
     assemblerCount_(0)
 {
@@ -2091,7 +2091,7 @@ IonCompile(JSContext* cx, JSScript* script,
     const JitCompileOptions options(cx);
 
     IonBuilder* builder = alloc->new_<IonBuilder>((JSContext*) nullptr,
-                                                  CompileCompartment::get(cx->compartment()),
+                                                  CompileRealm::get(cx->realm()),
                                                   options, temp, graph, constraints,
                                                   inspector, info, optimizationInfo,
                                                   baselineFrameInspector);

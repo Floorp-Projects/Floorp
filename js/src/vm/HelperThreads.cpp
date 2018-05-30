@@ -1971,7 +1971,7 @@ HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
 
         AutoSetContextRuntime ascr(rt);
         jit::JitContext jctx(jit::CompileRuntime::get(rt),
-                             jit::CompileCompartment::get(builder->script()->compartment()),
+                             jit::CompileRealm::get(builder->script()->realm()),
                              &builder->alloc());
         builder->setBackgroundCodegen(jit::CompileBackEnd(builder));
     }

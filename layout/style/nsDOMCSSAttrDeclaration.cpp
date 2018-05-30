@@ -180,7 +180,7 @@ nsDOMCSSAttributeDeclaration::SetSMILValue(const nsCSSPropertyID aPropID,
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
+  mozAutoDocUpdate autoUpdate(DocToUpdate(), true);
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
   bool changed = nsSMILCSSValueType::SetPropertyValues(aValue, *decl);
   if (changed) {

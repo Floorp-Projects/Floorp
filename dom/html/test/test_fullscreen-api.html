@@ -76,12 +76,6 @@ function shouldSkipTest(test) {
     return true;
   }
 
-  if (!SpecialPowers.DOMWindowUtils.isStyledByServo &&
-      test == "file_fullscreen-shadowdom.html") {
-    // Shadow DOM is stylo-only.
-    return true;
-  }
-
   if (!SpecialPowers.isMainProcess() &&
       navigator.platform.includes('Linux')) {
     for (let item of gLinuxE10sSkipList) {

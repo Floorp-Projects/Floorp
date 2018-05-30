@@ -17,12 +17,6 @@ function finish() {
 }
 
 function runTest() {
-  // The individual transform functions are not implemented in the Gecko style
-  // system.
-  if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    return;
-  }
-
   // Test for rotate property serialization.
   [
     [" 90deg ", "90deg"],

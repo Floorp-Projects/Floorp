@@ -52,35 +52,4 @@ private:
   (doc,notify)
 
 
-/**
- * Creates an update batch only under certain conditions.
- * Use this rather than mozAutoDocUpdate when you expect inner updates
- * to notify but you don't always want to spec cycles creating a batch.
- * This is needed to avoid having this batch always create a blocker,
- * but then have inner mozAutoDocUpdate call the last EndUpdate before.
- * we remove that blocker. See bug 423269.
- */
-class MOZ_STACK_CLASS mozAutoDocConditionalContentUpdateBatch
-{
-public:
-  mozAutoDocConditionalContentUpdateBatch(nsIDocument* aDocument,
-                                          bool aNotify) :
-    mDocument(aNotify ? aDocument : nullptr)
-  {
-    if (mDocument) {
-      mDocument->BeginUpdate();
-    }
-  }
-
-  ~mozAutoDocConditionalContentUpdateBatch()
-  {
-    if (mDocument) {
-      mDocument->EndUpdate();
-    }
-  }
-
-private:
-  nsCOMPtr<nsIDocument> mDocument;
-};
-
 #endif

@@ -26,8 +26,6 @@ var initial_values = {
     gridColumnGap: "0px",
 };
 
-const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-
 // For various specified values of the grid-template subproperties,
 // test the serialization of the shorthand.
 var grid_template_test_cases = [
@@ -70,13 +68,13 @@ var grid_template_test_cases = [
     {
         gridTemplateAreas: "\"a\"",
         gridTemplateRows: "[foo] repeat(1, 20px) [bar]",
-        shorthand: isStylo ? "" : "[foo] \"a\" 20px [bar]",
+        shorthand: "",
     },
     {
         gridTemplateAreas: "\"a a\"",
         gridTemplateColumns: "repeat(2, 100px)",
         gridTemplateRows: "auto",
-        shorthand: isStylo ? "" : "\"a a\" auto / 100px 100px",
+        shorthand: "",
     },
     // Combinations of longhands that make the shorthand non-serializable:
     {

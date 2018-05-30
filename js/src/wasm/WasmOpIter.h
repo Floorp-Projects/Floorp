@@ -62,14 +62,14 @@ enum class StackType
 static inline StackType
 ToStackType(ValType type)
 {
-    return StackType(type);
+    return StackType(type.bitsUnsafe());
 }
 
 static inline ValType
 NonAnyToValType(StackType type)
 {
     MOZ_ASSERT(type != StackType::Any);
-    return ValType(type);
+    return ValType::fromTypeCode(uint32_t(type));
 }
 
 static inline bool
@@ -1677,7 +1677,7 @@ OpIter<Policy>::readRefNull()
 {
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
     uint8_t valType;
-    if (!d_.readValType(&valType) || ValType(valType) != ValType::AnyRef)
+    if (!d_.readValType(&valType) || valType != uint8_t(ValType::AnyRef))
         return fail("unknown nullref type");
     return push(StackType::AnyRef);
 }
@@ -2243,6 +2243,9 @@ OpIter<Policy>::readMemCopy(Value* dest, Value* src, Value* len)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::MemCopy);
 
+    if (!env_.usesMemory())
+        return fail("can't touch memory without memory");
+
     if (!popWithType(ValType::I32, len))
         return false;
 
@@ -2260,6 +2263,9 @@ inline bool
 OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::MemFill);
+
+    if (!env_.usesMemory())
+        return fail("can't touch memory without memory");
 
     if (!popWithType(ValType::I32, len))
         return false;
