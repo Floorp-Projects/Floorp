@@ -82,6 +82,7 @@ function TextPropertyEditor(ruleEditor, property) {
   this._clickedElementOptions = null;
 
   const toolbox = this.ruleView.inspector.toolbox;
+  this.telemetry = toolbox.telemetry;
   this.cssProperties = getCssProperties(toolbox);
 
   this.getGridlineNames = this.getGridlineNames.bind(this);
@@ -741,6 +742,7 @@ TextPropertyEditor.prototype = {
     }
     this.prop.setEnabled(!checked);
     event.stopPropagation();
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
   },
 
   /**
@@ -810,6 +812,8 @@ TextPropertyEditor.prototype = {
     if (this.prop.value && isNameUnchanged) {
       return;
     }
+
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
 
     // Remove a property if the name is empty
     if (!value.trim()) {
@@ -901,6 +905,8 @@ TextPropertyEditor.prototype = {
       this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
       return;
     }
+
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
 
     // Since the value was changed, check if the original propertywas a flex or grid
     // display declaration and hide their respective highlighters.
