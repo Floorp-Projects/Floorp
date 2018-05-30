@@ -13,7 +13,7 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 /**
  * A tree widget with keyboard navigation and collapsable structure.
  *
- * @param {nsIDOMNode} node
+ * @param {Node} node
  *        The container element for the tree widget.
  * @param {Object} options
  *        - emptyText {string}: text to display when no entries in the table.

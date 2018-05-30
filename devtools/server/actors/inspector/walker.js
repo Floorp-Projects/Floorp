@@ -303,7 +303,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.manage(actor);
     this._refMap.set(node, actor);
 
-    if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
+    if (node.nodeType === Node.DOCUMENT_NODE) {
       actor.watchDocument(node, this.onMutations);
     }
 
@@ -455,7 +455,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // Quick checks to prevent creating a new walker if possible.
     if (node.isBeforePseudoElement ||
         node.isAfterPseudoElement ||
-        node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE ||
+        node.rawNode.nodeType != Node.ELEMENT_NODE ||
         node.rawNode.children.length > 0) {
       return undefined;
     }
@@ -470,7 +470,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // - unique child is a text node, but is too long to be inlined
     if (!firstChild ||
         walker.nextSibling() ||
-        firstChild.nodeType !== Ci.nsIDOMNode.TEXT_NODE ||
+        firstChild.nodeType !== Node.TEXT_NODE ||
         firstChild.nodeValue.length > gValueSummaryLength
         ) {
       return undefined;
@@ -1099,7 +1099,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   _addPseudoClassLock: function(node, pseudo, enabled) {
-    if (node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+    if (node.rawNode.nodeType !== Node.ELEMENT_NODE) {
       return false;
     }
     InspectorUtils.addPseudoClassLock(node.rawNode, pseudo, enabled);
@@ -1168,7 +1168,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   _removePseudoClassLock: function(node, pseudo) {
-    if (node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE) {
+    if (node.rawNode.nodeType != Node.ELEMENT_NODE) {
       return false;
     }
     InspectorUtils.removePseudoClassLock(node.rawNode, pseudo);
@@ -1385,7 +1385,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   isDocumentOrDocumentElementNode: function(node) {
     return ((node.rawNode.ownerDocument &&
       node.rawNode.ownerDocument.documentElement === this.rawNode) ||
-      node.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE);
+      node.rawNode.nodeType === Node.DOCUMENT_NODE);
   },
 
   /**
@@ -1837,7 +1837,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   /**
    * Check if a node is attached to the DOM tree of the current page.
-   * @param {nsIDomNode} rawNode
+   * @param {Node} rawNode
    * @return {Boolean} false if the node is removed from the tree or within a
    * document fragment
    */
@@ -1852,7 +1852,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     // The top of the tree is a fragment or is not rootDoc, hence rawNode isn't
     // attached
-    if (current.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE ||
+    if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
         current !== this.rootDoc) {
       return false;
     }

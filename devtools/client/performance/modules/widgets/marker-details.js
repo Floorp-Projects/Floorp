@@ -13,9 +13,9 @@ const { MarkerDOMUtils } = require("devtools/client/performance/modules/marker-d
 /**
  * A detailed view for one single marker.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the view.
- * @param nsIDOMNode splitter
+ * @param Node splitter
  *        The splitter node that the resize event is bound to.
  */
 function MarkerDetails(parent, splitter) {

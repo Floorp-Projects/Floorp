@@ -12,12 +12,12 @@ add_task(async function() {
   let root = inspector.markup._elt;
 
   info("Test copy outerHTML for COMMENT node");
-  let comment = getElementByType(inspector, Ci.nsIDOMNode.COMMENT_NODE);
+  let comment = getElementByType(inspector, Node.COMMENT_NODE);
   await setSelectionNodeFront(comment, inspector);
   await checkClipboard("<!-- Comment -->", root);
 
   info("Test copy outerHTML for DOCTYPE node");
-  let doctype = getElementByType(inspector, Ci.nsIDOMNode.DOCUMENT_TYPE_NODE);
+  let doctype = getElementByType(inspector, Node.DOCUMENT_TYPE_NODE);
   await setSelectionNodeFront(doctype, inspector);
   await checkClipboard("<!DOCTYPE html>", root);
 

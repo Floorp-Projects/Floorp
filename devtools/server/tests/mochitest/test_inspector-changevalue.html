@@ -42,7 +42,7 @@ addTest(function testChangeValue() {
     return gWalker.children(front, { maxNodes: 1 });
   }).then(children => {
     nodeFront = children.nodes[0];
-    is(nodeFront.nodeType, Ci.nsIDOMNode.TEXT_NODE);
+    is(nodeFront.nodeType, Node.TEXT_NODE);
     return nodeFront.setNodeValue("newvalue");
   }).then(() => {
     // We're only going to test that the change hit the document.

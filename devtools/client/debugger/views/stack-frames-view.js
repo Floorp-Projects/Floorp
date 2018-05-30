@@ -179,7 +179,7 @@ StackFramesView.prototype = extend(WidgetMethods, {
    *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
-   * @return nsIDOMNode
+   * @return Node
    *         The stack frame view.
    */
   _createFrameView: function (aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
