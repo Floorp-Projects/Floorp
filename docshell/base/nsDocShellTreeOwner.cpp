@@ -1043,14 +1043,23 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* aInBrowser,
   , mShowingTooltip(false)
   , mTooltipShownOnce(false)
 {
-  mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
-  if (!mTooltipTextProvider) {
-    mTooltipTextProvider = do_GetService(NS_DEFAULTTOOLTIPTEXTPROVIDER_CONTRACTID);
-  }
 }
 
 ChromeTooltipListener::~ChromeTooltipListener()
 {
+}
+
+nsITooltipTextProvider*
+ChromeTooltipListener::GetTooltipTextProvider() {
+  if (!mTooltipTextProvider) {
+    mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
+  }
+
+  if (!mTooltipTextProvider) {
+    mTooltipTextProvider = do_GetService(NS_DEFAULTTOOLTIPTEXTPROVIDER_CONTRACTID);
+  }
+
+  return mTooltipTextProvider;
 }
 
 // Hook up things to the chrome like context menus and tooltips, if the chrome
@@ -1342,12 +1351,12 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
 
     // if there is text associated with the node, show the tip and fire
     // off a timer to auto-hide it.
-
-    if (self->mTooltipTextProvider) {
+    nsITooltipTextProvider* tooltipProvider = self->GetTooltipTextProvider();
+    if (tooltipProvider) {
       nsString tooltipText;
       nsString directionText;
       bool textFound = false;
-      self->mTooltipTextProvider->GetNodeText(
+      tooltipProvider->GetNodeText(
         self->mPossibleTooltipNode, getter_Copies(tooltipText),
         getter_Copies(directionText), &textFound);
 
