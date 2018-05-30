@@ -148,7 +148,7 @@ private:
     nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                     nsIURI* aProxyURI,
                                                     uint32_t aProxyFlags,
-                                                    nsIDOMNode* aLoadingNode,
+                                                    nsINode* aLoadingNode,
                                                     nsIPrincipal* aLoadingPrincipal,
                                                     nsIPrincipal* aTriggeringPrincipal,
                                                     const mozilla::Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
