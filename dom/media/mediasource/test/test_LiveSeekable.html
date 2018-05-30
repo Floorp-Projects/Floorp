@@ -20,7 +20,7 @@ runWithMSE(async (ms, v) => {
   // and seekable range start.
   sb.timestampOffset = 2;
   const p = once(v, "loadedmetadata");
-  await fetchAndLoad(sb, "seek", [ "" ], ".webm");
+  await fetchAndLoad(sb, "seek", [""], ".webm");
   await p;
   ms.duration = Infinity;
   sb.abort();

@@ -16,8 +16,8 @@ SimpleTest.waitForExplicitFinish();
 // as the auto-eviction would succeed (removing all data prior currentTime)
 
 addMSEPrefs(
-  [ "media.mediasource.eviction_threshold.audio", 524288 ],
-  [ "media.dormant-on-pause-timeout-ms", -1 ] // FIXME: bug 1319292
+  ["media.mediasource.eviction_threshold.audio", 524288],
+  ["media.dormant-on-pause-timeout-ms", -1] // FIXME: bug 1319292
 );
 
 runWithMSE(async (ms, el) => {
@@ -26,7 +26,7 @@ runWithMSE(async (ms, el) => {
   ok(true, "Receive a sourceopen event");
   const audiosb = ms.addSourceBuffer("audio/mp4");
   audiosb.mode = "sequence";
-  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
   const audioBuffer = await fetchWithXHR("bipbop/bipbop_audio1.m4s");
 
   await must_reject(async () => {

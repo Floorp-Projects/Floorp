@@ -20,12 +20,12 @@ runWithMSE(async (ms, el) => {
     SimpleTest.finish();
   });
   const videosb = ms.addSourceBuffer("video/mp4");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 8), ".m4s");
   is(el.buffered.length, 2, "discontinuous buffered range");
   ms.endOfStream();
-  await Promise.all([ once(el, "durationchange"), once(ms, "sourceended") ]);
+  await Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
   // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
   // has notified it of available data. Make sure that we get "playing" before
   // we starting waiting for "waiting".

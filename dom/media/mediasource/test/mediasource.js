@@ -1,9 +1,9 @@
 // Helpers for Media Source Extensions tests
 
 let gMSETestPrefs = [
-  [ "media.mediasource.enabled", true ],
-  [ "media.audio-max-decode-error", 0 ],
-  [ "media.video-max-decode-error", 0 ],
+  ["media.mediasource.enabled", true],
+  ["media.audio-max-decode-error", 0],
+  ["media.video-max-decode-error", 0],
 ];
 
 // Called before runWithMSE() to set the prefs before running MSE tests.
@@ -187,8 +187,8 @@ async function waitUntilTime(target, targetTime) {
 // Log events for debugging.
 
 function logEvents(el) {
-  [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+  ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
    "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
    "waiting", "pause", "durationchange", "seeking",
-   "seeked" ].forEach(type => el.addEventListener(type, e => info(`got ${e.type} event`)));
+   "seeked"].forEach(type => el.addEventListener(type, e => info(`got ${e.type} event`)));
 }

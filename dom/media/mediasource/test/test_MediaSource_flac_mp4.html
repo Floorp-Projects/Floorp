@@ -19,7 +19,7 @@ runWithMSE(async (ms, el) => {
   const sb = ms.addSourceBuffer("audio/mp4; codecs=\"flac\"");
   ok(sb, "Create a SourceBuffer");
 
-  await fetchAndLoad(sb, "flac/IS", [ "" ], ".mp4");
+  await fetchAndLoad(sb, "flac/IS", [""], ".mp4");
   await fetchAndLoad(sb, "flac/0000", range(1, 3), ".m4s");
   el.play();
   ms.endOfStream();

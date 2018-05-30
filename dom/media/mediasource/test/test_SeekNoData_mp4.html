@@ -27,8 +27,8 @@ runWithMSE(async (ms, el) => {
   is(el.currentTime, 3, "currentTime is default playback start position");
   is(el.seeking, false, "seek not started with HAVE_NOTHING");
   await Promise.all([
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4"),
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"),
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4"),
+    fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4"),
     once(el, "loadedmetadata")
   ]);
   const p = once(el, "seeking");
