@@ -595,7 +595,8 @@ class TestRunnerManager(threading.Thread):
                              status,
                              message=file_result.message,
                              expected=expected,
-                             extra=file_result.extra)
+                             extra=file_result.extra,
+                             stack=file_result.stack)
 
         restart_before_next = (test.restart_after or
                                file_result.status in ("CRASH", "EXTERNAL-TIMEOUT", "INTERNAL-ERROR") or
