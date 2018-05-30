@@ -12,9 +12,7 @@ const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
 
-const nsIDOMNode           = I.nsIDOMNode;
-
-Cu.importGlobalProperties(["DOMParser", "Element", "XMLSerializer"]);
+Cu.importGlobalProperties(["DOMParser", "Element", "Node", "XMLSerializer"]);
 
 function getParser() {
   var parser = new DOMParser();
@@ -67,7 +65,7 @@ function roundtrip(obj) {
     return SerializeXML(ParseXML(obj));
   }
 
-  Assert.equal(obj instanceof nsIDOMNode, true);
+  Assert.equal(Node.isInstance(obj), true);
   return ParseXML(SerializeXML(obj));
 }
 
@@ -94,15 +92,15 @@ function do_compare_attrs(e1, e2) {
 function do_check_equiv(dom1, dom2) {
   Assert.equal(dom1.nodeType, dom2.nodeType);
   switch (dom1.nodeType) {
-  case nsIDOMNode.PROCESSING_INSTRUCTION_NODE:
+  case Node.PROCESSING_INSTRUCTION_NODE:
     Assert.equal(dom1.target, dom2.target);
     Assert.equal(dom1.data, dom2.data);
-  case nsIDOMNode.TEXT_NODE:
-  case nsIDOMNode.CDATA_SECTION_NODE:
-  case nsIDOMNode.COMMENT_NODE:
+  case Node.TEXT_NODE:
+  case Node.CDATA_SECTION_NODE:
+  case Node.COMMENT_NODE:
     Assert.equal(dom1.data, dom2.data);
     break;
-  case nsIDOMNode.ELEMENT_NODE:
+  case Node.ELEMENT_NODE:
     Assert.equal(dom1.namespaceURI, dom2.namespaceURI);
     Assert.equal(dom1.localName, dom2.localName);
     // Compare attrs in both directions -- do_compare_attrs does a
@@ -110,7 +108,7 @@ function do_check_equiv(dom1, dom2) {
     do_compare_attrs(dom1, dom2);
     do_compare_attrs(dom2, dom1);
     // Fall through
-  case nsIDOMNode.DOCUMENT_NODE:
+  case Node.DOCUMENT_NODE:
     Assert.equal(dom1.childNodes.length, dom2.childNodes.length);
     for (var i = 0; i < dom1.childNodes.length; ++i) {
       do_check_equiv(dom1.childNodes.item(i), dom2.childNodes.item(i));
