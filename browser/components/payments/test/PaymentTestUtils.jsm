@@ -130,6 +130,16 @@ var PaymentTestUtils = {
       option.click();
     },
 
+    selectShippingAddressByGuid: guid => {
+      let doc = content.document;
+      let addressPicker =
+        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let select = addressPicker.querySelector("rich-select");
+      let option = select.querySelector(`[guid="${guid}"]`);
+      select.click();
+      option.click();
+    },
+
     selectShippingOptionById: value => {
       let doc = content.document;
       let optionPicker =
