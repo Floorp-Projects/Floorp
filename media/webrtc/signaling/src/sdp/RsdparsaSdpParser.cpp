@@ -40,6 +40,14 @@ RsdparsaSdpParser::Parse(const std::string &sdpText)
     }
     return nullptr;
   }
+
+  if(err) {
+    size_t line = sdp_get_error_line_num(err);
+    std::string warningMsg = convertStringView(sdp_get_error_message(err));
+    sdp_free_error(err);
+    AddParseWarnings(line, warningMsg);
+  }
+
   RsdparsaSessionHandle uniqueResult;
   uniqueResult.reset(result);
   RustSdpOrigin rustOrigin = sdp_get_origin(uniqueResult.get());
@@ -47,7 +55,8 @@ RsdparsaSdpParser::Parse(const std::string &sdpText)
   SdpOrigin origin(convertStringView(rustOrigin.username),
                    rustOrigin.sessionId, rustOrigin.sessionVersion,
                    addrType, std::string(rustOrigin.addr.unicastAddr));
-  return MakeUnique<RsdparsaSdp>(std::move(uniqueResult), origin);
+
+    return MakeUnique<RsdparsaSdp>(std::move(uniqueResult), origin);
 }
 
 } // namespace mozilla

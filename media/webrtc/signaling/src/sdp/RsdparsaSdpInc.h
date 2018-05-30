@@ -17,6 +17,7 @@ struct RustSdpError;
 struct RustMediaSection;
 struct RustAttributeList;
 struct StringVec;
+struct U8Vec;
 struct U32Vec;
 struct RustHeapString;
 
@@ -101,10 +102,42 @@ struct RustSdpAttributeRtcpFb {
   StringView extra;
 };
 
+struct RustSdpAttributeFmtpParameters {
+  // H264
+  uint32_t packetization_mode;
+  bool level_asymmetry_allowed;
+  uint32_t profile_level_id;
+  uint32_t max_fs;
+  uint32_t max_cpb;
+  uint32_t max_dpb;
+  uint32_t max_br;
+  uint32_t max_mbps;
+
+  // VP8 and VP9
+  // max_fs, already defined in H264
+  uint32_t max_fr;
+
+  // Opus
+  uint32_t maxplaybackrate;
+  bool usedtx;
+  bool stereo;
+  bool useinbandfec;
+  bool cbr;
+
+  // telephone-event
+  StringView dtmf_tones;
+
+  // Red codecs
+  U8Vec* encodings;
+
+  // Unknown
+  StringVec* unknown_tokens;
+};
+
 struct RustSdpAttributeFmtp {
   uint8_t payloadType;
   StringView codecName;
-  StringVec* tokens;
+  RustSdpAttributeFmtpParameters parameters;
 };
 
 struct RustSdpAttributeFlags {
@@ -179,6 +212,9 @@ nsresult string_vec_get_view(const StringVec* vec, size_t index,
 
 size_t u32_vec_len(const U32Vec* vec);
 nsresult u32_vec_get(const U32Vec* vec, size_t index, uint32_t* ret);
+
+size_t u8_vec_len(const U8Vec* vec);
+nsresult u8_vec_get(const U8Vec* vec, size_t index, uint8_t* ret);
 
 void sdp_free_string(char* string);
 
