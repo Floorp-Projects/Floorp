@@ -37,7 +37,7 @@ const OVERVIEW_GROUP_VERTICAL_PADDING = 5; // px
 /**
  * An overview for the markers data.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the overview.
  * @param Array<String> filter
  *        List of names of marker types that should not be shown.

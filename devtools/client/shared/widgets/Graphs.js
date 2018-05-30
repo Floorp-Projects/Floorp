@@ -82,7 +82,7 @@ this.GraphAreaResizer = function() {
  *   - "selecting": when the selection is set or changed.
  *   - "deselecting": when the selection is dropped.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the graph.
  * @param string name
  *        The graph type, used for setting the correct class names.
@@ -1229,7 +1229,7 @@ AbstractCanvasGraph.prototype = {
  *
  * @param string url
  *        The desired source URL for the iframe.
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The desired parent node for the iframe.
  * @param function callback
  *        Invoked once the content is loaded, with the iframe as an argument.
