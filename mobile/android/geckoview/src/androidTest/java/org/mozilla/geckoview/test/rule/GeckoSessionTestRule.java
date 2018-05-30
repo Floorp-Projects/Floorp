@@ -1132,6 +1132,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mClosedSession = false;
         mWithDevTools = false;
         mReuseSession = true;
+        mIgnoreCrash = false;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -1164,10 +1165,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     ignore = mCallRecordHandler.handleCall(method, args);
                 }
 
-                if (!mIgnoreCrash && sOnCrash.equals(method)) {
-                    throw new RuntimeException("Content process crashed");
-                }
-
                 final boolean isExternalDelegate =
                         !DEFAULT_DELEGATES.contains(method.getDeclaringClass());
 
@@ -1185,6 +1182,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                                    args[0], instanceOf(GeckoSession.class));
                         session = (GeckoSession) args[0];
                     }
+
+                    if (sOnCrash.equals(method) && !mIgnoreCrash && isUsingSession(session)) {
+                        throw new RuntimeException("Content process crashed");
+                    }
+
                     records.add(new CallRecord(session, method, args));
 
                     call = waitDelegates.prepareMethodCall(session, method);
@@ -1247,6 +1249,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
+        }
+
+        if (sCachedSession != null && !sCachedSession.isOpen()) {
+            sCachedSession = null;
         }
 
         final boolean useDefaultSession = !mClosedSession && mDefaultSettings.equals(settings);
@@ -1364,13 +1370,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected void cleanupSession(final GeckoSession session) {
         final Tab tab = (mRDPTabs != null) ? mRDPTabs.get(session) : null;
         if (tab != null) {
-            tab.getPromises().detach();
-            tab.detach();
+            if (session.isOpen()) {
+                tab.getPromises().detach();
+                tab.detach();
+            }
+
             mRDPTabs.remove(session);
         }
         if (session.isOpen()) {
             session.close();
         }
+    }
+
+    protected boolean isUsingSession(final GeckoSession session) {
+        return session.equals(mMainSession) || mSubSessions.contains(session);
     }
 
     protected void cleanupStatement() throws Throwable {
@@ -1380,7 +1393,12 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         for (final GeckoSession session : mSubSessions) {
             cleanupSession(session);
         }
-        if (mMainSession.equals(sCachedSession)) {
+
+        if (sCachedSession != null && mReuseSession && !mIgnoreCrash) {
+            assertThat("Cached session should be open", sCachedSession.isOpen(), equalTo(true));
+        }
+
+        if (mMainSession.isOpen() && mMainSession.equals(sCachedSession)) {
             // We have to detach the Promises object, but keep the Tab itself.
             sCachedRDPTab.getPromises().detach();
         } else {
