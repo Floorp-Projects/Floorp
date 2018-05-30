@@ -418,8 +418,9 @@ function setupEnvironment() {
       // If either fake audio or video is desired we enable fake streams.
       // If loopback devices are set they will be chosen instead of fakes in gecko.
       ['media.navigator.streams.fake', WANT_FAKE_AUDIO || WANT_FAKE_VIDEO],
-      ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.audiocapture.enabled', true],
+      ['media.getusermedia.screensharing.enabled', true],
+      ['media.getusermedia.window.focus_source.enabled', false],
       ['media.recorder.audio_node.enabled', true],
       ['media.webaudio.audiocontextoptions-samplerate.enabled', true]
     ]

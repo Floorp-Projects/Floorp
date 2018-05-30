@@ -134,11 +134,11 @@ async function updateJSONBlocklist(client, { data: { current: records } }) {
  * defined on entries.
  */
 async function targetAppFilter(entry, environment) {
-  // If the entry has JEXL filters, they should prevail.
+  // If the entry has a JEXL filter expression, it should prevail.
   // The legacy target app mechanism will be kept in place for old entries.
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
-  const { filters } = entry;
-  if (filters) {
+  const { filter_expression } = entry;
+  if (filter_expression) {
     return jexlFilterFunc(entry, environment);
   }
 

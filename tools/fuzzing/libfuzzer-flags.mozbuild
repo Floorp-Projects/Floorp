@@ -1,0 +1,13 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+libfuzzer_flags = []
+
+if CONFIG['HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK']:
+    libfuzzer_flags += ['-fsanitize=fuzzer-no-link']
+else:
+    # Older Clang versions (<= 5) only support an older set of libFuzzer flags
+    libfuzzer_flags += ['-fsanitize-coverage=trace-pc-guard,trace-cmp']

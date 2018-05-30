@@ -954,15 +954,9 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
   // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
-  mForceRendering = true;
-
-  mCompositorScheduler->FlushPendingComposite();
-  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
-    mApi->FlushSceneBuilder();
-  }
+  FlushSceneBuilds();
+  FlushFrameGeneration();
   mApi->Readback(size, buffer, buffer_size);
-
-  mForceRendering = false;
 
   return IPC_OK();
 }

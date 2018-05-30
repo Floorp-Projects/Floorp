@@ -319,6 +319,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
         max_per_test_time = timedelta(minutes=60)
         max_per_test_tests = 10
         executed_tests = 0
+        executed_too_many_tests = False
 
         if self.per_test_coverage or self.verify_enabled:
             suites = self.query_per_test_category_suites(None, None)
@@ -332,11 +333,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             test_types = self.config.get("test_type", [])
             suites = [None]
         for suite in suites:
+            if executed_too_many_tests and not self.per_test_coverage:
+                continue
+
             if suite:
                 test_types = [suite]
 
             summary = {}
-            executed_too_many_tests = False
             for per_test_args in self.query_args(suite):
                 # Make sure baseline code coverage tests are never
                 # skipped and that having them run has no influence

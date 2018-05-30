@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<title>Test for scrollbar-*-color properties</title>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<style>
+  .outer {
+    width: 100px;
+    height: 100px;
+    background: yellow;
+    overflow: scroll;
+  }
+  .inner {
+    width: 200px;
+    height: 200px;
+  }
+</style>
+<style id="style"></style>
+<div class="outer">
+  <div class="inner">
+  </div>
+</div>
+<script>
+function countPixels(canvas) {
+  let result = new Map;
+  let ctx = canvas.getContext('2d');
+  let image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = image.data;
+  let size = image.width * image.height;
+  for (let i = 0; i < size; i++) {
+    let key = data.subarray(i * 4, i * 4 + 3).toString();
+    let value = result.get(key);
+    value = value ? value : 0;
+    result.set(key, value + 1);
+  }
+  return result;
+}
+
+const WIN_REFERENCES = [
+  // Yellow background
+  ["255,255,0", 6889],
+  // Blue scrollbar face
+  ["0,0,255", 540],
+  // Cyan scrollbar track
+  ["0,255,255", 2198],
+];
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["layout.css.scrollbar-colors.enabled", true]],
+}, function() {
+  document.querySelector('#style').textContent = `
+    .outer {
+      scrollbar-face-color: blue;
+      scrollbar-track-color: cyan;
+    }
+  `;
+
+  let outer = document.querySelector('.outer');
+  let canvas = snapshotRect(window, outer.getBoundingClientRect());
+  let stats = countPixels(canvas);
+  for (let [color, count] of WIN_REFERENCES) {
+    let value = stats.get(color);
+    is(value, count, `Pixel count of color ${color}`);
+  }
+  SimpleTest.finish();
+});
+</script>

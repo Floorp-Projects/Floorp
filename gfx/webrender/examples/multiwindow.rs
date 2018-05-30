@@ -7,6 +7,7 @@ extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
+extern crate winit;
 
 use app_units::Au;
 use gleam::gl;
@@ -16,11 +17,11 @@ use std::io::Read;
 use webrender::api::*;
 
 struct Notifier {
-    events_proxy: glutin::EventsLoopProxy,
+    events_proxy: winit::EventsLoopProxy,
 }
 
 impl Notifier {
-    fn new(events_proxy: glutin::EventsLoopProxy) -> Notifier {
+    fn new(events_proxy: winit::EventsLoopProxy) -> Notifier {
         Notifier { events_proxy }
     }
 }
@@ -43,7 +44,7 @@ impl RenderNotifier for Notifier {
 }
 
 struct Window {
-    events_loop: glutin::EventsLoop, //TODO: share events loop?
+    events_loop: winit::EventsLoop, //TODO: share events loop?
     window: glutin::GlWindow,
     renderer: webrender::Renderer,
     name: &'static str,
@@ -56,13 +57,13 @@ struct Window {
 
 impl Window {
     fn new(name: &'static str, clear_color: ColorF) -> Self {
-        let events_loop = glutin::EventsLoop::new();
+        let events_loop = winit::EventsLoop::new();
         let context_builder = glutin::ContextBuilder::new()
             .with_gl(glutin::GlRequest::GlThenGles {
                 opengl_version: (3, 2),
                 opengles_version: (3, 0),
             });
-        let window_builder = glutin::WindowBuilder::new()
+        let window_builder = winit::WindowBuilder::new()
             .with_title(name)
             .with_multitouch()
             .with_dimensions(800, 600);
@@ -135,21 +136,21 @@ impl Window {
         let renderer = &mut self.renderer;
 
         self.events_loop.poll_events(|global_event| match global_event {
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::Closed |
-                glutin::WindowEvent::KeyboardInput {
-                    input: glutin::KeyboardInput {
-                        virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
+            winit::Event::WindowEvent { event, .. } => match event {
+                winit::WindowEvent::CloseRequested |
+                winit::WindowEvent::KeyboardInput {
+                    input: winit::KeyboardInput {
+                        virtual_keycode: Some(winit::VirtualKeyCode::Escape),
                         ..
                     },
                     ..
                 } => {
                     do_exit = true
                 }
-                glutin::WindowEvent::KeyboardInput {
-                    input: glutin::KeyboardInput {
-                        state: glutin::ElementState::Pressed,
-                        virtual_keycode: Some(glutin::VirtualKeyCode::P),
+                winit::WindowEvent::KeyboardInput {
+                    input: winit::KeyboardInput {
+                        state: winit::ElementState::Pressed,
+                        virtual_keycode: Some(winit::VirtualKeyCode::P),
                         ..
                     },
                     ..

@@ -62,7 +62,7 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       Assert.equal(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
       Assert.equal(bookmarkPanelTitle.value,
         isNewBookmark ?
-          gNavigatorBundle.getString("editBookmarkPanel.pageBookmarkedTitle") :
+          gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle") :
           gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
         "title should match isEditingBookmark state");
       Assert.equal(bookmarkRemoveButton.label,

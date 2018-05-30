@@ -31,9 +31,9 @@ def _getdimensions():
 
 
 def get_terminal_width():
-    height = width = 0
+    width = 0
     try:
-        height, width = _getdimensions()
+        _, width = _getdimensions()
     except py.builtin._sysex:
         raise
     except:
@@ -129,7 +129,7 @@ class TerminalWriter(object):
             if stringio:
                 self.stringio = file = py.io.TextIO()
             else:
-                file = py.std.sys.stdout
+                from sys import stdout as file
         elif py.builtin.callable(file) and not (
              hasattr(file, "write") and hasattr(file, "flush")):
             file = WriteFile(file, encoding=encoding)
@@ -139,6 +139,7 @@ class TerminalWriter(object):
         self._file = file
         self.hasmarkup = should_do_markup(file)
         self._lastlen = 0
+        self._chars_on_current_line = 0
 
     @property
     def fullwidth(self):
@@ -149,6 +150,19 @@ class TerminalWriter(object):
     @fullwidth.setter
     def fullwidth(self, value):
         self._terminal_width = value
+
+    @property
+    def chars_on_current_line(self):
+        """Return the number of characters written so far in the current line.
+
+        Please note that this count does not produce correct results after a reline() call,
+        see #164.
+
+        .. versionadded:: 1.5.0
+
+        :rtype: int
+        """
+        return self._chars_on_current_line
 
     def _escaped(self, text, esc):
         if esc and self.hasmarkup:
@@ -200,11 +214,21 @@ class TerminalWriter(object):
         if msg:
             if not isinstance(msg, (bytes, text)):
                 msg = text(msg)
+
+            self._update_chars_on_current_line(msg)
+
             if self.hasmarkup and kw:
                 markupmsg = self.markup(msg, **kw)
             else:
                 markupmsg = msg
             write_out(self._file, markupmsg)
+
+    def _update_chars_on_current_line(self, text):
+        fields = text.rsplit('\n', 1)
+        if '\n' in text:
+            self._chars_on_current_line = len(fields[-1])
+        else:
+            self._chars_on_current_line += len(fields[-1])
 
     def line(self, s='', **kw):
         self.write(s, **kw)
@@ -229,6 +253,9 @@ class Win32ConsoleWriter(TerminalWriter):
         if msg:
             if not isinstance(msg, (bytes, text)):
                 msg = text(msg)
+
+            self._update_chars_on_current_line(msg)
+
             oldcolors = None
             if self.hasmarkup and kw:
                 handle = GetStdHandle(STD_OUTPUT_HANDLE)

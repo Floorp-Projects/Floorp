@@ -128,14 +128,6 @@ var gEditItemOverlay = {
     this._initTextField(this._locationField, this._paneInfo.uri.spec);
   },
 
-  _initDescriptionField() {
-    if (!this._paneInfo.isItem)
-      throw new Error("_initDescriptionField called unexpectedly");
-
-    this._initTextField(this._descriptionField,
-                        PlacesUIUtils.getItemDescription(this._paneInfo.itemId));
-  },
-
   async _initKeywordField(newKeyword = "") {
     if (!this._paneInfo.isBookmark) {
       throw new Error("_initKeywordField called unexpectedly");
@@ -193,7 +185,7 @@ var gEditItemOverlay = {
    *        2. any of the following optional properties:
    *          - hiddenRows (Strings array): list of rows to be hidden regardless
    *            of the item edited. Possible values: "title", "location",
-   *            "description", "keyword", "loadInSidebar", "feedLocation",
+   *            "keyword", "loadInSidebar", "feedLocation",
    *            "siteLocation", folderPicker"
    */
   initPanel(aInfo) {
@@ -243,13 +235,6 @@ var gEditItemOverlay = {
     if (isURI) {
       this._initLocationField();
       this._locationField.readOnly = this.readOnly;
-    }
-
-    // hide the description field for
-    if (showOrCollapse("descriptionRow", isItem && !this.readOnly,
-                       "description")) {
-      this._initDescriptionField();
-      this._descriptionField.readOnly = this.readOnly;
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
@@ -627,20 +612,6 @@ var gEditItemOverlay = {
     this._mayUpdateFirstEditField("namePicker");
     await PlacesTransactions.EditTitle({ guid: this._paneInfo.itemGuid,
                                          title: this._namePicker.value }).transact();
-  },
-
-  onDescriptionFieldChange() {
-    if (this.readOnly || !this._paneInfo.isItem)
-      return;
-
-    let description = this._element("descriptionField").value;
-    if (description != PlacesUIUtils.getItemDescription(this._paneInfo.itemId)) {
-      let annotation =
-        { name: PlacesUIUtils.DESCRIPTION_ANNO, value: description };
-      let guid = this._paneInfo.itemGuid;
-      PlacesTransactions.Annotate({ guid, annotation })
-                        .transact().catch(Cu.reportError);
-    }
   },
 
   onLocationFieldChange() {
@@ -1090,10 +1061,6 @@ var gEditItemOverlay = {
       if (this._paneInfo.visibleRows.has("keywordRow"))
         this._initKeywordField(aValue).catch(Cu.reportError);
       break;
-    case PlacesUIUtils.DESCRIPTION_ANNO:
-      if (this._paneInfo.visibleRows.has("descriptionRow"))
-        this._initDescriptionField();
-      break;
     case PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO:
       if (this._paneInfo.visibleRows.has("loadInSidebarCheckbox"))
         this._initLoadInSidebar();
@@ -1134,7 +1101,7 @@ var gEditItemOverlay = {
 };
 
 for (let elt of ["folderMenuList", "folderTree", "namePicker",
-                 "locationField", "descriptionField", "keywordField",
+                 "locationField", "keywordField",
                  "tagsField", "loadInSidebarCheckbox"]) {
   let eltScoped = elt;
   XPCOMUtils.defineLazyGetter(gEditItemOverlay, `_${eltScoped}`,

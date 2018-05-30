@@ -496,6 +496,9 @@ private:
 
     void               UpdateClientOffsetForCSDWindow();
 
+    nsWindow*          GetTransientForWindowIfPopup();
+    bool               IsHandlingTouchSequence(GdkEventSequence* aSequence);
+
 #ifdef MOZ_X11
     typedef enum { GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
                    GTK_WIDGET_COMPOSIDED_DISABLED = 1,

@@ -16,7 +16,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   findCssSelector: "resource://gre/modules/css-selector.js",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
@@ -36,8 +35,7 @@ const messageListeners = {
     let frame = this.getTarget(aMessage).ownerDocument;
 
     this.global.sendAsyncMessage("ContextMenu:BookmarkFrame:Result",
-                                 { title: frame.title,
-                                 description: PlacesUIUtils.getDescriptionFromDocument(frame) });
+                                 { title: frame.title });
   },
 
   "ContextMenu:Canvas:ToBlobURL": function(aMessage) {
@@ -125,7 +123,6 @@ const messageListeners = {
                          (node.form.enctype == "application/x-www-form-urlencoded" ||
                           node.form.enctype == ""));
     let title = node.ownerDocument.title;
-    let description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
     let formData = [];
 
     function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
@@ -172,7 +169,7 @@ const messageListeners = {
     }
 
     this.global.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData:Result",
-                                 { spec, title, description, postData, charset });
+                                 { spec, title, postData, charset });
   },
 
   "ContextMenu:SaveVideoFrameAsImage": function(aMessage) {

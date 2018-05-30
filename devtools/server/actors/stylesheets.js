@@ -161,6 +161,7 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
   if (request._discardResponseBody || request._truncated || !content) {
     return null;
   }
+
   if (content.text.type != "longString") {
     // For short strings, the text is available directly.
     return {
@@ -174,7 +175,7 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
     return null;
   }
   return {
-    content: longStringActor.rawValue(),
+    content: longStringActor.str,
     contentType: content.mimeType,
   };
 }

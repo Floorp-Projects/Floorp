@@ -1006,6 +1006,13 @@ MediaDevice::Reconfigure(const dom::MediaTrackConstraints &aConstraints,
 }
 
 nsresult
+MediaDevice::FocusOnSelectedSource()
+{
+  MOZ_ASSERT(MediaManager::IsInMediaThread());
+  return mSource->FocusOnSelectedSource(mAllocationHandle);
+}
+
+nsresult
 MediaDevice::Stop()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
@@ -1119,7 +1126,8 @@ public:
     const MediaStreamConstraints& aConstraints,
     MediaDevice* aAudioDevice,
     MediaDevice* aVideoDevice,
-    PeerIdentity* aPeerIdentity)
+    PeerIdentity* aPeerIdentity,
+    bool aIsChrome)
     : Runnable("GetUserMediaStreamRunnable")
     , mOnSuccess(aOnSuccess)
     , mOnFailure(aOnFailure)
@@ -1628,7 +1636,8 @@ public:
     MediaEnginePrefs& aPrefs,
     const ipc::PrincipalInfo& aPrincipalInfo,
     bool aIsChrome,
-    MediaManager::SourceSet* aSourceSet)
+    MediaManager::SourceSet* aSourceSet,
+    bool aShouldFocusSource)
     : Runnable("GetUserMediaTask")
     , mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
@@ -1639,6 +1648,7 @@ public:
     , mPrefs(aPrefs)
     , mPrincipalInfo(aPrincipalInfo)
     , mIsChrome(aIsChrome)
+    , mShouldFocusSource(aShouldFocusSource)
     , mDeviceChosen(false)
     , mSourceSet(aSourceSet)
     , mManager(MediaManager::GetInstance())
@@ -1709,6 +1719,16 @@ public:
         if (mAudioDevice) {
           mAudioDevice->Deallocate();
         }
+      } else {
+        if (!mIsChrome) {
+          if (mShouldFocusSource) {
+            rv = mVideoDevice->FocusOnSelectedSource();
+
+            if (NS_FAILED(rv)) {
+              LOG(("FocusOnSelectedSource failed"));
+            }
+          }
+        }
       }
     }
     if (errorMsg) {
@@ -1741,7 +1761,7 @@ public:
                                        mWindowListener, mSourceListener,
                                        mPrincipalInfo, mConstraints,
                                        mAudioDevice, mVideoDevice,
-                                       peerIdentity)));
+                                       peerIdentity, mIsChrome)));
     return NS_OK;
   }
 
@@ -1818,6 +1838,7 @@ private:
   MediaEnginePrefs mPrefs;
   ipc::PrincipalInfo mPrincipalInfo;
   bool mIsChrome;
+  bool mShouldFocusSource;
 
   bool mDeviceChosen;
 public:
@@ -2874,6 +2895,9 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         }
       }
 
+      bool focusSource;
+      focusSource = mozilla::Preferences::GetBool("media.getusermedia.window.focus_source.enabled", true);
+
       // Pass callbacks and listeners along to GetUserMediaTask.
       RefPtr<GetUserMediaTask> task (new GetUserMediaTask(c,
                                                           onSuccess,
@@ -2884,7 +2908,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                                           prefs,
                                                           principalInfo,
                                                           isChrome,
-                                                          devices->release()));
+                                                          devices->release(),
+                                                          focusSource));
       // Store the task w/callbacks.
       self->mActiveCallbacks.Put(callID, task.forget());
 

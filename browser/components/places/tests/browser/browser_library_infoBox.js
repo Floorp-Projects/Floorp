@@ -98,12 +98,13 @@ add_task(async function() {
       "Correctly selected recently bookmarked node.");
   PO._places.selectNode(childNode);
   checkInfoBoxSelected();
-  ok(!infoBoxExpanderWrapper.hidden,
-      "Expander button is not hidden for recently bookmarked node.");
-  checkAddInfoFieldsNotCollapsed(PO);
+  ok(infoBoxExpanderWrapper.hidden,
+     "Expander button is hidden for recently bookmarked node.");
+  checkAddInfoFieldsCollapsed(PO);
 
   // open first bookmark
   view = ContentTree.view.view;
+  ContentTree.view.focus();
   ok(view.rowCount > 0, "Bookmark item exists.");
   view.selection.select(0);
   checkInfoBoxSelected();

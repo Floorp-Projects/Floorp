@@ -343,6 +343,18 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
 }
 
 nsresult
+MediaEngineRemoteVideoSource::FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle)
+{
+  LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
+
+  int result;
+  result = camera::GetChildAndCall(&camera::CamerasChild::FocusOnSelectedSource,
+                                   mCapEngine, mCaptureIndex);
+  return result == 0 ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
 MediaEngineRemoteVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   LOG((__PRETTY_FUNCTION__));

@@ -672,6 +672,11 @@ int32_t DesktopCaptureImpl::StartCapture(const VideoCaptureCapability& capabilit
   return 0;
 }
 
+bool DesktopCaptureImpl::FocusOnSelectedSource()
+{
+  return desktop_capturer_cursor_composer_->FocusOnSelectedSource();
+}
+
 int32_t DesktopCaptureImpl::StopCapture() {
   if (started_) {
     capturer_thread_->Stop(); // thread is guaranteed stopped before this returns

@@ -52,8 +52,11 @@ const prefs = {
       FILTER_BAR: "ui.filterbar",
       // Persist is only used by the webconsole.
       PERSIST: "devtools.webconsole.persistlog",
+    },
+    FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.
       SIDEBAR_TOGGLE: "devtools.webconsole.sidebarToggle",
+      JSTERM_CODE_MIRROR: "devtools.webconsole.jsterm.codeMirror",
     }
   }
 };

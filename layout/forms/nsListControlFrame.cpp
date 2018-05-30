@@ -368,8 +368,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
                            nsReflowStatus&          aStatus)
 {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
-  MOZ_ASSERT(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
-             "Must have a computed inline size");
+  NS_WARNING_ASSERTION(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+                       "Must have a computed inline size");
 
   SchedulePaint();
 

@@ -1428,8 +1428,7 @@ nsContextMenu.prototype = {
 
       window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId,
                                                 uri.spec,
-                                                message.data.title,
-                                                message.data.description)
+                                                message.data.title)
                                   .catch(Cu.reportError);
     };
     mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);

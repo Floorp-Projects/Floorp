@@ -29,25 +29,6 @@ from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS
 
 
-VERSION_BUMP_FLAVORS = (
-    'ship_fennec',
-    'ship_firefox',
-    'ship_devedition',
-)
-
-PARTIAL_UPDATES_FLAVORS = (
-    'promote_firefox',
-    'promote_firefox_rc',
-    'promote_devedition',
-    'push_firefox',
-    'push_firefox_rc',
-    'push_devedition',
-    'ship_firefox',
-    'ship_firefox_rc',
-    'ship_devedition',
-)
-
-
 def is_release_promotion_available(parameters):
     return parameters['project'] in RELEASE_PROMOTION_PROJECTS
 
@@ -57,6 +38,17 @@ def get_partner_config(partner_url_config, github_token):
     for kind, url in partner_url_config.items():
         partner_config[kind] = get_partner_config_by_url(url, kind, github_token)
     return partner_config
+
+
+def get_flavors(graph_config, param):
+    """
+    Get all flavors with the given parameter enabled.
+    """
+    promotion_flavors = graph_config['release-promotion']['flavors']
+    return sorted([
+        flavor for (flavor, config) in promotion_flavors.items()
+        if config.get(param, False)
+    ])
 
 
 @register_callback_action(
@@ -129,7 +121,7 @@ def get_partner_config(partner_url_config, github_token):
             'next_version': {
                 'type': 'string',
                 'description': ('Next version. Required in the following flavors: '
-                                '{}'.format(sorted(VERSION_BUMP_FLAVORS))),
+                                '{}'.format(get_flavors(graph_config, 'version-bump'))),
                 'default': '',
             },
 
@@ -147,7 +139,7 @@ def get_partner_config(partner_url_config, github_token):
             'partial_updates': {
                 'type': 'object',
                 'description': ('Partial updates. Required in the following flavors: '
-                                '{}'.format(sorted(PARTIAL_UPDATES_FLAVORS))),
+                                '{}'.format(get_flavors(graph_config, 'partial-updates'))),
                 'default': {},
                 'additionalProperties': {
                     'type': 'object',
@@ -216,28 +208,27 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     product = promotion_config['product']
 
     next_version = str(input.get('next_version') or '')
-    if release_promotion_flavor in VERSION_BUMP_FLAVORS:
+    if promotion_config.get('version-bump', False):
         # We force str() the input, hence the 'None'
         if next_version in ['', 'None']:
             raise Exception(
-                "`next_version` property needs to be provided for %s "
-                "targets." % ', '.join(VERSION_BUMP_FLAVORS)
+                "`next_version` property needs to be provided for `{}` "
+                "target.".format(release_promotion_flavor)
             )
 
-    if product in ('firefox', 'devedition'):
-        if release_promotion_flavor in PARTIAL_UPDATES_FLAVORS:
-            partial_updates = json.dumps(input.get('partial_updates', {}))
-            if partial_updates == "{}":
-                raise Exception(
-                    "`partial_updates` property needs to be provided for %s "
-                    "targets." % ', '.join(PARTIAL_UPDATES_FLAVORS)
-                )
-            balrog_prefix = product.title()
-            os.environ['PARTIAL_UPDATES'] = partial_updates
-            release_history = populate_release_history(
-                balrog_prefix, parameters['project'],
-                partial_updates=input['partial_updates']
+    if promotion_config.get('partial-updates', False):
+        partial_updates = json.dumps(input.get('partial_updates', {}))
+        if partial_updates == "{}":
+            raise Exception(
+                "`partial_updates` property needs to be provided for `{}`"
+                "target.".format(release_promotion_flavor)
             )
+        balrog_prefix = product.title()
+        os.environ['PARTIAL_UPDATES'] = partial_updates
+        release_history = populate_release_history(
+            balrog_prefix, parameters['project'],
+            partial_updates=input['partial_updates']
+        )
 
     target_tasks_method = promotion_config['target-tasks-method'].format(
         project=parameters['project']

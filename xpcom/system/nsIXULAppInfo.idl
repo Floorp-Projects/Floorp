@@ -50,4 +50,10 @@ interface nsIXULAppInfo : nsIPlatformInfo
    * @returns an empty string if XREAppData.UAName is not set.
    */
   readonly attribute ACString UAName;
+
+  /**
+   * @see XREAppData.sourceURL
+   * @returns an empty string if XREAppData.sourceURL is not set.
+   */
+  readonly attribute ACString sourceURL;
 };

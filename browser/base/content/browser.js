@@ -6195,8 +6195,7 @@ function contentAreaClick(event, isPanelClick) {
                                          uri: makeURI(href),
                                          title: linkNode.getAttribute("title"),
                                          loadBookmarkInSidebar: true,
-                                         hiddenRows: [ "description",
-                                                       "location",
+                                         hiddenRows: [ "location",
                                                        "keyword" ]
                                        }, window);
       event.preventDefault();
@@ -7337,12 +7336,10 @@ function AddKeywordForSearchField() {
                                        type: "bookmark",
                                        uri: makeURI(bookmarkData.spec),
                                        title,
-                                       description: bookmarkData.description,
                                        keyword: "",
                                        postData: bookmarkData.postData,
                                        charSet: bookmarkData.charset,
                                        hiddenRows: [ "location",
-                                                     "description",
                                                      "tags",
                                                      "loadInSidebar" ]
                                      }, window);

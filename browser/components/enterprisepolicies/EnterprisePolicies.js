@@ -370,12 +370,14 @@ class JSONPoliciesProvider {
 
     let alternatePath = Services.prefs.getStringPref(PREF_ALTERNATE_PATH, "");
 
-    if (alternatePath && (!configFile || !configFile.exists())) {
-      // We only want to use the alternate file path if the file on the install
-      // folder doesn't exist. Otherwise it'd be possible for a user to override
-      // the admin-provided policies by changing the user-controlled prefs.
-      // This pref is only meant for tests, so it's fine to use this extra
-      // synchronous configFile.exists() above.
+    // Check if we are in automation *before* we use the synchronous
+    // nsIFile.exists() function or allow the config file to be overriden
+    // An alternate policy path can also be used in Nightly builds (for
+    // testing purposes), but the Background Update Agent will be unable to
+    // detect the alternate policy file so the DisableAppUpdate policy may not
+    // work as expected.
+    if (alternatePath && (Cu.isInAutomation || AppConstants.NIGHTLY_BUILD) &&
+        (!configFile || !configFile.exists())) {
       if (alternatePath.startsWith(MAGIC_TEST_ROOT_PREFIX)) {
         // Intentionally not using a default value on this pref lookup. If no
         // test root is set, we are not currently testing and this function

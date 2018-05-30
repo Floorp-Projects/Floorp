@@ -582,10 +582,9 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_URI: 2,
   COLUMN_TYPE_DATE: 3,
   COLUMN_TYPE_VISITCOUNT: 4,
-  COLUMN_TYPE_DESCRIPTION: 5,
-  COLUMN_TYPE_DATEADDED: 6,
-  COLUMN_TYPE_LASTMODIFIED: 7,
-  COLUMN_TYPE_TAGS: 8,
+  COLUMN_TYPE_DATEADDED: 5,
+  COLUMN_TYPE_LASTMODIFIED: 6,
+  COLUMN_TYPE_TAGS: 7,
 
   _getColumnType: function PTV__getColumnType(aColumn) {
     let columnType = aColumn.element.getAttribute("anonid") || aColumn.id;
@@ -599,8 +598,6 @@ PlacesTreeView.prototype = {
         return this.COLUMN_TYPE_DATE;
       case "visitCount":
         return this.COLUMN_TYPE_VISITCOUNT;
-      case "description":
-        return this.COLUMN_TYPE_DESCRIPTION;
       case "dateAdded":
         return this.COLUMN_TYPE_DATEADDED;
       case "lastModified":
@@ -629,13 +626,6 @@ PlacesTreeView.prototype = {
         return [this.COLUMN_TYPE_VISITCOUNT, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING:
         return [this.COLUMN_TYPE_VISITCOUNT, true];
-      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING:
-        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
-          return [this.COLUMN_TYPE_DESCRIPTION, false];
-        break;
-      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
-        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
-          return [this.COLUMN_TYPE_DESCRIPTION, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
         return [this.COLUMN_TYPE_DATEADDED, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING:
@@ -924,9 +914,7 @@ PlacesTreeView.prototype = {
   nodeKeywordChanged(aNode, aNewKeyword) {},
 
   nodeAnnotationChanged: function PTV_nodeAnnotationChanged(aNode, aAnno) {
-    if (aAnno == PlacesUIUtils.DESCRIPTION_ANNO) {
-      this._invalidateCellValue(aNode, this.COLUMN_TYPE_DESCRIPTION);
-    } else if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
+    if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
       PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
         .then(aLivemark => {
           this._controller.cacheLivemarkInfo(aNode, aLivemark);
@@ -1576,14 +1564,6 @@ PlacesTreeView.prototype = {
         return this._convertPRTimeToString(nodeTime);
       case this.COLUMN_TYPE_VISITCOUNT:
         return node.accessCount;
-      case this.COLUMN_TYPE_DESCRIPTION:
-        if (node.itemId != -1) {
-          try {
-            return PlacesUtils.annotations.
-                               getItemAnnotation(node.itemId, PlacesUIUtils.DESCRIPTION_ANNO);
-          } catch (ex) { /* has no description */ }
-        }
-        return "";
       case this.COLUMN_TYPE_DATEADDED:
         if (node.dateAdded)
           return this._convertPRTimeToString(node.dateAdded);
@@ -1665,7 +1645,6 @@ PlacesTreeView.prototype = {
     let allowTriState = PlacesUtils.nodeIsFolder(this._result.root);
 
     let oldSort = this._result.sortingMode;
-    let oldSortingAnnotation = this._result.sortingAnnotation;
     let newSort;
     let newSortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
@@ -1708,21 +1687,6 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_NONE;
         else
           newSort = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
-
-        break;
-      case this.COLUMN_TYPE_DESCRIPTION:
-        if (oldSort == NHQO.SORT_BY_ANNOTATION_ASCENDING &&
-            oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO) {
-          newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
-          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
-        } else if (allowTriState &&
-                 oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
-                 oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
-          newSort = NHQO.SORT_BY_NONE;
-        else {
-          newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
-          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
-        }
 
         break;
       case this.COLUMN_TYPE_DATEADDED:
