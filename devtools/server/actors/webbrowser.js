@@ -690,9 +690,9 @@ DevToolsUtils.makeInfallible(function(window) {
 exports.BrowserTabList = BrowserTabList;
 
 /**
- * Creates a tab actor for handling requests to a single browser frame.
+ * Creates a target actor for handling requests to a single browser frame.
  * Both <xul:browser> and <iframe mozbrowser> are supported.
- * This actor is a shim that connects to a ContentActor in a remote browser process.
+ * This actor is a shim that connects to a FrameTargetActor in a remote browser process.
  * All RDP packets get forwarded using the message manager.
  *
  * @param connection The main RDP connection.
@@ -772,7 +772,7 @@ BrowserTabActor.prototype = {
 
     const form = await new Promise(resolve => {
       const onFormUpdate = msg => {
-        // There may be more than just one content.js (ContentActor) up and running
+        // There may be more than one FrameTargetActor up and running
         if (this._form.actor != msg.json.actor) {
           return;
         }

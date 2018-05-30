@@ -25,7 +25,7 @@ RootActor: First one, automatically instantiated when we start connecting.
        Generally, there is a target actor for each thing you can point a
        toolbox at.
        Examples include:
-       ContentActor (for a frame, such as a tab)
+       FrameTargetActor (for a frame, such as a tab)
        WorkerActor (for various kind of workers)
        |
        \-- Tab-scoped actors:
@@ -54,15 +54,15 @@ RootActor (root.js)
    |
    |-- BrowserTabActor (webbrowser.js)
    |   Targets tabs living in the parent or child process. Note that this is
-   |   just a proxy for ContentActor, which is loaded via the tab's message
+   |   just a proxy for FrameTargetActor, which is loaded via the tab's message
    |   manager as a frame script in the process containing the tab. This proxy
    |   via message manager is always used, even when e10s is disabled.
    |   Returned by "listTabs" or "getTab" requests.
    |   |
-   |   \-- ContentActor (content.js)
-   |       The "real" actor for a tab, which runs in whichever process holds the
-   |       content.  BrowserTabActor communicates with this via the tab's
-   |       message manager.
+   |   \-- FrameTargetActor (frame.js)
+   |       The "real" target actor for a frame (such as a tab) which runs in
+   |       whichever process holds the content. BrowserTabActor communicates
+   |       with this via the frame's message manager.
    |       Extends the abstract class BrowsingContextTargetActor.
    |       Returned by "connect" on BrowserTabActor.
    |
@@ -156,8 +156,8 @@ Each of these actors focuses on providing one particular feature set. They are
 children of a given target actor.
 
 The data they return is filtered to reflect the target. For example, the
-InspectorActor that you fetch from a ContentActor gives you information about
-the markup and styles for only that frame.
+InspectorActor that you fetch from a FrameTargetActor gives you information
+about the markup and styles for only that frame.
 
 These actors may extend this hierarchy by having their own children, like
 LongStringActor, WalkerActor, etc.

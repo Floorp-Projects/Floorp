@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'browsing-context.js',
+    'frame.js',
 )

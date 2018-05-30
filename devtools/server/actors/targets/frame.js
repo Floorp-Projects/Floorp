@@ -4,6 +4,15 @@
 
 "use strict";
 
+/*
+ * Target actor for a frame / docShell in the content process (where the actual
+ * content lives).
+ *
+ * This actor extends BrowsingContextTargetActor.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 var { Cr } = require("chrome");
 var {
   BrowsingContextTargetActor,
@@ -12,18 +21,17 @@ var {
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
+const { frameTargetSpec } = require("devtools/shared/specs/targets/frame");
 
 /**
- * Target actor for documents living in a child process.
- *
- * Depends on BrowsingContextTargetActor, defined in browsing-context.js.
+ * Protocol.js expects only the prototype object, and does not maintain the prototype
+ * chain when it constructs the ActorClass. For this reason we are using `extend` to
+ * maintain the properties of BrowsingContextTargetActor.prototype
  */
+const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
 
 /**
- * Creates a target actor for handling requests to the single tab, like
- * attaching and detaching. ContentActor respects the actor factories
- * registered with DebuggerServer.addTabActor.
+ * Target actor for a frame / docShell in the content process.
  *
  * @param connection DebuggerServerConnection
  *        The conection to the client.
@@ -33,16 +41,7 @@ const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/bro
  *        the prefix used in protocol to create IDs for each actor.
  *        Used as ID identifying this particular target actor from the parent process.
  */
-
-/**
- * Protocol.js expects only the prototype object, and does not maintain the prototype
- * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of BrowsingContextTargetActor.prototype
- */
-
-const contentPrototype = extend({}, browsingContextTargetPrototype);
-
-contentPrototype.initialize = function(connection, chromeGlobal) {
+frameTargetPrototype.initialize = function(connection, chromeGlobal) {
   this._chromeGlobal = chromeGlobal;
   BrowsingContextTargetActor.prototype.initialize.call(this, connection, chromeGlobal);
   this.traits.reconfigure = false;
@@ -55,7 +54,7 @@ contentPrototype.initialize = function(connection, chromeGlobal) {
   });
 };
 
-Object.defineProperty(contentPrototype, "title", {
+Object.defineProperty(frameTargetPrototype, "title", {
   get: function() {
     return this.window.document.title;
   },
@@ -63,7 +62,7 @@ Object.defineProperty(contentPrototype, "title", {
   configurable: true
 });
 
-contentPrototype.exit = function() {
+frameTargetPrototype.exit = function() {
   if (this._sendForm) {
     try {
       this._chromeGlobal.removeMessageListener("debug:form", this._sendForm);
@@ -87,8 +86,8 @@ contentPrototype.exit = function() {
  * On navigation events, our URL and/or title may change, so we update our
  * counterpart in the parent process that participates in the tab list.
  */
-contentPrototype._sendForm = function() {
+frameTargetPrototype._sendForm = function() {
   this._chromeGlobal.sendAsyncMessage("debug:form", this.form());
 };
 
-exports.ContentActor = ActorClassWithSpec(browsingContextTargetSpec, contentPrototype);
+exports.FrameTargetActor = ActorClassWithSpec(frameTargetSpec, frameTargetPrototype);
