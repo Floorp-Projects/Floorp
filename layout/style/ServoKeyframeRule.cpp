@@ -6,8 +6,7 @@
 
 #include "mozilla/ServoKeyframeRule.h"
 
-#include "mozilla/DeclarationBlockInlines.h"
-#include "mozilla/ServoDeclarationBlock.h"
+#include "mozilla/DeclarationBlock.h"
 #include "nsDOMCSSDeclaration.h"
 #include "mozAutoDocUpdate.h"
 
@@ -23,7 +22,7 @@ public:
   explicit ServoKeyframeDeclaration(ServoKeyframeRule* aRule)
     : mRule(aRule)
   {
-    mDecls = new ServoDeclarationBlock(
+    mDecls = new DeclarationBlock(
       Servo_Keyframe_GetStyle(aRule->Raw()).Consume());
   }
 
@@ -50,7 +49,7 @@ public:
     mRule->UpdateRule([this, aDecls]() {
       if (mDecls != aDecls) {
         mDecls->SetOwningRule(nullptr);
-        mDecls = aDecls->AsServo();
+        mDecls = aDecls;
         mDecls->SetOwningRule(mRule);
         Servo_Keyframe_SetStyle(mRule->Raw(), mDecls->Raw());
       }
@@ -82,7 +81,7 @@ private:
   }
 
   ServoKeyframeRule* mRule;
-  RefPtr<ServoDeclarationBlock> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ServoKeyframeDeclaration)

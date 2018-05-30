@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
+#include "nsCSSProps.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
