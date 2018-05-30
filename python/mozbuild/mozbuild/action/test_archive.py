@@ -362,7 +362,19 @@ ARCHIVE_FILES = {
             'base': '',
             'pattern': 'mozinfo.json',
             'dest': 'mochitest'
-        }
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/xpi-stage',
+            'pattern': 'mochijar/**',
+            'dest': 'mochitest'
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/xpi-stage',
+            'pattern': 'specialpowers/**',
+            'dest': 'mochitest/extensions'
+        },
     ],
     'mozharness': [
         {
