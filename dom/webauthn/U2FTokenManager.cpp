@@ -14,11 +14,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
-#include "hasht.h"
-#include "nsICryptoHash.h"
 #include "nsTextFormatter.h"
-#include "pkix/Input.h"
-#include "pkixutil.h"
 
 // Not named "security.webauth.u2f_softtoken_counter" because setting that
 // name causes the window.u2f object to disappear until preferences get
@@ -303,37 +299,38 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  // Check if all the supplied parameters are syntactically well-formed and
-  // of the correct length. If not, return an error code equivalent to
-  // UnknownError and terminate the operation.
+  mLastTransactionId = aTransactionId;
 
-  if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
-      (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
+  // Determine whether direct attestation was requested.
+  bool directAttestationRequested = false;
+  if (aTransactionInfo.Extra().type() == WebAuthnMaybeMakeCredentialExtraInfo::TWebAuthnMakeCredentialExtraInfo) {
+    const auto& extra = aTransactionInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+    directAttestationRequested = extra.RequestDirectAttestation();
+  }
+
+  // Start a register request immediately if direct attestation
+  // wasn't requested or the test pref is set.
+  if (!directAttestationRequested ||
+      U2FPrefManager::Get()->GetAllowDirectAttestationForTesting()) {
+    // Force "none" attestation when "direct" attestation wasn't requested.
+    DoRegister(aTransactionInfo, !directAttestationRequested);
     return;
   }
 
-  mLastTransactionId = aTransactionId;
-
   // If the RP request direct attestation, ask the user for permission and
   // store the transaction info until the user proceeds or cancels.
-  // Might be overriden by a pref for testing purposes.
-  if (aTransactionInfo.RequestDirectAttestation() &&
-      !U2FPrefManager::Get()->GetAllowDirectAttestationForTesting()) {
-    NS_ConvertUTF16toUTF8 origin(aTransactionInfo.Origin());
-    SendPromptNotification(kRegisterDirectPromptNotifcation,
-                           aTransactionId,
-                           origin.get());
+  NS_ConvertUTF16toUTF8 origin(aTransactionInfo.Origin());
+  SendPromptNotification(kRegisterDirectPromptNotifcation,
+                         aTransactionId,
+                         origin.get());
 
-    MOZ_ASSERT(mPendingRegisterInfo.isNothing());
-    mPendingRegisterInfo = Some(aTransactionInfo);
-  } else {
-    DoRegister(aTransactionInfo);
-  }
+  MOZ_ASSERT(mPendingRegisterInfo.isNothing());
+  mPendingRegisterInfo = Some(aTransactionInfo);
 }
 
 void
-U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo)
+U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
+                            bool aForceNoneAttestation)
 {
   mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLastTransactionId > 0);
@@ -346,17 +343,12 @@ U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo)
 
   uint64_t tid = mLastTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
-  bool requestDirectAttestation = aInfo.RequestDirectAttestation();
 
   mTokenManagerImpl
-    ->Register(aInfo)
+    ->Register(aInfo, aForceNoneAttestation)
     ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-          [tid, startTime, requestDirectAttestation](WebAuthnMakeCredentialResult&& aResult) {
+          [tid, startTime](WebAuthnMakeCredentialResult&& aResult) {
             U2FTokenManager* mgr = U2FTokenManager::Get();
-            // The token manager implementations set DirectAttestationPermitted
-            // to false by default. Override this here with information from
-            // the JS prompt.
-            aResult.DirectAttestationPermitted() = requestDirectAttestation;
             mgr->MaybeConfirmRegister(tid, aResult);
             Telemetry::ScalarAdd(
               Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
@@ -409,12 +401,6 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   if (!mTokenManagerImpl) {
     AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return;
-  }
-
-  if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
-      (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
@@ -487,7 +473,7 @@ U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent,
 
 NS_IMETHODIMP
 U2FTokenManager::ResumeRegister(uint64_t aTransactionId,
-                                bool aPermitDirectAttestation)
+                                bool aForceNoneAttestation)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
@@ -499,14 +485,14 @@ U2FTokenManager::ResumeRegister(uint64_t aTransactionId,
   nsCOMPtr<nsIRunnable> r(NewRunnableMethod<uint64_t, bool>(
       "U2FTokenManager::RunResumeRegister", this,
       &U2FTokenManager::RunResumeRegister, aTransactionId,
-      aPermitDirectAttestation));
+      aForceNoneAttestation));
 
   return gBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
 U2FTokenManager::RunResumeRegister(uint64_t aTransactionId,
-                                   bool aPermitDirectAttestation)
+                                   bool aForceNoneAttestation)
 {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -518,12 +504,8 @@ U2FTokenManager::RunResumeRegister(uint64_t aTransactionId,
     return;
   }
 
-  // Forward whether the user opted into direct attestation.
-  mPendingRegisterInfo.ref().RequestDirectAttestation() =
-    aPermitDirectAttestation;
-
   // Resume registration and cleanup.
-  DoRegister(mPendingRegisterInfo.ref());
+  DoRegister(mPendingRegisterInfo.ref(), aForceNoneAttestation);
   mPendingRegisterInfo.reset();
 }
 
