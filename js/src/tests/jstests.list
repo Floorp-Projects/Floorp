@@ -48,7 +48,7 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/Sha
 
 # flatMap and flatten are Nightly-only
 skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
-skip-if(!Array.prototype.flatten) include test262/built-ins/Array/prototype/flatten/jstests.list
+skip-if(!Array.prototype.flat) include test262/built-ins/Array/prototype/flat/jstests.list
 
 
 #####################################
