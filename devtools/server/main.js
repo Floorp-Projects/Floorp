@@ -147,7 +147,7 @@ var DebuggerServer = {
 
   /**
    * We run a special server in child process whose main actor is an instance
-   * of ContentActor, but that isn't a root actor. Instead there is no root
+   * of FrameTargetActor, but that isn't a root actor. Instead there is no root
    * actor registered on DebuggerServer.
    */
   get rootlessServer() {
@@ -1127,7 +1127,7 @@ var DebuggerServer = {
           resolve(null);
         }
         if (actor) {
-          // The ContentActor within the child process doesn't necessary
+          // The FrameTargetActor within the child process doesn't necessary
           // have time to uninitialize itself when the frame is closed/killed.
           // So ensure telling the client that the related actor is detached.
           connection.send({ from: actor.actor, type: "tabDetached" });

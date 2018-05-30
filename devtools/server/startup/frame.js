@@ -25,7 +25,7 @@ try {
 
     DebuggerServer.init();
     // We want a special server without any root actor and only tab actors.
-    // We are going to spawn a ContentActor instance in the next few lines,
+    // We are going to spawn a FrameTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
     DebuggerServer.registerActors({ tab: true });
 
@@ -56,8 +56,8 @@ try {
           const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
           actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
         } else {
-          const { ContentActor } = require("devtools/server/actors/content");
-          actor = new ContentActor(conn, chromeGlobal);
+          const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
+          actor = new FrameTargetActor(conn, chromeGlobal);
         }
 
         const actorPool = new ActorPool(conn);

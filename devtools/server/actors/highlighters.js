@@ -657,8 +657,8 @@ HighlighterEnvironment.prototype = {
    *   *and* if we're in the Browser Toolbox (to inspect Firefox Desktop): the
    *   targetActor is the RootActor, in which case, the window property can be
    *   used to listen to events.
-   * - With Firefox Desktop, the targetActor is a ContentActor, and we use the
-   *   chromeEventHandler which gives us a target we can use to listen to
+   * - With Firefox Desktop, the targetActor is a FrameTargetActor, and we use
+   *   the chromeEventHandler which gives us a target we can use to listen to
    *   events, even from nested iframes.
    * - If the environment was initialized from a window, we also use the
    *   chromeEventHandler.

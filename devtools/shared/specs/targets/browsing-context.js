@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {types, generateActorSpec, RetVal, Option} = require("devtools/shared/protocol");
+const { types, generateActorSpec, RetVal, Option } = require("devtools/shared/protocol");
 
 types.addDictType("browsingContextTarget.attach", {
   type: "string",
@@ -49,7 +49,7 @@ types.addDictType("browsingContextTarget.reconfigure", {
   performReload: "nullable:boolean"
 });
 
-const browsingContextTargetSpec = generateActorSpec({
+const browsingContextTargetSpecPrototype = {
   typeName: "browsingContextTarget",
 
   methods: {
@@ -109,7 +109,10 @@ const browsingContextTargetSpec = generateActorSpec({
       },
       response: {}
     }
-  }
-});
+  },
+};
 
+const browsingContextTargetSpec = generateActorSpec(browsingContextTargetSpecPrototype);
+
+exports.browsingContextTargetSpecPrototype = browsingContextTargetSpecPrototype;
 exports.browsingContextTargetSpec = browsingContextTargetSpec;
