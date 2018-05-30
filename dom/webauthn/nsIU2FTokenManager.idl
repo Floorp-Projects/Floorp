@@ -22,11 +22,10 @@ interface nsIU2FTokenManager : nsISupports
      * and we have to wait for user input to proceed.
      *
      * @param aTransactionID : The ID of the transaction to resume.
-     * @param aPermitDirectAttestation : Whether direct attestation was
-     *                                   permitted by the user.
+     * @param aForceNoneAttestation : The user might enforce none attestation.
      */
     void resumeRegister(in uint64_t aTransactionID,
-                        in bool aPermitDirectAttestation);
+                        in bool aForceNoneAttestation);
 
     /**
      * Cancels the current WebAuthn/U2F transaction if that matches the given

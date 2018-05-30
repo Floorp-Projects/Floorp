@@ -166,6 +166,11 @@ signed
 ======
 Signals that the output of this task contains signed artifacts.
 
+stub-installer
+==============
+Signals to the build system that this build is expected to have a stub installer
+present, and informs followon tasks to expect it.
+
 repackage_type
 ==============
 This is the type of repackage. Can be ``repackage`` or

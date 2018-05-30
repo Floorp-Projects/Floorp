@@ -32,10 +32,6 @@ bool JSAPITest::init()
 
 void JSAPITest::uninit()
 {
-    if (oldCompartment) {
-        JS::LeaveRealm(cx, JS::GetRealmForCompartment(oldCompartment));
-        oldCompartment = nullptr;
-    }
     if (global) {
         JS::LeaveRealm(cx, nullptr);
         global = nullptr;

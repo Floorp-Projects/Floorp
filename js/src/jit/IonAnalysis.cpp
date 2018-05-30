@@ -4247,7 +4247,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
     BaselineInspector inspector(script);
     const JitCompileOptions options(cx);
 
-    IonBuilder builder(cx, CompileCompartment::get(cx->compartment()), options, &temp, &graph, constraints,
+    IonBuilder builder(cx, CompileRealm::get(cx->realm()), options, &temp, &graph, constraints,
                        &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
 
     AbortReasonOr<Ok> buildResult = builder.build();
@@ -4493,7 +4493,7 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     BaselineInspector inspector(script);
     const JitCompileOptions options(cx);
 
-    IonBuilder builder(nullptr, CompileCompartment::get(cx->compartment()), options, &temp, &graph, constraints,
+    IonBuilder builder(nullptr, CompileRealm::get(cx->realm()), options, &temp, &graph, constraints,
                        &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
 
     AbortReasonOr<Ok> buildResult = builder.build();

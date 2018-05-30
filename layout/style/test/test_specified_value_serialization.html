@@ -122,23 +122,12 @@
     [ "-webkit-linear-gradient(top left, red, blue)",
       "-webkit-linear-gradient(left top, red, blue)",
       "-webkit-linear-gradient with box corner" ],
-  ];
 
-  if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    // Radial gradients (should be serialized using modern unprefixed style):
-    backgroundImages.push([
-      "-webkit-radial-gradient(contain, red, blue)",
-      "radial-gradient(closest-side, red, blue)",
-      "-webkit-radial-gradient with legacy 'contain' keyword",
-    ]);
-  } else {
     // Servo keeps the original prefix form which is closer to other impls.
-    backgroundImages.push([
-      "-webkit-radial-gradient(contain, red, blue)",
+    [ "-webkit-radial-gradient(contain, red, blue)",
       "-webkit-radial-gradient(center center, closest-side, red, blue)",
-      "-webkit-radial-gradient with legacy 'contain' keyword",
-    ]);
-  }
+      "-webkit-radial-gradient with legacy 'contain' keyword" ],
+  ];
 
   var frame_container = document.getElementById("display");
   var p = document.createElement("p");

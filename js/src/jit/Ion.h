@@ -49,14 +49,14 @@ static_assert(sizeof(AbortReasonOr<bool>) <= sizeof(uintptr_t),
 
 // A JIT context is needed to enter into either an JIT method or an instance
 // of a JIT compiler. It points to a temporary allocator and the active
-// JSContext, either of which may be nullptr, and the active compartment, which
+// JSContext, either of which may be nullptr, and the active realm, which
 // will not be nullptr.
 
 class JitContext
 {
   public:
     JitContext(JSContext* cx, TempAllocator* temp);
-    JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocator* temp);
+    JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator* temp);
     explicit JitContext(TempAllocator* temp);
     JitContext();
     ~JitContext();
@@ -68,10 +68,10 @@ class JitContext
     // Allocator for temporary memory during compilation.
     TempAllocator* temp;
 
-    // Wrappers with information about the current runtime/compartment for use
+    // Wrappers with information about the current runtime/realm for use
     // during compilation.
     CompileRuntime* runtime;
-    CompileCompartment* compartment;
+    CompileRealm* realm;
 
     int getNextAssemblerId() {
         return assemblerCount_++;

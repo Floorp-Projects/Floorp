@@ -73,9 +73,8 @@ class JSAPITest
     JS::PersistentRootedObject global;
     bool knownFail;
     JSAPITestString msgs;
-    JSCompartment* oldCompartment;
 
-    JSAPITest() : cx(nullptr), knownFail(false), oldCompartment(nullptr) {
+    JSAPITest() : cx(nullptr), knownFail(false) {
         next = list;
         list = this;
     }

@@ -224,8 +224,12 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!atomsRealm || !atomsRealm->init(nullptr))
         return false;
 
+    JSCompartment* atomsComp = atomsRealm->compartment();
+    if (!atomsComp->realms().append(atomsRealm))
+        return false;
+
     gc.atomsZone = atomsZone.get();
-    if (!atomsZone->compartments().append(atomsRealm->compartment()))
+    if (!atomsZone->compartments().append(atomsComp))
         return false;
 
     atomsRealm->setIsSystem(true);

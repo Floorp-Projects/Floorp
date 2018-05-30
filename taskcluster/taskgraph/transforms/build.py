@@ -9,6 +9,7 @@ kind.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.workertypes import worker_type_implementation
 
 transforms = TransformSequence()
@@ -33,11 +34,25 @@ def set_defaults(config, jobs):
 
 
 @transforms.add
+def stub_installer(config, jobs):
+    for job in jobs:
+        job.setdefault('attributes', {})
+        if job.get('stub-installer'):
+            resolve_keyed_by(
+                job, 'stub-installer', item_name=job['name'], project=config.params['project']
+            )
+            job['attributes']['stub-installer'] = job['stub-installer']
+            del job['stub-installer']
+            job['worker']['env'].update({"USE_STUB_INSTALLER": "1"})
+        yield job
+
+
+@transforms.add
 def set_env(config, jobs):
     """Set extra environment variables from try command line."""
-    env = {}
+    env = []
     if config.params['try_mode'] == 'try_option_syntax':
-        env = config.params['try_options']['env'] or {}
+        env = config.params['try_options']['env'] or []
     for job in jobs:
         if env:
             job['worker']['env'].update(dict(x.split('=') for x in env))

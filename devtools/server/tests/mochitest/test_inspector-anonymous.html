@@ -23,8 +23,6 @@ window.onload = function() {
     require("devtools/shared/dom-node-filter-constants");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-  const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.webcomponents.shadowdom.enabled", true]
   ]});
@@ -149,8 +147,8 @@ window.onload = function() {
   });
 
   addAsyncTest(async function testShadowAnonymous() {
-    // Stylo doesn't currently support shadow DOM (bug 1293844)
-    if (isStylo) {
+    if (true) {
+      // FIXME(bug 1465114)
       runNextTest();
       return;
     }

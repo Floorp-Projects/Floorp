@@ -134,7 +134,8 @@ public:
   explicit U2FHIDTokenManager();
 
   RefPtr<U2FRegisterPromise>
-  Register(const WebAuthnMakeCredentialInfo& aInfo) override;
+  Register(const WebAuthnMakeCredentialInfo& aInfo,
+           bool aForceNoneAttestation) override;
 
   RefPtr<U2FSignPromise>
   Sign(const WebAuthnGetAssertionInfo& aInfo) override;
@@ -153,9 +154,34 @@ private:
     mSignPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
   }
 
+  class Transaction
+  {
+  public:
+    Transaction(uint64_t aId,
+                const nsTArray<uint8_t>& aRpIdHash,
+                const nsCString& aClientDataJSON,
+                bool aForceNoneAttestation = false)
+      : mId(aId)
+      , mRpIdHash(aRpIdHash)
+      , mClientDataJSON(aClientDataJSON)
+      , mForceNoneAttestation(aForceNoneAttestation)
+    { }
+
+    // The transaction ID.
+    uint64_t mId;
+
+    // The RP ID hash.
+    nsTArray<uint8_t> mRpIdHash;
+
+    // The clientData JSON.
+    nsCString mClientDataJSON;
+
+    // Whether we'll force "none" attestation.
+    bool mForceNoneAttestation;
+  };
+
   rust_u2f_manager* mU2FManager;
-  uint64_t mTransactionId;
-  nsTArray<uint8_t> mCurrentAppId;
+  Maybe<Transaction> mTransaction;
   MozPromiseHolder<U2FRegisterPromise> mRegisterPromise;
   MozPromiseHolder<U2FSignPromise> mSignPromise;
 };

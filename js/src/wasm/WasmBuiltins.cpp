@@ -349,7 +349,7 @@ CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData, Value* argv)
 
     for (size_t i = 0; i < fe.sig().args().length(); i++) {
         HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
-        switch (fe.sig().args()[i]) {
+        switch (fe.sig().args()[i].code()) {
           case ValType::I32: {
             int32_t i32;
             if (!ToInt32(cx, arg, &i32))
@@ -1054,7 +1054,7 @@ ToBuiltinABIFunctionType(const Sig& sig)
         return Nothing();
 
     for (size_t i = 0; i < args.length(); i++) {
-        switch (args[i]) {
+        switch (args[i].code()) {
           case ValType::F32: abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1))); break;
           case ValType::F64: abiType |= (ArgType_Double << (ArgType_Shift * (i + 1))); break;
           default: return Nothing();
