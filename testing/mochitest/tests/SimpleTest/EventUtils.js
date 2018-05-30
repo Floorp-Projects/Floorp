@@ -1056,7 +1056,7 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
     modifiers |= _EU_isMac(aWindow) ? 0x00008000 : 0x00000800;
   }
   if (aModifiers.altGrKey) {
-    modifiers |= _EU_isWin(aWindow) ? 0x00002800 : 0x00001000;
+    modifiers |= _EU_isWin(aWindow) ? 0x00020000 : 0x00001000;
   }
   return modifiers;
 }

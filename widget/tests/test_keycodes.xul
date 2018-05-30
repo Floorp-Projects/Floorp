@@ -123,6 +123,9 @@ function eventToString(aEvent)
   if (aEvent.modifiers.altKey) {
     name += " [Alt]";
   }
+  if (aEvent.modifiers.altGrKey) {
+    name += " [AltGr]";
+  }
   if (aEvent.modifiers.altRightKey) {
     name += " [Right Alt]";
   }
@@ -186,6 +189,7 @@ function synthesizeKey(aEvent, aFocusElementId, aCallback)
 // also keydown/keyup events too.
 function* runKeyEventTests()
 {
+  var name; // Current test name. Needs to be renamed later.
   var eventList, keyDownFlags, keyUpFlags, testingEvent, expectedDOMKeyCode;
   const kShiftFlag    = 0x1;
   const kCtrlFlag     = 0x2;
@@ -218,43 +222,54 @@ function* runKeyEventTests()
       } else if (e.type == "keyup") {
         flags = keyUpFlags;
       }
-      switch (e.keyCode) {
-        case e.DOM_VK_SHIFT:
+      switch (e.key) {
+        case "Shift":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Shift " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Shift " + e.type + " event mismatch");
           is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of Shift " + e.type + " event mismatch");
           is(e.shiftKey, e.type == "keydown", name + ", Shift of Shift " + e.type + " event mismatch");
           return (testingEvent.modifiers.shiftKey || testingEvent.modifiers.shiftRightKey) &&
                  removeFlag(e, kShiftFlag) && expectedDOMKeyCode != e.keyCode;
-        case e.DOM_VK_CONTROL:
+        case "Control":
           is(e.ctrlKey, e.type == "keydown", name + ", Ctrl of Ctrl " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Ctrl " + e.type + " event mismatch");
-          is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of Ctrl " + e.type + " event mismatch");
+          // When AltGr key is released on Windows, ControlLeft keyup event
+          // is followed by AltRight keyup event.  However, altKey should be
+          // false in such case.
+          is(e.altKey, (flags & kAltFlag) != 0 && !(IS_WIN && testingEvent.modifiers.altGrKey),
+             name + ", Alt of Ctrl " + e.type + " event mismatch");
           is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Ctrl " + e.type + " event mismatch");
           return (testingEvent.modifiers.ctrlKey || testingEvent.modifiers.ctrlRightKey || (IS_WIN && testingEvent.modifiers.altGrKey)) &&
                  removeFlag(e, kCtrlFlag) && expectedDOMKeyCode != e.keyCode;
-        case e.DOM_VK_ALT:
-          is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Alt " + e.type + " event mismatch");
+        case "Alt":
+          // When AltGr key is pressed on Windows, ControlLeft keydown event
+          // is fired before AltLeft keydown.  However, ctrlKey should be
+          // true only when the first ControlLeft keydown event.
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0 && !(IS_WIN && testingEvent.modifiers.altGrKey),
+             name + ", Ctrl of Alt " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Alt " + e.type + " event mismatch");
-          is(e.altKey, e.type == "keydown", name + ", Alt of Alt " + e.type + " event mismatch");
+          // When AltGr key is pressed on Windows, altKey of any events should
+          // be set to false.
+          is(e.altKey, e.type == "keydown" && !(IS_WIN && testingEvent.modifiers.altGrKey),
+             name + ", Alt of Alt " + e.type + " event mismatch");
           is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Alt " + e.type + " event mismatch");
           return (testingEvent.modifiers.altKey || testingEvent.modifiers.altRightKey || (IS_WIN && testingEvent.modifiers.altGrKey)) &&
                  removeFlag(e, kAltFlag) && expectedDOMKeyCode != e.keyCode;
-        case e.DOM_VK_META:
+        case "Meta":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Command " + e.type + " evnet mismatch");
           is(e.metaKey, e.type == "keydown", name + ", Command of Command " + e.type + " evnet mismatch");
           is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of Command " + e.type + " evnet mismatch");
           is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Command " + e.type + " evnet mismatch");
           return (testingEvent.modifiers.metaKey || testingEvent.modifiers.metaRightKey) &&
                  removeFlag(e, kMetaFlag) && expectedDOMKeyCode != e.keyCode;
-        case e.DOM_VK_NUM_LOCK:
+        case "NumLock":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of NumLock " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of NumLock " + e.type + " event mismatch");
           is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of NumLock " + e.type + " event mismatch");
           is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of NumLock " + e.type + " event mismatch");
           return (testingEvent.modifiers.numLockKey || testingEvent.modifiers.numericKeyPadKey) &&
                  removeFlag(e, kNumLockFlag) && expectedDOMKeyCode != e.keyCode;
-        case e.DOM_VK_CAPS_LOCK:
+        case "CapsLock":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of CapsLock " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of CapsLock " + e.type + " event mismatch");
           is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of CapsLock " + e.type + " event mismatch");
@@ -333,7 +348,7 @@ function* runKeyEventTests()
     testingEvent = aEvent;
     expectedDOMKeyCode = aExpectedGeckoKeyCode;
 
-    var name = eventToString(aEvent);
+    name = eventToString(aEvent);
     ok(true, "Starting: " + name);
 
     return synthesizeKey(aEvent, "button", function() {
@@ -368,7 +383,7 @@ function* runKeyEventTests()
               !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey) && !aEvent.isInputtingCharacters;
             var isAltExpected =
               !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey) && !aEvent.isInputtingCharacters;
-            if (IS_WIN && (aEvent.modifiers.altGrKey || isCtrlExpected && isAltExpected)) {
+            if (IS_WIN && (isCtrlExpected && isAltExpected)) {
               isCtrlExpected = isAltExpected = (aEvent.chars == "");
             }
             is(e.ctrlKey, isCtrlExpected, name + ", Ctrl mismatch");
