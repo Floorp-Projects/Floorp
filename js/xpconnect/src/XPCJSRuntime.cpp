@@ -2165,8 +2165,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats) override {
         // Get some global in this zone.
         AutoSafeJSContext cx;
-        JSCompartment* comp = js::GetAnyCompartmentInZone(zone);
-        Rooted<Realm*> realm(cx, JS::GetRealmForCompartment(comp));
+        Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
         xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
         extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
         RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
