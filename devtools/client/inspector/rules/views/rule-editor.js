@@ -54,6 +54,7 @@ function RuleEditor(ruleView, rule) {
   this.ruleView = ruleView;
   this.doc = this.ruleView.styleDocument;
   this.toolbox = this.ruleView.inspector.toolbox;
+  this.telemetry = this.toolbox.telemetry;
   this.rule = rule;
 
   this.isEditable = !rule.isSystem;
@@ -589,6 +590,8 @@ RuleEditor.prototype = {
     // Blur the editor field now and deal with adding declarations later when
     // the field gets destroyed (see _newPropertyDestroy)
     this.editor.input.blur();
+
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
   },
 
   /**
