@@ -40,6 +40,14 @@ object DownloadUtils {
             Pattern.CASE_INSENSITIVE)
 
     /**
+     * Keys for the capture groups inside CONTENT_DISPOSITION_PATTERN
+     */
+    private const val ENCODED_FILE_NAME_GROUP = 5
+    private const val ENCODING_GROUP = 4
+    private const val QUOTED_FILE_NAME_GROUP = 3
+    private const val UNQUOTED_FILE_NAME = 2
+
+    /**
      * Definition as per RFC 5987, section 3.2.1. (value-chars)
      */
     private val ENCODED_SYMBOL_PATTERN = Pattern.compile("%[0-9a-f]{2}|[0-9a-z!#$&+-.^_`|~]", Pattern.CASE_INSENSITIVE)
@@ -139,19 +147,19 @@ object DownloadUtils {
 
             if (m.find()) {
                 // If escaped string is found, decode it using the given encoding.
-                val encodedFileName = m.group(5)
-                val encoding = m.group(4)
+                val encodedFileName = m.group(ENCODED_FILE_NAME_GROUP)
+                val encoding = m.group(ENCODING_GROUP)
 
                 if (encodedFileName != null) {
                     return decodeHeaderField(encodedFileName, encoding)
                 }
 
                 // Return quoted string if available and replace escaped characters.
-                val quotedFileName = m.group(3)
+                val quotedFileName = m.group(QUOTED_FILE_NAME_GROUP)
 
                 return if (quotedFileName != null) {
                     quotedFileName.replace("\\\\(.)".toRegex(), "$1")
-                } else m.group(2)
+                } else m.group(UNQUOTED_FILE_NAME)
 
                 // Otherwise try to extract the unquoted file name
             }
