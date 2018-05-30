@@ -24,7 +24,7 @@ nsSVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeNodeElement)
 

@@ -52,7 +52,7 @@ SVGScriptElement::~SVGScriptElement()
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 nsresult
 SVGScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

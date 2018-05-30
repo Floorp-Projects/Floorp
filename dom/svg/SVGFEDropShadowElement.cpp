@@ -40,7 +40,7 @@ nsSVGElement::StringInfo SVGFEDropShadowElement::sStringInfo[2] =
 };
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDropShadowElement)
 

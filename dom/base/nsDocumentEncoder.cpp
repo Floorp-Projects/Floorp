@@ -829,11 +829,9 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   mEndOffsets.Clear();
 
   nsContentUtils::GetAncestors(mCommonParent, mCommonAncestors);
-  nsCOMPtr<nsIDOMNode> sp = do_QueryInterface(startContainer);
-  nsContentUtils::GetAncestorsAndOffsets(sp, startOffset,
+  nsContentUtils::GetAncestorsAndOffsets(startContainer, startOffset,
                                          &mStartNodes, &mStartOffsets);
-  nsCOMPtr<nsIDOMNode> ep = do_QueryInterface(endContainer);
-  nsContentUtils::GetAncestorsAndOffsets(ep, endOffset,
+  nsContentUtils::GetAncestorsAndOffsets(endContainer, endOffset,
                                          &mEndNodes, &mEndOffsets);
 
   nsCOMPtr<nsIContent> commonContent = do_QueryInterface(mCommonParent);
@@ -1149,13 +1147,11 @@ protected:
   nsresult GetPromotedPoint(Endpoint aWhere, nsINode* aNode, int32_t aOffset,
                             nsCOMPtr<nsINode>* outNode, int32_t* outOffset, nsINode* aCommon);
   nsCOMPtr<nsINode> GetChildAt(nsINode *aParent, int32_t aOffset);
-  bool IsMozBR(nsIDOMNode* aNode);
   bool IsMozBR(Element* aNode);
   nsresult GetNodeLocation(nsINode *inChild, nsCOMPtr<nsINode> *outParent, int32_t *outOffset);
   bool IsRoot(nsINode* aNode);
   bool IsFirstNode(nsINode *aNode);
   bool IsLastNode(nsINode *aNode);
-  bool IsEmptyTextContent(nsIDOMNode* aNode);
   virtual bool IncludeInContext(nsINode *aNode) override;
   virtual int32_t
   GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray) override;
@@ -1732,14 +1728,6 @@ nsHTMLCopyEncoder::GetChildAt(nsINode *aParent, int32_t aOffset)
 }
 
 bool
-nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
-{
-  MOZ_ASSERT(aNode);
-  nsCOMPtr<Element> element = do_QueryInterface(aNode);
-  return element && IsMozBR(element);
-}
-
-bool
 nsHTMLCopyEncoder::IsMozBR(Element* aElement)
 {
   return aElement->IsHTMLElement(nsGkAtoms::br) &&
@@ -1829,13 +1817,6 @@ nsHTMLCopyEncoder::IsLastNode(nsINode *aNode)
   }
 
   return true;
-}
-
-bool
-nsHTMLCopyEncoder::IsEmptyTextContent(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
-  return cont && cont->TextIsOnlyWhitespace();
 }
 
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy

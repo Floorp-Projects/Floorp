@@ -33,7 +33,7 @@ public:
   void GetNewValue(nsAString& aNewValue) const;
   void GetAttrName(nsAString& aAttrName) const;
 
-  already_AddRefed<nsINode> GetRelatedNode();
+  nsINode* GetRelatedNode();
 
   uint16_t AttrChange();
 

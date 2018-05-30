@@ -15,7 +15,6 @@
 // Interfaces needed to be included
 #include "nsCopySupport.h"
 #include "nsISelectionController.h"
-#include "nsIDOMNode.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFormControl.h"
 #include "nsITransferable.h"

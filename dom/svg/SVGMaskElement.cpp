@@ -57,7 +57,7 @@ SVGMaskElement::SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeIn
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode method
+// nsINode method
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMaskElement)
 

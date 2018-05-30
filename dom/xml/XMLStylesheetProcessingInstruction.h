@@ -43,7 +43,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLStylesheetProcessingInstruction,
                                            ProcessingInstruction)
 
-  // nsIDOMNode
+  // nsINode
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     mozilla::ErrorResult& aError) override;
 

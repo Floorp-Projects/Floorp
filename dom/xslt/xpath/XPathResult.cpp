@@ -9,7 +9,6 @@
 #include "nsError.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMNode.h"
 #include "nsDOMString.h"
 #include "txXPathTreeWalker.h"
 #include "nsCycleCollectionParticipant.h"
