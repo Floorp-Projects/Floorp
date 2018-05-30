@@ -18,7 +18,6 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrameInlines.h"

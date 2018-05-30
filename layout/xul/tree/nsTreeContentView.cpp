@@ -685,8 +685,7 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
         sortdirection.Append(' ');
         sortdirection += hints;
 
-        nsCOMPtr<nsIDOMNode> rootnode = do_QueryInterface(mRoot);
-        xs->Sort(rootnode, sort, sortdirection);
+        xs->Sort(mRoot, sort, sortdirection);
       }
     }
   }
