@@ -634,7 +634,6 @@ nsFrame::Init(nsIContent*       aContent,
     AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
                           NS_FRAME_PART_OF_IBSPLIT |
                           NS_FRAME_MAY_BE_TRANSFORMED |
-                          NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
                           NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   } else {
     PresContext()->ConstructedFrame();
