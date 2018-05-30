@@ -69,6 +69,10 @@ public class SharedPreferencesUtil {
     final SharedPreferences sharedPreferences = getPreferences(context, sharedPreferenceName);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(key, value);
+    commitChanges(editor);
+  }
+
+  public static void commitChanges(SharedPreferences.Editor editor){
     try {
       editor.apply();
     } catch (NoSuchMethodError e) {

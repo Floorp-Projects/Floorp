@@ -21,14 +21,18 @@
 
 package com.leanplum.activities;
 
-import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.res.Resources;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 
-@SuppressLint("Registered")
+/**
+ *  @deprecated due to rising minimal API to 14. This class will be removed in a
+ *  future major release. Please use {@link LeanplumActivityHelper} to track your activities
+ *  automatically.
+ */
+@Deprecated
 public class LeanplumListActivity extends ListActivity {
   private LeanplumActivityHelper helper;
 

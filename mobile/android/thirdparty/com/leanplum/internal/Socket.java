@@ -48,6 +48,8 @@ import java.util.TimerTask;
  *
  * @author Andrew First, Ben Marten
  */
+// Suppressing deprecated apache dependency.
+@SuppressWarnings("deprecation")
 public class Socket {
   private static final String TAG = "Leanplum";
   private static final String EVENT_CONTENT_RESPONSE = "getContentResponse";
@@ -58,6 +60,7 @@ public class Socket {
   private static final String EVENT_GET_VARIABLES = "getVariables";
   private static final String EVENT_GET_ACTIONS = "getActions";
   private static final String EVENT_REGISTER_DEVICE = "registerDevice";
+  private static final String EVENT_APPLY_VARS = "applyVars";
 
   private static Socket instance = new Socket();
   private SocketIOClient sio;
@@ -135,6 +138,9 @@ public class Socket {
               break;
             case EVENT_REGISTER_DEVICE:
               handleRegisterDeviceEvent(arguments);
+              break;
+            case EVENT_APPLY_VARS:
+              handleApplyVarsEvent(arguments);
               break;
             default:
               break;
@@ -285,6 +291,28 @@ public class Socket {
         });
       }
     });
+  }
+
+  /**
+   * Apply variables passed in from applyVars endpoint.
+   */
+  static void handleApplyVarsEvent(JSONArray args) {
+    if (args == null) {
+      return;
+    }
+
+    try {
+      JSONObject object = args.getJSONObject(0);
+      if (object == null) {
+        return;
+      }
+      VarCache.applyVariableDiffs(
+          JsonConverter.mapFromJson(object), null, null, null, null, null);
+    } catch (JSONException e) {
+      Log.e("Couldn't applyVars for preview.", e);
+    } catch (Throwable e) {
+      Util.handleException(e);
+    }
   }
 
   void previewUpdateRules(JSONArray arguments) {

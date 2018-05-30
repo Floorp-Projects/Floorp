@@ -30,11 +30,12 @@ import com.leanplum.callbacks.NewsfeedChangedCallback;
  * @author Aleksandar Gyorev
  */
 public class Newsfeed extends LeanplumInbox {
-
+  private static Newsfeed instance = new Newsfeed();
   /**
    * A private constructor, which prevents any other class from instantiating.
    */
-  Newsfeed() {
+  private Newsfeed() {
+      super();
   }
 
   /**

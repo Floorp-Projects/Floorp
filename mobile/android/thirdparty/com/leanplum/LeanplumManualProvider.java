@@ -33,19 +33,22 @@ public class LeanplumManualProvider extends LeanplumCloudMessagingProvider {
     onRegistrationIdReceived(context, registrationId);
   }
 
+  @Override
   public String getRegistrationId() {
     return getCurrentRegistrationId();
   }
 
+  @Override
   public boolean isInitialized() {
     return true;
   }
 
-  public boolean isManifestSetUp() {
+  @Override
+  public boolean isManifestSetup() {
     return true;
   }
 
+  @Override
   public void unregister() {
-
   }
 }
