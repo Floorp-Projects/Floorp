@@ -20,7 +20,7 @@ namespace dom {
 class DocGroup;
 } // namespace dom
 
-class ServoDeclarationBlock;
+class DeclarationBlock;
 class ServoPageRule;
 
 class ServoPageRuleDeclaration final : public nsDOMCSSDeclaration
@@ -49,7 +49,7 @@ private:
   inline ServoPageRule* Rule();
   inline const ServoPageRule* Rule() const;
 
-  RefPtr<ServoDeclarationBlock> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 class ServoPageRule final : public dom::CSSPageRule

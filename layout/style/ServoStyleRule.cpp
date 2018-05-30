@@ -8,9 +8,8 @@
 
 #include "mozilla/ServoStyleRule.h"
 
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/dom/CSSStyleRuleBinding.h"
 
 #include "mozAutoDocUpdate.h"
@@ -23,7 +22,7 @@ namespace mozilla {
 
 ServoStyleRuleDeclaration::ServoStyleRuleDeclaration(
   already_AddRefed<RawServoDeclarationBlock> aDecls)
-  : mDecls(new ServoDeclarationBlock(Move(aDecls)))
+  : mDecls(new DeclarationBlock(Move(aDecls)))
 {
 }
 
@@ -74,7 +73,7 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
     if (aDecl != mDecls) {
       mDecls->SetOwningRule(nullptr);
-      RefPtr<ServoDeclarationBlock> decls = aDecl->AsServo();
+      RefPtr<DeclarationBlock> decls = aDecl;
       Servo_StyleRule_SetStyle(rule->Raw(), decls->Raw());
       mDecls = decls.forget();
       mDecls->SetOwningRule(rule);

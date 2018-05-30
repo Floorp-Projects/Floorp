@@ -53,7 +53,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RestyleManager.h"
 
@@ -1188,7 +1187,7 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                        const nsAString& aMappedAttrValue)
 {
   if (!mDecl) {
-    mDecl = new ServoDeclarationBlock();
+    mDecl = new DeclarationBlock();
   }
 
   // Get the nsCSSPropertyID ID for our mapped attribute.
@@ -1202,7 +1201,7 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
     RefPtr<URLExtraData> data = new URLExtraData(mBaseURI, mDocURI,
                                                  mElement->NodePrincipal());
     changed = Servo_DeclarationBlock_SetPropertyById(
-      mDecl->AsServo()->Raw(), propertyID, &value, false, data,
+      mDecl->Raw(), propertyID, &value, false, data,
       ParsingMode::AllowUnitlessLength, mElement->OwnerDoc()->GetCompatibilityMode(), mLoader);
 
     if (changed) {
@@ -1231,7 +1230,7 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
     RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
-    Servo_DeclarationBlock_SetIdentStringValue(mDecl->AsServo()->Raw(), propertyID, atom);
+    Servo_DeclarationBlock_SetIdentStringValue(mDecl->Raw(), propertyID, atom);
   }
 }
 

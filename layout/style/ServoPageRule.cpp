@@ -8,9 +8,8 @@
 
 #include "mozilla/ServoPageRule.h"
 
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoDeclarationBlock.h"
 
 using namespace mozilla::dom;
 
@@ -20,7 +19,7 @@ namespace mozilla {
 
 ServoPageRuleDeclaration::ServoPageRuleDeclaration(
   already_AddRefed<RawServoDeclarationBlock> aDecls)
-  : mDecls(new ServoDeclarationBlock(Move(aDecls)))
+  : mDecls(new DeclarationBlock(Move(aDecls)))
 {
 }
 
@@ -72,7 +71,7 @@ ServoPageRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 
   if (aDecl != mDecls) {
     mDecls->SetOwningRule(nullptr);
-    RefPtr<ServoDeclarationBlock> decls = aDecl->AsServo();
+    RefPtr<DeclarationBlock> decls = aDecl;
     Servo_PageRule_SetStyle(rule->Raw(), decls->Raw());
     mDecls = decls.forget();
     mDecls->SetOwningRule(rule);
