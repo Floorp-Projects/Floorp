@@ -18,13 +18,18 @@ using namespace js;
 using namespace js::gc;
 
 static void
-IterateCompartmentsArenasCellsUnbarriered(JSContext* cx, Zone* zone, void* data,
-                                          JSIterateCompartmentCallback compartmentCallback,
-                                          IterateArenaCallback arenaCallback,
-                                          IterateCellCallback cellCallback)
+IterateRealmsArenasCellsUnbarriered(JSContext* cx, Zone* zone, void* data,
+                                    JS::IterateRealmCallback realmCallback,
+                                    IterateArenaCallback arenaCallback,
+                                    IterateCellCallback cellCallback)
 {
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        (*compartmentCallback)(cx, data, comp);
+    {
+        Rooted<Realm*> realm(cx);
+        for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+            realm = r;
+            (*realmCallback)(cx, data, realm);
+        }
+    }
 
     for (auto thingKind : AllAllocKinds()) {
         JS::TraceKind traceKind = MapAllocToTraceKind(thingKind);
@@ -42,7 +47,7 @@ IterateCompartmentsArenasCellsUnbarriered(JSContext* cx, Zone* zone, void* data,
 void
 js::IterateHeapUnbarriered(JSContext* cx, void* data,
                            IterateZoneCallback zoneCallback,
-                           JSIterateCompartmentCallback compartmentCallback,
+                           JS::IterateRealmCallback realmCallback,
                            IterateArenaCallback arenaCallback,
                            IterateCellCallback cellCallback)
 {
@@ -50,23 +55,23 @@ js::IterateHeapUnbarriered(JSContext* cx, void* data,
 
     for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
         (*zoneCallback)(cx->runtime(), data, zone);
-        IterateCompartmentsArenasCellsUnbarriered(cx, zone, data,
-                                                  compartmentCallback, arenaCallback, cellCallback);
+        IterateRealmsArenasCellsUnbarriered(cx, zone, data,
+                                            realmCallback, arenaCallback, cellCallback);
     }
 }
 
 void
 js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
                                   IterateZoneCallback zoneCallback,
-                                  JSIterateCompartmentCallback compartmentCallback,
+                                  JS::IterateRealmCallback realmCallback,
                                   IterateArenaCallback arenaCallback,
                                   IterateCellCallback cellCallback)
 {
     AutoPrepareForTracing prop(cx);
 
     (*zoneCallback)(cx->runtime(), data, zone);
-    IterateCompartmentsArenasCellsUnbarriered(cx, zone, data,
-                                              compartmentCallback, arenaCallback, cellCallback);
+    IterateRealmsArenasCellsUnbarriered(cx, zone, data,
+                                        realmCallback, arenaCallback, cellCallback);
 }
 
 void
@@ -138,4 +143,16 @@ JS_IterateCompartments(JSContext* cx, void* data,
 
     for (CompartmentsIter c(cx->runtime(), WithAtoms); !c.done(); c.next())
         (*compartmentCallback)(cx, data, c);
+}
+
+JS_PUBLIC_API(void)
+JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallback)
+{
+    AutoTraceSession session(cx->runtime());
+
+    Rooted<Realm*> realm(cx);
+    for (RealmsIter r(cx->runtime(), WithAtoms); !r.done(); r.next()) {
+        realm = r;
+        (*realmCallback)(cx, data, realm);
+    }
 }

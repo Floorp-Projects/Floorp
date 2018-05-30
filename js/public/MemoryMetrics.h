@@ -980,7 +980,7 @@ struct RuntimeStats
 
     mozilla::MallocSizeOf mallocSizeOf_;
 
-    virtual void initExtraRealmStats(JSCompartment* c, RealmStats* rstats) = 0;
+    virtual void initExtraRealmStats(JS::Handle<JS::Realm*> realm, RealmStats* rstats) = 0;
     virtual void initExtraZoneStats(JS::Zone* zone, ZoneStats* zstats) = 0;
 
 #undef FOR_EACH_SIZE
