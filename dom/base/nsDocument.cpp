@@ -3754,7 +3754,7 @@ nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
 
   // Referrer policy spec says to ignore any empty referrer policies.
   if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
-     enum ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
+     enum mozilla::net::ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
     // If policy is not the empty string, then set element's node document's
     // referrer policy to policy
     if (policy != mozilla::net::RP_Unset) {
@@ -3766,7 +3766,7 @@ nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
   }
 
   if (aHeaderField == nsGkAtoms::headerReferrerPolicy && !aData.IsEmpty()) {
-     enum ReferrerPolicy policy = nsContentUtils::GetReferrerPolicyFromHeader(aData);
+     enum mozilla::net::ReferrerPolicy policy = nsContentUtils::GetReferrerPolicyFromHeader(aData);
     if (policy != mozilla::net::RP_Unset) {
       mReferrerPolicy = policy;
       mReferrerPolicySet = true;
@@ -8961,7 +8961,7 @@ nsIDocument::ResolvePreloadImage(nsIURI *aBaseURI,
 void
 nsIDocument::MaybePreLoadImage(nsIURI* uri,
                                const nsAString &aCrossOriginAttr,
-                               enum ReferrerPolicy aReferrerPolicy,
+                               enum mozilla::net::ReferrerPolicy aReferrerPolicy,
                                bool aIsImgSet)
 {
   // Early exit if the img is already present in the img-cache
@@ -9108,7 +9108,7 @@ void
 nsIDocument::PreloadStyle(nsIURI* uri,
                           const Encoding* aEncoding,
                           const nsAString& aCrossOriginAttr,
-                          const enum ReferrerPolicy aReferrerPolicy,
+                          const enum mozilla::net::ReferrerPolicy aReferrerPolicy,
                           const nsAString& aIntegrity)
 {
   // The CSSLoader will retain this object after we return.

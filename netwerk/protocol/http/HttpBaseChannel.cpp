@@ -3268,7 +3268,7 @@ HttpBaseChannel::CloneLoadInfoForRedirect(nsIURI * newURI, uint32_t redirectFlag
   }
 
   nsCOMPtr<nsILoadInfo> newLoadInfo =
-    static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
+    static_cast<mozilla::net::LoadInfo*>(mLoadInfo.get())->Clone();
 
   nsContentPolicyType contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
   if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
