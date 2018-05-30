@@ -67,7 +67,7 @@ class TestharnessResultConverter(object):
         result_url, status, message, stack, subtest_results = result
         assert result_url == test.url, ("Got results from %s, expected %s" %
                                         (result_url, test.url))
-        harness_result = test.result_cls(self.harness_codes[status], message, extra=extra)
+        harness_result = test.result_cls(self.harness_codes[status], message, extra=extra, stack=stack)
         return (harness_result,
                 [test.subtest_result_cls(st_name, self.test_codes[st_status], st_message, st_stack)
                  for st_name, st_status, st_message, st_stack in subtest_results])
@@ -77,8 +77,11 @@ testharness_result_converter = TestharnessResultConverter()
 
 
 def reftest_result_converter(self, test, result):
-    return (test.result_cls(result["status"], result["message"],
-                            extra=result.get("extra", {})), [])
+    return (test.result_cls(
+        result["status"],
+        result["message"],
+        extra=result.get("extra", {}),
+        stack=result.get("stack")), [])
 
 
 def pytest_result_converter(self, test, data):
