@@ -45,6 +45,8 @@ graph_config_schema = Schema({
             Required('target-tasks-method'): basestring,
             Optional('release-type'): basestring,
             Optional('rebuild-kinds'): [basestring],
+            Optional('version-bump'): bool,
+            Optional('partial-updates'): bool,
         }},
     },
     Required('scriptworker'): {
