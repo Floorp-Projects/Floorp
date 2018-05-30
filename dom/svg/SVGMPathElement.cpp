@@ -49,7 +49,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGMPathElement,
                                              SVGMPathElementBase,
-                                             nsIDOMNode,
                                              nsIMutationObserver)
 
 // Constructor

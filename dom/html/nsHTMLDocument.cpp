@@ -22,7 +22,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIDOMNode.h" // for Find
 #include "nsPIDOMWindow.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"

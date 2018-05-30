@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CharacterData.h"
-#include "nsIDOMNode.h"
 #include "nsAString.h"
 #include "nsStyleLinkElement.h"
 
@@ -21,13 +20,13 @@ namespace dom {
 
 class ProcessingInstruction : public CharacterData
                             , public nsStyleLinkElement
-                            , public nsIDOMNode
 {
 public:
   ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                         const nsAString& aData);
 
-  // nsISupports
+  // nsISupports.  We need to declare QI, because nsStyleLinkElement
+  // has a pure-virtual QI.
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual already_AddRefed<CharacterData>

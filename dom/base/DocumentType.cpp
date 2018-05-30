@@ -62,8 +62,6 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
 
 DocumentType::~DocumentType() = default;
 
-NS_IMPL_ISUPPORTS_INHERITED(DocumentType, CharacterData, nsIDOMNode)
-
 bool
 DocumentType::IsNodeOfType(uint32_t aFlags) const
 {
