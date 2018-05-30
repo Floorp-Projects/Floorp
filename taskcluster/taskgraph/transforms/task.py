@@ -591,6 +591,7 @@ V2_NIGHTLY_L10N_TEMPLATES = [
 V2_L10N_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.revision.{branch_rev}.{product}-l10n.{job-name}.{locale}",
     "index.{trust-domain}.v2.{project}.pushdate.{build_date_long}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
+    "index.{trust-domain}.v2.{project}.pushlog-id.{pushlog_id}.{product}-l10n.{job-name}.{locale}",
     "index.{trust-domain}.v2.{project}.latest.{product}-l10n.{job-name}.{locale}",
 ]
 
@@ -1412,6 +1413,8 @@ def add_nightly_l10n_index_routes(config, task, force_locale=None):
     subs['job-name'] = index['job-name']
     subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
                                             time.gmtime(config.params['build_date']))
+    subs['build_date'] = time.strftime("%Y.%m.%d",
+                                       time.gmtime(config.params['build_date']))
     subs['product'] = index['product']
     subs['trust-domain'] = config.graph_config['trust-domain']
     subs['branch_rev'] = get_branch_rev(config)
@@ -1433,8 +1436,6 @@ def add_nightly_l10n_index_routes(config, task, force_locale=None):
         for tpl in V2_NIGHTLY_L10N_TEMPLATES:
             routes.append(tpl.format(locale=locale, **subs))
 
-    # Add locales at old route too
-    task = add_l10n_index_routes(config, task, force_locale=force_locale)
     return task
 
 

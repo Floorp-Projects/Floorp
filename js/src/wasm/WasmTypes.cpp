@@ -54,7 +54,7 @@ static_assert(MaxMemoryInitialPages <= ArrayBufferObject::MaxBufferByteLength / 
 void
 Val::writePayload(uint8_t* dst) const
 {
-    switch (type_) {
+    switch (type_.code()) {
       case ValType::I32:
       case ValType::F32:
         memcpy(dst, &u.i32_, sizeof(u.i32_));
@@ -181,7 +181,7 @@ static const unsigned sMaxTypes = (sTotalBits - sTagBits - sReturnBit - sLengthB
 static bool
 IsImmediateType(ValType vt)
 {
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I32:
       case ValType::I64:
       case ValType::F32:
@@ -204,7 +204,7 @@ static unsigned
 EncodeImmediateType(ValType vt)
 {
     static_assert(4 < (1 << sTypeBits), "fits");
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I32:
         return 0;
       case ValType::I64:

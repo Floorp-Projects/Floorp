@@ -38,10 +38,8 @@ class U2FTransaction
                   nsMainThreadPtrHandle<U2FSignCallback>> U2FCallback;
 
 public:
-  explicit U2FTransaction(const nsCString& aClientData,
-                          const U2FCallback&& aCallback)
-    : mClientData(aClientData)
-    , mCallback(Move(aCallback))
+  explicit U2FTransaction(const U2FCallback&& aCallback)
+    : mCallback(Move(aCallback))
     , mId(NextId())
   {
     MOZ_ASSERT(mId > 0);
@@ -62,9 +60,6 @@ public:
   auto& GetSignCallback() {
     return mCallback.as<nsMainThreadPtrHandle<U2FSignCallback>>();
   }
-
-  // Client data used to assemble reply objects.
-  nsCString mClientData;
 
   // The callback passed to the API.
   U2FCallback mCallback;

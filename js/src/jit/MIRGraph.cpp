@@ -17,11 +17,11 @@ using namespace js;
 using namespace js::jit;
 using mozilla::Swap;
 
-MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
+MIRGenerator::MIRGenerator(CompileRealm* realm, const JitCompileOptions& options,
                            TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
                            const OptimizationInfo* optimizationInfo)
-  : compartment(compartment),
-    runtime(compartment ? compartment->runtime() : nullptr),
+  : realm(realm),
+    runtime(realm ? realm->runtime() : nullptr),
     info_(info),
     optimizationInfo_(optimizationInfo),
     alloc_(alloc),
@@ -38,7 +38,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
     safeForMinorGC_(true),
-    stringsCanBeInNursery_(compartment ? compartment->zone()->canNurseryAllocateStrings() : false),
+    stringsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateStrings() : false),
     minWasmHeapLength_(0),
     options(options),
     gs_(alloc)

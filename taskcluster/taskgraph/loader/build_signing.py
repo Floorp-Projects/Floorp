@@ -13,6 +13,8 @@ NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS = (
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
     'build-win32-devedition/opt', 'build-win64-devedition/opt',
     'build-win64-ccov/debug',
+    'build-linux/opt', 'build-linux64/opt', 'build-macosx64/opt',
+    'build-android-api-16/opt'
     'release-source-linux64-source/opt',
     'release-source-linux64-fennec-source/opt',
     'release-source-linux64-devedition-source/opt',

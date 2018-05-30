@@ -110,7 +110,7 @@ load 347898-1.html
 load 348126-1.html
 load 348688-1.html
 load 348708-1.xhtml
-asserts(1) asserts-if(stylo,0) load 348729-1.html # bug 548836
+load 348729-1.html
 load 349095-1.xhtml
 load 350128-1.xhtml
 load 350267-1.html
@@ -266,7 +266,7 @@ load 448543-1.html
 load 448543-2.html
 load 448543-3.html
 load 450319-1.xhtml
-asserts(1) asserts-if(stylo&&Android,2) load 453894-1.xhtml # Bug 398043
+asserts(1) asserts-if(Android,2) load 453894-1.xhtml # Bug 398043
 load 454751-1.xul
 load 455063-1.html
 load 455063-2.html

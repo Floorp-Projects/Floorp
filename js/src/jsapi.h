@@ -4614,7 +4614,7 @@ static MOZ_ALWAYS_INLINE JSFlatString*
 JSID_TO_FLAT_STRING(jsid id)
 {
     MOZ_ASSERT(JSID_IS_STRING(id));
-    return (JSFlatString*)(JSID_BITS(id));
+    return (JSFlatString*)JSID_TO_STRING(id);
 }
 
 static MOZ_ALWAYS_INLINE JSFlatString*

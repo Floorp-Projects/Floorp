@@ -164,12 +164,139 @@ struct ShareableBase : AtomicRefCounted<T>
     }
 };
 
+enum class ExprType;
+
+class ValType
+{
+    struct {
+        uint32_t code_ : 8;           // If code_ is InvalidCode then the ValType is invalid
+        uint32_t refTypeIndex_ : 24;  // If code_ is not Ref then this must be NoIndex
+    };
+
+    static const uint32_t InvalidCode  = uint32_t(TypeCode::Limit);
+    static const uint32_t NoIndex = 0xFFFFFF;
+
+  public:
+    enum Code {
+        I32    = uint8_t(TypeCode::I32),
+        I64    = uint8_t(TypeCode::I64),
+        F32    = uint8_t(TypeCode::F32),
+        F64    = uint8_t(TypeCode::F64),
+
+        AnyRef = uint8_t(TypeCode::AnyRef),
+
+        // ------------------------------------------------------------------------
+        // The rest of these types are currently only emitted internally when
+        // compiling asm.js and are rejected by wasm validation.
+
+        I8x16  = uint8_t(TypeCode::I8x16),
+        I16x8  = uint8_t(TypeCode::I16x8),
+        I32x4  = uint8_t(TypeCode::I32x4),
+        F32x4  = uint8_t(TypeCode::F32x4),
+        B8x16  = uint8_t(TypeCode::B8x16),
+        B16x8  = uint8_t(TypeCode::B16x8),
+        B32x4  = uint8_t(TypeCode::B32x4)
+    };
+
+    ValType()
+      : code_(InvalidCode), refTypeIndex_(NoIndex)
+    {}
+
+    MOZ_IMPLICIT ValType(ValType::Code c)
+      : code_(uint32_t(c)), refTypeIndex_(NoIndex)
+    {
+        assertValid();
+    }
+
+    explicit inline ValType(ExprType t);
+
+    static ValType fromTypeCode(uint32_t code) {
+        return ValType(code, NoIndex);
+    }
+
+    static ValType fromBitsUnsafe(uint32_t bits) {
+        // This will change once we have Ref types.
+        return ValType(bits & 255, NoIndex);
+    }
+
+    bool isValid() const {
+        return code_ != InvalidCode;
+    }
+
+    Code code() const {
+        return Code(code_);
+    }
+    uint32_t refTypeIndex() const {
+        return refTypeIndex_;
+    }
+
+    uint32_t bitsUnsafe() const {
+        // This will change once we have Ref types.
+        return code_;
+    }
+
+    bool operator ==(const ValType& that) const {
+        return code_ == that.code_ && refTypeIndex_ == that.refTypeIndex_;
+    }
+    bool operator !=(const ValType& that) const {
+        return !(*this == that);
+    }
+    bool operator ==(ValType::Code that) const {
+        // This will change once we have Ref types.
+        return code_ == uint32_t(that) && refTypeIndex_ == NoIndex;
+    }
+    bool operator !=(ValType::Code that) const {
+        return !(*this == that);
+    }
+
+  private:
+    ValType(uint32_t code, uint32_t refTypeIndex)
+      : code_(code),
+        refTypeIndex_(refTypeIndex)
+    {
+        // 8-bit field.  Invalid values have their own constructor and should
+        // not appear here.
+        MOZ_ASSERT(code <= 0xFF && code != InvalidCode);
+        // 24-bit field.
+        MOZ_ASSERT(refTypeIndex <= 0xFFFFFF);
+
+        assertValid();
+    }
+
+    void assertValid() const {
+#ifdef DEBUG
+        // This will change once we have Ref types.
+        MOZ_ASSERT(refTypeIndex_ == NoIndex);
+        switch (code_) {
+          case uint8_t(Code::I32):
+          case uint8_t(Code::I64):
+          case uint8_t(Code::F32):
+          case uint8_t(Code::F64):
+          case uint8_t(Code::AnyRef):
+          case uint8_t(Code::I8x16):
+          case uint8_t(Code::I16x8):
+          case uint8_t(Code::I32x4):
+          case uint8_t(Code::F32x4):
+          case uint8_t(Code::B8x16):
+          case uint8_t(Code::B16x8):
+          case uint8_t(Code::B32x4):
+          case InvalidCode:
+            break;
+          default:
+            MOZ_CRASH("Invalid code");
+        }
+#endif
+    }
+};
+
+typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+
 // ValType utilities
 
 static inline unsigned
 SizeOf(ValType vt)
 {
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I32:
       case ValType::F32:
         return 4;
@@ -193,7 +320,7 @@ SizeOf(ValType vt)
 static inline bool
 IsSimdType(ValType vt)
 {
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I8x16:
       case ValType::I16x8:
       case ValType::I32x4:
@@ -211,7 +338,7 @@ static inline uint32_t
 NumSimdElements(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I8x16:
       case ValType::B8x16:
         return 16;
@@ -231,7 +358,7 @@ static inline ValType
 SimdElementType(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I8x16:
       case ValType::I16x8:
       case ValType::I32x4:
@@ -251,7 +378,7 @@ static inline ValType
 SimdBoolType(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I8x16:
       case ValType::B8x16:
         return ValType::B8x16;
@@ -276,7 +403,7 @@ IsSimdBoolType(ValType vt)
 static inline jit::MIRType
 ToMIRType(ValType vt)
 {
-    switch (vt) {
+    switch (vt.code()) {
       case ValType::I32:    return jit::MIRType::Int32;
       case ValType::I64:    return jit::MIRType::Int64;
       case ValType::F32:    return jit::MIRType::Float32;
@@ -331,6 +458,12 @@ enum class ExprType
     Limit  = uint8_t(TypeCode::Limit)
 };
 
+inline ValType::ValType(ExprType t)
+  : code_(uint32_t(t)), refTypeIndex_(NoIndex)
+{
+    assertValid();
+}
+
 static inline bool
 IsVoid(ExprType et)
 {
@@ -347,7 +480,7 @@ NonVoidToValType(ExprType et)
 static inline ExprType
 ToExprType(ValType vt)
 {
-    return ExprType(vt);
+    return ExprType(vt.bitsUnsafe());
 }
 
 static inline bool
@@ -579,7 +712,10 @@ class Sig
     const ExprType& ret() const { return ret_; }
 
     HashNumber hash() const {
-        return AddContainerToHash(args_, HashNumber(ret_));
+        HashNumber hn = HashNumber(ret_);
+        for (const ValType& vt : args_)
+            hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
+        return hn;
     }
     bool operator==(const Sig& rhs) const {
         return ret() == rhs.ret() && EqualContainers(args(), rhs.args());

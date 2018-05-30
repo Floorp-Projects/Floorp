@@ -9827,27 +9827,22 @@ GetCorrectedParent(const nsIFrame* aFrame)
     pseudo = aFrame->PrincipalChildList().FirstChild()->Style()->GetPseudo();
   }
 
-  // Prevent NAC from inheriting NAC. This partially duplicates the logic
-  // implemented in nsCSSFrameConstructor::AddFCItemsForAnonymousContent, and is
-  // necessary so that restyle inherits style in the same way as the initial
-  // styling performed in frame construction.
-  //
-  // It would be nice to put it in CorrectStyleParentFrame and therefore share
-  // it, but that would lose the information of whether the _child_ is NAC,
-  // since CorrectStyleParentFrame only knows about the prospective _parent_.
-  // This duplication and complexity will go away when we fully switch to the
-  // Servo style system, where all this can be handled much more naturally.
-  //
-  // We need to take special care not to disrupt the style inheritance of frames
-  // whose content is NAC but who implement a pseudo (like an anonymous
-  // box, or a non-NAC-backed pseudo like ::first-line) that does not match the
-  // one that the NAC implements, if any.
-  nsIContent* content = aFrame->GetContent();
-  Element* element =
-    content && content->IsElement() ? content->AsElement() : nullptr;
-  if (element && element->IsNativeAnonymous() && !element->IsNativeScrollbarContent() &&
-      element->GetPseudoElementType() == aFrame->Style()->GetPseudoType()) {
-    while (parent->GetContent() && parent->GetContent()->IsNativeAnonymous()) {
+  // Prevent a NAC pseudo-element from inheriting from its NAC parent, and
+  // inherit from the NAC generator element instead.
+  if (pseudo) {
+    MOZ_ASSERT(aFrame->GetContent());
+    Element* element =
+      aFrame->GetContent()->IsElement()
+        ? aFrame->GetContent()->AsElement() : nullptr;
+    // Make sure to avoid doing the fixup for non-element-backed pseudos like
+    // ::first-line and such.
+    if (element &&
+        !element->IsRootOfNativeAnonymousSubtree() &&
+        element->GetPseudoElementType() == aFrame->Style()->GetPseudoType()) {
+      while (parent->GetContent() &&
+             !parent->GetContent()->IsRootOfAnonymousSubtree()) {
+        parent = parent->GetInFlowParent();
+      }
       parent = parent->GetInFlowParent();
     }
   }

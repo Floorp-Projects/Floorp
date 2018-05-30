@@ -146,6 +146,11 @@
   margin: 0;
 }
 
+#identity-popup-permissions-content > description,
+#tracking-protection-content > description {
+  color: var(--panel-disabled-color);
+}
+
 /* This element needs the pre-wrap because we add newlines to it in the code. */
 #identity-popup-content-supplemental {
   white-space: pre-wrap;

@@ -161,7 +161,10 @@ class AstSig : public AstBase
 
     typedef const AstSig& Lookup;
     static HashNumber hash(Lookup sig) {
-        return AddContainerToHash(sig.args(), HashNumber(sig.ret()));
+        HashNumber hn = HashNumber(sig.ret());
+        for (ValType vt : sig.args())
+            hn = mozilla::AddToHash(hn, vt.code());
+        return hn;
     }
     static bool match(const AstSig* lhs, Lookup rhs) {
         return *lhs == rhs;
@@ -801,7 +804,7 @@ class AstGlobal : public AstNode
     Maybe<AstExpr*> init_;
 
   public:
-    AstGlobal() : isMutable_(false), type_(ValType(TypeCode::Limit))
+    AstGlobal() : isMutable_(false), type_(ValType())
     {}
 
     explicit AstGlobal(AstName name, ValType type, bool isMutable,

@@ -635,7 +635,7 @@ void
 MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
 {
     MOZ_ASSERT(cond == Zero || cond == NonZero);
-    CompileZone* zone = GetJitContext()->compartment->zone();
+    CompileZone* zone = GetJitContext()->realm->zone();
     AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
     branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
 }

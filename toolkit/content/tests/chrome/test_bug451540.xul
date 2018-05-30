@@ -30,6 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451540
 
       /** Test for Bug 451540 **/
       SimpleTest.waitForExplicitFinish();
+      SimpleTest.expectAssertions(18, 19); // Will be fixed as part of bug 1455891.
       window.open("bug451540_window.xul", "451540test",
                   "chrome,width=600,height=600");
 

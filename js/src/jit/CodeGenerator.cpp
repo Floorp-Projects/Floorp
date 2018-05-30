@@ -2218,7 +2218,7 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     OutOfLineRegExpMatcher* ool = new(alloc()) OutOfLineRegExpMatcher(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    const JitRealm* jitRealm = gen->realm->jitRealm();
     JitCode* regExpMatcherStub = jitRealm->regExpMatcherStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpMatcherStub);
     masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
@@ -2368,7 +2368,7 @@ CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir)
     OutOfLineRegExpSearcher* ool = new(alloc()) OutOfLineRegExpSearcher(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    const JitRealm* jitRealm = gen->realm->jitRealm();
     JitCode* regExpSearcherStub = jitRealm->regExpSearcherStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpSearcherStub);
     masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpSearcherResultFailed), ool->entry());
@@ -2505,7 +2505,7 @@ CodeGenerator::visitRegExpTester(LRegExpTester* lir)
     OutOfLineRegExpTester* ool = new(alloc()) OutOfLineRegExpTester(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    const JitRealm* jitRealm = gen->realm->jitRealm();
     JitCode* regExpTesterStub = jitRealm->regExpTesterStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpTesterStub);
 
@@ -4047,10 +4047,10 @@ CodeGenerator::maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal, OutOf
         return;
 
     JSObject* obj = &maybeGlobal->toConstant()->toObject();
-    if (gen->compartment->maybeGlobal() != obj)
+    if (gen->realm->maybeGlobal() != obj)
         return;
 
-    auto addr = AbsoluteAddress(gen->compartment->addressOfGlobalWriteBarriered());
+    auto addr = AbsoluteAddress(gen->realm->addressOfGlobalWriteBarriered());
     masm.branch32(Assembler::NotEqual, addr, Imm32(0), ool->rejoin());
 }
 
@@ -5634,7 +5634,7 @@ CodeGenerator::emitDebugForceBailing(LInstruction* lir)
         return;
 
     masm.comment("emitDebugForceBailing");
-    const void* bailAfterAddr = gen->compartment->zone()->addressOfIonBailAfter();
+    const void* bailAfterAddr = gen->realm->zone()->addressOfIonBailAfter();
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
 
@@ -8203,7 +8203,7 @@ CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs, Registe
     OutOfLineCode* ool = oolCallVM(ConcatStringsInfo, lir, ArgList(lhs, rhs),
                                    StoreRegisterTo(output));
 
-    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    const JitRealm* jitRealm = gen->realm->jitRealm();
     JitCode* stringConcatStub = jitRealm->stringConcatStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(stringConcatStub);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
@@ -10295,7 +10295,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     // Perform any read barriers which were skipped while compiling the
     // script, which may have happened off-thread.
-    const JitRealm* jr = gen->compartment->jitRealm();
+    const JitRealm* jr = gen->realm->jitRealm();
     jr->performStubReadBarriers(realmStubsToReadBarrier_);
     jr->performSIMDTemplateReadBarriers(simdTemplatesToReadBarrier_);
 
@@ -13225,7 +13225,7 @@ CodeGenerator::visitRandom(LRandom* ins)
     Register64 s1Reg(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
 #endif
 
-    const void* rng = gen->compartment->addressOfRandomNumberGenerator();
+    const void* rng = gen->realm->addressOfRandomNumberGenerator();
     masm.movePtr(ImmPtr(rng), tempReg);
 
     static_assert(sizeof(XorShift128PlusRNG) == 2 * sizeof(uint64_t),
