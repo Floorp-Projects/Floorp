@@ -20,7 +20,7 @@ namespace dom {
 NS_IMPL_ISUPPORTS(PaymentRequestParent, nsIPaymentActionCallback)
 
 PaymentRequestParent::PaymentRequestParent(uint64_t aTabId)
-  : mActorAlived(true)
+  : mActorAlive(true)
   , mTabId(aTabId)
 {
 }
@@ -28,7 +28,7 @@ PaymentRequestParent::PaymentRequestParent(uint64_t aTabId)
 mozilla::ipc::IPCResult
 PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest)
 {
-  if (!mActorAlived) {
+  if (!mActorAlive) {
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIPaymentActionRequest> action;
@@ -178,7 +178,7 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
     return NS_DispatchToMainThread(r);
   }
 
-  if (!mActorAlived) {
+  if (!mActorAlive) {
     return NS_ERROR_FAILURE;
   }
   uint32_t type;
@@ -276,7 +276,7 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
     });
     return NS_DispatchToMainThread(r);
   }
-  if (!mActorAlived) {
+  if (!mActorAlive) {
     return NS_ERROR_FAILURE;
   }
   nsAutoString country;
@@ -362,7 +362,7 @@ PaymentRequestParent::ChangeShippingOption(const nsAString& aRequestId,
     });
     return NS_DispatchToMainThread(r);
   }
-  if (!mActorAlived) {
+  if (!mActorAlive) {
     return NS_ERROR_FAILURE;
   }
   nsAutoString requestId(aRequestId);
@@ -376,14 +376,14 @@ PaymentRequestParent::ChangeShippingOption(const nsAString& aRequestId,
 mozilla::ipc::IPCResult
 PaymentRequestParent::Recv__delete__()
 {
-  mActorAlived = false;
+  mActorAlive = false;
   return IPC_OK();
 }
 
 void
 PaymentRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  mActorAlived = false;
+  mActorAlive = false;
   nsCOMPtr<nsIPaymentRequestService> service =
     do_GetService(NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID);
   MOZ_ASSERT(service);
