@@ -191,24 +191,22 @@ PermissionRequestBase::SetExplicitPermission(nsIPrincipal* aPrincipal,
   }
 }
 
-NS_IMPL_ISUPPORTS(PermissionRequestBase, nsIObserver, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(PermissionRequestBase, nsIObserver, nsIIDBPermissionsRequest)
 
 NS_IMETHODIMP
-PermissionRequestBase::GetInterface(const nsIID& aIID,
-                                    void** aResult)
+PermissionRequestBase::GetBrowserElement(Element** aElement)
 {
   AssertSanity();
+  *aElement = do_AddRef(mOwnerElement).take();
+  return NS_OK;
+}
 
-  if (aIID.Equals(NS_GET_IID(nsIObserver))) {
-    return QueryInterface(aIID, aResult);
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode)) && mOwnerElement) {
-    return mOwnerElement->QueryInterface(aIID, aResult);
-  }
-
-  *aResult = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
+NS_IMETHODIMP
+PermissionRequestBase::GetResponseObserver(nsIObserver** aObserver)
+{
+  AssertSanity();
+  *aObserver = do_AddRef(this).take();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
