@@ -374,6 +374,7 @@ private:
     nscoord BStart(ShapeType aShapeType) const;
     nscoord BEnd(ShapeType aShapeType) const;
     bool IsEmpty(ShapeType aShapeType) const;
+    bool MayNarrowInBlockDirection(ShapeType aShapeType) const;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     FloatInfo(FloatInfo&& aOther);
