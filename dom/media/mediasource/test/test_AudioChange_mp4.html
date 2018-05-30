@@ -14,54 +14,33 @@ SimpleTest.waitForExplicitFinish();
 
 // This test checks loading a stereo segment, followed by a 5.1 segment plays without error.
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    // Log events for debugging.
-    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
-    function logEvent(e) {
-      info("got " + e.type + " event");
-    }
-    events.forEach(function(e) {
-      el.addEventListener(e, logEvent);
-    });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  logEvents(el);
 
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    el.addEventListener("error", function(e) {
-      ok(false, "should not fire '" + e.type + "' event");
-      SimpleTest.finish();
-    });
-    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    const loadedmetadataPromises = [];
-    loadedmetadataPromises.push(fetchAndLoad(audiosb, "aac20-48000-64000-", [ "init" ], ".mp4"));
-    loadedmetadataPromises.push(once(el, "loadedmetadata"));
-    Promise.all(loadedmetadataPromises)
-    .then(function() {
-      ok(true, "got loadedmetadata event");
-      const canplayPromises = [];
-      canplayPromises.push(once(el, "loadeddata"));
-      canplayPromises.push(once(el, "canplay"));
-      canplayPromises.push(fetchAndLoad(audiosb, "aac20-48000-64000-", [ "1" ], ".m4s"));
-      return Promise.all(canplayPromises);
-    })
-    .then(function() {
-      ok(true, "got canplay event");
-      el.play();
-      return fetchAndLoad(audiosb, "aac51-48000-128000-", [ "init" ], ".mp4");
-    })
-    .then(fetchAndLoad.bind(null, audiosb, "aac51-48000-128000-", [ "2" ], ".m4s"))
-    .then(function() {
-      ms.endOfStream();
-      return once(el, "ended");
-    })
-    .then(function() {
-      ok(el.currentTime >= 6, "played to the end");
-      SimpleTest.finish();
-    });
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
   });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(audiosb, "aac20-48000-64000-", [ "init" ], ".mp4");
+  await p;
+  ok(true, "got loadedmetadata event");
+  p = Promise.all([ once(el, "loadeddata"), once(el, "canplay") ]);
+  await fetchAndLoad(audiosb, "aac20-48000-64000-", [ "1" ], ".m4s");
+  await p;
+  ok(true, "got canplay event");
+  el.play();
+  await fetchAndLoad(audiosb, "aac51-48000-128000-", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "aac51-48000-128000-", [ "2" ], ".m4s");
+  ms.endOfStream();
+  await once(el, "ended");
+  ok(el.currentTime >= 6, "played to the end");
+  SimpleTest.finish();
 });
 
 </script>

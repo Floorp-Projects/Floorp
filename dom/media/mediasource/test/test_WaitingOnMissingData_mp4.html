@@ -11,52 +11,48 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4")
-    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s"))
-    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 6), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(7, 14), ".m4s"))
-    .then(function() {
-      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
-      // has notified it of available data. Make sure that we get 'playing' before
-      // we starting waiting for 'waiting'.
-      info("Invoking play()");
-      const p = once(el, "playing");
-      el.play();
-      return p;
-    }).then(function() {
-      ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-      const p = once(el, "waiting");
-      el.play();
-      return p;
-    }).then(function() {
-      // currentTime is based on the current video frame, so if the audio ends just before
-      // the next video frame, currentTime can be up to 1 frame's worth earlier than
-      // min(audioEnd, videoEnd).
-      // 0.0465 is the length of the last audio frame.
-      ok(el.currentTime >= (Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 0.0465),
-          "Got a waiting event at " + el.currentTime);
-      info("Loading more data");
-      const p = once(el, "ended");
-      const loads = Promise.all([ fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ 5 ], ".m4s"),
-        fetchAndLoad(videosb, "bipbop/bipbop_video", [ 6 ], ".m4s") ]);
-      loads.then(() => ms.endOfStream());
-      return p;
-    }).then(function() {
-      // These fuzz factors are bigger than they should be. We should investigate
-      // and fix them in bug 1137574.
-      isfuzzy(el.duration, 10.1, 0.1, "Video has correct duration: " + el.duration);
-      isfuzzy(el.currentTime, el.duration, 0.1, "Video has correct currentTime.");
-      SimpleTest.finish();
-    });
-  });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(7, 14), ".m4s");
+  // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
+  // has notified it of available data. Make sure that we get "playing" before
+  // we starting waiting for "waiting".
+  info("Invoking play()");
+  let p = once(el, "playing");
+  el.play();
+  await p;
+  ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+  p = once(el, "waiting");
+  el.play();
+  await p;
+  // currentTime is based on the current video frame, so if the audio ends just before
+  // the next video frame, currentTime can be up to 1 frame's worth earlier than
+  // min(audioEnd, videoEnd).
+  // 0.0465 is the length of the last audio frame.
+  ok(el.currentTime >= (Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 0.0465),
+     `Got a waiting event at ${el.currentTime}`);
+  info("Loading more data");
+  p = once(el, "ended");
+  await Promise.all([
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ 5 ], ".m4s"),
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [ 6 ], ".m4s")
+  ]);
+  ms.endOfStream();
+  await p;
+  // These fuzz factors are bigger than they should be. We should investigate
+  // and fix them in bug 1137574.
+  isfuzzy(el.duration, 10.1, 0.1, "Video has correct duration: " + el.duration);
+  isfuzzy(el.currentTime, el.duration, 0.1, "Video has correct currentTime.");
+  SimpleTest.finish();
 });
 
 </script>

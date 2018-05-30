@@ -204,6 +204,9 @@ class GeckoProfile(object):
                                               path_in_zip,
                                               self.profile_arcname)
                     )
+            # save the latest gecko profile archive to an env var, so later on
+            # it can be viewed automatically via the view-gecko-profile tool
+            os.environ['TALOS_LATEST_GECKO_PROFILE_ARCHIVE'] = self.profile_arcname
 
     def clean(self):
         """

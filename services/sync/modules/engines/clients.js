@@ -86,7 +86,7 @@ function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
   this.fxAccounts = fxAccounts;
-  this.addClientCommandQueue = Promise.resolve();
+  this.addClientCommandQueue = Async.asyncQueueCaller(this._log);
   Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
 }
 ClientEngine.prototype = {
@@ -293,8 +293,7 @@ ClientEngine.prototype = {
   },
 
   async _addClientCommand(clientId, command) {
-    return this.addClientCommandQueue = (async () => {
-      await this.addClientCommandQueue;
+    this.addClientCommandQueue.enqueueCall(async () => {
       try {
         const localCommands = await this._readCommands();
         const localClientCommands = localCommands[clientId] || [];
@@ -315,7 +314,9 @@ ClientEngine.prototype = {
         this._log.error(e);
         return false;
       }
-    })();
+    });
+
+    return this.addClientCommandQueue.promiseCallsComplete();
   },
 
   async _removeClientCommands(clientId) {

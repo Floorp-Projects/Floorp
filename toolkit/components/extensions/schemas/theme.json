@@ -93,6 +93,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "tab_background_separator": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "tab_loading": {
                 "$ref": "ThemeColor",
                 "optional": true

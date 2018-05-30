@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 
 import copy
 import os
+import subprocess
 import sys
 import time
 import traceback
@@ -328,9 +329,67 @@ def run_tests(config, browser_config):
             print("Thanks for running Talos locally. Results are in %s"
                   % (results_urls['output_urls']))
 
+    # when running talos locally with gecko profiling on, use the view-gecko-profile
+    # tool to automatically load the latest gecko profile in perf-html.io
+    if config['gecko_profile'] and browser_config['develop']:
+        if os.environ.get('TALOS_DISABLE_PROFILE_LAUNCH', '0') == '1':
+            LOG.info("Not launching perf-html.io because TALOS_DISABLE_PROFILE_LAUNCH=1")
+        else:
+            view_gecko_profile(config['browser_path'])
+
     # we will stop running tests on a failed test, or we will return 0 for
     # green
     return 0
+
+
+def view_gecko_profile(ffox_bin):
+    # automatically load the latest talos gecko-profile archive in perf-html.io
+    if not os.path.exists(ffox_bin):
+        LOG.info("unable to find Firefox bin, cannot launch view-gecko-profile")
+        return
+
+    profile_zip = os.environ.get('TALOS_LATEST_GECKO_PROFILE_ARCHIVE', None)
+    if profile_zip is None or not os.path.exists(profile_zip):
+        LOG.info("No local talos gecko profiles were found so not launching perf-html.io")
+        return
+
+    # need the view-gecko-profile tool, it's in repo/testing/tools
+    repo_dir = os.environ.get('MOZ_DEVELOPER_REPO_DIR', None)
+    if repo_dir is None:
+        LOG.info("unable to find MOZ_DEVELOPER_REPO_DIR, can't launch view-gecko-profile")
+        return
+
+    view_gp = os.path.join(repo_dir, 'testing', 'tools',
+                           'view_gecko_profile', 'view_gecko_profile.py')
+    if not os.path.exists(view_gp):
+        LOG.info("unable to find the view-gecko-profile tool, cannot launch it")
+        return
+
+    command = ['python',
+               view_gp,
+               '-b', ffox_bin,
+               '-p', profile_zip]
+
+    LOG.info('Auto-loading this profile in perfhtml.io: %s' % profile_zip)
+    LOG.info(command)
+
+    # if the view-gecko-profile tool fails to launch for some reason, we don't
+    # want to crash talos! just dump error and finsh up talos as usual
+    try:
+        view_profile = subprocess.Popen(command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+        # that will leave it running in own instance and let talos finish up
+    except Exception as e:
+        LOG.info("failed to launch view-gecko-profile tool, exeption: %s" % e)
+        return
+
+    time.sleep(5)
+    ret = view_profile.poll()
+    if ret is None:
+        LOG.info("view-gecko-profile successfully started as pid %d" % view_profile.pid)
+    else:
+        LOG.error('view-gecko-profile process failed to start, poll returned: %s' % ret)
 
 
 def make_comparison_result(base_and_reference_results):

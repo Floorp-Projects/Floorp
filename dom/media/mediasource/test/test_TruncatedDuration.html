@@ -20,52 +20,33 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function round(n) {
-  return Math.round(n * 1000) / 1000;
-}
+const round = n => Math.round(n * 1000) / 1000;
 
-function do_seeking(e) {
-  const v = e.target;
-  v.removeEventListener("seeking", do_seeking);
-  SimpleTest.finish();
-}
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-function do_seeked(e) {
-  const v = e.target;
-  v.removeEventListener("seeked", do_seeked);
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm")));
+  await once(sb, "updateend");
+  v.currentTime = v.duration / 2;
+  is(v.currentTime, v.duration / 2, "current time was updated");
+  ok(v.seeking, "seeking is true");
+  await once(v, "seeked");
   const duration = round(v.duration / 3);
-  is(v._sb.updating, false, "sourcebuffer isn't updating");
-  v._sb.remove(duration, Infinity);
-  once(v._sb, "updateend", function() {
-    v._ms.duration = duration;
-    // frames aren't truncated, so duration may be slightly more.
-    isfuzzy(v.duration, duration, 1 / 30, "element duration was updated");
-    v._sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
-    ok(v.seeking, "seeking is true");
-    // test playback position was updated (bug 1130839).
-    is(v.currentTime, v.duration, "current time was updated");
-    is(v._sb.buffered.length, 1, "One buffered range");
-    // Truncated mediasource duration will cause the video element to seek.
-    v.addEventListener("seeking", do_seeking);
-  });
-}
-
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
-    v._sb = sb;
-    v._ms = ms;
-
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
-      once(sb, "updateend", function() {
-        v.currentTime = v.duration / 2;
-        is(v.currentTime, v.duration / 2, "current time was updated");
-        ok(v.seeking, "seeking is true");
-        v.addEventListener("seeked", do_seeked);
-      });
-    });
-  });
+  is(sb.updating, false, "sourcebuffer isn't updating");
+  sb.remove(duration, Infinity);
+  await once(sb, "updateend");
+  ms.duration = duration;
+  // frames aren't truncated, so duration may be slightly more.
+  isfuzzy(v.duration, duration, 1 / 30, "element duration was updated");
+  sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
+  ok(v.seeking, "seeking is true");
+  // test playback position was updated (bug 1130839).
+  is(v.currentTime, v.duration, "current time was updated");
+  is(sb.buffered.length, 1, "One buffered range");
+  // Truncated mediasource duration will cause the video element to seek.
+  await once(v, "seeking");
+  SimpleTest.finish();
 });
 
 </script>

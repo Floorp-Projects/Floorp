@@ -27,7 +27,6 @@ config = {
         'SCCACHE_DISABLE': '1',
     },
     'mozconfig_variant': 'tup',
-    'enable_count_ctors': False, # TODO: libxul.so needs to be linked for this to work
     'disable_package_metrics': True, # TODO: the package needs to be created for this to work
     'artifact_flag_build_variant_in_try': None,
 }

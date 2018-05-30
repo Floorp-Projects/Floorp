@@ -13,38 +13,34 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
-    fetchWithXHR("seek_lowres.webm", function(seek_lowres) {
-      fetchWithXHR("seek.webm", function(seek) {
-        const data = [
-          [ seek_lowres, 0, 438 ],     // lowres init segment
-          [ seek_lowres, 438, 25950 ], // lowres media segment 0-1
-          [ seek, 0, 318 ],            // init segment
-          [ seek, 46712, 67833 ]       // media segment 0.8-1.201
-        ];
-        const length = data.map(d => d[2] - d[1]).reduce((a, b) => a + b);
-        const arrayBuffer = new Uint8Array(length);
-        let pos = 0;
-        data.forEach(function(d) {
-          const buffer = new Uint8Array(d[0], d[1], d[2] - d[1]);
-          arrayBuffer.set(buffer, pos);
-          pos += buffer.byteLength;
-        });
-        loadSegment.bind(null, sb, arrayBuffer)().then(function() {
-          // Since we are passing multiple segments in one buffer,
-          // the first durationchange event from parsing the init
-          // segment will be fired before updateend.
-          v.addEventListener("durationchange", function() {
-            ok(v.duration, 1.201);
-            SimpleTest.finish();
-          });
-          ms.endOfStream();
-        });
-      });
-    });
-  });
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+  const seek_lowres = await fetchWithXHR("seek_lowres.webm");
+  const seek = await fetchWithXHR("seek.webm");
+  const data = [
+    [ seek_lowres, 0, 438 ],     // lowres init segment
+    [ seek_lowres, 438, 25950 ], // lowres media segment 0-1
+    [ seek, 0, 318 ],            // init segment
+    [ seek, 46712, 67833 ]       // media segment 0.8-1.201
+  ];
+  const length = data.map(d => d[2] - d[1]).reduce((a, b) => a + b, 0);
+  const arrayBuffer = new Uint8Array(length);
+  let pos = 0;
+  for (const d of data) {
+    const buffer = new Uint8Array(d[0], d[1], d[2] - d[1]);
+    arrayBuffer.set(buffer, pos);
+    pos += buffer.byteLength;
+  }
+  await loadSegment(sb, arrayBuffer);
+  // Since we are passing multiple segments in one buffer,
+  // the first durationchange event from parsing the init
+  // segment will be fired before updateend.
+  const p = once(v, "durationchange");
+  ms.endOfStream();
+  await p;
+  ok(v.duration, 1.201);
+  SimpleTest.finish();
 });
 
 </script>
