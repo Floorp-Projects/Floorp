@@ -1194,7 +1194,7 @@ public:
                              nsCycleCollectingAutoRefCnt* aRefCnt)
   {
     nsPurpleBufferEntry entry(aObject, aRefCnt, aCp);
-    Unused << mEntries.Append(Move(entry));
+    Unused << mEntries.Append(std::move(entry));
     MOZ_ASSERT(!entry.mRefCnt, "Move didn't work!");
     ++mCount;
   }

@@ -1152,7 +1152,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
   // (returns an empty list)
-  nssCertList = new nsNSSCertList(Move(certList));
+  nssCertList = new nsNSSCertList(std::move(certList));
 
   nssCertList.forget(_retval);
   return NS_OK;
@@ -1238,7 +1238,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
 
   nsCOMPtr<nsIX509CertList> nssCertList;
   // This adopts the list
-  nssCertList = new nsNSSCertList(Move(resultChain));
+  nssCertList = new nsNSSCertList(std::move(resultChain));
   NS_ENSURE_TRUE(nssCertList, NS_ERROR_FAILURE);
 
   *_retval = mozilla::pkix::MapResultToPRErrorCode(result);

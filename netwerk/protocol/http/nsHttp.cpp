@@ -594,7 +594,7 @@ localEnsureBuffer(UniquePtr<T[]> &buf, uint32_t newSize,
   if (preserve) {
     memcpy(tmp.get(), buf.get(), preserve);
   }
-  buf = Move(tmp);
+  buf = std::move(tmp);
 }
 
 void EnsureBuffer(UniquePtr<char[]> &buf, uint32_t newSize,

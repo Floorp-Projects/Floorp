@@ -1074,7 +1074,7 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
     }
 
     // Append to the final snapshot.
-    aSnapshot.Put(iter.Get()->GetKey(), mozilla::Move(keySnapshot));
+    aSnapshot.Put(iter.Get()->GetKey(), std::move(keySnapshot));
   }
 
   if (aClearSubsession) {
@@ -1144,7 +1144,7 @@ internal_GetKeyedHistogramsSnapshot(const StaticMutexAutoLock& aLock,
         return NS_ERROR_FAILURE;
       }
 
-      if (!hArray.emplaceBack(KeyedHistogramSnapshotInfo{mozilla::Move(snapshot), id})) {
+      if (!hArray.emplaceBack(KeyedHistogramSnapshotInfo{std::move(snapshot), id})) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -2909,7 +2909,7 @@ TelemetryHistogram::DeserializeHistograms(JSContext* aCx, JS::HandleValue aData)
 
       // Finally append the deserialized data to the storage.
       if (!deserializedProcessData.emplaceBack(
-        MakeTuple(mozilla::Move(histogramName), mozilla::Move(deserializedCounts), sum))) {
+        MakeTuple(std::move(histogramName), std::move(deserializedCounts), sum))) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -2954,7 +2954,7 @@ TelemetryHistogram::DeserializeHistograms(JSContext* aCx, JS::HandleValue aData)
         }
 
         // Update the data for the histogram.
-        h->AddSampleSet(base::PersistedSampleSet(mozilla::Move(mozilla::Get<1>(histogramData)),
+        h->AddSampleSet(base::PersistedSampleSet(std::move(mozilla::Get<1>(histogramData)),
                                                  mozilla::Get<2>(histogramData)));
       }
     }
@@ -3090,8 +3090,8 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
 
         // Finally append the deserialized data to the storage.
         if (!deserializedProcessData.emplaceBack(
-          MakeTuple(nsCString(NS_ConvertUTF16toUTF8(histogramName)), mozilla::Move(keyName),
-                    mozilla::Move(deserializedCounts), sum))) {
+          MakeTuple(nsCString(NS_ConvertUTF16toUTF8(histogramName)), std::move(keyName),
+                    std::move(deserializedCounts), sum))) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
       }
@@ -3148,7 +3148,7 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
         }
 
         // Update the data for the histogram.
-        h->AddSampleSet(base::PersistedSampleSet(mozilla::Move(mozilla::Get<2>(histogramData)),
+        h->AddSampleSet(base::PersistedSampleSet(std::move(mozilla::Get<2>(histogramData)),
                                                  mozilla::Get<3>(histogramData)));
       }
     }

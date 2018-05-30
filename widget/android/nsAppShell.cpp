@@ -773,13 +773,13 @@ nsAppShell::SyncRunEvent(Event&& event,
     };
 
     UniquePtr<Event> runAndNotifyEvent = mozilla::MakeUnique<
-            LambdaEvent<decltype(runAndNotify)>>(mozilla::Move(runAndNotify));
+            LambdaEvent<decltype(runAndNotify)>>(std::move(runAndNotify));
 
     if (eventFactory) {
-        runAndNotifyEvent = (*eventFactory)(mozilla::Move(runAndNotifyEvent));
+        runAndNotifyEvent = (*eventFactory)(std::move(runAndNotifyEvent));
     }
 
-    appShell->mEventQueue.Post(mozilla::Move(runAndNotifyEvent));
+    appShell->mEventQueue.Post(std::move(runAndNotifyEvent));
 
     while (!finished && MOZ_LIKELY(sAppShell && !sAppShell->mSyncRunQuit)) {
         appShell->mSyncRunFinished.Wait();

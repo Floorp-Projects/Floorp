@@ -38,8 +38,8 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
   }
   RefPtr<GenericPromise> result = promiseHolder->Ensure(__func__);
   // promiseHolder will removed by receive message
-  mResponsePromises.AppendElement(Move(promiseHolder));
-  return Move(result);
+  mResponsePromises.AppendElement(std::move(promiseHolder));
+  return std::move(result);
 }
 
 mozilla::ipc::IPCResult

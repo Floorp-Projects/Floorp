@@ -43,7 +43,7 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
     // Vector is 'final', so instead make Vector a member and add boilerplate.
     Bytes bytes;
     ShareableBytes() = default;
-    explicit ShareableBytes(Bytes&& bytes) : bytes(Move(bytes)) {}
+    explicit ShareableBytes(Bytes&& bytes) : bytes(std::move(bytes)) {}
     size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
     const uint8_t* begin() const { return bytes.begin(); }
     const uint8_t* end() const { return bytes.end(); }
@@ -88,7 +88,7 @@ class CodeSegment
     };
 
     CodeSegment(UniqueCodeBytes bytes, uint32_t length, Kind kind)
-      : bytes_(Move(bytes)),
+      : bytes_(std::move(bytes)),
         length_(length),
         kind_(kind),
         codeTier_(nullptr),
@@ -202,7 +202,7 @@ class FuncExport
   public:
     FuncExport() = default;
     explicit FuncExport(Sig&& sig, uint32_t funcIndex, bool hasEagerStubs)
-      : sig_(Move(sig))
+      : sig_(std::move(sig))
     {
         pod.funcIndex_ = funcIndex;
         pod.interpCodeRangeIndex_ = UINT32_MAX;
@@ -269,7 +269,7 @@ class FuncImport
     }
 
     FuncImport(Sig&& sig, uint32_t tlsDataOffset)
-      : sig_(Move(sig))
+      : sig_(std::move(sig))
     {
         pod.tlsDataOffset_ = tlsDataOffset;
         pod.interpExitCodeOffset_ = 0;
@@ -509,7 +509,7 @@ class LazyStubSegment : public CodeSegment
 
   public:
     LazyStubSegment(UniqueCodeBytes bytes, size_t length)
-      : CodeSegment(Move(bytes), length, CodeSegment::Kind::LazyStubs),
+      : CodeSegment(std::move(bytes), length, CodeSegment::Kind::LazyStubs),
         usedBytes_(0)
     {}
 
@@ -614,8 +614,8 @@ class CodeTier
   public:
     CodeTier(UniqueMetadataTier metadata, UniqueModuleSegment segment)
       : code_(nullptr),
-        metadata_(Move(metadata)),
-        segment_(Move(segment)),
+        metadata_(std::move(metadata)),
+        segment_(std::move(segment)),
         lazyStubs_(mutexForTier(segment_->tier()))
     {}
 

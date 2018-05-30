@@ -122,7 +122,7 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
         if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
           trackInfo->GetAsVideoInfo()->mBitDepth = bitDepth;
         }
-        trackInfos.AppendElement(Move(trackInfo));
+        trackInfos.AppendElement(std::move(trackInfo));
         continue;
       }
       // Note: Only accept H.264 in a video content type, not in an audio

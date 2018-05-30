@@ -103,7 +103,7 @@ VRManagerChild::ReinitForContent(Endpoint<PVRManagerChild>&& aEndpoint)
 
   ShutDown();
 
-  return InitForContent(Move(aEndpoint));
+  return InitForContent(std::move(aEndpoint));
 }
 
 /*static*/ void

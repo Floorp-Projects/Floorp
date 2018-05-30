@@ -100,7 +100,7 @@ struct ProxyReleaseChooser
                            already_AddRefed<T> aDoomed,
                            bool aAlwaysProxy)
   {
-    ::detail::ProxyRelease(aName, aTarget, mozilla::Move(aDoomed), aAlwaysProxy);
+    ::detail::ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
   }
 };
 
@@ -147,7 +147,7 @@ NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
                 already_AddRefed<T> aDoomed, bool aAlwaysProxy = false)
 {
   ::detail::ProxyReleaseChooser<mozilla::IsBaseOf<nsISupports, T>::value>
-    ::ProxyRelease(aName, aTarget, mozilla::Move(aDoomed), aAlwaysProxy);
+    ::ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
 }
 
 /**
@@ -183,7 +183,7 @@ NS_ReleaseOnMainThreadSystemGroup(const char* aName,
     }
   }
 
-  NS_ProxyRelease(aName, systemGroupEventTarget, mozilla::Move(aDoomed),
+  NS_ProxyRelease(aName, systemGroupEventTarget, std::move(aDoomed),
                   aAlwaysProxy);
 }
 
@@ -193,7 +193,7 @@ NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
                                   bool aAlwaysProxy = false)
 {
   NS_ReleaseOnMainThreadSystemGroup("NS_ReleaseOnMainThreadSystemGroup",
-                                    mozilla::Move(aDoomed), aAlwaysProxy);
+                                    std::move(aDoomed), aAlwaysProxy);
 }
 
 /**

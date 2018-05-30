@@ -233,7 +233,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   mOffset = aEvent.mReply.mOffset;
   mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
   mString = aEvent.mReply.mString;
-  mRectArray = mozilla::Move(aEvent.mReply.mRectArray);
+  mRectArray = std::move(aEvent.mReply.mRectArray);
   // Mark as result that is longer used.
   aEvent.mSucceeded = false;
 

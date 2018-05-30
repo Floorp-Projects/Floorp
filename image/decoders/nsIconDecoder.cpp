@@ -78,7 +78,7 @@ nsIconDecoder::ReadHeader(const char* aData)
     return Transition::TerminateFailure();
   }
 
-  mPipe = Move(*pipe);
+  mPipe = std::move(*pipe);
 
   MOZ_ASSERT(mImageData, "Should have a buffer now");
 

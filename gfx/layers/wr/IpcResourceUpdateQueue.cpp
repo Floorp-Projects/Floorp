@@ -245,7 +245,7 @@ ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aIn
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator,
                                                size_t aChunkSize)
-: mWriter(Move(aAllocator), aChunkSize)
+: mWriter(std::move(aAllocator), aChunkSize)
 {}
 
 bool

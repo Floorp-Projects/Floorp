@@ -323,7 +323,7 @@ class DeferredDeleteGPUChild : public Runnable
 public:
   explicit DeferredDeleteGPUChild(UniquePtr<GPUChild>&& aChild)
     : Runnable("gfx::DeferredDeleteGPUChild")
-    , mChild(Move(aChild))
+    , mChild(std::move(aChild))
   {
   }
 
@@ -338,7 +338,7 @@ private:
 /* static */ void
 GPUChild::Destroy(UniquePtr<GPUChild>&& aChild)
 {
-  NS_DispatchToMainThread(new DeferredDeleteGPUChild(Move(aChild)));
+  NS_DispatchToMainThread(new DeferredDeleteGPUChild(std::move(aChild)));
 }
 
 } // namespace gfx

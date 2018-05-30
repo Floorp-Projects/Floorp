@@ -844,7 +844,7 @@ class ProxyReleaseRunnable final : public mozilla::Runnable
 public:
   explicit ProxyReleaseRunnable(nsTArray<nsCOMPtr<nsISupports>>&& aDoomed)
     : Runnable("ProxyReleaseRunnable")
-    , mDoomed(Move(aDoomed))
+    , mDoomed(std::move(aDoomed))
   {}
 
   NS_IMETHOD

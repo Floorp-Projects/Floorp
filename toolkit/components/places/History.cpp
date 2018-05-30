@@ -694,7 +694,7 @@ public:
       AutoTArray<URIParams, 1> uris;
       URIParams uri;
       SerializeURI(mURI, uri);
-      uris.AppendElement(Move(uri));
+      uris.AppendElement(std::move(uri));
       history->NotifyVisitedParent(uris);
     }
 
@@ -852,7 +852,7 @@ public:
 
         URIParams serializedUri;
         SerializeURI(uris[i], serializedUri);
-        serializableUris.AppendElement(Move(serializedUri));
+        serializableUris.AppendElement(std::move(serializedUri));
       }
       mHistory->NotifyVisitedParent(serializableUris);
     } else {
@@ -862,7 +862,7 @@ public:
 
       URIParams serializedUri;
       SerializeURI(uris[0], serializedUri);
-      serializableUris.AppendElement(Move(serializedUri));
+      serializableUris.AppendElement(std::move(serializedUri));
       mHistory->NotifyVisitedParent(serializableUris);
     }
 

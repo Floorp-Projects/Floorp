@@ -15,7 +15,7 @@ namespace dom {
 PushSubscriptionOptions::PushSubscriptionOptions(nsIGlobalObject* aGlobal,
                                                  nsTArray<uint8_t>&& aRawAppServerKey)
   : mGlobal(aGlobal)
-  , mRawAppServerKey(Move(aRawAppServerKey))
+  , mRawAppServerKey(std::move(aRawAppServerKey))
   , mAppServerKey(nullptr)
 {
   // There's only one global on a worker, so we don't need to pass a global

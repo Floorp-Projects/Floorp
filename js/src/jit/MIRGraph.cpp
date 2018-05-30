@@ -100,14 +100,14 @@ MIRGenerator::abort(AbortReason r)
             break;
         }
     }
-    return Err(mozilla::Move(r));
+    return Err(std::move(r));
 }
 
 mozilla::GenericErrorResult<AbortReason>
 MIRGenerator::abortFmt(AbortReason r, const char* message, va_list ap)
 {
     JitSpewVA(JitSpew_IonAbort, message, ap);
-    return Err(mozilla::Move(r));
+    return Err(std::move(r));
 }
 
 mozilla::GenericErrorResult<AbortReason>

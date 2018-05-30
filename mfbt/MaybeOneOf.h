@@ -78,10 +78,10 @@ public:
   {
     if (!rhs.empty()) {
       if (rhs.constructed<T1>()) {
-        construct<T1>(Move(rhs.as<T1>()));
+        construct<T1>(std::move(rhs.as<T1>()));
         rhs.as<T1>().~T1();
       } else {
-        construct<T2>(Move(rhs.as<T2>()));
+        construct<T2>(std::move(rhs.as<T2>()));
         rhs.as<T2>().~T2();
       }
       rhs.state = None;
@@ -92,7 +92,7 @@ public:
   {
     MOZ_ASSERT(this != &rhs, "Self-move is prohibited");
     this->~MaybeOneOf();
-    new(this) MaybeOneOf(Move(rhs));
+    new(this) MaybeOneOf(std::move(rhs));
     return *this;
   }
 

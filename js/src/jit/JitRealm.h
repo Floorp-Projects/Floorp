@@ -351,10 +351,10 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
     UniquePtr<CacheIRStubInfo, JS::FreePolicy> stubInfo;
 
     explicit CacheIRStubKey(CacheIRStubInfo* info) : stubInfo(info) {}
-    CacheIRStubKey(CacheIRStubKey&& other) : stubInfo(Move(other.stubInfo)) { }
+    CacheIRStubKey(CacheIRStubKey&& other) : stubInfo(std::move(other.stubInfo)) { }
 
     void operator=(CacheIRStubKey&& other) {
-        stubInfo = Move(other.stubInfo);
+        stubInfo = std::move(other.stubInfo);
     }
 };
 
@@ -417,7 +417,7 @@ class JitZone
     {
         auto p = baselineCacheIRStubCodes_.lookupForAdd(lookup);
         MOZ_ASSERT(!p);
-        return baselineCacheIRStubCodes_.add(p, Move(key), stubCode);
+        return baselineCacheIRStubCodes_.add(p, std::move(key), stubCode);
     }
 
     CacheIRStubInfo* getIonCacheIRStubInfo(const CacheIRStubKey::Lookup& key) {
@@ -433,7 +433,7 @@ class JitZone
             return false;
         IonCacheIRStubInfoSet::AddPtr p = ionCacheIRStubInfoSet_.lookupForAdd(lookup);
         MOZ_ASSERT(!p);
-        return ionCacheIRStubInfoSet_.add(p, Move(key));
+        return ionCacheIRStubInfoSet_.add(p, std::move(key));
     }
     void purgeIonCacheIRStubInfo() {
         ionCacheIRStubInfoSet_.finish();

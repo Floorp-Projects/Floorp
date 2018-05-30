@@ -99,7 +99,7 @@ protected:
                     const nsAString& aName,
                     const nsAString& aContentType)
     : BaseBlobImpl(aName, aContentType, UINT64_MAX),
-      mBlobImpls(Move(aBlobImpls)),
+      mBlobImpls(std::move(aBlobImpls)),
       mIsFromNsIFile(false)
   {
   }
@@ -107,7 +107,7 @@ protected:
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aContentType)
     : BaseBlobImpl(aContentType, UINT64_MAX),
-      mBlobImpls(Move(aBlobImpls)),
+      mBlobImpls(std::move(aBlobImpls)),
       mIsFromNsIFile(false)
   {
   }

@@ -726,12 +726,12 @@ struct ZoneStats
 
     ZoneStats(ZoneStats&& other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
-        unusedGCThings(mozilla::Move(other.unusedGCThings)),
-        stringInfo(mozilla::Move(other.stringInfo)),
-        shapeInfo(mozilla::Move(other.shapeInfo)),
+        unusedGCThings(std::move(other.unusedGCThings)),
+        stringInfo(std::move(other.stringInfo)),
+        shapeInfo(std::move(other.shapeInfo)),
         extra(other.extra),
         allStrings(other.allStrings),
-        notableStrings(mozilla::Move(other.notableStrings)),
+        notableStrings(std::move(other.notableStrings)),
         isTotals(other.isTotals)
     {
         other.allStrings = nullptr;
@@ -846,10 +846,10 @@ struct RealmStats
 
     RealmStats(RealmStats&& other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
-        classInfo(mozilla::Move(other.classInfo)),
+        classInfo(std::move(other.classInfo)),
         extra(other.extra),
         allClasses(other.allClasses),
-        notableClasses(mozilla::Move(other.notableClasses)),
+        notableClasses(std::move(other.notableClasses)),
         isTotals(other.isTotals)
     {
         other.allClasses = nullptr;

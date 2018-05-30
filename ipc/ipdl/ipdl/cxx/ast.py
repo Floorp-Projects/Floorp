@@ -686,7 +686,7 @@ class ExprCall(Node):
 
 class ExprMove(ExprCall):
     def __init__(self, arg):
-        ExprCall.__init__(self, ExprVar("mozilla::Move"), args=[arg])
+        ExprCall.__init__(self, ExprVar("std::move"), args=[arg])
 
 class ExprNew(Node):
     # XXX taking some poetic license ...

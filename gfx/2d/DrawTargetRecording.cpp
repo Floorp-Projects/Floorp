@@ -89,7 +89,7 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRecording, override)
   DataSourceSurfaceRecording(UniquePtr<uint8_t[]> aData, IntSize aSize,
                              int32_t aStride, SurfaceFormat aFormat)
-    : mData(Move(aData))
+    : mData(std::move(aData))
     , mSize(aSize)
     , mStride(aStride)
     , mFormat(aFormat)
@@ -107,7 +107,7 @@ public:
     auto data = MakeUnique<uint8_t[]>(aStride * aSize.height);
     if (data) {
       memcpy(data.get(), aData, aStride * aSize.height);
-      RefPtr<DataSourceSurfaceRecording> surf = new DataSourceSurfaceRecording(Move(data), aSize, aStride, aFormat);
+      RefPtr<DataSourceSurfaceRecording> surf = new DataSourceSurfaceRecording(std::move(data), aSize, aStride, aFormat);
       return surf.forget();
     }
     return nullptr;

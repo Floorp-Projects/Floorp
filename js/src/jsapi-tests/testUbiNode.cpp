@@ -701,7 +701,7 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_no_path)
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
-                                                            mozilla::Move(targets));
+                                                            std::move(targets));
     }
 
     CHECK(maybeShortestPaths);
@@ -743,7 +743,7 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_one_path)
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
-                                                            mozilla::Move(targets));
+                                                            std::move(targets));
     }
 
     CHECK(maybeShortestPaths);
@@ -810,7 +810,7 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_paths)
         CHECK(targets.put(&f));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
-                                                            mozilla::Move(targets));
+                                                            std::move(targets));
     }
 
     CHECK(maybeShortestPaths);
@@ -902,7 +902,7 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_more_paths_than_max)
         CHECK(targets.put(&f));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 1, &a,
-                                                            mozilla::Move(targets));
+                                                            std::move(targets));
     }
 
     CHECK(maybeShortestPaths);
@@ -952,7 +952,7 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_edges_to_target)
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
-                                                            mozilla::Move(targets));
+                                                            std::move(targets));
     }
 
     CHECK(maybeShortestPaths);

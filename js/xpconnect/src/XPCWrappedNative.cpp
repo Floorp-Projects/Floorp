@@ -1813,7 +1813,7 @@ XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
         name = JS_smprintf("%s", scr->GetJSClass()->name);
     if (to) {
         const char* fmt = name ? " (%s)" : "%s";
-        name = JS_sprintf_append(Move(name), fmt,
+        name = JS_sprintf_append(std::move(name), fmt,
                                  to->GetInterface()->GetNameString());
     } else if (!name) {
         XPCNativeSet* set = GetSet();
@@ -1822,15 +1822,15 @@ XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
         uint16_t count = set->GetInterfaceCount();
 
         if (count == 1)
-            name = JS_sprintf_append(Move(name), "%s", array[0]->GetNameString());
+            name = JS_sprintf_append(std::move(name), "%s", array[0]->GetNameString());
         else if (count == 2 && array[0] == isupp) {
-            name = JS_sprintf_append(Move(name), "%s", array[1]->GetNameString());
+            name = JS_sprintf_append(std::move(name), "%s", array[1]->GetNameString());
         } else {
             for (uint16_t i = 0; i < count; i++) {
                 const char* fmt = (i == 0) ?
                                     "(%s" : (i == count-1) ?
                                         ", %s)" : ", %s";
-                name = JS_sprintf_append(Move(name), fmt,
+                name = JS_sprintf_append(std::move(name), fmt,
                                          array[i]->GetNameString());
             }
         }

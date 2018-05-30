@@ -576,7 +576,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
       return Result::FATAL_ERROR_NO_MEMORY;
     }
     Result tempRV = DoOCSPRequest(aiaLocation, mOriginAttributes,
-                                  Move(ocspRequest), GetOCSPTimeout(),
+                                  std::move(ocspRequest), GetOCSPTimeout(),
                                   ocspResponse);
     MOZ_ASSERT((tempRV != Success) || ocspResponse.length() > 0);
     if (tempRV != Success) {
@@ -784,7 +784,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   UniqueCERTCertList certListCopy = nsNSSCertList::DupCertList(certList);
 
   // This adopts the list
-  RefPtr<nsNSSCertList> nssCertList = new nsNSSCertList(Move(certListCopy));
+  RefPtr<nsNSSCertList> nssCertList = new nsNSSCertList(std::move(certListCopy));
   if (!nssCertList) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -912,7 +912,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     }
   }
 
-  mBuiltChain = Move(certList);
+  mBuiltChain = std::move(certList);
 
   return Success;
 }

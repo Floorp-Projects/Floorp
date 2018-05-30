@@ -31,7 +31,7 @@ public:
   static HRESULT WrapInterface(STAUniquePtr<Interface> aTargetInterface,
                                Interface** aOutInterface)
   {
-    return WrapInterface<Interface>(Move(aTargetInterface), nullptr,
+    return WrapInterface<Interface>(std::move(aTargetInterface), nullptr,
                                     aOutInterface);
   }
 
@@ -47,7 +47,7 @@ public:
     if (FAILED(hr)) {
       return hr;
     }
-    return CreateInterceptor(Move(aTargetInterface), handoff, aOutInterface);
+    return CreateInterceptor(std::move(aTargetInterface), handoff, aOutInterface);
   }
 
   // IUnknown

@@ -502,7 +502,7 @@ LayerManagerComposite::UpdateAndRender()
       // damage region for the next window composite.
       mInvalidRegion.Or(mInvalidRegion, changed);
     } else {
-      invalid = Move(changed);
+      invalid = std::move(changed);
     }
   }
 
@@ -876,7 +876,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
     auto packet = MakeUnique<layerscope::Packet>();
     layerscope::LayersPacket* layersPacket = packet->mutable_layers();
     this->Dump(layersPacket);
-    LayerScope::SendLayerDump(Move(packet));
+    LayerScope::SendLayerDump(std::move(packet));
   }
 
   mozilla::widget::WidgetRenderingContext widgetContext;

@@ -66,7 +66,6 @@ using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
 using mozilla::IsPowerOfTwo;
-using mozilla::Move;
 using mozilla::PodEqual;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
@@ -167,7 +166,7 @@ class AsmJSGlobal
     AsmJSGlobal(Which which, UniqueChars field) {
         mozilla::PodZero(&pod);  // zero padding for Valgrind
         pod.which_ = which;
-        field_ = Move(field);
+        field_ = std::move(field);
     }
     const char* field() const {
         return field_.get();
@@ -1422,8 +1421,8 @@ class MOZ_STACK_CLASS ModuleValidator
             srcBegin_ = fn->pn_pos.begin;
             srcEnd_ = fn->pn_pos.end;
             line_ = line;
-            bytes_ = Move(bytes);
-            callSiteLineNums_ = Move(callSiteLineNums);
+            bytes_ = std::move(bytes);
+            callSiteLineNums_ = std::move(callSiteLineNums);
         }
 
         uint32_t srcBegin() const { MOZ_ASSERT(defined_); return srcBegin_; }
@@ -1760,7 +1759,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return failCurrentOffset("too many signatures");
 
         *sigIndex = env_.sigs.length();
-        return env_.sigs.append(Move(sig));
+        return env_.sigs.append(std::move(sig));
     }
     bool declareSig(Sig&& sig, uint32_t* sigIndex) {
         SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
@@ -1770,7 +1769,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return true;
         }
 
-        return newSig(Move(sig), sigIndex) &&
+        return newSig(std::move(sig), sigIndex) &&
                sigSet_.add(p, HashableSig(*sigIndex, env_.sigs));
     }
 
@@ -1826,7 +1825,7 @@ class MOZ_STACK_CLASS ModuleValidator
         ErrorMetadata metadata;
         if (ts.computeErrorMetadata(&metadata, offset)) {
             if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
-                ReportCompileError(cx_, Move(metadata), nullptr, JSREPORT_ERROR,
+                ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR,
                                    JSMSG_USE_ASM_TYPE_FAIL, args);
             } else {
                 // asm.js type failure is indicated by calling one of the fail*
@@ -1837,7 +1836,7 @@ class MOZ_STACK_CLASS ModuleValidator
                 // If warning succeeds, no exception is set.  If warning fails,
                 // an exception is set and execution will halt.  Thus it's safe
                 // and correct to ignore the return value here.
-                Unused << ts.anyCharsAccess().compileWarning(Move(metadata), nullptr,
+                Unused << ts.anyCharsAccess().compileWarning(std::move(metadata), nullptr,
                                                              JSREPORT_WARNING,
                                                              JSMSG_USE_ASM_TYPE_FAIL, args);
             }
@@ -2005,7 +2004,7 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Variable, nullptr);
         g.pod.u.var.initKind_ = AsmJSGlobal::InitConstant;
         g.pod.u.var.u.val_ = lit.value();
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addGlobalVarImport(PropertyName* var, PropertyName* field, Type type, bool isConst) {
         MOZ_ASSERT(type.isGlobalVarType());
@@ -2027,10 +2026,10 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::Variable, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::Variable, std::move(fieldChars));
         g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
         g.pod.u.var.u.importType_ = valType;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addArrayView(PropertyName* var, Scalar::Type vt, PropertyName* maybeField) {
         UniqueChars fieldChars;
@@ -2050,9 +2049,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::ArrayView, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::ArrayView, std::move(fieldChars));
         g.pod.u.viewType_ = vt;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addMathBuiltinFunction(PropertyName* var, AsmJSMathBuiltinFunction func,
                                 PropertyName* field)
@@ -2068,9 +2067,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::MathBuiltinFunction, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::MathBuiltinFunction, std::move(fieldChars));
         g.pod.u.mathBuiltinFunc_ = func;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
   private:
     bool addGlobalDoubleConstant(PropertyName* var, double constant) {
@@ -2089,10 +2088,10 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!addGlobalDoubleConstant(var, constant))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::Constant, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::Constant, std::move(fieldChars));
         g.pod.u.constant.value_ = constant;
         g.pod.u.constant.kind_ = AsmJSGlobal::MathConstant;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addGlobalConstant(PropertyName* var, double constant, PropertyName* field) {
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
@@ -2102,10 +2101,10 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!addGlobalDoubleConstant(var, constant))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::Constant, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::Constant, std::move(fieldChars));
         g.pod.u.constant.value_ = constant;
         g.pod.u.constant.kind_ = AsmJSGlobal::GlobalConstant;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
                                    PropertyName* field)
@@ -2126,9 +2125,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::AtomicsBuiltinFunction, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::AtomicsBuiltinFunction, std::move(fieldChars));
         g.pod.u.atomicsBuiltinFunc_ = func;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addSimdCtor(PropertyName* var, SimdType type, PropertyName* field) {
         simdPresent_ = true;
@@ -2144,9 +2143,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::SimdCtor, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::SimdCtor, std::move(fieldChars));
         g.pod.u.simdCtorType_ = type;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addSimdOperation(PropertyName* var, SimdType type, SimdOperation op, PropertyName* field) {
         simdPresent_ = true;
@@ -2162,10 +2161,10 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::SimdOp, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::SimdOp, std::move(fieldChars));
         g.pod.u.simdOp.type_ = type;
         g.pod.u.simdOp.which_ = op;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addArrayViewCtor(PropertyName* var, Scalar::Type vt, PropertyName* field) {
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
@@ -2179,9 +2178,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::ArrayViewCtor, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::ArrayViewCtor, std::move(fieldChars));
         g.pod.u.viewType_ = vt;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addFFI(PropertyName* var, PropertyName* field) {
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
@@ -2199,9 +2198,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!globalMap_.putNew(var, global))
             return false;
 
-        AsmJSGlobal g(AsmJSGlobal::FFI, Move(fieldChars));
+        AsmJSGlobal g(AsmJSGlobal::FFI, std::move(fieldChars));
         g.pod.u.ffiIndex_ = ffiIndex;
-        return asmJSMetadata_->asmJSGlobals.append(Move(g));
+        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addExportField(const Func& func, PropertyName* maybeField) {
         // Record the field name of this export.
@@ -2216,7 +2215,7 @@ class MOZ_STACK_CLASS ModuleValidator
         // Declare which function is exported which gives us an index into the
         // module ExportVector.
         uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
-        if (!env_.exports.emplaceBack(Move(fieldChars), funcIndex, DefinitionKind::Function))
+        if (!env_.exports.emplaceBack(std::move(fieldChars), funcIndex, DefinitionKind::Function))
             return false;
 
         // The exported function might have already been exported in which case
@@ -2227,7 +2226,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     bool addFuncDef(PropertyName* name, uint32_t firstUse, Sig&& sig, Func** func) {
         uint32_t sigIndex;
-        if (!declareSig(Move(sig), &sigIndex))
+        if (!declareSig(std::move(sig), &sigIndex))
             return false;
 
         uint32_t funcDefIndex = funcDefs_.length();
@@ -2255,7 +2254,7 @@ class MOZ_STACK_CLASS ModuleValidator
         *tableIndex = env_.tables.length();
 
         uint32_t sigIndex;
-        if (!newSig(Move(sig), &sigIndex))
+        if (!newSig(std::move(sig), &sigIndex))
             return false;
 
         MOZ_ASSERT(sigIndex >= env_.asmJSSigToTableIndex.length());
@@ -2287,7 +2286,7 @@ class MOZ_STACK_CLASS ModuleValidator
         for (uint32_t& index : elems)
             index += funcImportMap_.count();
 
-        return env_.elemSegments.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), Move(elems));
+        return env_.elemSegments.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), std::move(elems));
     }
     bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* importIndex) {
         FuncImportMap::AddPtr p = funcImportMap_.lookupForAdd(NamedSig::Lookup(name, sig));
@@ -2306,7 +2305,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
 
         uint32_t sigIndex;
-        if (!declareSig(Move(sig), &sigIndex))
+        if (!declareSig(std::move(sig), &sigIndex))
             return false;
 
         return funcImportMap_.add(p, NamedSig(name, sigIndex, env_.sigs), *importIndex);
@@ -2476,7 +2475,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return nullptr;
         for (const Func& func : funcDefs_) {
             CacheableChars funcName = StringToNewUTF8CharsZ(cx_, *func.name());
-            if (!funcName || !asmJSMetadata_->asmJSFuncNames.emplaceBack(Move(funcName)))
+            if (!funcName || !asmJSMetadata_->asmJSFuncNames.emplaceBack(std::move(funcName)))
                 return nullptr;
         }
 
@@ -2497,7 +2496,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 
         MutableCompileArgs args = cx_->new_<CompileArgs>();
-        if (!args || !args->initFromContext(cx_, Move(scriptedCaller)))
+        if (!args || !args->initFromContext(cx_, std::move(scriptedCaller)))
             return nullptr;
 
         uint32_t codeSectionSize = 0;
@@ -2521,7 +2520,7 @@ class MOZ_STACK_CLASS ModuleValidator
         for (Func& func : funcDefs_) {
             if (!mg.compileFuncDef(funcImportMap_.count() + func.funcDefIndex(), func.line(),
                                    func.bytes().begin(), func.bytes().end(),
-                                   Move(func.callSiteLineNums()))) {
+                                   std::move(func.callSiteLineNums()))) {
                 return nullptr;
             }
         }
@@ -3074,7 +3073,7 @@ class MOZ_STACK_CLASS FunctionValidator
         MOZ_ASSERT(continuableStack_.empty());
         MOZ_ASSERT(breakLabels_.empty());
         MOZ_ASSERT(continueLabels_.empty());
-        func->define(fn_, line, Move(bytes_), Move(callSiteLineNums_));
+        func->define(fn_, line, std::move(bytes_), std::move(callSiteLineNums_));
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -4891,7 +4890,7 @@ CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, Property
     if (!existing) {
         if (!CheckModuleLevelName(m, usepn, name))
             return false;
-        return m.addFuncDef(name, usepn->pn_pos.begin, Move(sig), func);
+        return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
     }
 
     const SigWithId& existingSig = m.env().sigs[existing->sigIndex()];
@@ -4924,10 +4923,10 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    Sig sig(Move(args), ret.canonicalToExprType());
+    Sig sig(std::move(args), ret.canonicalToExprType());
 
     ModuleValidator::Func* callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Move(sig), calleeName, &callee))
+    if (!CheckFunctionSignature(f.m(), callNode, std::move(sig), calleeName, &callee))
         return false;
 
     if (!f.writeCall(callNode, MozOp::OldCallDirect))
@@ -4962,7 +4961,7 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyN
     if (!CheckModuleLevelName(m, usepn, name))
         return false;
 
-    if (!m.declareFuncPtrTable(Move(sig), name, usepn->pn_pos.begin, mask, tableIndex))
+    if (!m.declareFuncPtrTable(std::move(sig), name, usepn->pn_pos.begin, mask, tableIndex))
         return false;
 
     return true;
@@ -5007,10 +5006,10 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, Type ret, Type* type
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    Sig sig(Move(args), ret.canonicalToExprType());
+    Sig sig(std::move(args), ret.canonicalToExprType());
 
     uint32_t tableIndex;
-    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &tableIndex))
+    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, std::move(sig), mask, &tableIndex))
         return false;
 
     if (!f.writeCall(callNode, MozOp::OldCallIndirect))
@@ -5048,10 +5047,10 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!CheckCallArgs<CheckIsExternType>(f, callNode, &args))
         return false;
 
-    Sig sig(Move(args), ret.canonicalToExprType());
+    Sig sig(std::move(args), ret.canonicalToExprType());
 
     uint32_t importIndex;
-    if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
+    if (!f.m().declareImport(calleeName, std::move(sig), ffiIndex, &importIndex))
         return false;
 
     if (!f.writeCall(callNode, Op::Call))
@@ -7306,7 +7305,7 @@ CheckFunction(ModuleValidator& m)
         return false;
 
     ModuleValidator::Func* func = nullptr;
-    if (!CheckFunctionSignature(m, fn, Sig(Move(args), f.returnedType()), FunctionName(fn), &func))
+    if (!CheckFunctionSignature(m, fn, Sig(std::move(args), f.returnedType()), FunctionName(fn), &func))
         return false;
 
     if (func->defined())
@@ -7394,10 +7393,10 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
         return false;
 
     uint32_t tableIndex;
-    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), Move(copy), mask, &tableIndex))
+    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), std::move(copy), mask, &tableIndex))
         return false;
 
-    if (!m.defineFuncPtrTable(tableIndex, Move(elemFuncDefIndices)))
+    if (!m.defineFuncPtrTable(tableIndex, std::move(elemFuncDefIndices)))
         return m.fail(var, "duplicate function-pointer definition");
 
     return true;
@@ -8484,7 +8483,7 @@ class ModuleCharsForStore : ModuleChars
             ParseNode* arg = FunctionFormalParametersList(functionNode, &numArgs);
             for (unsigned i = 0; i < numArgs; i++, arg = arg->pn_next) {
                 UniqueChars name = StringToNewUTF8CharsZ(nullptr, *arg->name());
-                if (!name || !funCtorArgs_.append(Move(name)))
+                if (!name || !funCtorArgs_.append(std::move(name)))
                     return false;
             }
         }
@@ -8910,7 +8909,7 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
 
     // Success! Write to the console with a "warning" message.
     *validated = true;
-    SuccessfulValidation(parser, Move(message));
+    SuccessfulValidation(parser, std::move(message));
     return NoExceptionPending(cx);
 }
 

@@ -245,7 +245,7 @@ CertVerifier::LoadKnownCTLogs()
       continue;
     }
 
-    rv = mCTVerifier->AddLog(Move(logVerifier));
+    rv = mCTVerifier->AddLog(std::move(logVerifier));
     if (rv != Success) {
       MOZ_ASSERT_UNREACHABLE("Failed activating a known CT Log");
       continue;
@@ -416,7 +416,7 @@ CertVerifier::VerifyCertificateTransparencyPolicy(
   }
 
   if (ctInfo) {
-    ctInfo->verifyResult = Move(result);
+    ctInfo->verifyResult = std::move(result);
     ctInfo->policyCompliance = ctPolicyCompliance;
   }
   return Success;

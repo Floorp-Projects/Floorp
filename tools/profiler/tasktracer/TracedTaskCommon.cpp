@@ -100,7 +100,7 @@ NS_IMPL_ISUPPORTS(TracedRunnable, nsIRunnable);
 
 TracedRunnable::TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj)
   : TracedTaskCommon()
-  , mOriginalObj(Move(aOriginalObj))
+  , mOriginalObj(std::move(aOriginalObj))
 {
   Init();
   LogVirtualTablePtr(mTaskId, mSourceEventId, *reinterpret_cast<uintptr_t**>(mOriginalObj.get()));
@@ -129,7 +129,7 @@ TracedRunnable::Run()
 already_AddRefed<nsIRunnable>
 CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  RefPtr<nsIRunnable> runnable = new TracedRunnable(Move(aRunnable));
+  RefPtr<nsIRunnable> runnable = new TracedRunnable(std::move(aRunnable));
   return runnable.forget();
 }
 

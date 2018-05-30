@@ -30,7 +30,7 @@ FunctionBrokerParent::Create(Endpoint<PFunctionBrokerParent>&& aParentEnd)
   // message thread.
   FunctionHook::GetHooks();
 
-  return new FunctionBrokerParent(thread, Move(aParentEnd));
+  return new FunctionBrokerParent(thread, std::move(aParentEnd));
 }
 
 FunctionBrokerParent::FunctionBrokerParent(FunctionBrokerThread* aThread,
@@ -41,7 +41,7 @@ FunctionBrokerParent::FunctionBrokerParent(FunctionBrokerThread* aThread,
 {
   MOZ_ASSERT(mThread);
   mThread->Dispatch(NewNonOwningRunnableMethod<Endpoint<PFunctionBrokerParent>&&>(
-          "FunctionBrokerParent::Bind", this, &FunctionBrokerParent::Bind, Move(aParentEnd)));
+          "FunctionBrokerParent::Bind", this, &FunctionBrokerParent::Bind, std::move(aParentEnd)));
 }
 
 FunctionBrokerParent::~FunctionBrokerParent()

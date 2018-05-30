@@ -186,7 +186,7 @@ MediaSourceDemuxer::DoAttachSourceBuffer(
   RefPtr<mozilla::TrackBuffersManager>&& aSourceBuffer)
 {
   MOZ_ASSERT(OnTaskQueue());
-  mSourceBuffers.AppendElement(Move(aSourceBuffer));
+  mSourceBuffers.AppendElement(std::move(aSourceBuffer));
   ScanSourceBuffersForContent();
 }
 

@@ -35,18 +35,18 @@ protected:
       if (offset <= 0) {
         // Bail out for negative offset: probably already patched by some
         // third-party code.
-        return Move(origFn);
+        return std::move(origFn);
       }
 
       for (int8_t i = 0; i < offset; i++) {
         if (origFn[2 + i] != 0x90) {
           // Bail out on insufficient nop space.
-          return Move(origFn);
+          return std::move(origFn);
         }
       }
 
       uintptr_t abstarget = (origFn + 2 + offset).GetAddress();
-      return EnsureTargetIsAccessible(Move(origFn), abstarget);
+      return EnsureTargetIsAccessible(std::move(origFn), abstarget);
     }
 
 #if defined(_M_IX86)
@@ -54,24 +54,24 @@ protected:
     // we resolve redirected address from import table.
     if (origFn[0] == 0xff && origFn[1] == 0x25) {
       uintptr_t abstarget = (origFn + 2).template ChasePointer<uintptr_t*>();
-      return EnsureTargetIsAccessible(Move(origFn), abstarget);
+      return EnsureTargetIsAccessible(std::move(origFn), abstarget);
     }
 #elif defined(_M_X64)
     // If function entry is jmp [disp32] such as used by kernel32,
     // we resolve redirected address from import table.
     if (origFn[0] == 0x48 && origFn[1] == 0xff && origFn[2] == 0x25) {
       uintptr_t abstarget = (origFn + 3).ChasePointerFromDisp();
-      return EnsureTargetIsAccessible(Move(origFn), abstarget);
+      return EnsureTargetIsAccessible(std::move(origFn), abstarget);
     }
 
     if (origFn[0] == 0xe9) {
       // require for TestDllInterceptor with --disable-optimize
       uintptr_t abstarget = (origFn + 1).ReadDisp32AsAbsolute();
-      return EnsureTargetIsAccessible(Move(origFn), abstarget);
+      return EnsureTargetIsAccessible(std::move(origFn), abstarget);
     }
 #endif
 
-    return Move(origFn);
+    return std::move(origFn);
   }
 
 private:
@@ -80,7 +80,7 @@ private:
                            uintptr_t aRedirAddress)
   {
     if (!mVMPolicy.IsPageAccessible(reinterpret_cast<void*>(aRedirAddress))) {
-      return Move(aOrigFn);
+      return std::move(aOrigFn);
     }
 
     return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, aRedirAddress);

@@ -142,7 +142,7 @@ IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
 
   RefPtr<IDBFactory> factory = new IDBFactory();
-  factory->mPrincipalInfo = Move(principalInfo);
+  factory->mPrincipalInfo = std::move(principalInfo);
   factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
   factory->mEventTarget =

@@ -1450,7 +1450,7 @@ RInstructionResults::RInstructionResults(JitFrameLayout* fp)
 }
 
 RInstructionResults::RInstructionResults(RInstructionResults&& src)
-  : results_(mozilla::Move(src.results_)),
+  : results_(std::move(src.results_)),
     fp_(src.fp_),
     initialized_(src.initialized_)
 {
@@ -1462,7 +1462,7 @@ RInstructionResults::operator=(RInstructionResults&& rhs)
 {
     MOZ_ASSERT(&rhs != this, "self-moves are prohibited");
     this->~RInstructionResults();
-    new(this) RInstructionResults(mozilla::Move(rhs));
+    new(this) RInstructionResults(std::move(rhs));
     return *this;
 }
 
@@ -1931,7 +1931,7 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback& fallback)
         // cause a GC, we can ensure that the results are properly traced by the
         // activation.
         RInstructionResults tmp(fallback.frame->jsFrame());
-        if (!fallback.activation->registerIonFrameRecovery(mozilla::Move(tmp)))
+        if (!fallback.activation->registerIonFrameRecovery(std::move(tmp)))
             return false;
 
         results = fallback.activation->maybeIonFrameRecovery(fp);

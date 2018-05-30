@@ -1601,7 +1601,7 @@ TelemetryImpl::RecordChromeHang(uint32_t aDuration,
 
   sTelemetry->mHangReports.AddHang(aStack, aDuration,
                                    aSystemUptime, aFirefoxUptime,
-                                   Move(aAnnotations));
+                                   std::move(aAnnotations));
 }
 
 void
@@ -2168,7 +2168,7 @@ void RecordChromeHang(uint32_t duration,
 {
   TelemetryImpl::RecordChromeHang(duration, aStack,
                                   aSystemUptime, aFirefoxUptime,
-                                  Move(aAnnotations));
+                                  std::move(aAnnotations));
 }
 
 void CaptureStack(const nsACString& aKey)

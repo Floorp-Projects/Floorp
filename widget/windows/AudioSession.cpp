@@ -323,7 +323,7 @@ AudioSession::StopInternal()
     // bug 1419488: Avoid hanging due to Win7 race condition when destroying
     // AudioSessionControl.  We do that by Moving the AudioSessionControl
     // to a worker thread (that we never 'join') for destruction.
-    SpawnASCReleaseThread(Move(mAudioSessionControl));
+    SpawnASCReleaseThread(std::move(mAudioSessionControl));
   } else {
     mAudioSessionControl = nullptr;
   }

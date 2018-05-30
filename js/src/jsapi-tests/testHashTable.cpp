@@ -312,7 +312,7 @@ struct MoveOnlyType {
     MoveOnlyType& operator=(MoveOnlyType&& rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~MoveOnlyType();
-        new(this) MoveOnlyType(mozilla::Move(rhs));
+        new(this) MoveOnlyType(std::move(rhs));
         return *this;
     }
 
@@ -342,7 +342,7 @@ BEGIN_TEST(testHashSetOfMoveOnlyType)
 
     MoveOnlyType a(1);
 
-    CHECK(set.put(mozilla::Move(a))); // This shouldn't generate a compiler error.
+    CHECK(set.put(std::move(a))); // This shouldn't generate a compiler error.
 
     return true;
 }
@@ -416,7 +416,7 @@ BEGIN_TEST(testHashTableMovableEnum)
         e1.removeFront();
         e1.popFront();
 
-        auto e2 = mozilla::Move(e1);
+        auto e2 = std::move(e1);
         CHECK(!e2.empty());
         e2.removeFront();
         e2.popFront();

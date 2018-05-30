@@ -171,7 +171,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
         FinalizeFrame(result.mRegionToDraw);
 
       if (asyncPaint) {
-        result.mBufferState->mBufferFinalize = Move(bufferFinalize);
+        result.mBufferState->mBufferFinalize = std::move(bufferFinalize);
       } else if (bufferFinalize) {
         bufferFinalize->CopyBuffer();
       }
@@ -205,7 +205,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
       // and we're async painting as that may fail
       if (!bufferUnrotate ||
           mBuffer->BufferRotation() == IntPoint(0,0)) {
-        result.mBufferState->mBufferUnrotate = Move(bufferUnrotate);
+        result.mBufferState->mBufferUnrotate = std::move(bufferUnrotate);
 
         // We can then assume that preparing the buffer will always
         // succeed and update our parameters unconditionally
@@ -286,7 +286,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
         // If we're async painting then return the buffer state to
         // be dispatched to the paint thread, otherwise do it now
         if (asyncPaint) {
-          result.mBufferState->mBufferInitialize = Some(Move(bufferInitialize));
+          result.mBufferState->mBufferInitialize = Some(std::move(bufferInitialize));
         } else {
           if (!bufferInitialize.CopyBuffer()) {
             gfxCriticalNote << "Failed to copy front buffer to back buffer.";
@@ -516,8 +516,8 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
                "Destination rect doesn't contain what we need to paint");
 
   BufferDecision dest;
-  dest.mNeededRegion = Move(neededRegion);
-  dest.mValidRegion = Move(validRegion);
+  dest.mNeededRegion = std::move(neededRegion);
+  dest.mValidRegion = std::move(validRegion);
   dest.mBufferRect = destBufferRect;
   dest.mBufferMode = mode;
   dest.mBufferContentType = contentType;

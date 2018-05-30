@@ -136,7 +136,7 @@ SandboxBrokerTest::GetPolicy() const
   // This should be non-writable by the user running the test:
   policy->AddPath(MAY_READ | MAY_WRITE, "/etc", AddAlways);
 
-  return Move(policy);
+  return std::move(policy);
 }
 
 TEST_F(SandboxBrokerTest, OpenForRead)

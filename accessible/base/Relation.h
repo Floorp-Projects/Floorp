@@ -35,14 +35,14 @@ public:
     { AppendTarget(aDocument, aContent); }
 
   Relation(Relation&& aOther) :
-    mFirstIter(Move(aOther.mFirstIter)), mLastIter(aOther.mLastIter)
+    mFirstIter(std::move(aOther.mFirstIter)), mLastIter(aOther.mLastIter)
   {
     aOther.mLastIter = nullptr;
   }
 
   Relation& operator = (Relation&& aRH)
   {
-    mFirstIter = Move(aRH.mFirstIter);
+    mFirstIter = std::move(aRH.mFirstIter);
     mLastIter = aRH.mLastIter;
     aRH.mLastIter = nullptr;
     return *this;

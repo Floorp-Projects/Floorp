@@ -87,7 +87,7 @@ public:
     MOZ_ASSERT(!HaveDirectTasks());
 
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
-      DispatchTaskGroup(Move(mTaskGroups[i]));
+      DispatchTaskGroup(std::move(mTaskGroups[i]));
     }
   }
 
@@ -110,7 +110,7 @@ public:
     if (mDirectTasks.isNothing()) {
       mDirectTasks.emplace();
     }
-    mDirectTasks->push(Move(aRunnable));
+    mDirectTasks->push(std::move(aRunnable));
   }
 
   void AddStateChangeTask(AbstractThread* aThread,
@@ -153,7 +153,7 @@ public:
     // Dispatch all groups that match |aThread|.
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
       if (mTaskGroups[i]->mThread == aThread) {
-        nsresult rv2 = DispatchTaskGroup(Move(mTaskGroups[i]));
+        nsresult rv2 = DispatchTaskGroup(std::move(mTaskGroups[i]));
 
         if (NS_WARN_IF(NS_FAILED(rv2)) && NS_SUCCEEDED(rv)) {
           // We should try our best to call DispatchTaskGroup() as much as
@@ -192,7 +192,7 @@ private:
     public:
       explicit TaskGroupRunnable(UniquePtr<PerThreadTaskGroup>&& aTasks)
         : Runnable("AutoTaskDispatcher::TaskGroupRunnable")
-        , mTasks(Move(aTasks))
+        , mTasks(std::move(aTasks))
       {
       }
 
@@ -261,7 +261,7 @@ private:
 
     AbstractThread::DispatchReason reason = mIsTailDispatcher ? AbstractThread::TailDispatch
                                                               : AbstractThread::NormalDispatch;
-    nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(aGroup));
+    nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(std::move(aGroup));
     return thread->Dispatch(r.forget(), reason);
   }
 

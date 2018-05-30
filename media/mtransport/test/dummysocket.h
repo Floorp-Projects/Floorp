@@ -101,7 +101,7 @@ class DummySocket : public NrSocketBase {
 
     if (to_write) {
       UniquePtr<DataBuffer> msgbuf(new DataBuffer(static_cast<const uint8_t *>(msg), to_write));
-      write_buffer_ = merge(Move(write_buffer_), Move(msgbuf));
+      write_buffer_ = merge(std::move(write_buffer_), std::move(msgbuf));
     }
 
     *written = to_write;

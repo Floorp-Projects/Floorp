@@ -121,7 +121,7 @@ class HangMonitorChild
 
   void Dispatch(already_AddRefed<nsIRunnable> aRunnable)
   {
-    mHangMonitor->Dispatch(Move(aRunnable));
+    mHangMonitor->Dispatch(std::move(aRunnable));
   }
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
@@ -248,7 +248,7 @@ public:
 
   void Dispatch(already_AddRefed<nsIRunnable> aRunnable)
   {
-    mHangMonitor->Dispatch(Move(aRunnable));
+    mHangMonitor->Dispatch(std::move(aRunnable));
   }
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
@@ -754,7 +754,7 @@ HangMonitorParent::SendHangNotification(const HangData& aHangData,
     plugins::TakeFullMinidump(phd.pluginId(),
                               phd.contentProcessId(),
                               aBrowserDumpId,
-                              Move(callback),
+                              std::move(callback),
                               true);
   } else {
     // We already have a full minidump; go ahead and use it.
@@ -1123,7 +1123,7 @@ HangMonitoredProcess::TerminatePlugin()
                            contentPid,
                            NS_LITERAL_CSTRING("HangMonitor"),
                            mDumpId,
-                           Move(callback));
+                           std::move(callback));
   return NS_OK;
 }
 
@@ -1291,7 +1291,7 @@ CreateHangMonitorParent(ContentParent* aContentParent,
       "HangMonitorParent::Bind",
       parent,
       &HangMonitorParent::Bind,
-      Move(aEndpoint)));
+      std::move(aEndpoint)));
 
   return parent;
 }
@@ -1312,13 +1312,13 @@ mozilla::CreateHangMonitorChild(Endpoint<PProcessHangMonitorChild>&& aEndpoint)
       "HangMonitorChild::Bind",
       child,
       &HangMonitorChild::Bind,
-      Move(aEndpoint)));
+      std::move(aEndpoint)));
 }
 
 void
 ProcessHangMonitor::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
 {
-  mThread->Dispatch(Move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
+  mThread->Dispatch(std::move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
 }
 
 bool
@@ -1348,12 +1348,12 @@ ProcessHangMonitor::AddProcess(ContentParent* aContentParent)
     return nullptr;
   }
 
-  if (!aContentParent->SendInitProcessHangMonitor(Move(child))) {
+  if (!aContentParent->SendInitProcessHangMonitor(std::move(child))) {
     MOZ_ASSERT(false);
     return nullptr;
   }
 
-  return CreateHangMonitorParent(aContentParent, Move(parent));
+  return CreateHangMonitorParent(aContentParent, std::move(parent));
 }
 
 /* static */ void

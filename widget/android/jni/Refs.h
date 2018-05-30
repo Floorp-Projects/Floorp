@@ -551,14 +551,14 @@ public:
 
     LocalRef<Cls>& operator=(LocalRef<GenericObject>&& ref) &
     {
-        LocalRef<Cls> newRef(mozilla::Move(ref));
+        LocalRef<Cls> newRef(std::move(ref));
         return swap(newRef);
     }
 
     template<class C>
     LocalRef<Cls>& operator=(GenericLocalRef<C>&& ref) &
     {
-        LocalRef<Cls> newRef(mozilla::Move(ref));
+        LocalRef<Cls> newRef(std::move(ref));
         return swap(newRef);
     }
 
@@ -1053,7 +1053,7 @@ public:
     ~ReturnToLocal()
     {
         if (objRef) {
-            *localRef = mozilla::Move(objRef);
+            *localRef = std::move(objRef);
         }
     }
 };
@@ -1085,7 +1085,7 @@ public:
     ~ReturnToGlobal()
     {
         if (objRef) {
-            *globalRef = (clsRef = mozilla::Move(objRef));
+            *globalRef = (clsRef = std::move(objRef));
         } else if (clsRef) {
             *globalRef = clsRef;
         }

@@ -56,7 +56,7 @@ gfxVars::Initialize()
       // No provided initial updates, sync-request them from parent.
       InfallibleTArray<GfxVarUpdate> initUpdates;
       dom::ContentChild::GetSingleton()->SendGetGfxVars(&initUpdates);
-      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(Move(initUpdates));
+      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(std::move(initUpdates));
     }
     for (const auto& varUpdate : *gGfxVarInitUpdates) {
       ApplyUpdate(varUpdate);

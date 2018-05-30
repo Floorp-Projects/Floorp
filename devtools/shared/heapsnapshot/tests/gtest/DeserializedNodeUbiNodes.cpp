@@ -23,7 +23,7 @@ struct MockDeserializedNode : public DeserializedNode
 
   bool addEdge(DeserializedEdge&& edge)
   {
-    return edges.append(Move(edge));
+    return edges.append(std::move(edge));
   }
 
   MOCK_METHOD1(getEdgeReferent, JS::ubi::Node(const DeserializedEdge&));
@@ -67,7 +67,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                                                                    nullptr,
                                                                    10));
     DeserializedEdge edge1(referent1->id);
-    mocked.addEdge(Move(edge1));
+    mocked.addEdge(std::move(edge1));
     EXPECT_CALL(mocked, getEdgeReferent(EdgeTo(referent1->id)))
       .Times(1)
       .WillOnce(Return(JS::ubi::Node(referent1.get())));
@@ -76,7 +76,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                                                                    nullptr,
                                                                    20));
     DeserializedEdge edge2(referent2->id);
-    mocked.addEdge(Move(edge2));
+    mocked.addEdge(std::move(edge2));
     EXPECT_CALL(mocked, getEdgeReferent(EdgeTo(referent2->id)))
       .Times(1)
       .WillOnce(Return(JS::ubi::Node(referent2.get())));
@@ -85,7 +85,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                                                                    nullptr,
                                                                    30));
     DeserializedEdge edge3(referent3->id);
-    mocked.addEdge(Move(edge3));
+    mocked.addEdge(std::move(edge3));
     EXPECT_CALL(mocked, getEdgeReferent(EdgeTo(referent3->id)))
       .Times(1)
       .WillOnce(Return(JS::ubi::Node(referent3.get())));

@@ -249,7 +249,7 @@ protected:
 
   MainThreadWorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                                already_AddRefed<nsIEventTarget>&& aSyncLoopTarget)
-  : WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget))
+  : WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget))
   {
     AssertIsOnMainThread();
   }

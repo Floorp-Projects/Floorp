@@ -736,7 +736,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   r->SetAttributeOldValue(attributeOldValue);
   r->SetCharacterDataOldValue(characterDataOldValue);
   r->SetNativeAnonymousChildList(nativeAnonymousChildList);
-  r->SetAttributeFilter(Move(filters));
+  r->SetAttributeFilter(std::move(filters));
   r->SetAllAttributes(allAttrs);
   r->SetAnimations(animations);
   r->RemoveClones();

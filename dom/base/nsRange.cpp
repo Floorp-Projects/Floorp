@@ -3217,7 +3217,7 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
   // Take ownership of the InspectorFontFaces in the table and move them into
   // the aResult outparam.
   for (auto iter = fontFaces.Iter(); !iter.Done(); iter.Next()) {
-    aResult.AppendElement(Move(iter.Data()));
+    aResult.AppendElement(std::move(iter.Data()));
   }
 
   return NS_OK;

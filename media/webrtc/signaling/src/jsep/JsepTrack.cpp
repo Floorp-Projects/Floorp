@@ -556,7 +556,7 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
     }
   }
 
-  mNegotiatedDetails = Move(negotiatedDetails);
+  mNegotiatedDetails = std::move(negotiatedDetails);
 }
 
 // When doing bundle, if all else fails we can try to figure out which m-line a

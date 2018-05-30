@@ -659,7 +659,7 @@ struct nsTArray_CopyWithConstructors
       while (destElemEnd != destElem) {
         --destElemEnd;
         --srcElemEnd;
-        traits::Construct(destElemEnd, mozilla::Move(*srcElemEnd));
+        traits::Construct(destElemEnd, std::move(*srcElemEnd));
         traits::Destruct(srcElemEnd);
       }
     } else {
@@ -678,7 +678,7 @@ struct nsTArray_CopyWithConstructors
     MOZ_ASSERT(srcElemEnd <= destElem || srcElemEnd > destElemEnd);
 #endif
     while (destElem != destElemEnd) {
-      traits::Construct(destElem, mozilla::Move(*srcElem));
+      traits::Construct(destElem, std::move(*srcElem));
       traits::Destruct(srcElem);
       ++destElem;
       ++srcElem;
@@ -1661,7 +1661,7 @@ public:
   elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray,
                             const mozilla::fallible_t&)
   {
-    return AppendElements<Item, Allocator>(mozilla::Move(aArray));
+    return AppendElements<Item, Allocator>(std::move(aArray));
   }
 
   // Append a new element, move constructing if possible.
@@ -1738,7 +1738,7 @@ public:
   MOZ_MUST_USE
   elem_type PopLastElement()
   {
-    elem_type elem = mozilla::Move(LastElement());
+    elem_type elem = std::move(LastElement());
     RemoveLastElement();
     return elem;
   }
@@ -2331,7 +2331,7 @@ public:
   nsTArray() {}
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
   explicit nsTArray(const nsTArray& aOther) : base_type(aOther) {}
-  MOZ_IMPLICIT nsTArray(nsTArray&& aOther) : base_type(mozilla::Move(aOther)) {}
+  MOZ_IMPLICIT nsTArray(nsTArray&& aOther) : base_type(std::move(aOther)) {}
   MOZ_IMPLICIT nsTArray(std::initializer_list<E> aIL) : base_type(aIL) {}
 
   template<class Allocator>
@@ -2341,7 +2341,7 @@ public:
   }
   template<class Allocator>
   MOZ_IMPLICIT nsTArray(nsTArray_Impl<E, Allocator>&& aOther)
-    : base_type(mozilla::Move(aOther))
+    : base_type(std::move(aOther))
   {
   }
 
@@ -2358,13 +2358,13 @@ public:
   }
   self_type& operator=(self_type&& aOther)
   {
-    base_type::operator=(mozilla::Move(aOther));
+    base_type::operator=(std::move(aOther));
     return *this;
   }
   template<class Allocator>
   self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther)
   {
-    base_type::operator=(mozilla::Move(aOther));
+    base_type::operator=(std::move(aOther));
     return *this;
   }
 
@@ -2394,7 +2394,7 @@ public:
   explicit FallibleTArray(size_type aCapacity) : base_type(aCapacity) {}
   explicit FallibleTArray(const FallibleTArray<E>& aOther) : base_type(aOther) {}
   FallibleTArray(FallibleTArray<E>&& aOther)
-    : base_type(mozilla::Move(aOther))
+    : base_type(std::move(aOther))
   {
   }
 
@@ -2405,7 +2405,7 @@ public:
   }
   template<class Allocator>
   explicit FallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
-    : base_type(mozilla::Move(aOther))
+    : base_type(std::move(aOther))
   {
   }
 
@@ -2422,13 +2422,13 @@ public:
   }
   self_type& operator=(self_type&& aOther)
   {
-    base_type::operator=(mozilla::Move(aOther));
+    base_type::operator=(std::move(aOther));
     return *this;
   }
   template<class Allocator>
   self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther)
   {
-    base_type::operator=(mozilla::Move(aOther));
+    base_type::operator=(std::move(aOther));
     return *this;
   }
 };

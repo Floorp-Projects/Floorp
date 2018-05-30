@@ -42,7 +42,7 @@ public:
     : mBuffer(aOther.mBuffer)
   {}
   AudioDataBuffer(AudioDataBuffer&& aOther)
-    : mBuffer(Move(aOther.mBuffer))
+    : mBuffer(std::move(aOther.mBuffer))
   {}
   template <AudioConfig::SampleFormat OtherFormat, typename OtherValue>
   explicit AudioDataBuffer(const AudioDataBuffer<OtherFormat, OtherValue>& other)
@@ -73,26 +73,26 @@ public:
                   "Conversion not implemented yet");
   }
   explicit AudioDataBuffer(AlignedByteBuffer&& aBuffer)
-    : mBuffer(Move(aBuffer))
+    : mBuffer(std::move(aBuffer))
   {
     static_assert(Format == AudioConfig::FORMAT_U8,
                   "Conversion not implemented yet");
   }
   explicit AudioDataBuffer(AlignedShortBuffer&& aBuffer)
-    : mBuffer(Move(aBuffer))
+    : mBuffer(std::move(aBuffer))
   {
     static_assert(Format == AudioConfig::FORMAT_S16,
                   "Conversion not implemented yet");
   }
   explicit AudioDataBuffer(AlignedFloatBuffer&& aBuffer)
-    : mBuffer(Move(aBuffer))
+    : mBuffer(std::move(aBuffer))
   {
     static_assert(Format == AudioConfig::FORMAT_FLT,
                   "Conversion not implemented yet");
   }
   AudioDataBuffer& operator=(AudioDataBuffer&& aOther)
   {
-    mBuffer = Move(aOther.mBuffer);
+    mBuffer = std::move(aOther.mBuffer);
     return *this;
   }
   AudioDataBuffer& operator=(const AudioDataBuffer& aOther)
@@ -107,7 +107,7 @@ public:
   AlignedBuffer<Value> Forget()
   {
     // Correct type -> Just give values as-is.
-    return Move(mBuffer);
+    return std::move(mBuffer);
   }
 private:
   AlignedBuffer<Value> mBuffer;
@@ -129,11 +129,11 @@ public:
   AudioDataBuffer<Format, Value> Process(AudioDataBuffer<Format, Value>&& aBuffer)
   {
     MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format() && mIn.Format() == Format);
-    AudioDataBuffer<Format, Value> buffer = Move(aBuffer);
+    AudioDataBuffer<Format, Value> buffer = std::move(aBuffer);
     if (CanWorkInPlace()) {
       AlignedBuffer<Value> temp = buffer.Forget();
       Process(temp, temp.Data(), SamplesInToFrames(temp.Length()));
-      return AudioDataBuffer<Format, Value>(Move(temp));;
+      return AudioDataBuffer<Format, Value>(std::move(temp));;
     }
     return Process(buffer);
   }
@@ -146,12 +146,12 @@ public:
     size_t frames = SamplesInToFrames(aBuffer.Length());
     AlignedBuffer<Value> temp1;
     if (!temp1.SetLength(FramesOutToSamples(frames))) {
-      return AudioDataBuffer<Format, Value>(Move(temp1));
+      return AudioDataBuffer<Format, Value>(std::move(temp1));
     }
     frames = ProcessInternal(temp1.Data(), aBuffer.Data(), frames);
     if (mIn.Rate() == mOut.Rate()) {
       MOZ_ALWAYS_TRUE(temp1.SetLength(FramesOutToSamples(frames)));
-      return AudioDataBuffer<Format, Value>(Move(temp1));
+      return AudioDataBuffer<Format, Value>(std::move(temp1));
     }
 
     // At this point, temp1 contains the buffer reordered and downmixed.
@@ -162,7 +162,7 @@ public:
       // We are upsampling or about to drain, we can't work in place.
       // Allocate another temporary buffer where the upsampling will occur.
       if (!temp2.SetLength(FramesOutToSamples(ResampleRecipientFrames(frames)))) {
-        return AudioDataBuffer<Format, Value>(Move(temp2));
+        return AudioDataBuffer<Format, Value>(std::move(temp2));
       }
       outputBuffer = &temp2;
     }
@@ -172,7 +172,7 @@ public:
       frames = ResampleAudio(outputBuffer->Data(), temp1.Data(), frames);
     }
     MOZ_ALWAYS_TRUE(outputBuffer->SetLength(FramesOutToSamples(frames)));
-    return AudioDataBuffer<Format, Value>(Move(*outputBuffer));
+    return AudioDataBuffer<Format, Value>(std::move(*outputBuffer));
   }
 
   // Attempt to convert the AudioDataBuffer in place.

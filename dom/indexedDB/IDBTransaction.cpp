@@ -242,7 +242,7 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
       return nullptr;
     }
 
-    transaction->mWorkerHolder = Move(workerHolder);
+    transaction->mWorkerHolder = std::move(workerHolder);
   }
 
   nsCOMPtr<nsIRunnable> runnable = do_QueryObject(transaction);
@@ -821,7 +821,7 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
 #endif
 
   // Make sure we drop the WorkerHolder when this function completes.
-  nsAutoPtr<WorkerHolder> workerHolder = Move(mWorkerHolder);
+  nsAutoPtr<WorkerHolder> workerHolder = std::move(mWorkerHolder);
 
   RefPtr<Event> event;
   if (NS_SUCCEEDED(aResult)) {
@@ -1081,7 +1081,7 @@ WorkerHolder::Notify(WorkerStatus aStatus)
   if (mTransaction && aStatus > Terminating) {
     mTransaction->AssertIsOnOwningThread();
 
-    RefPtr<IDBTransaction> transaction = Move(mTransaction);
+    RefPtr<IDBTransaction> transaction = std::move(mTransaction);
 
     if (!transaction->IsCommittingOrDone()) {
       IDB_REPORT_INTERNAL_ERR();

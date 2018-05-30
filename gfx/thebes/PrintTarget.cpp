@@ -211,7 +211,7 @@ void
 PrintTarget::RegisterPageDoneCallback(PageDoneCallback&& aCallback)
 {
   MOZ_ASSERT(aCallback && !IsSyncPagePrinting());
-  mPageDoneCallback = Move(aCallback);
+  mPageDoneCallback = std::move(aCallback);
 }
 
 void

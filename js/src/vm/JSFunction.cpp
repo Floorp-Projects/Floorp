@@ -853,7 +853,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     if (!ss)
         return nullptr;
     ScriptSourceHolder ssHolder(ss);
-    if (!ss->setSource(cx, mozilla::Move(source), sourceLen))
+    if (!ss->setSource(cx, std::move(source), sourceLen))
         return nullptr;
 
     CompileOptions options(cx);

@@ -181,7 +181,7 @@ DataStorage::GetAllChildProcessData(
       }
     }
     storage->GetAll(&entry.items());
-    aEntries.AppendElement(Move(entry));
+    aEntries.AppendElement(std::move(entry));
   }
 }
 
@@ -207,11 +207,11 @@ DataStorage::SetCachedStorageEntries(
     entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
     for (auto& e : aEntries) {                       \
       if (entry.filename().Equals(e.filename())) {   \
-        entry.items() = Move(e.items());             \
+        entry.items() = std::move(e.items());             \
         break;                                       \
       }                                              \
     }                                                \
-    entries.AppendElement(Move(entry));              \
+    entries.AppendElement(std::move(entry));              \
   }
 #include "mozilla/DataStorageList.h"
 #undef DATA_STORAGE

@@ -73,7 +73,7 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
     aData.base().keyframe(),
     media::TimeUnit::FromMicroseconds(aData.base().timecode()));
 
-  mDecodedData.AppendElement(Move(video));
+  mDecodedData.AppendElement(std::move(video));
   return IPC_OK();
 }
 

@@ -293,10 +293,10 @@ class HashMap
     }
 
     // HashMap is movable
-    HashMap(HashMap&& rhs) : impl(mozilla::Move(rhs.impl)) {}
+    HashMap(HashMap&& rhs) : impl(std::move(rhs.impl)) {}
     void operator=(HashMap&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        impl = mozilla::Move(rhs.impl);
+        impl = std::move(rhs.impl);
     }
 
   private:
@@ -541,10 +541,10 @@ class HashSet
     }
 
     // HashSet is movable
-    HashSet(HashSet&& rhs) : impl(mozilla::Move(rhs.impl)) {}
+    HashSet(HashSet&& rhs) : impl(std::move(rhs.impl)) {}
     void operator=(HashSet&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        impl = mozilla::Move(rhs.impl);
+        impl = std::move(rhs.impl);
     }
 
   private:
@@ -643,7 +643,7 @@ struct DefaultHasher<mozilla::UniquePtr<T, D>>
         return PtrHasher::match(k.get(), l.get());
     }
     static void rekey(mozilla::UniquePtr<T, D>& k, mozilla::UniquePtr<T, D>&& newKey) {
-        k = mozilla::Move(newKey);
+        k = std::move(newKey);
     }
 };
 
@@ -746,13 +746,13 @@ class HashMapEntry
     {}
 
     HashMapEntry(HashMapEntry&& rhs)
-      : key_(mozilla::Move(rhs.key_)),
-        value_(mozilla::Move(rhs.value_))
+      : key_(std::move(rhs.key_)),
+        value_(std::move(rhs.value_))
     {}
 
     void operator=(HashMapEntry&& rhs) {
-        key_ = mozilla::Move(rhs.key_);
-        value_ = mozilla::Move(rhs.value_);
+        key_ = std::move(rhs.key_);
+        value_ = std::move(rhs.value_);
     }
 
     typedef Key KeyType;
@@ -846,7 +846,7 @@ class HashTableEntry
         if (other->isLive()) {
             mozilla::Swap(*valuePtr(), *other->valuePtr());
         } else {
-            *other->valuePtr() = mozilla::Move(*valuePtr());
+            *other->valuePtr() = std::move(*valuePtr());
             destroy();
         }
         mozilla::Swap(keyHash, other->keyHash);
@@ -1580,7 +1580,7 @@ class HashTable : private AllocPolicy
             if (src->isLive()) {
                 HashNumber hn = src->getKeyHash();
                 findFreeEntry(hn).setLive(
-                    hn, mozilla::Move(const_cast<typename Entry::NonConstT&>(src->get())));
+                    hn, std::move(const_cast<typename Entry::NonConstT&>(src->get())));
             }
 
             src->~Entry();
@@ -1955,10 +1955,10 @@ class HashTable : private AllocPolicy
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(p.found());
         MOZ_ASSERT(p.generation == generation());
-        typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
+        typename HashTableEntry<T>::NonConstT t(std::move(*p));
         HashPolicy::setKey(t, const_cast<Key&>(k));
         remove(*p.entry_);
-        putNewInfallibleInternal(l, mozilla::Move(t));
+        putNewInfallibleInternal(l, std::move(t));
     }
 
     void rekeyAndMaybeRehash(Ptr p, const Lookup& l, const Key& k)

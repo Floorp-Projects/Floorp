@@ -23,5 +23,5 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
     MakeUnique<IOMarkerPayload>(aObservation.Reference(),
                                 NS_ConvertUTF16toUTF8(filename).get(),
                                 aObservation.Start(), aObservation.End(),
-                                Move(stack)));
+                                std::move(stack)));
 }

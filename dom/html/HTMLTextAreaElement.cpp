@@ -828,7 +828,7 @@ HTMLTextAreaElement::SaveState()
         return rv;
       }
 
-      state->contentData() = Move(value);
+      state->contentData() = std::move(value);
     }
   }
 

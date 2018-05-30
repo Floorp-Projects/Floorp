@@ -231,7 +231,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     return NS_ERROR_FAILURE;
   }
 
-  mPipe = Move(*pipe);
+  mPipe = std::move(*pipe);
   return NS_OK;
 }
 

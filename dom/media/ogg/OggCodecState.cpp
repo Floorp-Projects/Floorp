@@ -298,12 +298,12 @@ OggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos)
       OggPacketPtr clone = Clone(&packet);
       if (IsHeader(&packet)) {
         // Header packets go straight into the packet queue.
-        mPackets.Append(Move(clone));
+        mPackets.Append(std::move(clone));
       } else {
         // We buffer data packets until we encounter a granulepos. We'll
         // then use the granulepos to figure out the granulepos of the
         // preceeding packets.
-        mUnstamped.AppendElement(Move(clone));
+        mUnstamped.AppendElement(std::move(clone));
         aFoundGranulepos = packet.granulepos > 0;
       }
     }
@@ -386,7 +386,7 @@ bool
 TheoraState::DecodeHeader(OggPacketPtr aPacket)
 {
   ogg_packet* packet = aPacket.get(); // Will be owned by mHeaders.
-  mHeaders.Append(Move(aPacket));
+  mHeaders.Append(std::move(aPacket));
   mPacketCount++;
   int ret = th_decode_headerin(&mTheoraInfo,
                                &mComment,
@@ -533,12 +533,12 @@ TheoraState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructTheoraGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      OggPacketPtr packet = Move(mUnstamped[i]);
+      OggPacketPtr packet = std::move(mUnstamped[i]);
 #ifdef DEBUG
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
 #endif
-      mPackets.Append(Move(packet));
+      mPackets.Append(std::move(packet));
     }
     mUnstamped.Clear();
   }
@@ -685,7 +685,7 @@ bool
 VorbisState::DecodeHeader(OggPacketPtr aPacket)
 {
   ogg_packet* packet = aPacket.get(); // Will be owned by mHeaders.
-  mHeaders.Append(Move(aPacket));
+  mHeaders.Append(std::move(aPacket));
   mPacketCount++;
   int ret = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mComment,
@@ -847,11 +847,11 @@ VorbisState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructVorbisGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      OggPacketPtr packet = Move(mUnstamped[i]);
+      OggPacketPtr packet = std::move(mUnstamped[i]);
       AssertHasRecordedPacketSamples(packet.get());
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(Move(packet));
+      mPackets.Append(std::move(packet));
     }
     mUnstamped.Clear();
   }
@@ -1067,7 +1067,7 @@ OpusState::DecodeHeader(OggPacketPtr aPacket)
       if (!mParser->DecodeHeader(aPacket->packet, aPacket->bytes)) {
         return false;
       }
-      mHeaders.Append(Move(aPacket));
+      mHeaders.Append(std::move(aPacket));
       break;
 
     // Parse the metadata header.
@@ -1082,7 +1082,7 @@ OpusState::DecodeHeader(OggPacketPtr aPacket)
     default:
       mDoneReadingHeaders = true;
       // Put it back on the queue so we can decode it.
-      mPackets.PushFront(Move(aPacket));
+      mPackets.PushFront(std::move(aPacket));
       break;
   }
   return true;
@@ -1153,10 +1153,10 @@ OpusState::PageIn(ogg_page* aPage)
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < mUnstamped.Length(); i++) {
-    OggPacketPtr packet = Move(mUnstamped[i]);
+    OggPacketPtr packet = std::move(mUnstamped[i]);
     NS_ASSERTION(!IsHeader(packet.get()), "Don't try to play a header packet");
     NS_ASSERTION(packet->granulepos != -1, "Packet should have a granulepos");
-    mPackets.Append(Move(packet));
+    mPackets.Append(std::move(packet));
   }
   mUnstamped.Clear();
   return NS_OK;
@@ -1373,10 +1373,10 @@ FlacState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructFlacGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      OggPacketPtr packet = Move(mUnstamped[i]);
+      OggPacketPtr packet = std::move(mUnstamped[i]);
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(Move(packet));
+      mPackets.Append(std::move(packet));
     }
     mUnstamped.Clear();
   }

@@ -101,7 +101,7 @@ private:
 /* static */ already_AddRefed<ImageOps::ImageBuffer>
 ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream)
 {
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   MOZ_ASSERT(inputStream);
 
   nsresult rv;
@@ -148,7 +148,7 @@ ImageOps::DecodeMetadata(already_AddRefed<nsIInputStream> aInputStream,
                          const nsACString& aMimeType,
                          ImageMetadata& aMetadata)
 {
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeMetadata(buffer, aMimeType, aMetadata);
 }
@@ -198,7 +198,7 @@ ImageOps::DecodeToSurface(already_AddRefed<nsIInputStream> aInputStream,
                           uint32_t aFlags,
                           const Maybe<IntSize>& aSize /* = Nothing() */)
 {
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeToSurface(buffer, aMimeType, aFlags, aSize);
 }

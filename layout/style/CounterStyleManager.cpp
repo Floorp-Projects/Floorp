@@ -1738,7 +1738,7 @@ AnonymousCounterStyle::AnonymousCounterStyle(uint8_t aSystem,
   : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
   , mSingleString(false)
   , mSystem(aSystem)
-  , mSymbols(Move(aSymbols))
+  , mSymbols(std::move(aSymbols))
 {
 }
 
@@ -2136,7 +2136,7 @@ CounterStyleManager::NotifyRuleChanged()
 void
 CounterStyleManager::CleanRetiredStyles()
 {
-  nsTArray<CounterStyle*> list(Move(mRetiredStyles));
+  nsTArray<CounterStyle*> list(std::move(mRetiredStyles));
   for (CounterStyle* style : list) {
     DestroyCounterStyle(style);
   }

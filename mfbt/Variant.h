@@ -218,7 +218,7 @@ struct VariantImplementation<Tag, N, T, Ts...>
     if (aRhs.template is<N>()) {
       ::new (KnownNotNull, aLhs) T(aRhs.template extract<N>());
     } else {
-      Next::moveConstruct(aLhs, Move(aRhs));
+      Next::moveConstruct(aLhs, std::move(aRhs));
     }
   }
 
@@ -287,7 +287,7 @@ struct AsVariantTemporary
   {}
 
   AsVariantTemporary(AsVariantTemporary&& aOther)
-    : mValue(Move(aOther.mValue))
+    : mValue(std::move(aOther.mValue))
   {}
 
   AsVariantTemporary() = delete;
@@ -571,7 +571,7 @@ public:
     using T = typename detail::SelectVariantType<RefT, Ts...>::Type;
     static_assert(detail::SelectVariantType<RefT, Ts...>::count == 1,
                   "Variant can only be selected by type if that type is unique");
-    ::new (KnownNotNull, ptr()) T(Move(aValue.mValue));
+    ::new (KnownNotNull, ptr()) T(std::move(aValue.mValue));
   }
 
   /** Copy construction. */
@@ -585,7 +585,7 @@ public:
   Variant(Variant&& aRhs)
     : tag(aRhs.tag)
   {
-    Impl::moveConstruct(ptr(), Move(aRhs));
+    Impl::moveConstruct(ptr(), std::move(aRhs));
   }
 
   /** Copy assignment. */
@@ -600,7 +600,7 @@ public:
   Variant& operator=(Variant&& aRhs) {
     MOZ_ASSERT(&aRhs != this, "self-assign disallowed");
     this->~Variant();
-    ::new (KnownNotNull, this) Variant(Move(aRhs));
+    ::new (KnownNotNull, this) Variant(std::move(aRhs));
     return *this;
   }
 
@@ -611,7 +611,7 @@ public:
     static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
                   "Variant can only be selected by type if that type is unique");
     this->~Variant();
-    ::new (KnownNotNull, this) Variant(Move(aValue));
+    ::new (KnownNotNull, this) Variant(std::move(aValue));
     return *this;
   }
 
@@ -702,7 +702,7 @@ public:
     static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
                   "provided a type not uniquely found in this Variant's type list");
     MOZ_ASSERT(is<T>());
-    return T(Move(as<T>()));
+    return T(std::move(as<T>()));
   }
 
   template<size_t N>
@@ -711,7 +711,7 @@ public:
     static_assert(N < sizeof...(Ts),
                   "provided an index outside of this Variant's type list");
     MOZ_RELEASE_ASSERT(is<N>());
-    return typename detail::Nth<N, Ts...>::Type(Move(as<N>()));
+    return typename detail::Nth<N, Ts...>::Type(std::move(as<N>()));
   }
 
   // Exhaustive matching of all variant types on the contained value.

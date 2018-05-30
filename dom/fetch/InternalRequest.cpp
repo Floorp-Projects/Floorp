@@ -477,7 +477,7 @@ InternalRequest::MaybeSkipCacheIfPerformingRevalidation()
 void
 InternalRequest::SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo)
 {
-  mPrincipalInfo = Move(aPrincipalInfo);
+  mPrincipalInfo = std::move(aPrincipalInfo);
 }
 
 } // namespace dom

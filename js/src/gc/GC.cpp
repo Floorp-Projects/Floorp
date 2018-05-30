@@ -258,7 +258,6 @@ using namespace js::gc;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::Swap;
 using mozilla::TimeStamp;
 
@@ -4699,7 +4698,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoTraceSession& session)
 
         AutoEnterOOMUnsafeRegion oomUnsafe;
         for (gc::WeakKeyTable::Range r = zone->gcWeakKeys().all(); !r.empty(); r.popFront()) {
-            if (!savedWeakKeys.put(Move(r.front().key), Move(r.front().value)))
+            if (!savedWeakKeys.put(std::move(r.front().key), std::move(r.front().value)))
                 oomUnsafe.crash("saving weak keys table for validator");
         }
 
@@ -4789,7 +4788,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoTraceSession& session)
     for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty(); r.popFront()) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         Zone* zone = gc::TenuredCell::fromPointer(r.front().key.asCell())->zone();
-        if (!zone->gcWeakKeys().put(Move(r.front().key), Move(r.front().value)))
+        if (!zone->gcWeakKeys().put(std::move(r.front().key), std::move(r.front().value)))
             oomUnsafe.crash("restoring weak keys table for validator");
     }
 
@@ -5383,7 +5382,7 @@ class ImmediateSweepWeakCacheTask : public GCParallelTaskHelper<ImmediateSweepWe
     {}
 
     ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
-      : GCParallelTaskHelper(Move(other)), cache(other.cache)
+      : GCParallelTaskHelper(std::move(other)), cache(other.cache)
     {}
 
     void run() {
@@ -5456,7 +5455,7 @@ SweepCompressionTasks(GCParallelTask* task)
     auto& finished = HelperThreadState().compressionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
         if (finished[i]->runtimeMatches(runtime)) {
-            UniquePtr<SourceCompressionTask> compressionTask(Move(finished[i]));
+            UniquePtr<SourceCompressionTask> compressionTask(std::move(finished[i]));
             HelperThreadState().remove(finished, &i);
             compressionTask->complete();
         }
@@ -6332,7 +6331,7 @@ class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...>
 
   public:
     SweepActionMaybeYield(UniquePtr<Action> action, ZealMode mode)
-      : mode(mode), action(Move(action)), triggered(false) {}
+      : mode(mode), action(std::move(action)), triggered(false) {}
 
     IncrementalProgress run(GCRuntime* gc, Args... args) override {
         if (!triggered && gc->shouldYieldForZeal(mode)) {
@@ -6365,7 +6364,7 @@ class SweepActionSequence final : public SweepAction<Args...>
   public:
     bool init(UniquePtr<Action>* acts, size_t count) {
         for (size_t i = 0; i < count; i++) {
-            if (!actions.emplaceBack(Move(acts[i])))
+            if (!actions.emplaceBack(std::move(acts[i])))
                 return false;
         }
         return true;
@@ -6399,7 +6398,7 @@ class SweepActionForEach final : public SweepAction<Args...>
 
   public:
     SweepActionForEach(const Init& init, UniquePtr<Action> action)
-      : iterInit(init), action(Move(action))
+      : iterInit(init), action(std::move(action))
     {}
 
     IncrementalProgress run(Args... args) override {
@@ -6429,7 +6428,7 @@ class SweepActionRepeatFor final : public SweepAction<Args...>
 
   public:
     SweepActionRepeatFor(const Init& init, UniquePtr<Action> action)
-      : iterInit(init), action(Move(action))
+      : iterInit(init), action(std::move(action))
     {}
 
     IncrementalProgress run(Args... args) override {
@@ -6493,7 +6492,7 @@ template <typename... Args>
 static UniquePtr<SweepAction<GCRuntime*, Args...>>
 MaybeYield(ZealMode zealMode, UniquePtr<SweepAction<GCRuntime*, Args...>> action) {
 #ifdef JS_GC_ZEAL
-    return js::MakeUnique<SweepActionMaybeYield<Args...>>(Move(action), zealMode);
+    return js::MakeUnique<SweepActionMaybeYield<Args...>>(std::move(action), zealMode);
 #else
     return action;
 #endif
@@ -6503,12 +6502,12 @@ template <typename... Args, typename... Rest>
 static UniquePtr<SweepAction<Args...>>
 Sequence(UniquePtr<SweepAction<Args...>> first, Rest... rest)
 {
-    UniquePtr<SweepAction<Args...>> actions[] = { Move(first), Move(rest)... };
+    UniquePtr<SweepAction<Args...>> actions[] = { std::move(first), std::move(rest)... };
     auto seq = MakeUnique<SweepActionSequence<Args...>>();
     if (!seq || !seq->init(actions, ArrayLength(actions)))
         return nullptr;
 
-    return UniquePtr<SweepAction<Args...>>(Move(seq));
+    return UniquePtr<SweepAction<Args...>>(std::move(seq));
 }
 
 template <typename... Args>
@@ -6519,7 +6518,7 @@ RepeatForSweepGroup(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
         return nullptr;
 
     using Action = SweepActionRepeatFor<SweepGroupsIter, JSRuntime*, Args...>;
-    return js::MakeUnique<Action>(rt, Move(action));
+    return js::MakeUnique<Action>(rt, std::move(action));
 }
 
 template <typename... Args>
@@ -6531,7 +6530,7 @@ ForEachZoneInSweepGroup(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
 
     using Action = typename RemoveLastTemplateParameter<
         SweepActionForEach<SweepGroupZonesIter, JSRuntime*, Args...>>::Type;
-    return js::MakeUnique<Action>(rt, Move(action));
+    return js::MakeUnique<Action>(rt, std::move(action));
 }
 
 template <typename... Args>
@@ -6543,7 +6542,7 @@ ForEachAllocKind(AllocKinds kinds, UniquePtr<SweepAction<Args...>> action)
 
     using Action = typename RemoveLastTemplateParameter<
         SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds, Args...>>::Type;
-    return js::MakeUnique<Action>(kinds, Move(action));
+    return js::MakeUnique<Action>(kinds, std::move(action));
 }
 
 } // namespace sweepaction
@@ -8149,8 +8148,8 @@ GCRuntime::mergeRealms(Realm* source, Realm* target)
 
         for (ScriptNameMap::Range r = source->scriptNameMap->all(); !r.empty(); r.popFront()) {
             JSScript* key = r.front().key();
-            auto value = Move(r.front().value());
-            if (!target->scriptNameMap->putNew(key, Move(value)))
+            auto value = std::move(r.front().value());
+            if (!target->scriptNameMap->putNew(key, std::move(value)))
                 oomUnsafe.crash("Failed to add an entry in the script name map.");
         }
 

@@ -912,7 +912,7 @@ struct StoreCopyPassByRRef
   stored_type m;
   template <typename A>
   MOZ_IMPLICIT StoreCopyPassByRRef(A&& a) : m(mozilla::Forward<A>(a)) {}
-  passed_type PassAsParameter() { return mozilla::Move(m); }
+  passed_type PassAsParameter() { return std::move(m); }
 };
 template<typename S>
 struct IsParameterStorageClass<StoreCopyPassByRRef<S>>
@@ -1100,7 +1100,7 @@ struct NonParameterStorageClass
 // - T*        -> StorePtrPassByPtr<T>           : Store T*, pass T*.
 // - const T&  -> StoreConstRefPassByConstLRef<T>: Store const T&, pass const T&.
 // - T&        -> StoreRefPassByLRef<T>          : Store T&, pass T&.
-// - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass Move(T).
+// - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass std::move(T).
 // - RefPtr<T>, nsCOMPtr<T>
 //             -> StoreRefPtrPassByPtr<T>        : Store RefPtr<T>, pass T*
 // - Other T   -> StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
@@ -1381,7 +1381,7 @@ using NonOwningIdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
 //   nsCOMPtr<nsIRunnable> event =
 //     mozilla::NewRunnableMethod<RefPtr<T>, nsTArray<U>>
 //         ("description", myObject, &MyClass::DoSomething,
-//          Move(ptr), Move(array));
+//          std::move(ptr), std::move(array));
 //
 // and there will be no extra AddRef/Release traffic, or copying of the array.
 //
@@ -1631,7 +1631,7 @@ public:
   {
     if (mEvent != aEvent) {
       Revoke();
-      mEvent = Move(aEvent);
+      mEvent = std::move(aEvent);
     }
     return *this;
   }

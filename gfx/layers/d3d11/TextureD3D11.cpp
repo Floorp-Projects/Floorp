@@ -421,7 +421,7 @@ DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   if (!SerializeSpecific(&desc))
     return false;
 
-  aOutDescriptor = Move(desc);
+  aOutDescriptor = std::move(desc);
   return true;
 }
 
@@ -432,7 +432,7 @@ DXGITextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc)
   if (!SerializeSpecific(&ret))
     return;
 
-  *aOutDesc = Move(ret);
+  *aOutDesc = std::move(ret);
 }
 
 DXGITextureData*
@@ -731,7 +731,7 @@ DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   SurfaceDescriptorDXGIYCbCr desc;
   SerializeSpecific(&desc);
 
-  aOutDescriptor = Move(desc);
+  aOutDescriptor = std::move(desc);
   return true;
 }
 
@@ -741,7 +741,7 @@ DXGIYCbCrTextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc)
   SurfaceDescriptorDXGIYCbCr desc;
   SerializeSpecific(&desc);
 
-  *aOutDesc = Move(desc);
+  *aOutDesc = std::move(desc);
 }
 
 void

@@ -26,7 +26,7 @@ namespace mozilla
 RsdparsaSdpMediaSection::RsdparsaSdpMediaSection(size_t level,
       RsdparsaSessionHandle session, const RustMediaSection* const section,
       const RsdparsaSdpAttributeList* sessionLevel)
-  : SdpMediaSection(level), mSession(Move(session)),
+  : SdpMediaSection(level), mSession(std::move(session)),
     mSection(section)
 {
   switch(sdp_rust_get_media_type(section)) {
@@ -42,7 +42,7 @@ RsdparsaSdpMediaSection::RsdparsaSdpMediaSection(size_t level,
   }
 
   RsdparsaSessionHandle attributeSession(sdp_new_reference(mSession.get()));
-  mAttributeList.reset(new RsdparsaSdpAttributeList(Move(attributeSession),
+  mAttributeList.reset(new RsdparsaSdpAttributeList(std::move(attributeSession),
                                                     section,
                                                     sessionLevel));
 

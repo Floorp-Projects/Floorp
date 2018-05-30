@@ -538,7 +538,7 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges)
   Intl()->SelectionRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++)
-    xpcRanges->AppendElement(new xpcAccessibleTextRange(Move(ranges[idx])));
+    xpcRanges->AppendElement(new xpcAccessibleTextRange(std::move(ranges[idx])));
 
   xpcRanges.forget(aRanges);
   return NS_OK;
@@ -562,7 +562,7 @@ xpcAccessibleHyperText::GetVisibleRanges(nsIArray** aRanges)
   Intl()->VisibleRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++)
-    xpcRanges->AppendElement(new xpcAccessibleTextRange(Move(ranges[idx])));
+    xpcRanges->AppendElement(new xpcAccessibleTextRange(std::move(ranges[idx])));
 
   xpcRanges.forget(aRanges);
   return NS_OK;

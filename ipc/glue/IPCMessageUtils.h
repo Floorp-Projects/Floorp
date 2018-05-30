@@ -882,7 +882,7 @@ struct ParamTraits<JSStructuredCloneData>
       return false;
     }
 
-    *aResult = JSStructuredCloneData(Move(out), JS::StructuredCloneScope::DifferentProcess);
+    *aResult = JSStructuredCloneData(std::move(out), JS::StructuredCloneScope::DifferentProcess);
 
     return true;
   }
@@ -942,7 +942,7 @@ struct ParamTraits<mozilla::Maybe<T>>
       if (!ReadParam(msg, iter, &tmp)) {
         return false;
       }
-      *result = mozilla::Some(mozilla::Move(tmp));
+      *result = mozilla::Some(std::move(tmp));
     } else {
       *result = mozilla::Nothing();
     }

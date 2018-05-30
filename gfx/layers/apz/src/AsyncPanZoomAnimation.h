@@ -48,7 +48,7 @@ public:
    * |mDeferredTasks| for more information.  Clears |mDeferredTasks|.
    */
   nsTArray<RefPtr<Runnable>> TakeDeferredTasks() {
-    return Move(mDeferredTasks);
+    return std::move(mDeferredTasks);
   }
 
   virtual KeyboardScrollAnimation* AsKeyboardScrollAnimation() {

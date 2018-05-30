@@ -66,7 +66,7 @@ WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
     // Move the vector buffer into a unique pointer buffer.
     UniquePtr<char[]> buf(reinterpret_cast<char*>(buffer.extractOrCopyRawBuffer()));
     nsresult rv = cache->PutBuffer(PromiseFlatCString(uri).get(),
-                                   Move(buf),
+                                   std::move(buf),
                                    size);
     return rv;
 }

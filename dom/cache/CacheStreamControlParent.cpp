@@ -68,7 +68,7 @@ CacheStreamControlParent::SerializeStream(CacheReadStream* aReadStreamOut,
   DebugOnly<bool> ok = autoStream->Serialize(aStream, Manager());
   MOZ_ASSERT(ok);
 
-  aStreamCleanupList.AppendElement(Move(autoStream));
+  aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
 void
@@ -87,7 +87,7 @@ CacheStreamControlParent::OpenStream(const nsID& aId,
   // a separate resolver function to signal the completion of the
   // operation.  The Manager uses the existence of the Listener to ensure
   // that its safe to complete the operation.
-  mStreamList->GetManager()->ExecuteOpenStream(this, Move(aResolver), aId);
+  mStreamList->GetManager()->ExecuteOpenStream(this, std::move(aResolver), aId);
 }
 
 void

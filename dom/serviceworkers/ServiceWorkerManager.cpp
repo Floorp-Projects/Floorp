@@ -324,7 +324,7 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
     RefPtr<ServiceWorkerRegistrationInfo> old =
       entry.Data()->mRegistrationInfo.forget();
 
-    ref = Move(entry.Data()->mClientHandle->Control(active));
+    ref = std::move(entry.Data()->mClientHandle->Control(active));
     entry.Data()->mRegistrationInfo = aRegistrationInfo;
 
     if (old != aRegistrationInfo) {
@@ -334,14 +334,14 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
 
     Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
 
-    return Move(ref);
+    return std::move(ref);
   }
 
   RefPtr<ClientHandle> clientHandle =
     ClientManager::CreateHandle(aClientInfo,
                                 SystemGroup::EventTargetFor(TaskCategory::Other));
 
-  ref = Move(clientHandle->Control(active));
+  ref = std::move(clientHandle->Control(active));
 
   aRegistrationInfo->StartControllingClient();
 
@@ -352,13 +352,13 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
   RefPtr<ServiceWorkerManager> self(this);
   clientHandle->OnDetach()->Then(
     SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-    [self = Move(self), aClientInfo] {
+    [self = std::move(self), aClientInfo] {
       self->StopControllingClient(aClientInfo);
     });
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
 
-  return Move(ref);
+  return std::move(ref);
 }
 
 void
@@ -437,7 +437,7 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     MOZ_ASSERT(aJob);
 
     if (aStatus.Failed()) {
-      mPromise->Reject(Move(aStatus), __func__);
+      mPromise->Reject(std::move(aStatus), __func__);
       return;
     }
 
@@ -1115,7 +1115,7 @@ ServiceWorkerManager::WhenReady(const ClientInfo& aClientInfo)
 
   RefPtr<ServiceWorkerManager> self(this);
   handle->OnDetach()->Then( target, __func__,
-    [self = Move(self), aClientInfo] {
+    [self = std::move(self), aClientInfo] {
       self->RemovePendingReadyPromise(aClientInfo);
     });
 
@@ -1128,7 +1128,7 @@ ServiceWorkerManager::CheckPendingReadyPromises()
   nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
   mPendingReadyList.SwapElements(pendingReadyList);
   for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
-    UniquePtr<PendingReadyData> prd(Move(pendingReadyList[i]));
+    UniquePtr<PendingReadyData> prd(std::move(pendingReadyList[i]));
 
     RefPtr<ServiceWorkerRegistrationInfo> reg =
       GetServiceWorkerRegistrationInfo(prd->mClientHandle->Info());
@@ -1136,7 +1136,7 @@ ServiceWorkerManager::CheckPendingReadyPromises()
     if (reg && reg->GetActive()) {
       prd->mPromise->Resolve(reg->Descriptor(), __func__);
     } else {
-      mPendingReadyList.AppendElement(Move(prd));
+      mPendingReadyList.AppendElement(std::move(prd));
     }
   }
 }
@@ -1147,13 +1147,13 @@ ServiceWorkerManager::RemovePendingReadyPromise(const ClientInfo& aClientInfo)
   nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
   mPendingReadyList.SwapElements(pendingReadyList);
   for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
-    UniquePtr<PendingReadyData> prd(Move(pendingReadyList[i]));
+    UniquePtr<PendingReadyData> prd(std::move(pendingReadyList[i]));
 
     if (prd->mClientHandle->Info().Id() == aClientInfo.Id() &&
         prd->mClientHandle->Info().PrincipalInfo() == aClientInfo.PrincipalInfo()) {
       prd->mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
     } else {
-      mPendingReadyList.AppendElement(Move(prd));
+      mPendingReadyList.AppendElement(std::move(prd));
     }
   }
 }
@@ -2218,7 +2218,7 @@ ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
                                                        target,
                                                        principal);
 
-          loadInfo->GiveReservedClientSource(Move(reservedClient));
+          loadInfo->GiveReservedClientSource(std::move(reservedClient));
 
           clientInfo = loadInfo->GetReservedClientInfo();
         }

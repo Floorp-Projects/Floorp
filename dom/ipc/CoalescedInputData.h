@@ -31,7 +31,7 @@ public:
 
   void RetrieveDataFrom(CoalescedInputData& aSource)
   {
-    mCoalescedInputEvent = Move(aSource.mCoalescedInputEvent);
+    mCoalescedInputEvent = std::move(aSource.mCoalescedInputEvent);
     mGuid = aSource.mGuid;
     mInputBlockId = aSource.mInputBlockId;
   }
@@ -47,7 +47,7 @@ public:
 
   UniquePtr<InputEventType> TakeCoalescedEvent()
   {
-    return Move(mCoalescedInputEvent);
+    return std::move(mCoalescedInputEvent);
   }
 
   ScrollableLayerGuid GetScrollableLayerGuid()

@@ -303,7 +303,7 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
   mPreviousIteration = currentIteration;
 
   if (!events.IsEmpty()) {
-    presContext->AnimationEventDispatcher()->QueueEvents(Move(events));
+    presContext->AnimationEventDispatcher()->QueueEvents(std::move(events));
   }
 }
 
@@ -372,7 +372,7 @@ public:
   }
   void SetKeyframes(KeyframeEffect& aEffect, nsTArray<Keyframe>&& aKeyframes)
   {
-    aEffect.SetKeyframes(Move(aKeyframes), mComputedStyle);
+    aEffect.SetKeyframes(std::move(aKeyframes), mComputedStyle);
   }
 
   // Currently all the animation building code in this file is based on
@@ -438,7 +438,7 @@ UpdateOldAnimationPropertiesWithNew(
 
     KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
     if (oldKeyframeEffect) {
-      aBuilder.SetKeyframes(*oldKeyframeEffect, Move(aNewKeyframes));
+      aBuilder.SetKeyframes(*oldKeyframeEffect, std::move(aNewKeyframes));
     }
   }
 
@@ -519,7 +519,7 @@ BuildAnimation(nsPresContext* aPresContext,
     // In order to honor what the spec said, we'd copy more data over.
     UpdateOldAnimationPropertiesWithNew(*oldAnim,
                                         timing,
-                                        Move(keyframes),
+                                        std::move(keyframes),
                                         isStylePaused,
                                         aBuilder);
     return oldAnim.forget();
@@ -532,7 +532,7 @@ BuildAnimation(nsPresContext* aPresContext,
   RefPtr<KeyframeEffect> effect =
     new KeyframeEffect(aPresContext->Document(), target, timing, effectOptions);
 
-  aBuilder.SetKeyframes(*effect, Move(keyframes));
+  aBuilder.SetKeyframes(*effect, std::move(keyframes));
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(), animationName);

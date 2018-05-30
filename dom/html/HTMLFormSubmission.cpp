@@ -301,7 +301,7 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
                .Finalize(aOutURI);
     } else {
       nsCOMPtr<nsIInputStream> dataStream;
-      rv = NS_NewCStringInputStream(getter_AddRefs(dataStream), Move(mQueryString));
+      rv = NS_NewCStringInputStream(getter_AddRefs(dataStream), std::move(mQueryString));
       NS_ENSURE_SUCCESS(rv, rv);
       mQueryString.Truncate();
 
@@ -771,7 +771,7 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
                                   nsLinebreakConverter::eLinebreakAny,
                                   nsLinebreakConverter::eLinebreakNet));
     nsCOMPtr<nsIInputStream> bodyStream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), Move(cbody));
+    rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), std::move(cbody));
     if (!bodyStream) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

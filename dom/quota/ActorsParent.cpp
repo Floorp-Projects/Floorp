@@ -7868,7 +7868,7 @@ StorageDirectoryHelper::GetDirectoryMetadata(nsIFile* aDirectory,
   aTimestamp = timestamp;
   aGroup = group;
   aOrigin = origin;
-  aIsApp = Move(isApp);
+  aIsApp = std::move(isApp);
   return NS_OK;
 }
 
@@ -8604,7 +8604,7 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
       originProps.mTimestamp = GetLastModifiedTime(originDir, persistent);
     }
 
-    mOriginProps.AppendElement(Move(originProps));
+    mOriginProps.AppendElement(std::move(originProps));
   }
 
   if (mOriginProps.IsEmpty()) {
@@ -8891,7 +8891,7 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
       originProps.mTimestamp = timestamp;
     }
 
-    mOriginProps.AppendElement(Move(originProps));
+    mOriginProps.AppendElement(std::move(originProps));
   }
 
   if (mOriginProps.IsEmpty()) {
@@ -9040,7 +9040,7 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
       originProps.mTimestamp = timestamp;
     }
 
-    mOriginProps.AppendElement(Move(originProps));
+    mOriginProps.AppendElement(std::move(originProps));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -9350,7 +9350,7 @@ UpgradeStorageFrom2_0To2_1Helper::DoUpgrade()
       originProps.mTimestamp = timestamp;
     }
 
-    mOriginProps.AppendElement(Move(originProps));
+    mOriginProps.AppendElement(std::move(originProps));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -9479,7 +9479,7 @@ RestoreDirectoryMetadata2Helper::RestoreMetadata2File()
 
   originProps.mTimestamp = GetLastModifiedTime(mDirectory, mPersistent);
 
-  mOriginProps.AppendElement(Move(originProps));
+  mOriginProps.AppendElement(std::move(originProps));
 
   rv = ProcessOriginDirectories();
   if (NS_WARN_IF(NS_FAILED(rv))) {

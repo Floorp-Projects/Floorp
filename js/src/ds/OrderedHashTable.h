@@ -41,7 +41,6 @@
 #include "mozilla/Move.h"
 
 using mozilla::Forward;
-using mozilla::Move;
 
 namespace js {
 
@@ -65,7 +64,7 @@ class OrderedHashTable
         Data* chain;
 
         Data(const T& e, Data* c) : element(e), chain(c) {}
-        Data(T&& e, Data* c) : element(Move(e)), chain(c) {}
+        Data(T&& e, Data* c) : element(std::move(e)), chain(c) {}
     };
 
     class Range;
@@ -664,7 +663,7 @@ class OrderedHashTable
             if (!Ops::isEmpty(Ops::getKey(rp->element))) {
                 HashNumber h = prepareHash(Ops::getKey(rp->element)) >> hashShift;
                 if (rp != wp)
-                    wp->element = Move(rp->element);
+                    wp->element = std::move(rp->element);
                 wp->chain = hashTable[h];
                 hashTable[h] = wp;
                 wp++;
@@ -713,7 +712,7 @@ class OrderedHashTable
         for (Data* p = data; p != end; p++) {
             if (!Ops::isEmpty(Ops::getKey(p->element))) {
                 HashNumber h = prepareHash(Ops::getKey(p->element)) >> newHashShift;
-                new (wp) Data(Move(p->element), newHashTable[h]);
+                new (wp) Data(std::move(p->element), newHashTable[h]);
                 newHashTable[h] = wp;
                 wp++;
             }
@@ -755,15 +754,15 @@ class OrderedHashMap
 
         void operator=(Entry&& rhs) {
             MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-            const_cast<Key&>(key) = Move(rhs.key);
-            value = Move(rhs.value);
+            const_cast<Key&>(key) = std::move(rhs.key);
+            value = std::move(rhs.value);
         }
 
       public:
         Entry() : key(), value() {}
         template <typename V>
         Entry(const Key& k, V&& v) : key(k), value(Forward<V>(v)) {}
-        Entry(Entry&& rhs) : key(Move(rhs.key)), value(Move(rhs.value)) {}
+        Entry(Entry&& rhs) : key(std::move(rhs.key)), value(std::move(rhs.value)) {}
 
         const Key key;
         Value value;

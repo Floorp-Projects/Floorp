@@ -324,7 +324,7 @@ MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
         continue;
       }
       // Status has changed, retry request.
-      requests.AppendElement(Move(request));
+      requests.AppendElement(std::move(request));
       mRequests.RemoveElementAt(i);
     }
     // Retry all pending requests, but this time fail if the CDM is not installed.
@@ -366,7 +366,7 @@ void
 MediaKeySystemAccessManager::Shutdown()
 {
   EME_LOG("MediaKeySystemAccessManager::Shutdown");
-  nsTArray<PendingRequest> requests(Move(mRequests));
+  nsTArray<PendingRequest> requests(std::move(mRequests));
   for (PendingRequest& request : requests) {
     // Cancel all requests; we're shutting down.
     request.CancelTimer();

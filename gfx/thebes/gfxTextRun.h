@@ -809,18 +809,18 @@ private:
 
     void ConvertToGlyphRunArray() {
         MOZ_ASSERT(!mHasGlyphRunArray && mSingleGlyphRun.mFont);
-        GlyphRun tmp = mozilla::Move(mSingleGlyphRun);
+        GlyphRun tmp = std::move(mSingleGlyphRun);
         mSingleGlyphRun.~GlyphRun();
         new (&mGlyphRunArray) nsTArray<GlyphRun>(2);
-        mGlyphRunArray.AppendElement(mozilla::Move(tmp));
+        mGlyphRunArray.AppendElement(std::move(tmp));
         mHasGlyphRunArray = true;
     }
 
     void ConvertFromGlyphRunArray() {
         MOZ_ASSERT(mHasGlyphRunArray && mGlyphRunArray.Length() == 1);
-        GlyphRun tmp = mozilla::Move(mGlyphRunArray[0]);
+        GlyphRun tmp = std::move(mGlyphRunArray[0]);
         mGlyphRunArray.~nsTArray<GlyphRun>();
-        new (&mSingleGlyphRun) GlyphRun(mozilla::Move(tmp));
+        new (&mSingleGlyphRun) GlyphRun(std::move(tmp));
         mHasGlyphRunArray = false;
     }
 

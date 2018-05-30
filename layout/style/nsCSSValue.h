@@ -209,7 +209,7 @@ struct URLValue final : public URLValueData
 {
   URLValue(ServoRawOffsetArc<RustString> aString,
            already_AddRefed<URLExtraData> aExtraData)
-    : URLValueData(aString, Move(aExtraData))
+    : URLValueData(aString, std::move(aExtraData))
   { }
 
   URLValue(const URLValue&) = delete;

@@ -5758,7 +5758,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
     ffiType->elements[i] = ffiBaseType;
   ffiType->elements[length] = nullptr;
 
-  return Move(ffiType);
+  return std::move(ffiType);
 }
 
 bool
@@ -6223,7 +6223,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   }
 
   // Move the field hash to the heap and store it in the typeObj.
-  FieldInfoHash *heapHash = cx->new_<FieldInfoHash>(mozilla::Move(fields.get()));
+  FieldInfoHash *heapHash = cx->new_<FieldInfoHash>(std::move(fields.get()));
   if (!heapHash) {
     JS_ReportOutOfMemory(cx);
     return false;
@@ -6306,7 +6306,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
   ffiType->alignment = structAlign;
 #endif
 
-  return Move(ffiType);
+  return std::move(ffiType);
 }
 
 bool

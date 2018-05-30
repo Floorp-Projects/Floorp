@@ -20,7 +20,7 @@ public:
   ServoCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
                         uint32_t aLine, uint32_t aColumn)
     : mozilla::css::Rule(aLine, aColumn)
-    , mRawRule(Move(aRawRule))
+    , mRawRule(std::move(aRawRule))
   {
   }
 

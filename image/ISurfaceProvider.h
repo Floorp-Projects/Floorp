@@ -155,7 +155,7 @@ public:
   DrawableSurface() : mHaveSurface(false) { }
 
   explicit DrawableSurface(DrawableFrameRef&& aDrawableRef)
-    : mDrawableRef(Move(aDrawableRef))
+    : mDrawableRef(std::move(aDrawableRef))
     , mHaveSurface(bool(mDrawableRef))
   { }
 
@@ -165,8 +165,8 @@ public:
   { }
 
   DrawableSurface(DrawableSurface&& aOther)
-    : mDrawableRef(Move(aOther.mDrawableRef))
-    , mProvider(Move(aOther.mProvider))
+    : mDrawableRef(std::move(aOther.mDrawableRef))
+    , mProvider(std::move(aOther.mProvider))
     , mHaveSurface(aOther.mHaveSurface)
   {
     aOther.mHaveSurface = false;
@@ -175,8 +175,8 @@ public:
   DrawableSurface& operator=(DrawableSurface&& aOther)
   {
     MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
-    mDrawableRef = Move(aOther.mDrawableRef);
-    mProvider = Move(aOther.mProvider);
+    mDrawableRef = std::move(aOther.mDrawableRef);
+    mProvider = std::move(aOther.mProvider);
     mHaveSurface = aOther.mHaveSurface;
     aOther.mHaveSurface = false;
     return *this;

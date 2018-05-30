@@ -91,13 +91,13 @@ private:
   {
     Diagnostics(DecoderDoctorDiagnostics&& aDiagnostics,
                 const char* aCallSite)
-      : mDecoderDoctorDiagnostics(Move(aDiagnostics))
+      : mDecoderDoctorDiagnostics(std::move(aDiagnostics))
       , mCallSite(aCallSite)
     {}
     Diagnostics(const Diagnostics&) = delete;
     Diagnostics(Diagnostics&& aOther)
-      : mDecoderDoctorDiagnostics(Move(aOther.mDecoderDoctorDiagnostics))
-      , mCallSite(Move(aOther.mCallSite))
+      : mDecoderDoctorDiagnostics(std::move(aOther.mDecoderDoctorDiagnostics))
+      , mCallSite(std::move(aOther.mCallSite))
     {}
 
     const DecoderDoctorDiagnostics mDecoderDoctorDiagnostics;
@@ -775,7 +775,7 @@ DecoderDoctorDocumentWatcher::AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnos
 
   DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(DecoderDoctorDiagnostics{%s}, call site '%s')",
            this, mDocument, aDiagnostics.GetDescription().Data(), aCallSite);
-  mDiagnosticsSequence.AppendElement(Diagnostics(Move(aDiagnostics), aCallSite));
+  mDiagnosticsSequence.AppendElement(Diagnostics(std::move(aDiagnostics), aCallSite));
   EnsureTimerIsStarted();
 }
 
@@ -855,8 +855,8 @@ DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
   mCanPlay = aCanPlay;
 
   // StoreDiagnostics should only be called once, after all data is available,
-  // so it is safe to Move() from this object.
-  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // so it is safe to std::move() from this object.
+  watcher->AddDiagnostics(std::move(*this), aCallSite);
   // Even though it's moved-from, the type should stay set
   // (Only used to ensure that we do store only once.)
   MOZ_ASSERT(mDiagnosticsType == eFormatSupportCheck);
@@ -897,8 +897,8 @@ DecoderDoctorDiagnostics::StoreMediaKeySystemAccess(nsIDocument* aDocument,
   mIsKeySystemSupported = aIsSupported;
 
   // StoreMediaKeySystemAccess should only be called once, after all data is
-  // available, so it is safe to Move() from this object.
-  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // available, so it is safe to std::move() from this object.
+  watcher->AddDiagnostics(std::move(*this), aCallSite);
   // Even though it's moved-from, the type should stay set
   // (Only used to ensure that we do store only once.)
   MOZ_ASSERT(mDiagnosticsType == eMediaKeySystemAccessRequest);
@@ -975,8 +975,8 @@ DecoderDoctorDiagnostics::StoreDecodeError(nsIDocument* aDocument,
   mDecodeIssueMediaSrc = aMediaSrc;
 
   // StoreDecodeError should only be called once, after all data is
-  // available, so it is safe to Move() from this object.
-  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // available, so it is safe to std::move() from this object.
+  watcher->AddDiagnostics(std::move(*this), aCallSite);
   // Even though it's moved-from, the type should stay set
   // (Only used to ensure that we do store only once.)
   MOZ_ASSERT(mDiagnosticsType == eDecodeError);
@@ -1016,8 +1016,8 @@ DecoderDoctorDiagnostics::StoreDecodeWarning(nsIDocument* aDocument,
   mDecodeIssueMediaSrc = aMediaSrc;
 
   // StoreDecodeWarning should only be called once, after all data is
-  // available, so it is safe to Move() from this object.
-  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // available, so it is safe to std::move() from this object.
+  watcher->AddDiagnostics(std::move(*this), aCallSite);
   // Even though it's moved-from, the type should stay set
   // (Only used to ensure that we do store only once.)
   MOZ_ASSERT(mDiagnosticsType == eDecodeWarning);

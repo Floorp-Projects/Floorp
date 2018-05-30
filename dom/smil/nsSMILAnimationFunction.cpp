@@ -269,7 +269,7 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
 
   // If additive animation isn't required or isn't supported, set the value.
   if (!isAdditive || NS_FAILED(aResult.SandwichAdd(result))) {
-    aResult = Move(result);
+    aResult = std::move(result);
   }
 }
 

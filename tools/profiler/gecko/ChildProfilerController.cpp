@@ -17,7 +17,7 @@ ChildProfilerController::Create(mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoi
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   RefPtr<ChildProfilerController> cpc = new ChildProfilerController();
-  cpc->Init(Move(aEndpoint));
+  cpc->Init(std::move(aEndpoint));
   return cpc.forget();
 }
 
@@ -35,7 +35,7 @@ ChildProfilerController::Init(Endpoint<PProfilerChild>&& aEndpoint)
                         "ChildProfilerController::SetupProfilerChild",
                         this,
                         &ChildProfilerController::SetupProfilerChild,
-                        Move(aEndpoint)),
+                        std::move(aEndpoint)),
                       NS_DISPATCH_NORMAL);
   }
 }
@@ -86,7 +86,7 @@ ChildProfilerController::SetupProfilerChild(Endpoint<PProfilerChild>&& aEndpoint
   MOZ_ASSERT(aEndpoint.IsValid());
 
   mProfilerChild = new ProfilerChild();
-  Endpoint<PProfilerChild> endpoint = Move(aEndpoint);
+  Endpoint<PProfilerChild> endpoint = std::move(aEndpoint);
 
   if (!endpoint.Bind(mProfilerChild)) {
     MOZ_CRASH("Failed to bind ProfilerChild!");

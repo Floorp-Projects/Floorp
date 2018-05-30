@@ -87,7 +87,7 @@ class LinkData
 
   public:
     LinkData() {}
-    explicit LinkData(UniqueLinkDataTier tier) : tier1_(Move(tier)) {}
+    explicit LinkData(UniqueLinkDataTier tier) : tier1_(std::move(tier)) {}
 
     void setTier2(UniqueLinkDataTier linkData) const;
     const LinkDataTier& tier(Tier tier) const;
@@ -171,14 +171,14 @@ class Module : public JS::WasmModule
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
            const ShareableBytes& bytecode)
-      : assumptions_(Move(assumptions)),
+      : assumptions_(std::move(assumptions)),
         code_(&code),
-        unlinkedCodeForDebugging_(Move(unlinkedCodeForDebugging)),
-        linkData_(Move(linkData)),
-        imports_(Move(imports)),
-        exports_(Move(exports)),
-        dataSegments_(Move(dataSegments)),
-        elemSegments_(Move(elemSegments)),
+        unlinkedCodeForDebugging_(std::move(unlinkedCodeForDebugging)),
+        linkData_(std::move(linkData)),
+        imports_(std::move(imports)),
+        exports_(std::move(exports)),
+        dataSegments_(std::move(dataSegments)),
+        elemSegments_(std::move(elemSegments)),
         bytecode_(&bytecode),
         tiering_(mutexid::WasmModuleTieringLock),
         codeIsBusy_(false)

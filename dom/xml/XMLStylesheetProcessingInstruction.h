@@ -22,7 +22,7 @@ class XMLStylesheetProcessingInstruction final
 public:
   XMLStylesheetProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      const nsAString& aData)
-    : ProcessingInstruction(Move(aNodeInfo), aData)
+    : ProcessingInstruction(std::move(aNodeInfo), aData)
   {
   }
 

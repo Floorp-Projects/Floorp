@@ -11635,14 +11635,14 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
         {
             CodeLabel cl;
             masm.writeCodePointer(&cl);
-            masm.propagateOOM(codeLabels_.append(mozilla::Move(cl)));
+            masm.propagateOOM(codeLabels_.append(std::move(cl)));
         }
     }
     // Register the code, to which the table will jump to.
     void addCodeEntry(MacroAssembler& masm) {
         Label entry;
         masm.bind(&entry);
-        masm.propagateOOM(labels_.append(mozilla::Move(entry)));
+        masm.propagateOOM(labels_.append(std::move(entry)));
     }
 
     void setOutOfLine() {

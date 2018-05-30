@@ -562,7 +562,7 @@ WebMDemuxer::GetTrackCrypto(TrackInfo::TrackType aType, size_t aTrackNumber)
     crypto.mValid = true;
     // crypto.mMode is not used for WebMs
     crypto.mIVSize = WEBM_IV_SIZE;
-    crypto.mKeyId = Move(initData);
+    crypto.mKeyId = std::move(initData);
   }
 
   return crypto;
@@ -1237,7 +1237,7 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
   }
   // We may have demuxed more than intended, so ensure that all frames are kept
   // in the right order.
-  mSamples.PushFront(Move(skipSamplesQueue));
+  mSamples.PushFront(std::move(skipSamplesQueue));
 
   if (frameTime.IsValid()) {
     mNextKeyframeTime.emplace(frameTime);
@@ -1321,7 +1321,7 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold)
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
     SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
-    return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
+    return SkipAccessPointPromise::CreateAndReject(std::move(failure), __func__);
   }
 }
 

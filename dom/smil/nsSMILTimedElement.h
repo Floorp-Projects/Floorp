@@ -558,7 +558,7 @@ protected:
   {
     if (mCurrentInterval) {
       // Transfer ownership to temp var. (This sets mCurrentInterval to null.)
-      auto interval = mozilla::Move(mCurrentInterval);
+      auto interval = std::move(mCurrentInterval);
       interval->Unlink();
     }
   }

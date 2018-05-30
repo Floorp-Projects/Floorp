@@ -412,7 +412,7 @@ void Gecko_AssignCString(nsACString* aThis, const nsACString* aOther)
 
 void Gecko_TakeFromCString(nsACString* aThis, nsACString* aOther)
 {
-  aThis->Assign(mozilla::Move(*aOther));
+  aThis->Assign(std::move(*aOther));
 }
 
 void Gecko_AppendCString(nsACString* aThis, const nsACString* aOther)
@@ -432,7 +432,7 @@ bool Gecko_FallibleAssignCString(nsACString* aThis, const nsACString* aOther)
 
 bool Gecko_FallibleTakeFromCString(nsACString* aThis, nsACString* aOther)
 {
-  return aThis->Assign(mozilla::Move(*aOther), mozilla::fallible);
+  return aThis->Assign(std::move(*aOther), mozilla::fallible);
 }
 
 bool Gecko_FallibleAppendCString(nsACString* aThis, const nsACString* aOther)
@@ -467,7 +467,7 @@ void Gecko_AssignString(nsAString* aThis, const nsAString* aOther)
 
 void Gecko_TakeFromString(nsAString* aThis, nsAString* aOther)
 {
-  aThis->Assign(mozilla::Move(*aOther));
+  aThis->Assign(std::move(*aOther));
 }
 
 void Gecko_AppendString(nsAString* aThis, const nsAString* aOther)
@@ -487,7 +487,7 @@ bool Gecko_FallibleAssignString(nsAString* aThis, const nsAString* aOther)
 
 bool Gecko_FallibleTakeFromString(nsAString* aThis, nsAString* aOther)
 {
-  return aThis->Assign(mozilla::Move(*aOther), mozilla::fallible);
+  return aThis->Assign(std::move(*aOther), mozilla::fallible);
 }
 
 bool Gecko_FallibleAppendString(nsAString* aThis, const nsAString* aOther)

@@ -33,12 +33,12 @@ SharedSurface_Basic::Create(GLContext* gl,
     MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
     if (err) {
         gl->fDeleteTextures(1, &tex);
-        return Move(ret);
+        return std::move(ret);
     }
 
     bool ownsTex = true;
     ret.reset( new SharedSurface_Basic(gl, size, hasAlpha, tex, ownsTex) );
-    return Move(ret);
+    return std::move(ret);
 }
 
 
@@ -51,7 +51,7 @@ SharedSurface_Basic::Wrap(GLContext* gl,
     bool ownsTex = false;
     UniquePtr<SharedSurface_Basic> ret( new SharedSurface_Basic(gl, size, hasAlpha, tex,
                                                                 ownsTex) );
-    return Move(ret);
+    return std::move(ret);
 }
 
 SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
@@ -126,12 +126,12 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
     MOZ_ASSERT_IF(err, err == LOCAL_GL_OUT_OF_MEMORY);
     if (err) {
         prodGL->fDeleteTextures(1, &tex);
-        return Move(ret);
+        return std::move(ret);
     }
 
     ret.reset(new SharedSurface_GLTexture(prodGL, size,
                                           hasAlpha, tex));
-    return Move(ret);
+    return std::move(ret);
 }
 
 SharedSurface_GLTexture::~SharedSurface_GLTexture()

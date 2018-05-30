@@ -53,7 +53,7 @@ class CustomElementCallbackReaction final : public CustomElementReaction
 {
   public:
     explicit CustomElementCallbackReaction(UniquePtr<CustomElementCallback> aCustomElementCallback)
-      : mCustomElementCallback(Move(aCustomElementCallback))
+      : mCustomElementCallback(std::move(aCustomElementCallback))
     {
     }
 
@@ -493,7 +493,7 @@ CustomElementRegistry::CreateCustomElementCallback(
   if (aAdoptedCallbackArgs) {
     callback->SetAdoptedCallbackArgs(*aAdoptedCallbackArgs);
   }
-  return Move(callback);
+  return std::move(callback);
 }
 
 /* static */ void
@@ -539,7 +539,7 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
 
   CustomElementReactionsStack* reactionsStack =
     docGroup->CustomElementReactionsStack();
-  reactionsStack->EnqueueCallbackReaction(aCustomElement, Move(callback));
+  reactionsStack->EnqueueCallbackReaction(aCustomElement, std::move(callback));
 }
 
 namespace {
@@ -581,7 +581,7 @@ CandidateFinder::OrderedCandidates()
   if (mCandidates.Count() == 1) {
     // Fast path for one candidate.
     for (auto iter = mCandidates.Iter(); !iter.Done(); iter.Next()) {
-      nsTArray<nsCOMPtr<Element>> rval({ Move(iter.Data()) });
+      nsTArray<nsCOMPtr<Element>> rval({ std::move(iter.Data()) });
       iter.Remove();
       return rval;
     }
@@ -602,7 +602,7 @@ CandidateFinder::Traverse(Element* aRoot, nsTArray<nsCOMPtr<Element>>& aOrderedE
 {
   nsCOMPtr<Element> elem;
   if (mCandidates.Remove(aRoot, getter_AddRefs(elem))) {
-    aOrderedElements.AppendElement(Move(elem));
+    aOrderedElements.AppendElement(std::move(elem));
     if (mCandidates.Count() == 0) {
       return false;
     }
@@ -929,8 +929,8 @@ CustomElementRegistry::Define(JSContext* aCx,
     new CustomElementDefinition(nameAtom,
                                 localNameAtom,
                                 &aFunctionConstructor,
-                                Move(observedAttributes),
-                                Move(callbacksHolder));
+                                std::move(observedAttributes),
+                                std::move(callbacksHolder));
 
   CustomElementDefinition* def = definition.get();
   mCustomDefinitions.Put(nameAtom, definition.forget());
@@ -1182,7 +1182,7 @@ void
 CustomElementReactionsStack::EnqueueCallbackReaction(Element* aElement,
                                                      UniquePtr<CustomElementCallback> aCustomElementCallback)
 {
-  Enqueue(aElement, new CustomElementCallbackReaction(Move(aCustomElementCallback)));
+  Enqueue(aElement, new CustomElementCallbackReaction(std::move(aCustomElementCallback)));
 }
 
 void
@@ -1268,7 +1268,7 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
     for (uint32_t j = 0; j < reactions.Length(); ++j) {
       // Transfer the ownership of the entry due to reentrant invocation of
       // this function.
-      auto reaction(Move(reactions.ElementAt(j)));
+      auto reaction(std::move(reactions.ElementAt(j)));
       if (reaction) {
         if (!aGlobal && reaction->IsUpgradeReaction()) {
           // This is for the special case when custom element is included
@@ -1351,8 +1351,8 @@ CustomElementDefinition::CustomElementDefinition(nsAtom* aType,
   : mType(aType),
     mLocalName(aLocalName),
     mConstructor(new CustomElementConstructor(aConstructor)),
-    mObservedAttributes(Move(aObservedAttributes)),
-    mCallbacks(Move(aCallbacks))
+    mObservedAttributes(std::move(aObservedAttributes)),
+    mCallbacks(std::move(aCallbacks))
 {
 }
 

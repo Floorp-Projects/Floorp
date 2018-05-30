@@ -178,7 +178,7 @@ EventTree::Process(const RefPtr<DocAccessible>& aDeathGrip)
         return;
       }
     }
-    mFirst = Move(mFirst->mNext);
+    mFirst = std::move(mFirst->mNext);
   }
 
   MOZ_ASSERT(mContainer || mDependentEvents.IsEmpty(),
@@ -329,9 +329,9 @@ EventTree::FindOrInsert(Accessible* aContainer)
       node->mFireReorder = false;
       UniquePtr<EventTree>& nodeOwnerRef = prevNode ? prevNode->mNext : mFirst;
       UniquePtr<EventTree> newNode(new EventTree(aContainer, mDependentEvents.IsEmpty()));
-      newNode->mFirst = Move(nodeOwnerRef);
-      nodeOwnerRef = Move(newNode);
-      nodeOwnerRef->mNext = Move(node->mNext);
+      newNode->mFirst = std::move(nodeOwnerRef);
+      nodeOwnerRef = std::move(newNode);
+      nodeOwnerRef->mNext = std::move(node->mNext);
 
       // Check if a next node is contained by the given node too, and move them
       // under the given node if so.
@@ -350,10 +350,10 @@ EventTree::FindOrInsert(Accessible* aContainer)
           MOZ_ASSERT(!insNode->mNext);
 
           node->mFireReorder = false;
-          insNode->mNext = Move(*nodeRef);
+          insNode->mNext = std::move(*nodeRef);
           insNode = insNode->mNext.get();
 
-          prevNode->mNext = Move(node->mNext);
+          prevNode->mNext = std::move(node->mNext);
           node = prevNode;
           break;
         }
@@ -508,7 +508,7 @@ EventTree::Mutated(AccMutationEvent* aEv)
                 AccShowEvent* childShowEv = downcast_accEvent(childEv);
                 if (childShowEv->mPrecedingEvents.Length() > 0) {
                   Controller(mContainer)->StorePrecedingEvents(
-                    mozilla::Move(childShowEv->mPrecedingEvents));
+                    std::move(childShowEv->mPrecedingEvents));
                 }
               }
             }
@@ -540,7 +540,7 @@ EventTree::Mutated(AccMutationEvent* aEv)
           }
         }
 
-        *node = Move((*node)->mNext);
+        *node = std::move((*node)->mNext);
         break;
       }
       cntr = cntr->Parent();

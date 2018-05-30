@@ -118,7 +118,7 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
     if (startValue.mServo) {
       mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
         Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
-      mProperties[0].mSegments[0].mFromValue = Move(startValue);
+      mProperties[0].mSegments[0].mFromValue = std::move(startValue);
     }
   }
 
@@ -321,7 +321,7 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
   mPreviousTransitionPhase = currentPhase;
 
   if (!events.IsEmpty()) {
-    presContext->AnimationEventDispatcher()->QueueEvents(Move(events));
+    presContext->AnimationEventDispatcher()->QueueEvents(std::move(events));
   }
 }
 
@@ -606,7 +606,7 @@ AppendKeyframe(double aOffset,
     RefPtr<RawServoDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
     frame.mPropertyValues.AppendElement(
-      Move(PropertyValuePair(aProperty, Move(decl))));
+      std::move(PropertyValuePair(aProperty, std::move(decl))));
   } else {
     MOZ_CRASH("old style system disabled");
   }
@@ -621,14 +621,14 @@ GetTransitionKeyframes(nsCSSPropertyID aProperty,
 {
   nsTArray<Keyframe> keyframes(2);
 
-  Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, Move(aStartValue),
+  Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, std::move(aStartValue),
                                        keyframes);
   if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
     fromFrame.mTimingFunction.emplace();
     fromFrame.mTimingFunction->Init(aTimingFunction);
   }
 
-  AppendKeyframe(1.0, aProperty, Move(aEndValue), keyframes);
+  AppendKeyframe(1.0, aProperty, std::move(aEndValue), keyframes);
 
   return keyframes;
 }
@@ -833,7 +833,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
                                   effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty,
-                                          Move(startValue), Move(endValue), tf),
+                                          std::move(startValue), std::move(endValue), tf),
                    &aNewStyle);
 
   RefPtr<CSSTransition> animation =

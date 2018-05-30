@@ -38,7 +38,7 @@ public:
   {
     UniquePtr<DummyDataCreator> creator = MakeUnique<NullVideoDataCreator>();
     RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-      Move(creator), NS_LITERAL_CSTRING("null media data decoder"), aParams);
+      std::move(creator), NS_LITERAL_CSTRING("null media data decoder"), aParams);
     return decoder.forget();
   }
 

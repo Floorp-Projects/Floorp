@@ -1659,7 +1659,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JSJitFrameIter& 
         if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover, frames))
             return nullptr;
 
-        if (!rematerializedFrames_->add(p, top, Move(frames))) {
+        if (!rematerializedFrames_->add(p, top, std::move(frames))) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -1709,7 +1709,7 @@ jit::JitActivation::registerIonFrameRecovery(RInstructionResults&& results)
 {
     // Check that there is no entry in the vector yet.
     MOZ_ASSERT(!maybeIonFrameRecovery(results.frame()));
-    if (!ionRecovery_.append(mozilla::Move(results)))
+    if (!ionRecovery_.append(std::move(results)))
         return false;
 
     return true;

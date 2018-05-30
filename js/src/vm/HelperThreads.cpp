@@ -1472,7 +1472,7 @@ GlobalHelperThreadState::scheduleCompressionTasks(const AutoLockHelperThreadStat
         if (pending[i]->shouldStart()) {
             // OOMing during appending results in the task not being scheduled
             // and deleted.
-            Unused << worklist.append(Move(pending[i]));
+            Unused << worklist.append(std::move(pending[i]));
             remove(pending, &i);
         }
     }
@@ -2100,7 +2100,7 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
     UniquePtr<SourceCompressionTask> task;
     {
         auto& worklist = HelperThreadState().compressionWorklist(locked);
-        task = Move(worklist.back());
+        task = std::move(worklist.back());
         worklist.popBack();
         currentTask.emplace(task.get());
     }
@@ -2116,7 +2116,7 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().compressionFinishedList(locked).append(Move(task)))
+        if (!HelperThreadState().compressionFinishedList(locked).append(std::move(task)))
             oomUnsafe.crash("handleCompressionWorkload");
     }
 
@@ -2132,7 +2132,7 @@ js::EnqueueOffThreadCompression(JSContext* cx, UniquePtr<SourceCompressionTask> 
     AutoLockHelperThreadState lock;
 
     auto& pending = HelperThreadState().compressionPendingList(lock);
-    if (!pending.append(Move(task))) {
+    if (!pending.append(std::move(task))) {
         if (!cx->helperThread())
             ReportOutOfMemory(cx);
         return false;

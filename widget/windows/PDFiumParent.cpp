@@ -44,7 +44,7 @@ PDFiumParent::RecvConvertToEMFDone(const nsresult& aResult,
   MOZ_ASSERT(aEMFContents.IsReadable());
 
   if (mTarget) {
-    mTarget->ConvertToEMFDone(aResult, Move(aEMFContents));
+    mTarget->ConvertToEMFDone(aResult, std::move(aEMFContents));
   }
 
   return IPC_OK();

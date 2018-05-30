@@ -1322,7 +1322,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   int32_t stride = 4 * size.width;
 
   // AsyncEncodeAndWriteIcon takes ownership of the heap allocated buffer
-  nsCOMPtr<nsIRunnable> event = new AsyncEncodeAndWriteIcon(path, Move(data),
+  nsCOMPtr<nsIRunnable> event = new AsyncEncodeAndWriteIcon(path, std::move(data),
                                                             stride,
                                                             size.width,
                                                             size.height,
@@ -1342,7 +1342,7 @@ AsyncEncodeAndWriteIcon::AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
                                                  const bool aURLShortcut) :
   mURLShortcut(aURLShortcut),
   mIconPath(aIconPath),
-  mBuffer(Move(aBuffer)),
+  mBuffer(std::move(aBuffer)),
   mStride(aStride),
   mWidth(aWidth),
   mHeight(aHeight)

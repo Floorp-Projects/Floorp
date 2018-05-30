@@ -244,7 +244,7 @@ public:
   void SetIterator(SourceBufferIterator&& aIterator)
   {
     MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mIterator.emplace(Move(aIterator));
+    mIterator.emplace(std::move(aIterator));
   }
 
   SourceBuffer* GetSourceBuffer() const

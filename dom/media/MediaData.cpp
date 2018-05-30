@@ -96,7 +96,7 @@ AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
                                       aTimestamp,
                                       aDuration,
                                       aOther->mFrames,
-                                      Move(aOther->mAudioData),
+                                      std::move(aOther->mAudioData),
                                       aOther->mChannels,
                                       aOther->mRate,
                                       aOther->mChannelMap);
@@ -178,7 +178,7 @@ VideoData::SetListener(UniquePtr<Listener> aListener)
   MOZ_ASSERT(!mSentToCompositor,
              "Listener should be registered before sending data");
 
-  mListener = Move(aListener);
+  mListener = std::move(aListener);
 }
 
 void

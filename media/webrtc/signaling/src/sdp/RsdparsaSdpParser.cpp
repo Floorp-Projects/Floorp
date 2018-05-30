@@ -47,7 +47,7 @@ RsdparsaSdpParser::Parse(const std::string &sdpText)
   SdpOrigin origin(convertStringView(rustOrigin.username),
                    rustOrigin.sessionId, rustOrigin.sessionVersion,
                    addrType, std::string(rustOrigin.addr.unicastAddr));
-  return MakeUnique<RsdparsaSdp>(Move(uniqueResult), origin);
+  return MakeUnique<RsdparsaSdp>(std::move(uniqueResult), origin);
 }
 
 } // namespace mozilla

@@ -74,7 +74,7 @@ struct ParamTraits<mozilla::ErrorResult>
                !readValue.DeserializeDOMExceptionInfo(aMsg, aIter)) {
       return false;
     }
-    *aResult = Move(readValue);
+    *aResult = std::move(readValue);
     return true;
   }
 };

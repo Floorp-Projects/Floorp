@@ -573,7 +573,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         CloseDescriptors(m.fd_cookie());
 #endif
       } else {
-        listener_->OnMessageReceived(mozilla::Move(m));
+        listener_->OnMessageReceived(std::move(m));
       }
 
       incoming_message_.reset();

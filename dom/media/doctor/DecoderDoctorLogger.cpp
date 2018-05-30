@@ -174,7 +174,7 @@ DecoderDoctorLogger::Log(const char* aSubjectTypeName,
   if (IsDDLoggingEnabled()) {
     MOZ_ASSERT(sMediaLogs);
     sMediaLogs->Log(
-      aSubjectTypeName, aSubjectPointer, aCategory, aLabel, Move(aValue));
+      aSubjectTypeName, aSubjectPointer, aCategory, aLabel, std::move(aValue));
   }
 }
 

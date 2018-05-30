@@ -422,14 +422,14 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
     // Steal the raw data from a BufferList. In this case, we don't know the
     // scope and none of the callback info is assigned yet.
     JSStructuredCloneData(BufferList&& buffers, JS::StructuredCloneScope scope)
-        : bufList_(mozilla::Move(buffers))
+        : bufList_(std::move(buffers))
         , scope_(scope)
         , callbacks_(nullptr)
         , closure_(nullptr)
         , ownTransferables_(OwnTransferablePolicy::NoTransferables)
     {}
     MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
-        : JSStructuredCloneData(mozilla::Move(buffers), JS::StructuredCloneScope::Unassigned)
+        : JSStructuredCloneData(std::move(buffers), JS::StructuredCloneScope::Unassigned)
     {}
     JSStructuredCloneData(JSStructuredCloneData&& other) = default;
     JSStructuredCloneData& operator=(JSStructuredCloneData&& other) = default;

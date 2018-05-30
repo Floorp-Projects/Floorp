@@ -254,7 +254,7 @@ ThreadMain(void*)
       if (waitCount >= 2) {
         uint32_t hangDuration = PR_IntervalToSeconds(now - lastTimestamp);
         Telemetry::RecordChromeHang(hangDuration, stack, systemUptime,
-                                    firefoxUptime, Move(annotations));
+                                    firefoxUptime, std::move(annotations));
         stack.Clear();
       }
 #endif

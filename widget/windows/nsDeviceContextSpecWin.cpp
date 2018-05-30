@@ -227,7 +227,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
 
       nsAutoCString printFile(NS_ConvertUTF16toUTF8(filename).get());
       auto skStream = MakeUnique<SkFILEWStream>(printFile.get());
-      return PrintTargetSkPDF::CreateOrNull(Move(skStream), size);
+      return PrintTargetSkPDF::CreateOrNull(std::move(skStream), size);
     }
 
     if (mDevMode) {

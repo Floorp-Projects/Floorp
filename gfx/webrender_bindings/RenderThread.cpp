@@ -146,7 +146,7 @@ RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRender
     return;
   }
 
-  mRenderers[aWindowId] = Move(aRenderer);
+  mRenderers[aWindowId] = std::move(aRenderer);
 
   MutexAutoLock lock(mFrameCountMapLock);
   mWindowInfos.Put(AsUint64(aWindowId), WindowInfo());
@@ -243,7 +243,7 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
         this,
         &RenderThread::RunEvent,
         aWindowId,
-        Move(aEvent)));
+        std::move(aEvent)));
     return;
   }
 
@@ -465,7 +465,7 @@ RenderThread::RegisterExternalImage(uint64_t aExternalImageId, already_AddRefed<
     return;
   }
   MOZ_ASSERT(!mRenderTextures.GetWeak(aExternalImageId));
-  mRenderTextures.Put(aExternalImageId, Move(aTexture));
+  mRenderTextures.Put(aExternalImageId, std::move(aTexture));
 }
 
 void
@@ -488,7 +488,7 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
     mRenderTextures.Remove(aExternalImageId, getter_AddRefs(texture));
     Loop()->PostTask(NewRunnableMethod<RefPtr<RenderTextureHost>>(
       "RenderThread::DeferredRenderTextureHostDestroy",
-      this, &RenderThread::DeferredRenderTextureHostDestroy, Move(texture)
+      this, &RenderThread::DeferredRenderTextureHostDestroy, std::move(texture)
     ));
   } else {
     mRenderTextures.Remove(aExternalImageId);
@@ -596,7 +596,7 @@ void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEv
   mozilla::UniquePtr<mozilla::wr::RendererEvent> evt(
     reinterpret_cast<mozilla::wr::RendererEvent*>(aRawEvent));
   mozilla::wr::RenderThread::Get()->RunEvent(mozilla::wr::WindowId(aWindowId),
-                                             mozilla::Move(evt));
+                                             std::move(evt));
 }
 
 void wr_schedule_render(mozilla::wr::WrWindowId aWindowId)

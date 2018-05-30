@@ -25,7 +25,7 @@ IncrementalTokenizer::IncrementalTokenizer(Consumer&& aConsumer,
   , mNeedMoreInput(false)
   , mRollback(false)
   , mInputCursor(0)
-  , mConsumer(Move(aConsumer))
+  , mConsumer(std::move(aConsumer))
 {
   mInputFinished = false;
   mMinRawDelivery = aRawMinBuffered;

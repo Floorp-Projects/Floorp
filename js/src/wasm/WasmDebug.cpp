@@ -51,7 +51,7 @@ GeneratedSourceMap::searchLineByOffset(JSContext* cx, uint32_t offset, size_t* e
             ReportOutOfMemory(cx);
             return false;
         }
-        sortedByOffsetExprLocIndices_ = Move(indices);
+        sortedByOffsetExprLocIndices_ = std::move(indices);
 
         for (size_t i = 0; i < exprlocsLength; i++)
             (*sortedByOffsetExprLocIndices_)[i] = i;
@@ -90,7 +90,7 @@ GeneratedSourceMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) cons
 DebugState::DebugState(SharedCode code,
                        const ShareableBytes* maybeBytecode,
                        bool binarySource)
-  : code_(Move(code)),
+  : code_(std::move(code)),
     maybeBytecode_(maybeBytecode),
     binarySource_(binarySource),
     enterAndLeaveFrameTrapsCounter_(0)
@@ -147,7 +147,7 @@ DebugState::createText(JSContext* cx)
             ReportOutOfMemory(cx);
             return nullptr;
         }
-        maybeSourceMap_ = Move(sourceMap);
+        maybeSourceMap_ = std::move(sourceMap);
 
         if (!BinaryToText(cx, bytes.begin(), bytes.length(), buffer, maybeSourceMap_.get()))
             return nullptr;

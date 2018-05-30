@@ -157,7 +157,7 @@ class InfallibleVector
     T& operator[](size_t index) { return vector_[index]; }
     const T& operator[](size_t index) const { return vector_[index]; }
 
-    InfallibleVector& operator=(InfallibleVector&& rhs) { vector_ = Move(rhs.vector_); return *this; }
+    InfallibleVector& operator=(InfallibleVector&& rhs) { vector_ = std::move(rhs.vector_); return *this; }
 };
 
 class CharacterRange;

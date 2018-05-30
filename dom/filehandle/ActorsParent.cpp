@@ -924,7 +924,7 @@ FileHandleThreadPool::WaitForDirectoriesToComplete(
   MOZ_ASSERT(aCallback);
 
   nsAutoPtr<StoragesCompleteCallback> callback(
-    new StoragesCompleteCallback(Move(aDirectoryIds), aCallback));
+    new StoragesCompleteCallback(std::move(aDirectoryIds), aCallback));
 
   if (!MaybeFireCallback(callback)) {
     mCompleteCallbacks.AppendElement(callback.forget());
@@ -1274,7 +1274,7 @@ FileHandleThreadPool::
 StoragesCompleteCallback::StoragesCompleteCallback(
                                              nsTArray<nsCString>&& aDirectoryIds,
                                              nsIRunnable* aCallback)
-  : mDirectoryIds(Move(aDirectoryIds))
+  : mDirectoryIds(std::move(aDirectoryIds))
   , mCallback(aCallback)
 {
   AssertIsOnBackgroundThread();

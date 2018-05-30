@@ -32,7 +32,7 @@ AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(
   }
 
   mDocShell = aDocShell;
-  timelines->AddMarkerForDocShell(mDocShell, Move(
+  timelines->AddMarkerForDocShell(mDocShell, std::move(
     MakeUnique<RestyleTimelineMarker>(
       mIsAnimationOnly,
       MarkerTracingType::START)));
@@ -51,7 +51,7 @@ AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker()
     return;
   }
 
-  timelines->AddMarkerForDocShell(mDocShell, Move(
+  timelines->AddMarkerForDocShell(mDocShell, std::move(
     MakeUnique<RestyleTimelineMarker>(
       mIsAnimationOnly,
       MarkerTracingType::END)));

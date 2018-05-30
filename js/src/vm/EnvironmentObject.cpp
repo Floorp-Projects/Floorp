@@ -2528,7 +2528,7 @@ DebugEnvironments::ensureRealmData(JSContext* cx)
         return nullptr;
     }
 
-    realm->debugEnvsRef() = Move(debugEnvs);
+    realm->debugEnvsRef() = std::move(debugEnvs);
     return realm->debugEnvs();
 }
 

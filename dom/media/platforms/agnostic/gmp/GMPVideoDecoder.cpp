@@ -75,7 +75,7 @@ GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     pictureRegion);
   RefPtr<GMPVideoDecoder> self = this;
   if (v) {
-    mDecodedData.AppendElement(Move(v));
+    mDecodedData.AppendElement(std::move(v));
   } else {
     mDecodedData.Clear();
     mDecodePromise.RejectIfExists(
@@ -303,7 +303,7 @@ GMPVideoDecoder::Init()
   if (NS_FAILED(mMPS->GetDecryptingGMPVideoDecoder(mCrashHelper,
                                                    &tags,
                                                    GetNodeId(),
-                                                   Move(callback),
+                                                   std::move(callback),
                                                    DecryptorId()))) {
     mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
@@ -335,7 +335,7 @@ GMPVideoDecoder::Decode(MediaRawData* aSample)
   }
   RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
-  nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
+  nsresult rv = mGMP->Decode(std::move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                                       RESULT_DETAIL("mGMP->Decode:%" PRIx32,

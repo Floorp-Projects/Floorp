@@ -323,7 +323,7 @@ CycleCollectedJSContext::CleanupIDBTransactions(uint32_t aRecursionDepth)
   MOZ_RELEASE_ASSERT(!mDoingStableStates);
   mDoingStableStates = true;
 
-  nsTArray<PendingIDBTransactionData> localQueue = Move(mPendingIDBTransactions);
+  nsTArray<PendingIDBTransactionData> localQueue = std::move(mPendingIDBTransactions);
 
   for (uint32_t i = 0; i < localQueue.Length(); ++i)
   {
@@ -429,7 +429,7 @@ void
 CycleCollectedJSContext::RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MOZ_ASSERT(mJSContext);
-  mStableStateEvents.AppendElement(Move(aRunnable));
+  mStableStateEvents.AppendElement(std::move(aRunnable));
 }
 
 void
@@ -455,7 +455,7 @@ CycleCollectedJSContext::AddPendingIDBTransaction(already_AddRefed<nsIRunnable>&
   }
 #endif
 
-  mPendingIDBTransactions.AppendElement(Move(data));
+  mPendingIDBTransactions.AppendElement(std::move(data));
 }
 
 void

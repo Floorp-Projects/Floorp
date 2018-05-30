@@ -32,7 +32,7 @@ public:
   explicit DominatorTree(JS::ubi::DominatorTree&& aDominatorTree, HeapSnapshot* aHeapSnapshot,
                          nsISupports* aParent)
     : mParent(aParent)
-    , mDominatorTree(Move(aDominatorTree))
+    , mDominatorTree(std::move(aDominatorTree))
     , mHeapSnapshot(aHeapSnapshot)
   {
     MOZ_ASSERT(aParent);

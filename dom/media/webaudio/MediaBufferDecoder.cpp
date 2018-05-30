@@ -473,7 +473,7 @@ WebAudioDecodeJob::AllocateBuffer()
 
   // Now create the AudioBuffer
   mOutput = AudioBuffer::Create(mContext->GetOwner(),
-                                mContext->SampleRate(), Move(mBuffer));
+                                mContext->SampleRate(), std::move(mBuffer));
   return mOutput != nullptr;
 }
 

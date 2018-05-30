@@ -138,9 +138,9 @@ public:
     }
 
     if (task->Priority() == TaskPriority::eHigh) {
-      mHighPriorityQueue.AppendElement(Move(task));
+      mHighPriorityQueue.AppendElement(std::move(task));
     } else {
-      mLowPriorityQueue.AppendElement(Move(task));
+      mLowPriorityQueue.AppendElement(std::move(task));
     }
 
     // If there are pending tasks, create more workers if and only if we have
@@ -322,7 +322,7 @@ bool DecodePoolImpl::CreateThread()
     return false;
   }
 
-  mThreads.AppendElement(Move(thread));
+  mThreads.AppendElement(std::move(thread));
   --mAvailableThreads;
   ++mIdleThreads;
   MOZ_ASSERT(mIdleThreads <= mThreads.Capacity());
