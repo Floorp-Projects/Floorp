@@ -91,7 +91,7 @@ function getExtra(expression, result) {
     const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
     if (!selectedFrame) {
-      return;
+      return {};
     }
 
     const extra = await getExtraProps(getState, expression, result, expr => client.evaluateInFrame(expr, selectedFrame.id));

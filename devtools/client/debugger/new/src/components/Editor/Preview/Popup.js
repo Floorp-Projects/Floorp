@@ -237,7 +237,7 @@ class Popup extends _react.Component {
       roots = roots.filter(r => r.type != NODE_TYPES.PROTOTYPE);
     }
 
-    if ((0, _preview.isReactComponent)(this.getObjectProperties())) {
+    if (extra.react && (0, _preview.isReactComponent)(this.getObjectProperties())) {
       header = this.renderReact(extra.react);
       roots = roots.filter(r => ["state", "props"].includes(r.name));
     }

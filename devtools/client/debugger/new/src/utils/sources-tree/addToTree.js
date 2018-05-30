@@ -129,7 +129,7 @@ function addSourceToNode(node, url, source) {
 
 
 function addToTree(tree, source, debuggeeUrl, projectRoot) {
-  const url = (0, _getURL.getURL)(source.get("url"), debuggeeUrl);
+  const url = (0, _getURL.getURL)(source.get ? source.get("url") : source.url, debuggeeUrl);
   const debuggeeHost = (0, _treeOrder.getDomain)(debuggeeUrl);
 
   if ((0, _utils.isInvalidUrl)(url, source) || !isUnderRoot(url, projectRoot)) {

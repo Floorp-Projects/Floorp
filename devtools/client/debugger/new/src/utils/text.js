@@ -3,7 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.truncateMiddleText = exports.formatKeyShortcut = undefined;
+exports.formatKeyShortcut = formatKeyShortcut;
+exports.truncateMiddleText = truncateMiddleText;
 
 var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
@@ -60,6 +61,3 @@ function truncateMiddleText(sourceText, maxLength) {
 
   return truncatedText;
 }
-
-exports.formatKeyShortcut = formatKeyShortcut;
-exports.truncateMiddleText = truncateMiddleText;
