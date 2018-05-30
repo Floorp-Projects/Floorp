@@ -436,10 +436,10 @@ AudioSink::NotifyAudioNeeded()
        }
       if (mConverter->InputConfig() != mConverter->OutputConfig()) {
         AlignedAudioBuffer convertedData =
-          mConverter->Process(AudioSampleBuffer(Move(silenceBuffer))).Forget();
-        silenceData = CreateAudioFromBuffer(Move(convertedData), data);
+          mConverter->Process(AudioSampleBuffer(std::move(silenceBuffer))).Forget();
+        silenceData = CreateAudioFromBuffer(std::move(convertedData), data);
       } else {
-        silenceData = CreateAudioFromBuffer(Move(silenceBuffer), data);
+        silenceData = CreateAudioFromBuffer(std::move(silenceBuffer), data);
       }
       PushProcessedAudio(silenceData);
     }
@@ -450,12 +450,12 @@ AudioSink::NotifyAudioNeeded()
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {
       // We must ensure that the size in the buffer contains exactly the number
       // of frames, in case one of the audio producer over allocated the buffer.
-      AlignedAudioBuffer buffer(Move(data->mAudioData));
+      AlignedAudioBuffer buffer(std::move(data->mAudioData));
       buffer.SetLength(size_t(data->mFrames) * data->mChannels);
 
       AlignedAudioBuffer convertedData =
-        mConverter->Process(AudioSampleBuffer(Move(buffer))).Forget();
-      data = CreateAudioFromBuffer(Move(convertedData), data);
+        mConverter->Process(AudioSampleBuffer(std::move(buffer))).Forget();
+      data = CreateAudioFromBuffer(std::move(convertedData), data);
     }
     if (PushProcessedAudio(data)) {
       mLastProcessedPacket = Some(data);
@@ -499,7 +499,7 @@ AudioSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
                   aReference->mTime,
                   duration,
                   frames,
-                  Move(aBuffer),
+                  std::move(aBuffer),
                   mOutputChannels,
                   mOutputRate);
   return data.forget();
@@ -530,7 +530,7 @@ AudioSink::DrainConverter(uint32_t aMaxFrames)
   }
 
   RefPtr<AudioData> data =
-    CreateAudioFromBuffer(Move(convertedData), lastPacket);
+    CreateAudioFromBuffer(std::move(convertedData), lastPacket);
   if (!data) {
     return 0;
   }

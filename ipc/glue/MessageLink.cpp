@@ -224,7 +224,7 @@ ThreadLink::EchoMessage(Message *msg)
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mChan->OnMessageReceivedFromLink(Move(*msg));
+    mChan->OnMessageReceivedFromLink(std::move(*msg));
     delete msg;
 }
 
@@ -237,7 +237,7 @@ ThreadLink::SendMessage(Message *msg)
     mChan->mMonitor->AssertCurrentThreadOwns();
 
     if (mTargetChan)
-        mTargetChan->OnMessageReceivedFromLink(Move(*msg));
+        mTargetChan->OnMessageReceivedFromLink(std::move(*msg));
     delete msg;
 }
 
@@ -282,14 +282,14 @@ ProcessLink::OnMessageReceived(Message&& msg)
     AssertIOThread();
     NS_ASSERTION(mChan->mChannelState != ChannelError, "Shouldn't get here!");
     MonitorAutoLock lock(*mChan->mMonitor);
-    mChan->OnMessageReceivedFromLink(Move(msg));
+    mChan->OnMessageReceivedFromLink(std::move(msg));
 }
 
 void
 ProcessLink::OnEchoMessage(Message* msg)
 {
     AssertIOThread();
-    OnMessageReceived(Move(*msg));
+    OnMessageReceived(std::move(*msg));
     delete msg;
 }
 
@@ -336,7 +336,7 @@ ProcessLink::OnTakeConnectedChannel()
 
     // Dispatch whatever messages the previous listener had queued up.
     while (!pending.empty()) {
-        OnMessageReceived(Move(pending.front()));
+        OnMessageReceived(std::move(pending.front()));
         pending.pop();
     }
 }

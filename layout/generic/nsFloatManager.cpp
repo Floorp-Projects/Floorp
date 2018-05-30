@@ -278,7 +278,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   if (thisBEnd > sideBEnd)
     sideBEnd = thisBEnd;
 
-  mFloats.AppendElement(Move(info));
+  mFloats.AppendElement(std::move(info));
 }
 
 // static
@@ -1058,7 +1058,7 @@ public:
   RoundedBoxShapeInfo(const nsRect& aRect,
                       UniquePtr<nscoord[]> aRadii)
     : mRect(aRect)
-    , mRadii(Move(aRadii))
+    , mRadii(std::move(aRadii))
     , mShapeMargin(0)
   {}
 
@@ -1128,7 +1128,7 @@ nsFloatManager::RoundedBoxShapeInfo::RoundedBoxShapeInfo(const nsRect& aRect,
   nscoord aShapeMargin,
   int32_t aAppUnitsPerDevPixel)
   : mRect(aRect)
-  , mRadii(Move(aRadii))
+  , mRadii(std::move(aRadii))
   , mShapeMargin(aShapeMargin)
 {
   MOZ_ASSERT(mShapeMargin > 0 && !EachCornerHasBalancedRadii(mRadii.get()),
@@ -2414,11 +2414,11 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsFloatManager::FloatInfo::FloatInfo(FloatInfo&& aOther)
-  : mFrame(Move(aOther.mFrame))
-  , mLeftBEnd(Move(aOther.mLeftBEnd))
-  , mRightBEnd(Move(aOther.mRightBEnd))
-  , mRect(Move(aOther.mRect))
-  , mShapeInfo(Move(aOther.mShapeInfo))
+  : mFrame(std::move(aOther.mFrame))
+  , mLeftBEnd(std::move(aOther.mLeftBEnd))
+  , mRightBEnd(std::move(aOther.mRightBEnd))
+  , mRect(std::move(aOther.mRect))
+  , mShapeInfo(std::move(aOther.mShapeInfo))
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
@@ -2649,7 +2649,7 @@ nsFloatManager::ShapeInfo::CreateInset(
       logicalRadii[i] = aShapeMargin;
     }
     return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                           Move(logicalRadii));
+                                           std::move(logicalRadii));
   }
 
   // If we have radii, and they have balanced/equal corners, we can inflate
@@ -2755,7 +2755,7 @@ nsFloatManager::ShapeInfo::CreatePolygon(
   }
 
   if (aShapeMargin == 0) {
-    return MakeUnique<PolygonShapeInfo>(Move(vertices));
+    return MakeUnique<PolygonShapeInfo>(std::move(vertices));
   }
 
   nsRect marginRect = ConvertToFloatLogical(aMarginRect, aWM, aContainerSize);
@@ -2763,7 +2763,7 @@ nsFloatManager::ShapeInfo::CreatePolygon(
   // We have to use the full constructor for PolygonShapeInfo. This
   // computes the float area using a rasterization method.
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  return MakeUnique<PolygonShapeInfo>(Move(vertices), aShapeMargin,
+  return MakeUnique<PolygonShapeInfo>(std::move(vertices), aShapeMargin,
                                       appUnitsPerDevPixel, marginRect);
 }
 

@@ -262,7 +262,7 @@ OSFileConstantsService::InitOSFileConstants()
   GetPathToSpecialDir(NS_MAC_USER_LIB_DIR, paths->macUserLibDir);
 #endif // defined(XP_MACOSX)
 
-  mPaths = Move(paths);
+  mPaths = std::move(paths);
 
   // Get the umask from the system-info service.
   // The property will always be present, but it will be zero on

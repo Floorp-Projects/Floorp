@@ -557,7 +557,7 @@ public:
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
     }
 
-    mStreamList->Add(mResponse.mBodyId, Move(stream));
+    mStreamList->Add(mResponse.mBodyId, std::move(stream));
 
     return rv;
   }
@@ -566,10 +566,10 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     if (!mFoundResponse) {
-      aListener->OnOpComplete(Move(aRv), CacheMatchResult(void_t()));
+      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(void_t()));
     } else {
       mStreamList->Activate(mCacheId);
-      aListener->OnOpComplete(Move(aRv), CacheMatchResult(void_t()), mResponse,
+      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(void_t()), mResponse,
                               mStreamList);
     }
     mStreamList = nullptr;
@@ -625,7 +625,7 @@ public:
         if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
       }
 
-      mStreamList->Add(mSavedResponses[i].mBodyId, Move(stream));
+      mStreamList->Add(mSavedResponses[i].mBodyId, std::move(stream));
     }
 
     return rv;
@@ -635,7 +635,7 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     mStreamList->Activate(mCacheId);
-    aListener->OnOpComplete(Move(aRv), CacheMatchAllResult(), mSavedResponses,
+    aListener->OnOpComplete(std::move(aRv), CacheMatchAllResult(), mSavedResponses,
                             mStreamList);
     mStreamList = nullptr;
   }
@@ -1134,7 +1134,7 @@ public:
       DecreaseUsageForQuotaInfo(mQuotaInfo.ref(), mDeletedPaddingSize);
     }
 
-    aListener->OnOpComplete(Move(aRv), CacheDeleteResult(mSuccess));
+    aListener->OnOpComplete(std::move(aRv), CacheDeleteResult(mSuccess));
   }
 
   virtual bool MatchesCacheId(CacheId aCacheId) const override
@@ -1189,7 +1189,7 @@ public:
         if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
       }
 
-      mStreamList->Add(mSavedRequests[i].mBodyId, Move(stream));
+      mStreamList->Add(mSavedRequests[i].mBodyId, std::move(stream));
     }
 
     return rv;
@@ -1199,7 +1199,7 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     mStreamList->Activate(mCacheId);
-    aListener->OnOpComplete(Move(aRv), CacheKeysResult(), mSavedRequests,
+    aListener->OnOpComplete(std::move(aRv), CacheKeysResult(), mSavedRequests,
                             mStreamList);
     mStreamList = nullptr;
   }
@@ -1255,7 +1255,7 @@ public:
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
     }
 
-    mStreamList->Add(mSavedResponse.mBodyId, Move(stream));
+    mStreamList->Add(mSavedResponse.mBodyId, std::move(stream));
 
     return rv;
   }
@@ -1264,10 +1264,10 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     if (!mFoundResponse) {
-      aListener->OnOpComplete(Move(aRv), StorageMatchResult(void_t()));
+      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(void_t()));
     } else {
       mStreamList->Activate(mSavedResponse.mCacheId);
-      aListener->OnOpComplete(Move(aRv), StorageMatchResult(void_t()), mSavedResponse,
+      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(void_t()), mSavedResponse,
                               mStreamList);
     }
     mStreamList = nullptr;
@@ -1306,7 +1306,7 @@ public:
   virtual void
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
-    aListener->OnOpComplete(Move(aRv), StorageHasResult(mCacheFound));
+    aListener->OnOpComplete(std::move(aRv), StorageHasResult(mCacheFound));
   }
 
 private:
@@ -1363,7 +1363,7 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     MOZ_DIAGNOSTIC_ASSERT(aRv.Failed() || mCacheId != INVALID_CACHE_ID);
-    aListener->OnOpComplete(Move(aRv),
+    aListener->OnOpComplete(std::move(aRv),
                             StorageOpenResult(nullptr, nullptr, mNamespace),
                             mCacheId);
   }
@@ -1439,7 +1439,7 @@ public:
       }
     }
 
-    aListener->OnOpComplete(Move(aRv), StorageDeleteResult(mCacheDeleted));
+    aListener->OnOpComplete(std::move(aRv), StorageDeleteResult(mCacheDeleted));
   }
 
 private:
@@ -1473,7 +1473,7 @@ public:
     if (aRv.Failed()) {
       mKeys.Clear();
     }
-    aListener->OnOpComplete(Move(aRv), StorageKeysResult(mKeys));
+    aListener->OnOpComplete(std::move(aRv), StorageKeysResult(mKeys));
   }
 
 private:
@@ -1489,7 +1489,7 @@ public:
   OpenStreamAction(Manager* aManager, ListenerId aListenerId,
                    InputStreamResolver&& aResolver, const nsID& aBodyId)
     : BaseAction(aManager, aListenerId)
-    , mResolver(Move(aResolver))
+    , mResolver(std::move(aResolver))
     , mBodyId(aBodyId)
   { }
 
@@ -1508,7 +1508,7 @@ public:
   virtual void
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
-    mResolver(Move(mBodyStream));
+    mResolver(std::move(mBodyStream));
     mResolver = nullptr;
   }
 
@@ -1526,7 +1526,7 @@ Manager::ListenerId Manager::sNextListenerId = 0;
 void
 Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult)
 {
-  OnOpComplete(Move(aRv), aResult, INVALID_CACHE_ID, nsTArray<SavedResponse>(),
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, nsTArray<SavedResponse>(),
                nsTArray<SavedRequest>(), nullptr);
 }
 
@@ -1534,7 +1534,7 @@ void
 Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                                 CacheId aOpenedCacheId)
 {
-  OnOpComplete(Move(aRv), aResult, aOpenedCacheId, nsTArray<SavedResponse>(),
+  OnOpComplete(std::move(aRv), aResult, aOpenedCacheId, nsTArray<SavedResponse>(),
                nsTArray<SavedRequest>(), nullptr);
 }
 
@@ -1545,7 +1545,7 @@ Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
 {
   AutoTArray<SavedResponse, 1> responseList;
   responseList.AppendElement(aSavedResponse);
-  OnOpComplete(Move(aRv), aResult, INVALID_CACHE_ID, responseList,
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, responseList,
                nsTArray<SavedRequest>(), aStreamList);
 }
 
@@ -1554,7 +1554,7 @@ Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                                 const nsTArray<SavedResponse>& aSavedResponseList,
                                 StreamList* aStreamList)
 {
-  OnOpComplete(Move(aRv), aResult, INVALID_CACHE_ID, aSavedResponseList,
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, aSavedResponseList,
                nsTArray<SavedRequest>(), aStreamList);
 }
 
@@ -1563,7 +1563,7 @@ Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                                 const nsTArray<SavedRequest>& aSavedRequestList,
                                 StreamList* aStreamList)
 {
-  OnOpComplete(Move(aRv), aResult, INVALID_CACHE_ID, nsTArray<SavedResponse>(),
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, nsTArray<SavedResponse>(),
                aSavedRequestList, aStreamList);
 }
 
@@ -1909,7 +1909,7 @@ Manager::ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action =
-    new OpenStreamAction(this, listenerId, Move(aResolver), aBodyId);
+    new OpenStreamAction(this, listenerId, std::move(aResolver), aBodyId);
 
   context->Dispatch(action);
 }

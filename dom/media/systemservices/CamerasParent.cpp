@@ -154,7 +154,7 @@ public:
     , mParent(aParent)
     , mCapEngine(aEngine)
     , mStreamId(aStreamId)
-    , mBuffer(Move(aBuffer))
+    , mBuffer(std::move(aBuffer))
     , mProperties(aProperties){};
 
   NS_IMETHOD Run() override {
@@ -163,7 +163,7 @@ public:
       mResult = 0;
       return NS_OK;
     }
-    if (!mParent->DeliverFrameOverIPC(mCapEngine, mStreamId, Move(mBuffer),
+    if (!mParent->DeliverFrameOverIPC(mCapEngine, mStreamId, std::move(mBuffer),
                                       mAlternateBuffer.get(), mProperties)) {
       mResult = -1;
     } else {
@@ -337,7 +337,7 @@ CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame)
     VideoFrameUtils::CopyVideoFrameBuffers(shMemBuffer.GetBytes(),
                                            properties.bufferSize(), aVideoFrame);
     runnable = new DeliverFrameRunnable(mParent, mCapEngine, mStreamId,
-                                        Move(shMemBuffer), properties);
+                                        std::move(shMemBuffer), properties);
   }
   if (!runnable) {
     runnable = new DeliverFrameRunnable(mParent, mCapEngine, mStreamId,
@@ -393,7 +393,7 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
     }
 
     config->Set<webrtc::CaptureDeviceInfo>(captureDeviceInfo.release());
-    engine = VideoEngine::Create(Move(config));
+    engine = VideoEngine::Create(std::move(config));
 
     if (!engine) {
       LOG(("VideoEngine::Create failed"));

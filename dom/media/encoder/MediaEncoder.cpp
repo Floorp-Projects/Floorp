@@ -153,7 +153,7 @@ public:
       mEncoderThread->Dispatch(
         NewRunnableMethod<StoreCopyPassByRRef<AudioSegment>>(
           "mozilla::AudioTrackEncoder::AppendAudioSegment",
-          mEncoder, &AudioTrackEncoder::AppendAudioSegment, Move(copy)));
+          mEncoder, &AudioTrackEncoder::AppendAudioSegment, std::move(copy)));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
@@ -305,7 +305,7 @@ public:
       mEncoderThread->Dispatch(
         NewRunnableMethod<StoreCopyPassByRRef<VideoSegment>>(
           "mozilla::VideoTrackEncoder::AppendVideoSegment",
-          mEncoder, &VideoTrackEncoder::AppendVideoSegment, Move(copy)));
+          mEncoder, &VideoTrackEncoder::AppendVideoSegment, std::move(copy)));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
@@ -453,7 +453,7 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
                            VideoTrackEncoder* aVideoEncoder,
                            const nsAString& aMIMEType)
   : mEncoderThread(aEncoderThread)
-  , mWriter(Move(aWriter))
+  , mWriter(std::move(aWriter))
   , mAudioEncoder(aAudioEncoder)
   , mVideoEncoder(aVideoEncoder)
   , mEncoderListener(MakeAndAddRef<EncoderListener>(mEncoderThread, this))
@@ -735,7 +735,7 @@ MediaEncoder::CreateEncoder(TaskQueue* aEncoderThread,
     }
   }
   return MakeAndAddRef<MediaEncoder>(aEncoderThread,
-                                     Move(writer),
+                                     std::move(writer),
                                      audioEncoder,
                                      videoEncoder,
                                      mimeType);

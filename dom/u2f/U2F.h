@@ -39,7 +39,7 @@ class U2FTransaction
 
 public:
   explicit U2FTransaction(const U2FCallback&& aCallback)
-    : mCallback(Move(aCallback))
+    : mCallback(std::move(aCallback))
     , mId(NextId())
   {
     MOZ_ASSERT(mId > 0);

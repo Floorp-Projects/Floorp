@@ -47,7 +47,7 @@ WebRequestService::RegisterChannel(ChannelWrapper* aChannel)
   MOZ_DIAGNOSTIC_ASSERT(!key);
   key.OrInsert([&entry]() { return entry.get(); });
 
-  return Move(entry);
+  return std::move(entry);
 
 }
 

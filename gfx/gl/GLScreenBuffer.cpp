@@ -48,7 +48,7 @@ GLScreenBuffer::Create(GLContext* gl,
     if (caps.antialias &&
         !gl->IsSupported(GLFeature::framebuffer_multisample))
     {
-        return Move(ret);
+        return std::move(ret);
     }
 
     layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
@@ -58,8 +58,8 @@ GLScreenBuffer::Create(GLContext* gl,
 
     UniquePtr<SurfaceFactory> factory = MakeUnique<SurfaceFactory_Basic>(gl, caps, flags);
 
-    ret.reset( new GLScreenBuffer(gl, caps, Move(factory)) );
-    return Move(ret);
+    ret.reset( new GLScreenBuffer(gl, caps, std::move(factory)) );
+    return std::move(ret);
 }
 
 /* static */ UniquePtr<SurfaceFactory>
@@ -133,7 +133,7 @@ GLScreenBuffer::GLScreenBuffer(GLContext* gl,
                                UniquePtr<SurfaceFactory> factory)
     : mGL(gl)
     , mCaps(caps)
-    , mFactory(Move(factory))
+    , mFactory(std::move(factory))
     , mNeedsBlit(true)
     , mUserReadBufferMode(LOCAL_GL_BACK)
     , mUserDrawBufferMode(LOCAL_GL_BACK)
@@ -470,7 +470,7 @@ void
 GLScreenBuffer::Morph(UniquePtr<SurfaceFactory> newFactory)
 {
     MOZ_RELEASE_ASSERT(newFactory, "newFactory must not be null");
-    mFactory = Move(newFactory);
+    mFactory = std::move(newFactory);
 }
 
 bool
@@ -519,9 +519,9 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
         }
 
         if (draw)
-            mDraw = Move(draw);
+            mDraw = std::move(draw);
 
-        mRead = Move(read);
+        mRead = std::move(read);
     }
 
     // Check that we're all set up.
@@ -863,7 +863,7 @@ DrawBuffer::Create(GLContext* const gl,
     if (err || !gl->IsFramebufferComplete(fb))
         return false;
 
-    *out_buffer = Move(ret);
+    *out_buffer = std::move(ret);
     return true;
 }
 
@@ -953,7 +953,7 @@ ReadBuffer::Create(GLContext* gl,
     if (!isComplete)
         return nullptr;
 
-    return Move(ret);
+    return std::move(ret);
 }
 
 ReadBuffer::~ReadBuffer()

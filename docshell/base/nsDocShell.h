@@ -320,7 +320,7 @@ public:
   void SetAncestorPrincipals(
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals)
   {
-    mAncestorPrincipals = mozilla::Move(aAncestorPrincipals);
+    mAncestorPrincipals = std::move(aAncestorPrincipals);
   }
 
   /**
@@ -342,7 +342,7 @@ public:
    */
   void SetAncestorOuterWindowIDs(nsTArray<uint64_t>&& aAncestorOuterWindowIDs)
   {
-    mAncestorOuterWindowIDs = mozilla::Move(aAncestorOuterWindowIDs);
+    mAncestorOuterWindowIDs = std::move(aAncestorOuterWindowIDs);
   }
 
   const mozilla::OriginAttributes& GetOriginAttributes()

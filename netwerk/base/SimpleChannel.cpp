@@ -40,7 +40,7 @@ private:
 };
 
 SimpleChannel::SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-  : mCallbacks(Move(aCallbacks))
+  : mCallbacks(std::move(aCallbacks))
 {
   EnableSynthesizedProgressEvents(true);
 }
@@ -99,7 +99,7 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(SimpleChannelChild, SimpleChannel, nsIChildChannel)
 
 SimpleChannelChild::SimpleChannelChild(UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-  : SimpleChannel(Move(aCallbacks))
+  : SimpleChannel(std::move(aCallbacks))
   , mIPDLRef(nullptr)
 {
 }
@@ -161,9 +161,9 @@ NS_NewSimpleChannelInternal(nsIURI* aURI, nsILoadInfo* aLoadInfo, UniquePtr<Simp
 {
   RefPtr<SimpleChannel> chan;
   if (IsNeckoChild()) {
-    chan = new SimpleChannelChild(Move(aCallbacks));
+    chan = new SimpleChannelChild(std::move(aCallbacks));
   } else {
-    chan = new SimpleChannel(Move(aCallbacks));
+    chan = new SimpleChannel(std::move(aCallbacks));
   }
 
   chan->SetURI(aURI);

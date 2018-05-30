@@ -136,7 +136,7 @@ MainThreadInvoker::MainThreadInvoker()
 bool
 MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(Move(aRunnable));
+  nsCOMPtr<nsIRunnable> runnable(std::move(aRunnable));
   if (!runnable) {
     return false;
   }

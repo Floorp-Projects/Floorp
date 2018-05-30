@@ -693,7 +693,7 @@ ChromeUtils::GetCallerLocation(const GlobalObject& aGlobal, nsIPrincipal* aPrinc
   JS::StackCapture captureMode(JS::FirstSubsumedFrame(cx, principals));
 
   JS::RootedObject frame(cx);
-  if (!JS::CaptureCurrentStack(cx, &frame, mozilla::Move(captureMode))) {
+  if (!JS::CaptureCurrentStack(cx, &frame, std::move(captureMode))) {
     JS_ClearPendingException(cx);
     aRetval.set(nullptr);
     return;

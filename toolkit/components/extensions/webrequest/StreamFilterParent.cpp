@@ -60,7 +60,7 @@ class ChannelEventFunction final : public ChannelEventWrapper
 public:
   ChannelEventFunction(nsIEventTarget* aTarget, std::function<void()>&& aFunc)
     : ChannelEventWrapper(aTarget)
-    , mFunc(Move(aFunc))
+    , mFunc(std::move(aFunc))
   {}
 
   void Run() override
@@ -151,11 +151,11 @@ StreamFilterParent::Create(dom::ContentParent* aContentParent, uint64_t aChannel
                                                &parent, &child);
   NS_ENSURE_SUCCESS(rv, false);
 
-  if (!chan->AttachStreamFilter(Move(parent))) {
+  if (!chan->AttachStreamFilter(std::move(parent))) {
     return false;
   }
 
-  *aEndpoint = Move(child);
+  *aEndpoint = std::move(child);
   return true;
 }
 
@@ -168,7 +168,7 @@ StreamFilterParent::Attach(nsIChannel* aChannel, ParentEndpoint&& aEndpoint)
     NewRunnableMethod<ParentEndpoint&&>("StreamFilterParent::Bind",
                                         self,
                                         &StreamFilterParent::Bind,
-                                        Move(aEndpoint)),
+                                        std::move(aEndpoint)),
     NS_DISPATCH_NORMAL);
 
   self->Init(aChannel);
@@ -382,7 +382,7 @@ StreamFilterParent::RecvWrite(Data&& aData)
     NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
                               this,
                               &StreamFilterParent::WriteMove,
-                              Move(aData)));
+                              std::move(aData)));
   return IPC_OK();
 }
 
@@ -533,7 +533,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     nsCOMPtr<nsIEventTarget> thread;
     Unused << req->GetDeliveryTarget(getter_AddRefs(thread));
     if (thread) {
-      mIOThread = Move(thread);
+      mIOThread = std::move(thread);
     }
   }
 
@@ -642,7 +642,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
 
   if (mState == State::Disconnecting) {
     MutexAutoLock al(mBufferMutex);
-    BufferData(Move(data));
+    BufferData(std::move(data));
   } else if (mState == State::Closed) {
     return NS_ERROR_FAILURE;
   } else {
@@ -650,7 +650,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
       NewRunnableMethod<Data&&>("StreamFilterParent::DoSendData",
                                 this,
                                 &StreamFilterParent::DoSendData,
-                                Move(data)),
+                                std::move(data)),
       NS_DISPATCH_NORMAL);
   }
   return NS_OK;
@@ -730,26 +730,26 @@ template<typename Function>
 void
 StreamFilterParent::RunOnMainThread(const char* aName, Function&& aFunc)
 {
-  mQueue->RunOrEnqueue(new ChannelEventFunction(mMainThread, Move(aFunc)));
+  mQueue->RunOrEnqueue(new ChannelEventFunction(mMainThread, std::move(aFunc)));
 }
 
 void
 StreamFilterParent::RunOnMainThread(already_AddRefed<Runnable> aRunnable)
 {
-  mQueue->RunOrEnqueue(new ChannelEventRunnable(mMainThread, Move(aRunnable)));
+  mQueue->RunOrEnqueue(new ChannelEventRunnable(mMainThread, std::move(aRunnable)));
 }
 
 template<typename Function>
 void
 StreamFilterParent::RunOnIOThread(const char* aName, Function&& aFunc)
 {
-  mQueue->RunOrEnqueue(new ChannelEventFunction(mIOThread, Move(aFunc)));
+  mQueue->RunOrEnqueue(new ChannelEventFunction(mIOThread, std::move(aFunc)));
 }
 
 void
 StreamFilterParent::RunOnIOThread(already_AddRefed<Runnable> aRunnable)
 {
-  mQueue->RunOrEnqueue(new ChannelEventRunnable(mIOThread, Move(aRunnable)));
+  mQueue->RunOrEnqueue(new ChannelEventRunnable(mIOThread, std::move(aRunnable)));
 }
 
 template<typename Function>
@@ -775,7 +775,7 @@ StreamFilterParent::RunOnActorThread(const char* aName, Function&& aFunc)
     aFunc();
   } else {
     ActorThread()->Dispatch(
-      Move(NS_NewRunnableFunction(aName, aFunc)),
+      std::move(NS_NewRunnableFunction(aName, aFunc)),
       NS_DISPATCH_NORMAL);
   }
 }

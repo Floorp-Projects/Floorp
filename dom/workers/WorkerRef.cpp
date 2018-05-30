@@ -24,7 +24,7 @@ public:
   ReleaseRefControlRunnable(WorkerPrivate* aWorkerPrivate,
                             already_AddRefed<StrongWorkerRef> aRef)
     : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    , mRef(Move(aRef))
+    , mRef(std::move(aRef))
   {
     MOZ_ASSERT(mRef);
   }
@@ -136,7 +136,7 @@ WeakWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
     return nullptr;
   }
 
-  ref->mHolder = Move(holder);
+  ref->mHolder = std::move(holder);
   ref->mCallback = aCallback;
 
   return ref.forget();
@@ -190,7 +190,7 @@ StrongWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
     return nullptr;
   }
 
-  ref->mHolder = Move(holder);
+  ref->mHolder = std::move(holder);
   ref->mCallback = aCallback;
 
   return ref.forget();

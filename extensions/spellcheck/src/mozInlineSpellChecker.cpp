@@ -476,7 +476,7 @@ public:
                        uint32_t aDisabledAsyncToken)
     : Runnable("mozInlineSpellResume")
     , mDisabledAsyncToken(aDisabledAsyncToken)
-    , mStatus(Move(aStatus))
+    , mStatus(std::move(aStatus))
   {
   }
 
@@ -491,7 +491,7 @@ public:
     // Discard the resumption if the spell checker was disabled after the
     // resumption was scheduled.
     if (mDisabledAsyncToken == mStatus->mSpellChecker->mDisabledAsyncToken) {
-      mStatus->mSpellChecker->ResumeCheck(Move(mStatus));
+      mStatus->mSpellChecker->ResumeCheck(std::move(mStatus));
     }
     return NS_OK;
   }
@@ -885,7 +885,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
                                    aStartNode, aStartOffset,
                                    aEndNode, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = ScheduleSpellCheck(Move(status));
+  rv = ScheduleSpellCheck(std::move(status));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // remember the current caret position after every change
@@ -911,7 +911,7 @@ mozInlineSpellChecker::SpellCheckRange(nsRange* aRange)
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   nsresult rv = status->InitForRange(aRange);
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 // mozInlineSpellChecker::GetMisspelledWord
@@ -979,7 +979,7 @@ mozInlineSpellChecker::AddWordToDictionary(const nsAString &word)
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForSelection();
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 //  mozInlineSpellChecker::RemoveWordFromDictionary
@@ -995,7 +995,7 @@ mozInlineSpellChecker::RemoveWordFromDictionary(const nsAString &word)
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForRange(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 // mozInlineSpellChecker::IgnoreWord
@@ -1011,7 +1011,7 @@ mozInlineSpellChecker::IgnoreWord(const nsAString &word)
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForSelection();
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 // mozInlineSpellChecker::IgnoreWords
@@ -1030,7 +1030,7 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   nsresult rv = status->InitForSelection();
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 void
@@ -1145,7 +1145,7 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsINode* aStartNode,
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForRange(range);
   NS_ENSURE_SUCCESS(rv, rv);
-  return ScheduleSpellCheck(Move(status));
+  return ScheduleSpellCheck(std::move(status));
 }
 
 // mozInlineSpellChecker::ShouldSpellCheckNode
@@ -1239,7 +1239,7 @@ mozInlineSpellChecker::ScheduleSpellCheck(UniquePtr<mozInlineSpellStatus>&& aSta
   bool isFullSpellCheck = aStatus->IsFullSpellCheck();
 
   RefPtr<mozInlineSpellResume> resume =
-    new mozInlineSpellResume(Move(aStatus), mDisabledAsyncToken);
+    new mozInlineSpellResume(std::move(aStatus), mDisabledAsyncToken);
   NS_ENSURE_TRUE(resume, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = resume->Post();
@@ -1601,7 +1601,7 @@ mozInlineSpellChecker::ResumeCheck(UniquePtr<mozInlineSpellStatus>&& aStatus)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (! doneChecking)
-    rv = ScheduleSpellCheck(Move(aStatus));
+    rv = ScheduleSpellCheck(std::move(aStatus));
   return rv;
 }
 
@@ -1809,7 +1809,7 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
                                  &shouldPost);
   NS_ENSURE_SUCCESS(rv, rv);
   if (shouldPost) {
-    rv = ScheduleSpellCheck(Move(status));
+    rv = ScheduleSpellCheck(std::move(status));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

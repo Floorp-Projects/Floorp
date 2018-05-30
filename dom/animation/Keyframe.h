@@ -29,7 +29,7 @@ struct PropertyValuePair
     : mProperty(aProperty) { }
   PropertyValuePair(nsCSSPropertyID aProperty,
                     RefPtr<RawServoDeclarationBlock>&& aValue)
-    : mProperty(aProperty), mServoDeclarationBlock(Move(aValue))
+    : mProperty(aProperty), mServoDeclarationBlock(std::move(aValue))
   {
     MOZ_ASSERT(mServoDeclarationBlock, "Should be valid property value");
   }
@@ -70,7 +70,7 @@ struct Keyframe
   Keyframe(const Keyframe& aOther) = default;
   Keyframe(Keyframe&& aOther)
   {
-    *this = Move(aOther);
+    *this = std::move(aOther);
   }
 
   Keyframe& operator=(const Keyframe& aOther) = default;
@@ -78,9 +78,9 @@ struct Keyframe
   {
     mOffset         = aOther.mOffset;
     mComputedOffset = aOther.mComputedOffset;
-    mTimingFunction = Move(aOther.mTimingFunction);
-    mComposite      = Move(aOther.mComposite);
-    mPropertyValues = Move(aOther.mPropertyValues);
+    mTimingFunction = std::move(aOther.mTimingFunction);
+    mComposite      = std::move(aOther.mComposite);
+    mPropertyValues = std::move(aOther.mPropertyValues);
     return *this;
   }
 

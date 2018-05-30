@@ -39,7 +39,7 @@ MLGSwapChain::ApplyNewInvalidRegion(nsIntRegion&& aRegion, const Maybe<gfx::IntR
   // We clamp the invalid region to the backbuffer size, otherwise the present
   // can fail.
   IntRect bounds(IntPoint(0, 0), GetSize());
-  nsIntRegion invalid = Move(aRegion);
+  nsIntRegion invalid = std::move(aRegion);
   invalid.AndWith(bounds);
   if (invalid.IsEmpty()) {
     return false;
@@ -305,7 +305,7 @@ MLGDevice::PrepareClearRegion(ClearRegionHelper* aOut,
                               const Maybe<int32_t>& aSortIndex)
 {
   if (CanUseClearView() && !aSortIndex) {
-    aOut->mRects = Move(aRects);
+    aOut->mRects = std::move(aRects);
     return;
   }
 

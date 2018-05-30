@@ -254,7 +254,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                            pts,
                                            duration,
                                            mFrame->nb_samples,
-                                           Move(audio),
+                                           std::move(audio),
                                            numChannels,
                                            samplingRate,
                                            mCodecContext->channel_layout));

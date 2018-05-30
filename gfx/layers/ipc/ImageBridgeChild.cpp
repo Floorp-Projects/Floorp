@@ -515,7 +515,7 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32
     "layers::ImageBridgeChild::Bind",
     child,
     &ImageBridgeChild::Bind,
-    Move(aEndpoint));
+    std::move(aEndpoint));
   child->GetMessageLoop()->PostTask(runnable.forget());
 
   // Assign this after so other threads can't post messages before we connect to IPDL.
@@ -538,7 +538,7 @@ ImageBridgeChild::ReinitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint
   // false result and a MsgDropped processing error. This is okay.
   ShutdownSingleton();
 
-  return InitForContent(Move(aEndpoint), aNamespace);
+  return InitForContent(std::move(aEndpoint), aNamespace);
 }
 
 void
@@ -667,7 +667,7 @@ ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint, ui
     "layers::ImageBridgeChild::Bind",
     child,
     &ImageBridgeChild::Bind,
-    Move(aEndpoint)));
+    std::move(aEndpoint)));
 
   // Assign this after so other threads can't post messages before we connect to IPDL.
   {

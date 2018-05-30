@@ -328,7 +328,7 @@ StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
 #endif
 
   entry.OrInsert([&inbuf, &len]() {
-      return new CacheEntry(Move(inbuf), len);
+      return new CacheEntry(std::move(inbuf), len);
   });
   mPendingWrites.AppendElement(idStr);
   return ResetStartupWriteTimer();

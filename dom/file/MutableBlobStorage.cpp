@@ -241,8 +241,8 @@ public:
   void
   OperationSucceeded(BlobImpl* aBlobImpl) override
   {
-    nsCOMPtr<nsISupports> parent(Move(mParent));
-    RefPtr<MutableBlobStorageCallback> callback(Move(mCallback));
+    nsCOMPtr<nsISupports> parent(std::move(mParent));
+    RefPtr<MutableBlobStorageCallback> callback(std::move(mCallback));
 
     RefPtr<Blob> blob = Blob::Create(parent, aBlobImpl);
     callback->BlobStoreCompleted(mBlobStorage, blob, NS_OK);
@@ -251,7 +251,7 @@ public:
   void
   OperationFailed(nsresult aRv) override
   {
-    RefPtr<MutableBlobStorageCallback> callback(Move(mCallback));
+    RefPtr<MutableBlobStorageCallback> callback(std::move(mCallback));
     callback->BlobStoreCompleted(mBlobStorage, nullptr, aRv);
   }
 

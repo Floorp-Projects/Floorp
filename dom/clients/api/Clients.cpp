@@ -94,7 +94,7 @@ Clients::Get(const nsAString& aClientID, ErrorResult& aRv)
       RefPtr<Client> client = new Client(holder->GetParentObject(),
                                          aResult.get_ClientInfoAndState());
       if (client->GetStorageAccess() == nsContentUtils::StorageAccess::eAllow) {
-        outerPromise->MaybeResolve(Move(client));
+        outerPromise->MaybeResolve(std::move(client));
         return;
       }
       nsCOMPtr<nsIRunnable> r =
@@ -180,7 +180,7 @@ Clients::MatchAll(const ClientQueryOptions& aOptions, ErrorResult& aRv)
           storageDenied = true;
           continue;
         }
-        clientList.AppendElement(Move(client));
+        clientList.AppendElement(std::move(client));
       }
       if (storageDenied) {
         nsCOMPtr<nsIRunnable> r =

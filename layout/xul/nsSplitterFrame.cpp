@@ -788,7 +788,7 @@ nsSplitterFrameInner::Reverse(UniquePtr<nsSplitterInfo[]>& aChildInfos, int32_t 
     for (int i=0; i < aCount; i++)
        infos[i] = aChildInfos[aCount - 1 - i];
 
-    aChildInfos = Move(infos);
+    aChildInfos = std::move(infos);
 }
 
 bool

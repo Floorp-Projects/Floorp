@@ -17,8 +17,8 @@ APZCTreeManagerParent::APZCTreeManagerParent(LayersId aLayersId,
                                              RefPtr<APZCTreeManager> aAPZCTreeManager,
                                              RefPtr<APZUpdater> aAPZUpdater)
   : mLayersId(aLayersId)
-  , mTreeManager(Move(aAPZCTreeManager))
-  , mUpdater(Move(aAPZUpdater))
+  , mTreeManager(std::move(aAPZCTreeManager))
+  , mUpdater(std::move(aAPZUpdater))
 {
   MOZ_ASSERT(mTreeManager != nullptr);
   MOZ_ASSERT(mUpdater != nullptr);
@@ -36,8 +36,8 @@ APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager,
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
   MOZ_ASSERT(aAPZUpdater != nullptr);
   MOZ_ASSERT(aAPZUpdater->HasTreeManager(aAPZCTreeManager));
-  mTreeManager = Move(aAPZCTreeManager);
-  mUpdater = Move(aAPZUpdater);
+  mTreeManager = std::move(aAPZCTreeManager);
+  mUpdater = std::move(aAPZUpdater);
 }
 
 mozilla::ipc::IPCResult
@@ -153,7 +153,7 @@ APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
       mTreeManager,
       &IAPZCTreeManager::SetAllowedTouchBehavior,
       aInputBlockId,
-      Move(aValues)));
+      std::move(aValues)));
 
   return IPC_OK();
 }

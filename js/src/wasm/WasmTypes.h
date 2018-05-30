@@ -80,7 +80,6 @@ using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::MallocSizeOf;
 using mozilla::Nothing;
 using mozilla::PodZero;
@@ -699,7 +698,7 @@ class Sig
 
   public:
     Sig() : args_(), ret_(ExprType::Void) {}
-    Sig(ValTypeVector&& args, ExprType ret) : args_(Move(args)), ret_(ret) {}
+    Sig(ValTypeVector&& args, ExprType ret) : args_(std::move(args)), ret_(ret) {}
 
     MOZ_MUST_USE bool clone(const Sig& rhs) {
         ret_ = rhs.ret_;
@@ -810,7 +809,7 @@ struct CacheableChars : UniqueChars
 {
     CacheableChars() = default;
     explicit CacheableChars(char* ptr) : UniqueChars(ptr) {}
-    MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs) : UniqueChars(Move(rhs)) {}
+    MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs) : UniqueChars(std::move(rhs)) {}
     WASM_DECLARE_SERIALIZABLE(CacheableChars)
 };
 
@@ -830,7 +829,7 @@ struct Import
 
     Import() = default;
     Import(UniqueChars&& module, UniqueChars&& field, DefinitionKind kind)
-      : module(Move(module)), field(Move(field)), kind(kind)
+      : module(std::move(module)), field(std::move(field)), kind(kind)
     {}
 
     WASM_DECLARE_SERIALIZABLE(Import)
@@ -1008,7 +1007,7 @@ struct ElemSegment
 
     ElemSegment() = default;
     ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
-      : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
+      : tableIndex(tableIndex), offset(offset), elemFuncIndices(std::move(elemFuncIndices))
     {}
 
     Uint32Vector& elemCodeRangeIndices(Tier t) {
@@ -1035,7 +1034,7 @@ struct ElemSegment
 
     void setTier2(Uint32Vector&& elemCodeRangeIndices) const {
         MOZ_ASSERT(elemCodeRangeIndices2_.length() == 0);
-        elemCodeRangeIndices2_ = Move(elemCodeRangeIndices);
+        elemCodeRangeIndices2_ = std::move(elemCodeRangeIndices);
     }
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
@@ -1103,9 +1102,9 @@ struct SigWithId : Sig
     SigIdDesc id;
 
     SigWithId() = default;
-    explicit SigWithId(Sig&& sig) : Sig(Move(sig)), id() {}
-    SigWithId(Sig&& sig, SigIdDesc id) : Sig(Move(sig)), id(id) {}
-    void operator=(Sig&& rhs) { Sig::operator=(Move(rhs)); }
+    explicit SigWithId(Sig&& sig) : Sig(std::move(sig)), id() {}
+    SigWithId(Sig&& sig, SigIdDesc id) : Sig(std::move(sig)), id(id) {}
+    void operator=(Sig&& rhs) { Sig::operator=(std::move(rhs)); }
 
     WASM_DECLARE_SERIALIZABLE(SigWithId)
 };

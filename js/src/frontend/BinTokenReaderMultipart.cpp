@@ -144,7 +144,7 @@ BinTokenReaderMultipart::readHeader()
 
         // Populate `slicesTable_`: i => slice
         Chars slice((const char*)current_, byteLen);
-        slicesTable_.infallibleAppend(Move(slice)); // We have reserved before entering the loop.
+        slicesTable_.infallibleAppend(std::move(slice)); // We have reserved before entering the loop.
 
         current_ += byteLen;
     }

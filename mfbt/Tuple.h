@@ -148,7 +148,7 @@ struct TupleImpl<Index, HeadT, TailT...>
     : Base(Tail(aOther))
     , mHead(Head(aOther)) {}
   TupleImpl(TupleImpl&& aOther)
-    : Base(Move(Tail(aOther)))
+    : Base(std::move(Tail(aOther)))
     , mHead(Forward<HeadT>(Head(aOther))) {}
 
   // Assign from a tuple whose elements are convertible to the elements
@@ -169,8 +169,8 @@ struct TupleImpl<Index, HeadT, TailT...>
   TupleImpl& operator=(TupleImpl<Index, OtherElements...>&& aOther)
   {
     typedef TupleImpl<Index, OtherElements...> OtherT;
-    Head(*this) = Move(OtherT::Head(aOther));
-    Tail(*this) = Move(OtherT::Tail(aOther));
+    Head(*this) = std::move(OtherT::Head(aOther));
+    Tail(*this) = std::move(OtherT::Tail(aOther));
     return *this;
   }
 
@@ -183,8 +183,8 @@ struct TupleImpl<Index, HeadT, TailT...>
   }
   TupleImpl& operator=(TupleImpl&& aOther)
   {
-    Head(*this) = Move(Head(aOther));
-    Tail(*this) = Move(Tail(aOther));
+    Head(*this) = std::move(Head(aOther));
+    Tail(*this) = std::move(Tail(aOther));
     return *this;
   }
   bool operator==(const TupleImpl& aOther) const
@@ -227,7 +227,7 @@ public:
   explicit Tuple(OtherHead&& aHead, OtherTail&&... aTail)
     : Impl(Forward<OtherHead>(aHead), Forward<OtherTail>(aTail)...) { }
   Tuple(const Tuple& aOther) : Impl(aOther) { }
-  Tuple(Tuple&& aOther) : Impl(Move(aOther)) { }
+  Tuple(Tuple&& aOther) : Impl(std::move(aOther)) { }
 
   template <typename... OtherElements,
             typename = typename EnableIf<
@@ -242,7 +242,7 @@ public:
                 sizeof...(OtherElements) == sizeof...(Elements)>::Type>
   Tuple& operator=(Tuple<OtherElements...>&& aOther)
   {
-    static_cast<Impl&>(*this) = Move(aOther);
+    static_cast<Impl&>(*this) = std::move(aOther);
     return *this;
   }
   Tuple& operator=(const Tuple& aOther)
@@ -252,7 +252,7 @@ public:
   }
   Tuple& operator=(Tuple&& aOther)
   {
-    static_cast<Impl&>(*this) = Move(aOther);
+    static_cast<Impl&>(*this) = std::move(aOther);
     return *this;
   }
   bool operator==(const Tuple& aOther) const
@@ -284,7 +284,7 @@ public:
   explicit Tuple(AArg&& aA, BArg&& aB)
     : Impl(Forward<AArg>(aA), Forward<BArg>(aB)) { }
   Tuple(const Tuple& aOther) : Impl(aOther) { }
-  Tuple(Tuple&& aOther) : Impl(Move(aOther)) { }
+  Tuple(Tuple&& aOther) : Impl(std::move(aOther)) { }
   explicit Tuple(const Pair<A, B>& aOther)
     : Impl(aOther.first(), aOther.second()) { }
   explicit Tuple(Pair<A, B>&& aOther) : Impl(Forward<A>(aOther.first()),
@@ -303,7 +303,7 @@ public:
   template <typename AArg, typename BArg>
   Tuple& operator=(Tuple<AArg, BArg>&& aOther)
   {
-    static_cast<Impl&>(*this) = Move(aOther);
+    static_cast<Impl&>(*this) = std::move(aOther);
     return *this;
   }
   Tuple& operator=(const Tuple& aOther)
@@ -313,7 +313,7 @@ public:
   }
   Tuple& operator=(Tuple&& aOther)
   {
-    static_cast<Impl&>(*this) = Move(aOther);
+    static_cast<Impl&>(*this) = std::move(aOther);
     return *this;
   }
   template <typename AArg, typename BArg>
@@ -413,11 +413,11 @@ auto Get(const Tuple<Elements...>& aTuple)
 // Rvalue reference version.
 template<std::size_t Index, typename... Elements>
 auto Get(Tuple<Elements...>&& aTuple)
-    -> decltype(Move(mozilla::Get<Index>(aTuple)))
+    -> decltype(std::move(mozilla::Get<Index>(aTuple)))
 {
   // We need a 'mozilla::' qualification here to avoid
   // name lookup only finding the current function.
-  return Move(mozilla::Get<Index>(aTuple));
+  return std::move(mozilla::Get<Index>(aTuple));
 }
 
 /**

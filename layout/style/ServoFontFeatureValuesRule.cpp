@@ -18,7 +18,7 @@ ServoFontFeatureValuesRule::ServoFontFeatureValuesRule(
   RefPtr<RawServoFontFeatureValuesRule> aRawRule,
   uint32_t aLine, uint32_t aColumn)
   : CSSFontFeatureValuesRule(aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
 {
 }
 

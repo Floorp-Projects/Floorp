@@ -483,7 +483,7 @@ NS_IMETHODIMP JumpListBuilder::CommitListBuild(nsIJumpListCommittedCallback* aCa
   RefPtr<nsIRunnable> event =
     NewNonOwningRunnableMethod<RefPtr<detail::DoneCommitListBuildCallback>>
       ("JumpListBuilder::DoCommitListBuild", this,
-       &JumpListBuilder::DoCommitListBuild, Move(callback));
+       &JumpListBuilder::DoCommitListBuild, std::move(callback));
   Unused << mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   return NS_OK;

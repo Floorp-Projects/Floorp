@@ -856,7 +856,7 @@ ChannelWrapper::GetProxyInfo(dom::Nullable<MozProxyInfo>& aRetVal, ErrorResult& 
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
     } else {
-      aRetVal.SetValue(Move(result));
+      aRetVal.SetValue(std::move(result));
     }
   }
 }

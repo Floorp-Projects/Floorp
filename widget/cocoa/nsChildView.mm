@@ -4001,7 +4001,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       }
       widgetArray.AppendElement(mGeckoChild);
       nsCOMPtr<nsIRunnable> releaserRunnable =
-        new WidgetsReleaserRunnable(Move(widgetArray));
+        new WidgetsReleaserRunnable(std::move(widgetArray));
       NS_DispatchToMainThread(releaserRunnable);
     }
 

@@ -88,7 +88,7 @@ private:
 nsresult
 nsStringInputStream::Init(nsCString&& aString)
 {
-  if (!mData.Assign(Move(aString), fallible)) {
+  if (!mData.Assign(std::move(aString), fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -467,7 +467,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 
   RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 
-  nsresult rv = stream->Init(Move(aStringToRead));
+  nsresult rv = stream->Init(std::move(aStringToRead));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

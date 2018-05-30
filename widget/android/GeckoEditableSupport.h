@@ -143,7 +143,7 @@ public:
     {
         struct IMEEvent : nsAppShell::LambdaEvent<Functor>
         {
-            explicit IMEEvent(Functor&& l) : nsAppShell::LambdaEvent<Functor>(Move(l)) {}
+            explicit IMEEvent(Functor&& l) : nsAppShell::LambdaEvent<Functor>(std::move(l)) {}
 
             nsAppShell::Event::Type ActivityType() const override
             {
@@ -167,7 +167,7 @@ public:
             }
         };
         nsAppShell::PostEvent(mozilla::MakeUnique<IMEEvent>(
-                mozilla::Move(aCall)));
+                std::move(aCall)));
     }
 
     // Constructor for main process GeckoEditableChild.

@@ -23,11 +23,11 @@ namespace mozilla
 {
 
 RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
-  : mSession(Move(session))
+  : mSession(std::move(session))
   , mOrigin(origin)
 {
   RsdparsaSessionHandle attributeSession(sdp_new_reference(mSession.get()));
-  mAttributeList.reset(new RsdparsaSdpAttributeList(Move(attributeSession)));
+  mAttributeList.reset(new RsdparsaSdpAttributeList(std::move(attributeSession)));
 
   size_t section_count = sdp_media_section_count(mSession.get());
   for (size_t level = 0; level < section_count; level++) {
@@ -41,7 +41,7 @@ RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
     RsdparsaSessionHandle newSession(sdp_new_reference(mSession.get()));
     RsdparsaSdpMediaSection* sdpMediaSection;
     sdpMediaSection = new RsdparsaSdpMediaSection(level,
-                                                  Move(newSession),
+                                                  std::move(newSession),
                                                   mediaSection,
                                                   mAttributeList.get());
     mMediaSections.values.push_back(sdpMediaSection);

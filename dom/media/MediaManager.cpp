@@ -1450,7 +1450,7 @@ public:
         windowListener->ChromeAffectingStateChanged();
         manager->SendPendingGUMRequest();
       },[manager = mManager, windowID = mWindowID,
-         onFailure = Move(mOnFailure)](const RefPtr<MediaMgrError>& error)
+         onFailure = std::move(mOnFailure)](const RefPtr<MediaMgrError>& error)
       {
         LOG(("GetUserMediaStreamRunnable::Run: starting failure callback "
              "following InitializeAsync()"));
@@ -1967,7 +1967,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
         result->AppendElement(source);
       }
     }
-    NS_DispatchToMainThread(NewRunnableFrom([id, result = Move(result)]() mutable {
+    NS_DispatchToMainThread(NewRunnableFrom([id, result = std::move(result)]() mutable {
       MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
@@ -2233,7 +2233,7 @@ MediaManager::PostTask(already_AddRefed<Runnable> task)
   }
   NS_ASSERTION(Get(), "MediaManager singleton?");
   NS_ASSERTION(Get()->mMediaThread, "No thread yet");
-  Get()->mMediaThread->message_loop()->PostTask(Move(task));
+  Get()->mMediaThread->message_loop()->PostTask(std::move(task));
 }
 
 template<typename MozPromiseType, typename FunctionType>
@@ -2243,7 +2243,7 @@ MediaManager::PostTask(const char* aName, FunctionType&& aFunction)
   MozPromiseHolder<MozPromiseType> holder;
   RefPtr<MozPromiseType> promise = holder.Ensure(aName);
   MediaManager::PostTask(NS_NewRunnableFunction(aName,
-        [h = Move(holder), func = Forward<FunctionType>(aFunction)]() mutable
+        [h = std::move(holder), func = Forward<FunctionType>(aFunction)]() mutable
         {
           func(h);
         }));
@@ -4103,7 +4103,7 @@ SourceListener::InitializeAsync()
     }, [self = RefPtr<SourceListener>(this), this](RefPtr<MediaMgrError>&& aResult)
     {
       if (mStopped) {
-        return InitPromise::CreateAndReject(Move(aResult), __func__);
+        return InitPromise::CreateAndReject(std::move(aResult), __func__);
       }
 
       for (DeviceState* state : {mAudioDeviceState.get(),
@@ -4117,7 +4117,7 @@ SourceListener::InitializeAsync()
 
         state->mStopped = true;
       }
-      return InitPromise::CreateAndReject(Move(aResult), __func__);
+      return InitPromise::CreateAndReject(std::move(aResult), __func__);
     });
 }
 

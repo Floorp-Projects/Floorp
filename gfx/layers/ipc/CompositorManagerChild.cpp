@@ -65,7 +65,7 @@ CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
     MOZ_ASSERT(sInstance->mNamespace != aNamespace);
   }
 
-  sInstance = new CompositorManagerChild(Move(aEndpoint), aProcessToken,
+  sInstance = new CompositorManagerChild(std::move(aEndpoint), aProcessToken,
                                          aNamespace);
   return sInstance->CanSend();
 }

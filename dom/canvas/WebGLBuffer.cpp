@@ -157,7 +157,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
     mUsage = usage;
     mByteLength = size;
     mFetchInvalidator.InvalidateCaches();
-    mIndexCache = Move(newIndexCache);
+    mIndexCache = std::move(newIndexCache);
 
     if (mIndexCache) {
         if (!mIndexRanges.empty()) {

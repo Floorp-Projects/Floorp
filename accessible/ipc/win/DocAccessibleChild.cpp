@@ -108,7 +108,7 @@ DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent)
   }
 
   if (topLevelIPCDoc) {
-    topLevelIPCDoc->mDeferredEvents.AppendElement(Move(aEvent));
+    topLevelIPCDoc->mDeferredEvents.AppendElement(std::move(aEvent));
   }
 }
 

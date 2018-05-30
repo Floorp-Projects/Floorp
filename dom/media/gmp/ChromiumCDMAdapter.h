@@ -42,14 +42,14 @@ private:
 struct HostFileData
 {
   HostFileData(HostFile&& aBinary, HostFile&& aSig)
-    : mBinary(Move(aBinary))
-    , mSig(Move(aSig))
+    : mBinary(std::move(aBinary))
+    , mSig(std::move(aSig))
   {
   }
 
   HostFileData(HostFileData&& aOther)
-    : mBinary(Move(aOther.mBinary))
-    , mSig(Move(aOther.mSig))
+    : mBinary(std::move(aOther.mBinary))
+    , mSig(std::move(aOther.mSig))
   {
   }
 

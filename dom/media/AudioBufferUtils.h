@@ -172,7 +172,7 @@ public:
 
     mPosition = aOther.mPosition;
     mChannels = aOther.mChannels;
-    mBuffer = Move(aOther.mBuffer);
+    mBuffer = std::move(aOther.mBuffer);
 
     return *this;
   }

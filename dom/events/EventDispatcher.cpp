@@ -222,7 +222,7 @@ public:
 
   void SetRetargetedTouchTarget(Maybe<nsTArray<RefPtr<EventTarget>>>&& aTargets)
   {
-    mRetargetedTouchTargets = Move(aTargets);
+    mRetargetedTouchTargets = std::move(aTargets);
   }
 
   bool HasRetargetTouchTargets()
@@ -266,7 +266,7 @@ public:
   void SetInitialTargetTouches(Maybe<nsTArray<RefPtr<dom::Touch>>>&&
                                  aInitialTargetTouches)
   {
-    mInitialTargetTouches = Move(aInitialTargetTouches);
+    mInitialTargetTouches = std::move(aInitialTargetTouches);
   }
 
   void SetForceContentDispatch(bool aForce)
@@ -484,7 +484,7 @@ EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   SetPreHandleEventOnly(aVisitor.mWantsPreHandleEvent && !aVisitor.mCanHandle);
   SetRootOfClosedTree(aVisitor.mRootOfClosedTree);
   SetRetargetedRelatedTarget(aVisitor.mRetargetedRelatedTarget);
-  SetRetargetedTouchTarget(Move(aVisitor.mRetargetedTouchTargets));
+  SetRetargetedTouchTarget(std::move(aVisitor.mRetargetedTouchTargets));
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
 }
@@ -1009,7 +1009,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         for (uint32_t i = 0; i < targetTouches->Length(); ++i) {
           initialTargetTouches->AppendElement(targetTouches->Item(i));
         }
-        targetEtci->SetInitialTargetTouches(Move(initialTargetTouches));
+        targetEtci->SetInitialTargetTouches(std::move(initialTargetTouches));
         targetTouches->Clear();
       }
     }

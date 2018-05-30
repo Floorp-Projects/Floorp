@@ -59,7 +59,7 @@ private:
     {}
     CacheEntry(CacheEntry&& aEntry)
      : mLastUsedFrame(aEntry.mLastUsedFrame),
-       mBuffer(Move(aEntry.mBuffer))
+       mBuffer(std::move(aEntry.mBuffer))
     {}
     CacheEntry(size_t aLastUsedFrame, MLGBuffer* aBuffer)
      : mLastUsedFrame(aLastUsedFrame),

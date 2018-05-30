@@ -11,6 +11,8 @@
 
 #include "mozilla/TypeTraits.h"
 
+#include <utility>
+
 namespace mozilla {
 
 /*
@@ -60,9 +62,9 @@ namespace mozilla {
  *
  * If a constructor's argument is an rvalue, as in 'C(f(x))' or 'C(x + y)', as
  * opposed to an lvalue, as in 'C(x)', then overload resolution will prefer the
- * move constructor, if there is one. The 'mozilla::Move' function, defined in
- * this file, is an identity function you can use in a constructor invocation to
- * make any argument into an rvalue, like this: C(Move(x)). That's 2). (You
+ * move constructor, if there is one. The 'std::move' function, defined in
+ * <utility>, is an identity function you can use in a constructor invocation to
+ * make any argument into an rvalue, like this: C(std::move(x)). That's 2). (You
  * could use any function that works, but 'Move' indicates your intention
  * clearly.)
  *
@@ -80,7 +82,7 @@ namespace mozilla {
  *
  * we would perform a move like this:
  *
- *   C c2(Move(c1));
+ *   C c2(std::move(c1));
  *
  * Note that 'T&&' implicitly converts to 'T&'. So you can pass a 'T&&' to an
  * ordinary copy constructor for a type that doesn't support a special move
@@ -97,13 +99,13 @@ namespace mozilla {
  *   C& operator=(C&& rhs) {
  *     MOZ_ASSERT(&rhs != this, "self-moves are prohibited");
  *     this->~C();
- *     new(this) C(Move(rhs));
+ *     new(this) C(std::move(rhs));
  *     return *this;
  *   }
  *
  * With that in place, one can write move assignments like this:
  *
- *   c2 = Move(c1);
+ *   c2 = std::move(c1);
  *
  * This destroys c2, moves c1's value to c2, and leaves c1 in an undefined but
  * destructible state.
@@ -126,9 +128,9 @@ namespace mozilla {
  * seems silly to write out all four combinations:
  *
  *   C::C(X&  x, Y&  y) : x(x),       y(y)       { }
- *   C::C(X&  x, Y&& y) : x(x),       y(Move(y)) { }
- *   C::C(X&& x, Y&  y) : x(Move(x)), y(y)       { }
- *   C::C(X&& x, Y&& y) : x(Move(x)), y(Move(y)) { }
+ *   C::C(X&  x, Y&& y) : x(x),       y(std::move(y)) { }
+ *   C::C(X&& x, Y&  y) : x(std::move(x)), y(y)       { }
+ *   C::C(X&& x, Y&& y) : x(std::move(x)), y(std::move(y)) { }
  *
  * To avoid this, C++11 has tweaks to make it possible to write what you mean.
  * The four constructor overloads above can be written as one constructor
@@ -193,17 +195,6 @@ namespace mozilla {
  */
 
 /**
- * Identical to std::Move(); this is necessary until our stlport supports
- * std::move().
- */
-template<typename T>
-inline typename RemoveReference<T>::Type&&
-Move(T&& aX)
-{
-  return static_cast<typename RemoveReference<T>::Type&&>(aX);
-}
-
-/**
  * These two overloads are identical to std::forward(); they are necessary until
  * our stlport supports std::forward().
  */
@@ -228,9 +219,9 @@ template<typename T>
 inline void
 Swap(T& aX, T& aY)
 {
-  T tmp(Move(aX));
-  aX = Move(aY);
-  aY = Move(tmp);
+  T tmp(std::move(aX));
+  aX = std::move(aY);
+  aY = std::move(tmp);
 }
 
 } // namespace mozilla

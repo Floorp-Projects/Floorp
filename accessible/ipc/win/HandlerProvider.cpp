@@ -43,7 +43,7 @@ HandlerProvider::HandlerProvider(REFIID aIid,
   : mRefCnt(0)
   , mMutex("mozilla::a11y::HandlerProvider::mMutex")
   , mTargetUnkIid(aIid)
-  , mTargetUnk(Move(aTarget))
+  , mTargetUnk(std::move(aTarget))
 {
 }
 
@@ -502,7 +502,7 @@ HandlerProvider::NewInstance(REFIID aIid,
                              mscom::InterceptorTargetPtr<IUnknown> aTarget,
                              NotNull<mscom::IHandlerProvider**> aOutNewPayload)
 {
-  RefPtr<IHandlerProvider> newPayload(new HandlerProvider(aIid, Move(aTarget)));
+  RefPtr<IHandlerProvider> newPayload(new HandlerProvider(aIid, std::move(aTarget)));
   newPayload.forget(aOutNewPayload.get());
   return S_OK;
 }
@@ -516,7 +516,7 @@ HandlerProvider::SetHandlerControlOnMainThread(DWORD aPid,
   auto content = dom::ContentChild::GetSingleton();
   MOZ_ASSERT(content);
 
-  IHandlerControlHolder holder(CreateHolderFromHandlerControl(Move(aCtrl)));
+  IHandlerControlHolder holder(CreateHolderFromHandlerControl(std::move(aCtrl)));
   Unused << content->SendA11yHandlerControl(aPid, holder);
 }
 
@@ -534,7 +534,7 @@ HandlerProvider::put_HandlerControl(long aPid, IHandlerControl* aCtrl)
   if (!mscom::InvokeOnMainThread("HandlerProvider::SetHandlerControlOnMainThread",
                                  this,
                                  &HandlerProvider::SetHandlerControlOnMainThread,
-                                 static_cast<DWORD>(aPid), Move(ptrProxy))) {
+                                 static_cast<DWORD>(aPid), std::move(ptrProxy))) {
     return E_FAIL;
   }
 
@@ -576,7 +576,7 @@ HandlerProvider::ToWrappedObject(Interface** aObj)
   mscom::STAUniquePtr<Interface> inObj(*aObj);
   RefPtr<HandlerProvider> hprov = new HandlerProvider(__uuidof(Interface),
     mscom::ToInterceptorTargetPtr(inObj));
-  HRESULT hr = mscom::MainThreadHandoff::WrapInterface(Move(inObj), hprov,
+  HRESULT hr = mscom::MainThreadHandoff::WrapInterface(std::move(inObj), hprov,
                                                        aObj);
   if (FAILED(hr)) {
     *aObj = nullptr;

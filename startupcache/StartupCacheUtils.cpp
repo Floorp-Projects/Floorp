@@ -98,7 +98,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   }
 
   *len = avail;
-  *buffer = Move(temp);
+  *buffer = std::move(temp);
   return NS_OK;
 }
 

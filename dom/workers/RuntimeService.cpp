@@ -1422,7 +1422,7 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
       UniquePtr<SharedWorkerInfo> sharedWorkerInfo(
         new SharedWorkerInfo(aWorkerPrivate, sharedWorkerScriptSpec,
                              aWorkerPrivate->WorkerName()));
-      domainInfo->mSharedWorkerInfos.AppendElement(Move(sharedWorkerInfo));
+      domainInfo->mSharedWorkerInfos.AppendElement(std::move(sharedWorkerInfo));
     }
   }
 

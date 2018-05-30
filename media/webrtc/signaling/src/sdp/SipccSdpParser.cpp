@@ -79,7 +79,7 @@ SipccSdpParser::Parse(const std::string &sdpText)
     return UniquePtr<Sdp>();
   }
 
-  return UniquePtr<Sdp>(Move(sipccSdp));
+  return UniquePtr<Sdp>(std::move(sipccSdp));
 }
 
 } // namespace mozilla

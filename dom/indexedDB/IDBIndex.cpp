@@ -513,7 +513,7 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
     SerializedKeyRange serializedKeyRange;
     keyRange->ToSerialized(serializedKeyRange);
 
-    optionalKeyRange = Move(serializedKeyRange);
+    optionalKeyRange = std::move(serializedKeyRange);
   } else {
     optionalKeyRange = void_t();
   }
@@ -525,18 +525,18 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
     IndexOpenKeyCursorParams openParams;
     openParams.objectStoreId() = objectStoreId;
     openParams.indexId() = indexId;
-    openParams.optionalKeyRange() = Move(optionalKeyRange);
+    openParams.optionalKeyRange() = std::move(optionalKeyRange);
     openParams.direction() = direction;
 
-    params = Move(openParams);
+    params = std::move(openParams);
   } else {
     IndexOpenCursorParams openParams;
     openParams.objectStoreId() = objectStoreId;
     openParams.indexId() = indexId;
-    openParams.optionalKeyRange() = Move(optionalKeyRange);
+    openParams.optionalKeyRange() = std::move(optionalKeyRange);
     openParams.direction() = direction;
 
-    params = Move(openParams);
+    params = std::move(openParams);
   }
 
   RefPtr<IDBRequest> request = GenerateRequest(aCx, this);

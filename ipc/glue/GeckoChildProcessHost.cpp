@@ -1162,7 +1162,7 @@ GeckoChildProcessHost::OnMessageReceived(IPC::Message&& aMsg)
 {
   // We never process messages ourself, just save them up for the next
   // listener.
-  mQueue.push(Move(aMsg));
+  mQueue.push(std::move(aMsg));
 }
 
 void

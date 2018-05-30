@@ -560,7 +560,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
         }
 
         if (interfaceArray.Length() > 0) {
-            set = NewInstance(Move(interfaceArray));
+            set = NewInstance(std::move(interfaceArray));
             if (set) {
                 NativeSetMap* map2 = xpcrt->GetNativeSetMap();
                 if (!map2)

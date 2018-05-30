@@ -146,8 +146,8 @@ public:
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           TimeUnit::FromMicroseconds(presentationTimeUs));
 
-        v->SetListener(Move(releaseSample));
-        mDecoder->UpdateOutputStatus(Move(v));
+        v->SetListener(std::move(releaseSample));
+        mDecoder->UpdateOutputStatus(std::move(v));
       }
 
       if (isEOS) {
@@ -366,9 +366,9 @@ private:
         RefPtr<AudioData> data = new AudioData(
           0, TimeUnit::FromMicroseconds(presentationTimeUs),
           FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
-          Move(audio), mOutputChannels, mOutputSampleRate);
+          std::move(audio), mOutputChannels, mOutputSampleRate);
 
-        mDecoder->UpdateOutputStatus(Move(data));
+        mDecoder->UpdateOutputStatus(std::move(data));
       }
 
       if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -671,7 +671,7 @@ RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample)
         NewRunnableMethod<const RefPtr<MediaData>>("RemoteDataDecoder::UpdateOutputStatus",
                                                    this,
                                                    &RemoteDataDecoder::UpdateOutputStatus,
-                                                   Move(aSample)));
+                                                   std::move(aSample)));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
     return;
@@ -681,7 +681,7 @@ RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample)
     return;
   }
   if (IsUsefulData(aSample)) {
-    mDecodedData.AppendElement(Move(aSample));
+    mDecodedData.AppendElement(std::move(aSample));
   }
   ReturnDecodedData();
 }

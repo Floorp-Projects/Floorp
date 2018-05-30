@@ -118,9 +118,9 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         return true;
     }
 
-    *aEndpoint = Move(parent);
+    *aEndpoint = std::move(parent);
 
-    if (!chromeParent->SendInitPluginModuleChild(Move(child))) {
+    if (!chromeParent->SendInitPluginModuleChild(std::move(child))) {
         *rv = NS_ERROR_BRIDGE_OPEN_CHILD;
         return true;
     }
@@ -364,7 +364,7 @@ mozilla::plugins::TakeFullMinidump(uint32_t aPluginId,
   if (chromeParent) {
     chromeParent->TakeFullMinidump(aContentProcessId,
                                    aBrowserDumpId,
-                                   Move(aCallback),
+                                   std::move(aCallback),
                                    aAsync);
   } else {
     aCallback(EmptyString());
@@ -386,7 +386,7 @@ mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
                                         aContentProcessId,
                                         aMonitorDescription,
                                         aDumpId,
-                                        Move(aCallback),
+                                        std::move(aCallback),
                                         true); // Always runs asynchronously.
   } else {
     aCallback(true);
@@ -417,7 +417,7 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
         NS_FAILED(rv)) {
         return nullptr;
     }
-    Initialize(Move(endpoint));
+    Initialize(std::move(endpoint));
 
     PluginModuleContentParent* parent = mapping->GetModule();
     MOZ_ASSERT(parent);
@@ -473,7 +473,7 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
             new PluginModuleChromeParent(aFilePath, aPluginId,
                                          aPluginTag->mSandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
-    bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable),
+    bool launched = parent->mSubprocess->Launch(std::move(onLaunchedRunnable),
                                                 aPluginTag->mSandboxLevel,
                                                 aPluginTag->mIsSandboxLoggingEnabled);
     if (!launched) {
@@ -502,9 +502,9 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     }
 
     parent->mBrokerParent =
-      FunctionBrokerParent::Create(Move(brokerParentEnd));
+      FunctionBrokerParent::Create(std::move(brokerParentEnd));
     if (parent->mBrokerParent) {
-      parent->SendInitPluginFunctionBroker(Move(brokerChildEnd));
+      parent->SendInitPluginFunctionBroker(std::move(brokerChildEnd));
     }
 #endif
     return parent.forget();
@@ -1088,7 +1088,7 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
         aCallback(EmptyString());
         return;
     }
-    mTakeFullMinidumpCallback.Init(Move(aCallback), aAsync);
+    mTakeFullMinidumpCallback.Init(std::move(aCallback), aAsync);
 
     nsString browserDumpId{aBrowserDumpId};
 
@@ -1121,7 +1121,7 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
         // report and pair it up with the browser report handed in.
         mCrashReporter->GenerateMinidumpAndPair(Process(), mBrowserDumpFile,
                                                 NS_LITERAL_CSTRING("browser"),
-                                                Move(callback), aAsync);
+                                                std::move(callback), aAsync);
     } else {
         TakeBrowserAndPluginMinidumps(false, aContentPid, browserDumpId, aAsync);
     }
@@ -1192,7 +1192,7 @@ PluginModuleChromeParent::TakeBrowserAndPluginMinidumps(bool aReportsReady,
         mCrashReporter->GenerateMinidumpAndPair(Process(),
                                                 nullptr, // Pair with a dump of this process and thread.
                                                 NS_LITERAL_CSTRING("browser"),
-                                                Move(callback),
+                                                std::move(callback),
                                                 aAsync);
     } else {
         OnTakeFullMinidumpComplete(aReportsReady, aContentPid, aBrowserDumpId);
@@ -1257,7 +1257,7 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
         aCallback(false);
         return;
     }
-    mTerminateChildProcessCallback.Init(Move(aCallback), aAsync);
+    mTerminateChildProcessCallback.Init(std::move(aCallback), aAsync);
 
     // Start by taking a full minidump if necessary, this is done early
     // because it also needs to lock the mCrashReporterMutex and Mutex doesn't
@@ -1279,7 +1279,7 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
                 this->ReleasePluginRef();
             };
 
-        TakeFullMinidump(aContentPid, EmptyString(), Move(callback), aAsync);
+        TakeFullMinidump(aContentPid, EmptyString(), std::move(callback), aAsync);
     } else {
         TerminateChildProcessOnDumpComplete(aMsgLoop, aMonitorDescription);
     }

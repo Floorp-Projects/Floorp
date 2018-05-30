@@ -52,13 +52,13 @@ public:
   }
 
   LookupResult(LookupResult&& aOther)
-    : mSurface(Move(aOther.mSurface))
+    : mSurface(std::move(aOther.mSurface))
     , mMatchType(aOther.mMatchType)
     , mSuggestedSize(aOther.mSuggestedSize)
   { }
 
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType)
-    : mSurface(Move(aSurface))
+    : mSurface(std::move(aSurface))
     , mMatchType(aMatchType)
   {
     MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
@@ -71,7 +71,7 @@ public:
 
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType,
                const gfx::IntSize& aSuggestedSize)
-    : mSurface(Move(aSurface))
+    : mSurface(std::move(aSurface))
     , mMatchType(aMatchType)
     , mSuggestedSize(aSuggestedSize)
   {
@@ -86,7 +86,7 @@ public:
   LookupResult& operator=(LookupResult&& aOther)
   {
     MOZ_ASSERT(&aOther != this, "Self-move-assignment is not supported");
-    mSurface = Move(aOther.mSurface);
+    mSurface = std::move(aOther.mSurface);
     mMatchType = aOther.mMatchType;
     mSuggestedSize = aOther.mSuggestedSize;
     return *this;

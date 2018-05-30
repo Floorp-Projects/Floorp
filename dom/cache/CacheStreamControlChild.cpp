@@ -104,7 +104,7 @@ CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
   autoStream->Serialize(aStream, Manager());
-  aStreamCleanupList.AppendElement(Move(autoStream));
+  aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
 void

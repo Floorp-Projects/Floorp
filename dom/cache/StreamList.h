@@ -52,7 +52,7 @@ private:
   {
     explicit Entry(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
       : mId(aId)
-      , mStream(Move(aStream))
+      , mStream(std::move(aStream))
     {}
 
     nsID mId;

@@ -858,9 +858,9 @@ void
 CompositorBridgeParent::ScheduleTask(already_AddRefed<CancelableRunnable> task, int time)
 {
   if (time == 0) {
-    MessageLoop::current()->PostTask(Move(task));
+    MessageLoop::current()->PostTask(std::move(task));
   } else {
-    MessageLoop::current()->PostDelayedTask(Move(task), time);
+    MessageLoop::current()->PostDelayedTask(std::move(task), time);
   }
 }
 
@@ -1852,7 +1852,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     // Same as for mApzUpdater, but for the sampler thread.
     mApzSampler->SetWebRenderWindowId(windowId);
   }
-  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), windowId, aSize);
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize);
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     mWrBridge.get()->AddRef(); // IPDL reference
@@ -1866,7 +1866,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   txn.SetRootPipeline(aPipelineId);
   api->SendTransaction(txn);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(asyncMgr), Move(animStorage));
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, std::move(api), std::move(asyncMgr), std::move(animStorage));
   mWrBridge.get()->AddRef(); // IPDL reference
 
   *aIdNamespace = mWrBridge->GetIdNamespace();

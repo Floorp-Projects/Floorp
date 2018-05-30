@@ -47,7 +47,6 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::PodArrayZero;
 using mozilla::PodCopy;
 using mozilla::PodZero;
@@ -2563,7 +2562,7 @@ TypeZone::processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles)
     // Steal the list of scripts to recompile, to make sure we don't try to
     // recursively recompile them. Note: the move constructor will not reset the
     // length if the Vector is using inline storage, so we also use clear().
-    RecompileInfoVector pending(Move(recompiles));
+    RecompileInfoVector pending(std::move(recompiles));
     recompiles.clear();
 
     jit::Invalidate(*this, fop, pending);

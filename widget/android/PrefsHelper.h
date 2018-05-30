@@ -141,7 +141,7 @@ public:
         nsAutoString strVal;
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(mozilla::Move(nameRef));
+            jni::String::LocalRef nameStr(std::move(nameRef));
             const nsCString& name = nameStr->ToCString();
 
             int32_t type = java::PrefsHelper::PREF_INVALID;
@@ -262,7 +262,7 @@ public:
         MOZ_ASSERT(appShell);
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(mozilla::Move(nameRef));
+            jni::String::LocalRef nameStr(std::move(nameRef));
             MOZ_ALWAYS_SUCCEEDS(Preferences::AddStrongObserver(
                     appShell, nameStr->ToCString().get()));
         }
@@ -277,7 +277,7 @@ public:
         MOZ_ASSERT(appShell);
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(mozilla::Move(nameRef));
+            jni::String::LocalRef nameStr(std::move(nameRef));
             MOZ_ALWAYS_SUCCEEDS(Preferences::RemoveObserver(
                     appShell, nameStr->ToCString().get()));
         }

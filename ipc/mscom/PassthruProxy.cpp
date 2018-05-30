@@ -34,7 +34,7 @@ PassthruProxy::PassthruProxy(ProxyStream::Environment* aEnv, REFIID aIidToWrap,
 {
   ProxyStream proxyStream(aIidToWrap, aObjToWrap, aEnv,
                           ProxyStreamFlags::ePreservable);
-  mPreservedStream = Move(proxyStream.GetPreservedStream());
+  mPreservedStream = std::move(proxyStream.GetPreservedStream());
   MOZ_ASSERT(mPreservedStream);
 }
 

@@ -40,7 +40,7 @@ HeadlessScreenHelper::HeadlessScreenHelper()
                                   96.0f);
   screenList.AppendElement(ret.forget());
   ScreenManager& screenManager = ScreenManager::GetSingleton();
-  screenManager.Refresh(Move(screenList));
+  screenManager.Refresh(std::move(screenList));
 }
 
 } // namespace widget

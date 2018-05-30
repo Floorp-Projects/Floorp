@@ -183,8 +183,8 @@ TEST_F(CTSerializationTest, EncodesSCTList)
   const uint8_t SCT_2[] = { 0x64, 0x65, 0x66 };
 
   Vector<Input> list;
-  ASSERT_TRUE(list.append(Move(Input(SCT_1))));
-  ASSERT_TRUE(list.append(Move(Input(SCT_2))));
+  ASSERT_TRUE(list.append(std::move(Input(SCT_1))));
+  ASSERT_TRUE(list.append(std::move(Input(SCT_2))));
 
   Buffer encodedList;
   ASSERT_EQ(Success, EncodeSCTList(list, encodedList));

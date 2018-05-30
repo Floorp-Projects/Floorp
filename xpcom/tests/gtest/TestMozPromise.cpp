@@ -313,8 +313,8 @@ TEST(MozPromise, ResolveOrRejectValue)
   EXPECT_FALSE(val.IsReject());
   EXPECT_EQ(87, *val.ResolveValue());
 
-  // IsResolve() should remain true after Move().
-  UniquePtr<int> i = Move(val.ResolveValue());
+  // IsResolve() should remain true after std::move().
+  UniquePtr<int> i = std::move(val.ResolveValue());
   EXPECT_EQ(87, *i);
   EXPECT_TRUE(val.IsResolve());
   EXPECT_EQ(val.ResolveValue().get(), nullptr);
@@ -343,8 +343,8 @@ TEST(MozPromise, MoveOnlyType)
       EXPECT_FALSE(aVal.IsReject());
       EXPECT_EQ(87, *aVal.ResolveValue());
 
-      // Move() shouldn't change the resolve/reject state of aVal.
-      RRValue val = Move(aVal);
+      // std::move() shouldn't change the resolve/reject state of aVal.
+      RRValue val = std::move(aVal);
       EXPECT_TRUE(aVal.IsResolve());
       EXPECT_EQ(nullptr, aVal.ResolveValue().get());
       EXPECT_EQ(87, *val.ResolveValue());

@@ -42,7 +42,7 @@ class MacroAssemblerX86Shared : public Assembler
         UsesVector uses;
 
         explicit Constant(const T& value) : value(value) {}
-        Constant(Constant<T>&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
+        Constant(Constant<T>&& other) : value(other.value), uses(std::move(other.uses)) {}
         explicit Constant(const Constant<T>&) = delete;
     };
 
@@ -61,7 +61,7 @@ class MacroAssemblerX86Shared : public Assembler
 
     struct SimdData : public Constant<SimdConstant> {
         explicit SimdData(SimdConstant d) : Constant<SimdConstant>(d) {}
-        SimdData(SimdData&& d) : Constant<SimdConstant>(mozilla::Move(d)) {}
+        SimdData(SimdData&& d) : Constant<SimdConstant>(std::move(d)) {}
         explicit SimdData(const SimdData&) = delete;
         SimdConstant::Type type() const { return value.type(); }
     };

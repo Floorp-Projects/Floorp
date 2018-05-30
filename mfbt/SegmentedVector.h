@@ -140,7 +140,7 @@ public:
   }
 
   SegmentedVector(SegmentedVector&& aOther)
-    : mSegments(mozilla::Move(aOther.mSegments))
+    : mSegments(std::move(aOther.mSegments))
   {
   }
 

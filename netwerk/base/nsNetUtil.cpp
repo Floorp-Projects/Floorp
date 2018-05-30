@@ -725,7 +725,7 @@ NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
   rv = isc->SetURI(aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInputStream> stream = Move(aStream);
+  nsCOMPtr<nsIInputStream> stream = std::move(aStream);
   rv = isc->SetContentStream(stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -776,7 +776,7 @@ NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIInputStream> stream = Move(aStream);
+  nsCOMPtr<nsIInputStream> stream = std::move(aStream);
 
   return NS_NewInputStreamChannelInternal(outChannel,
                                           aUri,
@@ -895,7 +895,7 @@ NS_NewInputStreamPump(nsIInputStreamPump** aResult,
                       bool aCloseWhenDone /* = false */,
                       nsIEventTarget* aMainThreadTarget /* = nullptr */)
 {
-    nsCOMPtr<nsIInputStream> stream = Move(aStream);
+    nsCOMPtr<nsIInputStream> stream = std::move(aStream);
 
     nsresult rv;
     nsCOMPtr<nsIInputStreamPump> pump =
@@ -1485,7 +1485,7 @@ NS_NewBufferedOutputStream(nsIOutputStream** aResult,
                            already_AddRefed<nsIOutputStream> aOutputStream,
                            uint32_t aBufferSize)
 {
-    nsCOMPtr<nsIOutputStream> outputStream = Move(aOutputStream);
+    nsCOMPtr<nsIOutputStream> outputStream = std::move(aOutputStream);
 
     nsresult rv;
     nsCOMPtr<nsIBufferedOutputStream> out =
@@ -1504,7 +1504,7 @@ NS_NewBufferedInputStream(nsIInputStream** aResult,
                           already_AddRefed<nsIInputStream> aInputStream,
                           uint32_t aBufferSize)
 {
-    nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+    nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
 
     nsresult rv;
     nsCOMPtr<nsIBufferedInputStream> in =

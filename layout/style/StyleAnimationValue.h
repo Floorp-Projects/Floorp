@@ -50,7 +50,7 @@ struct AnimationValue
   AnimationValue(const AnimationValue& aOther)
     : mServo(aOther.mServo) { }
   AnimationValue(AnimationValue&& aOther)
-    : mServo(Move(aOther.mServo)) { }
+    : mServo(std::move(aOther.mServo)) { }
 
   AnimationValue& operator=(const AnimationValue& aOther)
   {
@@ -63,7 +63,7 @@ struct AnimationValue
   {
     MOZ_ASSERT(this != &aOther, "Do not move itself");
     if (this != &aOther) {
-      mServo = Move(aOther.mServo);
+      mServo = std::move(aOther.mServo);
     }
     return *this;
   }

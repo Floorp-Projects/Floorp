@@ -13,7 +13,7 @@ ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
                                      UniquePtr<ProfileBuffer> aBuffer)
   : mName(strdup(aName))
   , mThreadId(aThreadId)
-  , mBuffer(Move(aBuffer))
+  , mBuffer(std::move(aBuffer))
 {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
 }

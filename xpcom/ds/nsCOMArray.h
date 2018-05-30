@@ -86,7 +86,7 @@ protected:
   }
   void AppendElement(already_AddRefed<nsISupports> aElement)
   {
-    InsertElementAt(Length(), mozilla::Move(aElement));
+    InsertElementAt(Length(), std::move(aElement));
   }
 
   bool AppendObjects(const nsCOMArray_base& aObjects)
@@ -364,7 +364,7 @@ public:
   }
   void AppendElement(already_AddRefed<T> aElement)
   {
-    nsCOMArray_base::AppendElement(mozilla::Move(aElement));
+    nsCOMArray_base::AppendElement(std::move(aElement));
   }
 
   // append objects, growing the array as necessary

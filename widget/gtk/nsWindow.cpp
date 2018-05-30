@@ -2364,7 +2364,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         //
         // These windows should not be moved by the window manager, and so any
         // change in position is a result of our direction.  mBounds has
-        // already been set in Move() or Resize(), and that is more
+        // already been set in std::move() or Resize(), and that is more
         // up-to-date than the position in the ConfigureNotify event if the
         // event is from an earlier window move.
         //

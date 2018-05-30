@@ -22,7 +22,7 @@ public:
   explicit AutoTaskQueue(already_AddRefed<nsIEventTarget> aPool,
                          bool aSupportsTailDispatch = false)
     : AbstractThread(aSupportsTailDispatch)
-    , mTaskQueue(new TaskQueue(Move(aPool), aSupportsTailDispatch))
+    , mTaskQueue(new TaskQueue(std::move(aPool), aSupportsTailDispatch))
     , mMonitor("AutoTaskQueue")
   {
   }
@@ -31,7 +31,7 @@ public:
                 const char* aName,
                 bool aSupportsTailDispatch = false)
     : AbstractThread(aSupportsTailDispatch)
-    , mTaskQueue(new TaskQueue(Move(aPool), aName, aSupportsTailDispatch))
+    , mTaskQueue(new TaskQueue(std::move(aPool), aName, aSupportsTailDispatch))
     , mMonitor("AutoTaskQueue")
   {
   }
@@ -45,7 +45,7 @@ public:
   Dispatch(already_AddRefed<nsIRunnable> aRunnable,
            DispatchReason aReason = NormalDispatch) override
   {
-    return mTaskQueue->Dispatch(Move(aRunnable), aReason);
+    return mTaskQueue->Dispatch(std::move(aRunnable), aReason);
   }
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.

@@ -44,7 +44,7 @@ SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample)
   RefPtr<WaitForKeyPromise> p = entry.mPromise.Ensure(__func__);
   {
     MutexAutoLock lock(mMutex);
-    mSamples.AppendElement(Move(entry));
+    mSamples.AppendElement(std::move(entry));
   }
   if (mOnWaitingForKeyEvent) {
     mOnWaitingForKeyEvent->Notify(mType);

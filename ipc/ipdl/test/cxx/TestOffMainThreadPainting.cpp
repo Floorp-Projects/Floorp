@@ -33,11 +33,11 @@ TestOffMainThreadPaintingParent::Main()
   }
 
   mPaintActor = new TestPaintThreadParent(this);
-  if (!mPaintActor->Bind(Move(parentPipe))) {
+  if (!mPaintActor->Bind(std::move(parentPipe))) {
     fail("bind parent pipe");
   }
 
-  if (!SendStartTest(Move(childPipe))) {
+  if (!SendStartTest(std::move(childPipe))) {
     fail("sending Start");
   }
 }
@@ -143,7 +143,7 @@ TestOffMainThreadPaintingChild::RecvStartTest(ipc::Endpoint<PTestPaintThreadChil
 
   mPaintActor = new TestPaintThreadChild(GetIPCChannel());
   RefPtr<Runnable> task = NewRunnableMethod<ipc::Endpoint<PTestPaintThreadChild>&&>(
-    "TestPaintthreadChild::Bind", mPaintActor, &TestPaintThreadChild::Bind, Move(aEndpoint));
+    "TestPaintthreadChild::Bind", mPaintActor, &TestPaintThreadChild::Bind, std::move(aEndpoint));
   mPaintThread->message_loop()->PostTask(task.forget());
 
   IssueTransaction();

@@ -185,7 +185,7 @@ class RootedCount : JS::CustomAutoRooter {
   public:
     RootedCount(JSContext* cx, CountBasePtr&& count)
         : CustomAutoRooter(cx),
-          count(Move(count))
+          count(std::move(count))
           { }
     CountBase* operator->() const { return count.get(); }
     explicit operator bool() const { return count.get(); }

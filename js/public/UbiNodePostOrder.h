@@ -59,7 +59,7 @@ struct PostOrder {
 
         OriginAndEdges(const Node& node, EdgeVector&& edges)
           : origin(node)
-          , edges(mozilla::Move(edges))
+          , edges(std::move(edges))
         { }
 
         OriginAndEdges(const OriginAndEdges& rhs) = delete;
@@ -67,14 +67,14 @@ struct PostOrder {
 
         OriginAndEdges(OriginAndEdges&& rhs)
           : origin(rhs.origin)
-          , edges(mozilla::Move(rhs.edges))
+          , edges(std::move(rhs.edges))
         {
             MOZ_ASSERT(&rhs != this, "self-move disallowed");
         }
 
         OriginAndEdges& operator=(OriginAndEdges&& rhs) {
             this->~OriginAndEdges();
-            new (this) OriginAndEdges(mozilla::Move(rhs));
+            new (this) OriginAndEdges(std::move(rhs));
             return *this;
         }
     };
@@ -93,7 +93,7 @@ struct PostOrder {
     MOZ_MUST_USE bool fillEdgesFromRange(EdgeVector& edges, js::UniquePtr<EdgeRange>& range) {
         MOZ_ASSERT(range);
         for ( ; !range->empty(); range->popFront()) {
-            if (!edges.append(mozilla::Move(range->front())))
+            if (!edges.append(std::move(range->front())))
                 return false;
         }
         return true;
@@ -104,7 +104,7 @@ struct PostOrder {
         auto range = node.edges(cx, /* wantNames */ false);
         return range &&
             fillEdgesFromRange(edges, range) &&
-            stack.append(OriginAndEdges(node, mozilla::Move(edges)));
+            stack.append(OriginAndEdges(node, std::move(edges)));
     }
 
 
@@ -161,7 +161,7 @@ struct PostOrder {
                 continue;
             }
 
-            Edge edge = mozilla::Move(edges.back());
+            Edge edge = std::move(edges.back());
             edges.popBack();
 
             if (!onEdge(origin, edge))

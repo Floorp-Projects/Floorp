@@ -233,7 +233,7 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
     return;
   }
 
-  Init(aCx, Move(aArguments));
+  Init(aCx, std::move(aArguments));
 }
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
@@ -271,7 +271,7 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  Init(aCx, Move(aArguments));
+  Init(aCx, std::move(aArguments));
 }
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
@@ -297,7 +297,7 @@ nsJSScriptTimeoutHandler::Init(JSContext* aCx,
                                nsTArray<JS::Heap<JS::Value>>&& aArguments)
 {
   mozilla::HoldJSObjects(this);
-  mArgs = Move(aArguments);
+  mArgs = std::move(aArguments);
 
   Init(aCx);
 }
@@ -339,7 +339,7 @@ NS_CreateJSTimeoutHandler(JSContext *aCx, nsGlobalWindowInner *aWindow,
   }
 
   RefPtr<nsJSScriptTimeoutHandler> handler =
-    new nsJSScriptTimeoutHandler(aCx, aWindow, aFunction, Move(args), aError);
+    new nsJSScriptTimeoutHandler(aCx, aWindow, aFunction, std::move(args), aError);
   return aError.Failed() ? nullptr : handler.forget();
 }
 
@@ -370,7 +370,7 @@ NS_CreateJSTimeoutHandler(JSContext *aCx, WorkerPrivate* aWorkerPrivate,
   }
 
   RefPtr<nsJSScriptTimeoutHandler> handler =
-    new nsJSScriptTimeoutHandler(aCx, aWorkerPrivate, aFunction, Move(args));
+    new nsJSScriptTimeoutHandler(aCx, aWorkerPrivate, aFunction, std::move(args));
   return handler.forget();
 }
 

@@ -651,10 +651,10 @@ nsHostResolver::Shutdown()
         mShutdown = true;
 
         // Move queues to temporary lists.
-        pendingQHigh = mozilla::Move(mHighQ);
-        pendingQMed = mozilla::Move(mMediumQ);
-        pendingQLow = mozilla::Move(mLowQ);
-        evictionQ = mozilla::Move(mEvictionQ);
+        pendingQHigh = std::move(mHighQ);
+        pendingQMed = std::move(mMediumQ);
+        pendingQLow = std::move(mLowQ);
+        evictionQ = std::move(mEvictionQ);
 
         mEvictionQSize = 0;
         mPendingCount = 0;
@@ -1641,7 +1641,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
     if (doCallbacks) {
         // get the list of pending callbacks for this lookup, and notify
         // them that the lookup is complete.
-        mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs = mozilla::Move(rec->mCallbacks);
+        mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs = std::move(rec->mCallbacks);
 
         LOG(("nsHostResolver record %p calling back dns users\n", rec));
 

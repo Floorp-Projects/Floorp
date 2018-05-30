@@ -112,7 +112,7 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendUpdateResources(resourceUpdates, Move(smallShmems), largeShmems);
+  this->SendUpdateResources(resourceUpdates, std::move(smallShmems), largeShmems);
 }
 
 void
@@ -144,7 +144,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
   this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
                            GetFwdTransactionId(), aTransactionId,
                            aContentSize, dlData, aDL.dl_desc, aScrollData,
-                           Move(resourceUpdates), Move(smallShmems), largeShmems,
+                           std::move(resourceUpdates), std::move(smallShmems), largeShmems,
                            mIdNamespace, aTxnStartTime, fwdTime);
 
   mParentCommands.Clear();

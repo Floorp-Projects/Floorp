@@ -282,7 +282,7 @@ static OffThreadJob*
 NewOffThreadJob(JSContext* cx, ScriptKind kind, OffThreadJob::Source&& source)
 {
     ShellContext* sc = GetShellContext(cx);
-    UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(sc, kind, Move(source)));
+    UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(sc, kind, std::move(source)));
     if (!job)
         return nullptr;
 
@@ -422,7 +422,7 @@ OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
     monitor(sc->offThreadMonitor),
     state(RUNNING),
     token(nullptr),
-    source(Move(source))
+    source(std::move(source))
 {
     MOZ_RELEASE_ASSERT(id > 0, "Off-thread job IDs exhausted");
 }
@@ -1500,19 +1500,19 @@ Options(JSContext* cx, unsigned argc, Value* vp)
     UniqueChars names = DuplicateString("");
     bool found = false;
     if (names && oldContextOptions.extraWarnings()) {
-        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "strict");
+        names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "strict");
         found = true;
     }
     if (names && oldContextOptions.werror()) {
-        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "werror");
+        names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "werror");
         found = true;
     }
     if (names && oldContextOptions.throwOnAsmJSValidationFailure()) {
-        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "throw_on_asmjs_validation_failure");
+        names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "throw_on_asmjs_validation_failure");
         found = true;
     }
     if (names && oldContextOptions.strictMode()) {
-        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "strict_mode");
+        names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "", "strict_mode");
         found = true;
     }
     if (!names) {
@@ -4704,7 +4704,7 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
     }
 
     OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::Script,
-                                        OffThreadJob::Source(Move(ownedChars)));
+                                        OffThreadJob::Source(std::move(ownedChars)));
     if (!job)
         return false;
 
@@ -4790,7 +4790,7 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
     }
 
     OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::Module,
-                                        OffThreadJob::Source(Move(ownedChars)));
+                                        OffThreadJob::Source(std::move(ownedChars)));
     if (!job)
         return false;
 
@@ -4895,7 +4895,7 @@ OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
     }
 
     OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::DecodeScript,
-                                        OffThreadJob::Source(Move(loadBuffer)));
+                                        OffThreadJob::Source(std::move(loadBuffer)));
     if (!job)
         return false;
 
@@ -5444,11 +5444,11 @@ WithSourceHook(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     mozilla::UniquePtr<SourceHook> savedHook = js::ForgetSourceHook(cx);
-    js::SetSourceHook(cx, Move(hook));
+    js::SetSourceHook(cx, std::move(hook));
 
     RootedObject fun(cx, &args[1].toObject());
     bool result = Call(cx, UndefinedHandleValue, fun, JS::HandleValueArray::empty(), args.rval());
-    js::SetSourceHook(cx, Move(savedHook));
+    js::SetSourceHook(cx, std::move(savedHook));
     return result;
 }
 
@@ -5542,7 +5542,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
         sc->stacks.back().length() != stack.length() ||
         !PodEqual(sc->stacks.back().begin(), stack.begin(), stack.length()))
     {
-        if (!sc->stacks.append(Move(stack)))
+        if (!sc->stacks.append(std::move(stack)))
             oomUnsafe.crash("stacks.append");
     }
 }
@@ -5953,7 +5953,7 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
     {
         auto state = bufferStreamState->lock();
         MOZ_ASSERT(!state->shutdown);
-        if (!state->jobs.append(Move(job)))
+        if (!state->jobs.append(std::move(job)))
             return false;
     }
 
@@ -6475,7 +6475,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
                 oom = true;
                 return;
             }
-            oom = !log.append(mozilla::Move(displayIdStr));
+            oom = !log.append(std::move(displayIdStr));
             return;
         }
 
@@ -6488,7 +6488,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
         enteredWithoutExit = true;
 
         UniqueChars label(JS_smprintf("eval:%s", JS_GetScriptFilename(script)));
-        oom = !label || !log.append(mozilla::Move(label));
+        oom = !label || !log.append(std::move(label));
     }
 
     void Exit(JSContext* cx) override {

@@ -222,7 +222,7 @@ AppleATDecoder::ProcessDecode(MediaRawData* aSample)
     mQueuedSamples.Clear();
   }
 
-  return DecodePromise::CreateAndResolve(Move(mDecodedSamples), __func__);
+  return DecodePromise::CreateAndResolve(std::move(mDecodedSamples), __func__);
 }
 
 MediaResult
@@ -321,7 +321,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   }
   if (mAudioConverter && mChannelLayout && mChannelLayout->IsValid()) {
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
-    data = mAudioConverter->Process(Move(data));
+    data = mAudioConverter->Process(std::move(data));
   }
 
   RefPtr<AudioData> audio =
@@ -335,7 +335,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
                   mChannelLayout && mChannelLayout->IsValid()
                     ? mChannelLayout->Map()
                     : AudioConfig::ChannelLayout::UNKNOWN_MAP);
-  mDecodedSamples.AppendElement(Move(audio));
+  mDecodedSamples.AppendElement(std::move(audio));
   return NS_OK;
 }
 

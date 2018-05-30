@@ -89,7 +89,7 @@ struct GradientCacheKey : public PLDHashEntryHdr {
 struct GradientCacheData {
   GradientCacheData(GradientStops* aStops, GradientCacheKey&& aKey)
     : mStops(aStops),
-      mKey(Move(aKey))
+      mKey(std::move(aKey))
   {}
 
   GradientCacheData(GradientCacheData&& aOther) = default;

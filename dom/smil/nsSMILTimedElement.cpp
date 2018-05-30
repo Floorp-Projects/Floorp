@@ -683,7 +683,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
             FireTimeEventAsync(eSMILEndEvent, 0);
           }
           mCurrentRepeatIteration = 0;
-          mOldIntervals.AppendElement(Move(mCurrentInterval));
+          mOldIntervals.AppendElement(std::move(mCurrentInterval));
           SampleFillValue();
           if (mElementState == STATE_WAITING) {
             mCurrentInterval = MakeUnique<nsSMILInterval>(newInterval);
@@ -1325,7 +1325,7 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
     auto spec = MakeUnique<nsSMILTimeValueSpec>(*this, aIsBegin);
     nsresult rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
     if (NS_SUCCEEDED(rv)) {
-      timeSpecsList.AppendElement(Move(spec));
+      timeSpecsList.AppendElement(std::move(spec));
     } else {
       hadFailure = true;
     }
@@ -1611,7 +1611,7 @@ nsSMILTimedElement::FilterIntervals()
         (i < threshold || !interval->IsDependencyChainLink())) {
       interval->Unlink(true /*filtered, not deleted*/);
     } else {
-      filteredList.AppendElement(Move(mOldIntervals[i]));
+      filteredList.AppendElement(std::move(mOldIntervals[i]));
     }
   }
   mOldIntervals.Clear();

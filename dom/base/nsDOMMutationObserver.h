@@ -225,7 +225,7 @@ public:
   {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAttributeFilter.Clear();
-    mAttributeFilter = mozilla::Move(aFilter);
+    mAttributeFilter = std::move(aFilter);
   }
 
   void AddClone(nsMutationReceiverBase* aClone)

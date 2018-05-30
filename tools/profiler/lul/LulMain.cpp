@@ -582,10 +582,10 @@ class PriMap {
     MOZ_ASSERT(i <= num_secMaps);
     if (i == num_secMaps) {
       // It goes at the end.
-      mSecMaps.push_back(mozilla::Move(aSecMap));
+      mSecMaps.push_back(std::move(aSecMap));
     } else {
       std::vector<mozilla::UniquePtr<SecMap>>::iterator iter = mSecMaps.begin() + i;
-      mSecMaps.insert(iter, mozilla::Move(aSecMap));
+      mSecMaps.insert(iter, std::move(aSecMap));
     }
     char buf[100];
     SprintfLiteral(buf, "AddSecMap: now have %d SecMaps\n",
@@ -804,7 +804,7 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
     mLog(buf);
 
     // Add it to the primary map (the top level set of mapped objects).
-    mPriMap->AddSecMap(mozilla::Move(smap));
+    mPriMap->AddSecMap(std::move(smap));
 
     // Tell the segment array about the mapping, so that the stack
     // scan and __kernel_syscall mechanisms know where valid code is.

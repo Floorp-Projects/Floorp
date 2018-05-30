@@ -230,7 +230,7 @@ public:
     explicit HashElemIter(T& hash, Matcher<ElemType>* matcher = nullptr)
         : hash_(hash), matcher_(matcher)
     {
-        iter_.emplace(Move(hash.Iter()));
+        iter_.emplace(std::move(hash.Iter()));
     }
 
     class Elem

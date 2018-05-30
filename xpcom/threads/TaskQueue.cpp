@@ -83,7 +83,7 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      bool aSupportsTailDispatch)
-  : TaskQueue(Move(aTarget), "Unnamed", aSupportsTailDispatch)
+  : TaskQueue(std::move(aTarget), "Unnamed", aSupportsTailDispatch)
 {
 }
 

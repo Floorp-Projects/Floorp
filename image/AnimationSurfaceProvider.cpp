@@ -311,7 +311,7 @@ AnimationSurfaceProvider::CheckForNewFrameAtYield()
                   mFrames.Frames().LastElement().get() != frame.get());
 
     // Append the new frame to the list.
-    continueDecoding = mFrames.Insert(Move(frame));
+    continueDecoding = mFrames.Insert(std::move(frame));
 
     // We only want to handle the first frame if it is the first pass for the
     // animation decoder. The owning image will be cleared after that.
@@ -361,7 +361,7 @@ AnimationSurfaceProvider::CheckForNewFrameAtTerminalState()
     }
 
     // Append the new frame to the list.
-    mFrames.Insert(Move(frame));
+    mFrames.Insert(std::move(frame));
     continueDecoding = mFrames.MarkComplete();
 
     // We only want to handle the first frame if it is the first pass for the

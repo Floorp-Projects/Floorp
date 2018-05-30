@@ -158,7 +158,7 @@ public:
       }
     }
 
-    mAttrList = Move(attrList);
+    mAttrList = std::move(attrList);
     aSiex.lpAttributeList = mAttrList.get();
     aSiex.StartupInfo.cb = sizeof(STARTUPINFOEXW);
     return Some(true);

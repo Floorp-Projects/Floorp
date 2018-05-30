@@ -22,7 +22,7 @@ StoreVerifiedSct(CTVerifyResult& result,
                  VerifiedSCT::Status status)
 {
   verifiedSct.status = status;
-  if (!result.verifiedScts.append(Move(verifiedSct))) {
+  if (!result.verifiedScts.append(std::move(verifiedSct))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
   return Success;
@@ -31,7 +31,7 @@ StoreVerifiedSct(CTVerifyResult& result,
 Result
 MultiLogCTVerifier::AddLog(CTLogVerifier&& log)
 {
-  if (!mLogs.append(Move(log))) {
+  if (!mLogs.append(std::move(log))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
   return Success;
@@ -122,7 +122,7 @@ MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
       continue;
     }
 
-    rv = VerifySingleSCT(Move(sct), expectedEntry, origin, time, result);
+    rv = VerifySingleSCT(std::move(sct), expectedEntry, origin, time, result);
     if (rv != Success) {
       return rv;
     }
@@ -139,7 +139,7 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 {
   VerifiedSCT verifiedSct;
   verifiedSct.origin = origin;
-  verifiedSct.sct = Move(sct);
+  verifiedSct.sct = std::move(sct);
 
   CTLogVerifier* matchingLog = nullptr;
   for (auto& log : mLogs) {
@@ -151,7 +151,7 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 
   if (!matchingLog) {
     // SCT does not match any known log.
-    return StoreVerifiedSct(result, Move(verifiedSct),
+    return StoreVerifiedSct(result, std::move(verifiedSct),
                             VerifiedSCT::Status::UnknownLog);
   }
 
@@ -159,14 +159,14 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 
   if (!matchingLog->SignatureParametersMatch(verifiedSct.sct.signature)) {
     // SCT signature parameters do not match the log's.
-    return StoreVerifiedSct(result, Move(verifiedSct),
+    return StoreVerifiedSct(result, std::move(verifiedSct),
                             VerifiedSCT::Status::InvalidSignature);
   }
 
   Result rv = matchingLog->Verify(expectedEntry, verifiedSct.sct);
   if (rv != Success) {
     if (rv == Result::ERROR_BAD_SIGNATURE) {
-      return StoreVerifiedSct(result, Move(verifiedSct),
+      return StoreVerifiedSct(result, std::move(verifiedSct),
                               VerifiedSCT::Status::InvalidSignature);
     }
     return rv;
@@ -181,7 +181,7 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
   Time sctTime =
     TimeFromEpochInSeconds((verifiedSct.sct.timestamp + 999u) / 1000u);
   if (sctTime > time) {
-    return StoreVerifiedSct(result, Move(verifiedSct),
+    return StoreVerifiedSct(result, std::move(verifiedSct),
                             VerifiedSCT::Status::InvalidTimestamp);
   }
 
@@ -190,11 +190,11 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
   // the CT Policy), the log qualification check must be the last one we do.
   if (matchingLog->isDisqualified()) {
     verifiedSct.logDisqualificationTime = matchingLog->disqualificationTime();
-    return StoreVerifiedSct(result, Move(verifiedSct),
+    return StoreVerifiedSct(result, std::move(verifiedSct),
                             VerifiedSCT::Status::ValidFromDisqualifiedLog);
   }
 
-  return StoreVerifiedSct(result, Move(verifiedSct),
+  return StoreVerifiedSct(result, std::move(verifiedSct),
                           VerifiedSCT::Status::Valid);
 }
 

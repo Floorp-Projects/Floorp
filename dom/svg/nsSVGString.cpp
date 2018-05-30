@@ -112,7 +112,7 @@ nsSVGString::SMILString::ValueFromString(const nsAString& aStr,
   nsSMILValue val(SMILStringType::Singleton());
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
-  aValue = Move(val);
+  aValue = std::move(val);
   aPreventCachingOfSandwich = false;
   return NS_OK;
 }

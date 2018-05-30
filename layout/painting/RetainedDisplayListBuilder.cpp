@@ -244,7 +244,7 @@ OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(!IsUsed());
   mUsed = mDiscarded = true;
-  mDirectPredecessors = Move(aDirectPredecessors);
+  mDirectPredecessors = std::move(aDirectPredecessors);
   if (mItem) {
     mItem->Destroy(aBuilder->Builder());
   }
@@ -271,8 +271,8 @@ public:
   MergeState(RetainedDisplayListBuilder* aBuilder, RetainedDisplayList& aOldList, uint32_t aOuterKey)
     : mBuilder(aBuilder)
     , mOldList(&aOldList)
-    , mOldItems(Move(aOldList.mOldItems))
-    , mOldDAG(Move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(&aOldList.mDAG)))
+    , mOldItems(std::move(aOldList.mOldItems))
+    , mOldDAG(std::move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(&aOldList.mDAG)))
     , mOuterKey(aOuterKey)
     , mResultIsModified(false)
   {
@@ -320,12 +320,12 @@ public:
 
       AutoTArray<MergedListIndex, 2> directPredecessors =
         ResolveNodeIndexesOldToMerged(mOldDAG.GetDirectPredecessors(OldListIndex(i)));
-      ProcessOldNode(OldListIndex(i), Move(directPredecessors));
+      ProcessOldNode(OldListIndex(i), std::move(directPredecessors));
     }
 
     RetainedDisplayList result;
     result.AppendToTop(&mMergedItems);
-    result.mDAG = Move(mMergedDAG);
+    result.mDAG = std::move(mMergedDAG);
     return result;
   }
 
@@ -390,7 +390,7 @@ public:
   void ProcessOldNode(OldListIndex aNode, nsTArray<MergedListIndex>&& aDirectPredecessors) {
     nsDisplayItem* item = mOldItems[aNode.val].mItem;
     if (mOldItems[aNode.val].IsChanged() || HasModifiedFrame(item)) {
-      mOldItems[aNode.val].Discard(mBuilder, Move(aDirectPredecessors));
+      mOldItems[aNode.val].Discard(mBuilder, std::move(aDirectPredecessors));
       mResultIsModified = true;
     } else {
       if (item->GetChildren()) {
@@ -444,7 +444,7 @@ public:
         if (mStack.IsEmpty()) {
           return result;
         } else {
-          ProcessOldNode(item.mNode, Move(result));
+          ProcessOldNode(item.mNode, std::move(result));
         }
       } else {
         // Grab the current predecessor, push predecessors of that onto the processing
@@ -514,7 +514,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
     previousItemIndex = Some(merge.ProcessItemFromNewList(item, previousItemIndex));
   }
 
-  *aOutList = Move(merge.Finalize());
+  *aOutList = std::move(merge.Finalize());
   aOutContainerASR = merge.mContainerASR;
   return merge.mResultIsModified;
 }

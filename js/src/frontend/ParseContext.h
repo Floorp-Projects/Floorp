@@ -74,7 +74,7 @@ class UsedNameTracker
         { }
 
         UsedNameInfo(UsedNameInfo&& other)
-          : uses_(mozilla::Move(other.uses_))
+          : uses_(std::move(other.uses_))
         { }
 
         bool noteUsedInScope(uint32_t scriptId, uint32_t scopeId) {

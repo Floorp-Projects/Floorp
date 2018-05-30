@@ -307,7 +307,7 @@ HttpBaseChannel::ReleaseMainThreadOnlyReferences()
     arrayToRelease.AppendElement(nonTailRemover.forget());
   }
 
-  NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
+  NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 
 void
@@ -2607,7 +2607,7 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
   // Delay the object construction until requested.
   // See TakeAllSecurityMessages()
   Pair<nsString, nsString> pair(aMessageTag, aMessageCategory);
-  mSecurityConsoleMessages.AppendElement(Move(pair));
+  mSecurityConsoleMessages.AppendElement(std::move(pair));
 
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!console) {

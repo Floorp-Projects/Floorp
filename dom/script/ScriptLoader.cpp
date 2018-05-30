@@ -1381,7 +1381,7 @@ ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
     request = CreateLoadRequest(aScriptKind, scriptURI, aElement,
                                 ourCORSMode, sriMetadata, ourRefPolicy);
-    request->mTriggeringPrincipal = Move(principal);
+    request->mTriggeringPrincipal = std::move(principal);
     request->mIsInline = false;
     request->SetScriptMode(aElement->GetScriptDeferred(),
                            aElement->GetScriptAsync());

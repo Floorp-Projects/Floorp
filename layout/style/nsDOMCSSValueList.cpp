@@ -25,7 +25,7 @@ void
 nsDOMCSSValueList::AppendCSSValue(already_AddRefed<CSSValue> aValue)
 {
   RefPtr<CSSValue> val = aValue;
-  mCSSValues.AppendElement(Move(val));
+  mCSSValues.AppendElement(std::move(val));
 }
 
 void

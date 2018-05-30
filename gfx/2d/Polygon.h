@@ -172,7 +172,7 @@ public:
 
   explicit PolygonTyped(nsTArray<Point4DType>&& aPoints,
                         const Point4DType& aNormal = DefaultNormal())
-    : mNormal(aNormal), mPoints(Move(aPoints)) {}
+    : mNormal(aNormal), mPoints(std::move(aPoints)) {}
 
   explicit PolygonTyped(const std::initializer_list<Point4DType>& aPoints,
                         const Point4DType& aNormal = DefaultNormal())
@@ -258,7 +258,7 @@ public:
                           backPoints, frontPoints);
 
       // Only use the points behind the clipping plane.
-      clippedPoints = Move(backPoints);
+      clippedPoints = std::move(backPoints);
 
       if (clippedPoints.Length() < 3) {
         // The clipping created a polygon with no area.
@@ -266,7 +266,7 @@ public:
       }
     }
 
-    return PolygonTyped<Units>(Move(clippedPoints), mNormal);
+    return PolygonTyped<Units>(std::move(clippedPoints), mNormal);
   }
 
   /**
@@ -281,7 +281,7 @@ public:
       Point4DType(aRect.XMost(), aRect.Y(), 0.0f, 1.0f)
     };
 
-    return PolygonTyped<Units>(Move(points));
+    return PolygonTyped<Units>(std::move(points));
   }
 
   const Point4DType& GetNormal() const
@@ -316,7 +316,7 @@ public:
       TriangleTyped<Units> triangle(Point(mPoints[0].x, mPoints[0].y),
                                     Point(mPoints[i].x, mPoints[i].y),
                                     Point(mPoints[i + 1].x, mPoints[i + 1].y));
-      triangles.AppendElement(Move(triangle));
+      triangles.AppendElement(std::move(triangle));
     }
 
     return triangles;

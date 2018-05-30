@@ -170,7 +170,7 @@ struct PreparedLayer
   PreparedLayer(Layer *aLayer,
                 RenderTargetIntRect aClipRect,
                 Maybe<gfx::Polygon>&& aGeometry)
-  : mLayer(aLayer), mClipRect(aClipRect), mGeometry(Move(aGeometry)) {}
+  : mLayer(aLayer), mClipRect(aClipRect), mGeometry(std::move(aGeometry)) {}
 
   RefPtr<Layer> mLayer;
   RenderTargetIntRect mClipRect;
@@ -238,7 +238,7 @@ ContainerPrepare(ContainerT* aContainer,
     layerToRender->Prepare(clipRect);
     aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender->GetLayer(),
                                                                clipRect,
-                                                               Move(layer.geometry)));
+                                                               std::move(layer.geometry)));
   }
 
   CULLING_LOG("Preparing container layer %p\n", aContainer->GetLayer());

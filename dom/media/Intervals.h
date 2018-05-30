@@ -72,9 +72,9 @@ public:
   { }
 
   Interval(SelfType&& aOther)
-    : mStart(Move(aOther.mStart))
-    , mEnd(Move(aOther.mEnd))
-    , mFuzz(Move(aOther.mFuzz))
+    : mStart(std::move(aOther.mStart))
+    , mEnd(std::move(aOther.mEnd))
+    , mFuzz(std::move(aOther.mFuzz))
   { }
 
   SelfType& operator= (const SelfType& aOther)
@@ -89,7 +89,7 @@ public:
   {
     MOZ_ASSERT(&aOther != this, "self-moves are prohibited");
     this->~Interval();
-    new(this) Interval(Move(aOther));
+    new(this) Interval(std::move(aOther));
     return *this;
   }
 
@@ -282,7 +282,7 @@ public:
 
   IntervalSet(SelfType&& aOther)
   {
-    mIntervals.AppendElements(Move(aOther.mIntervals));
+    mIntervals.AppendElements(std::move(aOther.mIntervals));
   }
 
   explicit IntervalSet(const ElemType& aOther)
@@ -295,7 +295,7 @@ public:
   explicit IntervalSet(ElemType&& aOther)
   {
     if (!aOther.IsEmpty()) {
-      mIntervals.AppendElement(Move(aOther));
+      mIntervals.AppendElement(std::move(aOther));
     }
   }
 
@@ -319,7 +319,7 @@ public:
   {
     MOZ_ASSERT(&aOther != this, "self-moves are prohibited");
     this->~IntervalSet();
-    new(this) IntervalSet(Move(aOther));
+    new(this) IntervalSet(std::move(aOther));
     return *this;
   }
 
@@ -336,7 +336,7 @@ public:
   {
     mIntervals.Clear();
     if (!aInterval.IsEmpty()) {
-      mIntervals.AppendElement(Move(aInterval));
+      mIntervals.AppendElement(std::move(aInterval));
     }
     return *this;
   }
@@ -379,15 +379,15 @@ public:
       } else if (current.LeftOf(interval)) {
         break;
       } else {
-        normalized.AppendElement(Move(interval));
+        normalized.AppendElement(std::move(interval));
       }
     }
-    normalized.AppendElement(Move(current));
+    normalized.AppendElement(std::move(current));
     for (; i < mIntervals.Length(); i++) {
-      normalized.AppendElement(Move(mIntervals[i]));
+      normalized.AppendElement(std::move(mIntervals[i]));
     }
     mIntervals.Clear();
-    mIntervals.AppendElements(Move(normalized));
+    mIntervals.AppendElements(std::move(normalized));
 
     return *this;
   }
@@ -439,8 +439,8 @@ public:
     T secondStart = std::min(mIntervals.LastElement().mEnd, aInterval.mEnd);
     ElemType startInterval(mIntervals[0].mStart, firstEnd);
     ElemType endInterval(secondStart, mIntervals.LastElement().mEnd);
-    SelfType intervals(Move(startInterval));
-    intervals += Move(endInterval);
+    SelfType intervals(std::move(startInterval));
+    intervals += std::move(endInterval);
     return Intersection(intervals);
   }
 
@@ -497,7 +497,7 @@ public:
       }
     }
     mIntervals.Clear();
-    mIntervals.AppendElements(Move(intersection));
+    mIntervals.AppendElements(std::move(intersection));
     return *this;
   }
 
@@ -729,14 +729,14 @@ private:
         if (current.Touches(interval)) {
           current = current.Span(interval);
         } else {
-          normalized.AppendElement(Move(current));
-          current = Move(interval);
+          normalized.AppendElement(std::move(current));
+          current = std::move(interval);
         }
       }
-      normalized.AppendElement(Move(current));
+      normalized.AppendElement(std::move(current));
 
       mIntervals.Clear();
-      mIntervals.AppendElements(Move(normalized));
+      mIntervals.AppendElements(std::move(normalized));
     }
   }
 

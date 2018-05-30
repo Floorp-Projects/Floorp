@@ -273,7 +273,7 @@ protected:
   {
     HandlerControllerData(DWORD aPid, RefPtr<IHandlerControl>&& aCtrl)
       : mPid(aPid)
-      , mCtrl(Move(aCtrl))
+      , mCtrl(std::move(aCtrl))
     {
       mIsProxy = mozilla::mscom::IsProxy(mCtrl);
     }
@@ -281,7 +281,7 @@ protected:
     HandlerControllerData(HandlerControllerData&& aOther)
       : mPid(aOther.mPid)
       , mIsProxy(aOther.mIsProxy)
-      , mCtrl(Move(aOther.mCtrl))
+      , mCtrl(std::move(aOther.mCtrl))
     {
     }
 

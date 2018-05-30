@@ -205,7 +205,7 @@ class TextureSourceRecycler
 {
 public:
   explicit TextureSourceRecycler(nsTArray<TileHost>&& aTileSet)
-    : mTiles(Move(aTileSet))
+    : mTiles(std::move(aTileSet))
     , mFirstPossibility(0)
   {}
 
@@ -225,9 +225,9 @@ public:
       // If this tile matches, then copy across the retained texture source (if
       // any).
       if (aTile.mTextureHost == mTiles[i].mTextureHost) {
-        aTile.mTextureSource = Move(mTiles[i].mTextureSource);
+        aTile.mTextureSource = std::move(mTiles[i].mTextureSource);
         if (aTile.mTextureHostOnWhite) {
-          aTile.mTextureSourceOnWhite = Move(mTiles[i].mTextureSourceOnWhite);
+          aTile.mTextureSourceOnWhite = std::move(mTiles[i].mTextureSourceOnWhite);
         }
         break;
       }
@@ -247,9 +247,9 @@ public:
 
       if (mTiles[i].mTextureSource &&
           mTiles[i].mTextureHost->GetFormat() == aTile.mTextureHost->GetFormat()) {
-        aTile.mTextureSource = Move(mTiles[i].mTextureSource);
+        aTile.mTextureSource = std::move(mTiles[i].mTextureSource);
         if (aTile.mTextureHostOnWhite) {
-          aTile.mTextureSourceOnWhite = Move(mTiles[i].mTextureSourceOnWhite);
+          aTile.mTextureSourceOnWhite = std::move(mTiles[i].mTextureSourceOnWhite);
         }
         break;
       }
@@ -295,7 +295,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
   const InfallibleTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
 
-  TextureSourceRecycler oldRetainedTiles(Move(mRetainedTiles));
+  TextureSourceRecycler oldRetainedTiles(std::move(mRetainedTiles));
   mRetainedTiles.SetLength(tileDescriptors.Length());
 
   // Step 1, deserialize the incoming set of tiles into mRetainedTiles, and attempt
