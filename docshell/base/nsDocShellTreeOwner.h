@@ -165,6 +165,7 @@ private:
                          const nsAString& aInTipText,
                          const nsAString& aDirText);
   NS_IMETHOD HideTooltip();
+  nsITooltipTextProvider* GetTooltipTextProvider();
 
   nsWebBrowser* mWebBrowser;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
