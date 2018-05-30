@@ -10,22 +10,22 @@ const FONTS = [{
   name: "Ostrich Sans Medium",
   remote: true,
   url: URL_ROOT + "ostrich-regular.ttf",
-  familyName: "bar"
+  cssName: "bar"
 }, {
   name: "Ostrich Sans Black",
   remote: true,
   url: URL_ROOT + "ostrich-black.ttf",
-  familyName: "bar"
+  cssName: "bar"
 }, {
   name: "Ostrich Sans Black",
   remote: true,
   url: URL_ROOT + "ostrich-black.ttf",
-  familyName: "bar"
+  cssName: "bar"
 }, {
   name: "Ostrich Sans Medium",
   remote: true,
   url: URL_ROOT + "ostrich-regular.ttf",
-  familyName: "barnormal"
+  cssName: "barnormal"
 }];
 
 add_task(async function() {
@@ -51,8 +51,6 @@ function testBodyFonts(inspector, viewDoc) {
     let font = FONTS[i];
 
     is(getName(li), font.name, `font ${i} right font name`);
-    /* global getFamilyName */
-    is(getFamilyName(li), font.familyName, `font ${i} right family name`);
     is(isRemote(li), font.remote, `font ${i} remote value correct`);
     is(li.querySelector(".font-origin").textContent, font.url, `font ${i} url correct`);
   }
