@@ -18,7 +18,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsINode;
-class nsIDOMNode;
 
 namespace mozilla {
 namespace dom {

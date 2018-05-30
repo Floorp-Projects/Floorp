@@ -65,7 +65,7 @@ XMLStylesheetProcessingInstruction::UnbindFromTree(bool aDeep, bool aNullParent)
   Unused << UpdateStyleSheetInternal(oldDoc, nullptr);
 }
 
-// nsIDOMNode
+// nsINode
 
 void
 XMLStylesheetProcessingInstruction::SetNodeValueInternal(const nsAString& aNodeValue,

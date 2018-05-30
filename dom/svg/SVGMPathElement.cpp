@@ -65,7 +65,7 @@ SVGMPathElement::~SVGMPathElement()
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMPathElement)
 

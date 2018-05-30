@@ -821,16 +821,11 @@ DataTransfer::Clone(nsISupports* aParent, EventMessage aEventMessage,
 }
 
 already_AddRefed<nsIArray>
-DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
+DataTransfer::GetTransferables(nsINode* aDragTarget)
 {
   MOZ_ASSERT(aDragTarget);
 
-  nsCOMPtr<nsINode> dragNode = do_QueryInterface(aDragTarget);
-  if (!dragNode) {
-    return nullptr;
-  }
-
-  nsIDocument* doc = dragNode->GetComposedDoc();
+  nsIDocument* doc = aDragTarget->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }

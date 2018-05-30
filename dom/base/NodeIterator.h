@@ -16,7 +16,6 @@
 #include "nsStubMutationObserver.h"
 
 class nsINode;
-class nsIDOMNode;
 
 namespace mozilla {
 namespace dom {
