@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.toolbar.display
 
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -468,7 +469,7 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `url box size matches url + page actions size`() {
+    fun `url box size matches url and page actions size`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
 
@@ -491,6 +492,40 @@ class DisplayToolbarTest {
 
         assertEquals(view.measuredWidth, urlView.measuredWidth + reloadView.measuredWidth + readerView.measuredWidth)
         assertEquals(200, view.measuredHeight)
+    }
+
+    @Test
+    fun `url box position is enclosing url and page actions`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.addPageAction(BrowserToolbar.Button(0, "Reload") {})
+        displayToolbar.addPageAction(BrowserToolbar.Button(0, "Reader Mode") {})
+
+        val view = TextView(RuntimeEnvironment.application)
+        displayToolbar.urlBoxView = view
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+        displayToolbar.layout(0, 0, 1024, 200)
+
+        val urlView = extractUrlView(displayToolbar)
+        val reloadView = extractActionView(displayToolbar, "Reload")!!
+        val readerView = extractActionView(displayToolbar, "Reader Mode")!!
+
+        val viewRect = Rect(view.left, view.top, view.right, view.bottom)
+        val urlViewRect = Rect(urlView.left, urlView.top, urlView.right, urlView.bottom)
+        val reloadViewRect = Rect(reloadView.left, reloadView.top, reloadView.right, reloadView.bottom)
+        val readerViewRect = Rect(readerView.left, readerView.top, readerView.right, readerView.bottom)
+
+        assertTrue(viewRect.width() > 0)
+        assertTrue(viewRect.height() > 0)
+        assertTrue(viewRect.contains(urlViewRect))
+        assertTrue(viewRect.contains(reloadViewRect))
+        assertTrue(viewRect.contains(readerViewRect))
+        assertEquals(urlViewRect.width() + reloadViewRect.width() + readerViewRect.width(), viewRect.width())
     }
 
     companion object {
