@@ -17,7 +17,6 @@ config = {
     ],
     'vcs_share_base': '/builds/hg-shared',
     # allows triggering of dependent jobs when --artifact try syntax is detected
-    'perfherder_extra_options': ['artifact'],
     #########################################################################
 
 
