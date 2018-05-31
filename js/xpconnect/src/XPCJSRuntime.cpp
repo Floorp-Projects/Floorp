@@ -1077,12 +1077,13 @@ static void
 GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
                    bool replaceSlashes)
 {
-    if (js::IsAtomsRealm(JS::GetRealmForCompartment(c))) {
+    JS::Realm* realm = JS::GetRealmForCompartment(c);
+    if (js::IsAtomsRealm(realm)) {
         name.AssignLiteral("atoms");
     } else if (*anonymizeID && !js::IsSystemCompartment(c)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
-    } else if (JSPrincipals* principals = JS_GetCompartmentPrincipals(c)) {
+    } else if (JSPrincipals* principals = JS::GetRealmPrincipals(realm)) {
         nsresult rv = nsJSPrincipals::get(principals)->GetScriptLocation(name);
         if (NS_FAILED(rv)) {
             name.AssignLiteral("(unknown)");
