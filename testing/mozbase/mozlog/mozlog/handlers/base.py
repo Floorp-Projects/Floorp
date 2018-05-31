@@ -8,6 +8,7 @@ from threading import Lock
 import codecs
 
 from mozlog.structuredlog import log_levels
+import six
 
 
 class BaseHandler(object):
@@ -97,7 +98,7 @@ class StreamHandler(BaseHandler):
         if not formatted:
             return
         with self._lock:
-            if isinstance(formatted, unicode):
+            if isinstance(formatted, six.text_type):
                 self.stream.write(formatted.encode("utf-8", "replace"))
             elif isinstance(formatted, str):
                 self.stream.write(formatted)

@@ -13,6 +13,7 @@ import traceback
 
 from .logtypes import Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple
 from .logtypes import log_action, convertor_registry
+import six
 
 """Structured Logging for recording test results.
 
@@ -207,7 +208,7 @@ class StructuredLogger(object):
 
         action = raw_data["action"]
         converted_data = convertor_registry[action].convert_known(**raw_data)
-        for k, v in raw_data.iteritems():
+        for k, v in six.iteritems(raw_data):
             if k not in converted_data:
                 converted_data[k] = v
 
