@@ -97,6 +97,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     private static final Method sGetNextMessage;
     private static final Method sOnPageStop;
     private static final Method sOnNewSession;
+    private static final Method sOnCrash;
 
     static {
         try {
@@ -106,6 +107,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     "onPageStop", GeckoSession.class, boolean.class);
             sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
                     "onNewSession", GeckoSession.class, String.class, GeckoResponse.class);
+            sOnCrash = GeckoSession.ContentDelegate.class.getMethod(
+                    "onCrash", GeckoSession.class);
         } catch (final NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -313,6 +316,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     public interface DelegateRegistrar<T> {
         void invoke(T delegate) throws Throwable;
+    }
+
+    /*
+     * If the value here is true, content crashes will be ignored. If false, the test will
+     * be failed immediately if a content crash occurs. This is also the case when
+     * {@link IgnoreCrash} is not present.
+     */
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface IgnoreCrash {
+        /**
+         * @return True if content crashes should be ignored, false otherwise. Default is true.
+         */
+        boolean value() default true;
     }
 
     public static class TimeoutException extends RuntimeException {
@@ -904,6 +921,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected Map<GeckoSession, Tab> mRDPTabs;
     protected Tab mRDPChromeProcess;
     protected boolean mReuseSession;
+    protected boolean mIgnoreCrash;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -1076,6 +1094,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 mWithDevTools = ((WithDevToolsAPI) annotation).value();
             } else if (ReuseSession.class.equals(annotation.annotationType())) {
                 mReuseSession = ((ReuseSession) annotation).value();
+            } else if (IgnoreCrash.class.equals(annotation.annotationType())) {
+                mIgnoreCrash = ((IgnoreCrash) annotation).value();
             }
         }
     }
@@ -1144,8 +1164,13 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     ignore = mCallRecordHandler.handleCall(method, args);
                 }
 
+                if (!mIgnoreCrash && sOnCrash.equals(method)) {
+                    throw new RuntimeException("Content process crashed");
+                }
+
                 final boolean isExternalDelegate =
                         !DEFAULT_DELEGATES.contains(method.getDeclaringClass());
+
                 if (!ignore) {
                     assertThat("Callbacks must be on UI thread",
                                Looper.myLooper(), equalTo(Looper.getMainLooper()));
