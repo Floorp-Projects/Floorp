@@ -52,26 +52,27 @@ and returns its `actorID`. That's the main role of RootActor.
 ```
 RootActor (root.js)
    |
-   |-- BrowserTabActor (webbrowser.js)
-   |   Targets tabs living in the parent or child process. Note that this is
-   |   just a proxy for FrameTargetActor, which is loaded via the tab's message
-   |   manager as a frame script in the process containing the tab. This proxy
-   |   via message manager is always used, even when e10s is disabled.
+   |-- FrameTargetActorProxy (frame-proxy.js)
+   |   Targets frames (such as a tab) living in the parent or child process.
+   |   Note that this is just a proxy for FrameTargetActor, which is loaded via
+   |   the frame's message manager as a frame script in the process containing
+   |   the frame content. This proxy via message manager is always used, even
+   |   when the content happens to be in the same process.
    |   Returned by "listTabs" or "getTab" requests.
    |   |
    |   \-- FrameTargetActor (frame.js)
    |       The "real" target actor for a frame (such as a tab) which runs in
-   |       whichever process holds the content. BrowserTabActor communicates
-   |       with this via the frame's message manager.
+   |       whichever process holds the content. FrameTargetActorProxy
+   |       communicates with this via the frame's message manager.
    |       Extends the abstract class BrowsingContextTargetActor.
-   |       Returned by "connect" on BrowserTabActor.
+   |       Returned by "connect" on FrameTargetActorProxy.
    |
    |-- WorkerActor (worker.js)
    |   Targets a worker (applies to various kinds like web worker, service
    |   worker, etc.).
    |   Returned by "listWorkers" request to the root actor to get all workers.
-   |   Returned by "listWorkers" request to a BrowserTabActor to get workers for
-   |   a specific tab.
+   |   Returned by "listWorkers" request to a FrameTargetActorProxy to get
+   |   workers for a specific frame.
    |   Returned by "listWorkers" request to a ChildProcessActor to get workers
    |   for the chrome of the child process.
    |

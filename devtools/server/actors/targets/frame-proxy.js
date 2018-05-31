@@ -4,11 +4,19 @@
 
 "use strict";
 
+/*
+ * Target actor proxy that represents a frame / docShell in the parent process. It
+ * launches a FrameTargetActor in the content process to do the real work and tunnels the
+ * data.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const { DebuggerServer } = require("devtools/server/main");
 loader.lazyImporter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
 
 /**
- * Creates a target actor for handling requests to a single browser frame.
+ * Creates a target actor proxy for handling requests to a single browser frame.
  * Both <xul:browser> and <iframe mozbrowser> are supported.
  * This actor is a shim that connects to a FrameTargetActor in a remote browser process.
  * All RDP packets get forwarded using the message manager.
@@ -18,7 +26,7 @@ loader.lazyImporter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm
  * @param options
  *        - {Boolean} favicons: true if the form should include the favicon for the tab.
  */
-function BrowserTabActor(connection, browser, options = {}) {
+function FrameTargetActorProxy(connection, browser, options = {}) {
   this._conn = connection;
   this._browser = browser;
   this._form = null;
@@ -26,14 +34,14 @@ function BrowserTabActor(connection, browser, options = {}) {
   this.options = options;
 }
 
-BrowserTabActor.prototype = {
+FrameTargetActorProxy.prototype = {
   async connect() {
     const onDestroy = () => {
       if (this._deferredUpdate) {
         // Reject the update promise if the tab was destroyed while requesting an update
         this._deferredUpdate.reject({
           error: "tabDestroyed",
-          message: "Tab destroyed while performing a BrowserTabActor update"
+          message: "Tab destroyed while performing a FrameTargetActorProxy update"
         });
       }
       this.exit();
@@ -75,10 +83,10 @@ BrowserTabActor.prototype = {
 
   /**
    * @param {Object} options
-   *        See BrowserTabActor constructor.
+   *        See FrameTargetActorProxy constructor.
    */
   async update(options = {}) {
-    // Update the BrowserTabActor options.
+    // Update the FrameTargetActorProxy options.
     this.options = options;
 
     // If the child happens to be crashed/close/detach, it won't have _form set,
@@ -172,4 +180,4 @@ BrowserTabActor.prototype = {
   },
 };
 
-exports.BrowserTabActor = BrowserTabActor;
+exports.FrameTargetActorProxy = FrameTargetActorProxy;
