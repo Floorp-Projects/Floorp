@@ -6,6 +6,11 @@
 
 UNIFIED_SOURCES += [
      'TestCSPParser.cpp',
+     'TestSecureContext.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
+
+LOCAL_INCLUDES += [
+    '/caps',
+]
