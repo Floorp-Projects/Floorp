@@ -153,7 +153,8 @@ nsFileProtocolHandler::GetDefaultPort(int32_t *result)
 NS_IMETHODIMP
 nsFileProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
-    *result = URI_NOAUTH | URI_IS_LOCAL_FILE | URI_IS_LOCAL_RESOURCE;
+    *result = URI_NOAUTH | URI_IS_LOCAL_FILE |
+              URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY;
     return NS_OK;
 }
 
