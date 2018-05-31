@@ -18,6 +18,8 @@ interface RTCDataChannel : EventTarget
 {
   readonly attribute DOMString label;
   readonly attribute boolean reliable;
+  readonly attribute unsigned short? maxPacketLifeTime;
+  readonly attribute unsigned short? maxRetransmits;
   readonly attribute RTCDataChannelState readyState;
   readonly attribute unsigned long bufferedAmount;
   attribute unsigned long bufferedAmountLowThreshold;
