@@ -2015,7 +2015,7 @@
           }
 
           const overCloseButton = event.originalTarget.getAttribute("anonid") == "close-button";
-          if (gBrowser.multiSelectedTabsCount > 0 && !overCloseButton) {
+          if (gBrowser.multiSelectedTabsCount > 0 && !overCloseButton && !this._overPlayingIcon) {
             // Tabs were previously multi-selected and user clicks on a tab
             // without holding Ctrl/Cmd Key
 
@@ -2028,7 +2028,11 @@
         }
 
         if (this._overPlayingIcon) {
-          this.toggleMuteAudio();
+          if (this.multiselected) {
+            gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
+          } else {
+            this.toggleMuteAudio();
+          }
           return;
         }
 
