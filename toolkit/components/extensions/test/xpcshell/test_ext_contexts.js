@@ -157,7 +157,7 @@ add_task(async function test_stringify_inaccessible() {
   let obj = Cu.evalInSandbox("({ local: true, nested: subobj })", sandbox);
   Assert.throws(() => {
     context.jsonStringify(obj);
-  });
+  }, /Permission denied to access property "toJSON"/);
 });
 
 add_task(async function test_stringify_accessible() {
@@ -174,4 +174,3 @@ add_task(async function test_stringify_accessible() {
   let expected = JSON.stringify({local: true, nested: {subobject: true}});
   equal(stringified, expected, "Stringified object with accessible property is as expected");
 });
-

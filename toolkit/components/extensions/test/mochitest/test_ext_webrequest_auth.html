@@ -108,7 +108,9 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
   let handlingExt = getAuthHandler();
   await handlingExt.startup();
 
-  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuth&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuth&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`),
+                       ProgressEvent,
+                       "caught rejected xhr");
 
   await callbackComplete;
   await handlingExt.awaitMessage("onAuthRequired");
@@ -162,7 +164,9 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
   let handlingExt = getAuthHandler();
   await handlingExt.startup();
 
-  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuthPromptProvider&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuthPromptProvider&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`),
+                       ProgressEvent,
+                       "caught rejected xhr");
 
   await callbackComplete;
   await handlingExt.awaitMessage("onAuthRequired");
