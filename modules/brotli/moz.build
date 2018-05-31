@@ -16,6 +16,7 @@ EXPORTS.brotli += [
 
 UNIFIED_SOURCES += [
     'common/dictionary.c',
+    'common/transform.c',
     'dec/bit_reader.c',
     'dec/decode.c',
     'dec/huffman.c',
@@ -44,6 +45,7 @@ HOST_SOURCES += [
     'enc/compress_fragment_two_pass.c',
     'enc/dictionary_hash.c',
     'enc/encode.c',
+    'enc/encoder_dict.c',
     'enc/entropy_encode.c',
     'enc/histogram.c',
     'enc/literal_cost.c',
