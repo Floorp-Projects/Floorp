@@ -70,7 +70,7 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
 
   if (clearJstermHistory) {
     // Clearing history that might have been set in previous tests.
-    await hud.jsterm.clearHistory();
+    await hud.ui.consoleOutput.dispatchClearHistory();
   }
 
   return hud;

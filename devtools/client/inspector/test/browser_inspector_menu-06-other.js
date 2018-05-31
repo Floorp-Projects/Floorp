@@ -3,6 +3,10 @@
 http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const {
+  getHistoryEntries,
+} = require("devtools/client/webconsole/selectors/history");
+
 // Tests for menuitem functionality that doesn't fit into any specific category
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 add_task(async function() {
@@ -30,7 +34,9 @@ add_task(async function() {
     let messagesAdded = webconsoleUI.once("new-messages");
     await messagesAdded;
     info("Checking if 'inspect($0)' was evaluated");
-    ok(webconsoleUI.jsterm.history[0] === "inspect($0)");
+
+    let state = webconsoleUI.consoleOutput.getStore().getState();
+    ok(getHistoryEntries(state)[0] === "inspect($0)");
     await toolbox.toggleSplitConsole();
   }
   async function testDuplicateNode() {
