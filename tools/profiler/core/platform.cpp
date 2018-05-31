@@ -1800,6 +1800,7 @@ CollectJavaThreadProfileData()
 
     buffer->AddThreadIdEntry(0);
     buffer->AddEntry(ProfileBufferEntry::Time(sampleTime));
+    bool parentFrameWasIdleFrame = false;
     int frameId = 0;
     while (true) {
       jni::String::LocalRef frameName =
@@ -1807,8 +1808,22 @@ CollectJavaThreadProfileData()
       if (!frameName) {
         break;
       }
-      buffer->CollectCodeLocation("", frameName->ToCString().get(), -1,
-                                  Nothing());
+      nsCString frameNameString = frameName->ToCString();
+
+      // Compute a category for the frame:
+      //  - IDLE for the wait function android.os.MessageQueue.nativePollOnce()
+      //  - OTHER for any function that's directly called by that wait function
+      //  - no category on everything else
+      Maybe<js::ProfilingStackFrame::Category> category;
+      if (frameNameString.EqualsLiteral("android.os.MessageQueue.nativePollOnce()")) {
+        category = Some(js::ProfilingStackFrame::Category::IDLE);
+        parentFrameWasIdleFrame = true;
+      } else if (parentFrameWasIdleFrame) {
+        category = Some(js::ProfilingStackFrame::Category::OTHER);
+        parentFrameWasIdleFrame = false;
+      }
+
+      buffer->CollectCodeLocation("", frameNameString.get(), -1, category);
     }
     sampleId++;
   }
