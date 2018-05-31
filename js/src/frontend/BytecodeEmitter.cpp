@@ -1696,13 +1696,13 @@ class MOZ_STACK_CLASS TryEmitter
 
     // Emits JSOP_GOTO to the end of try-catch-finally.
     // Used in `yield*`.
-    bool emitJumpOverCatchAndFinally() {
+    MOZ_MUST_USE bool emitJumpOverCatchAndFinally() {
         if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_))
             return false;
         return true;
     }
 
-    bool emitTry() {
+    MOZ_MUST_USE bool emitTry() {
         MOZ_ASSERT(state_ == State::Start);
 
         // Since an exception can be thrown at any place inside the try block,
@@ -1728,7 +1728,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   private:
-    bool emitTryEnd() {
+    MOZ_MUST_USE bool emitTryEnd() {
         MOZ_ASSERT(state_ == State::Try);
         MOZ_ASSERT(depth_ == bce_->stackDepth);
 
@@ -1753,7 +1753,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
-    bool emitCatch() {
+    MOZ_MUST_USE bool emitCatch() {
         MOZ_ASSERT(state_ == State::Try);
         if (!emitTryEnd())
             return false;
@@ -1778,7 +1778,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   private:
-    bool emitCatchEnd() {
+    MOZ_MUST_USE bool emitCatchEnd() {
         MOZ_ASSERT(state_ == State::Catch);
 
         if (!controlInfo_)
@@ -1803,7 +1803,7 @@ class MOZ_STACK_CLASS TryEmitter
     // "{" character in the source code text, to improve line:column number in
     // the error reporting.
     // For non-syntactic try-catch-finally, `finallyPos` can be omitted.
-    bool emitFinally(const Maybe<uint32_t>& finallyPos = Nothing()) {
+    MOZ_MUST_USE bool emitFinally(const Maybe<uint32_t>& finallyPos = Nothing()) {
         // If we are using controlInfo_ (i.e., emitting a syntactic try
         // blocks), we must have specified up front if there will be a finally
         // close. For internal non-syntactic try blocks, like those emitted for
@@ -1868,7 +1868,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   private:
-    bool emitFinallyEnd() {
+    MOZ_MUST_USE bool emitFinallyEnd() {
         MOZ_ASSERT(state_ == State::Finally);
 
         if (controlKind_ == ControlKind::Syntactic) {
@@ -1884,7 +1884,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
-    bool emitEnd() {
+    MOZ_MUST_USE bool emitEnd() {
         if (!hasFinally()) {
             MOZ_ASSERT(state_ == State::Catch);
             if (!emitCatchEnd())
