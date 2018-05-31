@@ -108,9 +108,11 @@ public class UrlUtils {
     public static boolean isPermittedResourceProtocol(@Nullable final String scheme) {
         return scheme != null && (
                 scheme.startsWith("http") ||
-                scheme.startsWith("https") ||
-                scheme.startsWith("file") ||
-                scheme.startsWith("data"));
+                        scheme.startsWith("https") ||
+                        scheme.startsWith("file") ||
+                        scheme.startsWith("data") ||
+                        scheme.startsWith("javascript") ||
+                        scheme.startsWith("about"));
     }
 
     public static boolean isSupportedProtocol(@Nullable final String scheme) {
