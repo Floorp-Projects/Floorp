@@ -338,15 +338,12 @@ describe("ASRouter", () => {
   });
 
   describe("#onMessage: Onboarding actions", () => {
-    it("should call openLinkIn with the correct params on OPEN_PRIVATE_BROWSER_WINDOW", async () => {
-      sinon.spy(Router, "openLinkIn");
+    it("should call OpenBrowserWindow with a private window on OPEN_PRIVATE_BROWSER_WINDOW", async () => {
       let [testMessage] = Router.state.messages;
-      testMessage.button_action_params = "about:home";
       const msg = fakeAsyncMessage({type: "OPEN_PRIVATE_BROWSER_WINDOW", data: testMessage});
       await Router.onMessage(msg);
 
-      assert.calledWith(Router.openLinkIn, testMessage.button_action_params, msg.target, {isPrivate: true, where: "window"});
-      assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
+      assert.calledWith(msg.target.browser.ownerGlobal.OpenBrowserWindow, {private: true});
     });
     it("should call openLinkIn with the correct params on OPEN_URL", async () => {
       sinon.spy(Router, "openLinkIn");

@@ -200,10 +200,28 @@ var PaymentTestUtils = {
    * Common PaymentDetailsInit for testing
    */
   Details: {
+    total2USD: {
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "2.00" },
+      },
+    },
+    total32USD: {
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "32.00" },
+      },
+    },
     total60USD: {
       total: {
         label: "Total due",
         amount: { currency: "USD", value: "60.00" },
+      },
+    },
+    total1pt75EUR: {
+      total: {
+        label: "Total due",
+        amount: { currency: "EUR", value: "1.75" },
       },
     },
     total60EUR: {
@@ -213,10 +231,6 @@ var PaymentTestUtils = {
       },
     },
     twoDisplayItems: {
-      total: {
-        label: "Total due",
-        amount: { currency: "USD", value: "32.00" },
-      },
       displayItems: [
         {
           label: "First",
@@ -228,11 +242,19 @@ var PaymentTestUtils = {
         },
       ],
     },
+    twoDisplayItemsEUR: {
+      displayItems: [
+        {
+          label: "First",
+          amount: { currency: "EUR", value: "0.85" },
+        },
+        {
+          label: "Second",
+          amount: { currency: "EUR", value: "1.70" },
+        },
+      ],
+    },
     twoShippingOptions: {
-      total: {
-        label: "Total due",
-        amount: { currency: "USD", value: "2.00" },
-      },
       shippingOptions: [
         {
           id: "1",
@@ -248,10 +270,6 @@ var PaymentTestUtils = {
       ],
     },
     twoShippingOptionsEUR: {
-      total: {
-        label: "Total due",
-        amount: { currency: "EUR", value: "1.75" },
-      },
       shippingOptions: [
         {
           id: "1",
@@ -266,21 +284,10 @@ var PaymentTestUtils = {
         },
       ],
     },
+    noShippingOptions: {
+      shippingOptions: [],
+    },
     bobPayPaymentModifier: {
-      total: {
-        label: "Total due",
-        amount: { currency: "USD", value: "2.00" },
-      },
-      displayItems: [
-        {
-          label: "First",
-          amount: { currency: "USD", value: "1.75" },
-        },
-        {
-          label: "Second",
-          amount: { currency: "USD", value: "0.25" },
-        },
-      ],
       modifiers: [
         {
           additionalDisplayItems: [
@@ -313,42 +320,28 @@ var PaymentTestUtils = {
         },
       ],
     },
-  },
-
-  UpdateWith: {
-    twoShippingOptions: {
-      error: "",
-      shippingOptions: [
+    additionalDisplayItemsEUR: {
+      modifiers: [
         {
-          id: "1",
-          label: "Most Unperfect Shipping",
-          amount: { currency: "USD", value: "1" },
-        },
-        {
-          id: "2",
-          label: "Least Perfect Shipping",
-          amount: { currency: "USD", value: "2" },
-          selected: true,
+          additionalDisplayItems: [
+            {
+              label: "Handling fee",
+              amount: { currency: "EUR", value: "1.00" },
+            },
+          ],
+          supportedMethods: "basic-card",
+          total: {
+            label: "Total due",
+            amount: { currency: "EUR", value: "2.50" },
+          },
         },
       ],
-      total: {
-        label: "Grand total is now: ",
-        amount: {
-          value: "24",
-          currency: "USD",
-        },
-      },
+    },
+    noError: {
+      error: "",
     },
     genericShippingError: {
       error: "Cannot ship with option 1 on days that end with Y",
-      shippingOptions: [],
-      total: {
-        label: "Grand total is!!!!!: ",
-        amount: {
-          value: "12",
-          currency: "USD",
-        },
-      },
     },
     fieldSpecificErrors: {
       error: "There are errors related to specific parts of the address",
@@ -361,14 +354,6 @@ var PaymentTestUtils = {
         postalCode: "Only allowed to ship to postalCodes that start with 0",
         recipient: "Can only ship to names that start with J",
         region: "Can only ship to regions that start with M",
-      },
-      shippingOptions: [],
-      total: {
-        label: "Grand total is now: ",
-        amount: {
-          value: "24",
-          currency: "USD",
-        },
       },
     },
   },

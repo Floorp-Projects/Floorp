@@ -23,9 +23,9 @@
 namespace mozilla {
 
 class AutoLockRulesSniffing;
+class EditSubActionInfo;
 class HTMLEditor;
 class HTMLEditRules;
-class RulesInfo;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -76,16 +76,16 @@ public:
   virtual nsresult Init(TextEditor* aTextEditor);
   virtual nsresult SetInitialValue(const nsAString& aValue);
   virtual nsresult DetachEditor();
-  virtual nsresult BeforeEdit(EditAction aAction,
+  virtual nsresult BeforeEdit(EditSubAction aEditSubAction,
                               nsIEditor::EDirection aDirection);
-  virtual nsresult AfterEdit(EditAction aAction,
+  virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection);
   virtual nsresult WillDoAction(Selection* aSelection,
-                                RulesInfo* aInfo,
+                                EditSubActionInfo& aInfo,
                                 bool* aCancel,
                                 bool* aHandled);
   virtual nsresult DidDoAction(Selection* aSelection,
-                               RulesInfo* aInfo,
+                               EditSubActionInfo& aInfo,
                                nsresult aResult);
 
   /**
@@ -155,8 +155,8 @@ protected:
    * This method may actually inserts text into the editor.  Therefore, this
    * might cause destroying the editor.
    *
-   * @param aAction             Must be EditAction::insertIMEText or
-   *                            EditAction::insertText.
+   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
+   *                            or EditSubAction::eInsertText.
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    * @param inString            String to be inserted.
@@ -165,7 +165,7 @@ protected:
    *                            allows to set.
    */
   MOZ_MUST_USE nsresult
-  WillInsertText(EditAction aAction, bool* aCancel, bool* aHandled,
+  WillInsertText(EditSubAction aEditSubAction, bool* aCancel, bool* aHandled,
                  const nsAString* inString, nsAString* outString,
                  int32_t aMaxLength);
 
@@ -499,7 +499,7 @@ protected:
   bool mDeleteBidiImmediately;
   bool mIsHTMLEditRules;
   // The top level editor action.
-  EditAction mTheAction;
+  EditSubAction mTopLevelEditSubAction;
   nsCOMPtr<nsITimer> mTimer;
   uint32_t mLastStart;
   uint32_t mLastLength;
@@ -514,11 +514,11 @@ protected:
  * TODO: This class (almost struct, though) is ugly and its size isn't
  *       optimized.  Should be refined later.
  */
-class RulesInfo final
+class MOZ_STACK_CLASS EditSubActionInfo final
 {
 public:
-  explicit RulesInfo(EditAction aAction)
-    : action(aAction)
+  explicit EditSubActionInfo(EditSubAction aEditSubAction)
+    : mEditSubAction(aEditSubAction)
     , inString(nullptr)
     , outString(nullptr)
     , outputFormat(nullptr)
@@ -533,37 +533,37 @@ public:
     , blockType(nullptr)
   {}
 
-  EditAction action;
+  EditSubAction mEditSubAction;
 
-  // EditAction::insertText / EditAction::insertIMEText
+  // EditSubAction::eInsertText / EditSubAction::eInsertTextComingFromIME
   const nsAString* inString;
   nsAString* outString;
   const nsAString* outputFormat;
   int32_t maxLength;
 
-  // EditAction::outputText
+  // EditSubAction::eComputeTextToOutput
   uint32_t flags;
 
-  // EditAction::deleteSelection
+  // EditSubAction::eDeleteSelectedContent
   nsIEditor::EDirection collapsedAction;
   nsIEditor::EStripWrappers stripWrappers;
 
-  // EditAction::removeList
+  // EditSubAction::eRemoveList
   bool bOrdered;
 
-  // EditAction::makeList
+  // EditSubAction::eCreateOrChangeList
   bool entireList;
   const nsAString* bulletType;
 
-  // EditAction::align
+  // EditSubAction::eSetOrClearAlignment
   const nsAString* alignType;
 
-  // EditAction::makeBasicBlock
+  // EditSubAction::eCreateOrRemoveBlock
   const nsAString* blockType;
 };
 
 /**
- * Stack based helper class for StartOperation()/EndOperation() sandwich.
+ * Stack based helper class for managing TextEditRules::mLockRluesSniffing.
  * This class sets a bool letting us know to ignore any rules sniffing
  * that tries to occur reentrantly.
  */

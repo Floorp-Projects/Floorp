@@ -49,13 +49,11 @@ void DisableMD5();
  *        The path to the directory containing the NSS builtin roots module.
  *        Usually the same as the path to the other NSS shared libraries.
  *        If empty, the (library) path will be searched.
- * @param modNameUTF8
- *        The UTF-8 name to give the module for display purposes.
  * @return true if the roots were successfully loaded, false otherwise.
  */
-bool LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8);
+bool LoadLoadableRoots(const nsCString& dir);
 
-void UnloadLoadableRoots(const char* modNameUTF8);
+void UnloadLoadableRoots();
 
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                               /*out*/ nsCString& nickname);

@@ -1224,9 +1224,9 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
 //
 nsStyleSVGReset::nsStyleSVGReset(const nsPresContext* aContext)
   : mMask(nsStyleImageLayers::LayerType::Mask)
-  , mStopColor(NS_RGB(0, 0, 0))
-  , mFloodColor(NS_RGB(0, 0, 0))
-  , mLightingColor(NS_RGB(255, 255, 255))
+  , mStopColor(StyleComplexColor::FromColor(NS_RGB(0, 0, 0)))
+  , mFloodColor(StyleComplexColor::FromColor(NS_RGB(0, 0, 0)))
+  , mLightingColor(StyleComplexColor::FromColor(NS_RGB(255, 255, 255)))
   , mStopOpacity(1.0f)
   , mFloodOpacity(1.0f)
   , mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO)
@@ -3339,17 +3339,13 @@ nsStyleBackground::HasFixedBackground(nsIFrame* aFrame) const
 nscolor
 nsStyleBackground::BackgroundColor(const nsIFrame* aFrame) const
 {
-  return BackgroundColor(aFrame->Style());
+  return mBackgroundColor.CalcColor(aFrame);
 }
 
 nscolor
 nsStyleBackground::BackgroundColor(mozilla::ComputedStyle* aStyle) const
 {
-  // In majority of cases, background-color should just be a numeric color.
-  // In that case, we can skip resolving StyleColor().
-  return mBackgroundColor.IsNumericColor()
-    ? mBackgroundColor.mColor
-    : mBackgroundColor.CalcColor(aStyle);
+  return mBackgroundColor.CalcColor(aStyle);
 }
 
 bool
