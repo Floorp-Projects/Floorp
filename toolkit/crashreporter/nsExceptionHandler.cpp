@@ -117,6 +117,7 @@ using mozilla::ipc::CrashReporterClient;
 // From toolkit/library/rust/shared/lib.rs
 extern "C" {
   void install_rust_panic_hook();
+  void install_rust_oom_hook();
   bool get_rust_panic_reason(char** reason, size_t* length);
 }
 
@@ -1686,6 +1687,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
   install_rust_panic_hook();
+
+  install_rust_oom_hook();
 
   InitThreadAnnotation();
 
