@@ -823,6 +823,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     // On ARM, the chip must have hardware division instructions.
     inline void remainder32(Register rhs, Register srcDest, bool isUnsigned) PER_SHARED_ARCH;
 
+    // Perform an integer division, returning the integer part rounded toward zero.
+    // rhs must not be zero, and the division must not overflow. The remainder
+    // is stored into the third argument register here.
+    //
+    // This variant preserves registers, and doesn't require hardware division
+    // instructions on ARM (will call out to a runtime routine).
+    //
+    // rhs is preserved, srdDest and remOutput are clobbered.
+    void flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
+                          bool isUnsigned, const LiveRegisterSet& volatileLiveRegs)
+                          DEFINED_ON(mips_shared, arm, arm64, x86_shared);
+
     inline void divFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 

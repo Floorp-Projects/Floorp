@@ -5925,6 +5925,48 @@ MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Regist
     addDouble(scratchDouble, dest);
 }
 
+extern "C" {
+    extern MOZ_EXPORT int64_t __aeabi_idivmod(int,int);
+    extern MOZ_EXPORT int64_t __aeabi_uidivmod(int,int);
+}
+
+void
+MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput, Register remOutput,
+                                 bool isUnsigned, const LiveRegisterSet& volatileLiveRegs)
+{
+    // Currently this helper can't handle this situation.
+    MOZ_ASSERT(lhsOutput != rhs);
+
+    if (HasIDIV()) {
+        mov(lhsOutput, remOutput);
+        remainder32(rhs, remOutput, isUnsigned);
+        quotient32(rhs, lhsOutput, isUnsigned);
+    } else {
+        // Ensure that the output registers are saved and restored properly,
+        MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal0));
+        MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal1));
+        PushRegsInMask(volatileLiveRegs);
+
+        {
+            ScratchRegisterScope scratch(*this);
+            setupUnalignedABICall(scratch);
+        }
+        passABIArg(lhsOutput);
+        passABIArg(rhs);
+        callWithABI(isUnsigned ? JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod) :
+                                 JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod),
+                    MoveOp::GENERAL,
+                    CheckUnsafeCallWithABI::DontCheckOther);
+        mov(ReturnRegVal1, remOutput);
+        mov(ReturnRegVal0, lhsOutput);
+
+        LiveRegisterSet ignore;
+        ignore.add(remOutput);
+        ignore.add(lhsOutput);
+        PopRegsInMaskIgnore(volatileLiveRegs, ignore);
+    }
+}
+
 // ========================================================================
 // Spectre Mitigations.
 
