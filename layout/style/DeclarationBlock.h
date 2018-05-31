@@ -31,9 +31,9 @@ class DeclarationBlock final
 public:
   explicit DeclarationBlock(
     already_AddRefed<RawServoDeclarationBlock> aRaw)
-    : mImmutable(false)
+    : mRaw(aRaw)
+    , mImmutable(false)
     , mIsDirty(false)
-    , mRaw(aRaw)
   {
     mContainer.mRaw = 0;
   }
@@ -42,9 +42,9 @@ public:
     : DeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
 
   DeclarationBlock(const DeclarationBlock& aCopy)
-    : mImmutable(false)
+    : mRaw(Servo_DeclarationBlock_Clone(aCopy.mRaw).Consume())
+    , mImmutable(false)
     , mIsDirty(false)
-    , mRaw(Servo_DeclarationBlock_Clone(aCopy.mRaw).Consume())
   {
     mContainer.mRaw = 0;
   }
@@ -209,6 +209,8 @@ private:
     nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
   } mContainer;
 
+  RefPtr<RawServoDeclarationBlock> mRaw;
+
   // set when declaration put in the rule tree;
   bool mImmutable;
 
@@ -224,8 +226,6 @@ private:
   // reference, and there is no problem with another user of the same
   // DeclarationBlock thinking that it is not dirty.
   Atomic<bool, MemoryOrdering::Relaxed> mIsDirty;
-
-  RefPtr<RawServoDeclarationBlock> mRaw;
 };
 
 } // namespace mozilla
