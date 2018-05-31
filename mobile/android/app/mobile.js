@@ -567,6 +567,9 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
+// Enable WebSpeech speech synthesis
+pref("media.webspeech.synth.enabled", true);
+
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
