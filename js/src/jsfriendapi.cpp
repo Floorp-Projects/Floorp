@@ -162,6 +162,12 @@ JS_GetCompartmentPrincipals(JSCompartment* compartment)
     return realm->principals();
 }
 
+JS_FRIEND_API(JSPrincipals*)
+JS::GetRealmPrincipals(JS::Realm* realm)
+{
+    return realm->principals();
+}
+
 JS_FRIEND_API(void)
 JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals)
 {
@@ -1543,8 +1549,9 @@ js::EnableAccessValidation(JSContext* cx, bool enabled)
 }
 
 JS_FRIEND_API(void)
-js::SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
+js::SetRealmValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
 {
+    MOZ_ASSERT(global->is<GlobalObject>());
     global->realm()->setValidAccessPtr(accessp);
 }
 

@@ -3085,12 +3085,12 @@ nsContentUtils::SubjectPrincipal(JSContext* aCx)
   MOZ_ASSERT(NS_IsMainThread());
 
   // As opposed to SubjectPrincipal(), we do in fact assume that
-  // we're in a compartment here; anyone who calls this function
-  // in situations where that's not the case is doing it wrong.
-  JSCompartment* compartment = js::GetContextCompartment(aCx);
-  MOZ_ASSERT(compartment);
+  // we're in a realm here; anyone who calls this function in
+  // situations where that's not the case is doing it wrong.
+  JS::Realm* realm = js::GetContextRealm(aCx);
+  MOZ_ASSERT(realm);
 
-  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  JSPrincipals* principals = JS::GetRealmPrincipals(realm);
   return nsJSPrincipals::get(principals);
 }
 
@@ -3105,9 +3105,9 @@ nsContentUtils::SubjectPrincipal()
     MOZ_CRASH("Accessing the Subject Principal without an AutoJSAPI on the stack is forbidden");
   }
 
-  JSCompartment *compartment = js::GetContextCompartment(cx);
+  JS::Realm* realm = js::GetContextRealm(cx);
 
-  // When an AutoJSAPI is instantiated, we are in a null compartment until the
+  // When an AutoJSAPI is instantiated, we are in a null realm until the
   // first JSAutoRealm, which is kind of a purgatory as far as permissions
   // go. It would be nice to just hard-abort if somebody does a security check
   // in this purgatory zone, but that would be too fragile, since it could be
@@ -3125,9 +3125,9 @@ nsContentUtils::SubjectPrincipal()
   //
   // So we use a singleton null principal. To avoid it being accidentally
   // inherited and becoming a "real" subject or object principal, we do a
-  // release-mode assert during compartment creation against using this
-  // principal on an actual global.
-  if (!compartment) {
+  // release-mode assert during realm creation against using this principal on
+  // an actual global.
+  if (!realm) {
     return sNullSubjectPrincipal;
   }
 
