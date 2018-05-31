@@ -42,6 +42,8 @@ def generate_symbols_file(output, *args):
 
     symbols = [s.strip() for s in pp.out.getvalue().splitlines() if s.strip()]
 
+    libname, ext = os.path.splitext(os.path.basename(output.name))
+
     if buildconfig.substs['OS_TARGET'] == 'WINNT':
         # A def file is generated for MSVC link.exe that looks like the
         # following:
@@ -66,14 +68,13 @@ def generate_symbols_file(output, *args):
         # those platforms, and to DATA on Windows, so that the "DATA" part
         # is, in fact, part of the symbol name as far as the symbols variable
         # is concerned.
-        libname, ext = os.path.splitext(os.path.basename(output.name))
         assert ext == '.def'
         output.write('LIBRARY %s\nEXPORTS\n  %s\n'
                      % (libname, '\n  '.join(symbols)))
     elif buildconfig.substs['GCC_USE_GNU_LD']:
         # A linker version script is generated for GNU LD that looks like the
         # following:
-        # {
+        # liblibrary.so {
         # global:
         #   symbol1;
         #   symbol2;
@@ -81,8 +82,8 @@ def generate_symbols_file(output, *args):
         # local:
         #   *;
         # };
-        output.write('{\nglobal:\n  %s;\nlocal:\n  *;\n};'
-                     % ';\n  '.join(symbols))
+        output.write('%s {\nglobal:\n  %s;\nlocal:\n  *;\n};'
+                     % (libname, ';\n  '.join(symbols)))
     elif buildconfig.substs['OS_TARGET'] == 'Darwin':
         # A list of symbols is generated for Apple ld that simply lists all
         # symbols, with an underscore prefix.
