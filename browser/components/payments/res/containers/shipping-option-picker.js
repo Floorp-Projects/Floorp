@@ -9,7 +9,7 @@ import ShippingOption from "../components/shipping-option.js";
 /**
  * <shipping-option-picker></shipping-option-picker>
  * Container around <rich-select> with
- * <rich-option> listening to shippingOptions.
+ * <option> listening to shippingOptions.
  */
 
 export default class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
@@ -17,6 +17,7 @@ export default class ShippingOptionPicker extends PaymentStateSubscriberMixin(HT
     super();
     this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
+    this.dropdown.setAttribute("option-type", "shipping-option");
   }
 
   connectedCallback() {
@@ -30,31 +31,30 @@ export default class ShippingOptionPicker extends PaymentStateSubscriberMixin(HT
     for (let option of shippingOptions) {
       let optionEl = this.dropdown.getOptionByValue(option.id);
       if (!optionEl) {
-        optionEl = new ShippingOption();
+        optionEl = document.createElement("option");
         optionEl.value = option.id;
       }
-      optionEl.label = option.label;
-      optionEl.amountCurrency = option.amount.currency;
-      optionEl.amountValue = option.amount.value;
+
+      optionEl.setAttribute("label", option.label);
+      optionEl.setAttribute("amount-currency", option.amount.currency);
+      optionEl.setAttribute("amount-value", option.amount.value);
+
+      optionEl.textContent = ShippingOption.formatSingleLineLabel(option);
       desiredOptions.push(optionEl);
     }
-    let el = null;
-    while ((el = this.dropdown.popupBox.querySelector(":scope > shipping-option"))) {
-      el.remove();
-    }
+
+    this.dropdown.popupBox.textContent = "";
     for (let option of desiredOptions) {
       this.dropdown.popupBox.appendChild(option);
     }
 
     // Update selectedness after the options are updated
     let selectedShippingOption = state.selectedShippingOption;
-    let selectedOptionEl =
-      this.dropdown.getOptionByValue(selectedShippingOption);
-    this.dropdown.selectedOption = selectedOptionEl;
+    this.dropdown.value = selectedShippingOption;
 
-    if (selectedShippingOption && !selectedOptionEl) {
-      throw new Error(`Selected shipping option ${selectedShippingOption} ` +
-                      `does not exist in option elements`);
+    if (selectedShippingOption && selectedShippingOption !== this.dropdown.popupBox.value) {
+      throw new Error(`The option ${selectedShippingOption} ` +
+                      `does not exist in the shipping option picker`);
     }
   }
 
@@ -68,8 +68,7 @@ export default class ShippingOptionPicker extends PaymentStateSubscriberMixin(HT
   }
 
   onChange(event) {
-    let select = event.target;
-    let selectedOptionId = select.selectedOption && select.selectedOption.value;
+    let selectedOptionId = this.dropdown.value;
     this.requestStore.setState({
       selectedShippingOption: selectedOptionId,
     });

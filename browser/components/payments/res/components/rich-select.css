@@ -6,27 +6,16 @@ rich-select {
   display: inline-block;
 }
 
-rich-select:not([open]) > .rich-select-popup-box {
-  display: none;
-}
-
-rich-select[open] {
-  position: relative;
-}
-
-rich-select[open] > .rich-select-popup-box {
-  box-shadow: 0 0 5px black;
-  position: absolute;
-  z-index: 1;
-}
-
-.rich-select-popup-box > .rich-option[selected] {
-  background-color: #ffa;
+/*
+ * The HTML select element is hidden and placed on the rich-option
+ * element to make it look like clicking on the rich-option element
+ * in the closed state opens the HTML select dropdown. */
+rich-select > select {
+  opacity: 0;
 }
 
 .rich-option {
   display: grid;
-  border-bottom: 1px solid #ddd;
   background: #fff; /* TODO: system colors */
   padding: 8px;
 }

@@ -4,6 +4,7 @@
 
 import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 import RichOption from "./rich-option.js";
+/* import-globals-from ../unprivileged-fallbacks.js */
 
 /**
  * <rich-select>
@@ -54,6 +55,10 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
       this.appendChild(this[`_${name}`]);
     }
     super.connectedCallback();
+  }
+
+  static formatSingleLineLabel(address) {
+    return PaymentDialogUtils.getAddressLabel(address);
   }
 
   render() {
