@@ -1008,7 +1008,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 final IWebView webView = getWebView();
                 if (webView != null) {
                     if (AppConstants.isGeckoBuild()) {
-                        CountDownLatch latch = new CountDownLatch(1);
+                        final CountDownLatch latch = new CountDownLatch(1);
                         webView.saveWebViewState(session, latch);
                         try {
                             latch.await();

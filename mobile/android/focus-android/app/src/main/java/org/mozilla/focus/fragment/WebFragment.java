@@ -107,7 +107,7 @@ public abstract class WebFragment extends LocaleAwareFragment {
         final Session session = getSession();
         if (session != null) {
             if (AppConstants.isGeckoBuild()) {
-                CountDownLatch latch = new CountDownLatch(1);
+                final CountDownLatch latch = new CountDownLatch(1);
                 webView.saveWebViewState(session, latch);
                 try {
                     latch.await();
