@@ -146,11 +146,17 @@ class ArtifactJob(object):
     # be the same across platforms.
     _test_archive_suffix = '.common.tests.zip'
 
-    def __init__(self, package_re, tests_re, log=None, download_symbols=False, substs=None):
+    def __init__(self, package_re, tests_re, log=None,
+                 download_symbols=False,
+                 download_host_bins=False,
+                 substs=None):
         self._package_re = re.compile(package_re)
         self._tests_re = None
         if tests_re:
             self._tests_re = re.compile(tests_re)
+        self._host_bins_re = None
+        if download_host_bins:
+            self._host_bins_re = re.compile(r'public/build/host/bin/(mar|mbsdiff)(.exe)?')
         self._log = log
         self._substs = substs
         self._symbols_archive_suffix = None
@@ -167,6 +173,8 @@ class ArtifactJob(object):
         for artifact in artifacts:
             name = artifact['name']
             if self._package_re and self._package_re.match(name):
+                yield name
+            elif self._host_bins_re and self._host_bins_re.match(name):
                 yield name
             elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
@@ -186,6 +194,13 @@ class ArtifactJob(object):
             return self.process_tests_artifact(filename, processed_filename)
         if self._symbols_archive_suffix and filename.endswith(self._symbols_archive_suffix):
             return self.process_symbols_archive(filename, processed_filename)
+        if self._host_bins_re:
+            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
+            # without the full path to the artifact, so we must reconstruct
+            # that path here.
+            orig_basename = os.path.basename(filename).split('-', 1)[1]
+            if self._host_bins_re.match('public/build/host/bin/{}'.format(orig_basename)):
+                return self.process_host_bin(filename, processed_filename)
         return self.process_package_artifact(filename, processed_filename)
 
     def process_package_artifact(self, filename, processed_filename):
@@ -236,6 +251,16 @@ class ArtifactJob(object):
                          {'destpath': destpath},
                          'Adding {destpath} to processed archive')
                 writer.add(destpath.encode('utf-8'), reader[filename])
+
+    def process_host_bin(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
+            # without any of the path parts of the artifact, so we must inject
+            # the desired `host/bin` prefix here.
+            orig_basename = os.path.basename(filename).split('-', 1)[1]
+            destpath = mozpath.join('host/bin', orig_basename)
+            writer.add(destpath.encode('utf-8'), open(filename, 'rb'))
+
 
 class AndroidArtifactJob(ArtifactJob):
 
@@ -501,10 +526,16 @@ JOB_DETAILS = {
 
 
 
-def get_job_details(job, log=None, download_symbols=False, substs=None):
+def get_job_details(job, log=None,
+                    download_symbols=False,
+                    download_host_bins=False,
+                    substs=None):
     cls, (package_re, tests_re) = JOB_DETAILS[job]
-    return cls(package_re, tests_re, log=log, download_symbols=download_symbols,
+    return cls(package_re, tests_re, log=log,
+               download_symbols=download_symbols,
+               download_host_bins=download_host_bins,
                substs=substs)
+
 
 def cachedmethod(cachefunc):
     '''Decorator to wrap a class or instance method with a memoizing callable that
@@ -632,9 +663,11 @@ class TaskCache(CacheManager):
         CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_urls(self, tree, job, rev, download_symbols):
+    def artifact_urls(self, tree, job, rev, download_symbols, download_host_bins):
         try:
-            artifact_job = get_job_details(job, log=self._log, download_symbols=download_symbols)
+            artifact_job = get_job_details(job, log=self._log,
+                                           download_symbols=download_symbols,
+                                           download_host_bins=download_host_bins)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': job},
@@ -860,6 +893,11 @@ class Artifacts(object):
 
         self._substs = substs
         self._download_symbols = self._substs.get('MOZ_ARTIFACT_BUILD_SYMBOLS', False)
+        # Host binaries are not produced for macOS consumers: that is, there's
+        # no macOS-hosted job to produce them at this time.  Therefore we
+        # enable this only for automation builds, which only require Linux and
+        # Windows host binaries.
+        self._download_host_bins = self._substs.get('MOZ_AUTOMATION', False)
         self._defines = defines
         self._tree = tree
         self._job = job or self._guess_artifact_job()
@@ -873,6 +911,7 @@ class Artifacts(object):
         try:
             self._artifact_job = get_job_details(self._job, log=self._log,
                                                  download_symbols=self._download_symbols,
+                                                 download_host_bins=self._download_host_bins,
                                                  substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
@@ -1051,7 +1090,9 @@ class Artifacts(object):
 
     def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
-            urls = task_cache.artifact_urls(tree, job, pushhead, self._download_symbols)
+            urls = task_cache.artifact_urls(tree, job, pushhead,
+                                            self._download_symbols,
+                                            self._download_host_bins)
         except ValueError:
             return None
         if urls:
