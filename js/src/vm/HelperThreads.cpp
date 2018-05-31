@@ -347,7 +347,7 @@ js::HasOffThreadIonCompile(Realm* realm)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads || realm->isAtomsRealm())
+    if (!HelperThreadState().threads)
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
@@ -753,7 +753,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    JS_SetCompartmentPrincipals(global->compartment(), currentRealm->principals());
+    JS::SetRealmPrincipals(global->realm(), currentRealm->principals());
 
     return global;
 }

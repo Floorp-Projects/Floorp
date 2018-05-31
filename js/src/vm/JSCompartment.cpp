@@ -92,11 +92,10 @@ JSCompartment::~JSCompartment()
 }
 
 bool
-JSCompartment::init(JSContext* maybecx)
+JSCompartment::init(JSContext* cx)
 {
     if (!crossCompartmentWrappers.init(0)) {
-        if (maybecx)
-            ReportOutOfMemory(maybecx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -104,15 +103,14 @@ JSCompartment::init(JSContext* maybecx)
 }
 
 bool
-ObjectRealm::init(JSContext* maybecx)
+ObjectRealm::init(JSContext* cx)
 {
     if (!iteratorCache.init()) {
-        if (maybecx)
-            ReportOutOfMemory(maybecx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
-    NativeIteratorSentinel sentinel(NativeIterator::allocateSentinel(maybecx));
+    NativeIteratorSentinel sentinel(NativeIterator::allocateSentinel(cx));
     if (!sentinel)
         return false;
 
@@ -122,17 +120,14 @@ ObjectRealm::init(JSContext* maybecx)
 }
 
 bool
-Realm::init(JSContext* maybecx)
+Realm::init(JSContext* cx)
 {
     // Initialize JSCompartment. This is temporary until Realm and
     // JSCompartment are completely separated.
-    if (!JSCompartment::init(maybecx))
+    if (!JSCompartment::init(cx))
         return false;
 
     /*
-     * maybecx is null when called to create the atoms realm from
-     * JSRuntime::init().
-     *
      * As a hack, we clear our timezone cache every time we create a new realm.
      * This ensures that the cache is always relatively fresh, but shouldn't
      * interfere with benchmarks that create tons of date objects (unless they
@@ -140,14 +135,13 @@ Realm::init(JSContext* maybecx)
      */
     JS::ResetTimeZone();
 
-    if (!objects_.init(maybecx))
+    if (!objects_.init(cx))
         return false;
 
     if (!savedStacks_.init() ||
         !varNames_.init())
     {
-        if (maybecx)
-            ReportOutOfMemory(maybecx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -307,7 +301,6 @@ CopyStringPure(JSContext* cx, JSString* str)
 bool
 JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
 {
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     MOZ_ASSERT(cx->compartment() == this);
 
     /* If the string is already in this compartment, we are done. */
@@ -454,7 +447,6 @@ JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableH
 bool
 JSCompartment::wrap(JSContext* cx, MutableHandleObject obj)
 {
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     MOZ_ASSERT(cx->compartment() == this);
 
     if (!obj)
@@ -486,7 +478,6 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj)
 bool
 JSCompartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existingArg)
 {
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     MOZ_ASSERT(cx->compartment() == this);
     MOZ_ASSERT(obj);
     MOZ_ASSERT(existingArg);
@@ -615,7 +606,6 @@ bool
 Realm::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 {
     MOZ_ASSERT(name);
-    MOZ_ASSERT(!isAtomsRealm());
 
     if (varNames_.put(name))
         return true;
@@ -649,7 +639,7 @@ JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 {
     gcstats::AutoPhase ap(trc->runtime()->gc.stats(), gcstats::PhaseKind::MARK_CCWS);
     MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
-    for (CompartmentsIter c(trc->runtime(), SkipAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(trc->runtime()); !c.done(); c.next()) {
         if (!c->zone()->isCollecting())
             c->traceOutgoingCrossCompartmentWrappers(trc);
     }
@@ -919,7 +909,7 @@ JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
 {
     MOZ_ASSERT(trc->runtime()->gc.isHeapCompacting());
 
-    for (CompartmentsIter comp(trc->runtime(), SkipAtoms); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
         // Sweep the wrapper map to update keys (wrapped values) in other
         // compartments that may have been moved.
         comp->sweepCrossCompartmentWrappers();
@@ -1400,12 +1390,6 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
             *scriptCountsMapArg += r.front().value()->sizeOfIncludingThis(mallocSizeOf);
         }
     }
-}
-
-HashNumber
-Realm::randomHashCode()
-{
-    return HashNumber(getOrCreateRandomNumberGenerator().next());
 }
 
 mozilla::HashCodeScrambler

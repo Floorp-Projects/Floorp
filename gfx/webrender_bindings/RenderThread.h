@@ -42,7 +42,7 @@ protected:
 
 class WebRenderProgramCache {
 public:
-  WebRenderProgramCache();
+  explicit WebRenderProgramCache(wr::WrThreadPool* aThreadPool);
 
   ~WebRenderProgramCache();
 
@@ -170,6 +170,7 @@ private:
 
   void DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost> aTexture);
   void ShutDownTask(layers::SynchronousTask* aTask);
+  void ProgramCacheTask();
 
   ~RenderThread();
 

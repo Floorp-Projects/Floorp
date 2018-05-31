@@ -190,9 +190,6 @@ JS_GetIsSecureContext(JSCompartment* compartment);
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment);
 
-extern JS_FRIEND_API(void)
-JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals);
-
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetScriptPrincipals(JSScript* script);
 
@@ -324,6 +321,12 @@ ForceLexicalInitialization(JSContext *cx, HandleObject obj);
  */
 extern JS_FRIEND_API(int)
 IsGCPoisoning();
+
+extern JS_FRIEND_API(JSPrincipals*)
+GetRealmPrincipals(JS::Realm* realm);
+
+extern JS_FRIEND_API(void)
+SetRealmPrincipals(JS::Realm* realm, JSPrincipals* principals);
 
 } // namespace JS
 
@@ -484,9 +487,6 @@ extern JS_FRIEND_API(bool)
 IsSystemZone(JS::Zone* zone);
 
 extern JS_FRIEND_API(bool)
-IsAtomsRealm(JS::Realm* realm);
-
-extern JS_FRIEND_API(bool)
 IsAtomsZone(JS::Zone* zone);
 
 struct WeakMapTracer
@@ -553,6 +553,7 @@ extern JS_FRIEND_API(size_t)
 SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject* obj);
 #endif
 
+// Note: this returns nullptr iff |zone| is the atoms zone.
 extern JS_FRIEND_API(JS::Realm*)
 GetAnyRealmInZone(JS::Zone* zone);
 
@@ -566,8 +567,8 @@ namespace shadow {
 
 struct ObjectGroup {
     const Class* clasp;
-    JSObject*   proto;
-    JSCompartment* compartment;
+    JSObject* proto;
+    JS::Realm* realm;
 };
 
 struct BaseShape {
@@ -670,10 +671,23 @@ InheritanceProtoKeyForStandardClass(JSProtoKey key)
 JS_FRIEND_API(bool)
 IsFunctionObject(JSObject* obj);
 
+JS_FRIEND_API(bool)
+IsCrossCompartmentWrapper(JSObject* obj);
+
 static MOZ_ALWAYS_INLINE JSCompartment*
 GetObjectCompartment(JSObject* obj)
 {
-    return reinterpret_cast<shadow::Object*>(obj)->group->compartment;
+    JS::Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
+    return JS::GetCompartmentForRealm(realm);
+}
+
+// CrossCompartmentWrappers are shared by all realms within the compartment, so
+// getting a wrapper's realm usually doesn't make sense.
+static MOZ_ALWAYS_INLINE JS::Realm*
+GetNonCCWObjectRealm(JSObject* obj)
+{
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
+    return reinterpret_cast<shadow::Object*>(obj)->group->realm;
 }
 
 JS_FRIEND_API(JSObject*)
@@ -3093,9 +3107,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoAssertNoContentJS)
 };
 
 // Turn on assertions so that we assert that
-//     !comp->validAccessPtr || *comp->validAccessPtr
-// is true for every |comp| that we run JS code in. The compartment's validAccessPtr
-// is set via SetCompartmentValidAccessPtr.
+//     !realm->validAccessPtr || *realm->validAccessPtr
+// is true for every |realm| that we run JS code in. The realm's validAccessPtr
+// is set via SetRealmValidAccessPtr.
 extern JS_FRIEND_API(void)
 EnableAccessValidation(JSContext* cx, bool enabled);
 
@@ -3104,7 +3118,7 @@ EnableAccessValidation(JSContext* cx, bool enabled);
 // threads that are allowed to run code on |global|, so all changes to *accessp
 // should be made from whichever thread owns |global| at a given time.
 extern JS_FRIEND_API(void)
-SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
+SetRealmValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
 
 // Returns true if the system zone is available (i.e., if no cooperative contexts
 // are using it now).

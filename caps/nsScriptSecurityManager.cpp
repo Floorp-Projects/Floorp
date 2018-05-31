@@ -1253,15 +1253,6 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
-// static
-nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
-{
-    JSCompartment *compartment = js::GetObjectCompartment(aObj);
-    JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
-    return nsJSPrincipals::get(principals);
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
                                           const nsIID &aIID,

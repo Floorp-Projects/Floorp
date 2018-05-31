@@ -8174,7 +8174,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // (eg. "my-module/Test") which is why they are nested in "vendored".
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
-const vendored = {
+const vendored = exports.vendored = {
   classnames: _classnames2.default,
   "devtools-components": devtoolsComponents,
   "devtools-config": devtoolsConfig,
@@ -8210,7 +8210,6 @@ const vendored = {
  */
 
 // Modules imported with destructuring
-exports.vendored = vendored;
 
 /***/ }),
 

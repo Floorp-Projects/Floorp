@@ -61,6 +61,7 @@ union InputStreamParams
   MultiplexInputStreamParams;
   SlicedInputStreamParams;
   IPCBlobInputStreamParams;
+  InputStreamLengthWrapperParams;
 };
 
 union OptionalInputStreamParams
@@ -80,6 +81,13 @@ struct MIMEInputStreamParams
   OptionalInputStreamParams optionalStream;
   HeaderEntry[] headers;
   bool startedReading;
+};
+
+struct InputStreamLengthWrapperParams
+{
+  InputStreamParams stream;
+  int64_t length;
+  bool consumed;
 };
 
 } // namespace ipc

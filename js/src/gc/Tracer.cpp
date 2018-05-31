@@ -163,7 +163,7 @@ struct TraceIncomingFunctor {
 JS_PUBLIC_API(void)
 JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
 {
-    for (js::CompartmentsIter comp(trc->runtime(), SkipAtoms); !comp.done(); comp.next()) {
+    for (js::CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
         if (compartments.has(comp))
             continue;
 

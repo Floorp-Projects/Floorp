@@ -597,7 +597,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   *   "moz-icon"
   * URI_INHERITS_SECURITY_CONTEXT - e.g.
   *   "javascript"
-  * URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT - e.g.
+  * URI_IS_POTENTIALLY_TRUSTWORTHY - e.g.
   *   "https",
   *   "moz-safe-about"
   *
@@ -609,7 +609,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   if (NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
       NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &schemeNoReturnData)) ||
       NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT, &schemeInherits)) ||
-      NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT, &schemeSecure))) {
+      NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY, &schemeSecure))) {
     *aDecision = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }

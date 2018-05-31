@@ -836,7 +836,7 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
     MOZ_ASSERT(totalArenaSize % gc::ArenaSize == 0);
 #endif
 
-    for (RealmsIter realm(rt, WithAtoms); !realm.done(); realm.next())
+    for (RealmsIter realm(rt); !realm.done(); realm.next())
         realm->nullRealmStats();
 
     size_t numDirtyChunks =
@@ -886,7 +886,7 @@ JS_PUBLIC_API(size_t)
 JS::SystemRealmCount(JSContext* cx)
 {
     size_t n = 0;
-    for (RealmsIter realm(cx->runtime(), WithAtoms); !realm.done(); realm.next()) {
+    for (RealmsIter realm(cx->runtime()); !realm.done(); realm.next()) {
         if (realm->isSystem())
             ++n;
     }
@@ -897,7 +897,7 @@ JS_PUBLIC_API(size_t)
 JS::UserRealmCount(JSContext* cx)
 {
     size_t n = 0;
-    for (RealmsIter realm(cx->runtime(), WithAtoms); !realm.done(); realm.next()) {
+    for (RealmsIter realm(cx->runtime()); !realm.done(); realm.next()) {
         if (!realm->isSystem())
             ++n;
     }

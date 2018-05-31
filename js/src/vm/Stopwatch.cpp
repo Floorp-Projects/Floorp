@@ -194,7 +194,7 @@ void
 PerformanceMonitoring::dispose(JSRuntime* rt)
 {
     reset();
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+    for (RealmsIter r(rt); !r.done(); r.next())
         r->performanceMonitoring.unlink();
 }
 
