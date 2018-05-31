@@ -3,7 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.renderWasmText = exports.clearWasmStates = exports.wasmOffsetToLine = exports.lineToWasmOffset = exports.isWasm = exports.getWasmLineNumberFormatter = exports.getWasmText = undefined;
+exports.getWasmText = getWasmText;
+exports.getWasmLineNumberFormatter = getWasmLineNumberFormatter;
+exports.isWasm = isWasm;
+exports.lineToWasmOffset = lineToWasmOffset;
+exports.wasmOffsetToLine = wasmOffsetToLine;
+exports.clearWasmStates = clearWasmStates;
+exports.renderWasmText = renderWasmText;
 
 var _WasmParser = require("devtools/client/shared/vendor/WasmParser");
 
@@ -180,11 +186,3 @@ function renderWasmText(sourceId, {
 
   return lines;
 }
-
-exports.getWasmText = getWasmText;
-exports.getWasmLineNumberFormatter = getWasmLineNumberFormatter;
-exports.isWasm = isWasm;
-exports.lineToWasmOffset = lineToWasmOffset;
-exports.wasmOffsetToLine = wasmOffsetToLine;
-exports.clearWasmStates = clearWasmStates;
-exports.renderWasmText = renderWasmText;

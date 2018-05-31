@@ -3632,10 +3632,10 @@ nsGlobalWindowInner::GetChildWindow(const nsAString& aName)
 }
 
 void
-nsGlobalWindowInner::RefreshCompartmentPrincipal()
+nsGlobalWindowInner::RefreshRealmPrincipal()
 {
-  JS_SetCompartmentPrincipals(js::GetObjectCompartment(GetWrapperPreserveColor()),
-                              nsJSPrincipals::get(mDoc->NodePrincipal()));
+  JS::SetRealmPrincipals(js::GetNonCCWObjectRealm(GetWrapperPreserveColor()),
+                         nsJSPrincipals::get(mDoc->NodePrincipal()));
 }
 
 already_AddRefed<nsIWidget>

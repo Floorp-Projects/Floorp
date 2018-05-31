@@ -9,6 +9,7 @@
 #include "nsIIPCSerializableInputStream.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
@@ -137,6 +138,14 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
+  // Let's try to take the length using InputStreamLengthHelper. If the length
+  // cannot be taken synchronously, and its length is needed, the stream needs
+  // to be fully copied in memory on the deserialization side.
+  int64_t length;
+  if (!InputStreamLengthHelper::GetSyncLength(aStream, &length)) {
+    length = -1;
+  }
+
   // As a fallback, attempt to stream the data across using a IPCStream
   // actor. For blocking streams, create a nonblocking pipe instead,
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
@@ -168,6 +177,7 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
   IPCRemoteStream remoteStream;
   remoteStream.delayedStart() = aDelayedStart;
   remoteStream.stream() = IPCStreamSource::Create(asyncStream, aManager);
+  remoteStream.length() = length;
   aValue = remoteStream;
 
   return true;
@@ -379,6 +389,7 @@ DeserializeIPCStream(const IPCStream& aValue)
     }
 
     destinationStream->SetDelayedStart(remoteStream.delayedStart());
+    destinationStream->SetLength(remoteStream.length());
     return destinationStream->TakeReader();
   }
 

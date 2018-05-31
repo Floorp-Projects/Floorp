@@ -13,6 +13,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStream.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/SlicedInputStream.h"
+#include "mozilla/InputStreamLengthWrapper.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"
@@ -98,6 +99,10 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
 
     case InputStreamParams::TSlicedInputStreamParams:
       serializable = new mozilla::SlicedInputStream();
+      break;
+
+    case InputStreamParams::TInputStreamLengthWrapperParams:
+      serializable = new mozilla::InputStreamLengthWrapper();
       break;
 
     default:

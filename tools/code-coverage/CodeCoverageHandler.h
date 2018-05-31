@@ -23,7 +23,7 @@ public:
 
 private:
   CodeCoverageHandler();
-  CodeCoverageHandler(const CrossProcessMutexHandle& aHandle);
+  explicit CodeCoverageHandler(const CrossProcessMutexHandle& aHandle);
 
   static StaticAutoPtr<CodeCoverageHandler> instance;
   CrossProcessMutex mGcovLock;

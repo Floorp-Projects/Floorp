@@ -94,7 +94,7 @@ public:
   }
 
   // Like CallbackOrNull(), but will return a new dead proxy object in the
-  // caller's compartment if the callback is null.
+  // caller's realm if the callback is null.
   JSObject* Callback(JSContext* aCx);
 
   JSObject* GetCreationStack() const
@@ -146,10 +146,9 @@ public:
     // binding object for a DOMException from the caller's scope, otherwise
     // report it.
     eRethrowContentExceptions,
-    // Throw exceptions to the caller code, unless the caller compartment is
+    // Throw exceptions to the caller code, unless the caller realm is
     // provided, the exception is not a DOMException from the caller
-    // compartment, and the caller compartment does not subsume our unwrapped
-    // callback.
+    // realm, and the caller realm does not subsume our unwrapped callback.
     eRethrowExceptions
   };
 
@@ -295,17 +294,17 @@ protected:
      * non-null.
      */
   public:
-    // If aExceptionHandling == eRethrowContentExceptions then aCompartment
-    // needs to be set to the compartment in which exceptions will be rethrown.
+    // If aExceptionHandling == eRethrowContentExceptions then aRealm
+    // needs to be set to the realm in which exceptions will be rethrown.
     //
-    // If aExceptionHandling == eRethrowExceptions then aCompartment may be set
-    // to the compartment in which exceptions will be rethrown.  In that case
-    // they will only be rethrown if that compartment's principal subsumes the
+    // If aExceptionHandling == eRethrowExceptions then aRealm may be set
+    // to the realm in which exceptions will be rethrown.  In that case
+    // they will only be rethrown if that realm's principal subsumes the
     // principal of our (unwrapped) callback.
     CallSetup(CallbackObject* aCallback, ErrorResult& aRv,
               const char* aExecutionReason,
               ExceptionHandling aExceptionHandling,
-              JSCompartment* aCompartment = nullptr,
+              JS::Realm* aRealm = nullptr,
               bool aIsJSImplementedWebIDL = false);
     ~CallSetup();
 
@@ -323,9 +322,9 @@ protected:
     // Members which can go away whenever
     JSContext* mCx;
 
-    // Caller's compartment. This will only have a sensible value if
+    // Caller's realm. This will only have a sensible value if
     // mExceptionHandling == eRethrowContentExceptions or eRethrowExceptions.
-    JSCompartment* mCompartment;
+    JS::Realm* mRealm;
 
     // And now members whose construction/destruction order we need to control.
     Maybe<AutoEntryScript> mAutoEntryScript;

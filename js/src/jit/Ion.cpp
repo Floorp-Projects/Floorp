@@ -108,6 +108,7 @@ JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator* t
     temp(temp),
     runtime(rt),
     realm(realm),
+    zone(realm ? realm->zone() : nullptr),
     prev_(CurrentJitContext()),
     assemblerCount_(0)
 {
@@ -119,6 +120,7 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
     temp(temp),
     runtime(CompileRuntime::get(cx->runtime())),
     realm(CompileRealm::get(cx->realm())),
+    zone(CompileZone::get(cx->zone())),
     prev_(CurrentJitContext()),
     assemblerCount_(0)
 {
@@ -211,12 +213,9 @@ JitRuntime::startTrampolineCode(MacroAssembler& masm)
 bool
 JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 {
-    AutoAtomsRealm ar(cx, lock);
+    AutoAtomsZone az(cx, lock);
 
     JitContext jctx(cx, nullptr);
-
-    if (!cx->realm()->ensureJitRealmExists(cx))
-        return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
     if (!functionWrappers_ || !functionWrappers_->init())
@@ -339,7 +338,7 @@ JitRuntime::debugTrapHandler(JSContext* cx)
         // JitRuntime code stubs are shared across compartments and have to
         // be allocated in the atoms zone.
         AutoLockForExclusiveAccess lock(cx);
-        AutoAtomsRealm ar(cx, lock);
+        AutoAtomsZone az(cx, lock);
         debugTrapHandler_ = generateDebugTrapHandler(cx);
     }
     return debugTrapHandler_;
@@ -592,7 +591,7 @@ JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
     if (trc->runtime()->atomsAreFinished())
         return;
 
-    Zone* zone = trc->runtime()->atomsRealm(lock)->zone();
+    Zone* zone = trc->runtime()->atomsZone(lock);
     for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
         JitCode* code = i;
         TraceRoot(trc, &code, "wrapper");

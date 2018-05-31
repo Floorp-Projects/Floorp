@@ -152,7 +152,7 @@ GeckoProfilerRuntime::enable(bool enabled)
     // WebAssembly code does not need to be released, but profiling string
     // labels have to be generated so that they are available during async
     // profiling stack iteration.
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+    for (RealmsIter r(rt); !r.done(); r.next())
         r->wasm.ensureProfilingLabels(enabled);
 }
 

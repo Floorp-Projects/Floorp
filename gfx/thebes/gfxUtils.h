@@ -295,6 +295,8 @@ public:
                                                nsACString& failureId,
                                                int32_t* status);
 
+    static void RemoveShaderCacheFromDiskIfNecessary();
+
     /**
      * Copy to the clipboard as a PNG encoded Data URL.
      */

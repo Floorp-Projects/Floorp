@@ -884,7 +884,7 @@ class RootingContext
         return reinterpret_cast<RootingContext*>(cx);
     }
 
-    friend JSCompartment* js::GetContextCompartment(const JSContext* cx);
+    friend JS::Realm* js::GetContextRealm(const JSContext* cx);
     friend JS::Zone* js::GetContextZone(const JSContext* cx);
 };
 
@@ -1054,10 +1054,16 @@ namespace js {
  *   usable without resorting to jsfriendapi.h, and when JSContext is an
  *   incomplete type.
  */
+inline JS::Realm*
+GetContextRealm(const JSContext* cx)
+{
+    return JS::RootingContext::get(cx)->realm_;
+}
+
 inline JSCompartment*
 GetContextCompartment(const JSContext* cx)
 {
-    return GetCompartmentForRealm(JS::RootingContext::get(cx)->realm_);
+    return GetCompartmentForRealm(GetContextRealm(cx));
 }
 
 inline JS::Zone*

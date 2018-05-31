@@ -3,6 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.basename = basename;
+exports.dirname = dirname;
+exports.isURL = isURL;
+exports.isAbsolute = isAbsolute;
+exports.join = join;
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,9 +32,3 @@ function isAbsolute(str) {
 function join(base, dir) {
   return `${base}/${dir}`;
 }
-
-exports.basename = basename;
-exports.dirname = dirname;
-exports.isURL = isURL;
-exports.isAbsolute = isAbsolute;
-exports.join = join;

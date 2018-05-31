@@ -1087,7 +1087,7 @@ bool
 StaticStrings::init(JSContext* cx)
 {
     AutoLockForExclusiveAccess lock(cx);
-    AutoAtomsRealm ar(cx, lock);
+    AutoAtomsZone az(cx, lock);
 
     static_assert(UNIT_STATIC_LIMIT - 1 <= JSString::MAX_LATIN1_CHAR,
                   "Unit strings must fit in Latin1Char.");

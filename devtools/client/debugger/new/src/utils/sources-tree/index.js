@@ -102,6 +102,12 @@ Object.defineProperty(exports, "createParentMap", {
     return _utils.createParentMap;
   }
 });
+Object.defineProperty(exports, "getFileExtension", {
+  enumerable: true,
+  get: function () {
+    return _utils.getFileExtension;
+  }
+});
 Object.defineProperty(exports, "getRelativePath", {
   enumerable: true,
   get: function () {
@@ -130,11 +136,5 @@ Object.defineProperty(exports, "nodeHasChildren", {
   enumerable: true,
   get: function () {
     return _utils.nodeHasChildren;
-  }
-});
-Object.defineProperty(exports, "getExtension", {
-  enumerable: true,
-  get: function () {
-    return _utils.getExtension;
   }
 });

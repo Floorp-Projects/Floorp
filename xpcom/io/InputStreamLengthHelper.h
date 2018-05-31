@@ -42,6 +42,9 @@ private:
   NS_IMETHOD
   Run() override;
 
+  void
+  ExecCallback(int64_t aLength);
+
   nsCOMPtr<nsIInputStream> mStream;
   std::function<void(int64_t aLength)> mCallback;
 };

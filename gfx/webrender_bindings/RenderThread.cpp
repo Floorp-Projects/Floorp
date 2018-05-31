@@ -70,6 +70,16 @@ RenderThread::Start()
   widget::WinCompositorWindowThread::Start();
 #endif
   layers::SharedSurfacesParent::Initialize();
+
+  if (XRE_IsGPUProcess() &&
+      gfx::gfxVars::UseWebRenderProgramBinary()) {
+    MOZ_ASSERT(gfx::gfxVars::UseWebRender());
+    // Initialize program cache if necessary
+    RefPtr<Runnable> runnable = WrapRunnable(
+      RefPtr<RenderThread>(sRenderThread.get()),
+      &RenderThread::ProgramCacheTask);
+    sRenderThread->Loop()->PostTask(runnable.forget());
+  }
 }
 
 // static
@@ -511,13 +521,19 @@ RenderThread::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
   return mRenderTextures.GetWeak(aExternalImageId.mHandle);
 }
 
+void
+RenderThread::ProgramCacheTask()
+{
+  ProgramCache();
+}
+
 WebRenderProgramCache*
 RenderThread::ProgramCache()
 {
   MOZ_ASSERT(IsInRenderThread());
 
   if (!mProgramCache) {
-    mProgramCache = MakeUnique<WebRenderProgramCache>();
+    mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
   return mProgramCache.get();
 }
@@ -532,9 +548,16 @@ WebRenderThreadPool::~WebRenderThreadPool()
   wr_thread_pool_delete(mThreadPool);
 }
 
-WebRenderProgramCache::WebRenderProgramCache()
+WebRenderProgramCache::WebRenderProgramCache(wr::WrThreadPool* aThreadPool)
 {
-  mProgramCache = wr_program_cache_new();
+  MOZ_ASSERT(aThreadPool);
+
+  nsAutoString path;
+  if (gfxVars::UseWebRenderProgramBinaryDisk()) {
+    path.Append(gfx::gfxVars::ProfDirectory());
+  }
+  mProgramCache = wr_program_cache_new(&path, aThreadPool);
+  wr_try_load_shader_from_disk(mProgramCache);
 }
 
 WebRenderProgramCache::~WebRenderProgramCache()
