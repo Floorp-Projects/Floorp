@@ -167,6 +167,7 @@ EXPORTS.js += [
     '../public/UbiNodeDominatorTree.h',
     '../public/UbiNodePostOrder.h',
     '../public/UbiNodeShortestPaths.h',
+    '../public/UbiNodeUtils.h',
     '../public/UniquePtr.h',
     '../public/Utility.h',
     '../public/Value.h',
