@@ -34,6 +34,7 @@
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/GamepadServiceTest.h"
+#include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/MIDIAccessManager.h"
@@ -152,6 +153,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCredentials)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaCapabilities)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
@@ -222,6 +224,8 @@ Navigator::Invalidate()
     mVRServiceTest->Shutdown();
     mVRServiceTest = nullptr;
   }
+
+  mMediaCapabilities = nullptr;
 }
 
 void
@@ -1793,6 +1797,16 @@ Navigator::Credentials()
     mCredentials = new CredentialsContainer(GetWindow());
   }
   return mCredentials;
+}
+
+dom::MediaCapabilities*
+Navigator::MediaCapabilities()
+{
+  if (!mMediaCapabilities) {
+    mMediaCapabilities =
+      new dom::MediaCapabilities(GetWindow()->AsGlobal());
+  }
+  return mMediaCapabilities;
 }
 
 /* static */
