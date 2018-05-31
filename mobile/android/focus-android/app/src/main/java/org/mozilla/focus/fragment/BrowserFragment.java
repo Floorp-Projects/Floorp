@@ -1331,10 +1331,18 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     @SuppressLint("SetTextI18n")
     private void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
+        final Context context = getContext();
+        if (context == null) { return; }
+
         if (numberOfMatches > 0) {
-            findInPageResultTextView.setText(activeMatchOrdinal + "/" + numberOfMatches);
+            final String visibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
+            final String accessibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
+
+            findInPageResultTextView.setText(visibleString);
+            findInPageResultTextView.setContentDescription(accessibleString);
         } else {
             findInPageResultTextView.setText("");
+            findInPageResultTextView.setContentDescription("");
         }
     }
 }

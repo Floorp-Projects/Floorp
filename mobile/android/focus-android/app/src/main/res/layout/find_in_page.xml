@@ -14,7 +14,7 @@
         android:layout_marginStart="12dp"
         android:background="@android:color/transparent"
         android:ems="10"
-        android:hint="@string/find_in_page"
+        android:hint="@string/find_in_page_input"
         android:lines="1"
         android:paddingBottom="17dp"
         android:paddingTop="17dp"
@@ -28,7 +28,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:text="12/255"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/queryText"
         app:layout_constraintEnd_toStartOf="@id/previousResult"
@@ -44,7 +43,7 @@
         app:layout_constraintStart_toEndOf="@+id/resultText"
         app:layout_constraintTop_toTopOf="parent"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Find previous result"
+        android:contentDescription="@string/accessibility_previous_result"
         android:src="@drawable/ic_arrowhead_up" />
 
     <ImageButton
@@ -57,7 +56,7 @@
         app:layout_constraintStart_toEndOf="@+id/previousResult"
         app:layout_constraintTop_toTopOf="parent"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Find next result"
+        android:contentDescription="@string/accessibility_next_result"
         android:src="@drawable/ic_arrowhead_down" />
 
     <ImageButton
@@ -70,7 +69,7 @@
         app:layout_constraintStart_toEndOf="@+id/nextResult"
         app:layout_constraintTop_toTopOf="parent"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Close find in page results"
+        android:contentDescription="@string/accessibility_close_find_in_page"
         android:src="@drawable/ic_close" />
 
 </android.support.constraint.ConstraintLayout>
