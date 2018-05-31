@@ -2784,6 +2784,18 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
     atomicEffectOp(arrayType, sync, op, value, mem, valueTemp, offsetTemp, maskTemp);
 }
 
+void
+MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
+                                 bool isUnsigned, const LiveRegisterSet&)
+{
+    if (isUnsigned)
+        as_divu(srcDest, rhs);
+    else
+        as_div(srcDest, rhs);
+    as_mfhi(remOutput);
+    as_mflo(srcDest);
+}
+
 // ========================================================================
 // Spectre Mitigations.
 

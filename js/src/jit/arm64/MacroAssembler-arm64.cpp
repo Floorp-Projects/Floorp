@@ -1860,6 +1860,26 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
     atomicEffectOp(arrayType, sync, op, value, mem, temp);
 }
 
+void
+MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
+                                 bool isUnsigned, const LiveRegisterSet&)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireW();
+    ARMRegister src = temps.AcquireW();
+
+    // Preserve src for remainder computation
+    Mov(src, ARMRegister(srcDest, 32));
+
+    if (isUnsigned)
+        Udiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    else
+        Sdiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    //Compute remainder
+    Mul(scratch, ARMRegister(srcDest, 32), ARMRegister(rhs, 32));
+    Sub(ARMRegister(remOutput, 32), src, scratch);
+}
+
 // ========================================================================
 // Spectre Mitigations.
 

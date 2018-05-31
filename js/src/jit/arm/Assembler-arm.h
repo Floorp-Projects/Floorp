@@ -159,6 +159,15 @@ static constexpr Register StackPointer = sp;
 static constexpr Register FramePointer = r11;
 static constexpr Register ReturnReg = r0;
 static constexpr Register64 ReturnReg64(r1, r0);
+
+// The attribute '__value_in_regs' alters the calling convention of a function so that
+// a structure of up to four elements can be returned via the argument registers rather
+// than being written to memory.
+static constexpr Register ReturnRegVal0 = IntArgReg0;
+static constexpr Register ReturnRegVal1 = IntArgReg1;
+static constexpr Register ReturnRegVal2 = IntArgReg2;
+static constexpr Register ReturnRegVal3 = IntArgReg3;
+
 static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
 static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
 static constexpr FloatRegister ReturnSimd128Reg = InvalidFloatReg;
