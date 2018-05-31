@@ -399,7 +399,7 @@ public:
                                AudioDataListener* aListener) override;
   /* Called on the graph thread when the input device settings should be
    * reevaluated, for example, if the channel count of the input stream should
-   * be changed . */
+   * be changed. */
   void ReevaluateInputDevice();
   /* Called on the graph thread when there is new output data for listeners.
    * This is the mixed audio output of this MediaStreamGraph. */
@@ -410,9 +410,12 @@ public:
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels);
   /* Called every time there are changes to input/output audio devices like
-   * plug/unplug etc.  Depending on the platform, this can be called on
-   * different thread. This function is called with the MSG lock held. */
+   * plug/unplug etc. This can be called on any thread, and posts a message to
+   * the main thread so that it can post a message to the graph thread. */
   void DeviceChanged();
+  /* Called every time there are changes to input/output audio devices. This is
+   * called on the graph thread. */
+  void DeviceChangedImpl();
 
   /**
    * Compute how much stream data we would like to buffer for aStream.
