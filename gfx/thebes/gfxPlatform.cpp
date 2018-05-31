@@ -22,6 +22,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
@@ -866,6 +867,18 @@ gfxPlatform::Init()
         Preferences::SetBool(FONT_VARIATIONS_PREF, false);
         Preferences::Lock(FONT_VARIATIONS_PREF);
       }
+
+      nsCOMPtr<nsIFile> profDir;
+      rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP, getter_AddRefs(profDir));
+      if (NS_FAILED(rv)) {
+        gfxVars::SetProfDirectory(nsString());
+      } else {
+        nsAutoString path;
+        profDir->GetPath(path);
+        gfxVars::SetProfDirectory(nsString(path));
+      }
+
+      gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
     }
 
     if (obs) {
@@ -2626,7 +2639,10 @@ gfxPlatform::InitWebRenderConfig()
 #endif
 
   if (Preferences::GetBool("gfx.webrender.program-binary", false)) {
-    gfx::gfxVars::SetUseWebRenderProgramBinary(gfxConfig::IsEnabled(Feature::WEBRENDER));
+    gfxVars::SetUseWebRenderProgramBinary(gfxConfig::IsEnabled(Feature::WEBRENDER));
+    if (Preferences::GetBool("gfx.webrender.program-binary-disk", false)) {
+      gfxVars::SetUseWebRenderProgramBinaryDisk(gfxConfig::IsEnabled(Feature::WEBRENDER));
+    }
   }
 
 #ifdef MOZ_WIDGET_ANDROID
