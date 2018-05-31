@@ -49,15 +49,16 @@ public:
                 const PaymentOptions& aOptions,
                 PaymentRequest** aRequest);
 
-  nsresult CanMakePayment(const nsAString& aRequestId);
-  nsresult ShowPayment(const nsAString& aRequestId);
-  nsresult AbortPayment(const nsAString& aRequestId);
-  nsresult CompletePayment(const nsAString& aRequestId,
+  nsresult CanMakePayment(PaymentRequest* aRequest);
+  nsresult ShowPayment(PaymentRequest* aRequest);
+  nsresult AbortPayment(PaymentRequest* aRequest, bool aDeferredShow);
+  nsresult CompletePayment(PaymentRequest* aRequest,
                            const PaymentComplete& aComplete);
   nsresult UpdatePayment(JSContext* aCx,
                          const nsAString& aRequestId,
                          const PaymentDetailsUpdate& aDetails,
-                         bool aRequestShipping);
+                         bool aRequestShipping,
+                         bool aDeferredShow);
 
   nsresult RespondPayment(const IPCPaymentActionResponse& aResponse);
   nsresult ChangeShippingAddress(const nsAString& aRequestId,
@@ -66,23 +67,27 @@ public:
                                 const nsAString& aOption);
 
   nsresult
-  ReleasePaymentChild(PaymentRequestChild* aPaymentChild);
+  ReleasePaymentChild(const nsAString& aId);
 
 private:
   PaymentRequestManager() = default;
-  ~PaymentRequestManager() = default;
+  ~PaymentRequestManager()
+  {
+    MOZ_ASSERT(mActivePayments.Count() == 0);
+  }
 
-  nsresult GetPaymentChild(PaymentRequest* aRequest,
-                           PaymentRequestChild** aPaymentChild);
-  nsresult ReleasePaymentChild(PaymentRequest* aRequest);
+  PaymentRequestChild* GetPaymentChild(PaymentRequest* aRequest);
 
   nsresult SendRequestPayment(PaymentRequest* aRequest,
                               const IPCPaymentActionRequest& action,
-                              bool aReleaseAfterSend = false);
+                              bool aResponseExpected = true);
+
+  void NotifyRequestDone(PaymentRequest* aRequest);
 
   // The container for the created PaymentRequests
-  nsTArray<RefPtr<PaymentRequest>> mRequestQueue;
-  nsRefPtrHashtable<nsRefPtrHashKey<PaymentRequest>, PaymentRequestChild> mPaymentChildHash;
+  nsDataHashtable<nsStringHashKey, PaymentRequest*> mPaymentChildHash;
+  // Strong pointer to requests with ongoing IPC messages to the parent.
+  nsDataHashtable<nsRefPtrHashKey<PaymentRequest>, uint32_t> mActivePayments;
   RefPtr<PaymentRequest> mShowingRequest;
 };
 
