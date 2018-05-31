@@ -16,9 +16,17 @@
 
 namespace mozilla {
 
+template <typename TChar>
 class TokenizerBase
 {
 public:
+  typedef nsTSubstring<TChar> TAString;
+  typedef nsTString<TChar> TString;
+  typedef nsTDependentString<TChar> TDependentString;
+  typedef nsTDependentSubstring<TChar> TDependentSubstring;
+
+  static TChar const sWhitespaces[];
+
   /**
    * The analyzer works with elements in the input cut to a sequence of token
    * where each token has an elementary type
@@ -45,15 +53,15 @@ public:
 
   /**
    * Class holding the type and the value of a token.  It can be manually created
-   * to allow checks against it via methods of Tokenizer or are results of some of
-   * the Tokenizer's methods.
+   * to allow checks against it via methods of TTokenizer or are results of some of
+   * the TTokenizer's methods.
    */
   class Token
   {
     TokenType mType;
-    nsDependentCSubstring mWord;
-    nsCString mCustom;
-    char mChar;
+    TDependentSubstring mWord;
+    TString mCustom;
+    TChar mChar;
     uint64_t mInteger;
     ECaseSensitivity mCustomCaseInsensitivity;
     bool mCustomEnabled;
@@ -61,11 +69,11 @@ public:
     // If this token is a result of the parsing process, this member is referencing
     // a sub-string in the input buffer.  If this is externally created Token this
     // member is left an empty string.
-    nsDependentCSubstring mFragment;
+    TDependentSubstring mFragment;
 
-    friend class TokenizerBase;
-    void AssignFragment(nsACString::const_char_iterator begin,
-                        nsACString::const_char_iterator end);
+    friend class TokenizerBase<TChar>;
+    void AssignFragment(typename TAString::const_char_iterator begin,
+                        typename TAString::const_char_iterator end);
 
     static Token Raw();
 
@@ -75,9 +83,9 @@ public:
     Token& operator=(const Token& aOther);
 
     // Static constructors of tokens by type and value
-    static Token Word(const nsACString& aWord);
-    static Token Char(const char aChar);
-    static Token Number(const uint64_t aNumber);
+    static Token Word(TAString const& aWord);
+    static Token Char(TChar const aChar);
+    static Token Number(uint64_t const aNumber);
     static Token Whitespace();
     static Token NewLine();
     static Token EndOfFile();
@@ -88,11 +96,11 @@ public:
     bool Equals(const Token& aOther) const;
 
     TokenType Type() const { return mType; }
-    char AsChar() const;
-    nsDependentCSubstring AsString() const;
+    TChar AsChar() const;
+    TDependentSubstring AsString() const;
     uint64_t AsInteger() const;
 
-    nsDependentCSubstring Fragment() const { return mFragment; }
+    TDependentSubstring Fragment() const { return mFragment; }
   };
 
   /**
@@ -101,11 +109,11 @@ public:
    * AddCustomToken() returns a reference to a token that can then be comapred using
    * Token::Equals() againts the output from Next*() or be passed to Check*().
    */
-  Token AddCustomToken(const nsACString& aValue, ECaseSensitivity aCaseInsensitivity, bool aEnabled = true);
+  Token AddCustomToken(const TAString& aValue, ECaseSensitivity aCaseInsensitivity, bool aEnabled = true);
   template <uint32_t N>
-  Token AddCustomToken(const char(&aValue)[N], ECaseSensitivity aCaseInsensitivity, bool aEnabled = true)
+  Token AddCustomToken(const TChar(&aValue)[N], ECaseSensitivity aCaseInsensitivity, bool aEnabled = true)
   {
-    return AddCustomToken(nsDependentCSubstring(aValue, N - 1), aCaseInsensitivity, aEnabled);
+    return AddCustomToken(TDependentSubstring(aValue, N - 1), aCaseInsensitivity, aEnabled);
   }
   void RemoveCustomToken(Token& aToken);
   /**
@@ -136,34 +144,34 @@ public:
   MOZ_MUST_USE bool HasFailed() const;
 
 protected:
-  explicit TokenizerBase(const char* aWhitespaces = nullptr,
-                         const char* aAdditionalWordChars = nullptr);
+  explicit TokenizerBase(const TChar* aWhitespaces = nullptr,
+                         const TChar* aAdditionalWordChars = nullptr);
 
   // false if we have already read the EOF token.
   bool HasInput() const;
   // Main parsing function, it doesn't shift the read cursor, just returns the next
   // token position.
-  nsACString::const_char_iterator Parse(Token& aToken) const;
+  typename TAString::const_char_iterator Parse(Token& aToken) const;
   // Is read cursor at the end?
-  bool IsEnd(const nsACString::const_char_iterator& caret) const;
+  bool IsEnd(const typename TAString::const_char_iterator& caret) const;
   // True, when we are at the end of the input data, but it has not been marked
-  // as complete yet.  In that case we cannot proceed with providing a multi-char token.
-  bool IsPending(const nsACString::const_char_iterator & caret) const;
+  // as complete yet.  In that case we cannot proceed with providing a multi-TChar token.
+  bool IsPending(const typename TAString::const_char_iterator & caret) const;
   // Is read cursor on a character that is a word start?
-  bool IsWordFirst(const char aInput) const;
+  bool IsWordFirst(const TChar aInput) const;
   // Is read cursor on a character that is an in-word letter?
-  bool IsWord(const char aInput) const;
+  bool IsWord(const TChar aInput) const;
   // Is read cursor on a character that is a valid number?
   // TODO - support multiple radix
-  bool IsNumber(const char aInput) const;
+  bool IsNumber(const TChar aInput) const;
   // Is equal to the given custom token?
-  bool IsCustom(const nsACString::const_char_iterator& caret,
+  bool IsCustom(const typename TAString::const_char_iterator& caret,
                 const Token& aCustomToken, uint32_t* aLongest = nullptr) const;
 
   // Friendly helper to assign a fragment on a Token
   static void AssignFragment(Token& aToken,
-                             nsACString::const_char_iterator begin,
-                             nsACString::const_char_iterator end);
+                             typename TAString::const_char_iterator begin,
+                             typename TAString::const_char_iterator end);
 
   // true iff we have already read the EOF token
   bool mPastEof;
@@ -178,14 +186,14 @@ protected:
   uint32_t mMinRawDelivery;
 
   // Customizable list of whitespaces
-  const char* mWhitespaces;
+  const TChar* mWhitespaces;
   // Additinal custom word characters
-  const char* mAdditionalWordChars;
+  const TChar* mAdditionalWordChars;
 
   // All these point to the original buffer passed to the constructor or to the incremental
   // buffer after FeedInput.
-  nsACString::const_char_iterator mCursor; // Position of the current (actually next to read) token start
-  nsACString::const_char_iterator mEnd; // End of the input position
+  typename TAString::const_char_iterator mCursor; // Position of the current (actually next to read) token start
+  typename TAString::const_char_iterator mEnd; // End of the input position
 
   // This is the list of tokens user has registered with AddCustomToken()
   nsTArray<UniquePtr<Token>> mCustomTokens;
@@ -201,39 +209,44 @@ private:
 
 /**
  * This is a simple implementation of a lexical analyzer or maybe better
- * called a tokenizer.  It doesn't allow any user dictionaries or
- * user define token types.
+ * called a tokenizer.
  *
- * It is limited only to ASCII input for now. UTF-8 or any other input
- * encoding must yet be implemented.
+ * Please use Tokenizer or Tokenizer16 classes, that are specializations
+ * of this template class.  Tokenizer is for ASCII input, Tokenizer16 may
+ * handle char16_t input, but doesn't recognize whitespaces or numbers
+ * other than standard `char` specialized Tokenizer class.
  */
-class Tokenizer : public TokenizerBase
+template <typename TChar>
+class TTokenizer : public TokenizerBase<TChar>
 {
 public:
+  typedef TokenizerBase<TChar> base;
+
   /**
    * @param aSource
    *    The string to parse.
-   *    IMPORTANT NOTE: Tokenizer doesn't ensure the input string buffer lifetime.
-   *    It's up to the consumer to make sure the string's buffer outlives the Tokenizer!
+   *    IMPORTANT NOTE: TTokenizer doesn't ensure the input string buffer
+   * lifetime. It's up to the consumer to make sure the string's buffer outlives
+   * the TTokenizer!
    * @param aWhitespaces
-   *    If non-null Tokenizer will use this custom set of whitespaces for CheckWhite()
-   *    and SkipWhites() calls.
-   *    By default the list consists of space and tab.
+   *    If non-null TTokenizer will use this custom set of whitespaces for
+   * CheckWhite() and SkipWhites() calls. By default the list consists of space
+   * and tab.
    * @param aAdditionalWordChars
-   *    If non-null it will be added to the list of characters that consist a word.
-   *    This is useful when you want to accept e.g. '-' in HTTP headers.
-   *    By default a word character is consider any character for which upper case
+   *    If non-null it will be added to the list of characters that consist a
+   * word. This is useful when you want to accept e.g. '-' in HTTP headers. By
+   * default a word character is consider any character for which upper case
    *    is different from lower case.
    *
-   * If there is an overlap between aWhitespaces and aAdditionalWordChars, the check for
-   * word characters is made first.
+   * If there is an overlap between aWhitespaces and aAdditionalWordChars, the
+   * check for word characters is made first.
    */
-  explicit Tokenizer(const nsACString& aSource,
-                     const char* aWhitespaces = nullptr,
-                     const char* aAdditionalWordChars = nullptr);
-  explicit Tokenizer(const char* aSource,
-                     const char* aWhitespaces = nullptr,
-                     const char* aAdditionalWordChars = nullptr);
+  explicit TTokenizer(const typename base::TAString& aSource,
+                      const TChar* aWhitespaces = nullptr,
+                      const TChar* aAdditionalWordChars = nullptr);
+  explicit TTokenizer(const TChar* aSource,
+                      const TChar* aWhitespaces = nullptr,
+                      const TChar* aAdditionalWordChars = nullptr);
 
   /**
    * When there is still anything to read from the input, tokenize it, store the token type
@@ -242,7 +255,7 @@ public:
    * Returns false if we have passed the end of the input.
    */
   MOZ_MUST_USE
-  bool Next(Token& aToken);
+  bool Next(typename base::Token& aToken);
 
   /**
    * Parse the token on the input read cursor position, check its type is equal to aTokenType
@@ -250,14 +263,14 @@ public:
    * the input read cursor position intact and return false.
    */
   MOZ_MUST_USE
-  bool Check(const TokenType aTokenType, Token& aResult);
+  bool Check(const typename base::TokenType aTokenType, typename base::Token& aResult);
   /**
    * Same as above method, just compares both token type and token value passed in aToken.
    * When both the type and the value equals, shift the cursor and return true.  Otherwise
    * return false.
    */
   MOZ_MUST_USE
-  bool Check(const Token& aToken);
+  bool Check(const typename base::Token& aToken);
 
   /**
    * SkipWhites method (below) may also skip new line characters automatically.
@@ -284,7 +297,7 @@ public:
    * Skips all tokens until the given one is found or EOF is hit.  The token
    * or EOF are next to read.
    */
-  void SkipUntil(Token const& aToken);
+  void SkipUntil(typename base::Token const& aToken);
 
   // These are mostly shortcuts for the Check() methods above.
 
@@ -292,13 +305,13 @@ public:
    * Check whitespace character is present.
    */
   MOZ_MUST_USE
-  bool CheckWhite() { return Check(Token::Whitespace()); }
+  bool CheckWhite() { return Check(base::Token::Whitespace()); }
   /**
    * Check there is a single character on the read cursor position.  If so, shift the read
    * cursor position and return true.  Otherwise false.
    */
   MOZ_MUST_USE
-  bool CheckChar(const char aChar) { return Check(Token::Char(aChar)); }
+  bool CheckChar(const TChar aChar) { return Check(base::Token::Char(aChar)); }
   /**
    * This is a customizable version of CheckChar.  aClassifier is a function called with
    * value of the character on the current input read position.  If this user function
@@ -307,38 +320,42 @@ public:
    * false is immediately returned.
    */
   MOZ_MUST_USE
-  bool CheckChar(bool (*aClassifier)(const char aChar));
+  bool CheckChar(bool (*aClassifier)(const TChar aChar));
   /**
    * Check for a whole expected word.
    */
   MOZ_MUST_USE
-  bool CheckWord(const nsACString& aWord) { return Check(Token::Word(aWord)); }
+  bool CheckWord(const typename base::TAString& aWord) {
+    return Check(base::Token::Word(aWord));
+  }
   /**
    * Shortcut for literal const word check with compile time length calculation.
    */
   template <uint32_t N>
   MOZ_MUST_USE
-  bool CheckWord(const char (&aWord)[N]) { return Check(Token::Word(nsDependentCString(aWord, N - 1))); }
+  bool CheckWord(const TChar (&aWord)[N]) {
+    return Check(base::Token::Word(typename base::TDependentString(aWord, N - 1)));
+  }
   /**
    * Checks \r, \n or \r\n.
    */
   MOZ_MUST_USE
-  bool CheckEOL() { return Check(Token::NewLine()); }
+  bool CheckEOL() { return Check(base::Token::NewLine()); }
   /**
    * Checks we are at the end of the input string reading.  If so, shift past the end
    * and returns true.  Otherwise does nothing and returns false.
    */
   MOZ_MUST_USE
-  bool CheckEOF() { return Check(Token::EndOfFile()); }
+  bool CheckEOF() { return Check(base::Token::EndOfFile()); }
 
   /**
    * These are shortcuts to obtain the value immediately when the token type matches.
    */
-  MOZ_MUST_USE bool ReadChar(char* aValue);
-  MOZ_MUST_USE bool ReadChar(bool (*aClassifier)(const char aChar),
-                             char* aValue);
-  MOZ_MUST_USE bool ReadWord(nsACString& aValue);
-  MOZ_MUST_USE bool ReadWord(nsDependentCSubstring& aValue);
+  MOZ_MUST_USE bool ReadChar(TChar* aValue);
+  MOZ_MUST_USE bool ReadChar(bool (*aClassifier)(const TChar aChar),
+                             TChar* aValue);
+  MOZ_MUST_USE bool ReadWord(typename base::TAString& aValue);
+  MOZ_MUST_USE bool ReadWord(typename base::TDependentSubstring& aValue);
 
   /**
    * This is an integer read helper.  It returns false and doesn't move the read
@@ -353,10 +370,10 @@ public:
   {
     MOZ_RELEASE_ASSERT(aValue);
 
-    nsACString::const_char_iterator rollback = mRollback;
-    nsACString::const_char_iterator cursor = mCursor;
-    Token t;
-    if (!Check(TOKEN_INTEGER, t)) {
+    typename base::TAString::const_char_iterator rollback = mRollback;
+    typename base::TAString::const_char_iterator cursor = base::mCursor;
+    typename base::Token t;
+    if (!Check(base::TOKEN_INTEGER, t)) {
       return false;
     }
 
@@ -364,8 +381,8 @@ public:
     if (!checked.isValid()) {
       // Move to a state as if Check() call has failed
       mRollback = rollback;
-      mCursor = cursor;
-      mHasFailed = true;
+      base::mCursor = cursor;
+      base::mHasFailed = true;
       return false;
     }
 
@@ -383,21 +400,21 @@ public:
   {
     MOZ_RELEASE_ASSERT(aValue);
 
-    nsACString::const_char_iterator rollback = mRollback;
-    nsACString::const_char_iterator cursor = mCursor;
+    typename base::TAString::const_char_iterator rollback = mRollback;
+    typename base::TAString::const_char_iterator cursor = base::mCursor;
     auto revert = MakeScopeExit([&] {
       // Move to a state as if Check() call has failed
       mRollback = rollback;
-      mCursor = cursor;
-      mHasFailed = true;
+      base::mCursor = cursor;
+      base::mHasFailed = true;
     });
 
     // Using functional raw access because '-' could be part of the word set
     // making CheckChar('-') not work.
-    bool minus = CheckChar([](const char aChar) { return aChar == '-'; });
+    bool minus = CheckChar([](const TChar aChar) { return aChar == '-'; });
 
-    Token t;
-    if (!Check(TOKEN_INTEGER, t)) {
+    typename base::Token t;
+    if (!Check(base::TOKEN_INTEGER, t)) {
       return false;
     }
 
@@ -417,18 +434,18 @@ public:
 
   /**
    * Returns the read cursor position back as it was before the last call of any parsing
-   * method of Tokenizer (Next, Check*, Skip*, Read*) so that the last operation
+   * method of TTokenizer (Next, Check*, Skip*, Read*) so that the last operation
    * can be repeated.
    * Rollback cannot be used multiple times, it only reverts the last successfull parse
    * operation.  It also cannot be used before any parsing operation has been called
-   * on the Tokenizer.
+   * on the TTokenizer.
    */
   void Rollback();
 
   /**
    * Record() and Claim() are collecting the input as it is being parsed to obtain
    * a substring between particular syntax bounderies defined by any recursive
-   * descent parser or simple parser the Tokenizer is used to read the input for.
+   * descent parser or simple parser the TTokenizer is used to read the input for.
    * Inlucsion of a token that has just been parsed can be controlled using an arguemnt.
    */
   enum ClaimInclusion {
@@ -453,8 +470,8 @@ public:
    * the ending of the sub-string result includes or excludes the last parsed or checked
    * token.
    */
-  void Claim(nsACString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
-  void Claim(nsDependentCSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+  void Claim(typename base::TAString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+  void Claim(typename base::TDependentSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
 
   /**
    * If aToken is found, aResult is set to the substring between the current
@@ -467,23 +484,26 @@ public:
    * Calling Rollback() after ReadUntil() will return the read cursor to the
    * position it had before ReadUntil was called.
    */
-  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
+  MOZ_MUST_USE bool ReadUntil(typename base::Token const& aToken, typename base::TDependentSubstring& aResult,
                               ClaimInclusion aInclude = EXCLUDE_LAST);
-  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsACString& aResult,
+  MOZ_MUST_USE bool ReadUntil(typename base::Token const& aToken, typename base::TAString& aResult,
                               ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
-  // All these point to the original buffer passed to the Tokenizer's constructor
-  nsACString::const_char_iterator mRecord; // Position where the recorded sub-string for Claim() is
-  nsACString::const_char_iterator mRollback; // Position of the previous token start
+  // All these point to the original buffer passed to the TTokenizer's constructor
+  typename base::TAString::const_char_iterator mRecord; // Position where the recorded sub-string for Claim() is
+  typename base::TAString::const_char_iterator mRollback; // Position of the previous token start
 
 private:
-  Tokenizer() = delete;
-  Tokenizer(const Tokenizer&) = delete;
-  Tokenizer(Tokenizer&&) = delete;
-  Tokenizer(const Tokenizer&&) = delete;
-  Tokenizer &operator=(const Tokenizer&) = delete;
+  TTokenizer() = delete;
+  TTokenizer(const TTokenizer&) = delete;
+  TTokenizer(TTokenizer&&) = delete;
+  TTokenizer(const TTokenizer&&) = delete;
+  TTokenizer &operator=(const TTokenizer&) = delete;
 };
+
+typedef TTokenizer<char> Tokenizer;
+typedef TTokenizer<char16_t> Tokenizer16;
 
 } // mozilla
 
