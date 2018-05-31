@@ -190,7 +190,7 @@ add_task(async function testCheckAsyncResults() {
   if (AppConstants.DEBUG) {
     await Assert.rejects(
       invalid.async_result(),
-      `Type error for widget value (Property "size" is required)`,
+      /Type error for widget value \(Property "size" is required\)/,
       "Should throw for invalid callback argument in DEBUG builds");
   } else {
     deepEqual(await invalid.async_result(), {},

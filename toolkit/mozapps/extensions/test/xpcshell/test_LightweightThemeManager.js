@@ -548,8 +548,10 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes[2].id, "builtInTheme1");
 
   Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")); },
+    /Error: Trying to add invalid builtIn theme/,
     "Exception is thrown adding a duplicate theme");
   Assert.throws(() => { ltm.addBuiltInTheme("not a theme object"); },
+    /Error: Trying to add invalid builtIn theme/,
     "Exception is thrown adding an invalid theme");
 
   let x0Addon = await AddonManager.getAddonByID("x0@personas.mozilla.org");

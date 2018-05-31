@@ -1733,7 +1733,7 @@ add_task(async function testReturns() {
 
   if (AppConstants.DEBUG) {
     Assert.throws(() => root.returns.invalid(),
-                  `Type error for result value (Property "size" is required)`,
+                  /Type error for result value \(Property "size" is required\)/,
                   "Should throw for invalid result in DEBUG builds");
   } else {
     deepEqual(root.returns.invalid(), {},
