@@ -2178,6 +2178,8 @@ class FrameIter
 
     bool isIonScripted() const { return isJSJit() && jsJitFrame().isIonScripted(); }
 
+    bool principalsSubsumeFrame() const;
+
     void popActivation();
     void popInterpreterFrame();
     void nextJitFrame();
