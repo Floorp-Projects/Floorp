@@ -225,19 +225,6 @@ nsNSSComponent::~nsNSSComponent()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::dtor finished\n"));
 }
 
-NS_IMETHODIMP
-nsNSSComponent::GetPIPNSSBundleString(const char* name, nsAString& outString)
-{
-  MutexAutoLock lock(mMutex);
-
-  outString.Truncate();
-  if (mPIPNSSBundle && name) {
-    return mPIPNSSBundle->GetStringFromName(name, outString);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 #ifdef XP_WIN
 static bool
 GetUserSid(nsAString& sidString)
@@ -1291,20 +1278,6 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
   return NS_OK;
 }
 
-nsresult
-nsNSSComponent::InitializePIPNSSBundle()
-{
-  MutexAutoLock lock(mMutex);
-  nsCOMPtr<nsIStringBundleService> bundleService(
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (!bundleService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return bundleService->CreateBundle("chrome://pipnss/locale/pipnss.properties",
-                                     getter_AddRefs(mPIPNSSBundle));
-}
-
 // Table of pref names and SSL cipher ID
 typedef struct {
   const char* pref;
@@ -2203,13 +2176,7 @@ nsNSSComponent::Init()
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Beginning NSS initialization\n"));
 
-  nsresult rv = InitializePIPNSSBundle();
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("Unable to create pipnss bundle.\n"));
-    return rv;
-  }
-
-  rv = InitializeNSS();
+  nsresult rv = InitializeNSS();
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
             ("nsNSSComponent::InitializeNSS() failed\n"));

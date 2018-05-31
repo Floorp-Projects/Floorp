@@ -26,7 +26,6 @@
 #include "nsNSSASN1Object.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertValidity.h"
-#include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
 #include "nsProxyRelease.h"
@@ -63,8 +62,6 @@ NS_IMPL_ISUPPORTS(nsNSSCertificate,
                   nsIX509Cert,
                   nsISerializable,
                   nsIClassInfo)
-
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 /*static*/ nsNSSCertificate*
 nsNSSCertificate::Create(CERTCertificate* cert)
@@ -195,18 +192,16 @@ nsNSSCertificate::MarkForPermDeletion()
 /**
  * Appends a pipnss bundle string to the given string.
  *
- * @param nssComponent For accessing the string bundle.
  * @param bundleKey Key for the string to append.
  * @param currentText The text to append to, using commas as separators.
  */
 template<size_t N>
 void
-AppendBundleString(const NotNull<nsCOMPtr<nsINSSComponent>>& nssComponent,
-                   const char (&bundleKey)[N],
-        /*in/out*/ nsAString& currentText)
+AppendBundleStringCommaSeparated(const char (&bundleKey)[N],
+                      /*in/out*/ nsAString& currentText)
 {
   nsAutoString bundleString;
-  nsresult rv = nssComponent->GetPIPNSSBundleString(bundleKey, bundleString);
+  nsresult rv = GetPIPNSSBundleString(bundleKey, bundleString);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -221,11 +216,6 @@ NS_IMETHODIMP
 nsNSSCertificate::GetKeyUsages(nsAString& text)
 {
   text.Truncate();
-
-  nsCOMPtr<nsINSSComponent> nssComponent = do_GetService(kNSSComponentCID);
-  if (!nssComponent) {
-    return NS_ERROR_FAILURE;
-  }
 
   if (!mCert) {
     return NS_ERROR_FAILURE;
@@ -246,28 +236,26 @@ nsNSSCertificate::GetKeyUsages(nsAString& text)
     keyUsage = keyUsageItem.data[0];
   }
 
-  NotNull<nsCOMPtr<nsINSSComponent>> wrappedNSSComponent =
-    WrapNotNull(nssComponent);
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUSign", text);
+    AppendBundleStringCommaSeparated("CertDumpKUSign", text);
   }
   if (keyUsage & KU_NON_REPUDIATION) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUNonRep", text);
+    AppendBundleStringCommaSeparated("CertDumpKUNonRep", text);
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUEnc", text);
+    AppendBundleStringCommaSeparated("CertDumpKUEnc", text);
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUDEnc", text);
+    AppendBundleStringCommaSeparated("CertDumpKUDEnc", text);
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUKA", text);
+    AppendBundleStringCommaSeparated("CertDumpKUKA", text);
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUCertSign", text);
+    AppendBundleStringCommaSeparated("CertDumpKUCertSign", text);
   }
   if (keyUsage & KU_CRL_SIGN) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUCRLSign", text);
+    AppendBundleStringCommaSeparated("CertDumpKUCRLSign", text);
   }
 
   return NS_OK;
@@ -381,12 +369,7 @@ nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
   if (mCert->emailAddr) {
     LossyUTF8ToUTF16(mCert->emailAddr, strlen(mCert->emailAddr), aEmailAddress);
   } else {
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv) || !nssComponent) {
-      return NS_ERROR_FAILURE;
-    }
-    nssComponent->GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
+    GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
   }
   return NS_OK;
 }
@@ -704,13 +687,10 @@ nsNSSCertificate::GetTokenName(nsAString& aTokenName)
         aTokenName = NS_ConvertUTF8toUTF16(token);
       }
     } else {
-      nsresult rv;
       nsAutoString tok;
-      nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-      if (NS_FAILED(rv)) return rv;
-      rv = nssComponent->GetPIPNSSBundleString("InternalToken", tok);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(GetPIPNSSBundleString("InternalToken", tok))) {
         aTokenName = tok;
+      }
     }
   }
   return NS_OK;
