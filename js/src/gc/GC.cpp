@@ -7961,7 +7961,7 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         return nullptr;
 
     // Set up the principals.
-    JS_SetCompartmentPrincipals(JS::GetCompartmentForRealm(realm), principals);
+    JS::SetRealmPrincipals(realm, principals);
 
     JSCompartment* comp = realm->compartment();
     if (!comp->realms().append(realm)) {

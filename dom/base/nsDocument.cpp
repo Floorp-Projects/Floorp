@@ -2364,9 +2364,9 @@ nsIDocument::ResetToURI(nsIURI* aURI,
     mFontFaceSet->RefreshStandardFontLoadPrincipal();
   }
 
-  // Refresh the principal on the compartment.
+  // Refresh the principal on the realm.
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
-    nsGlobalWindowInner::Cast(win)->RefreshCompartmentPrincipal();
+    nsGlobalWindowInner::Cast(win)->RefreshRealmPrincipal();
   }
 }
 
