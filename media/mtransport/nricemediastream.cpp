@@ -229,7 +229,7 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
     return NS_ERROR_FAILURE;
 
   std::vector<char *> attributes_in;
-
+  attributes_in.reserve(attributes.size());
   for (auto& attribute : attributes) {
     attributes_in.push_back(const_cast<char *>(attribute.c_str()));
   }

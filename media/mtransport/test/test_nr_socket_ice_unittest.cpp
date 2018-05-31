@@ -188,7 +188,7 @@ public:
 
   void ParseGlobalAttributes(std::vector<std::string> attrs) {
     std::vector<char *> attrs_in;
-
+    attrs_in.reserve(attrs.size());
     for (auto& attr : attrs) {
       attrs_in.push_back(const_cast<char *>(attr.c_str()));
     }
@@ -208,6 +208,7 @@ public:
     int r;
 
     std::vector<char*> attrs;
+    attrs.reserve(attributes.size());
     for (auto& attr: attributes) {
       attrs.push_back(const_cast<char*>(attr.c_str()));
     }
