@@ -28,7 +28,6 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 
-import kotlin.NotImplementedError;
 import kotlin.text.Charsets;
 
 /**

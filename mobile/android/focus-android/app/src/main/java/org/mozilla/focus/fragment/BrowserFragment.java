@@ -285,7 +285,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
                         final IWebView webView = getWebView();
-                        if (webView == null) { return; }
+                        if (webView == null) {
+                            return;
+                        }
 
                         webView.findAllAsync(s.toString());
                     }
@@ -864,8 +866,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     public boolean onBackPressed() {
         if (findInPageView.getVisibility() == View.VISIBLE) {
             hideFindInPage();
-        }
-        else if (canGoBack()) {
+        } else if (canGoBack()) {
             // Go back in web history
             goBack();
         } else {
@@ -1332,7 +1333,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     @SuppressLint("SetTextI18n")
     private void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
         final Context context = getContext();
-        if (context == null) { return; }
+        if (context == null) {
+            return;
+        }
 
         if (numberOfMatches > 0) {
             final String visibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);

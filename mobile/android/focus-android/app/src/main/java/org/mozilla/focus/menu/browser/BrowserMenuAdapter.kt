@@ -37,7 +37,10 @@ class BrowserMenuAdapter(
         get() = if (shouldShowButtonToolbar()) 1 else 0
 
     private val requestDesktopCheckPosition: Int
-        get() = if (hasCustomTabConfig) 4 else itemCount - 2
+        get() {
+            val offset = 2
+            return if (hasCustomTabConfig) 4 else itemCount - offset
+        }
 
     init {
         initializeMenu(fragment.url, customTabConfig)
@@ -73,7 +76,8 @@ class BrowserMenuAdapter(
         }
 
         if (customTabConfig == null) {
-            // There’s no need for Settings in a custom tab. The user can go to the browser app itself in order to do this.
+            // There’s no need for Settings in a custom tab.
+            // The user can go to the browser app itself in order to do this.
             items.add(MenuItem(R.id.settings, resources.getString(R.string.menu_settings)))
         }
 
@@ -125,7 +129,9 @@ class BrowserMenuAdapter(
                         fragment)
             }
             MenuItemViewHolder.LAYOUT_ID -> MenuItemViewHolder(inflater.inflate(R.layout.menu_item, parent, false))
-            CustomTabMenuItemViewHolder.LAYOUT_ID -> CustomTabMenuItemViewHolder(inflater.inflate(R.layout.custom_tab_menu_item, parent, false))
+            CustomTabMenuItemViewHolder.LAYOUT_ID -> CustomTabMenuItemViewHolder(
+                    inflater.inflate(R.layout.custom_tab_menu_item, parent, false)
+            )
             else -> throw IllegalArgumentException("Unknown view type: $viewType")
         }
     }
