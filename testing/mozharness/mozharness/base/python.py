@@ -450,9 +450,6 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
 
             opts.append('buildbot-%s' % instance)
 
-        # Allow configs to specify their own values.
-        opts.extend(self.config.get('perfherder_extra_options', []))
-
         return opts
 
 

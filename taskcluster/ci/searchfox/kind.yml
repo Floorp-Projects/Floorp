@@ -9,6 +9,7 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.build_lints:transforms
     - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -32,6 +33,8 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
             max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
         run:
             using: mozharness
             actions: [build]
@@ -56,6 +59,7 @@ jobs:
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+                PERFHERDER_EXTRA_OPTIONS: searchfox
         run:
             using: mozharness
             actions: [get-secrets build update]
@@ -89,6 +93,7 @@ jobs:
             max-run-time: 7200
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+                PERFHERDER_EXTRA_OPTIONS: searchfox
         run:
             using: mozharness
             options: [append-env-variables-from-configs]
