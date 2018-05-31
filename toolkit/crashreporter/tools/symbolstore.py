@@ -633,6 +633,11 @@ class Dumper:
                     }]}
                 ]
             }
+            for opt in os.environ.get('PERFHERDER_EXTRA_OPTIONS', '').split():
+                for suite in perfherder_data['suites']:
+                    if opt not in suite.get('extraOptions', []):
+                        suite.setdefault('extraOptions', []).append(opt)
+
             print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
                   file=sys.stderr)
 
