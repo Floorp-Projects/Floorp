@@ -105,8 +105,8 @@ ObservedActorFactory.prototype.createActor = function() {
 };
 exports.ObservedActorFactory = ObservedActorFactory;
 
-/**
- * Methods shared between RootActor and BrowserTabActor.
+/*
+ * Methods shared between RootActor and BrowsingContextTargetActor.
  */
 
 /**
@@ -125,8 +125,8 @@ exports.ObservedActorFactory = ObservedActorFactory;
  *     documented for addTabActor and addGlobalActor.
  *
  * @param this
- *     The BrowserRootActor or BrowserTabActor with which the new actors will
- *     be associated. It should support whatever API the |factories|
+ *     The RootActor or BrowsingContextTargetActor with which the new actors
+ *     will be associated. It should support whatever API the |factories|
  *     constructor functions might be interested in, as it is passed to them.
  *     For the sake of CommonCreateExtraActors itself, it should have at least
  *     the following properties:
@@ -173,7 +173,7 @@ exports.createExtraActors = function createExtraActors(factories, pool) {
  *     CommonCreateExtraActors.
  *
  * @param this
- *     The BrowserRootActor or BrowserTabActor whose |_extraActors| table we
+ *     The RootActor or BrowsingContextTargetActor whose |_extraActors| table we
  *     should use; see above.
  */
 exports.appendExtraActors = function appendExtraActors(object) {

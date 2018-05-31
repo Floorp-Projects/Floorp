@@ -131,7 +131,7 @@ add_task(async function() {
     const { DebuggerServer } = require("devtools/server/main");
     const EventEmitter = require("devtools/shared/event-emitter");
 
-    // !Hack! Retrieve a server side object, the BrowserTabActor instance
+    // !Hack! Retrieve a server side object, the FrameTargetActor instance
     const targetActor = DebuggerServer.searchAllConnectionsForActor(actorId);
     // In order to listen to internal will-navigate/navigate events
     EventEmitter.on(targetActor, "will-navigate", function(data) {

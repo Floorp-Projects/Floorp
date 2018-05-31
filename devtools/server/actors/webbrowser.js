@@ -12,7 +12,7 @@ var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
-loader.lazyRequireGetter(this, "BrowserTabActor", "devtools/server/actors/browser-tab", true);
+loader.lazyRequireGetter(this, "FrameTargetActorProxy", "devtools/server/actors/targets/frame-proxy", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
 loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/webextension-parent", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
@@ -84,11 +84,11 @@ function createRootActor(connection) {
 }
 
 /**
- * A live list of BrowserTabActors representing the current browser tabs,
+ * A live list of FrameTargetActorProxys representing the current browser tabs,
  * to be provided to the root actor to answer 'listTabs' requests.
  *
  * This object also takes care of listening for TabClose events and
- * onCloseWindow notifications, and exiting the BrowserTabActors concerned.
+ * onCloseWindow notifications, and exiting the target actors concerned.
  *
  * (See the documentation for RootActor for the definition of the "live
  * list" interface.)
@@ -230,9 +230,7 @@ BrowserTabList.prototype._getBrowsers = function* () {
   // Iterate over all navigator:browser XUL windows.
   for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
     // For each tab in this XUL window, ensure that we have an actor for
-    // it, reusing existing actors where possible. We actually iterate
-    // over 'browser' XUL elements, and BrowserTabActor uses
-    // browser.contentWindow as the debuggee global.
+    // it, reusing existing actors where possible.
     for (const browser of this._getChildren(win)) {
       yield browser;
     }
@@ -309,7 +307,7 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
 };
 
 /**
- * @param browserActorOptions see options argument of BrowserTabActor constructor.
+ * @param browserActorOptions see options argument of FrameTargetActorProxy constructor.
  */
 BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOptions) {
   // Do we have an existing actor for this browser? If not, create one.
@@ -319,7 +317,7 @@ BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOpt
     return actor.update(browserActorOptions);
   }
 
-  actor = new BrowserTabActor(this._connection, browser, browserActorOptions);
+  actor = new FrameTargetActorProxy(this._connection, browser, browserActorOptions);
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
   return actor.connect();
@@ -419,7 +417,7 @@ BrowserTabList.prototype._notifyListChanged = function() {
 BrowserTabList.prototype._handleActorClose = function(actor, browser) {
   if (this._testing) {
     if (this._actorByBrowser.get(browser) !== actor) {
-      throw new Error("BrowserTabActor not stored in map under given browser");
+      throw new Error("FrameTargetActorProxy not stored in map under given browser");
     }
     if (actor.browser !== browser) {
       throw new Error("actor's browser and map key don't match");

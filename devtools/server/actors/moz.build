@@ -27,7 +27,6 @@ DevToolsModules(
     'animation.js',
     'array-buffer.js',
     'breakpoint.js',
-    'browser-tab.js',
     'call-watcher.js',
     'canvas.js',
     'child-process.js',
