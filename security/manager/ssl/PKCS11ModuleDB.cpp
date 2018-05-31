@@ -157,32 +157,6 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
 }
 
 NS_IMETHODIMP
-PKCS11ModuleDB::FindModuleByName(const nsAString& name,
-                         /*out*/ nsIPKCS11Module** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsresult rv = BlockUntilLoadableRootsLoaded();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsAutoCString moduleNameNormalized;
-  rv = NormalizeModuleNameIn(name, moduleNameNormalized);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  UniqueSECMODModule mod(SECMOD_FindModule(moduleNameNormalized.get()));
-  if (!mod) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod.get());
-  module.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);

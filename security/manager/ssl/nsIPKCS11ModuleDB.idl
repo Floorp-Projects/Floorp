@@ -27,9 +27,6 @@ interface nsIPKCS11ModuleDB : nsISupports
                  in long cipherFlags);
 
   [must_use]
-  nsIPKCS11Module findModuleByName(in AString name);
-
-  [must_use]
   nsISimpleEnumerator listModules();
 
   [must_use]

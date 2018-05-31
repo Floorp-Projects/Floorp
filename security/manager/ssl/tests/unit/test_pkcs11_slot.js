@@ -8,13 +8,31 @@
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
 
+function find_slot_by_name(module, name) {
+  for (let slot of XPCOMUtils.IterSimpleEnumerator(module.listSlots(),
+                                                   Ci.nsIPKCS11Slot)) {
+    if (slot.name == name) {
+      return slot;
+    }
+  }
+  return null;
+}
+
 function run_test() {
   loadPKCS11TestModule(false);
 
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                    .getService(Ci.nsIPKCS11ModuleDB);
-  let testModule = moduleDB.findModuleByName("PKCS11 Test Module");
-  let testSlot = testModule.findSlotByName("Test PKCS11 Slot 二");
+  let testModule;
+  for (let module of XPCOMUtils.IterSimpleEnumerator(moduleDB.listModules(),
+                                                     Ci.nsIPKCS11Module)) {
+    if (module.name == "PKCS11 Test Module") {
+      testModule = module;
+      break;
+    }
+  }
+  let testSlot = find_slot_by_name(testModule, "Test PKCS11 Slot 二");
+  notEqual(testSlot, null, "should be able to find 'Test PKCS11 Slot 二'");
 
   equal(testSlot.name, "Test PKCS11 Slot 二",
         "Actual and expected name should match");
@@ -37,7 +55,8 @@ function run_test() {
         "Spot check: the actual and expected test token labels should be equal");
   ok(!testToken.isInternalKeyToken, "This token is not the internal key token");
 
-  testSlot = testModule.findSlotByName("Empty PKCS11 Slot");
+  testSlot = find_slot_by_name(testModule, "Empty PKCS11 Slot");
+  notEqual(testSlot, null, "should be able to find 'Empty PKCS11 Slot'");
   equal(testSlot.tokenName, null, "Empty slot is empty");
   equal(testSlot.status, Ci.nsIPKCS11Slot.SLOT_NOT_PRESENT,
         "Actual and expected status should match");
