@@ -533,7 +533,7 @@ class VirtualenvManager(object):
         subprocess.check_call([os.path.join(self.bin_path, 'pip')] + args,
             stderr=subprocess.STDOUT)
 
-    def activate_pipenv(self, pipfile, args=None):
+    def activate_pipenv(self, pipfile):
         """Install a Pipfile located at path and activate environment"""
         pipenv = os.path.join(self.bin_path, 'pipenv')
         env = os.environ.copy()
@@ -543,9 +543,8 @@ class VirtualenvManager(object):
             'WORKON_HOME': os.path.join(self.topobjdir, '_virtualenvs'),
         })
 
-        args = args or []
         subprocess.check_call(
-            [pipenv, 'install'] + args,
+            [pipenv, 'install', '--deploy'],
             stderr=subprocess.STDOUT,
             env=env)
 

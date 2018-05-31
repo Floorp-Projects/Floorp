@@ -12,8 +12,8 @@ class JsTests(unittest.TestCase):
             raise AssertionError
         return True
     
-    def assertMinified(self, js_input, expected):
-        minified = jsmin.jsmin(js_input)
+    def assertMinified(self, js_input, expected, **kwargs):
+        minified = jsmin.jsmin(js_input, **kwargs)
         assert minified == expected, "%r != %r" % (minified, expected)
         
     def testQuoted(self):
@@ -347,9 +347,48 @@ var  foo    =  "hey";
         expected = 'var msie;'
         self.assertMinified(original, expected)
 
-    def test_angular_4(self):
+    def test_angular_5(self):
         original = 'a/b'
         self.assertMinified(original, original)
+
+    def testBackticks(self):
+        original = '`test`'
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+        original = '` test with leading whitespace`'
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+        original = '`test with trailing whitespace `'
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+        original = '''`test
+with a new line`'''
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+        original = '''dumpAvStats: function(stats) {
+        var statsString = "";
+        if (stats.mozAvSyncDelay) {
+          statsString += `A/V sync: ${stats.mozAvSyncDelay} ms `;
+        }
+        if (stats.mozJitterBufferDelay) {
+          statsString += `Jitter-buffer delay: ${stats.mozJitterBufferDelay} ms`;
+        }
+
+        return React.DOM.div(null, statsString);'''
+        expected = 'dumpAvStats:function(stats){var statsString="";if(stats.mozAvSyncDelay){statsString+=`A/V sync: ${stats.mozAvSyncDelay} ms `;}\nif(stats.mozJitterBufferDelay){statsString+=`Jitter-buffer delay: ${stats.mozJitterBufferDelay} ms`;}\nreturn React.DOM.div(null,statsString);'
+        self.assertMinified(original, expected, quote_chars="'\"`")
+
+    def testBackticksExpressions(self):
+        original = '`Fifteen is ${a + b} and not ${2 * a + b}.`'
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+        original = '''`Fifteen is ${a +
+b} and not ${2 * a + "b"}.`'''
+        self.assertMinified(original, original, quote_chars="'\"`")
+
+    def testBackticksTagged(self):
+        original = 'tag`Hello ${ a + b } world ${ a * b}`;'
+        self.assertMinified(original, original, quote_chars="'\"`")
 
 if __name__ == '__main__':
     unittest.main()
