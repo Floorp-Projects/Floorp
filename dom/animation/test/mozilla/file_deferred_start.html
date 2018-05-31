@@ -16,7 +16,7 @@
 'use strict';
 
 function waitForDocLoad() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (document.readyState === 'complete') {
       resolve();
     } else {
@@ -26,12 +26,12 @@ function waitForDocLoad() {
 }
 
 function waitForPaints() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     waitForAllPaintsFlushed(resolve);
   });
 }
 
-promise_test(function(t) {
+promise_test(t => {
   // Test that empty animations actually start.
   //
   // Normally we tie the start of animations to when their first frame of
@@ -50,17 +50,17 @@ promise_test(function(t) {
   // continuing.
   var div;
   var promiseCallbackDone = false;
-  return waitForDocLoad().then(function() {
+  return waitForDocLoad().then(() => {
     div = addDiv(t);
 
     return waitForPaints();
-  }).then(function() {
+  }).then(() => {
     div.style.animation = 'empty 1000s';
     var animation = div.getAnimations()[0];
 
-    animation.ready.then(function() {
+    animation.ready.then(() => {
       promiseCallbackDone = true;
-    }).catch(function() {
+    }).catch(() => {
       assert_unreached('ready promise was rejected');
     });
 
@@ -69,7 +69,7 @@ promise_test(function(t) {
     // to take place. Even after that happens we don't actually resolve the
     // ready promise until the following tick.
     return waitForAnimationFrames(3);
-  }).then(function() {
+  }).then(() => {
     assert_true(promiseCallbackDone,
                 'ready promise for an empty animation was resolved'
                 + ' within three animation frames');
@@ -81,7 +81,7 @@ promise_test(function(t) {
 // NOTE: It is important that we DON'T use
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
-promise_test(function(t) {
+promise_test(t => {
   assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
                'Test should run without the refresh driver being under'
                + ' test control');
@@ -122,7 +122,7 @@ promise_test(function(t) {
 // NOTE: As with the previous test, it is important that we DON'T use
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
-promise_test(function(t) {
+promise_test(t => {
   assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
                'Test should run without the refresh driver being under'
                + ' test control');
