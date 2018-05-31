@@ -287,8 +287,6 @@ void
 PaintThread::AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
                                 CapturedBufferState* aState)
 {
-  AUTO_PROFILER_LABEL("PaintThread::AsyncPrepareBuffer", GRAPHICS);
-
   MOZ_ASSERT(IsOnPaintThread());
   MOZ_ASSERT(aState);
 
@@ -340,8 +338,6 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
                                 CapturedPaintState* aState,
                                 PrepDrawTargetForPaintingCallback aCallback)
 {
-  AUTO_PROFILER_LABEL("PaintThread::AsyncPaintContents", GRAPHICS);
-
   MOZ_ASSERT(IsOnPaintThread());
   MOZ_ASSERT(aState);
 
@@ -414,8 +410,6 @@ void
 PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
                                      CapturedTiledPaintState* aState)
 {
-  AUTO_PROFILER_LABEL("PaintThread::AsyncPaintTiledContents", GRAPHICS);
-  
   MOZ_ASSERT(IsOnPaintWorkerThread());
   MOZ_ASSERT(aState);
 

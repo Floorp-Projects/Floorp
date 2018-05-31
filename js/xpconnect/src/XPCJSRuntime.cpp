@@ -122,8 +122,6 @@ class AsyncFreeSnowWhite : public Runnable
 public:
   NS_IMETHOD Run() override
   {
-      AUTO_PROFILER_LABEL("AsyncFreeSnowWhite::Run", GCCC);
-      
       TimeStamp start = TimeStamp::Now();
       bool hadSnowWhiteObjects = nsCycleCollector_doDeferredDeletion();
       Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
