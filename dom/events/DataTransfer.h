@@ -451,6 +451,7 @@ protected:
                              uint32_t aIndex, nsIPrincipal* aSubjectPrincipal);
 
   friend class ContentParent;
+  friend class Clipboard;
 
   void FillAllExternalData();
 
