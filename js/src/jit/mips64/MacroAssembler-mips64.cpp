@@ -112,11 +112,12 @@ MacroAssemblerMIPS64Compat::convertDoubleToInt32(FloatRegister src, Register des
         ma_b(dest, Imm32(1), fail, Assembler::Equal);
     }
 
-    // Truncate double to int ; if result is inexact fail
+    // Truncate double to int ; if result is inexact or invalid fail.
     as_truncwd(ScratchFloat32Reg, src);
     as_cfc1(ScratchRegister, Assembler::FCSR);
     moveFromFloat32(ScratchFloat32Reg, dest);
-    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 1);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 6);
+    as_andi(ScratchRegister, ScratchRegister, 0x11);//masking for Inexact and Invalid flag.
     ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
