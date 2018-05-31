@@ -6,6 +6,7 @@
 
 #include "InputStreamLengthHelper.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "nsIAsyncInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIStreamTransportService.h"
 
@@ -102,6 +103,12 @@ InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
     return false;
   }
 
+  // We cannot calculate the length of an async stream.
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
+  if (asyncStream) {
+    return false;
+  }
+
   // For main-thread only, we want to avoid calling ::Available() for blocking
   // streams.
   if (NS_IsMainThread()) {
@@ -148,6 +155,11 @@ InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
     nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
       do_QueryInterface(aStream);
     if (!streamLength && !asyncStreamLength) {
+      // We cannot calculate the length of an async stream. We must fix the
+      // caller if this happens.
+      nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
+      MOZ_DIAGNOSTIC_ASSERT(!asyncStream);
+
       bool nonBlocking = false;
       if (NS_SUCCEEDED(aStream->IsNonBlocking(&nonBlocking)) && !nonBlocking) {
         nsCOMPtr<nsIEventTarget> target =
