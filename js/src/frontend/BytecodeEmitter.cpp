@@ -1921,8 +1921,8 @@ class MOZ_STACK_CLASS TryEmitter
 
 // Class for emitting bytecode for blocks like if-then-else.
 //
-// This class can be used to emit single if-then-else block.  Cascading
-// elseif's need multiple instances of this class.
+// This class can be used to emit single if-then-else block, or cascading
+// else-if blocks.
 //
 // Usage: (check for the return value is omitted for simplicity)
 //
@@ -1942,6 +1942,23 @@ class MOZ_STACK_CLASS TryEmitter
 //     emit(else_block);
 //     ifThenElse.emitEnd();
 //
+//   `if (c1) b1 else if (c2) b2 else if (c3) b3 else b4`
+//     IfThenElseEmitter ifThenElse(this);
+//     emit(c1);
+//     ifThenElse.emitIfElse();
+//     emit(b1);
+//     ifThenElse.emitElse();
+//     emit(c2);
+//     ifThenElse.emitIfElse();
+//     emit(b2);
+//     ifThenElse.emitElse();
+//     emit(c3);
+//     ifThenElse.emitIfElse();
+//     emit(b3);
+//     ifThenElse.emitElse();
+//     emit(b4);
+//     ifThenElse.emitEnd();
+//
 //   `cond ? then_expr : else_expr`
 //     IfThenElseEmitter condElse(this);
 //     emit(cond);
@@ -1955,7 +1972,10 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 {
     BytecodeEmitter* bce_;
 
+    // Jump around the then clause, to the beginning of the else clause.
     JumpList jumpAroundThen_;
+
+    // Jump around the else clause, to the end of the entire branch.
     JumpList jumpsAroundElse_;
 
     // The stack depth before emitting the then block.
@@ -1972,17 +1992,21 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
     // The state of this emitter.
     //
-    // +-------+   emitIf     +----+                           emitEnd +-----+
-    // | Start |-+----------->| If |-------------------------+-------->| End |
-    // +-------+ |            +----+                         |         +-----+
-    //           |                                           |
-    //           | emitCond   +------+     emitElse +------+ |
-    //           +----------->| Cond |---+--------->| Else |-+
-    //           |            +------+   |          +------+
-    //           |                       |
-    //           | emitIfElse +--------+ |
-    //           +----------->| IfElse |-+
-    //                        +--------+
+    // +-------+   emitCond +------+ emitElse +------+      emitEnd +-----+
+    // | Start |-+--------->| Cond |--------->| Else |---->+------->| End |
+    // +-------+ |          +------+          +------+     ^        +-----+
+    //           |                                         |
+    //           v emitIf +----+                           |
+    //        +->+------->| If |-------------------------->+
+    //        ^  |        +----+                           ^
+    //        |  |                                         |
+    //        |  |                                         |
+    //        |  |                                         |
+    //        |  | emitIfElse +--------+ emitElse +------+ |
+    //        |  +----------->| IfElse |--------->| Else |-+
+    //        |               +--------+          +------+ |
+    //        |                                            |
+    //        +--------------------------------------------+
     enum State {
         // The initial state.
         Start,
@@ -1996,7 +2020,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         // After calling emitIfElse.
         IfElse,
 
-        // After calling Else.
+        // After calling emitElse.
         Else,
 
         // After calling emitEnd.
