@@ -42,14 +42,6 @@ const gMockPKCS11ModuleDB = {
     throw new Error("not expecting getInternalFIPS() to be called");
   },
 
-  findModuleByName() {
-    throw new Error("not expecting findModuleByName() to be called");
-  },
-
-  findSlotByName() {
-    throw new Error("not expecting findSlotByName() to be called");
-  },
-
   listModules() {
     throw new Error("not expecting listModules() to be called");
   },
