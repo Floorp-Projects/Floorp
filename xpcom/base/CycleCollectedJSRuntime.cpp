@@ -1405,6 +1405,8 @@ IncrementalFinalizeRunnable::ReleaseNow(bool aLimited)
 NS_IMETHODIMP
 IncrementalFinalizeRunnable::Run()
 {
+  AUTO_PROFILER_LABEL("IncrementalFinalizeRunnable::Run", GCCC);
+
   if (mRuntime->mFinalizeRunnable != this) {
     /* These items were already processed synchronously in JSGC_END. */
     MOZ_ASSERT(!mDeferredFinalizeFunctions.Length());
