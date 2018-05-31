@@ -1747,24 +1747,26 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     }
 
     // Inner windows are only reused for same-origin principals, but the principals
-    // don't necessarily match exactly. Update the principal on the compartment to
-    // match the new document.
-    // NB: We don't just call currentInner->RefreshCompartmentPrincipals() here
+    // don't necessarily match exactly. Update the principal on the realm to match
+    // the new document.
+    // NB: We don't just call currentInner->RefreshRealmPrincipals() here
     // because we haven't yet set its mDoc to aDocument.
-    JSCompartment *compartment = js::GetObjectCompartment(newInnerGlobal);
+    JS::Realm* realm = js::GetNonCCWObjectRealm(newInnerGlobal);
 #ifdef DEBUG
     bool sameOrigin = false;
     nsIPrincipal *existing =
-      nsJSPrincipals::get(JS_GetCompartmentPrincipals(compartment));
+      nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
     aDocument->NodePrincipal()->Equals(existing, &sameOrigin);
     MOZ_ASSERT(sameOrigin);
-#endif
+
+    JSCompartment* compartment = JS::GetCompartmentForRealm(realm);
     MOZ_ASSERT_IF(aDocument == oldDoc,
                   xpc::GetCompartmentPrincipal(compartment) ==
                   aDocument->NodePrincipal());
+#endif
     if (aDocument != oldDoc) {
-      JS_SetCompartmentPrincipals(compartment,
-                                  nsJSPrincipals::get(aDocument->NodePrincipal()));
+      JS::SetRealmPrincipals(realm,
+                             nsJSPrincipals::get(aDocument->NodePrincipal()));
       // Make sure we clear out the old content XBL scope, so the new one will
       // get created with a principal that subsumes our new principal.
       xpc::ClearContentXBLScope(newInnerGlobal);

@@ -190,9 +190,6 @@ JS_GetIsSecureContext(JSCompartment* compartment);
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment);
 
-extern JS_FRIEND_API(void)
-JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals);
-
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetScriptPrincipals(JSScript* script);
 
@@ -327,6 +324,9 @@ IsGCPoisoning();
 
 extern JS_FRIEND_API(JSPrincipals*)
 GetRealmPrincipals(JS::Realm* realm);
+
+extern JS_FRIEND_API(void)
+SetRealmPrincipals(JS::Realm* realm, JSPrincipals* principals);
 
 } // namespace JS
 
