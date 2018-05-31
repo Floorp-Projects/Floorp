@@ -3201,7 +3201,7 @@ PeerConnectionImpl::IceGatheringStateChange(
   mThread->Dispatch(WrapRunnable(pco,
                                  &PeerConnectionObserver::OnStateChange,
                                  PCObserverStateType::IceGatheringState,
-                                 rv, static_cast<JSCompartment*>(nullptr)),
+                                 rv, static_cast<JS::Realm*>(nullptr)),
                     NS_DISPATCH_NORMAL);
 
   if (mIceGatheringState == PCImplIceGatheringState::Complete) {
