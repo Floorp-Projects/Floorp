@@ -35,7 +35,7 @@ function checkActive(expected) {
   if (expected) {
     load();
   } else {
-    Assert.throws(load);
+    Assert.throws(load, /Error opening input stream/);
   }
   equal(target.active, expected, "Manifest is active?");
 }
