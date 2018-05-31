@@ -753,7 +753,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    JS_SetCompartmentPrincipals(global->compartment(), currentRealm->principals());
+    JS::SetRealmPrincipals(global->realm(), currentRealm->principals());
 
     return global;
 }
