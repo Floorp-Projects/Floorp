@@ -197,6 +197,7 @@ function* runKeyEventTests()
   const kMetaFlag     = 0x8;
   const kNumLockFlag  = 0x10;
   const kCapsLockFlag = 0x20;
+  const kAltGraphFlag = 0x40;
 
   function onKeyEvent(e)
   {
@@ -261,6 +262,23 @@ function* runKeyEventTests()
           return (testingEvent.modifiers.altKey || testingEvent.modifiers.altRightKey ||
                   (IS_WIN && !!testingEvent.modifiers.altGrKey)) &&
                  removeFlag(e, kAltFlag) && expectedDOMKeyCode != e.keyCode;
+        case "AltGraph":
+          // On Windows, AltGraph events are fired only when AltRight key is
+          // pressed when active keyboard layout maps AltGraph to AltRight.
+          // Note that AltGraph is represented with pressing both Control key
+          // and Alt key.  Therefore, when AltGraph keyboard event is fired,
+          // both ctrlKey and altKey are always false on Windows.
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0 && !IS_WIN,
+             name + ", Ctrl of AltGraph " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             name + ", Command of AltGraph " + e.type + " event mismatch");
+          is(e.altKey, (flags & kAltFlag) != 0 && !IS_WIN,
+             name + ", Alt of AltGraph " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Ctrl " + e.type + " event mismatch");
+          is(e.getModifierState("AltGraph"), e.type === "keydown",
+             name + ", AltGraph of AltGraph " + e.type + " event mismatch");
+          return IS_WIN && testingEvent.modifiers.altGrKey &&
+                 removeFlag(e, kAltGraphFlag) && expectedDOMKeyCode != e.keyCode;
         case "Meta":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Command " + e.type + " evnet mismatch");
           is(e.metaKey, e.type == "keydown", name + ", Command of Command " + e.type + " evnet mismatch");
@@ -344,9 +362,11 @@ function* runKeyEventTests()
           (IS_WIN && aEvent.modifiers.altGrKey)) {
         keyDownFlags |= kCtrlFlag;
       }
-      if (aEvent.modifiers.altKey || aEvent.modifiers.altRightKey ||
-          (IS_WIN && aEvent.modifiers.altGrKey)) {
+      if (aEvent.modifiers.altKey || aEvent.modifiers.altRightKey) {
         keyDownFlags |= kAltFlag;
+      }
+      if (aEvent.modifiers.altGrKey) {
+        keyDownFlags |= kAltGraphFlag;
       }
       if (aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey) {
         keyDownFlags |= kMetaFlag;
@@ -5305,12 +5325,177 @@ function* runTextInputTests()
   document.getElementById("button").focus();
 }
 
+function* runAltRightKeyOnWindows()
+{
+  if (!IS_WIN) {
+    return;
+  }
+
+  var button = document.getElementById("button");
+  button.focus();
+
+  const kKeyboardLayouts = [
+    { layout: KEYBOARD_LAYOUT_ARABIC },
+    { layout: KEYBOARD_LAYOUT_BRAZILIAN_ABNT },
+    { layout: KEYBOARD_LAYOUT_EN_US },
+    { layout: KEYBOARD_LAYOUT_FRENCH },
+    { layout: KEYBOARD_LAYOUT_GREEK },
+    { layout: KEYBOARD_LAYOUT_GERMAN },
+    { layout: KEYBOARD_LAYOUT_HEBREW },
+    { layout: KEYBOARD_LAYOUT_JAPANESE },
+    { layout: KEYBOARD_LAYOUT_KHMER },
+    { layout: KEYBOARD_LAYOUT_LITHUANIAN },
+    { layout: KEYBOARD_LAYOUT_NORWEGIAN },
+    { layout: KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC,
+      canTestIt: function() { return OS_VERSION >= WIN8; } },
+    { layout: KEYBOARD_LAYOUT_SPANISH },
+    { layout: KEYBOARD_LAYOUT_SWEDISH },
+    { layout: KEYBOARD_LAYOUT_THAI },
+  ];
+  var events = [];
+  function pushEvent(aEvent) {
+    events.push(aEvent);
+    if (aEvent.key === "Alt") {
+      // Prevent working the menubar.
+      aEvent.preventDefault();
+    }
+  }
+  button.addEventListener("keydown", pushEvent);
+  button.addEventListener("keyup", pushEvent);
+
+  function testKey(aKeyboardLayout) {
+    return synthesizeKey({layout: aKeyboardLayout.layout, keyCode: WIN_VK_RMENU,
+                          modifiers: {}, chars: ""}, "button", function() {
+      const kDescription =
+        "runAltRightKeyOnWindows(" + aKeyboardLayout.layout.name + "): ";
+      if (aKeyboardLayout.layout.hasAltGrOnWin) {
+        is(events.length, 4,
+           kDescription + "AltRight should fire 2 pairs of keydown and keyup events");
+        is(events[0].type, "keydown",
+           kDescription + "First event should be keydown of ControlLeft");
+        is(events[0].key, "Control",
+           kDescription + "First event should be keydown of ControlLeft whose key should be Control");
+        is(events[0].code, "ControlLeft",
+           kDescription + "First event should be keydown of ControlLeft");
+        is(events[0].location, KeyboardEvent.DOM_KEY_LOCATION_LEFT,
+           kDescription + "First event should be keydown of ControlLeft whose location should be DOM_KEY_LOCATION_LEFT");
+        is(events[0].keyCode, KeyboardEvent.DOM_VK_CONTROL,
+           kDescription + "First event should be keydown of ControlLeft whose keyCode should be DOM_VK_CONTROL");
+        is(events[0].ctrlKey, true,
+           kDescription + "First event should be keydown of ControlLeft whose ctrlKey should be true");
+        is(events[0].altKey, false,
+           kDescription + "First event should be keydown of ControlLeft whose altKey should be false");
+        is(events[0].getModifierState("AltGraph"), false,
+           kDescription + "First event should be keydown of ControlLeft whose getModifierState(\"AltGraph\") should be false");
+        is(events[1].type, "keydown",
+           kDescription + "Second event should be keydown of AltRight");
+        is(events[1].key, "AltGraph",
+           kDescription + "Second event should be keydown of AltRight whose key should be AltGraph");
+        is(events[1].code, "AltRight",
+           kDescription + "Second event should be keydown of AltRight");
+        is(events[1].location, KeyboardEvent.DOM_KEY_LOCATION_RIGHT,
+           kDescription + "Second event should be keydown of AltRight whose location should be DOM_KEY_LOCATION_RIGHT");
+        is(events[1].keyCode, KeyboardEvent.DOM_VK_ALT,
+           kDescription + "Second event should be keydown of AltRight whose keyCode should be DOM_VK_ALT");
+        is(events[1].ctrlKey, false,
+           kDescription + "Second event should be keydown of AltRight whose ctrlKey should be false");
+        is(events[1].altKey, false,
+           kDescription + "Second event should be keydown of AltRight whose altKey should be false");
+        is(events[1].getModifierState("AltGraph"), true,
+           kDescription + "Second event should be keydown of AltRight whose getModifierState(\"AltGraph\") should be true");
+        is(events[2].type, "keyup",
+           kDescription + "Third event should be keyup of ControlLeft");
+        is(events[2].key, "Control",
+           kDescription + "Third event should be keyup of ControlLeft whose key should be Control");
+        is(events[2].code, "ControlLeft",
+           kDescription + "Third event should be keyup of ControlLeft");
+        is(events[2].location, KeyboardEvent.DOM_KEY_LOCATION_LEFT,
+           kDescription + "Third event should be keyup of ControlLeft whose location should be DOM_KEY_LOCATION_LEFT");
+        is(events[2].keyCode, KeyboardEvent.DOM_VK_CONTROL,
+           kDescription + "Third event should be keyup of ControlLeft whose keyCode should be DOM_VK_CONTROL");
+        is(events[2].ctrlKey, false,
+           kDescription + "Third event should be keyup of ControlLeft whose ctrlKey should be false");
+        is(events[2].altKey, false,
+           kDescription + "Third event should be keyup of ControlLeft whose altKey should be false");
+        is(events[2].getModifierState("AltGraph"), true,
+           kDescription + "Third event should be keyup of ControlLeft whose getModifierState(\"AltGraph\") should be true");
+        is(events[3].type, "keyup",
+           kDescription + "Forth event should be keyup of AltRight");
+        is(events[3].key, "AltGraph",
+           kDescription + "Forth event should be keyup of AltRight whose key should be AltGraph");
+        is(events[3].code, "AltRight",
+           kDescription + "Forth event should be keyup of AltRight");
+        is(events[3].location, KeyboardEvent.DOM_KEY_LOCATION_RIGHT,
+           kDescription + "Forth event should be keyup of AltRight whose location should be DOM_KEY_LOCATION_RIGHT");
+        is(events[3].keyCode, KeyboardEvent.DOM_VK_ALT,
+           kDescription + "Forth event should be keyup of AltRight whose keyCode should be DOM_VK_ALT");
+        is(events[3].ctrlKey, false,
+           kDescription + "Third event should be keyup of AltRight whose ctrlKey should be false");
+        is(events[3].altKey, false,
+           kDescription + "Third event should be keyup of AltRight whose altKey should be false");
+        is(events[3].getModifierState("AltGraph"), false,
+           kDescription + "Third event should be keyup of AltRight whose getModifierState(\"AltGraph\") should be false");
+      } else {
+        is(events.length, 2,
+           kDescription + "AltRight should fire a pair of keydown and keyup events");
+        is(events[0].type, "keydown",
+           kDescription + "First event should be keydown of AltRight");
+        is(events[0].key, "Alt",
+           kDescription + "First event should be keydown of AltRight whose key should be Alt");
+        is(events[0].code, "AltRight",
+           kDescription + "First event should be keydown of AltRight");
+        is(events[0].location, KeyboardEvent.DOM_KEY_LOCATION_RIGHT,
+           kDescription + "First event should be keydown of AltRight whose location should be DOM_KEY_LOCATION_RIGHT");
+        is(events[0].keyCode, KeyboardEvent.DOM_VK_ALT,
+           kDescription + "First event should be keydown of AltRight whose keyCode should be DOM_VK_ALT");
+        is(events[0].ctrlKey, false,
+           kDescription + "First event should be keydown of AltRight whose ctrlKey should be false");
+        is(events[0].altKey, true,
+           kDescription + "First event should be keydown of AltRight whose altKey should be true");
+        is(events[0].getModifierState("AltGraph"), false,
+           kDescription + "First event should be keydown of AltRight whose getModifierState(\"AltGraph\") should be false");
+        is(events[1].type, "keyup",
+           kDescription + "Second event should be keyup of AltRight");
+        is(events[1].key, "Alt",
+           kDescription + "Second event should be keyup of AltRight whose key should be Alt");
+        is(events[1].code, "AltRight",
+           kDescription + "Second event should be keyup of AltRight");
+        is(events[1].location, KeyboardEvent.DOM_KEY_LOCATION_RIGHT,
+           kDescription + "Second event should be keyup of AltRight whose location should be DOM_KEY_LOCATION_RIGHT");
+        is(events[1].keyCode, KeyboardEvent.DOM_VK_ALT,
+           kDescription + "Second event should be keyup of AltRight whose keyCode should be DOM_VK_ALT");
+        is(events[1].ctrlKey, false,
+           kDescription + "Second event should be keyup of AltRight whose ctrlKey should be false");
+        is(events[1].altKey, false,
+           kDescription + "Second event should be keyup of AltRight whose altKey should be false");
+        is(events[1].getModifierState("AltGraph"), false,
+           kDescription + "Second event should be keyup of AltRight whose getModifierState(\"AltGraph\") should be false");
+      }
+
+      continueTest();
+    });
+  }
+
+  for (const kKeyboardLayout of kKeyboardLayouts) {
+    if (typeof kKeyboardLayout.canTestIt === "function" &&
+        !kKeyboardLayout.canTestIt()) {
+      continue;
+    }
+    events = [];
+    yield testKey(kKeyboardLayout);
+  }
+
+  button.addEventListener("keydown", pushEvent);
+  button.addEventListener("keyup", pushEvent);
+}
+
 function* runAllTests() {
   yield* runKeyEventTests();
   yield* runAccessKeyTests();
   yield* runXULKeyTests();
   yield* runReservedKeyTests();
   yield* runTextInputTests();
+  yield* runAltRightKeyOnWindows();
 }
 
 var gTestContinuation = null;
@@ -5336,8 +5521,11 @@ function runTest()
   }
 
   if (IS_WIN && OS_VERSION >= WIN8) {
-    // Switching keyboard layout to Russian - Mnemonic causes 2 assertions in KeyboardLayout::LoadLayout().
-    SimpleTest.expectAssertions(2, 2);
+    // Switching keyboard layout to Russian - Mnemonic causes 2 assertions in
+    // KeyboardLayout::LoadLayout().
+    const kAssertionCountDueToRussainMnemonic = 2 * 2;
+    SimpleTest.expectAssertions(kAssertionCountDueToRussainMnemonic,
+                                kAssertionCountDueToRussainMnemonic);
   }
   SimpleTest.waitForExplicitFinish();
 
