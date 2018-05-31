@@ -3803,7 +3803,7 @@ AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
   for (const nsINode* node = &aSubtreeRoot;
        node;
        node = node->GetNextNode(&aSubtreeRoot)) {
-    Element* element = Element::FromNode(node);
+    const Element* element = Element::FromNode(node);
     if (!element) {
       continue;
     }
