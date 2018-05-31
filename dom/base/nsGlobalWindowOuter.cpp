@@ -1980,13 +1980,13 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   currentInner = nullptr;
 
   // Ask the JS engine to assert that it's valid to access our DocGroup whenever
-  // it runs JS code for this compartment. We skip the check if this window is
-  // for chrome JS or an add-on.
+  // it runs JS code for this realm. We skip the check if this window is for
+  // chrome JS or an add-on.
   nsCOMPtr<nsIPrincipal> principal = mDoc->NodePrincipal();
   if (GetDocGroup() && !nsContentUtils::IsSystemPrincipal(principal) &&
       !BasePrincipal::Cast(principal)->AddonPolicy()) {
-    js::SetCompartmentValidAccessPtr(cx, newInnerGlobal,
-                                     newInnerWindow->GetDocGroup()->GetValidAccessPtr());
+    js::SetRealmValidAccessPtr(cx, newInnerGlobal,
+                               newInnerWindow->GetDocGroup()->GetValidAccessPtr());
   }
 
   kungFuDeathGrip->DidInitializeContext();
