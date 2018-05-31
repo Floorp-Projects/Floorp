@@ -8,9 +8,12 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=UTF-8,test";
-const HISTORY_BACK = -1;
-const HISTORY_FORWARD = 1;
 const COMMANDS = ["document", "window", "window.location"];
+
+const {
+  HISTORY_BACK,
+  HISTORY_FORWARD,
+} = require("devtools/client/webconsole/constants");
 
 add_task(async function() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
