@@ -18,64 +18,45 @@ const { method } = require("devtools/shared/protocol");
  *   in DebuggerServer.remove{Global,Tab}Actor.
  * - `createObservedActorFactory` function to create "observed" actors factory
  *
- * @param options object, function
- *        Either an object or a function.
- *        If given an object:
- *
- *        If given a function (deprecated):
- *          Constructor function of an actor.
- *          The constructor function for this actor type.
- *          This expects to be called as a constructor (i.e. with 'new'),
- *          and passed two arguments: the DebuggerServerConnection, and
- *          the BrowserTabActor with which it will be associated.
- *          Only used for deprecated eagerly loaded actors.
- *
+ * @param options object
+ *        - constructorName: (required)
+ *          name of actor constructor, which is also used when removing the actor.
+ *        One of the following:
+ *          - id:
+ *            module ID that contains the actor
+ *          - constructorFun:
+ *            a function to construct the actor
  */
 function RegisteredActorFactory(options, prefix) {
   // By default the actor name will also be used for the actorID prefix.
   this._prefix = prefix;
-  if (typeof (options) != "function") {
-    // actors definition registered by actorRegistryActor
-    if (options.constructorFun) {
-      this._getConstructor = () => options.constructorFun;
-    } else {
-      // Lazy actor definition, where options contains all the information
-      // required to load the actor lazily.
-      this._getConstructor = function() {
-        // Load the module
-        let mod;
-        try {
-          mod = require(options.id);
-        } catch (e) {
-          throw new Error("Unable to load actor module '" + options.id + "'.\n" +
-                          e.message + "\n" + e.stack + "\n");
-        }
-        // Fetch the actor constructor
-        const c = mod[options.constructorName];
-        if (!c) {
-          throw new Error("Unable to find actor constructor named '" +
-                          options.constructorName + "'. (Is it exported?)");
-        }
-        return c;
-      };
-    }
-    // Exposes `name` attribute in order to allow removeXXXActor to match
-    // the actor by its actor constructor name.
-    this.name = options.constructorName;
+  if (options.constructorFun) {
+    // Actor definition registered by ActorRegistryActor or testing helpers
+    this._getConstructor = () => options.constructorFun;
   } else {
-    // Old actor case, where options is a function that is the actor constructor.
-    this._getConstructor = () => options;
-    // Exposes `name` attribute in order to allow removeXXXActor to match
-    // the actor by its actor constructor name.
-    this.name = options.name;
-
-    // For old actors, we allow the use of a different prefix for actorID
-    // than for listTabs actor names, by fetching a prefix on the actor prototype.
-    // (Used by ChromeDebuggerActor)
-    if (options.prototype && options.prototype.actorPrefix) {
-      this._prefix = options.prototype.actorPrefix;
-    }
+    // Lazy actor definition, where options contains all the information
+    // required to load the actor lazily.
+    this._getConstructor = function() {
+      // Load the module
+      let mod;
+      try {
+        mod = require(options.id);
+      } catch (e) {
+        throw new Error("Unable to load actor module '" + options.id + "'.\n" +
+                        e.message + "\n" + e.stack + "\n");
+      }
+      // Fetch the actor constructor
+      const c = mod[options.constructorName];
+      if (!c) {
+        throw new Error("Unable to find actor constructor named '" +
+                        options.constructorName + "'. (Is it exported?)");
+      }
+      return c;
+    };
   }
+  // Exposes `name` attribute in order to allow removeXXXActor to match
+  // the actor by its actor constructor name.
+  this.name = options.constructorName;
 }
 RegisteredActorFactory.prototype.createObservedActorFactory = function(conn,
   parentActor) {

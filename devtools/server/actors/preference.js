@@ -9,13 +9,6 @@ const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
 const {preferenceSpec} = require("devtools/shared/specs/preference");
 
-exports.register = function(handle) {
-  handle.addGlobalActor(PreferenceActor, "preferenceActor");
-};
-
-exports.unregister = function(handle) {
-};
-
 /**
  * Normally the preferences are set using Services.prefs, but this actor allows
  * a debugger client to set preferences on the debuggee. This is particularly useful
@@ -23,8 +16,8 @@ exports.unregister = function(handle) {
  * and not to the client. If used for a local target, it effectively behaves the same
  * as using Services.prefs.
  *
- * This actor is used as a Root actor, targeting the entire browser, not an individual
- * tab.
+ * This actor is used as a global-scoped actor, targeting the entire browser, not an
+ * individual tab.
  */
 var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
 

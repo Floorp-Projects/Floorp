@@ -64,7 +64,10 @@ function runTests() {
     TestActor.prototype.requestTypes = {
       "hello": TestActor.prototype.hello
     };
-    DebuggerServer.addTabActor(TestActor, "testActor");
+    DebuggerServer.addTabActor({
+      constructorName: "TestActor",
+      constructorFun: TestActor,
+    }, "testActor");
   }, false);
 
   // Instantiate a minimal server
