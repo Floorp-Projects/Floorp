@@ -2043,7 +2043,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     {}
 
   private:
-    bool emitIf(State nextState) {
+    MOZ_MUST_USE bool emitIf(State nextState) {
         MOZ_ASSERT(state_ == State::Start || state_ == State::Else);
         MOZ_ASSERT(nextState == State::If || nextState == State::IfElse ||
                    nextState == State::Cond);
@@ -2095,19 +2095,19 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     }
 
   public:
-    bool emitIf() {
+    MOZ_MUST_USE bool emitIf() {
         return emitIf(State::If);
     }
 
-    bool emitCond() {
+    MOZ_MUST_USE bool emitCond() {
         return emitIf(State::Cond);
     }
 
-    bool emitIfElse() {
+    MOZ_MUST_USE bool emitIfElse() {
         return emitIf(State::IfElse);
     }
 
-    bool emitElse() {
+    MOZ_MUST_USE bool emitElse() {
         MOZ_ASSERT(state_ == State::IfElse || state_ == State::Cond);
 
         calculateOrCheckPushed();
@@ -2128,7 +2128,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         return true;
     }
 
-    bool emitEnd() {
+    MOZ_MUST_USE bool emitEnd() {
         MOZ_ASSERT(state_ == State::If || state_ == State::Else);
 
         calculateOrCheckPushed();
