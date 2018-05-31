@@ -568,8 +568,6 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
                                                  const char *stringID,
                                                  nsIX509Cert *certToShow)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   if (!NS_IsMainThread()) {
     NS_ERROR("nsNSSCertificateDB::DisplayCertificateAlert called off the main thread");
     return;
@@ -583,19 +581,14 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
   // This shall be replaced by embedding ovverridable prompts
   // as discussed in bug 310446, and should make use of certToShow.
 
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoString tmpMessage;
-    nssComponent->GetPIPNSSBundleString(stringID, tmpMessage);
-
-    nsCOMPtr<nsIPrompt> prompt (do_GetInterface(my_ctx));
-    if (!prompt) {
-      return;
-    }
-
-    prompt->Alert(nullptr, tmpMessage.get());
+  nsAutoString tmpMessage;
+  GetPIPNSSBundleString(stringID, tmpMessage);
+  nsCOMPtr<nsIPrompt> prompt(do_GetInterface(my_ctx));
+  if (!prompt) {
+    return;
   }
+
+  prompt->Alert(nullptr, tmpMessage.get());
 }
 
 NS_IMETHODIMP
@@ -945,11 +938,8 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
                                          nsIInterfaceRequestor* ctx,
                                          nsCString &nickname)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nickname.Truncate();
 
-  nsresult rv;
   CK_OBJECT_HANDLE keyHandle;
 
   if (NS_FAILED(BlockUntilLoadableRootsLoaded())) {
@@ -957,10 +947,6 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
   }
 
   CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return;
-
   nsAutoCString username;
   UniquePORTString tempCN(CERT_GetCommonName(&cert->subject));
   if (tempCN) {
@@ -974,7 +960,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
   }
 
   nsAutoString tmpNickFmt;
-  nssComponent->GetPIPNSSBundleString("nick_template", tmpNickFmt);
+  GetPIPNSSBundleString("nick_template", tmpNickFmt);
   NS_ConvertUTF16toUTF8 nickFmt(tmpNickFmt);
 
   nsAutoCString baseName;
