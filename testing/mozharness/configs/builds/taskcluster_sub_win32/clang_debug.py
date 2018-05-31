@@ -1,5 +1,4 @@
 config = {
-    'perfherder_extra_options': ['static-analysis'],
     'stage_platform': 'win32-st-an-debug',
     'debug_build': True,
     'env': {
