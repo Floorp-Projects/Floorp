@@ -3,6 +3,6 @@ fn main() {
     // versions of rustc, >= 1.24 < 1.27, that are not going to change
     // the unstable APIs we use from under us (1.26 being a beta as of
     // writing, and close to release).
-    #[cfg(feature = "oom_with_global_alloc")]
+    #[cfg(any(feature = "oom_with_global_alloc", feature = "oom_with_hook"))]
     println!("cargo:rustc-env=RUSTC_BOOTSTRAP=1");
 }

@@ -14,6 +14,7 @@ cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 gecko_debug = ["gkrust-shared/gecko_debug"]
 simd-accel = ["gkrust-shared/simd-accel"]
 oom_with_global_alloc = ["gkrust-shared/oom_with_global_alloc"]
+oom_with_hook = ["gkrust-shared/oom_with_hook"]
 moz_memory = ["gkrust-shared/moz_memory"]
 
 [dependencies]

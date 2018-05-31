@@ -38,6 +38,7 @@ cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 oom_with_global_alloc = []
+oom_with_hook = []
 moz_memory = ["mp4parse_capi/mp4parse_fallible"]
 
 [lib]
