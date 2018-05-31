@@ -40,7 +40,7 @@ bool
 HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
                  nsAString& aFilename)
 {
-  AUTO_PROFILER_LABEL("HandletoFilename", OTHER);
+  AUTO_PROFILER_LABEL("HandletoFilename", NETWORK);
 
   aFilename.Truncate();
   // This implementation is nice because it uses fully documented APIs that

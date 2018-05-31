@@ -4262,7 +4262,7 @@ nsCycleCollector_forgetSkippable(js::SliceBudget& aBudget,
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->mCollector);
 
-  AUTO_PROFILER_LABEL("nsCycleCollector_forgetSkippable", GCCC);
+  AUTO_PROFILER_LABEL("nsCycleCollector_forgetSkippable", CC);
 
   TimeLog timeLog;
   data->mCollector->ForgetSkippable(aBudget,
@@ -4309,7 +4309,7 @@ nsCycleCollector_collect(nsICycleCollectorListener* aManualListener)
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->mCollector);
 
-  AUTO_PROFILER_LABEL("nsCycleCollector_collect", GCCC);
+  AUTO_PROFILER_LABEL("nsCycleCollector_collect", CC);
 
   SliceBudget unlimitedBudget = SliceBudget::unlimited();
   data->mCollector->Collect(ManualCC, unlimitedBudget, aManualListener);
@@ -4325,7 +4325,7 @@ nsCycleCollector_collectSlice(SliceBudget& budget,
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->mCollector);
 
-  AUTO_PROFILER_LABEL("nsCycleCollector_collectSlice", GCCC);
+  AUTO_PROFILER_LABEL("nsCycleCollector_collectSlice", CC);
 
   data->mCollector->Collect(SliceCC, budget, nullptr, aPreferShorterSlices);
 }
@@ -4365,7 +4365,7 @@ nsCycleCollector_shutdown(bool aDoCollect)
 
   if (data) {
     MOZ_ASSERT(data->mCollector);
-    AUTO_PROFILER_LABEL("nsCycleCollector_shutdown", OTHER);
+    AUTO_PROFILER_LABEL("nsCycleCollector_shutdown", CC);
 
     if (gMainThreadCollector == data->mCollector) {
       gMainThreadCollector = nullptr;
