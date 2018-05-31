@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
-const PREFERENCES_LOADED_EVENT = "sync-pane-loaded";
+const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // These "section" objects are formatted in a way to be similar to the ones from
