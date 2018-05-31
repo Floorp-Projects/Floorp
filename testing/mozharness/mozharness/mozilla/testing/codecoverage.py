@@ -98,7 +98,7 @@ class CodeCoverageMixin(SingleTestMixin):
         if not self.code_coverage_enabled:
             return
 
-        if mozinfo.os == 'linux':
+        if mozinfo.os == 'linux' or mozinfo.os == 'mac':
             self.prefix = '/builds/worker/workspace/build/src/'
             strip_count = self.prefix.count('/')
         elif mozinfo.os == 'win':
@@ -106,6 +106,8 @@ class CodeCoverageMixin(SingleTestMixin):
             # Add 1 as on Windows the path where the compiler tries to write the
             # gcda files has an additional 'obj-firefox' component.
             strip_count = self.prefix.count('/') + 1
+        else:
+            raise Exception('Unexpected OS: {}'.format(mozinfo.os))
 
         os.environ['GCOV_PREFIX_STRIP'] = str(strip_count)
 
@@ -121,10 +123,13 @@ class CodeCoverageMixin(SingleTestMixin):
 
         if mozinfo.os == 'linux':
             platform = 'linux64'
-            tar_file = 'grcov-linux-standalone-x86_64.tar.bz2'
+            tar_file = 'grcov-linux-x86_64.tar.bz2'
         elif mozinfo.os == 'win':
             platform = 'win32'
             tar_file = 'grcov-win-i686.tar.bz2'
+        elif mozinfo.os == 'mac':
+            platform = 'macosx64'
+            tar_file = 'grcov-osx-x86_64.tar.bz2'
 
         manifest = os.path.join(dirs.get('abs_test_install_dir', os.path.join(dirs['abs_work_dir'], 'tests')), \
             'config/tooltool-manifests/%s/ccov.manifest' % platform)
@@ -276,7 +281,7 @@ class CodeCoverageMixin(SingleTestMixin):
         if merge:
             grcov_command += [jsvm_output_file]
 
-        if mozinfo.os == 'win':
+        if mozinfo.os == 'win' or mozinfo.os == 'mac':
             grcov_command += ['--llvm']
 
         if filter_covered:
