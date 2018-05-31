@@ -33,10 +33,10 @@ runWithMSE(async (ms, el) => {
   });
   is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
   let p = once(el, "loadedmetadata");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await p;
   ok(true, "got loadedmetadata event");
-  p = Promise.all([ once(el, "loadeddata"), once(el, "canplay") ]);
+  p = Promise.all([once(el, "loadeddata"), once(el, "canplay")]);
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
   await p;
   ok(true, "got canplay event");
@@ -64,7 +64,7 @@ runWithMSE(async (ms, el) => {
   ok(true, "got seeking event");
   is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
   // Load [6+0, 6+1.601666)
-  p = Promise.all([ once(el, "seeked"), once(el, "canplay") ]);
+  p = Promise.all([once(el, "seeked"), once(el, "canplay")]);
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
   await p;
   ok(true, "got seeked and canplay event");
@@ -94,7 +94,7 @@ runWithMSE(async (ms, el) => {
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s");
   ok(true, "data loaded");
   // Playback we play for a little while then stall.
-  p = Promise.all([ once(el, "playing"), once(el, "waiting") ]);
+  p = Promise.all([once(el, "playing"), once(el, "waiting")]);
   el.play();
   await p;
   ok(true, "got playing and waiting event");
@@ -102,7 +102,7 @@ runWithMSE(async (ms, el) => {
   is(el.readyState, el.HAVE_CURRENT_DATA, "readyState is HAVE_CURRENT_DATA");
   // Load [15+3.203333, 15+4.805)
   // Our final buffered range will now be [0, 3.203333)[6, 9.203333)[15, 19.805)
-  p = Promise.all([ once(el, "playing"), once(el, "canplay"), once(el, "canplaythrough") ]);
+  p = Promise.all([once(el, "playing"), once(el, "canplay"), once(el, "canplaythrough")]);
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 7), ".m4s");
   await p;
   ok(true, "got playing, canplay and canplaythrough event");

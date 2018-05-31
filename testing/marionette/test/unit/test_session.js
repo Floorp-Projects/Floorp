@@ -432,13 +432,13 @@ add_test(function test_Capabilities_fromJSON() {
   equal(true, caps.get("acceptInsecureCerts"));
   caps = fromJSON({acceptInsecureCerts: false});
   equal(false, caps.get("acceptInsecureCerts"));
-  Assert.throws(() => fromJSON({acceptInsecureCerts: "foo"}));
+  Assert.throws(() => fromJSON({acceptInsecureCerts: "foo"}), InvalidArgumentError);
 
   for (let strategy of Object.values(session.PageLoadStrategy)) {
     caps = fromJSON({pageLoadStrategy: strategy});
     equal(strategy, caps.get("pageLoadStrategy"));
   }
-  Assert.throws(() => fromJSON({pageLoadStrategy: "foo"}));
+  Assert.throws(() => fromJSON({pageLoadStrategy: "foo"}), InvalidArgumentError);
 
   let proxyConfig = {proxyType: "manual"};
   caps = fromJSON({proxy: proxyConfig});
@@ -452,22 +452,24 @@ add_test(function test_Capabilities_fromJSON() {
   equal(true, caps.get("moz:accessibilityChecks"));
   caps = fromJSON({"moz:accessibilityChecks": false});
   equal(false, caps.get("moz:accessibilityChecks"));
-  Assert.throws(() => fromJSON({"moz:accessibilityChecks": "foo"}));
-  Assert.throws(() => fromJSON({"moz:accessibilityChecks": 1}));
+  Assert.throws(() => fromJSON({"moz:accessibilityChecks": "foo"}), InvalidArgumentError);
+  Assert.throws(() => fromJSON({"moz:accessibilityChecks": 1}), InvalidArgumentError);
 
   caps = fromJSON({"moz:useNonSpecCompliantPointerOrigin": false});
   equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));
   caps = fromJSON({"moz:useNonSpecCompliantPointerOrigin": true});
   equal(true, caps.get("moz:useNonSpecCompliantPointerOrigin"));
-  Assert.throws(() => fromJSON({"moz:useNonSpecCompliantPointerOrigin": "foo"}));
-  Assert.throws(() => fromJSON({"moz:useNonSpecCompliantPointerOrigin": 1}));
+  Assert.throws(() => fromJSON({"moz:useNonSpecCompliantPointerOrigin": "foo"}),
+      InvalidArgumentError);
+  Assert.throws(() => fromJSON({"moz:useNonSpecCompliantPointerOrigin": 1}),
+      InvalidArgumentError);
 
   caps = fromJSON({"moz:webdriverClick": true});
   equal(true, caps.get("moz:webdriverClick"));
   caps = fromJSON({"moz:webdriverClick": false});
   equal(false, caps.get("moz:webdriverClick"));
-  Assert.throws(() => fromJSON({"moz:webdriverClick": "foo"}));
-  Assert.throws(() => fromJSON({"moz:webdriverClick": 1}));
+  Assert.throws(() => fromJSON({"moz:webdriverClick": "foo"}), InvalidArgumentError);
+  Assert.throws(() => fromJSON({"moz:webdriverClick": 1}), InvalidArgumentError);
 
   run_next_test();
 });

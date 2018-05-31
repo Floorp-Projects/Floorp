@@ -334,6 +334,13 @@ ToolSidebar.prototype = {
 
     if (previousToolId) {
       this._telemetry.toolClosed(previousToolId);
+
+      this._telemetry.recordEvent("devtools.main", "sidepanel_changed", "inspector", null,
+        {
+          oldpanel: previousToolId,
+          newpanel: currentToolId
+        }
+      );
     }
     this._telemetry.toolOpened(currentToolId);
   },

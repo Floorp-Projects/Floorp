@@ -18,7 +18,7 @@ runWithMSE(async (ms, el) => {
   ok(true, "Receive a sourceopen event");
   const videosb = ms.addSourceBuffer("video/mp4");
 
-  await fetchAndLoad(videosb, "avc3/init", [ "" ], ".mp4");
+  await fetchAndLoad(videosb, "avc3/init", [""], ".mp4");
   const p = once(el, "loadeddata");
   await fetchAndLoad(videosb, "avc3/segment", range(1, 2), ".m4s");
   await p;

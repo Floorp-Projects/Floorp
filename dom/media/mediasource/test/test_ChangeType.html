@@ -11,7 +11,7 @@
 
 SimpleTest.waitForExplicitFinish();
 async function setupTest() {
-  await SpecialPowers.pushPrefEnv({"set": [ [ "media.mediasource.experimental.enabled", true ] ]});
+  await SpecialPowers.pushPrefEnv({"set": [["media.mediasource.experimental.enabled", true]]});
 }
 setupTest();
 
@@ -19,9 +19,9 @@ runWithMSE(function(ms, el) {
   el.controls = true;
   once(ms, "sourceopen").then(function() {
     // Log events for debugging.
-    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
+    const events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                    "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                    "waiting", "pause", "durationchange", "seeking", "seeked"];
     function logEvent(e) {
       info("got " + e.type + " event");
     }
@@ -42,7 +42,7 @@ runWithMSE(function(ms, el) {
     });
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
     const loadedmetadataPromises = [];
-    loadedmetadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop", [ "init" ], ".mp4"));
+    loadedmetadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop", ["init"], ".mp4"));
     loadedmetadataPromises.push(once(el, "loadedmetadata"));
     Promise.all(loadedmetadataPromises)
     .then(function() {
@@ -57,7 +57,7 @@ runWithMSE(function(ms, el) {
       ok(true, "got canplay event");
       el.play();
       videosb.timestampOffset = el.buffered.end(0);
-      return fetchAndLoad(videosb, "bipbop/bipbop_480_624kbps-video", [ "init" ], ".mp4");
+      return fetchAndLoad(videosb, "bipbop/bipbop_480_624kbps-video", ["init"], ".mp4");
     })
     .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_480_624kbps-video", range(1, 3), ".m4s"))
     .then(function() {
@@ -69,7 +69,7 @@ runWithMSE(function(ms, el) {
         SimpleTest.finish();
         throw e;
       }
-      return fetchAndLoad(videosb, "bipbop/bipbop_300-3s", [ "" ], ".webm");
+      return fetchAndLoad(videosb, "bipbop/bipbop_300-3s", [""], ".webm");
     })
     .then(function() {
       ms.endOfStream();

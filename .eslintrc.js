@@ -52,12 +52,8 @@ module.exports = {
     // XXX Bug 1452706. These directories are still being fixed, so turn off
     //  mozilla/require-expected-throws-or-rejects for now.
     "files": [
-      "browser/extensions/formautofill/test/unit/test_storage_tombstones.js",
-      "browser/modules/test/browser/**",
-      "browser/tools/mozscreenshots/browser_boundingbox.js",
       "devtools/client/inspector/extensions/test/head_devtools_inspector_sidebar.js",
       "storage/test/unit/**",
-      "testing/marionette/test/unit/**",
       "toolkit/components/extensions/**",
       "toolkit/mozapps/extensions/test/xpcshell/**"
     ],

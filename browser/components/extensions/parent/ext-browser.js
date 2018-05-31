@@ -142,8 +142,8 @@ global.TabContext = class extends EventEmitter {
     windowTracker.addListener("progress", this);
     windowTracker.addListener("TabSelect", this);
 
-    this.tabDetached = this.tabDetached.bind(this);
-    tabTracker.on("tab-detached", this.tabDetached);
+    this.tabAdopted = this.tabAdopted.bind(this);
+    tabTracker.on("tab-adopted", this.tabAdopted);
   }
 
   /**
@@ -188,14 +188,25 @@ global.TabContext = class extends EventEmitter {
     this.emit("location-change", tab, fromBrowse);
   }
 
-  tabDetached(eventType, {nativeTab, adoptedBy}) {
-    if (!this.tabData.has(nativeTab)) {
+  /**
+   * Persists context data when a tab is moved between windows.
+   *
+   * @param {string} eventType
+   *        Event type, should be "tab-adopted".
+   * @param {NativeTab} adoptingTab
+   *        The tab which is being opened and adopting `adoptedTab`.
+   * @param {NativeTab} adoptedTab
+   *        The tab which is being closed and adopted by `adoptingTab`.
+   */
+  tabAdopted(eventType, adoptingTab, adoptedTab) {
+    if (!this.tabData.has(adoptedTab)) {
       return;
     }
     // Create a new object (possibly with different inheritance) when a tab is moved
     // into a new window. But then reassign own properties from the old object.
-    let newData = this.get(adoptedBy);
-    let oldData = this.tabData.get(nativeTab);
+    let newData = this.get(adoptingTab);
+    let oldData = this.tabData.get(adoptedTab);
+    this.tabData.delete(adoptedTab);
     Object.assign(newData, oldData);
   }
 
@@ -205,7 +216,7 @@ global.TabContext = class extends EventEmitter {
   shutdown() {
     windowTracker.removeListener("progress", this);
     windowTracker.removeListener("TabSelect", this);
-    tabTracker.off("tab-detached", this.tabDetached);
+    tabTracker.off("tab-adopted", this.tabAdopted);
   }
 };
 
@@ -304,6 +315,24 @@ class TabTracker extends TabTrackerBase {
     this._tabIds.set(id, nativeTab);
   }
 
+  /**
+   * Handles tab adoption when a tab is moved between windows.
+   * Ensures the new tab will have the same ID as the old one,
+   * and emits a "tab-adopted" event.
+   *
+   * @param {NativeTab} adoptingTab
+   *        The tab which is being opened and adopting `adoptedTab`.
+   * @param {NativeTab} adoptedTab
+   *        The tab which is being closed and adopted by `adoptingTab`.
+   */
+  adopt(adoptingTab, adoptedTab) {
+    if (!this.adoptedTabs.has(adoptedTab)) {
+      this.adoptedTabs.set(adoptedTab, adoptingTab);
+      this.setId(adoptingTab, this.getId(adoptedTab));
+      this.emit("tab-adopted", adoptingTab, adoptedTab);
+    }
+  }
+
   _handleTabDestroyed(event, {nativeTab}) {
     let id = this._tabs.get(nativeTab);
     if (id) {
@@ -363,11 +392,9 @@ class TabTracker extends TabTrackerBase {
       case "TabOpen":
         let {adoptedTab} = event.detail;
         if (adoptedTab) {
-          this.adoptedTabs.set(adoptedTab, event.target);
-
           // This tab is being created to adopt a tab from a different window.
-          // Copy the ID from the old tab to the new.
-          this.setId(nativeTab, this.getId(adoptedTab));
+          // Handle the adoption.
+          this.adopt(nativeTab, adoptedTab);
 
           adoptedTab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetFrameData", {
             windowId: windowTracker.getId(nativeTab.ownerGlobal),
@@ -394,10 +421,10 @@ class TabTracker extends TabTrackerBase {
         let {adoptedBy} = event.detail;
         if (adoptedBy) {
           // This tab is being closed because it was adopted by a new window.
-          // Copy its ID to the new tab, in case it was created as the first tab
-          // of a new window, and did not have an `adoptedTab` detail when it was
+          // Handle the adoption in case it was created as the first tab of a
+          // new window, and did not have an `adoptedTab` detail when it was
           // opened.
-          this.setId(adoptedBy, this.getId(nativeTab));
+          this.adopt(adoptedBy, nativeTab);
 
           this.emitDetached(nativeTab, adoptedBy);
         } else {
@@ -448,9 +475,7 @@ class TabTracker extends TabTrackerBase {
       // process, so if we run later than it, we're too late.
       let nativeTab = tabToAdopt;
       let adoptedBy = window.gBrowser.tabs[0];
-
-      this.adoptedTabs.set(nativeTab, adoptedBy);
-      this.setId(adoptedBy, this.getId(nativeTab));
+      this.adopt(adoptedBy, nativeTab);
 
       // We need to be sure to fire this event after the onDetached event
       // for the original tab.

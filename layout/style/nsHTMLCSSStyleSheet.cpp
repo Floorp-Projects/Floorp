@@ -10,7 +10,7 @@
 
 #include "nsHTMLCSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "nsPresContext.h"
 #include "mozilla/dom/Element.h"
 #include "nsAttrValue.h"

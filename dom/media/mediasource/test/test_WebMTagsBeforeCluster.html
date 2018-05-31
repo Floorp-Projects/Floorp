@@ -12,7 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-addMSEPrefs([ "media.mediasource.webm.enabled", true ]);
+addMSEPrefs(["media.mediasource.webm.enabled", true]);
 
 runWithMSE(function(ms, v) {
   ms.addEventListener("sourceopen", function() {

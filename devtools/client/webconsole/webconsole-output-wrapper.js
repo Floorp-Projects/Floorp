@@ -367,6 +367,10 @@ WebConsoleOutputWrapper.prototype = {
     this.setTimeoutIfNeeded();
   },
 
+  dispatchClearHistory: function() {
+    store.dispatch(actions.clearHistory());
+  },
+
   /**
    * Returns a Promise that resolves once any async dispatch is finally dispatched.
    */

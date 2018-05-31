@@ -4,11 +4,10 @@
 
 add_task(async function test_no_slash() {
   info("Searching for host match without slash should match host");
-  await PlacesTestUtils.addVisits({
-    uri: NetUtil.newURI("http://file.org/test/"),
-  }, {
-    uri: NetUtil.newURI("file:///c:/test.html"),
-  });
+  await PlacesTestUtils.addVisits([
+    { uri: "http://file.org/test/" },
+    { uri: "file:///c:/test.html" }
+  ]);
   await check_autocomplete({
     search: "file",
     autofilled: "file.org/",
@@ -18,7 +17,7 @@ add_task(async function test_no_slash() {
 });
 
 add_task(async function test_w_slash() {
-  info("Searching match with slash at the end should match host");
+  info("Searching match with slash at the end should match url");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://file.org/test/"),
   }, {

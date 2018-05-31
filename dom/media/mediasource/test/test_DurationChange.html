@@ -18,7 +18,7 @@ runWithMSE(async (ms, v) => {
 
   const arrayBuffer = await fetchWithXHR("seek.webm");
   sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-  await Promise.all([ once(v, "loadedmetadata"), once(sb, "updateend") ]);
+  await Promise.all([once(v, "loadedmetadata"), once(sb, "updateend")]);
   is(v.duration, ms.duration, "video duration is mediasource one");
   must_not_throw(() => ms.duration = 0, "duration = 0 is valid initially");
   is(v.duration, 0, "reducing duration with no data buffered is valid");

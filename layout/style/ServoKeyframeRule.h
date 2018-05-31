@@ -14,7 +14,7 @@ class nsICSSDeclaration;
 
 namespace mozilla {
 
-class ServoDeclarationBlock;
+class DeclarationBlock;
 class ServoKeyframeDeclaration;
 
 class ServoKeyframeRule final : public dom::CSSKeyframeRule
