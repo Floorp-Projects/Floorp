@@ -8,6 +8,7 @@ import mozlog
 import time
 
 import pytest
+import six
 
 
 def pytest_addoption(parser):
@@ -15,10 +16,10 @@ def pytest_addoption(parser):
     # Pytest's parser doesn't have the add_argument_group method Mozlog expects.
     group = parser.getgroup('mozlog')
 
-    for name, (_class, _help) in mozlog.commandline.log_formatters.iteritems():
+    for name, (_class, _help) in six.iteritems(mozlog.commandline.log_formatters):
         group.addoption('--log-{0}'.format(name), action='append', help=_help)
 
-    formatter_options = mozlog.commandline.fmt_options.iteritems()
+    formatter_options = six.iteritems(mozlog.commandline.fmt_options)
     for name, (_class, _help, formatters, action) in formatter_options:
         for formatter in formatters:
             if formatter in mozlog.commandline.log_formatters:
@@ -89,7 +90,7 @@ class MozLog(object):
             status = 'SKIP' if not hasattr(report, 'wasxfail') else 'FAIL'
         if report.longrepr is not None:
             longrepr = report.longrepr
-            if isinstance(longrepr, basestring):
+            if isinstance(longrepr, six.string_types):
                 # When using pytest-xdist, longrepr is serialised as a str
                 message = stack = longrepr
                 if longrepr.startswith('[XPASS(strict)]'):
