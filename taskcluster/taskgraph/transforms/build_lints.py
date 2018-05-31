@@ -12,6 +12,8 @@ from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 
+SEEN_CONFIGS = {}
+
 
 @transforms.add
 def check_mozharness_perfherder_options(config, jobs):
@@ -26,7 +28,6 @@ def check_mozharness_perfherder_options(config, jobs):
     to the same bucket by looking for jobs not defining extra options when
     their platform or mozharness config are otherwise similar.
     """
-    seen_configs = {}
 
     for job in jobs:
         if job['run']['using'] != 'mozharness':
@@ -47,12 +48,13 @@ def check_mozharness_perfherder_options(config, jobs):
 
         key = (platform, primary_config, nightly, options)
 
-        if key in seen_configs:
-            raise Exception('Non-unique Perfherder data collection for jobs '
-                            '%s and %s: set PERFHERDER_EXTRA_OPTIONS in worker '
-                            'environment variables or use different mozconfigs'
-                            % (job['name'], seen_configs[key]))
+        if key in SEEN_CONFIGS:
+            raise Exception(
+                'Non-unique Perfherder data collection for jobs %s-%s and %s: '
+                'set PERFHERDER_EXTRA_OPTIONS in worker environment variables '
+                'or use different mozconfigs'
+                % (config.kind, job['name'], SEEN_CONFIGS[key]))
 
-        seen_configs[key] = job['name']
+        SEEN_CONFIGS[key] = '{}-{}'.format(config.kind, job['name'])
 
         yield job
