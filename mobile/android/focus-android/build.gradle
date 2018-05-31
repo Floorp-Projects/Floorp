@@ -7,7 +7,7 @@ buildscript {
     ext.kotlin_version = '1.2.30'
     ext.geckoview_nightly_date = '2018.05.31'
     ext.geckoview_revision = '763f30c3421233a45ef9e67a695c5c241a2c8a3a'
-    ext.geckoview_nightly_version ='62.0.20180531101443'
+    ext.geckoview_nightly_version = '62.0.20180531101443'
     ext.spotbugs_version = '3.1.2'
     ext.mozilla_components_version = '0.5.1'
 

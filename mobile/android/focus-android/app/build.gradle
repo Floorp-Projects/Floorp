@@ -438,6 +438,14 @@ android.applicationVariants.all { variant ->
 }
 
 // -------------------------------------------------------------------------------------------------
+// Gecko: Put GeckoVersion into BuildConfig
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.all {
+    buildConfigField 'String', 'GECKOVIEW_VERSION', "\"${geckoview_nightly_version}\""
+}
+
+// -------------------------------------------------------------------------------------------------
 // Sentry: Read token from locale file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 

@@ -12,13 +12,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.util.ArrayMap;
 import android.view.View;
 
+import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
-import org.mozilla.geckoview.BuildConfig;
 
 import java.util.Map;
 
@@ -52,9 +52,8 @@ public class LocalizedContent {
 
         String aboutVersion = "";
         try {
-            final String engineIndicator = AppConstants.isGeckoBuild() ? " \uD83E\uDD8E " +
-                    "Version: " + BuildConfig.MOZ_APP_VERSION +
-                    " Build ID: " + BuildConfig.MOZ_APP_BUILDID
+            final String engineIndicator = AppConstants.isGeckoBuild() ?
+                    " \uD83E\uDD8E " + BuildConfig.GECKOVIEW_VERSION
                     : "";
             final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode + engineIndicator);
