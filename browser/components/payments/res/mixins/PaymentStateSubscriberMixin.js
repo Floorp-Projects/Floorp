@@ -30,6 +30,7 @@ export let requestStore = new PaymentsStore({
     previousId: null,
     // onboardingWizard: true,
     // error: "",
+    // selectedStateKey: "",
   },
   request: {
     tabId: null,

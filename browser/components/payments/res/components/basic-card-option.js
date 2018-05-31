@@ -42,6 +42,10 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
     super.connectedCallback();
   }
 
+  static formatSingleLineLabel(basicCard) {
+    return basicCard["cc-number"] + " " + basicCard["cc-exp"] + " " + basicCard["cc-name"];
+  }
+
   render() {
     this["_cc-name"].textContent = this.ccName;
     this["_cc-number"].textContent = this.ccNumber;

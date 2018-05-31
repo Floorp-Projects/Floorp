@@ -5,15 +5,7 @@
 basic-card-option {
   grid-row-gap: 5px;
   grid-column-gap: 10px;
-  grid-template-areas:
-    "cc-name  type"
-    "cc-number ...";
-}
-
-rich-select[open] > .rich-select-popup-box > basic-card-option {
-  grid-template-areas:
-    "cc-name   type"
-    "cc-number  cc-exp";
+  grid-template-areas: "type cc-number cc-name cc-exp";
 }
 
 basic-card-option > .cc-number {
@@ -30,6 +22,7 @@ basic-card-option > .cc-exp {
 
 basic-card-option > .type {
   grid-area: type;
+  display: none;
 }
 
 basic-card-option > .cc-number,
@@ -37,8 +30,4 @@ basic-card-option > .cc-name,
 basic-card-option > .cc-exp,
 basic-card-option > .type {
   white-space: nowrap;
-}
-
-rich-select > .rich-select-selected-clone > .cc-exp {
-  display: none;
 }

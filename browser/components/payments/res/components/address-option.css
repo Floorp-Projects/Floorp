@@ -47,7 +47,7 @@ address-option > .tel {
 }
 
 address-picker.shipping-related address-option > .email,
-address-picker.shipping-related address-option.rich-select-selected-clone > .tel {
+address-picker.shipping-related address-option.rich-select-selected-option > .tel {
   display: none;
 }
 
