@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MiscEvents.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsAlgorithm.h"
@@ -1484,14 +1485,14 @@ NativeKey::InitWithKeyOrChar()
 
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mDOMKeyCode =
-    keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
+    keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mVirtualKeyCode);
   // Be aware, keyboard utilities can change non-printable keys to printable
   // keys.  In such case, we should make the key value as a printable key.
   // FYI: IsFollowedByPrintableCharMessage() returns true only when it's
   //      handling a keydown message.
   mKeyNameIndex = IsFollowedByPrintableCharMessage() ?
     KEY_NAME_INDEX_USE_STRING :
-    keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
+    keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mVirtualKeyCode);
   mCodeNameIndex =
     KeyboardLayout::ConvertScanCodeToCodeNameIndex(
       GetScanCodeWithExtendedFlag());
@@ -4782,6 +4783,20 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_VOLUME_UP:
       return NS_VK_VOLUME_UP;
 
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+      return NS_VK_SHIFT;
+
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+      return NS_VK_CONTROL;
+
+    // Note that even if the key is AltGr, we should return NS_VK_ALT for
+    // compatibility with both older Gecko and the other browsers.
+    case VK_LMENU:
+    case VK_RMENU:
+      return NS_VK_ALT;
+
     // Following keycodes are not defined in our DOM keycodes.
     case VK_BROWSER_BACK:
     case VK_BROWSER_FORWARD:
@@ -4980,6 +4995,12 @@ KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
     return KEY_NAME_INDEX_USE_STRING;
   }
 
+  // If the keyboard layout has AltGr and AltRight key is pressed,
+  // return AltGraph.
+  if (aVirtualKey == VK_RMENU && HasAltGr()) {
+    return KEY_NAME_INDEX_AltGraph;
+  }
+
   switch (aVirtualKey) {
 
 #undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
@@ -5101,6 +5122,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
 
   OverrideLayout(loadedLayout);
 
+  bool isAltGrKeyPress = false;
   if (aModifierFlags & nsIWidget::ALTGRAPH) {
     if (!HasAltGr()) {
       return NS_ERROR_INVALID_ARG;
@@ -5158,6 +5180,15 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       aModifierFlags &= ~(nsIWidget::ALT_R | nsIWidget::ALTGRAPH);
       argumentKeySpecific = aNativeKeyCode & 0xFF;
       aNativeKeyCode = (aNativeKeyCode & 0xFFFF0000) | VK_MENU;
+      // If AltRight key is AltGr in the keyboard layout, let's use
+      // SetupKeyModifiersSequence() to emulate the native behavior
+      // since the same event order between keydown and keyup makes
+      // the following code complicated.
+      if (HasAltGr()) {
+        isAltGrKeyPress = true;
+        aModifierFlags &= ~nsIWidget::CTRL_L;
+        aModifierFlags |= nsIWidget::ALTGRAPH;
+      }
       break;
     case VK_CAPITAL:
       aModifierFlags &= ~nsIWidget::CAPS_LOCK;
@@ -5172,7 +5203,9 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   AutoTArray<KeyPair,10> keySequence;
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags,
                                       WM_KEYDOWN);
-  keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
+  if (!isAltGrKeyPress) {
+    keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
+  }
 
   // Simulate the pressing of each modifier key and then the real key
   // FYI: Each NativeKey instance here doesn't need to override keyboard layout
@@ -5249,7 +5282,9 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
   }
 
   keySequence.Clear();
-  keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
+  if (!isAltGrKeyPress) {
+    keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
+  }
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags,
                                       WM_KEYUP);
   for (uint32_t i = 0; i < keySequence.Length(); ++i) {
