@@ -7236,9 +7236,9 @@ class CGCallGenerator(CGThing):
 
             getPrincipal = fill(
                 """
-                JSCompartment* compartment = js::GetContextCompartment(cx);
-                MOZ_ASSERT(compartment);
-                JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+                JS::Realm* realm = js::GetContextRealm(cx);
+                MOZ_ASSERT(realm);
+                JSPrincipals* principals = JS::GetRealmPrincipals(realm);
                 nsIPrincipal* principal = nsJSPrincipals::get(principals);
                 ${checkPrincipal}
                 """,
