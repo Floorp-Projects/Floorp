@@ -227,42 +227,6 @@ nsPKCS11Module::GetLibName(/*out*/ nsACString& libName)
 }
 
 NS_IMETHODIMP
-nsPKCS11Module::FindSlotByName(const nsACString& name,
-                       /*out*/ nsIPKCS11Slot** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  const nsCString& flatName = PromiseFlatCString(name);
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"", flatName.get()));
-  UniquePK11SlotInfo slotInfo;
-  UniquePK11SlotList slotList(PK11_FindSlotsByNames(mModule->dllName,
-                                                    flatName.get() /*slotName*/,
-                                                    nullptr /*tokenName*/,
-                                                    false));
-  if (!slotList) {
-    /* name must be the token name */
-    slotList.reset(PK11_FindSlotsByNames(mModule->dllName, nullptr /*slotName*/,
-                                         flatName.get() /*tokenName*/, false));
-  }
-  if (slotList && slotList->head && slotList->head->slot) {
-    slotInfo.reset(PK11_ReferenceSlot(slotList->head->slot));
-  }
-  if (!slotInfo) {
-    // workaround - the builtin module has no name
-    if (!flatName.EqualsLiteral("Root Certificates")) {
-      // Give up.
-      return NS_ERROR_FAILURE;
-    }
-
-    slotInfo.reset(PK11_ReferenceSlot(mModule->slots[0]));
-  }
-
-  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotInfo.get());
-  slot.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);

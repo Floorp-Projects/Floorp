@@ -28,14 +28,4 @@ interface nsIPK11TokenDB : nsISupports
    * Get the internal key database token
    */
   nsIPK11Token getInternalKeyToken();
-
-  /*
-   * Find a token by name. Throws NS_ERROR_FAILURE if no token with the given
-   * name can be found.
-   * @param tokenName a string identifying the name of the token. Must be
-   *                  non-empty.
-   * @return a token with the given name
-   */
-  [must_use]
-  nsIPK11Token findTokenByName(in AUTF8String tokenName);
 };

@@ -16,10 +16,6 @@ interface nsIPKCS11Module : nsISupports
   readonly attribute AUTF8String name;
   [must_use]
   readonly attribute AUTF8String libName;
-
-  [must_use]
-  nsIPKCS11Slot findSlotByName(in AUTF8String name);
-
   [must_use]
   nsISimpleEnumerator listSlots();
 };

@@ -12,7 +12,7 @@ const nsIPKCS11Slot = Ci.nsIPKCS11Slot;
 const nsIPK11Token = Ci.nsIPK11Token;
 
 var params;
-var tokenName = "";
+var token;
 var pw1;
 
 function doPrompt(msg) {
@@ -24,70 +24,47 @@ function onLoad() {
 
   pw1 = document.getElementById("pw1");
   params = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
-  tokenName = params.GetString(1);
+  token = params.objects.GetElementAt(0).QueryInterface(Ci.nsIPK11Token);
 
-  document.getElementById("tokenName").setAttribute("value", tokenName);
+  document.getElementById("tokenName").setAttribute("value", token.name);
 
   process();
 }
 
 function process() {
   let bundle = document.getElementById("pippki_bundle");
-
+  let oldpwbox = document.getElementById("oldpw");
+  let msgBox = document.getElementById("message");
   // If the token is unitialized, don't use the old password box.
   // Otherwise, do.
+  if ((token.needsLogin() && token.needsUserInit) || !token.needsLogin()) {
+    oldpwbox.setAttribute("hidden", "true");
+    msgBox.setAttribute("value", bundle.getString("password_not_set"));
+    msgBox.setAttribute("hidden", "false");
 
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
-  let token;
-  if (tokenName.length > 0) {
-    token = tokenDB.findTokenByName(tokenName);
-  } else {
-    token = tokenDB.getInternalKeyToken();
-  }
-  if (token) {
-    let oldpwbox = document.getElementById("oldpw");
-    let msgBox = document.getElementById("message");
-    if ((token.needsLogin() && token.needsUserInit) || !token.needsLogin()) {
-      oldpwbox.setAttribute("hidden", "true");
-      msgBox.setAttribute("value", bundle.getString("password_not_set"));
-      msgBox.setAttribute("hidden", "false");
-
-      if (!token.needsLogin()) {
-        oldpwbox.setAttribute("inited", "empty");
-      } else {
-        oldpwbox.setAttribute("inited", "true");
-      }
-
-      // Select first password field
-      document.getElementById("pw1").focus();
+    if (!token.needsLogin()) {
+      oldpwbox.setAttribute("inited", "empty");
     } else {
-      // Select old password field
-      oldpwbox.setAttribute("hidden", "false");
-      msgBox.setAttribute("hidden", "true");
-      oldpwbox.setAttribute("inited", "false");
-      oldpwbox.focus();
+      oldpwbox.setAttribute("inited", "true");
     }
+
+    // Select first password field
+    document.getElementById("pw1").focus();
+  } else {
+    // Select old password field
+    oldpwbox.setAttribute("hidden", "false");
+    msgBox.setAttribute("hidden", "true");
+    oldpwbox.setAttribute("inited", "false");
+    oldpwbox.focus();
   }
 
-  if (params) {
-    // Return value 0 means "canceled"
-    params.SetInt(1, 0);
-  }
+  // Return value 0 means "canceled"
+  params.SetInt(1, 0);
 
   checkPasswords();
 }
 
 function setPassword() {
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
-  let token;
-  if (tokenName.length > 0) {
-    token = tokenDB.findTokenByName(tokenName);
-  } else {
-    token = tokenDB.getInternalKeyToken();
-  }
-
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
   var bundle = document.getElementById("pippki_bundle");
