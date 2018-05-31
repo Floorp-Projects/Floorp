@@ -472,26 +472,13 @@ ImageContainer::GetD3D11YCbCrRecycleAllocator(KnowsCompositor* aAllocator)
     return mD3D11YCbCrRecycleAllocator;
   }
 
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
-  if (!device) {
-    device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-  }
-
-  if (!device || !aAllocator->SupportsD3D11()) {
+  if (!aAllocator->SupportsD3D11() ||
+      !gfx::DeviceManagerDx::Get()->GetImageDevice()) {
     return nullptr;
   }
-
-  RefPtr<ID3D10Multithread> multi;
-  HRESULT hr =
-    device->QueryInterface((ID3D10Multithread**)getter_AddRefs(multi));
-  if (FAILED(hr) || !multi) {
-    gfxWarning() << "Multithread safety interface not supported. " << hr;
-    return nullptr;
-  }
-  multi->SetMultithreadProtected(TRUE);
 
   mD3D11YCbCrRecycleAllocator =
-    new D3D11YCbCrRecycleAllocator(aAllocator, device);
+    new D3D11YCbCrRecycleAllocator(aAllocator);
   return mD3D11YCbCrRecycleAllocator;
 }
 #endif

@@ -314,13 +314,6 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     }
   }
 
-  if (aAnimParams) {
-    // We never want to unlock animated frames because we need the raw frame
-    // buffer for blending with future frames. Adding an extra unmatched lock
-    // here will guarantee that.
-    ++mLockCount;
-  }
-
   return NS_OK;
 }
 
@@ -506,6 +499,16 @@ imgFrame::RawAccessRef(bool aOnlyFinished /*= false*/)
 {
   return RawAccessFrameRef(this, aOnlyFinished);
 }
+
+void
+imgFrame::SetRawAccessOnly()
+{
+  AssertImageDataLocked();
+
+  // Lock our data and throw away the key.
+  LockImageData(false);
+}
+
 
 imgFrame::SurfaceWithFormat
 imgFrame::SurfaceForDrawing(bool               aDoPartialDecode,

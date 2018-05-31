@@ -549,13 +549,13 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsILoadInfo> loadInfo =
-    new mozilla::LoadInfo(loadingPrincipal,
-                          nullptr, // aTriggeringPrincipal
-                          nullptr, // aLoadingNode
-                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                          nsILoadInfo::SEC_ALLOW_CHROME |
-                          nsILoadInfo::SEC_DISALLOW_SCRIPT,
-                          nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON);
+    new mozilla::net::LoadInfo(loadingPrincipal,
+                               nullptr, // aTriggeringPrincipal
+                               nullptr, // aLoadingNode
+                               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                               nsILoadInfo::SEC_ALLOW_CHROME |
+                               nsILoadInfo::SEC_DISALLOW_SCRIPT,
+                               nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON);
 
   nsCOMPtr<nsIChannel> channel;
   rv = protocolHandler->NewChannel2(dataURI, loadInfo, getter_AddRefs(channel));

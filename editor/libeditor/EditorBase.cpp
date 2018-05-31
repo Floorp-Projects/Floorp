@@ -1266,8 +1266,7 @@ EditorBase::MarkNodeDirty(nsINode* aNode)
   if (!OutputsMozDirty()) {
     return NS_OK;
   }
-  if (aNode && aNode->IsElement()) {
-    RefPtr<Element> element = aNode->AsElement();
+  if (RefPtr<Element> element = Element::FromNodeOrNull(aNode)) {
     element->SetAttr(kNameSpaceID_None, nsGkAtoms::mozdirty, EmptyString(),
                      false);
   }
@@ -3921,8 +3920,7 @@ EditorBase::IsPreformatted(nsINode* aNode)
   }
   // Look at the node (and its parent if it's not an element), and grab its
   // ComputedStyle.
-  RefPtr<ComputedStyle> elementStyle;
-  Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
+  Element* element = Element::FromNode(aNode);
   if (!element) {
     element = aNode->GetParentElement();
     if (!element) {
@@ -3930,7 +3928,7 @@ EditorBase::IsPreformatted(nsINode* aNode)
     }
   }
 
-  elementStyle =
+  RefPtr<ComputedStyle> elementStyle =
     nsComputedDOMStyle::GetComputedStyleNoFlush(element, nullptr);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:

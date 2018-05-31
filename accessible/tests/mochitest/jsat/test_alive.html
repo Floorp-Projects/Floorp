@@ -23,7 +23,7 @@
         ok(AccessFu._enabled, "AccessFu was enabled again.");
         AccessFuTest.nextTest();
       });
-      AccessFu._enable();
+      AccessFu.enable();
     }
 
     // Make sure EventManager is started again.
@@ -36,7 +36,7 @@
         isnot(AccessFu._enabled, "AccessFu was disabled.");
         AccessFuTest.finish();
       });
-      AccessFu._disable();
+      AccessFu.disable();
     }
 
     function doTest() {

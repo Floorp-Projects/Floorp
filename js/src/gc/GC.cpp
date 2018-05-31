@@ -8545,7 +8545,7 @@ JS::SkipZoneForGC(Zone* zone)
 }
 
 JS_PUBLIC_API(void)
-JS::GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason)
+JS::NonIncrementalGC(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
     cx->runtime()->gc.gc(gckind, reason);

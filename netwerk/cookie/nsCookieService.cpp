@@ -3513,7 +3513,7 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
 // to be processed
 bool
 nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
-                                   const mozilla::nsCookieKey    &aKey,
+                                   const mozilla::net::nsCookieKey &aKey,
                                    bool                           aRequireHostMatch,
                                    CookieStatus                   aStatus,
                                    nsDependentCString            &aCookieHeader,

@@ -2282,7 +2282,7 @@ nsXPCComponents_Utils::ForceGC()
 {
     JSContext* cx = XPCJSContext::Get()->Context();
     PrepareForFullGC(cx);
-    GCForReason(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
+    NonIncrementalGC(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -2326,7 +2326,7 @@ nsXPCComponents_Utils::ForceShrinkingGC()
 {
     JSContext* cx = dom::danger::GetJSContext();
     PrepareForFullGC(cx);
-    GCForReason(cx, GC_SHRINK, gcreason::COMPONENT_UTILS);
+    NonIncrementalGC(cx, GC_SHRINK, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 

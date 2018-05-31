@@ -91,7 +91,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
     // create an unbounded pipe.
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
                     getter_AddRefs(bufOutStream),
-                    nsIOService::gDefaultSegmentSize,
+                    net::nsIOService::gDefaultSegmentSize,
                     UINT32_MAX,
                     async, true);
     if (NS_FAILED(rv))

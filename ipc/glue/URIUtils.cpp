@@ -105,7 +105,7 @@ DeserializeURI(const URIParams& aParams)
       break;
 
     case URIParams::TSimpleNestedURIParams:
-      mutator = new nsSimpleNestedURI::Mutator();
+      mutator = new net::nsSimpleNestedURI::Mutator();
       break;
 
     case URIParams::THostObjectURIParams:
