@@ -258,7 +258,8 @@ add_task(async function test_getAddonsByID_fails() {
   Services.prefs.setCharPref(GET_TEST.preference, GET_TEST.preferenceValue);
 
   await Assert.rejects(
-    AddonRepository.getAddonsByIDs(GET_TEST.failedIDs));
+    AddonRepository.getAddonsByIDs(GET_TEST.failedIDs),
+    /Error: GET.*?failed/);
 });
 
 // Tests success of AddonRepository.getAddonsByIDs()
