@@ -28,6 +28,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 
+import kotlin.NotImplementedError;
 import kotlin.text.Charsets;
 
 /**
@@ -439,6 +440,26 @@ public class WebViewProvider {
         @Override
         public void exitFullscreen() {
             geckoSession.exitFullScreen();
+        }
+
+        @Override
+        public void findAllAsync(String find) {
+            // TODO: #2690
+        }
+
+        @Override
+        public void findNext(boolean forward) {
+            // TODO: #2690
+        }
+
+        @Override
+        public void clearMatches() {
+            // TODO: #2690
+        }
+
+        @Override
+        public void setFindListener(IFindListener findListener) {
+            // TODO: #2690
         }
 
         @Override
