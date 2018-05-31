@@ -47,6 +47,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.dom += [
     'AnimationEvent.h',
     'BeforeUnloadEvent.h',
+    'Clipboard.h',
     'ClipboardEvent.h',
     'CommandEvent.h',
     'CompositionEvent.h',
@@ -90,6 +91,7 @@ UNIFIED_SOURCES += [
     'AnimationEvent.cpp',
     'AsyncEventDispatcher.cpp',
     'BeforeUnloadEvent.cpp',
+    'Clipboard.cpp',
     'ClipboardEvent.cpp',
     'CommandEvent.cpp',
     'CompositionEvent.cpp',
