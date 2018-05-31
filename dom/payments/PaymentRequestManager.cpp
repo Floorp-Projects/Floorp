@@ -252,92 +252,72 @@ ConvertOptions(const PaymentOptions& aOptions,
 
 StaticRefPtr<PaymentRequestManager> gPaymentManager;
 
-nsresult
-PaymentRequestManager::GetPaymentChild(PaymentRequest* aRequest,
-                                       PaymentRequestChild** aChild)
+PaymentRequestChild*
+PaymentRequestManager::GetPaymentChild(PaymentRequest* aRequest)
 {
-  NS_ENSURE_ARG_POINTER(aRequest);
-  NS_ENSURE_ARG_POINTER(aChild);
-  *aChild = nullptr;
+  MOZ_ASSERT(aRequest);
 
-  RefPtr<PaymentRequestChild> paymentChild;
-  if (mPaymentChildHash.Get(aRequest, getter_AddRefs(paymentChild))) {
-    paymentChild.forget(aChild);
-    return NS_OK;
+  if (PaymentRequestChild* child = aRequest->GetIPC()) {
+    return child;
   }
 
   nsPIDOMWindowInner* win = aRequest->GetOwner();
-  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(win, nullptr);
   TabChild* tabChild = TabChild::GetFrom(win->GetDocShell());
-  NS_ENSURE_TRUE(tabChild, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(tabChild, nullptr);
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
 
-  paymentChild = new PaymentRequestChild();
+  PaymentRequestChild* paymentChild = new PaymentRequestChild(aRequest);
   tabChild->SendPPaymentRequestConstructor(paymentChild);
-  if (!mPaymentChildHash.Put(aRequest, paymentChild, mozilla::fallible) ) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!mPaymentChildHash.Put(requestId, aRequest, mozilla::fallible) ) {
+    paymentChild->MaybeDelete();
+    return nullptr;
   }
-  paymentChild.forget(aChild);
-  return NS_OK;
+
+  return paymentChild;
 }
 
 nsresult
-PaymentRequestManager::ReleasePaymentChild(PaymentRequestChild* aPaymentChild)
+PaymentRequestManager::ReleasePaymentChild(const nsAString& aId)
 {
-  NS_ENSURE_ARG_POINTER(aPaymentChild);
-  for (auto iter = mPaymentChildHash.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<PaymentRequestChild> child = iter.Data();
-    if (NS_WARN_IF(!child)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (child == aPaymentChild) {
-      iter.Remove();
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-PaymentRequestManager::ReleasePaymentChild(PaymentRequest* aRequest)
-{
-  NS_ENSURE_ARG_POINTER(aRequest);
-
-  RefPtr<PaymentRequestChild> paymentChild;
-  if(!mPaymentChildHash.Remove(aRequest, getter_AddRefs(paymentChild))) {
-    return NS_ERROR_FAILURE;
-  }
-  if (NS_WARN_IF(!paymentChild)) {
-    return NS_ERROR_FAILURE;
-  }
-  paymentChild->MaybeDelete();
+  mPaymentChildHash.Remove(aId);
   return NS_OK;
 }
 
 nsresult
 PaymentRequestManager::SendRequestPayment(PaymentRequest* aRequest,
                                           const IPCPaymentActionRequest& aAction,
-                                          bool aReleaseAfterSend)
+                                          bool aResponseExpected)
 {
-  RefPtr<PaymentRequestChild> requestChild;
-  nsresult rv = GetPaymentChild(aRequest, getter_AddRefs(requestChild));
+  PaymentRequestChild* requestChild = GetPaymentChild(aRequest);
+  nsresult rv = requestChild->RequestPayment(aAction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = requestChild->RequestPayment(aAction);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (aReleaseAfterSend) {
-    rv = ReleasePaymentChild(aRequest);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aResponseExpected) {
+    auto count = mActivePayments.LookupForAdd(aRequest);
+    if (count) {
+      count.Data()++;
+    } else {
+      count.OrInsert([]() { return 1; });
     }
   }
   return NS_OK;
+}
+
+void
+PaymentRequestManager::NotifyRequestDone(PaymentRequest* aRequest)
+{
+  auto entry = mActivePayments.Lookup(aRequest);
+  MOZ_ASSERT(entry);
+  MOZ_ASSERT(entry.Data() > 0);
+
+  uint32_t count = --entry.Data();
+  if (count == 0) {
+    entry.Remove();
+  }
 }
 
 already_AddRefed<PaymentRequestManager>
@@ -354,13 +334,9 @@ PaymentRequestManager::GetSingleton()
 already_AddRefed<PaymentRequest>
 PaymentRequestManager::GetPaymentRequestById(const nsAString& aRequestId)
 {
-  for (const RefPtr<PaymentRequest>& request : mRequestQueue) {
-    if (request->Equals(aRequestId)) {
-      RefPtr<PaymentRequest> paymentRequest = request;
-      return paymentRequest.forget();
-    }
-  }
-  return nullptr;
+  // TODO Pass PaymentRequestChild objects around instead of strings.
+  RefPtr<PaymentRequest> request = mPaymentChildHash.Get(aRequestId);
+  return request.forget();
 }
 
 void
@@ -460,11 +436,10 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
                                        options,
                                        shippingOption);
 
-  rv = SendRequestPayment(request, action, true);
+  rv = SendRequestPayment(request, action, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  mRequestQueue.AppendElement(request);
   request.forget(aRequest);
   return NS_OK;
 }
@@ -504,17 +479,20 @@ PaymentRequestManager::ShowPayment(const nsAString& aRequestId)
 }
 
 nsresult
-PaymentRequestManager::AbortPayment(const nsAString& aRequestId)
+PaymentRequestManager::AbortPayment(PaymentRequest* aRequest, bool aDeferredShow)
 {
   RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
   if (!request) {
     return NS_ERROR_FAILURE;
   }
+  MOZ_ASSERT(request == mShowingRequest);
 
   nsAutoString requestId(aRequestId);
   IPCPaymentAbortActionRequest action(requestId);
 
-  return SendRequestPayment(request, action);
+  // If aDeferredShow is true, then show was called with a promise that was
+  // rejected. In that case, we need to remember that we called show earlier.
+  return SendRequestPayment(aRequest, action, aDeferredShow);
 }
 
 nsresult
@@ -536,14 +514,15 @@ PaymentRequestManager::CompletePayment(const nsAString& aRequestId,
   nsAutoString requestId(aRequestId);
   IPCPaymentCompleteActionRequest action(requestId, completeStatusString);
 
-  return SendRequestPayment(request, action);
+  return SendRequestPayment(request, action, false);
 }
 
 nsresult
 PaymentRequestManager::UpdatePayment(JSContext* aCx,
                                      const nsAString& aRequestId,
                                      const PaymentDetailsUpdate& aDetails,
-                                     bool aRequestShipping)
+                                     bool aRequestShipping,
+                                     bool aDeferredShow)
 {
   NS_ENSURE_ARG_POINTER(aCx);
   RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
@@ -565,7 +544,10 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
 
   nsAutoString requestId(aRequestId);
   IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
-  return SendRequestPayment(request, action);
+
+  // If aDeferredShow is true, then this call serves as the ShowUpdate call for
+  // this request.
+  return SendRequestPayment(aRequest, action, aDeferredShow);
 }
 
 nsresult
@@ -579,10 +561,7 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
         return NS_ERROR_FAILURE;
       }
       request->RespondCanMakePayment(response.result());
-      nsresult rv = ReleasePaymentChild(request);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      NotifyRequestDone(request);
       break;
     }
     case IPCPaymentActionResponse::TIPCPaymentShowActionResponse: {
@@ -619,11 +598,7 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
       if (NS_FAILED(rejectedReason)) {
         MOZ_ASSERT(mShowingRequest == request);
         mShowingRequest = nullptr;
-        mRequestQueue.RemoveElement(request);
-        nsresult rv = ReleasePaymentChild(request);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        NotifyRequestDone(aRequest);
       }
       break;
     }
@@ -636,13 +611,9 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
       request->RespondAbortPayment(response.isSucceeded());
       if (response.isSucceeded()) {
         MOZ_ASSERT(mShowingRequest == request);
-        mRequestQueue.RemoveElement(request);
       }
       mShowingRequest = nullptr;
-      nsresult rv = ReleasePaymentChild(request);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      NotifyRequestDone(request);
       break;
     }
     case IPCPaymentActionResponse::TIPCPaymentCompleteActionResponse: {
@@ -654,11 +625,7 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
       request->RespondComplete();
       MOZ_ASSERT(mShowingRequest == request);
       mShowingRequest = nullptr;
-      mRequestQueue.RemoveElement(request);
-      nsresult rv = ReleasePaymentChild(request);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      NotifyRequestDone(request);
       break;
     }
     default: {
