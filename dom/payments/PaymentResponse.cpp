@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentResponse)
 NS_INTERFACE_MAP_END
 
 PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
-                                 const nsAString& aInternalId,
+                                 PaymentRequest* aRequest,
                                  const nsAString& aRequestId,
                                  const nsAString& aMethodName,
                                  const nsAString& aShippingOption,
@@ -36,7 +36,7 @@ PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                                  const nsAString& aPayerPhone)
   : mOwner(aWindow)
   , mCompleteCalled(false)
-  , mInternalId(aInternalId)
+  , mRequest(aRequest)
   , mRequestId(aRequestId)
   , mMethodName(aMethodName)
   , mDetails(aDetails)
@@ -151,7 +151,7 @@ PaymentResponse::Complete(PaymentComplete result, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsresult rv = manager->CompletePayment(mInternalId, result);
+  nsresult rv = manager->CompletePayment(mRequest, result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_FAILURE);
     return promise.forget();

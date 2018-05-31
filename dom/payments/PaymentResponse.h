@@ -15,6 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class PaymentAddress;
+class PaymentRequest;
 class Promise;
 
 class PaymentResponse final : public nsISupports,
@@ -25,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaymentResponse)
 
   PaymentResponse(nsPIDOMWindowInner* aWindow,
-                  const nsAString& aInternalId,
+                  PaymentRequest* aRequest,
                   const nsAString& aRequestId,
                   const nsAString& aMethodName,
                   const nsAString& aShippingOption,
@@ -71,7 +72,7 @@ protected:
 private:
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
   bool mCompleteCalled;
-  nsString mInternalId;
+  PaymentRequest* mRequest;
   nsString mRequestId;
   nsString mMethodName;
   nsString mDetails;
