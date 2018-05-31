@@ -6,6 +6,7 @@
 
 #include "InputStreamLengthHelper.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "nsIAsyncInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIStreamTransportService.h"
 
@@ -50,7 +51,9 @@ public:
     }
 
     // pong
-    mCallback(mSize);
+    std::function<void(int64_t aLength)> callback;
+    callback.swap(mCallback);
+    callback(mSize);
     return NS_OK;
   }
 
@@ -100,6 +103,12 @@ InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
     return false;
   }
 
+  // We cannot calculate the length of an async stream.
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
+  if (asyncStream) {
+    return false;
+  }
+
   // For main-thread only, we want to avoid calling ::Available() for blocking
   // streams.
   if (NS_IsMainThread()) {
@@ -146,6 +155,11 @@ InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
     nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
       do_QueryInterface(aStream);
     if (!streamLength && !asyncStreamLength) {
+      // We cannot calculate the length of an async stream. We must fix the
+      // caller if this happens.
+      nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
+      MOZ_DIAGNOSTIC_ASSERT(!asyncStream);
+
       bool nonBlocking = false;
       if (NS_SUCCEEDED(aStream->IsNonBlocking(&nonBlocking)) && !nonBlocking) {
         nsCOMPtr<nsIEventTarget> target =
@@ -187,7 +201,7 @@ InputStreamLengthHelper::Run()
 
     // All good!
     if (NS_SUCCEEDED(rv)) {
-      mCallback(length);
+      ExecCallback(length);
       return NS_OK;
     }
 
@@ -195,7 +209,7 @@ InputStreamLengthHelper::Run()
     if (rv == NS_BASE_STREAM_CLOSED ||
         NS_WARN_IF(rv == NS_ERROR_NOT_AVAILABLE) ||
         NS_WARN_IF(rv != NS_BASE_STREAM_WOULD_BLOCK)) {
-      mCallback(-1);
+      ExecCallback(-1);
       return NS_OK;
     }
   }
@@ -208,7 +222,7 @@ InputStreamLengthHelper::Run()
      asyncStreamLength->AsyncLengthWait(this,
                                         GetCurrentThreadSerialEventTarget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mCallback(-1);
+      ExecCallback(-1);
     }
 
     return NS_OK;
@@ -218,11 +232,11 @@ InputStreamLengthHelper::Run()
   uint64_t available = 0;
   nsresult rv = mStream->Available(&available);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mCallback(-1);
+    ExecCallback(-1);
     return NS_OK;
   }
 
-  mCallback((int64_t)available);
+  ExecCallback((int64_t)available);
   return NS_OK;
 }
 
@@ -230,10 +244,19 @@ NS_IMETHODIMP
 InputStreamLengthHelper::OnInputStreamLengthReady(nsIAsyncInputStreamLength* aStream,
                                                   int64_t aLength)
 {
-  MOZ_ASSERT(mCallback);
-  mCallback(aLength);
-  mCallback = nullptr;
+  ExecCallback(aLength);
   return NS_OK;
+}
+
+void
+InputStreamLengthHelper::ExecCallback(int64_t aLength)
+{
+  MOZ_ASSERT(mCallback);
+
+  std::function<void(int64_t aLength)> callback;
+  callback.swap(mCallback);
+
+  callback(aLength);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(InputStreamLengthHelper, Runnable,

@@ -483,45 +483,49 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
                                         std::vector<CapturedTiledPaintState::Copy>* aCopies,
                                         std::vector<RefPtr<TextureClient>>* aClients)
 {
-  if (mBackBuffer && mFrontBuffer) {
-    gfx::IntSize tileSize = mFrontBuffer->GetSize();
-    const IntRect tileRect = IntRect(0, 0, tileSize.width, tileSize.height);
+  if (!mBackBuffer || !mFrontBuffer) {
+    return;
+  }
 
-    if (aDirtyRegion.Contains(tileRect)) {
-      // The dirty region means that we no longer need the front buffer, so
-      // discard it.
-      DiscardFrontBuffer();
-    } else {
-      // Region that needs copying.
-      nsIntRegion regionToCopy = mInvalidBack;
+  gfx::IntSize tileSize = mFrontBuffer->GetSize();
+  const IntRect tileRect = IntRect(0, 0, tileSize.width, tileSize.height);
 
-      regionToCopy.Sub(regionToCopy, aDirtyRegion);
-      regionToCopy.And(regionToCopy, aVisibleRegion);
+  if (aDirtyRegion.Contains(tileRect)) {
+    // The dirty region means that we no longer need the front buffer, so
+    // discard it.
+    DiscardFrontBuffer();
+    return;
+  }
 
-      aAddPaintedRegion = regionToCopy;
+  // Region that needs copying.
+  nsIntRegion regionToCopy = mInvalidBack;
 
-      if (regionToCopy.IsEmpty()) {
-        // Just redraw it all.
-        return;
-      }
+  regionToCopy.Sub(regionToCopy, aDirtyRegion);
+  regionToCopy.And(regionToCopy, aVisibleRegion);
 
-      // Copy the bounding rect of regionToCopy. As tiles are quite small, it
-      // is unlikely that we'd save much by copying each individual rect of the
-      // region, but we can reevaluate this if it becomes an issue.
-      const IntRect rectToCopy = regionToCopy.GetBounds();
-      gfx::IntRect gfxRectToCopy(rectToCopy.X(), rectToCopy.Y(), rectToCopy.Width(), rectToCopy.Height());
-      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags, aCopies, aClients)) {
-        if (mBackBufferOnWhite) {
-          MOZ_ASSERT(mFrontBufferOnWhite);
-          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies, aClients)) {
-            mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
-          }
-        } else {
-          mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
-        }
-      }
+  aAddPaintedRegion = regionToCopy;
+
+  if (regionToCopy.IsEmpty()) {
+    // Just redraw it all.
+    return;
+  }
+
+  // Copy the bounding rect of regionToCopy. As tiles are quite small, it
+  // is unlikely that we'd save much by copying each individual rect of the
+  // region, but we can reevaluate this if it becomes an issue.
+  const IntRect rectToCopy = regionToCopy.GetBounds();
+  if (!CopyFrontToBack(mFrontBuffer, mBackBuffer, rectToCopy, aFlags, aCopies, aClients)) {
+    return;
+  }
+
+  if (mBackBufferOnWhite) {
+    MOZ_ASSERT(mFrontBufferOnWhite);
+    if (!CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, rectToCopy, aFlags, aCopies, aClients)) {
+      return;
     }
   }
+
+  mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
 }
 
 void
@@ -578,6 +582,59 @@ TileClient::DiscardBackBuffer()
     DiscardTexture(mBackBufferOnWhite, mAllocator);
     mBackBufferOnWhite = nullptr;
   }
+}
+
+bool
+TileClient::CopyFromBuffer(RefPtr<TextureClient> aBuffer,
+                           RefPtr<TextureClient> aBufferOnWhite,
+                           nsIntPoint aBufferOrigin,
+                           nsIntPoint aTileOrigin,
+                           const nsIntRegion& aRegion,
+                           TilePaintFlags aFlags,
+                           std::vector<CapturedTiledPaintState::Copy>* aCopies)
+{
+  if (aRegion.IsEmpty()) {
+    return true;
+  }
+
+  bool asyncPaint = !!(aFlags & TilePaintFlags::Async);
+  auto CopyBuffer = [&aRegion, asyncPaint, &aCopies] (auto aSrc, auto aSrcOrigin, auto aDest, auto aDestOrigin) {
+    MOZ_ASSERT(aDest->IsLocked());
+
+    OpenMode asyncFlags = asyncPaint ? OpenMode::OPEN_ASYNC
+                                     : OpenMode::OPEN_NONE;
+    TextureClientAutoLock lock(aSrc, OpenMode::OPEN_READ | asyncFlags);
+    if (!lock.Succeeded()) {
+      return false;
+    }
+
+    RefPtr<gfx::DrawTarget> srcTarget = aSrc->BorrowDrawTarget();
+    RefPtr<gfx::DrawTarget> destTarget = aDest->BorrowDrawTarget();
+    if (!srcTarget || !destTarget) {
+      return false;
+    }
+
+    for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::IntRect src = iter.Get() - aSrcOrigin;
+      const gfx::IntPoint dest = iter.Get().TopLeft() - aDestOrigin;
+
+      auto copy = CapturedTiledPaintState::Copy{
+        srcTarget, destTarget, src, dest
+      };
+
+      if (asyncPaint) {
+        aCopies->push_back(copy);
+      } else {
+        copy.CopyBuffer();
+      }
+    }
+    return true;
+  };
+
+  return CopyBuffer(aBuffer, aBufferOrigin, mBackBuffer, aTileOrigin) &&
+    (!aBufferOnWhite ||
+     !mBackBufferOnWhite ||
+     CopyBuffer(aBufferOnWhite, aBufferOrigin, mBackBufferOnWhite, aTileOrigin));
 }
 
 static already_AddRefed<TextureClient>

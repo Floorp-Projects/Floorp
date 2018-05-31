@@ -1219,7 +1219,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
+#ifdef DEBUG
     enterRealmDepth_(0),
+#endif
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),
@@ -1355,7 +1357,7 @@ JSContext::getPendingException(MutableHandleValue rval)
 {
     MOZ_ASSERT(throwing);
     rval.set(unwrappedException());
-    if (realm()->isAtomsRealm())
+    if (zone()->isAtomsZone())
         return true;
     bool wasOverRecursed = overRecursed_;
     clearPendingException();
@@ -1475,6 +1477,14 @@ JSContext::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
      */
     return cycleDetectorVector().sizeOfExcludingThis(mallocSizeOf);
 }
+
+#ifdef DEBUG
+bool
+JSContext::inAtomsZone() const
+{
+    return zone_->isAtomsZone();
+}
+#endif
 
 void
 JSContext::trace(JSTracer* trc)

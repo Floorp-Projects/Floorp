@@ -93,7 +93,7 @@ nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
     // Secure (https) pages can load safe about pages without becoming
     // mixed content.
     if (aboutModuleFlags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) {
-        *aFlags |= URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
+        *aFlags |= URI_IS_POTENTIALLY_TRUSTWORTHY;
         // about: pages can only be loaded by unprivileged principals
         // if they are marked as LINKABLE
         if (aboutModuleFlags & nsIAboutModule::MAKE_LINKABLE) {
@@ -305,7 +305,7 @@ nsSafeAboutProtocolHandler::GetDefaultPort(int32_t *result)
 NS_IMETHODIMP
 nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE | URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE | URI_IS_POTENTIALLY_TRUSTWORTHY;
     return NS_OK;
 }
 

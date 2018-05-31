@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.onConnect = undefined;
+exports.onConnect = onConnect;
 
 var _firefox = require("./firefox");
 
@@ -69,5 +69,3 @@ async function onConnect(connection, {
     client: commands
   };
 }
-
-exports.onConnect = onConnect;

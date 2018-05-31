@@ -133,10 +133,10 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                                      ErrorResult& aRv,
                                      const char* aExecutionReason,
                                      ExceptionHandling aExceptionHandling,
-                                     JSCompartment* aCompartment,
+                                     JS::Realm* aRealm,
                                      bool aIsJSImplementedWebIDL)
   : mCx(nullptr)
-  , mCompartment(aCompartment)
+  , mRealm(aRealm)
   , mErrorResult(aRv)
   , mExceptionHandling(aExceptionHandling)
   , mIsMainThread(NS_IsMainThread())
@@ -261,35 +261,35 @@ bool
 CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aException)
 {
   if (mExceptionHandling == eRethrowExceptions) {
-    if (!mCompartment) {
+    if (!mRealm) {
       // Caller didn't ask us to filter for only exceptions we subsume.
       return true;
     }
 
     // On workers, we don't have nsIPrincipals to work with.  But we also only
-    // have one compartment, so check whether mCompartment is the same as the
-    // current compartment of mCx.
-    if (mCompartment == js::GetContextCompartment(mCx)) {
+    // have one realm, so check whether mRealm is the same as the current realm
+    // of mCx.
+    if (mRealm == js::GetContextRealm(mCx)) {
       return true;
     }
 
     MOZ_ASSERT(NS_IsMainThread());
 
-    // At this point mCx is in the compartment of our unwrapped callback, so
-    // just check whether the principal of mCompartment subsumes that of the
-    // current compartment/global of mCx.
+    // At this point mCx is in the realm of our unwrapped callback, so just
+    // check whether the principal of mRealm subsumes that of the current
+    // realm/global of mCx.
     nsIPrincipal* callerPrincipal =
-      nsJSPrincipals::get(JS_GetCompartmentPrincipals(mCompartment));
+      nsJSPrincipals::get(JS::GetRealmPrincipals(mRealm));
     nsIPrincipal* calleePrincipal = nsContentUtils::SubjectPrincipal();
     if (callerPrincipal->SubsumesConsideringDomain(calleePrincipal)) {
       return true;
     }
   }
 
-  MOZ_ASSERT(mCompartment);
+  MOZ_ASSERT(mRealm);
 
   // Now we only want to throw an exception to the caller if the object that was
-  // thrown is in the caller compartment (which we stored in mCompartment).
+  // thrown is in the caller realm (which we stored in mRealm).
 
   if (!aException.isObject()) {
     return false;
@@ -297,7 +297,7 @@ CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aExcepti
 
   JS::Rooted<JSObject*> obj(mCx, &aException.toObject());
   obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-  return js::GetObjectCompartment(obj) == mCompartment;
+  return js::GetNonCCWObjectRealm(obj) == mRealm;
 }
 
 CallbackObject::CallSetup::~CallSetup()
@@ -313,7 +313,7 @@ CallbackObject::CallSetup::~CallSetup()
   // were told to re-throw them.
   if (mCx) {
     bool needToDealWithException = mAutoEntryScript->HasException();
-    if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
+    if ((mRealm && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
       mErrorResult.MightThrowJSException();
       if (needToDealWithException) {
@@ -349,7 +349,7 @@ CallbackObject::CallSetup::~CallSetup()
   mAutoEntryScript.reset();
 
   // It is important that this is the last thing we do, after leaving the
-  // compartment and undoing all our entry/incumbent script changes
+  // realm and undoing all our entry/incumbent script changes
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (ccjs) {
     ccjs->LeaveMicroTask();

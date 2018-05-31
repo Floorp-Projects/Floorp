@@ -1025,7 +1025,7 @@ std::vector<std::string> NrIceCtx::GetGlobalAttributes() {
 
 nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
   std::vector<char *> attrs_in;
-
+  attrs_in.reserve(attrs.size());
   for (auto& attr : attrs) {
     attrs_in.push_back(const_cast<char *>(attr.c_str()));
   }

@@ -124,6 +124,18 @@ class SourcesTree extends _react.Component {
     }
   }
 
+  // NOTE: we get the source from sources because item.contents is cached
+  getSource(item) {
+    return this.props.sources.get(item.contents.id);
+  }
+
+  isEmpty() {
+    const {
+      sourceTree
+    } = this.state;
+    return sourceTree.contents.length === 0;
+  }
+
   renderItemName(name) {
     const hosts = {
       "ng://": "Angular",
@@ -135,69 +147,56 @@ class SourcesTree extends _react.Component {
 
   renderEmptyElement(message) {
     return _react2.default.createElement("div", {
+      key: "empty",
       className: "no-sources-message"
     }, message);
   }
 
-  render() {
+  renderProjectRootHeader() {
     const {
-      expanded,
       projectRoot
     } = this.props;
     const {
-      focusedItem,
-      highlightItems,
-      listItems,
-      parentMap,
       sourceTree
     } = this.state;
 
-    const onExpand = (item, expandedState) => {
-      this.props.setExpandedState(expandedState);
-    };
-
-    const onCollapse = (item, expandedState) => {
-      this.props.setExpandedState(expandedState);
-    };
-
-    const isEmpty = sourceTree.contents.length === 0;
-    const isCustomRoot = projectRoot !== "";
-
-    let roots = () => sourceTree.contents;
-
-    let clearProjectRootButton = null; // The "sourceTree.contents[0]" check ensures that there are contents
-    // A custom root with no existing sources will be ignored
-
-    if (isCustomRoot) {
-      const sourceContents = sourceTree.contents[0];
-      let rootLabel = projectRoot.split("/").pop();
-
-      roots = () => sourceContents.contents;
-
-      if (sourceContents && sourceContents.name !== rootLabel) {
-        rootLabel = sourceContents.contents[0].name;
-
-        roots = () => sourceContents.contents[0].contents;
-      }
-
-      clearProjectRootButton = _react2.default.createElement("button", {
-        className: "sources-clear-root",
-        onClick: () => this.props.clearProjectDirectoryRoot(),
-        title: L10N.getStr("removeDirectoryRoot.label")
-      }, _react2.default.createElement(_Svg2.default, {
-        name: "home"
-      }), _react2.default.createElement(_Svg2.default, {
-        name: "breadcrumb",
-        "class": true
-      }), _react2.default.createElement("span", {
-        className: "sources-clear-root-label"
-      }, rootLabel));
+    if (!projectRoot) {
+      return null;
     }
 
-    if (isEmpty && !isCustomRoot) {
-      return this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailable"));
+    const sourceContents = sourceTree.contents[0];
+    let rootLabel = projectRoot.split("/").pop();
+
+    if (sourceContents && sourceContents.name !== rootLabel) {
+      rootLabel = sourceContents.contents[0].name;
     }
 
+    return _react2.default.createElement("div", {
+      key: "root",
+      className: "sources-clear-root-container"
+    }, _react2.default.createElement("button", {
+      className: "sources-clear-root",
+      onClick: () => this.props.clearProjectDirectoryRoot(),
+      title: L10N.getStr("removeDirectoryRoot.label")
+    }, _react2.default.createElement(_Svg2.default, {
+      name: "home"
+    }), _react2.default.createElement(_Svg2.default, {
+      name: "breadcrumb",
+      "class": true
+    }), _react2.default.createElement("span", {
+      className: "sources-clear-root-label"
+    }, rootLabel)));
+  }
+
+  renderTree() {
+    const {
+      expanded
+    } = this.props;
+    const {
+      highlightItems,
+      listItems,
+      parentMap
+    } = this.state;
     const treeProps = {
       autoExpandAll: false,
       autoExpandDepth: expanded ? 0 : 1,
@@ -205,35 +204,49 @@ class SourcesTree extends _react.Component {
       getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
       getParent: item => parentMap.get(item),
       getPath: this.getPath,
-      getRoots: roots,
+      getRoots: this.getRoots,
       highlightItems,
       itemHeight: 21,
-      key: isEmpty ? "empty" : "full",
+      key: this.isEmpty() ? "empty" : "full",
       listItems,
-      onCollapse,
-      onExpand,
+      onCollapse: this.onCollapse,
+      onExpand: this.onExpand,
       onFocus: this.focusItem,
       renderItem: this.renderItem
     };
+    return _react2.default.createElement(_ManagedTree2.default, treeProps);
+  }
 
-    const tree = _react2.default.createElement(_ManagedTree2.default, treeProps);
-
-    const onKeyDown = e => {
-      if (e.keyCode === 13 && focusedItem) {
-        this.selectItem(focusedItem);
-      }
-    };
-
+  renderPane(...children) {
+    const {
+      projectRoot
+    } = this.props;
     return _react2.default.createElement("div", {
+      key: "pane",
       className: (0, _classnames2.default)("sources-pane", {
-        "sources-list-custom-root": isCustomRoot
+        "sources-list-custom-root": projectRoot
       })
-    }, isCustomRoot ? _react2.default.createElement("div", {
-      className: "sources-clear-root-container"
-    }, clearProjectRootButton) : null, isEmpty ? this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailableRoot")) : _react2.default.createElement("div", {
+    }, children);
+  }
+
+  render() {
+    const {
+      projectRoot
+    } = this.props;
+
+    if (this.isEmpty()) {
+      if (projectRoot) {
+        return this.renderPane(this.renderProjectRootHeader(), this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailableRoot")));
+      }
+
+      return this.renderPane(this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailable")));
+    }
+
+    return this.renderPane(this.renderProjectRootHeader(), _react2.default.createElement("div", {
+      key: "tree",
       className: "sources-list",
-      onKeyDown: onKeyDown
-    }, tree));
+      onKeyDown: this.onKeyDown
+    }, this.renderTree()));
   }
 
 }
@@ -246,25 +259,21 @@ var _initialiseProps = function () {
   };
 
   this.selectItem = item => {
-    if (!(0, _sourcesTree.nodeHasChildren)(item)) {
-      this.props.selectLocation({
-        sourceId: item.contents.get("id")
-      });
+    if (!(0, _sourcesTree.isDirectory)(item)) {
+      this.props.selectSource(item.contents.id);
     }
   };
 
   this.getPath = item => {
-    const {
-      sources
-    } = this.props;
-    const obj = item.contents.get && item.contents.get("id");
-    let blackBoxedPart = "";
+    const path = `${item.path}/${item.name}`;
 
-    if (typeof obj !== "undefined" && sources.has(obj) && sources.get(obj).get("isBlackBoxed")) {
-      blackBoxedPart = "update";
+    if ((0, _sourcesTree.isDirectory)(item)) {
+      return path;
     }
 
-    return `${item.path}/${item.name}/${blackBoxedPart}`;
+    const source = this.getSource(item);
+    const blackBoxedPart = source.isBlackBoxed ? ":blackboxed" : "";
+    return `${path}${blackBoxedPart}`;
   };
 
   this.getIcon = (sources, item, depth) => {
@@ -295,17 +304,15 @@ var _initialiseProps = function () {
       });
     }
 
-    if (!(0, _sourcesTree.nodeHasChildren)(item)) {
-      const obj = item.contents.get("id");
-      const source = sources.get(obj);
-      const className = (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "source-icon");
+    if ((0, _sourcesTree.isDirectory)(item)) {
       return _react2.default.createElement("img", {
-        className: className
+        className: "folder"
       });
     }
 
+    const source = this.getSource(item);
     return _react2.default.createElement("img", {
-      className: "folder"
+      className: (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "source-icon")
     });
   };
 
@@ -320,13 +327,12 @@ var _initialiseProps = function () {
     const menuOptions = [];
 
     if (!(0, _sourcesTree.isDirectory)(item)) {
-      const source = item.contents.get("url");
       const copySourceUri2 = {
         id: "node-menu-copy-source",
         label: copySourceUri2Label,
         accesskey: copySourceUri2Key,
         disabled: false,
-        click: () => (0, _clipboard.copyToTheClipboard)(source)
+        click: () => (0, _clipboard.copyToTheClipboard)(item.contents.url)
       };
       menuOptions.push(copySourceUri2);
     }
@@ -358,6 +364,24 @@ var _initialiseProps = function () {
     }
 
     (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
+  };
+
+  this.onExpand = (item, expandedState) => {
+    this.props.setExpandedState(expandedState);
+  };
+
+  this.onCollapse = (item, expandedState) => {
+    this.props.setExpandedState(expandedState);
+  };
+
+  this.onKeyDown = e => {
+    const {
+      focusedItem
+    } = this.state;
+
+    if (e.keyCode === 13 && focusedItem) {
+      this.selectItem(focusedItem);
+    }
   };
 
   this.renderItem = (item, depth, focused, _, expanded, {
@@ -393,6 +417,28 @@ var _initialiseProps = function () {
       className: "label"
     }, " ", this.renderItemName(item.name), " "));
   };
+
+  this.getRoots = () => {
+    const {
+      projectRoot
+    } = this.props;
+    const {
+      sourceTree
+    } = this.state;
+    const sourceContents = sourceTree.contents[0];
+    const rootLabel = projectRoot.split("/").pop(); // The "sourceTree.contents[0]" check ensures that there are contents
+    // A custom root with no existing sources will be ignored
+
+    if (projectRoot) {
+      if (sourceContents && sourceContents.name !== rootLabel) {
+        return sourceContents.contents[0].contents;
+      }
+
+      return sourceContents.contents;
+    }
+
+    return sourceTree.contents;
+  };
 };
 
 const mapStateToProps = state => {
@@ -408,7 +454,7 @@ const mapStateToProps = state => {
 
 const actionCreators = {
   setExpandedState: _sourceTree.setExpandedState,
-  selectLocation: _sources.selectLocation,
+  selectSource: _sources.selectSource,
   setProjectDirectoryRoot: _ui.setProjectDirectoryRoot,
   clearProjectDirectoryRoot: _ui.clearProjectDirectoryRoot
 };

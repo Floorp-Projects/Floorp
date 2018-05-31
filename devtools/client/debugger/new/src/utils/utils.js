@@ -3,6 +3,10 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.handleError = handleError;
+exports.promisify = promisify;
+exports.endTruncateStr = endTruncateStr;
+exports.waitForMs = waitForMs;
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,8 +59,3 @@ function endTruncateStr(str, size) {
 function waitForMs(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-exports.handleError = handleError;
-exports.promisify = promisify;
-exports.endTruncateStr = endTruncateStr;
-exports.waitForMs = waitForMs;

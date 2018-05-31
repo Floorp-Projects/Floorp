@@ -17,6 +17,10 @@
 namespace mozilla {
 namespace wr {
 
+static const uint32_t MAX_CACHED_PROGRAM_COUNT = 15;
+
+static const uint64_t MAX_LOAD_TIME_MS = 400;
+
 enum class BorderStyle : uint32_t {
   None = 0,
   Solid = 1,
@@ -1001,6 +1005,10 @@ extern bool is_in_main_thread();
 extern bool is_in_render_thread();
 
 WR_INLINE
+bool remove_program_binary_disk_cache(const nsAString *aProfPath)
+WR_FUNC;
+
+WR_INLINE
 const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
 WR_FUNC;
 
@@ -1411,7 +1419,8 @@ void wr_program_cache_delete(WrProgramCache *aProgramCache)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrProgramCache *wr_program_cache_new()
+WrProgramCache *wr_program_cache_new(const nsAString *aProfPath,
+                                     WrThreadPool *aThreadPool)
 WR_FUNC;
 
 WR_INLINE
@@ -1660,6 +1669,10 @@ WR_INLINE
 void wr_transaction_update_epoch(Transaction *aTxn,
                                  WrPipelineId aPipelineId,
                                  WrEpoch aEpoch)
+WR_FUNC;
+
+WR_INLINE
+void wr_try_load_shader_from_disk(WrProgramCache *aProgramCache)
 WR_FUNC;
 
 WR_INLINE
