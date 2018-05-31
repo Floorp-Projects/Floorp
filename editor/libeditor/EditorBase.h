@@ -51,8 +51,8 @@ class nsRange;
 
 namespace mozilla {
 class AddStyleSheetTransaction;
-class AutoRules;
 class AutoSelectionRestorer;
+class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionsConserveSelection;
 class AutoUpdateViewBatch;
 class ChangeAttributeTransaction;
@@ -82,7 +82,7 @@ class TextInputListener;
 class TextServicesDocument;
 class TypeInState;
 class WSRunObject;
-enum class EditAction : int32_t;
+enum class EditSubAction : int32_t;
 
 namespace dom {
 class DataTransfer;
@@ -586,10 +586,10 @@ public:
   }
 
   /**
-   * IsInEditAction() return true while the instance is handling an edit action.
-   * Otherwise, false.
+   * IsInEditSubAction() return true while the instance is handling an edit
+   * sub-action.  Otherwise, false.
    */
-  bool IsInEditAction() const { return mIsInEditAction; }
+  bool IsInEditSubAction() const { return mIsInEditSubAction; }
 
   /**
    * SuppressDispatchingInputEvent() suppresses or unsuppresses dispatching
@@ -1533,7 +1533,7 @@ protected: // May be called by friends.
 
   bool GetShouldTxnSetSelection();
 
-  nsresult HandleInlineSpellCheck(EditAction action,
+  nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                   Selection& aSelection,
                                   nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
@@ -1585,18 +1585,25 @@ protected: // May be called by friends.
   void HideCaret(bool aHide);
 
 protected: // Called by helper classes.
-  /**
-   * All editor operations which alter the doc should be prefaced
-   * with a call to StartOperation, naming the action and direction.
-   */
-  virtual nsresult StartOperation(EditAction opID,
-                                  nsIEditor::EDirection aDirection);
 
   /**
-   * All editor operations which alter the doc should be followed
-   * with a call to EndOperation.
+   * OnStartToHandleTopLevelEditSubAction() is called when
+   * mTopLevelEditSubAction is EditSubAction::eNone and somebody starts to
+   * handle aEditSubAction.
+   *
+   * @param aEditSubAction      Top level edit sub action which will be
+   *                            handled soon.
+   * @param aDirection          Direction of aEditSubAction.
    */
-  virtual nsresult EndOperation();
+  virtual void
+  OnStartToHandleTopLevelEditSubAction(EditSubAction aEditSubAction,
+                                       nsIEditor::EDirection aDirection);
+
+  /**
+   * OnEndHandlingTopLevelEditSubAction() is called after
+   * mTopLevelEditSubAction is handled.
+   */
+  virtual void OnEndHandlingTopLevelEditSubAction();
 
   /**
    * Routines for managing the preservation of selection across
@@ -1883,10 +1890,10 @@ protected:
 
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
-  // The current editor action.
-  EditAction mAction;
+  // The top level edit sub-action.
+  EditSubAction mTopLevelEditSubAction;
 
-  // The current direction of editor action.
+  // The top level edit sub-action's direction.
   EDirection mDirection;
   // -1 = not initialized
   int8_t mDocDirtyState;
@@ -1900,8 +1907,8 @@ protected:
   // Whether PostCreate has been called.
   bool mDidPostCreate;
   bool mDispatchInputEvent;
-  // True while the instance is handling an edit action.
-  bool mIsInEditAction;
+  // True while the instance is handling an edit sub-action.
+  bool mIsInEditSubAction;
   // Whether caret is hidden forcibly.
   bool mHidingCaret;
   // Whether spellchecker dictionary is initialized after focused.
@@ -1910,8 +1917,8 @@ protected:
   bool mIsHTMLEditorClass;
 
   friend class AutoPlaceholderBatch;
-  friend class AutoRules;
   friend class AutoSelectionRestorer;
+  friend class AutoTopLevelEditSubActionNotifier;
   friend class AutoTransactionsConserveSelection;
   friend class AutoUpdateViewBatch;
   friend class CompositionTransaction;

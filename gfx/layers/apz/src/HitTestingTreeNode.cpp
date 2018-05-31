@@ -24,6 +24,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
                                        LayersId aLayersId)
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
+  , mLocked(false)
   , mLayersId(aLayersId)
   , mScrollbarAnimationId(0)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
@@ -37,10 +38,11 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
 }
 
 void
-HitTestingTreeNode::RecycleWith(AsyncPanZoomController* aApzc,
+HitTestingTreeNode::RecycleWith(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                AsyncPanZoomController* aApzc,
                                 LayersId aLayersId)
 {
-  MOZ_ASSERT(!mIsPrimaryApzcHolder);
+  MOZ_ASSERT(IsRecyclable(aProofOfTreeLock));
   Destroy(); // clear out tree pointers
   mApzc = aApzc;
   mLayersId = aLayersId;
@@ -67,8 +69,12 @@ HitTestingTreeNode::Destroy()
     }
     mApzc = nullptr;
   }
+}
 
-  mLayersId = LayersId{0};
+bool
+HitTestingTreeNode::IsRecyclable(const RecursiveMutexAutoLock& aProofOfTreeLock)
+{
+  return !(IsPrimaryHolder() || mLocked);
 }
 
 void
@@ -399,6 +405,59 @@ HitTestingTreeNode::SetApzcParent(AsyncPanZoomController* aParent)
   } else {
     MOZ_ASSERT(GetApzc()->GetParent() == aParent);
   }
+}
+
+void
+HitTestingTreeNode::Lock(const RecursiveMutexAutoLock& aProofOfTreeLock)
+{
+  MOZ_ASSERT(!mLocked);
+  mLocked = true;
+}
+
+void
+HitTestingTreeNode::Unlock(const RecursiveMutexAutoLock& aProofOfTreeLock)
+{
+  MOZ_ASSERT(mLocked);
+  mLocked = false;
+}
+
+HitTestingTreeNodeAutoLock::HitTestingTreeNodeAutoLock()
+  : mTreeMutex(nullptr)
+{
+}
+
+HitTestingTreeNodeAutoLock::~HitTestingTreeNodeAutoLock()
+{
+  Clear();
+}
+
+void
+HitTestingTreeNodeAutoLock::Initialize(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                       already_AddRefed<HitTestingTreeNode> aNode,
+                                       RecursiveMutex& aTreeMutex)
+{
+  MOZ_ASSERT(!mNode);
+
+  mNode = aNode;
+  mTreeMutex = &aTreeMutex;
+
+  mNode->Lock(aProofOfTreeLock);
+}
+
+void
+HitTestingTreeNodeAutoLock::Clear()
+{
+  if (!mNode) {
+    return;
+  }
+  MOZ_ASSERT(mTreeMutex);
+
+  { // scope lock
+    RecursiveMutexAutoLock lock(*mTreeMutex);
+    mNode->Unlock(lock);
+  }
+  mNode = nullptr;
+  mTreeMutex = nullptr;
 }
 
 } // namespace layers

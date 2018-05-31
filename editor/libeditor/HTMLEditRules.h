@@ -26,10 +26,9 @@ namespace mozilla {
 
 class EditActionResult;
 class HTMLEditor;
-class RulesInfo;
 class SplitNodeResult;
 class TextEditor;
-enum class EditAction : int32_t;
+enum class EditSubAction : int32_t;
 
 namespace dom {
 class Element;
@@ -97,16 +96,16 @@ public:
   // TextEditRules methods
   virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
-  virtual nsresult BeforeEdit(EditAction aAction,
+  virtual nsresult BeforeEdit(EditSubAction aEditSubAction,
                               nsIEditor::EDirection aDirection) override;
-  virtual nsresult AfterEdit(EditAction aAction,
+  virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection) override;
   virtual nsresult WillDoAction(Selection* aSelection,
-                                RulesInfo* aInfo,
+                                EditSubActionInfo& aInfo,
                                 bool* aCancel,
                                 bool* aHandled) override;
   virtual nsresult DidDoAction(Selection* aSelection,
-                               RulesInfo* aInfo,
+                               EditSubActionInfo& aInfo,
                                nsresult aResult) override;
   virtual bool DocumentIsEmpty() override;
   virtual nsresult DocumentModified() override;
@@ -144,8 +143,8 @@ public:
                      nsINode& aTextNode, int32_t aOffset, int32_t aLength);
   void WillDeleteSelection(Selection& aSelection);
 
-  void StartToListenToEditActions() { mListenerEnabled = true; }
-  void EndListeningToEditActions() { mListenerEnabled = false; }
+  void StartToListenToEditSubActions() { mListenerEnabled = true; }
+  void EndListeningToEditSubActions() { mListenerEnabled = false; }
 
 protected:
   virtual ~HTMLEditRules();
@@ -188,8 +187,8 @@ protected:
    * This method may actually inserts text into the editor.  Therefore, this
    * might cause destroying the editor.
    *
-   * @param aAction             Must be EditAction::insertIMEText or
-   *                            EditAction::insertText.
+   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
+   *                            or EditSubAction::eInsertText.
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    * @param inString            String to be inserted.
@@ -198,7 +197,7 @@ protected:
    *                            allows to set.
    */
   MOZ_MUST_USE nsresult
-  WillInsertText(EditAction aAction, bool* aCancel, bool* aHandled,
+  WillInsertText(EditSubAction aEditSubAction, bool* aCancel, bool* aHandled,
                  const nsAString* inString, nsAString* outString,
                  int32_t aMaxLength);
 
@@ -705,7 +704,8 @@ protected:
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
   MOZ_MUST_USE nsresult
-  AfterEditInner(EditAction action, nsIEditor::EDirection aDirection);
+  AfterEditInner(EditSubAction aEditSubAction,
+                 nsIEditor::EDirection aDirection);
 
   /**
    * IndentAroundSelectionWithCSS() indents around Selection with CSS.
@@ -902,21 +902,22 @@ protected:
    * GetPromotedPoint() figures out where a start or end point for a block
    * operation really is.
    */
-  EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
-                                  int32_t aOffset, EditAction actionID);
+  EditorDOMPoint
+  GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode, int32_t aOffset,
+                   EditSubAction aEditSubAction);
 
   /**
    * GetPromotedRanges() runs all the selection range endpoint through
    * GetPromotedPoint().
    */
   void GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
-                         EditAction inOperationType);
+                         EditSubAction aEditSubAction);
 
   /**
    * PromoteRange() expands a range to include any parents for which all
    * editable children are already in range.
    */
-  void PromoteRange(nsRange& aRange, EditAction inOperationType);
+  void PromoteRange(nsRange& aRange, EditSubAction aEditSubAction);
 
   /**
    * GetNodesForOperation() runs through the ranges in the array and construct a
@@ -929,7 +930,8 @@ protected:
   MOZ_MUST_USE nsresult
   GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
                        nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                       EditAction aOperationType, TouchContent aTouchContent);
+                       EditSubAction aEditSubAction,
+                       TouchContent aTouchContent);
 
   void GetChildNodesForOperation(
          nsINode& aNode,
@@ -940,7 +942,7 @@ protected:
    * operated on.
    */
   MOZ_MUST_USE nsresult
-  GetNodesFromPoint(const EditorDOMPoint& aPoint, EditAction aOperation,
+  GetNodesFromPoint(const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
                     nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                     TouchContent aTouchContent);
 
@@ -949,7 +951,7 @@ protected:
    * will be operated on.
    */
   MOZ_MUST_USE nsresult
-  GetNodesFromSelection(EditAction aOperation,
+  GetNodesFromSelection(EditSubAction aEditSubAction,
                         nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                         TouchContent aTouchContent);
 

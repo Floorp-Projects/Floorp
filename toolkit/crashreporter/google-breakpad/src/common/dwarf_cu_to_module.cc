@@ -288,6 +288,10 @@ class DwarfCUToModule::GenericDIEHandler: public dwarf2reader::DIEHandler {
   // string if the DIE has no such attribute or its content could not be
   // demangled.
   string demangled_name_;
+
+  // The non-demangled value of the DW_AT_MIPS_linkage_name attribute,
+  // it its content count not be demangled.
+  string raw_name_;
 };
 
 void DwarfCUToModule::GenericDIEHandler::ProcessAttributeUnsigned(
@@ -350,6 +354,7 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
     case dwarf2reader::DW_AT_name:
       name_attribute_ = AddStringToPool(data);
       break;
+    case dwarf2reader::DW_AT_linkage_name:
     case dwarf2reader::DW_AT_MIPS_linkage_name: {
       char* demangled = NULL;
       int status = -1;
@@ -359,6 +364,7 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
       if (status != 0) {
         cu_context_->reporter->DemangleError(data, status);
         demangled_name_ = "";
+        raw_name_ = AddStringToPool(data);
         break;
       }
       if (demangled) {
@@ -393,6 +399,8 @@ string DwarfCUToModule::GenericDIEHandler::ComputeQualifiedName() {
       unqualified_name = &name_attribute_;
     else if (specification_)
       unqualified_name = &specification_->unqualified_name;
+    else if (!raw_name_.empty())
+      unqualified_name = &raw_name_;
 
     // Find the name of the enclosing context. If this DIE has a
     // specification, it's the specification's enclosing context that

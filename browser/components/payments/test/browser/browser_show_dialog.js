@@ -1,7 +1,7 @@
 "use strict";
 
 const methodData = [PTU.MethodData.basicCard];
-const details = PTU.Details.twoShippingOptions;
+const details = Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD);
 
 add_task(async function test_show_abort_dialog() {
   await BrowserTestUtils.withNewTab({
