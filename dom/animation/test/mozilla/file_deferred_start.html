@@ -97,9 +97,12 @@ promise_test(async t => {
   // wait for paints and only then do we commence the test.
   await waitForPaints();
 
-  div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
-              { duration: 400 * MS_PER_SEC,
-                delay: -200 * MS_PER_SEC });
+  const animation =
+    div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
+                { duration: 400 * MS_PER_SEC,
+                  delay: -200 * MS_PER_SEC });
+
+  await waitForAnimationReadyToRestyle(animation);
 
   await waitForPaints();
 
