@@ -1507,7 +1507,8 @@ BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
 // Usage: (check for the return value is omitted for simplicity)
 //
 //   `try { try_block } catch (ex) { catch_block }`
-//     TryEmitter tryCatch(this, TryEmitter::Kind::TryCatch);
+//     TryEmitter tryCatch(this, TryEmitter::Kind::TryCatch,
+//                         TryEmitter::ControlKind::Syntactic);
 //     tryCatch.emitTry();
 //     emit(try_block);
 //     tryCatch.emitCatch();
@@ -1515,7 +1516,8 @@ BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
 //     tryCatch.emitEnd();
 //
 //   `try { try_block } finally { finally_block }`
-//     TryEmitter tryCatch(this, TryEmitter::Kind::TryFinally);
+//     TryEmitter tryCatch(this, TryEmitter::Kind::TryFinally,
+//                         TryEmitter::ControlKind::Syntactic);
 //     tryCatch.emitTry();
 //     emit(try_block);
 //     // finally_pos: The "{" character's position in the source code text.
@@ -1524,7 +1526,8 @@ BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
 //     tryCatch.emitEnd();
 //
 //   `try { try_block } catch (ex) {catch_block} finally { finally_block }`
-//     TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally);
+//     TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally,
+//                         TryEmitter::ControlKind::Syntactic);
 //     tryCatch.emitTry();
 //     emit(try_block);
 //     tryCatch.emitCatch();
@@ -1542,11 +1545,17 @@ class MOZ_STACK_CLASS TryEmitter
         TryFinally
     };
 
-    // Whether the catch and finally blocks handle the frame's return value.
-    // If UseRetVal is specified, the bytecode marked with "*" are emitted
-    // to clear return value with `undefined` before the catch block and the
-    // finally block, and also to save/restore the return value before/after
-    // the finally block.
+    // Syntactic try-catch-finally and internally used non-syntactic
+    // try-catch-finally behave differently for 2 points.
+    //
+    // The first one is whether TryFinallyControl is used or not.
+    // See the comment for `controlInfo_`.
+    //
+    // The second one is whether the catch and finally blocks handle the frame's
+    // return value.  For syntactic try-catch-finally, the bytecode marked with
+    // "*" are emitted to clear return value with `undefined` before the catch
+    // block and the finally block, and also to save/restore the return value
+    // before/after the finally block.
     //
     //     JSOP_TRY
     //
@@ -1581,27 +1590,17 @@ class MOZ_STACK_CLASS TryEmitter
     //   end:
     //     JSOP_JUMPTARGET
     //
-    // For syntactic try-catch-finally, UseRetVal should be used.
-    // For non-syntactic try-catch-finally, DontUseRetVal should be used.
-    enum ShouldUseRetVal {
-        UseRetVal,
-        DontUseRetVal
-    };
-
-    // Whether this class should use TryFinallyControl.
-    // See the comment for `controlInfo_`.
-    //
-    // For syntactic try-catch-finally, UseControl should be used.
-    // For non-syntactic try-catch-finally, DontUseControl should be used.
-    enum ShouldUseControl {
-        UseControl,
-        DontUseControl,
+    // For syntactic try-catch-finally, Syntactic should be used.
+    // For non-syntactic try-catch-finally, NonSyntactic should be used.
+    enum class ControlKind {
+        Syntactic,
+        NonSyntactic
     };
 
   private:
     BytecodeEmitter* bce_;
     Kind kind_;
-    ShouldUseRetVal retValKind_;
+    ControlKind controlKind_;
 
     // Track jumps-over-catches and gosubs-to-finally for later fixup.
     //
@@ -1609,19 +1608,17 @@ class MOZ_STACK_CLASS TryEmitter
     // jumps-over-catches) result in a GOSUB being written into the bytecode
     // stream and fixed-up later.
     //
-    // If ShouldUseControl is DontUseControl, all that handling is skipped.
-    // DontUseControl is used by yield* and the internal try-catch around
-    // IteratorClose. These internal uses must:
+    // For non-syntactic try-catch-finally, all that handling is skipped.
+    // The non-syntactic try-catch-finally must:
     //   * have only one catch block
     //   * have JSOP_GOTO at the end of catch-block
     //   * have no non-local-jump
     //   * don't use finally block for normal completion of try-block and
     //     catch-block
     //
-    // Additionally, a finally block may be emitted when ShouldUseControl is
-    // DontUseControl, even if the kind is not TryCatchFinally or TryFinally,
-    // because GOSUBs are not emitted. This internal use shares the
-    // requirements as above.
+    // Additionally, a finally block may be emitted for non-syntactic
+    // try-catch-finally, even if the kind is TryCatch, because GOSUBs are not
+    // emitted.
     Maybe<TryFinallyControl> controlInfo_;
 
     // The stack depth before emitting JSOP_TRY.
@@ -1679,17 +1676,16 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
-    TryEmitter(BytecodeEmitter* bce, Kind kind, ShouldUseRetVal retValKind = UseRetVal,
-               ShouldUseControl controlKind = UseControl)
+    TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind)
       : bce_(bce),
         kind_(kind),
-        retValKind_(retValKind),
+        controlKind_(controlKind),
         depth_(0),
         noteIndex_(0),
         tryStart_(0),
         state_(State::Start)
     {
-        if (controlKind == UseControl)
+        if (controlKind_ == ControlKind::Syntactic)
             controlInfo_.emplace(bce_, hasFinally() ? StatementKind::Finally : StatementKind::Try);
         finallyStart_.offset = 0;
     }
@@ -1758,7 +1754,7 @@ class MOZ_STACK_CLASS TryEmitter
 
         MOZ_ASSERT(bce_->stackDepth == depth_);
 
-        if (retValKind_ == UseRetVal) {
+        if (controlKind_ == ControlKind::Syntactic) {
             // Clear the frame's return value that might have been set by the
             // try block:
             //
@@ -1802,9 +1798,10 @@ class MOZ_STACK_CLASS TryEmitter
     bool emitFinally(const Maybe<uint32_t>& finallyPos = Nothing()) {
         // If we are using controlInfo_ (i.e., emitting a syntactic try
         // blocks), we must have specified up front if there will be a finally
-        // close. For internal try blocks, like those emitted for yield* and
-        // IteratorClose inside for-of loops, we can emitFinally even without
-        // specifying up front, since the internal try blocks emit no GOSUBs.
+        // close. For internal non-syntactic try blocks, like those emitted for
+        // yield* and IteratorClose inside for-of loops, we can emitFinally even
+        // without specifying up front, since the internal non-syntactic try
+        // blocks emit no GOSUBs.
         if (!controlInfo_) {
             if (kind_ == Kind::TryCatch)
                 kind_ = Kind::TryCatchFinally;
@@ -1841,7 +1838,7 @@ class MOZ_STACK_CLASS TryEmitter
         if (!bce_->emit1(JSOP_FINALLY))
             return false;
 
-        if (retValKind_ == UseRetVal) {
+        if (controlKind_ == ControlKind::Syntactic) {
             if (!bce_->emit1(JSOP_GETRVAL))
                 return false;
 
@@ -1863,7 +1860,7 @@ class MOZ_STACK_CLASS TryEmitter
     bool emitFinallyEnd() {
         MOZ_ASSERT(state_ == State::Finally);
 
-        if (retValKind_ == UseRetVal) {
+        if (controlKind_ == ControlKind::Syntactic) {
             if (!bce_->emit1(JSOP_SETRVAL))
                 return false;
         }
@@ -2263,8 +2260,7 @@ class ForOfLoopControl : public LoopControl
     }
 
     bool emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce) {
-        tryCatch_.emplace(bce, TryEmitter::Kind::TryCatch, TryEmitter::DontUseRetVal,
-                          TryEmitter::DontUseControl);
+        tryCatch_.emplace(bce, TryEmitter::Kind::TryCatch, TryEmitter::ControlKind::NonSyntactic);
 
         if (!tryCatch_->emitTry())
             return false;
@@ -5536,8 +5532,7 @@ BytecodeEmitter::emitIteratorCloseInScope(EmitterScope& currentScope,
     Maybe<TryEmitter> tryCatch;
 
     if (completionKind == CompletionKind::Throw) {
-        tryCatch.emplace(this, TryEmitter::Kind::TryCatch, TryEmitter::DontUseRetVal,
-                         TryEmitter::DontUseControl);
+        tryCatch.emplace(this, TryEmitter::Kind::TryCatch, TryEmitter::ControlKind::NonSyntactic);
 
         // Mutate stack to balance stack for try-catch.
         if (!emit1(JSOP_UNDEFINED))                       // ... RET ITER UNDEF
@@ -6872,7 +6867,7 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         MOZ_ASSERT(finallyNode);
         kind = TryEmitter::Kind::TryFinally;
     }
-    TryEmitter tryCatch(this, kind);
+    TryEmitter tryCatch(this, kind, TryEmitter::ControlKind::Syntactic);
 
     if (!tryCatch.emitTry())
         return false;
@@ -8618,8 +8613,8 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     int32_t startDepth = stackDepth;
     MOZ_ASSERT(startDepth >= 3);
 
-    TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally, TryEmitter::DontUseRetVal,
-                        TryEmitter::DontUseControl);
+    TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally,
+                        TryEmitter::ControlKind::NonSyntactic);
     if (!tryCatch.emitJumpOverCatchAndFinally())          // NEXT ITER RESULT
         return false;
 
