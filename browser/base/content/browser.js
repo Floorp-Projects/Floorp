@@ -1162,7 +1162,6 @@ var delayedStartupPromise = new Promise(resolve => {
 
 var gBrowserInit = {
   delayedStartupFinished: false,
-  idleTasksFinished: false,
 
   _tabToAdopt: undefined,
 
@@ -1780,14 +1779,6 @@ var gBrowserInit = {
         Cu.reportError(ex);
       }
     }, {timeout: 10000});
-
-    // This should always go last, since the idle tasks (except for the ones with
-    // timeouts) should execute in order. Note that this observer notification is
-    // not guaranteed to fire, since the window could close before we get here.
-    scheduleIdleTask(() => {
-      this.idleTasksFinished = true;
-      Services.obs.notifyObservers(window, "browser-idle-startup-tasks-finished");
-    });
   },
 
   // Returns the URI(s) to load at startup if it is immediately known, or a
