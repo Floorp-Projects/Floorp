@@ -666,7 +666,7 @@ PaymentRequest::CanMakePayment(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsresult rv = manager->CanMakePayment(mInternalId);
+  nsresult rv = manager->CanMakePayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_FAILURE);
     return promise.forget();
@@ -719,7 +719,7 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
     mDeferredShow = true;
   }
 
-  nsresult rv = manager->ShowPayment(mInternalId);
+  nsresult rv = manager->ShowPayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (rv == NS_ERROR_ABORT) {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -768,7 +768,7 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
   mFullShippingAddress = nullptr;
 
   RefPtr<PaymentResponse> paymentResponse =
-    new PaymentResponse(GetOwner(), mInternalId, mId, aMethodName,
+    new PaymentResponse(GetOwner(), this, mId, aMethodName,
                         mShippingOption, mShippingAddress, aDetails,
                         aPayerName, aPayerEmail, aPayerPhone);
   mResponse = paymentResponse;
