@@ -44,19 +44,14 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    /* Note: should only be used when neither c1 nor c2 may be the atoms compartment. */
     static void check(JSCompartment* c1, JSCompartment* c2) {
-        MOZ_ASSERT(!c1->runtimeFromAnyThread()->isAtomsCompartment(c1));
-        MOZ_ASSERT(!c2->runtimeFromAnyThread()->isAtomsCompartment(c2));
         if (c1 != c2)
             fail(c1, c2);
     }
 
     void check(JSCompartment* c) {
-        if (c && !compartment->runtimeFromAnyThread()->isAtomsCompartment(c)) {
-            if (c != compartment)
-                fail(compartment, c);
-        }
+        if (c && c != compartment)
+            fail(compartment, c);
     }
 
     void checkZone(JS::Zone* z) {
@@ -463,26 +458,27 @@ JSContext::runningWithTrustedPrincipals()
 }
 
 inline void
-JSContext::enterNonAtomsRealm(JS::Realm* realm)
+JSContext::enterRealm(JS::Realm* realm)
 {
+    // We should never enter a realm while in the atoms zone.
+    MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
+
+#ifdef DEBUG
     enterRealmDepth_++;
-
-    MOZ_ASSERT(!realm->zone()->isAtomsZone());
-
+#endif
     realm->enter();
-    setRealm(realm, nullptr);
+    setRealm(realm);
 }
 
 inline void
-JSContext::enterAtomsRealm(JS::Realm* realm,
-                           const js::AutoLockForExclusiveAccess& lock)
+JSContext::enterAtomsZone(const js::AutoLockForExclusiveAccess& lock)
 {
-    enterRealmDepth_++;
+    // Only one thread can be in the atoms zone at a time.
+    MOZ_ASSERT(runtime_->currentThreadHasExclusiveAccess());
 
-    MOZ_ASSERT(realm->zone()->isAtomsZone());
-
-    realm->enter();
-    setRealm(realm, &lock);
+    realm_ = nullptr;
+    zone_ = runtime_->atomsZone(lock);
+    arenas_ = &zone_->arenas;
 }
 
 template <typename T>
@@ -490,51 +486,53 @@ inline void
 JSContext::enterRealmOf(const T& target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
-    enterNonAtomsRealm(target->realm());
+    enterRealm(target->realm());
 }
 
 inline void
 JSContext::enterNullRealm()
 {
+    // We should never enter a realm while in the atoms zone.
+    MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
+
+#ifdef DEBUG
     enterRealmDepth_++;
+#endif
     setRealm(nullptr);
 }
 
 inline void
-JSContext::leaveRealm(JS::Realm* oldRealm,
-                      const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+JSContext::leaveRealm(JS::Realm* oldRealm)
 {
     MOZ_ASSERT(hasEnteredRealm());
+#ifdef DEBUG
     enterRealmDepth_--;
+#endif
 
     // Only call leave() after we've setRealm()-ed away from the current realm.
     JS::Realm* startingRealm = realm_;
-    setRealm(oldRealm, maybeLock);
+    setRealm(oldRealm);
     if (startingRealm)
         startingRealm->leave();
 }
 
 inline void
-JSContext::setRealm(JS::Realm* realm,
-                    const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+JSContext::leaveAtomsZone(JS::Realm* oldRealm,
+                          const js::AutoLockForExclusiveAccess& lock)
 {
-    // Only one thread can be in the atoms realm at a time.
-    MOZ_ASSERT_IF(realm && realm->isAtomsRealm(), maybeLock != nullptr);
-    MOZ_ASSERT_IF((realm && realm->isAtomsRealm()) || (realm_ && realm_->isAtomsRealm()),
-                  runtime_->currentThreadHasExclusiveAccess());
+    setRealm(oldRealm);
+}
 
-    // Make sure that the atoms realm has its own zone.
-    MOZ_ASSERT_IF(realm && !realm->isAtomsRealm(),
-                  !realm->zone()->isAtomsZone());
-
+inline void
+JSContext::setRealm(JS::Realm* realm)
+{
     // Both the current and the new realm should be properly marked as
     // entered at this point.
     MOZ_ASSERT_IF(realm_, realm_->hasBeenEntered());
     MOZ_ASSERT_IF(realm, realm->hasBeenEntered());
 
     // This thread must have exclusive access to the zone.
-    MOZ_ASSERT_IF(realm && !realm->zone()->isAtomsZone(),
-                  CurrentThreadCanAccessZone(realm->zone()));
+    MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));
 
     realm_ = realm;
     zone_ = realm ? realm->zone() : nullptr;

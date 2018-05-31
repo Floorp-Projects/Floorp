@@ -193,14 +193,7 @@ class CompartmentsOrRealmsIterT
 
   public:
     explicit CompartmentsOrRealmsIterT(JSRuntime* rt)
-      : iterMarker(&rt->gc), zone(rt)
-    {
-        if (!zone.done())
-            inner.emplace(zone);
-    }
-
-    CompartmentsOrRealmsIterT(JSRuntime* rt, ZoneSelector selector)
-      : iterMarker(&rt->gc), zone(rt, selector)
+      : iterMarker(&rt->gc), zone(rt, SkipAtoms)
     {
         if (!zone.done())
             inner.emplace(zone);

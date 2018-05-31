@@ -86,7 +86,7 @@ GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicS
 
     MOZ_ASSERT(cx->isNurseryAllocAllowed());
     MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     JSObject* obj = cx->nursery().allocateObject(cx, thingSize, nDynamicSlots, clasp);
     if (obj)
@@ -140,7 +140,7 @@ GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind)
     MOZ_ASSERT(cx->isNurseryAllocAllowed());
     MOZ_ASSERT(!cx->helperThread());
     MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     Cell* cell = cx->nursery().allocateString(cx->zone(), thingSize, kind);
     if (cell)
@@ -275,13 +275,13 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
     }
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
-    MOZ_ASSERT_IF(cx->realm()->isAtomsRealm(),
+    MOZ_ASSERT_IF(cx->zone()->isAtomsZone(),
                   kind == AllocKind::ATOM ||
                   kind == AllocKind::FAT_INLINE_ATOM ||
                   kind == AllocKind::SYMBOL ||
                   kind == AllocKind::JITCODE ||
                   kind == AllocKind::SCOPE);
-    MOZ_ASSERT_IF(!cx->realm()->isAtomsRealm(),
+    MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(),
                   kind != AllocKind::ATOM &&
                   kind != AllocKind::FAT_INLINE_ATOM);
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());

@@ -487,9 +487,6 @@ extern JS_FRIEND_API(bool)
 IsSystemZone(JS::Zone* zone);
 
 extern JS_FRIEND_API(bool)
-IsAtomsRealm(JS::Realm* realm);
-
-extern JS_FRIEND_API(bool)
 IsAtomsZone(JS::Zone* zone);
 
 struct WeakMapTracer
@@ -556,6 +553,7 @@ extern JS_FRIEND_API(size_t)
 SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject* obj);
 #endif
 
+// Note: this returns nullptr iff |zone| is the atoms zone.
 extern JS_FRIEND_API(JS::Realm*)
 GetAnyRealmInZone(JS::Zone* zone);
 
