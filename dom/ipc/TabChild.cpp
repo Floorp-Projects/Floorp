@@ -2304,7 +2304,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "TabChild::RecvAsyncMessage", OTHER, aMessage);
+    "TabChild::RecvAsyncMessage", EVENTS, aMessage);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
   if (!mTabChildGlobal) {

@@ -4182,7 +4182,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
 {
   WidgetPointerEvent* sourcePointer = aMouseEvent->AsPointerEvent();
   if (sourcePointer) {
-    AUTO_PROFILER_LABEL("CreateMouseOrPointerWidgetEvent", OTHER);
+    AUTO_PROFILER_LABEL("CreateMouseOrPointerWidgetEvent", EVENTS);
 
     nsAutoPtr<WidgetPointerEvent> newPointerEvent;
     newPointerEvent =

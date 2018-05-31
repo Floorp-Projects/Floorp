@@ -61,7 +61,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
                                    uint32_t* aEqualStructs)
 {
   MOZ_ASSERT(aNewContext);
-  AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", LAYOUT);
+  AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", CSS);
   static_assert(StyleStructConstants::kStyleStructCount <= 32,
                 "aEqualStructs is not big enough");
 
