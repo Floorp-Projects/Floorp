@@ -38,7 +38,10 @@ PaymentRequestChild::RecvRespondPayment(const IPCPaymentActionResponse& aRespons
   const IPCPaymentActionResponse& response = aResponse;
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  nsresult rv = manager->RespondPayment(response);
+
+  // Hold a strong reference to our request for the entire response.
+  RefPtr<PaymentRequest> request(mRequest);
+  nsresult rv = manager->RespondPayment(request, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -54,7 +57,8 @@ PaymentRequestChild::RecvChangeShippingAddress(const nsString& aRequestId,
   }
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  nsresult rv = manager->ChangeShippingAddress(aRequestId, aAddress);
+  RefPtr<PaymentRequest> request(mRequest);
+  nsresult rv = manager->ChangeShippingAddress(request, aAddress);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -70,7 +74,8 @@ PaymentRequestChild::RecvChangeShippingOption(const nsString& aRequestId,
   }
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  nsresult rv = manager->ChangeShippingOption(aRequestId, aOption);
+  RefPtr<PaymentRequest> request(mRequest);
+  nsresult rv = manager->ChangeShippingOption(request, aOption);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -109,10 +114,6 @@ PaymentRequestChild::DetachFromRequest()
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  nsresult rv = manager->ReleasePaymentChild(id);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT(false);
-  }
 
   mRequest->SetIPC(nullptr);
   mRequest = nullptr;

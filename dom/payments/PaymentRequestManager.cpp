@@ -270,19 +270,8 @@ PaymentRequestManager::GetPaymentChild(PaymentRequest* aRequest)
 
   PaymentRequestChild* paymentChild = new PaymentRequestChild(aRequest);
   tabChild->SendPPaymentRequestConstructor(paymentChild);
-  if (!mPaymentChildHash.Put(requestId, aRequest, mozilla::fallible) ) {
-    paymentChild->MaybeDelete();
-    return nullptr;
-  }
 
   return paymentChild;
-}
-
-nsresult
-PaymentRequestManager::ReleasePaymentChild(const nsAString& aId)
-{
-  mPaymentChildHash.Remove(aId);
-  return NS_OK;
 }
 
 nsresult
@@ -329,14 +318,6 @@ PaymentRequestManager::GetSingleton()
   }
   RefPtr<PaymentRequestManager> manager = gPaymentManager;
   return manager.forget();
-}
-
-already_AddRefed<PaymentRequest>
-PaymentRequestManager::GetPaymentRequestById(const nsAString& aRequestId)
-{
-  // TODO Pass PaymentRequestChild objects around instead of strings.
-  RefPtr<PaymentRequest> request = mPaymentChildHash.Get(aRequestId);
-  return request.forget();
 }
 
 void
@@ -445,49 +426,38 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
 }
 
 nsresult
-PaymentRequestManager::CanMakePayment(const nsAString& aRequestId)
+PaymentRequestManager::CanMakePayment(PaymentRequest* aRequest)
 {
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (!request) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoString requestId(aRequestId);
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
   IPCPaymentCanMakeActionRequest action(requestId);
 
-  return SendRequestPayment(request, action);
+  return SendRequestPayment(aRequest, action);
 }
 
 nsresult
-PaymentRequestManager::ShowPayment(const nsAString& aRequestId)
+PaymentRequestManager::ShowPayment(PaymentRequest* aRequest)
 {
   if (mShowingRequest) {
     return NS_ERROR_ABORT;
   }
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (!request) {
-    return NS_ERROR_FAILURE;
-  }
   nsresult rv = NS_OK;
-  if (!request->IsUpdating()) {
-    nsAutoString requestId(aRequestId);
+  if (!aRequest->IsUpdating()) {
+    nsAutoString requestId;
+    aRequest->GetInternalId(requestId);
     IPCPaymentShowActionRequest action(requestId);
-    rv = SendRequestPayment(request, action);
+    rv = SendRequestPayment(aRequest, action);
   }
-  mShowingRequest = request;
+  mShowingRequest = aRequest;
   return rv;
 }
 
 nsresult
 PaymentRequestManager::AbortPayment(PaymentRequest* aRequest, bool aDeferredShow)
 {
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (!request) {
-    return NS_ERROR_FAILURE;
-  }
-  MOZ_ASSERT(request == mShowingRequest);
-
-  nsAutoString requestId(aRequestId);
+  MOZ_ASSERT(aRequest == mShowingRequest);
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
   IPCPaymentAbortActionRequest action(requestId);
 
   // If aDeferredShow is true, then show was called with a promise that was
@@ -496,14 +466,9 @@ PaymentRequestManager::AbortPayment(PaymentRequest* aRequest, bool aDeferredShow
 }
 
 nsresult
-PaymentRequestManager::CompletePayment(const nsAString& aRequestId,
+PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
                                        const PaymentComplete& aComplete)
 {
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (!request) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsString completeStatusString(NS_LITERAL_STRING("unknown"));
   uint8_t completeIndex = static_cast<uint8_t>(aComplete);
   if (completeIndex < ArrayLength(PaymentCompleteValues::strings)) {
@@ -511,24 +476,21 @@ PaymentRequestManager::CompletePayment(const nsAString& aRequestId,
       PaymentCompleteValues::strings[completeIndex].value);
   }
 
-  nsAutoString requestId(aRequestId);
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
   IPCPaymentCompleteActionRequest action(requestId, completeStatusString);
 
-  return SendRequestPayment(request, action, false);
+  return SendRequestPayment(aRequest, action, false);
 }
 
 nsresult
 PaymentRequestManager::UpdatePayment(JSContext* aCx,
-                                     const nsAString& aRequestId,
+                                     PaymentRequest* aRequest,
                                      const PaymentDetailsUpdate& aDetails,
                                      bool aRequestShipping,
                                      bool aDeferredShow)
 {
   NS_ENSURE_ARG_POINTER(aCx);
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (!request) {
-    return NS_ERROR_UNEXPECTED;
-  }
   IPCPaymentDetails details;
   nsresult rv = ConvertDetailsUpdate(aCx, aDetails, details, aRequestShipping);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -539,10 +501,11 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
   SetDOMStringToNull(shippingOption);
   if (aRequestShipping) {
     GetSelectedShippingOption(aDetails, shippingOption);
-    request->SetShippingOption(shippingOption);
+    aRequest->SetShippingOption(shippingOption);
   }
 
-  nsAutoString requestId(aRequestId);
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
   IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
 
   // If aDeferredShow is true, then this call serves as the ShowUpdate call for
@@ -551,25 +514,18 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
 }
 
 nsresult
-PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
+PaymentRequestManager::RespondPayment(PaymentRequest* aRequest,
+                                      const IPCPaymentActionResponse& aResponse)
 {
   switch (aResponse.type()) {
     case IPCPaymentActionResponse::TIPCPaymentCanMakeActionResponse: {
       const IPCPaymentCanMakeActionResponse& response = aResponse;
-      RefPtr<PaymentRequest> request = GetPaymentRequestById(response.requestId());
-      if (NS_WARN_IF(!request)) {
-        return NS_ERROR_FAILURE;
-      }
-      request->RespondCanMakePayment(response.result());
-      NotifyRequestDone(request);
+      aRequest->RespondCanMakePayment(response.result());
+      NotifyRequestDone(aRequest);
       break;
     }
     case IPCPaymentActionResponse::TIPCPaymentShowActionResponse: {
       const IPCPaymentShowActionResponse& response = aResponse;
-      RefPtr<PaymentRequest> request = GetPaymentRequestById(response.requestId());
-      if (NS_WARN_IF(!request)) {
-        return NS_ERROR_FAILURE;
-      }
       nsresult rejectedReason = NS_ERROR_DOM_ABORT_ERR;
       switch (response.status()) {
         case nsIPaymentActionResponse::PAYMENT_ACCEPTED: {
@@ -589,14 +545,14 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
           break;
         }
       }
-      request->RespondShowPayment(response.methodName(),
-                                  response.data(),
-                                  response.payerName(),
-                                  response.payerEmail(),
-                                  response.payerPhone(),
-                                  rejectedReason);
+      aRequest->RespondShowPayment(response.methodName(),
+                                   response.data(),
+                                   response.payerName(),
+                                   response.payerEmail(),
+                                   response.payerPhone(),
+                                   rejectedReason);
       if (NS_FAILED(rejectedReason)) {
-        MOZ_ASSERT(mShowingRequest == request);
+        MOZ_ASSERT(mShowingRequest == aRequest);
         mShowingRequest = nullptr;
         NotifyRequestDone(aRequest);
       }
@@ -604,28 +560,19 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
     }
     case IPCPaymentActionResponse::TIPCPaymentAbortActionResponse: {
       const IPCPaymentAbortActionResponse& response = aResponse;
-      RefPtr<PaymentRequest> request = GetPaymentRequestById(response.requestId());
-      if (NS_WARN_IF(!request)) {
-        return NS_ERROR_FAILURE;
-      }
-      request->RespondAbortPayment(response.isSucceeded());
+      aRequest->RespondAbortPayment(response.isSucceeded());
       if (response.isSucceeded()) {
-        MOZ_ASSERT(mShowingRequest == request);
+        MOZ_ASSERT(mShowingRequest == aRequest);
       }
       mShowingRequest = nullptr;
-      NotifyRequestDone(request);
+      NotifyRequestDone(aRequest);
       break;
     }
     case IPCPaymentActionResponse::TIPCPaymentCompleteActionResponse: {
-      const IPCPaymentCompleteActionResponse& response = aResponse;
-      RefPtr<PaymentRequest> request = GetPaymentRequestById(response.requestId());
-      if (NS_WARN_IF(!request)) {
-        return NS_ERROR_FAILURE;
-      }
-      request->RespondComplete();
-      MOZ_ASSERT(mShowingRequest == request);
+      aRequest->RespondComplete();
+      MOZ_ASSERT(mShowingRequest == aRequest);
       mShowingRequest = nullptr;
-      NotifyRequestDone(request);
+      NotifyRequestDone(aRequest);
       break;
     }
     default: {
@@ -636,35 +583,27 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
 }
 
 nsresult
-PaymentRequestManager::ChangeShippingAddress(const nsAString& aRequestId,
+PaymentRequestManager::ChangeShippingAddress(PaymentRequest* aRequest,
                                              const IPCPaymentAddress& aAddress)
 {
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (NS_WARN_IF(!request)) {
-    return NS_ERROR_FAILURE;
-  }
-  return request->UpdateShippingAddress(aAddress.country(),
-                                        aAddress.addressLine(),
-                                        aAddress.region(),
-                                        aAddress.city(),
-                                        aAddress.dependentLocality(),
-                                        aAddress.postalCode(),
-                                        aAddress.sortingCode(),
-                                        aAddress.languageCode(),
-                                        aAddress.organization(),
-                                        aAddress.recipient(),
-                                        aAddress.phone());
+  return aRequest->UpdateShippingAddress(aAddress.country(),
+                                         aAddress.addressLine(),
+                                         aAddress.region(),
+                                         aAddress.city(),
+                                         aAddress.dependentLocality(),
+                                         aAddress.postalCode(),
+                                         aAddress.sortingCode(),
+                                         aAddress.languageCode(),
+                                         aAddress.organization(),
+                                         aAddress.recipient(),
+                                         aAddress.phone());
 }
 
 nsresult
-PaymentRequestManager::ChangeShippingOption(const nsAString& aRequestId,
+PaymentRequestManager::ChangeShippingOption(PaymentRequest* aRequest,
                                             const nsAString& aOption)
 {
-  RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
-  if (NS_WARN_IF(!request)) {
-    return NS_ERROR_FAILURE;
-  }
-  return request->UpdateShippingOption(aOption);
+  return aRequest->UpdateShippingOption(aOption);
 }
 
 } // end of namespace dom
