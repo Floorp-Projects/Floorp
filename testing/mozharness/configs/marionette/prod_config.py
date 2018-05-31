@@ -15,9 +15,6 @@ config = {
         'install',
         'run-tests',
     ],
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
     "download_symbols": "ondemand",
     "download_minidump_stackwalk": True,
     "tooltool_cache": "/builds/worker/tooltool-cache",

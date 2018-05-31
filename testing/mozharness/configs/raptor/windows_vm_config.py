@@ -33,9 +33,6 @@ config = {
         "install",
         "run-tests",
     ],
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
     "metro_harness_path_frmt": "%(metro_base_path)s/metro/metrotestharness.exe",
     "download_minidump_stackwalk": True,
     "tooltool_cache": os.path.join('c:\\', 'build', 'tooltool_cache'),
