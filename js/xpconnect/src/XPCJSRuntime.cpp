@@ -197,7 +197,7 @@ CompartmentPrivate::SystemIsBeingShutDown()
 }
 
 RealmPrivate::RealmPrivate(JS::Realm* realm)
-    : scriptability(JS::GetCompartmentForRealm(realm))
+    : scriptability(realm)
     , scope(nullptr)
 {
 }
@@ -367,11 +367,11 @@ PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
     return false;
 }
 
-Scriptability::Scriptability(JSCompartment* c) : mScriptBlocks(0)
+Scriptability::Scriptability(JS::Realm* realm) : mScriptBlocks(0)
                                                , mDocShellAllowsScript(true)
                                                , mScriptBlockedByPolicy(false)
 {
-    nsIPrincipal* prin = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    nsIPrincipal* prin = nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
     mImmuneToScriptPolicy = PrincipalImmuneToScriptPolicy(prin);
 
     // If we're not immune, we should have a real principal with a codebase URI.
