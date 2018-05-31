@@ -55,6 +55,7 @@
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
+#include "nsIPropertyBag2.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1661,6 +1662,20 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
     res = appInfo->GetSourceURL(string);
     if (!NS_FAILED(res))
       aWriter.StringProperty("sourceURL", string.Data());
+  }
+
+  nsCOMPtr<nsIPropertyBag2> systemInfo =
+    do_GetService("@mozilla.org/system-info;1");
+  if (systemInfo) {
+    int32_t cpus;
+    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucores"), &cpus);
+    if (!NS_FAILED(res)) {
+      aWriter.IntProperty("physicalCPUs", cpus);
+    }
+    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
+    if (!NS_FAILED(res)) {
+      aWriter.IntProperty("logicalCPUs", cpus);
+    }
   }
 
   // We should avoid collecting extension metadata for profiler while XPCOM is
