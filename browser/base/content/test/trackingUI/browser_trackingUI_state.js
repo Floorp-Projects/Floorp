@@ -1,16 +1,23 @@
 /*
  * Test that the Tracking Protection section is visible in the Control Center
  * and has the correct state for the cases when:
- *   1) A page with no tracking elements is loaded.
- *   2) A page with tracking elements is loaded and they are blocked.
- *   3) A page with tracking elements is loaded and they are not blocked.
+ *
+ * In a normal window as well as a private window,
+ *   With TP enabled
+ *     1) A page with no tracking elements is loaded.
+ *     2) A page with tracking elements is loaded and they are blocked.
+ *     3) A page with tracking elements is loaded and they are not blocked.
+ *   With TP disabled
+ *     1) A page with no tracking elements is loaded.
+ *     2) A page with tracking elements is loaded.
+ *
  * See also Bugs 1175327, 1043801, 1178985
  */
 
 const PREF = "privacy.trackingprotection.enabled";
 const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
+const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 var TrackingProtection = null;
 var tabbrowser = null;
 
@@ -50,6 +57,7 @@ function testBenignPage() {
   ok(hidden("#tracking-protection-icon"), "icon is hidden");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
+  ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");
 
   // Make sure that the no tracking elements message appears
   ok(!hidden("#tracking-not-detected"), "labelNoTracking is visible");
@@ -69,6 +77,7 @@ function testTrackingPage(window) {
 
   ok(!hidden("#tracking-protection-icon"), "icon is visible");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
+  ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");
 
 
   if (PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -90,14 +99,18 @@ function testTrackingPageUnblocked() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "loaded-tracking-content",
       'content: state="loaded-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("state"), "loaded-tracking-content",
-      'icon: state="loaded-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("tooltiptext"),
-     gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
+  if (TrackingProtection.enabled) {
+    is(TrackingProtection.icon.getAttribute("state"), "loaded-tracking-content",
+        'icon: state="loaded-tracking-content"');
+    is(TrackingProtection.icon.getAttribute("tooltiptext"),
+       gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
+  }
 
-  ok(!hidden("#tracking-protection-icon"), "icon is visible");
+  is(!hidden("#tracking-protection-icon"), TrackingProtection.enabled, "icon is visible if TP is on");
   ok(!hidden("#tracking-action-block"), "blockButton is visible");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
+  is(!hidden("#tracking-protection-preferences-button"), TrackingProtection.enabled,
+    "preferences button is visible if TP is on");
 
   // Make sure that the blocked tracking elements message appears
   ok(hidden("#tracking-not-detected"), "labelNoTracking is hidden");
@@ -105,7 +118,7 @@ function testTrackingPageUnblocked() {
   ok(hidden("#tracking-blocked"), "labelTrackingBlocked is hidden");
 }
 
-async function testTrackingProtectionForTab(tab) {
+async function testTrackingProtectionEnabled(tab) {
   info("Load a test page not containing tracking elements");
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
   testBenignPage();
@@ -127,6 +140,16 @@ async function testTrackingProtectionForTab(tab) {
   testTrackingPage(tab.ownerGlobal);
 }
 
+async function testTrackingProtectionDisabled(tab) {
+  info("Load a test page not containing tracking elements");
+  await promiseTabLoadEvent(tab, BENIGN_PAGE);
+  testBenignPage();
+
+  info("Load a test page containing tracking elements");
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
+  testTrackingPageUnblocked();
+}
+
 add_task(async function testNormalBrowsing() {
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -141,14 +164,16 @@ add_task(async function testNormalBrowsing() {
   Services.prefs.setBoolPref(PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  await testTrackingProtectionForTab(tab);
+  await testTrackingProtectionEnabled(tab);
 
   Services.prefs.setBoolPref(PREF, false);
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+
+  await testTrackingProtectionDisabled(tab);
 });
 
 add_task(async function testPrivateBrowsing() {
-  let privateWin = await promiseOpenAndLoadWindow({private: true}, true);
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   tabbrowser = privateWin.gBrowser;
   let tab = tabbrowser.selectedTab = tabbrowser.addTab();
 
@@ -160,10 +185,12 @@ add_task(async function testPrivateBrowsing() {
   Services.prefs.setBoolPref(PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  await testTrackingProtectionForTab(tab);
+  await testTrackingProtectionEnabled(tab);
 
   Services.prefs.setBoolPref(PB_PREF, false);
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+
+  await testTrackingProtectionDisabled(tab);
 
   privateWin.close();
 });
