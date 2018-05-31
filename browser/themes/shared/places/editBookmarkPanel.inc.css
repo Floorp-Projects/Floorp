@@ -8,7 +8,6 @@
   padding: 0;
 }
 
-#editBookmarkPanelBottomButtons,
 #editBookmarkPanelRows {
   padding: var(--arrowpanel-padding);
 }
@@ -16,4 +15,43 @@
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
   min-width: 27em;
+}
+
+#editBookmarkPanelBottomButtons {
+  display: flex;
+}
+
+.editBookmarkPanelBottomButton {
+  flex: 1;
+  -moz-appearance: none;
+  margin: 0;
+  padding: .8em;
+  color: inherit;
+  background-color: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
+}
+
+.editBookmarkPanelBottomButton:not(:last-child) {
+  border-inline-end: 1px solid var(--panel-separator-color);
+}
+
+.editBookmarkPanelBottomButton:hover {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+.editBookmarkPanelBottomButton:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+.editBookmarkPanelBottomButton[default] {
+  color: white;
+  background-color: #0996f8;
+}
+
+.editBookmarkPanelBottomButton[default]:hover {
+  background-color: #0675d3;
+}
+
+.editBookmarkPanelBottomButton[default]:hover:active {
+  background-color: #0568ba;
 }
