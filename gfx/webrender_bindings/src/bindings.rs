@@ -13,12 +13,14 @@ use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use webrender::{AsyncPropertySampler, PipelineInfo, SceneBuilderHooks};
-use webrender::{ProgramCache, UploadMethod, VertexUsageHint};
+use webrender::{UploadMethod, VertexUsageHint};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
+use program_cache::{WrProgramCache, remove_disk_cache};
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
+use nsstring::nsAString;
 
 #[cfg(target_os = "windows")]
 use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
@@ -827,23 +829,40 @@ pub unsafe extern "C" fn wr_thread_pool_delete(thread_pool: *mut WrThreadPool) {
     Box::from_raw(thread_pool);
 }
 
-pub struct WrProgramCache(Rc<ProgramCache>);
-
 #[no_mangle]
-pub unsafe extern "C" fn wr_program_cache_new() -> *mut WrProgramCache {
-    let program_cache = ProgramCache::new(None);
-    Box::into_raw(Box::new(WrProgramCache(program_cache)))
+pub unsafe extern "C" fn wr_program_cache_new(prof_path: &nsAString, thread_pool: *mut WrThreadPool) -> *mut WrProgramCache {
+    let workers = &(*thread_pool).0;
+    let program_cache = WrProgramCache::new(prof_path, workers);
+    Box::into_raw(Box::new(program_cache))
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_program_cache_delete(program_cache: *mut WrProgramCache) {
-    Rc::from_raw(program_cache);
+    Box::from_raw(program_cache);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_try_load_shader_from_disk(program_cache: *mut WrProgramCache) {
+    if !program_cache.is_null() {
+        (*program_cache).try_load_from_disk();
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn remove_program_binary_disk_cache(prof_path: &nsAString) -> bool {
+    match remove_disk_cache(prof_path) {
+        Ok(_) => true,
+        Err(_) => {
+            error!("Failed to remove program binary disk cache");
+            false
+        }
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, program_cache: &mut WrProgramCache) {
-    let program_cache = Rc::clone(&program_cache.0);
+    let program_cache = Rc::clone(&program_cache.rc_get());
     renderer.update_program_cache(program_cache);
 }
 

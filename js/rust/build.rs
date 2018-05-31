@@ -174,6 +174,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JSAutoStructuredCloneBuffer",
     "JSClass",
     "JSClassOps",
+    "JSCompartment",
     "JSContext",
     "JSErrNum",
     "JSErrorCallback",

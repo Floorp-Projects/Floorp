@@ -34,6 +34,8 @@ struct IPCRemoteStream
   bool delayedStart;
 
   IPCRemoteStreamType stream;
+
+  int64_t length;
 };
 
 // Use IPCStream or OptionalIPCStream in your ipdl to represent serialized

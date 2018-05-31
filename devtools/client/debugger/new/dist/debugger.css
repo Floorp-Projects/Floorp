@@ -2117,6 +2117,10 @@ menuseparator {
   padding: 0 2px;
 }
 
+.objectBox-node.clickable {
+  cursor: pointer;
+}
+
 /******************************************************************************/
 
 .objectBox-event,
@@ -2223,6 +2227,7 @@ button.open-inspector {
   height: 16px;
   margin-left: 0.25em;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 .objectBox-node:hover .open-inspector,

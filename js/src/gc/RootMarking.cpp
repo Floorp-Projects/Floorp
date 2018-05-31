@@ -369,7 +369,7 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
 
     // Trace all realm roots, but not the realm itself; it is traced via the
     // parent pointer if traceRoots actually traces anything.
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+    for (RealmsIter r(rt); !r.done(); r.next())
         r->traceRoots(trc, traceOrMark);
 
     // Trace helper thread roots.
@@ -427,7 +427,7 @@ js::gc::GCRuntime::finishRoots()
 
     rt->finishSelfHosting();
 
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+    for (RealmsIter r(rt); !r.done(); r.next())
         r->finishRoots();
 
 #ifdef DEBUG

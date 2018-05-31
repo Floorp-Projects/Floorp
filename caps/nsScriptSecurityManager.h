@@ -93,10 +93,6 @@ private:
     static bool
     JSPrincipalsSubsume(JSPrincipals *first, JSPrincipals *second);
 
-    // Returns null if a principal cannot be found; generally callers
-    // should error out at that point.
-    static nsIPrincipal* doGetObjectPrincipal(JSObject* obj);
-
     nsresult
     Init();
 

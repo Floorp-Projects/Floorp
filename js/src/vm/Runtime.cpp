@@ -157,7 +157,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     allowContentJS_(true),
     atoms_(nullptr),
     atomsAddedWhileSweeping_(nullptr),
-    atomsRealm_(nullptr),
     staticStrings(nullptr),
     commonNames(nullptr),
     permanentAtoms(nullptr),
@@ -219,24 +218,8 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!atomsZone || !atomsZone->init(true))
         return false;
 
-    JS::RealmOptions options;
-    ScopedJSDeletePtr<Realm> atomsRealm(js_new<Realm>(atomsZone.get(), options));
-    if (!atomsRealm || !atomsRealm->init(nullptr))
-        return false;
-
-    JSCompartment* atomsComp = atomsRealm->compartment();
-    if (!atomsComp->realms().append(atomsRealm))
-        return false;
-
     gc.atomsZone = atomsZone.get();
-    if (!atomsZone->compartments().append(atomsComp))
-        return false;
-
-    atomsRealm->setIsSystem(true);
-    atomsRealm->setIsAtomsRealm();
-
     atomsZone.forget();
-    this->atomsRealm_ = atomsRealm.forget();
 
     if (!symbolRegistry_.ref().init())
         return false;
@@ -333,7 +316,6 @@ JSRuntime::destroyRuntime()
 #endif
 
     gc.finish();
-    atomsRealm_ = nullptr;
 
     js_delete(defaultFreeOp_.ref());
 
@@ -437,7 +419,7 @@ static bool
 HandleInterrupt(JSContext* cx, bool invokeCallback)
 {
     MOZ_ASSERT(cx->requestDepth >= 1);
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     cx->runtime()->gc.gcIfRequested();
 
@@ -716,6 +698,20 @@ JSRuntime::forkRandomKeyGenerator()
     return mozilla::non_crypto::XorShift128PlusRNG(rng.next(), rng.next());
 }
 
+js::HashNumber
+JSRuntime::randomHashCode()
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
+
+    if (randomHashCodeGenerator_.isNothing()) {
+        mozilla::Array<uint64_t, 2> seed;
+        GenerateXorShift128PlusSeed(seed);
+        randomHashCodeGenerator_.emplace(seed[0], seed[1]);
+    }
+
+    return HashNumber(randomHashCodeGenerator_->next());
+}
+
 void
 JSRuntime::updateMallocCounter(size_t nbytes)
 {
@@ -770,7 +766,7 @@ JSRuntime::onOutOfMemoryCanGC(AllocFunction allocFunc, size_t bytes, void* reall
 bool
 JSRuntime::activeGCInAtomsZone()
 {
-    Zone* zone = atomsRealm_->zone();
+    Zone* zone = unsafeAtomsZone();
     return (zone->needsIncrementalBarrier() && !gc.isVerifyPreBarriersEnabled()) ||
            zone->wasGCStarted();
 }

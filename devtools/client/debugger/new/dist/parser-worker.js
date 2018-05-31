@@ -1222,7 +1222,7 @@ function isYieldExpression(path) {
 }
 
 function isObjectShorthand(parent) {
-  return t.isObjectProperty(parent) && parent.key.start == parent.value.start && parent.key.loc.identifierName === parent.value.loc.identifierName;
+  return t.isObjectProperty(parent) && parent.value && parent.key.start == parent.value.start && parent.key.loc.identifierName === parent.value.loc.identifierName;
 }
 
 function getObjectExpressionValue(node) {

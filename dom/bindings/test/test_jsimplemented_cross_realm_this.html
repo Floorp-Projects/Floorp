@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1464374-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1464374</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1464374">Mozilla Bug 1464374</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<iframe></iframe>
+<script type="application/javascript">
+  /** Test for Bug 1464374 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function doTest() {
+    var frame = frames[0];
+    var obj = new frame.TestInterfaceJS();
+    var ex;
+    try {
+      TestInterfaceJS.prototype.testThrowTypeError.call(obj);
+    } catch(e) {
+      ex = e;
+    }
+    ok(ex, "Should have an exception");
+    SimpleTest.finish();
+  }
+
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                            doTest);
+</script>
+
+</body>
+</html>

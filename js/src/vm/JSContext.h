@@ -25,6 +25,7 @@ struct DtoaState;
 
 namespace js {
 
+class AutoAtomsZone;
 class AutoRealm;
 
 namespace jit {
@@ -199,39 +200,40 @@ struct JSContext : public JS::RootingContext,
      * enter/leave stack is maintained by enterRealmDepth_ and queried by
      * hasEnteredRealm.
      *
-     * To enter a compartment, code should prefer using AutoRealm over
+     * To enter a realm, code should prefer using AutoRealm over
      * manually calling cx->enterRealm/leaveRealm.
      */
   protected:
+#ifdef DEBUG
     js::ThreadData<unsigned> enterRealmDepth_;
+#endif
 
-    inline void setRealm(JS::Realm* realm,
-                         const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    inline void setRealm(JS::Realm* realm);
   public:
+#ifdef DEBUG
     bool hasEnteredRealm() const {
         return enterRealmDepth_ > 0;
     }
-#ifdef DEBUG
     unsigned getEnterRealmDepth() const {
         return enterRealmDepth_;
     }
 #endif
 
   private:
-    // We distinguish between entering the atoms realm and all other realms.
-    // Entering the atoms realm requires a lock.
-    inline void enterNonAtomsRealm(JS::Realm* realm);
-    inline void enterAtomsRealm(JS::Realm* realm,
-                                const js::AutoLockForExclusiveAccess& lock);
+    inline void enterRealm(JS::Realm* realm);
+    inline void enterAtomsZone(const js::AutoLockForExclusiveAccess& lock);
 
+    friend class js::AutoAtomsZone;
     friend class js::AutoRealm;
 
   public:
     template <typename T>
     inline void enterRealmOf(const T& target);
     inline void enterNullRealm();
-    inline void leaveRealm(JS::Realm* oldRealm,
-                           const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+
+    inline void leaveRealm(JS::Realm* oldRealm);
+    inline void leaveAtomsZone(JS::Realm* oldRealm,
+                               const js::AutoLockForExclusiveAccess& lock);
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
@@ -247,8 +249,13 @@ struct JSContext : public JS::RootingContext,
     JS::Realm* realm() const {
         return realm_;
     }
+
+#ifdef DEBUG
+    bool inAtomsZone() const;
+#endif
+
     JS::Zone* zone() const {
-        MOZ_ASSERT_IF(!realm(), !zone_);
+        MOZ_ASSERT_IF(!realm() && zone_, inAtomsZone());
         MOZ_ASSERT_IF(realm(), js::GetCompartmentZone(GetCompartmentForRealm(realm())) == zone_);
         return zoneRaw();
     }
@@ -275,8 +282,8 @@ struct JSContext : public JS::RootingContext,
     js::AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
         return runtime_->atoms(lock);
     }
-    JS::Realm* atomsRealm(js::AutoLockForExclusiveAccess& lock) {
-        return runtime_->atomsRealm(lock);
+    const JS::Zone* atomsZone(js::AutoLockForExclusiveAccess& lock) {
+        return runtime_->atomsZone(lock);
     }
     js::SymbolRegistry& symbolRegistry(js::AutoLockForExclusiveAccess& lock) {
         return runtime_->symbolRegistry(lock);

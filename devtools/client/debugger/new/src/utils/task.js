@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", {
 /**
  * This object provides the public module functions.
  */
-const Task = {
+const Task = exports.Task = {
   // XXX: Not sure if this works in all cases...
   async: function (task) {
     return function () {
@@ -50,4 +50,3 @@ const Task = {
     });
   }
 };
-exports.Task = Task;

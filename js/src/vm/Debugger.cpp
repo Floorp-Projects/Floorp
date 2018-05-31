@@ -3064,7 +3064,7 @@ Debugger::markIteratively(GCMarker* marker)
      * convoluted since the easiest way to find them is via their debuggees.
      */
     JSRuntime* rt = marker->runtime();
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
+    for (RealmsIter r(rt); !r.done(); r.next()) {
         if (r->isDebuggee()) {
             GlobalObject* global = r->unsafeUnbarrieredMaybeGlobal();
             if (!IsMarkedUnbarriered(rt, &global))
@@ -3261,26 +3261,39 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global)
 /* static */ void
 Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
 {
-    /*
-     * For debugger cross compartment wrappers, add edges in the opposite
-     * direction to those already added by JSCompartment::findOutgoingEdges.
-     * This ensure that debuggers and their debuggees are finalized in the same
-     * group.
-     */
     JSRuntime* rt = zone->runtimeFromMainThread();
     for (Debugger* dbg : rt->debuggerList()) {
-        Zone* w = dbg->object->zone();
-        if (w == zone || !w->isGCMarking())
+        Zone* debuggerZone = dbg->object->zone();
+        if (!debuggerZone->isGCMarking())
             continue;
-        if (dbg->debuggeeZones.has(zone) ||
-            dbg->scripts.hasKeyInZone(zone) ||
-            dbg->sources.hasKeyInZone(zone) ||
-            dbg->objects.hasKeyInZone(zone) ||
-            dbg->environments.hasKeyInZone(zone) ||
-            dbg->wasmInstanceScripts.hasKeyInZone(zone) ||
-            dbg->wasmInstanceSources.hasKeyInZone(zone))
-        {
-            finder.addEdgeTo(w);
+
+        if (debuggerZone == zone) {
+            /*
+             * Add edges to debuggee zones. These are weak references that are
+             * not in the cross compartment wrapper map.
+             */
+            for (auto e = dbg->debuggeeZones.all(); !e.empty(); e.popFront()) {
+                Zone* debuggeeZone = e.front();
+                if (debuggeeZone->isGCMarking())
+                    finder.addEdgeTo(debuggeeZone);
+            }
+        } else {
+            /*
+             * For debugger cross compartment wrappers, add edges in the
+             * opposite direction to those already added by
+             * JSCompartment::findOutgoingEdges and above.  This ensure that
+             * debuggers and their debuggees are finalized in the same group.
+             */
+            if (dbg->debuggeeZones.has(zone) ||
+                dbg->scripts.hasKeyInZone(zone) ||
+                dbg->sources.hasKeyInZone(zone) ||
+                dbg->objects.hasKeyInZone(zone) ||
+                dbg->environments.hasKeyInZone(zone) ||
+                dbg->wasmInstanceScripts.hasKeyInZone(zone) ||
+                dbg->wasmInstanceSources.hasKeyInZone(zone))
+            {
+                finder.addEdgeTo(debuggerZone);
+            }
         }
     }
 }
@@ -4957,7 +4970,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
         // wrapping can GC and collect realms from under us, while iterating.
         JS::AutoCheckCannotGC nogc;
 
-        for (RealmsIter r(cx->runtime(), SkipAtoms); !r.done(); r.next()) {
+        for (RealmsIter r(cx->runtime()); !r.done(); r.next()) {
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 

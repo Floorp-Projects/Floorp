@@ -2364,9 +2364,9 @@ nsIDocument::ResetToURI(nsIURI* aURI,
     mFontFaceSet->RefreshStandardFontLoadPrincipal();
   }
 
-  // Refresh the principal on the compartment.
+  // Refresh the principal on the realm.
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
-    nsGlobalWindowInner::Cast(win)->RefreshCompartmentPrincipal();
+    nsGlobalWindowInner::Cast(win)->RefreshRealmPrincipal();
   }
 }
 
@@ -8495,6 +8495,18 @@ static void ClearPendingFullscreenRequests(nsIDocument* aDoc);
 void
 nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
 {
+  if (mDocGroup && Telemetry::CanRecordExtended() &&
+      IsTopLevelContentDocument()) {
+    TabGroup* tabGroup = mDocGroup->GetTabGroup();
+
+    if (tabGroup) {
+      Telemetry::Accumulate(Telemetry::ACTIVE_DOCGROUPS_PER_TABGROUP,
+                            tabGroup->Count(true /* aActiveOnly */));
+      Telemetry::Accumulate(Telemetry::TOTAL_DOCGROUPS_PER_TABGROUP,
+                            tabGroup->Count());
+    }
+  }
+
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();

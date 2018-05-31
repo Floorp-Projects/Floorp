@@ -1206,15 +1206,12 @@ public:
     // aRealmStats->extra is a xpc::RealmStatsExtras pointer.
     xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
 
-    // This is the |jsPathPrefix|.  Each worker has exactly two realms:
-    // one for atoms, and one for everything else.
+    // This is the |jsPathPrefix|.  Each worker has exactly one realm.
     JSCompartment* compartment = JS::GetCompartmentForRealm(aRealm);
     extras->jsPathPrefix.Assign(mRtPath);
     extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
                                             (void *)js::GetCompartmentZone(compartment));
-    extras->jsPathPrefix += js::IsAtomsRealm(aRealm)
-                            ? NS_LITERAL_CSTRING("realm(web-worker-atoms)/")
-                            : NS_LITERAL_CSTRING("realm(web-worker)/");
+    extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(web-worker)/");
 
     // This should never be used when reporting with workers (hence the "?!").
     extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");

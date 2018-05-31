@@ -326,7 +326,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     }
 
     bool edgePaddingEnabled = gfxPrefs::TileEdgePaddingEnabled();
-
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
       TileClient& tile = mRetainedTiles[i];
 
@@ -442,6 +441,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     return false;
   }
 
+  // Get the targets to draw into, and create a dual target
+  // if we are using component alpha
   RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
   RefPtr<DrawTarget> dtOnWhite;
   if (backBufferOnWhite) {
@@ -460,12 +461,18 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     drawTarget = dt;
   }
 
-  auto clear = CapturedTiledPaintState::Clear{
-    dt,
-    dtOnWhite,
-    tileDirtyRegion
-  };
+  // We need to clear the dirty region of the tile before painting
+  // if we are painting non-opaque content
+  Maybe<CapturedTiledPaintState::Clear> clear = Nothing();
+  if (mode != SurfaceMode::SURFACE_OPAQUE) {
+    clear = Some(CapturedTiledPaintState::Clear{
+      dt,
+      dtOnWhite,
+      tileDirtyRegion
+    });
+  }
 
+  // Queue or execute the paint operation
   gfx::Tile paintTile;
   paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
 
@@ -481,7 +488,9 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     asyncPaint->mCapture = captureDT;
 
     asyncPaint->mCopies = std::move(asyncPaintCopies);
-    asyncPaint->mClears.push_back(clear);
+    if (clear) {
+      asyncPaint->mClears.push_back(*clear);
+    }
 
     asyncPaint->mClients = std::move(asyncPaintClients);
     asyncPaint->mClients.push_back(backBuffer);
@@ -492,7 +501,9 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     mPaintStates.push_back(asyncPaint);
   } else {
     paintTile.mDrawTarget = drawTarget;
-    clear.ClearBuffer();
+    if (clear) {
+      clear->ClearBuffer();
+    }
   }
 
   mPaintTiles.push_back(paintTile);
