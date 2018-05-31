@@ -24,6 +24,8 @@ const {
   PREFS,
   INITIALIZE,
   FILTER_TOGGLE,
+  APPEND_TO_HISTORY,
+  CLEAR_HISTORY,
 } = require("devtools/client/webconsole/constants");
 const { reducers } = require("./reducers/index");
 const {
@@ -35,6 +37,9 @@ const {
   getAllNetworkMessagesUpdateById,
 } = require("devtools/client/webconsole/selectors/messages");
 const {getPrefsService} = require("devtools/client/webconsole/utils/prefs");
+const historyActions = require("devtools/client/webconsole/actions/history");
+
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
 /**
  * Create and configure store for the Console panel. This is the place
@@ -51,12 +56,14 @@ function configureStore(hud, options = {}) {
     || Math.max(getIntPref("devtools.hud.loglimit"), 1);
   const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
   const jstermCodeMirror = getBoolPref(PREFS.FEATURES.JSTERM_CODE_MIRROR);
+  const historyCount = getIntPref(PREFS.UI.INPUT_HISTORY_COUNT);
 
   const initialState = {
     prefs: PrefState({
       logLimit,
       sidebarToggle,
       jstermCodeMirror,
+      historyCount,
     }),
     filters: FilterState({
       error: getBoolPref(PREFS.FILTER.ERROR),
@@ -75,11 +82,17 @@ function configureStore(hud, options = {}) {
     })
   };
 
+  // Prepare middleware.
+  let middleware = applyMiddleware(
+    thunk.bind(null, {prefsService}),
+    historyPersistenceMiddleware,
+  );
+
   return createStore(
     createRootReducer(),
     initialState,
     compose(
-      applyMiddleware(thunk.bind(null, {prefsService})),
+      middleware,
       enableActorReleaser(hud),
       enableBatching(),
       enableNetProvider(hud),
@@ -99,13 +112,18 @@ function thunk(options = {}, { dispatch, getState }) {
 
 function createRootReducer() {
   return function rootReducer(state, action) {
-    // We want to compute the new state for all properties except "messages".
+    // We want to compute the new state for all properties except
+    // "messages" and "history". These two reducers are handled
+    // separately since they are receiving additional arguments.
     const newState = [...Object.entries(reducers)].reduce((res, [key, reducer]) => {
-      if (key !== "messages") {
+      if (key !== "messages" && key !== "history") {
         res[key] = reducer(state[key], action);
       }
       return res;
     }, {});
+
+    // Pass prefs state as additional argument to the history reducer.
+    newState.history = reducers.history(state.history, action, newState.prefs);
 
     return Object.assign(newState, {
       // specifically pass the updated filters and prefs state as additional arguments.
@@ -227,7 +245,7 @@ function enableNetProvider(hud) {
       // Data provider implements async logic for fetching
       // data from the backend. It's created the first
       // time it's needed.
-      if (!dataProvider) {
+      if (!dataProvider && proxy.webConsoleClient) {
         dataProvider = new DataProvider({
           actions,
           webConsoleClient: proxy.webConsoleClient
@@ -321,6 +339,41 @@ function releaseActors(removedActors, proxy) {
   }
 
   removedActors.forEach(actor => proxy.releaseActor(actor));
+}
+
+/**
+ * History persistence middleware is responsible for loading
+ * and maintaining history of executed expressions in JSTerm.
+ */
+function historyPersistenceMiddleware(store) {
+  let historyLoaded = false;
+  asyncStorage.getItem("webConsoleHistory").then(value => {
+    if (Array.isArray(value)) {
+      store.dispatch(historyActions.historyLoaded(value));
+    }
+    historyLoaded = true;
+  }, err => {
+    historyLoaded = true;
+    console.error(err);
+  });
+
+  return next => action => {
+    const res = next(action);
+
+    let triggerStoreActions = [
+      APPEND_TO_HISTORY,
+      CLEAR_HISTORY,
+    ];
+
+    // Save the current history entries when modified, but wait till
+    // entries from the previous session are loaded.
+    if (historyLoaded && triggerStoreActions.includes(action.type)) {
+      const state = store.getState();
+      asyncStorage.setItem("webConsoleHistory", state.history.entries);
+    }
+
+    return res;
+  };
 }
 
 // Provide the store factory for test code so that each test is working with
