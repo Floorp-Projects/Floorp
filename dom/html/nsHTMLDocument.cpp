@@ -1537,10 +1537,10 @@ nsHTMLDocument::Open(JSContext* cx,
   SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
 
   // After changing everything around, make sure that the principal on the
-  // document's compartment exactly matches NodePrincipal().
+  // document's realm exactly matches NodePrincipal().
   DebugOnly<JSObject*> wrapper = GetWrapperPreserveColor();
   MOZ_ASSERT_IF(wrapper,
-                JS_GetCompartmentPrincipals(js::GetObjectCompartment(wrapper)) ==
+                JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(wrapper)) ==
                 nsJSPrincipals::get(NodePrincipal()));
 
   return kungFuDeathGrip.forget();
