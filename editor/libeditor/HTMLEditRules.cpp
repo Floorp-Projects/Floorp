@@ -64,8 +64,6 @@ class nsISupports;
 
 namespace mozilla {
 
-class RulesInfo;
-
 using namespace dom;
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
@@ -84,19 +82,19 @@ enum
  ********************************************************/
 
 static bool
-IsStyleCachePreservingAction(EditAction action)
+IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
 {
-  return action == EditAction::deleteSelection ||
-         action == EditAction::insertBreak ||
-         action == EditAction::makeList ||
-         action == EditAction::indent ||
-         action == EditAction::outdent ||
-         action == EditAction::align ||
-         action == EditAction::makeBasicBlock ||
-         action == EditAction::removeList ||
-         action == EditAction::makeDefListItem ||
-         action == EditAction::insertElement ||
-         action == EditAction::insertQuotation;
+  return aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
+         aEditSubAction == EditSubAction::eCreateOrChangeList ||
+         aEditSubAction == EditSubAction::eIndent ||
+         aEditSubAction == EditSubAction::eOutdent ||
+         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
+         aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
+         aEditSubAction == EditSubAction::eRemoveList ||
+         aEditSubAction == EditSubAction::eCreateOrChangeDefinitionList ||
+         aEditSubAction == EditSubAction::eInsertElement ||
+         aEditSubAction == EditSubAction::eInsertQuotation;
 }
 
 static nsAtom&
@@ -304,7 +302,7 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
       "Failed to insert <br> elements to empty list items and table cells");
   }
 
-  StartToListenToEditActions();
+  StartToListenToEditSubActions();
 
   return NS_OK;
 }
@@ -312,13 +310,13 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
 nsresult
 HTMLEditRules::DetachEditor()
 {
-  EndListeningToEditActions();
+  EndListeningToEditSubActions();
   mHTMLEditor = nullptr;
   return TextEditRules::DetachEditor();
 }
 
 nsresult
-HTMLEditRules::BeforeEdit(EditAction aAction,
+HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
                           nsIEditor::EDirection aDirection)
 {
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -372,10 +370,10 @@ HTMLEditRules::BeforeEdit(EditAction aAction,
     }
 
     // Remember current inline styles for deletion and normal insertion ops
-    if (aAction == EditAction::insertText ||
-        aAction == EditAction::insertIMEText ||
-        aAction == EditAction::deleteSelection ||
-        IsStyleCachePreservingAction(aAction)) {
+    if (aEditSubAction == EditSubAction::eInsertText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        IsStyleCachePreservingSubAction(aEditSubAction)) {
       nsCOMPtr<nsINode> selNode =
         aDirection == nsIEditor::eNext ? selEndNode : selStartNode;
       nsresult rv = CacheInlineStyles(selNode);
@@ -400,14 +398,14 @@ HTMLEditRules::BeforeEdit(EditAction aAction,
       return NS_ERROR_EDITOR_DESTROYED;
     }
     // Let rules remember the top level action
-    mTheAction = aAction;
+    mTopLevelEditSubAction = aEditSubAction;
   }
   return NS_OK;
 }
 
 
 nsresult
-HTMLEditRules::AfterEdit(EditAction aAction,
+HTMLEditRules::AfterEdit(EditSubAction aEditSubAction,
                          nsIEditor::EDirection aDirection)
 {
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -432,7 +430,7 @@ HTMLEditRules::AfterEdit(EditAction aAction,
     AutoSafeEditorData setData(*this, *mHTMLEditor, *selection);
 
     // Do all the tricky stuff
-    rv = AfterEditInner(aAction, aDirection);
+    rv = AfterEditInner(aEditSubAction, aDirection);
     // Perhaps, we need to do the following jobs even if the editor has been
     // destroyed since they adjust some states of HTML document but don't
     // modify the DOM tree nor Selection.
@@ -460,7 +458,7 @@ HTMLEditRules::AfterEdit(EditAction aAction,
 }
 
 nsresult
-HTMLEditRules::AfterEditInner(EditAction aAction,
+HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
                               nsIEditor::EDirection aDirection)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -470,7 +468,8 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
-  if (aAction == EditAction::ignore) {
+  if (aEditSubAction == EditSubAction::eReplaceHeadWithHTMLSource ||
+      aEditSubAction == EditSubAction::eCreateBogusNode) {
     return NS_OK;
   }
 
@@ -488,21 +487,23 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
   }
 
-  if (bDamagedRange && !((aAction == EditAction::undo) ||
-                         (aAction == EditAction::redo))) {
+  if (bDamagedRange && !((aEditSubAction == EditSubAction::eUndo) ||
+                         (aEditSubAction == EditSubAction::eRedo))) {
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
     AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
 
     // expand the "changed doc range" as needed
-    PromoteRange(*mDocChangeRange, aAction);
+    PromoteRange(*mDocChangeRange, aEditSubAction);
 
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
     // Note we only want to do this if the overall operation was deletion,
-    // not if deletion was done along the way for EditAction::loadHTML, EditAction::insertText, etc.
+    // not if deletion was done along the way for
+    // EditSubAction::eInsertHTMLSource, EditSubAction::eInsertText, etc.
     // That's why this is here rather than DidDeleteSelection().
-    if (aAction == EditAction::deleteSelection && mDidRangedDelete) {
+    if (aEditSubAction == EditSubAction::eDeleteSelectedContent &&
+        mDidRangedDelete) {
       nsresult rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -518,8 +519,8 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
       "Failed to insert <br> elements to empty list items and table cells");
 
     // merge any adjacent text nodes
-    if (aAction != EditAction::insertText &&
-        aAction != EditAction::insertIMEText) {
+    if (aEditSubAction != EditSubAction::eInsertText &&
+        aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
       nsresult rv = HTMLEditorRef().CollapseAdjacentTextNodes(mDocChangeRange);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -536,12 +537,12 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // attempt to transform any unneeded nbsp's into spaces after doing various operations
-    if (aAction == EditAction::insertText ||
-        aAction == EditAction::insertIMEText ||
-        aAction == EditAction::deleteSelection ||
-        aAction == EditAction::insertBreak ||
-        aAction == EditAction::htmlPaste ||
-        aAction == EditAction::loadHTML) {
+    if (aEditSubAction == EditSubAction::eInsertText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
+        aEditSubAction == EditSubAction::ePasteHTMLContent ||
+        aEditSubAction == EditSubAction::eInsertHTMLSource) {
       rv = AdjustWhitespace();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -572,12 +573,12 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // adjust selection for insert text, html paste, and delete actions
-    if (aAction == EditAction::insertText ||
-        aAction == EditAction::insertIMEText ||
-        aAction == EditAction::deleteSelection ||
-        aAction == EditAction::insertBreak ||
-        aAction == EditAction::htmlPaste ||
-        aAction == EditAction::loadHTML) {
+    if (aEditSubAction == EditSubAction::eInsertText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
+        aEditSubAction == EditSubAction::ePasteHTMLContent ||
+        aEditSubAction == EditSubAction::eInsertHTMLSource) {
       rv = AdjustSelection(aDirection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -585,10 +586,10 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // check for any styles which were removed inappropriately
-    if (aAction == EditAction::insertText ||
-        aAction == EditAction::insertIMEText ||
-        aAction == EditAction::deleteSelection ||
-        IsStyleCachePreservingAction(aAction)) {
+    if (aEditSubAction == EditSubAction::eInsertText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        IsStyleCachePreservingSubAction(aEditSubAction)) {
       HTMLEditorRef().mTypeInState->UpdateSelState(&SelectionRef());
       rv = ReapplyCachedStyles();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -598,7 +599,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
   }
 
-  rv = HTMLEditorRef().HandleInlineSpellCheck(aAction, SelectionRef(),
+  rv = HTMLEditorRef().HandleInlineSpellCheck(aEditSubAction, SelectionRef(),
                                               mRangeItem->mStartContainer,
                                               mRangeItem->mStartOffset,
                                               rangeStartContainer,
@@ -625,11 +626,11 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
 
 nsresult
 HTMLEditRules::WillDoAction(Selection* aSelection,
-                            RulesInfo* aInfo,
+                            EditSubActionInfo& aInfo,
                             bool* aCancel,
                             bool* aHandled)
 {
-  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
+  if (NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -644,9 +645,9 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
-  if (aInfo->action == EditAction::outputText ||
-      aInfo->action == EditAction::undo ||
-      aInfo->action == EditAction::redo) {
+  if (aInfo.mEditSubAction == EditSubAction::eComputeTextToOutput ||
+      aInfo.mEditSubAction == EditSubAction::eUndo ||
+      aInfo.mEditSubAction == EditSubAction::eRedo) {
     return TextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
   }
 
@@ -680,37 +681,37 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     }
   }
 
-  switch (aInfo->action) {
-    case EditAction::insertText:
-    case EditAction::insertIMEText:
+  switch (aInfo.mEditSubAction) {
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
       UndefineCaretBidiLevel();
-      return WillInsertText(aInfo->action, aCancel, aHandled,
-                            aInfo->inString, aInfo->outString,
-                            aInfo->maxLength);
-    case EditAction::loadHTML:
+      return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
+                            aInfo.inString, aInfo.outString,
+                            aInfo.maxLength);
+    case EditSubAction::eInsertHTMLSource:
       return WillLoadHTML();
-    case EditAction::insertBreak:
+    case EditSubAction::eInsertParagraphSeparator:
       UndefineCaretBidiLevel();
       return WillInsertBreak(aCancel, aHandled);
-    case EditAction::deleteSelection:
-      return WillDeleteSelection(aInfo->collapsedAction, aInfo->stripWrappers,
+    case EditSubAction::eDeleteSelectedContent:
+      return WillDeleteSelection(aInfo.collapsedAction, aInfo.stripWrappers,
                                  aCancel, aHandled);
-    case EditAction::makeList:
-      return WillMakeList(aInfo->blockType, aInfo->entireList,
-                          aInfo->bulletType, aCancel, aHandled);
-    case EditAction::indent:
+    case EditSubAction::eCreateOrChangeList:
+      return WillMakeList(aInfo.blockType, aInfo.entireList,
+                          aInfo.bulletType, aCancel, aHandled);
+    case EditSubAction::eIndent:
       return WillIndent(aCancel, aHandled);
-    case EditAction::outdent:
+    case EditSubAction::eOutdent:
       return WillOutdent(aCancel, aHandled);
-    case EditAction::setAbsolutePosition:
+    case EditSubAction::eSetPositionToAbsolute:
       return WillAbsolutePosition(aCancel, aHandled);
-    case EditAction::removeAbsolutePosition:
+    case EditSubAction::eSetPositionToStatic:
       return WillRemoveAbsolutePosition(aCancel, aHandled);
-    case EditAction::align:
-      return WillAlign(*aInfo->alignType, aCancel, aHandled);
-    case EditAction::makeBasicBlock:
-      return WillMakeBasicBlock(*aInfo->blockType, aCancel, aHandled);
-    case EditAction::removeList: {
+    case EditSubAction::eSetOrClearAlignment:
+      return WillAlign(*aInfo.alignType, aCancel, aHandled);
+    case EditSubAction::eCreateOrRemoveBlock:
+      return WillMakeBasicBlock(*aInfo.blockType, aCancel, aHandled);
+    case EditSubAction::eRemoveList: {
       nsresult rv = WillRemoveList(aCancel, aHandled);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
           NS_WARN_IF(!CanHandleEditAction())) {
@@ -721,10 +722,10 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       }
       return NS_OK;
     }
-    case EditAction::makeDefListItem:
-      return WillMakeDefListItem(aInfo->blockType,
-                                 aInfo->entireList, aCancel, aHandled);
-    case EditAction::insertElement: {
+    case EditSubAction::eCreateOrChangeDefinitionList:
+      return WillMakeDefListItem(aInfo.blockType,
+                                 aInfo.entireList, aCancel, aHandled);
+    case EditSubAction::eInsertElement: {
       nsresult rv = WillInsert(aCancel);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -732,9 +733,9 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
     }
-    case EditAction::decreaseZIndex:
+    case EditSubAction::eDecreaseZIndex:
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
-    case EditAction::increaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
       return WillRelativeChangeZIndex(1, aCancel, aHandled);
     default:
       return TextEditRules::WillDoAction(&SelectionRef(), aInfo,
@@ -744,10 +745,10 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
 nsresult
 HTMLEditRules::DidDoAction(Selection* aSelection,
-                           RulesInfo* aInfo,
+                           EditSubActionInfo& aInfo,
                            nsresult aResult)
 {
-  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
+  if (NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -756,19 +757,19 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor, *aSelection);
 
-  switch (aInfo->action) {
-    case EditAction::insertText:
-    case EditAction::insertBreak:
-    case EditAction::insertIMEText:
+  switch (aInfo.mEditSubAction) {
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eInsertTextComingFromIME:
       return NS_OK;
-    case EditAction::deleteSelection:
+    case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditAction::makeBasicBlock:
-    case EditAction::indent:
-    case EditAction::outdent:
-    case EditAction::align:
+    case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eIndent:
+    case EditSubAction::eOutdent:
+    case EditSubAction::eSetOrClearAlignment:
       return DidMakeBasicBlock();
-    case EditAction::setAbsolutePosition: {
+    case EditSubAction::eSetPositionToAbsolute: {
       nsresult rv = DidMakeBasicBlock();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -979,12 +980,13 @@ HTMLEditRules::GetAlignment(bool* aMixed,
     }
   } else {
     nsTArray<RefPtr<nsRange>> arrayOfRanges;
-    GetPromotedRanges(arrayOfRanges, EditAction::align);
+    GetPromotedRanges(arrayOfRanges, EditSubAction::eSetOrClearAlignment);
 
     // Use these ranges to construct a list of nodes to act on.
     nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
     nsresult rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                                       EditAction::align, TouchContent::no);
+                                       EditSubAction::eSetOrClearAlignment,
+                                       TouchContent::no);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1127,7 +1129,8 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
   // contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesFromSelection(EditAction::indent, arrayOfNodes, TouchContent::no);
+    GetNodesFromSelection(EditSubAction::eIndent, arrayOfNodes,
+                          TouchContent::no);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1414,9 +1417,9 @@ HTMLEditRules::WillInsert(bool* aCancel)
   }
 
   if (mDidDeleteSelection &&
-      (mTheAction == EditAction::insertText ||
-       mTheAction == EditAction::insertIMEText ||
-       mTheAction == EditAction::deleteSelection)) {
+      (mTopLevelEditSubAction == EditSubAction::eInsertText ||
+       mTopLevelEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+       mTopLevelEditSubAction == EditSubAction::eDeleteSelectedContent)) {
     nsresult rv = ReapplyCachedStyles();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1424,14 +1427,14 @@ HTMLEditRules::WillInsert(bool* aCancel)
   }
   // For most actions we want to clear the cached styles, but there are
   // exceptions
-  if (!IsStyleCachePreservingAction(mTheAction)) {
+  if (!IsStyleCachePreservingSubAction(mTopLevelEditSubAction)) {
     ClearCachedStyles();
   }
   return NS_OK;
 }
 
 nsresult
-HTMLEditRules::WillInsertText(EditAction aAction,
+HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
                               bool* aCancel,
                               bool* aHandled,
                               const nsAString* inString,
@@ -1499,7 +1502,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     return NS_ERROR_FAILURE;
   }
 
-  if (aAction == EditAction::insertIMEText) {
+  if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     // Right now the WSRunObject code bails on empty strings, but IME needs
     // the InsertTextWithTransaction() call to still happen since empty strings
     // are meaningful there.
@@ -1535,7 +1538,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     return NS_OK;
   }
 
-  // aAction == kInsertText
+  // aEditSubAction == kInsertText
 
   // find where we are
   EditorDOMPoint currentPoint(pointToInsert);
@@ -3801,8 +3804,8 @@ HTMLEditRules::MoveBlock(Element& aLeftBlock,
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
   nsresult rv = GetNodesFromPoint(EditorDOMPoint(&aRightBlock, aRightOffset),
-                                  EditAction::makeList, arrayOfNodes,
-                                  TouchContent::yes);
+                                  EditSubAction::eCreateOrChangeList,
+                                  arrayOfNodes, TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
@@ -4505,7 +4508,7 @@ HTMLEditRules::WillRemoveList(bool* aCancel,
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, EditAction::makeList);
+  GetPromotedRanges(arrayOfRanges, EditSubAction::eCreateOrChangeList);
 
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -4611,7 +4614,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
 
   // Contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetNodesFromSelection(EditAction::makeBasicBlock, arrayOfNodes,
+  rv = GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock, arrayOfNodes,
                              TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4887,7 +4890,7 @@ HTMLEditRules::IndentAroundSelectionWithCSS()
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
     nsresult rv =
-      GetNodesFromSelection(EditAction::indent, arrayOfNodes,
+      GetNodesFromSelection(EditSubAction::eIndent, arrayOfNodes,
                             TouchContent::yes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -5170,12 +5173,12 @@ HTMLEditRules::IndentAroundSelectionWithHTML()
   // whose children are all in the range
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, EditAction::indent);
+  GetPromotedRanges(arrayOfRanges, EditSubAction::eIndent);
 
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditAction::indent,
+    GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditSubAction::eIndent,
                          TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5552,7 +5555,8 @@ HTMLEditRules::OutdentAroundSelection()
   // in the range
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesFromSelection(EditAction::outdent, arrayOfNodes, TouchContent::yes);
+    GetNodesFromSelection(EditSubAction::eOutdent, arrayOfNodes,
+                          TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return SplitRangeOffFromNodeResult(rv);
   }
@@ -6190,7 +6194,8 @@ HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType)
   // in the range
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   nsresult rv =
-    GetNodesFromSelection(EditAction::align, nodeArray, TouchContent::yes);
+    GetNodesFromSelection(EditSubAction::eSetOrClearAlignment, nodeArray,
+                          TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7123,16 +7128,16 @@ EditorDOMPoint
 HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
                                 nsINode& aNode,
                                 int32_t aOffset,
-                                EditAction actionID)
+                                EditSubAction aEditSubAction)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // we do one thing for text actions, something else entirely for other
   // actions
-  if (actionID == EditAction::insertText ||
-      actionID == EditAction::insertIMEText ||
-      actionID == EditAction::insertBreak ||
-      actionID == EditAction::deleteText) {
+  if (aEditSubAction == EditSubAction::eInsertText ||
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+      aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
+      aEditSubAction == EditSubAction::eDeleteText) {
     bool isSpace, isNBSP;
     nsCOMPtr<nsIContent> content =
       aNode.IsContent() ? aNode.AsContent() : nullptr;
@@ -7204,7 +7209,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       // aWhere == kEnd case.  as long as they are in one or the other it will
       // work.  special case for outdent: don't keep looking up if we have
       // found a blockquote element to act on
-      if (actionID == EditAction::outdent &&
+      if (aEditSubAction == EditSubAction::eOutdent &&
           point.IsContainerHTMLElement(nsGkAtoms::blockquote)) {
         break;
       }
@@ -7213,10 +7218,11 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       // before walking up to a parent because we need to return the parent
       // object, so the parent itself might not be in the editable area, but
       // it's OK if we're not performing a block-level action.
-      bool blockLevelAction = actionID == EditAction::indent ||
-                              actionID == EditAction::outdent ||
-                              actionID == EditAction::align ||
-                              actionID == EditAction::makeBasicBlock;
+      bool blockLevelAction =
+        aEditSubAction == EditSubAction::eIndent ||
+        aEditSubAction == EditSubAction::eOutdent ||
+        aEditSubAction == EditSubAction::eSetOrClearAlignment ||
+        aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
       if (!HTMLEditorRef().IsDescendantOfEditorRoot(
                              point.GetContainer()->GetParentNode()) &&
           (blockLevelAction ||
@@ -7250,9 +7256,9 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   //     This might be different from "block-extend" of execCommand spec.
   //     However, the spec is really unclear.
   // XXX Probably, scanning only editable nodes is wrong for
-  //     EditAction::makeBasicBlock because it might be better to wrap existing
-  //     inline elements even if it's non-editable.  For example, following
-  //     examples with insertParagraph causes different result:
+  //     EditSubAction::eCreateOrRemoveBlock because it might be better to wrap
+  //     existing inline elements even if it's non-editable.  For example,
+  //     following examples with insertParagraph causes different result:
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b></div>
   //     * <div contenteditable>foo[]<b>bar</b></div>
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b>baz</div>
@@ -7315,7 +7321,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
 
 void
 HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
-                                 EditAction inOperationType)
+                                 EditSubAction aEditSubAction)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -7330,7 +7336,7 @@ HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
     // Make a new adjusted range to represent the appropriate block content.
     // The basic idea is to push out the range endpoints to truly enclose the
     // blocks that we will affect.  This call alters opRange.
-    PromoteRange(*opRange, inOperationType);
+    PromoteRange(*opRange, aEditSubAction);
 
     // Stuff new opRange into array
     outArrayOfRanges.AppendElement(opRange);
@@ -7339,7 +7345,7 @@ HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
 
 void
 HTMLEditRules::PromoteRange(nsRange& aRange,
-                            EditAction aOperationType)
+                            EditSubAction aEditSubAction)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(!aRange.IsInSelection());
@@ -7378,10 +7384,10 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
     }
   }
 
-  if (aOperationType == EditAction::insertText ||
-      aOperationType == EditAction::insertIMEText ||
-      aOperationType == EditAction::insertBreak ||
-      aOperationType == EditAction::deleteText) {
+  if (aEditSubAction == EditSubAction::eInsertText ||
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+      aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
+      aEditSubAction == EditSubAction::eDeleteText) {
      if (!startNode->IsContent() ||
          !endNode->IsContent()) {
        // GetPromotedPoint cannot promote node when action type is text
@@ -7399,13 +7405,13 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   //     implement a method which checks both two DOM points in the editor
   //     root.
   EditorDOMPoint startPoint =
-    GetPromotedPoint(kStart, *startNode, startOffset, aOperationType);
+    GetPromotedPoint(kStart, *startNode, startOffset, aEditSubAction);
   if (!HTMLEditorRef().IsDescendantOfEditorRoot(
                          EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
     return;
   }
   EditorDOMPoint endPoint =
-    GetPromotedPoint(kEnd, *endNode, endOffset, aOperationType);
+    GetPromotedPoint(kEnd, *endNode, endOffset, aEditSubAction);
   EditorRawDOMPoint lastRawPoint(endPoint);
   lastRawPoint.RewindOffset();
   if (!HTMLEditorRef().IsDescendantOfEditorRoot(
@@ -7439,7 +7445,7 @@ nsresult
 HTMLEditRules::GetNodesForOperation(
                  nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
                  nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                 EditAction aOperationType,
+                 EditSubAction aEditSubAction,
                  TouchContent aTouchContent)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -7530,7 +7536,7 @@ HTMLEditRules::GetNodesForOperation(
 
   // Certain operations should not act on li's and td's, but rather inside
   // them.  Alter the list as needed.
-  if (aOperationType == EditAction::makeBasicBlock) {
+  if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsListItem(node)) {
@@ -7551,9 +7557,9 @@ HTMLEditRules::GetNodesForOperation(
   }
   // Indent/outdent already do something special for list items, but we still
   // need to make sure we don't act on table elements
-  else if (aOperationType == EditAction::outdent ||
-           aOperationType == EditAction::indent ||
-           aOperationType == EditAction::setAbsolutePosition) {
+  else if (aEditSubAction == EditSubAction::eOutdent ||
+           aEditSubAction == EditSubAction::eIndent ||
+           aEditSubAction == EditSubAction::eSetPositionToAbsolute) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsTableElementButNotTable(node)) {
@@ -7564,7 +7570,7 @@ HTMLEditRules::GetNodesForOperation(
     }
   }
   // Outdent should look inside of divs.
-  if (aOperationType == EditAction::outdent &&
+  if (aEditSubAction == EditSubAction::eOutdent &&
       !HTMLEditorRef().IsCSSEnabled()) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
@@ -7579,12 +7585,12 @@ HTMLEditRules::GetNodesForOperation(
 
   // Post-process the list to break up inline containers that contain br's, but
   // only for operations that might care, like making lists or paragraphs
-  if (aOperationType == EditAction::makeBasicBlock ||
-      aOperationType == EditAction::makeList ||
-      aOperationType == EditAction::align ||
-      aOperationType == EditAction::setAbsolutePosition ||
-      aOperationType == EditAction::indent ||
-      aOperationType == EditAction::outdent) {
+  if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
+      aEditSubAction == EditSubAction::eCreateOrChangeList ||
+      aEditSubAction == EditSubAction::eSetOrClearAlignment ||
+      aEditSubAction == EditSubAction::eSetPositionToAbsolute ||
+      aEditSubAction == EditSubAction::eIndent ||
+      aEditSubAction == EditSubAction::eOutdent) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       // XXX Why do we run this loop even when aTouchContent is "no"?
@@ -7650,7 +7656,7 @@ HTMLEditRules::GetListActionNodes(
     AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
 
     // contruct a list of nodes to act on.
-    nsresult rv = GetNodesFromSelection(EditAction::makeList,
+    nsresult rv = GetNodesFromSelection(EditSubAction::eCreateOrChangeList,
                                         aOutArrayOfNodes, aTouchContent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -7761,7 +7767,7 @@ HTMLEditRules::GetParagraphFormatNodes(
 
   // Contruct a list of nodes to act on.
   nsresult rv =
-   GetNodesFromSelection(EditAction::makeBasicBlock,
+   GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock,
                          outArrayOfNodes, TouchContent::no);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -7955,7 +7961,7 @@ HTMLEditRules::GetHighestInlineParent(nsINode& aNode)
 nsresult
 HTMLEditRules::GetNodesFromPoint(
                  const EditorDOMPoint& aPoint,
-                 EditAction aOperation,
+                 EditSubAction aEditSubAction,
                  nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                  TouchContent aTouchContent)
 {
@@ -7970,7 +7976,7 @@ HTMLEditRules::GetNodesFromPoint(
   MOZ_ASSERT(!ignoredError.Failed());
 
   // Expand the range to include adjacent inlines
-  PromoteRange(*range, aOperation);
+  PromoteRange(*range, aEditSubAction);
 
   // Make array of ranges
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
@@ -7980,7 +7986,7 @@ HTMLEditRules::GetNodesFromPoint(
 
   // Use these ranges to contruct a list of nodes to act on
   nsresult rv =
-    GetNodesForOperation(arrayOfRanges, outArrayOfNodes, aOperation,
+    GetNodesForOperation(arrayOfRanges, outArrayOfNodes, aEditSubAction,
                          aTouchContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -7991,7 +7997,7 @@ HTMLEditRules::GetNodesFromPoint(
 
 nsresult
 HTMLEditRules::GetNodesFromSelection(
-                 EditAction aOperation,
+                 EditSubAction aEditSubAction,
                  nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                  TouchContent aTouchContent)
 {
@@ -7999,11 +8005,11 @@ HTMLEditRules::GetNodesFromSelection(
 
   // Promote selection ranges
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, aOperation);
+  GetPromotedRanges(arrayOfRanges, aEditSubAction);
 
   // Use these ranges to contruct a list of nodes to act on.
   nsresult rv = GetNodesForOperation(arrayOfRanges, outArrayOfNodes,
-                                     aOperation, aTouchContent);
+                                     aEditSubAction, aTouchContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9464,7 +9470,7 @@ HTMLEditRules::ReapplyCachedStyles()
       }
       // This style has disappeared through deletion.  Let's add the styles to
       // mTypeInState when same style isn't applied to the node already.
-      if ((!bAny || IsStyleCachePreservingAction(mTheAction)) &&
+      if ((!bAny || IsStyleCachePreservingSubAction(mTopLevelEditSubAction)) &&
            (!styleAtInsertionPoint[i].mPresent ||
             styleAtInsertionPoint[i].value != mCachedStyles[i].value)) {
         HTMLEditorRef().mTypeInState->SetProp(mCachedStyles[i].tag,
@@ -11066,12 +11072,12 @@ HTMLEditRules::PrepareToMakeElementAbsolutePosition(
   // in the range.
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, EditAction::setAbsolutePosition);
+  GetPromotedRanges(arrayOfRanges, EditSubAction::eSetPositionToAbsolute);
 
   // Use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                                     EditAction::setAbsolutePosition,
+                                     EditSubAction::eSetPositionToAbsolute,
                                      TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

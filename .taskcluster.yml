@@ -121,8 +121,6 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the hash
-        # XXX Changing this will break Chain of Trust without an associated puppet and
-        # scriptworker patch!
         image: 'taskcluster/decision:2.1.0@sha256:6db3b697d7a3c7aba440d72f04199331b872111cefff57206b8b8b1d53230360'
 
         maxRunTime: 1800

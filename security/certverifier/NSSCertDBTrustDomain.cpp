@@ -21,8 +21,9 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsCRTGlue.h"
-#include "nsNSSCertificate.h"
+#include "nsNSSCertHelper.h"
 #include "nsNSSCertValidity.h"
+#include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nss.h"
@@ -1179,13 +1180,13 @@ DisableMD5()
 }
 
 bool
-LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
+LoadLoadableRoots(const nsCString& dir)
 {
   // If a module exists with the same name, make a best effort attempt to delete
   // it. Note that it isn't possible to delete the internal module, so checking
   // the return value would be detrimental in that case.
   int unusedModType;
-  Unused << SECMOD_DeleteModule(modNameUTF8.get(), &unusedModType);
+  Unused << SECMOD_DeleteModule(kRootModuleName, &unusedModType);
   // Some NSS command-line utilities will load a roots module under the name
   // "Root Certs" if there happens to be a `DLL_PREFIX "nssckbi" DLL_SUFFIX`
   // file in the directory being operated on. In some cases this can cause us to
@@ -1204,7 +1205,7 @@ LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
   fullLibraryPath.ReplaceSubstring("\"", "\\\"");
 
   nsAutoCString pkcs11ModuleSpec("name=\"");
-  pkcs11ModuleSpec.Append(modNameUTF8);
+  pkcs11ModuleSpec.Append(kRootModuleName);
   pkcs11ModuleSpec.AppendLiteral("\" library=\"");
   pkcs11ModuleSpec.Append(fullLibraryPath);
   pkcs11ModuleSpec.AppendLiteral("\"");
@@ -1224,10 +1225,9 @@ LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
 }
 
 void
-UnloadLoadableRoots(const char* modNameUTF8)
+UnloadLoadableRoots()
 {
-  MOZ_ASSERT(modNameUTF8);
-  UniqueSECMODModule rootsModule(SECMOD_FindModule(modNameUTF8));
+  UniqueSECMODModule rootsModule(SECMOD_FindModule(kRootModuleName));
 
   if (rootsModule) {
     SECMOD_UnloadUserModule(rootsModule.get());

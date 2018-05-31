@@ -23,7 +23,7 @@ class UpdateCurrentDictionaryCallback;
 namespace mozilla {
 class EditorSpellCheck;
 class TextEditor;
-enum class EditAction : int32_t;
+enum class EditSubAction : int32_t;
 
 namespace dom {
 class Event;
@@ -35,7 +35,7 @@ class mozInlineSpellStatus
 public:
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(mozilla::EditAction aAction,
+  nsresult InitForEditorChange(mozilla::EditSubAction aEditSubAction,
                                nsINode* aAnchorNode, uint32_t aAnchorOffset,
                                nsINode* aPreviousNode, uint32_t aPreviousOffset,
                                nsINode* aStartNode, uint32_t aStartOffset,
@@ -180,7 +180,7 @@ private:
 
   // Set to true when this instance needs to listen to edit actions of
   // the editor.
-  bool mIsListeningToEditActions;
+  bool mIsListeningToEditSubActions;
 
 public:
 
@@ -257,7 +257,7 @@ public:
   void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
   void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
 
-  nsresult SpellCheckAfterEditorChange(mozilla::EditAction aAction,
+  nsresult SpellCheckAfterEditorChange(mozilla::EditSubAction aEditSubAction,
                                        mozilla::dom::Selection& aSelection,
                                        nsINode* aPreviousSelectedNode,
                                        uint32_t aPreviousSelectedOffset,
@@ -279,8 +279,8 @@ protected:
                                    mozilla::TextEditor* aTextEditor = nullptr);
   void NotifyObservers(const char* aTopic, mozilla::TextEditor* aTextEditor);
 
-  void StartToListenToEditActions() { mIsListeningToEditActions = true; }
-  void EndListeningToEditActions() { mIsListeningToEditActions = false; }
+  void StartToListenToEditSubActions() { mIsListeningToEditSubActions = true; }
+  void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
 };
 
 #endif // #ifndef mozilla_mozInlineSpellChecker_h

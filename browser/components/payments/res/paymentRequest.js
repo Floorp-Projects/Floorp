@@ -116,6 +116,9 @@ var paymentRequest = {
     log.debug("onShowPaymentRequest, isPrivate?", detail.isPrivate);
 
     let paymentDialog = document.querySelector("payment-dialog");
+    let hasSavedAddresses = Object.keys(detail.savedAddresses).length != 0;
+    let hasSavedCards = Object.keys(detail.savedBasicCards).length != 0;
+    let shippingRequested = detail.request.paymentOptions.requestShipping;
     let state = {
       request: detail.request,
       savedAddresses: detail.savedAddresses,
@@ -127,19 +130,29 @@ var paymentRequest = {
     };
 
     // Onboarding wizard flow.
-    if (Object.keys(detail.savedAddresses).length == 0) {
+    if (!hasSavedAddresses && (shippingRequested || !hasSavedCards)) {
       state.page = {
         id: "address-page",
         onboardingWizard: true,
       };
 
       state["address-page"] = {
-        selectedStateKey: "selectedShippingAddress",
         addressFields: null,
         guid: null,
-        title: paymentDialog.dataset.shippingAddressTitleAdd,
       };
-    } else if (Object.keys(detail.savedBasicCards).length == 0) {
+
+      if (shippingRequested) {
+        Object.assign(state["address-page"], {
+          title: paymentDialog.dataset.shippingAddressTitleAdd,
+        });
+        state.page.selectedStateKey = ["selectedShippingAddress"];
+      } else {
+        Object.assign(state["address-page"], {
+          title: paymentDialog.dataset.billingAddressTitleAdd,
+        });
+        state.page.selectedStateKey = ["basic-card-page", "billingAddressGUID"];
+      }
+    } else if (!hasSavedCards) {
       state.page = {
         id: "basic-card-page",
         onboardingWizard: true,

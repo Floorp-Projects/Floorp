@@ -407,7 +407,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
         {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
-          HitTestingTreeNode* node = PrepareNodeForLayer(aLayerMetrics,
+          HitTestingTreeNode* node = PrepareNodeForLayer(lock, aLayerMetrics,
                 aLayerMetrics.Metrics(), layersId, ancestorTransforms.top(),
                 parent, next, state);
           MOZ_ASSERT(node);
@@ -724,7 +724,8 @@ GetEventRegions(const ScrollNode& aLayer)
 
 
 already_AddRefed<HitTestingTreeNode>
-APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
+APZCTreeManager::RecycleOrCreateNode(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                     TreeBuildingState& aState,
                                      AsyncPanZoomController* aApzc,
                                      LayersId aLayersId)
 {
@@ -733,9 +734,9 @@ APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
   // first iteration, so it should be cheap in the common case.
   for (int32_t i = aState.mNodesToDestroy.Length() - 1; i >= 0; i--) {
     RefPtr<HitTestingTreeNode> node = aState.mNodesToDestroy[i];
-    if (!node->IsPrimaryHolder()) {
+    if (node->IsRecyclable(aProofOfTreeLock)) {
       aState.mNodesToDestroy.RemoveElementAt(i);
-      node->RecycleWith(aApzc, aLayersId);
+      node->RecycleWith(aProofOfTreeLock, aApzc, aLayersId);
       return node.forget();
     }
   }
@@ -829,7 +830,8 @@ APZCTreeManager::NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) cons
 }
 
 template<class ScrollNode> HitTestingTreeNode*
-APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
+APZCTreeManager::PrepareNodeForLayer(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                     const ScrollNode& aLayer,
                                      const FrameMetrics& aMetrics,
                                      LayersId aLayersId,
                                      const AncestorTransform& aAncestorTransform,
@@ -837,8 +839,6 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
                                      HitTestingTreeNode* aNextSibling,
                                      TreeBuildingState& aState)
 {
-  mTreeLock.AssertCurrentThreadIn();
-
   bool needsApzc = true;
   if (!aMetrics.IsScrollable()) {
     needsApzc = false;
@@ -866,7 +866,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // Note: if layer properties must be propagated to nodes, RecvUpdate in
     // LayerTransactionParent.cpp must ensure that APZ will be notified
     // when those properties change.
-    node = RecycleOrCreateNode(aState, nullptr, aLayersId);
+    node = RecycleOrCreateNode(aProofOfTreeLock, aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(
         GetEventRegions(aLayer),
@@ -1046,7 +1046,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // now that will also be using that APZC. The hit-test region on the APZC needs
     // to be updated to deal with the new layer's hit region.
 
-    node = RecycleOrCreateNode(aState, apzc, aLayersId);
+    node = RecycleOrCreateNode(aProofOfTreeLock, aState, apzc, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
 
     // Even though different layers associated with a given APZC may be at
@@ -1186,10 +1186,10 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         FlushRepaintsToClearScreenToGeckoTransform();
       }
 
-      RefPtr<HitTestingTreeNode> hitScrollbarNode = nullptr;
+      HitTestingTreeNodeAutoLock hitScrollbarNode;
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(mouseInput.mOrigin,
             &hitResult, &hitScrollbarNode);
-      bool hitScrollbar = hitScrollbarNode;
+      bool hitScrollbar = (bool)hitScrollbarNode;
 
       // When the mouse is outside the window we still want to handle dragging
       // but we won't find an APZC. Fallback to root APZC then.
@@ -1225,7 +1225,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         if (apzDragEnabled && startsDrag && hitScrollbarNode &&
             hitScrollbarNode->IsScrollThumbNode() &&
             hitScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable) {
-          SetupScrollbarDrag(mouseInput, hitScrollbarNode.get(), apzc.get());
+          SetupScrollbarDrag(mouseInput, hitScrollbarNode, apzc.get());
         }
 
         if (result == nsEventStatus_eConsumeDoDefault) {
@@ -1549,7 +1549,7 @@ already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
                                         nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors,
                                         CompositorHitTestInfo* aOutHitResult,
-                                        RefPtr<HitTestingTreeNode>* aOutHitScrollbarNode)
+                                        HitTestingTreeNodeAutoLock* aOutHitScrollbarNode)
 {
   RefPtr<AsyncPanZoomController> apzc;
   if (aEvent.mTouches.Length() == 0) {
@@ -1573,7 +1573,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
     // A multi-touch gesture will not be a scrollbar drag, even if the
     // first touch point happened to hit a scrollbar.
-    *aOutHitScrollbarNode = nullptr;
+    aOutHitScrollbarNode->Clear();
   }
 
   if (aOutHitResult) {
@@ -1591,7 +1591,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
 {
   aInput.mHandledByAPZ = true;
   nsTArray<TouchBehaviorFlags> touchBehaviors;
-  RefPtr<HitTestingTreeNode> hitScrollbarNode = nullptr;
+  HitTestingTreeNodeAutoLock hitScrollbarNode;
   if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
     // If we are panned into overscroll and a second finger goes down,
     // ignore that second touch point completely. The touch-start for it is
@@ -1638,7 +1638,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
   nsEventStatus result = nsEventStatus_eIgnore;
 
   if (mInScrollbarTouchDrag) {
-    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode.get(),
+    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode,
         aOutTargetGuid, aOutInputBlockId);
   } else {
     // If we receive a touch-cancel, it means all touches are finished, so we
@@ -1734,7 +1734,7 @@ MultiTouchTypeToMouseType(MultiTouchInput::MultiTouchType aType)
 
 nsEventStatus
 APZCTreeManager::ProcessTouchInputForScrollbarDrag(MultiTouchInput& aTouchInput,
-                                                   const HitTestingTreeNode* aScrollThumbNode,
+                                                   const HitTestingTreeNodeAutoLock& aScrollThumbNode,
                                                    ScrollableLayerGuid* aOutTargetGuid,
                                                    uint64_t* aOutInputBlockId)
 {
@@ -1786,7 +1786,7 @@ APZCTreeManager::ProcessTouchInputForScrollbarDrag(MultiTouchInput& aTouchInput,
 
 void
 APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
-                                    const HitTestingTreeNode* aScrollThumbNode,
+                                    const HitTestingTreeNodeAutoLock& aScrollThumbNode,
                                     AsyncPanZoomController* aApzc)
 {
   DragBlockState* dragBlock = mInputQueue->GetCurrentDragBlock();
@@ -1824,7 +1824,7 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
     LayerToParentLayerMatrix4x4 thumbTransform;
     {
       RecursiveMutexAutoLock lock(mTreeLock);
-      thumbTransform = ComputeTransformForNode(aScrollThumbNode);
+      thumbTransform = ComputeTransformForNode(aScrollThumbNode.Get(lock));
     }
     // Only consider the translation, since we do not support both
     // zooming and scrollbar dragging on any platform.
@@ -2462,7 +2462,7 @@ APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
                                CompositorHitTestInfo* aOutHitResult,
-                               RefPtr<HitTestingTreeNode>* aOutScrollbarNode)
+                               HitTestingTreeNodeAutoLock* aOutScrollbarNode)
 {
   RecursiveMutexAutoLock lock(mTreeLock);
 
@@ -2478,8 +2478,9 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
   if (aOutHitResult) {
     *aOutHitResult = hitResult;
   }
-  if (aOutScrollbarNode) {
-    *aOutScrollbarNode = scrollbarNode;
+  if (aOutScrollbarNode && scrollbarNode) {
+    RefPtr<HitTestingTreeNode> scrollbarRef = scrollbarNode;
+    aOutScrollbarNode->Initialize(lock, scrollbarRef.forget(), mTreeLock);
   }
   return target.forget();
 }

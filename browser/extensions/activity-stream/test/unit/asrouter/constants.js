@@ -25,7 +25,8 @@ export class FakeRemotePageManager {
     this.browser = {
       ownerGlobal: {
         openTrustedLinkIn: sinon.stub(),
-        openLinkIn: sinon.stub()
+        openLinkIn: sinon.stub(),
+        OpenBrowserWindow: sinon.stub()
       }
     };
   }
