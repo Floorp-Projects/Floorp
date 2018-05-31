@@ -26,15 +26,8 @@ export default class CurrencyAmount extends ObservedPropertiesMixin(HTMLElement)
     this._currencyCodeElement.classList.add("currency-code");
   }
 
-  connectedCallback() {
-    if (super.connectedCallback) {
-      super.connectedCallback();
-    }
-
-    this.append(this._currencyAmountTextNode, this._currencyCodeElement);
-  }
-
   render() {
+    this.append(this._currencyAmountTextNode, this._currencyCodeElement);
     let currencyAmount = "";
     let currencyCode = "";
     try {

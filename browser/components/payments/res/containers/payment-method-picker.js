@@ -18,6 +18,7 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
     super();
     this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
+    this.dropdown.setAttribute("option-type", "basic-card-option");
     this.spacerText = document.createTextNode(" ");
     this.securityCodeInput = document.createElement("input");
     this.securityCodeInput.autocomplete = "off";
@@ -51,9 +52,10 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
     for (let [guid, basicCard] of Object.entries(basicCards)) {
       let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
-        optionEl = new BasicCardOption();
+        optionEl = document.createElement("option");
         optionEl.value = guid;
       }
+
       for (let key of BasicCardOption.recordAttributes) {
         let val = basicCard[key];
         if (val) {
@@ -62,24 +64,23 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
           optionEl.removeAttribute(key);
         }
       }
+
+      optionEl.textContent = BasicCardOption.formatSingleLineLabel(basicCard);
       desiredOptions.push(optionEl);
     }
-    let el = null;
-    while ((el = this.dropdown.popupBox.querySelector(":scope > basic-card-option"))) {
-      el.remove();
-    }
+
+    this.dropdown.popupBox.textContent = "";
     for (let option of desiredOptions) {
       this.dropdown.popupBox.appendChild(option);
     }
 
     // Update selectedness after the options are updated
     let selectedPaymentCardGUID = state[this.selectedStateKey];
-    let optionWithGUID = this.dropdown.getOptionByValue(selectedPaymentCardGUID);
-    this.dropdown.selectedOption = optionWithGUID;
+    this.dropdown.value = selectedPaymentCardGUID;
 
-    if (selectedPaymentCardGUID && !optionWithGUID) {
-      throw new Error(`${this.selectedStateKey} option ${selectedPaymentCardGUID}` +
-                      `does not exist in options`);
+    if (selectedPaymentCardGUID && selectedPaymentCardGUID !== this.dropdown.value) {
+      throw new Error(`The option ${selectedPaymentCardGUID} ` +
+                      `does not exist in the payment method picker`);
     }
   }
 
@@ -109,11 +110,8 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
     }
 
     switch (target) {
-      case this.dropdown: {
-        stateChange[selectedKey] = target.selectedOption && target.selectedOption.guid;
-        // Select the security code text since the user is likely to edit it next.
-        // We don't want to do this if the user simply blurs the dropdown.
-        this.securityCodeInput.select();
+      case this.dropdown.popupBox: {
+        stateChange[selectedKey] = this.dropdown.value;
         break;
       }
       case this.securityCodeInput: {

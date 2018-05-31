@@ -22,6 +22,7 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
     super();
     this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
+    this.dropdown.setAttribute("option-type", "address-option");
     this.addLink = document.createElement("a");
     this.addLink.className = "add-link";
     this.addLink.href = "javascript:void(0)";
@@ -99,11 +100,10 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
       }
     }
     let filteredAddresses = this.filterAddresses(addresses, fieldNames);
-
     for (let [guid, address] of Object.entries(filteredAddresses)) {
       let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
-        optionEl = new AddressOption();
+        optionEl = document.createElement("option");
         optionEl.value = guid;
       }
 
@@ -116,25 +116,22 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
         }
       }
 
+      optionEl.textContent = AddressOption.formatSingleLineLabel(address);
       desiredOptions.push(optionEl);
     }
 
-    let el = null;
-    while ((el = this.dropdown.popupBox.querySelector(":scope > address-option"))) {
-      el.remove();
-    }
+    this.dropdown.popupBox.textContent = "";
     for (let option of desiredOptions) {
       this.dropdown.popupBox.appendChild(option);
     }
 
     // Update selectedness after the options are updated
     let selectedAddressGUID = state[this.selectedStateKey];
-    let optionWithGUID = this.dropdown.getOptionByValue(selectedAddressGUID);
-    this.dropdown.selectedOption = optionWithGUID;
+    this.dropdown.value = selectedAddressGUID;
 
-    if (selectedAddressGUID && !optionWithGUID) {
+    if (selectedAddressGUID && selectedAddressGUID !== this.dropdown.value) {
       throw new Error(`${this.selectedStateKey} option ${selectedAddressGUID}` +
-                      `does not exist in options`);
+                      `does not exist in the address picker`);
     }
   }
 
@@ -155,11 +152,10 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   onChange(event) {
-    let select = event.target;
     let selectedKey = this.selectedStateKey;
     if (selectedKey) {
       this.requestStore.setState({
-        [selectedKey]: select.selectedOption && select.selectedOption.guid,
+        [selectedKey]: this.dropdown.value,
       });
     }
   }

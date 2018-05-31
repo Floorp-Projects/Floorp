@@ -13,12 +13,16 @@ import RichOption from "./rich-option.js";
  */
 
 export default class ShippingOption extends ObservedPropertiesMixin(RichOption) {
-  static get observedAttributes() {
-    return RichOption.observedAttributes.concat([
+  static get recordAttributes() {
+    return [
       "label",
       "amount-currency",
       "amount-value",
-    ]);
+    ];
+  }
+
+  static get observedAttributes() {
+    return RichOption.observedAttributes.concat(ShippingOption.recordAttributes);
   }
 
   constructor() {
@@ -36,6 +40,15 @@ export default class ShippingOption extends ObservedPropertiesMixin(RichOption) 
     this.append(" ");
     this.appendChild(this._label);
     super.connectedCallback();
+  }
+
+  static formatSingleLineLabel(option) {
+    let amount = new CurrencyAmount();
+    amount.value = option.amount.value;
+    amount.currency = option.amount.currency;
+    amount.render();
+
+    return amount.textContent + " " + option.label;
   }
 
   render() {
