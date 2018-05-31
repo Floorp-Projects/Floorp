@@ -14,10 +14,6 @@ config = {
         "--certutil-binary=%(test_install_path)s/bin/certutil",
     ],
 
-    "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
-    ],
-
     "download_minidump_stackwalk": True,
 
     # this would normally be in "exes", but "exes" is clobbered by remove_executables

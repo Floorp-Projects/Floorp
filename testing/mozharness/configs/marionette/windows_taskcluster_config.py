@@ -20,9 +20,6 @@ config = {
         'install',
         'run-tests',
     ],
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
     "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
     "suite_definitions": {
