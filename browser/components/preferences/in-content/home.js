@@ -372,5 +372,8 @@ let gHomePane = {
       makeDisableControllingExtension(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY));
     document.getElementById("disableNewTabExtension").addEventListener("command",
       makeDisableControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY));
+
+    // Notify observers that the UI is now ready
+    Services.obs.notifyObservers(window, "home-pane-loaded");
   }
 };
