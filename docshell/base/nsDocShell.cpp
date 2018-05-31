@@ -225,6 +225,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::net;
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -683,7 +684,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
   bool inheritPrincipal = false;
   bool principalIsExplicit = false;
   bool sendReferrer = true;
-  uint32_t referrerPolicy = mozilla::net::RP_Unset;
+  uint32_t referrerPolicy = RP_Unset;
   bool isSrcdoc = false;
   nsCOMPtr<nsISHEntry> shEntry;
   nsString target;
@@ -4223,7 +4224,7 @@ nsDocShell::LoadURI(const char16_t* aURI,
                     nsIPrincipal* aTriggeringPrincipal)
 {
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
-                            mozilla::net::RP_Unset, aPostStream,
+                            RP_Unset, aPostStream,
                             aHeaderStream, nullptr, aTriggeringPrincipal);
 }
 
@@ -4919,8 +4920,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
   nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InternalLoad(errorPageURI, nullptr, Nothing(), false, nullptr,
-                      mozilla::net::RP_Unset,
+  return InternalLoad(errorPageURI, nullptr, Nothing(), false, nullptr, RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
                       nullptr, VoidString(), nullptr, nullptr,
@@ -7472,8 +7472,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo) {
-      mozilla::net::PredictorLearnRedirect(url, aChannel,
-                                           loadInfo->GetOriginAttributes());
+      PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
     }
   }
 
@@ -10202,10 +10201,10 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   OriginAttributes attrs = GetOriginAttributes();
   attrs.SetFirstPartyDomain(isTopLevelDoc, aURI);
 
-  net::PredictorLearn(aURI, nullptr,
-                      nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, attrs);
-  net::PredictorPredict(aURI, nullptr,
-                        nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
+  PredictorLearn(aURI, nullptr,
+                 nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, attrs);
+  PredictorPredict(aURI, nullptr,
+                   nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace,
@@ -10642,7 +10641,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                                        getter_AddRefs(resultPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
       if (IsConsideredSameOriginForUIR(aTriggeringPrincipal, resultPrincipal)) {
-        static_cast<mozilla::LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
+        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
       }
     }
   }
@@ -11973,7 +11972,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   nsCOMPtr<nsIURI> resultPrincipalURI;
   bool loadReplace = false;
   nsCOMPtr<nsIURI> referrerURI;
-  uint32_t referrerPolicy = mozilla::net::RP_Unset;
+  uint32_t referrerPolicy = RP_Unset;
   uint32_t cacheKey = 0;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
@@ -13517,8 +13516,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   // if per element referrer is enabled, the element referrer overrules
   // the document wide referrer
   if (IsElementAnchorOrArea(aContent)) {
-    net::ReferrerPolicy refPolEnum = aContent->AsElement()->GetReferrerPolicyAsEnum();
-    if (refPolEnum != net::RP_Unset) {
+    net::ReferrerPolicy refPolEnum =
+      aContent->AsElement()->GetReferrerPolicyAsEnum();
+    if (refPolEnum != RP_Unset) {
       refererPolicy = refPolEnum;
     }
   }
@@ -13618,10 +13618,10 @@ nsDocShell::OnOverLink(nsIContent* aContent,
 
   NS_ConvertUTF8toUTF16 uStr(spec);
 
-  mozilla::net::PredictorPredict(aURI, mCurrentURI,
-                                 nsINetworkPredictor::PREDICT_LINK,
-                                 aContent->NodePrincipal()->OriginAttributesRef(),
-                                 nullptr);
+  PredictorPredict(aURI, mCurrentURI,
+                   nsINetworkPredictor::PREDICT_LINK,
+                   aContent->NodePrincipal()->OriginAttributesRef(),
+                   nullptr);
 
   if (browserChrome2) {
     rv = browserChrome2->SetStatusWithContext(nsIWebBrowserChrome::STATUS_LINK,

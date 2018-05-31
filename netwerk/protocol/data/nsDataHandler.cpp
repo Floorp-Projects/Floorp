@@ -87,7 +87,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
             }
         }
 
-        rv = NS_MutateURI(new nsSimpleURI::Mutator())
+        rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
                .SetSpec(spec)
                .Finalize(uri);
     }

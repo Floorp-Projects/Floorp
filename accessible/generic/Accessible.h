@@ -168,8 +168,8 @@ public:
   virtual nsINode* GetNode() const;
 
   nsIContent* GetContent() const { return mContent; }
-  mozilla::dom::Element* Elm() const
-    { return mContent && mContent->IsElement() ? mContent->AsElement() : nullptr; }
+  dom::Element* Elm() const
+    { return dom::Element::FromNodeOrNull(mContent); }
 
   /**
    * Return node type information of DOM node associated with the accessible.

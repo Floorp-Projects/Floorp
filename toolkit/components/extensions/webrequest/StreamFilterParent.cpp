@@ -137,7 +137,7 @@ StreamFilterParent::Create(dom::ContentParent* aContentParent, uint64_t aChannel
   RefPtr<nsAtom> addonId = NS_Atomize(aAddonId);
   nsCOMPtr<nsITraceableChannel> channel = webreq.GetTraceableChannel(aChannelId, addonId, aContentParent);
 
-  RefPtr<nsHttpChannel> chan = do_QueryObject(channel);
+  RefPtr<mozilla::net::nsHttpChannel> chan = do_QueryObject(channel);
   NS_ENSURE_TRUE(chan, false);
 
   auto channelPid = chan->ProcessId();
@@ -693,7 +693,7 @@ StreamFilterParent::FlushBufferedData()
 nsIEventTarget*
 StreamFilterParent::ActorThread()
 {
-  return gSocketTransportService;
+  return net::gSocketTransportService;
 }
 
 bool

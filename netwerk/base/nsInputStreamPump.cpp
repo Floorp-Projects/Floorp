@@ -112,7 +112,7 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
   PeekData data(callback, closure);
   return mAsyncStream->ReadSegments(CallPeekFunc,
                                     &data,
-                                    nsIOService::gDefaultSegmentSize,
+                                    net::nsIOService::gDefaultSegmentSize,
                                     &dummy);
 }
 

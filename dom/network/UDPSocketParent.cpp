@@ -20,6 +20,9 @@
 #include "mtransport/runnable_utils.h"
 
 namespace mozilla {
+
+using namespace net;
+
 namespace dom {
 
 NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)

@@ -405,7 +405,7 @@ NS_IMETHODIMP nsExtProtocolChannel::CompleteRedirectSetup(nsIStreamListener *lis
 // From nsIParentChannel (derives from nsIStreamListener)
 //////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsExtProtocolChannel::SetParentListener(HttpChannelParentListener* aListener)
+NS_IMETHODIMP nsExtProtocolChannel::SetParentListener(mozilla::net::HttpChannelParentListener* aListener)
 {
   // This is called as part of the connect parent operation from
   // ContentParent::RecvExtProtocolChannelConnectParent.  Setting

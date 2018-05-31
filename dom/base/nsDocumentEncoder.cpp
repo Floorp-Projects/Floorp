@@ -373,11 +373,8 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
         nsLayoutUtils::IsInvisibleBreak(node)) {
       return NS_OK;
     }
-    Element* originalElement =
-      aOriginalNode && aOriginalNode->IsElement() ?
-        aOriginalNode->AsElement() : nullptr;
-    mSerializer->AppendElementStart(node->AsElement(),
-                                    originalElement, aStr);
+    Element* originalElement = Element::FromNodeOrNull(aOriginalNode);
+    mSerializer->AppendElementStart(node->AsElement(), originalElement, aStr);
     return NS_OK;
   }
 

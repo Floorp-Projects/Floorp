@@ -647,6 +647,25 @@ FrameIter::popActivation()
     settleOnActivation();
 }
 
+bool
+FrameIter::principalsSubsumeFrame() const
+{
+    // If the caller supplied principals, only show frames which are
+    // subsumed (of the same origin or of an origin accessible) by these
+    // principals.
+
+    MOZ_ASSERT(!done());
+
+    if (!data_.principals_)
+        return true;
+
+    JSSubsumesOp subsumes = data_.cx_->runtime()->securityCallbacks->subsumes;
+    if (!subsumes)
+        return true;
+
+    return subsumes(data_.principals_, realm()->principals());
+}
+
 void
 FrameIter::popInterpreterFrame()
 {
@@ -672,20 +691,6 @@ FrameIter::settleOnActivation()
         }
 
         Activation* activation = data_.activations_.activation();
-
-        // If the caller supplied principals, only show activations which are
-        // subsumed (of the same origin or of an origin accessible) by these
-        // principals.
-        if (data_.principals_) {
-            JSContext* cx = data_.cx_;
-            if (JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes) {
-                JS::Realm* realm = JS::GetRealmForCompartment(activation->compartment());
-                if (!subsumes(data_.principals_, realm->principals())) {
-                    ++data_.activations_;
-                    continue;
-                }
-            }
-        }
 
         if (activation->isJit()) {
             data_.jitFrames_ = JitFrameIter(activation->asJit());
@@ -757,6 +762,9 @@ FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
     // settleOnActivation can only GC if principals are given.
     JS::AutoSuppressGCAnalysis nogc;
     settleOnActivation();
+
+    // No principals so we can see all frames.
+    MOZ_ASSERT_IF(!done(), principalsSubsumeFrame());
 }
 
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
@@ -765,6 +773,11 @@ FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
     ionInlineFrames_(cx, (js::jit::JSJitFrameIter*) nullptr)
 {
     settleOnActivation();
+
+    // If we're not allowed to see this frame, call operator++ to skip this (and
+    // other) cross-origin frames.
+    if (!done() && !principalsSubsumeFrame())
+        ++*this;
 }
 
 FrameIter::FrameIter(const FrameIter& other)
@@ -830,32 +843,38 @@ FrameIter::popJitFrame()
 FrameIter&
 FrameIter::operator++()
 {
-    switch (data_.state_) {
-      case DONE:
-        MOZ_CRASH("Unexpected state");
-      case INTERP:
-        if (interpFrame()->isDebuggerEvalFrame() &&
-            data_.debuggerEvalOption_ == FOLLOW_DEBUGGER_EVAL_PREV_LINK)
-        {
-            AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
+    while (true) {
+        switch (data_.state_) {
+          case DONE:
+            MOZ_CRASH("Unexpected state");
+          case INTERP:
+            if (interpFrame()->isDebuggerEvalFrame() &&
+                data_.debuggerEvalOption_ == FOLLOW_DEBUGGER_EVAL_PREV_LINK)
+            {
+                AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
 
-            popInterpreterFrame();
+                popInterpreterFrame();
 
-            while (!hasUsableAbstractFramePtr() || abstractFramePtr() != eifPrev) {
-                if (data_.state_ == JIT)
-                    popJitFrame();
-                else
-                    popInterpreterFrame();
+                while (!hasUsableAbstractFramePtr() || abstractFramePtr() != eifPrev) {
+                    if (data_.state_ == JIT)
+                        popJitFrame();
+                    else
+                        popInterpreterFrame();
+                }
+
+                break;
             }
-
+            popInterpreterFrame();
+            break;
+          case JIT:
+            popJitFrame();
             break;
         }
-        popInterpreterFrame();
-        break;
-      case JIT:
-        popJitFrame();
-        break;
+
+        if (done() || principalsSubsumeFrame())
+            break;
     }
+
     return *this;
 }
 

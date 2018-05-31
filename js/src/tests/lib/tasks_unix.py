@@ -178,7 +178,8 @@ def reap_zombies(tasks, timeout):
                 ''.join(ended.err),
                 returncode,
                 (datetime.now() - ended.start).total_seconds(),
-                timed_out(ended, timeout)))
+                timed_out(ended, timeout),
+                {'pid': ended.pid}))
     return tasks, finished
 
 def kill_undead(tasks, timeout):
@@ -228,4 +229,3 @@ def run_all_tests(tests, prefix, pb, options):
         # the test harness is at least not frozen.
         if len(finished) == 0:
             pb.poke()
-
