@@ -484,7 +484,7 @@ public:
     MOZ_ASSERT(listeners);
     for (const auto& listener : *listeners) {
       maxInputChannels =
-        std::max(maxInputChannels, listener->InputChannelCount());
+        std::max(maxInputChannels, listener->RequestedInputChannelCount(this));
     }
     return maxInputChannels;
   }
