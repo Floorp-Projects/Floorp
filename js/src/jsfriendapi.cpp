@@ -251,7 +251,7 @@ DefineHelpProperty(JSContext* cx, HandleObject obj, const char* prop, const char
 JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpecWithHelp* fs)
 {
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -357,12 +357,6 @@ js::IsSystemZone(Zone* zone)
 }
 
 JS_FRIEND_API(bool)
-js::IsAtomsRealm(JS::Realm* realm)
-{
-    return realm->isAtomsRealm();
-}
-
-JS_FRIEND_API(bool)
 js::IsAtomsZone(JS::Zone* zone)
 {
     return zone->runtimeFromAnyThread()->isAtomsZone(zone);
@@ -438,7 +432,7 @@ js::DefineFunctionWithReserved(JSContext* cx, JSObject* objArg, const char* name
                                unsigned nargs, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom* atom = Atomize(cx, name, strlen(name));
@@ -452,7 +446,7 @@ JS_FRIEND_API(JSFunction*)
 js::NewFunctionWithReserved(JSContext* cx, JSNative native, unsigned nargs, unsigned flags,
                             const char* name)
 {
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     CHECK_REQUEST(cx);
 
@@ -473,7 +467,7 @@ js::NewFunctionByIdWithReserved(JSContext* cx, JSNative native, unsigned nargs, 
                                 jsid id)
 {
     MOZ_ASSERT(JSID_IS_STRING(id));
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, id);
 
@@ -1280,6 +1274,9 @@ JS::NotifyGCRootsRemoved(JSContext* cx)
 JS_FRIEND_API(JS::Realm*)
 js::GetAnyRealmInZone(JS::Zone* zone)
 {
+    if (zone->isAtomsZone())
+        return nullptr;
+
     RealmsInZoneIter realm(zone);
     MOZ_ASSERT(!realm.done());
     return realm.get();

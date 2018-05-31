@@ -157,8 +157,8 @@ struct Imm64
 static inline bool
 IsCompilingWasm()
 {
-    // wasm compilation pushes a JitContext with a null Realm.
-    return GetJitContext()->realm == nullptr;
+    // wasm compilation pushes a JitContext with a null Zone.
+    return GetJitContext()->zone == nullptr;
 }
 #endif
 

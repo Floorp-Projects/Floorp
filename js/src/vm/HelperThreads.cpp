@@ -347,7 +347,7 @@ js::HasOffThreadIonCompile(Realm* realm)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads || realm->isAtomsRealm())
+    if (!HelperThreadState().threads)
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
