@@ -18,6 +18,7 @@ import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
+import org.mozilla.geckoview.BuildConfig;
 
 import java.util.Map;
 
@@ -51,7 +52,10 @@ public class LocalizedContent {
 
         String aboutVersion = "";
         try {
-            final String engineIndicator = AppConstants.isGeckoBuild() ? " \uD83E\uDD8E" : "";
+            final String engineIndicator = AppConstants.isGeckoBuild() ? " \uD83E\uDD8E " +
+                    "Version: " + BuildConfig.MOZ_APP_VERSION +
+                    " Build ID: " + BuildConfig.MOZ_APP_BUILDID
+                    : "";
             final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode + engineIndicator);
         } catch (PackageManager.NameNotFoundException e) {
