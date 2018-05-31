@@ -356,6 +356,8 @@ class BaseToolchainTest(BaseConfigureTest):
             environ['PATH'] = os.pathsep.join(
                 mozpath.abspath(p) for p in ('/bin', '/usr/bin'))
 
+        args = args + ['--enable-release']
+
         sandbox = self.get_sandbox(paths, {}, args, environ,
                                    logger=self.logger)
 

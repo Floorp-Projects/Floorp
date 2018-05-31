@@ -4,6 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+imply_option('--enable-release', mozilla_official)
+imply_option('--enable-release', depends_if('MOZ_AUTOMATION')(lambda x: True))
+
+js_option('--enable-release',
+          help='Build with more conservative, release engineering-oriented '
+               'options. This may slow down builds.')
+
+
+@depends('--enable-release')
+def developer_options(value):
+    if not value:
+        return True
+
+
+add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
+set_config('DEVELOPER_OPTIONS', developer_options)
+
 # PGO
 # ==============================================================
 js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
@@ -647,8 +664,10 @@ def default_c_compilers(host_or_target):
     '''
     assert host_or_target in (host, target)
 
-    @depends(host_or_target, target, toolchain_prefix, android_clang_compiler)
-    def default_c_compilers(host_or_target, target, toolchain_prefix, android_clang_compiler):
+    @depends(host_or_target, target, toolchain_prefix, android_clang_compiler,
+             developer_options)
+    def default_c_compilers(host_or_target, target, toolchain_prefix,
+                            android_clang_compiler, developer_options):
         gcc = ('gcc',)
         if toolchain_prefix and host_or_target is target:
             gcc = tuple('%sgcc' % p for p in toolchain_prefix) + gcc
@@ -656,12 +675,14 @@ def default_c_compilers(host_or_target):
         # we want the latter to take precedence, because the latter can
         # point at clang, which is what we want to use.
         if android_clang_compiler and host_or_target is target:
-            gcc = (android_clang_compiler,) + gcc
+            return (android_clang_compiler,) + gcc
 
         if host_or_target.kernel == 'WINNT':
             return ('cl', 'clang-cl') + gcc + ('clang',)
         if host_or_target.kernel == 'Darwin':
             return ('clang',)
+        if developer_options:
+            return ('clang',) + gcc
         return gcc + ('clang',)
 
     return default_c_compilers
@@ -1362,23 +1383,6 @@ option(env='RUSTFLAGS',
        help='Rust compiler flags')
 set_config('RUSTFLAGS', depends('RUSTFLAGS')(lambda flags: flags))
 
-
-imply_option('--enable-release', mozilla_official)
-imply_option('--enable-release', depends_if('MOZ_AUTOMATION')(lambda x: True))
-
-js_option('--enable-release',
-          help='Build with more conservative, release engineering-oriented '
-               'options. This may slow down builds.')
-
-
-@depends('--enable-release')
-def developer_options(value):
-    if not value:
-        return True
-
-
-add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
-set_config('DEVELOPER_OPTIONS', developer_options)
 
 # Rust compiler flags
 # ==============================================================
