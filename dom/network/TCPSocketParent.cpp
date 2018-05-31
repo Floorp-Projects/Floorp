@@ -41,6 +41,8 @@ extern LazyLogModule gTCPSocketLog;
 #define TCPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gTCPSocketLog, LogLevel::Debug)
 } // namespace net
 
+using namespace net;
+
 namespace dom {
 
 static void

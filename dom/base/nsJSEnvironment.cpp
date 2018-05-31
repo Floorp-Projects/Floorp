@@ -1224,7 +1224,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
   if (aIncremental == IncrementalGC) {
     JS::StartIncrementalGC(cx, gckind, aReason, aSliceMillis);
   } else {
-    JS::GCForReason(cx, gckind, aReason);
+    JS::NonIncrementalGC(cx, gckind, aReason);
   }
 }
 

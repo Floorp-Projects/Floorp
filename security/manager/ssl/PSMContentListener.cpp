@@ -271,7 +271,7 @@ PSMContentDownloaderParent::RecvDivertToParentUsing(mozilla::net::PChannelDivert
   MOZ_ASSERT(diverter);
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
-  mozilla::Unused << ChannelDiverterParent::Send__delete__(p);
+  mozilla::Unused << mozilla::net::ChannelDiverterParent::Send__delete__(p);
   return IPC_OK();
 }
 

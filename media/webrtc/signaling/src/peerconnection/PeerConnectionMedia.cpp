@@ -169,7 +169,7 @@ PeerConnectionMedia::InitLocalAddrs()
     // We're in the content process, so send a request over IPC for the
     // stun address discovery.
     mStunAddrsRequest =
-      new StunAddrsRequestChild(new StunAddrsHandler(this), target);
+      new net::StunAddrsRequestChild(new StunAddrsHandler(this), target);
     mStunAddrsRequest->SendGetStunAddrs();
   } else {
     // No content process, so don't need to hold up the ice event queue

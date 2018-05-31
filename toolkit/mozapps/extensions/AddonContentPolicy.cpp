@@ -97,20 +97,19 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                const nsACString& aMimeTypeGuess,
                                int16_t* aShouldLoad)
 {
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  nsCOMPtr<nsISupports> aContext = aLoadInfo->GetLoadingContext();
-  nsCOMPtr<nsIURI> aRequestOrigin;
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsIURI> requestOrigin;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
   if (loadingPrincipal) {
-    loadingPrincipal->GetURI(getter_AddRefs(aRequestOrigin));
+    loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));
   }
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
 
-  if (!aRequestOrigin) {
+  if (!requestOrigin) {
     return NS_OK;
   }
 
@@ -118,11 +117,11 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   // moz-extension URLs, or to resources being loaded from moz-extension URLs.
   bool equals;
   if (!((NS_SUCCEEDED(aContentLocation->SchemeIs("moz-extension", &equals)) && equals) ||
-        (NS_SUCCEEDED(aRequestOrigin->SchemeIs("moz-extension", &equals)) && equals))) {
+        (NS_SUCCEEDED(requestOrigin->SchemeIs("moz-extension", &equals)) && equals))) {
     return NS_OK;
   }
 
-  if (aContentType == nsIContentPolicy::TYPE_SCRIPT) {
+  if (contentType == nsIContentPolicy::TYPE_SCRIPT) {
     NS_ConvertUTF8toUTF16 typeString(aMimeTypeGuess);
     nsContentTypeParser mimeParser(typeString);
 
@@ -133,8 +132,9 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
         NS_SUCCEEDED(mimeParser.GetParameter("version", version))) {
       *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
 
+      nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
       LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE),
-                 aRequestOrigin, typeString, aContext);
+                 requestOrigin, typeString, context);
       return NS_OK;
     }
   }
@@ -149,8 +149,8 @@ AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                   int16_t* aShouldProcess)
 {
 #ifdef DEBUG
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 #endif
 

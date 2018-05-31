@@ -40,6 +40,7 @@
 #define MAX_RETRY_COUNT 20
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 //-----------------------------------------------------------------------------
 

@@ -369,7 +369,7 @@ interface nsILoadInfo : nsISupports
    * ContextForTopLevelLoad will always return null.
    */
   [noscript, notxpcom, nostdcall, binaryname(ContextForTopLevelLoad)]
-  nsISupports binaryContextForTopLevelLoad();
+  LoadContextRef binaryContextForTopLevelLoad();
 
   /**
    * For all loads except loads of TYPE_DOCUMENT, the loadingContext

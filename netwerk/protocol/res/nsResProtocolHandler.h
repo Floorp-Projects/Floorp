@@ -17,18 +17,18 @@ class nsISubstitutionObserver;
 
 struct SubstitutionMapping;
 class nsResProtocolHandler final : public nsIResProtocolHandler,
-                                   public mozilla::SubstitutingProtocolHandler,
+                                   public mozilla::net::SubstitutingProtocolHandler,
                                    public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRESPROTOCOLHANDLER
 
-    NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
+    NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::net::SubstitutingProtocolHandler::)
 
     nsResProtocolHandler()
-      : SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE,
-                                    /* aEnforceFileOrJar = */ false)
+      : mozilla::net::SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE,
+                                                  /* aEnforceFileOrJar = */ false)
     {}
 
     MOZ_MUST_USE nsresult Init();
@@ -38,27 +38,27 @@ public:
 
     NS_IMETHOD GetSubstitution(const nsACString& aRoot, nsIURI** aResult) override
     {
-        return mozilla::SubstitutingProtocolHandler::GetSubstitution(aRoot, aResult);
+        return mozilla::net::SubstitutingProtocolHandler::GetSubstitution(aRoot, aResult);
     }
 
     NS_IMETHOD HasSubstitution(const nsACString& aRoot, bool* aResult) override
     {
-        return mozilla::SubstitutingProtocolHandler::HasSubstitution(aRoot, aResult);
+        return mozilla::net::SubstitutingProtocolHandler::HasSubstitution(aRoot, aResult);
     }
 
     NS_IMETHOD ResolveURI(nsIURI *aResURI, nsACString& aResult) override
     {
-        return mozilla::SubstitutingProtocolHandler::ResolveURI(aResURI, aResult);
+        return mozilla::net::SubstitutingProtocolHandler::ResolveURI(aResURI, aResult);
     }
 
     NS_IMETHOD AddObserver(nsISubstitutionObserver *aObserver) override
     {
-        return mozilla::SubstitutingProtocolHandler::AddObserver(aObserver);
+        return mozilla::net::SubstitutingProtocolHandler::AddObserver(aObserver);
     }
 
     NS_IMETHOD RemoveObserver(nsISubstitutionObserver *aObserver) override
     {
-        return mozilla::SubstitutingProtocolHandler::RemoveObserver(aObserver);
+        return mozilla::net::SubstitutingProtocolHandler::RemoveObserver(aObserver);
     }
 
 protected:

@@ -42,33 +42,33 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
                                         const nsACString &aMimeGuess,
                                         int16_t *aDecision)
 {
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aDecision = nsIContentPolicy::ACCEPT;
-  // Look for the document.  In most cases, aRequestingContext is a node.
+  // Look for the document.  In most cases, requestingContext is a node.
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aRequestingContext);
+  nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
   if (node) {
     doc = node->OwnerDoc();
   } else {
-    if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aRequestingContext)) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(requestingContext)) {
       doc = window->GetDoc();
     }
   }
 
   // DTDs are always OK to load
-  if (!doc || aContentType == nsIContentPolicy::TYPE_DTD) {
+  if (!doc || contentType == nsIContentPolicy::TYPE_DTD) {
     return NS_OK;
   }
 
   // Nothing else is OK to load for data documents
   if (doc->IsLoadedAsData()) {
     // ...but let static (print/print preview) documents to load fonts.
-    if (!doc->IsStaticDocument() || aContentType != nsIContentPolicy::TYPE_FONT) {
+    if (!doc->IsStaticDocument() || contentType != nsIContentPolicy::TYPE_FONT) {
       *aDecision = nsIContentPolicy::REJECT_TYPE;
       return NS_OK;
     }
@@ -105,8 +105,8 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
             nullptr, "ExternalDataError", principalURI, aContentLocation);
         }
       }
-    } else if ((aContentType == nsIContentPolicy::TYPE_IMAGE ||
-                aContentType == nsIContentPolicy::TYPE_IMAGESET) &&
+    } else if ((contentType == nsIContentPolicy::TYPE_IMAGE ||
+                contentType == nsIContentPolicy::TYPE_IMAGESET) &&
                doc->GetDocumentURI()) {
       // Check for (& disallow) recursive image-loads
       bool isRecursiveLoad;
@@ -126,13 +126,13 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
   }
 
   // For resource documents, blacklist some load types
-  if (aContentType == nsIContentPolicy::TYPE_OBJECT ||
-      aContentType == nsIContentPolicy::TYPE_DOCUMENT ||
-      aContentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
-      aContentType == nsIContentPolicy::TYPE_SCRIPT ||
-      aContentType == nsIContentPolicy::TYPE_XSLT ||
-      aContentType == nsIContentPolicy::TYPE_FETCH ||
-      aContentType == nsIContentPolicy::TYPE_WEB_MANIFEST) {
+  if (contentType == nsIContentPolicy::TYPE_OBJECT ||
+      contentType == nsIContentPolicy::TYPE_DOCUMENT ||
+      contentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
+      contentType == nsIContentPolicy::TYPE_SCRIPT ||
+      contentType == nsIContentPolicy::TYPE_XSLT ||
+      contentType == nsIContentPolicy::TYPE_FETCH ||
+      contentType == nsIContentPolicy::TYPE_WEB_MANIFEST) {
     *aDecision = nsIContentPolicy::REJECT_TYPE;
   }
 

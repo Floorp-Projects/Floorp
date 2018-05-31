@@ -215,7 +215,7 @@ class AbstractFramePtr
     template <typename SpecificEnvironment>
     inline void popOffEnvironmentChain();
 
-    inline JSCompartment* compartment() const;
+    inline JS::Realm* realm() const;
 
     inline bool hasInitialEnvironment() const;
     inline bool isGlobalFrame() const;
@@ -2177,6 +2177,8 @@ class FrameIter
     wasm::WasmFrameIter& wasmFrame() { return data_.jitFrames_.asWasm(); }
 
     bool isIonScripted() const { return isJSJit() && jsJitFrame().isIonScripted(); }
+
+    bool principalsSubsumeFrame() const;
 
     void popActivation();
     void popInterpreterFrame();
