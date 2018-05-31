@@ -25,7 +25,7 @@ add_task(async function test_validation() {
           "en-US": "en-US.dic",
         },
       },
-    })
+    }), /Expected file to be downloaded for install/
   );
 
   await Assert.rejects(
@@ -40,7 +40,7 @@ add_task(async function test_validation() {
       files: {
         "en-US.dic": "",
       },
-    })
+    }), /Expected file to be downloaded for install/
   );
 
   let addon = await promiseInstallWebExtension({
