@@ -568,9 +568,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomKeyGenerator_;
     mozilla::non_crypto::XorShift128PlusRNG& randomKeyGenerator();
 
+    // Used to generate random hash codes for symbols.
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomHashCodeGenerator_;
+
   public:
     mozilla::HashCodeScrambler randomHashCodeScrambler();
     mozilla::non_crypto::XorShift128PlusRNG forkRandomKeyGenerator();
+
+    js::HashNumber randomHashCode();
 
     //-------------------------------------------------------------------------
     // Self-hosting support
@@ -699,11 +704,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Set of all atoms added while the main atoms table is being swept.
     js::ExclusiveAccessLockData<js::AtomSet*> atomsAddedWhileSweeping_;
 
-    // Realm and associated zone containing all atoms in the runtime, as
-    // well as runtime wide IonCode stubs. Modifying the contents of this
-    // zone requires the calling thread to use AutoLockForExclusiveAccess.
-    js::WriteOnceData<JS::Realm*> atomsRealm_;
-
     // Set of all live symbols produced by Symbol.for(). All such symbols are
     // allocated in the atomsZone. Reading or writing the symbol registry
     // requires the calling thread to use AutoLockForExclusiveAccess.
@@ -734,25 +734,16 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return atomsAddedWhileSweeping_;
     }
 
-    JS::Realm* atomsRealm(js::AutoLockForExclusiveAccess& lock) {
-        return atomsRealm_;
+    const JS::Zone* atomsZone(const js::AutoLockForExclusiveAccess& lock) const {
+        return gc.atomsZone;
     }
-    JS::Realm* unsafeAtomsRealm() {
-        return atomsRealm_;
+    JS::Zone* atomsZone(const js::AutoLockForExclusiveAccess& lock) {
+        return gc.atomsZone;
     }
-
-    // Note: once JS::Realm and JSCompartment are completely unrelated, the
-    // atoms realm probably won't have a compartment so we can remove this
-    // then.
-    bool isAtomsCompartment(JSCompartment* comp) {
-        return JS::GetRealmForCompartment(comp) == atomsRealm_;
-    }
-
-    const JS::Zone* atomsZone(js::AutoLockForExclusiveAccess& lock) const {
+    JS::Zone* unsafeAtomsZone() {
         return gc.atomsZone;
     }
 
-    // The atoms realm is the only one in its zone.
     bool isAtomsZone(const JS::Zone* zone) const {
         return zone == gc.atomsZone;
     }

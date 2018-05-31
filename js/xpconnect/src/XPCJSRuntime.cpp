@@ -1078,9 +1078,7 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
                    bool replaceSlashes)
 {
     JS::Realm* realm = JS::GetRealmForCompartment(c);
-    if (js::IsAtomsRealm(realm)) {
-        name.AssignLiteral("atoms");
-    } else if (*anonymizeID && !js::IsSystemCompartment(c)) {
+    if (*anonymizeID && !js::IsSystemCompartment(c)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
     } else if (JSPrincipals* principals = JS::GetRealmPrincipals(realm)) {
@@ -2164,20 +2162,23 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     }
 
     virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats) override {
-        // Get some global in this zone.
         AutoSafeJSContext cx;
-        Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
         xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
         extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
-        RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
-        if (global) {
-            RefPtr<nsGlobalWindowInner> window;
-            if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
-                // The global is a |window| object.  Use the path prefix that
-                // we should have already created for it.
-                if (mTopWindowPaths->Get(window->WindowID(),
-                                         &extras->pathPrefix))
-                    extras->pathPrefix.AppendLiteral("/js-");
+
+        // Get some global in this zone.
+        Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
+        if (realm) {
+            RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
+            if (global) {
+                RefPtr<nsGlobalWindowInner> window;
+                if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
+                    // The global is a |window| object.  Use the path prefix that
+                    // we should have already created for it.
+                    if (mTopWindowPaths->Get(window->WindowID(),
+                                             &extras->pathPrefix))
+                        extras->pathPrefix.AppendLiteral("/js-");
+                }
             }
         }
 

@@ -3064,7 +3064,7 @@ Debugger::markIteratively(GCMarker* marker)
      * convoluted since the easiest way to find them is via their debuggees.
      */
     JSRuntime* rt = marker->runtime();
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
+    for (RealmsIter r(rt); !r.done(); r.next()) {
         if (r->isDebuggee()) {
             GlobalObject* global = r->unsafeUnbarrieredMaybeGlobal();
             if (!IsMarkedUnbarriered(rt, &global))
@@ -4970,7 +4970,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
         // wrapping can GC and collect realms from under us, while iterating.
         JS::AutoCheckCannotGC nogc;
 
-        for (RealmsIter r(cx->runtime(), SkipAtoms); !r.done(); r.next()) {
+        for (RealmsIter r(cx->runtime()); !r.done(); r.next()) {
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
