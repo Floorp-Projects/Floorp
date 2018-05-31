@@ -642,7 +642,7 @@ LoadInfo::LoadingNode()
   return node;
 }
 
-nsISupports*
+already_AddRefed<nsISupports>
 LoadInfo::ContextForTopLevelLoad()
 {
   // Most likely you want to query LoadingNode() instead of
@@ -650,7 +650,7 @@ LoadInfo::ContextForTopLevelLoad()
   MOZ_ASSERT(mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
             "should only query this context for top level document loads");
   nsCOMPtr<nsISupports> context = do_QueryReferent(mContextForTopLevelLoad);
-  return context;
+  return context.forget();
 }
 
 already_AddRefed<nsISupports>

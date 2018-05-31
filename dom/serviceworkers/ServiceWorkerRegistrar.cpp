@@ -63,8 +63,8 @@ StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
 nsresult
 GetOrigin(const nsACString& aURL, nsACString& aOrigin)
 {
-  RefPtr<MozURL> url;
-  nsresult rv = MozURL::Init(getter_AddRefs(url), aURL);
+  RefPtr<net::MozURL> url;
+  nsresult rv = net::MozURL::Init(getter_AddRefs(url), aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

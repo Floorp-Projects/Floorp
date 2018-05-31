@@ -174,9 +174,35 @@ class Accessible extends Component {
       gToolbox.selection.setNodeFront(nodeFront, reason));
   }
 
+  openLink(link, e) {
+    if (!gToolbox) {
+      return;
+    }
+
+    // Avoid using Services.appinfo.OS in order to keep accessible pane's frontend free of
+    // priveleged code.
+    const os = window.navigator.userAgent;
+    const isOSX =  os && os.includes("Mac");
+    let where = "tab";
+    if (e && (e.button === 1 || (e.button === 0 && (isOSX ? e.metaKey : e.ctrlKey)))) {
+      where = "tabshifted";
+    } else if (e && e.shiftKey) {
+      where = "window";
+    }
+
+    const win = gToolbox.doc.defaultView.top;
+    win.openWebLinkIn(link, where);
+  }
+
   renderItem(item, depth, focused, arrow, expanded) {
     const object = item.contents;
-    let valueProps = { object, mode: MODE.TINY, title: "Object" };
+    let valueProps = {
+      object,
+      mode: MODE.TINY,
+      title: "Object",
+      openLink: this.openLink
+    };
+
     if (isNode(object)) {
       valueProps.defaultRep = ElementNode;
       valueProps.onDOMNodeMouseOut = () => this.hideHighlighter();

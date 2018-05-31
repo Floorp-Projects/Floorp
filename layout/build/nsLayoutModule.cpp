@@ -162,12 +162,10 @@ static void Shutdown();
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::net;
 using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
-using mozilla::dom::WorkerDebuggerManager;
-using mozilla::dom::UDPSocketChild;
 using mozilla::gmp::GeckoMediaPluginService;
-using mozilla::dom::NotificationTelemetryService;
 
 #define NS_EDITORCOMMANDTABLE_CID \
 { 0x4f5e62b8, 0xd659, 0x4156, \

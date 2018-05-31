@@ -257,7 +257,7 @@ HTMLLabelElement::GetFirstLabelableDescendant() const
 {
   for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
-    Element* element = cur->IsElement() ? cur->AsElement() : nullptr;
+    Element* element = Element::FromNode(cur);
     if (element && element->IsLabelable()) {
       return static_cast<nsGenericHTMLElement*>(element);
     }

@@ -28,15 +28,14 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
 {
   MOZ_ASSERT(aShouldLoad, "Null out param");
 
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
-
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
 
-  nsIDocShell* shell = NS_CP_GetDocShellFromContext(aRequestingContext);
+  nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
+  nsIDocShell* shell = NS_CP_GetDocShellFromContext(context);
   /* We're going to dereference shell, so make sure it isn't null */
   if (!shell) {
     return NS_OK;
@@ -45,7 +44,7 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   nsresult rv;
   bool allowed = true;
 
-  switch (aContentType) {
+  switch (contentType) {
     case nsIContentPolicy::TYPE_SCRIPT:
       rv = shell->GetAllowJavascript(&allowed);
       break;
@@ -80,10 +79,8 @@ nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
 {
   MOZ_ASSERT(aShouldProcess, "Null out param");
 
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
-  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
-
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aShouldProcess = nsIContentPolicy::ACCEPT;
@@ -91,11 +88,12 @@ nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
   // Object tags will always open channels with TYPE_OBJECT, but may end up
   // loading with TYPE_IMAGE or TYPE_DOCUMENT as their final type, so we block
   // actual-plugins at the process stage
-  if (aContentType != nsIContentPolicy::TYPE_OBJECT) {
+  if (contentType != nsIContentPolicy::TYPE_OBJECT) {
     return NS_OK;
   }
 
-  nsIDocShell* shell = NS_CP_GetDocShellFromContext(aRequestingContext);
+  nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
+  nsIDocShell* shell = NS_CP_GetDocShellFromContext(context);
   if (shell && (!shell->PluginsAllowedInCurrentDoc())) {
     *aShouldProcess = nsIContentPolicy::REJECT_TYPE;
   }

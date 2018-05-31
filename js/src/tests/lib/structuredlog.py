@@ -39,7 +39,7 @@ class TestLogger(object):
         self._log(action='test_end', test=testname, status=status)
 
     def test(self, testname, status, duration, **details):
-        record = self._record(action='test_start', test=testname)
+        record = self._record(action='test_start', test=testname, **details.get('extra', {}))
         end_time = record['time']
         record['time'] -= duration
         self._log_obj(record)

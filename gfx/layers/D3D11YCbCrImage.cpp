@@ -7,6 +7,7 @@
 #include "D3D11YCbCrImage.h"
 #include "YCbCrUtils.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/TextureD3D11.h"
@@ -56,8 +57,13 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
     return false;
   }
 
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
+  if (!device) {
+    return false;
+  }
+
   {
-    DXGIYCbCrTextureAllocationHelper helper(aData, TextureFlags::DEFAULT, allocator->GetDevice());
+    DXGIYCbCrTextureAllocationHelper helper(aData, TextureFlags::DEFAULT, device);
     mTextureClient = allocator->CreateOrRecycle(helper);
   }
 
@@ -73,7 +79,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   ID3D11Texture2D* textureCr = data->GetD3D11Texture(2);
 
   RefPtr<ID3D10Multithread> mt;
-  HRESULT hr = allocator->GetDevice()->QueryInterface(
+  HRESULT hr = device->QueryInterface(
     (ID3D10Multithread**)getter_AddRefs(mt));
 
   if (FAILED(hr) || !mt) {
@@ -89,7 +95,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   D3D11MTAutoEnter mtAutoEnter(mt.forget());
 
   RefPtr<ID3D11DeviceContext> ctx;
-  allocator->GetDevice()->GetImmediateContext(getter_AddRefs(ctx));
+  device->GetImmediateContext(getter_AddRefs(ctx));
   if (!ctx) {
     gfxCriticalError() << "Failed to get immediate context.";
     return false;
@@ -323,6 +329,14 @@ DXGIYCbCrTextureAllocationHelper::IsCompatible(TextureClient* aTextureClient)
       dxgiData->GetYUVColorSpace() != mData.mYUVColorSpace) {
     return false;
   }
+
+  RefPtr<ID3D11Texture2D> texY = dxgiData->GetD3D11Texture(0);
+  RefPtr<ID3D11Device> device;
+  texY->GetDevice(getter_AddRefs(device));
+  if (!device || device != gfx::DeviceManagerDx::Get()->GetImageDevice()) {
+    return false;
+  }
+
   return true;
 }
 

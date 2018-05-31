@@ -3685,5 +3685,5 @@ nsStandardURL::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 nsresult
 Test_NormalizeIPv4(const nsACString& host, nsCString& result)
 {
-    return nsStandardURL::NormalizeIPv4(host, result);
+    return mozilla::net::nsStandardURL::NormalizeIPv4(host, result);
 }

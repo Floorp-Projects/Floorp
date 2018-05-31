@@ -94,7 +94,8 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
     dataSpec.Truncate(50);
     dataSpec.AppendLiteral("...");
   }
-  nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(loadInfo->ContextForTopLevelLoad());
+  nsCOMPtr<nsISupports> context = loadInfo->ContextForTopLevelLoad();
+  nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(context);
   nsCOMPtr<nsIDocument> doc;
   if (tabChild) {
     doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())->GetDocument();
