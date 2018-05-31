@@ -104,3 +104,32 @@ add_task(async function portNoMatch2() {
   });
   await cleanup();
 });
+
+// "example/" should *not* match http://example.com/.
+add_task(async function trailingSlash() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://example.com/",
+  }]);
+  await check_autocomplete({
+    search: "example/",
+    matches: [],
+  });
+  await cleanup();
+});
+
+// multi.dotted.domain, search up to dot.
+add_task(async function multidotted() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://www.example.co.jp:8888/",
+  }]);
+  await check_autocomplete({
+    search: "www.example.co.",
+    completed: "http://www.example.co.jp:8888/",
+    matches: [{
+      value: "www.example.co.jp:8888/",
+      comment: "www.example.co.jp:8888",
+      style: ["autofill", "heuristic"],
+    }],
+  });
+  await cleanup();
+});

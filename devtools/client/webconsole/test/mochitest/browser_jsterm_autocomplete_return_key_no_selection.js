@@ -16,8 +16,16 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </head>
 <body>bug 873250 - test pressing return with open popup, but no selection</body>`;
 
+const {
+  getHistoryEntries,
+} = require("devtools/client/webconsole/selectors/history");
+
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const {
+    jsterm,
+    ui,
+  } = await openNewTabAndConsole(TEST_URI);
+
   const {
     autocompletePopup: popup,
     completeNode,
@@ -43,6 +51,9 @@ add_task(async function() {
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
   is(jsterm.getInputValue(), "", "inputNode is empty after KEY_Enter");
   is(completeNode.value, "", "completeNode is empty");
-  is(jsterm.history[jsterm.history.length - 1], "window.testBug",
+
+  const state = ui.consoleOutput.getStore().getState();
+  const entries = getHistoryEntries(state);
+  is(entries[entries.length - 1], "window.testBug",
      "jsterm history is correct");
 });

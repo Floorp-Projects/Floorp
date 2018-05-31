@@ -19,7 +19,7 @@ runWithMSE(async (ms, v) => {
   const init = new Uint8Array(await fetchWithXHR("bipbop/bipbop_videoinit.mp4"));
   const segment1 = new Uint8Array(await fetchWithXHR("bipbop/bipbop_video1.m4s"));
   const segment2 = new Uint8Array(await fetchWithXHR("bipbop/bipbop_video2.m4s"));
-  const data = [ init, segment1, init, segment2 ];
+  const data = [init, segment1, init, segment2];
   const length = data.map(d => d.byteLength).reduce((a, b) => a + b, 0);
   const arrayBuffer = new Uint8Array(length);
   let pos = 0;

@@ -17,10 +17,10 @@ runWithMSE(async (ms, el) => {
   ok(true, "Receive a sourceopen event");
   const audiosb = ms.addSourceBuffer("audio/mp4");
   const videosb = ms.addSourceBuffer("video/mp4");
-  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
   await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
   await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(7, 14), ".m4s");
   // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
@@ -43,8 +43,8 @@ runWithMSE(async (ms, el) => {
   info("Loading more data");
   p = once(el, "ended");
   await Promise.all([
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ 5 ], ".m4s"),
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [ 6 ], ".m4s")
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [5], ".m4s"),
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [6], ".m4s")
   ]);
   ms.endOfStream();
   await p;

@@ -9,6 +9,8 @@
 // FIXME: some of the inplace-editor focus/blur/commit/revert stuff
 // should be factored out in head.js
 
+const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+
 const TEST_URI = `
   <style type="text/css">
   #testid {
@@ -31,7 +33,47 @@ var TEST_DATA = [
   { name: "border", value: "solid 1px foo", isValid: false },
 ];
 
+const DATA = [
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "edit_rule",
+    object: "ruleview"
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "edit_rule",
+    object: "ruleview"
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "edit_rule",
+    object: "ruleview"
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "edit_rule",
+    object: "ruleview"
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "edit_rule",
+    object: "ruleview"
+  }
+];
+
 add_task(async function() {
+  // Let's reset the counts.
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  ok(!snapshot.parent, "No events have been logged for the main process");
+
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
@@ -40,6 +82,8 @@ add_task(async function() {
   for (let {name, value, isValid} of TEST_DATA) {
     await testEditProperty(view, rule, name, value, isValid);
   }
+
+  checkResults();
 });
 
 async function testEditProperty(view, rule, name, value, isValid) {
@@ -89,5 +133,24 @@ async function testEditProperty(view, rule, name, value, isValid) {
     is(propValue, value, name + " should have been set.");
   } else {
     isnot(propValue, value, name + " shouldn't have been set.");
+  }
+}
+
+function checkResults() {
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
+                                                 event[2] === "edit_rule" &&
+                                                 event[3] === "ruleview"
+  );
+
+  for (let i in DATA) {
+    const [ timestamp, category, method, object ] = events[i];
+    const expected = DATA[i];
+
+    // ignore timestamp
+    ok(timestamp > 0, "timestamp is greater than 0");
+    is(category, expected.category, "category is correct");
+    is(method, expected.method, "method is correct");
+    is(object, expected.object, "object is correct");
   }
 }

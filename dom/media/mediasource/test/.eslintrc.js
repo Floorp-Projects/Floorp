@@ -23,7 +23,7 @@ module.exports = {
   },
   // Use const/let instead of var for tighter scoping, avoiding redeclaration
   "rules": {
-    "array-bracket-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
     "no-var": "error",
     "prefer-const": "error"
   }

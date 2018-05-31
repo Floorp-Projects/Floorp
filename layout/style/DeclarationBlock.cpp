@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ServoDeclarationBlock.h"
+#include "mozilla/DeclarationBlock.h"
 
 #include "mozilla/ServoBindings.h"
 
@@ -12,44 +12,44 @@
 
 namespace mozilla {
 
-/* static */ already_AddRefed<ServoDeclarationBlock>
-ServoDeclarationBlock::FromCssText(const nsAString& aCssText,
-                                   URLExtraData* aExtraData,
-                                   nsCompatibility aMode,
-                                   css::Loader* aLoader)
+/* static */ already_AddRefed<DeclarationBlock>
+DeclarationBlock::FromCssText(const nsAString& aCssText,
+                              URLExtraData* aExtraData,
+                              nsCompatibility aMode,
+                              css::Loader* aLoader)
 {
   NS_ConvertUTF16toUTF8 value(aCssText);
-  // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
   RefPtr<RawServoDeclarationBlock>
       raw = Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
-  RefPtr<ServoDeclarationBlock> decl = new ServoDeclarationBlock(raw.forget());
+  RefPtr<DeclarationBlock> decl = new DeclarationBlock(raw.forget());
   return decl.forget();
 }
 
+// TODO: We can make them inline.
 void
-ServoDeclarationBlock::GetPropertyValue(const nsAString& aProperty,
-                                        nsAString& aValue) const
+DeclarationBlock::GetPropertyValue(const nsAString& aProperty,
+                                   nsAString& aValue) const
 {
   NS_ConvertUTF16toUTF8 property(aProperty);
   Servo_DeclarationBlock_GetPropertyValue(mRaw, &property, &aValue);
 }
 
 void
-ServoDeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
-                                            nsAString& aValue) const
+DeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
+                                       nsAString& aValue) const
 {
   Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropID, &aValue);
 }
 
 bool
-ServoDeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
+DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
 {
   NS_ConvertUTF16toUTF8 property(aProperty);
   return Servo_DeclarationBlock_GetPropertyIsImportant(mRaw, &property);
 }
 
 bool
-ServoDeclarationBlock::RemoveProperty(const nsAString& aProperty)
+DeclarationBlock::RemoveProperty(const nsAString& aProperty)
 {
   AssertMutable();
   NS_ConvertUTF16toUTF8 property(aProperty);
@@ -57,7 +57,7 @@ ServoDeclarationBlock::RemoveProperty(const nsAString& aProperty)
 }
 
 bool
-ServoDeclarationBlock::RemovePropertyByID(nsCSSPropertyID aPropID)
+DeclarationBlock::RemovePropertyByID(nsCSSPropertyID aPropID)
 {
   AssertMutable();
   return Servo_DeclarationBlock_RemovePropertyById(mRaw, aPropID);

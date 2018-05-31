@@ -306,17 +306,17 @@ add_test(function test_coordinates() {
   deepEqual({x: 10, y: 10}, element.coordinates(domEl, 10, 10));
   deepEqual({x: -5, y: -5}, element.coordinates(domEl, -5, -5));
 
-  Assert.throws(() => element.coordinates(null));
+  Assert.throws(() => element.coordinates(null), /node is null/);
 
-  Assert.throws(() => element.coordinates(domEl, "string", undefined));
-  Assert.throws(() => element.coordinates(domEl, undefined, "string"));
-  Assert.throws(() => element.coordinates(domEl, "string", "string"));
-  Assert.throws(() => element.coordinates(domEl, {}, undefined));
-  Assert.throws(() => element.coordinates(domEl, undefined, {}));
-  Assert.throws(() => element.coordinates(domEl, {}, {}));
-  Assert.throws(() => element.coordinates(domEl, [], undefined));
-  Assert.throws(() => element.coordinates(domEl, undefined, []));
-  Assert.throws(() => element.coordinates(domEl, [], []));
+  Assert.throws(() => element.coordinates(domEl, "string", undefined), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, undefined, "string"), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, "string", "string"), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, {}, undefined), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, undefined, {}), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, {}, {}), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, [], undefined), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, undefined, []), /Offset must be a number/);
+  Assert.throws(() => element.coordinates(domEl, [], []), /Offset must be a number/);
 
   run_next_test();
 });
@@ -326,7 +326,7 @@ add_test(function test_WebElement_ctor() {
   equal(el.uuid, "foo");
 
   for (let t of [42, true, [], {}, null, undefined]) {
-    Assert.throws(() => new WebElement(t));
+    Assert.throws(() => new WebElement(t), /to be a string/);
   }
 
   run_next_test();

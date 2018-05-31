@@ -76,6 +76,10 @@ Preferences.addAll([
   // Do not track
   { id: "privacy.donottrackheader.enabled", type: "bool" },
 
+  // Media
+  { id: "media.autoplay.enabled", type: "bool" },
+  { id: "media.autoplay.enabled.user-gestures-needed", type: "bool" },
+
   // Popups
   { id: "dom.disable_open_during_load", type: "bool" },
   // Passwords
@@ -254,6 +258,8 @@ var gPrivacyPane = {
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
+    this.updateAutoplayMediaControls();
+    this.updateAutoplayMediaControlsVisibility();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
@@ -270,6 +276,10 @@ var gPrivacyPane = {
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
     Preferences.get("privacy.trackingprotection.pbmode.enabled").on("change",
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
+    Preferences.get("media.autoplay.enabled").on("change",
+     gPrivacyPane.updateAutoplayMediaControls.bind(gPrivacyPane));
+    Preferences.get("media.autoplay.enabled.user-gestures-needed").on("change",
+     gPrivacyPane.updateAutoplayMediaControlsVisibility.bind(gPrivacyPane));
     setEventListener("historyMode", "command", function() {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
@@ -332,6 +342,10 @@ var gPrivacyPane = {
       gPrivacyPane.showMicrophoneExceptions);
     setEventListener("popupPolicyButton", "command",
       gPrivacyPane.showPopupExceptions);
+    setEventListener("autoplayMediaPolicy", "command",
+      gPrivacyPane.toggleAutoplayMedia);
+    setEventListener("autoplayMediaPolicyButton", "command",
+      gPrivacyPane.showAutoplayMediaExceptions);
     setEventListener("notificationsDoNotDisturb", "command",
       gPrivacyPane.toggleDoNotDisturbNotifications);
 
@@ -970,6 +984,44 @@ var gPrivacyPane = {
     } catch (e) { }
   },
 
+
+  // MEDIA
+
+  /**
+   * media.autoplay.enabled works the opposite to most of the other preferences.
+   * The checkbox enabled sets the pref to false
+   */
+  toggleAutoplayMedia(event) {
+    Services.prefs.setBoolPref("media.autoplay.enabled", !event.target.checked);
+  },
+
+  updateAutoplayMediaControls() {
+    let autoPlayEnabled = Preferences.get("media.autoplay.enabled").value;
+    document.getElementById("autoplayMediaPolicy").checked = !autoPlayEnabled;
+    document.getElementById("autoplayMediaPolicyButton").disabled = autoPlayEnabled;
+  },
+
+  /**
+   * Show the controls for the new media autoplay behaviour behind a pref for now
+   */
+  updateAutoplayMediaControlsVisibility() {
+    document.getElementById("autoplayMediaBox").hidden =
+      !Services.prefs.getBoolPref("media.autoplay.enabled.user-gestures-needed");
+  },
+
+  /**
+   * Displays the autoplay exceptions dialog where specific site autoplay preferences
+   * can be set.
+   */
+  showAutoplayMediaExceptions() {
+    var params = {
+      blockVisible: false, sessionVisible: false, allowVisible: true,
+      prefilledHost: "", permissionType: "autoplay-media"
+    };
+
+    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+      "resizable=yes", params);
+  },
 
   // POP-UPS
 

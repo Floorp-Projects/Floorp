@@ -5,12 +5,89 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_sidebar.js</p>";
+const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
 
 // Because we need to gather stats for the period of time that a tool has been
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
+const DATA = [
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "computedview",
+      newpanel: "fontinspector"
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "fontinspector",
+      newpanel: "layoutview"
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "layoutview",
+      newpanel: "computedview"
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "computedview",
+      newpanel: "fontinspector"
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "fontinspector",
+      newpanel: "layoutview"
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: "layoutview",
+      newpanel: "computedview"
+    }
+  }
+];
+
 add_task(async function() {
+  // Let's reset the counts.
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  ok(!snapshot.parent, "No events have been logged for the main process");
+
   await addTab(TEST_URI);
   startTelemetry();
 
@@ -20,6 +97,7 @@ add_task(async function() {
 
   await testSidebar(toolbox);
   checkResults();
+  checkEventTelemetry();
 
   await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
@@ -62,4 +140,28 @@ function checkResults() {
   checkTelemetry("DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+}
+
+function checkEventTelemetry() {
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
+                                                  event[2] === "sidepanel_changed" &&
+                                                  event[3] === "inspector" &&
+                                                  event[4] === null
+  );
+
+  for (let i in DATA) {
+    const [ timestamp, category, method, object, value, extra ] = events[i];
+    const expected = DATA[i];
+
+    // ignore timestamp
+    ok(timestamp > 0, "timestamp is greater than 0");
+    is(category, expected.category, "category is correct");
+    is(method, expected.method, "method is correct");
+    is(object, expected.object, "object is correct");
+    is(value, expected.value, "value is correct");
+
+    is(extra.oldpanel, expected.extra.oldpanel, "oldpanel is correct");
+    is(extra.newpanel, expected.extra.newpanel, "newpanel is correct");
+  }
 }

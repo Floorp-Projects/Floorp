@@ -95,6 +95,9 @@ const REGEXP_SPACES = /\s+/;
 // Regex used to strip prefixes from URLs.  See stripPrefix().
 const REGEXP_STRIP_PREFIX = /^[a-zA-Z]+:(?:\/\/)?/;
 
+// Cannot contains spaces or path delims.
+const REGEXP_ORIGIN = /^[^\s\/\?\#]+$/;
+
 // The result is notified on a delay, to avoid rebuilding the panel at every match.
 const NOTIFYRESULT_DELAY_MS = 16;
 
@@ -817,29 +820,18 @@ function makeKeyForURL(match) {
  * Returns whether the passed in string looks like a url.
  */
 function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
-  // Single word not including special chars.
+  // Single word including special chars.
   return !REGEXP_SPACES.test(str) &&
          (["/", "@", ":", "["].some(c => str.includes(c)) ||
           (ignoreAlphanumericHosts ? /(.*\..*){3,}/.test(str) : str.includes(".")));
 }
 
 /**
- * Returns:
- *
- *   * `str` if `str` doesn't have any slashes
- *   * `str` trimmed of its trailing slash if it's the only slash
- *   * null if `str` has a slash that's not trailing
+ * Returns whether the passed in string looks like an origin.
  */
-function trimTrailingSlashIfOnlySlash(str) {
-  let slashIndex = str.indexOf("/");
-  if (slashIndex >= 0) {
-    if (slashIndex < str.length - 1) {
-      return null;
-    }
-    // Trim the trailing slash.
-    str = str.slice(0, -1);
-  }
-  return str;
+function looksLikeOrigin(str) {
+  // Single word not including path delimiters.
+  return REGEXP_ORIGIN.test(str);
 }
 
 /**
@@ -1463,18 +1455,17 @@ Search.prototype = {
   async _matchKnownUrl(conn) {
     let gotResult = false;
 
-    // If search string has a slash in it, then treat it as a possible URL and
-    // try to autofill against URLs.  Otherwise treat it as a possible origin
-    // and try to autofill against origins.  One exception:  When the string has
-    // only one slash and it's at the end, treat it as a possible origin, not a
-    // URL.
+    // If search string looks like an origin, try to autofill against origins.
+    // Otherwise treat it as a possible URL.  When the string has only one slash
+    // at the end, we still treat it as an URL.
     let query, params;
-    if (trimTrailingSlashIfOnlySlash(this._searchString)) {
+    if (looksLikeOrigin(this._searchString)) {
       [query, params] = this._originQuery;
     } else {
       [query, params] = this._urlQuery;
     }
 
+    // _urlQuery doesn't always return a query.
     if (query) {
       await conn.executeCached(query, params, (row, cancel) => {
         gotResult = true;
@@ -1547,18 +1538,27 @@ Search.prototype = {
       return false;
     }
 
-    // PlacesSearchAutocompleteProvider only matches against engine domains.  If
-    // the search string (without the prefix) contains multiple slashes, or a
-    // single slash that's not at the end, don't try to match.
-    let searchStr = trimTrailingSlashIfOnlySlash(this._searchString);
-    if (!searchStr) {
+    // PlacesSearchAutocompleteProvider only matches against engine domains.
+    // Remove an eventual trailing slash from the search string (without the
+    // prefix) and check if the resulting string is worth matching.
+    // Later, we'll verify that the found result matches the original
+    // searchString and eventually discard it.
+    let searchStr = this._searchString;
+    if (searchStr.indexOf("/") == searchStr.length - 1) {
+      searchStr = searchStr.slice(0, -1);
+    }
+    // If the search string looks more like a url than a domain, bail out.
+    if (!looksLikeOrigin(searchStr)) {
       return false;
     }
 
     let match =
       await PlacesSearchAutocompleteProvider.findMatchByToken(searchStr);
+    // Verify that the match we got is acceptable. Autofilling "example/" to
+    // "example.com/" would not be good.
     if (!match ||
-        (this._strippedPrefix && !match.url.startsWith(this._strippedPrefix))) {
+        (this._strippedPrefix && !match.url.startsWith(this._strippedPrefix)) ||
+        !(match.token + "/").includes(this._searchString)) {
       return false;
     }
 
@@ -2076,9 +2076,24 @@ Search.prototype = {
   _addURLAutofillMatch(row) {
     let url = row.getResultByIndex(QUERYINDEX_URL_URL);
     let strippedURL = row.getResultByIndex(QUERYINDEX_URL_STRIPPED_URL);
+    // We autofill urls to-the-next-slash.
+    // http://mozilla.org/foo/bar/baz will be autofilled to:
+    //  - http://mozilla.org/f[oo/]
+    //  - http://mozilla.org/foo/b[ar/]
+    //  - http://mozilla.org/foo/bar/b[az]
+    let value;
+    let strippedURLIndex = url.indexOf(strippedURL);
+    let strippedPrefix = url.substr(0, strippedURLIndex);
+    let nextSlashIndex = url.indexOf("/", strippedURLIndex + strippedURL.length - 1);
+    if (nextSlashIndex == -1) {
+      value = url.substr(strippedURLIndex);
+    } else {
+      value = url.substring(strippedURLIndex, nextSlashIndex + 1);
+    }
+
     this._addAutofillMatch(
-      url.substr(url.indexOf(strippedURL)),
-      url,
+      value,
+      strippedPrefix + value,
       row.getResultByIndex(QUERYINDEX_URL_FRECENCY)
     );
   },

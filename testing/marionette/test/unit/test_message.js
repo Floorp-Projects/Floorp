@@ -94,11 +94,11 @@ add_test(function test_Command_fromPacket() {
   equal(c1.name, c2.name);
   equal(c1.parameters, c2.parameters);
 
-  Assert.throws(() => Command.fromPacket([null, 2, "foo", {}]));
-  Assert.throws(() => Command.fromPacket([1, 2, "foo", {}]));
-  Assert.throws(() => Command.fromPacket([0, null, "foo", {}]));
-  Assert.throws(() => Command.fromPacket([0, 2, null, {}]));
-  Assert.throws(() => Command.fromPacket([0, 2, "foo", false]));
+  Assert.throws(() => Command.fromPacket([null, 2, "foo", {}]), /InvalidArgumentError/);
+  Assert.throws(() => Command.fromPacket([1, 2, "foo", {}]), /InvalidArgumentError/);
+  Assert.throws(() => Command.fromPacket([0, null, "foo", {}]), /InvalidArgumentError/);
+  Assert.throws(() => Command.fromPacket([0, 2, null, {}]), /InvalidArgumentError/);
+  Assert.throws(() => Command.fromPacket([0, 2, "foo", false]), /InvalidArgumentError/);
 
   let nullParams = Command.fromPacket([0, 2, "foo", null]);
   equal("[object Object]", Object.prototype.toString.call(nullParams.parameters));
@@ -231,10 +231,10 @@ add_test(function test_Response_fromPacket() {
   equal(r1.error, r2.error);
   equal(r1.body, r2.body);
 
-  Assert.throws(() => Response.fromPacket([null, 2, "foo", {}]));
-  Assert.throws(() => Response.fromPacket([0, 2, "foo", {}]));
-  Assert.throws(() => Response.fromPacket([1, null, "foo", {}]));
-  Assert.throws(() => Response.fromPacket([1, 2, null, {}]));
+  Assert.throws(() => Response.fromPacket([null, 2, "foo", {}]), InvalidArgumentError);
+  Assert.throws(() => Response.fromPacket([0, 2, "foo", {}]), InvalidArgumentError);
+  Assert.throws(() => Response.fromPacket([1, null, "foo", {}]), InvalidArgumentError);
+  Assert.throws(() => Response.fromPacket([1, 2, null, {}]), InvalidArgumentError);
   Response.fromPacket([1, 2, "foo", null]);
 
   run_next_test();
