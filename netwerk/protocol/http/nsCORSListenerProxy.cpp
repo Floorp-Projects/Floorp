@@ -48,6 +48,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 #define PREFLIGHT_CACHE_SIZE 100
 
@@ -1490,9 +1491,9 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   // Either it wasn't cached or the cached result has expired. Build a
   // channel for the OPTIONS request.
 
-  nsCOMPtr<nsILoadInfo> loadInfo = static_cast<mozilla::LoadInfo*>
+  nsCOMPtr<nsILoadInfo> loadInfo = static_cast<mozilla::net::LoadInfo*>
     (originalLoadInfo.get())->CloneForNewRequest();
-  static_cast<mozilla::LoadInfo*>(loadInfo.get())->SetIsPreflight();
+  static_cast<mozilla::net::LoadInfo*>(loadInfo.get())->SetIsPreflight();
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   rv = aRequestChannel->GetLoadGroup(getter_AddRefs(loadGroup));

@@ -48,7 +48,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     /* Zone GC, non-incremental, single zone. */
     FinalizeCalls = 0;
     JS::PrepareZoneForGC(global1->zone());
-    JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
+    JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::API);
     CHECK(!cx->runtime()->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
@@ -58,7 +58,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global1->zone());
     JS::PrepareZoneForGC(global2->zone());
     JS::PrepareZoneForGC(global3->zone());
-    JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
+    JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::API);
     CHECK(!cx->runtime()->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());

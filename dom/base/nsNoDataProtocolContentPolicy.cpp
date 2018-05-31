@@ -28,9 +28,9 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
                                           const nsACString &aMimeGuess,
                                           int16_t *aDecision)
 {
-  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
              "We should only see external content policy types here.");
 
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -39,10 +39,10 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
   // plugin, so they don't necessarily open external apps
   // TYPE_WEBSOCKET loads can only go to ws:// or wss://, so we don't need to
   // concern ourselves with them.
-  if (aContentType != TYPE_DOCUMENT &&
-      aContentType != TYPE_SUBDOCUMENT &&
-      aContentType != TYPE_OBJECT &&
-      aContentType != TYPE_WEBSOCKET) {
+  if (contentType != TYPE_DOCUMENT &&
+      contentType != TYPE_SUBDOCUMENT &&
+      contentType != TYPE_OBJECT &&
+      contentType != TYPE_WEBSOCKET) {
 
     // The following are just quick-escapes for the most common cases
     // where we would allow the content to be loaded anyway.

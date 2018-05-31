@@ -489,9 +489,9 @@ var BrowserApp = {
       InitLater(() => GlobalEventDispatcher.dispatch("GeckoView:AccessibilityReady"));
       GlobalEventDispatcher.registerListener((aEvent, aData, aCallback) => {
         if (aData.enabled) {
-          AccessFu.attach(window);
+          AccessFu.enable();
         } else {
-          AccessFu.detach();
+          AccessFu.disable();
         }
       }, "GeckoView:AccessibilitySettings");
     }
