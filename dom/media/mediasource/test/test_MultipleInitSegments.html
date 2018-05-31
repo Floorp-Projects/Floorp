@@ -19,10 +19,10 @@ runWithMSE(async (ms, v) => {
   const seek_lowres = await fetchWithXHR("seek_lowres.webm");
   const seek = await fetchWithXHR("seek.webm");
   const data = [
-    [ seek_lowres, 0, 438 ],     // lowres init segment
-    [ seek_lowres, 438, 25950 ], // lowres media segment 0-1
-    [ seek, 0, 318 ],            // init segment
-    [ seek, 46712, 67833 ]       // media segment 0.8-1.201
+    [seek_lowres, 0, 438],     // lowres init segment
+    [seek_lowres, 438, 25950], // lowres media segment 0-1
+    [seek, 0, 318],            // init segment
+    [seek, 46712, 67833]       // media segment 0.8-1.201
   ];
   const length = data.map(d => d[2] - d[1]).reduce((a, b) => a + b, 0);
   const arrayBuffer = new Uint8Array(length);

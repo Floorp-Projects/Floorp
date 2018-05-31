@@ -15,7 +15,7 @@ add_task(async function testTempAllowThrows() {
   await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
     Assert.throws(function() {
       SitePermissions.set(uri, id, SitePermissions.ALLOW, SitePermissions.SCOPE_TEMPORARY, browser);
-    }, "'Block' is the only permission we can save temporarily on a tab");
+    }, /'Block' is the only permission we can save temporarily on a browser/);
   });
 });
 
@@ -91,4 +91,3 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-

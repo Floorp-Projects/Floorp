@@ -39,13 +39,13 @@ runWithMSE(async (ms, el) => {
   });
   is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
   let p = once(el, "loadedmetadata");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await p;
   ok(true, "got loadedmetadata event");
   // We shift the timestamps slightly to create a small gaps at the start.
   // one that should normally be ignored.
   videosb.timestampOffset = 0.1;
-  p = Promise.all([ "loadeddata", "canplay", "play", "playing" ].map(e => once(el, e)));
+  p = Promise.all(["loadeddata", "canplay", "play", "playing"].map(e => once(el, e)));
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 14), ".m4s");
   await p;
   ok(true, "got all required event");

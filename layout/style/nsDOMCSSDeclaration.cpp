@@ -8,7 +8,7 @@
 
 #include "nsDOMCSSDeclaration.h"
 
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSS2PropertiesBinding.h"
@@ -126,8 +126,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   }
 
   RefPtr<DeclarationBlock> newdecl =
-    ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
-                                       servoEnv.mCompatMode, servoEnv.mLoader);
+    DeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
+                                  servoEnv.mCompatMode, servoEnv.mLoader);
 
   aRv = SetCSSDeclaration(newdecl);
 }
@@ -268,7 +268,7 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  changed = aFunc(decl->AsServo(), servoEnv);
+  changed = aFunc(decl, servoEnv);
 
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
@@ -286,7 +286,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
 {
   return ModifyDeclaration(
     aSubjectPrincipal,
-    [&](ServoDeclarationBlock* decl, ParsingEnvironment& env) {
+    [&](DeclarationBlock* decl, ParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetPropertyById(
         decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
@@ -303,7 +303,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
   return ModifyDeclaration(
     aSubjectPrincipal,
-    [&](ServoDeclarationBlock* decl, ParsingEnvironment& env) {
+    [&](DeclarationBlock* decl, ParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 property(aPropertyName);
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetProperty(

@@ -20,7 +20,7 @@ setup(
     author='Gregory Szorc',
     author_email='gregory.szorc@gmail.com',
     url='https://developer.mozilla.org/en-US/docs/Developer_Guide/mach',
-    packages=['mach'],
+    packages=['mach', 'mach.mixin'],
     version=VERSION,
     classifiers=[
         'Environment :: Console',

@@ -21,7 +21,7 @@ namespace dom {
 class DocGroup;
 } // namespace dom
 
-class ServoDeclarationBlock;
+class DeclarationBlock;
 class ServoStyleRule;
 
 class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
@@ -50,7 +50,7 @@ private:
   inline ServoStyleRule* Rule();
   inline const ServoStyleRule* Rule() const;
 
-  RefPtr<ServoDeclarationBlock> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 class ServoStyleRule final : public BindingStyleRule

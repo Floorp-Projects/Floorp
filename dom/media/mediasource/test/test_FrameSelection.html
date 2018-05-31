@@ -41,7 +41,7 @@ runWithMSE(async (ms, v) => {
   ms.endOfStream();
 
   info("Seeking to t=3");
-  p = Promise.all([ once(v, "seeked"), once(v, "resize") ]);
+  p = Promise.all([once(v, "seeked"), once(v, "resize")]);
   v.currentTime = 3;
   await p;
   is(v.currentTime, 3, "Video currentTime at target");
@@ -49,7 +49,7 @@ runWithMSE(async (ms, v) => {
   is(v.videoHeight, 120, "videoHeight has correct low-res value");
 
   info("Seeking to t=1");
-  p = Promise.all([ once(v, "seeked"), once(v, "resize") ]);
+  p = Promise.all([once(v, "seeked"), once(v, "resize")]);
   v.currentTime = 1;
   await p;
   is(v.currentTime, 1, "Video currentTime at target");

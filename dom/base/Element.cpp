@@ -59,7 +59,7 @@
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -3780,12 +3780,6 @@ void
 Element::SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal* aSubjectPrincipal, ErrorResult& aError)
 {
   SetInnerHTMLInternal(aInnerHTML, aError);
-}
-
-void
-Element::UnsafeSetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
-{
-  SetInnerHTMLInternal(aInnerHTML, aError, true);
 }
 
 void

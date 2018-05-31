@@ -16,7 +16,7 @@ runWithMSE(async (ms, v) => {
   // Load a webm video and play it.
   await once(ms, "sourceopen");
   const sb = ms.addSourceBuffer("video/webm");
-  await fetchAndLoad(sb, "seek", [ "" ], ".webm");
+  await fetchAndLoad(sb, "seek", [""], ".webm");
   const p = once(v, "ended");
   ms.endOfStream();
   v.play();

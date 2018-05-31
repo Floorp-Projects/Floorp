@@ -53,3 +53,43 @@ add_task(async function portNoMatch() {
   });
   await cleanup();
 });
+
+// autofill to the next slash
+add_task(async function port() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://example.com:8888/foo/bar/baz",
+  }]);
+  await check_autocomplete({
+    search: "example.com:8888/foo/b",
+    autofilled: "example.com:8888/foo/bar/",
+    completed: "http://example.com:8888/foo/bar/",
+    matches: [{
+      value: "example.com:8888/foo/bar/",
+      comment: "example.com:8888/foo/bar/",
+      style: ["autofill", "heuristic"],
+    }, {
+      value: "http://example.com:8888/foo/bar/baz",
+      comment: "test visit for http://example.com:8888/foo/bar/baz",
+      style: ["favicon"],
+    }],
+  });
+  await cleanup();
+});
+
+// autofill to the next slash, end of url
+add_task(async function port() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://example.com:8888/foo/bar/baz",
+  }]);
+  await check_autocomplete({
+    search: "example.com:8888/foo/bar/b",
+    autofilled: "example.com:8888/foo/bar/baz",
+    completed: "http://example.com:8888/foo/bar/baz",
+    matches: [{
+      value: "example.com:8888/foo/bar/baz",
+      comment: "example.com:8888/foo/bar/baz",
+      style: ["autofill", "heuristic"],
+    }],
+  });
+  await cleanup();
+});

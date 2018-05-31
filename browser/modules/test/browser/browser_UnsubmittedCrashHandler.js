@@ -562,8 +562,8 @@ add_task(async function test_shutdown_while_not_showing() {
   UnsubmittedCrashHandler.uninit();
   Assert.throws(() => {
     UnsubmittedCrashHandler.prefs.getBoolPref("shutdownWhileShowing");
-  }, "We should have noticed that the notification had closed before " +
-     "uninitting.");
+  }, /NS_ERROR_UNEXPECTED/,
+     "We should have noticed that the notification had closed before uninitting.");
   UnsubmittedCrashHandler.init();
 
   clearPendingCrashReports();

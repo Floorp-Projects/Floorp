@@ -15,24 +15,24 @@ SimpleTest.waitForExplicitFinish();
 runWithMSE(async (ms, v) => {
   const receiveEvent = e => v["got" + e] = true;
 
-  const msevents = [ "onsourceopen", "onsourceended" ];
+  const msevents = ["onsourceopen", "onsourceended"];
   msevents.forEach(e => ms[e] = () => receiveEvent(e));
 
-  const sblistevents = [ "onaddsourcebuffer", "onremovesourcebuffer" ];
+  const sblistevents = ["onaddsourcebuffer", "onremovesourcebuffer"];
   sblistevents.forEach(e => ms.sourceBuffers[e] = () => receiveEvent(e));
 
   await once(ms, "sourceopen");
   const sb = ms.addSourceBuffer("video/webm");
 
-  const sbevents = [ "onupdatestart", "onupdate", "onupdateend", "onabort" ];
+  const sbevents = ["onupdatestart", "onupdate", "onupdateend", "onabort"];
   sbevents.forEach(e => sb[e] = () => receiveEvent(e));
 
-  await fetchAndLoad(sb, "seek", [ "" ], ".webm");
+  await fetchAndLoad(sb, "seek", [""], ".webm");
   sb.appendBuffer(await fetchWithXHR("seek.webm"));
   ms.removeSourceBuffer(sb); // will fire abort and removesourcebuffer
   ms.endOfStream(); // will fire sourceended
   await once(ms, "sourceended");
-  [ ...msevents, ...sbevents, ...sblistevents ].forEach(e => ok(v["got" + e], "got " + e));
+  [...msevents, ...sbevents, ...sblistevents].forEach(e => ok(v["got" + e], "got " + e));
   SimpleTest.finish();
 });
 

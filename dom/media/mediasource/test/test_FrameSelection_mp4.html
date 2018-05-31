@@ -25,7 +25,7 @@ runWithMSE(async (ms, v) => {
     ok(false, `should not fire ${e.type} event`);
     SimpleTest.finish();
   });
-  await fetchAndLoad(sb, "bipbop/bipbop", [ "init" ], ".mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop", ["init"], ".mp4");
   const p = once(v, "loadeddata");
   await fetchAndLoad(sb, "bipbop/bipbop", range(1, 3), ".m4s");
   await p;
@@ -33,12 +33,12 @@ runWithMSE(async (ms, v) => {
   v.play();
   // We have nothing to play, waiting will be fired.
   await waitUntilTime(v, 1.5);
-  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", [ "init" ], ".mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", ["init"], ".mp4");
   sb.timestampOffset = 1.601666; // End of the video track buffered - time of first video sample (0.095).
   sb.appendWindowEnd = 1.796677; // Only allow room for three extra video frames (we need 3 as this video has b-frames).
-  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", [ "1" ], ".m4s");
+  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", ["1"], ".m4s");
   ms.endOfStream();
-  await Promise.all([ once(ms, "sourceended"), once(v, "playing"), once(v, "ended") ]);
+  await Promise.all([once(ms, "sourceended"), once(v, "playing"), once(v, "ended")]);
   if (v.width, 640, "has proper width");
   if (v.height, 480, "has proper height");
   SimpleTest.finish();

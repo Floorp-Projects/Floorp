@@ -474,7 +474,7 @@ private:
   const SnapshotTable& Snapshots();
 
   /**
-   * Resolve all ServoDeclarationBlocks attached to mapped
+   * Resolve all DeclarationBlocks attached to mapped
    * presentation attributes cached on the document.
    *
    * Call this before jumping into Servo's style system.

@@ -18,7 +18,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsNameSpaceManager.h"
@@ -2323,7 +2323,7 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         RefPtr<URLExtraData> data =
           new URLExtraData(aDocumentURI, aDocumentURI, principal);
         RefPtr<DeclarationBlock> declaration =
-          ServoDeclarationBlock::FromCssText(
+          DeclarationBlock::FromCssText(
             aValue, data, eCompatibility_FullStandards, nullptr);
         if (declaration) {
             mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);

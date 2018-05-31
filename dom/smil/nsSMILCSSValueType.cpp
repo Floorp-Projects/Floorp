@@ -16,9 +16,8 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
@@ -594,7 +593,7 @@ nsSMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
   for (const auto& value : wrapper->mServoValues) {
     changed |=
       Servo_DeclarationBlock_SetPropertyToAnimationValue(
-        aDecl.AsServo()->Raw(), value);
+        aDecl.Raw(), value);
   }
 
   return changed;

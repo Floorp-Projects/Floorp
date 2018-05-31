@@ -23,7 +23,7 @@ runWithMSE(async (ms, v) => {
   sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
 
   // Adding the first init segment will fire a durationchange.
-  await Promise.all([ once(sb, "updateend"), once(v, "loadedmetadata") ]);
+  await Promise.all([once(sb, "updateend"), once(v, "loadedmetadata")]);
   ok(true, "got loadedmetadata");
   // Set mediasource duration to 0, so future appendBuffer
   // will update the mediasource duration.

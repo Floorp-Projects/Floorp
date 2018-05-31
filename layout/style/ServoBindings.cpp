@@ -47,7 +47,7 @@
 #include "nsWindowSizes.h"
 
 #include "mozilla/CORSMode.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
@@ -391,7 +391,7 @@ Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
   if (!decl) {
     return nullptr;
   }
-  return decl->AsServo()->RefRawStrong();
+  return decl->RefRawStrong();
 }
 
 void
@@ -421,7 +421,7 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
     auto* svg = nsSVGElement::FromNodeOrNull(aElement);
     if (svg) {
       if (auto decl = svg->GetContentDeclarationBlock()) {
-        return decl->AsServo()->RefRawStrong();
+        return decl->RefRawStrong();
       }
     }
     return nullptr;
