@@ -186,6 +186,23 @@ class AnimationInspector {
   }
 
   /**
+   * This function calls AnimationsFront.setCurrentTimes with considering the createdTime
+   * which was introduced bug 1454392.
+   *
+   * @param {Number} currentTime
+   */
+  async doSetCurrentTimes(currentTime) {
+    const { animations, timeScale } = this.state;
+
+    // If currentTime is not defined in timeScale (which happens when connected
+    // to server older than FF62), set currentTime as it is. See bug 1454392.
+    currentTime = typeof timeScale.currentTime === "undefined"
+                    ? currentTime : currentTime + timeScale.minStartTime;
+    await this.animationsFront.setCurrentTimes(animations, currentTime, true,
+                                               { relativeToCreatedTime: true });
+  }
+
+  /**
    * Return a map of animated property from given animation actor.
    *
    * @param {Object} animation
@@ -386,17 +403,11 @@ class AnimationInspector {
       return;
     }
 
-    const { animations, timeScale } = this.state;
+    const { animations } = this.state;
     this.isCurrentTimeSet = true;
-    // If currentTime is not defined in timeScale (which happens when connected
-    // to server older than FF62), set currentTime as it is. See bug 1454392.
-    currentTime =
-      typeof timeScale.currentTime === "undefined"
-        ? currentTime : currentTime + timeScale.minStartTime;
 
     try {
-      await this.animationsFront.setCurrentTimes(animations, currentTime, true,
-                                                 { relativeToCreatedTime: true });
+      await this.doSetCurrentTimes(currentTime);
       await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
@@ -445,8 +456,7 @@ class AnimationInspector {
     try {
       if (doPlay && animations.every(animation =>
                       timeScale.getEndTime(animation) <= animation.state.currentTime)) {
-        await this.animationsFront.setCurrentTimes(animations, 0, true,
-                                                   { relativeToCreatedTime: true });
+        await this.doSetCurrentTimes(0);
       }
 
       // If the server does not support pauseSome/playSome function, (which happens
