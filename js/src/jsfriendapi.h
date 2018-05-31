@@ -325,6 +325,9 @@ ForceLexicalInitialization(JSContext *cx, HandleObject obj);
 extern JS_FRIEND_API(int)
 IsGCPoisoning();
 
+extern JS_FRIEND_API(JSPrincipals*)
+GetRealmPrincipals(JS::Realm* realm);
+
 } // namespace JS
 
 /**
@@ -3093,9 +3096,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoAssertNoContentJS)
 };
 
 // Turn on assertions so that we assert that
-//     !comp->validAccessPtr || *comp->validAccessPtr
-// is true for every |comp| that we run JS code in. The compartment's validAccessPtr
-// is set via SetCompartmentValidAccessPtr.
+//     !realm->validAccessPtr || *realm->validAccessPtr
+// is true for every |realm| that we run JS code in. The realm's validAccessPtr
+// is set via SetRealmValidAccessPtr.
 extern JS_FRIEND_API(void)
 EnableAccessValidation(JSContext* cx, bool enabled);
 
@@ -3104,7 +3107,7 @@ EnableAccessValidation(JSContext* cx, bool enabled);
 // threads that are allowed to run code on |global|, so all changes to *accessp
 // should be made from whichever thread owns |global| at a given time.
 extern JS_FRIEND_API(void)
-SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
+SetRealmValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
 
 // Returns true if the system zone is available (i.e., if no cooperative contexts
 // are using it now).

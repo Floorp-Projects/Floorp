@@ -85,6 +85,7 @@ typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 
 namespace js {
 
+inline JS::Realm* GetContextRealm(const JSContext* cx);
 inline JSCompartment* GetContextCompartment(const JSContext* cx);
 inline JS::Zone* GetContextZone(const JSContext* cx);
 
