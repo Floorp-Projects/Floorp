@@ -11,12 +11,16 @@ euclid = { version = "0.17", features = ["serde"] }
 app_units = "0.6"
 gleam = "0.5"
 log = "0.4"
+nsstring = { path = "../../servo/support/gecko/nsstring" }
+bincode = "1.0"
+uuid = {version = "0.1.18"}
+fxhash = "0.2.1"
 
 [dependencies.webrender]
 path = "../webrender"
 version = "0.57.2"
 default-features = false
-features = ["capture"]
+features = ["capture", "serialize_program"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4.1"
