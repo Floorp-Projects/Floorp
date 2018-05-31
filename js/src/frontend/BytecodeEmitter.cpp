@@ -2007,7 +2007,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     //        |               +--------+          +------+ |
     //        |                                            |
     //        +--------------------------------------------+
-    enum State {
+    enum class State {
         // The initial state.
         Start,
 
@@ -2036,7 +2036,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         pushed_(0),
         calculatedPushed_(false),
 #endif
-        state_(Start)
+        state_(State::Start)
     {}
 
     ~IfThenElseEmitter()
@@ -2044,15 +2044,28 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
   private:
     bool emitIf(State nextState) {
-        MOZ_ASSERT(state_ == Start || state_ == Else);
-        MOZ_ASSERT(nextState == If || nextState == IfElse || nextState == Cond);
+        MOZ_ASSERT(state_ == State::Start || state_ == State::Else);
+        MOZ_ASSERT(nextState == State::If || nextState == State::IfElse ||
+                   nextState == State::Cond);
 
         // Clear jumpAroundThen_ offset that points previous JSOP_IFEQ.
-        if (state_ == Else)
+        if (state_ == State::Else)
             jumpAroundThen_ = JumpList();
 
         // Emit an annotated branch-if-false around the then part.
-        SrcNoteType type = nextState == If ? SRC_IF : nextState == IfElse ? SRC_IF_ELSE : SRC_COND;
+        SrcNoteType type;
+        switch (nextState) {
+          case State::If:
+            type = SRC_IF;
+            break;
+          case State::IfElse:
+            type = SRC_IF_ELSE;
+            break;
+          default:
+            MOZ_ASSERT(nextState == State::Cond);
+            type = SRC_COND;
+            break;
+        }
         if (!bce_->newSrcNote(type))
             return false;
         if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_))
@@ -2063,7 +2076,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         // If DEBUG, this is also necessary to calculate |pushed_|.
         thenDepth_ = bce_->stackDepth;
 #else
-        if (nextState == IfElse || nextState == Cond)
+        if (nextState == State::IfElse || nextState == State::Cond)
             thenDepth_ = bce_->stackDepth;
 #endif
         state_ = nextState;
@@ -2083,19 +2096,19 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
   public:
     bool emitIf() {
-        return emitIf(If);
+        return emitIf(State::If);
     }
 
     bool emitCond() {
-        return emitIf(Cond);
+        return emitIf(State::Cond);
     }
 
     bool emitIfElse() {
-        return emitIf(IfElse);
+        return emitIf(State::IfElse);
     }
 
     bool emitElse() {
-        MOZ_ASSERT(state_ == IfElse || state_ == Cond);
+        MOZ_ASSERT(state_ == State::IfElse || state_ == State::Cond);
 
         calculateOrCheckPushed();
 
@@ -2111,16 +2124,16 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
         // Restore stack depth of the then part.
         bce_->stackDepth = thenDepth_;
-        state_ = Else;
+        state_ = State::Else;
         return true;
     }
 
     bool emitEnd() {
-        MOZ_ASSERT(state_ == If || state_ == Else);
+        MOZ_ASSERT(state_ == State::If || state_ == State::Else);
 
         calculateOrCheckPushed();
 
-        if (state_ == If) {
+        if (state_ == State::If) {
             // No else part, fixup the branch-if-false to come here.
             if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
                 return false;
@@ -2130,7 +2143,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         if (!bce_->emitJumpTargetAndPatch(jumpsAroundElse_))
             return false;
 
-        state_ = End;
+        state_ = State::End;
         return true;
     }
 
