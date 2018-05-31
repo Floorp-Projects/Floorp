@@ -168,10 +168,15 @@ class Logging
           }
           case JSVariant::TObjectVariant: {
               const ObjectVariant& ovar = value.get_ObjectVariant();
-              if (ovar.type() == ObjectVariant::TLocalObject)
-                  formatObject(incoming, true, ObjectId::deserialize(ovar.get_LocalObject().serializedId()), out);
-              else
-                  formatObject(incoming, false, ObjectId::deserialize(ovar.get_RemoteObject().serializedId()), out);
+              if (ovar.type() == ObjectVariant::TLocalObject) {
+                  Maybe<ObjectId> objId(ObjectId::deserialize(ovar.get_LocalObject().serializedId()));
+                  MOZ_RELEASE_ASSERT(objId.isSome());
+                  formatObject(incoming, true, objId.value(), out);
+              } else {
+                  Maybe<ObjectId> objId(ObjectId::deserialize(ovar.get_RemoteObject().serializedId()));
+                  MOZ_RELEASE_ASSERT(objId.isSome());
+                  formatObject(incoming, false, objId.value(), out);
+              }
               break;
           }
           case JSVariant::TSymbolVariant: {
