@@ -26,21 +26,33 @@ class BrowserMenuAdapter(
     private val fragment: BrowserFragment,
     customTabConfig: CustomTabConfig?
 ) : RecyclerView.Adapter<BrowserMenuViewHolder>() {
-    internal data class MenuItem(val id: Int, val label: String, val pendingIntent: PendingIntent? = null)
+    sealed class MenuItem {
+        open val viewType = 0
+
+        open class Default(val id: Int, val label: String) : MenuItem() {
+            override val viewType = MenuItemViewHolder.LAYOUT_ID
+        }
+
+        class Custom(id: Int, label: String, val pendingIntent: PendingIntent) : Default(id, label) {
+            override val viewType = CustomTabMenuItemViewHolder.LAYOUT_ID
+        }
+
+        object Navigation : MenuItem() {
+            override val viewType = NavigationItemViewHolder.LAYOUT_ID
+        }
+
+        object BlockingSwitch : MenuItem() {
+            override val viewType = BlockingItemViewHolder.LAYOUT_ID
+        }
+
+        object RequestDesktopCheck : MenuItem() {
+            override val viewType = RequestDesktopCheckItemViewHolder.LAYOUT_ID
+        }
+    }
 
     private var items = mutableListOf<MenuItem>()
     private var navigationItemViewHolderReference = WeakReference<NavigationItemViewHolder>(null)
     private var blockingItemViewHolderReference = WeakReference<BlockingItemViewHolder>(null)
-    private var hasCustomTabConfig = customTabConfig != null
-
-    private val blockingSwitchPosition: Int
-        get() = if (shouldShowButtonToolbar()) 1 else 0
-
-    private val requestDesktopCheckPosition: Int
-        get() {
-            val offset = 2
-            return if (hasCustomTabConfig) 4 else itemCount - offset
-        }
 
     init {
         initializeMenu(fragment.url, customTabConfig)
@@ -50,27 +62,35 @@ class BrowserMenuAdapter(
         val resources = context.resources
         val browsers = Browsers(context, url)
 
-        if (customTabConfig == null || customTabConfig.showShareMenuItem) {
-            items.add(MenuItem(R.id.share, resources.getString(R.string.menu_share)))
+        if (shouldShowButtonToolbar()) {
+            items.add(MenuItem.Navigation)
         }
 
-        items.add(MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)))
+        items.add(MenuItem.BlockingSwitch)
 
-        items.add(MenuItem(R.id.find_in_page, resources.getString(R.string.find_in_page)))
+        if (customTabConfig == null || customTabConfig.showShareMenuItem) {
+            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share)))
+        }
+
+        items.add(MenuItem.Default(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)))
+        items.add(MenuItem.Default(R.id.find_in_page, resources.getString(R.string.find_in_page)))
 
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
-            items.add(MenuItem(R.id.open_select_browser, resources.getString(
+            items.add(MenuItem.Default(R.id.open_select_browser, resources.getString(
                     R.string.menu_open_with_a_browser2)))
         }
 
         if (customTabConfig != null) {
             // "Open in Firefox Focus" to switch from a custom tab to the full-featured browser
-            items.add(MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_with_default_browser2,
-                    resources.getString(R.string.app_name))))
+            val appName = resources.getString(R.string.app_name)
+            val label = resources.getString(R.string.menu_open_with_default_browser2, appName)
+            val menuItem = MenuItem.Default(R.id.open_in_firefox_focus, label)
+
+            items.add(menuItem)
         }
 
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
-            items.add(MenuItem(R.id.open_default, resources.getString(
+            items.add(MenuItem.Default(R.id.open_default, resources.getString(
                     R.string.menu_open_with_default_browser2, browsers.defaultBrowser!!.loadLabel(
                     context.packageManager))))
         }
@@ -78,23 +98,21 @@ class BrowserMenuAdapter(
         if (customTabConfig == null) {
             // There’s no need for Settings in a custom tab.
             // The user can go to the browser app itself in order to do this.
-            items.add(MenuItem(R.id.settings, resources.getString(R.string.menu_settings)))
+            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings)))
         }
+
+        items.add(MenuItem.RequestDesktopCheck)
 
         if (AppConstants.isGeckoBuild()) {
             // "Report Site Issue" is available for builds using GeckoView only
-            items.add(MenuItem(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue)))
+            items.add(MenuItem.Default(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue)))
         }
 
         if (customTabConfig != null) {
-            addCustomTabMenuItems(items, customTabConfig)
+            val customTabItems = customTabConfig.menuItems
+                    .map { MenuItem.Custom(R.id.custom_tab_menu_item, it.name, it.pendingIntent) }
+            items.addAll(customTabItems)
         }
-    }
-
-    private fun addCustomTabMenuItems(items: MutableList<MenuItem>, customTabConfig: CustomTabConfig) {
-        customTabConfig.menuItems
-                .map { MenuItem(R.id.custom_tab_menu_item, it.name, it.pendingIntent) }
-                .forEach { items.add(it) }
     }
 
     fun updateTrackers(trackers: Int) {
@@ -136,58 +154,19 @@ class BrowserMenuAdapter(
         }
     }
 
-    private fun translateToMenuPosition(position: Int): Int {
-        var offset = 1
-        if (shouldShowButtonToolbar()) offset++
-        if (position > requestDesktopCheckPosition) offset++
-        return position - offset
-    }
-
     override fun onBindViewHolder(holder: BrowserMenuViewHolder, position: Int) {
         holder.menu = menu
         holder.setOnClickListener(fragment)
 
-        val actualPosition = translateToMenuPosition(position)
-
-        if (actualPosition >= 0 && position != blockingSwitchPosition && position!= requestDesktopCheckPosition) {
-            (holder as MenuItemViewHolder).bind(items[actualPosition])
+        val item = items[position]
+        when (item) {
+            is MenuItem.Default -> (holder as MenuItemViewHolder).bind(item)
+            is MenuItem.Custom -> (holder as CustomTabMenuItemViewHolder).bind(item)
         }
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (position == 0 && shouldShowButtonToolbar()) {
-            NavigationItemViewHolder.LAYOUT_ID
-        } else if (position == blockingSwitchPosition) {
-            BlockingItemViewHolder.LAYOUT_ID
-        } else if (position == requestDesktopCheckPosition) {
-            RequestDesktopCheckItemViewHolder.LAYOUT_ID
-        } else {
-            val actualPosition = translateToMenuPosition(position)
-            val menuItem = items[actualPosition]
-
-            if (menuItem.id == R.id.custom_tab_menu_item) {
-                CustomTabMenuItemViewHolder.LAYOUT_ID
-            } else {
-                MenuItemViewHolder.LAYOUT_ID
-            }
-        }
-    }
-
-    override fun getItemCount(): Int {
-        var itemCount = items.size
-
-        if (shouldShowButtonToolbar()) {
-            itemCount++
-        }
-
-        // For the blocking switch
-        itemCount++
-
-        // For the Request Desktop Check
-        itemCount++
-
-        return itemCount
-    }
+    override fun getItemViewType(position: Int): Int = items[position].viewType
+    override fun getItemCount(): Int = items.size
 
     // On phones we show an extra row with toolbar items (forward/refresh)
     private fun shouldShowButtonToolbar(): Boolean = !HardwareUtils.isTablet(context)

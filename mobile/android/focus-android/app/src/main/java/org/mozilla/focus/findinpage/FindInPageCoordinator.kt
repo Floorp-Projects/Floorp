@@ -3,7 +3,7 @@ package org.mozilla.focus.findinpage
 import android.arch.lifecycle.MutableLiveData
 import org.mozilla.focus.web.IFindListener
 
-class FindInPageCoordinator: IFindListener {
+class FindInPageCoordinator : IFindListener {
     val matches = MutableLiveData<Pair<Int, Int>>()
 
     fun reset() = matches.postValue(Pair(0, 0))
