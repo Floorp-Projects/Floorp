@@ -52,44 +52,36 @@ js::ObjectRealm::get(const JSObject* obj)
 template <typename T>
 js::AutoRealm::AutoRealm(JSContext* cx, const T& target)
   : cx_(cx),
-    origin_(cx->realm()),
-    maybeLock_(nullptr)
+    origin_(cx->realm())
 {
     cx_->enterRealmOf(target);
 }
 
-// Protected constructor that bypasses assertions in enterCompartmentOf. Used
-// only for entering the atoms realm.
-js::AutoRealm::AutoRealm(JSContext* cx, JS::Realm* target,
-                         js::AutoLockForExclusiveAccess& lock)
-  : cx_(cx),
-    origin_(cx->realm()),
-    maybeLock_(&lock)
-{
-    MOZ_ASSERT(target->isAtomsRealm());
-    cx_->enterAtomsRealm(target, lock);
-}
-
-// Protected constructor that bypasses assertions in enterCompartmentOf. Should
-// not be used to enter the atoms realm.
+// Protected constructor that bypasses assertions in enterRealmOf.
 js::AutoRealm::AutoRealm(JSContext* cx, JS::Realm* target)
   : cx_(cx),
-    origin_(cx->realm()),
-    maybeLock_(nullptr)
+    origin_(cx->realm())
 {
-    MOZ_ASSERT(!target->isAtomsRealm());
-    cx_->enterNonAtomsRealm(target);
+    cx_->enterRealm(target);
 }
 
 js::AutoRealm::~AutoRealm()
 {
-    cx_->leaveRealm(origin_, maybeLock_);
+    cx_->leaveRealm(origin_);
 }
 
-js::AutoAtomsRealm::AutoAtomsRealm(JSContext* cx,
-                                   js::AutoLockForExclusiveAccess& lock)
-  : AutoRealm(cx, cx->atomsRealm(lock), lock)
-{}
+js::AutoAtomsZone::AutoAtomsZone(JSContext* cx, js::AutoLockForExclusiveAccess& lock)
+  : cx_(cx),
+    origin_(cx->realm()),
+    lock_(lock)
+{
+    cx_->enterAtomsZone(lock);
+}
+
+js::AutoAtomsZone::~AutoAtomsZone()
+{
+    cx_->leaveAtomsZone(origin_, lock_);
+}
 
 js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JS::Realm* target)
   : AutoRealm(cx, target)

@@ -1999,7 +1999,7 @@ CreateObjectConstructor(JSContext* cx, JSProtoKey key)
 static JSObject*
 CreateObjectPrototype(JSContext* cx, JSProtoKey key)
 {
-    MOZ_ASSERT(!cx->realm()->isAtomsRealm());
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
     MOZ_ASSERT(cx->global()->isNative());
 
     /*

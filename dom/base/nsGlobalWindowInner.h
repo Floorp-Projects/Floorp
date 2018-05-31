@@ -377,7 +377,7 @@ public:
   virtual void MaybeUpdateTouchState() override;
 
   // Inner windows only.
-  void RefreshCompartmentPrincipal();
+  void RefreshRealmPrincipal();
 
   // For accessing protected field mFullScreen
   friend class FullscreenTransitionTask;

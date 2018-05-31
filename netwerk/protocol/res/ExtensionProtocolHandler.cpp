@@ -375,7 +375,9 @@ ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
     loadableByAnyone = policy->IsPathWebAccessible(url.FilePath());
   }
 
-  *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE) : URI_DANGEROUS_TO_LOAD);
+  *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY |
+    (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE |
+                         URI_FETCHABLE_BY_ANYONE) : URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
 

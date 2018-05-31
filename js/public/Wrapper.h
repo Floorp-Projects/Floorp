@@ -378,9 +378,6 @@ UncheckedUnwrapWithoutExpose(JSObject* obj);
 void
 ReportAccessDenied(JSContext* cx);
 
-JS_FRIEND_API(bool)
-IsCrossCompartmentWrapper(JSObject* obj);
-
 JS_FRIEND_API(void)
 NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper);
 

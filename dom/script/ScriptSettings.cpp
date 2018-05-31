@@ -618,7 +618,7 @@ AutoJSAPI::PeekException(JS::MutableHandle<JS::Value> aVal)
 {
   MOZ_ASSERT_IF(mIsMainThread, IsStackTop());
   MOZ_ASSERT(HasException());
-  MOZ_ASSERT(js::GetContextCompartment(cx()));
+  MOZ_ASSERT(js::GetContextRealm(cx()));
   if (!JS_GetPendingException(cx(), aVal)) {
     return false;
   }

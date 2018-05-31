@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.nodeHasChildren = nodeHasChildren;
 exports.isExactUrlMatch = isExactUrlMatch;
 exports.isDirectory = isDirectory;
-exports.getExtension = getExtension;
+exports.getFileExtension = getFileExtension;
 exports.isNotJavaScript = isNotJavaScript;
 exports.isInvalidUrl = isInvalidUrl;
 exports.partIsFile = partIsFile;
@@ -47,7 +47,7 @@ function isDirectory(url) {
   return (parts.length === 0 || url.path.slice(-1) === "/" || nodeHasChildren(url)) && url.name != "(index)";
 }
 
-function getExtension(url = "") {
+function getFileExtension(url = "") {
   const parsedUrl = (0, _url.parse)(url).pathname;
 
   if (!parsedUrl) {
@@ -58,11 +58,11 @@ function getExtension(url = "") {
 }
 
 function isNotJavaScript(source) {
-  return ["css", "svg", "png"].includes(getExtension(source.url));
+  return ["css", "svg", "png"].includes(getFileExtension(source.url));
 }
 
 function isInvalidUrl(url, source) {
-  return IGNORED_URLS.indexOf(url) != -1 || !source.get("url") || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
+  return IGNORED_URLS.indexOf(url) != -1 || !(source.get ? source.get("url") : source.url) || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
 }
 
 function partIsFile(index, parts, url) {

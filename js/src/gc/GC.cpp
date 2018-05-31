@@ -3852,7 +3852,6 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
     while (read < end) {
         JSCompartment* comp = *read++;
         Realm* realm = JS::GetRealmForCompartment(comp);
-        MOZ_ASSERT(!realm->isAtomsRealm());
 
         /*
          * Don't delete the last compartment and realm if all the ones before
@@ -4126,7 +4125,7 @@ CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing)
 {
     JSCompartment* comp = DispatchTyped(MaybeCompartmentFunctor(), thing);
     if (comp && compartment) {
-        MOZ_ASSERT(comp == compartment || runtime()->isAtomsCompartment(comp) ||
+        MOZ_ASSERT(comp == compartment ||
                    (srcKind == JS::TraceKind::Object &&
                     InCrossCompartmentMap(static_cast<JSObject*>(src), thing)));
     } else {
@@ -4223,7 +4222,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     /* Assert that zone state is as we expect */
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         MOZ_ASSERT(!zone->isCollecting());
-        MOZ_ASSERT(!zone->compartments().empty());
+        MOZ_ASSERT_IF(!zone->isAtomsZone(), !zone->compartments().empty());
         for (auto i : AllAllocKinds())
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep(i));
     }
@@ -4251,7 +4250,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     // executable code limit.
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->scheduledForDestruction = false;
         c->maybeAlive = false;
         for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
@@ -4478,7 +4477,7 @@ GCRuntime::markCompartments()
 
     Vector<JSCompartment*, 0, js::SystemAllocPolicy> workList;
 
-    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
         if (comp->maybeAlive) {
             if (!workList.append(comp))
                 return;
@@ -4895,7 +4894,7 @@ DropStringWrappers(JSRuntime* rt)
      * us to sweep the wrappers in all compartments every time we sweep a
      * compartment group.
      */
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         for (JSCompartment::StringWrapperEnum e(c); !e.empty(); e.popFront()) {
             MOZ_ASSERT(e.front().key().is<JSString*>());
             e.removeFront();
@@ -5137,7 +5136,7 @@ static void
 AssertNoWrappersInGrayList(JSRuntime* rt)
 {
 #ifdef DEBUG
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         MOZ_ASSERT(!c->gcIncomingGrayPointers);
         for (JSCompartment::NonStringWrapperEnum e(c); !e.empty(); e.popFront())
             AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
@@ -5412,7 +5411,7 @@ UpdateAtomsBitmap(GCParallelTask* task)
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
     runtime->unsafeSymbolRegistry().sweep();
-    for (RealmsIter realm(runtime, SkipAtoms); !realm.done(); realm.next())
+    for (RealmsIter realm(runtime); !realm.done(); realm.next())
         realm->sweepVarNames();
 }
 
@@ -6888,7 +6887,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
       case State::Sweep: {
         marker.reset();
 
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        for (CompartmentsIter c(rt); !c.done(); c.next())
             c->scheduledForDestruction = false;
 
         /* Finish sweeping the current sweep group, then abort. */
@@ -7552,7 +7551,7 @@ GCRuntime::maybeDoCycleCollection()
 
     size_t realmsTotal = 0;
     size_t realmsGray = 0;
-    for (RealmsIter realm(rt, SkipAtoms); !realm.done(); realm.next()) {
+    for (RealmsIter realm(rt); !realm.done(); realm.next()) {
         ++realmsTotal;
         GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
         if (global && global->isMarkedGray())
@@ -7602,7 +7601,7 @@ GCRuntime::shouldRepeatForDeadZone(JS::gcreason::Reason reason)
     if (!isIncremental)
         return false;
 
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->scheduledForDestruction)
             return true;
     }
@@ -7961,7 +7960,7 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         return nullptr;
 
     // Set up the principals.
-    JS_SetCompartmentPrincipals(JS::GetCompartmentForRealm(realm), principals);
+    JS::SetRealmPrincipals(realm, principals);
 
     JSCompartment* comp = realm->compartment();
     if (!comp->realms().append(realm)) {
@@ -8488,7 +8487,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
         }
     }
 
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->checkWrapperMapAfterMovingGC();
 
         for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {

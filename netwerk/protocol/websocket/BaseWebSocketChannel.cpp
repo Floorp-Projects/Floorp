@@ -290,6 +290,9 @@ BaseWebSocketChannel::GetProtocolFlags(uint32_t *aProtocolFlags)
 
   *aProtocolFlags = URI_NORELATIVE | URI_NON_PERSISTABLE | ALLOWS_PROXY |
       ALLOWS_PROXY_HTTP | URI_DOES_NOT_RETURN_DATA | URI_DANGEROUS_TO_LOAD;
+  if (mEncrypted) {
+    *aProtocolFlags |= URI_IS_POTENTIALLY_TRUSTWORTHY;
+  }
   return NS_OK;
 }
 
