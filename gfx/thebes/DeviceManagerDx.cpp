@@ -867,6 +867,7 @@ DeviceManagerDx::ResetDevices()
   mMLGDevice = nullptr;
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
+  mImageDevice = nullptr;
   mDeviceStatus = Nothing();
   mDeviceResetReason = Nothing();
   Factory::SetDirect3D11Device(nullptr);
@@ -1051,6 +1052,37 @@ DeviceManagerDx::GetContentDevice()
 {
   MutexAutoLock lock(mDeviceLock);
   return mContentDevice;
+}
+
+RefPtr<ID3D11Device>
+DeviceManagerDx::GetImageDevice()
+{
+  MutexAutoLock lock(mDeviceLock);
+  if (mImageDevice) {
+    return mImageDevice;
+  }
+
+  RefPtr<ID3D11Device> device = mContentDevice;
+  if (!device) {
+    device = mCompositorDevice;
+  }
+
+  if (!device) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D10Multithread> multi;
+  HRESULT hr =
+    device->QueryInterface((ID3D10Multithread**)getter_AddRefs(multi));
+  if (FAILED(hr) || !multi) {
+    gfxWarning() << "Multithread safety interface not supported. " << hr;
+    return nullptr;
+  }
+  multi->SetMultithreadProtected(TRUE);
+
+  mImageDevice = device;
+
+  return mImageDevice;
 }
 
 RefPtr<ID3D11Device>

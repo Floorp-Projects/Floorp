@@ -167,6 +167,8 @@ public:
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
+  NS_IMPL_FROMNODE_HELPER(Element, IsElement())
+
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   /**
@@ -2047,7 +2049,7 @@ inline const mozilla::dom::Element* nsINode::AsElement() const
 
 inline mozilla::dom::Element* nsINode::GetParentElement() const
 {
-  return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
+  return mozilla::dom::Element::FromNodeOrNull(mParent);
 }
 
 /**

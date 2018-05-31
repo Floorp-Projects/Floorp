@@ -421,7 +421,7 @@ js::DirectEval(JSContext* cx, HandleValue v, MutableHandleValue vp)
                JSOp(*iter.pc()) == JSOP_STRICTEVAL ||
                JSOp(*iter.pc()) == JSOP_SPREADEVAL ||
                JSOp(*iter.pc()) == JSOP_STRICTSPREADEVAL);
-    MOZ_ASSERT(caller.compartment() == caller.script()->compartment());
+    MOZ_ASSERT(caller.realm() == caller.script()->realm());
 
     RootedObject envChain(cx, caller.environmentChain());
     return EvalKernel(cx, v, DIRECT_EVAL, caller, envChain, iter.pc(), vp);

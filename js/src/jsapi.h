@@ -1098,6 +1098,16 @@ EnterRealm(JSContext* cx, JSObject* target);
 extern JS_PUBLIC_API(void)
 LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
 
+using IterateRealmCallback = void (*)(JSContext* cx, void* data, Handle<Realm*> realm);
+
+/**
+ * This function calls |realmCallback| on every realm. Beware that there is no
+ * guarantee that the realm will survive after the callback returns. Also,
+ * barriers are disabled via the TraceSession.
+ */
+extern JS_PUBLIC_API(void)
+IterateRealms(JSContext* cx, void* data, IterateRealmCallback realmCallback);
+
 } // namespace JS
 
 typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);

@@ -377,8 +377,7 @@ public:
   nsIContent* GetLeftContent() const { return mLeftContent; }
   dom::Element* GetLeftContentAsElement() const
   {
-    return mLeftContent && mLeftContent->IsElement() ?
-             mLeftContent->AsElement() : nullptr;
+    return Element::FromNodeOrNull(mLeftContent);
   }
 
   /**
@@ -389,8 +388,7 @@ public:
   nsIContent* GetMiddleContent() const { return mMiddleContent; }
   dom::Element* GetMiddleContentAsElement() const
   {
-    return mMiddleContent && mMiddleContent->IsElement() ?
-             mMiddleContent->AsElement() : nullptr;
+    return Element::FromNodeOrNull(mMiddleContent);
   }
 
   /**
@@ -401,8 +399,7 @@ public:
   nsIContent* GetRightContent() const { return mRightContent; }
   dom::Element* GetRightContentAsElement() const
   {
-    return mRightContent && mRightContent->IsElement() ?
-             mRightContent->AsElement() : nullptr;
+    return Element::FromNodeOrNull(mRightContent);
   }
 
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent, nsIContent* aMiddleContent,

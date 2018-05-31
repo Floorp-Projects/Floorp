@@ -32,37 +32,6 @@ var Utils = { // jshint ignore:line
     "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android"
   },
 
-  init: function Utils_init(aWindow) {
-    if (this._win) {
-      // XXX: only supports attaching to one window now.
-      throw new Error("Only one top-level window could used with AccessFu");
-    }
-    this._win = Cu.getWeakReference(aWindow);
-  },
-
-  uninit: function Utils_uninit() {
-    if (!this._win) {
-      return;
-    }
-    delete this._win;
-  },
-
-  get win() {
-    if (!this._win) {
-      return null;
-    }
-    return this._win.get();
-  },
-
-  get winUtils() {
-    let win = this.win;
-    if (!win) {
-      return null;
-    }
-    return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
-      Ci.nsIDOMWindowUtils);
-  },
-
   get AccService() {
     if (!this._AccService) {
       this._AccService = Cc["@mozilla.org/accessibilityService;1"].
@@ -81,20 +50,6 @@ var Utils = { // jshint ignore:line
       this._buildApp = this._buildAppMap[Services.appinfo.ID];
     }
     return this._buildApp;
-  },
-
-  get OS() {
-    if (!this._OS) {
-      this._OS = Services.appinfo.OS;
-    }
-    return this._OS;
-  },
-
-  get widgetToolkit() {
-    if (!this._widgetToolkit) {
-      this._widgetToolkit = Services.appinfo.widgetToolkit;
-    }
-    return this._widgetToolkit;
   },
 
   get ScriptName() {
@@ -123,39 +78,14 @@ var Utils = { // jshint ignore:line
     this._AndroidSdkVersion = value;
   },
 
-  get BrowserApp() {
-    if (!this.win) {
-      return null;
-    }
-    switch (this.MozBuildApp) {
-      case "mobile/android":
-        return this.win.BrowserApp;
-      case "browser":
-        return this.win.gBrowser;
-      case "b2g":
-        return this.win.shell;
-      default:
-        return null;
-    }
+  getCurrentBrowser: function getCurrentBrowser(aWindow) {
+    let win = aWindow ||
+      Services.wm.getMostRecentWindow("navigator:browser") ||
+      Services.wm.getMostRecentWindow("navigator:geckoview");
+    return win.document.querySelector("browser[type=content][primary=true]");
   },
 
-  get CurrentBrowser() {
-    if (!this.BrowserApp) {
-      // Get the first content browser element when no 'BrowserApp' exists.
-      return this.win.document.querySelector("browser[type=content]");
-    }
-    if (this.MozBuildApp == "b2g") {
-      return this.BrowserApp.contentBrowser;
-    }
-    return this.BrowserApp.selectedBrowser;
-  },
-
-  get CurrentContentDoc() {
-    let browser = this.CurrentBrowser;
-    return browser ? browser.contentDocument : null;
-  },
-
-  get AllMessageManagers() {
+  getAllMessageManagers: function getAllMessageManagers(aWindow) {
     let messageManagers = new Set();
 
     function collectLeafMessageManagers(mm) {
@@ -170,18 +100,12 @@ var Utils = { // jshint ignore:line
       }
     }
 
-    collectLeafMessageManagers(this.win.messageManager);
+    collectLeafMessageManagers(aWindow.messageManager);
 
-    let document = this.CurrentContentDoc;
+    let browser = this.getCurrentBrowser(aWindow);
+    let document = browser ? browser.contentDocument : null;
 
     if (document) {
-      if (document.location.host === "b2g") {
-        // The document is a b2g app chrome (ie. Mulet).
-        let contentBrowser = this.win.content.shell.contentBrowser;
-        messageManagers.add(this.getMessageManager(contentBrowser));
-        document = contentBrowser.contentDocument;
-      }
-
       let remoteframes = document.querySelectorAll("iframe");
 
       for (let i = 0; i < remoteframes.length; ++i) {
@@ -249,8 +173,9 @@ var Utils = { // jshint ignore:line
   },
 
   getMessageManager: function getMessageManager(aBrowser) {
+    let browser = aBrowser || this.getCurrentBrowser();
     try {
-      return aBrowser.frameLoader.messageManager;
+      return browser.frameLoader.messageManager;
     } catch (x) {
       return null;
     }
@@ -317,15 +242,6 @@ var Utils = { // jshint ignore:line
       Ci.nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE);
 
     return new Rect(objX.value, objY.value, objW.value, objH.value);
-  },
-
-  /**
-   * Get current display DPI.
-   */
-  get dpi() {
-    delete this.dpi;
-    this.dpi = this.winUtils.displayDPI;
-    return this.dpi;
   },
 
   isInSubtree: function isInSubtree(aAccessible, aSubTreeRoot) {
@@ -476,29 +392,6 @@ var Utils = { // jshint ignore:line
 
     return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
       aStaticText.indexInParent === 0;
-  },
-
-  dispatchChromeEvent: function dispatchChromeEvent(aType, aDetails) {
-    let details = {
-      type: aType,
-      details: JSON.stringify(
-        typeof aDetails === "string" ? { eventType: aDetails } : aDetails)
-    };
-    let window = this.win;
-    let shell = window.shell || window.content.shell;
-    if (shell) {
-      // On B2G device.
-      shell.sendChromeEvent(details);
-    } else {
-      // Dispatch custom event to have support for desktop and screen reader
-      // emulator add-on.
-      window.dispatchEvent(new window.CustomEvent(aType, {
-        bubbles: true,
-        cancelable: true,
-        detail: details
-      }));
-    }
-
   },
 
   isActivatableOnFingerUp: function isActivatableOnFingerUp(aAccessible) {

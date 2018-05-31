@@ -811,9 +811,7 @@ public:
   static bool CanLoadImage(nsIURI* aURI,
                            nsINode* aNode,
                            nsIDocument* aLoadingDocument,
-                           nsIPrincipal* aLoadingPrincipal,
-                           int16_t* aImageBlockingStatus = nullptr,
-                           uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+                           nsIPrincipal* aLoadingPrincipal);
 
   /**
    * Returns true if objects in aDocument shouldn't initiate image loads.

@@ -1254,7 +1254,7 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
 
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   JS::PrepareForFullGC(cx);
-  JS::GCForReason(cx, GC_NORMAL, gcreason);
+  JS::NonIncrementalGC(cx, GC_NORMAL, gcreason);
 }
 
 void

@@ -502,6 +502,8 @@ def print_automation_format(ok, res, slog):
             'jitflags': jitflags,
         }
     }
+    if res.extra:
+        details['extra'].update(res.extra)
     slog.test(res.test.relpath_tests, 'PASS' if ok else 'FAIL', res.dt, **details)
 
     # For failed tests, print as much information as we have, to aid debugging.

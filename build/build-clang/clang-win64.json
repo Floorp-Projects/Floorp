@@ -1,5 +1,5 @@
 {
-    "llvm_revision": "328769",
+    "llvm_revision": "333414",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
@@ -14,8 +14,6 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "r332092.patch",
-      "r332095.patch",
       "loosen-msvc-detection.patch"
     ]
 }

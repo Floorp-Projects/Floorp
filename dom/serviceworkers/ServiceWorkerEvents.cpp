@@ -337,7 +337,7 @@ public:
        mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);
     }
 
-    auto castLoadInfo = static_cast<LoadInfo*>(loadInfo.get());
+    auto castLoadInfo = static_cast<mozilla::net::LoadInfo*>(loadInfo.get());
     castLoadInfo->SynthesizeServiceWorkerTainting(mInternalResponse->GetTainting());
 
     // Get the preferred alternative data type of outter channel

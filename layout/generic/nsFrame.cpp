@@ -9831,9 +9831,7 @@ GetCorrectedParent(const nsIFrame* aFrame)
   // inherit from the NAC generator element instead.
   if (pseudo) {
     MOZ_ASSERT(aFrame->GetContent());
-    Element* element =
-      aFrame->GetContent()->IsElement()
-        ? aFrame->GetContent()->AsElement() : nullptr;
+    Element* element = Element::FromNode(aFrame->GetContent());
     // Make sure to avoid doing the fixup for non-element-backed pseudos like
     // ::first-line and such.
     if (element &&

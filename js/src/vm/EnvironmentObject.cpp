@@ -2829,7 +2829,7 @@ DebugEnvironments::onPopVar(JSContext* cx, const EnvironmentIter& ei)
 void
 DebugEnvironments::onPopWith(AbstractFramePtr frame)
 {
-    Realm* realm = JS::GetRealmForCompartment(frame.compartment());
+    Realm* realm = frame.realm();
     if (DebugEnvironments* envs = realm->debugEnvs())
         envs->liveEnvs.remove(&frame.environmentChain()->as<WithEnvironmentObject>());
 }

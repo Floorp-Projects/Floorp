@@ -354,13 +354,9 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  if (aNode->IsElement()) {
-    nsIDocument* ownerDoc = aNode->OwnerDoc();
-    Element* elem = aNode->AsElement();
-    ownerDoc->ClearBoxObjectFor(elem);
-
-    NS_ASSERTION(!elem->GetXBLBinding(),
-                 "Node has binding on destruction");
+  if (Element* element = Element::FromNode(aNode)) {
+    element->OwnerDoc()->ClearBoxObjectFor(element);
+    NS_ASSERTION(!element->GetXBLBinding(), "Node has binding on destruction");
   }
 
   aNode->ReleaseWrapper(aNode);
@@ -429,7 +425,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     nodeInfo = newNodeInfo;
   }
 
-  Element *elem = aNode->IsElement() ? aNode->AsElement() : nullptr;
+  Element* elem = Element::FromNode(aNode);
 
   nsCOMPtr<nsINode> clone;
   if (aClone) {
@@ -496,10 +492,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   else if (nodeInfoManager) {
     nsIDocument* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
-    if (aNode->IsElement()) {
-      Element* element = aNode->AsElement();
-      oldDoc->ClearBoxObjectFor(element);
-      wasRegistered = oldDoc->UnregisterActivityObserver(element);
+    if (elem) {
+      oldDoc->ClearBoxObjectFor(elem);
+      wasRegistered = oldDoc->UnregisterActivityObserver(elem);
     }
 
     aNode->mNodeInfo.swap(newNodeInfo);
@@ -509,20 +504,17 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     nsIDocument* newDoc = aNode->OwnerDoc();
     if (newDoc) {
-      if (CustomElementRegistry::IsCustomElementEnabled(newDoc)) {
+      if (elem && CustomElementRegistry::IsCustomElementEnabled(newDoc)) {
         // Adopted callback must be enqueued whenever a node’s
         // shadow-including inclusive descendants that is custom.
-        Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
-        if (element) {
-          CustomElementData* data = element->GetCustomElementData();
-          if (data && data->mState == CustomElementData::State::eCustom) {
-            LifecycleAdoptedCallbackArgs args = {
-              oldDoc,
-              newDoc
-            };
-            nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAdopted,
-                                                     element, nullptr, &args);
-          }
+        CustomElementData* data = elem->GetCustomElementData();
+        if (data && data->mState == CustomElementData::State::eCustom) {
+          LifecycleAdoptedCallbackArgs args = {
+            oldDoc,
+            newDoc
+          };
+          nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAdopted,
+                                                   elem, nullptr, &args);
         }
       }
 

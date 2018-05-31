@@ -225,9 +225,7 @@ protected:
 
   virtual Element* GetNameSpaceElement() override
   {
-    nsINode *parent = GetParentNode();
-
-    return parent && parent->IsElement() ? parent->AsElement() : nullptr;
+    return Element::FromNodeOrNull(GetParentNode());
   }
 
   nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,

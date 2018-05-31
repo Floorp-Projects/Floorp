@@ -7544,37 +7544,58 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     return true;
 }
 
-// Fast path to get the activation to use for GetScriptedCallerGlobal. If this
-// returns false, the fast path didn't work out and the caller has to use the
-// (much slower) NonBuiltinFrameIter path.
+// Fast path to get the activation and realm to use for GetScriptedCallerGlobal.
+// If this returns false, the fast path didn't work out and the caller has to
+// use the (much slower) NonBuiltinFrameIter path.
 //
 // The optimization here is that we skip Ion-inlined frames and only look at
-// 'outer' frames. That's fine: each activation is tied to a single compartment,
-// so if an activation contains at least one non-self-hosted frame, we can use
-// the activation's global for GetScriptedCallerGlobal. If, however, all 'outer'
-// frames are self-hosted, it's possible Ion inlined a non-self-hosted script,
-// so we must return false and use the slower path.
+// 'outer' frames. That's fine because Ion doesn't inline cross-realm calls.
+// However, GetScriptedCallerGlobal has to skip self-hosted frames and Ion
+// can inline self-hosted scripts, so we have to be careful:
+//
+// * When we see a non-self-hosted outer script, it's possible we inlined
+//   self-hosted scripts into it but that doesn't matter because these scripts
+//   all have the same realm/global anyway.
+//
+// * When we see a self-hosted outer script, it's possible we inlined
+//   non-self-hosted scripts into it, so we have to give up because in this
+//   case, whether or not to skip the self-hosted frame (to the possibly
+//   different-realm caller) requires the slow path to handle inlining. Baseline
+//   and the interpreter don't inline so this only affects Ion.
 static bool
-GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
+GetScriptedCallerActivationRealmFast(JSContext* cx, Activation** activation, Realm** realm)
 {
     ActivationIterator activationIter(cx);
 
     if (activationIter.done()) {
         *activation = nullptr;
+        *realm = nullptr;
         return true;
     }
 
-    *activation = activationIter.activation();
-
     if (activationIter->isJit()) {
         for (OnlyJSJitFrameIter iter(activationIter); !iter.done(); ++iter) {
-            if (iter.frame().isScripted() && !iter.frame().script()->selfHosted())
+            if (!iter.frame().isScripted())
+                continue;
+            if (!iter.frame().script()->selfHosted()) {
+                *activation = activationIter.activation();
+                *realm = iter.frame().script()->realm();
                 return true;
+            }
+            if (iter.frame().isIonScripted()) {
+                // Ion might have inlined non-self-hosted scripts in this
+                // self-hosted script.
+                return false;
+            }
         }
     } else if (activationIter->isInterpreter()) {
-        for (InterpreterFrameIterator iter((*activation)->asInterpreter()); !iter.done(); ++iter) {
-            if (!iter.frame()->script()->selfHosted())
+        InterpreterActivation* act = activationIter->asInterpreter();
+        for (InterpreterFrameIterator iter(act); !iter.done(); ++iter) {
+            if (!iter.frame()->script()->selfHosted()) {
+                *activation = act;
+                *realm = iter.frame()->script()->realm();
                 return true;
+            }
         }
     }
 
@@ -7585,8 +7606,8 @@ JS_PUBLIC_API(JSObject*)
 GetScriptedCallerGlobal(JSContext* cx)
 {
     Activation* activation;
-
-    if (GetScriptedCallerActivationFast(cx, &activation)) {
+    Realm* realm;
+    if (GetScriptedCallerActivationRealmFast(cx, &activation, &realm)) {
         if (!activation)
             return nullptr;
     } else {
@@ -7594,18 +7615,21 @@ GetScriptedCallerGlobal(JSContext* cx)
         if (i.done())
             return nullptr;
         activation = i.activation();
+        realm = i.realm();
     }
+
+    MOZ_ASSERT(realm->compartment() == activation->compartment());
 
     // If the caller is hidden, the embedding wants us to return null here so
     // that it can check its own stack (see HideScriptedCaller).
     if (activation->scriptedCallerIsHidden())
         return nullptr;
 
-    GlobalObject* global = JS::GetRealmForCompartment(activation->compartment())->maybeGlobal();
+    GlobalObject* global = realm->maybeGlobal();
 
-    // No one should be running code in the atoms realm or running code in
-    // a compartment without any live objects, so there should definitely be a
-    // live global.
+    // No one should be running code in the atoms realm or running code in a
+    // realm without any live objects, so there should definitely be a live
+    // global.
     MOZ_ASSERT(global);
 
     return global;

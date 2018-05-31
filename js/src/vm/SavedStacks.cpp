@@ -1481,7 +1481,7 @@ SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
 
         RootedAtom displayAtom(cx, iter.maybeFunctionDisplayAtom());
 
-        auto principals = JS::GetRealmForCompartment(iter.compartment())->principals();
+        auto principals = iter.realm()->principals();
         MOZ_ASSERT_IF(framePtr && !iter.isWasm(), iter.pc());
 
         if (!stackChain->emplaceBack(location.source(),
