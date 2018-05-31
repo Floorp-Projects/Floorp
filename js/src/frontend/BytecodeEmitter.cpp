@@ -1639,6 +1639,7 @@ class MOZ_STACK_CLASS TryEmitter
     // The offset of JSOP_JUMPTARGET at the beginning of the finally block.
     JumpTarget finallyStart_;
 
+#ifdef DEBUG
     // The state of this emitter.
     //
     // +-------+ emitTry +-----+   emitCatch +-------+      emitEnd  +-----+
@@ -1667,6 +1668,7 @@ class MOZ_STACK_CLASS TryEmitter
         End
     };
     State state_;
+#endif
 
     bool hasCatch() const {
         return kind_ == Kind::TryCatch || kind_ == Kind::TryCatchFinally;
@@ -1682,8 +1684,10 @@ class MOZ_STACK_CLASS TryEmitter
         controlKind_(controlKind),
         depth_(0),
         noteIndex_(0),
-        tryStart_(0),
-        state_(State::Start)
+        tryStart_(0)
+#ifdef DEBUG
+      , state_(State::Start)
+#endif
     {
         if (controlKind_ == ControlKind::Syntactic)
             controlInfo_.emplace(bce_, hasFinally() ? StatementKind::Finally : StatementKind::Try);
@@ -1717,7 +1721,9 @@ class MOZ_STACK_CLASS TryEmitter
             return false;
         tryStart_ = bce_->offset();
 
+#ifdef DEBUG
         state_ = State::Try;
+#endif
         return true;
     }
 
@@ -1765,7 +1771,9 @@ class MOZ_STACK_CLASS TryEmitter
                 return false;
         }
 
+#ifdef DEBUG
         state_ = State::Catch;
+#endif
         return true;
     }
 
@@ -1809,7 +1817,8 @@ class MOZ_STACK_CLASS TryEmitter
             MOZ_ASSERT(hasFinally());
         }
 
-        if (state_ == State::Try) {
+        if (!hasCatch()) {
+            MOZ_ASSERT(state_ == State::Try);
             if (!emitTryEnd())
                 return false;
         } else {
@@ -1852,7 +1861,9 @@ class MOZ_STACK_CLASS TryEmitter
                 return false;
         }
 
+#ifdef DEBUG
         state_ = State::Finally;
+#endif
         return true;
     }
 
@@ -1874,13 +1885,12 @@ class MOZ_STACK_CLASS TryEmitter
 
   public:
     bool emitEnd() {
-        if (state_ == State::Catch) {
-            MOZ_ASSERT(!hasFinally());
+        if (!hasFinally()) {
+            MOZ_ASSERT(state_ == State::Catch);
             if (!emitCatchEnd())
                 return false;
         } else {
             MOZ_ASSERT(state_ == State::Finally);
-            MOZ_ASSERT(hasFinally());
             if (!emitFinallyEnd())
                 return false;
         }
@@ -1911,7 +1921,9 @@ class MOZ_STACK_CLASS TryEmitter
                 return false;
         }
 
+#ifdef DEBUG
         state_ = State::End;
+#endif
         return true;
     }
 };
