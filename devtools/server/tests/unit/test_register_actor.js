@@ -3,48 +3,14 @@
 
 "use strict";
 
-function check_actors(expect) {
-  Assert.equal(expect,
-               DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor1"));
-  Assert.equal(expect,
-               DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor2"));
-
-  Assert.equal(expect,
-               DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor2"));
-  Assert.equal(expect,
-               DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor1"));
-}
-
 function run_test() {
   // Allow incoming connections.
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  add_test(test_deprecated_api);
   add_test(test_lazy_api);
+  add_test(manual_remove);
   add_test(cleanup);
-  run_next_test();
-}
-
-function test_deprecated_api() {
-  // The xpcshell-test/ path maps to resource://test/
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-01");
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-02");
-
-  check_actors(true);
-
-  // Calling registerModule again is just a no-op and doesn't throw
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-01");
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-02");
-
-  DebuggerServer.unregisterModule("xpcshell-test/registertestactors-01");
-  DebuggerServer.unregisterModule("xpcshell-test/registertestactors-02");
-  check_actors(false);
-
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-01");
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-02");
-  check_actors(true);
-
   run_next_test();
 }
 
@@ -60,7 +26,7 @@ function test_lazy_api() {
     }
   }
   Services.obs.addObserver(onActorEvent, "actor");
-  DebuggerServer.registerModule("xpcshell-test/registertestactors-03", {
+  DebuggerServer.registerModule("xpcshell-test/registertestactors-lazy", {
     prefix: "lazy",
     constructor: "LazyActor",
     type: { global: true, tab: true }
@@ -82,7 +48,7 @@ function test_lazy_api() {
     Assert.ok(!isActorInstantiated);
     Assert.ok("lazyActor" in response);
 
-    const {LazyFront} = require("xpcshell-test/registertestactors-03");
+    const {LazyFront} = require("xpcshell-test/registertestactors-lazy");
     const front = LazyFront(client, response);
     front.hello().then(onRequest);
   }
@@ -98,11 +64,18 @@ function test_lazy_api() {
   }
 }
 
+function manual_remove() {
+  Assert.ok(DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
+  DebuggerServer.removeGlobalActor("lazyActor");
+  Assert.ok(!DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
+
+  run_next_test();
+}
+
 function cleanup() {
   DebuggerServer.destroy();
 
   // Check that all actors are unregistered on server destruction
-  check_actors(false);
   Assert.ok(!DebuggerServer.tabActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
 
