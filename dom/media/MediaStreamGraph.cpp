@@ -878,6 +878,10 @@ MediaStreamGraphImpl::CloseAudioInputImpl(Maybe<CubebUtils::AudioDeviceID>& aID,
   MOZ_ASSERT(listeners);
   DebugOnly<bool> wasPresent = listeners->RemoveElement(aListener);
   MOZ_ASSERT(wasPresent);
+
+  // Breaks the cycle between the MSG and the listener.
+  aListener->Disconnect(this);
+
   if (!listeners->IsEmpty()) {
     // There is still a consumer for this audio input device
     return;
@@ -990,7 +994,7 @@ void MediaStreamGraphImpl::DeviceChangedImpl()
   nsTArray<RefPtr<AudioDataListener>>* listeners =
     mInputDeviceUsers.GetValue(mInputDeviceID);
   for (auto& listener : *listeners) {
-    listener->DeviceChanged();
+    listener->DeviceChanged(this);
   }
 }
 
