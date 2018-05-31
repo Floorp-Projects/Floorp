@@ -91,26 +91,6 @@ nsMacUtilsImpl::GetArchString(nsAString& aArchString)
   return (aArchString.IsEmpty() ? NS_ERROR_FAILURE : NS_OK);
 }
 
-NS_IMETHODIMP
-nsMacUtilsImpl::GetIsUniversalBinary(bool* aIsUniversalBinary)
-{
-  if (NS_WARN_IF(!aIsUniversalBinary)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aIsUniversalBinary = false;
-
-  nsAutoString archString;
-  nsresult rv = GetArchString(archString);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // The delimiter char in the arch string is '-', so if that character
-  // is in the string we know we have multiple architectures.
-  *aIsUniversalBinary = (archString.Find("-") > -1);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsMacUtilsImpl::GetArchitecturesInBinary(nsAString& aArchString)

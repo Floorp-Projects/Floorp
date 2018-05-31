@@ -13,12 +13,6 @@
 interface nsIMacUtils : nsISupports
 {
   /**
-   * True when the main executable is a fat file supporting at least
-   * ppc and x86 (universal binary).
-   */
-  readonly attribute boolean isUniversalBinary;
-
-  /**
    * Returns a string containing a list of architectures delimited
    * by "-". Architecture sets are always in the same order:
    * ppc > i386 > ppc64 > x86_64 > (future additions)
