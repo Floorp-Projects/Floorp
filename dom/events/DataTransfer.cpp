@@ -1177,15 +1177,11 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
     return true;
   }
 
-  char16_t* chrs;
-  uint32_t len = 0;
-  nsresult rv = aVariant->GetAsWStringWithSize(&len, &chrs);
+  nsAutoString str;
+  nsresult rv = aVariant->GetAsAString(str);
   if (NS_FAILED(rv)) {
     return false;
   }
-
-  nsAutoString str;
-  str.Adopt(chrs, len);
 
   nsCOMPtr<nsISupportsString>
     strSupports(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
@@ -1198,7 +1194,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   strSupports.forget(aSupports);
 
   // each character is two bytes
-  *aLength = str.Length() << 1;
+  *aLength = str.Length() * 2;
 
   return true;
 }
@@ -1386,9 +1382,7 @@ DataTransfer::CacheExternalClipboardFormats(bool aPlainTextOnly)
   NS_ASSERTION(mEventMessage == ePaste,
                "caching clipboard data for invalid event");
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> sysPrincipal;
-  ssm->GetSystemPrincipal(getter_AddRefs(sysPrincipal));
+  nsCOMPtr<nsIPrincipal> sysPrincipal = nsContentUtils::GetSystemPrincipal();
 
   nsTArray<nsCString> typesArray;
 
