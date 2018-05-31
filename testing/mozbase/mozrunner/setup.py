@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import sys
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozrunner'
@@ -23,6 +24,8 @@ deps = [
 
 EXTRAS_REQUIRE = {'crash': ['mozcrash >= 1.0']}
 
+# we only support python 2 right now
+assert sys.version_info[0] == 2
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

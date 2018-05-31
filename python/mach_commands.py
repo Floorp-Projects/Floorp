@@ -30,8 +30,6 @@ from mach.decorators import (
     Command,
 )
 
-here = os.path.abspath(os.path.dirname(__file__))
-
 
 @CommandProvider
 class MachCommands(MachCommandBase):
@@ -67,10 +65,6 @@ class MachCommands(MachCommandBase):
                      default=False,
                      action='store_true',
                      help='Verbose output.')
-    @CommandArgument('--three',
-                     default=False,
-                     action='store_true',
-                     help='Run tests using Python 3.')
     @CommandArgument('-j', '--jobs',
                      default=1,
                      type=int,
@@ -97,13 +91,8 @@ class MachCommands(MachCommandBase):
                          subsuite=None,
                          verbose=False,
                          jobs=1,
-                         three=False,
                          **kwargs):
-        if three:
-            # use pipenv to run tests against Python 3
-            self.activate_pipenv(os.path.join(here, 'Pipfile'), ['--three'])
-        else:
-            self._activate_virtualenv()
+        self._activate_virtualenv()
 
         if test_objects is None:
             from moztest.resolve import TestResolver
