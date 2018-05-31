@@ -141,7 +141,7 @@ JS_IterateCompartments(JSContext* cx, void* data,
 {
     AutoTraceSession session(cx->runtime());
 
-    for (CompartmentsIter c(cx->runtime(), WithAtoms); !c.done(); c.next())
+    for (CompartmentsIter c(cx->runtime()); !c.done(); c.next())
         (*compartmentCallback)(cx, data, c);
 }
 
@@ -151,7 +151,7 @@ JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallb
     AutoTraceSession session(cx->runtime());
 
     Rooted<Realm*> realm(cx);
-    for (RealmsIter r(cx->runtime(), WithAtoms); !r.done(); r.next()) {
+    for (RealmsIter r(cx->runtime()); !r.done(); r.next()) {
         realm = r;
         (*realmCallback)(cx, data, realm);
     }

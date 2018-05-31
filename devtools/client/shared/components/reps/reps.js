@@ -5680,7 +5680,8 @@ function ElementNode(props) {
   if (isInTree) {
     if (onDOMNodeClick) {
       Object.assign(baseConfig, {
-        onClick: _ => onDOMNodeClick(object)
+        onClick: _ => onDOMNodeClick(object),
+        className: `${baseConfig.className} clickable`
       });
     }
 

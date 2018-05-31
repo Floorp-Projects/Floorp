@@ -423,6 +423,25 @@ nsTerminator::StartWatchdog()
     crashAfterMS += ADDITIONAL_WAIT_BEFORE_CRASH_MS;
   }
 
+# ifdef MOZ_VALGRIND
+  // If we're running on Valgrind, we'll be making forward progress at a
+  // rate of somewhere between 1/25th and 1/50th of normal.  This can cause
+  // timeouts frequently enough to be a problem for the Valgrind runs on
+  // automation: see bug 1296819.  As an attempt to avoid the worst of this,
+  // scale up the presented timeout by a factor of three.  For a
+  // non-Valgrind-enabled build, or for an enabled build which isn't running
+  // on Valgrind, the timeout is unchanged.
+  if (RUNNING_ON_VALGRIND) {
+    const int32_t scaleUp = 3;
+    if (crashAfterMS >= (INT32_MAX / scaleUp) - 1) {
+      // Defend against overflow
+      crashAfterMS = INT32_MAX;
+    } else {
+      crashAfterMS *= scaleUp;
+    }
+  }
+# endif
+
   UniquePtr<Options> options(new Options());
   const PRIntervalTime ticksDuration = PR_MillisecondsToInterval(1000);
   options->crashAfterTicks = crashAfterMS / ticksDuration;

@@ -1029,7 +1029,7 @@ js::Nursery::sweep(JSTracer* trc)
     }
     cellsWithUid_.clear();
 
-    for (CompartmentsIter c(runtime(), SkipAtoms); !c.done(); c.next())
+    for (CompartmentsIter c(runtime()); !c.done(); c.next())
         c->sweepAfterMinorGC(trc);
 
     sweepDictionaryModeObjects();

@@ -140,6 +140,18 @@ struct TileClient
 
   void DiscardBackBuffer();
 
+  /*
+   * Copy aRegion from aBuffer and aBufferOnWhite positioned at aBufferOrigin
+   * into ourselves assuming we are positioned at aTileOrigin.
+   */
+  bool CopyFromBuffer(RefPtr<TextureClient> aBuffer,
+                      RefPtr<TextureClient> aBufferOnWhite,
+                      nsIntPoint aBufferOrigin,
+                      nsIntPoint aTileOrigin,
+                      const nsIntRegion& aRegion,
+                      TilePaintFlags aFlags,
+                      std::vector<CapturedTiledPaintState::Copy>* aCopies);
+
   /* We wrap the back buffer in a class that disallows assignment
    * so that we can track when ever it changes so that we can update
    * the expiry tracker for expiring the back buffers */
@@ -168,8 +180,10 @@ struct TileClient
   nsIntRegion mInvalidBack;
   nsExpirationState mExpirationState;
 private:
-  // Copies dirty pixels from the front buffer into the back buffer,
-  // and records the copied region in aAddPaintedRegion.
+  /*
+   * Copies dirty pixels from the front buffer into the back buffer,
+   * and records the copied region in aAddPaintedRegion.
+   */
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
                                    const nsIntRegion& aVisibleRegion,
                                    nsIntRegion& aAddPaintedRegion,

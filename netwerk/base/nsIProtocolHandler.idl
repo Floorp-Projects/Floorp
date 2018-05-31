@@ -302,10 +302,13 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_SYNC_LOAD_IS_OK = (1<<17);
 
     /**
-     * URI is secure to load in an https page and should not be blocked
-     * by nsMixedContentBlocker
+     * All the origins whose URI has this scheme are considered potentially
+     * trustworthy.
+     * Per the SecureContext spec, https: and wss: should be considered
+     * a priori secure, and implementations may consider other,
+     * implementation-specific URI schemes as secure.
      */
-    const unsigned long URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT = (1<<18);
+    const unsigned long URI_IS_POTENTIALLY_TRUSTWORTHY = (1<<18);
 
     /**
      * This URI may be fetched and the contents are visible to anyone. This is

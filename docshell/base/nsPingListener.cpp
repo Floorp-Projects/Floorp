@@ -162,7 +162,7 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
 
   if (sm && info->referrer) {
     bool referrerIsSecure;
-    uint32_t flags = nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
+    uint32_t flags = nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY;
     rv = NS_URIChainHasFlags(info->referrer, flags, &referrerIsSecure);
 
     // Default to sending less data if NS_URIChainHasFlags() fails.

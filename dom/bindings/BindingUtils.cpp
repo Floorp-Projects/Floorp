@@ -2462,9 +2462,9 @@ GlobalObject::GetSubjectPrincipal() const
     return nullptr;
   }
 
-  JSCompartment* compartment = js::GetContextCompartment(mCx);
-  MOZ_ASSERT(compartment);
-  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  JS::Realm* realm = js::GetContextRealm(mCx);
+  MOZ_ASSERT(realm);
+  JSPrincipals* principals = JS::GetRealmPrincipals(realm);
   return nsJSPrincipals::get(principals);
 }
 

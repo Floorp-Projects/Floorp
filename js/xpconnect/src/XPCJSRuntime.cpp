@@ -197,7 +197,7 @@ CompartmentPrivate::SystemIsBeingShutDown()
 }
 
 RealmPrivate::RealmPrivate(JS::Realm* realm)
-    : scriptability(JS::GetCompartmentForRealm(realm))
+    : scriptability(realm)
     , scope(nullptr)
 {
 }
@@ -367,11 +367,11 @@ PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
     return false;
 }
 
-Scriptability::Scriptability(JSCompartment* c) : mScriptBlocks(0)
+Scriptability::Scriptability(JS::Realm* realm) : mScriptBlocks(0)
                                                , mDocShellAllowsScript(true)
                                                , mScriptBlockedByPolicy(false)
 {
-    nsIPrincipal* prin = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    nsIPrincipal* prin = nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
     mImmuneToScriptPolicy = PrincipalImmuneToScriptPolicy(prin);
 
     // If we're not immune, we should have a real principal with a codebase URI.
@@ -1077,12 +1077,11 @@ static void
 GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
                    bool replaceSlashes)
 {
-    if (js::IsAtomsRealm(JS::GetRealmForCompartment(c))) {
-        name.AssignLiteral("atoms");
-    } else if (*anonymizeID && !js::IsSystemCompartment(c)) {
+    JS::Realm* realm = JS::GetRealmForCompartment(c);
+    if (*anonymizeID && !js::IsSystemCompartment(c)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
-    } else if (JSPrincipals* principals = JS_GetCompartmentPrincipals(c)) {
+    } else if (JSPrincipals* principals = JS::GetRealmPrincipals(realm)) {
         nsresult rv = nsJSPrincipals::get(principals)->GetScriptLocation(name);
         if (NS_FAILED(rv)) {
             name.AssignLiteral("(unknown)");
@@ -2163,20 +2162,23 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     }
 
     virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats) override {
-        // Get some global in this zone.
         AutoSafeJSContext cx;
-        Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
         xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
         extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
-        RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
-        if (global) {
-            RefPtr<nsGlobalWindowInner> window;
-            if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
-                // The global is a |window| object.  Use the path prefix that
-                // we should have already created for it.
-                if (mTopWindowPaths->Get(window->WindowID(),
-                                         &extras->pathPrefix))
-                    extras->pathPrefix.AppendLiteral("/js-");
+
+        // Get some global in this zone.
+        Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
+        if (realm) {
+            RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
+            if (global) {
+                RefPtr<nsGlobalWindowInner> window;
+                if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, window))) {
+                    // The global is a |window| object.  Use the path prefix that
+                    // we should have already created for it.
+                    if (mTopWindowPaths->Get(window->WindowID(),
+                                             &extras->pathPrefix))
+                        extras->pathPrefix.AppendLiteral("/js-");
+                }
             }
         }
 
