@@ -569,8 +569,8 @@ namespace shadow {
 
 struct ObjectGroup {
     const Class* clasp;
-    JSObject*   proto;
-    JSCompartment* compartment;
+    JSObject* proto;
+    JS::Realm* realm;
 };
 
 struct BaseShape {
@@ -673,10 +673,23 @@ InheritanceProtoKeyForStandardClass(JSProtoKey key)
 JS_FRIEND_API(bool)
 IsFunctionObject(JSObject* obj);
 
+JS_FRIEND_API(bool)
+IsCrossCompartmentWrapper(JSObject* obj);
+
 static MOZ_ALWAYS_INLINE JSCompartment*
 GetObjectCompartment(JSObject* obj)
 {
-    return reinterpret_cast<shadow::Object*>(obj)->group->compartment;
+    JS::Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
+    return JS::GetCompartmentForRealm(realm);
+}
+
+// CrossCompartmentWrappers are shared by all realms within the compartment, so
+// getting a wrapper's realm usually doesn't make sense.
+static MOZ_ALWAYS_INLINE JS::Realm*
+GetNonCCWObjectRealm(JSObject* obj)
+{
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
+    return reinterpret_cast<shadow::Object*>(obj)->group->realm;
 }
 
 JS_FRIEND_API(JSObject*)
