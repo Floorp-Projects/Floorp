@@ -19,4 +19,7 @@ PreInitTabActor.prototype.requestTypes = {
   "ping": PreInitTabActor.prototype.onPing,
 };
 
-DebuggerServer.addGlobalActor(PreInitTabActor, "preInitTabActor");
+DebuggerServer.addTabActor({
+  constructorName: "PreInitTabActor",
+  constructorFun: PreInitTabActor,
+}, "preInitTabActor");
