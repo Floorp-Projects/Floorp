@@ -17,7 +17,6 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
-#include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
 #include "nsTHashtable.h"
@@ -159,9 +158,6 @@ nsCertTree::nsCertTree()
   , mCompareCache(&gMapOps, sizeof(CompareCacheHashEntryPtr),
                   kInitialCacheLength)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-  mNSSComponent = do_GetService(kNSSComponentCID);
   mOverrideService = do_GetService("@mozilla.org/security/certoverride;1");
   // Might be a different service if someone is overriding the contract
   nsCOMPtr<nsICertOverrideService> origCertOverride =
@@ -686,7 +682,7 @@ if (count) {
   for (int32_t i=0; i<mNumOrgs; i++) {
     nsString &orgNameRef = mTreeArray[i].orgName;
     if (!orgCert) {
-      mNSSComponent->GetPIPNSSBundleString("CertOrgUnknown", orgNameRef);
+      GetPIPNSSBundleString("CertOrgUnknown", orgNameRef);
     }
     else {
       orgCert->GetIssuerOrganization(orgNameRef);
@@ -1057,7 +1053,7 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
 
   if (NS_LITERAL_STRING("certcol").Equals(colID)) {
     if (!cert) {
-      rv = mNSSComponent->GetPIPNSSBundleString("CertNotStored", _retval);
+      rv = GetPIPNSSBundleString("CertNotStored", _retval);
     } else {
       rv = cert->GetDisplayName(_retval);
     }
@@ -1093,7 +1089,7 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
   } else if (NS_LITERAL_STRING("lifetimecol").Equals(colID)) {
     const char *stringID =
       (certdi->mIsTemporary) ? "CertExceptionTemporary" : "CertExceptionPermanent";
-    rv = mNSSComponent->GetPIPNSSBundleString(stringID, _retval);
+    rv = GetPIPNSSBundleString(stringID, _retval);
   } else {
     return NS_ERROR_FAILURE;
   }
