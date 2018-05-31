@@ -55,25 +55,29 @@ session.Timeouts = class {
   }
 
   static fromJSON(json) {
-    assert.object(json);
+    assert.object(json,
+        pprint`Expected "timeouts" to be an object, got ${json}`);
     let t = new session.Timeouts();
 
-    for (let [typ, ms] of Object.entries(json)) {
-      switch (typ) {
+    for (let [type, ms] of Object.entries(json)) {
+      switch (type) {
         case "implicit":
-          t.implicit = assert.positiveInteger(ms);
+          t.implicit = assert.positiveInteger(ms,
+              pprint`Expected ${type} to be a positive integer, got ${ms}`);
           break;
 
         case "script":
-          t.script = assert.positiveInteger(ms);
+          t.script = assert.positiveInteger(ms,
+              pprint`Expected ${type} to be a positive integer, got ${ms}`);
           break;
 
         case "pageLoad":
-          t.pageLoad = assert.positiveInteger(ms);
+          t.pageLoad = assert.positiveInteger(ms,
+              pprint`Expected ${type} to be a positive integer, got ${ms}`);
           break;
 
         default:
-          throw new InvalidArgumentError("Unrecognised timeout: " + typ);
+          throw new InvalidArgumentError("Unrecognised timeout: " + type);
       }
     }
 
@@ -288,7 +292,8 @@ session.Proxy = class {
         }
         if (typeof json.socksProxy != "undefined") {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
-          p.socksVersion = assert.positiveInteger(json.socksVersion);
+          p.socksVersion = assert.positiveInteger(json.socksVersion,
+              pprint`Expected "socksVersion" to be a positive integer, got ${json.socksVersion}`);
         }
         if (typeof json.noProxy != "undefined") {
           let entries = assert.array(json.noProxy,
@@ -422,7 +427,8 @@ session.Capabilities = class extends Map {
     if (typeof json == "undefined" || json === null) {
       json = {};
     }
-    assert.object(json);
+    assert.object(json,
+        pprint`Expected "capabilities" to be an object, got ${json}"`);
 
     return session.Capabilities.match_(json);
   }
@@ -434,7 +440,8 @@ session.Capabilities = class extends Map {
     for (let [k, v] of Object.entries(json)) {
       switch (k) {
         case "acceptInsecureCerts":
-          assert.boolean(v);
+          assert.boolean(v,
+              pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("acceptInsecureCerts", v);
           break;
 
@@ -442,7 +449,8 @@ session.Capabilities = class extends Map {
           if (v === null) {
             matched.set("pageLoadStrategy", session.PageLoadStrategy.Normal);
           } else {
-            assert.string(v);
+            assert.string(v,
+                pprint`Expected ${k} to be a string, got ${v}`);
 
             if (Object.values(session.PageLoadStrategy).includes(v)) {
               matched.set("pageLoadStrategy", v);
@@ -465,17 +473,20 @@ session.Capabilities = class extends Map {
           break;
 
         case "moz:accessibilityChecks":
-          assert.boolean(v);
+          assert.boolean(v,
+              pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:accessibilityChecks", v);
           break;
 
         case "moz:useNonSpecCompliantPointerOrigin":
-          assert.boolean(v);
+          assert.boolean(v,
+              pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:useNonSpecCompliantPointerOrigin", v);
           break;
 
         case "moz:webdriverClick":
-          assert.boolean(v);
+          assert.boolean(v,
+              pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:webdriverClick", v);
           break;
       }
