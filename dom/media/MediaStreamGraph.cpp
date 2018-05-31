@@ -979,16 +979,52 @@ MediaStreamGraphImpl::NotifyInputData(const AudioDataValue* aBuffer, size_t aFra
   }
 }
 
-void MediaStreamGraphImpl::DeviceChanged()
+void MediaStreamGraphImpl::DeviceChangedImpl()
 {
-  MOZ_ASSERT(!OnGraphThread());
+  MOZ_ASSERT(OnGraphThread());
+
   if (!mInputDeviceID) {
     return;
   }
-  nsTArray<RefPtr<AudioDataListener>>* listeners = mInputDeviceUsers.GetValue(mInputDeviceID);
+
+  nsTArray<RefPtr<AudioDataListener>>* listeners =
+    mInputDeviceUsers.GetValue(mInputDeviceID);
   for (auto& listener : *listeners) {
     listener->DeviceChanged();
   }
+}
+
+void MediaStreamGraphImpl::DeviceChanged()
+{
+  // This is safe to be called from any thread: this message comes from an
+  // underlying platform API, and we don't have much guarantees. If it is not
+  // called from the main thread (and it probably will rarely be), it will post
+  // itself to the main thread, and the actual device change message will be ran
+  // and acted upon on the graph thread.
+  if (!NS_IsMainThread()) {
+    RefPtr<nsIRunnable> runnable =
+      WrapRunnable(this,
+                   &MediaStreamGraphImpl::DeviceChanged);
+    mAbstractMainThread->Dispatch(runnable.forget());
+    return;
+  }
+
+  class Message : public ControlMessage {
+  public:
+    explicit Message(MediaStreamGraph* aGraph)
+      : ControlMessage(nullptr)
+      , mGraphImpl(static_cast<MediaStreamGraphImpl*>(aGraph))
+    {}
+    void Run() override
+    {
+      mGraphImpl->DeviceChangedImpl();
+    }
+    // We know that this is valid, because the graph can't shutdown if it has
+    // messages.
+    MediaStreamGraphImpl* mGraphImpl;
+  };
+
+  AppendMessage(MakeUnique<Message>(this));
 }
 
 void MediaStreamGraphImpl::ReevaluateInputDevice()
