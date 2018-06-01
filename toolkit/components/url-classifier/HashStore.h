@@ -8,11 +8,11 @@
 #include "Entries.h"
 #include "ChunkSet.h"
 
-#include "chromium/safebrowsing.pb.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
+#include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include <string>
@@ -30,7 +30,7 @@ public:
   {
   }
 
-  virtual ~TableUpdate() {}
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TableUpdate);
 
   // To be overriden.
   virtual bool Empty() const = 0;
@@ -43,11 +43,16 @@ public:
     return (T::TAG == aThat->Tag() ? reinterpret_cast<T*>(aThat) : nullptr);
   }
 
+protected:
+  virtual ~TableUpdate() {}
+
 private:
   virtual int Tag() const = 0;
 
   const nsCString mTable;
 };
+
+typedef nsTArray<RefPtr<TableUpdate>> TableUpdateArray;
 
 // A table update is built from a single update chunk from the server. As the
 // protocol parser processes each chunk, it constructs a table update with the
@@ -220,7 +225,7 @@ public:
   nsresult BeginUpdate();
 
   // Imports the data from a TableUpdate.
-  nsresult ApplyUpdate(TableUpdateV2 *aUpdate);
+  nsresult ApplyUpdate(RefPtr<TableUpdateV2> aUpdate);
 
   // Process expired chunks
   nsresult Expire();

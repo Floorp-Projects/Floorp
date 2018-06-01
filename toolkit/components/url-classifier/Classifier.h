@@ -64,12 +64,10 @@ public:
   /**
    * Asynchronously apply updates to the in-use databases. When the
    * update is complete, the caller can be notified by |aCallback|, which
-   * will occur on the caller thread. Note that the ownership of
-   * |aUpdates| will be transferred. This design is inherited from the
-   * previous sync update function (ApplyUpdates) which has been removed.
+   * will occur on the caller thread.
    */
   using AsyncUpdateCallback = std::function<void(nsresult)>;
-  nsresult AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
+  nsresult AsyncApplyUpdates(const TableUpdateArray& aUpdates,
                              const AsyncUpdateCallback& aCallback);
 
   /**
@@ -82,7 +80,7 @@ public:
   /**
    * Apply full hashes retrived from gethash to cache.
    */
-  nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
+  nsresult ApplyFullHashes(TableUpdateArray& aUpdates);
 
   /*
    * Get a bunch of extra prefixes to query for completion
@@ -150,13 +148,13 @@ private:
 
   nsresult ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables);
 
-  nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
+  nsresult UpdateHashStore(TableUpdateArray& aUpdates,
                            const nsACString& aTable);
 
-  nsresult UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
+  nsresult UpdateTableV4(TableUpdateArray& aUpdates,
                          const nsACString& aTable);
 
-  nsresult UpdateCache(TableUpdate* aUpdates);
+  nsresult UpdateCache(RefPtr<TableUpdate> aUpdates);
 
   LookupCache *GetLookupCacheForUpdate(const nsACString& aTable) {
     return GetLookupCache(aTable, true);
@@ -167,7 +165,7 @@ private:
                                   nsIFile* aRootStoreDirectory);
 
 
-  bool CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
+  bool CheckValidUpdate(TableUpdateArray& aUpdates,
                         const nsACString& aTable);
 
   nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
@@ -180,7 +178,7 @@ private:
    * background result no matter whether the background update is
    * successful or not.
    */
-  nsresult ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+  nsresult ApplyUpdatesBackground(TableUpdateArray& aUpdates,
                                   nsACString& aFailedTableName);
 
   /**
