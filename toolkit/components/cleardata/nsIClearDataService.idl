@@ -158,10 +158,18 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_AUTH_CACHE = 1 << 14;
 
+  /**
+   * Site permissions
+   */
+  const uint32_t CLEAR_PERMISSIONS = 1 << 15;
+
+  /**
+   * Site preferences
+   */
+  const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 16;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
-  const uint32_t CLEAR_PERMISSIONS = 1 << 7;
-  const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 9;
   const uint32_t CLEAR_HSTS = 1 << 12;
   const uint32_t CLEAR_HPKP = 1 << 13;
   const uint32_t CLEAR_FORMDATA = 1 << 16;
@@ -185,7 +193,6 @@ interface nsIClearDataService : nsISupports
 
   /**
    * Delete all DOM storages
-   * TODO: add CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
    */
   const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS;
 };

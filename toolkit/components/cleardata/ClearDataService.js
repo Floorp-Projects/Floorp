@@ -483,6 +483,76 @@ const AuthCacheCleaner = {
   },
 };
 
+const PermissionsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      let enumerator = Services.perms.enumerator;
+      while (enumerator.hasMoreElements()) {
+        let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+        try {
+          if (hasRootDomain(perm.principal.URI.host, aHost)) {
+            Services.perms.removePermission(perm);
+          }
+        } catch (ex) {
+          // Ignore entry
+        }
+      }
+
+      aResolve();
+    });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    Services.perms.removeAllSince(aFrom / 1000);
+    return Promise.resolve();
+  },
+
+  deleteAll() {
+    Services.perms.removeAll();
+    return Promise.resolve();
+  },
+};
+
+const PreferencesCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise((aResolve, aReject) => {
+      let cps2 = Cc["@mozilla.org/content-pref/service;1"]
+                   .getService(Ci.nsIContentPrefService2);
+      cps2.removeBySubdomain(aHost, null, {
+        handleCompletion: aReason => {
+          // Notify other consumers, including extensions
+          Services.obs.notifyObservers(null, "browser:purge-domain-data",
+                                       aHost);
+          if (aReason === cps2.COMPLETE_ERROR) {
+            aReject();
+          } else {
+            aResolve();
+          }
+        },
+        handleError() {}
+      });
+    });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    return new Promise(aResolve => {
+      let cps2 = Cc["@mozilla.org/content-pref/service;1"]
+                   .getService(Ci.nsIContentPrefService2);
+      cps2.removeAllDomainsSince(aFrom / 1000, null);
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      let cps2 = Cc["@mozilla.org/content-pref/service;1"]
+                   .getService(Ci.nsIContentPrefService2);
+      cps2.removeAllDomains(null);
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -529,6 +599,12 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
    cleaner: AuthCacheCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_PERMISSIONS,
+   cleaner: PermissionsCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES,
+   cleaner: PreferencesCleaner, },
 ];
 
 this.ClearDataService = function() {};
