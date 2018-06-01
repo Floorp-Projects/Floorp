@@ -1426,7 +1426,7 @@ gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
 
 bool
 gfxDWriteFontList::FindAndAddFamilies(const nsAString& aFamily,
-                                      nsTArray<FamilyAndGeneric>* aOutput,
+                                      nsTArray<gfxFontFamily*>* aOutput,
                                       FindFamiliesFlags aFlags,
                                       gfxFontStyle* aStyle,
                                       gfxFloat aDevToCssSize)
@@ -1436,7 +1436,7 @@ gfxDWriteFontList::FindAndAddFamilies(const nsAString& aFamily,
 
     gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
     if (ff) {
-        aOutput->AppendElement(FamilyAndGeneric(ff));
+        aOutput->AppendElement(ff);
         return true;
     }
 

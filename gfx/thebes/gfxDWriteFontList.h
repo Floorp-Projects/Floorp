@@ -427,7 +427,7 @@ public:
     bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
     bool FindAndAddFamilies(const nsAString& aFamily,
-                            nsTArray<FamilyAndGeneric>* aOutput,
+                            nsTArray<gfxFontFamily*>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;

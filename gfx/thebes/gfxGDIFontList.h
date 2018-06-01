@@ -326,7 +326,7 @@ public:
     gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
 
     bool FindAndAddFamilies(const nsAString& aFamily,
-                            nsTArray<FamilyAndGeneric>* aOutput,
+                            nsTArray<gfxFontFamily*>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;

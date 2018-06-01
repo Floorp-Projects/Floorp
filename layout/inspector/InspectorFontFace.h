@@ -56,7 +56,6 @@ public:
   bool FromSystemFallback();
   void GetName(nsAString& aName);
   void GetCSSFamilyName(nsAString& aCSSFamilyName);
-  void GetCSSGeneric(nsAString& aGeneric);
   ServoFontFaceRule* GetRule();
   int32_t SrcIndex();
   void GetURI(nsAString& aURI);
