@@ -326,7 +326,6 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
           if config.substs['OS_TARGET'] == 'WINNT':
               context['DEFINES']['UNICODE'] = True
               context['DEFINES']['_UNICODE'] = True
-        context['COMPILE_FLAGS']['STL'] = []
         context['COMPILE_FLAGS']['OS_INCLUDES'] = []
 
         for key, value in gyp_dir_attrs.sandbox_vars.items():
