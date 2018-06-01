@@ -50,52 +50,52 @@ TOOLTOOL_PLATFORM_DIR = {
 testing_config_options = [
     [["--installer-url"],
      {"action": "store",
-     "dest": "installer_url",
-     "default": None,
-     "help": "URL to the installer to install",
+      "dest": "installer_url",
+      "default": None,
+      "help": "URL to the installer to install",
       }],
     [["--installer-path"],
      {"action": "store",
-     "dest": "installer_path",
-     "default": None,
-     "help": "Path to the installer to install.  This is set automatically if run with --download-and-extract.",
+      "dest": "installer_path",
+      "default": None,
+      "help": "Path to the installer to install.  This is set automatically if run with --download-and-extract.",
       }],
     [["--binary-path"],
      {"action": "store",
-     "dest": "binary_path",
-     "default": None,
-     "help": "Path to installed binary.  This is set automatically if run with --install.",
+      "dest": "binary_path",
+      "default": None,
+      "help": "Path to installed binary.  This is set automatically if run with --install.",
       }],
     [["--exe-suffix"],
      {"action": "store",
-     "dest": "exe_suffix",
-     "default": None,
-     "help": "Executable suffix for binaries on this platform",
+      "dest": "exe_suffix",
+      "default": None,
+      "help": "Executable suffix for binaries on this platform",
       }],
     [["--test-url"],
      {"action": "store",
-     "dest": "test_url",
-     "default": None,
-     "help": "URL to the zip file containing the actual tests",
+      "dest": "test_url",
+      "default": None,
+      "help": "URL to the zip file containing the actual tests",
       }],
     [["--test-packages-url"],
      {"action": "store",
-     "dest": "test_packages_url",
-     "default": None,
-     "help": "URL to a json file describing which tests archives to download",
+      "dest": "test_packages_url",
+      "default": None,
+      "help": "URL to a json file describing which tests archives to download",
       }],
     [["--jsshell-url"],
      {"action": "store",
-     "dest": "jsshell_url",
-     "default": None,
-     "help": "URL to the jsshell to install",
+      "dest": "jsshell_url",
+      "default": None,
+      "help": "URL to the jsshell to install",
       }],
     [["--download-symbols"],
      {"action": "store",
-     "dest": "download_symbols",
-     "type": "choice",
-     "choices": ['ondemand', 'true'],
-     "help": "Download and extract crash reporter symbols.",
+      "dest": "download_symbols",
+      "type": "choice",
+      "choices": ['ondemand', 'true'],
+      "help": "Download and extract crash reporter symbols.",
       }],
 ] + copy.deepcopy(virtualenv_config_options) \
   + copy.deepcopy(try_config_options) \
@@ -181,7 +181,7 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
                     self.symbols_url = symbols_url
             except Exception as ex:
                 self.warning("Cannot open symbols url %s (installer url: %s): %s" %
-                    (symbols_url, self.installer_url, ex))
+                             (symbols_url, self.installer_url, ex))
                 if raise_on_failure:
                     raise
 
@@ -224,7 +224,8 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
             self.exception("You must use --installer-url with developer_config.py")
         if c.get("require_test_zip"):
             if not c.get('test_url') and not c.get('test_packages_url'):
-                self.exception("You must use --test-url or --test-packages-url with developer_config.py")
+                self.exception(
+                    "You must use --test-url or --test-packages-url with developer_config.py")
 
         c["installer_url"] = _replace_url(c["installer_url"], c["replace_urls"])
         if c.get("test_url"):
@@ -401,9 +402,9 @@ You can set this by specifying --test-url URL
             file_name = self.installer_path
         dirs = self.query_abs_dirs()
         source = self.download_file(self.installer_url,
-                                            file_name=file_name,
-                                            parent_dir=dirs['abs_work_dir'],
-                                            error_level=FATAL)
+                                    file_name=file_name,
+                                    parent_dir=dirs['abs_work_dir'],
+                                    error_level=FATAL)
         self.installer_path = os.path.realpath(source)
         self.set_property("build_url", self.installer_url)
 
@@ -593,7 +594,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
             return self.nodejs_path
 
         c = self.config
-        dirs = self.query_abs_dirs();
+        dirs = self.query_abs_dirs()
 
         nodejs_path = self.query_nodejs_filename()
         if not self.config.get('download_nodejs'):
@@ -623,7 +624,8 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
                 self.chmod(abs_nodejs_path, 0755)
             self.nodejs_path = abs_nodejs_path
         else:
-            self.warning("nodejs path was given but couldn't be found. Tried looking in '%s'" % abs_nodejs_path)
+            self.warning(
+                "nodejs path was given but couldn't be found. Tried looking in '%s'" % abs_nodejs_path)
             self.record_status(TBPL_WARNING, WARNING)
 
         return self.nodejs_path

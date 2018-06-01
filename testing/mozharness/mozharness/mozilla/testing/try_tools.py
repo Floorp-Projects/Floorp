@@ -16,9 +16,9 @@ from mozharness.base.transfer import TransferMixin
 try_config_options = [
     [["--try-message"],
      {"action": "store",
-     "dest": "try_message",
-     "default": None,
-     "help": "try syntax string to select tests to run",
+      "dest": "try_message",
+      "default": None,
+      "help": "try syntax string to select tests to run",
       }],
 ]
 
@@ -27,7 +27,7 @@ test_flavors = {
     'chrome': {},
     'devtools-chrome': {},
     'mochitest': {},
-    'xpcshell' :{},
+    'xpcshell': {},
     'reftest': {
         "path": lambda x: os.path.join("tests", "reftest", "tests", x)
     },
@@ -44,6 +44,7 @@ test_flavors = {
         "path": lambda x: os.path.join("tests", x.split("testing" + os.path.sep)[1])
     },
 }
+
 
 class TryToolsMixin(TransferMixin):
     """Utility functions for an interface between try syntax and out test harnesses.
@@ -157,6 +158,7 @@ class TryToolsMixin(TransferMixin):
                          ' and forward them to the underlying test harness command.'))
 
         label_dict = {}
+
         def label_from_val(val):
             if val in label_dict:
                 return label_dict[val]
@@ -219,7 +221,7 @@ class TryToolsMixin(TransferMixin):
                       'files: %s.' % ','.join(self.try_test_paths[flavor]))
             args.extend(['--this-chunk=1', '--total-chunks=1'])
 
-            path_func = test_flavors[flavor].get("path", lambda x:x)
+            path_func = test_flavors[flavor].get("path", lambda x: x)
             tests = [path_func(os.path.normpath(item)) for item in self.try_test_paths[flavor]]
         else:
             tests = []
