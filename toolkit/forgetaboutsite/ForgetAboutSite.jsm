@@ -31,30 +31,6 @@ var ForgetAboutSite = {
       throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
     }));
 
-    // HSTS and HPKP
-    promises.push((async function() {
-      let sss = Cc["@mozilla.org/ssservice;1"].
-                getService(Ci.nsISiteSecurityService);
-      for (let type of [Ci.nsISiteSecurityService.HEADER_HSTS,
-                        Ci.nsISiteSecurityService.HEADER_HPKP]) {
-        // Also remove HSTS/HPKP information for subdomains by enumerating the
-        // information in the site security service.
-        let enumerator = sss.enumerate(type);
-        while (enumerator.hasMoreElements()) {
-          let entry = enumerator.getNext();
-          let hostname = entry.QueryInterface(Ci.nsISiteSecurityState).hostname;
-          // If the hostname is aDomain's subdomain, we remove its state.
-          if (hostname == aDomain || hostname.endsWith("." + aDomain)) {
-            // This uri is used as a key to remove the state.
-            let uri = NetUtil.newURI("https://" + hostname);
-            sss.removeState(type, uri, 0, entry.originAttributes);
-          }
-        }
-      }
-    })().catch(ex => {
-      throw new Error("Exception thrown while clearing HSTS/HPKP: " + ex);
-    }));
-
     let ErrorCount = 0;
     for (let promise of promises) {
       try {
