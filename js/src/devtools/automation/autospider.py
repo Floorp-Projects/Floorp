@@ -25,8 +25,7 @@ def directories(pathmodule, cwd, fixup=lambda s: s):
     js_src = pathmodule.abspath(pathmodule.join(scripts, "..", ".."))
     source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
     tooltool = pathmodule.abspath(env.get('TOOLTOOL_CHECKOUT',
-                                          env.get('MOZBUILD_STATE_PATH',
-                                                  pathmodule.expanduser("~/.mozbuild"))))
+                                          pathmodule.join(source, "..", "..")))
     return Dirs(scripts, js_src, source, tooltool)
 
 # Some scripts will be called with sh, which cannot use backslashed
