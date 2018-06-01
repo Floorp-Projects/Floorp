@@ -249,7 +249,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
                                   nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "nsIContentParent::RecvSyncMessage", OTHER, aMsg);
+    "nsIContentParent::RecvSyncMessage", EVENTS, aMsg);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
@@ -271,7 +271,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
                                  nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "nsIContentParent::RecvRpcMessage", OTHER, aMsg);
+    "nsIContentParent::RecvRpcMessage", EVENTS, aMsg);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
@@ -331,7 +331,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
                                    const ClonedMessageData& aData)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "nsIContentParent::RecvAsyncMessage", OTHER, aMsg);
+    "nsIContentParent::RecvAsyncMessage", EVENTS, aMsg);
 
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;

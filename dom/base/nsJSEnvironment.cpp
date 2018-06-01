@@ -1178,7 +1178,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
                                IsShrinking aShrinking,
                                int64_t aSliceMillis)
 {
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("nsJSContext::GarbageCollectNow", GCCC,
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("nsJSContext::GarbageCollectNow", GC,
                                    JS::gcreason::ExplainReason(aReason));
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
@@ -1231,7 +1231,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 static void
 FinishAnyIncrementalGC()
 {
-  AUTO_PROFILER_LABEL("FinishAnyIncrementalGC", GCCC);
+  AUTO_PROFILER_LABEL("FinishAnyIncrementalGC", GC);
 
   if (sCCLockedOut) {
     AutoJSAPI jsapi;
@@ -1482,7 +1482,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
     return;
   }
 
-  AUTO_PROFILER_LABEL("nsJSContext::CycleCollectNow", GCCC);
+  AUTO_PROFILER_LABEL("nsJSContext::CycleCollectNow", CC);
 
   gCCStats.PrepareForCycleCollectionSlice(TimeStamp());
   nsCycleCollector_collect(aListener);
@@ -1499,7 +1499,7 @@ nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline)
 
   AUTO_PROFILER_TRACING("CC", aDeadline.IsNull() ? "CCSlice" : "IdleCCSlice");
 
-  AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorSlice", GCCC);
+  AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorSlice", CC);
 
   gCCStats.PrepareForCycleCollectionSlice(aDeadline);
 
@@ -1557,7 +1557,7 @@ nsJSContext::RunCycleCollectorWorkSlice(int64_t aWorkBudget)
     return;
   }
 
-  AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorWorkSlice", GCCC);
+  AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorWorkSlice", CC);
 
   gCCStats.PrepareForCycleCollectionSlice();
 
