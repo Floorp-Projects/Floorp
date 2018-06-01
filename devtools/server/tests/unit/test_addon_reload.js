@@ -55,7 +55,7 @@ function getSupportFile(path) {
 
 add_task(async function testReloadExitedAddon() {
   const client = await new Promise(resolve => {
-    get_chrome_actors(client => resolve(client));
+    get_parent_process_actors(client => resolve(client));
   });
 
   // Install our main add-on to trigger reloads on.

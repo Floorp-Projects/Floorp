@@ -123,7 +123,7 @@ var onConnectionReady = async function([aType, aTraits]) {
 
   // Build the Remote Process button
   // If Fx<39, chrome target actors were used to be exposed on RootActor
-  // but in Fx>=39, chrome is debuggable via getProcess() and ChromeActor
+  // but in Fx>=39, chrome is debuggable via getProcess() and ParentProcessTargetActor
   if (globals.consoleActor || gClient.mainRoot.traits.allowChromeProcess) {
     const a = document.createElement("a");
     a.onclick = function() {

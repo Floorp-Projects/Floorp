@@ -514,7 +514,7 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Fetch the ChromeActor for the main process or ChildProcessActor for a
+   * Fetch the ParentProcessTargetActor for the main process or ChildProcessActor for a
    * a given child process ID.
    *
    * @param number id

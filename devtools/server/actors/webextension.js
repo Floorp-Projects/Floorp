@@ -8,7 +8,10 @@ const { extend } = require("devtools/shared/extend");
 const { Ci, Cu, Cc } = require("chrome");
 const Services = require("Services");
 
-const { ChromeActor, chromePrototype } = require("./chrome");
+const {
+  ParentProcessTargetActor,
+  parentProcessTargetPrototype,
+} = require("devtools/server/actors/targets/parent-process");
 const makeDebugger = require("./utils/make-debugger");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
@@ -20,8 +23,8 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
 /**
  * Creates a target actor for debugging all the contexts associated to a target
  * WebExtensions add-on running in a child extension process. Most of the implementation
- * is inherited from ChromeActor (which inherits most of its implementation from
- * BrowsingContextTargetActor).
+ * is inherited from ParentProcessTargetActor (which inherits most of its implementation
+ * from BrowsingContextTargetActor).
  *
  * WebExtensionChildActor is created by a WebExtensionParentActor counterpart, when its
  * parent actor's `connect` method has been called (on the listAddons RDP package),
@@ -29,8 +32,8 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  * process if the extension is running in non-oop mode, or the child extension process
  * if the extension is running in oop-mode).
  *
- * A WebExtensionChildActor contains all tab actors, like a regular ChromeActor
- * or BrowsingContextTargetActor.
+ * A WebExtensionChildActor contains all tab actors, like a regular
+ * ParentProcessTargetActor or BrowsingContextTargetActor.
  *
  * History lecture:
  * - The add-on actors used to not inherit BrowsingContextTargetActor because of the
@@ -39,10 +42,10 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  *   Browser Toolbox.
  * - In a WebExtensions add-on all the provided contexts (background, popups etc.),
  *   besides the Content Scripts which run in the content process, hooked to an existent
- *   tab, by creating a new WebExtensionActor which inherits from ChromeActor, we can
- *   provide a full features Addon Toolbox (which is basically like a BrowserToolbox which
- *   filters the visible sources and frames to the one that are related to the target
- *   add-on).
+ *   tab, by creating a new WebExtensionActor which inherits from
+ *   ParentProcessTargetActor, we can provide a full features Addon Toolbox (which is
+ *   basically like a BrowserToolbox which filters the visible sources and frames to the
+ *   one that are related to the target add-on).
  * - When the WebExtensions OOP mode has been introduced, this actor has been refactored
  *   and moved from the main process to the new child extension process.
  *
@@ -57,10 +60,10 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  *        the addonId of the target WebExtension.
  */
 
-const webExtensionChildPrototype = extend({}, chromePrototype);
+const webExtensionChildPrototype = extend({}, parentProcessTargetPrototype);
 
 webExtensionChildPrototype.initialize = function(conn, chromeGlobal, prefix, addonId) {
-  chromePrototype.initialize.call(this, conn);
+  parentProcessTargetPrototype.initialize.call(this, conn);
   this._chromeGlobal = chromeGlobal;
   this._prefix = prefix;
   this.id = addonId;
@@ -135,7 +138,7 @@ webExtensionChildPrototype.exit = function() {
   this.addon = null;
   this.id = null;
 
-  return ChromeActor.prototype.exit.apply(this);
+  return ParentProcessTargetActor.prototype.exit.apply(this);
 };
 
 // Private helpers.
@@ -188,7 +191,7 @@ webExtensionChildPrototype._searchForExtensionWindow = function() {
   return undefined;
 };
 
-// Customized ChromeActor/BrowsingContextTargetActor hooks.
+// Customized ParentProcessTargetActor/BrowsingContextTargetActor hooks.
 
 webExtensionChildPrototype._onDocShellDestroy = function(docShell) {
   // Stop watching this docshell (the unwatch() method will check if we
@@ -216,9 +219,9 @@ webExtensionChildPrototype._onNewExtensionWindow = function(window) {
 };
 
 webExtensionChildPrototype._attach = function() {
-  // NOTE: we need to be sure that `this.window` can return a
-  // window before calling the ChromeActor.onAttach, or the BrowsingContextTargetActor
-  // will not be subscribed to the child doc shell updates.
+  // NOTE: we need to be sure that `this.window` can return a window before calling the
+  // ParentProcessTargetActor.onAttach, or the BrowsingContextTargetActor will not be
+  // subscribed to the child doc shell updates.
 
   if (!this.window || this.window.document.nodePrincipal.addonId !== this.id) {
     // Discovery an existent extension page to attach.
@@ -232,13 +235,15 @@ webExtensionChildPrototype._attach = function() {
     }
   }
 
-  // Call ChromeActor's _attach to listen for any new/destroyed chrome docshell
-  ChromeActor.prototype._attach.apply(this);
+  // Call ParentProcessTargetActor's _attach to listen for any new/destroyed chrome
+  // docshell.
+  ParentProcessTargetActor.prototype._attach.apply(this);
 };
 
 webExtensionChildPrototype._detach = function() {
-  // Call ChromeActor's _detach to unsubscribe new/destroyed chrome docshell listeners.
-  ChromeActor.prototype._detach.apply(this);
+  // Call ParentProcessTargetActor's _detach to unsubscribe new/destroyed chrome docshell
+  // listeners.
+  ParentProcessTargetActor.prototype._detach.apply(this);
 
   // Stop watching for new extension windows.
   this._destroyFallbackWindow();
@@ -248,7 +253,8 @@ webExtensionChildPrototype._detach = function() {
  * Return the json details related to a docShell.
  */
 webExtensionChildPrototype._docShellToWindow = function(docShell) {
-  const baseWindowDetails = ChromeActor.prototype._docShellToWindow.call(this, docShell);
+  const baseWindowDetails =
+    ParentProcessTargetActor.prototype._docShellToWindow.call(this, docShell);
 
   const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress);
@@ -273,7 +279,7 @@ webExtensionChildPrototype._docShellToWindow = function(docShell) {
  * Return an array of the json details related to an array/iterator of docShells.
  */
 webExtensionChildPrototype._docShellsToWindows = function(docshells) {
-  return ChromeActor.prototype._docShellsToWindows.call(this, docshells)
+  return ParentProcessTargetActor.prototype._docShellsToWindows.call(this, docshells)
                     .filter(windowDetails => {
                       // Filter the docShells based on the addon id of the window or
                       // its sameType top level frame.

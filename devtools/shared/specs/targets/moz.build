@@ -8,5 +8,6 @@ DevToolsModules(
     'browsing-context.js',
     'chrome-window.js',
     'frame.js',
+    'parent-process.js',
     'worker.js',
 )
