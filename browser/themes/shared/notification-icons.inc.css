@@ -153,7 +153,9 @@ html|*#webRTC-previewVideo {
 }
 
 #webRTC-previewWarning {
-  background: rgba(255, 217, 99, .8) url("chrome://browser/skin/warning-white.svg") no-repeat .75em .75em;
+  background: rgba(255,217,99,.8) url("chrome://browser/skin/warning.svg") no-repeat .75em .75em;
+  -moz-context-properties: fill;
+  fill: #fff;
   margin: 0;
   padding: .5em;
   padding-inline-start: calc(1.5em + 16px);
