@@ -102,7 +102,7 @@ function RootActor(connection, parameters) {
   this._globalActorPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._globalActorPool);
 
-  this._chromeActor = null;
+  this._parentProcessTargetActor = null;
   this._processActors = new Map();
 }
 
@@ -149,7 +149,7 @@ RootActor.prototype = {
     webConsoleCommands: true,
     // Whether root actor exposes chrome target actors and access to any window.
     // If allowChromeProcess is true, you can:
-    // * get a ChromeActor instance to debug chrome and any non-content
+    // * get a ParentProcessTargetActor instance to debug chrome and any non-content
     //   resource via getProcess requests
     // * get a ChromeWindowTargetActor instance to debug windows which could be chrome,
     //   like browser windows via getWindow requests
@@ -223,7 +223,7 @@ RootActor.prototype = {
     this._globalActorPool = null;
     this._chromeWindowActorPool = null;
     this._parameters = null;
-    this._chromeActor = null;
+    this._parentProcessTargetActor = null;
     this._processActors.clear();
   },
 
@@ -512,19 +512,19 @@ RootActor.prototype = {
     // If the request doesn't contains id parameter or id is 0
     // (id == 0, based on onListProcesses implementation)
     if ((!("id" in request)) || request.id === 0) {
-      if (this._chromeActor && (!this._chromeActor.docShell ||
-          this._chromeActor.docShell.isBeingDestroyed)) {
-        this._globalActorPool.removeActor(this._chromeActor);
-        this._chromeActor = null;
+      if (this._parentProcessTargetActor && (!this._parentProcessTargetActor.docShell ||
+          this._parentProcessTargetActor.docShell.isBeingDestroyed)) {
+        this._globalActorPool.removeActor(this._parentProcessTargetActor);
+        this._parentProcessTargetActor = null;
       }
-      if (!this._chromeActor) {
-        // Create a ChromeActor for the parent process
-        const { ChromeActor } = require("devtools/server/actors/chrome");
-        this._chromeActor = new ChromeActor(this.conn);
-        this._globalActorPool.addActor(this._chromeActor);
+      if (!this._parentProcessTargetActor) {
+        // Create a ParentProcessTargetActor for the parent process
+        const { ParentProcessTargetActor } = require("devtools/server/actors/targets/parent-process");
+        this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
+        this._globalActorPool.addActor(this._parentProcessTargetActor);
       }
 
-      return { form: this._chromeActor.form() };
+      return { form: this._parentProcessTargetActor.form() };
     }
 
     const { id } = request;

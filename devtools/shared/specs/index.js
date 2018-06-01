@@ -230,6 +230,11 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["parentProcessTarget"],
+    spec: "devtools/shared/specs/targets/parent-process",
+    front: null,
+  },
+  {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
     front: null,

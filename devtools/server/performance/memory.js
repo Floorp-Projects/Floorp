@@ -14,8 +14,7 @@ loader.lazyRequireGetter(this, "DeferredTask",
 loader.lazyRequireGetter(this, "StackFrameCache",
   "devtools/server/actors/utils/stack", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
-loader.lazyRequireGetter(this, "ChromeActor", "devtools/server/actors/chrome",
-                         true);
+loader.lazyRequireGetter(this, "ParentProcessTargetActor", "devtools/server/actors/targets/parent-process", true);
 loader.lazyRequireGetter(this, "ChildProcessActor",
                          "devtools/server/actors/child-process", true);
 
@@ -144,7 +143,7 @@ Memory.prototype = {
     // If we are observing the whole process, then scope the snapshot
     // accordingly. Otherwise, use the debugger's debuggees.
     if (!boundaries) {
-      if (this.parent instanceof ChromeActor ||
+      if (this.parent instanceof ParentProcessTargetActor ||
           this.parent instanceof ChildProcessActor) {
         boundaries = { runtime: true };
       } else {
