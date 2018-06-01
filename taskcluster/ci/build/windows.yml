@@ -576,7 +576,7 @@ win64-asan/debug:
     treeherder:
         platform: windows2012-64/asan
         symbol: Bd
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -606,7 +606,7 @@ win64-asan/opt:
     treeherder:
         platform: windows2012-64/asan
         symbol: Bo
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200

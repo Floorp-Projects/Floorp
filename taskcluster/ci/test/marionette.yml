@@ -33,7 +33,6 @@ marionette:
     tier:
         by-test-platform:
             android.*: 2
-            windows10-64-asan.*: 3
             default: default
     chunks:
         by-test-platform:
@@ -48,7 +47,3 @@ marionette-headless:
     mozharness:
         extra-options:
             - --headless
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default

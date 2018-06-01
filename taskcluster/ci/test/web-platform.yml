@@ -145,10 +145,7 @@ test-verify-wpt:
             .*-ccov/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --verify
@@ -163,10 +160,7 @@ test-coverage-wpt:
             # only run on mozilla-central and try.
             .*-ccov/.*: ['mozilla-central', 'try']
             default: []
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --per-test-coverage
