@@ -136,7 +136,7 @@ public:
 
   MOZ_IMPLICIT Saturate(Saturate<T>&& aValue)
   {
-    mValue = Move(aValue.mValue);
+    mValue = std::move(aValue.mValue);
   }
 
   explicit Saturate(const T& aValue)
@@ -176,7 +176,7 @@ public:
 
   Saturate<T>& operator=(Saturate<T>&& aRhs)
   {
-    mValue = Move(aRhs.mValue);
+    mValue = std::move(aRhs.mValue);
     return *this;
   }
 

@@ -212,7 +212,7 @@ GetJarCache()
   nsCOMPtr<nsIZipReaderCache> zipCache;
   MOZ_TRY(jar->GetJARCache(getter_AddRefs(zipCache)));
 
-  return Move(zipCache);
+  return std::move(zipCache);
 }
 
 static Result<FileLocation, nsresult>
@@ -243,7 +243,7 @@ GetFileLocation(nsIURI* uri)
     location.Init(file, entry.get());
   }
 
-  return Move(location);
+  return std::move(location);
 }
 
 
@@ -434,14 +434,14 @@ Addon::FullPath()
   // First check for an absolute path, in case we have a proxy file.
   nsCOMPtr<nsIFile> file;
   if (NS_SUCCEEDED(NS_NewLocalFile(path, false, getter_AddRefs(file)))) {
-    return Move(file);
+    return std::move(file);
   }
 
   // If not an absolute path, fall back to a relative path from the location.
   MOZ_TRY(NS_NewLocalFile(mLocation.Path(), false, getter_AddRefs(file)));
 
   MOZ_TRY(file->AppendRelativePath(path));
-  return Move(file);
+  return std::move(file);
 }
 
 Result<bool, nsresult>
@@ -674,8 +674,8 @@ public:
 
   RegistryEntries(FileLocation& location, nsTArray<Override>&& overrides, nsTArray<Locale>&& locales)
     : mLocation(location)
-    , mOverrides(Move(overrides))
-    , mLocales(Move(locales))
+    , mOverrides(std::move(overrides))
+    , mLocales(std::move(locales))
   {}
 
   void Register();
@@ -795,8 +795,8 @@ AddonManagerStartup::RegisterChrome(nsIURI* manifestURI, JS::HandleValue locatio
   }
 
   auto entry = MakeRefPtr<RegistryEntries>(location,
-                                           Move(overrides),
-                                           Move(locales));
+                                           std::move(overrides),
+                                           std::move(locales));
 
   entry->Register();
   GetRegistryEntries().insertBack(entry);

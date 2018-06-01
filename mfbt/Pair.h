@@ -161,7 +161,7 @@ public:
   {}
 
   Pair(Pair&& aOther)
-    : Base(Move(aOther.first()), Move(aOther.second()))
+    : Base(std::move(aOther.first()), std::move(aOther.second()))
   { }
 
   Pair(const Pair& aOther) = default;
@@ -170,8 +170,8 @@ public:
   {
     MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
 
-    first() = Move(aOther.first());
-    second() = Move(aOther.second());
+    first() = std::move(aOther.first());
+    second() = std::move(aOther.second());
 
     return *this;
   }

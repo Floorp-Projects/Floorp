@@ -297,7 +297,7 @@ public:
     , mChecker()
 #endif
   {
-    *this = mozilla::Move(aOther);
+    *this = std::move(aOther);
   }
 
   PLDHashTable& operator=(PLDHashTable&& aOther);

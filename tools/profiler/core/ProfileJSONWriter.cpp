@@ -62,7 +62,7 @@ ChunkedJSONWriteFunc::Take(ChunkedJSONWriteFunc&& aOther)
 {
   for (size_t i = 0; i < aOther.mChunkList.length(); i++) {
     MOZ_ALWAYS_TRUE(mChunkLengths.append(aOther.mChunkLengths[i]));
-    MOZ_ALWAYS_TRUE(mChunkList.append(mozilla::Move(aOther.mChunkList[i])));
+    MOZ_ALWAYS_TRUE(mChunkList.append(std::move(aOther.mChunkList[i])));
   }
   mChunkPtr = mChunkList.back().get() + mChunkLengths.back();
   mChunkEnd = mChunkPtr;
@@ -81,7 +81,7 @@ ChunkedJSONWriteFunc::AllocChunk(size_t aChunkSize)
   mChunkEnd = mChunkPtr + aChunkSize;
   *mChunkPtr = '\0';
   MOZ_ALWAYS_TRUE(mChunkLengths.append(0));
-  MOZ_ALWAYS_TRUE(mChunkList.append(mozilla::Move(newChunk)));
+  MOZ_ALWAYS_TRUE(mChunkList.append(std::move(newChunk)));
 }
 
 void
@@ -110,6 +110,6 @@ void
 SpliceableChunkedJSONWriter::TakeAndSplice(ChunkedJSONWriteFunc* aFunc)
 {
   Separator();
-  WriteFunc()->Take(mozilla::Move(*aFunc));
+  WriteFunc()->Take(std::move(*aFunc));
   mNeedComma[mDepth] = true;
 }

@@ -6195,7 +6195,7 @@ SaveFileContentData(const nsTArray<OwningFileOrDirectory>& aArray)
   for (auto& it : aArray) {
     if (it.IsFile()) {
       RefPtr<BlobImpl> impl = it.GetAsFile()->Impl();
-      res.AppendElement(Move(impl));
+      res.AppendElement(std::move(impl));
     } else {
       MOZ_ASSERT(it.IsDirectory());
       nsString fullPath;
@@ -6203,7 +6203,7 @@ SaveFileContentData(const nsTArray<OwningFileOrDirectory>& aArray)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }
-      res.AppendElement(Move(fullPath));
+      res.AppendElement(std::move(fullPath));
     }
   }
   return res;
@@ -6265,7 +6265,7 @@ HTMLInputElement::SaveState()
         }
       }
 
-      state->contentData() = Move(value);
+      state->contentData() = std::move(value);
       break;
   }
 

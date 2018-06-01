@@ -233,7 +233,7 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
     sessionType,
     initDataType,
     aPromiseId,
-    Move(aInitData)));
+    std::move(aInitData)));
 }
 
 void
@@ -282,7 +282,7 @@ ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
     cdm,
     &gmp::ChromiumCDMParent::SetServerCertificate,
     aPromiseId,
-    Move(aCert)));
+    std::move(aCert)));
 }
 
 void
@@ -310,7 +310,7 @@ ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
       &gmp::ChromiumCDMParent::UpdateSession,
       NS_ConvertUTF16toUTF8(aSessionId),
       aPromiseId,
-      Move(aResponse)));
+      std::move(aResponse)));
 }
 
 void

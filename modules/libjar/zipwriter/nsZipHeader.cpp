@@ -372,7 +372,7 @@ nsresult nsZipHeader::PadExtraField(uint32_t aOffset, uint16_t aAlignSize)
       return NS_ERROR_FAILURE;
     }
 
-    UniquePtr<uint8_t[]> field = Move(mLocalExtraField);
+    UniquePtr<uint8_t[]> field = std::move(mLocalExtraField);
     uint32_t pos = mLocalFieldLength;
 
     mLocalExtraField = MakeUnique<uint8_t[]>(mLocalFieldLength + pad_size);

@@ -1151,7 +1151,7 @@ public:
     : Runnable("net::SendRequestRunnable")
     , mSocket(aSocket)
     , mAddr(aAddr)
-    , mData(Move(aData))
+    , mData(std::move(aData))
   { }
 
   NS_DECL_NSIRUNNABLE
@@ -1270,7 +1270,7 @@ nsUDPSocket::SendWithAddress(const NetAddr *aAddr, const uint8_t *aData,
     }
 
     nsresult rv = mSts->Dispatch(
-      new SendRequestRunnable(this, *aAddr, Move(fallibleArray)),
+      new SendRequestRunnable(this, *aAddr, std::move(fallibleArray)),
       NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
     *_retval = aDataLength;

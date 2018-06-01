@@ -35,7 +35,7 @@ JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last, const c
     va_start(ap, fmt);
     JSSmprintfPointer lastPtr(last.release());
     JSSmprintfPointer result =
-        mozilla::VsmprintfAppend<js::SystemAllocPolicy>(Move(lastPtr), fmt, ap);
+        mozilla::VsmprintfAppend<js::SystemAllocPolicy>(std::move(lastPtr), fmt, ap);
     va_end(ap);
     return JS::UniqueChars(result.release());
 }
@@ -49,6 +49,6 @@ JS_PUBLIC_API(JS::UniqueChars) JS_vsprintf_append(JS::UniqueChars&& last,
                                                   const char* fmt, va_list ap)
 {
     JSSmprintfPointer lastPtr(last.release());
-    return JS::UniqueChars(mozilla::VsmprintfAppend<js::SystemAllocPolicy>(Move(lastPtr),
+    return JS::UniqueChars(mozilla::VsmprintfAppend<js::SystemAllocPolicy>(std::move(lastPtr),
                                                                            fmt, ap).release());
 }

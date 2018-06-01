@@ -876,7 +876,7 @@ public:
   const FrameMetrics& GetMetrics() const { return mMetrics; }
 
   void SetSnapInfo(ScrollSnapInfo&& aSnapInfo) {
-    mSnapInfo = Move(aSnapInfo);
+    mSnapInfo = std::move(aSnapInfo);
   }
   const ScrollSnapInfo& GetSnapInfo() const { return mSnapInfo; }
 

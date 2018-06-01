@@ -29,7 +29,7 @@ PerformanceResourceTiming::PerformanceResourceTiming(UniquePtr<PerformanceTiming
                                                      Performance* aPerformance,
                                                      const nsAString& aName)
   : PerformanceEntry(aPerformance->GetParentObject(), aName, NS_LITERAL_STRING("resource"))
-  , mTimingData(Move(aPerformanceTiming))
+  , mTimingData(std::move(aPerformanceTiming))
   , mPerformance(aPerformance)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");

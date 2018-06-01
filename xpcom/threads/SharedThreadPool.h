@@ -68,7 +68,7 @@ public:
   }
 
   NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable> event, uint32_t flags = NS_DISPATCH_NORMAL) override
-    { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->Dispatch(Move(event), flags); }
+    { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->Dispatch(std::move(event), flags); }
 
   NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override
     { return NS_ERROR_NOT_IMPLEMENTED; }

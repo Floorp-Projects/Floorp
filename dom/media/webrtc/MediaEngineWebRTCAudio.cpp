@@ -534,7 +534,7 @@ MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs,
   MOZ_DIAGNOSTIC_ASSERT(aGraph);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph = Move(aGraph), aPrefs]() mutable {
+  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph = std::move(aGraph), aPrefs]() mutable {
     that->mSettings->mEchoCancellation.Value() = aPrefs.mAecOn;
     that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
     that->mSettings->mNoiseSuppression.Value() = aPrefs.mNoiseOn;

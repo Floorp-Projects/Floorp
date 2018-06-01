@@ -1465,7 +1465,7 @@ Gecko_SetCounterStyleToSymbols(CounterStylePtr* aPtr, uint8_t aSymbolsType,
   for (uint32_t i = 0; i < aSymbolsCount; i++) {
     symbols.AppendElement(NS_ConvertUTF8toUTF16(*aSymbols[i]));
   }
-  *aPtr = new AnonymousCounterStyle(aSymbolsType, Move(symbols));
+  *aPtr = new AnonymousCounterStyle(aSymbolsType, std::move(symbols));
 }
 
 void
@@ -2605,8 +2605,8 @@ Gecko_StyleSheet_FinishAsyncParse(SheetLoadDataHolder* aData,
   RefPtr<SheetLoadDataHolder> loadData = aData;
   RefPtr<RawServoStyleSheetContents> sheetContents = aSheetContents.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,
-                                                 [d = Move(loadData),
-                                                  s = Move(sheetContents)]() mutable {
+                                                 [d = std::move(loadData),
+                                                  s = std::move(sheetContents)]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
     d->get()->mSheet->FinishAsyncParse(s.forget());
   }));
@@ -2625,7 +2625,7 @@ LoadImportSheet(css::Loader* aLoader,
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURL, "Invalid URLs shouldn't be loaded!");
 
-  RefPtr<dom::MediaList> media = new MediaList(Move(aMediaList));
+  RefPtr<dom::MediaList> media = new MediaList(std::move(aMediaList));
   nsCOMPtr<nsIURI> uri = aURL->GetURI();
   nsresult rv = uri ? NS_OK : NS_ERROR_FAILURE;
 
@@ -2687,10 +2687,10 @@ Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
   RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
   RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,
-                                                 [data = Move(loadData),
-                                                  url = Move(urlVal),
-                                                  media = Move(mediaList),
-                                                  import = Move(importRule)]() mutable {
+                                                 [data = std::move(loadData),
+                                                  url = std::move(urlVal),
+                                                  media = std::move(mediaList),
+                                                  import = std::move(importRule)]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
     SheetLoadData* d = data->get();
     RefPtr<StyleSheet> sheet =

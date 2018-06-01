@@ -114,7 +114,7 @@ ObjectRealm::init(JSContext* cx)
     if (!sentinel)
         return false;
 
-    iteratorSentinel_ = Move(sentinel);
+    iteratorSentinel_ = std::move(sentinel);
     enumerators = iteratorSentinel_.get();
     return true;
 }
@@ -199,7 +199,7 @@ Realm::ensureJitRealmExists(JSContext* cx)
     if (!jitRealm->initialize(cx))
         return false;
 
-    jitRealm_ = Move(jitRealm);
+    jitRealm_ = std::move(jitRealm);
     return true;
 }
 
@@ -549,7 +549,7 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObje
         if (!map || !map->init())
             return nullptr;
 
-        nonSyntacticLexicalEnvironments_ = Move(map);
+        nonSyntacticLexicalEnvironments_ = std::move(map);
     }
 
     // If a wrapped WithEnvironmentObject was passed in, unwrap it, as we may
@@ -1090,7 +1090,7 @@ Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
             if (!table || !table->init())
                 oomUnsafe.crash("setNewObjectMetadata");
 
-            objects_.objectMetadataTable = Move(table);
+            objects_.objectMetadataTable = std::move(table);
         }
 
         if (!objects_.objectMetadataTable->add(cx, obj, metadata))

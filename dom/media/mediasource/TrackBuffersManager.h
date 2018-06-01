@@ -52,7 +52,7 @@ public:
     if (!mQueue.Length()) {
       return nullptr;
     }
-    RefPtr<SourceBufferTask> task = Move(mQueue[0]);
+    RefPtr<SourceBufferTask> task = std::move(mQueue[0]);
     mQueue.RemoveElementAt(0);
     return task.forget();
   }

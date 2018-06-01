@@ -1017,7 +1017,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
         continue;
       }
       if (keptUpdateCount != i) {
-        mStreamUpdates[keptUpdateCount] = Move(mStreamUpdates[i]);
+        mStreamUpdates[keptUpdateCount] = std::move(mStreamUpdates[i]);
         MOZ_ASSERT(!mStreamUpdates[i].mStream);
       }
       ++keptUpdateCount;
@@ -1039,7 +1039,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
       update->mNextMainThreadFinished = stream->mNotifiedFinished;
     }
     if (!mPendingUpdateRunnables.IsEmpty()) {
-      mUpdateRunnables.AppendElements(Move(mPendingUpdateRunnables));
+      mUpdateRunnables.AppendElements(std::move(mPendingUpdateRunnables));
     }
   }
 
@@ -1123,7 +1123,7 @@ MediaStreamGraphImpl::RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessa
 
   // Only one block is used for messages from the graph thread.
   MOZ_ASSERT(mFrontMessageQueue.Length() == 1);
-  mFrontMessageQueue[0].mMessages.AppendElement(Move(aMessage));
+  mFrontMessageQueue[0].mMessages.AppendElement(std::move(aMessage));
 }
 
 void
@@ -1701,7 +1701,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
       for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
         MessageBlock& mb = mBackMessageQueue[i];
-        controlMessagesToRunDuringShutdown.AppendElements(Move(mb.mMessages));
+        controlMessagesToRunDuringShutdown.AppendElements(std::move(mb.mMessages));
       }
       mBackMessageQueue.Clear();
       MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
@@ -1817,14 +1817,14 @@ MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage)
     return;
   }
 
-  mCurrentTaskMessageQueue.AppendElement(Move(aMessage));
+  mCurrentTaskMessageQueue.AppendElement(std::move(aMessage));
   EnsureRunInStableState();
 }
 
 void
 MediaStreamGraphImpl::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  mAbstractMainThread->Dispatch(Move(aRunnable));
+  mAbstractMainThread->Dispatch(std::move(aRunnable));
 }
 
 MediaStream::MediaStream()
@@ -2592,7 +2592,7 @@ MediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode)
         return;
       }
     }
-    mDisabledTracks.AppendElement(Move(DisabledTrack(aTrackID, aMode)));
+    mDisabledTracks.AppendElement(std::move(DisabledTrack(aTrackID, aMode)));
   }
 }
 
@@ -2956,7 +2956,7 @@ void
 SourceMediaStream::FinishAddTracks()
 {
   MutexAutoLock lock(mMutex);
-  mUpdateTracks.AppendElements(Move(mPendingTracks));
+  mUpdateTracks.AppendElements(std::move(mPendingTracks));
   LOG(LogLevel::Debug,
       ("FinishAddTracks: %lu/%lu",
        (long)mPendingTracks.Length(),
@@ -3864,7 +3864,7 @@ MediaStreamGraphImpl::CollectSizesForMemoryReport(
     NS_IMETHOD Run() override
     {
       MediaStreamGraphImpl::FinishCollectReports(mHandleReport, mHandlerData,
-                                                 Move(mAudioStreamSizes));
+                                                 std::move(mAudioStreamSizes));
       return NS_OK;
     }
 
@@ -3881,7 +3881,7 @@ MediaStreamGraphImpl::CollectSizesForMemoryReport(
   };
 
   RefPtr<FinishCollectRunnable> runnable =
-    new FinishCollectRunnable(Move(aHandleReport), Move(aHandlerData));
+    new FinishCollectRunnable(std::move(aHandleReport), std::move(aHandlerData));
 
   auto audioStreamSizes = &runnable->mAudioStreamSizes;
 
@@ -4383,7 +4383,7 @@ MediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(
 {
   AssertOnGraphThreadOrNotRunning();
   *mPendingUpdateRunnables.AppendElement() =
-    AbstractMainThread()->CreateDirectTaskDrainer(Move(aRunnable));
+    AbstractMainThread()->CreateDirectTaskDrainer(std::move(aRunnable));
 }
 
 } // namespace mozilla

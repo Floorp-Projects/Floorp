@@ -280,13 +280,13 @@ XDRIncrementalEncoder::createOrReplaceSubTree(AutoXDRTree* child)
     SlicesNode tmp;
     if (!p) {
         // Create a new sub-tree node.
-        if (!tree_.add(p, child->key_, mozilla::Move(tmp))) {
+        if (!tree_.add(p, child->key_, std::move(tmp))) {
             oom_ = true;
             return;
         }
     } else {
         // Replace an exisiting sub-tree.
-        p->value() = mozilla::Move(tmp);
+        p->value() = std::move(tmp);
     }
     node_ = &p->value();
 

@@ -295,7 +295,7 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 
   aNumSpecs = count;
   // Transfer ownership to caller here
-  *aSpecs = Move(specs);
+  *aSpecs = std::move(specs);
 
   return NS_OK;
 }

@@ -74,7 +74,7 @@ public:
                                 time,
                                 duration,
                                 framesCopied,
-                                Move(buffer),
+                                std::move(buffer),
                                 aChannels,
                                 aSampleRate));
 

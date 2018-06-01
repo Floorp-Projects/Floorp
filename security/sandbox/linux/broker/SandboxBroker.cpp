@@ -42,7 +42,7 @@ static const nsLiteralCString tempDirPrefix("/tmp");
 // This constructor signals failure by setting mFileDesc and aClientFd to -1.
 SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
                              int& aClientFd)
-  : mChildPid(aChildPid), mPolicy(Move(aPolicy))
+  : mChildPid(aChildPid), mPolicy(std::move(aPolicy))
 {
   int fds[2];
   if (0 != socketpair(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0, fds)) {
@@ -70,14 +70,14 @@ SandboxBroker::Create(UniquePtr<const Policy> aPolicy, int aChildPid,
 {
   int clientFd;
   // Can't use MakeUnique here because the constructor is private.
-  UniquePtr<SandboxBroker> rv(new SandboxBroker(Move(aPolicy), aChildPid,
+  UniquePtr<SandboxBroker> rv(new SandboxBroker(std::move(aPolicy), aChildPid,
                                                 clientFd));
   if (clientFd < 0) {
     rv = nullptr;
   } else {
     aClientFdOut = ipc::FileDescriptor(clientFd);
   }
-  return Move(rv);
+  return std::move(rv);
 }
 
 SandboxBroker::~SandboxBroker() {

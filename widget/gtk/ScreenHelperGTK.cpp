@@ -197,7 +197,7 @@ ScreenHelperGTK::RefreshScreens()
   }
 
   ScreenManager& screenManager = ScreenManager::GetSingleton();
-  screenManager.Refresh(Move(screenList));
+  screenManager.Refresh(std::move(screenList));
 }
 
 } // namespace widget

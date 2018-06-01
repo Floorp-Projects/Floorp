@@ -7791,7 +7791,7 @@ public:
   DeleteDatabaseOp(Factory* aFactory,
                    already_AddRefed<ContentParent> aContentParent,
                    const CommonFactoryRequestParams& aParams)
-    : FactoryOp(aFactory, Move(aContentParent), aParams, /* aDeleting */ true)
+    : FactoryOp(aFactory, std::move(aContentParent), aParams, /* aDeleting */ true)
     , mPreviousVersion(0)
   { }
 
@@ -8430,7 +8430,7 @@ private:
   void
   GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
-    aResponse = Move(mResponse);
+    aResponse = std::move(mResponse);
     *aResponseSize = 0;
   }
 };
@@ -8456,7 +8456,7 @@ private:
   void
   GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
-    aResponse = Move(mResponse);
+    aResponse = std::move(mResponse);
     *aResponseSize = 0;
   }
 };
@@ -8484,7 +8484,7 @@ private:
   void
   GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
-    aResponse = Move(mResponse);
+    aResponse = std::move(mResponse);
     *aResponseSize = sizeof(uint64_t);
   }
 };
@@ -8587,7 +8587,7 @@ private:
   void
   GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
-    aResponse = Move(mResponse);
+    aResponse = std::move(mResponse);
     *aResponseSize = sizeof(uint64_t);
   }
 };
@@ -9351,7 +9351,7 @@ struct Maintenance::DirectoryInfo final
                 nsTArray<nsString>&& aDatabasePaths)
    : mGroup(aGroup)
    , mOrigin(aOrigin)
-   , mDatabasePaths(Move(aDatabasePaths))
+   , mDatabasePaths(std::move(aDatabasePaths))
    , mPersistenceType(aPersistenceType)
   {
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
@@ -9368,10 +9368,10 @@ struct Maintenance::DirectoryInfo final
   }
 
   DirectoryInfo(DirectoryInfo&& aOther)
-    : mGroup(Move(aOther.mGroup))
-    , mOrigin(Move(aOther.mOrigin))
-    , mDatabasePaths(Move(aOther.mDatabasePaths))
-    , mPersistenceType(Move(aOther.mPersistenceType))
+    : mGroup(std::move(aOther.mGroup))
+    , mOrigin(std::move(aOther.mOrigin))
+    , mDatabasePaths(std::move(aOther.mDatabasePaths))
+    , mPersistenceType(std::move(aOther.mPersistenceType))
   {
 #ifdef DEBUG
     MOZ_ASSERT(!mDatabasePaths.IsEmpty());
@@ -9763,7 +9763,7 @@ CheckWasmModule(FileHelper* aFileHelper,
     }
 
     match = JS::CompiledWasmModuleAssumptionsMatch(compiledFileDesc,
-                                                   Move(buildId));
+                                                   std::move(buildId));
   }
   if (match) {
     return NS_OK;
@@ -9796,7 +9796,7 @@ CheckWasmModule(FileHelper* aFileHelper,
 
   RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
                                                             nullptr,
-                                                            Move(buildId),
+                                                            std::move(buildId),
                                                             nullptr,
                                                             0);
   if (NS_WARN_IF(!module)) {
@@ -12243,7 +12243,7 @@ ConnectionPool::WaitForDatabasesToComplete(nsTArray<nsCString>&& aDatabaseIds,
   }
 
   nsAutoPtr<DatabasesCompleteCallback> callback(
-    new DatabasesCompleteCallback(Move(aDatabaseIds), aCallback));
+    new DatabasesCompleteCallback(std::move(aDatabaseIds), aCallback));
   mCompleteCallbacks.AppendElement(callback.forget());
 }
 
@@ -13082,7 +13082,7 @@ ConnectionPool::
 DatabasesCompleteCallback::DatabasesCompleteCallback(
                                              nsTArray<nsCString>&& aDatabaseIds,
                                              nsIRunnable* aCallback)
-  : mDatabaseIds(Move(aDatabaseIds))
+  : mDatabaseIds(std::move(aDatabaseIds))
   , mCallback(aCallback)
 {
   AssertIsOnBackgroundThread();
@@ -13150,8 +13150,8 @@ FinishCallbackWrapper::Run()
   mConnectionPool->AssertIsOnOwningThread();
   MOZ_ASSERT(mHasRunOnce);
 
-  RefPtr<ConnectionPool> connectionPool = Move(mConnectionPool);
-  RefPtr<FinishCallback> callback = Move(mCallback);
+  RefPtr<ConnectionPool> connectionPool = std::move(mConnectionPool);
+  RefPtr<FinishCallback> callback = std::move(mCallback);
 
   callback->TransactionFinishedBeforeUnblock();
 
@@ -13540,7 +13540,7 @@ DatabaseLoggingInfo::~DatabaseLoggingInfo()
  ******************************************************************************/
 
 Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
-  : mLoggingInfo(Move(aLoggingInfo))
+  : mLoggingInfo(std::move(aLoggingInfo))
 #ifdef DEBUG
   , mActorDestroyed(false)
 #endif
@@ -13780,7 +13780,7 @@ WaitForTransactionsHelper::MaybeWaitForTransactions()
 
     mState = State::WaitingForTransactions;
 
-    connectionPool->WaitForDatabasesToComplete(Move(ids), this);
+    connectionPool->WaitForDatabasesToComplete(std::move(ids), this);
     return;
   }
 
@@ -13801,7 +13801,7 @@ WaitForTransactionsHelper::MaybeWaitForFileHandles()
 
     mState = State::WaitingForFileHandles;
 
-    fileHandleThreadPool->WaitForDirectoriesToComplete(Move(ids), this);
+    fileHandleThreadPool->WaitForDirectoriesToComplete(std::move(ids), this);
     return;
   }
 
@@ -13868,7 +13868,7 @@ Database::Database(Factory* aFactory,
   : mFactory(aFactory)
   , mMetadata(aMetadata)
   , mFileManager(aFileManager)
-  , mDirectoryLock(Move(aDirectoryLock))
+  , mDirectoryLock(std::move(aDirectoryLock))
   , mPrincipalInfo(aPrincipalInfo)
   , mOptionalContentParentId(aOptionalContentParentId)
   , mGroup(aGroup)
@@ -17502,7 +17502,7 @@ QuotaClient::GetOrCreateThreadPool()
 
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt")));
 
-    mMaintenanceThreadPool = Move(threadPool);
+    mMaintenanceThreadPool = std::move(threadPool);
   }
 
   return mMaintenanceThreadPool;
@@ -18569,7 +18569,7 @@ Maintenance::DirectoryWork()
         mDirectoryInfos.AppendElement(DirectoryInfo(persistenceType,
                                                     group,
                                                     origin,
-                                                    Move(databasePaths)));
+                                                    std::move(databasePaths)));
 
         nsCOMPtr<nsIFile> directory;
 
@@ -20657,7 +20657,7 @@ FactoryOp::FactoryOp(Factory* aFactory,
   : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
                           aFactory->GetLoggingInfo()->NextRequestSN())
   , mFactory(aFactory)
-  , mContentParent(Move(aContentParent))
+  , mContentParent(std::move(aContentParent))
   , mCommonParams(aCommonParams)
   , mState(State::Initial)
   , mEnforcingQuota(true)
@@ -21427,7 +21427,7 @@ FactoryOp::RecvPermissionRetry()
 OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
                                already_AddRefed<ContentParent> aContentParent,
                                const CommonFactoryRequestParams& aParams)
-  : FactoryOp(aFactory, Move(aContentParent), aParams, /* aDeleting */ false)
+  : FactoryOp(aFactory, std::move(aContentParent), aParams, /* aDeleting */ false)
   , mMetadata(new FullDatabaseMetadata(aParams.metadata()))
   , mRequestedVersion(aParams.metadata().version())
   , mVersionChangeOp(nullptr)
@@ -26510,7 +26510,7 @@ MoveData<SerializedStructuredCloneReadInfo>(
                                      StructuredCloneReadInfo& aInfo,
                                      SerializedStructuredCloneReadInfo& aResult)
 {
-  aResult.data().data = Move(aInfo.mData);
+  aResult.data().data = std::move(aInfo.mData);
   aResult.hasPreprocessInfo() = aInfo.mHasPreprocessInfo;
 }
 
@@ -26864,7 +26864,7 @@ ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 
   if (!mResponse.IsEmpty()) {
     *aResponseSize = mResponse[0].GetBuffer().Length();
-    aResponse.get_ObjectStoreGetKeyResponse().key() = Move(mResponse[0]);
+    aResponse.get_ObjectStoreGetKeyResponse().key() = std::move(mResponse[0]);
   }
 }
 
@@ -27321,7 +27321,7 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
         SerializedStructuredCloneReadInfo& serializedInfo =
           fallibleCloneInfos[index];
 
-        serializedInfo.data().data = Move(info.mData);
+        serializedInfo.data().data = std::move(info.mData);
 
         FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
         nsresult rv = SerializeStructuredCloneFiles(mBackgroundParent,
@@ -27358,7 +27358,7 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
     SerializedStructuredCloneReadInfo& serializedInfo =
       aResponse.get_IndexGetResponse().cloneInfo();
 
-    serializedInfo.data().data = Move(info.mData);
+    serializedInfo.data().data = std::move(info.mData);
 
     FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
     nsresult rv =
@@ -27507,7 +27507,7 @@ IndexGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 
   if (!mResponse.IsEmpty()) {
     *aResponseSize = mResponse[0].GetBuffer().Length();
-    aResponse.get_IndexGetKeyResponse().key() = Move(mResponse[0]);
+    aResponse.get_IndexGetKeyResponse().key() = std::move(mResponse[0]);
   }
 }
 
@@ -27681,10 +27681,10 @@ CursorOpBase::PopulateResponseFromStatement(
 
       auto& responses = mResponse.get_ArrayOfObjectStoreCursorResponse();
       auto& response = *responses.AppendElement();
-      response.cloneInfo().data().data = Move(cloneInfo.mData);
+      response.cloneInfo().data().data = std::move(cloneInfo.mData);
       response.key() = mCursor->mKey;
 
-      mFiles.AppendElement(Move(cloneInfo.mFiles));
+      mFiles.AppendElement(std::move(cloneInfo.mFiles));
       break;
     }
 
@@ -27724,12 +27724,12 @@ CursorOpBase::PopulateResponseFromStatement(
       mResponse = IndexCursorResponse();
 
       auto& response = mResponse.get_IndexCursorResponse();
-      response.cloneInfo().data().data = Move(cloneInfo.mData);
+      response.cloneInfo().data().data = std::move(cloneInfo.mData);
       response.key() = mCursor->mKey;
       response.sortKey() = mCursor->mSortKey;
       response.objectKey() = mCursor->mObjectKey;
 
-      mFiles.AppendElement(Move(cloneInfo.mFiles));
+      mFiles.AppendElement(std::move(cloneInfo.mFiles));
       break;
     }
 
@@ -29105,8 +29105,8 @@ FileHelper::Init()
   MOZ_ASSERT(NS_SUCCEEDED(journalDirectory->IsDirectory(&isDirectory)));
   MOZ_ASSERT(isDirectory);
 
-  mFileDirectory = Move(fileDirectory);
-  mJournalDirectory= Move(journalDirectory);
+  mFileDirectory = std::move(fileDirectory);
+  mJournalDirectory= std::move(journalDirectory);
 
   return NS_OK;
 }

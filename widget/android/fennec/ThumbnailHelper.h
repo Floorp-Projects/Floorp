@@ -202,7 +202,7 @@ public:
         public:
             explicit IdleEvent(Functor&& aCall)
                 : Runnable("ThumbnailHelperIdle")
-                , mLambda(Move(aCall))
+                , mLambda(std::move(aCall))
                 , mIdlePass(false)
             {}
 
@@ -224,7 +224,7 @@ public:
             }
         };
 
-        NS_DispatchToMainThread(new IdleEvent(Move(aCall)));
+        NS_DispatchToMainThread(new IdleEvent(std::move(aCall)));
     }
 
     static void

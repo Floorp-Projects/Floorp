@@ -85,7 +85,7 @@ public:
   MatchGlobSet() {}
   explicit MatchGlobSet(size_type aCapacity) : nsTArray(aCapacity) {}
   explicit MatchGlobSet(const nsTArray& aOther) : nsTArray(aOther) {}
-  MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther) : nsTArray(mozilla::Move(aOther)) {}
+  MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther) : nsTArray(std::move(aOther)) {}
   MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL) : nsTArray(aIL) {}
 
   bool Matches(const nsAString& aValue) const;

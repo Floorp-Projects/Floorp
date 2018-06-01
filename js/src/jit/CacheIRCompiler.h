@@ -529,8 +529,8 @@ class FailurePath
     FailurePath() = default;
 
     FailurePath(FailurePath&& other)
-      : inputs_(Move(other.inputs_)),
-        spilledRegs_(Move(other.spilledRegs_)),
+      : inputs_(std::move(other.inputs_)),
+        spilledRegs_(std::move(other.spilledRegs_)),
         label_(other.label_),
         stackPushed_(other.stackPushed_)
     {}

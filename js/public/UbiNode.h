@@ -178,7 +178,6 @@ namespace ubi {
 
 using mozilla::Forward;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::RangedPtr;
 using mozilla::Variant;
 
@@ -844,14 +843,14 @@ class Edge {
 
     // Move construction and assignment.
     Edge(Edge&& rhs)
-        : name(mozilla::Move(rhs.name))
+        : name(std::move(rhs.name))
         , referent(rhs.referent)
     { }
 
     Edge& operator=(Edge&& rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~Edge();
-        new (this) Edge(mozilla::Move(rhs));
+        new (this) Edge(std::move(rhs));
         return *this;
     }
 
@@ -862,7 +861,7 @@ class Edge {
     // false as the wantNames parameter.
     //
     // The storage is owned by this Edge, and will be freed when this Edge is
-    // destructed. You may take ownership of the name by `mozilla::Move`ing it
+    // destructed. You may take ownership of the name by `std::move`ing it
     // out of the edge; it is just a UniquePtr.
     //
     // (In real life we'll want a better representation for names, to avoid

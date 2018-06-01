@@ -186,9 +186,9 @@ SourceSurfaceSharedData::ReallocHandle()
 #endif
 
   if (mMapCount > 0 && !mOldBuf) {
-    mOldBuf = Move(mBuf);
+    mOldBuf = std::move(mBuf);
   }
-  mBuf = Move(buf);
+  mBuf = std::move(buf);
   mClosed = false;
   mShared = false;
   return true;

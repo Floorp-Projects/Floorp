@@ -242,7 +242,7 @@ KeyframeEffect::SetKeyframes(JSContext* aContext,
   }
 
   RefPtr<ComputedStyle> style = GetTargetComputedStyle();
-  SetKeyframes(Move(keyframes), style);
+  SetKeyframes(std::move(keyframes), style);
 }
 
 
@@ -255,7 +255,7 @@ KeyframeEffect::SetKeyframes(
     return;
   }
 
-  mKeyframes = Move(aKeyframes);
+  mKeyframes = std::move(aKeyframes);
   KeyframeUtils::DistributeKeyframes(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
@@ -352,7 +352,7 @@ KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle)
     }
   }
 
-  mProperties = Move(properties);
+  mProperties = std::move(properties);
   UpdateEffectSet();
 
   for (AnimationProperty& property : mProperties) {

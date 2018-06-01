@@ -93,8 +93,8 @@ ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
 { }
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
-  : mURI(Move(aOther.mURI))
-  , mBlobSerial(Move(aOther.mBlobSerial))
+  : mURI(std::move(aOther.mURI))
+  , mBlobSerial(std::move(aOther.mBlobSerial))
   , mOriginAttributes(aOther.mOriginAttributes)
   , mControlledDocument(aOther.mControlledDocument)
   , mHash(aOther.mHash)

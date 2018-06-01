@@ -22,7 +22,7 @@ SharedImmutableString::SharedImmutableString(
 }
 
 SharedImmutableString::SharedImmutableString(SharedImmutableString&& rhs)
-  : cache_(mozilla::Move(rhs.cache_))
+  : cache_(std::move(rhs.cache_))
   , box_(rhs.box_)
 {
     MOZ_ASSERT(this != &rhs, "self move not allowed");
@@ -35,12 +35,12 @@ SharedImmutableString::SharedImmutableString(SharedImmutableString&& rhs)
 SharedImmutableString&
 SharedImmutableString::operator=(SharedImmutableString&& rhs) {
     this->~SharedImmutableString();
-    new (this) SharedImmutableString(mozilla::Move(rhs));
+    new (this) SharedImmutableString(std::move(rhs));
     return *this;
 }
 
 SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableString&& string)
-  : string_(mozilla::Move(string))
+  : string_(std::move(string))
 { }
 
 SharedImmutableTwoByteString::SharedImmutableTwoByteString(
@@ -52,7 +52,7 @@ SharedImmutableTwoByteString::SharedImmutableTwoByteString(
 }
 
 SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableTwoByteString&& rhs)
-  : string_(mozilla::Move(rhs.string_))
+  : string_(std::move(rhs.string_))
 {
     MOZ_ASSERT(this != &rhs, "self move not allowed");
 }
@@ -61,7 +61,7 @@ SharedImmutableTwoByteString&
 SharedImmutableTwoByteString::operator=(SharedImmutableTwoByteString&& rhs)
 {
     this->~SharedImmutableTwoByteString();
-    new (this) SharedImmutableTwoByteString(mozilla::Move(rhs));
+    new (this) SharedImmutableTwoByteString(std::move(rhs));
     return *this;
 }
 
@@ -96,9 +96,9 @@ SharedImmutableTwoByteString::clone() const
 MOZ_MUST_USE mozilla::Maybe<SharedImmutableString>
 SharedImmutableStringsCache::getOrCreate(OwnedChars&& chars, size_t length)
 {
-    OwnedChars owned(mozilla::Move(chars));
+    OwnedChars owned(std::move(chars));
     MOZ_ASSERT(owned);
-    return getOrCreate(owned.get(), length, [&]() { return mozilla::Move(owned); });
+    return getOrCreate(owned.get(), length, [&]() { return std::move(owned); });
 }
 
 MOZ_MUST_USE mozilla::Maybe<SharedImmutableString>
@@ -110,9 +110,9 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length)
 MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>
 SharedImmutableStringsCache::getOrCreate(OwnedTwoByteChars&& chars, size_t length)
 {
-    OwnedTwoByteChars owned(mozilla::Move(chars));
+    OwnedTwoByteChars owned(std::move(chars));
     MOZ_ASSERT(owned);
-    return getOrCreate(owned.get(), length, [&]() { return mozilla::Move(owned); });
+    return getOrCreate(owned.get(), length, [&]() { return std::move(owned); });
 }
 
 MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>

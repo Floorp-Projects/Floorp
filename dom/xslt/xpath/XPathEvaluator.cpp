@@ -116,7 +116,7 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
         return nullptr;
     }
 
-    return new XPathExpression(Move(expression), mRecycler, aDocument);
+    return new XPathExpression(std::move(expression), mRecycler, aDocument);
 }
 
 bool

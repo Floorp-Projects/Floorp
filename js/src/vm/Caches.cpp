@@ -23,7 +23,7 @@ RuntimeCaches::createMathCache(JSContext* cx)
         return nullptr;
     }
 
-    mathCache_ = Move(newMathCache);
+    mathCache_ = std::move(newMathCache);
     return mathCache_.get();
 }
 

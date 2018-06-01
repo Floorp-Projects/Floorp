@@ -266,7 +266,7 @@ class EdgeVectorTracer : public JS::CallbackTracer {
         // ownership of name; if the append succeeds, the vector element
         // then takes ownership; if the append fails, then the temporary
         // retains it, and its destructor will free it.
-        if (!vec->append(mozilla::Move(Edge(name16, Node(thing))))) {
+        if (!vec->append(std::move(Edge(name16, Node(thing))))) {
             okay = false;
             return;
         }
@@ -474,7 +474,7 @@ RootList::init(CompartmentSet& debuggees)
         if (zone && !debuggeeZones.has(zone))
             continue;
 
-        if (!edges.append(mozilla::Move(edge)))
+        if (!edges.append(std::move(edge)))
             return false;
     }
 
@@ -525,7 +525,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
             return false;
     }
 
-    return edges.append(mozilla::Move(Edge(name.release(), node)));
+    return edges.append(std::move(Edge(name.release(), node)));
 }
 
 const char16_t Concrete<RootList>::concreteTypeName[] = u"JS::ubi::RootList";

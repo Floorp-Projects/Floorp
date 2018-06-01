@@ -37,7 +37,7 @@ struct JS_PUBLIC_API(BackEdge)
         MOZ_ASSERT(!name_);
 
         predecessor_ = predecessor;
-        name_ = mozilla::Move(edge.name);
+        name_ = std::move(edge.name);
         return true;
     }
 
@@ -46,14 +46,14 @@ struct JS_PUBLIC_API(BackEdge)
 
     BackEdge(BackEdge&& rhs)
       : predecessor_(rhs.predecessor_)
-      , name_(mozilla::Move(rhs.name_))
+      , name_(std::move(rhs.name_))
     {
         MOZ_ASSERT(&rhs != this);
     }
 
     BackEdge& operator=(BackEdge&& rhs) {
         this->~BackEdge();
-        new(this) BackEdge(Move(rhs));
+        new(this) BackEdge(std::move(rhs));
         return *this;
     }
 
@@ -135,8 +135,8 @@ struct JS_PUBLIC_API(ShortestPaths)
                 auto cloned = back->clone();
                 if (!cloned)
                     return false;
-                paths.infallibleAppend(mozilla::Move(cloned));
-                if (!shortestPaths.paths_.putNew(edge.referent, mozilla::Move(paths)))
+                paths.infallibleAppend(std::move(cloned));
+                if (!shortestPaths.paths_.putNew(edge.referent, std::move(paths)))
                     return false;
                 totalPathsRecorded++;
             } else {
@@ -150,7 +150,7 @@ struct JS_PUBLIC_API(ShortestPaths)
                     BackEdge::Ptr thisBackEdge(js_new<BackEdge>());
                     if (!thisBackEdge || !thisBackEdge->init(origin, edge))
                         return false;
-                    ptr->value().infallibleAppend(mozilla::Move(thisBackEdge));
+                    ptr->value().infallibleAppend(std::move(thisBackEdge));
                     totalPathsRecorded++;
                 }
             }
@@ -186,7 +186,7 @@ struct JS_PUBLIC_API(ShortestPaths)
     ShortestPaths(uint32_t maxNumPaths, const Node& root, NodeSet&& targets)
       : maxNumPaths_(maxNumPaths)
       , root_(root)
-      , targets_(mozilla::Move(targets))
+      , targets_(std::move(targets))
       , paths_()
       , backEdges_()
     {
@@ -207,16 +207,16 @@ struct JS_PUBLIC_API(ShortestPaths)
     ShortestPaths(ShortestPaths&& rhs)
       : maxNumPaths_(rhs.maxNumPaths_)
       , root_(rhs.root_)
-      , targets_(mozilla::Move(rhs.targets_))
-      , paths_(mozilla::Move(rhs.paths_))
-      , backEdges_(mozilla::Move(rhs.backEdges_))
+      , targets_(std::move(rhs.targets_))
+      , paths_(std::move(rhs.paths_))
+      , backEdges_(std::move(rhs.backEdges_))
     {
         MOZ_ASSERT(this != &rhs, "self-move is not allowed");
     }
 
     ShortestPaths& operator=(ShortestPaths&& rhs) {
         this->~ShortestPaths();
-        new (this) ShortestPaths(mozilla::Move(rhs));
+        new (this) ShortestPaths(std::move(rhs));
         return *this;
     }
 
@@ -249,7 +249,7 @@ struct JS_PUBLIC_API(ShortestPaths)
         MOZ_ASSERT(maxNumPaths > 0);
 
         size_t count = targets.count();
-        ShortestPaths paths(maxNumPaths, root, mozilla::Move(targets));
+        ShortestPaths paths(maxNumPaths, root, std::move(targets));
         if (!paths.paths_.init(count))
             return mozilla::Nothing();
 
@@ -262,10 +262,10 @@ struct JS_PUBLIC_API(ShortestPaths)
         // Take ownership of the back edges we created while traversing the
         // graph so that we can follow them from `paths_` and don't
         // use-after-free.
-        paths.backEdges_ = mozilla::Move(traversal.visited);
+        paths.backEdges_ = std::move(traversal.visited);
 
         MOZ_ASSERT(paths.initialized());
-        return mozilla::Some(mozilla::Move(paths));
+        return mozilla::Some(std::move(paths));
     }
 
     /**

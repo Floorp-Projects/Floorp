@@ -15,7 +15,7 @@ namespace gfx {
 PrintTargetSkPDF::PrintTargetSkPDF(const IntSize& aSize,
                                    UniquePtr<SkWStream> aStream)
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
-  , mOStream(Move(aStream))
+  , mOStream(std::move(aStream))
   , mPageCanvas(nullptr)
 {
 }
@@ -34,7 +34,7 @@ PrintTargetSkPDF::~PrintTargetSkPDF()
 PrintTargetSkPDF::CreateOrNull(UniquePtr<SkWStream> aStream,
                                const IntSize& aSizeInPoints)
 {
-  return do_AddRef(new PrintTargetSkPDF(aSizeInPoints, Move(aStream)));
+  return do_AddRef(new PrintTargetSkPDF(aSizeInPoints, std::move(aStream)));
 }
 
 nsresult

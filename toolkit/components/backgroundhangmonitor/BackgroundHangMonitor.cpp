@@ -491,7 +491,7 @@ BackgroundHangThread::ReportHang(TimeDuration aHangTime)
   nsTArray<HangAnnotation> annotations;
   for (auto& annotation : mAnnotations) {
     HangAnnotation annot(annotation.mName, annotation.mValue);
-    annotations.AppendElement(mozilla::Move(annot));
+    annotations.AppendElement(std::move(annot));
   }
 
   HangDetails hangDetails(
@@ -500,8 +500,8 @@ BackgroundHangThread::ReportHang(TimeDuration aHangTime)
     VoidString(),
     mThreadName,
     mRunnableName,
-    Move(mHangStack),
-    Move(annotations)
+    std::move(mHangStack),
+    std::move(annotations)
   );
 
   // If the hang processing thread exists, we can process the native stack
@@ -509,12 +509,12 @@ BackgroundHangThread::ReportHang(TimeDuration aHangTime)
   // report without one.
   if (mManager->mHangProcessingThread) {
     nsCOMPtr<nsIRunnable> processHangStackRunnable =
-      new ProcessHangStackRunnable(Move(hangDetails));
+      new ProcessHangStackRunnable(std::move(hangDetails));
     mManager->mHangProcessingThread
             ->Dispatch(processHangStackRunnable.forget());
   } else {
     NS_WARNING("Unable to report native stack without a BHR processing thread");
-    RefPtr<nsHangDetails> hd = new nsHangDetails(Move(hangDetails));
+    RefPtr<nsHangDetails> hd = new nsHangDetails(std::move(hangDetails));
     hd->Submit();
   }
 

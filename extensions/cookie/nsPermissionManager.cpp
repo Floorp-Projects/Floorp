@@ -3434,7 +3434,7 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     }
 
     if (promise) {
-      promises.AppendElement(Move(promise));
+      promises.AppendElement(std::move(promise));
     }
   }
 

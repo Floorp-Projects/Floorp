@@ -93,7 +93,7 @@ StreamFilter::Connect()
       GetCurrentThreadSerialEventTarget(),
       __func__,
       [=] (mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
-        self->FinishConnect(Move(aEndpoint));
+        self->FinishConnect(std::move(aEndpoint));
       },
       [=] (mozilla::ipc::ResponseRejectReason aReason) {
         self->mActor->RecvInitialized(false);
@@ -108,7 +108,7 @@ StreamFilter::Connect()
       NewRunnableMethod<mozilla::ipc::Endpoint<PStreamFilterChild>&&>(
         "StreamFilter::FinishConnect",
         this, &StreamFilter::FinishConnect,
-        Move(endpoint)));
+        std::move(endpoint)));
   }
 }
 
@@ -177,7 +177,7 @@ StreamFilter::Write(const ArrayBufferOrUint8Array& aData, ErrorResult& aRv)
   }
 
   if (ok) {
-    mActor->Write(Move(data), aRv);
+    mActor->Write(std::move(data), aRv);
   }
 }
 

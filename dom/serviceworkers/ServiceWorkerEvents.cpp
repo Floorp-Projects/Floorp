@@ -235,7 +235,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit BodyCopyHandle(UniquePtr<RespondWithClosure>&& aClosure)
-    : mClosure(Move(aClosure))
+    : mClosure(std::move(aClosure))
   {
   }
 
@@ -290,7 +290,7 @@ public:
     , mWorkerChannelInfo(aWorkerChannelInfo)
     , mScriptSpec(aScriptSpec)
     , mResponseURLSpec(aResponseURLSpec)
-    , mClosure(Move(aClosure))
+    , mClosure(std::move(aClosure))
   {
   }
 
@@ -366,7 +366,7 @@ public:
     }
 
     RefPtr<BodyCopyHandle> copyHandle;
-    copyHandle = new BodyCopyHandle(Move(mClosure));
+    copyHandle = new BodyCopyHandle(std::move(mClosure));
 
     rv = mChannel->StartSynthesizedResponse(body, copyHandle, cacheInfoChannel,
                                             mResponseURLSpec,
@@ -742,7 +742,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
                                                           worker->GetChannelInfo(),
                                                           mScriptSpec,
                                                           responseURL,
-                                                          Move(closure));
+                                                          std::move(closure));
 
   nsCOMPtr<nsIInputStream> body;
   ir->GetUnfilteredBody(getter_AddRefs(body));
@@ -1074,7 +1074,7 @@ ExtractBytesFromData(const OwningArrayBufferViewOrArrayBufferOrUSVString& aDataI
 
 PushMessageData::PushMessageData(nsISupports* aOwner,
                                  nsTArray<uint8_t>&& aBytes)
-  : mOwner(aOwner), mBytes(Move(aBytes)) {}
+  : mOwner(aOwner), mBytes(std::move(aBytes)) {}
 
 PushMessageData::~PushMessageData()
 {
@@ -1193,7 +1193,7 @@ PushEvent::Constructor(mozilla::dom::EventTarget* aOwner,
       aRv.Throw(rv);
       return nullptr;
     }
-    e->mData = new PushMessageData(aOwner, Move(bytes));
+    e->mData = new PushMessageData(aOwner, std::move(bytes));
   }
   return e.forget();
 }

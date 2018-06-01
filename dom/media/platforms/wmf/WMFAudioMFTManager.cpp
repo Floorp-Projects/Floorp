@@ -342,7 +342,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
                            timestamp,
                            duration,
                            numFrames,
-                           Move(audioData),
+                           std::move(audioData),
                            mAudioChannels,
                            mAudioRate,
                            mChannelsMap);

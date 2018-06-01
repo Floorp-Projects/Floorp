@@ -90,7 +90,7 @@ public:
   public:
     explicit Iterator(EffectSet& aEffectSet)
       : mEffectSet(aEffectSet)
-      , mHashIterator(mozilla::Move(aEffectSet.mEffects.Iter()))
+      , mHashIterator(std::move(aEffectSet.mEffects.Iter()))
       , mIsEndIterator(false)
     {
 #ifdef DEBUG
@@ -100,7 +100,7 @@ public:
 
     Iterator(Iterator&& aOther)
       : mEffectSet(aOther.mEffectSet)
-      , mHashIterator(mozilla::Move(aOther.mHashIterator))
+      , mHashIterator(std::move(aOther.mHashIterator))
       , mIsEndIterator(aOther.mIsEndIterator)
     {
 #ifdef DEBUG

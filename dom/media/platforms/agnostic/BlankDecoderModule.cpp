@@ -119,7 +119,7 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
                                        aSample->mTime,
                                        aSample->mDuration,
                                        uint32_t(frames.value()),
-                                       Move(samples),
+                                       std::move(samples),
                                        mChannelCount,
                                        mSampleRate));
   return data.forget();
@@ -132,7 +132,7 @@ BlankDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   UniquePtr<DummyDataCreator> creator =
     MakeUnique<BlankVideoDataCreator>(config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
   RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-    Move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
+    std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
   return decoder.forget();
 }
 
@@ -143,7 +143,7 @@ BlankDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   UniquePtr<DummyDataCreator> creator =
     MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate);
   RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-    Move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
+    std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
   return decoder.forget();
 }
 

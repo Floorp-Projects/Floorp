@@ -18,7 +18,7 @@ public:
   PerformanceProxyData(UniquePtr<PerformanceTimingData>&& aData,
                        const nsAString& aInitiatorType,
                        const nsAString& aEntryName)
-    : mData(Move(aData))
+    : mData(std::move(aData))
     , mInitiatorType(aInitiatorType)
     , mEntryName(aEntryName)
   {}
@@ -40,13 +40,13 @@ public:
                         UniquePtr<PerformanceProxyData>&& aData)
     : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mStorage(aStorage)
-    , mData(Move(aData))
+    , mData(std::move(aData))
   {}
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    mStorage->AddEntryOnWorker(Move(mData));
+    mStorage->AddEntryOnWorker(std::move(mData));
     return true;
   }
 
@@ -151,11 +151,11 @@ PerformanceStorageWorker::AddEntry(nsIHttpChannel* aChannel,
   }
 
   UniquePtr<PerformanceProxyData> data(
-    new PerformanceProxyData(Move(performanceTimingData), initiatorType,
+    new PerformanceProxyData(std::move(performanceTimingData), initiatorType,
                              entryName));
 
   RefPtr<PerformanceEntryAdder> r =
-    new PerformanceEntryAdder(workerPrivate, this, Move(data));
+    new PerformanceEntryAdder(workerPrivate, this, std::move(data));
   Unused << NS_WARN_IF(!r->Dispatch());
 }
 
@@ -177,7 +177,7 @@ void
 PerformanceStorageWorker::AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData)
 {
   RefPtr<Performance> performance;
-  UniquePtr<PerformanceProxyData> data = Move(aData);
+  UniquePtr<PerformanceProxyData> data = std::move(aData);
 
   {
     MutexAutoLock lock(mMutex);
@@ -200,7 +200,7 @@ PerformanceStorageWorker::AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aDa
   }
 
   RefPtr<PerformanceResourceTiming> performanceEntry =
-    new PerformanceResourceTiming(Move(data->mData), performance,
+    new PerformanceResourceTiming(std::move(data->mData), performance,
                                  data->mEntryName);
   performanceEntry->SetInitiatorType(data->mInitiatorType);
 

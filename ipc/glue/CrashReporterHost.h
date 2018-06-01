@@ -38,7 +38,7 @@ public:
   public:
     void Init(std::function<void(T)>&& aCallback, bool aAsync)
     {
-      mCallback = Move(aCallback);
+      mCallback = std::move(aCallback);
       mAsync = aAsync;
       if (IsAsync()) {
         // Don't call do_GetCurrentThread() if this is called synchronously
@@ -61,7 +61,7 @@ public:
     void Invoke(T aResult)
     {
       if (IsAsync()) {
-        decltype(mCallback) callback = Move(mCallback);
+        decltype(mCallback) callback = std::move(mCallback);
         mTargetThread->
           Dispatch(NS_NewRunnableFunction("ipc::CrashReporterHost::CallbackWrapper::Invoke",
                                           [callback, aResult](){

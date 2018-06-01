@@ -1511,10 +1511,10 @@ class NewSdpTest : public ::testing::Test,
     void ParseSdp(const std::string &sdp, bool expectSuccess = true) {
       if (::testing::get<1>(GetParam())) {
         mSdpErrorHolder = &mSipccParser;
-        mSdp = mozilla::Move(mSipccParser.Parse(sdp));
+        mSdp = std::move(mSipccParser.Parse(sdp));
       } else {
         mSdpErrorHolder = &mRustParser;
-        mSdp = mozilla::Move(mRustParser.Parse(sdp));
+        mSdp = std::move(mRustParser.Parse(sdp));
       }
 
       // Are we configured to do a parse and serialize before actually
@@ -1531,9 +1531,9 @@ class NewSdpTest : public ::testing::Test,
           // Serialize and re-parse
           mSdp->Serialize(os);
           if (::testing::get<1>(GetParam())) {
-            mSdp = mozilla::Move(mSipccParser.Parse(os.str()));
+            mSdp = std::move(mSipccParser.Parse(os.str()));
           } else {
-            mSdp = mozilla::Move(mRustParser.Parse(os.str()));
+            mSdp = std::move(mRustParser.Parse(os.str()));
           }
 
           // Whether we expected the parse to work or not, it should

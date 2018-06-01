@@ -240,8 +240,8 @@ static void TestNewRunnableFunction(bool aNamed)
         TestMove tracker(&moveCounter);
         trackedRunnable =
           aNamed
-            ? NS_NewRunnableFunction("unused", Move(tracker))
-            : NS_NewRunnableFunction("TestNewRunnableFunction", Move(tracker));
+            ? NS_NewRunnableFunction("unused", std::move(tracker))
+            : NS_NewRunnableFunction("TestNewRunnableFunction", std::move(tracker));
       }
       trackedRunnable->Run();
     }
@@ -274,8 +274,8 @@ static void TestNewRunnableFunction(bool aNamed)
         TestCopyMove tracker(&copyCounter, &moveCounter);
         trackedRunnable =
           aNamed
-            ? NS_NewRunnableFunction("unused", Move(tracker))
-            : NS_NewRunnableFunction("TestNewRunnableFunction", Move(tracker));
+            ? NS_NewRunnableFunction("unused", std::move(tracker))
+            : NS_NewRunnableFunction("TestNewRunnableFunction", std::move(tracker));
       }
       trackedRunnable->Run();
     }
@@ -1010,7 +1010,7 @@ public:
   void TestByRRef(Spy&& s)
   {
     if (gDebug) { printf("TestByRRef(Spy[%d@%p]&&)\n", s.mID, &s); }
-    mSpy = mozilla::Move(s);
+    mSpy = std::move(s);
   };
   void TestByLRef(Spy& s)
   {
@@ -1390,7 +1390,7 @@ TEST(ThreadUtils, main)
       NewRunnableMethod<int&&>("TestThreadUtils::ThreadUtilsObject::Test1rri",
                                rpt,
                                &ThreadUtilsObject::Test1rri,
-                               mozilla::Move(i));
+                               std::move(i));
   }
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
@@ -1415,7 +1415,7 @@ TEST(ThreadUtils, main)
       "TestThreadUtils::ThreadUtilsObject::Test1upi",
       rpt,
       &ThreadUtilsObject::Test1upi,
-      mozilla::Move(upi));
+      std::move(upi));
   }
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
@@ -1441,7 +1441,7 @@ TEST(ThreadUtils, main)
       "TestThreadUtils::ThreadUtilsObject::Test1upi",
       rpt,
       &ThreadUtilsObject::Test1upi,
-      mozilla::Move(upi));
+      std::move(upi));
   }
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
@@ -1454,7 +1454,7 @@ TEST(ThreadUtils, main)
       "TestThreadUtils::ThreadUtilsObject::Test1upi",
       rpt,
       &ThreadUtilsObject::Test1upi,
-      mozilla::Move(upi));
+      std::move(upi));
   }
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
@@ -1466,7 +1466,7 @@ TEST(ThreadUtils, main)
       "TestThreadUtils::ThreadUtilsObject::Test1upi",
       rpt,
       &ThreadUtilsObject::Test1upi,
-      mozilla::Move(upi));
+      std::move(upi));
   }
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
@@ -1572,7 +1572,7 @@ TEST(ThreadUtils, main)
         "TestThreadUtils::ThreadUtilsObject::TestByValue",
         rpt,
         &ThreadUtilsObject::TestByValue,
-        mozilla::Move(s));
+        std::move(s));
       EXPECT_LE(1, gMoveConstructions);
       EXPECT_EQ(1, gAlive);
       EXPECT_EQ(1, gZombies);

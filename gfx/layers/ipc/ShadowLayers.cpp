@@ -235,7 +235,7 @@ struct ReleaseOnMainThreadTask : public Runnable
 
   explicit ReleaseOnMainThreadTask(UniquePtr<T>& aObj)
     : Runnable("layers::ReleaseOnMainThreadTask")
-    , mObj(Move(aObj))
+    , mObj(std::move(aObj))
   {}
 
   NS_IMETHOD Run() override {
@@ -732,10 +732,10 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   mWindowOverlayChanged = false;
 
-  info.cset() = Move(mTxn->mCset);
-  info.setSimpleAttrs() = Move(setSimpleAttrs);
-  info.setAttrs() = Move(setAttrs);
-  info.paints() = Move(mTxn->mPaints);
+  info.cset() = std::move(mTxn->mCset);
+  info.setSimpleAttrs() = std::move(setSimpleAttrs);
+  info.setAttrs() = std::move(setAttrs);
+  info.paints() = std::move(mTxn->mPaints);
   info.toDestroy() = mTxn->mDestroyedActors;
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;

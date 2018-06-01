@@ -18,7 +18,7 @@ public:
   MathMLTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
                        uint32_t aFlags, uint8_t aSSTYScriptLevel,
                        float aFontInflation)
-    : mInnerTransformingTextRunFactory(Move(aInnerTransformingTextRunFactory)),
+    : mInnerTransformingTextRunFactory(std::move(aInnerTransformingTextRunFactory)),
       mFlags(aFlags),
       mFontInflation(aFontInflation),
       mSSTYScriptLevel(aSSTYScriptLevel) {}

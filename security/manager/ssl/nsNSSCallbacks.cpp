@@ -125,7 +125,7 @@ OCSPRequest::OCSPRequest(const nsCString& aiaLocation,
   , mLoader(nullptr)
   , mAIALocation(aiaLocation)
   , mOriginAttributes(originAttributes)
-  , mPOSTData(Move(ocspRequest))
+  , mPOSTData(std::move(ocspRequest))
   , mTimeout(timeout)
   , mTimeoutTimer(nullptr)
   , mStartTime()
@@ -471,7 +471,7 @@ DoOCSPRequest(const nsCString& aiaLocation,
   }
 
   RefPtr<OCSPRequest> request(new OCSPRequest(aiaLocation, originAttributes,
-                                              Move(ocspRequest), timeout));
+                                              std::move(ocspRequest), timeout));
   rv = request->DispatchToMainThreadAndWait();
   if (NS_FAILED(rv)) {
     return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -1044,7 +1044,7 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
 
   if (rv == Success) {
     sslStatus->SetCertificateTransparencyInfo(certificateTransparencyInfo);
-    sslStatus->SetSucceededCertChain(Move(builtChain));
+    sslStatus->SetSucceededCertChain(std::move(builtChain));
   }
 }
 

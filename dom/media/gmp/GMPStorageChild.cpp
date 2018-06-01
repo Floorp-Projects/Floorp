@@ -26,7 +26,7 @@ ToArray(const uint8_t* aData, uint32_t aDataSize)
 {
   nsTArray<uint8_t> data;
   data.AppendElements(aData, aDataSize);
-  return mozilla::Move(data);
+  return std::move(data);
 }
 
 namespace mozilla {

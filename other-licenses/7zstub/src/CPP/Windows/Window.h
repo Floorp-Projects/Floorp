@@ -130,7 +130,7 @@ public:
     return result;
   }
   bool IsWindow() {  return BOOLToBool(::IsWindow(_window)); }
-  bool Move(int x, int y, int width, int height, bool repaint = true)
+  bool std::move(int x, int y, int width, int height, bool repaint = true)
     { return BOOLToBool(::MoveWindow(_window, x, y, width, height, BoolToBOOL(repaint))); }
 
   bool ChangeSubWindowSizeX(HWND hwnd, int xSize)

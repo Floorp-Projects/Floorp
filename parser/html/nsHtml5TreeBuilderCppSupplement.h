@@ -1176,7 +1176,7 @@ nsHtml5TreeBuilder::AllocateContentHandle()
     return nullptr;
   }
   if (mHandlesUsed == NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH) {
-    mOldHandles.AppendElement(Move(mHandles));
+    mOldHandles.AppendElement(std::move(mHandles));
     mHandles = mozilla::MakeUnique<nsIContent* []>(
       NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH);
     mHandlesUsed = 0;

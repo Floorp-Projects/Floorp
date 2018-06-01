@@ -32,7 +32,7 @@ VsyncBridgeChild::Create(RefPtr<VsyncIOThreadHolder> aThread,
     "gfx::VsyncBridgeChild::Open",
     child,
     &VsyncBridgeChild::Open,
-    Move(aEndpoint));
+    std::move(aEndpoint));
   aThread->GetThread()->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
 
   return child;

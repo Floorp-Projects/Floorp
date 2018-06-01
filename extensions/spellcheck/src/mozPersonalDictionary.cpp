@@ -369,7 +369,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   }
 
   nsCOMPtr<nsIRunnable> runnable =
-    new mozPersonalDictionarySave(this, theFile, mozilla::Move(array));
+    new mozPersonalDictionarySave(this, theFile, std::move(array));
   res = target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(res))) {
     return res;

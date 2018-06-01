@@ -1402,7 +1402,7 @@ public:
     {
       MOZ_ASSERT(NS_IsMainThread());
       SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-      mTable.Put(key->mKey, Move(aSelectorList));
+      mTable.Put(key->mKey, std::move(aSelectorList));
       AddObject(key);
     }
 

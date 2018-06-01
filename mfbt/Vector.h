@@ -107,7 +107,7 @@ struct VectorImpl
   {
     MOZ_ASSERT(aSrcStart <= aSrcEnd);
     for (U* p = aSrcStart; p < aSrcEnd; ++p, ++aDst) {
-      new_(aDst, Move(*p));
+      new_(aDst, std::move(*p));
     }
   }
 
@@ -141,7 +141,7 @@ struct VectorImpl
     T* dst = newbuf;
     T* src = aV.beginNoCheck();
     for (; src < aV.endNoCheck(); ++dst, ++src) {
-      new_(dst, Move(*src));
+      new_(dst, std::move(*src));
     }
     VectorImpl::destroy(aV.beginNoCheck(), aV.endNoCheck());
     aV.free_(aV.mBegin);
@@ -875,7 +875,7 @@ Vector<T, N, AP>::Vector(AP aAP)
 template<typename T, size_t N, class AllocPolicy>
 MOZ_ALWAYS_INLINE
 Vector<T, N, AllocPolicy>::Vector(Vector&& aRhs)
-  : AllocPolicy(Move(aRhs))
+  : AllocPolicy(std::move(aRhs))
 #ifdef DEBUG
   , mEntered(false)
 #endif
@@ -916,7 +916,7 @@ Vector<T, N, AP>::operator=(Vector&& aRhs)
 {
   MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
   this->~Vector();
-  new(KnownNotNull, this) Vector(Move(aRhs));
+  new(KnownNotNull, this) Vector(std::move(aRhs));
   return *this;
 }
 
@@ -1327,12 +1327,12 @@ Vector<T, N, AP>::insert(T* aP, U&& aVal)
       return nullptr;
     }
   } else {
-    T oldBack = Move(back());
-    if (!append(Move(oldBack))) {
+    T oldBack = std::move(back());
+    if (!append(std::move(oldBack))) {
       return nullptr;
     }
     for (size_t i = oldLength - 1; i > pos; --i) {
-      (*this)[i] = Move((*this)[i - 1]);
+      (*this)[i] = std::move((*this)[i - 1]);
     }
     (*this)[pos] = Forward<U>(aVal);
   }
@@ -1346,7 +1346,7 @@ Vector<T, N, AP>::erase(T* aIt)
   MOZ_ASSERT(begin() <= aIt);
   MOZ_ASSERT(aIt < end());
   while (aIt + 1 < end()) {
-    *aIt = Move(*(aIt + 1));
+    *aIt = std::move(*(aIt + 1));
     ++aIt;
   }
   popBack();
@@ -1360,7 +1360,7 @@ Vector<T, N, AP>::erase(T* aBegin, T* aEnd)
   MOZ_ASSERT(aBegin <= aEnd);
   MOZ_ASSERT(aEnd <= end());
   while (aEnd < end()) {
-    *aBegin++ = Move(*aEnd++);
+    *aBegin++ = std::move(*aEnd++);
   }
   shrinkBy(aEnd - aBegin);
 }

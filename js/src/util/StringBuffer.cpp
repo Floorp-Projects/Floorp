@@ -67,7 +67,7 @@ StringBuffer::inflateChars()
     twoByte.infallibleAppend(latin1Chars().begin(), latin1Chars().length());
 
     cb.destroy();
-    cb.construct<TwoByteCharBuffer>(Move(twoByte));
+    cb.construct<TwoByteCharBuffer>(std::move(twoByte));
     return true;
 }
 

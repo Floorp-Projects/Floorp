@@ -657,7 +657,7 @@ nsIContent**
 nsHtml5Highlighter::AllocateContentHandle()
 {
   if (mHandlesUsed == NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH) {
-    mOldHandles.AppendElement(Move(mHandles));
+    mOldHandles.AppendElement(std::move(mHandles));
     mHandles =
       MakeUnique<nsIContent* []>(NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH);
     mHandlesUsed = 0;

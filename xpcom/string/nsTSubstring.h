@@ -281,7 +281,7 @@ public:
   }
   self_type& operator=(self_type&& aStr)
   {
-    Assign(mozilla::Move(aStr));
+    Assign(std::move(aStr));
     return *this;
   }
   // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.

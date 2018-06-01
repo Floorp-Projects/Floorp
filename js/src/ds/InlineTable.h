@@ -445,7 +445,7 @@ class InlineMap
         }
 
         MOZ_MUST_USE bool moveTo(Map& map) {
-            return map.putNew(mozilla::Move(key), mozilla::Move(value));
+            return map.putNew(std::move(key), std::move(value));
         }
     };
 
@@ -583,7 +583,7 @@ class InlineSet
         }
 
         MOZ_MUST_USE bool moveTo(Set& set) {
-            return set.putNew(mozilla::Move(key));
+            return set.putNew(std::move(key));
         }
     };
 

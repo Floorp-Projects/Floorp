@@ -202,7 +202,7 @@ GetCurrentJSStack(int32_t aMaxDepth)
     ? JS::StackCapture(JS::AllFrames())
     : JS::StackCapture(JS::MaxFrames(aMaxDepth));
 
-  return dom::exceptions::CreateStack(cx, mozilla::Move(captureMode));
+  return dom::exceptions::CreateStack(cx, std::move(captureMode));
 }
 
 namespace exceptions {
@@ -690,7 +690,7 @@ already_AddRefed<nsIStackFrame>
 CreateStack(JSContext* aCx, JS::StackCapture&& aCaptureMode)
 {
   JS::Rooted<JSObject*> stack(aCx);
-  if (!JS::CaptureCurrentStack(aCx, &stack, mozilla::Move(aCaptureMode))) {
+  if (!JS::CaptureCurrentStack(aCx, &stack, std::move(aCaptureMode))) {
     return nullptr;
   }
 

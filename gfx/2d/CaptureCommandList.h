@@ -24,14 +24,14 @@ public:
     : mLastCommand(nullptr)
   {}
   CaptureCommandList(CaptureCommandList&& aOther)
-   : mStorage(Move(aOther.mStorage)), mLastCommand(aOther.mLastCommand)
+   : mStorage(std::move(aOther.mStorage)), mLastCommand(aOther.mLastCommand)
   {
     aOther.mLastCommand = nullptr;
   }
   ~CaptureCommandList();
 
   CaptureCommandList& operator =(CaptureCommandList&& aOther) {
-    mStorage = Move(aOther.mStorage);
+    mStorage = std::move(aOther.mStorage);
     mLastCommand = aOther.mLastCommand;
     aOther.mLastCommand = nullptr;
     return *this;

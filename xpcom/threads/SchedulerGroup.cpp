@@ -74,7 +74,7 @@ SchedulerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return mDispatcher->Dispatch(mCategory, Move(aRunnable));
+  return mDispatcher->Dispatch(mCategory, std::move(aRunnable));
 }
 
 NS_IMETHODIMP
@@ -101,9 +101,9 @@ SchedulerGroup::UnlabeledDispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(Move(aRunnable));
+    return NS_DispatchToCurrentThread(std::move(aRunnable));
   } else {
-    return NS_DispatchToMainThread(Move(aRunnable));
+    return NS_DispatchToMainThread(std::move(aRunnable));
   }
 }
 
@@ -147,14 +147,14 @@ SchedulerGroup::DispatchWithDocGroup(TaskCategory aCategory,
                                      already_AddRefed<nsIRunnable>&& aRunnable,
                                      dom::DocGroup* aDocGroup)
 {
-  return LabeledDispatch(aCategory, Move(aRunnable), aDocGroup);
+  return LabeledDispatch(aCategory, std::move(aRunnable), aDocGroup);
 }
 
 nsresult
 SchedulerGroup::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return LabeledDispatch(aCategory, Move(aRunnable), nullptr);
+  return LabeledDispatch(aCategory, std::move(aRunnable), nullptr);
 }
 
 nsISerialEventTarget*
@@ -255,7 +255,7 @@ SchedulerGroup::InternalUnlabeledDispatch(TaskCategory aCategory,
   if (NS_IsMainThread()) {
     // NS_DispatchToCurrentThread will not leak the passed in runnable
     // when it fails, so we don't need to do anything special.
-    return NS_DispatchToCurrentThread(Move(aRunnable));
+    return NS_DispatchToCurrentThread(std::move(aRunnable));
   }
 
   RefPtr<Runnable> runnable(aRunnable);
@@ -292,7 +292,7 @@ SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
                                    SchedulerGroup* aGroup,
                                    dom::DocGroup* aDocGroup)
   : mozilla::Runnable("SchedulerGroup::Runnable")
-  , mRunnable(Move(aRunnable))
+  , mRunnable(std::move(aRunnable))
   , mGroup(aGroup)
   , mDocGroup(aDocGroup)
 {

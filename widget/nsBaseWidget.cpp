@@ -972,7 +972,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
           aInputBlockId,
           aPreventDefault));
       });
-  mAPZEventState = new APZEventState(this, mozilla::Move(callback));
+  mAPZEventState = new APZEventState(this, std::move(callback));
 
   mSetAllowedTouchBehaviorCallback = [treeManager](uint64_t aInputBlockId,
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)

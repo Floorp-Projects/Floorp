@@ -192,7 +192,7 @@ void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = null
   }
 
   JS::ubi::Edge edge(ownedEdgeName, &referent);
-  ASSERT_TRUE(node.edges.append(mozilla::Move(edge)));
+  ASSERT_TRUE(node.edges.append(std::move(edge)));
 }
 
 

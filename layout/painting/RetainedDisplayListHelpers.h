@@ -90,14 +90,14 @@ class DirectedAcyclicGraph {
 public:
   DirectedAcyclicGraph() {}
   DirectedAcyclicGraph(DirectedAcyclicGraph&& aOther)
-    : mNodesInfo(mozilla::Move(aOther.mNodesInfo))
-    , mDirectPredecessorList(mozilla::Move(aOther.mDirectPredecessorList))
+    : mNodesInfo(std::move(aOther.mNodesInfo))
+    , mDirectPredecessorList(std::move(aOther.mDirectPredecessorList))
   {}
 
   DirectedAcyclicGraph& operator=(DirectedAcyclicGraph&& aOther)
   {
-    mNodesInfo = mozilla::Move(aOther.mNodesInfo);
-    mDirectPredecessorList = mozilla::Move(aOther.mDirectPredecessorList);
+    mNodesInfo = std::move(aOther.mNodesInfo);
+    mDirectPredecessorList = std::move(aOther.mDirectPredecessorList);
     return *this;
   }
 

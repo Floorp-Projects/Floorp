@@ -141,7 +141,7 @@ AliasAnalysis::analyze()
         MInstructionVector defs(alloc());
         if (!defs.append(firstIns))
             return false;
-        if (!stores.append(Move(defs)))
+        if (!stores.append(std::move(defs)))
             return false;
     }
 

@@ -82,7 +82,7 @@ public:
 
 private:
   explicit RsdparsaSdpAttributeList(RsdparsaSessionHandle session)
-    : mSession(Move(session))
+    : mSession(std::move(session))
     , mSessionAttributes(nullptr)
     , mIsVideo(false)
     , mAttributes()
@@ -94,7 +94,7 @@ private:
   RsdparsaSdpAttributeList(RsdparsaSessionHandle session,
                            const RustMediaSection* const msection,
                            const RsdparsaSdpAttributeList* sessionAttributes)
-    : mSession(Move(session))
+    : mSession(std::move(session))
     , mSessionAttributes(sessionAttributes)
     , mAttributes()
   {

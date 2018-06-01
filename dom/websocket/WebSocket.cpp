@@ -2783,7 +2783,7 @@ public:
                            already_AddRefed<nsIRunnable> aEvent)
     : WorkerRunnable(aWorkerRef->Private(), WorkerThreadUnchangedBusyCount)
     , mWebSocketImpl(aImpl)
-    , mEvent(Move(aEvent))
+    , mEvent(std::move(aEvent))
   {
   }
 

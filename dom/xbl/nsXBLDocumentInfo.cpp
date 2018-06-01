@@ -206,7 +206,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
     return rv;
 
   nsCOMPtr<nsIObjectInputStream> stream;
-  rv = NewObjectInputStreamFromBuffer(Move(buf), len, getter_AddRefs(stream));
+  rv = NewObjectInputStreamFromBuffer(std::move(buf), len, getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The file compatibility.ini stores the build id. This is checked in
@@ -293,7 +293,7 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   rv = NewBufferFromStorageStream(storageStream, &buf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return startupCache->PutBuffer(spec.get(), Move(buf), len);
+  return startupCache->PutBuffer(spec.get(), std::move(buf), len);
 }
 
 void

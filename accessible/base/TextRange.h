@@ -49,16 +49,16 @@ public:
             HyperTextAccessible* aEndContainer, int32_t aEndOffset);
   TextRange() : mStartOffset{0}, mEndOffset{0} {}
   TextRange(TextRange&& aRange) :
-    mRoot(mozilla::Move(aRange.mRoot)),
-    mStartContainer(mozilla::Move(aRange.mStartContainer)),
-    mEndContainer(mozilla::Move(aRange.mEndContainer)),
+    mRoot(std::move(aRange.mRoot)),
+    mStartContainer(std::move(aRange.mStartContainer)),
+    mEndContainer(std::move(aRange.mEndContainer)),
     mStartOffset(aRange.mStartOffset), mEndOffset(aRange.mEndOffset) {}
 
   TextRange& operator= (TextRange&& aRange)
   {
-    mRoot = mozilla::Move(aRange.mRoot);
-    mStartContainer = mozilla::Move(aRange.mStartContainer);
-    mEndContainer = mozilla::Move(aRange.mEndContainer);
+    mRoot = std::move(aRange.mRoot);
+    mStartContainer = std::move(aRange.mStartContainer);
+    mEndContainer = std::move(aRange.mEndContainer);
     mStartOffset = aRange.mStartOffset;
     mEndOffset = aRange.mEndOffset;
     return *this;
