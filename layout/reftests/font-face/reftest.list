@@ -41,7 +41,7 @@ skip == src-list-local-localized.html src-list-local-localized-ref.html # 486787
 
 # postscript name lookup
 # fontconfig only supports postscript name lookup from 2.10.92, Android not supported
-fails-if(Android) random-if(gtkWidget) == src-list-local-ps.html src-list-local-full-ref.html
+fails-if(Android) random-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == src-list-local-ps.html src-list-local-full-ref.html # Bug 1392106
 # Mac-specific test of 100 weight faces
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
@@ -90,7 +90,7 @@ random-if(cocoaWidget) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # 
 == ex-unit-1.html ex-unit-1-ref.html
 == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-== local-1.html local-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == local-1.html local-1-ref.html # Bug 1392106
 == local-styled-1.html local-styled-1-ref.html
 
 == synthetic-weight-style.html synthetic-weight-style-ref.html
