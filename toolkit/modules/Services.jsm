@@ -60,6 +60,7 @@ XPCOMUtils.defineLazyGetter(Services, "io", () => {
 var initTable = {
   appShell: ["@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],
   cache2: ["@mozilla.org/netwerk/cache-storage-service;1", "nsICacheStorageService"],
+  clearData: ["@mozilla.org/clear-data-service;1", "nsIClearDataService"],
   cpmm: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
   console: ["@mozilla.org/consoleservice;1", "nsIConsoleService"],
   cookies: ["@mozilla.org/cookiemanager;1", "nsICookieManager"],

@@ -4,7 +4,102 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+// A Cleaner is an object with 3 methods. These methods must return a Promise
+// object. Here a description of these methods:
+// * deleteAll() - this method _must_ exist. When called, it deletes all the
+//                 data owned by the cleaner.
+// * deleteByHost() - this method is implemented only if the cleaner knows
+//                    how to delete data by host + originAttributes pattern. If
+//                    not implemented, deleteAll() will be used as fallback.
+// *deleteByRange() - this method is implemented only if the cleaner knows how
+//                    to delete data by time range. It receives 2 time range
+//                    parameters: aFrom/aTo. If not implemented, deleteAll() is
+//                    used as fallback.
+
+const CookieCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      Services.cookies.removeCookiesWithOriginAttributes(JSON.stringify(aOriginAttributes),
+                                                         aHost);
+      aResolve();
+    });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    let enumerator = Services.cookies.enumerator;
+    return this._deleteInternal(enumerator, aCookie => aCookie.creationTime > aFrom);
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      Services.cookies.removeAll();
+      aResolve();
+    });
+  },
+
+  _deleteInternal(aEnumerator, aCb) {
+    // A number of iterations after which to yield time back to the system.
+    const YIELD_PERIOD = 10;
+
+    return new Promise((aResolve, aReject) => {
+      let count = 0;
+      while (aEnumerator.hasMoreElements()) {
+        let cookie = aEnumerator.getNext().QueryInterface(Ci.nsICookie2);
+        if (aCb(cookie)) {
+          Services.cookies.remove(cookie.host, cookie.name, cookie.path,
+                                  false, cookie.originAttributes);
+          // We don't want to block the main-thread.
+          if (++count % YIELD_PERIOD == 0) {
+            setTimeout(() => {
+              this._deleteInternal(aEnumerator, aCb).then(aResolve, aReject);
+            }, 0);
+            return;
+          }
+        }
+      }
+
+      aResolve();
+    });
+  },
+
+};
+
+const NetworkCacheCleaner = {
+  deleteAll() {
+    return new Promise(aResolve => {
+      Services.cache2.clear();
+      aResolve();
+    });
+  },
+};
+
+const ImageCacheCleaner = {
+  deleteAll() {
+    return new Promise(aResolve => {
+      let imageCache = Cc["@mozilla.org/image/tools;1"]
+                         .getService(Ci.imgITools)
+                         .getImgCacheForDocument(null);
+      imageCache.clearCache(false); // true=chrome, false=content
+      aResolve();
+    });
+  },
+};
+
+// Here the map of Flags-Cleaner.
+const FLAGS_MAP = [
+ { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
+   cleaner: CookieCleaner },
+
+ { flag: Ci.nsIClearDataService.CLEAR_NETWORK_CACHE,
+   cleaner: NetworkCacheCleaner },
+
+ { flag: Ci.nsIClearDataService.CLEAR_IMAGE_CACHE,
+   cleaner: ImageCacheCleaner, },
+];
 
 this.ClearDataService = function() {};
 
@@ -14,19 +109,89 @@ ClearDataService.prototype = Object.freeze({
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(ClearDataService),
 
   deleteDataFromHost(aHost, aIsUserRequest, aFlags, aCallback) {
-    // TODO
+    if (!aHost || !aCallback) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    return this._deleteInternal(aFlags, aCallback, aCleaner => {
+      // Some of the 'Cleaners' do not support to delete by principal. Let's
+      // use deleteAll() as fallback.
+      if (aCleaner.deleteByHost) {
+        // A generic originAttributes dictionary.
+        return aCleaner.deleteByHost(aHost, {});
+      }
+      // The user wants to delete data. Let's remove as much as we can.
+      if (aIsUserRequest) {
+        return aCleaner.deleteAll();
+      }
+      // We don't want to delete more than what is strictly required.
+      return Promise.resolve();
+    });
   },
 
   deleteDataFromPrincipal(aPrincipal, aIsUserRequest, aFlags, aCallback) {
-    // TODO
+    if (!aPrincipal || !aCallback) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    return this._deleteInternal(aFlags, aCallback, aCleaner => {
+      // Some of the 'Cleaners' do not support to delete by principal. Let's
+      // use deleteAll() as fallback.
+      if (aCleaner.deleteByHost) {
+        return aCleaner.deleteByHost(aPrincipal.URI.host,
+                                     aPrincipal.originAttributes);
+      }
+      // The user wants to delete data. Let's remove as much as we can.
+      if (aIsUserRequest) {
+        return aCleaner.deleteAll();
+      }
+      // We don't want to delete more than what is strictly required.
+      return Promise.resolve();
+    });
   },
 
   deleteDataInTimeRange(aFrom, aTo, aIsUserRequest, aFlags, aCallback) {
-    // TODO
+    if (aFrom > aTo || !aCallback) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    return this._deleteInternal(aFlags, aCallback, aCleaner => {
+      // Some of the 'Cleaners' do not support to delete by range. Let's use
+      // deleteAll() as fallback.
+      if (aCleaner.deleteByRange) {
+        return aCleaner.deleteByRange(aFrom, aTo);
+      }
+      // The user wants to delete data. Let's remove as much as we can.
+      if (aIsUserRequest) {
+        return aCleaner.deleteAll();
+      }
+      // We don't want to delete more than what is strictly required.
+      return Promise.resolve();
+    });
   },
 
   deleteData(aFlags, aCallback) {
-    // TODO
+    if (!aCallback) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    return this._deleteInternal(aFlags, aCallback, aCleaner => {
+      return aCleaner.deleteAll();
+    });
+  },
+
+  // This internal method uses aFlags against FLAGS_MAP in order to retrieve a
+  // list of 'Cleaners'. For each of them, the aHelper callback retrieves a
+  // promise object. All these promise objects are resolved before calling
+  // onDataDeleted.
+  _deleteInternal(aFlags, aCallback, aHelper) {
+    let resultFlags = 0;
+    let promises = FLAGS_MAP.filter(c => aFlags & c.flag).map(c => {
+      // Let's collect the failure in resultFlags.
+      return aHelper(c.cleaner).catch(() => { resultFlags |= c.flag; });
+    });
+    Promise.all(promises).then(() => { aCallback.onDataDeleted(resultFlags); });
+    return Cr.NS_OK;
   },
 });
 
