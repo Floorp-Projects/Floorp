@@ -368,6 +368,8 @@ module.exports = {
     "one-var": "off",
     // Disallow padding within blocks.
     "padded-blocks": ["error", "never"],
+    // Enforce using `let` only when variables are reassigned.
+    "prefer-const": ["error", { "destructuring": "all" }],
     // Don't require quotes around object literal property names.
     "quote-props": "off",
     // Require use of the second argument for parseInt().
