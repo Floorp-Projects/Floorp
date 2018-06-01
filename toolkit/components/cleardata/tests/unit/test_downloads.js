@@ -38,11 +38,6 @@ async function createDownloadList() {
 
 add_task(async function test_all_downloads() {
   const url = createFileURL();
-
-  const service = Cc["@mozilla.org/clear-data-service;1"]
-                    .getService(Ci.nsIClearDataService);
-  Assert.ok(!!service);
-
   const list = await createDownloadList();
 
   // First download.
@@ -66,7 +61,7 @@ add_task(async function test_all_downloads() {
   Assert.equal(items.length, 2);
 
   await new Promise(resolve => {
-    service.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
       Assert.equal(value, 0);
       resolve();
     });
@@ -80,7 +75,7 @@ add_task(async function test_all_downloads() {
   await download.cancel();
 
   await new Promise(resolve => {
-    service.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
       Assert.equal(value, 0);
       resolve();
     });
@@ -92,12 +87,6 @@ add_task(async function test_all_downloads() {
 
 add_task(async function test_range_downloads() {
   const url = createFileURL();
-
-  const service = Cc["@mozilla.org/clear-data-service;1"]
-                    .getService(Ci.nsIClearDataService);
-
-  Assert.ok(!!service);
-
   const list = await createDownloadList();
 
   let download = await Downloads.createDownload({
@@ -115,7 +104,7 @@ add_task(async function test_range_downloads() {
   Assert.equal(items.length, 1);
 
   await new Promise(resolve => {
-    service.deleteDataInTimeRange(download.startTime.getTime() * 1000,
+    Services.clearData.deleteDataInTimeRange(download.startTime.getTime() * 1000,
                                   download.startTime.getTime() * 1000,
                                   true /* user request */,
                                   Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
@@ -129,11 +118,6 @@ add_task(async function test_range_downloads() {
 });
 
 add_task(async function test_principal_downloads() {
-  const service = Cc["@mozilla.org/clear-data-service;1"]
-                    .getService(Ci.nsIClearDataService);
-
-  Assert.ok(!!service);
-
   const list = await createDownloadList();
 
   let download = await Downloads.createDownload({
@@ -157,7 +141,7 @@ add_task(async function test_principal_downloads() {
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
   await new Promise(resolve => {
-    service.deleteDataFromPrincipal(principal,
+    Services.clearData.deleteDataFromPrincipal(principal,
                                     true /* user request */,
                                     Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
       Assert.equal(value, 0);
@@ -169,7 +153,7 @@ add_task(async function test_principal_downloads() {
   Assert.equal(items.length, 1);
 
   await new Promise(resolve => {
-    service.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
       Assert.equal(value, 0);
       resolve();
     });

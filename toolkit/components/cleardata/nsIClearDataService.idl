@@ -178,14 +178,10 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_EME = 1 << 18;
 
-  /* TODO
-  const uint32_t CLEAR_FORMDATA = 1 << 16;
-  */
-
   /**
    * Use this value to delete all the data.
    */
-  const uint32_t CLEAR_ALL = 0xFFFF;
+  const uint32_t CLEAR_ALL = 0xFFFFFF;
 
   /**************************************************************************
    * The following flags are helpers: they combine some of the previous flags
@@ -194,7 +190,6 @@ interface nsIClearDataService : nsISupports
 
   /**
    * Delete all the possible caches.
-   * TODO: add CLEAR_PREDICTOR_CACHE ?
    */
   const uint32_t CLEAR_ALL_CACHES = CLEAR_NETWORK_CACHE | CLEAR_IMAGE_CACHE;
 
@@ -202,6 +197,16 @@ interface nsIClearDataService : nsISupports
    * Delete all DOM storages
    */
   const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS;
+
+  /**
+   * Helper flag for forget about site
+   */
+  const uint32_t CLEAR_FORGET_ABOUT_SITE =
+    CLEAR_HISTORY | CLEAR_NETWORK_CACHE | CLEAR_IMAGE_CACHE | CLEAR_COOKIES |
+    CLEAR_EME | CLEAR_PLUGIN_DATA | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
+    CLEAR_PERMISSIONS | CLEAR_DOM_STORAGES | CLEAR_CONTENT_PREFERENCES |
+    CLEAR_PREDICTOR_NETWORK_DATA | CLEAR_DOM_PUSH_NOTIFICATIONS |
+    CLEAR_SECURITY_SETTINGS;
 };
 
 /**
