@@ -122,7 +122,7 @@ private:
 /*
     Stores the verbs and points as they are given to us, with exceptions:
     - we only record "Close" if it was immediately preceeded by Move | Line | Quad | Cubic
-    - we insert a std::move(0,0) if Line | Quad | Cubic is our first command
+    - we insert a Move(0,0) if Line | Quad | Cubic is our first command
 
     The iterator does more cleanup, especially if forceClose == true
     1. If we encounter degenerate segments, remove them
