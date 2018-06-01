@@ -139,7 +139,8 @@ protected:
     cairo_scaled_font_t*
     CreateScaledFont(FcPattern* aRenderPattern,
                      gfxFloat aAdjustedSize,
-                     const gfxFontStyle *aStyle);
+                     const gfxFontStyle *aStyle,
+                     FT_Face aFTFace);
 
     // override to pull data from FTFace
     virtual nsresult

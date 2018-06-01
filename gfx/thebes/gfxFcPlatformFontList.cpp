@@ -749,10 +749,19 @@ ReleaseFTUserFontData(void* aData)
   static_cast<FTUserFontData*>(aData)->Release();
 }
 
+static cairo_user_data_key_t sFcFontlistFTFaceKey;
+
+static void
+ReleaseFTFace(void* aData)
+{
+  Factory::ReleaseFTFace(static_cast<FT_Face>(aData));
+}
+
 cairo_scaled_font_t*
 gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
                                          gfxFloat aAdjustedSize,
-                                         const gfxFontStyle *aStyle)
+                                         const gfxFontStyle *aStyle,
+                                         FT_Face aFTFace)
 {
     if (aStyle->NeedsSyntheticBold(this)) {
         FcPatternAddBool(aRenderPattern, FC_EMBOLDEN, FcTrue);
@@ -784,9 +793,21 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
                                               coords.Elements(),
                                               coords.Length());
 
+    if (aFTFace) {
+        if (cairo_font_face_set_user_data(face,
+                                          &sFcFontlistFTFaceKey,
+                                          aFTFace,
+                                          ReleaseFTFace) != CAIRO_STATUS_SUCCESS) {
+            NS_WARNING("Failed binding FT_Face to Cairo font face");
+            cairo_font_face_destroy(face);
+            Factory::ReleaseFTFace(aFTFace);
+            return nullptr;
+        }
+    }
+
     if (mFontData) {
         // for data fonts, add the face/data pointer to the cairo font face
-        // so that it gets deleted whenever cairo decides
+        // so that it ges deleted whenever cairo decides
         NS_ASSERTION(mFTFace, "FT_Face is null when setting user data");
         NS_ASSERTION(mUserFontData, "user font data is null when setting user data");
         mUserFontData.get()->AddRef();
@@ -1009,11 +1030,14 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle)
     }
     if (!renderPattern) {
         NS_WARNING("Failed to prepare Fontconfig pattern for font instance");
+        if (face != mFTFace) {
+            Factory::ReleaseFTFace(face);
+        }
         return nullptr;
     }
 
     cairo_scaled_font_t* scaledFont =
-        CreateScaledFont(renderPattern, size, aFontStyle);
+        CreateScaledFont(renderPattern, size, aFontStyle, face != mFTFace ? face : nullptr);
 
     const FcChar8* file = ToFcChar8Ptr("");
     int index = 0;
