@@ -16,6 +16,10 @@ var _devtoolsContextmenu = require("devtools/client/debugger/new/dist/vendors").
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
+var _SourceIcon = require("../shared/SourceIcon");
+
+var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
+
 var _selectors = require("../../selectors/index");
 
 var _sourceTree = require("../../actions/source-tree");
@@ -311,8 +315,8 @@ var _initialiseProps = function () {
     }
 
     const source = this.getSource(item);
-    return _react2.default.createElement("img", {
-      className: (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "source-icon")
+    return _react2.default.createElement(_SourceIcon2.default, {
+      source: source
     });
   };
 
