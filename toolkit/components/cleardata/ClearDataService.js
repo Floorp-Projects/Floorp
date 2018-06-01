@@ -198,6 +198,37 @@ const DownloadsCleaner = {
   },
 };
 
+const PasswordsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return this._deleteInternal(aLogin => hasRootDomain(aLogin.hostname, aHost));
+  },
+
+  deleteAll() {
+    return this._deleteInternal(() => true);
+  },
+
+  _deleteInternal(aCb) {
+    return new Promise(aResolve => {
+      try {
+        let logins = Services.logins.getAllLogins();
+        for (let login of logins) {
+          if (aCb(login)) {
+            Services.logins.removeLogin(login);
+          }
+        }
+      } catch (ex) {
+        // XXXehsan: is there a better way to do this rather than this
+        // hacky comparison?
+        if (!ex.message.includes("User canceled Master Password entry")) {
+          throw new Error("Exception occured in clearing passwords :" + ex);
+        }
+      }
+
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -214,6 +245,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_DOWNLOADS,
    cleaner: DownloadsCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_PASSWORDS,
+   cleaner: PasswordsCleaner, },
 ];
 
 this.ClearDataService = function() {};
