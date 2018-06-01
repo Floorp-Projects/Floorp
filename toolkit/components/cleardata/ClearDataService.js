@@ -590,6 +590,22 @@ const SecuritySettingsCleaner = {
   },
 };
 
+const EMECleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"]
+                  .getService(Ci.mozIGeckoMediaPluginChromeService);
+      mps.forgetThisSite(aHost, JSON.stringify(aOriginAttributes));
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    // Not implemented.
+    return Promise.resolve();
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -645,6 +661,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
    cleaner: SecuritySettingsCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_EME,
+   cleaner: EMECleaner, },
 ];
 
 this.ClearDataService = function() {};

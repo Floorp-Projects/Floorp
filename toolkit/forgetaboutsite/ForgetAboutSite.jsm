@@ -13,34 +13,31 @@ var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
     let promises = [];
+    let errorCount = 0;
 
     ["http://", "https://"].forEach(scheme => {
       promises.push(new Promise(resolve => {
         Services.clearData.deleteDataFromHost(aDomain, true /* user request */,
                                               Ci.nsIClearDataService.CLEAR_ALL,
-                                              resolve);
+                                              value => {
+          errorCount += bitCounting(value);
+          resolve();
+        });
       }));
     });
 
-    // EME
-    promises.push((async function() {
-      let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].
-                getService(Ci.mozIGeckoMediaPluginChromeService);
-      mps.forgetThisSite(aDomain, JSON.stringify({}));
-    })().catch(ex => {
-      throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
-    }));
+    await Promise.all(promises);
 
-    let ErrorCount = 0;
-    for (let promise of promises) {
-      try {
-        await promise;
-      } catch (ex) {
-        Cu.reportError(ex);
-        ErrorCount++;
-      }
+    if (errorCount !== 0) {
+      throw new Error(`There were a total of ${errorCount} errors during removal`);
     }
-    if (ErrorCount !== 0)
-      throw new Error(`There were a total of ${ErrorCount} errors during removal`);
   }
 };
+
+function bitCounting(value) {
+  // To know more about how to count bits set to 1 in a numeric value, see this
+  // interesting article:
+  // https://blogs.msdn.microsoft.com/jeuge/2005/06/08/bit-fiddling-3/
+  const count = value - ((value >> 1) & 0o33333333333) - ((value >> 2) & 0o11111111111);
+  return ((count + (count >> 3)) & 0o30707070707) % 63;
+}
