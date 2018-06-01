@@ -1913,22 +1913,6 @@ struct StyleTransition
     { mTimingFunction = aTimingFunction; }
   void SetDelay(float aDelay) { mDelay = aDelay; }
   void SetDuration(float aDuration) { mDuration = aDuration; }
-  void SetProperty(nsCSSPropertyID aProperty)
-    {
-      NS_ASSERTION(aProperty != eCSSProperty_UNKNOWN &&
-                   aProperty != eCSSPropertyExtra_variable,
-                   "invalid property");
-      mProperty = aProperty;
-    }
-  void SetUnknownProperty(nsCSSPropertyID aProperty,
-                          const nsAString& aPropertyString);
-  void SetUnknownProperty(nsCSSPropertyID aProperty,
-                          nsAtom* aPropertyString);
-  void CopyPropertyFrom(const StyleTransition& aOther)
-    {
-      mProperty = aOther.mProperty;
-      mUnknownProperty = aOther.mUnknownProperty;
-    }
 
   nsTimingFunction& TimingFunctionSlot() { return mTimingFunction; }
 
