@@ -225,7 +225,7 @@ UrlClassifierDBServiceWorkerProxy::PreShutdown()
 }
 
 nsresult
-UrlClassifierDBServiceWorkerProxy::CacheCompletions(CacheResultArray * aEntries)
+UrlClassifierDBServiceWorkerProxy::CacheCompletions(const ConstCacheResultArray& aEntries)
 {
   nsCOMPtr<nsIRunnable> r = new CacheCompletionsRunnable(mTarget, aEntries);
   return DispatchToWorkerThread(r);
