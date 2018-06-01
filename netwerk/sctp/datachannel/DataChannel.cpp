@@ -3172,6 +3172,24 @@ DataChannel::SendBinaryStream(nsIInputStream *aBlob,ErrorResult& aRv)
   SendErrnoToErrorResult(mConnection->SendBlob(mStream, aBlob), aRv);
 }
 
+dom::Nullable<uint16_t>
+DataChannel::GetMaxPacketLifeTime() const
+{
+  if (mPrPolicy == SCTP_PR_SCTP_TTL) {
+    return dom::Nullable<uint16_t>(mPrValue);
+  }
+  return dom::Nullable<uint16_t>();
+}
+
+dom::Nullable<uint16_t>
+DataChannel::GetMaxRetransmits() const
+{
+  if (mPrPolicy == SCTP_PR_SCTP_RTX) {
+    return dom::Nullable<uint16_t>(mPrValue);
+  }
+  return dom::Nullable<uint16_t>();
+}
+
 // May be called from another (i.e. Main) thread!
 void
 DataChannel::AppReady()
