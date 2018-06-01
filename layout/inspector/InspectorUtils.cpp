@@ -617,12 +617,10 @@ InspectorUtils::GetCleanComputedStyleForElement(dom::Element* aElement,
 InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
                                  nsRange& aRange,
                                  uint32_t aMaxRanges,
-                                 bool aSkipCollapsedWhitespace,
                                  nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                  ErrorResult& aRv)
 {
-  nsresult rv = aRange.GetUsedFontFaces(aResult, aMaxRanges,
-                                        aSkipCollapsedWhitespace);
+  nsresult rv = aRange.GetUsedFontFaces(aResult, aMaxRanges);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }

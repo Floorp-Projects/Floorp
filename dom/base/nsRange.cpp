@@ -3157,7 +3157,7 @@ nsRange::GetClientRectsAndTexts(
 
 nsresult
 nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
-                          uint32_t aMaxRanges, bool aSkipCollapsedWhitespace)
+                          uint32_t aMaxRanges)
 {
   NS_ENSURE_TRUE(mStart.Container(), NS_ERROR_UNEXPECTED);
 
@@ -3201,20 +3201,17 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
          int32_t offset = startContainer == endContainer ?
            mEnd.Offset() : content->GetText()->GetLength();
          nsLayoutUtils::GetFontFacesForText(frame, mStart.Offset(), offset,
-                                            true, fontFaces, aMaxRanges,
-                                            aSkipCollapsedWhitespace);
+                                            true, fontFaces, aMaxRanges);
          continue;
        }
        if (node == endContainer) {
          nsLayoutUtils::GetFontFacesForText(frame, 0, mEnd.Offset(),
-                                            true, fontFaces, aMaxRanges,
-                                            aSkipCollapsedWhitespace);
+                                            true, fontFaces, aMaxRanges);
          continue;
        }
     }
 
-    nsLayoutUtils::GetFontFacesForFrames(frame, fontFaces, aMaxRanges,
-                                         aSkipCollapsedWhitespace);
+    nsLayoutUtils::GetFontFacesForFrames(frame, fontFaces, aMaxRanges);
   }
 
   // Take ownership of the InspectorFontFaces in the table and move them into
