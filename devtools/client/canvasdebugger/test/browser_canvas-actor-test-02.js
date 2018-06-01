@@ -7,9 +7,9 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCallWatcherBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initCallWatcherBackend(SIMPLE_CANVAS_URL);
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({
     tracedGlobals: ["CanvasRenderingContext2D", "WebGLRenderingContext"],
@@ -25,7 +25,7 @@ async function ifTestingSupported() {
   // Allow the content to execute some functions.
   await waitForTick();
 
-  let functionCalls = await front.pauseRecording();
+  const functionCalls = await front.pauseRecording();
   ok(functionCalls,
     "An array of function call actors was sent after reloading.");
   ok(functionCalls.length > 0,
@@ -45,7 +45,7 @@ async function ifTestingSupported() {
   is(functionCalls[0].argsPreview, "0, 0, 128, 128",
     "The called function's args preview is correct.");
 
-  let details = await functionCalls[1].getDetails();
+  const details = await functionCalls[1].getDetails();
   ok(details,
     "The first called function has some details available.");
 

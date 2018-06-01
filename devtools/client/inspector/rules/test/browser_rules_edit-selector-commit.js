@@ -57,15 +57,15 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await runTestData(inspector, view, data);
   }
 });
 
 async function runTestData(inspector, view, data) {
-  let {node, value, commitKey, modifiers, expected} = data;
+  const {node, value, commitKey, modifiers, expected} = data;
 
   info("Updating " + node + " to " + value + " and committing with " +
        commitKey + ". Expecting: " + expected);
@@ -76,7 +76,7 @@ async function runTestData(inspector, view, data) {
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, idRuleEditor.selectorText);
+  const editor = await focusEditableField(view, idRuleEditor.selectorText);
   is(inplaceEditor(idRuleEditor.selectorText), editor,
       "The selector editor got focused");
 
@@ -86,7 +86,7 @@ async function runTestData(inspector, view, data) {
   info("Entering the commit key " + commitKey + " " + modifiers);
   EventUtils.synthesizeKey(commitKey, modifiers);
 
-  let activeElement = view.styleDocument.activeElement;
+  const activeElement = view.styleDocument.activeElement;
 
   if (commitKey === "VK_ESCAPE") {
     is(idRuleEditor.rule.selectorText, expected,
@@ -106,7 +106,7 @@ async function runTestData(inspector, view, data) {
     idRuleEditor = getRuleViewRuleEditor(view, 0);
   }
 
-  let rule = idRuleEditor.rule;
+  const rule = idRuleEditor.rule;
   if (rule.textProps.length > 0) {
     is(inplaceEditor(rule.textProps[0].editor.nameSpan).input, activeElement,
        "Focus is on the first property name span.");

@@ -46,7 +46,7 @@ class Browser extends PureComponent {
    */
   componentWillMount() {
     this.browserShown = new Promise(resolve => {
-      let handler = frameLoader => {
+      const handler = frameLoader => {
         if (frameLoader.ownerElement != this.browser) {
           return;
         }
@@ -88,8 +88,8 @@ class Browser extends PureComponent {
   }
 
   onContentResize(msg) {
-    let { onContentResize } = this.props;
-    let { width, height } = msg.data;
+    const { onContentResize } = this.props;
+    const { width, height } = msg.data;
     onContentResize({
       width,
       height,
@@ -97,11 +97,11 @@ class Browser extends PureComponent {
   }
 
   async startFrameScript() {
-    let {
+    const {
       browser,
       onContentResize,
     } = this;
-    let mm = browser.frameLoader.messageManager;
+    const mm = browser.frameLoader.messageManager;
 
     // Notify tests when the content has received a resize event.  This is not
     // quite the same timing as when we _set_ a new size around the browser,
@@ -109,12 +109,12 @@ class Browser extends PureComponent {
     // resized to match.
     e10s.on(mm, "OnContentResize", onContentResize);
 
-    let ready = e10s.once(mm, "ChildScriptReady");
+    const ready = e10s.once(mm, "ChildScriptReady");
     mm.loadFrameScript(FRAME_SCRIPT, true);
     await ready;
 
-    let browserWindow = getToplevelWindow(window);
-    let requiresFloatingScrollbars =
+    const browserWindow = getToplevelWindow(window);
+    const requiresFloatingScrollbars =
       !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
 
     await e10s.request(mm, "Start", {
@@ -125,11 +125,11 @@ class Browser extends PureComponent {
   }
 
   async stopFrameScript() {
-    let {
+    const {
       browser,
       onContentResize,
     } = this;
-    let mm = browser.frameLoader.messageManager;
+    const mm = browser.frameLoader.messageManager;
 
     e10s.off(mm, "OnContentResize", onContentResize);
     await e10s.request(mm, "Stop");

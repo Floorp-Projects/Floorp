@@ -70,7 +70,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   await runStyleAttributeAutocompleteTests(inspector, TEST_DATA);
 });

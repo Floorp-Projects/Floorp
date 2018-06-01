@@ -25,11 +25,11 @@ let gWalker = null;
 let gCleanupConnection = null;
 
 function setup(callback) {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       gWalker = walker;
     }).then(callback));
@@ -47,7 +47,7 @@ function teardown() {
 
 function checkChange(change, expectation) {
   is(change.type, "pseudoClassLock", "Expect a pseudoclass lock change.");
-  let target = change.target;
+  const target = change.target;
   if (expectation.id) {
     is(target.id, expectation.id, "Expect a change on node id " + expectation.id);
   }
@@ -59,10 +59,10 @@ function checkChange(change, expectation) {
   is(target.pseudoClassLocks.length, expectation.pseudos.length,
      "Expect " + expectation.pseudos.length + " pseudoclass locks.");
   for (let i = 0; i < expectation.pseudos.length; i++) {
-    let pseudo = expectation.pseudos[i];
-    let enabled = expectation.enabled === undefined ? true : expectation.enabled[i];
+    const pseudo = expectation.pseudos[i];
+    const enabled = expectation.enabled === undefined ? true : expectation.enabled[i];
     ok(target.hasPseudoClassLock(pseudo), "Expect lock: " + pseudo);
-    let rawNode = target.rawNode();
+    const rawNode = target.rawNode();
     ok(InspectorUtils.hasPseudoClassLock(rawNode, pseudo),
        "Expect lock in dom: " + pseudo);
 
@@ -70,7 +70,7 @@ function checkChange(change, expectation) {
        `Target should match pseudoclass, '${pseudo}', if enabled (with .matches())`);
   }
 
-  for (let pseudo of KNOWN_PSEUDOCLASSES) {
+  for (const pseudo of KNOWN_PSEUDOCLASSES) {
     if (!expectation.pseudos.some(expected => pseudo === expected)) {
       ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
       ok(!InspectorUtils.hasPseudoClassLock(target.rawNode(), pseudo),
@@ -110,7 +110,7 @@ addTest(function testPseudoClassLock() {
       gWalker.addPseudoClassLock(nodeFront, ":hover", {parents: true});
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
-      let expectedMutations = [{
+      const expectedMutations = [{
         id: "b",
         nodeName: "DIV",
         pseudos: [":hover", ":active"],
@@ -134,7 +134,7 @@ addTest(function testPseudoClassLock() {
       gWalker.removePseudoClassLock(nodeFront, ":hover", {parents: true});
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
-      let expectedMutations = [{
+      const expectedMutations = [{
         id: "b",
         nodeName: "DIV",
         // Should still have :active on the original node.

@@ -15,7 +15,7 @@ add_task(async function() {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   info("Test Open URL menu item for text log");
@@ -49,13 +49,13 @@ add_task(async function() {
   openUrlItem = menuPopup.querySelector("#console-menu-open-url");
   ok(openUrlItem, "Open URL menu item is available");
 
-  let currentTab = gBrowser.selectedTab;
-  let tabLoaded = listenToTabLoad();
+  const currentTab = gBrowser.selectedTab;
+  const tabLoaded = listenToTabLoad();
   info("Click on Open URL menu item and wait for new tab to open");
   openUrlItem.click();
   await hideContextMenu(hud);
-  let newTab = await tabLoaded;
-  let newTabHref = newTab.linkedBrowser.currentURI.spec;
+  const newTab = await tabLoaded;
+  const newTabHref = newTab.linkedBrowser.currentURI.spec;
   is(newTabHref, TEST_URI, "Tab was opened with the expected URL");
 
   info("Remove the new tab and select the previous tab back");
@@ -69,7 +69,7 @@ add_task(async function() {
 function listenToTabLoad() {
   return new Promise((resolve) => {
     gBrowser.tabContainer.addEventListener("TabOpen", function(evt) {
-      let newTab = evt.target;
+      const newTab = evt.target;
       BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() => resolve(newTab));
     }, {capture: true, once: true});
   });

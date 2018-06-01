@@ -12,14 +12,14 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  let {client, walker, animations} = await initAnimationsFrontForUrl(
+  const {client, walker, animations} = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
     "<iframe id='i1' src='" + URL + "'></iframe>" +
     "<iframe id='i2' src='" + URL + "'></iframe>");
 
   info("Getting the 2 iframe container nodes and animated nodes in them");
-  let nodeInFrame1 = await getNodeInFrame(walker, "#i1", ".simple-animation");
-  let nodeInFrame2 = await getNodeInFrame(walker, "#i2", ".simple-animation");
+  const nodeInFrame1 = await getNodeInFrame(walker, "#i1", ".simple-animation");
+  const nodeInFrame2 = await getNodeInFrame(walker, "#i2", ".simple-animation");
 
   info("Pause all animations in the test document");
   await animations.pauseAll();
@@ -37,15 +37,15 @@ add_task(async function() {
 
 async function checkState(animations, nodeFront, playState) {
   info("Getting the AnimationPlayerFront for the test node");
-  let [player] = await animations.getAnimationPlayersForNode(nodeFront);
+  const [player] = await animations.getAnimationPlayersForNode(nodeFront);
   await player.ready;
-  let state = await player.getCurrentState();
+  const state = await player.getCurrentState();
   is(state.playState, playState,
      "The playState of the test node is " + playState);
 }
 
 async function getNodeInFrame(walker, frameSelector, nodeSelector) {
-  let iframe = await walker.querySelector(walker.rootNode, frameSelector);
-  let {nodes} = await walker.children(iframe);
+  const iframe = await walker.querySelector(walker.rootNode, frameSelector);
+  const {nodes} = await walker.children(iframe);
   return walker.querySelector(nodes[0], nodeSelector);
 }

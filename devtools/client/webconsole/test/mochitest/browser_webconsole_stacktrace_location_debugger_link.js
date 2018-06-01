@@ -28,21 +28,21 @@ add_task(async function() {
     Services.prefs.clearUserPref("devtools.webconsole.filter.log");
   });
 
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   await testOpenInDebugger(hud, toolbox, "console.trace()");
 });
 
 async function testOpenInDebugger(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
-  let messageNode = await waitFor(() => findMessage(hud, text));
-  let frameLinksNode = messageNode.querySelectorAll(".stack-trace .frame-link");
+  const messageNode = await waitFor(() => findMessage(hud, text));
+  const frameLinksNode = messageNode.querySelectorAll(".stack-trace .frame-link");
   is(frameLinksNode.length, 3,
     "The message does have the expected number of frames in the stacktrace");
 
-  for (let frameLinkNode of frameLinksNode) {
+  for (const frameLinkNode of frameLinksNode) {
     await checkClickOnNode(hud, toolbox, frameLinkNode);
 
     info("Selecting the console again");
@@ -53,15 +53,15 @@ async function testOpenInDebugger(hud, toolbox, text) {
 async function checkClickOnNode(hud, toolbox, frameLinkNode) {
   info("checking click on node location");
 
-  let onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
+  const onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
 
   EventUtils.sendMouseEvent({ type: "click" },
     frameLinkNode.querySelector(".frame-link-source"));
 
   await onSourceInDebuggerOpened;
 
-  let url = frameLinkNode.getAttribute("data-url");
-  let dbg = toolbox.getPanel("jsdebugger");
+  const url = frameLinkNode.getAttribute("data-url");
+  const dbg = toolbox.getPanel("jsdebugger");
   is(
     dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
     url,

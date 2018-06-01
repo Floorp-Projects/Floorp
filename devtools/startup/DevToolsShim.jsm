@@ -31,7 +31,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 function removeItem(array, callback) {
-  let index = array.findIndex(callback);
+  const index = array.findIndex(callback);
   if (index >= 0) {
     array.splice(index, 1);
   }
@@ -63,7 +63,7 @@ this.DevToolsShim = {
    * should no-op in this case.
    */
   isEnabled: function() {
-    let enabled = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
+    const enabled = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
     return enabled && !this.isDisabledByPolicy();
   },
 
@@ -163,8 +163,8 @@ this.DevToolsShim = {
       return;
     }
 
-    let {scratchpads, browserConsole, browserToolbox} = session;
-    let hasDevToolsData = browserConsole || browserToolbox ||
+    const {scratchpads, browserConsole, browserToolbox} = session;
+    const hasDevToolsData = browserConsole || browserToolbox ||
                           (scratchpads && scratchpads.length);
     if (!hasDevToolsData) {
       // Do not initialize DevTools unless there is DevTools specific data in the session.
@@ -200,7 +200,7 @@ this.DevToolsShim = {
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
     // i.e. especially take `DevtoolsStartup.initDevTools` into account.
-    let startTime = Cu.now();
+    const startTime = Cu.now();
 
     this.initDevTools("ContextMenu");
 
@@ -232,7 +232,7 @@ this.DevToolsShim = {
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
     // i.e. especially take `DevtoolsStartup.initDevTools` into account.
-    let startTime = Cu.now();
+    const startTime = Cu.now();
 
     this.initDevTools("ContextMenu");
 
@@ -241,7 +241,7 @@ this.DevToolsShim = {
 
   _onDevToolsRegistered: function() {
     // Register all pending event listeners on the real gDevTools object.
-    for (let [event, listener] of this.listeners) {
+    for (const [event, listener] of this.listeners) {
       this._gDevTools.on(event, listener);
     }
 
@@ -280,7 +280,7 @@ this.DevToolsShim = {
  * Those methods are called only after a DevTools webextension was loaded in DevTools,
  * therefore DevTools should always be available when they are called.
  */
-let webExtensionsMethods = [
+const webExtensionsMethods = [
   "createTargetForTab",
   "createWebExtensionInspectedWindowFront",
   "getTargetForTab",
@@ -289,7 +289,7 @@ let webExtensionsMethods = [
   "getToolboxes",
 ];
 
-for (let method of webExtensionsMethods) {
+for (const method of webExtensionsMethods) {
   this.DevToolsShim[method] = function() {
     if (!this.isEnabled()) {
       throw new Error("Could not call a DevToolsShim webextension method ('" + method +

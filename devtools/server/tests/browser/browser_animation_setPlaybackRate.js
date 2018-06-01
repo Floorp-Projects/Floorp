@@ -8,14 +8,14 @@
 // can have their rates changed at the same time.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve an animated node");
   let node = await walker.querySelector(walker.rootNode, ".simple-animation");
 
   info("Retrieve the animation player for the node");
-  let [player] = await animations.getAnimationPlayersForNode(node);
+  const [player] = await animations.getAnimationPlayersForNode(node);
 
   ok(player.setPlaybackRate, "Player has the setPlaybackRate method");
 
@@ -35,14 +35,14 @@ add_task(async function() {
 
   info("Retrieve several animation players and set their rates");
   node = await walker.querySelector(walker.rootNode, "body");
-  let players = await animations.getAnimationPlayersForNode(node);
+  const players = await animations.getAnimationPlayersForNode(node);
 
   info("Change all animations in <body> to .5 rate");
   await animations.setPlaybackRates(players, .5);
 
   info("Query their states and check they are correct");
-  for (let animPlayer of players) {
-    let animPlayerState = await animPlayer.getCurrentState();
+  for (const animPlayer of players) {
+    const animPlayerState = await animPlayer.getCurrentState();
     is(animPlayerState.playbackRate, .5, "The playbackRate was updated");
   }
 

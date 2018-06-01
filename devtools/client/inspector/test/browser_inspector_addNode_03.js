@@ -11,7 +11,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 const PARENT_TREE_LEVEL = 3;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Adding a node in an element that has no children and is collapsed");
   let parentNode = await getNodeFront("#foo", inspector);
@@ -37,15 +37,15 @@ add_task(async function() {
 });
 
 async function testAddNode(parentNode, inspector) {
-  let btn = inspector.panelDoc.querySelector("#inspector-element-add-button");
-  let parentContainer = inspector.markup.getContainer(parentNode);
+  const btn = inspector.panelDoc.querySelector("#inspector-element-add-button");
+  const parentContainer = inspector.markup.getContainer(parentNode);
 
   is(parentContainer.tagLine.getAttribute("aria-level"), PARENT_TREE_LEVEL,
      "The parent aria-level is up to date.");
 
   info("Clicking 'add node' and expecting a markup mutation and a new container");
-  let onMutation = inspector.once("markupmutation");
-  let onNewContainer = inspector.once("container-created");
+  const onMutation = inspector.once("markupmutation");
+  const onNewContainer = inspector.once("container-created");
   btn.click();
   let mutations = await onMutation;
   await onNewContainer;
@@ -57,18 +57,18 @@ async function testAddNode(parentNode, inspector) {
   is(mutations.length, 1, "There is one mutation only");
   is(mutations[0].added.length, 1, "There is one new node only");
 
-  let newNode = mutations[0].added[0];
+  const newNode = mutations[0].added[0];
 
   is(parentNode, inspector.selection.nodeFront, "The parent node is still selected");
   is(newNode.parentNode(), parentNode, "The new node is inside the right parent");
 
-  let newNodeContainer = inspector.markup.getContainer(newNode);
+  const newNodeContainer = inspector.markup.getContainer(newNode);
 
   is(newNodeContainer.tagLine.getAttribute("aria-level"), PARENT_TREE_LEVEL + 1,
      "The child aria-level is up to date.");
 }
 
 function collapseNode(node, inspector) {
-  let container = inspector.markup.getContainer(node);
+  const container = inspector.markup.getContainer(node);
   container.setExpanded(false);
 }

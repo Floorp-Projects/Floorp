@@ -23,7 +23,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 500);
 
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await testEditingMargins(inspector, boxmodel, testActor);
   await testKeyBindings(inspector, boxmodel, testActor);
@@ -40,11 +40,11 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
      "Should be no margin-top on the element.");
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
@@ -70,11 +70,11 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
      "Should be no margin-top on the element.");
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-left > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-left > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "10px", "Should have the right value in the editor.");
 
@@ -113,11 +113,11 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
      "Should be the right margin-top on the element.");
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-left > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-left > span");
   is(span.textContent, 20, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "20px", "Should have the right value in the editor.");
 
@@ -144,11 +144,11 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-right > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-right > span");
   is(span.textContent, 15, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "15px", "Should have the right value in the editor.");
 
@@ -171,11 +171,11 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
 
   await selectNode("#div4", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 1, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   info("Click in the already opened editor input");

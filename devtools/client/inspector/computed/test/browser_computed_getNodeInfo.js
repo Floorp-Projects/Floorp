@@ -95,7 +95,7 @@ const TEST_DATA = [
   {
     desc: "Testing an image url",
     getHoveredNode: function(view) {
-      let {valueSpan} = getComputedViewProperty(view, "background-image");
+      const {valueSpan} = getComputedViewProperty(view, "background-image");
       return valueSpan.querySelector(".theme-link");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -111,7 +111,7 @@ const TEST_DATA = [
   {
     desc: "Testing a matched rule selector (bestmatch)",
     getHoveredNode: async function(view) {
-      let el = await getComputedViewMatchedRules(view, "background-color");
+      const el = await getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".bestmatch");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -122,7 +122,7 @@ const TEST_DATA = [
   {
     desc: "Testing a matched rule selector (matched)",
     getHoveredNode: async function(view) {
-      let el = await getComputedViewMatchedRules(view, "background-color");
+      const el = await getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".matched");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -133,7 +133,7 @@ const TEST_DATA = [
   {
     desc: "Testing a matched rule selector (parentmatch)",
     getHoveredNode: async function(view) {
-      let el = await getComputedViewMatchedRules(view, "color");
+      const el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".parentmatch");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -144,7 +144,7 @@ const TEST_DATA = [
   {
     desc: "Testing a matched rule value",
     getHoveredNode: async function(view) {
-      let el = await getComputedViewMatchedRules(view, "color");
+      const el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".computed-other-property-value");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -156,7 +156,7 @@ const TEST_DATA = [
   {
     desc: "Testing a matched rule stylesheet link",
     getHoveredNode: async function(view) {
-      let el = await getComputedViewMatchedRules(view, "color");
+      const el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".rule-link .theme-link");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -167,12 +167,12 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#testElement", inspector);
 
-  for (let {desc, getHoveredNode, assertNodeInfo} of TEST_DATA) {
+  for (const {desc, getHoveredNode, assertNodeInfo} of TEST_DATA) {
     info(desc);
-    let nodeInfo = view.getNodeInfo(await getHoveredNode(view));
+    const nodeInfo = view.getNodeInfo(await getHoveredNode(view));
     assertNodeInfo(nodeInfo);
   }
 });

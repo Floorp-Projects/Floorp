@@ -16,7 +16,7 @@ registerCleanupFunction(() => {
 
 add_task(async function() {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   const INITIAL_LOGS_NUMBER = 5;
   await ContentTask.spawn(gBrowser.selectedBrowser, INITIAL_LOGS_NUMBER, (count) => {
@@ -35,7 +35,7 @@ add_task(async function() {
 add_task(async function() {
   info("Testing that messages persist on a refresh if logs are persisted");
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   hud.ui.outputNode.querySelector(".webconsole-filterbar-primary .filter-checkbox")
     .click();

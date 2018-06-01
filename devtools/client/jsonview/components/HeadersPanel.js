@@ -39,7 +39,7 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let data = this.props.data;
+      const data = this.props.data;
 
       return (
         div({className: "headersPanelBox tab-panel-inner"},

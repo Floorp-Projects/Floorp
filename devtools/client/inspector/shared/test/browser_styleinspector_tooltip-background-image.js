@@ -42,7 +42,7 @@ add_task(async function() {
   await testTooltipAppearsEvenInEditMode(view);
 
   info("Switching over to the computed-view");
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
   view = selectComputedView(inspector);
   await onComputedViewReady;
 
@@ -54,12 +54,12 @@ async function testBodyRuleView(view) {
   info("Testing tooltips in the rule view");
 
   // Get the background-image property inside the rule view
-  let {valueSpan} = getRuleViewProperty(view, "body", "background-image");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+  const {valueSpan} = getRuleViewProperty(view, "body", "background-image");
+  const uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  const previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
 
-  let images = previewTooltip.panel.getElementsByTagName("img");
+  const images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src")
     .includes("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe"),
@@ -70,12 +70,12 @@ async function testBodyRuleView(view) {
 
 async function testDivRuleView(view) {
   // Get the background property inside the rule view
-  let {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+  const {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
+  const uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  const previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
 
-  let images = previewTooltip.panel.getElementsByTagName("img");
+  const images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
@@ -85,13 +85,13 @@ async function testDivRuleView(view) {
 
 async function testTooltipAppearsEvenInEditMode(view) {
   info("Switching to edit mode in the rule view");
-  let editor = await turnToEditMode(view);
+  const editor = await turnToEditMode(view);
 
   info("Now trying to show the preview tooltip");
-  let {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+  const {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
+  const uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  const previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
 
   is(view.styleDocument.activeElement, editor.input,
     "Tooltip was shown in edit mode, and inplace-editor still focused");
@@ -100,20 +100,20 @@ async function testTooltipAppearsEvenInEditMode(view) {
 }
 
 function turnToEditMode(ruleView) {
-  let brace = ruleView.styleDocument.querySelector(".ruleview-ruleclose");
+  const brace = ruleView.styleDocument.querySelector(".ruleview-ruleclose");
   return focusEditableField(ruleView, brace);
 }
 
 async function testComputedView(view) {
-  let {valueSpan} = getComputedViewProperty(view, "background-image");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+  const {valueSpan} = getComputedViewProperty(view, "background-image");
+  const uriSpan = valueSpan.querySelector(".theme-link");
 
   // Scroll to ensure the line is visible as we see the box model by default
   valueSpan.scrollIntoView();
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  const previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
 
-  let images = previewTooltip.panel.getElementsByTagName("img");
+  const images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
 
   ok(images[0].getAttribute("src").startsWith("data:"),

@@ -54,7 +54,7 @@ WebConsoleOutputWrapper.prototype = {
         }
 
         // Do not focus if a link was clicked
-        let target = event.originalTarget || event.target;
+        const target = event.originalTarget || event.target;
         if (target.closest("a")) {
           return;
         }
@@ -71,7 +71,7 @@ WebConsoleOutputWrapper.prototype = {
         }
 
         // Do not focus if something is selected
-        let selection = this.document.defaultView.getSelection();
+        const selection = this.document.defaultView.getSelection();
         if (selection && !selection.isCollapsed) {
           return;
         }
@@ -81,7 +81,7 @@ WebConsoleOutputWrapper.prototype = {
         }
       });
 
-      let { hud } = this;
+      const { hud } = this;
 
       const serviceContainer = {
         attachRefToHud,
@@ -116,34 +116,34 @@ WebConsoleOutputWrapper.prototype = {
       // is available in the current scope and we can pass it into
       // `createContextMenu` method.
       serviceContainer.openContextMenu = (e, message) => {
-        let { screenX, screenY, target } = e;
+        const { screenX, screenY, target } = e;
 
-        let messageEl = target.closest(".message");
-        let clipboardText = messageEl ? messageEl.textContent : null;
+        const messageEl = target.closest(".message");
+        const clipboardText = messageEl ? messageEl.textContent : null;
 
-        let messageVariable = target.closest(".objectBox");
+        const messageVariable = target.closest(".objectBox");
         // Ensure that console.group and console.groupCollapsed commands are not captured
-        let variableText = (messageVariable
+        const variableText = (messageVariable
           && !(messageEl.classList.contains("startGroup"))
           && !(messageEl.classList.contains("startGroupCollapsed")))
             ? messageVariable.textContent : null;
 
         // Retrieve closes actor id from the DOM.
-        let actorEl = target.closest("[data-link-actor-id]") ||
+        const actorEl = target.closest("[data-link-actor-id]") ||
                       target.querySelector("[data-link-actor-id]");
-        let actor = actorEl ? actorEl.dataset.linkActorId : null;
+        const actor = actorEl ? actorEl.dataset.linkActorId : null;
 
-        let rootObjectInspector = target.closest(".object-inspector");
-        let rootActor = rootObjectInspector ?
+        const rootObjectInspector = target.closest(".object-inspector");
+        const rootActor = rootObjectInspector ?
                         rootObjectInspector.querySelector("[data-link-actor-id]") : null;
-        let rootActorId = rootActor ? rootActor.dataset.linkActorId : null;
+        const rootActorId = rootActor ? rootActor.dataset.linkActorId : null;
 
-        let sidebarTogglePref = store.getState().prefs.sidebarToggle;
-        let openSidebar = sidebarTogglePref ? (messageId) => {
+        const sidebarTogglePref = store.getState().prefs.sidebarToggle;
+        const openSidebar = sidebarTogglePref ? (messageId) => {
           store.dispatch(actions.showObjectInSidebar(rootActorId, messageId));
         } : null;
 
-        let menu = createContextMenu(this.hud, this.parentNode, {
+        const menu = createContextMenu(this.hud, this.parentNode, {
           actor,
           clipboardText,
           variableText,
@@ -192,15 +192,15 @@ WebConsoleOutputWrapper.prototype = {
               : null;
           },
           openNodeInInspector: async (grip) => {
-            let onSelectInspector = this.toolbox.selectTool("inspector");
-            let onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
-            let [
+            const onSelectInspector = this.toolbox.selectTool("inspector");
+            const onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
+            const [
               front,
               inspector
             ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
 
-            let onInspectorUpdated = inspector.once("inspector-updated");
-            let onNodeFrontSet = this.toolbox.selection
+            const onInspectorUpdated = inspector.once("inspector-updated");
+            const onNodeFrontSet = this.toolbox.selection
               .setNodeFront(front, { reason: "console" });
 
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
@@ -218,7 +218,7 @@ WebConsoleOutputWrapper.prototype = {
       });
 
       // Render the root Application component.
-      let provider = createElement(Provider, { store }, app);
+      const provider = createElement(Provider, { store }, app);
       this.body = ReactDOM.render(provider, this.parentNode);
     });
   },
@@ -237,7 +237,7 @@ WebConsoleOutputWrapper.prototype = {
 
       promise = new Promise(resolve => {
         this.hud.on("new-messages", function onThisMessage(messages) {
-          for (let m of messages) {
+          for (const m of messages) {
             if (m.timeStamp === timeStampToMatch) {
               resolve(m.node);
               this.hud.off("new-messages", onThisMessage);

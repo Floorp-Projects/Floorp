@@ -11,9 +11,9 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>Test console input focus";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let inputNode = hud.jsterm.inputNode;
+  const inputNode = hud.jsterm.inputNode;
   const filterInput = hud.ui.outputNode.querySelector(".text-filter");
 
   info("Focus after console is opened");

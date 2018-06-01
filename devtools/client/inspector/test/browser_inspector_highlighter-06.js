@@ -10,14 +10,14 @@
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter_scroll.html";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
 
   await testActor.scrollIntoView("a");
   await selectAndHighlightNode("a", inspector);
 
-  let markupLoaded = inspector.once("markuploaded");
+  const markupLoaded = inspector.once("markuploaded");
 
-  let y = await testActor.eval("window.pageYOffset");
+  const y = await testActor.eval("window.pageYOffset");
   isnot(y, 0, "window scrolled vertically.");
 
   info("Reloading page.");
@@ -26,6 +26,6 @@ add_task(async function() {
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
 
-  let newY = await testActor.eval("window.pageYOffset");
+  const newY = await testActor.eval("window.pageYOffset");
   is(y, newY, "window remember the previous scroll position.");
 });

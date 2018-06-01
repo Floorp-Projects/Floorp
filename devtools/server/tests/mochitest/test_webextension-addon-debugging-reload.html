@@ -37,12 +37,12 @@ async function test_reload_addon() {
   const {addon} = await promiseInstallFile(addonFile);
   await promiseWebExtensionStartup();
 
-  let addonTarget = await attachAddon(addonID);
+  const addonTarget = await attachAddon(addonID);
   ok(addonTarget, "Got an addon target");
 
   const matchBackgroundPageFrame = (data) => {
     if (data.frames) {
-      let frameFound = data.frames.filter((frame) => {
+      const frameFound = data.frames.filter((frame) => {
         return frame.url && frame.url.endsWith("_generated_background_page.html");
       }).pop();
 
@@ -100,12 +100,12 @@ async function test_reload_addon() {
   // Expect the target to be automatically closed when the addon
   // is finally uninstalled.
 
-  let {client} = addonTarget;
-  let waitDebuggingClientClosed = new Promise(resolve => {
+  const {client} = addonTarget;
+  const waitDebuggingClientClosed = new Promise(resolve => {
     addonTarget.once("close", resolve);
   });
 
-  let waitShutdown = promiseWebExtensionShutdown();
+  const waitShutdown = promiseWebExtensionShutdown();
   addon.uninstall();
   await waitShutdown;
 

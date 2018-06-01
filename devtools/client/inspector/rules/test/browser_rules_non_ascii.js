@@ -17,19 +17,19 @@ const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 add_task(async function() {
   await addTab(TEST_URI);
 
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#q", inspector);
 
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let expected = [
+  const expected = [
     {name: "color", overridden: false},
   ];
 
-  let rule = elementStyle.rules[1];
+  const rule = elementStyle.rules[1];
 
   for (let i = 0; i < expected.length; ++i) {
-    let prop = rule.textProps[i];
+    const prop = rule.textProps[i];
     is(prop.name, expected[i].name, `Got expected property name ${prop.name}`);
     is(prop.overridden, expected[i].overridden,
        `Got expected overridden value ${prop.overridden}`);

@@ -37,8 +37,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
   graph.setData(TEST_DATA);
 
@@ -88,7 +88,7 @@ function testGraph(graph) {
 }
 
 function setZoom(frame, zoomValue) {
-  let contViewer = frame.docShell.contentViewer;
+  const contViewer = frame.docShell.contentViewer;
   CURRENT_ZOOM = contViewer.fullZoom = zoomValue;
 }
 
@@ -99,12 +99,12 @@ function dispatchEvent(graph, x, y, fn) {
   y *= CURRENT_ZOOM;
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  let quad = graph._canvas.getBoxQuads({
+  const quad = graph._canvas.getBoxQuads({
     relativeTo: window.document
   })[0];
 
-  let screenX = (window.screenX + quad.p1.x + x);
-  let screenY = (window.screenY + quad.p1.y + y);
+  const screenX = (window.screenX + quad.p1.x + x);
+  const screenY = (window.screenY + quad.p1.y + y);
 
   fn({
     screenX: screenX,

@@ -110,10 +110,10 @@ const ViewHelpers = exports.ViewHelpers = {
       // Event cancelled.
       return true;
     }
-    let document = target.ownerDocument || target;
-    let dispatcher = target.ownerDocument ? target : document.documentElement;
+    const document = target.ownerDocument || target;
+    const dispatcher = target.ownerDocument ? target : document.documentElement;
 
-    let event = document.createEvent("CustomEvent");
+    const event = document.createEvent("CustomEvent");
     event.initCustomEvent(type, true, true, detail);
     return dispatcher.dispatchEvent(event);
   },
@@ -251,7 +251,7 @@ const ViewHelpers = exports.ViewHelpers = {
     }
 
     // Computes and sets the pane margins in order to hide or show it.
-    let doToggle = () => {
+    const doToggle = () => {
       // Negative margins are applied to "right" and "left" to support RTL and
       // LTR directions, as well as to "bottom" to support vertical layouts.
       // Unnecessary negative margins are forced to 0 via CSS in widgets.css.
@@ -261,8 +261,8 @@ const ViewHelpers = exports.ViewHelpers = {
         pane.style.marginBottom = "0";
         pane.classList.remove("pane-collapsed");
       } else {
-        let width = Math.floor(pane.getAttribute("width")) + 1;
-        let height = Math.floor(pane.getAttribute("height")) + 1;
+        const width = Math.floor(pane.getAttribute("width")) + 1;
+        const height = Math.floor(pane.getAttribute("height")) + 1;
         pane.style.marginLeft = -width + "px";
         pane.style.marginRight = -width + "px";
         pane.style.marginBottom = -height + "px";
@@ -270,7 +270,7 @@ const ViewHelpers = exports.ViewHelpers = {
 
       // Wait for the animation to end before calling afterToggle()
       if (flags.animated) {
-        let options = {
+        const options = {
           useCapture: false,
           once: true
         };
@@ -364,7 +364,7 @@ Item.prototype = {
    *         The item associated with the displayed element.
    */
   append: function(element, options = {}) {
-    let item = new Item(this, element, "", options.attachment);
+    const item = new Item(this, element, "", options.attachment);
 
     // Entangle the item with the newly inserted child node.
     // Make sure this is done with the value returned by appendChild(),
@@ -420,7 +420,7 @@ Item.prototype = {
     if (item.finalize) {
       item.finalize(item);
     }
-    for (let childItem of item) {
+    for (const childItem of item) {
       item.remove(childItem);
     }
 
@@ -571,7 +571,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *         undefined if the item was staged for a later commit.
    */
   push: function([element, value], options = {}) {
-    let item = new Item(this, element, value, options.attachment);
+    const item = new Item(this, element, value, options.attachment);
 
     // Batch the item to be added later.
     if (options.staged) {
@@ -599,14 +599,14 @@ const WidgetMethods = exports.WidgetMethods = {
    *          - sorted: true to sort all the items before adding them
    */
   commit: function(options = {}) {
-    let stagedItems = this._stagedItems;
+    const stagedItems = this._stagedItems;
 
     // Sort the items before adding them to this container, if preferred.
     if (options.sorted) {
       stagedItems.sort((a, b) => this._currentSortPredicate(a.item, b.item));
     }
     // Append the prepared items to this container.
-    for (let { item, opt } of stagedItems) {
+    for (const { item, opt } of stagedItems) {
       this._insertItemAt(-1, item, opt);
     }
     // Recreate the temporary items list for ulterior pushes.
@@ -662,7 +662,7 @@ const WidgetMethods = exports.WidgetMethods = {
     this._widget.removeAllItems();
     this._widget.setAttribute("emptyText", this._emptyText);
 
-    for (let [, item] of this._itemsByElement) {
+    for (const [, item] of this._itemsByElement) {
       this._untangleItem(item);
     }
 
@@ -731,7 +731,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *        Specifies the intended visibility.
    */
   toggleContents: function(visibleFlag) {
-    for (let [element] of this._itemsByElement) {
+    for (const [element] of this._itemsByElement) {
       element.hidden = !visibleFlag;
     }
   },
@@ -748,7 +748,7 @@ const WidgetMethods = exports.WidgetMethods = {
   filterContents: function(predicate = this._currentFilterPredicate) {
     this._currentFilterPredicate = predicate;
 
-    for (let [element, item] of this._itemsByElement) {
+    for (const [element, item] of this._itemsByElement) {
       element.hidden = !predicate(item);
     }
   },
@@ -762,7 +762,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *        container. If unspecified, all items will be sorted by their value.
    */
   sortContents: function(predicate = this._currentSortPredicate) {
-    let sortedItems = this.items.sort(this._currentSortPredicate = predicate);
+    const sortedItems = this.items.sort(this._currentSortPredicate = predicate);
 
     for (let i = 0, len = sortedItems.length; i < len; i++) {
       this.swapItems(this.getItemAtIndex(i), sortedItems[i]);
@@ -782,29 +782,29 @@ const WidgetMethods = exports.WidgetMethods = {
       // We're just dandy, thank you.
       return;
     }
-    let { _prebuiltNode: firstPrebuiltTarget, _target: firstTarget } = first;
-    let { _prebuiltNode: secondPrebuiltTarget, _target: secondTarget } = second;
+    const { _prebuiltNode: firstPrebuiltTarget, _target: firstTarget } = first;
+    const { _prebuiltNode: secondPrebuiltTarget, _target: secondTarget } = second;
 
     // If the two items were constructed with prebuilt nodes as
     // DocumentFragments, then those DocumentFragments are now
     // empty and need to be reassembled.
     if (Cu.getClassName(firstPrebuiltTarget) == "DocumentFragment") {
-      for (let node of firstTarget.childNodes) {
+      for (const node of firstTarget.childNodes) {
         firstPrebuiltTarget.appendChild(node.cloneNode(true));
       }
     }
     if (Cu.getClassName(secondPrebuiltTarget) == "DocumentFragment") {
-      for (let node of secondTarget.childNodes) {
+      for (const node of secondTarget.childNodes) {
         secondPrebuiltTarget.appendChild(node.cloneNode(true));
       }
     }
 
     // 1. Get the indices of the two items to swap.
-    let i = this._indexOfElement(firstTarget);
-    let j = this._indexOfElement(secondTarget);
+    const i = this._indexOfElement(firstTarget);
+    const j = this._indexOfElement(secondTarget);
 
     // 2. Remeber the selection index, to reselect an item, if necessary.
-    let selectedTarget = this._widget.selectedItem;
+    const selectedTarget = this._widget.selectedItem;
     let selectedIndex = -1;
     if (selectedTarget == firstTarget) {
       selectedIndex = i;
@@ -873,7 +873,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @return Item | null
    */
   get selectedItem() {
-    let selectedElement = this._widget.selectedItem;
+    const selectedElement = this._widget.selectedItem;
     if (selectedElement) {
       return this._itemsByElement.get(selectedElement);
     }
@@ -885,7 +885,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @return number
    */
   get selectedIndex() {
-    let selectedElement = this._widget.selectedItem;
+    const selectedElement = this._widget.selectedItem;
     if (selectedElement) {
       return this._indexOfElement(selectedElement);
     }
@@ -897,7 +897,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @return string
    */
   get selectedValue() {
-    let selectedElement = this._widget.selectedItem;
+    const selectedElement = this._widget.selectedItem;
     if (selectedElement) {
       return this._itemsByElement.get(selectedElement)._value;
     }
@@ -909,7 +909,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @return object | null
    */
   get selectedAttachment() {
-    let selectedElement = this._widget.selectedItem;
+    const selectedElement = this._widget.selectedItem;
     if (selectedElement) {
       return this._itemsByElement.get(selectedElement).attachment;
     }
@@ -918,8 +918,8 @@ const WidgetMethods = exports.WidgetMethods = {
 
   _selectItem: function(item) {
     // A falsy item is allowed to invalidate the current selection.
-    let targetElement = item ? item._target : null;
-    let prevElement = this._widget.selectedItem;
+    const targetElement = item ? item._target : null;
+    const prevElement = this._widget.selectedItem;
 
     // Make sure the selected item's target element is focused and visible.
     if (this.autoFocusOnSelection && targetElement) {
@@ -942,8 +942,8 @@ const WidgetMethods = exports.WidgetMethods = {
       item = this.getItemForPredicate(item);
     }
 
-    let targetElement = item ? item._target : null;
-    let prevElement = this._widget.selectedItem;
+    const targetElement = item ? item._target : null;
+    const prevElement = this._widget.selectedItem;
 
     if (this.maintainSelectionVisible && targetElement) {
       // Some methods are optional. See the WidgetMethods object documentation
@@ -958,8 +958,8 @@ const WidgetMethods = exports.WidgetMethods = {
     // Prevent selecting the same item again and avoid dispatching
     // a redundant selection event, so return early.
     if (targetElement != prevElement) {
-      let dispTarget = targetElement || prevElement;
-      let dispName = this.suppressSelectionEvents ? "suppressed-select"
+      const dispTarget = targetElement || prevElement;
+      const dispName = this.suppressSelectionEvents ? "suppressed-select"
                                                   : "select";
       ViewHelpers.dispatchEvent(dispTarget, dispName, item);
     }
@@ -970,7 +970,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @param number index
    */
   set selectedIndex(index) {
-    let targetElement = this._widget.getItemAtIndex(index);
+    const targetElement = this._widget.getItemAtIndex(index);
     if (targetElement) {
       this.selectedItem = this._itemsByElement.get(targetElement);
       return;
@@ -1097,7 +1097,7 @@ const WidgetMethods = exports.WidgetMethods = {
     // command dispatcher mechanism has a relative node to work with.
     // If there's no selection, just select an item at a corresponding index
     // (e.g. the first item in this container if delta <= 1).
-    let selectedElement = this._widget.selectedItem;
+    const selectedElement = this._widget.selectedItem;
     if (selectedElement) {
       selectedElement.focus();
     } else {
@@ -1105,7 +1105,7 @@ const WidgetMethods = exports.WidgetMethods = {
       return;
     }
 
-    let direction = delta > 0 ? "advanceFocus" : "rewindFocus";
+    const direction = delta > 0 ? "advanceFocus" : "rewindFocus";
     let distance = Math.abs(Math[delta > 0 ? "ceil" : "floor"](delta));
     while (distance--) {
       if (!this._focusChange(direction)) {
@@ -1128,8 +1128,8 @@ const WidgetMethods = exports.WidgetMethods = {
    *         in this container was focused instead.
    */
   _focusChange: function(direction) {
-    let commandDispatcher = this._commandDispatcher;
-    let prevFocusedElement = commandDispatcher.focusedElement;
+    const commandDispatcher = this._commandDispatcher;
+    const prevFocusedElement = commandDispatcher.focusedElement;
     let currFocusedElement;
 
     do {
@@ -1157,9 +1157,9 @@ const WidgetMethods = exports.WidgetMethods = {
     if (this._cachedCommandDispatcher) {
       return this._cachedCommandDispatcher;
     }
-    let someElement = this._widget.getItemAtIndex(0);
+    const someElement = this._widget.getItemAtIndex(0);
     if (someElement) {
-      let commandDispatcher = someElement.ownerDocument.commandDispatcher;
+      const commandDispatcher = someElement.ownerDocument.commandDispatcher;
       this._cachedCommandDispatcher = commandDispatcher;
       return commandDispatcher;
     }
@@ -1173,7 +1173,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *         The focused element, or null if nothing is found.
    */
   get _focusedElement() {
-    let commandDispatcher = this._commandDispatcher;
+    const commandDispatcher = this._commandDispatcher;
     if (commandDispatcher) {
       return commandDispatcher.focusedElement;
     }
@@ -1244,7 +1244,7 @@ const WidgetMethods = exports.WidgetMethods = {
    */
   getItemForPredicate: function(predicate, owner = this) {
     // Recursively check the items in this widget for a predicate match.
-    for (let [element, item] of owner._itemsByElement) {
+    for (const [element, item] of owner._itemsByElement) {
       let match;
       if (predicate(item) && !element.hidden) {
         match = item;
@@ -1257,7 +1257,7 @@ const WidgetMethods = exports.WidgetMethods = {
     }
     // Also check the staged items. No need to do this recursively since
     // they're not even appended to the view yet.
-    for (let { item } of this._stagedItems) {
+    for (const { item } of this._stagedItems) {
       if (predicate(item)) {
         return item;
       }
@@ -1315,8 +1315,8 @@ const WidgetMethods = exports.WidgetMethods = {
    * @return array
    */
   get items() {
-    let store = [];
-    let itemCount = this.itemCount;
+    const store = [];
+    const itemCount = this.itemCount;
     for (let i = 0; i < itemCount; i++) {
       store.push(this.getItemAtIndex(i));
     }
@@ -1358,7 +1358,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *         True if the item is unique, false otherwise.
    */
   isUnique: function(item) {
-    let value = item._value;
+    const value = item._value;
     if (value == "" || value == "undefined" || value == "null") {
       return true;
     }
@@ -1388,7 +1388,7 @@ const WidgetMethods = exports.WidgetMethods = {
    *         The expected item index.
    */
   _findExpectedIndexFor: function(item) {
-    let itemCount = this.itemCount;
+    const itemCount = this.itemCount;
     for (let i = 0; i < itemCount; i++) {
       if (this._currentSortPredicate(this.getItemAtIndex(i), item) > 0) {
         return i;
@@ -1419,8 +1419,8 @@ const WidgetMethods = exports.WidgetMethods = {
     // Entangle the item with the newly inserted node.
     // Make sure this is done with the value returned by insertItemAt(),
     // to avoid storing a potential DocumentFragment.
-    let node = item._prebuiltNode;
-    let attachment = item.attachment;
+    const node = item._prebuiltNode;
+    const attachment = item.attachment;
     this._entangleItem(item,
                        this._widget.insertItemAt(index, node, attachment));
 
@@ -1469,7 +1469,7 @@ const WidgetMethods = exports.WidgetMethods = {
     if (item.finalize) {
       item.finalize(item);
     }
-    for (let childItem of item) {
+    for (const childItem of item) {
       item.remove(childItem);
     }
 
@@ -1534,7 +1534,7 @@ const WidgetMethods = exports.WidgetMethods = {
       return;
     }
 
-    let item = this.getItemForElement(event.target);
+    const item = this.getItemForElement(event.target);
     if (item) {
       // The container is not empty and we clicked on an actual item.
       this.selectedItem = item;

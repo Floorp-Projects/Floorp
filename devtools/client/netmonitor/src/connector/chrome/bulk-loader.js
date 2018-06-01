@@ -6,7 +6,7 @@
 
 let bulkLoader = undefined;
 
-let PriorityLevels = {Critical: 1, Major: 2, Normal: 3, None: 0};
+const PriorityLevels = {Critical: 1, Major: 2, Normal: 3, None: 0};
 
 class Scheduler {
   constructor() {
@@ -23,12 +23,12 @@ class Scheduler {
   }
 
   dequeue() {
-    let self = this;
-    let recursive = (resolve) => {
+    const self = this;
+    const recursive = (resolve) => {
       self.dequeue();
     };
     this.busy = true;
-    let next = this.queue.shift();
+    const next = this.queue.shift();
     if (next) {
       next().then(recursive, recursive);
     } else {

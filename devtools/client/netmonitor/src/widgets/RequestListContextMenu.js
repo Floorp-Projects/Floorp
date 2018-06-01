@@ -27,7 +27,7 @@ class RequestListContextMenu {
   }
 
   open(event, selectedRequest, requests) {
-    let {
+    const {
       id,
       isCustom,
       formDataSections,
@@ -44,13 +44,13 @@ class RequestListContextMenu {
       responseContentAvailable,
       url,
     } = selectedRequest;
-    let {
+    const {
       connector,
       cloneSelectedRequest,
       openStatistics,
     } = this.props;
-    let menu = [];
-    let copySubmenu = [];
+    const menu = [];
+    const copySubmenu = [];
 
     copySubmenu.push({
       id: "request-list-context-copy-url",
@@ -241,7 +241,7 @@ class RequestListContextMenu {
    * Opens selected item in the debugger
    */
   openInDebugger(url) {
-    let toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
     toolbox.viewSourceInDebugger(url, 0);
   }
 
@@ -249,7 +249,7 @@ class RequestListContextMenu {
    * Opens selected item in the style editor
    */
   openInStyleEditor(url) {
-    let toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
     toolbox.viewSourceInStyleEditor(url, 0);
   }
 
@@ -265,7 +265,7 @@ class RequestListContextMenu {
    * selected item.
    */
   copyUrlParams(url) {
-    let params = getUrlQuery(url).split("&");
+    const params = getUrlQuery(url).split("&");
     copyString(params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n"));
   }
 
@@ -279,7 +279,7 @@ class RequestListContextMenu {
     // available, which is only true if ParamsPanel has ever been mounted before.
     if (formDataSections) {
       formDataSections.forEach(section => {
-        let paramsArray = parseQueryString(section);
+        const paramsArray = parseQueryString(section);
         if (paramsArray) {
           params = [...params, ...paramsArray];
         }
@@ -314,7 +314,7 @@ class RequestListContextMenu {
       await this.props.connector.requestData(id, "requestPostData");
 
     // Create a sanitized object for the Curl command generator.
-    let data = {
+    const data = {
       url,
       method,
       headers: requestHeaders.headers,
@@ -361,7 +361,7 @@ class RequestListContextMenu {
     responseContent = responseContent ||
       await this.props.connector.requestData(id, "responseContent");
 
-    let { encoding, text } = responseContent.content;
+    const { encoding, text } = responseContent.content;
     copyString(formDataURI(mimeType, encoding, text));
   }
 
@@ -372,11 +372,11 @@ class RequestListContextMenu {
     responseContent = responseContent ||
       await this.props.connector.requestData(id, "responseContent");
 
-    let { encoding, text } = responseContent.content;
-    let fileName = getUrlBaseName(url);
+    const { encoding, text } = responseContent.content;
+    const fileName = getUrlBaseName(url);
     let data;
     if (encoding === "base64") {
-      let decoded = atob(text);
+      const decoded = atob(text);
       data = new Uint8Array(decoded.length);
       for (let i = 0; i < decoded.length; ++i) {
         data[i] = decoded.charCodeAt(i);

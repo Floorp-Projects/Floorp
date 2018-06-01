@@ -12,9 +12,9 @@ define(function(require, exports, module) {
    * object responsible for transformation data (usually a state) to
    * a structure that can be directly consumed by the tree-view component.
    */
-  let ObjectProvider = {
+  const ObjectProvider = {
     getChildren: function(object) {
-      let children = [];
+      const children = [];
 
       if (object instanceof ObjectProperty) {
         object = object.value;
@@ -28,7 +28,7 @@ define(function(require, exports, module) {
         return [];
       }
 
-      for (let prop in object) {
+      for (const prop in object) {
         try {
           children.push(new ObjectProperty(prop, object[prop]));
         } catch (e) {

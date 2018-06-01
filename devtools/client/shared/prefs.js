@@ -35,14 +35,14 @@ const EventEmitter = require("devtools/shared/event-emitter");
 function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
   EventEmitter.decorate(this);
 
-  let cache = new Map();
+  const cache = new Map();
 
-  for (let accessorName in prefsBlueprint) {
-    let [prefType, prefName] = prefsBlueprint[accessorName];
+  for (const accessorName in prefsBlueprint) {
+    const [prefType, prefName] = prefsBlueprint[accessorName];
     map(this, cache, accessorName, prefType, prefsRoot, prefName);
   }
 
-  let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
+  const observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
   this.registerObserver = () => observer.register();
   this.unregisterObserver = () => observer.unregister();
 }
@@ -57,11 +57,11 @@ function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
  * @return any
  */
 function get(cache, prefType, prefsRoot, prefName) {
-  let cachedPref = cache.get(prefName);
+  const cachedPref = cache.get(prefName);
   if (cachedPref !== undefined) {
     return cachedPref;
   }
-  let value = Services.prefs["get" + prefType + "Pref"](
+  const value = Services.prefs["get" + prefType + "Pref"](
     [prefsRoot, prefName].join(".")
   );
   cache.set(prefName, value);
@@ -135,8 +135,8 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName,
  * @return string
  */
 function accessorNameForPref(somePrefName, prefsBlueprint) {
-  for (let accessorName in prefsBlueprint) {
-    let [, prefName] = prefsBlueprint[accessorName];
+  for (const accessorName in prefsBlueprint) {
+    const [, prefName] = prefsBlueprint[accessorName];
     if (somePrefName == prefName) {
       return accessorName;
     }
@@ -165,7 +165,7 @@ function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
     observe: function(subject, topic, prefName) {
       // If this particular pref isn't handled by the blueprint object,
       // even though it's in the specified branch, ignore it.
-      let accessorName = accessorNameForPref(prefName, prefsBlueprint);
+      const accessorName = accessorNameForPref(prefName, prefsBlueprint);
       if (!(accessorName in self)) {
         return;
       }

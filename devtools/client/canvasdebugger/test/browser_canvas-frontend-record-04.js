@@ -9,13 +9,13 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(RAF_BEGIN_URL);
-  let { window, EVENTS, gFront, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(RAF_BEGIN_URL);
+  const { window, EVENTS, gFront, SnapshotsListView } = panel.panelWin;
   loadFrameScriptUtils();
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
   // Wait until after the recording started to trigger the content.

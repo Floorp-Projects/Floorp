@@ -12,12 +12,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     DetailsView,
     WaterfallView,

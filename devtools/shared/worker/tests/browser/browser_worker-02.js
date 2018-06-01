@@ -17,7 +17,7 @@ add_task(async function() {
     ok(true, "Creating a DevToolsWorker with an invalid URL throws");
   }
 
-  let worker = new DevToolsWorker(WORKER_URL);
+  const worker = new DevToolsWorker(WORKER_URL);
   try {
     // plotTimestampsGraph requires timestamp, interval an duration props on the object
     // passed in so there should be an error thrown in the worker

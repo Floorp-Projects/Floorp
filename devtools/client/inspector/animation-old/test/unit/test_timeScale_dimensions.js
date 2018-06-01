@@ -38,13 +38,13 @@ function run_test() {
   // Be independent of possible prior tests
   TimeScale.reset();
 
-  for (let {desc, animations, expectedEndDelayX} of TEST_ENDDELAY_X) {
+  for (const {desc, animations, expectedEndDelayX} of TEST_ENDDELAY_X) {
     info(`Adding animations: ${desc}`);
 
-    for (let state of animations) {
+    for (const state of animations) {
       TimeScale.addAnimation(state);
 
-      let {endDelayX} = TimeScale.getAnimationDimensions({state});
+      const {endDelayX} = TimeScale.getAnimationDimensions({state});
       equal(endDelayX, expectedEndDelayX);
 
       TimeScale.reset();

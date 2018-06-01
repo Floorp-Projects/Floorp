@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Selecting the test element");
   await selectNode("#testid", inspector);
@@ -32,10 +32,10 @@ add_task(async function() {
 async function testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, idRuleEditor.selectorText);
+  const editor = await focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -44,7 +44,7 @@ async function testEditSelector(view, name) {
   editor.input.value = name;
 
   info("Waiting for rule view to update");
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");

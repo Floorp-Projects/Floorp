@@ -289,7 +289,7 @@ class FlexboxInspector {
       }
     }
 
-    let highlighted = this._highlighters &&
+    const highlighted = this._highlighters &&
       nodeFront == this.highlighters.flexboxHighlighterShown;
 
     this.store.dispatch(updateFlexbox({

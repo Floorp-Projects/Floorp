@@ -12,7 +12,7 @@ const TOOL_DELAY = 200;
 
 add_task(async function() {
   info("Activating the webaudioeditor");
-  let originalPref = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
+  const originalPref = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
 
   await addTab(TEST_URI);

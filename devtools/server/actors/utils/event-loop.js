@@ -110,7 +110,7 @@ EventLoop.prototype = {
    * Enter this nested event loop.
    */
   enter: function() {
-    let nestData = this._hooks.preNest
+    const nestData = this._hooks.preNest
       ? this._hooks.preNest()
       : null;
 

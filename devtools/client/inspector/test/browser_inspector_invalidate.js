@@ -11,8 +11,8 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<div style=\"width: 100px; height: 100px; background:yellow;\"></div>";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
-  let divFront = await getNodeFront("div", inspector);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const divFront = await getNodeFront("div", inspector);
 
   info("Waiting for highlighter to activate");
   await inspector.highlighter.showBoxModel(divFront);

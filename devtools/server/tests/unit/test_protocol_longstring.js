@@ -100,13 +100,13 @@ function run_test() {
   });
 
   DebuggerServer.init();
-  let trace = connectPipeTracing();
-  let client = new DebuggerClient(trace);
+  const trace = connectPipeTracing();
+  const client = new DebuggerClient(trace);
   let rootClient;
 
   let strfront = null;
 
-  let expectRootChildren = function(size) {
+  const expectRootChildren = function(size) {
     Assert.equal(rootActor.__poolMap.size, size + 1);
     Assert.equal(rootClient.__poolMap.size, size + 1);
   };
@@ -165,7 +165,7 @@ function run_test() {
       // That reference should be removed now.
       expectRootChildren(0);
     }).then(() => {
-      let deferred = defer();
+      const deferred = defer();
       rootClient.once("string-event", (str) => {
         trace.expectSend({"type": "emitShortString", "to": "<actorid>"});
         trace.expectReceive({"type": "string-event", "str": "abc", "from": "<actorid>"});
@@ -187,7 +187,7 @@ function run_test() {
       // Will generate no packets
       return strfront.release();
     }).then(() => {
-      let deferred = defer();
+      const deferred = defer();
       rootClient.once("string-event", (str) => {
         trace.expectSend({"type": "emitLongString", "to": "<actorid>"});
         trace.expectReceive({"type": "string-event",

@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_svg_attributes.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();
   await selectNode("svg", inspector);
@@ -23,16 +23,16 @@ async function testWellformedMixedCase(inspector, testActor) {
     "expecting the attribute's case to be preserved");
 
   info("Listening to markup mutations");
-  let onMutated = inspector.once("markupmutation");
+  const onMutated = inspector.once("markupmutation");
 
   info("Focusing the viewBox attribute editor");
-  let {editor} = await focusNode("svg", inspector);
-  let attr = editor.attrElements.get("viewBox").querySelector(".editable");
+  const {editor} = await focusNode("svg", inspector);
+  const attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
 
   info("Editing the attribute value and waiting for the mutation event");
-  let input = inplaceEditor(attr).input;
+  const input = inplaceEditor(attr).input;
   input.value = "viewBox=\"0 0 1 1\"";
   EventUtils.sendKey("return", inspector.panelWin);
   await onMutated;
@@ -49,16 +49,16 @@ async function testMalformedMixedCase(inspector, testActor) {
     "expecting the attribute's case to be preserved");
 
   info("Listening to markup mutations");
-  let onMutated = inspector.once("markupmutation");
+  const onMutated = inspector.once("markupmutation");
 
   info("Focusing the viewBox attribute editor");
-  let {editor} = await focusNode("svg", inspector);
-  let attr = editor.attrElements.get("viewBox").querySelector(".editable");
+  const {editor} = await focusNode("svg", inspector);
+  const attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
 
   info("Editing the attribute value and waiting for the mutation event");
-  let input = inplaceEditor(attr).input;
+  const input = inplaceEditor(attr).input;
   input.value = "viewBox=\"<>\"";
   EventUtils.sendKey("return", inspector.panelWin);
   await onMutated;

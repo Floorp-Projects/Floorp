@@ -54,7 +54,7 @@ module.exports = {
    */
   parseFontVariationAxes(string) {
     let axes = {};
-    let keywords = ["initial", "normal", "inherit", "unset"];
+    const keywords = ["initial", "normal", "inherit", "unset"];
 
     if (keywords.includes(string.trim())) {
       return axes;

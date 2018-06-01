@@ -92,7 +92,7 @@ SourceClient.prototype = {
    *        The callback function called when we receive the response from the server.
    */
   getExecutableLines: function(cb = noop) {
-    let packet = {
+    const packet = {
       to: this._form.actor,
       type: "getExecutableLines"
     };
@@ -107,7 +107,7 @@ SourceClient.prototype = {
    * Get a long string grip for this SourceClient's source.
    */
   source: function(callback = noop) {
-    let packet = {
+    const packet = {
       to: this._form.actor,
       type: "source"
     };
@@ -164,9 +164,9 @@ SourceClient.prototype = {
       return response;
     }
 
-    let { contentType, source } = response;
+    const { contentType, source } = response;
     if (source.type === "arrayBuffer") {
-      let arrayBuffer = this._activeThread.threadArrayBuffer(source);
+      const arrayBuffer = this._activeThread.threadArrayBuffer(source);
       return arrayBuffer.slice(0, arrayBuffer.length).then(function(resp) {
         if (resp.error) {
           callback(resp);
@@ -175,7 +175,7 @@ SourceClient.prototype = {
         // Keeping str as a string, ArrayBuffer/Uint8Array will not survive
         // setIn/mergeIn operations.
         const str = atob(resp.encoded);
-        let newResponse = {
+        const newResponse = {
           source: {
             binary: str,
             toString: () => "[wasm]",
@@ -187,14 +187,14 @@ SourceClient.prototype = {
       });
     }
 
-    let longString = this._activeThread.threadLongString(source);
+    const longString = this._activeThread.threadLongString(source);
     return longString.substring(0, longString.length).then(function(resp) {
       if (resp.error) {
         callback(resp);
         return resp;
       }
 
-      let newResponse = {
+      const newResponse = {
         source: resp.substring,
         contentType: contentType
       };
@@ -214,14 +214,14 @@ SourceClient.prototype = {
    */
   setBreakpoint: function({ line, column, condition, noSliding }, onResponse = noop) {
     // A helper function that sets the breakpoint.
-    let doSetBreakpoint = callback => {
-      let root = this._client.mainRoot;
-      let location = {
+    const doSetBreakpoint = callback => {
+      const root = this._client.mainRoot;
+      const location = {
         line,
         column,
       };
 
-      let packet = {
+      const packet = {
         to: this.actor,
         type: "setBreakpoint",
         location,

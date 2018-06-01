@@ -9,7 +9,7 @@ const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_js.html";
 
 function test() {
   addTab(TEST_URI).then(tab => {
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testSelectTool);
   });
 }
@@ -19,7 +19,7 @@ function testSelectTool(toolbox) {
   toolbox.selectTool("options");
 }
 
-let testToggleJS = async function(toolbox) {
+const testToggleJS = async function(toolbox) {
   ok(true, "Toolbox selected via selectTool method");
 
   await testJSEnabled();
@@ -48,8 +48,8 @@ async function testJSEnabled() {
   await waitForTick();
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let doc = content.document;
-    let output = doc.getElementById("output");
+    const doc = content.document;
+    const output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
     is(output.textContent, "JavaScript Enabled", 'Output is "JavaScript Enabled"');
   });
@@ -59,10 +59,10 @@ async function testJSEnabledIframe() {
   info("Testing that JS is enabled in the iframe");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let doc = content.document;
-    let iframe = doc.querySelector("iframe");
-    let iframeDoc = iframe.contentDocument;
-    let output = iframeDoc.getElementById("output");
+    const doc = content.document;
+    const iframe = doc.querySelector("iframe");
+    const iframeDoc = iframe.contentDocument;
+    const output = iframeDoc.getElementById("output");
     iframeDoc.querySelector("#logJSEnabled").click();
     is(output.textContent, "JavaScript Enabled",
                             'Output is "JavaScript Enabled" in iframe');
@@ -70,8 +70,8 @@ async function testJSEnabledIframe() {
 }
 
 async function toggleJS(toolbox) {
-  let panel = toolbox.getCurrentPanel();
-  let cbx = panel.panelDoc.getElementById("devtools-disable-javascript");
+  const panel = toolbox.getCurrentPanel();
+  const cbx = panel.panelDoc.getElementById("devtools-disable-javascript");
 
   if (cbx.checked) {
     info("Clearing checkbox to re-enable JS");
@@ -79,7 +79,7 @@ async function toggleJS(toolbox) {
     info("Checking checkbox to disable JS");
   }
 
-  let browserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const browserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   cbx.click();
   await browserLoaded;
 }
@@ -88,8 +88,8 @@ async function testJSDisabled() {
   info("Testing that JS is disabled");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let doc = content.document;
-    let output = doc.getElementById("output");
+    const doc = content.document;
+    const output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
 
     ok(output.textContent !== "JavaScript Disabled",
@@ -101,10 +101,10 @@ async function testJSDisabledIframe() {
   info("Testing that JS is disabled in the iframe");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let doc = content.document;
-    let iframe = doc.querySelector("iframe");
-    let iframeDoc = iframe.contentDocument;
-    let output = iframeDoc.getElementById("output");
+    const doc = content.document;
+    const iframe = doc.querySelector("iframe");
+    const iframeDoc = iframe.contentDocument;
+    const output = iframeDoc.getElementById("output");
     iframeDoc.querySelector("#logJSDisabled").click();
     ok(output.textContent !== "JavaScript Disabled",
        'output is not "JavaScript Disabled" in iframe');

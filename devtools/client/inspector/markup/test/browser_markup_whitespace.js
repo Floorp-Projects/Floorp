@@ -9,8 +9,8 @@
 const TEST_URL = URL_ROOT + "doc_markup_whitespace.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
-  let {markup} = inspector;
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {markup} = inspector;
 
   await markup.expandAll();
 
@@ -25,7 +25,7 @@ add_task(async function() {
   // In body, there are only block-level elements, so whitespace text nodes do not have
   // layout, so they should be skipped in the markup-view.
   info("Check that the body's whitespace text node children aren't shown");
-  let bodyContainer = markup.getContainer(inspector.selection.nodeFront);
+  const bodyContainer = markup.getContainer(inspector.selection.nodeFront);
   let childContainers = bodyContainer.getChildContainers();
   is(childContainers.length, 5,
      "Only the element nodes are shown in the markup view");

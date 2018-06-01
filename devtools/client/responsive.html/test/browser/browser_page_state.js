@@ -15,8 +15,8 @@ add_task(async function() {
   // 0. DUMMY_1_URL
   // 1. TEST_URL
   // 2. DUMMY_2_URL
-  let tab = await addTab(DUMMY_1_URL);
-  let browser = tab.linkedBrowser;
+  const tab = await addTab(DUMMY_1_URL);
+  const browser = tab.linkedBrowser;
   await load(browser, TEST_URL);
   await load(browser, DUMMY_2_URL);
 
@@ -42,7 +42,7 @@ add_task(async function() {
   // Click on content to set an altered state that would be lost on reload
   await BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser);
 
-  let { ui } = await openRDM(tab);
+  const { ui } = await openRDM(tab);
 
   // Check color inside the viewport
   let color = await spawnViewportTask(ui, {}, function() {

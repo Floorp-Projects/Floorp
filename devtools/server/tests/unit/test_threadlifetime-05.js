@@ -28,8 +28,8 @@ function run_test() {
 }
 
 function arg_grips(frameArgs, onResponse) {
-  let grips = [];
-  let handler = function(response) {
+  const grips = [];
+  const handler = function(response) {
     if (response.error) {
       grips.push(response.error);
     } else {
@@ -48,7 +48,7 @@ function arg_grips(frameArgs, onResponse) {
 function test_thread_lifetime() {
   // Get two thread-lifetime grips.
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let frameArgs = [ packet.frame.arguments[0], packet.frame.arguments[1] ];
+    const frameArgs = [ packet.frame.arguments[0], packet.frame.arguments[1] ];
     gPauseGrip = packet.frame.arguments[2];
     arg_grips(frameArgs, function(grips) {
       release_grips(frameArgs, grips);
@@ -65,7 +65,7 @@ function test_thread_lifetime() {
 
 function release_grips(frameArgs, threadGrips) {
   // Release all actors with releaseMany...
-  let release = [threadGrips[0], threadGrips[1], gPauseGrip.actor];
+  const release = [threadGrips[0], threadGrips[1], gPauseGrip.actor];
   gThreadClient.releaseMany(release, function(response) {
     Assert.equal(response.error, "notReleasable");
     // Now ask for thread grips again, they should not exist.

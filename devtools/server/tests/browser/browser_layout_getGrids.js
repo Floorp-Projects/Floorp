@@ -108,10 +108,11 @@ const GRID_FRAGMENT_DATA = {
 };
 
 add_task(async function() {
-  let { client, walker, layout } = await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
-  let grids = await layout.getGrids(walker.rootNode);
-  let grid = grids[0];
-  let { gridFragments } = grid;
+  const { client, walker, layout } =
+    await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
+  const grids = await layout.getGrids(walker.rootNode);
+  const grid = grids[0];
+  const { gridFragments } = grid;
 
   is(grids.length, 1, "One grid was returned.");
   is(gridFragments.length, 1, "One grid fragment was returned.");
@@ -122,7 +123,7 @@ add_task(async function() {
   info("Get the grid container node front.");
 
   try {
-    let nodeFront = await walker.getNodeFromActor(grids[0].actorID, ["containerEl"]);
+    const nodeFront = await walker.getNodeFromActor(grids[0].actorID, ["containerEl"]);
     ok(nodeFront, "Got the grid container node front.");
   } catch (e) {
     ok(false, "Did not get grid container node front.");

@@ -12,9 +12,9 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
 const TEST_URI_NAVIGATE = "data:text/html;charset=utf-8,<p>testing autocomplete closes";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let popup = hud.jsterm.autocompletePopup;
-  let popupShown = once(popup, "popup-opened");
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const popup = hud.jsterm.autocompletePopup;
+  const popupShown = once(popup, "popup-opened");
 
   hud.jsterm.setInputValue("sc");
   EventUtils.sendString("r");

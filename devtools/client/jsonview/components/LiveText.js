@@ -27,7 +27,7 @@ define(function(require, exports, module) {
     }
 
     componentDidUpdate() {
-      let el = findDOMNode(this);
+      const el = findDOMNode(this);
       if (el.firstChild === this.props.data) {
         return;
       }

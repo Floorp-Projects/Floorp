@@ -83,7 +83,7 @@ PerformanceGraph.prototype = extend(LineGraphWidget.prototype, {
    */
   setTheme: function(theme) {
     theme = theme || "light";
-    let mainColor = getColor(this.mainColor || "graphs-blue", theme);
+    const mainColor = getColor(this.mainColor || "graphs-blue", theme);
     this.backgroundColor = getColor("body-background", theme);
     this.strokeColor = mainColor;
     this.backgroundGradientStart = colorUtils.setAlpha(mainColor, 0.2);
@@ -219,7 +219,7 @@ GraphsController.prototype = {
     }
 
     this._rendering = defer();
-    for (let graph of (await this._getEnabled())) {
+    for (const graph of (await this._getEnabled())) {
       await graph.setPerformanceData(recordingData, resolution);
       this.emit("rendered", graph.graphName);
     }
@@ -230,7 +230,7 @@ GraphsController.prototype = {
    * Destroys the underlying graphs.
    */
   async destroy() {
-    let primary = this._getPrimaryLink();
+    const primary = this._getPrimaryLink();
 
     this._destroyed = true;
 
@@ -244,7 +244,7 @@ GraphsController.prototype = {
       await this._rendering.promise;
     }
 
-    for (let graph of this.getWidgets()) {
+    for (const graph of this.getWidgets()) {
       await graph.destroy();
     }
   },
@@ -254,8 +254,8 @@ GraphsController.prototype = {
    * a `redraw` boolean in the options to force redraw.
    */
   setTheme: function(options = {}) {
-    let theme = options.theme || this._getTheme();
-    for (let graph of this.getWidgets()) {
+    const theme = options.theme || this._getTheme();
+    for (const graph of this.getWidgets()) {
       graph.setTheme(theme);
       graph.refresh({ force: options.redraw });
     }
@@ -286,7 +286,7 @@ GraphsController.prototype = {
    * This determines what graphs are visible and get rendered.
    */
   enable: function(graphName, isEnabled) {
-    let el = this.$(this._definition[graphName].selector);
+    const el = this.$(this._definition[graphName].selector);
     el.classList[isEnabled ? "remove" : "add"]("hidden");
 
     // If no status change, just return
@@ -327,7 +327,7 @@ GraphsController.prototype = {
    * (which throws in Graphs.js), return null.
    */
   getMappedSelection: function({ mapStart, mapEnd }) {
-    let primary = this._getPrimaryLink();
+    const primary = this._getPrimaryLink();
     if (primary && primary.hasData()) {
       return primary.getMappedSelection({ mapStart, mapEnd });
     }
@@ -356,7 +356,7 @@ GraphsController.prototype = {
    * Makes sure the selection is enabled or disabled in all the graphs.
    */
   async selectionEnabled(enabled) {
-    for (let graph of (await this._getEnabled())) {
+    for (const graph of (await this._getEnabled())) {
       graph.selectionEnabled = enabled;
     }
   },
@@ -365,10 +365,10 @@ GraphsController.prototype = {
    * Creates the graph `graphName` and initializes it.
    */
   async _construct(graphName) {
-    let def = this._definition[graphName];
-    let el = this.$(def.selector);
-    let filter = this._getFilter();
-    let graph = this._graphs[graphName] = new def.constructor(el, filter);
+    const def = this._definition[graphName];
+    const el = this.$(def.selector);
+    const filter = this._getFilter();
+    const graph = this._graphs[graphName] = new def.constructor(el, filter);
     graph.graphName = graphName;
 
     await graph.ready();
@@ -413,9 +413,9 @@ GraphsController.prototype = {
     if (this._enabledGraphs) {
       return this._enabledGraphs;
     }
-    let enabled = [];
-    for (let graphName of this._enabled) {
-      let graph = await this.isAvailable(graphName);
+    const enabled = [];
+    for (const graphName of this._enabled) {
+      const graph = await this.isAvailable(graphName);
       if (graph) {
         enabled.push(graph);
       }
@@ -450,7 +450,7 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
       return;
     }
 
-    let { sampleTimes } = threadNode;
+    const { sampleTimes } = threadNode;
 
     if (!sampleTimes.length) {
       this.setData([]);
@@ -460,11 +460,11 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
     // Take startTime/endTime from samples recorded, rather than
     // using duration directly from threadNode, as the first sample that
     // equals the startTime does not get recorded.
-    let startTime = sampleTimes[0];
-    let endTime = sampleTimes[sampleTimes.length - 1];
+    const startTime = sampleTimes[0];
+    const endTime = sampleTimes[sampleTimes.length - 1];
 
-    let bucketSize = (endTime - startTime) / OPTIMIZATIONS_GRAPH_RESOLUTION;
-    let data = createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize);
+    const bucketSize = (endTime - startTime) / OPTIMIZATIONS_GRAPH_RESOLUTION;
+    const data = createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize);
 
     // If for some reason we don't have data (like the frameNode doesn't
     // have optimizations, but it shouldn't be at this point if it doesn't),
@@ -487,9 +487,9 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
   setTheme: function(theme) {
     theme = theme || "light";
 
-    let interpreterColor = getColor("graphs-red", theme);
-    let baselineColor = getColor("graphs-blue", theme);
-    let ionColor = getColor("graphs-green", theme);
+    const interpreterColor = getColor("graphs-red", theme);
+    const baselineColor = getColor("graphs-blue", theme);
+    const ionColor = getColor("graphs-green", theme);
 
     this.format = [
       { color: interpreterColor },

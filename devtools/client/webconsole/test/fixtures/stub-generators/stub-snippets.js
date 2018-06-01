@@ -27,7 +27,7 @@ const consoleApiCommands = [
   "console.error('error message');",
 ];
 
-let consoleApi = new Map(consoleApiCommands.map(
+const consoleApi = new Map(consoleApiCommands.map(
   cmd => [cmd, {keys: [cmd], code: cmd}]));
 
 consoleApi.set("console.log('mymap')", {
@@ -208,7 +208,7 @@ const evaluationResultCommands = [
   "undefined"
 ];
 
-let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
+const evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
 evaluationResult.set("longString message Error",
   `throw new Error("Long error ".repeat(10000))`);
 
@@ -217,7 +217,7 @@ evaluationResult.set(`eval throw "tomato"`, `throw "tomato"`);
 
 // Network Event
 
-let networkEvent = new Map();
+const networkEvent = new Map();
 
 networkEvent.set("GET request", {
   keys: ["GET request"],
@@ -244,7 +244,7 @@ xhr.send();
 
 // Page Error
 
-let pageError = new Map();
+const pageError = new Map();
 
 pageError.set("ReferenceError: asdf is not defined", `
   function bar() {

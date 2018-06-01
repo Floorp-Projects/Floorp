@@ -40,8 +40,8 @@ function run_test_with_server(server, callback) {
 
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let [f, s, ne, e] = packet.frame.arguments;
-    let [fClient, sClient, neClient, eClient] = packet.frame.arguments.map(
+    const [f, s, ne, e] = packet.frame.arguments;
+    const [fClient, sClient, neClient, eClient] = packet.frame.arguments.map(
       a => gThreadClient.pauseGrip(a));
 
     Assert.ok(!f.extensible);
@@ -63,11 +63,11 @@ function test_object_grip() {
 
   /* eslint-disable no-undef */
   gDebuggee.eval("(" + function() {
-    let f = {};
+    const f = {};
     Object.freeze(f);
-    let s = {};
+    const s = {};
     Object.seal(s);
-    let ne = {};
+    const ne = {};
     Object.preventExtensions(ne);
     stopMe(f, s, ne, {});
   } + "())");

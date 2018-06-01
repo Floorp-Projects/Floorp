@@ -233,33 +233,33 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
-  for (let test of TEST_CASES) {
-    let { desc, disabled, selector, attributeTrigger } = test;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  for (const test of TEST_CASES) {
+    const { desc, disabled, selector, attributeTrigger } = test;
 
     info(`Test ${desc}`);
     setupClipboard(test.clipboardData, test.clipboardDataType);
 
-    let front = await getNodeFrontForSelector(selector, inspector);
+    const front = await getNodeFrontForSelector(selector, inspector);
 
     info("Selecting the specified node.");
     await selectNode(front, inspector);
 
     info("Simulating context menu click on the selected node container.");
-    let nodeFrontContainer = getContainerForNodeFront(front, inspector);
-    let contextMenuTrigger = attributeTrigger
+    const nodeFrontContainer = getContainerForNodeFront(front, inspector);
+    const contextMenuTrigger = attributeTrigger
       ? nodeFrontContainer.tagLine.querySelector(
           `[data-attr="${attributeTrigger}"]`)
       : nodeFrontContainer.tagLine;
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: contextMenuTrigger,
     });
 
-    for (let id of ALL_MENU_ITEMS) {
-      let menuItem = allMenuItems.find(item => item.id === id);
-      let shouldBeDisabled = disabled.includes(id);
-      let shouldBeDisabledText = shouldBeDisabled ? "disabled" : "enabled";
+    for (const id of ALL_MENU_ITEMS) {
+      const menuItem = allMenuItems.find(item => item.id === id);
+      const shouldBeDisabled = disabled.includes(id);
+      const shouldBeDisabledText = shouldBeDisabled ? "disabled" : "enabled";
       is(menuItem.disabled, shouldBeDisabled,
         `#${id} should be ${shouldBeDisabledText} for test case ${desc}`);
     }
@@ -277,7 +277,7 @@ async function getNodeFrontForSelector(selector, inspector) {
   }
 
   info("Retrieving front for doctype node");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
+  const {nodes} = await inspector.walker.children(inspector.walker.rootNode);
   return nodes[0];
 }
 
@@ -302,17 +302,17 @@ function setupClipboard(data, type) {
  * The code below is a simplified version of the sdk/clipboard helper set() method.
  */
 function copyImageToClipboard(data) {
-  let imageTools = Cc["@mozilla.org/image/tools;1"]
+  const imageTools = Cc["@mozilla.org/image/tools;1"]
                      .getService(Ci.imgITools);
 
   // Image data is stored as base64 in the test.
-  let image = atob(data);
+  const image = atob(data);
 
-  let imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"]
+  const imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"]
                  .createInstance(Ci.nsISupportsInterfacePointer);
   imgPtr.data = imageTools.decodeImageFromBuffer(image, image.length, "image/png");
 
-  let xferable = Cc["@mozilla.org/widget/transferable;1"]
+  const xferable = Cc["@mozilla.org/widget/transferable;1"]
                    .createInstance(Ci.nsITransferable);
   xferable.init(null);
   xferable.addDataFlavor("image/png");

@@ -67,7 +67,7 @@ add_task(async function() {
   await toolbox.selectTool("webconsole");
 
   info("And wait for all messages to be visible");
-  let waitForMessagePromises = [];
+  const waitForMessagePromises = [];
   for (let j = 1; j <= MESSAGES_COUNT; j++) {
     waitForMessagePromises.push(waitFor(() => findMessage(hud, "in-inspector log " + j)));
   }
@@ -104,7 +104,7 @@ add_task(async function() {
   });
 
   info("Wait for all messages to be visible in the split console");
-  let waitForMessagePromises = [];
+  const waitForMessagePromises = [];
   for (let j = 1; j <= MESSAGES_COUNT; j++) {
     waitForMessagePromises.push(waitFor(() => findMessage(hud, "in-inspector log " + j)));
   }

@@ -8,7 +8,7 @@
 "use strict";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole("data:text/html;charset=utf8,empty page");
+  const hud = await openNewTabAndConsole("data:text/html;charset=utf8,empty page");
 
   loadScriptURI("'use strict';var arguments;");
   await waitForError(hud,
@@ -35,6 +35,6 @@ function loadScriptURI(script) {
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
-  let uri = "data:text/html;charset=utf8,<script>" + script + "</script>";
+  const uri = "data:text/html;charset=utf8,<script>" + script + "</script>";
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri);
 }

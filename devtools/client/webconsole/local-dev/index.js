@@ -37,7 +37,6 @@ pref("devtools.webconsole.ui.filterbar", false);
 pref("devtools.webconsole.inputHistoryCount", 50);
 pref("devtools.webconsole.persistlog", false);
 pref("devtools.webconsole.timestampMessages", false);
-pref("devtools.webconsole.autoMultiline", true);
 pref("devtools.webconsole.sidebarToggle", true);
 
 const WebConsoleOutputWrapper = require("../webconsole-output-wrapper");
@@ -45,7 +44,7 @@ const WebConsoleFrame = require("../webconsole-frame").WebConsoleFrame;
 
 // Copied from netmonitor/index.js:
 window.addEventListener("DOMContentLoaded", () => {
-  for (let link of document.head.querySelectorAll("link")) {
+  for (const link of document.head.querySelectorAll("link")) {
     link.href = link.href.replace(/(resource|chrome)\:\/\//, "/");
   }
 

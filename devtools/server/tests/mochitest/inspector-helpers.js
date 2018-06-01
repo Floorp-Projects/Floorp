@@ -30,7 +30,7 @@ if (!DebuggerServer.initialized) {
 var gAttachCleanups = [];
 
 SimpleTest.registerCleanupFunction(function() {
-  for (let cleanup of gAttachCleanups) {
+  for (const cleanup of gAttachCleanups) {
     cleanup();
   }
 });
@@ -46,7 +46,7 @@ function attachURL(url, callback) {
   let win = window.open(url, "_blank");
   let client = null;
 
-  let cleanup = () => {
+  const cleanup = () => {
     if (client) {
       client.close();
       client = null;
@@ -63,7 +63,7 @@ function attachURL(url, callback) {
       client = new DebuggerClient(DebuggerServer.connectPipe());
       client.connect().then(([applicationType, traits]) => {
         client.listTabs().then(response => {
-          for (let tab of response.tabs) {
+          for (const tab of response.tabs) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener);
               // eslint-disable-next-line max-nested-callbacks
@@ -87,7 +87,7 @@ function attachURL(url, callback) {
 }
 
 function promiseOnce(target, event) {
-  let deferred = defer();
+  const deferred = defer();
   target.on(event, (...args) => {
     if (args.length === 1) {
       deferred.resolve(args[0]);
@@ -103,16 +103,16 @@ function sortOwnershipChildren(children) {
 }
 
 function serverOwnershipSubtree(walker, node) {
-  let actor = walker._refMap.get(node);
+  const actor = walker._refMap.get(node);
   if (!actor) {
     return undefined;
   }
 
-  let children = [];
-  let docwalker = new _documentWalker(node, window);
+  const children = [];
+  const docwalker = new _documentWalker(node, window);
   let child = docwalker.firstChild();
   while (child) {
-    let item = serverOwnershipSubtree(walker, child);
+    const item = serverOwnershipSubtree(walker, child);
     if (item) {
       children.push(item);
     }
@@ -125,7 +125,7 @@ function serverOwnershipSubtree(walker, node) {
 }
 
 function serverOwnershipTree(walker) {
-  let serverWalker = DebuggerServer.searchAllConnectionsForActor(walker.actorID);
+  const serverWalker = DebuggerServer.searchAllConnectionsForActor(walker.actorID);
 
   return {
     root: serverOwnershipSubtree(serverWalker, serverWalker.rootDoc),
@@ -154,15 +154,15 @@ function clientOwnershipTree(walker) {
 
 function ownershipTreeSize(tree) {
   let size = 1;
-  for (let child of tree.children) {
+  for (const child of tree.children) {
     size += ownershipTreeSize(child);
   }
   return size;
 }
 
 function assertOwnershipTrees(walker) {
-  let serverTree = serverOwnershipTree(walker);
-  let clientTree = clientOwnershipTree(walker);
+  const serverTree = serverOwnershipTree(walker);
+  const clientTree = clientOwnershipTree(walker);
   is(JSON.stringify(clientTree, null, " "), JSON.stringify(serverTree, null, " "),
      "Server and client ownership trees should match.");
 
@@ -172,7 +172,7 @@ function assertOwnershipTrees(walker) {
 // Verify that an actorID is inaccessible both from the client library and the server.
 function checkMissing(client, actorID) {
   let deferred = defer();
-  let front = client.getActor(actorID);
+  const front = client.getActor(actorID);
   ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
 
   deferred = defer();
@@ -189,7 +189,7 @@ function checkMissing(client, actorID) {
 // Verify that an actorID is accessible both from the client library and the server.
 function checkAvailable(client, actorID) {
   let deferred = defer();
-  let front = client.getActor(actorID);
+  const front = client.getActor(actorID);
   ok(front, "Front should be accessible from the client for actorID: " + actorID);
 
   deferred = defer();
@@ -217,7 +217,7 @@ function promiseDone(currentPromise) {
 // Mutation list testing
 
 function assertAndStrip(mutations, message, test) {
-  let size = mutations.length;
+  const size = mutations.length;
   mutations = mutations.filter(test);
   ok((mutations.size != size), message);
   return mutations;
@@ -275,8 +275,8 @@ function assertChildList(mutations) {
 // Load mutations aren't predictable, so keep accumulating mutations until
 // the one we're looking for shows up.
 function waitForMutation(walker, test, mutations = []) {
-  let deferred = defer();
-  for (let change of mutations) {
+  const deferred = defer();
+  for (const change of mutations) {
     if (test(change)) {
       deferred.resolve(mutations);
     }
@@ -305,7 +305,7 @@ function runNextTest() {
     SimpleTest.finish();
     return;
   }
-  let fn = _tests.shift();
+  const fn = _tests.shift();
   try {
     fn();
   } catch (ex) {

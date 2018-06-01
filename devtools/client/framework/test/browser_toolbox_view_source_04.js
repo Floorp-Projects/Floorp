@@ -10,13 +10,13 @@
 var URL = `${URL_ROOT}doc_viewsource.html`;
 
 async function viewSource() {
-  let toolbox = await openNewTabAndToolbox(URL);
-  let win = await openScratchpadWindow();
-  let { Scratchpad: scratchpad } = win;
+  const toolbox = await openNewTabAndToolbox(URL);
+  const win = await openScratchpadWindow();
+  const { Scratchpad: scratchpad } = win;
 
   // Brahm's Cello Sonata No.1, Op.38 now in the scratchpad
   scratchpad.setText("E G B C B\nA B A G A B\nG E");
-  let scratchpadURL = scratchpad.uniqueName;
+  const scratchpadURL = scratchpad.uniqueName;
 
   // Now select another tool for focus
   await toolbox.selectTool("webconsole");

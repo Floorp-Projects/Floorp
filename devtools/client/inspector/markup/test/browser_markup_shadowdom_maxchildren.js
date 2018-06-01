@@ -34,17 +34,17 @@ add_task(async function() {
   await enableWebComponents();
   await pushPref("devtools.markup.pagesize", 5);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   // <test-component> is a shadow host.
   info("Find and expand the test-component shadow DOM host.");
-  let hostFront = await getNodeFront("test-component", inspector);
+  const hostFront = await getNodeFront("test-component", inspector);
   await inspector.markup.expandNode(hostFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Test that expanding a shadow host shows shadow root and direct host children.");
-  let {markup} = inspector;
-  let hostContainer = markup.getContainer(hostFront);
+  const {markup} = inspector;
+  const hostContainer = markup.getContainer(hostFront);
   let childContainers = hostContainer.getChildContainers();
 
   is(childContainers.length, 6, "Expecting 6 children: shadowroot, 5 host children");
@@ -66,24 +66,24 @@ add_task(async function() {
   checkText(childContainers[6], "node 6");
 
   info("Expand the shadow root");
-  let shadowRootContainer = childContainers[0];
-  let shadowRootFront = shadowRootContainer.node;
+  const shadowRootContainer = childContainers[0];
+  const shadowRootFront = shadowRootContainer.node;
   await inspector.markup.expandNode(shadowRootFront);
   await waitForMultipleChildrenUpdates(inspector);
 
-  let shadowChildContainers = shadowRootContainer.getChildContainers();
+  const shadowChildContainers = shadowRootContainer.getChildContainers();
   is(shadowChildContainers.length, 1, "Expecting 1 slot child");
   checkText(shadowChildContainers[0], "slot");
 
   info("Expand the slot");
-  let slotContainer = shadowChildContainers[0];
-  let slotFront = slotContainer.node;
+  const slotContainer = shadowChildContainers[0];
+  const slotFront = slotContainer.node;
   await inspector.markup.expandNode(slotFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   let slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 5, "Expecting 5 slotted children");
-  for (let slotChildContainer of slotChildContainers) {
+  for (const slotChildContainer of slotChildContainers) {
     checkText(slotChildContainer, "div");
     ok(slotChildContainer.elt.querySelector(".reveal-link"),
       "Slotted container has a reveal link element");

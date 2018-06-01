@@ -50,19 +50,19 @@ async function addJsonViewTab(url, {
   docReadyState = "complete",
 } = {}) {
   info("Adding a new JSON tab with URL: '" + url + "'");
-  let tabAdded = BrowserTestUtils.waitForNewTab(gBrowser, url);
-  let tabLoaded = addTab(url);
-  let tab = await Promise.race([tabAdded, tabLoaded]);
-  let browser = tab.linkedBrowser;
+  const tabAdded = BrowserTestUtils.waitForNewTab(gBrowser, url);
+  const tabLoaded = addTab(url);
+  const tab = await Promise.race([tabAdded, tabLoaded]);
+  const browser = tab.linkedBrowser;
 
   // Load devtools/shared/test/frame-script-utils.js
   loadFrameScriptUtils();
-  let rootDir = getRootDirectory(gTestPath);
+  const rootDir = getRootDirectory(gTestPath);
 
   // Catch RequireJS errors (usually timeouts)
-  let error = tabLoaded.then(() => ContentTask.spawn(browser, null, function() {
+  const error = tabLoaded.then(() => ContentTask.spawn(browser, null, function() {
     return new Promise((resolve, reject) => {
-      let {requirejs} = content.wrappedJSObject;
+      const {requirejs} = content.wrappedJSObject;
       if (requirejs) {
         requirejs.onError = err => {
           info(err);
@@ -73,29 +73,29 @@ async function addJsonViewTab(url, {
     });
   }));
 
-  let data = {rootDir, appReadyState, docReadyState};
+  const data = {rootDir, appReadyState, docReadyState};
   // eslint-disable-next-line no-shadow
   await Promise.race([error, ContentTask.spawn(browser, data, async function(data) {
     // Check if there is a JSONView object.
-    let {JSONView} = content.wrappedJSObject;
+    const {JSONView} = content.wrappedJSObject;
     if (!JSONView) {
       throw new Error("The JSON Viewer did not load.");
     }
 
     // Load frame script with helpers for JSON View tests.
-    let frameScriptUrl = data.rootDir + "doc_frame_script.js";
+    const frameScriptUrl = data.rootDir + "doc_frame_script.js";
     Services.scriptloader.loadSubScript(frameScriptUrl, {}, "UTF-8");
 
-    let docReadyStates = ["loading", "interactive", "complete"];
-    let docReadyIndex = docReadyStates.indexOf(data.docReadyState);
-    let appReadyStates = ["uninitialized", ...docReadyStates];
-    let appReadyIndex = appReadyStates.indexOf(data.appReadyState);
+    const docReadyStates = ["loading", "interactive", "complete"];
+    const docReadyIndex = docReadyStates.indexOf(data.docReadyState);
+    const appReadyStates = ["uninitialized", ...docReadyStates];
+    const appReadyIndex = appReadyStates.indexOf(data.appReadyState);
     if (docReadyIndex < 0 || appReadyIndex < 0) {
       throw new Error("Invalid app or doc readyState parameter.");
     }
 
     // Wait until the document readyState suffices.
-    let {document} = content;
+    const {document} = content;
     while (docReadyStates.indexOf(document.readyState) < docReadyIndex) {
       info(`DocReadyState is "${document.readyState}". Await "${data.docReadyState}"`);
       await new Promise(resolve => {
@@ -121,7 +121,7 @@ async function addJsonViewTab(url, {
 function clickJsonNode(selector) {
   info("Expanding node: '" + selector + "'");
 
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
   return BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
 }
 
@@ -131,15 +131,15 @@ function clickJsonNode(selector) {
 function selectJsonViewContentTab(name) {
   info("Selecting tab: '" + name + "'");
 
-  let browser = gBrowser.selectedBrowser;
-  let selector = ".tabs-menu .tabs-menu-item." + name + " a";
+  const browser = gBrowser.selectedBrowser;
+  const selector = ".tabs-menu .tabs-menu-item." + name + " a";
   return BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
 }
 
 function getElementCount(selector) {
   info("Get element count: '" + selector + "'");
 
-  let data = {
+  const data = {
     selector: selector
   };
 
@@ -152,7 +152,7 @@ function getElementCount(selector) {
 function getElementText(selector) {
   info("Get element text: '" + selector + "'");
 
-  let data = {
+  const data = {
     selector: selector
   };
 
@@ -165,7 +165,7 @@ function getElementText(selector) {
 function getElementAttr(selector, attr) {
   info("Get attribute '" + attr + "' for element '" + selector + "'");
 
-  let data = {selector, attr};
+  const data = {selector, attr};
   return executeInContent("Test:JsonView:GetElementAttr", data)
   .then(result => result.text);
 }
@@ -173,7 +173,7 @@ function getElementAttr(selector, attr) {
 function focusElement(selector) {
   info("Focus element: '" + selector + "'");
 
-  let data = {
+  const data = {
     selector: selector
   };
 
@@ -189,7 +189,7 @@ function focusElement(selector) {
 function sendString(str, selector) {
   info("Send string: '" + str + "'");
 
-  let data = {
+  const data = {
     selector: selector,
     str: str
   };

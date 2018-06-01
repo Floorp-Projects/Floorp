@@ -34,10 +34,10 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  let {inspector, testActor, tab} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor, tab} = await openInspectorForURL(TEST_URL);
 
-  let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
-  let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
+  const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
+  const pageLoaded = waitForLinkedBrowserEvent(tab, "load");
 
   ok(inspector.markup, "There is a markup view");
 
@@ -48,7 +48,7 @@ add_task(async function() {
   await domContentLoaded;
 
   info("Inspect element via context menu");
-  let markupLoaded = inspector.once("markuploaded");
+  const markupLoaded = inspector.once("markuploaded");
   await chooseWithInspectElementContextMenu("img", tab);
 
   info("Wait for load");

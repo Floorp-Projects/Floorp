@@ -84,7 +84,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
 
     // Nullify webConsoleActor before calling releaseActor as it will recall this method
     // To be removed once WebConsoleActor switches to protocol.js
-    let actor = this.webConsoleActor;
+    const actor = this.webConsoleActor;
     this.webConsoleActor = null;
     actor.releaseActor(this);
 
@@ -117,7 +117,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     networkEvent.cause.stacktraceAvailable =
       !!(this._stackTrace && this._stackTrace.length);
 
-    for (let prop of ["method", "url", "httpVersion", "headersSize"]) {
+    for (const prop of ["method", "url", "httpVersion", "headersSize"]) {
       this._request[prop] = networkEvent[prop];
     }
 
@@ -315,7 +315,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(postData.text);
-    let dataSize = postData.text.str.length;
+    const dataSize = postData.text.str.length;
     postData.text = postData.text.form();
 
     this.emit("network-event-update:post-data", "requestPostData", {
@@ -456,7 +456,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * @param array aHeaders
    */
   _prepareHeaders(headers) {
-    for (let header of headers) {
+    for (const header of headers) {
       header.value = new LongStringActor(this.conn, header.value);
       // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
       // protocol.js performance issue

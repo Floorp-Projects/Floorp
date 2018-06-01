@@ -11,7 +11,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_search.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   let container = await getContainerForSelector("em", inspector, true);
   ok(!container, "The <em> tag isn't present yet in the markup-view");
@@ -32,7 +32,7 @@ add_task(async function() {
     "The <em> tag is the currently selected node");
 
   info("searching for other nodes too");
-  for (let node of ["span", "li", "ul"]) {
+  for (const node of ["span", "li", "ul"]) {
     await searchFor(node, inspector);
 
     nodeFront = await getNodeFront(node, inspector);
@@ -42,7 +42,7 @@ add_task(async function() {
 });
 
 async function searchFor(selector, inspector) {
-  let onNewNodeFront = inspector.selection.once("new-node-front");
+  const onNewNodeFront = inspector.selection.once("new-node-front");
 
   searchUsingSelectorSearch(selector, inspector);
 

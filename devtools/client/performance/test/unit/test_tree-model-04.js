@@ -8,14 +8,14 @@
  */
 
 add_task(function test() {
-  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
   // Create a root node from a given samples array, filtering by time.
 
-  let startTime = 5;
-  let endTime = 18;
-  let thread = new ThreadNode(gThread, { startTime, endTime, contentOnly: true });
-  let root = getFrameNodePath(thread, "(root)");
+  const startTime = 5;
+  const endTime = 18;
+  const thread = new ThreadNode(gThread, { startTime, endTime, contentOnly: true });
+  const root = getFrameNodePath(thread, "(root)");
 
   // Test the ThreadNode, only node which should have duration
   equal(thread.duration, endTime - startTime,

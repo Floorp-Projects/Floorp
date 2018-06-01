@@ -48,9 +48,9 @@ function requestsReducer(state = Requests(), action) {
   switch (action.type) {
     // Appending new request into the list/map.
     case ADD_REQUEST: {
-      let nextState = { ...state };
+      const nextState = { ...state };
 
-      let newRequest = {
+      const newRequest = {
         id: action.id,
         ...action.data,
         urlDetails: getUrlDetails(action.data.url),
@@ -59,7 +59,7 @@ function requestsReducer(state = Requests(), action) {
       nextState.requests = mapSet(state.requests, newRequest.id, newRequest);
 
       // Update the started/ended timestamps.
-      let { startedMillis } = action.data;
+      const { startedMillis } = action.data;
       if (startedMillis < state.firstStartedMillis) {
         nextState.firstStartedMillis = startedMillis;
       }
@@ -78,7 +78,7 @@ function requestsReducer(state = Requests(), action) {
 
     // Update an existing request (with received data).
     case UPDATE_REQUEST: {
-      let { requests, lastEndedMillis } = state;
+      const { requests, lastEndedMillis } = state;
 
       let request = requests.get(action.id);
       if (!request) {
@@ -89,7 +89,7 @@ function requestsReducer(state = Requests(), action) {
         ...request,
         ...processNetworkUpdates(action.data),
       };
-      let requestEndTime = request.startedMillis +
+      const requestEndTime = request.startedMillis +
         (request.eventTimings ? request.eventTimings.totalTime : 0);
 
       return {
@@ -119,18 +119,18 @@ function requestsReducer(state = Requests(), action) {
 
     // Clone selected request for re-send.
     case CLONE_SELECTED_REQUEST: {
-      let { requests, selectedId } = state;
+      const { requests, selectedId } = state;
 
       if (!selectedId) {
         return state;
       }
 
-      let clonedRequest = requests.get(selectedId);
+      const clonedRequest = requests.get(selectedId);
       if (!clonedRequest) {
         return state;
       }
 
-      let newRequest = {
+      const newRequest = {
         id: clonedRequest.id + "-clone",
         method: clonedRequest.method,
         url: clonedRequest.url,
@@ -171,7 +171,7 @@ function requestsReducer(state = Requests(), action) {
 
     // Side bar with request details opened.
     case OPEN_NETWORK_DETAILS: {
-      let nextState = { ...state };
+      const nextState = { ...state };
       if (!action.open) {
         nextState.selectedId = null;
         return nextState;
@@ -196,13 +196,13 @@ function requestsReducer(state = Requests(), action) {
  * Remove the currently selected custom request.
  */
 function closeCustomRequest(state) {
-  let { requests, selectedId } = state;
+  const { requests, selectedId } = state;
 
   if (!selectedId) {
     return state;
   }
 
-  let removedRequest = requests.get(selectedId);
+  const removedRequest = requests.get(selectedId);
 
   // Only custom requests can be removed
   if (!removedRequest || !removedRequest.isCustom) {
@@ -220,7 +220,7 @@ function closeCustomRequest(state) {
  * Append new item into existing map and return new map.
  */
 function mapSet(map, key, value) {
-  let newMap = new Map(map);
+  const newMap = new Map(map);
   return newMap.set(key, value);
 }
 
@@ -228,7 +228,7 @@ function mapSet(map, key, value) {
  * Remove an item from existing map and return new map.
  */
 function mapDelete(map, key) {
-  let newMap = new Map(map);
+  const newMap = new Map(map);
   newMap.delete(key);
   return newMap;
 }

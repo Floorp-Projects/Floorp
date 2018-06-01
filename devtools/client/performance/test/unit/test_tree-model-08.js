@@ -7,15 +7,15 @@
  */
 
 add_task(function test() {
-  let FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
-  let { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
-  let compute = frame => {
+  const FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
+  const { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
+  const compute = frame => {
     FrameUtils.computeIsContentAndCategory(frame);
     return frame;
   };
 
-  let frames = [
+  const frames = [
     new FrameNode("hello/<.world (http://foo/bar.js:123:987)", compute({
       location: "hello/<.world (http://foo/bar.js:123:987)",
       line: 456,
@@ -62,9 +62,9 @@ add_task(function test() {
     }), false),
   ];
 
-  let fields = ["nodeType", "functionName", "fileName", "host", "url", "line", "column",
-                "categoryData.abbrev", "isContent", "port"];
-  let expected = [
+  const fields = ["nodeType", "functionName", "fileName", "host", "url", "line", "column",
+                  "categoryData.abbrev", "isContent", "port"];
+  const expected = [
     // nodeType, functionName, fileName, host, url, line, column, categoryData.abbrev,
     // isContent, port
     ["Frame", "hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, void 0, true],
@@ -81,12 +81,12 @@ add_task(function test() {
   ];
 
   for (let i = 0; i < frames.length; i++) {
-    let info = frames[i].getInfo();
-    let expect = expected[i];
+    const info = frames[i].getInfo();
+    const expect = expected[i];
 
     for (let j = 0; j < fields.length; j++) {
-      let field = fields[j];
-      let value = field === "categoryData.abbrev"
+      const field = fields[j];
+      const value = field === "categoryData.abbrev"
         ? info.categoryData.abbrev
         : info[field];
       equal(value, expect[j], `${field} for frame #${i} is correct: ${expect[j]}`);

@@ -42,7 +42,7 @@ add_task(async function() {
   }
   ok(threw, "getCreationTime should throw when snapshot does not exist");
 
-  let time = await client.getCreationTime(snapshotFilePath, {
+  const time = await client.getCreationTime(snapshotFilePath, {
     breakdown: BREAKDOWN
   });
 

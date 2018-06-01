@@ -32,7 +32,7 @@ const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
   gClient.addOneTimeListener("paused", function(event, packet) {
-    let source = gThreadClient.source(packet.frame.where.source);
+    const source = gThreadClient.source(packet.frame.where.source);
     source.setBreakpoint({
       line: 4
     }, function({error}, bpClient) {
@@ -74,7 +74,7 @@ function test_black_box() {
 function test_black_box_dbg_statement() {
   gThreadClient.getSources(function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    let sourceClient = gThreadClient.source(
+    const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 

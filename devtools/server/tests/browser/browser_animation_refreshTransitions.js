@@ -9,20 +9,20 @@
 // AnimationPlayerFront should be sent, and the old one should be removed.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve the test node");
-  let node = await walker.querySelector(walker.rootNode, ".all-transitions");
+  const node = await walker.querySelector(walker.rootNode, ".all-transitions");
 
   info("Retrieve the animation players for the node");
-  let players = await animations.getAnimationPlayersForNode(node);
+  const players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 0, "The node has no animation players yet");
 
   info("Play a transition by adding the expand class, wait for mutations");
   let onMutations = expectMutationEvents(animations, 2);
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    let el = content.document.querySelector(".all-transitions");
+    const el = content.document.querySelector(".all-transitions");
     el.classList.add("expand");
   });
   let reportedMutations = await onMutations;
@@ -38,7 +38,7 @@ add_task(async function() {
   info("Play the transition back by removing the class, wait for mutations");
   onMutations = expectMutationEvents(animations, 4);
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    let el = content.document.querySelector(".all-transitions");
+    const el = content.document.querySelector(".all-transitions");
     el.classList.remove("expand");
   });
   reportedMutations = await onMutations;
@@ -74,7 +74,7 @@ function expectMutationEvents(animationsFront, nbOfEvents) {
 async function waitForEnd(animationFront) {
   let playState;
   while (playState !== "finished") {
-    let state = await animationFront.getCurrentState();
+    const state = await animationFront.getCurrentState();
     playState = state.playState;
     info("Wait for transition " + animationFront.state.name +
          " to finish, playState=" + playState);

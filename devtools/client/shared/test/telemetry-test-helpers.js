@@ -55,12 +55,12 @@ class TelemetryHelpers {
     const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
     const tel = Services.telemetry;
 
-    for (let optInOut of [OPTIN, OPTOUT]) {
+    for (const optInOut of [OPTIN, OPTOUT]) {
       const snapshot = snapshotFunc(optInOut, true, false).parent;
       const histKeys = Object.keys(snapshot);
 
-      for (let getHistogram of [tel.getHistogramById, tel.getKeyedHistogramById]) {
-        for (let key of histKeys) {
+      for (const getHistogram of [tel.getHistogramById, tel.getKeyedHistogramById]) {
+        for (const key of histKeys) {
           try {
             getHistogram(key).clear();
           } catch (e) {
@@ -119,7 +119,7 @@ class TelemetryHelpers {
         is(JSON.stringify(actual), JSON.stringify(expected), msg);
         break;
       case "hasentries":
-        let hasEntry = actual.some(num => num > 0);
+        const hasEntry = actual.some(num => num > 0);
         if (key) {
           ok(hasEntry, `${histId}["${key}"] has at least one entry.`);
         } else {
@@ -175,15 +175,15 @@ class TelemetryHelpers {
                           .filter(histId => histId.startsWith(prefix));
 
     dump("=".repeat(80) + "\n");
-    for (let histId of histIds) {
-      let snapshot = allHistograms[histId];
+    for (const histId of histIds) {
+      const snapshot = allHistograms[histId];
 
       if (histId === histId.toLowerCase()) {
         if (typeof snapshot === "object") {
           // Keyed Scalar
           const keys = Object.keys(snapshot);
 
-          for (let key of keys) {
+          for (const key of keys) {
             const value = snapshot[key];
 
             dump(`checkTelemetry("${histId}", "${key}", ${value}, "keyedscalar");\n`);
@@ -202,7 +202,7 @@ class TelemetryHelpers {
         // Keyed Histogram
         const keys = Object.keys(snapshot);
 
-        for (let key of keys) {
+        for (const key of keys) {
           const value = snapshot[key];
           const actual = value.counts;
 
@@ -234,7 +234,7 @@ class TelemetryHelpers {
       case Services.telemetry.HISTOGRAM_EXPONENTIAL:
       case Services.telemetry.HISTOGRAM_LINEAR:
         let total = 0;
-        for (let val of actual) {
+        for (const val of actual) {
           total += val;
         }
 

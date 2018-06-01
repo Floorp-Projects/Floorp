@@ -9,25 +9,25 @@ function run_test() {
     DebuggerServer.registerModule("xpcshell-test/testactors");
     DebuggerServer.init(() => true);
 
-    let global = createTestGlobal("test");
+    const global = createTestGlobal("test");
     DebuggerServer.addTestGlobal(global);
 
-    let client = new DebuggerClient(DebuggerServer.connectPipe());
+    const client = new DebuggerClient(DebuggerServer.connectPipe());
     await connect(client);
 
-    let { tabs } = await listTabs(client);
-    let tab = findTab(tabs, "test");
-    let [, tabClient] = await attachTab(client, tab);
+    const { tabs } = await listTabs(client);
+    const tab = findTab(tabs, "test");
+    const [, tabClient] = await attachTab(client, tab);
 
-    let [, threadClient] = await attachThread(tabClient);
+    const [, threadClient] = await attachThread(tabClient);
     await resume(threadClient);
 
-    let promise = waitForNewSource(threadClient, SOURCE_URL);
+    const promise = waitForNewSource(threadClient, SOURCE_URL);
     loadSubScript(SOURCE_URL, global);
-    let { source } = await promise;
-    let sourceClient = threadClient.source(source);
+    const { source } = await promise;
+    const sourceClient = threadClient.source(source);
 
-    let location = { line: 4 };
+    const location = { line: 4 };
     let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
     Assert.ok(!packet.isPending);
     Assert.equal(false, "actualLocation" in packet);

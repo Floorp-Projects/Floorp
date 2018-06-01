@@ -10,20 +10,20 @@
 const TEST_URI = "data:text/html;charset=utf-8,Test for jsterm multine input";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let input = hud.jsterm.inputNode;
+  const input = hud.jsterm.inputNode;
 
   info("Focus the jsterm input");
   input.focus();
 
-  let ordinaryHeight = input.clientHeight;
+  const ordinaryHeight = input.clientHeight;
 
   // Set a multiline value
   input.value = "hello\nworld\n";
 
   // Set the caret at the end of input
-  let length = input.value.length;
+  const length = input.value.length;
   input.selectionEnd = length;
   input.selectionStart = length;
 

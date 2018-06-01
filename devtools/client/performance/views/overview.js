@@ -125,16 +125,16 @@ var OverviewView = {
    *        The { startTime, endTime }, in milliseconds.
    */
   setTimeInterval: function(interval, options = {}) {
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to set the selection.");
     }
     if (this.isDisabled()) {
       return;
     }
-    let mapStart = () => 0;
-    let mapEnd = () => recording.getDuration();
-    let selection = { start: interval.startTime, end: interval.endTime };
+    const mapStart = () => 0;
+    const mapEnd = () => recording.getDuration();
+    const selection = { start: interval.startTime, end: interval.endTime };
     this._stopSelectionChangeEventPropagation = options.stopPropagation;
     this.graphs.setMappedSelection(selection, { mapStart, mapEnd });
     this._stopSelectionChangeEventPropagation = false;
@@ -147,16 +147,16 @@ var OverviewView = {
    *         The { startTime, endTime }, in milliseconds.
    */
   getTimeInterval: function() {
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to get the selection.");
     }
     if (this.isDisabled()) {
       return { startTime: 0, endTime: recording.getDuration() };
     }
-    let mapStart = () => 0;
-    let mapEnd = () => recording.getDuration();
-    let selection = this.graphs.getMappedSelection({ mapStart, mapEnd });
+    const mapStart = () => 0;
+    const mapEnd = () => recording.getDuration();
+    const selection = this.graphs.getMappedSelection({ mapStart, mapEnd });
     // If no selection returned, this means the overview graphs have not been rendered
     // yet, so act as if we have no selection (the full recording). Also
     // if the selection range distance is tiny, assume the range was cleared or just
@@ -178,7 +178,7 @@ var OverviewView = {
       return;
     }
 
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     await this.graphs.render(recording.getAllData(), resolution);
 
     // Finished rendering all graphs in this overview.
@@ -266,7 +266,7 @@ var OverviewView = {
    * based on whether a recording currently exists and is not in progress.
    */
   async _checkSelection(recording) {
-    let isEnabled = recording ? recording.isCompleted() : false;
+    const isEnabled = recording ? recording.isCompleted() : false;
     await this.graphs.selectionEnabled(isEnabled);
   },
 
@@ -305,9 +305,9 @@ var OverviewView = {
   async _onPrefChanged(prefName, prefValue) {
     switch (prefName) {
       case "hidden-markers": {
-        let graph = await this.graphs.isAvailable("timeline");
+        const graph = await this.graphs.isAvailable("timeline");
         if (graph) {
-          let filter = PerformanceController.getPref("hidden-markers");
+          const filter = PerformanceController.getPref("hidden-markers");
           graph.setFilter(filter);
           graph.refresh({ force: true });
         }
@@ -317,7 +317,7 @@ var OverviewView = {
   },
 
   _setGraphVisibilityFromRecordingFeatures: function(recording) {
-    for (let [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {
+    for (const [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {
       this.graphs.enable(graphName,
                          PerformanceController.isFeatureSupported(requirements.features));
     }
@@ -380,7 +380,7 @@ function OverviewViewOnStateChange(fn) {
       recording = arguments[1];
     }
 
-    let currentRecording = PerformanceController.getCurrentRecording();
+    const currentRecording = PerformanceController.getCurrentRecording();
 
     // All these methods require a recording to exist selected and
     // from the event name, since there is a delay between starting

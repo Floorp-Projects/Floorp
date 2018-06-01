@@ -22,7 +22,7 @@ const TEST_URI =
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await selectNode(".test", inspector);
 
@@ -44,15 +44,15 @@ add_task(async function() {
 });
 
 async function checkValueInBoxModel(selector, expectedValue, doc) {
-  let span = doc.querySelector(selector + " > span");
+  const span = doc.querySelector(selector + " > span");
   is(span.textContent, expectedValue, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, doc.defaultView);
-  let editor = doc.querySelector(".styleinspector-propertyeditor");
+  const editor = doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, expectedValue, "Should have the right value in the editor.");
 
-  let onBlur = once(editor, "blur");
+  const onBlur = once(editor, "blur");
   EventUtils.synthesizeKey("VK_RETURN", {}, doc.defaultView);
   await onBlur;
 }

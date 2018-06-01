@@ -17,8 +17,8 @@ add_task(async function() {
 
   await pushPref("devtools.command-button-paintflashing.enabled", true);
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the paintflashing button");
@@ -31,7 +31,7 @@ add_task(async function() {
 async function testButton(toolbox) {
   info("Testing command-button-paintflashing");
 
-  let button = toolbox.doc.querySelector("#command-button-paintflashing");
+  const button = toolbox.doc.querySelector("#command-button-paintflashing");
   ok(button, "Captain, we have the button");
 
   await delayedClicks(toolbox, button, 4);
@@ -45,8 +45,8 @@ async function delayedClicks(toolbox, node, clicks) {
       setTimeout(() => resolve(), TOOL_DELAY);
     });
 
-    let { CommandState } = require("devtools/shared/gcli/command-state");
-    let clicked = new Promise(resolve => {
+    const { CommandState } = require("devtools/shared/gcli/command-state");
+    const clicked = new Promise(resolve => {
       CommandState.on("changed", function changed({command}) {
         if (command === "paintflashing") {
           CommandState.off("changed", changed);

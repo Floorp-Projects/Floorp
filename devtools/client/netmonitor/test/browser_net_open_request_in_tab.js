@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL);
+  const { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL);
   info("Starting test...");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let contextMenuDoc = monitor.panelWin.parent.document;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const contextMenuDoc = monitor.panelWin.parent.document;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let newTab;
 
   store.dispatch(Actions.batchEnable(false));
@@ -38,20 +38,20 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 
   async function openLastRequestInTab() {
-    let wait = waitForDOM(contextMenuDoc, "#request-list-context-newtab");
-    let requestItems = document.querySelectorAll(".request-list-item");
-    let lastRequest = requestItems[requestItems.length - 1];
+    const wait = waitForDOM(contextMenuDoc, "#request-list-context-newtab");
+    const requestItems = document.querySelectorAll(".request-list-item");
+    const lastRequest = requestItems[requestItems.length - 1];
     EventUtils.sendMouseEvent({ type: "mousedown" }, lastRequest);
     EventUtils.sendMouseEvent({ type: "contextmenu" }, lastRequest);
     await wait;
 
-    let onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
+    const onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
     monitor.panelWin.parent.document
       .querySelector("#request-list-context-newtab").click();
     await onTabOpen;
     ok(true, "A new tab has been opened");
 
-    let awaitedTab = gBrowser.selectedTab;
+    const awaitedTab = gBrowser.selectedTab;
     await BrowserTestUtils.browserLoaded(awaitedTab.linkedBrowser);
     info("The tab load completed");
 
@@ -59,7 +59,7 @@ add_task(async function() {
   }
 
   async function performRequest(method) {
-    let wait = waitForNetworkEvents(monitor, 1);
+    const wait = waitForNetworkEvents(monitor, 1);
     await ContentTask.spawn(tab.linkedBrowser, method, async function(meth) {
       content.wrappedJSObject.performRequest(meth);
     });
@@ -68,8 +68,9 @@ add_task(async function() {
 
   async function checkTabResponse(checkedTab, method) {
     await ContentTask.spawn(checkedTab.linkedBrowser, method, async function(met) {
-      let { body } = content.wrappedJSObject.document;
-      let responseRE = RegExp(met + (met == "POST" ? "\n*\s*foo\=bar\&amp;baz\=42" : ""));
+      const { body } = content.wrappedJSObject.document;
+      const responseRE =
+        RegExp(met + (met == "POST" ? "\n*\s*foo\=bar\&amp;baz\=42" : ""));
       ok(body.innerHTML.match(responseRE), "Tab method and data match original request");
     });
   }

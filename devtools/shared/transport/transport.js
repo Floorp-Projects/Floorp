@@ -131,7 +131,7 @@
      * they are passed to this method.
      */
     send: function(object) {
-      let packet = new JSONPacket(this);
+      const packet = new JSONPacket(this);
       packet.object = object;
       this._outgoing.push(packet);
       this._flushOutgoing();
@@ -179,7 +179,7 @@
      *                     that is copied.  See stream-utils.js.
      */
     startBulkSend: function(header) {
-      let packet = new BulkPacket(this);
+      const packet = new BulkPacket(this);
       packet.header = header;
       this._outgoing.push(packet);
       this._flushOutgoing();
@@ -232,7 +232,7 @@
       }
 
       if (this._outgoing.length > 0) {
-        let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+        const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
         this._output.asyncWait(this, 0, 0, threadManager.currentThread);
       }
     },
@@ -292,7 +292,7 @@
      * Clear the entire outgoing queue.
      */
     _destroyAllOutgoing: function() {
-      for (let packet of this._outgoing) {
+      for (const packet of this._outgoing) {
         packet.destroy();
       }
       this._outgoing = [];
@@ -314,7 +314,7 @@
      */
     _waitForIncoming: function() {
       if (this._incomingEnabled) {
-        let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+        const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
         this._input.asyncWait(this, 0, 0, threadManager.currentThread);
       }
     },
@@ -399,7 +399,7 @@
           this._incoming.read(stream, this._scriptableInput);
         }
       } catch (e) {
-        let msg = "Error reading incoming packet: (" + e + " - " + e.stack + ")";
+        const msg = "Error reading incoming packet: (" + e + " - " + e.stack + ")";
         dumpn(msg);
 
         // Now in an invalid state, shut down the transport.
@@ -426,7 +426,7 @@
      *         True if we now have a complete header.
      */
     _readHeader: function() {
-      let amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
+      const amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
       this._incomingHeader +=
       StreamUtils.delimitedRead(this._scriptableInput, ":", amountToRead);
       if (flags.wantVerbose) {
@@ -532,7 +532,7 @@
      * endpoint.
      */
     send: function(packet) {
-      let serial = this._serial.count++;
+      const serial = this._serial.count++;
       if (flags.wantLogging) {
         // Check 'from' first, as 'echo' packets have both.
         if (packet.from) {
@@ -542,7 +542,7 @@
         }
       }
       this._deepFreeze(packet);
-      let other = this.other;
+      const other = this.other;
       if (other) {
         DevToolsUtils.executeSoon(DevToolsUtils.makeInfallible(() => {
           // Avoid the cost of JSON.stringify() when logging is disabled.
@@ -566,15 +566,15 @@
      * done with it.
      */
     startBulkSend: function({actor, type, length}) {
-      let serial = this._serial.count++;
+      const serial = this._serial.count++;
 
       dumpn("Sent bulk packet " + serial + " for actor " + actor);
       if (!this.other) {
-        let error = new Error("startBulkSend: other side of transport missing");
+        const error = new Error("startBulkSend: other side of transport missing");
         return promise.reject(error);
       }
 
-      let pipe = new Pipe(true, true, 0, 0, null);
+      const pipe = new Pipe(true, true, 0, 0, null);
 
       DevToolsUtils.executeSoon(DevToolsUtils.makeInfallible(() => {
         dumpn("Received bulk packet " + serial);
@@ -583,13 +583,13 @@
         }
 
         // Receiver
-        let deferred = defer();
-        let packet = {
+        const deferred = defer();
+        const packet = {
           actor: actor,
           type: type,
           length: length,
           copyTo: (output) => {
-            let copying =
+            const copying =
             StreamUtils.copyStream(pipe.inputStream, output, length);
             deferred.resolve(copying);
             return copying;
@@ -605,16 +605,16 @@
       }, "LocalDebuggerTransport instance's this.other.hooks.onBulkPacket"));
 
       // Sender
-      let sendDeferred = defer();
+      const sendDeferred = defer();
 
       // The remote transport is not capable of resolving immediately here, so we
       // shouldn't be able to either.
       DevToolsUtils.executeSoon(() => {
-        let copyDeferred = defer();
+        const copyDeferred = defer();
 
         sendDeferred.resolve({
           copyFrom: (input) => {
-            let copying =
+            const copying =
             StreamUtils.copyStream(input, pipe.outputStream, length);
             copyDeferred.resolve(copying);
             return copying;
@@ -637,7 +637,7 @@
       if (this.other) {
         // Remove the reference to the other endpoint before calling close(), to
         // avoid infinite recursion.
-        let other = this.other;
+        const other = this.other;
         this.other = null;
         other.close();
       }
@@ -661,7 +661,7 @@
      */
     _deepFreeze: function(object) {
       Object.freeze(object);
-      for (let prop in object) {
+      for (const prop in object) {
         // Freeze the properties that are objects, not on the prototype, and not
         // already frozen. Note that this might leave an unfrozen reference
         // somewhere in the object if there is an already frozen object containing
@@ -742,7 +742,7 @@
      */
     _canBeSerialized: function(object) {
       try {
-        let holder = new StructuredCloneHolder(object);
+        const holder = new StructuredCloneHolder(object);
         holder.deserialize(this);
       } catch (e) {
         return false;
@@ -751,8 +751,8 @@
     },
 
     pathToUnserializable: function(object) {
-      for (let key in object) {
-        let value = object[key];
+      for (const key in object) {
+        const value = object[key];
         if (!this._canBeSerialized(value)) {
           if (typeof value == "object") {
             return [key].concat(this.pathToUnserializable(value));
@@ -765,7 +765,7 @@
 
     send: function(packet) {
       if (flags.testing && !this._canBeSerialized(packet)) {
-        let attributes = this.pathToUnserializable(packet);
+        const attributes = this.pathToUnserializable(packet);
         let msg = "Following packet can't be serialized: " + JSON.stringify(packet);
         msg += "\nBecause of attributes: " + attributes.join(", ") + "\n";
         msg += "Did you pass a function or an XPCOM object in it?";
@@ -846,7 +846,7 @@
         },
 
         _onMessage: function(message) {
-          let packet = JSON.parse(message);
+          const packet = JSON.parse(message);
           if (packet.type !== "message" || packet.id !== this._id) {
             return;
           }
@@ -899,7 +899,7 @@
         },
 
         _onMessage: function(event) {
-          let packet = JSON.parse(event.data);
+          const packet = JSON.parse(event.data);
           if (packet.type !== "message" || packet.id !== this._id) {
             return;
           }

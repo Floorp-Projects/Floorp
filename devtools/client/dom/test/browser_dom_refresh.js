@@ -13,13 +13,13 @@ const TEST_PAGE_URL = URL_ROOT + "page_basic.html";
 add_task(async function() {
   info("Test DOM panel basic started");
 
-  let { panel } = await addTestTab(TEST_PAGE_URL);
+  const { panel } = await addTestTab(TEST_PAGE_URL);
 
   // Create a new variable in the page scope and refresh the panel.
   await evaluateJSAsync(panel, "var _b = 10");
   await refreshPanel(panel);
 
   // Verify that the variable is displayed now.
-  let row = getRowByLabel(panel, "_b");
+  const row = getRowByLabel(panel, "_b");
   ok(row, "New variable must be displayed");
 });

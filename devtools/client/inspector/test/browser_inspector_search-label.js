@@ -9,8 +9,8 @@
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
-  let { panelWin, searchResultsLabel } = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { panelWin, searchResultsLabel } = inspector;
 
   info("Searching for test node #d1");
   // Expect the label shows 1 result

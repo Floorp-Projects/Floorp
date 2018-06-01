@@ -5,7 +5,7 @@
 "use strict";
 
 function getDisplayedTimingMarker(state, marker) {
-  let value = state.timingMarkers[marker];
+  const value = state.timingMarkers[marker];
   if (value == -1) {
     return value;
   }

@@ -16,13 +16,13 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_allocations.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
-  let rec = await front.startRecording({ withMarkers: true });
+  const rec = await front.startRecording({ withMarkers: true });
 
-  let markers = await waitForMarkerType(front, ["MinorGC"]);
+  const markers = await waitForMarkerType(front, ["MinorGC"]);
   await front.stopRecording(rec);
 
   ok(markers.some(m => m.name === "MinorGC" && m.causeName),

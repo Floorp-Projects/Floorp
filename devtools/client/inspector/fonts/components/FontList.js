@@ -23,7 +23,7 @@ class FontList extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       fonts,
       fontOptions,
       onPreviewFonts,

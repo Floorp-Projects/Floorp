@@ -32,7 +32,7 @@ function getRegistry() {
 }
 
 function registerNewActor() {
-  let options = {
+  const options = {
     prefix: "helloActor",
     constructor: "HelloActor",
     type: { global: true }

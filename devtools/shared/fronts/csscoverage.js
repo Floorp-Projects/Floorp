@@ -44,17 +44,17 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
     ev.target = target;
 
     if (isRunning) {
-      let gnb = chromeWindow.document.getElementById("global-notificationbox");
+      const gnb = chromeWindow.document.getElementById("global-notificationbox");
       notification = gnb.getNotificationWithValue("csscoverage-running");
 
       if (notification == null) {
-        let notifyStop = reason => {
+        const notifyStop = reason => {
           if (reason == "removed") {
             this.stop();
           }
         };
 
-        let msg = l10n.lookup("csscoverageRunningReply");
+        const msg = l10n.lookup("csscoverageRunningReply");
         notification = gnb.appendNotification(msg, "csscoverage-running",
                                               "",
                                               gnb.PRIORITY_INFO_HIGH,

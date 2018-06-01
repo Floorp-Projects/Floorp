@@ -43,13 +43,13 @@ add_task(async function() {
   // This test seems to take a very long time to finish on Linux VMs.
   requestLongerTimeout(4);
 
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   info("Recording 1 - Starting console.profile()...");
   let started = waitForRecordingStartedEvents(panel, {
@@ -252,8 +252,8 @@ add_task(async function() {
 });
 
 function testRecordings(controller, expectedBitFlags) {
-  let recordings = controller.getRecordings();
-  let current = controller.getCurrentRecording();
+  const recordings = controller.getRecordings();
+  const current = controller.getCurrentRecording();
   is(recordings.length, expectedBitFlags.length, "Expected number of recordings.");
 
   recordings.forEach((recording, i) => {

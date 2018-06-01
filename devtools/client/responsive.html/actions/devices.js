@@ -29,7 +29,7 @@ const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
  * - removed: Names of the devices that were explicitly removed by the user
  */
 function loadPreferredDevices() {
-  let preferredDevices = {
+  const preferredDevices = {
     "added": new Set(),
     "removed": new Set(),
   };
@@ -103,8 +103,8 @@ module.exports = {
   removeCustomDevice(device) {
     return async function(dispatch, getState) {
       // Check if the custom device is currently associated with any viewports
-      let { viewports } = getState();
-      for (let viewport of viewports) {
+      const { viewports } = getState();
+      for (const viewport of viewports) {
         if (viewport.device == device.name) {
           dispatch(removeDeviceAssociation(viewport.id));
         }
@@ -132,7 +132,7 @@ module.exports = {
   loadDevices() {
     return async function(dispatch) {
       dispatch({ type: LOAD_DEVICE_LIST_START });
-      let preferredDevices = loadPreferredDevices();
+      const preferredDevices = loadPreferredDevices();
       let devices;
 
       try {
@@ -143,14 +143,14 @@ module.exports = {
         return;
       }
 
-      for (let type of devices.TYPES) {
+      for (const type of devices.TYPES) {
         dispatch(module.exports.addDeviceType(type));
-        for (let device of devices[type]) {
+        for (const device of devices[type]) {
           if (device.os == "fxos") {
             continue;
           }
 
-          let newDevice = Object.assign({}, device, {
+          const newDevice = Object.assign({}, device, {
             displayed: preferredDevices.added.has(device.name) ||
               (device.featured && !(preferredDevices.removed.has(device.name))),
           });

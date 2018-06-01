@@ -42,28 +42,28 @@ function runTests() {
   gFileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
-  let foutA = Cc["@mozilla.org/network/file-output-stream;1"]
+  const foutA = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   foutA.init(gFileA.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, foutA.DEFER_OPEN);
 
-  let foutB = Cc["@mozilla.org/network/file-output-stream;1"]
+  const foutB = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   foutB.init(gFileB.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, foutB.DEFER_OPEN);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  let fileContentStreamA = converter.convertToInputStream(gFileAContent);
-  let fileContentStreamB = converter.convertToInputStream(gFileBContent);
+  const fileContentStreamA = converter.convertToInputStream(gFileAContent);
+  const fileContentStreamB = converter.convertToInputStream(gFileBContent);
 
   NetUtil.asyncCopy(fileContentStreamA, foutA, tempFileSaved);
   NetUtil.asyncCopy(fileContentStreamB, foutB, tempFileSaved);
 }
 
 function tempFileSaved(aStatus) {
-  let success = Components.isSuccessCode(aStatus);
+  const success = Components.isSuccessCode(aStatus);
 
   ok(success, "a temporary file was saved successfully");
 

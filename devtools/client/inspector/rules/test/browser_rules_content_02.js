@@ -18,10 +18,10 @@ const CONTENT = `
 `;
 
 add_task(async function() {
-  let tab = await addTab("data:text/html;charset=utf-8," + CONTENT);
+  const tab = await addTab("data:text/html;charset=utf-8," + CONTENT);
 
-  let testActor = await getTestActorWithoutToolbox(tab);
-  let inspector = await clickOnInspectMenuItem(testActor, "span");
+  const testActor = await getTestActorWithoutToolbox(tab);
+  const inspector = await clickOnInspectMenuItem(testActor, "span");
   await getRuleViewSelectorHighlighterIcon(inspector.getPanel("ruleview").view,
                                            "element", 3);
 
@@ -31,7 +31,7 @@ add_task(async function() {
 function checkRuleViewContent({styleDocument}) {
   info("Making sure the rule-view contains the expected content");
 
-  let headers = [...styleDocument.querySelectorAll(".ruleview-header")];
+  const headers = [...styleDocument.querySelectorAll(".ruleview-header")];
   is(headers.length, 3, "There are 3 headers for inherited rules");
 
   is(headers[0].textContent,
@@ -44,18 +44,18 @@ function checkRuleViewContent({styleDocument}) {
     STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", "body"),
     "The third header is correct");
 
-  let rules = styleDocument.querySelectorAll(".ruleview-rule");
+  const rules = styleDocument.querySelectorAll(".ruleview-rule");
   is(rules.length, 4, "There are 4 rules in the view");
 
-  for (let rule of rules) {
-    let selector = rule.querySelector(".ruleview-selectorcontainer");
+  for (const rule of rules) {
+    const selector = rule.querySelector(".ruleview-selectorcontainer");
     is(selector.textContent, STYLE_INSPECTOR_L10N.getStr("rule.sourceElement"),
       "The rule's selector is correct");
 
-    let propertyNames = [...rule.querySelectorAll(".ruleview-propertyname")];
+    const propertyNames = [...rule.querySelectorAll(".ruleview-propertyname")];
     is(propertyNames.length, 1, "There's only one property name, as expected");
 
-    let propertyValues = [...rule.querySelectorAll(".ruleview-propertyvalue")];
+    const propertyValues = [...rule.querySelectorAll(".ruleview-propertyvalue")];
     is(propertyValues.length, 1, "There's only one property value, as expected");
   }
 }

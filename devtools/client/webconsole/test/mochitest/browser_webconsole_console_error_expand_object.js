@@ -9,8 +9,8 @@
 const TEST_URI = "data:text/html;charset=utf8,<h1>test console.error with objects</h1>";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
 
   const onMessagesLogged = waitForMessage(hud, "myError");
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
@@ -18,7 +18,7 @@ add_task(async function() {
   });
   const {node} = await onMessagesLogged;
 
-  let objectInspectors = [...node.querySelectorAll(".tree")];
+  const objectInspectors = [...node.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
   const [oi] = objectInspectors;
   oi.querySelector(".node .arrow").click();

@@ -22,12 +22,12 @@ const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
 
   await selectNode("#grid", inspector);
-  let checkbox = doc.getElementById("grid-setting-extend-grid-lines");
+  const checkbox = doc.getElementById("grid-setting-extend-grid-lines");
 
   ok(!Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
     "'Extend grid lines infinitely' is pref off by default.");

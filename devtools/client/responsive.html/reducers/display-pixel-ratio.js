@@ -9,7 +9,7 @@
 const { CHANGE_DISPLAY_PIXEL_RATIO } = require("../actions/index");
 const INITIAL_DISPLAY_PIXEL_RATIO = 0;
 
-let reducers = {
+const reducers = {
 
   [CHANGE_DISPLAY_PIXEL_RATIO](_, action) {
     return action.displayPixelRatio;
@@ -18,7 +18,7 @@ let reducers = {
 };
 
 module.exports = function(displayPixelRatio = INITIAL_DISPLAY_PIXEL_RATIO, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return displayPixelRatio;
   }

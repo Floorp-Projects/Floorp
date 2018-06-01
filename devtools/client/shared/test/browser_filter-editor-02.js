@@ -15,7 +15,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const TEST_DATA = [
@@ -71,11 +71,11 @@ add_task(async function() {
   ];
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
 
   info("Test rendering of different types");
 
-  for (let {cssValue, expected} of TEST_DATA) {
+  for (const {cssValue, expected} of TEST_DATA) {
     widget.setCssValue(cssValue);
 
     if (cssValue === "none") {
@@ -92,8 +92,8 @@ add_task(async function() {
 });
 
 function testRenderedFilters(filters, expected) {
-  for (let [index, filter] of [...filters].entries()) {
-    let [name, value] = filter.children,
+  for (const [index, filter] of [...filters].entries()) {
+    const [name, value] = filter.children,
       label = name.children[1],
       [input, unit] = value.children;
 

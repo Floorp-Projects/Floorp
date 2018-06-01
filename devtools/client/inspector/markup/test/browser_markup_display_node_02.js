@@ -84,10 +84,10 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL("data:text/html;charset=utf-8," +
-    encodeURIComponent(TEST_URI));
+  const {inspector, testActor} = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
     await runTestData(inspector, testActor, data);
   }
@@ -96,8 +96,8 @@ add_task(async function() {
 async function runTestData(inspector, testActor,
                       {selector, before, changeStyle, after}) {
   await selectNode(selector, inspector);
-  let container = await getContainerForSelector(selector, inspector);
-  let displayNode = container.elt.querySelector(".markupview-display-badge");
+  const container = await getContainerForSelector(selector, inspector);
+  const displayNode = container.elt.querySelector(".markupview-display-badge");
 
   is(displayNode.textContent, before.textContent,
     `Got the correct before display type for ${selector}: ${displayNode.textContent}`);
@@ -105,15 +105,15 @@ async function runTestData(inspector, testActor,
     `Got the correct before display style for ${selector}: ${displayNode.style.display}`);
 
   info("Listening for the display-change event");
-  let onDisplayChanged = inspector.markup.walker.once("display-change");
+  const onDisplayChanged = inspector.markup.walker.once("display-change");
   info("Making style changes");
   await changeStyle(testActor);
-  let nodes = await onDisplayChanged;
+  const nodes = await onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");
   ok(nodes.length, "The display-change event was received with a nodes");
   let foundContainer = false;
-  for (let node of nodes) {
+  for (const node of nodes) {
     if (getContainerForNodeFront(node, inspector) === container) {
       foundContainer = true;
       break;

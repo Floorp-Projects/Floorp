@@ -431,7 +431,7 @@ function run_test() {
 
 // Test parseDeclarations.
 function run_basic_tests() {
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     info("Test input string " + test.input);
     let output;
     try {
@@ -469,9 +469,9 @@ const COMMENT_DATA = [
 
 // Test parseCommentDeclarations.
 function run_comment_tests() {
-  for (let test of COMMENT_DATA) {
+  for (const test of COMMENT_DATA) {
     info("Test input string " + test.input);
-    let output = _parseCommentDeclarations(isCssPropertyKnown, test.input, 0,
+    const output = _parseCommentDeclarations(isCssPropertyKnown, test.input, 0,
                                            test.input.length + 4);
     deepEqual(output, test.expected);
   }
@@ -491,9 +491,9 @@ const NAMED_DATA = [
 
 // Test parseNamedDeclarations.
 function run_named_tests() {
-  for (let test of NAMED_DATA) {
+  for (const test of NAMED_DATA) {
     info("Test input string " + test.input);
-    let output = parseNamedDeclarations(isCssPropertyKnown, test.input, true);
+    const output = parseNamedDeclarations(isCssPropertyKnown, test.input, true);
     info(JSON.stringify(output));
     deepEqual(output, test.expected);
   }
@@ -514,7 +514,7 @@ function assertOutput(actual, expected) {
       }
     }
   } else {
-    for (let prop of actual) {
+    for (const prop of actual) {
       info("Actual output contained: {name: " + prop.name + ", value: " +
         prop.value + ", priority: " + prop.priority + "}");
     }

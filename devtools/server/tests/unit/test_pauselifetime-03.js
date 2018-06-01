@@ -28,12 +28,12 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
-    let objActor = args[0].actor;
+    const args = packet.frame.arguments;
+    const objActor = args[0].actor;
     Assert.equal(args[0].class, "Object");
     Assert.ok(!!objActor);
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     Assert.ok(objClient.valid);
 
     // Make a bogus request to the grip actor.  Should get

@@ -26,24 +26,24 @@ function run_test() {
 
 function test_banana_environment() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let environment = packet.frame.environment;
+    const environment = packet.frame.environment;
     Assert.equal(environment.type, "function");
 
-    let parent = environment.parent;
+    const parent = environment.parent;
     Assert.equal(parent.type, "block");
 
-    let grandpa = parent.parent;
+    const grandpa = parent.parent;
     Assert.equal(grandpa.type, "function");
 
-    let envClient = gThreadClient.environment(environment);
+    const envClient = gThreadClient.environment(environment);
     envClient.getBindings(response => {
       Assert.equal(response.bindings.arguments[0].z.value, "z");
 
-      let parentClient = gThreadClient.environment(parent);
+      const parentClient = gThreadClient.environment(parent);
       parentClient.getBindings(response => {
         Assert.equal(response.bindings.variables.banana3.value.class, "Function");
 
-        let grandpaClient = gThreadClient.environment(grandpa);
+        const grandpaClient = gThreadClient.environment(grandpa);
         grandpaClient.getBindings(response => {
           Assert.equal(response.bindings.arguments[0].y.value, "y");
           gThreadClient.resume(() => finishClient(gClient));

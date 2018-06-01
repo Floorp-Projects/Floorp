@@ -47,7 +47,7 @@ AnimationDetails.prototype = {
   },
 
   unrender: function() {
-    for (let component of this.keyframeComponents) {
+    for (const component of this.keyframeComponents) {
       component.destroy();
     }
     this.keyframeComponents = [];
@@ -62,7 +62,7 @@ AnimationDetails.prototype = {
     let className = "";
     if (animation.state.propertyState) {
       let isRunningOnCompositor;
-      for (let propState of animation.state.propertyState) {
+      for (const propState of animation.state.propertyState) {
         if (propState.property == propertyName) {
           isRunningOnCompositor = propState.runningOnCompositor;
           if (typeof propState.warning != "undefined") {
@@ -154,9 +154,9 @@ AnimationDetails.prototype = {
     });
 
     // Add labels
-    for (let label of [L10N.getFormatStr("detail.propertiesHeader.percentage", 0),
-                       L10N.getFormatStr("detail.propertiesHeader.percentage", 50),
-                       L10N.getFormatStr("detail.propertiesHeader.percentage", 100)]) {
+    for (const label of [L10N.getFormatStr("detail.propertiesHeader.percentage", 0),
+                         L10N.getFormatStr("detail.propertiesHeader.percentage", 50),
+                         L10N.getFormatStr("detail.propertiesHeader.percentage", 100)]) {
       createNode({
         parent: progressTickContainerEl,
         nodeType: "span",
@@ -181,7 +181,7 @@ AnimationDetails.prototype = {
     // Move unchanged value animation to bottom in the list.
     const propertyNames = [];
     const unchangedPropertyNames = [];
-    for (let propertyName in this.tracks) {
+    for (const propertyName in this.tracks) {
       if (!isUnchangedProperty(this.tracks[propertyName])) {
         propertyNames.push(propertyName);
       } else {
@@ -190,15 +190,15 @@ AnimationDetails.prototype = {
     }
     Array.prototype.push.apply(propertyNames, unchangedPropertyNames);
 
-    for (let propertyName of propertyNames) {
-      let line = createNode({
+    for (const propertyName of propertyNames) {
+      const line = createNode({
         parent: bodyEl,
         attributes: {"class": "property"}
       });
       if (unchangedPropertyNames.includes(propertyName)) {
         line.classList.add("unchanged");
       }
-      let {warning, className} =
+      const {warning, className} =
         this.getPerfDataForProperty(this.animation, propertyName);
       createNode({
         // text-overflow doesn't work in flex items, so we need a second level
@@ -214,17 +214,17 @@ AnimationDetails.prototype = {
       });
 
       // Add the keyframes diagram for this property.
-      let framesWrapperEl = createNode({
+      const framesWrapperEl = createNode({
         parent: line,
         attributes: {"class": "track-container"}
       });
 
-      let framesEl = createNode({
+      const framesEl = createNode({
         parent: framesWrapperEl,
         attributes: {"class": "frames"}
       });
 
-      let keyframesComponent = new Keyframes();
+      const keyframesComponent = new Keyframes();
       keyframesComponent.init(framesEl);
       keyframesComponent.render({
         keyframes: this.tracks[propertyName],

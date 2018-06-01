@@ -23,9 +23,9 @@ function setDocument(frame) {
 
 function fieldChange(fields, id) {
   // Trigger existing field change
-  for (let field of fields) {
+  for (const field of fields) {
     if (field.id == id) {
-      let button = doc.getElementById("btn-" + id);
+      const button = doc.getElementById("btn-" + id);
       found = true;
       ok(button.classList.contains("hide"), "Default field detected");
       field.value = "custom";
@@ -52,7 +52,7 @@ function addNewField() {
   customName.value = "new-string-field!";
   customValue.value = "test";
   customBtn.click();
-  let newField = doc.querySelector("#new-string-field");
+  const newField = doc.querySelector("#new-string-field");
   if (newField) {
     found = true;
     is(newField.type, "text", "Custom type is a string");
@@ -68,8 +68,8 @@ function addNewFieldWithEnter() {
   found = false;
   customName.value = "new-string-field-two";
   customValue.value = "test";
-  let newAddField = doc.querySelector("#add-custom-field");
-  let enter = doc.createEvent("KeyboardEvent");
+  const newAddField = doc.querySelector("#add-custom-field");
+  const enter = doc.createEvent("KeyboardEvent");
   enter.initKeyEvent(
     "keyup", true, true, null, false, false, false, false, 13, 0);
   newAddField.dispatchEvent(enter);
@@ -118,13 +118,13 @@ var editFieldInteger = async function() {
   is(newField.value, "3", "Custom integer existing value is correct");
 
   // Reset a custom field
-  let resetBtn = doc.querySelector("#btn-new-integer-field");
+  const resetBtn = doc.querySelector("#btn-new-integer-field");
   resetBtn.click();
 
   try {
     await iframe.contentWindow.configView._defaultField;
   } catch (err) {
-    let fieldRow = doc.querySelector("#row-new-integer-field");
+    const fieldRow = doc.querySelector("#row-new-integer-field");
     if (!fieldRow) {
       found = false;
     }
@@ -133,7 +133,7 @@ var editFieldInteger = async function() {
 };
 
 var resetExistingField = async function(id) {
-  let existing = doc.getElementById(id);
+  const existing = doc.getElementById(id);
   existing.click();
   is(existing.checked, true, "Existing boolean value is correct");
   resetBtn = doc.getElementById("btn-" + id);
@@ -146,7 +146,7 @@ var resetExistingField = async function(id) {
 };
 
 var resetNewField = async function(id) {
-  let custom = doc.getElementById(id);
+  const custom = doc.getElementById(id);
   custom.click();
   is(custom.value, "test", "New string value is correct");
   resetBtn = doc.getElementById("btn-" + id);
@@ -173,7 +173,7 @@ function addNewFieldBoolean() {
   ok(found, "Found new boolean field line");
 
   // Mouse event trigger
-  let mouseClick = new MouseEvent("click", {
+  const mouseClick = new MouseEvent("click", {
     canBubble: true,
     cancelable: true,
     view: doc.parent,
@@ -201,11 +201,11 @@ function addNewFieldBoolean() {
 
 function searchFields(deck, keyword) {
   // Search for a non-existent field
-  let searchField = doc.querySelector("#search-bar");
+  const searchField = doc.querySelector("#search-bar");
   searchField.value = "![o_O]!";
   searchField.click();
 
-  let fieldsTotal = doc.querySelectorAll("tr.edit-row").length;
+  const fieldsTotal = doc.querySelectorAll("tr.edit-row").length;
   let hiddenFields = doc.querySelectorAll("tr.hide");
   is(hiddenFields.length, fieldsTotal, "Search keyword not found");
 

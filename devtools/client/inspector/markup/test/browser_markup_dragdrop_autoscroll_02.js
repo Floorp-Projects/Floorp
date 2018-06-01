@@ -13,9 +13,9 @@ add_task(async function() {
   // Set the toolbox to very small in size.
   await pushPref("devtools.toolbox.footer.height", 150);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let markup = inspector.markup;
-  let viewHeight = markup.doc.documentElement.clientHeight;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const markup = inspector.markup;
+  const viewHeight = markup.doc.documentElement.clientHeight;
 
   info("Pretend the markup-view is dragging");
   markup.isDragging = true;
@@ -28,7 +28,7 @@ add_task(async function() {
     pageY: viewHeight + markup.doc.defaultView.scrollY
   });
 
-  let bottomScrollPos = await waitForScrollStop(markup.doc);
+  const bottomScrollPos = await waitForScrollStop(markup.doc);
   ok(bottomScrollPos > 0, "The view was scrolled down");
   info("Simulate a mousemove at the top and expect more scrolling");
 
@@ -38,7 +38,7 @@ add_task(async function() {
     pageY: markup.doc.defaultView.scrollY
   });
 
-  let topScrollPos = await waitForScrollStop(markup.doc);
+  const topScrollPos = await waitForScrollStop(markup.doc);
   ok(topScrollPos < bottomScrollPos, "The view was scrolled up");
   is(topScrollPos, 0, "The view was scrolled up to the top");
 

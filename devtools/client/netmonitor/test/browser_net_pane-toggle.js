@@ -8,13 +8,13 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
+  const {
     getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -28,7 +28,7 @@ add_task(async function() {
   is(getSelectedRequest(store.getState()), null,
     "There should be no selected item in the requests menu.");
 
-  let networkEvent = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
+  const networkEvent = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
   await networkEvent;
 
@@ -41,7 +41,7 @@ add_task(async function() {
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  let toggleButton = document.querySelector(".sidebar-toggle");
+  const toggleButton = document.querySelector(".sidebar-toggle");
 
   is(toggleButton.classList.contains("pane-collapsed"), false,
     "The pane toggle button should now indicate that the details pane is " +

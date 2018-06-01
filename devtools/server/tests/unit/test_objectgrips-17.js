@@ -37,7 +37,7 @@ async function run_test_with_server(server, callback) {
 async function run_tests_in_principal(debuggeePrincipal, title) {
   for (gDebuggeeHasXrays of [true, false]) {
     // Prepare the debuggee.
-    let fullTitle = gDebuggeeHasXrays ? title + "-with-xrays" : title;
+    const fullTitle = gDebuggeeHasXrays ? title + "-with-xrays" : title;
     gDebuggee = Cu.Sandbox(debuggeePrincipal, {wantXrays: gDebuggeeHasXrays});
     gDebuggee.__name = fullTitle;
     gServer.addTestGlobal(gDebuggee);
@@ -80,10 +80,10 @@ async function testPrincipal(globalPrincipal) {
     return;
   }
 
-  let debuggeePrincipal = Cu.getObjectPrincipal(gDebuggee);
-  let sameOrigin = debuggeePrincipal === globalPrincipal;
+  const debuggeePrincipal = Cu.getObjectPrincipal(gDebuggee);
+  const sameOrigin = debuggeePrincipal === globalPrincipal;
   gSubsumes = sameOrigin || debuggeePrincipal === systemPrincipal;
-  for (let globalHasXrays of [true, false]) {
+  for (const globalHasXrays of [true, false]) {
     gIsOpaque = gSubsumes && globalPrincipal !== systemPrincipal
                 && (sameOrigin && gDebuggeeHasXrays || globalHasXrays);
     for (gGlobalIsInvisible of [true, false]) {
@@ -100,27 +100,28 @@ function test() {
   return new Promise(function(resolve) {
     gThreadClient.addOneTimeListener("paused", async function(event, packet) {
       // Get the grips.
-      let [proxyGrip, inheritsProxyGrip, inheritsProxy2Grip] = packet.frame.arguments;
+      const [proxyGrip, inheritsProxyGrip, inheritsProxy2Grip] = packet.frame.arguments;
 
       // Check the grip of the proxy object.
       check_proxy_grip(proxyGrip);
 
       // Check the prototype and properties of the proxy object.
-      let proxyClient = gThreadClient.pauseGrip(proxyGrip);
-      let proxyResponse = await proxyClient.getPrototypeAndProperties();
+      const proxyClient = gThreadClient.pauseGrip(proxyGrip);
+      const proxyResponse = await proxyClient.getPrototypeAndProperties();
       check_properties(proxyResponse.ownProperties, true, false);
       check_prototype(proxyResponse.prototype, true, false);
 
       // Check the prototype and properties of the object which inherits from the proxy.
-      let inheritsProxyClient = gThreadClient.pauseGrip(inheritsProxyGrip);
-      let inheritsProxyResponse = await inheritsProxyClient.getPrototypeAndProperties();
+      const inheritsProxyClient = gThreadClient.pauseGrip(inheritsProxyGrip);
+      const inheritsProxyResponse = await inheritsProxyClient.getPrototypeAndProperties();
       check_properties(inheritsProxyResponse.ownProperties, false, false);
       check_prototype(inheritsProxyResponse.prototype, false, false);
 
       // The prototype chain was not iterated if the object was inaccessible, so now check
       // another object which inherits from the proxy, but was created in the debuggee.
-      let inheritsProxy2Client = gThreadClient.pauseGrip(inheritsProxy2Grip);
-      let inheritsProxy2Response = await inheritsProxy2Client.getPrototypeAndProperties();
+      const inheritsProxy2Client = gThreadClient.pauseGrip(inheritsProxy2Grip);
+      const inheritsProxy2Response =
+        await inheritsProxy2Client.getPrototypeAndProperties();
       check_properties(inheritsProxy2Response.ownProperties, false, true);
       check_prototype(inheritsProxy2Response.prototype, false, true);
 
@@ -145,7 +146,7 @@ function test() {
       }}));
       var inheritsProxy = Object.create(proxy, {x:{value:1}});
     `);
-    let data = Cu.createObjectIn(gDebuggee, {defineAs: "data"});
+    const data = Cu.createObjectIn(gDebuggee, {defineAs: "data"});
     data.proxy = gGlobal.proxy;
     data.inheritsProxy = gGlobal.inheritsProxy;
     gDebuggee.eval(`
@@ -164,9 +165,9 @@ function check_proxy_grip(grip) {
     ok(grip.proxyTarget, "There is a [[ProxyTarget]] grip.");
     ok(grip.proxyHandler, "There is a [[ProxyHandler]] grip.");
     strictEqual(preview.ownPropertiesLength, 2, "The preview has 2 properties.");
-    let target = preview.ownProperties["<target>"].value;
+    const target = preview.ownProperties["<target>"].value;
     strictEqual(target, grip.proxyTarget, "<target> contains the [[ProxyTarget]].");
-    let handler = preview.ownProperties["<handler>"].value;
+    const handler = preview.ownProperties["<handler>"].value;
     strictEqual(handler, grip.proxyHandler, "<handler> contains the [[ProxyHandler]].");
   } else if (gIsOpaque) {
     // The proxy has opaque security wrappers.
@@ -193,7 +194,7 @@ function check_proxy_grip(grip) {
 }
 
 function check_properties(props, isProxy, createdInDebuggee) {
-  let ownPropertiesLength = Reflect.ownKeys(props).length;
+  const ownPropertiesLength = Reflect.ownKeys(props).length;
 
   if (createdInDebuggee || !isProxy && gSubsumes && !gGlobalIsInvisible) {
     // The debuggee can access the properties.

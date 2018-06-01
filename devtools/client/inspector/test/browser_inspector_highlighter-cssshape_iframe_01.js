@@ -10,12 +10,12 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes_iframe.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
-  let env = await openInspectorForURL(TEST_URL);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  let {testActor, inspector} = env;
-  let view = selectRuleView(inspector);
-  let highlighters = view.highlighters;
-  let config = {inspector, view, highlighters, testActor, helper};
+  const env = await openInspectorForURL(TEST_URL);
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
+  const {testActor, inspector} = env;
+  const view = selectRuleView(inspector);
+  const highlighters = view.highlighters;
+  const config = {inspector, view, highlighters, testActor, helper};
 
   await testPolygonIframeMovePoint(config);
 });
@@ -27,11 +27,11 @@ async function testPolygonIframeMovePoint(config) {
 
   info(`Turn on shapes highlighter for ${selector}`);
   // Get a reference to the highlighter's target node inside the iframe.
-  let highlightedNode = await getNodeFrontInFrame(selector, "#frame", inspector);
+  const highlightedNode = await getNodeFrontInFrame(selector, "#frame", inspector);
   // Select the nested node so toggling of the shapes highlighter works from the rule view
   await selectNode(highlightedNode, inspector);
   await toggleShapesHighlighter(view, selector, property, true);
-  let { mouse } = helper;
+  const { mouse } = helper;
 
   let onRuleViewChanged = view.once("ruleview-changed");
   info("Moving polygon point visible in iframe");

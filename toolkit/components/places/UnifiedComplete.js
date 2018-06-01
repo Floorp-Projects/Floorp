@@ -60,6 +60,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 const QUERYTYPE_FILTERED            = 0;
 const QUERYTYPE_AUTOFILL_ORIGIN     = 1;
 const QUERYTYPE_AUTOFILL_URL        = 2;
+const QUERYTYPE_ADAPTIVE            = 3;
 
 // This separator is used as an RTL-friendly way to split the title and tags.
 // It can also be used by an nsIAutoCompleteResult consumer to re-split the
@@ -930,6 +931,10 @@ function Search(searchString, searchParam, autocompleteListener,
     }
   }
 
+  // Used to limit the number of adaptive results.
+  this._adaptiveCount = 0;
+  this._extraAdaptiveRows = [];
+
   // This is a replacement for this._result.matchCount, to be used when you need
   // to check how many "current" matches have been inserted.
   // Indeed this._result.matchCount may include matches from the previous search.
@@ -1209,6 +1214,12 @@ Search.prototype = {
       await conn.executeCached(query, params, this._onResultRow.bind(this));
       if (!this.pending)
         return;
+    }
+
+    // If we have some unused adaptive matches, add them now.
+    while (this._extraAdaptiveRows.length &&
+           this._currentMatchCount < Prefs.get("maxRichResults")) {
+      this._addFilteredQueryMatch(this._extraAdaptiveRows.shift());
     }
 
     // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
@@ -1806,6 +1817,9 @@ Search.prototype = {
         this._result.setDefaultIndex(0);
         this._addURLAutofillMatch(row);
         break;
+      case QUERYTYPE_ADAPTIVE:
+        this._addAdaptiveQueryMatch(row);
+        break;
       case QUERYTYPE_FILTERED:
         this._addFilteredQueryMatch(row);
         break;
@@ -2116,6 +2130,22 @@ Search.prototype = {
     });
   },
 
+  // This is the same as _addFilteredQueryMatch, but it only returns a few
+  // results, caching the others. If at the end we don't find other results, we
+  // can add these.
+  _addAdaptiveQueryMatch(row) {
+    // Allow one quarter of the results to be adaptive results.
+    // Note: ideally adaptive results should have their own provider and the
+    // results muxer should decide what to show.  But that's too complex to
+    // support in the current code, so that's left for a future refactoring.
+    if (this._adaptiveCount < Math.ceil(Prefs.get("maxRichResults") / 4)) {
+      this._addFilteredQueryMatch(row);
+    } else {
+      this._extraAdaptiveRows.push(row);
+    }
+    this._adaptiveCount++;
+  },
+
   _addFilteredQueryMatch(row) {
     let match = {};
     match.placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
@@ -2278,7 +2308,7 @@ Search.prototype = {
       {
         parent: PlacesUtils.tagsFolderId,
         search_string: this._searchString,
-        query_type: QUERYTYPE_FILTERED,
+        query_type: QUERYTYPE_ADAPTIVE,
         matchBehavior: this._matchBehavior,
         searchBehavior: this._behavior,
         userContextId: this._userContextId,

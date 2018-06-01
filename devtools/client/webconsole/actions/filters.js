@@ -43,7 +43,7 @@ function filtersClear() {
     });
 
     const filterState = getAllFilters(getState());
-    for (let filter in filterState) {
+    for (const filter in filterState) {
       if (filter !== FILTERS.TEXT) {
         prefsService.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
       }

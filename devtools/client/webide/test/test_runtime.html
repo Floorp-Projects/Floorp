@@ -43,14 +43,14 @@
           DebuggerServer.registerAllActors();
 
           win = await openWebIDE();
-          let docRuntime = getRuntimeDocument(win);
-          let docProject = getProjectDocument(win);
-          let winProject = getProjectWindow(win);
+          const docRuntime = getRuntimeDocument(win);
+          const docProject = getProjectDocument(win);
+          const winProject = getProjectWindow(win);
 
-          let packagedAppLocation = getTestFilePath("app");
+          const packagedAppLocation = getTestFilePath("app");
 
-          let onValidated = waitForUpdate(win, "project-validated");
-          let onDetails = waitForUpdate(win, "details");
+          const onValidated = waitForUpdate(win, "project-validated");
+          const onDetails = waitForUpdate(win, "details");
           await winProject.projectList.importPackagedApp(packagedAppLocation);
           await onValidated;
           await onDetails;
@@ -92,8 +92,8 @@
 
           win.AppManager.update("runtime-list");
 
-          let panelNode = docRuntime.querySelector("#runtime-panel");
-          let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
+          const panelNode = docRuntime.querySelector("#runtime-panel");
+          const items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 3, "Found 3 runtime buttons");
 
           let connectionsChanged = waitForConnectionChange("opened", 2);
@@ -110,7 +110,7 @@
           // Play button always disabled now, webapps actor removed
           ok(!isPlayActive(), "play button is disabled");
           ok(!isStopActive(), "stop button is disabled");
-          let oldProject = win.AppManager.selectedProject;
+          const oldProject = win.AppManager.selectedProject;
           win.AppManager.selectedProject = null;
 
           await nextTick();
@@ -178,7 +178,7 @@
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
 
           // Check for unexpected error message since this is prolonged
-          let noErrorDeferred = new Promise((resolve, reject) => {
+          const noErrorDeferred = new Promise((resolve, reject) => {
             win.UI.reportError = errorName => {
               if (errorName === "error_operationTimeout") {
                 reject();

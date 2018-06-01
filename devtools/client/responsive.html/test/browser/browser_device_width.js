@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
   info("Setting docShell.deviceSizeIsPageSize to false");
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    const docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
     docShell.deviceSizeIsPageSize = false;
@@ -34,12 +34,12 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 async function setViewportSizeWithInputKeys(ui) {
-  let width = 320, height = 500;
+  const width = 320, height = 500;
   let resized = waitForViewportResizeTo(ui, width, height);
   ui.setViewportSize({ width, height });
   await resized;
 
-  let dimensions = ui.toolWindow.document.querySelectorAll(".viewport-dimension-input");
+  const dimensions = ui.toolWindow.document.querySelectorAll(".viewport-dimension-input");
 
   // Increase width value to 420 by using the Up arrow key
   resized = waitForViewportResizeTo(ui, 420, height);
@@ -71,13 +71,13 @@ async function setViewportSizeWithInputKeys(ui) {
 }
 
 async function doInitialChecks(ui) {
-  let { innerWidth, matchesMedia } = await grabContentInfo(ui);
+  const { innerWidth, matchesMedia } = await grabContentInfo(ui);
   is(innerWidth, 110, "initial width should be 110px");
   ok(!matchesMedia, "media query shouldn't match.");
 }
 
 async function checkScreenProps(ui) {
-  let { matchesMedia, screen } = await grabContentInfo(ui);
+  const { matchesMedia, screen } = await grabContentInfo(ui);
   ok(matchesMedia, "media query should match");
   isnot(window.screen.width, screen.width,
         "screen.width should not be the size of the screen.");
@@ -86,7 +86,7 @@ async function checkScreenProps(ui) {
 }
 
 async function checkScreenProps2(ui) {
-  let { matchesMedia, screen } = await grabContentInfo(ui);
+  const { matchesMedia, screen } = await grabContentInfo(ui);
   ok(!matchesMedia, "media query should be re-evaluated.");
   is(window.screen.width, screen.width,
      "screen.width should be the size of the screen.");

@@ -14,8 +14,8 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel} = await openAnimationInspector();
-  let label = panel.timelineCurrentTimeEl;
+  const {panel} = await openAnimationInspector();
+  const label = panel.timelineCurrentTimeEl;
   ok(label, "The current time label exists");
 
   // On page load animations are playing so the time shoud change, although we
@@ -35,11 +35,11 @@ add_task(async function() {
 });
 
 async function isCurrentTimeLabelChanging(panel, isChanging) {
-  let label = panel.timelineCurrentTimeEl;
+  const label = panel.timelineCurrentTimeEl;
 
-  let time1 = label.textContent;
+  const time1 = label.textContent;
   await new Promise(r => setTimeout(r, 200));
-  let time2 = label.textContent;
+  const time2 = label.textContent;
 
   if (isChanging) {
     ok(time1 !== time2, "The text displayed in the label changes with time");

@@ -161,7 +161,7 @@ DevToolsLoader.prototype = {
     this.require = Require(this._provider.loader, { id: "devtools" });
 
     // Fetch custom pseudo modules and globals
-    let { modules, globals } = this.require("devtools/shared/builtin-modules");
+    const { modules, globals } = this.require("devtools/shared/builtin-modules");
 
     // When creating a Loader for the browser toolbox, we have to use
     // Promise-backend.js, as a Loader module. Instead of Promise.jsm which
@@ -171,9 +171,9 @@ DevToolsLoader.prototype = {
     }
 
     // Register custom pseudo modules to the current loader instance
-    let loader = this._provider.loader;
-    for (let id in modules) {
-      let uri = resolveURI(id, loader.mapping);
+    const loader = this._provider.loader;
+    for (const id in modules) {
+      const uri = resolveURI(id, loader.mapping);
       loader.modules[uri] = {
         get exports() {
           return modules[id];

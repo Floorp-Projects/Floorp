@@ -14,15 +14,15 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host, , doc] = await createHost("bottom", "data:text/html," +
+  const [host, , doc] = await createHost("bottom", "data:text/html," +
     "<h1>browser_outputParser.js</h1><div></div>");
 
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
-  let toolbox = {target: {client: {}, hasActor: () => false}};
+  const toolbox = {target: {client: {}, hasActor: () => false}};
   await initCssProperties(toolbox);
-  let cssProperties = getCssProperties(toolbox);
+  const cssProperties = getCssProperties(toolbox);
 
-  let parser = new OutputParser(doc, cssProperties);
+  const parser = new OutputParser(doc, cssProperties);
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
   testParseURL(doc, parser);
@@ -48,13 +48,13 @@ var COLOR_TEST_CLASS = "test-class";
 // This approach is taken to reduce boilerplate and to make it simpler
 // to modify the test when the parseCssProperty output changes.
 function makeColorTest(name, value, segments) {
-  let result = {
+  const result = {
     name,
     value,
     expected: ""
   };
 
-  for (let segment of segments) {
+  for (const segment of segments) {
     if (typeof (segment) === "string") {
       result.expected += segment;
     } else {
@@ -71,7 +71,7 @@ function makeColorTest(name, value, segments) {
 }
 
 function testParseCssProperty(doc, parser) {
-  let tests = [
+  const tests = [
     makeColorTest("border", "1px solid red",
                   ["1px solid ", {name: "red"}]),
 
@@ -160,13 +160,13 @@ function testParseCssProperty(doc, parser) {
     makeColorTest("border", "1px dotted#f06", ["1px dotted ", {name: "#f06"}]),
   ];
 
-  let target = doc.querySelector("div");
+  const target = doc.querySelector("div");
   ok(target, "captain, we have the div");
 
-  for (let test of tests) {
+  for (const test of tests) {
     info(test.desc);
 
-    let frag = parser.parseCssProperty(test.name, test.value, {
+    const frag = parser.parseCssProperty(test.name, test.value, {
       colorSwatchClass: COLOR_TEST_CLASS
     });
 
@@ -180,11 +180,11 @@ function testParseCssProperty(doc, parser) {
 }
 
 function testParseCssVar(doc, parser) {
-  let frag = parser.parseCssProperty("color", "var(--some-kind-of-green)", {
+  const frag = parser.parseCssProperty("color", "var(--some-kind-of-green)", {
     colorSwatchClass: "test-colorswatch"
   });
 
-  let target = doc.querySelector("div");
+  const target = doc.querySelector("div");
   ok(target, "captain, we have the div");
   target.appendChild(frag);
 
@@ -250,19 +250,19 @@ function testParseURL(doc, parser) {
     }
   ];
 
-  for (let test of tests) {
-    let url = test.leader + "something.jpg" + test.trailer;
-    let frag = parser.parseCssProperty("background", url, {
+  for (const test of tests) {
+    const url = test.leader + "something.jpg" + test.trailer;
+    const frag = parser.parseCssProperty("background", url, {
       urlClass: "test-urlclass",
       baseURI: test.baseURI,
     });
 
-    let target = doc.querySelector("div");
+    const target = doc.querySelector("div");
     target.appendChild(frag);
 
-    let expectedTrailer = test.expectedTrailer || test.trailer;
+    const expectedTrailer = test.expectedTrailer || test.trailer;
 
-    let expected = test.leader +
+    const expected = test.leader +
         "<a target=\"_blank\" class=\"test-urlclass\" " +
         "href=\"something.jpg\">something.jpg</a>" +
         expectedTrailer;
@@ -274,11 +274,11 @@ function testParseURL(doc, parser) {
 }
 
 function testParseFilter(doc, parser) {
-  let frag = parser.parseCssProperty("filter", "something invalid", {
+  const frag = parser.parseCssProperty("filter", "something invalid", {
     filterSwatchClass: "test-filterswatch"
   });
 
-  let swatchCount = frag.querySelectorAll(".test-filterswatch").length;
+  const swatchCount = frag.querySelectorAll(".test-filterswatch").length;
   is(swatchCount, 1, "filter swatch was created");
 }
 
@@ -406,19 +406,19 @@ function testParseShape(doc, parser) {
     }
   ];
 
-  for (let {desc, definition, spanCount} of tests) {
+  for (const {desc, definition, spanCount} of tests) {
     info(desc);
-    let frag = parser.parseCssProperty("clip-path", definition, {
+    const frag = parser.parseCssProperty("clip-path", definition, {
       shapeClass: "ruleview-shape"
     });
-    let spans = frag.querySelectorAll(".ruleview-shape-point");
+    const spans = frag.querySelectorAll(".ruleview-shape-point");
     is(spans.length, spanCount, desc + " span count");
     is(frag.textContent, definition, desc + " text content");
   }
 }
 
 function testParseVariable(doc, parser) {
-  let TESTS = [
+  const TESTS = [
     {
       text: "var(--seen)",
       variables: {"--seen": "chartreuse" },
@@ -448,17 +448,17 @@ function testParseVariable(doc, parser) {
     },
   ];
 
-  for (let test of TESTS) {
-    let getValue = function(varName) {
+  for (const test of TESTS) {
+    const getValue = function(varName) {
       return test.variables[varName];
     };
 
-    let frag = parser.parseCssProperty("color", test.text, {
+    const frag = parser.parseCssProperty("color", test.text, {
       isVariableInUse: getValue,
       unmatchedVariableClass: "unmatched-class"
     });
 
-    let target = doc.querySelector("div");
+    const target = doc.querySelector("div");
     target.appendChild(frag);
 
     is(target.innerHTML, test.expected, test.text);
@@ -529,12 +529,12 @@ function testParseFontFamily(doc, parser) {
     }
   ];
 
-  for (let {desc, definition, families} of tests) {
+  for (const {desc, definition, families} of tests) {
     info(desc);
-    let frag = parser.parseCssProperty("font-family", definition, {
+    const frag = parser.parseCssProperty("font-family", definition, {
       fontFamilyClass: "ruleview-font-family"
     });
-    let spans = frag.querySelectorAll(".ruleview-font-family");
+    const spans = frag.querySelectorAll(".ruleview-font-family");
 
     is(spans.length, families.length, desc + " span count");
     for (let i = 0; i < spans.length; i++) {
@@ -543,9 +543,9 @@ function testParseFontFamily(doc, parser) {
   }
 
   info("Test font-family text content");
-  for (let {desc, definition, output} of textContentTests) {
+  for (const {desc, definition, output} of textContentTests) {
     info(desc);
-    let frag = parser.parseCssProperty("font-family", definition, {});
+    const frag = parser.parseCssProperty("font-family", definition, {});
     is(frag.textContent, output, desc + " text content matches");
   }
 }

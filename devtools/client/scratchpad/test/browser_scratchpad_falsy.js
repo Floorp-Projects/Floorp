@@ -15,7 +15,7 @@ function test() {
 }
 
 function testFalsy() {
-  let scratchpad = gScratchpadWindow.Scratchpad;
+  const scratchpad = gScratchpadWindow.Scratchpad;
   verifyFalsies(scratchpad).then(function() {
     scratchpad.setBrowserContext();
     verifyFalsies(scratchpad).then(finish);
@@ -23,7 +23,7 @@ function testFalsy() {
 }
 
 function verifyFalsies(scratchpad) {
-  let tests = [{
+  const tests = [{
     method: "display",
     code: "undefined",
     result: "undefined\n/*\nundefined\n*/",

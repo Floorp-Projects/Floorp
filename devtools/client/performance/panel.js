@@ -30,7 +30,7 @@ PerformancePanel.prototype = {
     if (this._opening) {
       return this._opening;
     }
-    let deferred = defer();
+    const deferred = defer();
     this._opening = deferred.promise;
 
     this.panelWin.gToolbox = this.toolbox;
@@ -41,7 +41,7 @@ PerformancePanel.prototype = {
     // the same front, and the toolbox will also initialize the front,
     // but redo it here so we can hook into the same event to prevent race conditions
     // in the case of the front still being in the process of opening.
-    let front = await this.panelWin.gToolbox.initPerformance();
+    const front = await this.panelWin.gToolbox.initPerformance();
 
     // This should only happen if this is completely unsupported (when profiler
     // does not exist), and in that case, the tool shouldn't be available,
@@ -51,7 +51,7 @@ PerformancePanel.prototype = {
     }
 
     this.panelWin.gFront = front;
-    let { PerformanceController, EVENTS } = this.panelWin;
+    const { PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
     await this.panelWin.startupPerformance();
@@ -80,7 +80,7 @@ PerformancePanel.prototype = {
       return;
     }
 
-    let { PerformanceController, EVENTS } = this.panelWin;
+    const { PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
     await this.panelWin.shutdownPerformance();

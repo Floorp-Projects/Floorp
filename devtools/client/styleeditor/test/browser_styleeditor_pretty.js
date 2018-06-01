@@ -49,18 +49,18 @@ const ORIGINAL_SOURCE = "" +
 const EXPAND_TAB = "devtools.editor.expandtab";
 
 add_task(async function() {
-  let oldExpandTabPref = SpecialPowers.getBoolPref(EXPAND_TAB);
+  const oldExpandTabPref = SpecialPowers.getBoolPref(EXPAND_TAB);
   // The 'EXPAND_TAB' preference has to be set to false because
   // the constant 'PRETTIFIED_SOURCE' uses tabs for indentation.
   SpecialPowers.setBoolPref(EXPAND_TAB, false);
 
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   is(ui.editors.length, 2, "Two sheets present.");
 
   info("Testing minified style sheet.");
   let editor = await ui.editors[0].getSourceEditor();
 
-  let prettifiedSourceRE = new RegExp(PRETTIFIED_SOURCE);
+  const prettifiedSourceRE = new RegExp(PRETTIFIED_SOURCE);
   ok(prettifiedSourceRE.test(editor.sourceEditor.getText()),
      "minified source has been prettified automatically");
 
@@ -69,7 +69,7 @@ add_task(async function() {
 
   editor = ui.editors[1];
 
-  let originalSourceRE = new RegExp(ORIGINAL_SOURCE);
+  const originalSourceRE = new RegExp(ORIGINAL_SOURCE);
   ok(originalSourceRE.test(editor.sourceEditor.getText()),
      "non-minified source has been left untouched");
 

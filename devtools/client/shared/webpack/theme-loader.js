@@ -17,8 +17,8 @@ module.exports.pitch = function(remainingRequest, precedingRequest, data) {
     this.cacheable();
   }
 
-  let request = remainingRequest.split("!");
-  let rawUrl = request[request.length - 1];
+  const request = remainingRequest.split("!");
+  const rawUrl = request[request.length - 1];
   let content = fs.readFileSync(rawUrl, "utf8");
 
   // Avoid mix of single & double quotes in a string

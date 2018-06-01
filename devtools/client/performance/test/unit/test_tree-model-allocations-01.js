@@ -7,10 +7,10 @@
  */
 
 add_task(function() {
-  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");
-  let allocationData = getProfileThreadFromAllocations(TEST_DATA);
-  let thread = new ThreadNode(allocationData, { startTime: 0, endTime: 1000 });
+  const allocationData = getProfileThreadFromAllocations(TEST_DATA);
+  const thread = new ThreadNode(allocationData, { startTime: 0, endTime: 1000 });
 
   /* eslint-disable max-len */
   /**
@@ -34,7 +34,7 @@ add_task(function() {
 
 function compareFrameInfo(root, parent) {
   parent = parent || root;
-  let fields = [
+  const fields = [
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
     "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage"
   ];
@@ -43,11 +43,11 @@ function compareFrameInfo(root, parent) {
     if (Array.isArray(def[def.length - 1])) {
       children = def.pop();
     }
-    let name = def.pop();
-    let expected = def;
+    const name = def.pop();
+    const expected = def;
 
-    let node = getFrameNodePath(parent, name);
-    let data = node.getInfo({ root, allocations: true });
+    const node = getFrameNodePath(parent, name);
+    const data = node.getInfo({ root, allocations: true });
 
     fields.forEach((field, i) => {
       let actual = data[field];

@@ -27,10 +27,10 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </body>`;
 
 add_task(async function() {
-  let {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
   const random = Math.random();
-  let string = "Text: " + random;
-  let obj = {a: 1, b: "foo", c: random};
+  const string = "Text: " + random;
+  const obj = {a: 1, b: "foo", c: random};
 
   await testCopy(jsterm, random, random.toString());
   await testCopy(jsterm, JSON.stringify(string), string);

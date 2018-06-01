@@ -35,15 +35,15 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the grid highlighter can be displayed");
-  let {inspector, view} = await openRuleView();
-  let {highlighters} = view;
+  const {inspector, view} = await openRuleView();
+  const {highlighters} = view;
 
   await selectNode("#grid", inspector);
-  let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
-  let gridToggle = container.querySelector(".ruleview-grid");
+  const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
+  const gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   await onHighlighterShown;
 
@@ -59,7 +59,7 @@ add_task(async function() {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Navigate to another URL, and check that the highlighter is hidden");
-  let otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
+  const otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
   onStateRestored = highlighters.once("grid-state-restored");
   await navigateTo(inspector, otherUri);
   ({ restored } = await onStateRestored);

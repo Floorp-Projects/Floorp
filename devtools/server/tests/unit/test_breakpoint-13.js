@@ -37,8 +37,8 @@ function run_test_with_server(server, callback) {
 
 function test_simple_breakpoint() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let source = gThreadClient.source(packet.frame.where.source);
-    let location = { line: gDebuggee.line0 + 2 };
+    const source = gThreadClient.source(packet.frame.where.source);
+    const location = { line: gDebuggee.line0 + 2 };
 
     source.setBreakpoint(location, async function(response, bpClient) {
       const testCallbacks = [
@@ -89,15 +89,15 @@ function test_simple_breakpoint() {
         },
       ];
 
-      for (let callback of testCallbacks) {
-        let waiter = waitForPause(gThreadClient);
+      for (const callback of testCallbacks) {
+        const waiter = waitForPause(gThreadClient);
         gThreadClient.stepIn();
-        let packet = await waiter;
+        const packet = await waiter;
         callback(packet);
       }
 
       // Remove the breakpoint and finish.
-      let waiter = waitForPause(gThreadClient);
+      const waiter = waitForPause(gThreadClient);
       gThreadClient.stepIn();
       await waiter;
       bpClient.remove(() => gThreadClient.resume(() => gClient.close().then(gCallback)));

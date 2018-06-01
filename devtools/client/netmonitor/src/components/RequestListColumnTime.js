@@ -44,12 +44,12 @@ class RequestListColumnTime extends Component {
   }
 
   componentDidMount() {
-    let { item, connector } = this.props;
+    const { item, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { item, connector } = nextProps;
+    const { item, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
   }
 
@@ -58,7 +58,7 @@ class RequestListColumnTime extends Component {
   }
 
   getTime(props) {
-    let {
+    const {
       firstRequestStartedMillis,
       item,
       type,
@@ -81,8 +81,8 @@ class RequestListColumnTime extends Component {
   }
 
   render() {
-    let { type } = this.props;
-    let time = getFormattedTime(this.getTime(this.props));
+    const { type } = this.props;
+    const time = getFormattedTime(this.getTime(this.props));
 
     return (
       div({

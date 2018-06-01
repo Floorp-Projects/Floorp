@@ -32,14 +32,14 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    let container = createNode(this.win, {
+    const container = createNode(this.win, {
       attributes: {
         "class": "highlighter-container"
       }
     });
 
     // The root wrapper is used to unzoom the highlighter when needed.
-    let rootWrapper = createNode(this.win, {
+    const rootWrapper = createNode(this.win, {
       parent: container,
       attributes: {
         "id": "root",
@@ -48,7 +48,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let svg = createSVGNode(this.win, {
+    const svg = createSVGNode(this.win, {
       nodeType: "svg",
       parent: rootWrapper,
       attributes: {
@@ -63,7 +63,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
     // Add a marker tag to the svg root for the arrow tip
     this.markerId = "arrow-marker-" + MARKER_COUNTER;
     MARKER_COUNTER++;
-    let marker = createSVGNode(this.win, {
+    const marker = createSVGNode(this.win, {
       nodeType: "marker",
       parent: svg,
       attributes: {
@@ -87,7 +87,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       }
     });
 
-    let shapesGroup = createSVGNode(this.win, {
+    const shapesGroup = createSVGNode(this.win, {
       nodeType: "g",
       parent: svg
     });
@@ -113,7 +113,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
     });
 
     // Create the arrows
-    for (let nb of ["1", "2", "3", "4"]) {
+    for (const nb of ["1", "2", "3", "4"]) {
       createSVGNode(this.win, {
         nodeType: "line",
         parent: shapesGroup,
@@ -157,26 +157,26 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
    * Checks if the supplied node is transformed and not inline
    */
   _isTransformed(node) {
-    let style = getComputedStyle(node);
+    const style = getComputedStyle(node);
     return style && (style.transform !== "none" && style.display !== "inline");
   }
 
   _setPolygonPoints(quad, id) {
-    let points = [];
-    for (let point of ["p1", "p2", "p3", "p4"]) {
+    const points = [];
+    for (const point of ["p1", "p2", "p3", "p4"]) {
       points.push(quad[point].x + "," + quad[point].y);
     }
     this.getElement(id).setAttribute("points", points.join(" "));
   }
 
   _setLinePoints(p1, p2, id) {
-    let line = this.getElement(id);
+    const line = this.getElement(id);
     line.setAttribute("x1", p1.x);
     line.setAttribute("y1", p1.y);
     line.setAttribute("x2", p2.x);
     line.setAttribute("y2", p2.y);
 
-    let dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     if (dist < ARROW_LINE_MIN_DISTANCE) {
       line.removeAttribute("marker-end");
     } else {
@@ -193,21 +193,21 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(true);
 
     // Getting the points for the transformed shape
-    let quads = this.currentQuads.border;
+    const quads = this.currentQuads.border;
     if (!quads.length ||
         quads[0].bounds.width <= 0 || quads[0].bounds.height <= 0) {
       this._hideShapes();
       return false;
     }
 
-    let [quad] = quads;
+    const [quad] = quads;
 
     // Getting the points for the untransformed shape
-    let untransformedQuad = getNodeBounds(this.win, this.currentNode);
+    const untransformedQuad = getNodeBounds(this.win, this.currentNode);
 
     this._setPolygonPoints(quad, "transformed");
     this._setPolygonPoints(untransformedQuad, "untransformed");
-    for (let nb of ["1", "2", "3", "4"]) {
+    for (const nb of ["1", "2", "3", "4"]) {
       this._setLinePoints(untransformedQuad["p" + nb], quad["p" + nb], "line" + nb);
     }
 

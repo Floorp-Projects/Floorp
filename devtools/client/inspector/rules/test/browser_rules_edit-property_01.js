@@ -75,11 +75,11 @@ add_task(async function() {
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  for (let {name, value, isValid} of TEST_DATA) {
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  for (const {name, value, isValid} of TEST_DATA) {
     await testEditProperty(view, rule, name, value, isValid);
   }
 
@@ -89,8 +89,8 @@ add_task(async function() {
 async function testEditProperty(view, rule, name, value, isValid) {
   info("Test editing existing property name/value fields");
 
-  let doc = rule.editor.doc;
-  let prop = rule.textProps[0];
+  const doc = rule.editor.doc;
+  const prop = rule.textProps[0];
 
   info("Focusing an existing property name in the rule-view");
   let editor = await focusEditableField(view, prop.editor.nameSpan, 32, 1);
@@ -101,8 +101,8 @@ async function testEditProperty(view, rule, name, value, isValid) {
 
   info("Entering a new property name, including : to commit and " +
     "focus the value");
-  let onValueFocus = once(rule.editor.element, "focus", true);
-  let onNameDone = view.once("ruleview-changed");
+  const onValueFocus = once(rule.editor.element, "focus", true);
+  const onNameDone = view.once("ruleview-changed");
   EventUtils.sendString(name + ":", doc.defaultView);
   await onValueFocus;
   await onNameDone;
@@ -113,8 +113,8 @@ async function testEditProperty(view, rule, name, value, isValid) {
   is(inplaceEditor(prop.editor.valueSpan), editor, "Focus moved to the value.");
 
   info("Entering a new value, including ; to commit and blur the value");
-  let onValueDone = view.once("ruleview-changed");
-  let onBlur = once(input, "blur");
+  const onValueDone = view.once("ruleview-changed");
+  const onBlur = once(input, "blur");
   EventUtils.sendString(value + ";", doc.defaultView);
   await onBlur;
   await onValueDone;
@@ -123,7 +123,7 @@ async function testEditProperty(view, rule, name, value, isValid) {
     value + " is " + isValid ? "valid" : "invalid");
 
   info("Checking that the style property was changed on the content page");
-  let propValue = await executeInContent("Test:GetRulePropertyValue", {
+  const propValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name
@@ -143,7 +143,7 @@ function checkResults() {
                                                  event[3] === "ruleview"
   );
 
-  for (let i in DATA) {
+  for (const i in DATA) {
     const [ timestamp, category, method, object ] = events[i];
     const expected = DATA[i];
 

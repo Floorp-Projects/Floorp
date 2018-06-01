@@ -77,7 +77,7 @@ async function checkResults() {
                                                  event[2] === "deactivate")
   );
 
-  for (let i in DATA) {
+  for (const i in DATA) {
     const [ timestamp, category, method, object, value, extra ] = events[i];
     const expected = DATA[i];
 

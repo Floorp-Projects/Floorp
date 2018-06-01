@@ -22,18 +22,18 @@ exports.items = [
     isRemoteSafe: true,
     state: {
       isChecked: function(target) {
-        let toolbox = gDevTools.getToolbox(target);
+        const toolbox = gDevTools.getToolbox(target);
         return !!(toolbox && toolbox.splitConsole);
       },
       onChange: function(target, changeHandler) {
         // Register handlers for when a change event should be fired
         // (which resets the checked state of the button).
-        let toolbox = gDevTools.getToolbox(target);
+        const toolbox = gDevTools.getToolbox(target);
         if (!toolbox) {
           return;
         }
 
-        let callback = changeHandler.bind(null, { target });
+        const callback = changeHandler.bind(null, { target });
         toolbox.on("split-console", callback);
         toolbox.once("destroyed", () => {
           toolbox.off("split-console", callback);
@@ -41,8 +41,8 @@ exports.items = [
       }
     },
     exec: function(args, context) {
-      let target = context.environment.target;
-      let toolbox = gDevTools.getToolbox(target);
+      const target = context.environment.target;
+      const toolbox = gDevTools.getToolbox(target);
 
       if (!toolbox) {
         return gDevTools.showToolbox(target, "inspector").then((newToolbox) => {
@@ -63,17 +63,17 @@ exports.items = [
     name: "console clear",
     description: l10n.lookup("consoleclearDesc"),
     exec: function(args, context) {
-      let toolbox = gDevTools.getToolbox(context.environment.target);
+      const toolbox = gDevTools.getToolbox(context.environment.target);
       if (toolbox == null) {
         return null;
       }
 
-      let panel = toolbox.getPanel("webconsole");
+      const panel = toolbox.getPanel("webconsole");
       if (panel == null) {
         return null;
       }
 
-      let onceMessagesCleared = panel.hud.jsterm.once("messages-cleared");
+      const onceMessagesCleared = panel.hud.jsterm.once("messages-cleared");
       panel.hud.jsterm.clearOutput();
       return onceMessagesCleared;
     }

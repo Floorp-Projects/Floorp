@@ -28,7 +28,7 @@ class Viewports extends Component {
   }
 
   render() {
-    let {
+    const {
       devices,
       screenshot,
       viewports,

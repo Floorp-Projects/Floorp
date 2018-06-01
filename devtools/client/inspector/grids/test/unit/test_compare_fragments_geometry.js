@@ -70,7 +70,7 @@ const TESTS = [{
 }];
 
 function run_test() {
-  for (let { desc, grids, expected } of TESTS) {
+  for (const { desc, grids, expected } of TESTS) {
     if (desc) {
       info(desc);
     }

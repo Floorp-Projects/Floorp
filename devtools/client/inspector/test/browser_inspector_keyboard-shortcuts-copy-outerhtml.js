@@ -8,16 +8,16 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_outerhtml.html";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
-  let root = inspector.markup._elt;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const root = inspector.markup._elt;
 
   info("Test copy outerHTML for COMMENT node");
-  let comment = getElementByType(inspector, Node.COMMENT_NODE);
+  const comment = getElementByType(inspector, Node.COMMENT_NODE);
   await setSelectionNodeFront(comment, inspector);
   await checkClipboard("<!-- Comment -->", root);
 
   info("Test copy outerHTML for DOCTYPE node");
-  let doctype = getElementByType(inspector, Node.DOCUMENT_TYPE_NODE);
+  const doctype = getElementByType(inspector, Node.DOCUMENT_TYPE_NODE);
   await setSelectionNodeFront(doctype, inspector);
   await checkClipboard("<!DOCTYPE html>", root);
 
@@ -27,7 +27,7 @@ add_task(async function() {
 });
 
 async function setSelectionNodeFront(node, inspector) {
-  let updated = inspector.once("inspector-updated");
+  const updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(node);
   await updated;
 }
@@ -43,7 +43,7 @@ async function checkClipboard(expectedText, node) {
 }
 
 function getElementByType(inspector, type) {
-  for (let [node] of inspector.markup._containers) {
+  for (const [node] of inspector.markup._containers) {
     if (node.nodeType === type) {
       return node;
     }

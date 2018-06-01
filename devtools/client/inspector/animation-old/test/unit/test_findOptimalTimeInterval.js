@@ -66,11 +66,11 @@ const TEST_DATA = [{
 }];
 
 function run_test() {
-  for (let {minTimeInterval, desc, expectedInterval} of TEST_DATA) {
+  for (const {minTimeInterval, desc, expectedInterval} of TEST_DATA) {
     info(`Testing minTimeInterval: ${minTimeInterval}.
           Expecting ${expectedInterval}.`);
 
-    let interval = findOptimalTimeInterval(minTimeInterval);
+    const interval = findOptimalTimeInterval(minTimeInterval);
     if (typeof expectedInterval == "string") {
       ok(eval(expectedInterval), desc);
     } else {

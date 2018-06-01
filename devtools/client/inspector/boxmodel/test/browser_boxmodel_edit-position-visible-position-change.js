@@ -18,20 +18,20 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
+  const {inspector, boxmodel} = await openLayoutView();
 
   await selectNode("#mydiv", inspector);
   let editPositionButton = boxmodel.document.querySelector(".layout-geometry-editor");
 
   ok(isNodeVisible(editPositionButton), "Edit Position button is visible initially");
 
-  let positionLeftTextbox = boxmodel.document.querySelector(
+  const positionLeftTextbox = boxmodel.document.querySelector(
       ".boxmodel-editable[title=position-left]"
   );
   ok(isNodeVisible(positionLeftTextbox), "Position-left edit box exists");
 
   info("Change the value of position-left and submit");
-  let onUpdate = waitForUpdate(inspector);
+  const onUpdate = waitForUpdate(inspector);
   EventUtils.synthesizeMouseAtCenter(positionLeftTextbox, {},
     boxmodel.document.defaultView);
   EventUtils.synthesizeKey("8", {}, boxmodel.document.defaultView);

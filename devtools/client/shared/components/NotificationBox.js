@@ -145,7 +145,7 @@ class NotificationBox extends Component {
    * used to close it.
    */
   getNotificationWithValue(value) {
-    let notification = this.state.notifications.get(value);
+    const notification = this.state.notifications.get(value);
     if (!notification) {
       return null;
     }
@@ -189,9 +189,9 @@ class NotificationBox extends Component {
    * These are used to execute custom callback.
    */
   renderButton(props, notification) {
-    let onClick = event => {
+    const onClick = event => {
       if (props.callback) {
-        let result = props.callback(this, props, event.target);
+        const result = props.callback(this, props, event.target);
         if (!result) {
           this.close(notification);
         }

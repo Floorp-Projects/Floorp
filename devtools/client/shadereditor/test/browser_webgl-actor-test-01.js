@@ -6,7 +6,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
 
   ok(target, "Should have a target available.");
   ok(front, "Should have a protocol front available.");

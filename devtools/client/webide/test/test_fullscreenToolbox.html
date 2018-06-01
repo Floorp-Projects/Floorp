@@ -28,9 +28,9 @@
         SimpleTest.waitForExplicitFinish();
 
         (async function() {
-          let win = await openWebIDE();
-          let docProject = getProjectDocument(win);
-          let docRuntime = getRuntimeDocument(win);
+          const win = await openWebIDE();
+          const docProject = getProjectDocument(win);
+          const docRuntime = getRuntimeDocument(win);
           win.AppManager.update("runtime-list");
 
           connectToLocal(win, docRuntime);
@@ -46,7 +46,7 @@
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
           await win.UI.toolboxPromise;
 
-          let nbox = win.document.querySelector("#notificationbox");
+          const nbox = win.document.querySelector("#notificationbox");
           ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
 
           win.Cmds.showRuntimeDetails();

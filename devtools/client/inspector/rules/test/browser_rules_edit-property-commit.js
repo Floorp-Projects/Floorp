@@ -51,21 +51,21 @@ const testData = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  for (let data of testData) {
+  for (const data of testData) {
     await runTestData(view, data);
   }
 });
 
 async function runTestData(view, {value, commitKey, modifiers, expected}) {
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the inplace editor field");
 
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  const editor = await focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "Focused editor should be the value span.");
 
@@ -77,7 +77,7 @@ async function runTestData(view, {value, commitKey, modifiers, expected}) {
 
   info("Entering the commit key " + commitKey + " " + modifiers);
   onRuleViewChanged = view.once("ruleview-changed");
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey(commitKey, modifiers);
   await onBlur;
   await onRuleViewChanged;

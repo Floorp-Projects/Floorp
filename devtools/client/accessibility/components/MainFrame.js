@@ -68,12 +68,12 @@ class MainFrame extends Component {
   }
 
   resetAccessibility() {
-    let { dispatch, accessibility } = this.props;
+    const { dispatch, accessibility } = this.props;
     dispatch(reset(accessibility));
   }
 
   get useLandscapeMode() {
-    let { clientWidth } = document.getElementById("content");
+    const { clientWidth } = document.getElementById("content");
     return clientWidth > PORTRAIT_MODE_WIDTH;
   }
 
@@ -91,7 +91,7 @@ class MainFrame extends Component {
    * Render Accessibility panel content
    */
   render() {
-    let { accessibility, walker, enabled } = this.props;
+    const { accessibility, walker, enabled } = this.props;
 
     if (!enabled) {
       return Description({ accessibility });

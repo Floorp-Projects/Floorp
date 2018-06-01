@@ -18,9 +18,9 @@ const CanvasUtils = require("./canvas-utils");
  */
 module.exports = function startVisualization(parentEl, report,
                                               debounceRate = 60) {
-  let window = parentEl.ownerDocument.defaultView;
-  let canvases = new CanvasUtils(parentEl, debounceRate);
-  let dragZoom = new DragZoom(canvases.container, debounceRate,
+  const window = parentEl.ownerDocument.defaultView;
+  const canvases = new CanvasUtils(parentEl, debounceRate);
+  const dragZoom = new DragZoom(canvases.container, debounceRate,
                               window.requestAnimationFrame);
 
   setupDraw(report, canvases, dragZoom);

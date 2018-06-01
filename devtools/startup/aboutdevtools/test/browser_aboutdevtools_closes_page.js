@@ -9,13 +9,14 @@
 add_task(async function() {
   pushPref("devtools.enabled", false);
 
-  let {doc, win} = await openAboutDevTools();
+  const {doc, win} = await openAboutDevTools();
 
   info("Check that the close button is available on the page");
-  let closeButton = doc.getElementById("close");
+  const closeButton = doc.getElementById("close");
   ok(closeButton, "close button is displayed");
 
-  let onWindowUnload = new Promise(r => win.addEventListener("unload", r, {once: true}));
+  const onWindowUnload =
+    new Promise(r => win.addEventListener("unload", r, {once: true}));
   info("Click on the install button to enable DevTools.");
   EventUtils.synthesizeMouseAtCenter(closeButton, {}, win);
 

@@ -33,7 +33,7 @@ class StackTracePanel extends Component {
    * for the first time
    */
   componentDidMount() {
-    let { request, connector } = this.props;
+    const { request, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
   }
 
@@ -42,19 +42,19 @@ class StackTracePanel extends Component {
    * switching between two requests while this panel is displayed.
    */
   componentWillReceiveProps(nextProps) {
-    let { request, connector } = nextProps;
+    const { request, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
   }
 
   render() {
-    let {
+    const {
       connector,
       openLink,
       request,
       sourceMapService,
     } = this.props;
 
-    let {
+    const {
       stacktrace = []
     } = request;
 

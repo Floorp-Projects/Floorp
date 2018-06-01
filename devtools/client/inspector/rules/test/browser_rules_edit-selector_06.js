@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".testclass", inspector);
   await testEditClassSelector(view);
   await testEditDivSelector(view);
@@ -28,16 +28,16 @@ add_task(async function() {
 
 async function testEditClassSelector(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   editor.input.value = "body";
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  const propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Check that the correct rules are visible");
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
@@ -53,10 +53,10 @@ async function testEditClassSelector(view) {
 
 async function testEditDivSelector(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   editor.input.value = "asdf";
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 

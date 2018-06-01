@@ -41,9 +41,9 @@ add_task(async function() {
 });
 
 async function testNetmonitor(toolbox) {
-  let monitor = toolbox.getCurrentPanel();
-  let { store, windowRequire } = monitor.panelWin;
-  let {
+  const monitor = toolbox.getCurrentPanel();
+  const { store, windowRequire } = monitor.panelWin;
+  const {
     getSortedRequests
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -52,7 +52,7 @@ async function testNetmonitor(toolbox) {
   is(store.getState().requests.requests.size, 1,
     "Network request appears in the network panel");
 
-  let item = getSortedRequests(store.getState()).get(0);
+  const item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The request method is correct.");
   is(item.url, TEST_PATH, "The request url is correct.");
 }

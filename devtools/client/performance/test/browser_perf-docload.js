@@ -12,19 +12,19 @@ const { startRecording, stopRecording, reload } = require("devtools/client/perfo
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let { panel, target } = await initPerformanceInNewTab({
+  const { panel, target } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { PerformanceController } = panel.panelWin;
+  const { PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await reload(target);
 
   await waitUntil(() => {
     // Wait until we get the necessary markers.
-    let markers = PerformanceController.getCurrentRecording().getMarkers();
+    const markers = PerformanceController.getCurrentRecording().getMarkers();
     if (!markers.some(m => m.name == "document::DOMContentLoaded") ||
         !markers.some(m => m.name == "document::Load")) {
       return false;

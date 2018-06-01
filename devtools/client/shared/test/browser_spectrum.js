@@ -11,9 +11,9 @@ const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
 
 add_task(async function() {
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
-  let container = doc.getElementById("spectrum-container");
+  const container = doc.getElementById("spectrum-container");
 
   await testCreateAndDestroyShouldAppendAndRemoveElements(container);
   await testPassingAColorAtInitShouldSetThatColor(container);
@@ -28,7 +28,7 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   ok(container, "We have the root node to append spectrum to");
   is(container.childElementCount, 0, "Root node is empty");
 
-  let s = new Spectrum(container, [255, 126, 255, 1]);
+  const s = new Spectrum(container, [255, 126, 255, 1]);
   s.show();
   ok(container.childElementCount > 0, "Spectrum has appended elements");
 
@@ -37,12 +37,12 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
 }
 
 function testPassingAColorAtInitShouldSetThatColor(container) {
-  let initRgba = [255, 126, 255, 1];
+  const initRgba = [255, 126, 255, 1];
 
-  let s = new Spectrum(container, initRgba);
+  const s = new Spectrum(container, initRgba);
   s.show();
 
-  let setRgba = s.rgb;
+  const setRgba = s.rgb;
 
   is(initRgba[0], setRgba[0], "Spectrum initialized with the right color");
   is(initRgba[1], setRgba[1], "Spectrum initialized with the right color");
@@ -53,12 +53,12 @@ function testPassingAColorAtInitShouldSetThatColor(container) {
 }
 
 function testSettingAndGettingANewColor(container) {
-  let s = new Spectrum(container, [0, 0, 0, 1]);
+  const s = new Spectrum(container, [0, 0, 0, 1]);
   s.show();
 
-  let colorToSet = [255, 255, 255, 1];
+  const colorToSet = [255, 255, 255, 1];
   s.rgb = colorToSet;
-  let newColor = s.rgb;
+  const newColor = s.rgb;
 
   is(colorToSet[0], newColor[0], "Spectrum set with the right color");
   is(colorToSet[1], newColor[1], "Spectrum set with the right color");
@@ -70,7 +70,7 @@ function testSettingAndGettingANewColor(container) {
 
 function testChangingColorShouldEmitEvents(container) {
   return new Promise(resolve => {
-    let s = new Spectrum(container, [255, 255, 255, 1]);
+    const s = new Spectrum(container, [255, 255, 255, 1]);
     s.show();
 
     s.once("changed", (rgba, color) => {
@@ -91,10 +91,10 @@ function testChangingColorShouldEmitEvents(container) {
 }
 
 function testSettingColorShoudUpdateTheUI(container) {
-  let s = new Spectrum(container, [255, 255, 255, 1]);
+  const s = new Spectrum(container, [255, 255, 255, 1]);
   s.show();
-  let dragHelperOriginalPos = [s.dragHelper.style.top, s.dragHelper.style.left];
-  let alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
+  const dragHelperOriginalPos = [s.dragHelper.style.top, s.dragHelper.style.left];
+  const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
 
   s.rgb = [50, 240, 234, .2];
   s.updateUI();

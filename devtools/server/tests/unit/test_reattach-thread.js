@@ -14,7 +14,7 @@ function run_test() {
   gDebuggee = testGlobal("test-reattach");
   DebuggerServer.addTestGlobal(gDebuggee);
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(() => {
     attachTestTab(gClient, "test-reattach", (reply, tabClient) => {

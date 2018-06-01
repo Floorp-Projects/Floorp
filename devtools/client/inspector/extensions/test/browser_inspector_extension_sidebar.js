@@ -56,7 +56,7 @@ add_task(async function setupExtensionSidebar() {
      "Got the expeted title in the provider props");
 
   // Test sidebar Redux state.
-  let inspectorStoreState = inspector.store.getState();
+  const inspectorStoreState = inspector.store.getState();
   ok("extensionsSidebar" in inspectorStoreState,
      "Got the extensionsSidebar sub-state in the inspector Redux store");
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
@@ -64,18 +64,18 @@ add_task(async function setupExtensionSidebar() {
 });
 
 add_task(async function testSidebarSetObject() {
-  let object = {
+  const object = {
     propertyName: {
       nestedProperty: "propertyValue",
       anotherProperty: "anotherValue",
     },
   };
 
-  let sidebar = inspector.getPanel(SIDEBAR_ID);
+  const sidebar = inspector.getPanel(SIDEBAR_ID);
   sidebar.setObject(object);
 
   // Test updated sidebar Redux state.
-  let inspectorStoreState = inspector.store.getState();
+  const inspectorStoreState = inspector.store.getState();
   is(Object.keys(inspectorStoreState.extensionsSidebar).length, 1,
      "The extensionsSidebar state contains the newly registered extension sidebar state");
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {
@@ -122,7 +122,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
 
   info("Testing sidebar.setObjectValueGrip with rootTitle");
 
-  let expression = `
+  const expression = `
     var obj = Object.create(null);
     obj.prop1 = 123;
     obj[Symbol('sym1')] = 456;
@@ -130,7 +130,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
     obj;
   `;
 
-  let evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
+  const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
     toolboxConsoleActorID: toolbox.target.form.consoleActor
   });
@@ -165,9 +165,9 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
-  let expression = "({ body: document.body })";
+  const expression = "({ body: document.body })";
 
-  let evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
+  const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
     toolboxConsoleActorID: toolbox.target.form.consoleActor
   });
@@ -193,16 +193,16 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   // Test highlight DOMNode on mouseover.
   info("Highlight the node by moving the cursor on it");
 
-  let onNodeHighlight = toolbox.once("node-highlight");
+  const onNodeHighlight = toolbox.once("node-highlight");
 
   moveMouseOnObjectInspectorDOMNode(sidebarPanelContent);
 
-  let nodeFront = await onNodeHighlight;
+  const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "body", "The correct node was highlighted");
 
   // Test unhighlight DOMNode on mousemove.
   info("Unhighlight the node by moving away from the node");
-  let onNodeUnhighlight = toolbox.once("node-unhighlight");
+  const onNodeUnhighlight = toolbox.once("node-unhighlight");
 
   moveMouseOnPanelCenter(sidebarPanelContent);
 
@@ -226,8 +226,8 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
 
   // Once we click the open-inspector icon we expect a new node front to be selected
   // and the node to have been highlighted and unhighlighted.
-  let onNodeHighlight = toolbox.once("node-highlight");
-  let onNodeUnhighlight = toolbox.once("node-unhighlight");
+  const onNodeHighlight = toolbox.once("node-highlight");
+  const onNodeUnhighlight = toolbox.once("node-unhighlight");
   onceNewNodeFront = inspector.selection.once("new-node-front");
 
   clickOpenInspectorIcon(sidebarPanelContent);
@@ -248,7 +248,7 @@ add_task(async function teardownExtensionSidebar() {
   ok(!inspector.sidebar.getTabPanel(SIDEBAR_ID),
      "The rendered extension sidebar has been removed");
 
-  let inspectorStoreState = inspector.store.getState();
+  const inspectorStoreState = inspector.store.getState();
 
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
                    "The extensions sidebar Redux store data has been cleared");

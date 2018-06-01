@@ -25,7 +25,7 @@ class Census extends Component {
   }
 
   render() {
-    let {
+    const {
       census,
       onExpand,
       onCollapse,
@@ -36,7 +36,7 @@ class Census extends Component {
     } = this.props;
 
     const report = census.report;
-    let parentMap = census.parentMap;
+    const parentMap = census.parentMap;
     const { totalBytes, totalCount } = report;
 
     const getPercentBytes = totalBytes === 0

@@ -12,10 +12,10 @@ function run_test() {
 
 // Ensure done can be checked without getting an error
 function test_packet_done() {
-  let json = new JSONPacket();
+  const json = new JSONPacket();
   Assert.ok(!json.done);
 
-  let bulk = new BulkPacket();
+  const bulk = new BulkPacket();
   Assert.ok(!bulk.done);
 
   run_next_test();

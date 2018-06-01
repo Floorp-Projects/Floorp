@@ -17,11 +17,11 @@ registerCleanupFunction(function() {
 });
 
 async function viewSource() {
-  let toolbox = await openNewTabAndToolbox(URL);
-  let { panelWin: debuggerWin } = await toolbox.selectTool("jsdebugger");
-  let debuggerEvents = debuggerWin.EVENTS;
-  let { DebuggerView } = debuggerWin;
-  let Sources = DebuggerView.Sources;
+  const toolbox = await openNewTabAndToolbox(URL);
+  const { panelWin: debuggerWin } = await toolbox.selectTool("jsdebugger");
+  const debuggerEvents = debuggerWin.EVENTS;
+  const { DebuggerView } = debuggerWin;
+  const Sources = DebuggerView.Sources;
 
   await debuggerWin.once(debuggerEvents.SOURCE_SHOWN);
   ok("A source was shown in the debugger.");
@@ -33,7 +33,7 @@ async function viewSource() {
 
   await toolbox.viewSourceInDebugger(JS_URL, 2);
 
-  let debuggerPanel = toolbox.getPanel("jsdebugger");
+  const debuggerPanel = toolbox.getPanel("jsdebugger");
   ok(debuggerPanel, "The debugger panel was opened.");
   is(toolbox.currentToolId, "jsdebugger", "The debugger panel was selected.");
 

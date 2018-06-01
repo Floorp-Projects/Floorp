@@ -21,8 +21,8 @@ window.onload = function() {
   let inspectee = null;
   let inspector = null;
   let walker = null;
-  let eventListener1 = function() {};
-  let eventListener2 = function() {};
+  const eventListener1 = function() {};
+  const eventListener2 = function() {};
   let eventNode1;
   let eventNode2;
   let eventFront1;
@@ -30,7 +30,7 @@ window.onload = function() {
 
   addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
 
     await new Promise(resolve => {
       attachURL(url, function(err, client, tab, doc) {
@@ -154,7 +154,7 @@ window.onload = function() {
     info("set any attribute on the node to trigger a mutation");
     eventNode1.setAttribute("data-attr", "somevalue");
 
-    let mutations = await waitForMutations();
+    const mutations = await waitForMutations();
     is(mutations.length, 1, "expect only one mutation");
     isnot(mutations.type, "events", "mutation type should not be events");
 

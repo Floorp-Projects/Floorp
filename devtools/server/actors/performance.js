@@ -87,8 +87,8 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
       return null;
     }
 
-    let normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
-    let recording = await this.bridge.startRecording(normalizedOptions);
+    const normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
+    const recording = await this.bridge.startRecording(normalizedOptions);
     this.manage(recording);
 
     return recording;
@@ -132,8 +132,8 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     // a method on the related PerformanceRecordingActor so it can
     // update its internal state.
     if (RECORDING_STATE_CHANGE_EVENTS.has(eventName)) {
-      let recording = data[0];
-      let extraData = data[1];
+      const recording = data[0];
+      const extraData = data[1];
       recording._setState(eventName, extraData);
     }
 

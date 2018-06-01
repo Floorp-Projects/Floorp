@@ -20,7 +20,7 @@ class ReloadConditions extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       reloadConditions,
       onChangeReloadCondition,
     } = this.props;

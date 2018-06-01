@@ -82,7 +82,7 @@ AccessibilityView.prototype = {
     // point.
     if (!accessible || accessible.indexInParent < 0) {
       const { nodes: children } = await gToolbox.walker.children(node);
-      for (let child of children) {
+      for (const child of children) {
         if (child.nodeType === nodeConstants.TEXT_NODE) {
           accessible = await walker.getAccessibleFor(child);
           if (accessible && accessible.indexInParent >= 0) {

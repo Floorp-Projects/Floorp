@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   await addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
@@ -38,19 +38,19 @@ add_task(async function() {
 });
 
 function testAddingProperty(view, index) {
-  let ruleEditor = getRuleViewRuleEditor(view, index);
+  const ruleEditor = getRuleViewRuleEditor(view, index);
   ruleEditor.addProperty("font-weight", "bold", "", true);
-  let textProps = ruleEditor.rule.textProps;
-  let lastRule = textProps[textProps.length - 1];
+  const textProps = ruleEditor.rule.textProps;
+  const lastRule = textProps[textProps.length - 1];
   is(lastRule.name, "font-weight", "Last rule name is font-weight");
   is(lastRule.value, "bold", "Last rule value is bold");
 }
 
 async function testEditSelector(view, name) {
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, idRuleEditor.selectorText);
+  const editor = await focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -59,7 +59,7 @@ async function testEditSelector(view, name) {
   editor.input.value = name;
 
   info("Waiting for rule view to update");
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
@@ -72,9 +72,9 @@ function checkModifiedElement(view, name, index) {
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let textProps = idRuleEditor.rule.textProps;
-  let lastRule = textProps[textProps.length - 1];
+  const idRuleEditor = getRuleViewRuleEditor(view, index);
+  const textProps = idRuleEditor.rule.textProps;
+  const lastRule = textProps[textProps.length - 1];
   is(lastRule.name, "font-weight", "Last rule name is font-weight");
   is(lastRule.value, "bold", "Last rule value is bold");
 }

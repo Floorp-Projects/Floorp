@@ -13,7 +13,7 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
   info("Click the toggle button");
   await panel.toggleAll();
@@ -25,8 +25,8 @@ add_task(async function() {
 });
 
 async function checkState(state) {
-  for (let selector of [".animated", ".multi", ".long"]) {
-    let playState = await getAnimationPlayerState(selector);
+  for (const selector of [".animated", ".multi", ".long"]) {
+    const playState = await getAnimationPlayerState(selector);
     is(playState, state, "The animation on node " + selector + " is " + state);
   }
 }

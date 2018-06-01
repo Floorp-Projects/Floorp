@@ -311,7 +311,7 @@ function onNextAnimationFrame(fn) {
  */
 function renderComponent(element, container) {
   return new Promise(resolve => {
-    let component = ReactDOM.render(element, container,
+    const component = ReactDOM.render(element, container,
       onNextAnimationFrame(() => {
         dumpn("Rendered = " + container.innerHTML);
         resolve(component);

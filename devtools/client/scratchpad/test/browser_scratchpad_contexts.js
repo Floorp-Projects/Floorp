@@ -15,16 +15,16 @@ function test() {
 }
 
 function runTests() {
-  let sp = gScratchpadWindow.Scratchpad;
-  let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
-  let chromeMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
-  let notificationBox = sp.notificationBox;
+  const sp = gScratchpadWindow.Scratchpad;
+  const contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
+  const chromeMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
+  const notificationBox = sp.notificationBox;
 
   ok(contentMenu, "found #sp-menu-content");
   ok(chromeMenu, "found #sp-menu-browser");
   ok(notificationBox, "found Scratchpad.notificationBox");
 
-  let tests = [{
+  const tests = [{
     method: "run",
     prepare: async function() {
       sp.setContentContext();
@@ -43,7 +43,7 @@ function runTests() {
 
       sp.editor.setText("window.foobarBug636725 = 'aloha';");
 
-      let pageResult = await inContent(function() {
+      const pageResult = await inContent(function() {
         return content.wrappedJSObject.foobarBug636725;
       });
       ok(!pageResult, "no content.foobarBug636725");
@@ -69,7 +69,7 @@ function runTests() {
       ok(notificationBox.currentNotification,
          "there is a notification in browser context");
 
-      let [ from, to ] = sp.editor.getPosition(31, 32);
+      const [ from, to ] = sp.editor.getPosition(31, 32);
       sp.editor.replaceText("2'", from, to);
 
       is(sp.getText(), "window.foobarBug636725 = 'aloha2';",

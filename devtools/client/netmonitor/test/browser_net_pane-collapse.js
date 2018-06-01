@@ -8,14 +8,14 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 

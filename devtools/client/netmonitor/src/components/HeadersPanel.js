@@ -85,7 +85,7 @@ class HeadersPanel extends Component {
   }
 
   componentDidMount() {
-    let { request, connector } = this.props;
+    const { request, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "requestHeaders",
       "responseHeaders",
@@ -94,7 +94,7 @@ class HeadersPanel extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { request, connector } = nextProps;
+    const { request, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "requestHeaders",
       "responseHeaders",
@@ -104,8 +104,8 @@ class HeadersPanel extends Component {
 
   getProperties(headers, title) {
     if (headers && headers.headers.length) {
-      let headerKey = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
-      let propertiesResult = {
+      const headerKey = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
+      const propertiesResult = {
         [headerKey]: new HeaderList(headers.headers)
       };
       return propertiesResult;
@@ -143,7 +143,7 @@ class HeadersPanel extends Component {
       return null;
     }
 
-    let headerDocURL = getHeadersURL(member.name);
+    const headerDocURL = getHeadersURL(member.name);
 
     return (
       div({ className: "treeValueCellDivider" },
@@ -181,7 +181,7 @@ class HeadersPanel extends Component {
         urlDetails,
       },
     } = this.props;
-    let item = { fromCache, fromServiceWorker, status, statusText };
+    const item = { fromCache, fromServiceWorker, status, statusText };
 
     if ((!requestHeaders || !requestHeaders.headers.length) &&
         (!uploadHeaders || !uploadHeaders.headers.length) &&
@@ -191,28 +191,28 @@ class HeadersPanel extends Component {
       );
     }
 
-    let object = Object.assign({},
+    const object = Object.assign({},
       this.getProperties(responseHeaders, RESPONSE_HEADERS),
       this.getProperties(requestHeaders, REQUEST_HEADERS),
       this.getProperties(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD),
     );
 
     // not showing #hash in url
-    let summaryUrl = urlDetails.unicodeUrl ?
+    const summaryUrl = urlDetails.unicodeUrl ?
       this.renderSummary(SUMMARY_URL, urlDetails.unicodeUrl.split("#")[0]) : null;
 
-    let summaryMethod = method ?
+    const summaryMethod = method ?
       this.renderSummary(SUMMARY_METHOD, method) : null;
 
-    let summaryAddress = remoteAddress ?
+    const summaryAddress = remoteAddress ?
       this.renderSummary(SUMMARY_ADDRESS,
         getFormattedIPAndPort(remoteAddress, remotePort)) : null;
 
     let summaryStatus;
 
     if (status) {
-      let statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
-      let toggleRawHeadersClassList = ["devtools-button", "raw-headers-button"];
+      const statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
+      const toggleRawHeadersClassList = ["devtools-button", "raw-headers-button"];
       if (this.state.rawHeadersOpened) {
         toggleRawHeadersClassList.push("checked");
       }
@@ -240,10 +240,10 @@ class HeadersPanel extends Component {
       );
     }
 
-    let summaryVersion = httpVersion ?
+    const summaryVersion = httpVersion ?
       this.renderSummary(SUMMARY_VERSION, httpVersion) : null;
     // display Status-Line above other response headers
-    let statusLine = `${httpVersion} ${status} ${statusText}\n`;
+    const statusLine = `${httpVersion} ${status} ${statusText}\n`;
 
     let summaryRawHeaders;
     if (this.state.rawHeadersOpened) {

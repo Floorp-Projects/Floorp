@@ -69,7 +69,7 @@ async function addDevice(device, type = "phones") {
   }
 
   // Ensure the new device is has a unique name
-  let exists = list.some(entry => entry.name == device.name);
+  const exists = list.some(entry => entry.name == device.name);
   if (exists) {
     return false;
   }
@@ -86,12 +86,12 @@ async function addDevice(device, type = "phones") {
  */
 async function removeDevice(device, type = "phones") {
   await loadLocalDevices();
-  let list = localDevices[type];
+  const list = localDevices[type];
   if (!list) {
     return false;
   }
 
-  let index = list.findIndex(entry => entry.name == device.name);
+  const index = list.findIndex(entry => entry.name == device.name);
   if (index == -1) {
     return false;
   }
@@ -115,9 +115,9 @@ async function removeLocalDevices() {
  */
 async function getDevices() {
   // Fetch common devices from Mozilla's CDN.
-  let devices = await getJSON(DEVICES_URL);
+  const devices = await getJSON(DEVICES_URL);
   await loadLocalDevices();
-  for (let type in localDevices) {
+  for (const type in localDevices) {
     if (!devices[type]) {
       devices.TYPES.push(type);
       devices[type] = [];

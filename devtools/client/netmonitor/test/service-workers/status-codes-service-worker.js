@@ -9,6 +9,6 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  let response = new Response("Service worker response");
+  const response = new Response("Service worker response");
   event.respondWith(response);
 });

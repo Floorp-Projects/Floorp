@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
+  const { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 
   // Enable allocations to test.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
@@ -26,7 +26,7 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  let rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
+  const rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   await DetailsView.selectView("memory-calltree");
   await rendered;
 

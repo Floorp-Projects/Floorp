@@ -22,7 +22,7 @@ add_task(async function() {
   info("Closing the browser console and waiting for the session restore to reopen it");
   await HUDService.toggleBrowserConsole();
 
-  let opened = waitForBrowserConsole();
+  const opened = waitForBrowserConsole();
   gDevTools.restoreDevToolsSession({
     browserConsole: true
   });

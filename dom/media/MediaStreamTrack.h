@@ -229,6 +229,9 @@ public:
       Stop();
       mStopped = true;
     }
+    if (!mStopped) {
+      SinkEnabledStateChanged();
+    }
   }
 
 protected:

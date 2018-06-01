@@ -23,7 +23,7 @@ function cacheRequestHandler(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/json", false);
 
-  let body = "[" + Math.random() + "]";
+  const body = "[" + Math.random() + "]";
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -53,7 +53,7 @@ add_task(async function test_caching() {
   });
 
   info("Performing a third request with cache bypassed.");
-  let opts = { loadFromCache: false };
+  const opts = { loadFromCache: false };
   await DevToolsUtils.fetch(CACHED_URL, opts).then(({content}) => {
     notDeepEqual(content, initialContent,
       "The URL wasn't loaded from cache with loadFromCache: false.");

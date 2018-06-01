@@ -7,8 +7,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
   await promise.all([
@@ -16,8 +16,8 @@ async function ifWebGLSupported() {
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
   let vertError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
@@ -78,7 +78,7 @@ async function ifWebGLSupported() {
     ok(error, "Vertex shader compiled with errors.");
     isnot(error.link, "", "The linkage status should not be empty.");
 
-    let line = 7;
+    const line = 7;
     info("Checking first vertex shader error on line " + line + "...");
 
     is(vsEditor.hasMarker(line, "errors", "error"), bool,
@@ -86,7 +86,7 @@ async function ifWebGLSupported() {
     is(vsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    let parsed = ShadersEditorsView._errors.vs;
+    const parsed = ShadersEditorsView._errors.vs;
     is(parsed.length >= 1, bool,
       "There's " + (bool ? ">= 1" : "< 1") + " parsed vertex shader error(s).");
 
@@ -108,7 +108,7 @@ async function ifWebGLSupported() {
     ok(error, "Vertex shader compiled with errors.");
     isnot(error.link, "", "The linkage status should not be empty.");
 
-    let line = 8;
+    const line = 8;
     info("Checking second vertex shader error on line " + line + "...");
 
     is(vsEditor.hasMarker(line, "errors", "error"), bool,
@@ -116,7 +116,7 @@ async function ifWebGLSupported() {
     is(vsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    let parsed = ShadersEditorsView._errors.vs;
+    const parsed = ShadersEditorsView._errors.vs;
     is(parsed.length >= 2, bool,
       "There's " + (bool ? ">= 2" : "< 2") + " parsed vertex shader error(s).");
 
@@ -136,7 +136,7 @@ async function ifWebGLSupported() {
     ok(error, "Fragment shader compiled with errors.");
     isnot(error.link, "", "The linkage status should not be empty.");
 
-    let line = 5;
+    const line = 5;
     info("Checking first vertex shader error on line " + line + "...");
 
     is(fsEditor.hasMarker(line, "errors", "error"), bool,
@@ -144,7 +144,7 @@ async function ifWebGLSupported() {
     is(fsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    let parsed = ShadersEditorsView._errors.fs;
+    const parsed = ShadersEditorsView._errors.fs;
     is(parsed.length >= 1, bool,
       "There's " + (bool ? ">= 2" : "< 1") + " parsed fragment shader error(s).");
 

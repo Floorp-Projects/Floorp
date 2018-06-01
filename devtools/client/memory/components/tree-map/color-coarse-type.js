@@ -26,7 +26,7 @@ const L = 0.9;
  *         index
  */
 function findCoarseTypeIndex(node) {
-  let index = TYPES.indexOf(node.name);
+  const index = TYPES.indexOf(node.name);
 
   if (node.parent) {
     return index === -1 ? findCoarseTypeIndex(node.parent) : index;
@@ -62,9 +62,9 @@ function typeColorFactor(node) {
  * @return {Array} HSL values ranged 0-1
  */
 module.exports = function colorCoarseType(node) {
-  let h = Math.min(1, H + typeColorFactor(node));
-  let s = Math.min(1, S);
-  let l = Math.min(1, L + depthColorFactor(node));
+  const h = Math.min(1, H + typeColorFactor(node));
+  const s = Math.min(1, S);
+  const l = Math.min(1, L + depthColorFactor(node));
 
   return [h, s, l];
 };

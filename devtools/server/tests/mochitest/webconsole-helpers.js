@@ -38,7 +38,7 @@ async function attachURL(url) {
   let win = window.open(url, "_blank");
   let client = null;
 
-  let cleanup = async function() {
+  const cleanup = async function() {
     if (client) {
       await client.close();
       client = null;
@@ -52,8 +52,8 @@ async function attachURL(url) {
 
   client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  let {tabs} = await client.listTabs();
-  let attachedTab = tabs.find(tab => tab.url === url);
+  const {tabs} = await client.listTabs();
+  const attachedTab = tabs.find(tab => tab.url === url);
 
   if (!attachedTab) {
     throw new Error(`Could not find a tab matching URL ${url}`);

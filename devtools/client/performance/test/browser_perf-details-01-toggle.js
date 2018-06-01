@@ -13,12 +13,12 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { command } = require("devtools/client/performance/test/helpers/input-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, $, DetailsView } = panel.panelWin;
+  const { EVENTS, $, DetailsView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -52,8 +52,8 @@ add_task(async function() {
 });
 
 function checkViews(DetailsView, $, currentView) {
-  for (let viewName in DetailsView.components) {
-    let button = $(`toolbarbutton[data-view="${viewName}"]`);
+  for (const viewName in DetailsView.components) {
+    const button = $(`toolbarbutton[data-view="${viewName}"]`);
 
     is(DetailsView.el.selectedPanel.id, DetailsView.components[currentView].id,
       `DetailsView correctly has ${currentView} selected.`);

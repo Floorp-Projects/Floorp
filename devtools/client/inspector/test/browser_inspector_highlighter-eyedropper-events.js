@@ -77,9 +77,9 @@ const MOVE_EVENTS_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(
+  const {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
 
   helper.prefix = ID;
 
@@ -92,8 +92,8 @@ add_task(async function() {
 
 async function respondsToMoveEvents(helper, testActor) {
   info("Checking that the eyedropper responds to events from the mouse and keyboard");
-  let {mouse} = helper;
-  let {width, height} = await testActor.getBoundingClientRect("html");
+  const {mouse} = helper;
+  const {width, height} = await testActor.getBoundingClientRect("html");
 
   for (let {type, x, y, key, shift, expected, desc} of MOVE_EVENTS_DATA) {
     x = typeof x === "function" ? x(width, height) : x;
@@ -112,7 +112,7 @@ async function respondsToMoveEvents(helper, testActor) {
     if (type === "mouse") {
       await mouse.move(x, y);
     } else if (type === "keyboard") {
-      let options = shift ? {shiftKey: true} : {};
+      const options = shift ? {shiftKey: true} : {};
       await EventUtils.synthesizeAndWaitKey(key, options);
     }
     await checkPosition(expected, helper);
@@ -120,7 +120,7 @@ async function respondsToMoveEvents(helper, testActor) {
 }
 
 async function checkPosition({x, y}, {getElementAttribute}) {
-  let style = await getElementAttribute("root", "style");
+  const style = await getElementAttribute("root", "style");
   is(style, `top:${y}px;left:${x}px;`,
      `The eyedropper is at the expected ${x} ${y} position`);
 }

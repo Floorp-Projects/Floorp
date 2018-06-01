@@ -18,10 +18,10 @@ exports.isVisible = (element) => {
  * Should be reviewed if Bug 1240509 lands.
  */
 exports.appendAndWaitForPaint = function(parent, element) {
-  let isE10s = Services.appinfo.browserTabsRemoteAutostart;
+  const isE10s = Services.appinfo.browserTabsRemoteAutostart;
   if (isE10s) {
-    let win = parent.ownerDocument.defaultView;
-    let onMozAfterPaint = waitForMozAfterPaint(win);
+    const win = parent.ownerDocument.defaultView;
+    const onMozAfterPaint = waitForMozAfterPaint(win);
     parent.appendChild(element);
     return onMozAfterPaint;
   }

@@ -51,7 +51,7 @@ async function checkValues(oi, storageType) {
   is(nodes.length, 5, "There is the expected number of nodes in the tree");
 
   info("Expanding the <entries> leaf of the map");
-  let entriesNode = nodes[3];
+  const entriesNode = nodes[3];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
     childList: true

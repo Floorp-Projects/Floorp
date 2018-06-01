@@ -33,30 +33,30 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await testLivePreviewData(data, view, "#testid");
   }
 });
 
 async function testLivePreviewData(data, ruleView, selector) {
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  let propEditor = rule.textProps[0].editor;
+  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const propEditor = rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");
-  let editor = await focusEditableField(ruleView, propEditor.valueSpan);
+  const editor = await focusEditableField(ruleView, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "The focused editor is the value");
 
   info("Entering value in the editor: " + data.value);
-  let onPreviewDone = ruleView.once("ruleview-changed");
+  const onPreviewDone = ruleView.once("ruleview-changed");
   EventUtils.sendString(data.value, ruleView.styleWindow);
   ruleView.debounce.flush();
   await onPreviewDone;
 
-  let onValueDone = ruleView.once("ruleview-changed");
+  const onValueDone = ruleView.once("ruleview-changed");
   if (data.escape) {
     EventUtils.synthesizeKey("KEY_Escape");
   } else {

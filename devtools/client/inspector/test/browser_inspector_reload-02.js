@@ -24,9 +24,9 @@ const TEST_URI = 'data:text/xml,<?xml version="1.0" standalone="no"?>' +
 "</svg>";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
 
-  let markupLoaded = inspector.once("markuploaded");
+  const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
   await testActor.eval("location.reload()");
@@ -34,7 +34,7 @@ add_task(async function() {
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
 
-  let svgFront = await getNodeFront("svg", inspector);
+  const svgFront = await getNodeFront("svg", inspector);
   is(inspector.selection.nodeFront, svgFront, "<svg> selected after reload.");
 
   info("Selecting a node to see that inspector still works.");
@@ -43,6 +43,6 @@ add_task(async function() {
   info("Reloading page.");
   await testActor.eval("location.reload");
 
-  let rectFront = await getNodeFront("rect", inspector);
+  const rectFront = await getNodeFront("rect", inspector);
   is(inspector.selection.nodeFront, rectFront, "<rect> selected after reload.");
 });

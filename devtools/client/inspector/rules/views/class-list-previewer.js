@@ -73,9 +73,10 @@ ClassListPreviewerModel.prototype = {
     if (!CLASSES.has(this.currentNode)) {
       // Use the proxy node to get a clean list of classes.
       this.classListProxyNode.className = this.currentNode.className;
-      let nodeClasses = [...new Set([...this.classListProxyNode.classList])].map(name => {
-        return { name, isApplied: true };
-      });
+      const nodeClasses = [...new Set([...this.classListProxyNode.classList])]
+        .map(name => {
+          return { name, isApplied: true };
+        });
 
       CLASSES.set(this.currentNode, nodeClasses);
     }
@@ -104,7 +105,7 @@ ClassListPreviewerModel.prototype = {
    */
   setClassState(name, isApplied) {
     // Do the change in our local model.
-    let nodeClasses = this.currentClasses;
+    const nodeClasses = this.currentClasses;
     nodeClasses.find(({ name: cName }) => cName === name).isApplied = isApplied;
 
     return this.applyClassState();
@@ -164,19 +165,19 @@ ClassListPreviewerModel.prototype = {
     };
 
     // Apply the change to the node.
-    let mod = this.currentNode.startModifyingAttributes();
+    const mod = this.currentNode.startModifyingAttributes();
     mod.setAttribute("class", this.currentClassesPreview);
     return mod.apply();
   },
 
   onMutations(mutations) {
-    for (let {type, target, attributeName} of mutations) {
+    for (const {type, target, attributeName} of mutations) {
       // Only care if this mutation is for the class attribute.
       if (type !== "attributes" || attributeName !== "class") {
         continue;
       }
 
-      let isMutationForOurChange = this.lastStateChange &&
+      const isMutationForOurChange = this.lastStateChange &&
                                    target === this.lastStateChange.node &&
                                    target.className === this.lastStateChange.className;
 
@@ -257,8 +258,8 @@ ClassListPreviewer.prototype = {
   render() {
     this.classesEl.innerHTML = "";
 
-    for (let { name, isApplied } of this.model.currentClasses) {
-      let checkBox = this.renderCheckBox(name, isApplied);
+    for (const { name, isApplied } of this.model.currentClasses) {
+      const checkBox = this.renderCheckBox(name, isApplied);
       this.classesEl.appendChild(checkBox);
     }
 
@@ -277,19 +278,19 @@ ClassListPreviewer.prototype = {
    * @return {DOMNode} The DOM element for this checkbox.
    */
   renderCheckBox(name, isApplied) {
-    let box = this.doc.createElement("input");
+    const box = this.doc.createElement("input");
     box.setAttribute("type", "checkbox");
     if (isApplied) {
       box.setAttribute("checked", "checked");
     }
     box.dataset.name = name;
 
-    let labelWrapper = this.doc.createElement("label");
+    const labelWrapper = this.doc.createElement("label");
     labelWrapper.setAttribute("title", name);
     labelWrapper.appendChild(box);
 
     // A child element is required to do the ellipsis.
-    let label = this.doc.createElement("span");
+    const label = this.doc.createElement("span");
     label.textContent = name;
     labelWrapper.appendChild(label);
 
@@ -302,7 +303,7 @@ ClassListPreviewer.prototype = {
    * @return {DOMNode} The DOM element for the message.
    */
   renderNoClassesMessage() {
-    let msg = this.doc.createElement("p");
+    const msg = this.doc.createElement("p");
     msg.classList.add("no-classes");
     msg.textContent = L10N.getStr("inspector.classPanel.noClasses");
     return msg;

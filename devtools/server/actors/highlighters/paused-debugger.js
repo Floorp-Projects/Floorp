@@ -25,15 +25,15 @@ PausedDebuggerOverlay.prototype = {
   ID_CLASS_PREFIX: "paused-dbg-",
 
   _buildMarkup() {
-    let { window } = this.env;
-    let prefix = this.ID_CLASS_PREFIX;
+    const { window } = this.env;
+    const prefix = this.ID_CLASS_PREFIX;
 
-    let container = createNode(window, {
+    const container = createNode(window, {
       attributes: {"class": "highlighter-container"}
     });
 
     // Wrapper element.
-    let wrapper = createNode(window, {
+    const wrapper = createNode(window, {
       parent: container,
       attributes: {
         "id": "root",
@@ -44,7 +44,7 @@ PausedDebuggerOverlay.prototype = {
       prefix
     });
 
-    let toolbar = createNode(window, {
+    const toolbar = createNode(window, {
       parent: wrapper,
       attributes: {
         "id": "toolbar",
@@ -82,7 +82,7 @@ PausedDebuggerOverlay.prototype = {
     }
 
     // Show the highlighter's root element.
-    let root = this.getElement("root");
+    const root = this.getElement("root");
     root.removeAttribute("hidden");
 
     // The page overlay is only shown upon request. Sometimes we just want the toolbar.
@@ -93,7 +93,7 @@ PausedDebuggerOverlay.prototype = {
     }
 
     // Set the text to appear in the toolbar.
-    let toolbar = this.getElement("toolbar");
+    const toolbar = this.getElement("toolbar");
     if (options.reason) {
       this.getElement("reason").setTextContent(options.reason);
       toolbar.removeAttribute("hidden");

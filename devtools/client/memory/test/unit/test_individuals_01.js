@@ -25,10 +25,10 @@ const EXPECTED_INDIVIDUAL_STATES = [
 ];
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   equal(getState().individuals, null,
@@ -54,7 +54,7 @@ add_task(async function() {
                             reportLeafIndex));
 
   // Wait for each expected state.
-  for (let state of EXPECTED_INDIVIDUAL_STATES) {
+  for (const state of EXPECTED_INDIVIDUAL_STATES) {
     await waitUntilState(store, s => {
       return s.view.state === viewState.INDIVIDUALS &&
              s.individuals &&

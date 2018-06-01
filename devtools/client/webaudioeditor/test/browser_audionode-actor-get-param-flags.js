@@ -6,14 +6,14 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_NODES_URL);
+  const [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
-  let allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
-  let nodeTypes = [
+  const allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
+  const nodeTypes = [
     "AudioDestinationNode",
     "AudioBufferSourceNode", "ScriptProcessorNode", "AnalyserNode", "GainNode",
     "DelayNode", "BiquadFilterNode", "WaveShaperNode", "PannerNode", "ConvolverNode",
@@ -24,11 +24,11 @@ add_task(async function() {
   // For some reason nodeTypes.forEach and params.forEach fail here so we use
   // simple for loops.
   for (let i = 0; i < nodeTypes.length; i++) {
-    let type = nodeTypes[i];
-    let params = allNodeParams[i];
+    const type = nodeTypes[i];
+    const params = allNodeParams[i];
 
-    for (let {param, value, flags} of params) {
-      let testFlags = await nodes[i].getParamFlags(param);
+    for (const {param, value, flags} of params) {
+      const testFlags = await nodes[i].getParamFlags(param);
       ok(typeof testFlags === "object", type + " has flags from #getParamFlags(" + param + ")");
 
       if (param === "buffer") {

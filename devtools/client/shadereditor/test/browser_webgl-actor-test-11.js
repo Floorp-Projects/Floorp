@@ -7,9 +7,9 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
 
-  let linked = once(front, "program-linked");
+  const linked = once(front, "program-linked");
   front.setup({ reload: true });
   await linked;
   ok(true, "Canvas was correctly instrumented on the first navigation.");

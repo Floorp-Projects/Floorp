@@ -143,7 +143,7 @@ TooltipToggle.prototype = {
    *         tooltip or null if no valid target was found.
    */
   async isValidHoverTarget(target) {
-    let res = await this._targetNodeCb(target, this.tooltip);
+    const res = await this._targetNodeCb(target, this.tooltip);
     if (res) {
       return res.nodeName ? res : target;
     }

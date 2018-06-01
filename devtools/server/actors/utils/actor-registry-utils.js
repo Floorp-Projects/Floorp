@@ -38,7 +38,7 @@ exports.registerActorInCurrentProcess = function(sourceText, fileName, options) 
 
   Cu.evalInSandbox(sourceText, sandbox, "1.8", fileName, 1);
 
-  let { prefix, constructor, type } = options;
+  const { prefix, constructor, type } = options;
 
   if (type.global && !DebuggerServer.globalActorFactories.hasOwnProperty(prefix)) {
     DebuggerServer.addGlobalActor({

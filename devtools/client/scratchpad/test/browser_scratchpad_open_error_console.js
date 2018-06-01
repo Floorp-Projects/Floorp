@@ -21,14 +21,14 @@ function runTests() {
     Services.obs.removeObserver(observer, "web-console-created");
     aSubject.QueryInterface(Ci.nsISupportsString);
 
-    let hud = HUDService.getBrowserConsole();
+    const hud = HUDService.getBrowserConsole();
     ok(hud, "browser console is open");
     is(aSubject.data, hud.hudId, "notification hudId is correct");
 
     HUDService.toggleBrowserConsole().then(finish);
   }, "web-console-created");
 
-  let hud = HUDService.getBrowserConsole();
+  const hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");
   info("wait for the browser console to open from Scratchpad");
 

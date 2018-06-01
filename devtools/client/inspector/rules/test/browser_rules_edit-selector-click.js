@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".testclass", inspector);
   await testClickOnSelectorEditorInput(view);
 });
@@ -26,16 +26,16 @@ add_task(async function() {
 async function testClickOnSelectorEditorInput(view) {
   info("Test clicking inside the selector editor input");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
-  let editorInput = editor.input;
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editorInput = editor.input;
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
 
   info("Click inside the editor input");
-  let onClick = once(editorInput, "click");
+  const onClick = once(editorInput, "click");
   EventUtils.synthesizeMouse(editor.input, 2, 1, {}, view.styleWindow);
   await onClick;
   is(editor.input, view.styleDocument.activeElement,
@@ -43,7 +43,7 @@ async function testClickOnSelectorEditorInput(view) {
   ok(!ruleEditor.newPropSpan, "No newProperty editor was created");
 
   info("Doubleclick inside the editor input");
-  let onDoubleClick = once(editorInput, "dblclick");
+  const onDoubleClick = once(editorInput, "dblclick");
   EventUtils.synthesizeMouse(editor.input, 2, 1, { clickCount: 2 },
     view.styleWindow);
   await onDoubleClick;
@@ -52,8 +52,8 @@ async function testClickOnSelectorEditorInput(view) {
   ok(!ruleEditor.newPropSpan, "No newProperty editor was created");
 
   info("Click outside the editor input");
-  let onBlur = once(editorInput, "blur");
-  let rect = editorInput.getBoundingClientRect();
+  const onBlur = once(editorInput, "blur");
+  const rect = editorInput.getBoundingClientRect();
   EventUtils.synthesizeMouse(editorInput, rect.width + 5, rect.height / 2, {},
     view.styleWindow);
   await onBlur;

@@ -19,29 +19,29 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#test1", inspector);
   await simpleInherit(inspector, view);
 });
 
 function simpleInherit(inspector, view) {
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
   is(elementStyle.rules.length, 2, "Should have 2 rules.");
 
-  let elementRule = elementStyle.rules[0];
+  const elementRule = elementStyle.rules[0];
   ok(!elementRule.inherited,
     "Element style attribute should not consider itself inherited.");
 
-  let inheritRule = elementStyle.rules[1];
+  const inheritRule = elementStyle.rules[1];
   is(inheritRule.selectorText, "#test2",
     "Inherited rule should be the one that includes inheritable properties.");
   ok(!!inheritRule.inherited, "Rule should consider itself inherited.");
   is(inheritRule.textProps.length, 2,
     "Rule should have two styles");
-  let bgcProp = inheritRule.textProps[0];
+  const bgcProp = inheritRule.textProps[0];
   is(bgcProp.name, "background-color",
      "background-color property should exist");
   ok(bgcProp.invisible, "background-color property should be invisible");
-  let inheritProp = inheritRule.textProps[1];
+  const inheritProp = inheritRule.textProps[1];
   is(inheritProp.name, "color", "color should have been inherited.");
 }

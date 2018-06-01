@@ -313,7 +313,7 @@ DominatorTreeNode.attachShortestPaths = function(snapshot,
                                                   maxNumPaths = DEFAULT_MAX_NUM_PATHS) {
   const idToTreeNode = new Map();
   const targets = [];
-  for (let node of treeNodes) {
+  for (const node of treeNodes) {
     const id = node.nodeId;
     idToTreeNode.set(id, node);
     targets.push(id);
@@ -323,7 +323,7 @@ DominatorTreeNode.attachShortestPaths = function(snapshot,
                                                       targets,
                                                       maxNumPaths);
 
-  for (let [target, paths] of shortestPaths) {
+  for (const [target, paths] of shortestPaths) {
     const deduped = deduplicatePaths(target, paths);
     deduped.nodes = deduped.nodes.map(id => {
       const { label } =

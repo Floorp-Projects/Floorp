@@ -17,9 +17,9 @@ function test() {
 
     let tab = await addTab(TEST_URI);
 
-    let win = await openWebIDE();
-    let docProject = getProjectDocument(win);
-    let docRuntime = getRuntimeDocument(win);
+    const win = await openWebIDE();
+    const docProject = getProjectDocument(win);
+    const docRuntime = getRuntimeDocument(win);
 
     await connectToLocal(win, docRuntime);
 
@@ -30,12 +30,12 @@ function test() {
     ok(win.UI.toolboxPromise, "Toolbox promise exists");
     await win.UI.toolboxPromise;
 
-    let project = win.AppManager.selectedProject;
+    const project = win.AppManager.selectedProject;
     is(project.location, TEST_URI, "Location is correct");
     is(project.name, "example.com: Test Tab", "Name is correct");
 
     // Ensure tab list changes are noticed
-    let tabsNode = docProject.querySelector("#project-panel-tabs");
+    const tabsNode = docProject.querySelector("#project-panel-tabs");
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
     await removeTab(tab);
     await waitForUpdate(win, "project");
@@ -75,9 +75,9 @@ function connectToLocal(win, docRuntime) {
 function selectTabProject(win, docProject) {
   return (async function() {
     await waitForUpdate(win, "runtime-targets");
-    let tabsNode = docProject.querySelector("#project-panel-tabs");
-    let tabNode = tabsNode.querySelectorAll(".panel-item")[1];
-    let project = waitForUpdate(win, "project");
+    const tabsNode = docProject.querySelector("#project-panel-tabs");
+    const tabNode = tabsNode.querySelectorAll(".panel-item")[1];
+    const project = waitForUpdate(win, "project");
     tabNode.click();
     await project;
   })();

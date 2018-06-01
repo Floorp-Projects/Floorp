@@ -7,7 +7,7 @@
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-    let simpleProg = "function foo() {\n  let i = 1;\n  let j = 2;\n  " +
+    const simpleProg = "function foo() {\n  let i = 1;\n  let j = 2;\n  " +
                      "return bar;\n}";
     ed.setText(simpleProg);
 

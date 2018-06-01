@@ -13,14 +13,14 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 const ID = "rulers-highlighter-";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  let front = inspector.inspector;
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const front = inspector.inspector;
 
-  let highlighter = await front.getHighlighterByType("RulersHighlighter");
+  const highlighter = await front.getHighlighterByType("RulersHighlighter");
 
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
-  let body = await getNodeFront("body", inspector);
+  const body = await getNodeFront("body", inspector);
   await highlighter.show(body);
 
   await isUpdatedAfterScroll(highlighter, inspector, testActor);
@@ -47,7 +47,7 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Ask the content window to scroll to specific coords");
 
-  let x = 200, y = 300;
+  const x = 200, y = 300;
 
   let data = await testActor.scrollWindow(x, y);
 

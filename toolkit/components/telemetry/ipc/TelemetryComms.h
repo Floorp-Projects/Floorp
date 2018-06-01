@@ -10,6 +10,7 @@
 #include "nsITelemetry.h"
 #include "nsVariant.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TelemetryProcessEnums.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -49,6 +50,9 @@ struct ScalarAction
   // We need to wrap mData in a Maybe otherwise the IPC system
   // is unable to instantiate a ScalarAction.
   Maybe<ScalarVariant> mData;
+  // The process type this scalar should be recorded for.
+  // The IPC system will determine the process this action was coming from later.
+  mozilla::Telemetry::ProcessID mProcessType;
 };
 
 struct KeyedScalarAction
@@ -60,6 +64,9 @@ struct KeyedScalarAction
   // We need to wrap mData in a Maybe otherwise the IPC system
   // is unable to instantiate a ScalarAction.
   Maybe<ScalarVariant> mData;
+  // The process type this scalar should be recorded for.
+  // The IPC system will determine the process this action was coming from later.
+  mozilla::Telemetry::ProcessID mProcessType;
 };
 
 // Dynamic scalars support.

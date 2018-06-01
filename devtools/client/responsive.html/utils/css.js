@@ -12,7 +12,7 @@ const { getDOMWindowUtils } = require("./window");
  * and only on the document of the `window` given.
  */
 function loadAgentSheet(window, url) {
-  let winUtils = getDOMWindowUtils(window);
+  const winUtils = getDOMWindowUtils(window);
   winUtils.loadSheetUsingURIString(url, winUtils.AGENT_SHEET);
 }
 exports.loadAgentSheet = loadAgentSheet;

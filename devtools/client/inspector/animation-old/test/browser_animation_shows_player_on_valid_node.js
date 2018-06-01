@@ -11,10 +11,10 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
   info("Select node .animated and check that the panel is not empty");
-  let node = await getNodeFront(".animated", inspector);
+  const node = await getNodeFront(".animated", inspector);
   await selectNodeAndWaitForAnimations(node, inspector);
 
   assertAnimationsDisplayed(panel, 1);

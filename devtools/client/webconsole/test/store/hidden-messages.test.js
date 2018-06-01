@@ -26,7 +26,7 @@ describe("Filtering - Hidden messages", () => {
   });
 
   it("has the expected numbers", () => {
-    let counter = getFilteredMessagesCount(store.getState());
+    const counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual(BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT);
   });
 
@@ -54,7 +54,7 @@ describe("Filtering - Hidden messages", () => {
     const packets = MESSAGES.map(key => stubPackets.get(key));
     store.dispatch(actions.messagesAdd(packets));
 
-    let counter = getFilteredMessagesCount(store.getState());
+    const counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
       [FILTERS.ERROR]: 6,
       [FILTERS.WARN]: 2,
@@ -94,7 +94,7 @@ describe("Filtering - Hidden messages", () => {
     // Add a text search to make sure it is handled as well.
     store.dispatch(actions.filterTextSet("danger, will robinson!"));
     store.dispatch(actions.messagesClear());
-    let counter = getFilteredMessagesCount(store.getState());
+    const counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
       [FILTERS.ERROR]: 0,
       [FILTERS.WARN]: 0,
@@ -110,7 +110,7 @@ describe("Filtering - Hidden messages", () => {
     // Add a text search to make sure it is handled as well.
     store.dispatch(actions.filterTextSet("danger, will robinson!"));
     store.dispatch(actions.defaultFiltersReset());
-    let counter = getFilteredMessagesCount(store.getState());
+    const counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
       [FILTERS.ERROR]: 0,
       [FILTERS.WARN]: 0,
@@ -126,7 +126,7 @@ describe("Filtering - Hidden messages", () => {
     // Add a text search to make sure it is handled as well.
     store.dispatch(actions.filterTextSet("danger, will robinson!"));
     store.dispatch(actions.filtersClear());
-    let counter = getFilteredMessagesCount(store.getState());
+    const counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
       [FILTERS.ERROR]: 0,
       [FILTERS.WARN]: 0,

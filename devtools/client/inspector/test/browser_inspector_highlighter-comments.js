@@ -12,8 +12,8 @@ const TEST_PAGE = URL_ROOT +
   "doc_inspector_highlighter-comments.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
-  let markupView = inspector.markup;
+  const {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
+  const markupView = inspector.markup;
   await selectNode("p", inspector);
 
   info("Hovering over #id1 and waiting for highlighter to appear.");
@@ -49,7 +49,7 @@ add_task(async function() {
   await assertHighlighterShownOnTextNode("body", 14);
 
   function hoverContainer(container) {
-    let promise = inspector.toolbox.once("node-highlight");
+    const promise = inspector.toolbox.once("node-highlight");
 
     container.tagLine.scrollIntoView();
     EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
@@ -60,13 +60,13 @@ add_task(async function() {
 
   async function hoverElement(selector) {
     info(`Hovering node ${selector} in the markup view`);
-    let container = await getContainerForSelector(selector, inspector);
+    const container = await getContainerForSelector(selector, inspector);
     return hoverContainer(container);
   }
 
   function hoverComment() {
     info("Hovering the comment node in the markup view");
-    for (let [node, container] of markupView._containers) {
+    for (const [node, container] of markupView._containers) {
       if (node.nodeType === Node.COMMENT_NODE) {
         return hoverContainer(container);
       }
@@ -76,7 +76,7 @@ add_task(async function() {
 
   function hoverTextNode(text) {
     info(`Hovering the text node "${text}" in the markup view`);
-    let container = [...markupView._containers].filter(([nodeFront]) => {
+    const container = [...markupView._containers].filter(([nodeFront]) => {
       return nodeFront.nodeType === Node.TEXT_NODE &&
              nodeFront._form.nodeValue.trim() === text.trim();
     })[0][1];
@@ -94,7 +94,7 @@ add_task(async function() {
   }
 
   async function assertHighlighterHidden() {
-    let isVisible = await testActor.isHighlighting();
+    const isVisible = await testActor.isHighlighting();
     ok(!isVisible, "Highlighter is hidden");
   }
 });

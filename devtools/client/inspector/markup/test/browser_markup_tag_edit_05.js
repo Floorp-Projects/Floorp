@@ -72,6 +72,6 @@ var TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
   await runAddAttributesTests(TEST_DATA, "div", inspector, testActor);
 });

@@ -41,14 +41,14 @@ function test() {
 
 function windowObserver(subject, topic, data) {
   if (topic == "domwindowopened") {
-    let win = subject.QueryInterface(Ci.nsIDOMWindow);
+    const win = subject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function() {
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
           onReady() {
             win.Scratchpad.removeObserver(this);
 
-            let state = win.Scratchpad.getState();
+            const state = win.Scratchpad.getState();
             BrowserTestUtils.closeWindow(win).then(() => {
               addState(state);
             });

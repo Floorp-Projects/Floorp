@@ -12,8 +12,8 @@ const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
 add_task(async function() {
   Services.prefs.setBoolPref(AUTOCOMPLETION_PREF, false);
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
-  let editor = await ui.editors[0].getSourceEditor();
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const editor = await ui.editors[0].getSourceEditor();
 
   is(editor.sourceEditor.getOption("autocomplete"), false,
      "Autocompletion option does not exist");

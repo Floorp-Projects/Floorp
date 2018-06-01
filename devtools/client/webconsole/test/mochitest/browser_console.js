@@ -24,7 +24,7 @@ const ObjectClient = require("devtools/shared/client/object-client");
 add_task(async function() {
   await addTab(TEST_URI);
 
-  let opened = waitForBrowserConsole();
+  const opened = waitForBrowserConsole();
 
   let hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");
@@ -60,11 +60,11 @@ async function testMessages(hud) {
   // Use another js script to not depend on the test file line numbers.
   Services.scriptloader.loadSubScript(TEST_FILE, hud.iframeWindow);
 
-  let sandbox = new Cu.Sandbox(null, {
+  const sandbox = new Cu.Sandbox(null, {
     wantComponents: false,
     wantGlobalProperties: ["URL", "URLSearchParams"],
   });
-  let error = Cu.evalInSandbox(`new Error("error from nuked globals");`, sandbox);
+  const error = Cu.evalInSandbox(`new Error("error from nuked globals");`, sandbox);
   Cu.reportError(error);
   Cu.nukeSandbox(sandbox);
 
@@ -81,13 +81,13 @@ async function testMessages(hud) {
     `"framescript-eval";`);
 
   // Check for network requests.
-  let xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.onload = () => console.log("xhr loaded, status is: " + xhr.status);
   xhr.open("get", TEST_URI, true);
   xhr.send();
 
   // Check for xhr error.
-  let xhrErr = new XMLHttpRequest();
+  const xhrErr = new XMLHttpRequest();
   xhrErr.onload = () => {
     console.log("xhr error loaded, status is: " + xhrErr.status);
   };
@@ -118,26 +118,26 @@ async function testCPOWInspection(hud) {
   // us to assert that inspecting an object doesn't throw in the server.
   // This would be done in a mochitest-chrome suite, but that doesn't run in
   // e10s, so it's harder to get ahold of a CPOW.
-  let cpowEval = await hud.jsterm.requestEvaluation("gBrowser.selectedBrowser");
+  const cpowEval = await hud.jsterm.requestEvaluation("gBrowser.selectedBrowser");
   info("Creating an ObjectClient with: " + cpowEval.result.actor);
 
-  let objectClient = new ObjectClient(hud.jsterm.hud.proxy.client, {
+  const objectClient = new ObjectClient(hud.jsterm.hud.proxy.client, {
     actor: cpowEval.result.actor,
   });
 
   // Before the fix for Bug 1382833, this wouldn't resolve due to a CPOW error
   // in the ObjectActor.
-  let prototypeAndProperties = await objectClient.getPrototypeAndProperties();
+  const prototypeAndProperties = await objectClient.getPrototypeAndProperties();
 
   // Just a sanity check to make sure a valid packet came back
   is(prototypeAndProperties.prototype.class, "XBL prototype JSClass",
     "Looks like a valid response");
 
   // The CPOW is in the _contentWindow property.
-  let cpow = prototypeAndProperties.ownProperties._contentWindow.value;
+  const cpow = prototypeAndProperties.ownProperties._contentWindow.value;
 
   // But it's only a CPOW in e10s.
-  let e10sCheck = await hud.jsterm.requestEvaluation(
+  const e10sCheck = await hud.jsterm.requestEvaluation(
     "Cu.isCrossProcessWrapper(gBrowser.selectedBrowser._contentWindow)");
   if (!e10sCheck.result) {
     is(cpow.class, "Window", "The object is not a CPOW.");
@@ -147,7 +147,7 @@ async function testCPOWInspection(hud) {
   is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
 
   // Check that various protocol request methods work for the CPOW.
-  let objClient = new ObjectClient(hud.jsterm.hud.proxy.client, cpow);
+  const objClient = new ObjectClient(hud.jsterm.hud.proxy.client, cpow);
 
   let response = await objClient.getPrototypeAndProperties();
   is(Reflect.ownKeys(response.ownProperties).length, 0, "No property was retrieved.");
@@ -181,6 +181,6 @@ async function testCPOWInspection(hud) {
 
 async function checkMessageExists(hud, msg) {
   info(`Checking "${msg}" was logged`);
-  let message = await waitFor(() => findMessage(hud, msg));
+  const message = await waitFor(() => findMessage(hud, msg));
   ok(message, `"${msg}" was logged`);
 }

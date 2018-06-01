@@ -7,7 +7,7 @@
 // Check the animation player's initial state
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await playerHasAnInitialState(walker, animations);
@@ -18,8 +18,8 @@ add_task(async function() {
 });
 
 async function playerHasAnInitialState(walker, animations) {
-  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = await animations.getAnimationPlayersForNode(node);
+  const node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  const [player] = await animations.getAnimationPlayersForNode(node);
 
   ok(player.initialState, "The player front has an initial state");
   ok("startTime" in player.initialState, "Player's state has startTime");
@@ -115,9 +115,9 @@ async function playerStateIsCorrect(walker, animations) {
 }
 
 async function getAnimationPlayerForNode(walker, animations, nodeSelector, index) {
-  let node = await walker.querySelector(walker.rootNode, nodeSelector);
-  let players = await animations.getAnimationPlayersForNode(node);
-  let player = players[index];
+  const node = await walker.querySelector(walker.rootNode, nodeSelector);
+  const players = await animations.getAnimationPlayersForNode(node);
+  const player = players[index];
   await player.ready();
   return player;
 }

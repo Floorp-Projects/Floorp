@@ -12,25 +12,25 @@ add_task(async function() {
   await pushPref("devtools.netmonitor.visibleColumns",
     '["status", "contentSize", "waterfall"]');
 
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  const wait = waitForNetworkEvents(monitor, 2);
   // Timeout needed for having enough divisions on the time scale.
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests(2, null, 3000);
   });
   await wait;
 
-  let milDivs = document.querySelectorAll(
+  const milDivs = document.querySelectorAll(
     ".requests-list-timings-division[data-division-scale=millisecond]");
-  let secDivs = document.querySelectorAll(
+  const secDivs = document.querySelectorAll(
     ".requests-list-timings-division[data-division-scale=second]");
-  let minDivs = document.querySelectorAll(
+  const minDivs = document.querySelectorAll(
     ".requests-list-timings-division[data-division-scale=minute]");
 
   info("Number of millisecond divisions: " + milDivs.length);

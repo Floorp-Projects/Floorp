@@ -71,7 +71,7 @@ Object.assign({
    *        The file to stream the data into.
    */
   exportRecording: function(file) {
-    let recordingData = this.getAllData();
+    const recordingData = this.getAllData();
     return PerformanceIO.saveRecordingToFile(recordingData, file);
   },
 
@@ -79,7 +79,7 @@ Object.assign({
    * Fired whenever the PerformanceFront emits markers, memory or ticks.
    */
   _addTimelineData: function(eventName, data) {
-    let config = this.getConfiguration();
+    const config = this.getConfiguration();
 
     switch (eventName) {
       // Accumulate timeline markers into an array. Furthermore, the timestamps
@@ -88,7 +88,7 @@ Object.assign({
         if (!config.withMarkers) {
           break;
         }
-        let { markers } = data;
+        const { markers } = data;
         RecordingUtils.offsetMarkerTimes(markers, this._startTime);
         RecordingUtils.pushAll(this._markers, markers);
         break;
@@ -98,7 +98,7 @@ Object.assign({
         if (!config.withMarkers) {
           break;
         }
-        let { frames } = data;
+        const { frames } = data;
         RecordingUtils.pushAll(this._frames, frames);
         break;
       }
@@ -108,7 +108,7 @@ Object.assign({
         if (!config.withMemory) {
           break;
         }
-        let { delta, measurement } = data;
+        const { delta, measurement } = data;
         this._memory.push({
           delta: delta - this._startTime,
           value: measurement.total / 1024 / 1024
@@ -120,7 +120,7 @@ Object.assign({
         if (!config.withTicks) {
           break;
         }
-        let { timestamps } = data;
+        const { timestamps } = data;
         this._ticks = timestamps;
         break;
       }
@@ -129,7 +129,7 @@ Object.assign({
         if (!config.withAllocations) {
           break;
         }
-        let {
+        const {
           allocations: sites,
           allocationsTimestamps: timestamps,
           allocationSizes: sizes,

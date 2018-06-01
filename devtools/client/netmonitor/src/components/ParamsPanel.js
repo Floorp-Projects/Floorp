@@ -56,13 +56,13 @@ class ParamsPanel extends Component {
   }
 
   componentDidMount() {
-    let { request, connector } = this.props;
+    const { request, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
     updateFormDataSections(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { request, connector } = nextProps;
+    const { request, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
     updateFormDataSections(nextProps);
   }
@@ -78,7 +78,7 @@ class ParamsPanel extends Component {
    */
   getProperties(arr) {
     return sortObjectKeys(arr.reduce((map, obj) => {
-      let value = map[obj.name];
+      const value = map[obj.name];
       if (value) {
         if (typeof value !== "object") {
           map[obj.name] = [value];
@@ -92,18 +92,18 @@ class ParamsPanel extends Component {
   }
 
   render() {
-    let {
+    const {
       openLink,
       request
     } = this.props;
-    let {
+    const {
       formDataSections,
       mimeType,
       requestPostData,
       url,
     } = request;
     let postData = requestPostData ? requestPostData.postData.text : null;
-    let query = getUrlQuery(url);
+    const query = getUrlQuery(url);
 
     if ((!formDataSections || formDataSections.length === 0) && !postData && !query) {
       return div({ className: "empty-notice" },
@@ -111,7 +111,7 @@ class ParamsPanel extends Component {
       );
     }
 
-    let object = {};
+    const object = {};
     let json;
 
     // Query String section
@@ -121,7 +121,7 @@ class ParamsPanel extends Component {
 
     // Form Data section
     if (formDataSections && formDataSections.length > 0) {
-      let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
+      const sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
       object[PARAMS_FORM_DATA] = this.getProperties(parseFormData(sections));
     }
 

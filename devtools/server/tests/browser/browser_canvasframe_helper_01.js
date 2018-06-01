@@ -9,7 +9,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(async function() {
-  let browser = await addTab(TEST_URL);
+  const browser = await addTab(TEST_URL);
 
   await ContentTask.spawn(browser, null, async function() {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -17,11 +17,11 @@ add_task(async function() {
     const {
       CanvasFrameAnonymousContentHelper
     } = require("devtools/server/actors/highlighters/utils/markup");
-    let doc = content.document;
+    const doc = content.document;
 
-    let nodeBuilder = () => {
-      let root = doc.createElement("div");
-      let child = doc.createElement("div");
+    const nodeBuilder = () => {
+      const root = doc.createElement("div");
+      const child = doc.createElement("div");
       child.style = "width:200px;height:200px;background:red;";
       child.id = "child-element";
       child.className = "child-element";
@@ -31,9 +31,9 @@ add_task(async function() {
     };
 
     info("Building the helper");
-    let env = new HighlighterEnvironment();
+    const env = new HighlighterEnvironment();
     env.initFromWindow(doc.defaultView);
-    let helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
+    const helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
 
     ok(helper.content instanceof content.AnonymousContent,
       "The helper owns the AnonymousContent object");
@@ -63,7 +63,7 @@ add_task(async function() {
     is(helper.getAttributeForElement("child-element", "class"), "child-element",
       "The class attribute was retrieve correctly");
 
-    let el = helper.getElement("child-element");
+    const el = helper.getElement("child-element");
     ok(el, "The DOMNode-like element was created");
 
     is(el.getTextContent(), "test element",

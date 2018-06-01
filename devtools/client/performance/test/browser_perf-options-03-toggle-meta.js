@@ -13,14 +13,14 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 add_task(async function() {
   Services.prefs.setBoolPref(UI_EXPERIMENTAL_PREF, false);
 
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $ } = panel.panelWin;
-  let $body = $(".theme-body");
-  let $menu = $("#performance-options-menupopup");
+  const { $ } = panel.panelWin;
+  const $body = $(".theme-body");
+  const $menu = $("#performance-options-menupopup");
 
   ok(!$body.classList.contains("experimental-enabled"),
     "The body node does not have `experimental-enabled` on start.");

@@ -51,7 +51,7 @@ const SymbolIteratorActor  = protocol.ActorClassWithSpec(symbolIteratorSpec, {
   },
 
   slice({ start, count }) {
-    let ownSymbols = [];
+    const ownSymbols = [];
     for (let i = start, m = start + count; i < m; i++) {
       ownSymbols.push(this.iterator.symbolDescription(i));
     }

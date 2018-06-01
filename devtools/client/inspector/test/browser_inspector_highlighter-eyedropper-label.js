@@ -71,11 +71,11 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+  const {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
   helper.prefix = ID;
 
-  let {mouse, show, hide, finalize} = helper;
+  const {mouse, show, hide, finalize} = helper;
   let {width, height} = await testActor.getBoundingClientRect("html");
 
   // This test fails in non-e10s windows if we use width and height. For some reasons, the
@@ -89,9 +89,9 @@ add_task(async function() {
   await show("html");
 
   info("Move the eyedropper around and check that the label appears at the right place");
-  for (let {desc, getCoordinates, expectedPositions} of TEST_DATA) {
+  for (const {desc, getCoordinates, expectedPositions} of TEST_DATA) {
     info(desc);
-    let {x, y} = getCoordinates(width, height);
+    const {x, y} = getCoordinates(width, height);
     info(`Moving the mouse to ${x} ${y}`);
     await mouse.move(x, y);
     await checkLabelPositionAttributes(helper, expectedPositions);
@@ -103,13 +103,13 @@ add_task(async function() {
 });
 
 async function checkLabelPositionAttributes(helper, positions) {
-  for (let position in positions) {
+  for (const position in positions) {
     is((await hasAttribute(helper, position)), positions[position],
        `The label was ${positions[position] ? "" : "not "}moved to the ${position}`);
   }
 }
 
 async function hasAttribute({getElementAttribute}, name) {
-  let value = await getElementAttribute("root", name);
+  const value = await getElementAttribute("root", name);
   return value !== null;
 }

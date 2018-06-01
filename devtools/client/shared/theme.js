@@ -26,7 +26,7 @@ const THEME_PREF = "devtools.theme";
  */
 function getThemeFile(name) {
   // If there's no theme expected for this name, use `light` as default.
-  let selector = THEME_SELECTOR_STRINGS[name] ||
+  const selector = THEME_SELECTOR_STRINGS[name] ||
                  THEME_SELECTOR_STRINGS.light;
 
   // This is a pretty naive way to find the contents between:
@@ -58,10 +58,10 @@ const getTheme = exports.getTheme = () => {
  */
 /* eslint-disable no-unused-vars */
 const getColor = exports.getColor = (type, theme) => {
-  let themeName = theme || getTheme();
+  const themeName = theme || getTheme();
   let themeFile = getThemeFile(themeName);
   let match = themeFile.match(new RegExp("--theme-" + type + ": (.*);"));
-  let variableMatch = match ? match[1].match(/var\((.*)\)/) : null;
+  const variableMatch = match ? match[1].match(/var\((.*)\)/) : null;
 
   // Check if the match is a color variable and retrieve the value of the color variable
   // if needed

@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   await testEditProperty(inspector, view);
@@ -30,8 +30,8 @@ add_task(async function() {
 });
 
 async function testEditProperty(inspector, ruleView) {
-  let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
-  let prop = idRule.textProps[0];
+  const idRule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const prop = idRule.textProps[0];
 
   let editor = await focusEditableField(ruleView, prop.editor.nameSpan);
   let input = editor.input;
@@ -48,8 +48,8 @@ async function testEditProperty(inspector, ruleView) {
 
   info("Entering property name \"border-color\" followed by a colon to " +
     "focus the value");
-  let onNameDone = ruleView.once("ruleview-changed");
-  let onFocus = once(idRule.editor.element, "focus", true);
+  const onNameDone = ruleView.once("ruleview-changed");
+  const onFocus = once(idRule.editor.element, "focus", true);
   EventUtils.sendString("border-color:", ruleView.styleWindow);
   await onFocus;
   await onNameDone;
@@ -63,11 +63,11 @@ async function testEditProperty(inspector, ruleView) {
     "Editor contents are selected.");
 
   info("Entering a value following by a semi-colon to commit it");
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
   // Use sendChar() to pass each character as a string so that we can test
   // prop.editor.warning.hidden after each character.
-  for (let ch of "red;") {
-    let onPreviewDone = ruleView.once("ruleview-changed");
+  for (const ch of "red;") {
+    const onPreviewDone = ruleView.once("ruleview-changed");
     EventUtils.sendChar(ch, ruleView.styleWindow);
     ruleView.debounce.flush();
     await onPreviewDone;
@@ -76,7 +76,7 @@ async function testEditProperty(inspector, ruleView) {
   }
   await onBlur;
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
+  const newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "border-color"
@@ -86,7 +86,7 @@ async function testEditProperty(inspector, ruleView) {
   ruleView.styleDocument.activeElement.blur();
   await addProperty(ruleView, 1, "color", "red", ";");
 
-  let props = ruleView.element.querySelectorAll(".ruleview-property");
+  const props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
     is(props[i].hasAttribute("dirty"), i <= 1,
       "props[" + i + "] marked dirty as appropriate");
@@ -94,8 +94,8 @@ async function testEditProperty(inspector, ruleView) {
 }
 
 async function testDisableProperty(inspector, ruleView) {
-  let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
-  let prop = idRule.textProps[0];
+  const idRule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const prop = idRule.textProps[0];
 
   info("Disabling a property");
   await togglePropStatus(ruleView, prop);
@@ -125,7 +125,7 @@ async function testPropertyStillMarkedDirty(inspector, ruleView) {
   // Select the original node again.
   await selectNode("#testid", inspector);
 
-  let props = ruleView.element.querySelectorAll(".ruleview-property");
+  const props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
     is(props[i].hasAttribute("dirty"), i <= 1,
       "props[" + i + "] marked dirty as appropriate");

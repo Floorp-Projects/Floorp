@@ -25,8 +25,8 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(currentTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const target = TargetFactory.forTab(currentTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   const documentUrl = TEST_PATH + TEST_FILE;
   await loadDocument(documentUrl);

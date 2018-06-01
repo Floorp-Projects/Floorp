@@ -11,7 +11,7 @@ const TESTCASE_URI = URL_ROOT + "doc_keyframeLineNumbers.html";
 
 add_task(async function() {
   await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#outer", inspector);
 
   info("Insert a new property, which will affect the line numbers");
@@ -19,7 +19,7 @@ add_task(async function() {
 
   await selectNode("#inner", inspector);
 
-  let value = getRuleViewLinkTextByIndex(view, 3);
+  const value = getRuleViewLinkTextByIndex(view, 3);
   // Note that this is relative to the <style>.
   is(value.slice(-3), ":27", "rule line number is 27");
 });

@@ -6,7 +6,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: false });
 
   // Attach frame scripts if in e10s to perform
@@ -14,13 +14,13 @@ async function ifWebGLSupported() {
   loadFrameScripts();
 
   reload(target);
-  let firstProgram = await once(front, "program-linked");
+  const firstProgram = await once(front, "program-linked");
   await checkFirstCachedPrograms(firstProgram);
   await checkHighlightingInTheFirstPage(firstProgram);
   ok(true, "The cached programs behave correctly before the navigation.");
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
-  let [secondProgram, thirdProgram] = await getPrograms(front, 2);
+  const [secondProgram, thirdProgram] = await getPrograms(front, 2);
   await checkSecondCachedPrograms(firstProgram, [secondProgram, thirdProgram]);
   await checkHighlightingInTheSecondPage(secondProgram, thirdProgram);
   ok(true, "The cached programs behave correctly after the navigation.");
@@ -54,7 +54,7 @@ async function ifWebGLSupported() {
 
   function checkFirstCachedPrograms(programActor) {
     return (async function() {
-      let programs = await front.getPrograms();
+      const programs = await front.getPrograms();
 
       is(programs.length, 1,
         "There should be 1 cached program actor.");
@@ -65,7 +65,7 @@ async function ifWebGLSupported() {
 
   function checkSecondCachedPrograms(oldProgramActor, newProgramActors) {
     return (async function() {
-      let programs = await front.getPrograms();
+      const programs = await front.getPrograms();
 
       is(programs.length, 2,
         "There should be 2 cached program actors after the navigation.");

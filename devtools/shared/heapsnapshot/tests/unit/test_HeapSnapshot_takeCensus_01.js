@@ -6,12 +6,12 @@
 // shape. Ported from js/src/jit-tests/debug/Memory-takeCensus-01.js
 
 function run_test() {
-  let dbg = new Debugger();
+  const dbg = new Debugger();
 
   function checkProperties(census) {
     equal(typeof census, "object");
-    for (let prop of Object.getOwnPropertyNames(census)) {
-      let desc = Object.getOwnPropertyDescriptor(census, prop);
+    for (const prop of Object.getOwnPropertyNames(census)) {
+      const desc = Object.getOwnPropertyDescriptor(census, prop);
       equal(desc.enumerable, true);
       equal(desc.configurable, true);
       equal(desc.writable, true);
@@ -25,7 +25,7 @@ function run_test() {
 
   checkProperties(saveHeapSnapshotAndTakeCensus(dbg));
 
-  let g = newGlobal();
+  const g = newGlobal();
   dbg.addDebuggee(g);
   checkProperties(saveHeapSnapshotAndTakeCensus(dbg));
 

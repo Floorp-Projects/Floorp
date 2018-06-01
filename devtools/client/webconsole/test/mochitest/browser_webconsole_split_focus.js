@@ -10,11 +10,11 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting
 add_task(async function() {
   info("Test that the split console input is focused and restores the focus properly.");
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(!toolbox.splitConsole, "Split console is hidden by default");
 
   info("Focusing the search box before opening the split console");
-  let inspector = toolbox.getPanel("inspector");
+  const inspector = toolbox.getPanel("inspector");
   inspector.searchBox.focus();
 
   let activeElement = getActiveElement(inspector.panelDoc);
@@ -25,7 +25,7 @@ add_task(async function() {
   ok(toolbox.splitConsole, "Split console is now visible");
 
   activeElement = getActiveElement(toolbox.doc);
-  let inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
+  const inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
   is(activeElement, inputNode, "Split console input is focused by default");
 
   await toolbox.closeSplitConsole();

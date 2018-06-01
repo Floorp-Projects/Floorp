@@ -8,17 +8,17 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   // Set a higher panel height in order to get full CodeMirror content
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 600);
 
-  let { tab, monitor } = await initNetMonitor(POST_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -28,10 +28,10 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  let requestItems = document.querySelectorAll(".request-list-item");
-  for (let requestItem of requestItems) {
+  const requestItems = document.querySelectorAll(".request-list-item");
+  for (const requestItem of requestItems) {
     requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".status-code");
+    const requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
   }
@@ -77,8 +77,8 @@ add_task(async function() {
   await testParamsTab("urlencoded");
 
   // Wait for all tree sections and editor updated by react
-  let waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
-  let waitForSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
+  const waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
+  const waitForSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
   await Promise.all([waitForSections, waitForSourceEditor]);
@@ -87,7 +87,7 @@ add_task(async function() {
   return teardown(monitor);
 
   function testParamsTab(type) {
-    let tabpanel = document.querySelector("#params-panel");
+    const tabpanel = document.querySelector("#params-panel");
 
     function checkVisibility(box) {
       is(!tabpanel.querySelector(".treeTable"), !box.includes("params"),
@@ -102,7 +102,7 @@ add_task(async function() {
     is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
-    let treeSections = tabpanel.querySelectorAll(".tree-section");
+    const treeSections = tabpanel.querySelectorAll(".tree-section");
 
     is(treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
@@ -112,9 +112,9 @@ add_task(async function() {
       L10N.getStr(type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"),
       "The post section doesn't have the correct title.");
 
-    let labels = tabpanel
+    const labels = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = tabpanel
+    const values = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
     is(labels[0].textContent, "baz", "The first query param name was incorrect.");
@@ -138,7 +138,7 @@ add_task(async function() {
 
       // Collect code lines and combine into one text for checking
       let text = "";
-      let lines = [...document.querySelectorAll(".CodeMirror-line")];
+      const lines = [...document.querySelectorAll(".CodeMirror-line")];
 
       lines.forEach((line) => {
         text += line.textContent + "\n";

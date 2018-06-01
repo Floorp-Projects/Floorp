@@ -25,7 +25,7 @@ window.onload = function() {
   addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
@@ -40,15 +40,15 @@ window.onload = function() {
   });
 
   addAsyncTest(async function() {
-    let walker = await inspector.getWalker();
+    const walker = await inspector.getWalker();
 
     // We can't receive events from the walker if we haven't first executed a
     // method on the actor to initialize it.
     await walker.querySelector(walker.rootNode, "img");
 
-    let {outerWidth, outerHeight} = win;
+    const {outerWidth, outerHeight} = win;
     // eslint-disable-next-line new-cap
-    let onResize = new Promise(resolve => {
+    const onResize = new Promise(resolve => {
       walker.once("resize", () => {
         resolve();
       });

@@ -18,14 +18,14 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
-  let { inspector, view } = await openFontInspectorForURL(TEST_URI);
-  let { document: doc } = view;
+  const { inspector, view } = await openFontInspectorForURL(TEST_URI);
+  const { document: doc } = view;
 
   await selectNode(".normal-text", inspector);
 
   // Store the original preview URI for later comparison.
-  let originalURI = doc.querySelector("#font-container .font-preview").src;
-  let newTheme = originalTheme === "light" ? "dark" : "light";
+  const originalURI = doc.querySelector("#font-container .font-preview").src;
+  const newTheme = originalTheme === "light" ? "dark" : "light";
 
   info(`Original theme was '${originalTheme}'.`);
 
@@ -45,7 +45,7 @@ add_task(async function() {
  * @param {Object} inspector - the inspector panel
  */
 async function setThemeAndWaitForUpdate(theme, inspector) {
-  let onUpdated = inspector.once("fontinspector-updated");
+  const onUpdated = inspector.once("fontinspector-updated");
 
   info(`Setting theme to '${theme}'.`);
   setTheme(theme);

@@ -83,7 +83,7 @@ function configureStore(hud, options = {}) {
   };
 
   // Prepare middleware.
-  let middleware = applyMiddleware(
+  const middleware = applyMiddleware(
     thunk.bind(null, {prefsService}),
     historyPersistenceMiddleware,
   );
@@ -170,8 +170,8 @@ function enableActorReleaser(hud) {
     function releaseActorsEnhancer(state, action) {
       state = reducer(state, action);
 
-      let type = action.type;
-      let proxy = hud ? hud.proxy : null;
+      const type = action.type;
+      const proxy = hud ? hud.proxy : null;
       if (
         proxy &&
         ([MESSAGES_ADD, MESSAGES_CLEAR, PRIVATE_MESSAGES_CLEAR].includes(type))
@@ -198,7 +198,7 @@ function enableActorReleaser(hud) {
 function ensureCSSErrorReportingEnabled(hud) {
   return next => (reducer, initialState, enhancer) => {
     function ensureErrorReportingEnhancer(state, action) {
-      let proxy = hud ? hud.proxy : null;
+      const proxy = hud ? hud.proxy : null;
       if (!proxy) {
         return reducer(state, action);
       }
@@ -208,7 +208,7 @@ function ensureCSSErrorReportingEnabled(hud) {
         return state;
       }
 
-      let cssFilterToggled =
+      const cssFilterToggled =
         action.type == FILTER_TOGGLE && action.filter == "css";
       if (cssFilterToggled || action.type == INITIALIZE) {
         proxy.target.activeTab.ensureCSSErrorReportingEnabled();
@@ -231,12 +231,12 @@ function enableNetProvider(hud) {
   let dataProvider;
   return next => (reducer, initialState, enhancer) => {
     function netProviderEnhancer(state, action) {
-      let proxy = hud ? hud.proxy : null;
+      const proxy = hud ? hud.proxy : null;
       if (!proxy) {
         return reducer(state, action);
       }
 
-      let actions = {
+      const actions = {
         updateRequest: (id, data, batch) => {
           proxy.dispatchRequestUpdate(id, data);
         }
@@ -259,8 +259,8 @@ function enableNetProvider(hud) {
         proxy.networkDataProvider = dataProvider;
       }
 
-      let type = action.type;
-      let newState = reducer(state, action);
+      const type = action.type;
+      const newState = reducer(state, action);
 
       // If network message has been opened, fetch all HTTP details
       // from the backend. It can happen (especially in test) that
@@ -268,8 +268,8 @@ function enableNetProvider(hud) {
       // received. The rest of updates will be handled below, see:
       // NETWORK_MESSAGE_UPDATE action handler.
       if (type == MESSAGE_OPEN) {
-        let updates = getAllNetworkMessagesUpdateById(newState);
-        let message = updates[action.id];
+        const updates = getAllNetworkMessagesUpdateById(newState);
+        const message = updates[action.id];
         if (message && !message.openedOnce && message.source == "network") {
           dataProvider.onNetworkEvent(message);
           message.updates.forEach(updateType => {
@@ -288,10 +288,10 @@ function enableNetProvider(hud) {
       // Make sure to call `dataProvider.onNetworkEventUpdate`
       // to fetch data from the backend.
       if (type == NETWORK_MESSAGE_UPDATE) {
-        let actor = action.response.networkInfo.actor;
-        let open = getAllMessagesUiById(state).includes(actor);
+        const actor = action.response.networkInfo.actor;
+        const open = getAllMessagesUiById(state).includes(actor);
         if (open) {
-          let message = getMessage(state, actor);
+          const message = getMessage(state, actor);
           message.updates.forEach(updateType => {
             dataProvider.onNetworkEventUpdate({
               packet: { updateType },
@@ -318,7 +318,7 @@ function enableMessagesCacheClearing(hud) {
     function messagesCacheClearingEnhancer(state, action) {
       state = reducer(state, action);
 
-      let webConsoleClient = hud && hud.proxy ? hud.proxy.webConsoleClient : null;
+      const webConsoleClient = hud && hud.proxy ? hud.proxy.webConsoleClient : null;
       if (webConsoleClient && action.type === MESSAGES_CLEAR) {
         webConsoleClient.clearNetworkRequests();
         webConsoleClient.clearMessagesCache();
@@ -360,7 +360,7 @@ function historyPersistenceMiddleware(store) {
   return next => action => {
     const res = next(action);
 
-    let triggerStoreActions = [
+    const triggerStoreActions = [
       APPEND_TO_HISTORY,
       CLEAR_HISTORY,
     ];

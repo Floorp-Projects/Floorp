@@ -13,7 +13,7 @@ const TEST_PAGE = URL_ROOT +
   "doc_inspector_delete-selected-node-02.html";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_PAGE);
+  const { inspector } = await openInspectorForURL(TEST_PAGE);
 
   await testManuallyDeleteSelectedNode();
   await testAutomaticallyDeleteSelectedNode();
@@ -35,7 +35,7 @@ add_task(async function() {
     info("Selecting a node, deleting it via javascript and checking that " +
          "its parent node is selected and breadcrumbs are updated.");
 
-    let div = await getNodeFront("#deleteAutomatically", inspector);
+    const div = await getNodeFront("#deleteAutomatically", inspector);
     await selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
@@ -55,8 +55,8 @@ add_task(async function() {
          "breadcrumbs are updated.");
 
     info("Selecting an element inside iframe.");
-    let iframe = await getNodeFront("#deleteIframe", inspector);
-    let div = await getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
+    const iframe = await getNodeFront("#deleteIframe", inspector);
+    const div = await getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
     await selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
@@ -93,15 +93,15 @@ add_task(async function() {
 
   async function deleteNodeWithContextMenu(selector) {
     await selectNode(selector, inspector);
-    let nodeToBeDeleted = inspector.selection.nodeFront;
+    const nodeToBeDeleted = inspector.selection.nodeFront;
 
     info("Getting the node container in the markup view.");
-    let container = await getContainerForSelector(selector, inspector);
+    const container = await getContainerForSelector(selector, inspector);
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: container.tagLine,
     });
-    let menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
+    const menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
 
     info("Clicking 'Delete Node' in the context menu.");
     is(menuItem.disabled, false, "delete menu item is enabled");
@@ -128,10 +128,10 @@ add_task(async function() {
   function assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
                                                expectedNodeType) {
     info("Performing checks");
-    let actualNodeType = inspector.selection.nodeFront.nodeType;
+    const actualNodeType = inspector.selection.nodeFront.nodeType;
     is(actualNodeType, expectedNodeType, "The node has the right type");
 
-    let breadcrumbs = inspector.panelDoc.querySelectorAll(
+    const breadcrumbs = inspector.panelDoc.querySelectorAll(
       "#inspector-breadcrumbs .html-arrowscrollbox-inner > *");
     is(breadcrumbs.length, expectedCrumbs.length,
        "Have the correct number of breadcrumbs");
@@ -142,10 +142,10 @@ add_task(async function() {
   }
 
   async function assertNodeSelectedAndPanelsUpdated(selector, crumbLabel) {
-    let nodeFront = await getNodeFront(selector, inspector);
+    const nodeFront = await getNodeFront(selector, inspector);
     is(inspector.selection.nodeFront, nodeFront, "The right node is selected");
 
-    let breadcrumbs = inspector.panelDoc.querySelector(
+    const breadcrumbs = inspector.panelDoc.querySelector(
       "#inspector-breadcrumbs .html-arrowscrollbox-inner");
     is(breadcrumbs.querySelector("button[checked=true]").textContent,
        crumbLabel,

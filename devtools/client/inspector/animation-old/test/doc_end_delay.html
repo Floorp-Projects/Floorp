@@ -19,7 +19,7 @@
     /* globals KeyframeEffect, Animation */
     "use strict";
 
-    let animations = [{
+    const animations = [{
       id: "target1",
       frames: [{ opacity: 0, offset: 0 }, { opacity: 1, offset: 1 }],
       timing: {
@@ -58,10 +58,10 @@
       }
     }];
 
-    for (let {id, frames, timing} of animations) {
-      let effect = new KeyframeEffect(document.getElementById(id),
+    for (const {id, frames, timing} of animations) {
+      const effect = new KeyframeEffect(document.getElementById(id),
                                       frames, timing);
-      let animation = new Animation(effect, document.timeline);
+      const animation = new Animation(effect, document.timeline);
       animation.play();
     }
   </script>

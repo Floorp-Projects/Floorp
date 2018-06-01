@@ -11,9 +11,9 @@ const TEST_URI = `data:text/html;charset=utf-8,
                   <p id="one">one</p><p id="two">two</p><p id="three">three</p>`;
 
 add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
 
-  let body = await getNodeFront("body", inspector);
+  const body = await getNodeFront("body", inspector);
   is(inspector.selection.nodeFront, body, "By default the body node is selected");
 
   info("Start the element picker");
@@ -36,7 +36,7 @@ add_task(async function() {
 });
 
 async function clickElement(selector, testActor, inspector, isShift) {
-  let onSelectionChanged = inspector.once("inspector-updated");
+  const onSelectionChanged = inspector.once("inspector-updated");
   await testActor.synthesizeMouse({
     selector: selector,
     center: true,
@@ -46,11 +46,11 @@ async function clickElement(selector, testActor, inspector, isShift) {
 }
 
 async function checkElementSelected(selector, inspector) {
-  let el = await getNodeFront(selector, inspector);
+  const el = await getNodeFront(selector, inspector);
   is(inspector.selection.nodeFront, el, `The element ${selector} is now selected`);
 }
 
 function checkPickerMode(toolbox, isOn) {
-  let pickerButton = toolbox.doc.querySelector("#command-button-pick");
+  const pickerButton = toolbox.doc.querySelector("#command-button-pick");
   is(pickerButton.classList.contains("checked"), isOn, "The picker mode is correct");
 }

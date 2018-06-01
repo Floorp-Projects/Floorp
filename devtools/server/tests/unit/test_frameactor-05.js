@@ -33,11 +33,11 @@ function test_pause_frame() {
       Assert.equal(frameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
-      let expectPopped = frameResponse.frames.slice(0, 3).map(frame => frame.actor);
+      const expectPopped = frameResponse.frames.slice(0, 3).map(frame => frame.actor);
       expectPopped.sort();
 
       gThreadClient.addOneTimeListener("paused", function(event, pausePacket) {
-        let popped = pausePacket.poppedFrames.sort();
+        const popped = pausePacket.poppedFrames.sort();
         Assert.equal(popped.length, 3);
         for (let i = 0; i < 3; i++) {
           Assert.equal(expectPopped[i], popped[i]);

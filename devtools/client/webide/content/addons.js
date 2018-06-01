@@ -10,7 +10,7 @@ const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.p
 
 window.addEventListener("load", function() {
   document.querySelector("#aboutaddons").onclick = function() {
-    let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+    const browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (browserWin && browserWin.BrowserOpenAddonsMgr) {
       browserWin.BrowserOpenAddonsMgr("addons://list/extension");
     }
@@ -60,10 +60,10 @@ function BuildItem(addon, type) {
     addon.off("progress", onAddonProgress);
   }, {once: true});
 
-  let li = document.createElement("li");
+  const li = document.createElement("li");
   li.setAttribute("status", addon.status);
 
-  let name = document.createElement("span");
+  const name = document.createElement("span");
   name.className = "name";
 
   switch (type) {
@@ -75,28 +75,28 @@ function BuildItem(addon, type) {
 
   li.appendChild(name);
 
-  let status = document.createElement("span");
+  const status = document.createElement("span");
   status.className = "status";
   status.textContent = Strings.GetStringFromName("addons_status_" + addon.status);
   li.appendChild(status);
 
-  let installButton = document.createElement("button");
+  const installButton = document.createElement("button");
   installButton.className = "install-button";
   installButton.onclick = () => addon.install();
   installButton.textContent = Strings.GetStringFromName("addons_install_button");
   li.appendChild(installButton);
 
-  let uninstallButton = document.createElement("button");
+  const uninstallButton = document.createElement("button");
   uninstallButton.className = "uninstall-button";
   uninstallButton.onclick = () => addon.uninstall();
   uninstallButton.textContent = Strings.GetStringFromName("addons_uninstall_button");
   li.appendChild(uninstallButton);
 
-  let progress = document.createElement("progress");
+  const progress = document.createElement("progress");
   li.appendChild(progress);
 
   if (type == "adb") {
-    let warning = document.createElement("p");
+    const warning = document.createElement("p");
     warning.textContent = Strings.GetStringFromName("addons_adb_warning");
     warning.className = "warning";
     li.appendChild(warning);

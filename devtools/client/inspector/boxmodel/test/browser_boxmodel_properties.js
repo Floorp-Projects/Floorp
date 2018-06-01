@@ -81,7 +81,7 @@ const res2 = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, boxmodel, testActor } = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
   await selectNode("div", inspector);
 
   await testInitialValues(inspector, boxmodel);
@@ -90,26 +90,26 @@ add_task(async function() {
 
 function testInitialValues(inspector, boxmodel) {
   info("Test that the initial values of the box model are correct");
-  let doc = boxmodel.document;
+  const doc = boxmodel.document;
 
-  for (let { property, value } of res1) {
-    let elt = doc.querySelector(getPropertySelector(property));
+  for (const { property, value } of res1) {
+    const elt = doc.querySelector(getPropertySelector(property));
     is(elt.textContent, value, property + " has the right value.");
   }
 }
 
 async function testChangingValues(inspector, boxmodel, testActor) {
   info("Test that changing the document updates the box model");
-  let doc = boxmodel.document;
+  const doc = boxmodel.document;
 
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await testActor.setAttribute("div", "style",
                                "box-sizing:content-box;float:right;" +
                                "line-height:10px;position:static;z-index:5;");
   await onUpdated;
 
-  for (let { property, value } of res2) {
-    let elt = doc.querySelector(getPropertySelector(property));
+  for (const { property, value } of res2) {
+    const elt = doc.querySelector(getPropertySelector(property));
     is(elt.textContent, value, property + " has the right value after style update.");
   }
 }

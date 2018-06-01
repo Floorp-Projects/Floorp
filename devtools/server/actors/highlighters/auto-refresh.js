@@ -21,17 +21,17 @@ function arePointsDifferent(pointA, pointB) {
 }
 
 function areQuadsDifferent(oldQuads, newQuads) {
-  for (let region of BOX_MODEL_REGIONS) {
-    let { length } = oldQuads[region];
+  for (const region of BOX_MODEL_REGIONS) {
+    const { length } = oldQuads[region];
 
     if (length !== newQuads[region].length) {
       return true;
     }
 
     for (let i = 0; i < length; i++) {
-      for (let prop of QUADS_PROPS) {
-        let oldPoint = oldQuads[region][i][prop];
-        let newPoint = newQuads[region][i][prop];
+      for (const prop of QUADS_PROPS) {
+        const oldPoint = oldQuads[region][i][prop];
+        const newPoint = newQuads[region][i][prop];
 
         if (arePointsDifferent(oldPoint, newPoint)) {
           return true;
@@ -95,8 +95,8 @@ AutoRefreshHighlighter.prototype = {
    *        Object used for passing options
    */
   show: function(node, options = {}) {
-    let isSameNode = node === this.currentNode;
-    let isSameOptions = this._isSameOptions(options);
+    const isSameNode = node === this.currentNode;
+    const isSameOptions = this._isSameOptions(options);
 
     if (!this._isNodeValid(node) || (isSameNode && isSameOptions)) {
       return false;
@@ -109,7 +109,7 @@ AutoRefreshHighlighter.prototype = {
     this._updateAdjustedQuads();
     this._startRefreshLoop();
 
-    let shown = this._show();
+    const shown = this._show();
     if (shown) {
       this.emit("shown");
     }
@@ -153,13 +153,13 @@ AutoRefreshHighlighter.prototype = {
       return false;
     }
 
-    let keys = Object.keys(options);
+    const keys = Object.keys(options);
 
     if (keys.length !== Object.keys(this.options).length) {
       return false;
     }
 
-    for (let key of keys) {
+    for (const key of keys) {
       if (this.options[key] !== options[key]) {
         return false;
       }
@@ -174,7 +174,7 @@ AutoRefreshHighlighter.prototype = {
   _updateAdjustedQuads: function() {
     this.currentQuads = {};
 
-    for (let region of BOX_MODEL_REGIONS) {
+    for (const region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
         this.win,
         this.currentNode, region);
@@ -187,7 +187,7 @@ AutoRefreshHighlighter.prototype = {
    * @return {Boolean}
    */
   _hasMoved: function() {
-    let oldQuads = this.currentQuads;
+    const oldQuads = this.currentQuads;
     this._updateAdjustedQuads();
 
     return areQuadsDifferent(oldQuads, this.currentQuads);
@@ -199,8 +199,8 @@ AutoRefreshHighlighter.prototype = {
    * @return {Boolean}
    */
   _hasWindowScrolled: function() {
-    let { pageXOffset, pageYOffset } = this.win;
-    let hasChanged = this._scroll.x !== pageXOffset ||
+    const { pageXOffset, pageYOffset } = this.win;
+    const hasChanged = this._scroll.x !== pageXOffset ||
                      this._scroll.y !== pageYOffset;
 
     this._scroll = { x: pageXOffset, y: pageYOffset };
@@ -214,8 +214,8 @@ AutoRefreshHighlighter.prototype = {
    * @return {Boolean}
    */
   _haveWindowDimensionsChanged: function() {
-    let { width, height } = getWindowDimensions(this.win);
-    let haveChanged = (this._winDimensions.width !== width ||
+    const { width, height } = getWindowDimensions(this.win);
+    const haveChanged = (this._winDimensions.width !== width ||
                       this._winDimensions.height !== height);
 
     this._winDimensions = { width, height };
@@ -270,7 +270,7 @@ AutoRefreshHighlighter.prototype = {
   },
 
   _startRefreshLoop: function() {
-    let win = this.currentNode.ownerGlobal;
+    const win = this.currentNode.ownerGlobal;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
     this.rafWin = win;
     this.update();

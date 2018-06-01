@@ -8,10 +8,10 @@
 const TEST_URL = "http://example.com/";
 
 add_task(async function() {
-  let tab = await addTab(TEST_URL);
+  const tab = await addTab(TEST_URL);
 
-  let { ui } = await openRDM(tab);
-  let clientClosed = waitForClientClose(ui);
+  const { ui } = await openRDM(tab);
+  const clientClosed = waitForClientClose(ui);
 
   closeRDM(tab, {
     reason: "TabClose",
@@ -27,10 +27,10 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let tab = await addTab(TEST_URL);
+  const tab = await addTab(TEST_URL);
 
-  let { ui } = await openRDM(tab);
-  let clientClosed = waitForClientClose(ui);
+  const { ui } = await openRDM(tab);
+  const clientClosed = waitForClientClose(ui);
 
   await removeTab(tab);
 

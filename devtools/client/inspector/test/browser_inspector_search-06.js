@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Searching for test node #d1");
   await focusSearchBoxUsingShortcut(inspector.panelWin);
@@ -22,7 +22,7 @@ add_task(async function() {
   info("Removing node #d1");
   // Expect an inspector-updated event here, because removing #d1 causes the
   // breadcrumbs to update (since #d1 is displayed in it).
-  let onUpdated = inspector.once("inspector-updated");
+  const onUpdated = inspector.once("inspector-updated");
   await mutatePage(inspector, testActor,
                    "document.getElementById(\"d1\").remove()");
   await onUpdated;
@@ -34,8 +34,8 @@ add_task(async function() {
   assertHasResult(inspector, false);
 
   info("Emptying the field and searching for a node that doesn't exist: #d3");
-  let keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3",
-              "VK_RETURN"];
+  const keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3",
+                "VK_RETURN"];
   await synthesizeKeys(keys, inspector);
 
   await inspector.search.once("search-result");
@@ -64,9 +64,9 @@ async function synthesizeKeys(keys, inspector) {
     keys = [keys];
   }
 
-  for (let key of keys) {
+  for (const key of keys) {
     info("Synthesizing key " + key + " in the search box");
-    let eventHandled = once(inspector.searchBox, "keypress", true);
+    const eventHandled = once(inspector.searchBox, "keypress", true);
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await eventHandled;
     info("Waiting for the search query to complete");
@@ -81,7 +81,7 @@ function assertHasResult(inspector, expectResult) {
 }
 
 async function mutatePage(inspector, testActor, expression) {
-  let onMutation = inspector.once("markupmutation");
+  const onMutation = inspector.once("markupmutation");
   await testActor.eval(expression);
   await onMutation;
 }

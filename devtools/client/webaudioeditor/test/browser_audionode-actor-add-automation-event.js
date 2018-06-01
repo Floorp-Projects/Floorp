@@ -6,17 +6,17 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
-  let [_, [destNode, oscNode, gainNode]] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
+  const [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),
     get3(front, "create-node")
   ]);
   let count = 0;
-  let counter = () => count++;
+  const counter = () => count++;
   front.on("automation-event", counter);
 
-  let t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
-  let curve = [-1, 0, 1];
+  const t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
+  const curve = [-1, 0, 1];
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.2, t0]);
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.3, t1]);
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.4, t2]);

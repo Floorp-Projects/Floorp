@@ -33,7 +33,7 @@ GripProvider.prototype = {
       return [];
     }
 
-    let props = this.grips.get(grip.actor);
+    const props = this.grips.get(grip.actor);
     if (!props) {
       // Fetch missing data from the backend. Returning a promise
       // from data provider causes the tree to show a spinner.
@@ -45,7 +45,7 @@ GripProvider.prototype = {
 
   hasChildren: function(object) {
     if (object instanceof Property) {
-      let value = this.getValue(object);
+      const value = this.getValue(object);
       if (!value) {
         return false;
       }
@@ -57,9 +57,9 @@ GripProvider.prototype = {
       }
 
       if (value.preview) {
-        let preview = value.preview;
-        let k = preview.kind;
-        let objectsWithProps = ["DOMNode", "ObjectWithURL"];
+        const preview = value.preview;
+        const k = preview.kind;
+        const objectsWithProps = ["DOMNode", "ObjectWithURL"];
         hasChildren = hasChildren || (objectsWithProps.includes(k));
         hasChildren = hasChildren || (k == "ArrayLike" && preview.length > 0);
       }
@@ -72,7 +72,7 @@ GripProvider.prototype = {
 
   getValue: function(object) {
     if (object instanceof Property) {
-      let value = object.value;
+      const value = object.value;
       return (typeof value.value != "undefined") ? value.value :
         value.getterValue;
     }

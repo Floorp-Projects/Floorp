@@ -12,14 +12,14 @@
  * order and not sorted.
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
-  let { store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
@@ -32,30 +32,30 @@ add_task(async function() {
 });
 
 async function verifyHeaders(monitor) {
-  let { document, store } = monitor.panelWin;
+  const { document, store } = monitor.panelWin;
 
   info("Check if Request-Headers and Response-Headers are sorted");
 
-  let wait = waitForDOM(document, ".headers-overview");
+  const wait = waitForDOM(document, ".headers-overview");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   await wait;
 
   await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
 
-  let expectedResponseHeaders = ["cache-control", "connection", "content-length",
-                                 "content-type", "date", "expires", "foo-bar",
-                                 "foo-bar", "foo-bar", "pragma", "server", "set-cookie",
-                                 "set-cookie"];
-  let expectedRequestHeaders = ["Accept", "Accept-Encoding", "Accept-Language",
-                                "Cache-Control", "Connection", "Cookie", "Host",
-                                "Pragma", "Upgrade-Insecure-Requests", "User-Agent"];
+  const expectedResponseHeaders = ["cache-control", "connection", "content-length",
+                                   "content-type", "date", "expires", "foo-bar",
+                                   "foo-bar", "foo-bar", "pragma", "server", "set-cookie",
+                                   "set-cookie"];
+  const expectedRequestHeaders = ["Accept", "Accept-Encoding", "Accept-Language",
+                                  "Cache-Control", "Connection", "Cookie", "Host",
+                                  "Pragma", "Upgrade-Insecure-Requests", "User-Agent"];
 
-  let labelCells = document.querySelectorAll(".treeLabelCell");
-  let actualResponseHeaders = [];
-  let actualRequestHeaders = [];
+  const labelCells = document.querySelectorAll(".treeLabelCell");
+  const actualResponseHeaders = [];
+  const actualRequestHeaders = [];
 
-  let responseHeadersLength = expectedResponseHeaders.length;
+  const responseHeadersLength = expectedResponseHeaders.length;
   for (let i = 1; i < responseHeadersLength + 1; i++) {
     actualResponseHeaders.push(labelCells[i].innerText);
   }
@@ -72,25 +72,25 @@ async function verifyHeaders(monitor) {
 }
 
 async function verifyRawHeaders(monitor) {
-  let { document } = monitor.panelWin;
+  const { document } = monitor.panelWin;
 
   info("Check if raw Request-Headers and raw Response-Headers are not sorted");
 
-  let actualResponseHeaders = [];
-  let actualRequestHeaders = [];
+  const actualResponseHeaders = [];
+  const actualRequestHeaders = [];
 
-  let expectedResponseHeaders = ["cache-control", "pragma", "expires",
-                                 "set-cookie", "set-cookie", "content-type", "foo-bar",
-                                 "foo-bar", "foo-bar", "connection", "server",
-                                 "date", "content-length"];
+  const expectedResponseHeaders = ["cache-control", "pragma", "expires",
+                                   "set-cookie", "set-cookie", "content-type", "foo-bar",
+                                   "foo-bar", "foo-bar", "connection", "server",
+                                   "date", "content-length"];
 
-  let expectedRequestHeaders = ["Host", "User-Agent", "Accept", "Accept-Language",
-                                "Accept-Encoding", "Cookie", "Connection",
-                                "Upgrade-Insecure-Requests", "Pragma",
-                                "Cache-Control"];
+  const expectedRequestHeaders = ["Host", "User-Agent", "Accept", "Accept-Language",
+                                  "Accept-Encoding", "Cookie", "Connection",
+                                  "Upgrade-Insecure-Requests", "Pragma",
+                                  "Cache-Control"];
 
   // Click the 'Raw headers' button to show original headers source.
-  let rawHeadersBtn = document.querySelector(".raw-headers-button");
+  const rawHeadersBtn = document.querySelector(".raw-headers-button");
   rawHeadersBtn.click();
 
   // Wait till raw headers are available.
@@ -99,20 +99,20 @@ async function verifyRawHeaders(monitor) {
       document.querySelector(".raw-response-headers-textarea");
   });
 
-  let requestHeadersText =
+  const requestHeadersText =
     document.querySelector(".raw-request-headers-textarea").textContent;
-  let responseHeadersText =
+  const responseHeadersText =
     document.querySelector(".raw-response-headers-textarea").textContent;
 
-  let rawRequestHeadersArray = requestHeadersText.split("\n");
+  const rawRequestHeadersArray = requestHeadersText.split("\n");
   for (let i = 0; i < rawRequestHeadersArray.length; i++) {
-    let header = rawRequestHeadersArray[i];
+    const header = rawRequestHeadersArray[i];
     actualRequestHeaders.push(header.split(":")[0]);
   }
 
-  let rawResponseHeadersArray = responseHeadersText.split("\n");
+  const rawResponseHeadersArray = responseHeadersText.split("\n");
   for (let i = 1; i < rawResponseHeadersArray.length; i++) {
-    let header = rawResponseHeadersArray[i];
+    const header = rawResponseHeadersArray[i];
     actualResponseHeaders.push(header.split(":")[0]);
   }
 

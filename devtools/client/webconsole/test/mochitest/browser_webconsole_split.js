@@ -54,7 +54,7 @@ add_task(async function() {
   async function testKeyboardShortcuts() {
     info("About to check that panel responds to ESCAPE keyboard shortcut");
 
-    let splitConsoleReady = toolbox.once("split-console");
+    const splitConsoleReady = toolbox.once("split-console");
     EventUtils.sendKey("ESCAPE", toolbox.win);
     await splitConsoleReady;
     ok(true, "Split console has been triggered via ESCAPE keypress");
@@ -72,16 +72,16 @@ add_task(async function() {
   }
 
   async function getCurrentUIState() {
-    let deck = toolbox.doc.querySelector("#toolbox-deck");
-    let webconsolePanel = toolbox.webconsolePanel;
-    let splitter = toolbox.doc.querySelector("#toolbox-console-splitter");
+    const deck = toolbox.doc.querySelector("#toolbox-deck");
+    const webconsolePanel = toolbox.webconsolePanel;
+    const splitter = toolbox.doc.querySelector("#toolbox-console-splitter");
 
-    let containerHeight = deck.parentNode.getBoundingClientRect().height;
-    let deckHeight = deck.getBoundingClientRect().height;
-    let webconsoleHeight = webconsolePanel.getBoundingClientRect().height;
-    let splitterVisibility = !splitter.getAttribute("hidden");
-    let openedConsolePanel = toolbox.currentToolId === "webconsole";
-    let menuLabel = await getMenuLabel(toolbox);
+    const containerHeight = deck.parentNode.getBoundingClientRect().height;
+    const deckHeight = deck.getBoundingClientRect().height;
+    const webconsoleHeight = webconsolePanel.getBoundingClientRect().height;
+    const splitterVisibility = !splitter.getAttribute("hidden");
+    const openedConsolePanel = toolbox.currentToolId === "webconsole";
+    const menuLabel = await getMenuLabel(toolbox);
 
     return {
       deckHeight: deckHeight,
@@ -234,7 +234,7 @@ add_task(async function() {
   }
 
   async function openPanel(toolId) {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = TargetFactory.forTab(gBrowser.selectedTab);
     toolbox = await gDevTools.showToolbox(target, toolId);
   }
 
@@ -246,7 +246,7 @@ add_task(async function() {
   function checkHostType(hostType) {
     is(toolbox.hostType, hostType, "host type is " + hostType);
 
-    let pref = Services.prefs.getCharPref("devtools.toolbox.host");
+    const pref = Services.prefs.getCharPref("devtools.toolbox.host");
     is(pref, hostType, "host pref is " + hostType);
   }
 });

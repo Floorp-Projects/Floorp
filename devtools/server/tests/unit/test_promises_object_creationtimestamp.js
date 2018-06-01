@@ -15,15 +15,15 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
 add_task(async function() {
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  const timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function() {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
-  let client = await startTestDebuggerServer("promises-object-test");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("promises-object-test");
+  const chromeActors = await getChromeActors(client);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
@@ -33,8 +33,8 @@ add_task(async function() {
     return new Promise(resolve => resolve(v));
   });
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "promises-object-test");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "promises-object-test");
   ok(targetTab, "Found our target tab.");
 
   await testPromiseCreationTimestamp(client, targetTab, v => {
@@ -46,15 +46,15 @@ add_task(async function() {
 });
 
 async function testPromiseCreationTimestamp(client, form, makePromise) {
-  let front = PromisesFront(client, form);
-  let resolution = "MyLittleSecret" + Math.random();
+  const front = PromisesFront(client, form);
+  const resolution = "MyLittleSecret" + Math.random();
 
   await front.attach();
   await front.listPromises();
 
-  let onNewPromise = new Promise(resolve => {
+  const onNewPromise = new Promise(resolve => {
     EventEmitter.on(front, "new-promises", promises => {
-      for (let p of promises) {
+      for (const p of promises) {
         if (p.promiseState.state === "fulfilled" &&
             p.promiseState.value === resolution) {
           resolve(p);
@@ -63,14 +63,14 @@ async function testPromiseCreationTimestamp(client, form, makePromise) {
     });
   });
 
-  let start = Date.now();
-  let promise = makePromise(resolution);
-  let end = Date.now();
+  const start = Date.now();
+  const promise = makePromise(resolution);
+  const end = Date.now();
 
-  let grip = await onNewPromise;
+  const grip = await onNewPromise;
   ok(grip, "Found our new promise.");
 
-  let creationTimestamp = grip.promiseState.creationTimestamp;
+  const creationTimestamp = grip.promiseState.creationTimestamp;
 
   ok(start - 1 <= creationTimestamp && creationTimestamp <= end + 1,
     "Expect promise creation timestamp to be within elapsed time range: " +

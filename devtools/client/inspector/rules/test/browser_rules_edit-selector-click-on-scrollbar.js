@@ -37,24 +37,24 @@ const TEST_URI = `
 add_task(async function() {
   info("Toolbox height should be small enough to force scrollbars to appear");
   await new Promise(done => {
-    let options = {"set": [
+    const options = {"set": [
       ["devtools.toolbox.footer.height", 200],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
   });
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".testclass", inspector);
 
   info("Check we have an overflow on the ruleview container.");
-  let container = view.element;
-  let hasScrollbar = container.offsetHeight < container.scrollHeight;
+  const container = view.element;
+  const hasScrollbar = container.offsetHeight < container.scrollHeight;
   ok(hasScrollbar, "The rule view container should have a vertical scrollbar.");
 
   info("Focusing an existing selector name in the rule-view.");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor is focused.");
 
@@ -65,8 +65,8 @@ add_task(async function() {
     "The editor input should still be focused.");
 
   info("Check a new value can still be committed in the editable field");
-  let newValue = ".testclass.a.b.c.d.e.f";
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const newValue = ".testclass.a.b.c.d.e.f";
+  const onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Enter new value and commit.");
   editor.input.value = newValue;
@@ -76,9 +76,9 @@ add_task(async function() {
 });
 
 async function clickOnRuleviewScrollbar(view) {
-  let container = view.element.parentNode;
-  let onScroll = once(container, "scroll");
-  let rect = container.getBoundingClientRect();
+  const container = view.element.parentNode;
+  const onScroll = once(container, "scroll");
+  const rect = container.getBoundingClientRect();
   // click 5 pixels before the bottom-right corner should hit the scrollbar
   EventUtils.synthesizeMouse(container, rect.width - 5, rect.height - 5,
     {}, view.styleWindow);

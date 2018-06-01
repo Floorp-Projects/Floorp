@@ -22,12 +22,12 @@ const SHOW_GRID_AREAS_PREF = "devtools.gridinspector.showGridAreas";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
 
   await selectNode("#grid", inspector);
-  let checkbox = doc.getElementById("grid-setting-show-grid-areas");
+  const checkbox = doc.getElementById("grid-setting-show-grid-areas");
 
   ok(!Services.prefs.getBoolPref(SHOW_GRID_AREAS_PREF),
     "'Display grid areas' is pref off by default.");

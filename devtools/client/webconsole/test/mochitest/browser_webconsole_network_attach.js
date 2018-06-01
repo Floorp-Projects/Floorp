@@ -14,11 +14,11 @@ add_task(async function task() {
   await openNewTabAndToolbox(TEST_URI, "netmonitor");
 
   const currentTab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(currentTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const target = TargetFactory.forTab(currentTab);
+  const toolbox = gDevTools.getToolbox(target);
 
-  let monitor = toolbox.getCurrentPanel();
-  let netReady = monitor.panelWin.api.once("NetMonitor:PayloadReady");
+  const monitor = toolbox.getCurrentPanel();
+  const netReady = monitor.panelWin.api.once("NetMonitor:PayloadReady");
 
   // Fire an XHR POST request.
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
@@ -31,16 +31,16 @@ add_task(async function task() {
 
   info("NetMonitor:PayloadReady received");
 
-  let webconsolePanel = await toolbox.selectTool("webconsole");
-  let { hud } = webconsolePanel;
+  const webconsolePanel = await toolbox.selectTool("webconsole");
+  const { hud } = webconsolePanel;
 
-  let xhrUrl = TEST_PATH + "test-data.json";
-  let messageNode = await waitFor(() => findMessage(hud, xhrUrl));
-  let urlNode = messageNode.querySelector(".url");
+  const xhrUrl = TEST_PATH + "test-data.json";
+  const messageNode = await waitFor(() => findMessage(hud, xhrUrl));
+  const urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 
-  let ui = hud.ui;
-  let consoleReady = ui.jsterm.hud.once("network-request-payload-ready");
+  const ui = hud.ui;
+  const consoleReady = ui.jsterm.hud.once("network-request-payload-ready");
 
   // Expand network log
   urlNode.click();
@@ -53,7 +53,7 @@ add_task(async function task() {
 });
 
 async function testNetworkMessage(messageNode) {
-  let headersTab = messageNode.querySelector("#headers-tab");
+  const headersTab = messageNode.querySelector("#headers-tab");
 
   ok(headersTab, "Headers tab is available");
 
@@ -73,8 +73,8 @@ async function testNetworkMessage(messageNode) {
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
-  let { ui } = toolbox.getCurrentPanel().hud;
-  let proxy = ui.jsterm.hud.proxy;
+  const { ui } = toolbox.getCurrentPanel().hud;
+  const proxy = ui.jsterm.hud.proxy;
   return waitUntil(() => {
     return !proxy.networkDataProvider.lazyRequestData.size;
   });

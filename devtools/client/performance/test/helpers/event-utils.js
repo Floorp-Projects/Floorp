@@ -27,7 +27,8 @@ exports.once = function(target, eventName, options = {}) {
  * Possible options: `useCapture`, `spreadArgs`, `expectedArgs`
  */
 exports.times = function(target, eventName, receiveCount, options = {}) {
-  let msg = `Waiting for event: '${eventName}' on ${target} for ${receiveCount} time(s)`;
+  const msg =
+    `Waiting for event: '${eventName}' on ${target} for ${receiveCount} time(s)`;
   if ("expectedArgs" in options) {
     dump(`${msg} with arguments: ${JSON.stringify(options.expectedArgs)}.\n`);
   } else {
@@ -39,17 +40,17 @@ exports.times = function(target, eventName, receiveCount, options = {}) {
       reject(new Error(`Unexpected event name: ${eventName}.`));
     }
 
-    let API = KNOWN_EE_APIS.find(([a, r]) => (a in target) && (r in target));
+    const API = KNOWN_EE_APIS.find(([a, r]) => (a in target) && (r in target));
     if (!API) {
       reject(new Error("Target is not a supported event listener."));
       return;
     }
 
-    let [add, remove] = API;
+    const [add, remove] = API;
 
     target[add](eventName, function onEvent(...args) {
       if ("expectedArgs" in options) {
-        for (let [index, expectedValue] of options.expectedArgs.entries()) {
+        for (const [index, expectedValue] of options.expectedArgs.entries()) {
           const isExpectedValueRegExp = expectedValue instanceof RegExp;
           if (
             (isExpectedValueRegExp && !expectedValue.exec(args[index])) ||

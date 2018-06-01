@@ -70,14 +70,14 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
    * @return {Object} Container element for the highlighter markup.
    */
   _buildMarkup() {
-    let container = createNode(this.win, {
+    const container = createNode(this.win, {
       attributes: {
         "class": "highlighter-container",
         "role": "presentation"
       }
     });
 
-    let root = createNode(this.win, {
+    const root = createNode(this.win, {
       parent: container,
       attributes: {
         "id": "root",
@@ -88,7 +88,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the SVG element.
-    let svg = createSVGNode(this.win, {
+    const svg = createSVGNode(this.win, {
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -154,8 +154,8 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       this._highlightTimer = null;
     }
 
-    let { duration } = this.options;
-    let shown = this._update();
+    const { duration } = this.options;
+    const shown = this._update();
     if (shown && duration) {
       this._highlightTimer = setTimeout(() => {
         this.hide();
@@ -228,19 +228,20 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
    * @return {Boolean} True if accessible is highlighted, false otherwise.
    */
   _updateAccessibleBounds() {
-    let bounds = this._bounds;
+    const bounds = this._bounds;
     if (!bounds) {
       this._hideAccessibleBounds();
       return false;
     }
 
-    let boundsEl = this.getElement("bounds");
-    let { left, right, top, bottom } = bounds;
-    let path = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
+    const boundsEl = this.getElement("bounds");
+    const { left, right, top, bottom } = bounds;
+    const path =
+      `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
     boundsEl.setAttribute("d", path);
 
     // Un-zoom the root wrapper if the page was zoomed.
-    let rootId = this.ID_CLASS_PREFIX + "elements";
+    const rootId = this.ID_CLASS_PREFIX + "elements";
     this.markup.scaleRootElement(this.currentNode, rootId);
 
     return true;

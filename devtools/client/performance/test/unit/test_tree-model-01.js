@@ -11,8 +11,8 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
-  let root = getFrameNodePath(threadNode, "(root)");
+  const threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
+  const root = getFrameNodePath(threadNode, "(root)");
 
   // Test the root node.
 

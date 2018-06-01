@@ -14,8 +14,8 @@ var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
 function test() {
   addTab("about:blank").then(function() {
     toolIDs = [];
-    for (let [id, definition] of gDevTools._tools) {
-      let shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
+    for (const [id, definition] of gDevTools._tools) {
+      const shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
       if (!shortcut) {
         continue;
       }
@@ -23,16 +23,16 @@ function test() {
       toolShortcuts.push(shortcut);
 
       // Enable disabled tools
-      let pref = definition.visibilityswitch;
+      const pref = definition.visibilityswitch;
       if (pref) {
-        let prefValue = Services.prefs.getBoolPref(pref, false);
+        const prefValue = Services.prefs.getBoolPref(pref, false);
         if (!prefValue) {
           modifiedPrefs.push(pref);
           Services.prefs.setBoolPref(pref, true);
         }
       }
     }
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = TargetFactory.forTab(gBrowser.selectedTab);
     idIndex = 0;
     gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.WINDOW)
              .then(testShortcuts);
@@ -52,10 +52,10 @@ function testShortcuts(aToolbox, aIndex) {
 
   toolbox.once("select", selectCB);
 
-  let shortcut = toolShortcuts[aIndex];
-  let key = shortcut.shortcut;
-  let toolModifiers = shortcut.modifiers;
-  let modifiers = {
+  const shortcut = toolShortcuts[aIndex];
+  const key = shortcut.shortcut;
+  const toolModifiers = shortcut.modifiers;
+  const modifiers = {
     accelKey: toolModifiers.includes("accel"),
     altKey: toolModifiers.includes("alt"),
     shiftKey: toolModifiers.includes("shift"),
@@ -79,7 +79,7 @@ function tidyUp() {
   toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
 
-    for (let pref of modifiedPrefs) {
+    for (const pref of modifiedPrefs) {
       Services.prefs.clearUserPref(pref);
     }
     toolbox = toolIDs = idIndex = modifiedPrefs = Toolbox = null;

@@ -21,8 +21,8 @@ add_task(async function() {
   const {jsterm} = hud;
 
   info("open the debugger");
-  let {panel} = await openDebugger();
-  let {activeThread} = panel.panelWin.DebuggerController;
+  const {panel} = await openDebugger();
+  const {activeThread} = panel.panelWin.DebuggerController;
 
   const onFirstCallFramesAdded = activeThread.addOneTimeListener("framesadded");
   // firstCall calls secondCall, which has a debugger statement, so we'll be paused.

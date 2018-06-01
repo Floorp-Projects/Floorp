@@ -20,8 +20,8 @@ function test() {
 }
 
 function runTests({ Scratchpad }) {
-  let browser = Services.wm.getEnumerator("navigator:browser").getNext();
-  let oldPrompt = Services.prompt;
+  const browser = Services.wm.getEnumerator("navigator:browser").getNext();
+  const oldPrompt = Services.prompt;
   let button;
 
   Services.prompt = {
@@ -57,7 +57,7 @@ var CloseObserver = {
 
   observe: function(aSubject) {
     aSubject.QueryInterface(Ci.nsISupportsPRBool);
-    let message = this.expectedValue ? "close" : "stay open";
+    const message = this.expectedValue ? "close" : "stay open";
     ok(this.expectedValue === aSubject.data, "Expected browser to " + message);
     aSubject.data = true;
   },

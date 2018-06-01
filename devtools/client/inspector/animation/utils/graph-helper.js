@@ -170,7 +170,7 @@ function getPreferredDurationResolution(keyframes) {
 
   let durationResolution = DEFAULT_DURATION_RESOLUTION;
   let previousOffset = 0;
-  for (let keyframe of keyframes) {
+  for (const keyframe of keyframes) {
     if (previousOffset && previousOffset != keyframe.offset) {
       const interval = keyframe.offset - previousOffset;
       durationResolution = Math.max(durationResolution, Math.ceil(1 / interval));

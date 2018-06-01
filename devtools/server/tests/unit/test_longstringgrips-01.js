@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_longstring_grip() {
-  let longString = "All I want is to be a monkey of moderate intelligence who"
+  const longString = "All I want is to be a monkey of moderate intelligence who"
     + " wears a suit... that's why I'm transferring to business school! Maybe I"
     + " love you so much, I love you no matter who you are pretending to be."
     + " Enough about your promiscuous mother, Hermes! We have bigger problems."
@@ -40,9 +40,9 @@ function test_longstring_grip() {
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
     Assert.equal(args.length, 1);
-    let grip = args[0];
+    const grip = args[0];
 
     try {
       Assert.equal(grip.type, "longString");
@@ -50,7 +50,7 @@ function test_longstring_grip() {
       Assert.equal(grip.initial,
                    longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
 
-      let longStringClient = gThreadClient.pauseLongString(grip);
+      const longStringClient = gThreadClient.pauseLongString(grip);
       longStringClient.substring(22, 28, function(response) {
         try {
           Assert.equal(response.substring, "monkey");

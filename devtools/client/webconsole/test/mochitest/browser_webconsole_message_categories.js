@@ -31,7 +31,7 @@ const TESTS = [
     matchString: "multipart/form-data",
     onload: function() {
       ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-        let form = content.document.querySelector("form");
+        const form = content.document.querySelector("form");
         form.submit();
       });
     },
@@ -94,24 +94,24 @@ add_task(async function() {
   await pushPref("devtools.webconsole.filter.css", true);
   await pushPref("devtools.webconsole.filter.net", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   for (let i = 0; i < TESTS.length; i++) {
-    let test = TESTS[i];
+    const test = TESTS[i];
     info("Running test #" + i);
     await runTest(test, hud);
   }
 });
 
 async function runTest(test, hud) {
-  let {file, category, matchString, onload, skipInE10s} = test;
+  const {file, category, matchString, onload, skipInE10s} = test;
 
   if (skipInE10s && Services.appinfo.browserTabsRemoteAutostart) {
     return;
   }
 
-  let onMessageLogged = waitForMessage(hud, matchString);
+  const onMessageLogged = waitForMessage(hud, matchString);
 
-  let onMessageObserved = new Promise(resolve => {
+  const onMessageObserved = new Promise(resolve => {
     Services.console.registerListener(function listener(subject) {
       if (!(subject instanceof Ci.nsIScriptError)) {
         return;

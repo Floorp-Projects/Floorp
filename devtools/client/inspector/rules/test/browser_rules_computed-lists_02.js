@@ -19,15 +19,15 @@ var TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testComputedList(inspector, view);
 });
 
 function testComputedList(inspector, view) {
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let propEditor = rule.textProps[0].editor;
-  let expander = propEditor.expander;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const propEditor = rule.textProps[0].editor;
+  const expander = propEditor.expander;
 
   ok(!expander.hasAttribute("open"), "margin computed list is closed");
 
@@ -35,9 +35,9 @@ function testComputedList(inspector, view) {
   expander.click();
   ok(expander.hasAttribute("open"), "margin computed list is open");
 
-  let computed = propEditor.prop.computed;
-  let computedDom = propEditor.computed;
-  let propNames = [
+  const computed = propEditor.prop.computed;
+  const computedDom = propEditor.computed;
+  const propNames = [
     "margin-top",
     "margin-right",
     "margin-bottom",
@@ -49,7 +49,7 @@ function testComputedList(inspector, view) {
      "There should be 4 nodes in the DOM");
 
   propNames.forEach((propName, i) => {
-    let propValue = i + "px";
+    const propValue = i + "px";
     is(computed[i].name, propName,
        "Computed property #" + i + " has name " + propName);
     is(computed[i].value, propValue,

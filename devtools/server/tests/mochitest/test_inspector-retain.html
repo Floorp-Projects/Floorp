@@ -26,11 +26,11 @@ function assertOwnership() {
 }
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -71,7 +71,7 @@ addTest(function testRetain() {
     // OK, try releasing the parent of the first retained.
     return gWalker.releaseNode(bodyFront.parentNode());
   }).then(() => {
-    let clientTree = clientOwnershipTree(gWalker);
+    const clientTree = clientOwnershipTree(gWalker);
 
     // That request should have freed the parent of the first retained
     // but moved the rest into the retained orphaned tree.
@@ -108,7 +108,7 @@ addTest(function testWinRace() {
   let front = null;
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(node => {
     front = node;
-    let contentNode = gInspectee.querySelector("#a");
+    const contentNode = gInspectee.querySelector("#a");
     contentNode.remove();
     // Now wait for that mutation and retain response to come in.
     return Promise.all([
@@ -134,7 +134,7 @@ addTest(function testLoseRace() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#z").then(node => {
     front = node;
     gInspectee.querySelector("#z").parentNode = null;
-    let contentNode = gInspectee.querySelector("#a");
+    const contentNode = gInspectee.querySelector("#a");
     contentNode.remove();
     return promiseOnce(gWalker, "new-mutations");
   }).then(() => {

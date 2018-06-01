@@ -22,11 +22,11 @@ let gInspectee = null;
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -39,7 +39,7 @@ addTest(function setup() {
 });
 
 addTest(function testReload() {
-  let oldRootID = gWalker.rootNode.actorID;
+  const oldRootID = gWalker.rootNode.actorID;
   // Load a node to populate the tree a bit.
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(front => {
     gInspectee.defaultView.location.reload();

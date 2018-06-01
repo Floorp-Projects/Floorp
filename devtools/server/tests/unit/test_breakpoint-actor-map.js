@@ -17,12 +17,12 @@ function run_test() {
 }
 
 function test_get_actor() {
-  let bpStore = new BreakpointActorMap();
-  let location = {
+  const bpStore = new BreakpointActorMap();
+  const location = {
     originalSourceActor: { actor: "actor1" },
     originalLine: 3
   };
-  let columnLocation = {
+  const columnLocation = {
     originalSourceActor: { actor: "actor2" },
     originalLine: 5,
     originalColumn: 15
@@ -55,7 +55,7 @@ function test_get_actor() {
 
 function test_set_actor() {
   // Breakpoint with column
-  let bpStore = new BreakpointActorMap();
+  const bpStore = new BreakpointActorMap();
   let location = {
     originalSourceActor: { actor: "actor1" },
     originalLine: 10,
@@ -77,7 +77,7 @@ function test_set_actor() {
 
 function test_delete_actor() {
   // Breakpoint with column
-  let bpStore = new BreakpointActorMap();
+  const bpStore = new BreakpointActorMap();
   let location = {
     originalSourceActor: { actor: "actor1" },
     originalLine: 10,
@@ -100,7 +100,7 @@ function test_delete_actor() {
 }
 
 function test_find_actors() {
-  let bps = [
+  const bps = [
     { originalSourceActor: { actor: "actor1" }, originalLine: 10 },
     { originalSourceActor: { actor: "actor1" }, originalLine: 10, originalColumn: 3 },
     { originalSourceActor: { actor: "actor1" }, originalLine: 10, originalColumn: 10 },
@@ -111,16 +111,16 @@ function test_find_actors() {
     { originalSourceActor: { actor: "actor2" }, originalLine: 40, originalColumn: 56 }
   ];
 
-  let bpStore = new BreakpointActorMap();
+  const bpStore = new BreakpointActorMap();
 
-  for (let bp of bps) {
+  for (const bp of bps) {
     bpStore.setActor(bp, bp);
   }
 
   // All breakpoints
 
   let bpSet = new Set(bps);
-  for (let bp of bpStore.findActors()) {
+  for (const bp of bpStore.findActors()) {
     bpSet.delete(bp);
   }
   Assert.equal(bpSet.size, 0,
@@ -131,7 +131,7 @@ function test_find_actors() {
   bpSet = new Set(bps.filter(bp => {
     return bp.originalSourceActor.actorID === "actor1";
   }));
-  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" } })) {
+  for (const bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" } })) {
     bpSet.delete(bp);
   }
   Assert.equal(bpSet.size, 0,
@@ -143,8 +143,8 @@ function test_find_actors() {
     return bp.originalSourceActor.actorID === "actor1" && bp.originalLine === 10;
   }));
   let first = true;
-  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" },
-                                      originalLine: 10 })) {
+  for (const bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" },
+                                        originalLine: 10 })) {
     if (first) {
       Assert.equal(bp.originalColumn, undefined,
                    "Should always get the whole line breakpoint first");
@@ -160,7 +160,7 @@ function test_find_actors() {
 }
 
 function test_duplicate_actors() {
-  let bpStore = new BreakpointActorMap();
+  const bpStore = new BreakpointActorMap();
 
   // Breakpoint with column
   let location = {

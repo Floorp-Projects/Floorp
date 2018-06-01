@@ -74,8 +74,8 @@ Tools.inspector = {
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
     if (osString == "Darwin") {
-      let cmdShiftC = "Cmd+Shift+" + l10n("inspector.commandkey");
-      let cmdOptC = "Cmd+Opt+" + l10n("inspector.commandkey");
+      const cmdShiftC = "Cmd+Shift+" + l10n("inspector.commandkey");
+      const cmdOptC = "Cmd+Opt+" + l10n("inspector.commandkey");
       return l10n("inspector.mac.tooltip", cmdShiftC, cmdOptC);
     }
 
@@ -551,8 +551,8 @@ exports.ToolboxButtons = [
                       osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M"),
     isTargetSupported: target => target.isLocalTab,
     onClick(event, toolbox) {
-      let tab = toolbox.target.tab;
-      let browserWindow = tab.ownerDocument.defaultView;
+      const tab = toolbox.target.tab;
+      const browserWindow = tab.ownerDocument.defaultView;
       ResponsiveUIManager.handleGcliCommand(browserWindow, tab,
         "resize toggle", null);
     },

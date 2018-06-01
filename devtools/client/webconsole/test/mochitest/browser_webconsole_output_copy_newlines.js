@@ -11,11 +11,11 @@ const TEST_URI = "data:text/html,<meta charset=utf8>" +
                  "Test copy multiple messages to clipboard";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   const messages = Array.from({length: 10}, (_, i) => `Message number ${i + 1}`);
   const lastMessage = [...messages].pop();
-  let onMessage = waitForMessage(hud, lastMessage);
+  const onMessage = waitForMessage(hud, lastMessage);
   ContentTask.spawn(gBrowser.selectedBrowser, messages, msgs => {
     msgs.forEach(msg => content.wrappedJSObject.console.log(msg));
   });

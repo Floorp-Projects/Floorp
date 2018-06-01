@@ -30,10 +30,10 @@ function connectToDebugger() {
   initCommon();
   initDebuggerServer();
 
-  let transport = DebuggerServer.connectPipe();
-  let client = new DebuggerClient(transport);
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
 
-  let dbgState = { dbgClient: client };
+  const dbgState = { dbgClient: client };
   return new Promise(resolve => {
     client.connect().then(response => resolve([dbgState, response]));
   });
@@ -80,7 +80,7 @@ var _attachConsole = async function(
   if (!attachToTab) {
     response = await state.dbgClient.getProcess();
     await state.dbgClient.attachTab(response.form.actor);
-    let consoleActor = response.form.consoleActor;
+    const consoleActor = response.form.consoleActor;
     state.actor = consoleActor;
     state.dbgClient.attachConsole(consoleActor, listeners,
                                   _onAttachConsole.bind(null, state));
@@ -93,25 +93,25 @@ var _attachConsole = async function(
     callback(state, response);
     return;
   }
-  let tab = response.tabs[response.selected];
-  let [, tabClient] = await state.dbgClient.attachTab(tab.actor);
+  const tab = response.tabs[response.selected];
+  const [, tabClient] = await state.dbgClient.attachTab(tab.actor);
   if (attachToWorker) {
-    let workerName = "console-test-worker.js#" + new Date().getTime();
-    let worker = new Worker(workerName);
+    const workerName = "console-test-worker.js#" + new Date().getTime();
+    const worker = new Worker(workerName);
     // Keep a strong reference to the Worker to avoid it being
     // GCd during the test (bug 1237492).
     // eslint-disable-next-line camelcase
     state._worker_ref = worker;
     await waitForMessage(worker);
 
-    let { workers } = await tabClient.listWorkers();
-    let workerActor = workers.filter(w => w.url == workerName)[0].actor;
+    const { workers } = await tabClient.listWorkers();
+    const workerActor = workers.filter(w => w.url == workerName)[0].actor;
     if (!workerActor) {
       console.error("listWorkers failed. Unable to find the " +
                     "worker actor\n");
       return;
     }
-    let [workerResponse, workerClient] = await tabClient.attachWorker(workerActor);
+    const [workerResponse, workerClient] = await tabClient.attachWorker(workerActor);
     if (!workerClient || workerResponse.error) {
       console.error("attachWorker failed. No worker client or " +
                     " error: " + workerResponse.error);
@@ -159,9 +159,9 @@ function checkConsoleAPICall(call, expected) {
 }
 
 function checkObject(object, expected) {
-  for (let name of Object.keys(expected)) {
-    let expectedValue = expected[name];
-    let value = object[name];
+  for (const name of Object.keys(expected)) {
+    const expectedValue = expected[name];
+    const value = object[name];
     checkValue(name, value, expectedValue);
   }
 }
@@ -188,9 +188,9 @@ function checkValue(name, value, expected) {
 }
 
 function checkHeadersOrCookies(array, expected) {
-  let foundHeaders = {};
+  const foundHeaders = {};
 
-  for (let elem of array) {
+  for (const elem of array) {
     if (!(elem.name in expected)) {
       continue;
     }
@@ -199,7 +199,7 @@ function checkHeadersOrCookies(array, expected) {
     checkValue(elem.name, elem.value, expected[elem.name]);
   }
 
-  for (let header in expected) {
+  for (const header in expected) {
     if (!(header in foundHeaders)) {
       ok(false, header + " was not found");
     }
@@ -207,10 +207,10 @@ function checkHeadersOrCookies(array, expected) {
 }
 
 function checkRawHeaders(text, expected) {
-  let headers = text.split(/\r\n|\n|\r/);
-  let arr = [];
-  for (let header of headers) {
-    let index = header.indexOf(": ");
+  const headers = text.split(/\r\n|\n|\r/);
+  const arr = [];
+  for (const header of headers) {
+    const index = header.indexOf(": ");
     if (index < 0) {
       continue;
     }
@@ -230,7 +230,7 @@ function runTests(tests, endCallback) {
     let lastResult, sendToNext;
     for (let i = 0; i < tests.length; i++) {
       gTestState.index = i;
-      let fn = tests[i];
+      const fn = tests[i];
       info("will run test #" + i + ": " + fn.name);
       lastResult = fn(sendToNext, lastResult);
       sendToNext = yield lastResult;
@@ -246,7 +246,7 @@ function nextTest(message) {
 }
 
 function withActiveServiceWorker(win, url, scope) {
-  let opts = {};
+  const opts = {};
   if (scope) {
     opts.scope = scope;
   }
@@ -260,7 +260,7 @@ function withActiveServiceWorker(win, url, scope) {
     // then the ready promise will never resolve.  Instead monitor the service
     // workers state change events to determine when its activated.
     return new Promise(resolve => {
-      let sw = swr.waiting || swr.installing;
+      const sw = swr.waiting || swr.installing;
       sw.addEventListener("statechange", function stateHandler(evt) {
         if (sw.state === "activated") {
           sw.removeEventListener("statechange", stateHandler);

@@ -13,7 +13,7 @@ const TEST_URI = `<style>${TEST_STYLE}</style><h1>test element</h1>`;
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector} = await openInspector();
+  const {inspector} = await openInspector();
 
   await testRuleViewUrls(inspector);
   await testComputedViewUrls(inspector);
@@ -21,21 +21,21 @@ add_task(async function() {
 
 async function testRuleViewUrls(inspector) {
   info("Testing tooltips in the rule view");
-  let view = selectRuleView(inspector);
+  const view = selectRuleView(inspector);
   await selectNode("h1", inspector);
 
-  let {valueSpan} = getRuleViewProperty(view, "h1", "background");
+  const {valueSpan} = getRuleViewProperty(view, "h1", "background");
   await performChecks(view, valueSpan);
 }
 
 async function testComputedViewUrls(inspector) {
   info("Testing tooltips in the computed view");
 
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
-  let view = selectComputedView(inspector);
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
+  const view = selectComputedView(inspector);
   await onComputedViewReady;
 
-  let {valueSpan} = getComputedViewProperty(view, "background-image");
+  const {valueSpan} = getComputedViewProperty(view, "background-image");
 
   await performChecks(view, valueSpan);
 }
@@ -45,16 +45,16 @@ async function testComputedViewUrls(inspector) {
  */
 async function performChecks(view, propertyValue) {
   function checkTooltip(panel, imageSrc) {
-    let images = panel.getElementsByTagName("img");
+    const images = panel.getElementsByTagName("img");
     is(images.length, 1, "Tooltip contains an image");
     is(images[0].getAttribute("src"), imageSrc, "The image URL is correct");
   }
 
-  let links = propertyValue.querySelectorAll(".theme-link");
+  const links = propertyValue.querySelectorAll(".theme-link");
 
   info("Checking first link tooltip");
   let previewTooltip = await assertShowPreviewTooltip(view, links[0]);
-  let panel = view.tooltips.getTooltip("previewTooltip").panel;
+  const panel = view.tooltips.getTooltip("previewTooltip").panel;
   checkTooltip(panel, YELLOW_DOT);
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, links[0]);

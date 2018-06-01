@@ -16,8 +16,8 @@ function run_test() {
 
 function check_actor_for_list(nodelist) {
   info("Checking NodeListActor with nodelist '" + nodelist + "' works.");
-  let actor = new NodeListActor({}, nodelist);
-  let form = actor.form();
+  const actor = new NodeListActor({}, nodelist);
+  const form = actor.form();
 
   // No exception occured as a exceptions abort the test.
   ok(true, "No exceptions occured.");

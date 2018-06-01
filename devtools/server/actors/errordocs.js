@@ -112,12 +112,12 @@ exports.GetURL = (error) => {
     return undefined;
   }
 
-  let doc = ErrorDocs[error.errorMessageName];
+  const doc = ErrorDocs[error.errorMessageName];
   if (doc) {
     return baseURL + doc + params;
   }
 
-  let categoryURL = ErrorCategories[error.category];
+  const categoryURL = ErrorCategories[error.category];
   if (categoryURL) {
     return categoryURL + params;
   }

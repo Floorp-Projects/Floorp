@@ -195,7 +195,12 @@ min-width: 600px; min-height: 600px; max-width: 600px; max-height: 600px`;
       try {
         result = await this.runTest(testUrl, references, expected, timeout);
       } catch (e) {
-        result = {status: STATUS.ERROR, message: e.stack, extra: {}};
+        result = {
+          status: STATUS.ERROR,
+          message: String(e),
+          stack: e.stack,
+          extra: {},
+        };
       }
       return result;
     })();

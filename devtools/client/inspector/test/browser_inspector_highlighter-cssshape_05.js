@@ -10,12 +10,12 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
-  let env = await openInspectorForURL(TEST_URL);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  let { testActor, inspector } = env;
-  let view = selectRuleView(inspector);
-  let highlighters = view.highlighters;
-  let config = { inspector, view, highlighters, testActor, helper };
+  const env = await openInspectorForURL(TEST_URL);
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
+  const { testActor, inspector } = env;
+  const view = selectRuleView(inspector);
+  const highlighters = view.highlighters;
+  const config = { inspector, view, highlighters, testActor, helper };
 
   await highlightFromRuleView(config);
   await highlightFromHighlighter(config);
@@ -44,16 +44,16 @@ async function highlightFromRuleView(config) {
 
   await setup({ selector, property, ...config });
 
-  let container = getRuleViewProperty(view, selector, property).valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
+  const container = getRuleViewProperty(view, selector, property).valueSpan;
+  const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
-  let highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
+  const highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
   let markerHidden = await testActor.getHighlighterNodeAttribute(
     "shapes-marker-hover", "hidden", highlighterFront);
   ok(markerHidden, "Hover marker on highlighter is not visible");
 
   info("Hover over point 0 in rule view");
-  let pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
+  const pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   EventUtils.synthesizeMouseAtCenter(pointSpan, {type: "mousemove"}, view.styleWindow);
   await onHighlighterShown;
@@ -86,9 +86,9 @@ async function highlightFromHighlighter(config) {
 
   await setup({ selector, property, ...config });
 
-  let highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
-  let { mouse } = helper;
-  let container = getRuleViewProperty(view, selector, property).valueSpan;
+  const highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
+  const { mouse } = helper;
+  const container = getRuleViewProperty(view, selector, property).valueSpan;
 
   info("Hover over first point in highlighter");
   let onEventHandled = highlighters.once("highlighter-event-handled");
@@ -99,7 +99,7 @@ async function highlightFromHighlighter(config) {
   ok(!markerHidden, "Marker on highlighter is visible");
 
   info("Point in rule view is marked when same point in shapes highlighter is hovered");
-  let pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
+  const pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
   ok(pointSpan.classList.contains("active"), "Span for point 0 is active");
 
   info("Move mouse off point");

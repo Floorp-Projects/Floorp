@@ -47,7 +47,7 @@ function testOpen() {
 }
 
 function testOpenWithState() {
-  let state = {
+  const state = {
     filename: "testfile",
     executionContext: 2,
     text: "test text"
@@ -65,7 +65,7 @@ function testOpenWithState() {
 }
 
 function testOpenInvalidState() {
-  let win = openScratchpad(null, {state: 7});
+  const win = openScratchpad(null, {state: 7});
   ok(!win, "no scratchpad opened if state is not an object");
   done();
 }
@@ -78,9 +78,9 @@ function testOpenTestFile() {
         "http://example.com/browser/devtools/client/scratchpad/test/NS_ERROR_ILLEGAL_INPUT.txt",
         "silent",
         function(aStatus, content) {
-          let nb = win.document.querySelector("#scratchpad-notificationbox");
+          const nb = win.document.querySelector("#scratchpad-notificationbox");
           is(nb.querySelectorAll("notification").length, 1, "There is just one notification");
-          let cn = nb.currentNotification;
+          const cn = nb.currentNotification;
           is(cn.priority, nb.PRIORITY_WARNING_HIGH, "notification priority is correct");
           is(cn.value, "file-import-convert-failed", "notification value is corrent");
           is(cn.type, "warning", "notification type is correct");

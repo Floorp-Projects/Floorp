@@ -21,9 +21,9 @@ function copyString(string) {
  * @return {String} Clipboard text content, null if no text clipboard data is available.
  */
 function getText() {
-  let flavor = "text/unicode";
+  const flavor = "text/unicode";
 
-  let xferable = Cc["@mozilla.org/widget/transferable;1"]
+  const xferable = Cc["@mozilla.org/widget/transferable;1"]
                  .createInstance(Ci.nsITransferable);
 
   if (!xferable) {
@@ -40,7 +40,7 @@ function getText() {
     Services.clipboard.kGlobalClipboard
   );
 
-  let data = {};
+  const data = {};
   try {
     xferable.getTransferData(flavor, data, {});
   } catch (e) {

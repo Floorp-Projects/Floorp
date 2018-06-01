@@ -10,8 +10,8 @@ add_task(async function() {
   await addTab(TEST_URI);
   startTelemetry();
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
 
   info("testing the eyedropper button");
   await testButton(toolbox);

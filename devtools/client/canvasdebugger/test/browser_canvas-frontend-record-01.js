@@ -6,8 +6,8 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
 
   await reload(target);
 
@@ -23,8 +23,8 @@ async function ifTestingSupported() {
   is(SnapshotsListView.selectedIndex, -1,
     "There should be no selected item in the snapshots list view.");
 
-  let recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
   await recordingStarted;

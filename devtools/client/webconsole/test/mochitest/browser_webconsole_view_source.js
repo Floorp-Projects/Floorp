@@ -15,15 +15,16 @@ const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test-mixedcontent-securityerrors.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   info("console opened");
 
-  let msg = await waitFor(() => findMessage(hud, "Blocked loading mixed active content"));
+  const msg =
+    await waitFor(() => findMessage(hud, "Blocked loading mixed active content"));
   ok(msg, "error message");
-  let locationNode = msg.querySelector(".message-location .frame-link-filename");
+  const locationNode = msg.querySelector(".message-location .frame-link-filename");
   ok(locationNode, "location node");
 
-  let onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   locationNode.click();
   await onTabOpen;

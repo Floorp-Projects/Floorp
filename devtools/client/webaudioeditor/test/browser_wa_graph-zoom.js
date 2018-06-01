@@ -6,11 +6,11 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, ContextView } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, ContextView } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
   await Promise.all([
     waitForGraphRendered(panelWin, 3, 2),

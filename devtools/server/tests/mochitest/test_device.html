@@ -27,17 +27,17 @@ window.onload = function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      let d = getDeviceFront(client, response);
+      const d = getDeviceFront(client, response);
 
       let desc;
-      let appInfo = Services.appinfo;
-      let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+      const appInfo = Services.appinfo;
+      const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils);
 
-      let localDesc = {
+      const localDesc = {
         appid: appInfo.ID,
         vendor: appInfo.vendor,
         name: appInfo.name,
@@ -58,12 +58,12 @@ window.onload = function() {
       };
 
       function checkValues() {
-        for (let key in localDesc) {
+        for (const key in localDesc) {
           is(desc[key], localDesc[key], "valid field (" + key + ")");
         }
 
-        let currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
-        let profileDir = currProfD.path;
+        const currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+        const profileDir = currProfD.path;
         ok(profileDir.includes(desc.profile.length > 0 && desc.profile),
            "valid profile name");
 

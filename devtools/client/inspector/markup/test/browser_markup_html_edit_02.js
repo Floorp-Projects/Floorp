@@ -17,10 +17,10 @@ const TEST_DATA = [
     validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let textNodeName = await testActor.eval(`
+      const textNodeName = await testActor.eval(`
         document.querySelector("#badMarkup1").nextSibling.nodeName
       `);
-      let textNodeData = await testActor.eval(`
+      const textNodeData = await testActor.eval(`
         document.querySelector("#badMarkup1").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
@@ -35,10 +35,10 @@ const TEST_DATA = [
     validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let textNodeName = await testActor.eval(`
+      const textNodeName = await testActor.eval(`
         document.querySelector("#badMarkup2").nextSibling.nodeName
       `);
-      let textNodeData = await testActor.eval(`
+      const textNodeData = await testActor.eval(`
         document.querySelector("#badMarkup2").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
@@ -53,8 +53,8 @@ const TEST_DATA = [
     validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let emText = await testActor.getProperty("#badMarkup3 em", "textContent");
-      let strongText = await testActor.getProperty("#badMarkup3 strong",
+      const emText = await testActor.getProperty("#badMarkup3 em", "textContent");
+      const strongText = await testActor.getProperty("#badMarkup3 strong",
                                                    "textContent");
       is(emText, "Emphasized  and strong", "<em> was auto created");
       is(strongText, " and strong", "<strong> was auto created");
@@ -67,11 +67,11 @@ const TEST_DATA = [
     validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let divText = await testActor.getProperty("#badMarkup4", "textContent");
-      let divTag = await testActor.getProperty("#badMarkup4", "tagName");
+      const divText = await testActor.getProperty("#badMarkup4", "textContent");
+      const divTag = await testActor.getProperty("#badMarkup4", "tagName");
 
-      let pText = await testActor.getProperty("#badMarkup4 p", "textContent");
-      let pTag = await testActor.getProperty("#badMarkup4 p", "tagName");
+      const pText = await testActor.getProperty("#badMarkup4 p", "textContent");
+      const pTag = await testActor.getProperty("#badMarkup4 p", "tagName");
 
       is(divText, "badMarkup4", "textContent is correct");
       is(divTag, "DIV", "did not change to <p> tag");
@@ -86,14 +86,14 @@ const TEST_DATA = [
     validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let num = await testActor.getNumberOfElementMatches("#badMarkup5 div");
+      const num = await testActor.getNumberOfElementMatches("#badMarkup5 div");
 
-      let pText = await testActor.getProperty("#badMarkup5", "textContent");
-      let pTag = await testActor.getProperty("#badMarkup5", "tagName");
+      const pText = await testActor.getProperty("#badMarkup5", "textContent");
+      const pTag = await testActor.getProperty("#badMarkup5", "tagName");
 
-      let divText = await testActor.getProperty("#badMarkup5 ~ div",
+      const divText = await testActor.getProperty("#badMarkup5 ~ div",
                                                 "textContent");
-      let divTag = await testActor.getProperty("#badMarkup5 ~ div", "tagName");
+      const divTag = await testActor.getProperty("#badMarkup5 ~ div", "tagName");
 
       is(num, 0, "The invalid markup got created as a sibling");
       is(pText, "badMarkup5 ", "The p tag does not take in the div content");
@@ -113,7 +113,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
   await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

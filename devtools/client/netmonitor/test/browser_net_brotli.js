@@ -11,14 +11,14 @@ const BROTLI_REQUESTS = 1;
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = await initNetMonitor(BROTLI_URL);
+  const { tab, monitor } = await initNetMonitor(BROTLI_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -28,8 +28,8 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, BROTLI_REQUESTS);
 
-  let requestItem = document.querySelector(".request-list-item");
-  let requestsListStatus = requestItem.querySelector(".status-code");
+  const requestItem = document.querySelector(".request-list-item");
+  const requestsListStatus = requestItem.querySelector(".status-code");
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
 
@@ -48,7 +48,7 @@ add_task(async function() {
     });
 
   wait = waitForDOM(document, ".CodeMirror-code");
-  let onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
+  const onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));

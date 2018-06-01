@@ -5,17 +5,17 @@
 
 // Test that changing filter state properly refreshes the selected census.
 
-let { viewState, censusState } = require("devtools/client/memory/constants");
-let { setFilterStringAndRefresh } = require("devtools/client/memory/actions/filter");
-let { takeSnapshotAndCensus, selectSnapshotAndRefresh } = require("devtools/client/memory/actions/snapshot");
-let { changeView } = require("devtools/client/memory/actions/view");
+const { viewState, censusState } = require("devtools/client/memory/constants");
+const { setFilterStringAndRefresh } = require("devtools/client/memory/actions/filter");
+const { takeSnapshotAndCensus, selectSnapshotAndRefresh } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
 

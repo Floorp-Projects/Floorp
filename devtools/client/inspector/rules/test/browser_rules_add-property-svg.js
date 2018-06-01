@@ -11,7 +11,7 @@ var TEST_SELECTOR = "path";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(TEST_SELECTOR, inspector);
 
   info("Test creating a new property");

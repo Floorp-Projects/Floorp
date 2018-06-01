@@ -64,7 +64,7 @@ TreeWidget.prototype = {
     if (this._selectedLabel) {
       this._selectedLabel.classList.remove("theme-selected");
     }
-    let currentSelected = this._selectedLabel;
+    const currentSelected = this._selectedLabel;
     if (ids == -1) {
       this._selectedLabel = this._selectedItem = null;
       return;
@@ -127,7 +127,7 @@ TreeWidget.prototype = {
     this.root = new TreeItem(this.document);
     if (this.contextMenuId) {
       this.root.children.addEventListener("contextmenu", (event) => {
-        let menu = this.document.getElementById(this.contextMenuId);
+        const menu = this.document.getElementById(this.contextMenuId);
         menu.openPopupAtScreen(event.screenX, event.screenY, true);
       });
     }
@@ -159,7 +159,7 @@ TreeWidget.prototype = {
    * Selects the next visible item in the tree.
    */
   selectNextItem: function() {
-    let next = this.getNextVisibleItem();
+    const next = this.getNextVisibleItem();
     if (next) {
       this.selectedItem = next;
     }
@@ -169,7 +169,7 @@ TreeWidget.prototype = {
    * Selects the previos visible item in the tree
    */
   selectPreviousItem: function() {
-    let prev = this.getPreviousVisibleItem();
+    const prev = this.getPreviousVisibleItem();
     if (prev) {
       this.selectedItem = prev;
     }
@@ -281,7 +281,7 @@ TreeWidget.prototype = {
   exists: function(item) {
     let bookmark = this.root;
 
-    for (let id of item) {
+    for (const id of item) {
       if (bookmark.items.has(id)) {
         bookmark = bookmark.items.get(id);
       } else {
@@ -354,7 +354,7 @@ TreeWidget.prototype = {
     }
 
     if (this._selectedLabel != target) {
-      let ids = target.parentNode.getAttribute("data-id");
+      const ids = target.parentNode.getAttribute("data-id");
       this.selectedItem = JSON.parse(ids);
     }
   },
@@ -400,8 +400,8 @@ TreeWidget.prototype = {
    * visible.
    */
   ensureSelectedVisible: function() {
-    let {top, bottom} = this._selectedLabel.getBoundingClientRect();
-    let height = this.root.children.parentNode.clientHeight;
+    const {top, bottom} = this._selectedLabel.getBoundingClientRect();
+    const height = this.root.children.parentNode.clientHeight;
     if (top < 0) {
       this._selectedLabel.scrollIntoView();
     } else if (bottom > height) {
@@ -493,7 +493,7 @@ TreeItem.prototype = {
       return;
     }
     // Get the id and label corresponding to this level inside the tree.
-    let id = items[this.level].id || items[this.level];
+    const id = items[this.level].id || items[this.level];
     if (this.items.has(id)) {
       // An item with same id already exists, thus calling the add method of
       // that child to add the passed node at correct position.
@@ -507,13 +507,13 @@ TreeItem.prototype = {
     let label = items[this.level].label ||
                 items[this.level].id ||
                 items[this.level];
-    let node = items[this.level].node;
+    const node = items[this.level].node;
     if (node) {
       // The item is supposed to be a DOMNode, so we fetch the textContent in
       // order to find the correct sorted location of this new item.
       label = node.textContent;
     }
-    let treeItem = new TreeItem(this.document, this, node || label,
+    const treeItem = new TreeItem(this.document, this, node || label,
                                 items[this.level].type || defaultType);
 
     treeItem.add(items, defaultType, sorted);
@@ -523,7 +523,7 @@ TreeItem.prototype = {
 
     if (sorted) {
       // Inserting this newly created item at correct position
-      let nextSibling = [...this.items.values()].find(child => {
+      const nextSibling = [...this.items.values()].find(child => {
         return child.label.textContent >= label;
       });
 
@@ -552,9 +552,9 @@ TreeItem.prototype = {
    *        Ids of items leading up to the item to be removed.
    */
   remove: function(items = []) {
-    let id = items.shift();
+    const id = items.shift();
     if (id && this.items.has(id)) {
-      let deleted = this.items.get(id);
+      const deleted = this.items.get(id);
       if (!items.length) {
         this.items.delete(id);
       }
@@ -581,7 +581,7 @@ TreeItem.prototype = {
       return this.label;
     }
     if (this.items.has(items[this.level])) {
-      let label = this.items.get(items[this.level]).setSelectedItem(items);
+      const label = this.items.get(items[this.level]).setSelectedItem(items);
       if (label && this.label) {
         this.label.setAttribute("expanded", true);
       }
@@ -597,7 +597,7 @@ TreeItem.prototype = {
     if (this.label) {
       this.label.removeAttribute("expanded");
     }
-    for (let child of this.items.values()) {
+    for (const child of this.items.values()) {
       child.collapseAll();
     }
   },
@@ -609,7 +609,7 @@ TreeItem.prototype = {
     if (this.label) {
       this.label.setAttribute("expanded", "true");
     }
-    for (let child of this.items.values()) {
+    for (const child of this.items.values()) {
       child.expandAll();
     }
   },

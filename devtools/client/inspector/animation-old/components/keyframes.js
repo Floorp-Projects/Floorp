@@ -84,7 +84,7 @@ Keyframes.prototype = {
 
     // Append elements to display keyframe values.
     this.keyframesEl.classList.add(animation.state.type);
-    for (let frame of this.keyframes) {
+    for (const frame of this.keyframes) {
       createNode({
         parent: this.keyframesEl,
         attributes: {

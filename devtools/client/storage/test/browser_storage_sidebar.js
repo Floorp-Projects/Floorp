@@ -100,8 +100,8 @@ const testCases = [
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  for (let test of testCases) {
-    let { location, sidebarHidden, sendEscape } = test;
+  for (const test of testCases) {
+    const { location, sidebarHidden, sendEscape } = test;
 
     info("running " + JSON.stringify(test));
 

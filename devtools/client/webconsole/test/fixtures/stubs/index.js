@@ -3,7 +3,7 @@
 
 "use strict";
 
-let maps = [];
+const maps = [];
 
 [
   "consoleApi",

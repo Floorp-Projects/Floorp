@@ -31,18 +31,18 @@ const TOOLTIP_DOM_CONTENT_LOADED =
 const TOOLTIP_LOAD = L10N.getStr("networkMenu.summary.tooltip.load");
 
 function StatusBar({ summary, openStatistics, timingMarkers }) {
-  let { count, contentSize, transferredSize, millis } = summary;
-  let {
+  const { count, contentSize, transferredSize, millis } = summary;
+  const {
     DOMContentLoaded,
     load,
   } = timingMarkers;
 
-  let countText = count === 0 ? REQUESTS_COUNT_EMPTY :
+  const countText = count === 0 ? REQUESTS_COUNT_EMPTY :
     PluralForm.get(count,
       L10N.getStr("networkMenu.summary.requestsCount2")).replace("#1", count);
-  let transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
+  const transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
     getFormattedSize(contentSize), getFormattedSize(transferredSize));
-  let finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
+  const finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
     getFormattedTime(millis));
 
   return (

@@ -12,12 +12,12 @@ const LIST_ITEM_HEIGHT = 32;
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
   const initialValue = "blur(2px) contrast(200%) brightness(200%)";
-  let widget = new CSSFilterEditorWidget(container, initialValue, cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, initialValue, cssIsValid);
 
   const filters = widget.el.querySelector("#filters");
   function first() {

@@ -10,16 +10,16 @@
 const HTML_LONG_URL = CONTENT_TYPE_SJS + "?fmt=html-long";
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // This test could potentially be slow because over 100 KB of stuff
   // is going to be requested and displayed in the source editor.
   requestLongerTimeout(2);
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -32,9 +32,9 @@ add_task(async function() {
   });
   await wait;
 
-  let requestItem = document.querySelector(".request-list-item");
+  const requestItem = document.querySelector(".request-list-item");
   requestItem.scrollIntoView();
-  let requestsListStatus = requestItem.querySelector(".status-code");
+  const requestsListStatus = requestItem.querySelector(".status-code");
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
 
@@ -55,7 +55,7 @@ add_task(async function() {
     document.querySelector("#response-tab"));
   await wait;
 
-  let text = document.querySelector(".CodeMirror-line").textContent;
+  const text = document.querySelector(".CodeMirror-line").textContent;
 
   ok(text.match(/^<p>/), "The text shown in the source editor is incorrect.");
 

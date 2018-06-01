@@ -62,13 +62,13 @@ function TextEditor(container, node, type) {
 
 TextEditor.prototype = {
   buildMarkup: function(type) {
-    let doc = this.markup.doc;
+    const doc = this.markup.doc;
 
     this.elt = doc.createElement("span");
     this.elt.classList.add("editor", type);
 
     if (type === "comment") {
-      let openComment = doc.createElement("span");
+      const openComment = doc.createElement("span");
       openComment.textContent = "<!--";
       this.elt.appendChild(openComment);
     }
@@ -79,7 +79,7 @@ TextEditor.prototype = {
     this.elt.appendChild(this.value);
 
     if (type === "comment") {
-      let closeComment = doc.createElement("span");
+      const closeComment = doc.createElement("span");
       closeComment.textContent = "-->";
       this.elt.appendChild(closeComment);
     }
@@ -106,10 +106,10 @@ TextEditor.prototype = {
       longstr.release().catch(console.error);
       this.value.textContent = str;
 
-      let isWhitespace = !/[^\s]/.exec(str);
+      const isWhitespace = !/[^\s]/.exec(str);
       this.value.classList.toggle("whitespace", isWhitespace);
 
-      let chars = str.replace(/\n/g, "⏎")
+      const chars = str.replace(/\n/g, "⏎")
                      .replace(/\t/g, "⇥")
                      .replace(/ /g, "◦");
       this.value.setAttribute("title", isWhitespace

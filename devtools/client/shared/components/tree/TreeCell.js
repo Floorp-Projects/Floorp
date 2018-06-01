@@ -51,7 +51,7 @@ define(function(require, exports, module) {
     }
 
     getCellClass(object, id) {
-      let decorator = this.props.decorator;
+      const decorator = this.props.decorator;
       if (!decorator || !decorator.getCellClass) {
         return [];
       }
@@ -84,10 +84,10 @@ define(function(require, exports, module) {
         renderValue,
         enableInput,
       } = this.props;
-      let type = member.type || "";
+      const type = member.type || "";
 
       // Compute class name list for the <td> element.
-      let classNames = this.getCellClass(member.object, id) || [];
+      const classNames = this.getCellClass(member.object, id) || [];
       classNames.push("treeValueCell");
       classNames.push(type + "Cell");
 
@@ -98,7 +98,7 @@ define(function(require, exports, module) {
         renderValue = decorator.renderValue(member.object, id) || renderValue;
       }
 
-      let props = Object.assign({}, this.props, {
+      const props = Object.assign({}, this.props, {
         object: value,
       });
 
@@ -134,7 +134,7 @@ define(function(require, exports, module) {
   }
 
   // Default value rendering.
-  let defaultRenderValue = props => {
+  const defaultRenderValue = props => {
     return (
       props.object + ""
     );

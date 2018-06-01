@@ -34,18 +34,18 @@ Test that css-logic handles media-queries correctly
 
     SimpleTest.waitForExplicitFinish();
 
-    let div = document.querySelector("div");
-    let cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
+    const div = document.querySelector("div");
+    const cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
     cssLogic.highlight(div);
     cssLogic.processMatchedSelectors();
 
-    let _strings = Services.strings
+    const _strings = Services.strings
       .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 
-    let inline = _strings.GetStringFromName("rule.sourceInline");
+    const inline = _strings.GetStringFromName("rule.sourceInline");
 
-    let source1 = inline + ":12";
-    let source2 = inline + ":19 @media screen and (min-width: 1px)";
+    const source1 = inline + ":12";
+    const source2 = inline + ":19 @media screen and (min-width: 1px)";
     is(cssLogic._matchedRules[0][0].source, source1,
       "rule.source gives correct output for rule 1");
     is(cssLogic._matchedRules[1][0].source, source2,

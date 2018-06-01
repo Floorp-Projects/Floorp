@@ -17,16 +17,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode(".matches", inspector);
 
-  let propView = getFirstVisiblePropertyView(view);
-  let rulesTable = propView.matchedSelectorsContainer;
-  let matchedExpander = propView.element;
+  const propView = getFirstVisiblePropertyView(view);
+  const rulesTable = propView.matchedSelectorsContainer;
+  const matchedExpander = propView.element;
 
   info("Focusing the property");
   matchedExpander.scrollIntoView();
-  let onMatchedExpanderFocus = once(matchedExpander, "focus", true);
+  const onMatchedExpanderFocus = once(matchedExpander, "focus", true);
   EventUtils.synthesizeMouseAtCenter(matchedExpander, {}, view.styleWindow);
   await onMatchedExpanderFocus;
 
@@ -54,8 +54,8 @@ async function checkToggleKeyBinding(win, key, rulesTable, inspector) {
   info("Pressing " + key + " key a couple of times to check that the " +
     "property gets expanded/collapsed");
 
-  let onExpand = inspector.once("computed-view-property-expanded");
-  let onCollapse = inspector.once("computed-view-property-collapsed");
+  const onExpand = inspector.once("computed-view-property-expanded");
+  const onCollapse = inspector.once("computed-view-property-collapsed");
 
   info("Expanding the property");
   EventUtils.synthesizeKey(key, {}, win);
@@ -70,7 +70,7 @@ async function checkToggleKeyBinding(win, key, rulesTable, inspector) {
 
 function checkHelpLinkKeybinding(view) {
   info("Check that MDN link is opened on \"F1\"");
-  let propView = getFirstVisiblePropertyView(view);
+  const propView = getFirstVisiblePropertyView(view);
   return new Promise(resolve => {
     propView.mdnLinkClick = function(event) {
       ok(true, "Pressing F1 opened the MDN link");

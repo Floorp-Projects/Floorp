@@ -52,7 +52,7 @@ class InspectorStyleChangeTracker {
       }
 
       // Is the mutation on the current selected node?
-      let currentNode = this.selection.nodeFront;
+      const currentNode = this.selection.nodeFront;
       if (target === currentNode) {
         return true;
       }
@@ -62,7 +62,7 @@ class InspectorStyleChangeTracker {
       // walker.children, so don't attempt to check the previous or next element siblings.
       // It's good enough to know that one sibling changed.
       let parent = currentNode.parentNode();
-      let siblings = parent.treeChildren();
+      const siblings = parent.treeChildren();
       if (siblings.includes(target)) {
         return true;
       }
@@ -78,7 +78,7 @@ class InspectorStyleChangeTracker {
       return false;
     };
 
-    for (let mutation of mutations) {
+    for (const mutation of mutations) {
       if (canMutationImpactCurrentStyles(mutation)) {
         this.emit("style-changed");
         break;

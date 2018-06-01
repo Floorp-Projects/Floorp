@@ -30,10 +30,10 @@ const DOCUMENT_SRC = "<style>" +
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
 add_task(async function() {
-  let { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Waiting for box mode to show.");
-  let body = await getNodeFront("body", inspector);
+  const body = await getNodeFront("body", inspector);
   await inspector.highlighter.showBoxModel(body);
 
   info("Waiting for element picker to become active.");
@@ -50,7 +50,7 @@ add_task(async function() {
   await testActor.eval("window.scrollBy(0, 40);");
 
   // target the body within the iframe
-  let iframeBodySelector = ["iframe", "body"];
+  const iframeBodySelector = ["iframe", "body"];
 
   info("Moving mouse over iframe body");
   await moveMouseOver("iframe", 40, 40);

@@ -13,9 +13,9 @@ const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(async function() {
   await addTab("about:blank");
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
-  let tree = new TreeWidget(doc.querySelector("div"), {
+  const tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"
   });
 
@@ -62,7 +62,7 @@ function populateTree(tree, doc) {
   tree.add(["level1.1", "level2", {id: "level3", type: "url"}]);
 
   // Adding a new non text item in the tree.
-  let node = doc.createElement("div");
+  const node = doc.createElement("div");
   node.textContent = "Foo Bar";
   node.className = "foo bar";
   tree.add([{
@@ -76,7 +76,7 @@ function populateTree(tree, doc) {
 
 // Sends a click event on the passed DOM node in an async manner
 function click(node) {
-  let win = node.ownerDocument.defaultView;
+  const win = node.ownerDocument.defaultView;
   executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, win));
 }
 
@@ -86,12 +86,12 @@ function click(node) {
 async function testMouseInteraction(tree) {
   info("Testing mouse interaction with the tree");
   let event;
-  let pass = (d, a) => event.resolve([d, a]);
+  const pass = (d, a) => event.resolve([d, a]);
 
   ok(!tree.selectedItem, "Nothing should be selected beforehand");
 
   tree.once("select", pass);
-  let node = tree.root.children.firstChild.firstChild;
+  const node = tree.root.children.firstChild.firstChild;
   info("clicking on first top level item");
   event = defer();
   ok(!node.classList.contains("theme-selected"),
@@ -105,7 +105,7 @@ async function testMouseInteraction(tree) {
   is(attachment.foo, "bar", "Correct attachment value is emitted");
 
   info("clicking second top level item with children to check if it expands");
-  let node2 = tree.root.children.firstChild.nextSibling.firstChild;
+  const node2 = tree.root.children.firstChild.nextSibling.firstChild;
   event = defer();
   // node should not have selected class
   ok(!node2.classList.contains("theme-selected"),

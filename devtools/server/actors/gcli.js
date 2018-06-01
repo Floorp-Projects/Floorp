@@ -110,7 +110,7 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
   parseType: function(typed, paramName) {
     return this._getRequisition().then(requisition => {
       return requisition.update(typed).then(() => {
-        let assignment = requisition.getAssignment(paramName);
+        const assignment = requisition.getAssignment(paramName);
         return Promise.resolve(assignment.predictions).then(predictions => {
           return {
             status: assignment.getStatus().toString(),

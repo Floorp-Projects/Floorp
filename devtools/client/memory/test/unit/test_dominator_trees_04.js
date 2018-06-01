@@ -19,16 +19,16 @@ const {
 } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
 
-  for (let intermediateSnapshotState of [states.SAVING, states.READING, states.READ]) {
+  for (const intermediateSnapshotState of [states.SAVING, states.READING, states.READ]) {
     dumpn("Testing switching to the DOMINATOR_TREE view in the middle of the " +
           `${intermediateSnapshotState} snapshot state`);
 
-    let store = Store();
-    let { getState, dispatch } = store;
+    const store = Store();
+    const { getState, dispatch } = store;
 
     dispatch(takeSnapshotAndCensus(front, heapWorker));
     await waitUntilSnapshotState(store, [intermediateSnapshotState]);

@@ -41,17 +41,17 @@ class DeviceModal extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    let {
+    const {
       devices: oldDevices,
     } = this.props;
-    let {
+    const {
       devices,
     } = nextProps;
 
     // Refresh component state only when model transitions from closed to open
     if (!oldDevices.isModalOpen && devices.isModalOpen) {
-      for (let type of devices.types) {
-        for (let device of devices[type]) {
+      for (const type of devices.types) {
+        for (const device of devices[type]) {
           this.setState({
             [device.name]: device.displayed,
           });
@@ -82,21 +82,21 @@ class DeviceModal extends PureComponent {
   }
 
   onDeviceModalSubmit() {
-    let {
+    const {
       devices,
       onDeviceListUpdate,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
     } = this.props;
 
-    let preferredDevices = {
+    const preferredDevices = {
       "added": new Set(),
       "removed": new Set(),
     };
 
-    for (let type of devices.types) {
-      for (let device of devices[type]) {
-        let newState = this.state[device.name];
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
+        const newState = this.state[device.name];
 
         if (device.featured && !newState) {
           preferredDevices.removed.add(device.name);
@@ -120,7 +120,7 @@ class DeviceModal extends PureComponent {
     }
     // Escape keycode
     if (event.keyCode === 27) {
-      let {
+      const {
         onUpdateDeviceModal
       } = this.props;
       onUpdateDeviceModal(false);
@@ -128,19 +128,19 @@ class DeviceModal extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       deviceAdderViewportTemplate,
       devices,
       onRemoveCustomDevice,
       onUpdateDeviceModal,
     } = this.props;
 
-    let {
+    const {
       onAddCustomDevice,
     } = this;
 
     const sortedDevices = {};
-    for (let type of devices.types) {
+    for (const type of devices.types) {
       sortedDevices[type] = Object.assign([], devices[type])
         .sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -176,7 +176,7 @@ class DeviceModal extends PureComponent {
                 type
               ),
               sortedDevices[type].map(device => {
-                let details = getFormatStr(
+                const details = getFormatStr(
                   "responsive.deviceDetails", device.width, device.height,
                   device.pixelRatio, device.userAgent, device.touch
                 );

@@ -27,12 +27,12 @@ add_task(async function() {
 
   startTelemetry();
 
-  let { inspector } = await openLayoutView();
-  let { store } = inspector;
+  const { inspector } = await openLayoutView();
+  const { store } = inspector;
 
   info("Navigate to TEST_URI2");
 
-  let onGridListUpdate = waitUntilState(store, state => state.grids.length == 1);
+  const onGridListUpdate = waitUntilState(store, state => state.grids.length == 1);
   await navigateTo(inspector,
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2));
   await onGridListUpdate;

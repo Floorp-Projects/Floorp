@@ -18,24 +18,24 @@ var hud;
 add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
-  let jar = getJar(getRootDirectory(gTestPath));
-  let dir = jar ?
+  const jar = getJar(getRootDirectory(gTestPath));
+  const dir = jar ?
             extractJarToTmp(jar) :
             getChromeDir(getResolvedURI(gTestPath));
 
   dir.append(TEST_FILE);
-  let uri = Services.io.newFileURI(dir);
+  const uri = Services.io.newFileURI(dir);
 
   // Open tab with correct remote type so we don't switch processes when we load
   // the file:// URI, otherwise we won't get the same web console.
-  let remoteType = E10SUtils.getRemoteTypeForURI(uri.spec,
+  const remoteType = E10SUtils.getRemoteTypeForURI(uri.spec,
                                                  gMultiProcessBrowser);
-  let { browser } = await loadTab("about:blank", remoteType);
+  const { browser } = await loadTab("about:blank", remoteType);
 
   hud = await openConsole();
   hud.jsterm.clearOutput();
 
-  let loaded = loadBrowser(browser);
+  const loaded = loadBrowser(browser);
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri.spec);
   await loaded;
 

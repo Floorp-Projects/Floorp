@@ -77,13 +77,13 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
 
   info("Starting to iterate through the test data");
-  for (let [key, className] of TEST_DATA) {
+  for (const [key, className] of TEST_DATA) {
     info("Testing step: " + key + " to navigate to " + className);
     EventUtils.synthesizeKey(key);
 
@@ -103,7 +103,7 @@ add_task(async function() {
 });
 
 function checkSelectedNode(key, className, inspector) {
-  let node = inspector.selection.nodeFront;
+  const node = inspector.selection.nodeFront;
 
   if (className == "*comment*") {
     is(node.nodeType, Node.COMMENT_NODE,

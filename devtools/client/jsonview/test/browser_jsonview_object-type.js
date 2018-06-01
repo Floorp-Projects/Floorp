@@ -22,6 +22,6 @@ add_task(async function() {
   count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 1, "There must be one row");
 
-  let label = await getElementText(".jsonPanelBox .treeTable .objectCell");
+  const label = await getElementText(".jsonPanelBox .treeTable .objectCell");
   is(label, `{${ELLIPSIS}}`, "The label must be indicating an object");
 });

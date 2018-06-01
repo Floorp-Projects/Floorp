@@ -16,13 +16,13 @@ const TEST_NODES = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_markup_image_and_canvas_2.html");
-  let {inspector} = await openInspector();
+  const {inspector} = await openInspector();
 
   info("Selecting the first <img> tag");
   await selectNode("img", inspector);
 
-  for (let testNode of TEST_NODES) {
-    let target = await getImageTooltipTarget(testNode, inspector);
+  for (const testNode of TEST_NODES) {
+    const target = await getImageTooltipTarget(testNode, inspector);
     await assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
     checkImageTooltip(testNode, inspector);
     await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
@@ -30,10 +30,10 @@ add_task(async function() {
 });
 
 async function getImageTooltipTarget({selector}, inspector) {
-  let nodeFront = await getNodeFront(selector, inspector);
-  let isImg = nodeFront.tagName.toLowerCase() === "img";
+  const nodeFront = await getNodeFront(selector, inspector);
+  const isImg = nodeFront.tagName.toLowerCase() === "img";
 
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
   let target = container.editor.tag;
   if (isImg) {
@@ -43,11 +43,11 @@ async function getImageTooltipTarget({selector}, inspector) {
 }
 
 function checkImageTooltip({selector, size}, {markup}) {
-  let panel = markup.imagePreviewTooltip.panel;
-  let images = panel.getElementsByTagName("img");
+  const panel = markup.imagePreviewTooltip.panel;
+  const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip for [" + selector + "] contains an image");
 
-  let label = panel.querySelector(".devtools-tooltip-caption");
+  const label = panel.querySelector(".devtools-tooltip-caption");
   is(label.textContent, size,
      "Tooltip label for [" + selector + "] displays the right image size");
 

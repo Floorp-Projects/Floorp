@@ -7,9 +7,9 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -17,15 +17,15 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
+  const snapshotActor = await front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
 
-  let animationOverview = await snapshotActor.getOverview();
+  const animationOverview = await snapshotActor.getOverview();
   ok(animationOverview,
     "An animation overview could be retrieved after recording.");
 
-  let thumbnails = animationOverview.thumbnails;
+  const thumbnails = animationOverview.thumbnails;
   ok(thumbnails,
     "An array of thumbnails was sent after recording.");
   is(thumbnails.length, 4,
@@ -80,6 +80,6 @@ async function ifTestingSupported() {
 }
 
 function Uint32(src) {
-  let charView = new Uint8Array(src);
+  const charView = new Uint8Array(src);
   return new Uint32Array(charView.buffer);
 }

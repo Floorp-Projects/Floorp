@@ -37,12 +37,12 @@ var AboutDebugging = {
       return;
     }
 
-    let {connect, client} = await createClient();
+    const {connect, client} = await createClient();
 
     this.client = client;
     await this.client.connect();
 
-    let telemetry = new Telemetry();
+    const telemetry = new Telemetry();
 
     render(AboutDebuggingApp({ client, connect, telemetry }),
       document.querySelector("#body"));

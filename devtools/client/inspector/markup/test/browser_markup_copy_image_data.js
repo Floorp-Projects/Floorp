@@ -9,19 +9,19 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_markup_image_and_canvas.html");
-  let {inspector, testActor} = await openInspector();
+  const {inspector, testActor} = await openInspector();
 
   await selectNode("div", inspector);
   await assertCopyImageDataNotAvailable(inspector);
 
   await selectNode("img", inspector);
   await assertCopyImageDataAvailable(inspector);
-  let expectedSrc = await testActor.getAttribute("img", "src");
+  const expectedSrc = await testActor.getAttribute("img", "src");
   await triggerCopyImageUrlAndWaitForClipboard(expectedSrc, inspector);
 
   await selectNode("canvas", inspector);
   await assertCopyImageDataAvailable(inspector);
-  let expectedURL = await testActor.eval(`
+  const expectedURL = await testActor.eval(`
     document.querySelector(".canvas").toDataURL();`);
   await triggerCopyImageUrlAndWaitForClipboard(expectedURL, inspector);
 
@@ -32,16 +32,16 @@ add_task(async function() {
 });
 
 function assertCopyImageDataNotAvailable(inspector) {
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
-  let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 
   ok(item, "The menu item was found in the contextual menu");
   ok(item.disabled, "The menu item is disabled");
 }
 
 function assertCopyImageDataAvailable(inspector) {
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
-  let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 
   ok(item, "The menu item was found in the contextual menu");
   ok(!item.disabled, "The menu item is enabled");

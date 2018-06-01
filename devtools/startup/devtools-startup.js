@@ -69,7 +69,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
 
   // List of all key shortcuts triggering installation UI
   // `id` should match tool's id from client/definitions.js
-  let shortcuts = [
+  const shortcuts = [
     // The following keys are also registered in /client/menus.js
     // And should be synced.
 
@@ -220,13 +220,13 @@ DevToolsStartup.prototype = {
   },
 
   handle: function(cmdLine) {
-    let flags = this.readCommandLineFlags(cmdLine);
+    const flags = this.readCommandLineFlags(cmdLine);
 
     // handle() can be called after browser startup (e.g. opening links from other apps).
-    let isInitialLaunch = cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
+    const isInitialLaunch = cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
       // Execute only on first launch of this browser instance.
-      let hasDevToolsFlag = flags.console || flags.devtools || flags.debugger;
+      const hasDevToolsFlag = flags.console || flags.devtools || flags.debugger;
       this.setupEnabledPref(hasDevToolsFlag);
 
       // Store devtoolsFlag to check it later in onWindowReady.
@@ -262,9 +262,9 @@ DevToolsStartup.prototype = {
       return { console: false, debugger: false, devtools: false, debuggerServer: false };
     }
 
-    let console = cmdLine.handleFlag("jsconsole", false);
-    let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
-    let devtools = cmdLine.handleFlag("devtools", false);
+    const console = cmdLine.handleFlag("jsconsole", false);
+    const debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
+    const devtools = cmdLine.handleFlag("devtools", false);
 
     let debuggerServer;
     try {
@@ -325,12 +325,12 @@ DevToolsStartup.prototype = {
    */
   pingOnboardingTelemetry() {
     // Only ping telemetry once per profile.
-    let alreadyLoggedPref = "devtools.onboarding.telemetry.logged";
+    const alreadyLoggedPref = "devtools.onboarding.telemetry.logged";
     if (Services.prefs.getBoolPref(alreadyLoggedPref)) {
       return;
     }
 
-    let scalarId = "devtools.onboarding.is_devtools_user";
+    const scalarId = "devtools.onboarding.is_devtools_user";
     this.telemetry.scalarSet(scalarId, this.isDevToolsUser());
     Services.prefs.setBoolPref(alreadyLoggedPref, true);
   },
@@ -381,12 +381,12 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    let id = "developer-button";
-    let widget = CustomizableUI.getWidget(id);
+    const id = "developer-button";
+    const widget = CustomizableUI.getWidget(id);
     if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
       return;
     }
-    let item = {
+    const item = {
       id: id,
       type: "view",
       viewId: "PanelUI-developer",
@@ -402,16 +402,16 @@ DevToolsStartup.prototype = {
         // Populate the subview with whatever menuitems are in the developer
         // menu. We skip menu elements, because the menu panel has no way
         // of dealing with those right now.
-        let doc = event.target.ownerDocument;
+        const doc = event.target.ownerDocument;
 
-        let menu = doc.getElementById("menuWebDeveloperPopup");
+        const menu = doc.getElementById("menuWebDeveloperPopup");
 
-        let itemsToDisplay = [...menu.children];
+        const itemsToDisplay = [...menu.children];
         // Hardcode the addition of the "work offline" menuitem at the bottom:
         itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
         itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
 
-        let developerItems = doc.getElementById("PanelUI-developerItems");
+        const developerItems = doc.getElementById("PanelUI-developerItems");
         CustomizableUI.clearSubview(developerItems);
         CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
@@ -430,9 +430,9 @@ DevToolsStartup.prototype = {
         if (doc.getElementById("PanelUI-developerItems")) {
           return;
         }
-        let view = doc.createElement("panelview");
+        const view = doc.createElement("panelview");
         view.id = "PanelUI-developerItems";
-        let panel = doc.createElement("vbox");
+        const panel = doc.createElement("vbox");
         panel.setAttribute("class", "panel-subview-body");
         view.appendChild(panel);
         doc.getElementById("PanelUI-multiView").appendChild(view);
@@ -450,8 +450,8 @@ DevToolsStartup.prototype = {
    * populate it lazily. Loading main DevTools module is going to populate it.
    */
   hookWebDeveloperMenu(window) {
-    let menu = window.document.getElementById("webDeveloperMenu");
-    let onPopupShowing = () => {
+    const menu = window.document.getElementById("webDeveloperMenu");
+    const onPopupShowing = () => {
       if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
         return;
       }
@@ -466,10 +466,10 @@ DevToolsStartup.prototype = {
    * System Menu.
    */
   createDevToolsEnableMenuItem(window) {
-    let {document} = window;
+    const {document} = window;
 
     // Create the menu item.
-    let item = document.createElement("menuitem");
+    const item = document.createElement("menuitem");
     item.id = "enableDeveloperTools";
     item.setAttribute("label", StartupBundle.GetStringFromName("enableDevTools.label"));
     item.setAttribute("accesskey",
@@ -481,7 +481,7 @@ DevToolsStartup.prototype = {
     });
 
     // Insert the menu item in the DevTools submenu.
-    let systemMenuItem = document.getElementById("menuWebDeveloperPopup");
+    const systemMenuItem = document.getElementById("menuWebDeveloperPopup");
     systemMenuItem.appendChild(item);
   },
 
@@ -489,7 +489,7 @@ DevToolsStartup.prototype = {
    * Update the visibility the menu item to enable DevTools.
    */
   updateDevToolsMenuItems(window) {
-    let item = window.document.getElementById("enableDeveloperTools");
+    const item = window.document.getElementById("enableDeveloperTools");
     item.hidden = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
   },
 
@@ -498,9 +498,9 @@ DevToolsStartup.prototype = {
    * item.
    */
   onEnabledPrefChanged() {
-    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
-      let window = enumerator.getNext();
+      const window = enumerator.getNext();
       if (window.gBrowserInit && window.gBrowserInit.delayedStartupFinished) {
         this.updateDevToolsMenuItems(window);
       }
@@ -514,7 +514,7 @@ DevToolsStartup.prototype = {
    * @return {Boolean} true if the user can be considered as a devtools user.
    */
   isDevToolsUser() {
-    let selfXssCount = Services.prefs.getIntPref("devtools.selfxss.count", 0);
+    const selfXssCount = Services.prefs.getIntPref("devtools.selfxss.count", 0);
     return selfXssCount > 0;
   },
 
@@ -527,10 +527,10 @@ DevToolsStartup.prototype = {
    */
   setupEnabledPref(hasDevToolsFlag) {
     // Read the current experiment state.
-    let experimentState = Services.prefs.getCharPref("devtools.onboarding.experiment");
-    let isRegularExperiment = experimentState == "on";
-    let isForcedExperiment = experimentState == "force";
-    let isInExperiment = isRegularExperiment || isForcedExperiment;
+    const experimentState = Services.prefs.getCharPref("devtools.onboarding.experiment");
+    const isRegularExperiment = experimentState == "on";
+    const isForcedExperiment = experimentState == "force";
+    const isInExperiment = isRegularExperiment || isForcedExperiment;
 
     // Force devtools.enabled to true for users that are not part of the experiment.
     if (!isInExperiment) {
@@ -551,7 +551,7 @@ DevToolsStartup.prototype = {
 
     // We only consider checking the actual isDevToolsUser() if the user is in the
     // "regular" experiment group.
-    let isDevToolsUser = isRegularExperiment && this.isDevToolsUser();
+    const isDevToolsUser = isRegularExperiment && this.isDevToolsUser();
 
     if (hasDevToolsFlag || isDevToolsUser) {
       Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
@@ -559,7 +559,7 @@ DevToolsStartup.prototype = {
   },
 
   hookKeyShortcuts(window) {
-    let doc = window.document;
+    const doc = window.document;
 
     // hookKeyShortcuts can be called both from hookWindow and from the developer toggle
     // onBeforeCreated. Make sure shortcuts are only added once per window.
@@ -567,39 +567,39 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    let keyset = doc.createElement("keyset");
+    const keyset = doc.createElement("keyset");
     keyset.setAttribute("id", "devtoolsKeyset");
 
-    for (let key of KeyShortcuts) {
-      let xulKey = this.createKey(doc, key, () => this.onKey(window, key));
+    for (const key of KeyShortcuts) {
+      const xulKey = this.createKey(doc, key, () => this.onKey(window, key));
       keyset.appendChild(xulKey);
     }
 
     // Appending a <key> element is not always enough. The <keyset> needs
     // to be detached and reattached to make sure the <key> is taken into
     // account (see bug 832984).
-    let mainKeyset = doc.getElementById("mainKeyset");
+    const mainKeyset = doc.getElementById("mainKeyset");
     mainKeyset.parentNode.insertBefore(keyset, mainKeyset);
   },
 
   onKey(window, key) {
     if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-      let id = key.toolId || key.id;
+      const id = key.toolId || key.id;
       this.openInstallPage("KeyShortcut", id);
     } else {
       // Record the timing at which this event started in order to compute later in
       // gDevTools.showToolbox, the complete time it takes to open the toolbox.
       // i.e. especially take `initDevTools` into account.
-      let startTime = Cu.now();
-      let require = this.initDevTools("KeyShortcut", key);
-      let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+      const startTime = Cu.now();
+      const require = this.initDevTools("KeyShortcut", key);
+      const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
       gDevToolsBrowser.onKeyShortcut(window, key, startTime);
     }
   },
 
   // Create a <xul:key> DOM Element
   createKey(doc, { id, toolId, shortcut, modifiers: mod }, oncommand) {
-    let k = doc.createElement("key");
+    const k = doc.createElement("key");
     k.id = "key_" + (id || toolId);
 
     if (shortcut.startsWith("VK_")) {
@@ -629,7 +629,7 @@ DevToolsStartup.prototype = {
     this.sendEntryPointTelemetry(reason, key);
 
     this.initialized = true;
-    let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
     require("devtools/client/framework/devtools-browser");
@@ -653,13 +653,13 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+    const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
 
     // Focus about:devtools tab if there is already one opened in the current window.
-    for (let tab of gBrowser.tabs) {
-      let browser = tab.linkedBrowser;
+    for (const tab of gBrowser.tabs) {
+      const browser = tab.linkedBrowser;
       // browser.documentURI might be undefined if the browser tab is still loading.
-      let location = browser.documentURI ? browser.documentURI.spec : "";
+      const location = browser.documentURI ? browser.documentURI.spec : "";
       if (location.startsWith("about:devtools") &&
           !location.startsWith("about:devtools-toolbox")) {
         // Focus the existing about:devtools tab and bail out.
@@ -670,12 +670,12 @@ DevToolsStartup.prototype = {
 
     let url = "about:devtools";
 
-    let params = [];
+    const params = [];
     if (reason) {
       params.push("reason=" + encodeURIComponent(reason));
     }
 
-    let selectedBrowser = gBrowser.selectedBrowser;
+    const selectedBrowser = gBrowser.selectedBrowser;
     if (selectedBrowser) {
       params.push("tabid=" + selectedBrowser.outerWindowID);
     }
@@ -693,10 +693,10 @@ DevToolsStartup.prototype = {
   },
 
   handleConsoleFlag: function(cmdLine) {
-    let window = Services.wm.getMostRecentWindow("devtools:webconsole");
+    const window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
-      let require = this.initDevTools("CommandLine");
-      let { HUDService } = require("devtools/client/webconsole/hudservice");
+      const require = this.initDevTools("CommandLine");
+      const { HUDService } = require("devtools/client/webconsole/hudservice");
       HUDService.toggleBrowserConsole().catch(console.error);
     } else {
       // the Browser Console was already open
@@ -713,7 +713,7 @@ DevToolsStartup.prototype = {
     const require = this.initDevTools("CommandLine");
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
-    let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+    const target = TargetFactory.forTab(window.gBrowser.selectedTab);
     gDevTools.showToolbox(target);
   },
 
@@ -728,7 +728,7 @@ DevToolsStartup.prototype = {
       return false;
     }
     if (!remoteDebuggingEnabled) {
-      let errorMsg = "Could not run chrome debugger! You need the following " +
+      const errorMsg = "Could not run chrome debugger! You need the following " +
                      "prefs to be set to true: " + kDebuggerPrefs.join(", ");
       console.error(new Error(errorMsg));
       // Dump as well, as we're doing this from a commandline, make sure people
@@ -744,9 +744,9 @@ DevToolsStartup.prototype = {
     }
 
     let devtoolsThreadResumed = false;
-    let pauseOnStartup = cmdLine.handleFlag("wait-for-jsdebugger", false);
+    const pauseOnStartup = cmdLine.handleFlag("wait-for-jsdebugger", false);
     if (pauseOnStartup) {
-      let observe = function(subject, topic, data) {
+      const observe = function(subject, topic, data) {
         devtoolsThreadResumed = true;
         Services.obs.removeObserver(observe, "devtools-thread-resumed");
       };
@@ -760,7 +760,7 @@ DevToolsStartup.prototype = {
 
     if (pauseOnStartup) {
       // Spin the event loop until the debugger connects.
-      let tm = Cc["@mozilla.org/thread-manager;1"].getService();
+      const tm = Cc["@mozilla.org/thread-manager;1"].getService();
       tm.spinEventLoopUntil(() => {
         return devtoolsThreadResumed;
       });
@@ -796,18 +796,18 @@ DevToolsStartup.prototype = {
     }
 
     let webSocket = false;
-    let defaultPort = Services.prefs.getIntPref("devtools.debugger.remote-port");
+    const defaultPort = Services.prefs.getIntPref("devtools.debugger.remote-port");
     if (portOrPath === true) {
       // Default to pref values if no values given on command line
       webSocket = Services.prefs.getBoolPref("devtools.debugger.remote-websocket");
       portOrPath = defaultPort;
     } else if (portOrPath.startsWith("ws:")) {
       webSocket = true;
-      let port = portOrPath.slice(3);
+      const port = portOrPath.slice(3);
       portOrPath = Number(port) ? port : defaultPort;
     }
 
-    let { DevToolsLoader } =
+    const { DevToolsLoader } =
       ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
     try {
@@ -817,15 +817,15 @@ DevToolsStartup.prototype = {
       // actors and DebuggingServer itself, especially since we can mark
       // serverLoader as invisible to the debugger (unlike the usual loader
       // settings).
-      let serverLoader = new DevToolsLoader();
+      const serverLoader = new DevToolsLoader();
       serverLoader.invisibleToDebugger = true;
-      let { DebuggerServer: debuggerServer } =
+      const { DebuggerServer: debuggerServer } =
         serverLoader.require("devtools/server/main");
       debuggerServer.init();
       debuggerServer.registerAllActors();
       debuggerServer.allowChromeProcess = true;
 
-      let listener = debuggerServer.createListener();
+      const listener = debuggerServer.createListener();
       listener.portOrPath = portOrPath;
       listener.webSocket = webSocket;
       listener.open();
@@ -942,8 +942,8 @@ const JsonView = {
    * in the parent process.
    */
   onSave: function(message) {
-    let chrome = Services.wm.getMostRecentWindow("navigator:browser");
-    let browser = chrome.gBrowser.selectedBrowser;
+    const chrome = Services.wm.getMostRecentWindow("navigator:browser");
+    const browser = chrome.gBrowser.selectedBrowser;
     if (message.data === null) {
       // Save original contents
       chrome.saveBrowser(browser);
@@ -951,11 +951,11 @@ const JsonView = {
       // The following code emulates saveBrowser, but:
       // - Uses the given blob URL containing the custom contents to save.
       // - Obtains the file name from the URL of the document, not the blob.
-      let persistable = browser.frameLoader;
+      const persistable = browser.frameLoader;
       persistable.startPersistence(0, {
         onDocumentReady(doc) {
-          let uri = chrome.makeURI(doc.documentURI, doc.characterSet);
-          let filename = chrome.getDefaultFileName(undefined, uri, doc, null);
+          const uri = chrome.makeURI(doc.documentURI, doc.characterSet);
+          const filename = chrome.getDefaultFileName(undefined, uri, doc, null);
           chrome.internalSave(message.data, doc, filename, null, doc.contentType,
             false, null, null, null, doc, false, null, undefined);
         },

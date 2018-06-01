@@ -62,7 +62,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   ok(true, "Second snapshot is selected after ACCEL+DOWN");
 
   info("Click on first node.");
-  let firstNode = doc.querySelector(".tree .heap-tree-item-name");
+  const firstNode = doc.querySelector(".tree .heap-tree-item-name");
   EventUtils.synthesizeMouseAtCenter(firstNode, {}, panel.panelWin);
   await waitUntilState(store, state => state.snapshots[1].census.focused ===
       state.snapshots[1].census.report.children[0]

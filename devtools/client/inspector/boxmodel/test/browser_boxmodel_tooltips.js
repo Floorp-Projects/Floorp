@@ -72,7 +72,7 @@ const VALUES_TEST_DATA = [{
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
+  const {inspector, boxmodel} = await openLayoutView();
 
   info("Checking the regions tooltips");
 
@@ -96,25 +96,25 @@ add_task(async function() {
   is(boxmodel.document.querySelector(".boxmodel-content").getAttribute("title"),
     "content", "The content region has the correct tooltip content");
 
-  for (let {selector, values} of VALUES_TEST_DATA) {
+  for (const {selector, values} of VALUES_TEST_DATA) {
     info("Selecting " + selector + " and checking the values tooltips");
     await selectNode(selector, inspector);
 
     info("Iterate over all values");
-    for (let key in boxmodel.map) {
+    for (const key in boxmodel.map) {
       if (key === "position") {
         continue;
       }
 
-      let name = boxmodel.map[key].property;
-      let expectedTooltipData = values.find(o => o.name === name);
-      let el = boxmodel.document.querySelector(boxmodel.map[key].selector);
+      const name = boxmodel.map[key].property;
+      const expectedTooltipData = values.find(o => o.name === name);
+      const el = boxmodel.document.querySelector(boxmodel.map[key].selector);
 
       ok(el.hasAttribute("title"), "The " + name + " value has a tooltip");
 
       if (expectedTooltipData) {
         info("The " + name + " value comes from a css rule");
-        let expectedTooltip = name + "\n" + expectedTooltipData.ruleSelector +
+        const expectedTooltip = name + "\n" + expectedTooltipData.ruleSelector +
                               "\n" + expectedTooltipData.styleSheetLocation;
         is(el.getAttribute("title"), expectedTooltip, "The tooltip is correct");
       } else {

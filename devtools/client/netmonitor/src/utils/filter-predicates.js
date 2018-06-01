@@ -91,7 +91,7 @@ function isWS({ requestHeaders, responseHeaders }) {
 }
 
 function isOther(item) {
-  let tests = [isHtml, isCss, isJs, isXHR, isFont, isImage, isMedia, isWS];
+  const tests = [isHtml, isCss, isJs, isXHR, isFont, isImage, isMedia, isWS];
   return tests.every(is => !is(item));
 }
 

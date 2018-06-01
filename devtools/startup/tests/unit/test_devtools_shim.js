@@ -15,7 +15,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {
  * to be called by DevToolsShim.
  */
 function createMockDevTools() {
-  let methods = [
+  const methods = [
     "on",
     "off",
     "emit",
@@ -23,11 +23,11 @@ function createMockDevTools() {
     "restoreDevToolsSession",
   ];
 
-  let mock = {
+  const mock = {
     callLog: {}
   };
 
-  for (let method of methods) {
+  for (const method of methods) {
     // Create a stub for method, that only pushes its arguments in the inner callLog
     mock[method] = function(...args) {
       mock.callLog[method].push(args);
@@ -52,7 +52,7 @@ function checkCalls(mock, method, length, lastArgs) {
   }
 
   for (let i = 0; i < lastArgs.length; i++) {
-    let expectedArg = lastArgs[i];
+    const expectedArg = lastArgs[i];
     ok(mock.callLog[method][length - 1][i] === expectedArg,
         `Devtools.${method} was called with the expected argument (index ${i})`);
   }
@@ -73,7 +73,7 @@ function test_on_is_forwarded_to_devtools() {
 
   function cb1() {}
   function cb2() {}
-  let mock = createMockDevTools();
+  const mock = createMockDevTools();
 
   DevToolsShim.on("test_event", cb1);
   DevToolsShim.register(mock);
@@ -87,7 +87,7 @@ function test_off_called_before_registering_devtools() {
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
-  let mock = createMockDevTools();
+  const mock = createMockDevTools();
 
   DevToolsShim.on("test_event", cb1);
   DevToolsShim.off("test_event", cb1);
@@ -101,7 +101,7 @@ function test_off_called_before_with_bad_callback() {
 
   function cb1() {}
   function cb2() {}
-  let mock = createMockDevTools();
+  const mock = createMockDevTools();
 
   DevToolsShim.on("test_event", cb1);
   DevToolsShim.off("test_event", cb2);
@@ -116,7 +116,7 @@ function test_off_called_before_with_bad_callback() {
 function test_events() {
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
-  let mock = createMockDevTools();
+  const mock = createMockDevTools();
   // Check emit was not called.
   checkCalls(mock, "emit", 0);
 
@@ -131,12 +131,12 @@ function test_events() {
 
 function test_restore_session_apis() {
   // Backup method and preferences that will be updated for the test.
-  let initDevToolsBackup = DevToolsShim.initDevTools;
-  let devtoolsEnabledValue = Services.prefs.getBoolPref("devtools.enabled");
+  const initDevToolsBackup = DevToolsShim.initDevTools;
+  const devtoolsEnabledValue = Services.prefs.getBoolPref("devtools.enabled");
 
   // Create fake session objects to restore.
-  let sessionWithoutDevTools = {};
-  let sessionWithDevTools = {
+  const sessionWithoutDevTools = {};
+  const sessionWithDevTools = {
     scratchpads: [{}],
     browserConsole: true,
   };
@@ -171,7 +171,7 @@ function test_restore_session_apis() {
   DevToolsShim.restoreDevToolsSession(sessionWithoutDevTools);
   ok(!DevToolsShim.isInitialized(), "DevTools are still not initialized");
 
-  let mock = createMockDevTools();
+  const mock = createMockDevTools();
   DevToolsShim.initDevTools = () => {
     // Next call to restoreDevToolsSession is expected to initialize DevTools, which we
     // simulate here by registering our mock.

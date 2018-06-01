@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let clearButton = document.querySelector(".requests-list-clear-button");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const clearButton = document.querySelector(".requests-list-clear-button");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -40,7 +40,7 @@ add_task(async function() {
 
   // Make sure we can now open the network details panel
   store.dispatch(Actions.toggleNetworkDetails());
-  let detailsPanelToggleButton = document.querySelector(".sidebar-toggle");
+  const detailsPanelToggleButton = document.querySelector(".sidebar-toggle");
   ok(detailsPanelToggleButton &&
     !detailsPanelToggleButton.classList.contains("pane-collapsed"),
     "The details pane should be visible.");

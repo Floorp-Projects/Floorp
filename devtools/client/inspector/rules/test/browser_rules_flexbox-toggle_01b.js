@@ -20,12 +20,12 @@ const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let {highlighters} = view;
+  const {inspector, view} = await openRuleView();
+  const {highlighters} = view;
 
   await selectNode("#flex", inspector);
-  let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
-  let flexboxToggle = container.querySelector(".ruleview-flex");
+  const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
+  const flexboxToggle = container.querySelector(".ruleview-flex");
 
   info("Checking the initial state of the flexbox toggle in the rule-view.");
   ok(flexboxToggle, "Flexbox highlighter toggle is visible.");
@@ -36,7 +36,7 @@ add_task(async function() {
   ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
   await onHighlighterShown;
 
@@ -49,7 +49,7 @@ add_task(async function() {
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 
   info("Toggling OFF the flexbox highlighter from the rule-view.");
-  let onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
   flexboxToggle.click();
   await onHighlighterHidden;
 

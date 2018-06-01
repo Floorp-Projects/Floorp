@@ -96,7 +96,7 @@ var ContextView = {
   resetGraphTransform: function() {
     // Only reset if the graph was ever drawn.
     if (this._zoomBinding) {
-      let { translate, scale } = GRAPH_DEFAULTS;
+      const { translate, scale } = GRAPH_DEFAULTS;
       // Must set the `zoomBinding` so the next `zoom` event is in sync with
       // where the graph is visually (set by the `transform` attribute).
       this._zoomBinding.scale(scale);
@@ -140,7 +140,7 @@ var ContextView = {
    * status is toggled.
    */
   _bypassNode: function(node, enabled) {
-    let el = this._getNodeByID(node.id);
+    const el = this._getNodeByID(node.id);
     el.classList[enabled ? "add" : "remove"]("bypassed");
   },
 
@@ -153,17 +153,17 @@ var ContextView = {
     // Clear out previous SVG information
     this.clearGraph();
 
-    let graph = new dagreD3.Digraph();
-    let renderer = new dagreD3.Renderer();
+    const graph = new dagreD3.Digraph();
+    const renderer = new dagreD3.Renderer();
     gAudioNodes.populateGraph(graph);
 
     // Post-render manipulation of the nodes
-    let oldDrawNodes = renderer.drawNodes();
+    const oldDrawNodes = renderer.drawNodes();
     renderer.drawNodes(function(graph, root) {
-      let svgNodes = oldDrawNodes(graph, root);
+      const svgNodes = oldDrawNodes(graph, root);
       svgNodes.each(function(n) {
-        let node = graph.node(n);
-        let classString = "audionode type-" + node.type + (node.bypassed ? " bypassed" : "");
+        const node = graph.node(n);
+        const classString = "audionode type-" + node.type + (node.bypassed ? " bypassed" : "");
         this.setAttribute("class", classString);
         this.setAttribute("data-id", node.id);
         this.setAttribute("data-type", node.type);
@@ -172,17 +172,17 @@ var ContextView = {
     });
 
     // Post-render manipulation of edges
-    let oldDrawEdgePaths = renderer.drawEdgePaths();
-    let defaultClasses = "edgePath enter";
+    const oldDrawEdgePaths = renderer.drawEdgePaths();
+    const defaultClasses = "edgePath enter";
 
     renderer.drawEdgePaths(function(graph, root) {
-      let svgEdges = oldDrawEdgePaths(graph, root);
+      const svgEdges = oldDrawEdgePaths(graph, root);
       svgEdges.each(function(e) {
-        let edge = graph.edge(e);
+        const edge = graph.edge(e);
 
         // We have to manually specify the default classes on the edges
         // as to not overwrite them
-        let edgeClass = defaultClasses + (edge.param ? (" param-connection " + edge.param) : "");
+        const edgeClass = defaultClasses + (edge.param ? (" param-connection " + edge.param) : "");
 
         this.setAttribute("data-source", edge.source);
         this.setAttribute("data-target", edge.target);
@@ -202,8 +202,8 @@ var ContextView = {
       // For now, manually set it on creation, and the `_onThemeChange`
       // function will fire when the devtools theme changes to update the
       // styling manually.
-      let theme = Services.prefs.getCharPref("devtools.theme");
-      let markerColor = MARKER_STYLING[theme];
+      const theme = Services.prefs.getCharPref("devtools.theme");
+      const markerColor = MARKER_STYLING[theme];
       if (graph.isDirected() && root.select("#arrowhead").empty()) {
         root
           .append("svg:defs")
@@ -222,7 +222,7 @@ var ContextView = {
       }
 
       // Reselect the previously selected audio node
-      let currentNode = InspectorView.getCurrentAudioNode();
+      const currentNode = InspectorView.getCurrentAudioNode();
       if (currentNode) {
         this.focusNode(currentNode.id);
       }
@@ -236,7 +236,7 @@ var ContextView = {
       window.emit(EVENTS.UI_GRAPH_RENDERED, info.nodes, info.edges, info.paramEdges);
     });
 
-    let layout = dagreD3.layout().rankDir("LR");
+    const layout = dagreD3.layout().rankDir("LR");
     renderer.layout(layout).run(graph, d3.select("#graph-target"));
 
     // Handle the sliding and zooming of the graph,
@@ -286,8 +286,8 @@ var ContextView = {
    * Fired when the devtools theme changes.
    */
   _onThemeChange: function(theme) {
-    let markerColor = MARKER_STYLING[theme];
-    let marker = $("#arrowhead");
+    const markerColor = MARKER_STYLING[theme];
+    const marker = $("#arrowhead");
     if (marker) {
       marker.setAttribute("style", "fill: " + markerColor);
     }
@@ -300,14 +300,14 @@ var ContextView = {
    *        Click event.
    */
   _onGraphClick: function(e) {
-    let node = findGraphNodeParent(e.target);
+    const node = findGraphNodeParent(e.target);
     // If node not found (clicking outside of an audio node in the graph),
     // then ignore this event
     if (!node) {
       return;
     }
 
-    let id = node.getAttribute("data-id");
+    const id = node.getAttribute("data-id");
 
     this.focusNode(id);
     window.emit(EVENTS.UI_SELECT_NODE, id);

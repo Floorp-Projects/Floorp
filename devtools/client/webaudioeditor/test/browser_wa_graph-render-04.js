@@ -6,30 +6,30 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS } = panelWin;
+  const { target, panel } = await initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     getN(gFront, "create-node", 5),
     waitForGraphRendered(panelWin, 5, 2, 3)
   ]);
   reload(target);
-  let [actors] = await events;
-  let nodeIDs = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const nodeIDs = actors.map(actor => actor.actorID);
 
-  let [, carrier, gain, mod1, mod2] = nodeIDs;
+  const [, carrier, gain, mod1, mod2] = nodeIDs;
 
-  let edges = [
+  const edges = [
     [mod1, gain, "gain", "mod1 -> gain[gain]"],
     [mod2, carrier, "frequency", "mod2 -> carrier[frequency]"],
     [mod2, carrier, "detune", "mod2 -> carrier[detune]"]
   ];
 
   edges.forEach(([source, target, param, msg], i) => {
-    let edge = findGraphEdge(panelWin, source, target, param);
+    const edge = findGraphEdge(panelWin, source, target, param);
     ok(edge.classList.contains("param-connection"), "edge is classified as a param-connection");
   });
 

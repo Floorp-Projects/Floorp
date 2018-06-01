@@ -21,7 +21,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
  * Opens given request in a new tab.
  */
 function openRequestInTab(url, requestPostData) {
-  let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+  const win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   if (!requestPostData) {
     win.openWebLinkIn(url, "tab", {relatedToCurrent: true});
   } else {
@@ -33,14 +33,14 @@ function openRequestInTab(url, requestPostData) {
 }
 
 function openPostRequestInTabHelper({url, data}) {
-  let form = document.createElement("form");
+  const form = document.createElement("form");
   form.target = "_blank";
   form.action = url;
   form.method = "post";
 
   if (data) {
-    for (let key in data) {
-      let input = document.createElement("input");
+    for (const key in data) {
+      const input = document.createElement("input");
       input.name = key;
       input.value = data[key];
       form.appendChild(input);

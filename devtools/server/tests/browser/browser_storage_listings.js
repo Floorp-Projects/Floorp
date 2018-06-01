@@ -350,10 +350,10 @@ function testCookies(cookiesActor) {
 }
 
 var testCookiesObjects = async function(index, hosts, cookiesActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = data => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = data => {
     let cookiesLength = 0;
-    for (let secureCookie of storeMap.cookies[host]) {
+    for (const secureCookie of storeMap.cookies[host]) {
       if (secureCookie.isSecure) {
         ++cookiesLength;
       }
@@ -361,9 +361,9 @@ var testCookiesObjects = async function(index, hosts, cookiesActor) {
     // Any secure cookies did not get stored in the database.
     is(data.total, storeMap.cookies[host].length - cookiesLength,
        "Number of cookies in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of storeMap.cookies[host]) {
+      for (const toMatch of storeMap.cookies[host]) {
         if (item.name == toMatch.name) {
           found = true;
           ok(true, "Found cookie " + item.name + " in response");
@@ -395,13 +395,13 @@ function testLocalStorage(localStorageActor) {
 }
 
 var testLocalStorageObjects = async function(index, hosts, localStorageActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = data => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = data => {
     is(data.total, storeMap.localStorage[host].length,
        "Number of local storage items in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of storeMap.localStorage[host]) {
+      for (const toMatch of storeMap.localStorage[host]) {
         if (item.name == toMatch.name) {
           found = true;
           ok(true, "Found local storage item " + item.name + " in response");
@@ -429,13 +429,13 @@ function testSessionStorage(sessionStorageActor) {
 }
 
 var testSessionStorageObjects = async function(index, hosts, sessionStorageActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = data => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = data => {
     is(data.total, storeMap.sessionStorage[host].length,
        "Number of session storage items in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of storeMap.sessionStorage[host]) {
+      for (const toMatch of storeMap.sessionStorage[host]) {
         if (item.name == toMatch.name) {
           found = true;
           ok(true, "Found session storage item " + item.name + " in response");
@@ -459,11 +459,11 @@ var testIndexedDB = async function(indexedDBActor) {
   is(Object.keys(indexedDBActor.hosts).length, 3,
      "Correct number of host entries for indexed db");
 
-  for (let host in indexedDBActor.hosts) {
-    for (let item of indexedDBActor.hosts[host]) {
-      let parsedItem = JSON.parse(item);
+  for (const host in indexedDBActor.hosts) {
+    for (const item of indexedDBActor.hosts[host]) {
+      const parsedItem = JSON.parse(item);
       let found = false;
-      for (let toMatch of IDBValues.listStoresResponse[host]) {
+      for (const toMatch of IDBValues.listStoresResponse[host]) {
         if (toMatch[0] == parsedItem[0] && toMatch[1] == parsedItem[1]) {
           found = true;
           break;
@@ -479,13 +479,13 @@ var testIndexedDB = async function(indexedDBActor) {
 };
 
 var testIndexedDBs = async function(index, hosts, indexedDBActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = data => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = data => {
     is(data.total, IDBValues.dbDetails[host].length,
        "Number of indexed db in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of IDBValues.dbDetails[host]) {
+      for (const toMatch of IDBValues.dbDetails[host]) {
         if (item.uniqueKey == toMatch.db) {
           found = true;
           ok(true, "Found indexed db " + item.uniqueKey + " in response");
@@ -509,13 +509,13 @@ var testIndexedDBs = async function(index, hosts, indexedDBActor) {
 };
 
 var testObjectStores = async function(ix, hosts, indexedDBActor) {
-  let host = Object.keys(hosts)[ix];
-  let matchItems = (data, db) => {
+  const host = Object.keys(hosts)[ix];
+  const matchItems = (data, db) => {
     is(data.total, IDBValues.objectStoreDetails[host][db].length,
        "Number of object stores in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of IDBValues.objectStoreDetails[host][db]) {
+      for (const toMatch of IDBValues.objectStoreDetails[host][db]) {
         if (item.objectStore == toMatch.objectStore) {
           found = true;
           ok(true, "Found object store " + item.objectStore + " in response");
@@ -523,9 +523,9 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
           is(item.autoIncrement, toMatch.autoIncrement, "The autoIncrement matches.");
           item.indexes = JSON.parse(item.indexes);
           is(item.indexes.length, toMatch.indexes.length, "Number of indexes match");
-          for (let index of item.indexes) {
+          for (const index of item.indexes) {
             let indexFound = false;
-            for (let toMatchIndex of toMatch.indexes) {
+            for (const toMatchIndex of toMatch.indexes) {
               if (toMatchIndex.name == index.name) {
                 indexFound = true;
                 ok(true, "Found index " + index.name);
@@ -547,8 +547,8 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
   };
 
   ok(!!IDBValues.objectStoreDetails[host], "Host is present in the list : " + host);
-  for (let name of hosts[host]) {
-    let objName = JSON.parse(name).slice(0, 1);
+  for (const name of hosts[host]) {
+    const objName = JSON.parse(name).slice(0, 1);
     matchItems((
       await indexedDBActor.getStoreObjects(host, [JSON.stringify(objName)])
     ), objName[0]);
@@ -560,20 +560,20 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
 };
 
 var testIDBEntries = async function(index, hosts, indexedDBActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = (data, obj) => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = (data, obj) => {
     is(data.total, IDBValues.entries[host][obj].length,
        "Number of items in object store " + obj + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of IDBValues.entries[host][obj]) {
+      for (const toMatch of IDBValues.entries[host][obj]) {
         if (item.name == toMatch.name) {
           found = true;
           ok(true, "Found indexed db item " + item.name + " in response");
-          let value = JSON.parse(item.value.str);
+          const value = JSON.parse(item.value.str);
           is(Object.keys(value).length, Object.keys(toMatch.value).length,
              "Number of entries in the value matches");
-          for (let key in value) {
+          for (const key in value) {
             is(value[key], toMatch.value[key],
                "value of " + key + " value key matches");
           }
@@ -585,8 +585,8 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
   };
 
   ok(!!IDBValues.entries[host], "Host is present in the list : " + host);
-  for (let name of hosts[host]) {
-    let parsed = JSON.parse(name);
+  for (const name of hosts[host]) {
+    const parsed = JSON.parse(name);
     matchItems((
       await indexedDBActor.getStoreObjects(host, [name])
     ), parsed[0] + "#" + parsed[1]);
@@ -601,10 +601,10 @@ add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = StorageFront(client, form);
-  let data = await front.listStores();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = StorageFront(client, form);
+  const data = await front.listStores();
   await testStores(data);
 
   await clearStorage();

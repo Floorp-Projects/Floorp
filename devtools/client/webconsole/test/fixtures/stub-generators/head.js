@@ -29,7 +29,7 @@ const {
 const BASE_PATH = env.get("MOZ_DEVELOPER_REPO_DIR") +
                   "/devtools/client/webconsole/test/fixtures";
 
-let cachedPackets = {};
+const cachedPackets = {};
 
 function getCleanedPacket(key, packet) {
   if (Object.keys(cachedPackets).includes(key)) {
@@ -37,7 +37,7 @@ function getCleanedPacket(key, packet) {
   }
 
   // Strip escaped characters.
-  let safeKey = key
+  const safeKey = key
     .replace(/\\n/g, "\n")
     .replace(/\\r/g, "\r")
     .replace(/\\\"/g, `\"`)
@@ -48,7 +48,7 @@ function getCleanedPacket(key, packet) {
   // the diff resulting from this stub generation.
   let res;
   if (stubPackets.has(safeKey)) {
-    let existingPacket = stubPackets.get(safeKey);
+    const existingPacket = stubPackets.get(safeKey);
     res = Object.assign({}, packet, {
       from: existingPacket.from
     });
@@ -88,8 +88,8 @@ function getCleanedPacket(key, packet) {
             return argument;
           }
 
-          let newArgument = Object.assign({}, argument);
-          let existingArgument = existingPacket.message.arguments[i];
+          const newArgument = Object.assign({}, argument);
+          const existingArgument = existingPacket.message.arguments[i];
 
           if (existingArgument) {
             // Clean actor ids on each message.arguments item.
@@ -169,8 +169,8 @@ function getCleanedPacket(key, packet) {
     }
 
     if (res.packet) {
-      let override = {};
-      let keys = ["totalTime", "from", "contentSize", "transferredSize"];
+      const override = {};
+      const keys = ["totalTime", "from", "contentSize", "transferredSize"];
       keys.forEach(x => {
         if (res.packet[x] !== undefined) {
           override[x] = existingPacket.packet[key];
@@ -235,29 +235,31 @@ function getCleanedPacket(key, packet) {
 }
 
 function formatPacket(key, packet) {
-  let stringifiedPacket = JSON.stringify(getCleanedPacket(key, packet), null, 2);
+  const stringifiedPacket = JSON.stringify(getCleanedPacket(key, packet), null, 2);
   return `stubPackets.set(\`${key}\`, ${stringifiedPacket});`;
 }
 
 function formatStub(key, packet) {
-  let prepared = prepareMessage(
+  const prepared = prepareMessage(
     getCleanedPacket(key, packet),
     {getNextId: () => "1"}
   );
-  let stringifiedMessage = JSON.stringify(prepared, null, 2);
+  const stringifiedMessage = JSON.stringify(prepared, null, 2);
   return (
     `stubPreparedMessages.set(\`${key}\`, new ConsoleMessage(${stringifiedMessage}));`);
 }
 
 function formatNetworkEventStub(key, packet) {
-  let cleanedPacket = getCleanedPacket(key, packet);
-  let networkInfo = cleanedPacket.networkInfo ? cleanedPacket.networkInfo : cleanedPacket;
+  const cleanedPacket = getCleanedPacket(key, packet);
+  const networkInfo = cleanedPacket.networkInfo
+    ? cleanedPacket.networkInfo
+    : cleanedPacket;
 
-  let prepared = prepareMessage(
+  const prepared = prepareMessage(
     networkInfo,
     {getNextId: () => "1"}
   );
-  let stringifiedMessage = JSON.stringify(prepared, null, 2);
+  const stringifiedMessage = JSON.stringify(prepared, null, 2);
   return `stubPreparedMessages.set("${key}", ` +
     `new NetworkEventMessage(${stringifiedMessage}));`;
 }
@@ -276,8 +278,8 @@ function formatFile(stubs, type) {
 const { ${type} } =
   require("devtools/client/webconsole/types");
 
-let stubPreparedMessages = new Map();
-let stubPackets = new Map();
+const stubPreparedMessages = new Map();
+const stubPackets = new Map();
 ${stubs.preparedMessages.join("\n\n")}
 
 ${stubs.packets.join("\n\n")}
@@ -295,21 +297,21 @@ async function generateConsoleApiStubs() {
   // Hiding log messages so we don't get unwanted client/server communication.
   Services.prefs.setBoolPref(PREFS.FILTER.LOG, false);
 
-  let stubs = {
+  const stubs = {
     preparedMessages: [],
     packets: [],
   };
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   const hud = toolbox.getCurrentPanel().hud;
-  let {ui} = hud;
+  const {ui} = hud;
   ok(ui.jsterm, "jsterm exists");
   ok(ui.consoleOutput, "consoleOutput exists");
 
-  for (let [key, {keys, code}] of consoleApi) {
-    let received = new Promise(resolve => {
+  for (const [key, {keys, code}] of consoleApi) {
+    const received = new Promise(resolve => {
       let i = 0;
-      let listener = async (type, res) => {
+      const listener = async (type, res) => {
         const callKey = keys[i];
         stubs.packets.push(formatPacket(callKey, res));
         stubs.preparedMessages.push(formatStub(callKey, res));
@@ -325,7 +327,7 @@ async function generateConsoleApiStubs() {
       gBrowser.selectedBrowser,
       [key, code],
       function([subKey, subCode]) {
-        let script = content.document.createElement("script");
+        const script = content.document.createElement("script");
         // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = `function triggerPacket() {${subCode}}`;
         content.document.body.appendChild(script);
@@ -346,21 +348,21 @@ async function generateConsoleApiStubs() {
 async function generateCssMessageStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-css-message.html";
 
-  let stubs = {
+  const stubs = {
     preparedMessages: [],
     packets: [],
   };
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
-  for (let [key, code] of cssMessage) {
-    let received = new Promise(resolve => {
+  for (const [key, code] of cssMessage) {
+    const received = new Promise(resolve => {
       /* CSS errors are considered as pageError on the server */
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
         toolbox.target.client.removeListener("pageError", onPacket);
         info("Received css message:" + e + " " + JSON.stringify(packet, null, "\t"));
 
-        let message = prepareMessage(packet, {getNextId: () => 1});
+        const message = prepareMessage(packet, {getNextId: () => 1});
         stubs.packets.push(formatPacket(message.messageText, packet));
         stubs.preparedMessages.push(formatStub(message.messageText, packet));
         resolve();
@@ -372,7 +374,7 @@ async function generateCssMessageStubs() {
       [key, code],
       function([subKey, subCode]) {
         content.document.docShell.cssErrorReportingEnabled = true;
-        let style = content.document.createElement("style");
+        const style = content.document.createElement("style");
         // eslint-disable-next-line no-unsanitized/property
         style.innerHTML = subCode;
         content.document.body.appendChild(style);
@@ -389,14 +391,14 @@ async function generateCssMessageStubs() {
 async function generateEvaluationResultStubs() {
   const TEST_URI = "data:text/html;charset=utf-8,stub generation";
 
-  let stubs = {
+  const stubs = {
     preparedMessages: [],
     packets: [],
   };
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
-  for (let [key, code] of evaluationResult) {
+  for (const [key, code] of evaluationResult) {
     const packet = await new Promise(resolve => {
       toolbox.target.activeConsole.evaluateJS(code, resolve);
     });
@@ -411,16 +413,16 @@ async function generateEvaluationResultStubs() {
 async function generateNetworkEventStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-network-event.html";
 
-  let stubs = {
+  const stubs = {
     preparedMessages: [],
     packets: [],
   };
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let {ui} = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const {ui} = toolbox.getCurrentPanel().hud;
 
-  for (let [key, {keys, code}] of networkEvent) {
-    let onNetwork = new Promise(resolve => {
+  for (const [key, {keys, code}] of networkEvent) {
+    const onNetwork = new Promise(resolve => {
       let i = 0;
       toolbox.target.activeConsole.on("networkEvent", function onNetworkEvent(res) {
         stubs.packets.push(formatPacket(keys[i], res));
@@ -432,10 +434,10 @@ async function generateNetworkEventStubs() {
       });
     });
 
-    let onNetworkUpdate = new Promise(resolve => {
+    const onNetworkUpdate = new Promise(resolve => {
       let i = 0;
       ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(res) {
-        let updateKey = `${keys[i++]} update`;
+        const updateKey = `${keys[i++]} update`;
         // We cannot ensure the form of the network update packet, some properties
         // might be in another order than in the original packet.
         // Hand-picking only what we need should prevent this.
@@ -462,7 +464,7 @@ async function generateNetworkEventStubs() {
       gBrowser.selectedBrowser,
       [key, code],
       function([subKey, subCode]) {
-        let script = content.document.createElement("script");
+        const script = content.document.createElement("script");
         // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = `function triggerPacket() {${subCode}}`;
         content.document.body.appendChild(script);
@@ -481,15 +483,15 @@ async function generateNetworkEventStubs() {
 async function generatePageErrorStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html";
 
-  let stubs = {
+  const stubs = {
     preparedMessages: [],
     packets: [],
   };
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
-  for (let [key, code] of pageError) {
-    let received = new Promise(resolve => {
+  for (const [key, code] of pageError) {
+    const received = new Promise(resolve => {
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
         toolbox.target.client.removeListener("pageError", onPacket);
         stubs.packets.push(formatPacket(key, packet));
@@ -509,7 +511,7 @@ async function generatePageErrorStubs() {
       gBrowser.selectedBrowser,
       [key, code],
       function([subKey, subCode]) {
-        let script = content.document.createElement("script");
+        const script = content.document.createElement("script");
         // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = subCode;
         content.document.body.appendChild(script);

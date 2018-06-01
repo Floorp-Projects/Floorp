@@ -39,9 +39,9 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
       return;
     }
 
-    let selection = this.markup.inspector.selection;
+    const selection = this.markup.inspector.selection;
     if (selection.nodeFront != this.node || selection.isSlotted()) {
-      let reason = "reveal-from-slot";
+      const reason = "reveal-from-slot";
       this.markup.inspector.selection.setNodeFront(this.node, { reason });
     }
   },

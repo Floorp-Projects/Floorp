@@ -34,17 +34,17 @@ const OTHER_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { gridInspector, inspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters, store } = inspector;
+  const { gridInspector, inspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters, store } = inspector;
 
   await selectNode("#grid", inspector);
-  let gridList = doc.getElementById("grid-list");
-  let checkbox = gridList.children[0].querySelector("input");
+  const gridList = doc.getElementById("grid-list");
+  const checkbox = gridList.children[0].querySelector("input");
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
@@ -72,7 +72,7 @@ add_task(async function() {
 
   info("Navigate to another URL, and check that the highlighter is hidden and " +
     "grid is unchecked");
-  let otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
+  const otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
   onStateRestored = highlighters.once("grid-state-restored");
   onGridListRestored = waitUntilState(store, state =>
     state.grids.length == 1 &&

@@ -9,7 +9,7 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   await rightClickStyleSheet(ui, ui.editors[0]);
   is(ui._openLinkNewTabItem.getAttribute("disabled"), "false",
@@ -17,12 +17,12 @@ add_task(async function() {
   is(ui._openLinkNewTabItem.getAttribute("hidden"), "false",
     "The menu item is not hidden");
 
-  let url = "https://example.com/browser/devtools/client/styleeditor/test/" +
+  const url = "https://example.com/browser/devtools/client/styleeditor/test/" +
     "simple.css";
   is(ui._contextMenuStyleSheet.href, url, "Correct URL for sheet");
 
-  let originalOpenWebLinkIn = ui._window.openWebLinkIn;
-  let tabOpenedDefer = new Promise(resolve => {
+  const originalOpenWebLinkIn = ui._window.openWebLinkIn;
+  const tabOpenedDefer = new Promise(resolve => {
     ui._window.openWebLinkIn = newUrl => {
       // Reset the actual openWebLinkIn function before proceeding.
       ui._window.openWebLinkIn = originalOpenWebLinkIn;

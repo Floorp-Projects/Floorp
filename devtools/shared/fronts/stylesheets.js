@@ -123,17 +123,17 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
    * should be used to indent a block in this style sheet.
    */
   guessIndentation: function() {
-    let prefIndent = getIndentationFromPrefs();
+    const prefIndent = getIndentationFromPrefs();
     if (prefIndent) {
-      let {indentUnit, indentWithTabs} = prefIndent;
+      const {indentUnit, indentWithTabs} = prefIndent;
       return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
     }
 
     return (async function() {
-      let longStr = await this.getText();
-      let source = await longStr.string();
+      const longStr = await this.getText();
+      const source = await longStr.string();
 
-      let {indentUnit, indentWithTabs} = getIndentationFromString(source);
+      const {indentUnit, indentWithTabs} = getIndentationFromString(source);
 
       return indentWithTabs ? "\t" : " ".repeat(indentUnit);
     }.bind(this))();

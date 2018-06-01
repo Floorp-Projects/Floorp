@@ -8,7 +8,7 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<div id='testid'>Styled Node</div>");
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("#testid", inspector);
@@ -17,14 +17,14 @@ add_task(async function() {
   await addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
 
   info("Adding a new property for this rule");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   ruleEditor.addProperty("font-weight", "bold", "", true);
   await onRuleViewChanged;
 
-  let textProps = ruleEditor.rule.textProps;
-  let prop = textProps[textProps.length - 1];
+  const textProps = ruleEditor.rule.textProps;
+  const prop = textProps[textProps.length - 1];
   is(prop.name, "font-weight", "The last property name is font-weight");
   is(prop.value, "bold", "The last property value is bold");
 });

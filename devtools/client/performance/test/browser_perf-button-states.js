@@ -11,24 +11,24 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $, $$, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
+  const { $, $$, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
 
-  let recordButton = $("#main-record-button");
+  const recordButton = $("#main-record-button");
 
   checkRecordButtonsStates(false, false);
 
-  let uiStartClick = once(PerformanceView, EVENTS.UI_START_RECORDING);
-  let recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+  const uiStartClick = once(PerformanceView, EVENTS.UI_START_RECORDING);
+  const recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: ["recording-started"]
   });
-  let backendStartReady = once(PerformanceController,
+  const backendStartReady = once(PerformanceController,
                                EVENTS.BACKEND_READY_AFTER_RECORDING_START);
-  let uiStateRecording = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
+  const uiStateRecording = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: ["recording"]
   });
 
@@ -44,13 +44,13 @@ add_task(async function() {
   await backendStartReady;
   await uiStateRecording;
 
-  let uiStopClick = once(PerformanceView, EVENTS.UI_STOP_RECORDING);
-  let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+  const uiStopClick = once(PerformanceView, EVENTS.UI_STOP_RECORDING);
+  const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: ["recording-stopped"]
   });
-  let backendStopReady = once(PerformanceController,
+  const backendStopReady = once(PerformanceController,
                                EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
-  let uiStateRecorded = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
+  const uiStateRecorded = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: ["recorded"]
   });
 
@@ -66,7 +66,7 @@ add_task(async function() {
   await teardownToolboxAndRemoveTab(panel);
 
   function checkRecordButtonsStates(checked, locked) {
-    for (let button of $$(".record-button")) {
+    for (const button of $$(".record-button")) {
       is(button.classList.contains("checked"), checked,
          "The record button checked state should be " + checked);
       is(button.disabled, locked,

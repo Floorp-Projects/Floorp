@@ -38,7 +38,7 @@ function getHeapSnapshotFileTemplate() {
  * @returns String
  */
 exports.getNewUniqueHeapSnapshotTempFilePath = function() {
-  let file = new FileUtils.File(getHeapSnapshotFileTemplate());
+  const file = new FileUtils.File(getHeapSnapshotFileTemplate());
   // The call to createUnique will append "-N" after the leaf name (but before
   // the extension) until a new file is found and create it. This guarantees we
   // won't accidentally choose the same file twice.

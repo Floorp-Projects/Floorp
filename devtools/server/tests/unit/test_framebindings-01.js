@@ -27,9 +27,9 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let bindings = packet.frame.environment.bindings;
-    let args = bindings.arguments;
-    let vars = bindings.variables;
+    const bindings = packet.frame.environment.bindings;
+    const args = bindings.arguments;
+    const vars = bindings.variables;
 
     Assert.equal(args.length, 6);
     Assert.equal(args[0].number.value, 42);
@@ -47,7 +47,7 @@ function test_pause_frame() {
     Assert.equal(vars.c.value.class, "Object");
     Assert.ok(!!vars.c.value.actor);
 
-    let objClient = gThreadClient.pauseGrip(vars.c.value);
+    const objClient = gThreadClient.pauseGrip(vars.c.value);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.a.configurable, true);
       Assert.equal(response.ownProperties.a.enumerable, true);

@@ -57,7 +57,7 @@ class AccessibilityParent {
 
     if (this.messageManager) {
       // If the browser was swapped we need to reset the message manager.
-      let oldMM = this.messageManager;
+      const oldMM = this.messageManager;
       oldMM.removeMessageListener(this._msgName, this.onAccessibilityMessage);
     }
 
@@ -74,7 +74,7 @@ class AccessibilityParent {
    *         Name of the action to perform.
    */
   onAccessibilityMessage(msg) {
-    let { action } = msg.json;
+    const { action } = msg.json;
     switch (action) {
       case "enable":
         this.enable();
@@ -100,7 +100,7 @@ class AccessibilityParent {
       // a11y service: XPCOM and PlatformAPI (e.g. screen readers). We only care
       // about PlatformAPI consumer changes because when set, we can no longer
       // disable accessibility service.
-      let { PlatformAPI } = JSON.parse(data);
+      const { PlatformAPI } = JSON.parse(data);
       this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
         topic: "can-be-disabled-change",
         data: !PlatformAPI
@@ -137,9 +137,9 @@ class AccessibilityParent {
    */
   get canBeDisabled() {
     if (this.enabled) {
-      let a11yService = Cc["@mozilla.org/accessibilityService;1"].getService(
+      const a11yService = Cc["@mozilla.org/accessibilityService;1"].getService(
         Ci.nsIAccessibilityService);
-      let { PlatformAPI } = JSON.parse(a11yService.getConsumers());
+      const { PlatformAPI } = JSON.parse(a11yService.getConsumers());
       return !PlatformAPI;
     }
 

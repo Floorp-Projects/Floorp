@@ -12,18 +12,18 @@ const { startRecording, stopRecording, reload } = require("devtools/client/perfo
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let { panel, target } = await initPerformanceInNewTab({
+  const { panel, target } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { PerformanceController } = panel.panelWin;
+  const { PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await reload(target);
 
-  let recording = PerformanceController.getCurrentRecording();
-  let markersLength = recording.getAllData().markers.length;
+  const recording = PerformanceController.getCurrentRecording();
+  const markersLength = recording.getAllData().markers.length;
 
   ok(recording.isRecording(),
     "RecordingModel should still be recording after reload");

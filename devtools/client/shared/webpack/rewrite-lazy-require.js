@@ -8,7 +8,7 @@ module.exports = function(content) {
   this.cacheable && this.cacheable();
 
   // taking care of "named" depedencies.
-  let res = content.replace(
+  const res = content.replace(
     /loader.lazyRequireGetter\(this,\s*"([^"]+)",[^"]*"([^"]+)", true\);/g,
     "let { $1 } = require(\"$2\")"
   );

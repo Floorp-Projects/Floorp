@@ -53,13 +53,13 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
   },
 
   async _buildEventTooltipContent(target) {
-    let tooltip = this.markup.eventDetailsTooltip;
+    const tooltip = this.markup.eventDetailsTooltip;
 
     await tooltip.hide();
 
-    let listenerInfo = await this.node.getEventListenerInfo();
+    const listenerInfo = await this.node.getEventListenerInfo();
 
-    let toolbox = this.markup.toolbox;
+    const toolbox = this.markup.toolbox;
 
     setEventTooltip(tooltip, listenerInfo, toolbox);
     // Disable the image preview tooltip while we display the event details
@@ -96,9 +96,9 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
 
     // Fetch the preview from the server.
     this.tooltipDataPromise = (async function() {
-      let maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
-      let preview = await this.node.getImageData(maxDim);
-      let data = await preview.data.string();
+      const maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
+      const preview = await this.node.getImageData(maxDim);
+      const data = await preview.data.string();
 
       // Clear the pending preview request. We can't reuse the results later as
       // the preview contents might have changed.
@@ -127,16 +127,16 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     // If the Element has an src attribute, the tooltip is shown when hovering
     // over the src url. If not, the tooltip is shown when hovering over the tag
     // name.
-    let src = this.editor.getAttributeElement("src");
-    let expectedTarget = src ? src.querySelector(".link") : this.editor.tag;
+    const src = this.editor.getAttributeElement("src");
+    const expectedTarget = src ? src.querySelector(".link") : this.editor.tag;
     if (target !== expectedTarget) {
       return false;
     }
 
     try {
-      let { data, size } = await this._getPreview();
+      const { data, size } = await this._getPreview();
       // The preview is ready.
-      let options = {
+      const options = {
         naturalWidth: size.naturalWidth,
         naturalHeight: size.naturalHeight,
         maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF)
@@ -189,8 +189,8 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
    * This is an undoable action.
    */
   removeAttribute: function(attrName) {
-    let doMods = this.editor._startModifyingAttributes();
-    let undoMods = this.editor._startModifyingAttributes();
+    const doMods = this.editor._startModifyingAttributes();
+    const undoMods = this.editor._startModifyingAttributes();
     this.editor._saveAttribute(attrName, undoMods);
     doMods.removeAttribute(attrName);
     this.undo.do(() => {

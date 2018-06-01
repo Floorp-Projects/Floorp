@@ -11,14 +11,14 @@ const TEST_URI = `<style>body{background:red}</style>`;
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let {view, toolbox} = await openRuleView();
-  let pickerStopped = toolbox.once("picker-stopped");
+  const {view, toolbox} = await openRuleView();
+  const pickerStopped = toolbox.once("picker-stopped");
 
   await startPicker(toolbox);
 
   info("Get the background property from the rule-view");
-  let property = getRuleViewProperty(view, "body", "background");
-  let swatch = property.valueSpan.querySelector(".ruleview-colorswatch");
+  const property = getRuleViewProperty(view, "body", "background");
+  const swatch = property.valueSpan.querySelector(".ruleview-colorswatch");
   ok(swatch, "Color swatch is displayed for the background property");
 
   info("Open the eyedropper from the colorpicker tooltip");

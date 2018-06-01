@@ -23,8 +23,8 @@ const TEST_DATA = [
   { node: "div", draggable: true },
   {
     node: async function(inspector) {
-      let parentFront = await getNodeFront("#before", inspector);
-      let {nodes} = await inspector.walker.children(parentFront);
+      const parentFront = await getNodeFront("#before", inspector);
+      const {nodes} = await inspector.walker.children(parentFront);
       // Getting the comment node.
       return getContainerForNodeFront(nodes[1], inspector);
     },
@@ -32,8 +32,8 @@ const TEST_DATA = [
   },
   {
     node: async function(inspector) {
-      let parentFront = await getNodeFront("#test", inspector);
-      let {nodes} = await inspector.walker.children(parentFront);
+      const parentFront = await getNodeFront("#test", inspector);
+      const {nodes} = await inspector.walker.children(parentFront);
       // Getting the ::before pseudo element.
       return getContainerForNodeFront(nodes[0], inspector);
     },
@@ -42,10 +42,10 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await inspector.markup.expandAll();
 
-  for (let {node, draggable} of TEST_DATA) {
+  for (const {node, draggable} of TEST_DATA) {
     let container;
     let name;
     if (typeof node === "string") {
@@ -56,7 +56,7 @@ add_task(async function() {
       name = container.toString();
     }
 
-    let status = draggable ? "draggable" : "not draggable";
+    const status = draggable ? "draggable" : "not draggable";
     info(`Testing ${name}, expecting it to be ${status}`);
     is(container.isDraggable(), draggable, `The node is ${status}`);
   }

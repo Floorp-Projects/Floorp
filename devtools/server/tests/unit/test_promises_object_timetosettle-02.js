@@ -14,8 +14,8 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {}
 var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("test-promises-timetosettle");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("test-promises-timetosettle");
+  const chromeActors = await getChromeActors(client);
   await attachTab(client, chromeActors);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
@@ -25,8 +25,8 @@ add_task(async function() {
   await testGetTimeToSettle(client, chromeActors,
     v => new Promise(resolve => setTimeout(() => resolve(v), 100)));
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "test-promises-timetosettle");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "test-promises-timetosettle");
   ok(targetTab, "Found our target tab.");
   await attachTab(client, targetTab);
 
@@ -40,19 +40,19 @@ add_task(async function() {
 });
 
 async function testGetTimeToSettle(client, form, makePromise) {
-  let front = PromisesFront(client, form);
-  let resolution = "MyLittleSecret" + Math.random();
+  const front = PromisesFront(client, form);
+  const resolution = "MyLittleSecret" + Math.random();
   let found = false;
 
   await front.attach();
   await front.listPromises();
 
-  let onNewPromise = new Promise(resolve => {
+  const onNewPromise = new Promise(resolve => {
     EventEmitter.on(front, "promises-settled", promises => {
-      for (let p of promises) {
+      for (const p of promises) {
         if (p.promiseState.state === "fulfilled" &&
             p.promiseState.value === resolution) {
-          let timeToSettle = Math.floor(p.promiseState.timeToSettle / 100) * 100;
+          const timeToSettle = Math.floor(p.promiseState.timeToSettle / 100) * 100;
           ok(timeToSettle >= 100,
             "Expect time to settle for resolved promise to be " +
             "at least 100ms, got " + timeToSettle + "ms.");
@@ -65,7 +65,7 @@ async function testGetTimeToSettle(client, form, makePromise) {
     });
   });
 
-  let promise = makePromise(resolution);
+  const promise = makePromise(resolution);
 
   await onNewPromise;
   ok(found, "Found our new promise.");

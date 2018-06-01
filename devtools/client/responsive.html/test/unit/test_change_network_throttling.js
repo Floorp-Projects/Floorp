@@ -10,7 +10,7 @@ const {
 } = require("devtools/client/shared/components/throttling/actions");
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   ok(!getState().networkThrottling.enabled,

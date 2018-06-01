@@ -142,7 +142,7 @@ class ConsoleOutput extends Component {
       }
     }
 
-    let messageNodes = visibleMessages.map((messageId) => MessageContainer({
+    const messageNodes = visibleMessages.map((messageId) => MessageContainer({
       dispatch,
       key: messageId,
       messageId,
@@ -174,7 +174,7 @@ function scrollToBottom(node) {
 }
 
 function isScrolledToBottom(outputNode, scrollNode) {
-  let lastNodeHeight = outputNode.lastChild ?
+  const lastNodeHeight = outputNode.lastChild ?
                        outputNode.lastChild.clientHeight : 0;
   return scrollNode.scrollTop + scrollNode.clientHeight >=
          scrollNode.scrollHeight - lastNodeHeight / 2;

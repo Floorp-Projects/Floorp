@@ -13,7 +13,7 @@ const TOOL_PREF = "devtools.shadereditor.enabled";
 
 add_task(async function() {
   info("Active the sharer editor");
-  let originalPref = Services.prefs.getBoolPref(TOOL_PREF);
+  const originalPref = Services.prefs.getBoolPref(TOOL_PREF);
   Services.prefs.setBoolPref(TOOL_PREF, true);
 
   await addTab(TEST_URI);

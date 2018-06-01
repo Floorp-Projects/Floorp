@@ -15,19 +15,19 @@ var FileUtils = tempScope.FileUtils;
 var NetUtil = tempScope.NetUtil;
 
 add_task(async function() {
-  let htmlFile = await copy(TESTCASE_URI_HTML, "simple.html");
+  const htmlFile = await copy(TESTCASE_URI_HTML, "simple.html");
   await copy(TESTCASE_URI_CSS, "simple.css");
-  let uri = Services.io.newFileURI(htmlFile);
-  let filePath = uri.resolve("");
+  const uri = Services.io.newFileURI(htmlFile);
+  const filePath = uri.resolve("");
 
-  let { ui } = await openStyleEditorForURL(filePath);
+  const { ui } = await openStyleEditorForURL(filePath);
 
-  let editor = ui.editors[0];
+  const editor = ui.editors[0];
   await editor.getSourceEditor();
 
   info("Editing the style sheet.");
   let dirty = editor.sourceEditor.once("dirty-change");
-  let beginCursor = {line: 0, ch: 0};
+  const beginCursor = {line: 0, ch: 0};
   editor.sourceEditor.replaceText("DIRTY TEXT", beginCursor, beginCursor);
 
   await dirty;
@@ -52,20 +52,20 @@ add_task(async function() {
 
 function copy(srcChromeURL, destFileName) {
   return new Promise(resolve => {
-    let destFile = FileUtils.getFile("ProfD", [destFileName]);
+    const destFile = FileUtils.getFile("ProfD", [destFileName]);
     write(read(srcChromeURL), destFile, resolve);
   });
 }
 
 function read(srcChromeURL) {
-  let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
     .getService(Ci.nsIScriptableInputStream);
 
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: srcChromeURL,
     loadUsingSystemPrincipal: true
   });
-  let input = channel.open2();
+  const input = channel.open2();
   scriptableStream.init(input);
 
   let data = "";
@@ -79,13 +79,13 @@ function read(srcChromeURL) {
 }
 
 function write(data, file, callback) {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
     .createInstance(Ci.nsIScriptableUnicodeConverter);
 
   converter.charset = "UTF-8";
 
-  let istream = converter.convertToInputStream(data);
-  let ostream = FileUtils.openSafeFileOutputStream(file);
+  const istream = converter.convertToInputStream(data);
+  const ostream = FileUtils.openSafeFileOutputStream(file);
 
   NetUtil.asyncCopy(istream, ostream, function(status) {
     if (!Components.isSuccessCode(status)) {

@@ -102,7 +102,7 @@ function getLastTokenFlagValues(lastToken, requests) {
   }
 
   let values = [];
-  for (let request of requests) {
+  for (const request of requests) {
     values.push(...getAutocompleteValuesForFlag(flag, request));
   }
   values = [...new Set(values)];
@@ -111,8 +111,8 @@ function getLastTokenFlagValues(lastToken, requests) {
     .filter(value => value)
     .filter(value => {
       if (typedFlagValue && value) {
-        let lowerTyped = typedFlagValue.toLowerCase();
-        let lowerValue = value.toLowerCase();
+        const lowerTyped = typedFlagValue.toLowerCase();
+        const lowerValue = value.toLowerCase();
         return lowerValue.includes(lowerTyped) && lowerValue !== lowerTyped;
       }
       return typeof value !== "undefined" && value !== "" && value !== "undefined";
@@ -139,14 +139,14 @@ function autocompleteProvider(filter, requests) {
     return [];
   }
 
-  let negativeAutocompleteList = FILTER_FLAGS.map((item) => `-${item}`);
-  let baseList = [...FILTER_FLAGS, ...negativeAutocompleteList]
+  const negativeAutocompleteList = FILTER_FLAGS.map((item) => `-${item}`);
+  const baseList = [...FILTER_FLAGS, ...negativeAutocompleteList]
     .map((item) => `${item}:`);
 
   // The last token is used to filter the base autocomplete list
-  let tokens = filter.split(/\s+/g);
-  let lastToken = tokens[tokens.length - 1];
-  let previousTokens = tokens.slice(0, tokens.length - 1);
+  const tokens = filter.split(/\s+/g);
+  const lastToken = tokens[tokens.length - 1];
+  const previousTokens = tokens.slice(0, tokens.length - 1);
 
   // Autocomplete list is not generated for empty lastToken
   if (!lastToken) {
@@ -154,7 +154,7 @@ function autocompleteProvider(filter, requests) {
   }
 
   let autocompleteList;
-  let availableValues = getLastTokenFlagValues(lastToken, requests);
+  const availableValues = getLastTokenFlagValues(lastToken, requests);
   if (availableValues.length > 0) {
     autocompleteList = availableValues;
   } else {

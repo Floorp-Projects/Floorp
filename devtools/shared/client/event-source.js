@@ -53,7 +53,7 @@ function eventSource(proto) {
    */
   proto.addOneTimeListener = function(name, listener) {
     return new Promise(resolve => {
-      let l = (eventName, ...rest) => {
+      const l = (eventName, ...rest) => {
         this.removeListener(name, l);
         if (listener) {
           listener(eventName, ...rest);
@@ -116,10 +116,10 @@ function eventSource(proto) {
       return;
     }
 
-    let name = arguments[0];
-    let listeners = this._getListeners(name).slice(0);
+    const name = arguments[0];
+    const listeners = this._getListeners(name).slice(0);
 
-    for (let listener of listeners) {
+    for (const listener of listeners) {
       try {
         listener.apply(null, arguments);
       } catch (e) {

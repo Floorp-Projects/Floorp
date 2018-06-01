@@ -25,8 +25,8 @@ const device2 = Object.assign({}, device, {
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { toolWindow } = ui;
-  let { store, document } = toolWindow;
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
 
   info("Verify that remove buttons affect the correct device");
 
@@ -34,8 +34,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  let deviceSelector = document.querySelector(".viewport-device-selector");
-  let submitButton = document.querySelector("#device-submit-button");
+  const deviceSelector = document.querySelector(".viewport-device-selector");
+  const submitButton = document.querySelector("#device-submit-button");
 
   openDeviceModal(ui);
 
@@ -54,10 +54,10 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await addDeviceInModal(ui, device2);
 
   info("Verify all custom devices default to enabled in modal");
-  let deviceCbs =
+  const deviceCbs =
     [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
   is(deviceCbs.length, 2, "Both devices have a checkbox in modal");
-  for (let cb of deviceCbs) {
+  for (const cb of deviceCbs) {
     ok(cb.checked, "Custom device enabled");
   }
   submitButton.click();
@@ -73,9 +73,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   openDeviceModal(ui);
 
   info("Remove device 2");
-  let deviceRemoveButtons = [...document.querySelectorAll(".device-remove-button")];
+  const deviceRemoveButtons = [...document.querySelectorAll(".device-remove-button")];
   is(deviceRemoveButtons.length, 2, "Both devices have a remove button in modal");
-  let removed = waitUntilState(store, state => state.devices.custom.length == 1);
+  const removed = waitUntilState(store, state => state.devices.custom.length == 1);
   deviceRemoveButtons[1].click();
   await removed;
   submitButton.click();
@@ -90,34 +90,36 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { toolWindow } = ui;
-  let { store, document } = toolWindow;
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  let deviceSelector = document.querySelector(".viewport-device-selector");
+  const deviceSelector = document.querySelector(".viewport-device-selector");
 
   info("Ensure device 1 is still in device selector");
-  let deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);
+  const deviceOption1 =
+    [...deviceSelector.options].find(opt => opt.value == device1.name);
   ok(deviceOption1, "Test device 1 option exists");
 
   info("Ensure device 2 is no longer in device selector");
-  let deviceOption2 = [...deviceSelector.options].find(opt => opt.value == device2.name);
+  const deviceOption2 =
+    [...deviceSelector.options].find(opt => opt.value == device2.name);
   ok(!deviceOption2, "Test device 2 option removed");
 
   openDeviceModal(ui);
 
   info("Ensure device 1 is still in device modal");
-  let deviceCbs =
+  const deviceCbs =
     [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
   is(deviceCbs.length, 1, "Only 1 custom present in modal");
-  let deviceCb1 = deviceCbs.find(cb => cb.value == device1.name);
+  const deviceCb1 = deviceCbs.find(cb => cb.value == device1.name);
   ok(deviceCb1 && deviceCb1.checked, "Test device 1 checkbox exists and enabled");
 
   info("Ensure device 2 is no longer in device modal");
-  let deviceCb2 = deviceCbs.find(cb => cb.value == device2.name);
+  const deviceCb2 = deviceCbs.find(cb => cb.value == device2.name);
   ok(!deviceCb2, "Test device 2 checkbox does not exist");
 });
 

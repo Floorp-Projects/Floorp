@@ -30,7 +30,7 @@ addonsListener.onEnabled =
 addonsListener.onDisabled =
 addonsListener.onInstalled =
 addonsListener.onUninstalled = (updatedAddon) => {
-  let addons = GetAvailableAddons();
+  const addons = GetAvailableAddons();
   addons.adb.updateInstallStatus();
 };
 AddonManager.addAddonListener(addonsListener);
@@ -63,7 +63,7 @@ Addon.prototype = {
   },
 
   updateInstallStatus: async function() {
-    let addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(this.addonID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
     } else {
@@ -72,7 +72,7 @@ Addon.prototype = {
   },
 
   install: async function() {
-    let addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(this.addonID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
       return;
@@ -81,14 +81,14 @@ Addon.prototype = {
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
-      let install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall");
+      const install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall");
       install.addListener(this);
       install.install();
     }
   },
 
   uninstall: async function() {
-    let addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(this.addonID);
     addon.uninstall();
   },
 
@@ -134,7 +134,7 @@ Addon.prototype = {
 function ADBAddon() {
   EventEmitter.decorate(this);
   // This addon uses the string "linux" for "linux32"
-  let fixedOS = OS == "linux32" ? "linux" : OS;
+  const fixedOS = OS == "linux32" ? "linux" : OS;
   this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
   this.addonID = ADB_ADDON_ID;
   this.updateInstallStatus();

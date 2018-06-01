@@ -126,7 +126,7 @@ class SearchBox extends Component {
       this.props.onKeyDown();
     }
 
-    let { autocomplete } = this.refs;
+    const { autocomplete } = this.refs;
     if (!autocomplete || autocomplete.state.list.length <= 0) {
       return;
     }
@@ -171,13 +171,13 @@ class SearchBox extends Component {
       learnMoreUrl,
       learnMoreTitle,
     } = this.props;
-    let { value } = this.state;
-    let divClassList = ["devtools-searchbox", "has-clear-btn"];
-    let inputClassList = [`devtools-${type}input`];
+    const { value } = this.state;
+    const divClassList = ["devtools-searchbox", "has-clear-btn"];
+    const inputClassList = [`devtools-${type}input`];
     if (plainStyle) {
       inputClassList.push("devtools-plaininput");
     }
-    let showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
+    const showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
 
     if (value !== "") {
       inputClassList.push("filled");

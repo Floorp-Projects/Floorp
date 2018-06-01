@@ -40,7 +40,7 @@ exports.pmmUniqueMessage = function(message, payload) {
     throw new Error("`pmmLoadFrameScripts()` must be called when using MessageManager.");
   }
 
-  let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
+  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
   payload.id = generateUUID().toString();
 
@@ -66,7 +66,7 @@ exports.pmmIsProfilerActive = () => {
  * Starts the nsProfiler module.
  */
 exports.pmmStartProfiler = async function({ entries, interval, features }) {
-  let isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
+  const isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
   if (!isActive) {
     return exports.pmmSendProfilerCommand("StartProfiler", [entries, interval, features,
                                                             features.length]);
@@ -77,7 +77,7 @@ exports.pmmStartProfiler = async function({ entries, interval, features }) {
  * Stops the nsProfiler module.
  */
 exports.pmmStopProfiler = async function() {
-  let isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
+  const isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
   if (isActive) {
     return exports.pmmSendProfilerCommand("StopProfiler");
   }

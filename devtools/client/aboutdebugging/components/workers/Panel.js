@@ -53,7 +53,7 @@ class WorkersPanel extends Component {
   }
 
   componentDidMount() {
-    let client = this.props.client;
+    const client = this.props.client;
     client.addListener("workerListChanged", this.updateWorkers);
     client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     client.addListener("processListChanged", this.updateWorkers);
@@ -79,7 +79,7 @@ class WorkersPanel extends Component {
   }
 
   componentWillUnmount() {
-    let client = this.props.client;
+    const client = this.props.client;
     client.removeListener("processListChanged", this.updateWorkers);
     client.removeListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     client.removeListener("workerListChanged", this.updateWorkers);
@@ -103,12 +103,12 @@ class WorkersPanel extends Component {
   updateMultiE10S() {
     // We watch the pref but set the state based on
     // nsIXULRuntime.maxWebProcessCount.
-    let processCount = Services.appinfo.maxWebProcessCount;
+    const processCount = Services.appinfo.maxWebProcessCount;
     this.setState({ processCount });
   }
 
   updateWorkers() {
-    let workers = this.initialState.workers;
+    const workers = this.initialState.workers;
 
     this.props.client.mainRoot.listAllWorkers().then(({service, other, shared}) => {
       workers.service = service.map(f => Object.assign({ icon: WorkerIcon }, f));
@@ -128,12 +128,13 @@ class WorkersPanel extends Component {
   }
 
   renderServiceWorkersError() {
-    let isWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
-    let isPrivateBrowsingMode = PrivateBrowsingUtils.permanentPrivateBrowsing;
-    let isServiceWorkerDisabled = !Services.prefs
+    const isWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
+    const isPrivateBrowsingMode = PrivateBrowsingUtils.permanentPrivateBrowsing;
+    const isServiceWorkerDisabled = !Services.prefs
                                     .getBoolPref("dom.serviceWorkers.enabled");
 
-    let isDisabled = isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
+    const isDisabled =
+      isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
     if (!isDisabled) {
       return "";
     }
@@ -159,11 +160,11 @@ class WorkersPanel extends Component {
   }
 
   render() {
-    let { client, id } = this.props;
-    let { workers, processCount } = this.state;
+    const { client, id } = this.props;
+    const { workers, processCount } = this.state;
 
-    let isE10S = Services.appinfo.browserTabsRemoteAutostart;
-    let isMultiE10S = isE10S && processCount > 1;
+    const isE10S = Services.appinfo.browserTabsRemoteAutostart;
+    const isMultiE10S = isE10S && processCount > 1;
 
     return dom.div(
       {

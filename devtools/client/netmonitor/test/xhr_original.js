@@ -1,7 +1,7 @@
 "use strict";
 
 function reallydoxhr() {
-  let z = new XMLHttpRequest();
+  const z = new XMLHttpRequest();
   z.open("get", "test-image.png", true);
   z.send();
 }

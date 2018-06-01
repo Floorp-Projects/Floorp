@@ -7,7 +7,7 @@
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 function checkAccessibilityState(accessibility, expected) {
-  let { enabled, canBeDisabled, canBeEnabled } = accessibility;
+  const { enabled, canBeDisabled, canBeEnabled } = accessibility;
   is(enabled, expected.enabled, "Enabled state is correct.");
   is(canBeDisabled, expected.canBeDisabled, "canBeDisabled state is correct.");
   is(canBeEnabled, expected.canBeEnabled, "canBeEnabled state is correct.");
@@ -16,7 +16,7 @@ function checkAccessibilityState(accessibility, expected) {
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
 add_task(async function() {
-  let { walker: domWalker, client, accessibility} = await initAccessibilityFrontForUrl(
+  const { walker: domWalker, client, accessibility} = await initAccessibilityFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(accessibility, "The AccessibilityFront was created");
@@ -43,7 +43,7 @@ add_task(async function() {
     { enabled: false, canBeDisabled: true, canBeEnabled: true });
 
   info("Initialize accessibility service");
-  let initEvent = accessibility.once("init");
+  const initEvent = accessibility.once("init");
   await accessibility.enable();
   await waitForA11yInit();
   await initEvent;
@@ -51,12 +51,12 @@ add_task(async function() {
     { enabled: true, canBeDisabled: true, canBeEnabled: true });
 
   a11yWalker = await accessibility.getWalker();
-  let rootNode = await domWalker.getRootNode();
-  let a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
+  const rootNode = await domWalker.getRootNode();
+  const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
   ok(a11yDoc, "Accessible document actor is created");
 
   info("Shutdown accessibility service");
-  let shutdownEvent = accessibility.once("shutdown");
+  const shutdownEvent = accessibility.once("shutdown");
   await accessibility.disable();
   await waitForA11yShutdown();
   await shutdownEvent;

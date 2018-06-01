@@ -87,7 +87,7 @@ class StorageUI {
     this.sidebarToggledOpen = null;
     this.shouldLoadMoreItems = true;
 
-    let treeNode = this._panelDoc.getElementById("storage-tree");
+    const treeNode = this._panelDoc.getElementById("storage-tree");
     this.tree = new TreeWidget(treeNode, {
       defaultType: "dir",
       contextMenuId: "storage-tree-popup"
@@ -95,7 +95,7 @@ class StorageUI {
     this.onHostSelect = this.onHostSelect.bind(this);
     this.tree.on("select", this.onHostSelect);
 
-    let tableNode = this._panelDoc.getElementById("storage-table");
+    const tableNode = this._panelDoc.getElementById("storage-table");
     this.table = new TableWidget(tableNode, {
       emptyText: L10N.getStr("table.emptyText"),
       highlightUpdated: true,
@@ -120,10 +120,10 @@ class StorageUI {
     this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
     this.setupToolbar();
 
-    let shortcuts = new KeyShortcuts({
+    const shortcuts = new KeyShortcuts({
       window: this._panelDoc.defaultView,
     });
-    let key = L10N.getStr("storage.filter.key");
+    const key = L10N.getStr("storage.filter.key");
     shortcuts.on(key, event => {
       event.preventDefault();
       this.searchBox.focus();
@@ -138,10 +138,10 @@ class StorageUI {
       // If we are not inside the browser toolbox we need to delete these
       // hostnames.
       if (!this._target.chrome && storageTypes.indexedDB) {
-        let hosts = storageTypes.indexedDB.hosts;
-        let newHosts = {};
+        const hosts = storageTypes.indexedDB.hosts;
+        const newHosts = {};
 
-        for (let [host, dbs] of Object.entries(hosts)) {
+        for (const [host, dbs] of Object.entries(hosts)) {
           if (SAFE_HOSTS_PREFIXES_REGEX.test(host)) {
             newHosts[host] = dbs;
           }
@@ -309,7 +309,7 @@ class StorageUI {
   }
 
   getCurrentFront() {
-    let type = this.table.datatype;
+    const type = this.table.datatype;
 
     return this.storageTypes[type];
   }
@@ -329,7 +329,7 @@ class StorageUI {
   }
 
   editItem(data) {
-    let front = this.getCurrentFront();
+    const front = this.getCurrentFront();
 
     front.editItem(data);
   }
@@ -360,16 +360,16 @@ class StorageUI {
    */
   onCleared(response) {
     function* enumPaths() {
-      for (let type in response) {
+      for (const type in response) {
         if (Array.isArray(response[type])) {
           // Handle the legacy response with array of hosts
-          for (let host of response[type]) {
+          for (const host of response[type]) {
             yield [type, host];
           }
         } else {
           // Handle the new format that supports clearing sub-stores in a host
-          for (let host in response[type]) {
-            let paths = response[type][host];
+          for (const host in response[type]) {
+            const paths = response[type][host];
 
             if (!paths.length) {
               yield [type, host];
@@ -388,7 +388,7 @@ class StorageUI {
       }
     }
 
-    for (let path of enumPaths()) {
+    for (const path of enumPaths()) {
       // Find if the path is selected (there is max one) and clear it
       if (this.tree.isSelected(path)) {
         this.table.clear();
@@ -452,8 +452,8 @@ class StorageUI {
    * @param {object} See onEdit docs
    */
   async handleAddedItems(added) {
-    for (let type in added) {
-      for (let host in added[type]) {
+    for (const type in added) {
+      for (const host in added[type]) {
         const label = this.getReadableLabelFromHostname(host);
         this.tree.add([type, {id: host, label: label, type: "url"}]);
         for (let name of added[type][host]) {
@@ -487,8 +487,8 @@ class StorageUI {
    * @param {object} See onEdit docs
    */
   async handleDeletedItems(deleted) {
-    for (let type in deleted) {
-      for (let host in deleted[type]) {
+    for (const type in deleted) {
+      for (const host in deleted[type]) {
         if (!deleted[type][host].length) {
           // This means that the whole host is deleted, thus the item should
           // be removed from the storage tree
@@ -500,10 +500,10 @@ class StorageUI {
 
           this.tree.remove([type, host]);
         } else {
-          for (let name of deleted[type][host]) {
+          for (const name of deleted[type][host]) {
             try {
               // trying to parse names in case of indexedDB or cache
-              let names = JSON.parse(name);
+              const names = JSON.parse(name);
               // Is a whole cache, database or objectstore deleted?
               // Then remove it from the tree.
               if (names.length < 3) {
@@ -517,7 +517,7 @@ class StorageUI {
 
               // Remove the item from table if currently displayed.
               if (names.length > 0) {
-                let tableItemName = names.pop();
+                const tableItemName = names.pop();
                 if (this.tree.isSelected([type, host, ...names])) {
                   await this.removeItemFromTable(tableItemName);
                 }
@@ -544,15 +544,15 @@ class StorageUI {
       return;
     }
 
-    let [type, host, db, objectStore] = selectedItem;
+    const [type, host, db, objectStore] = selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
       return;
     }
     try {
-      let toUpdate = [];
-      for (let name of changed[type][host]) {
-        let names = JSON.parse(name);
+      const toUpdate = [];
+      for (const name of changed[type][host]) {
+        const names = JSON.parse(name);
         if (names[0] == db && names[1] == objectStore && names[2]) {
           toUpdate.push(name);
         }
@@ -577,9 +577,9 @@ class StorageUI {
    *        See REASON constant at top of file.
    */
   async fetchStorageObjects(type, host, names, reason) {
-    let fetchOpts = reason === REASON.NEXT_50_ITEMS ? {offset: this.itemOffset}
+    const fetchOpts = reason === REASON.NEXT_50_ITEMS ? {offset: this.itemOffset}
                                                     : {};
-    let storageType = this.storageTypes[type];
+    const storageType = this.storageTypes[type];
 
     this.sidebarToggledOpen = null;
 
@@ -597,7 +597,7 @@ class StorageUI {
         // If having names specified, then it means
         // we are fetching details of specific database or of object store.
         if (type === "indexedDB" && names) {
-          let [ dbName, objectStoreName ] = JSON.parse(names[0]);
+          const [ dbName, objectStoreName ] = JSON.parse(names[0]);
           if (dbName) {
             subType = "database";
           }
@@ -617,7 +617,7 @@ class StorageUI {
         await this.resetColumns(type, host, subType);
       }
 
-      let {data} = await storageType.getStoreObjects(host, names, fetchOpts);
+      const {data} = await storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
         await this.populateTable(data, reason);
       }
@@ -632,12 +632,12 @@ class StorageUI {
    * Updates the toolbar hiding and showing buttons as appropriate.
    */
   updateToolbar() {
-    let item = this.tree.selectedItem;
-    let howManyNodesIn = item ? item.length : 0;
+    const item = this.tree.selectedItem;
+    const howManyNodesIn = item ? item.length : 0;
 
     // The first node is just a title e.g. "Cookies" so we need to be at least
     // 2 nodes in to show the add button.
-    let canAdd = this.actorSupportsAddItem && howManyNodesIn > 1;
+    const canAdd = this.actorSupportsAddItem && howManyNodesIn > 1;
 
     if (canAdd) {
       this._addButton.hidden = false;
@@ -659,7 +659,7 @@ class StorageUI {
    */
   populateStorageTree(storageTypes) {
     this.storageTypes = {};
-    for (let type in storageTypes) {
+    for (const type in storageTypes) {
       // Ignore `from` field, which is just a protocol.js implementation
       // artifact.
       if (type === "from") {
@@ -676,12 +676,12 @@ class StorageUI {
         continue;
       }
       this.storageTypes[type] = storageTypes[type];
-      for (let host in storageTypes[type].hosts) {
+      for (const host in storageTypes[type].hosts) {
         const label = this.getReadableLabelFromHostname(host);
         this.tree.add([type, {id: host, label: label, type: "url"}]);
-        for (let name of storageTypes[type].hosts[host]) {
+        for (const name of storageTypes[type].hosts[host]) {
           try {
-            let names = JSON.parse(name);
+            const names = JSON.parse(name);
             this.tree.add([type, host, ...names]);
             if (!this.tree.selectedItem) {
               this.tree.selectedItem = [type, host, names[0], names[1]];
@@ -702,7 +702,7 @@ class StorageUI {
    * detailed view.
    */
   async updateObjectSidebar() {
-    let item = this.table.selectedRow;
+    const item = this.table.selectedRow;
     let value;
 
     // Get the string value (async action) and the update the UI synchronously.
@@ -727,11 +727,11 @@ class StorageUI {
 
     this.updateSidebarToggleButton();
     this.view.empty();
-    let mainScope = this.view.addScope(L10N.getStr("storage.data.label"));
+    const mainScope = this.view.addScope(L10N.getStr("storage.data.label"));
     mainScope.expanded = true;
 
     if (value) {
-      let itemVar = mainScope.addItem(item.name + "", {}, {relaxed: true});
+      const itemVar = mainScope.addItem(item.name + "", {}, {relaxed: true});
 
       // The main area where the value will be displayed
       itemVar.setGrip(value);
@@ -741,20 +741,20 @@ class StorageUI {
 
       // By default the item name and value are shown. If this is the only
       // information available, then nothing else is to be displayed.
-      let itemProps = Object.keys(item);
+      const itemProps = Object.keys(item);
       if (itemProps.length > 3) {
         // Display any other information other than the item name and value
         // which may be available.
-        let rawObject = Object.create(null);
-        let otherProps = itemProps.filter(
+        const rawObject = Object.create(null);
+        const otherProps = itemProps.filter(
           e => !["name", "value", "valueActor"].includes(e));
-        for (let prop of otherProps) {
-          let column = this.table.columns.get(prop);
+        for (const prop of otherProps) {
+          const column = this.table.columns.get(prop);
           if (column && column.private) {
             continue;
           }
 
-          let cookieProp = COOKIE_KEY_MAP[prop] || prop;
+          const cookieProp = COOKIE_KEY_MAP[prop] || prop;
           // The pseduo property of HostOnly refers to converse of isDomain property
           rawObject[cookieProp] = (prop === "isDomain") ? !item[prop] : item[prop];
         }
@@ -764,8 +764,8 @@ class StorageUI {
       }
     } else {
       // Case when displaying IndexedDB db/object store properties.
-      for (let key in item) {
-        let column = this.table.columns.get(key);
+      for (const key in item) {
+        const column = this.table.columns.get(key);
         if (column && column.private) {
           continue;
         }
@@ -825,7 +825,7 @@ class StorageUI {
     } catch (e) {
       // Unable to decode, nothing to do
     }
-    let value = (decodedValue && decodedValue !== originalValue)
+    const value = (decodedValue && decodedValue !== originalValue)
       ? decodedValue : originalValue;
 
     let json = null;
@@ -850,13 +850,13 @@ class StorageUI {
       return;
     }
 
-    let jsonObject = Object.create(null);
-    let view = this.view;
+    const jsonObject = Object.create(null);
+    const view = this.view;
     jsonObject[name] = json;
-    let valueScope = view.getScopeAtIndex(1) ||
+    const valueScope = view.getScopeAtIndex(1) ||
                       view.addScope(L10N.getStr("storage.parsedValue.label"));
     valueScope.expanded = true;
-    let jsonVar = valueScope.addItem("", Object.create(null), {relaxed: true});
+    const jsonVar = valueScope.addItem("", Object.create(null), {relaxed: true});
     jsonVar.expanded = true;
     jsonVar.twisty = true;
     jsonVar.populate(jsonObject, {expanded: true});
@@ -871,10 +871,10 @@ class StorageUI {
    *        The string to be parsed into an object or array
    */
   _extractKeyValPairs(value) {
-    let makeObject = (keySep, pairSep) => {
-      let object = {};
-      for (let pair of value.split(pairSep)) {
-        let [key, val] = pair.split(keySep);
+    const makeObject = (keySep, pairSep) => {
+      const object = {};
+      for (const pair of value.split(pairSep)) {
+        const [key, val] = pair.split(keySep);
         object[key] = val;
       }
       return object;
@@ -884,16 +884,16 @@ class StorageUI {
     const separators = ["=", ":", "~", "#", "&", "\\*", ",", "\\."];
     // Testing for object
     for (let i = 0; i < separators.length; i++) {
-      let kv = separators[i];
+      const kv = separators[i];
       for (let j = 0; j < separators.length; j++) {
         if (i == j) {
           continue;
         }
-        let p = separators[j];
-        let word = `[^${kv}${p}]*`;
-        let keyValue = `${word}${kv}${word}`;
-        let keyValueList = `${keyValue}(${p}${keyValue})*`;
-        let regex = new RegExp(`^${keyValueList}$`);
+        const p = separators[j];
+        const word = `[^${kv}${p}]*`;
+        const keyValue = `${word}${kv}${word}`;
+        const keyValueList = `${keyValue}(${p}${keyValue})*`;
+        const regex = new RegExp(`^${keyValueList}$`);
         if (value.match && value.match(regex) && value.includes(kv) &&
             (value.includes(p) || value.split(kv).length == 2)) {
           return makeObject(kv, p);
@@ -901,10 +901,10 @@ class StorageUI {
       }
     }
     // Testing for array
-    for (let p of separators) {
-      let word = `[^${p}]*`;
-      let wordList = `(${word}${p})+${word}`;
-      let regex = new RegExp(`^${wordList}$`);
+    for (const p of separators) {
+      const word = `[^${p}]*`;
+      const wordList = `(${word}${p})+${word}`;
+      const regex = new RegExp(`^${wordList}$`);
       if (value.match && value.match(regex)) {
         return value.split(p.replace(/\\*/g, ""));
       }
@@ -929,7 +929,7 @@ class StorageUI {
     this.hideSidebar();
     this.searchBox.value = "";
 
-    let [type, host] = item;
+    const [type, host] = item;
     this.table.host = host;
     this.table.datatype = type;
 
@@ -963,11 +963,11 @@ class StorageUI {
     this.table.datatype = type;
 
     let uniqueKey = null;
-    let columns = {};
-    let editableFields = [];
-    let hiddenFields = [];
-    let privateFields = [];
-    let fields = await this.getCurrentFront().getFields(subtype);
+    const columns = {};
+    const editableFields = [];
+    const hiddenFields = [];
+    const privateFields = [];
+    const fields = await this.getCurrentFront().getFields(subtype);
 
     fields.forEach(f => {
       if (!uniqueKey) {
@@ -990,7 +990,7 @@ class StorageUI {
       let columnName;
       try {
         // Path key names for l10n in the case of a string change.
-        let name = f.name === "keyPath" ? "keyPath2" : f.name;
+        const name = f.name === "keyPath" ? "keyPath2" : f.name;
 
         columnName = L10N.getStr("table.headers." + type + "." + name);
       } catch (e) {
@@ -1019,7 +1019,7 @@ class StorageUI {
    *        See REASON constant at top of file.
    */
   async populateTable(data, reason) {
-    for (let item of data) {
+    for (const item of data) {
       if (item.value) {
         item.valueActor = item.value;
         item.value = item.value.initial || "";
@@ -1078,7 +1078,7 @@ class StorageUI {
    * Handles filtering the table
    */
   filterItems() {
-    let value = this.searchBox.value;
+    const value = this.searchBox.value;
     this.table.filterItems(value, ["valueActor"]);
     this._panelDoc.documentElement.classList.toggle("filtering", !!value);
   }
@@ -1093,8 +1093,8 @@ class StorageUI {
     this.shouldLoadMoreItems = false;
     this.itemOffset += 50;
 
-    let item = this.tree.selectedItem;
-    let [type, host] = item;
+    const item = this.tree.selectedItem;
+    const [type, host] = item;
     let names = null;
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
@@ -1108,8 +1108,8 @@ class StorageUI {
    * removing items, prevent showing the menu.
    */
   onTablePopupShowing(event) {
-    let selectedItem = this.tree.selectedItem;
-    let type = selectedItem[0];
+    const selectedItem = this.tree.selectedItem;
+    const type = selectedItem[0];
 
     // IndexedDB only supports removing items from object stores (level 4 of the tree)
     if ((!this.actorSupportsAddItem && !this.actorSupportsRemoveItem &&
@@ -1119,13 +1119,13 @@ class StorageUI {
       return;
     }
 
-    let rowId = this.table.contextMenuRowId;
-    let data = this.table.items.get(rowId);
+    const rowId = this.table.contextMenuRowId;
+    const data = this.table.items.get(rowId);
 
     if (this.actorSupportsRemoveItem) {
-      let name = data[this.table.uniqueId];
-      let separatorRegex = new RegExp(SEPARATOR_GUID, "g");
-      let label = addEllipsis((name + "").replace(separatorRegex, "-"));
+      const name = data[this.table.uniqueId];
+      const separatorRegex = new RegExp(SEPARATOR_GUID, "g");
+      const label = addEllipsis((name + "").replace(separatorRegex, "-"));
 
       this._tablePopupDelete.hidden = false;
       this._tablePopupDelete.setAttribute("label",
@@ -1152,7 +1152,7 @@ class StorageUI {
     this._tablePopupDeleteAllSessionCookies.hidden = !showDeleteAllSessionCookies;
 
     if (type === "cookies") {
-      let host = addEllipsis(data.host);
+      const host = addEllipsis(data.host);
 
       this._tablePopupDeleteAllFrom.hidden = false;
       this._tablePopupDeleteAllFrom.setAttribute("label",
@@ -1164,10 +1164,10 @@ class StorageUI {
 
   onTreePopupShowing(event) {
     let showMenu = false;
-    let selectedItem = this.tree.selectedItem;
+    const selectedItem = this.tree.selectedItem;
 
     if (selectedItem) {
-      let type = selectedItem[0];
+      const type = selectedItem[0];
 
       // The delete all (aka clear) action is displayed for IndexedDB object stores
       // (level 4 of tree), for Cache objects (level 3) and for the whole host (level 2)
@@ -1204,11 +1204,11 @@ class StorageUI {
       // The delete action is displayed for:
       // - IndexedDB databases (level 3 of the tree)
       // - Cache objects (level 3 of the tree)
-      let showDelete = (type == "indexedDB" || type == "Cache") &&
+      const showDelete = (type == "indexedDB" || type == "Cache") &&
                         selectedItem.length == 3;
       this._treePopupDelete.hidden = !showDelete;
       if (showDelete) {
-        let itemName = addEllipsis(selectedItem[selectedItem.length - 1]);
+        const itemName = addEllipsis(selectedItem[selectedItem.length - 1]);
         this._treePopupDelete.setAttribute("label",
           L10N.getFormatStr("storage.popupMenu.deleteLabel", itemName));
       }
@@ -1250,10 +1250,10 @@ class StorageUI {
    * Handles removing an item from the storage
    */
   onRemoveItem() {
-    let [, host, ...path] = this.tree.selectedItem;
-    let front = this.getCurrentFront();
-    let rowId = this.table.contextMenuRowId;
-    let data = this.table.items.get(rowId);
+    const [, host, ...path] = this.tree.selectedItem;
+    const front = this.getCurrentFront();
+    const rowId = this.table.contextMenuRowId;
+    const data = this.table.items.get(rowId);
     let name = data[this.table.uniqueId];
     if (path.length > 0) {
       name = JSON.stringify([...path, name]);
@@ -1268,9 +1268,9 @@ class StorageUI {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns correct value only after the table
     // data from server are successfully fetched (and that's async).
-    let [, host, ...path] = this.tree.selectedItem;
-    let front = this.getCurrentFront();
-    let name = path.length > 0 ? JSON.stringify(path) : undefined;
+    const [, host, ...path] = this.tree.selectedItem;
+    const front = this.getCurrentFront();
+    const name = path.length > 0 ? JSON.stringify(path) : undefined;
     front.removeAll(host, name);
   }
 
@@ -1281,9 +1281,9 @@ class StorageUI {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns the correct value only after the
     // table data from server is successfully fetched (and that's async).
-    let [, host, ...path] = this.tree.selectedItem;
-    let front = this.getCurrentFront();
-    let name = path.length > 0 ? JSON.stringify(path) : undefined;
+    const [, host, ...path] = this.tree.selectedItem;
+    const front = this.getCurrentFront();
+    const name = path.length > 0 ? JSON.stringify(path) : undefined;
     front.removeAllSessionCookies(host, name);
   }
 
@@ -1292,16 +1292,16 @@ class StorageUI {
    * cookie in the selected row.
    */
   onRemoveAllFrom() {
-    let [, host] = this.tree.selectedItem;
-    let front = this.getCurrentFront();
-    let rowId = this.table.contextMenuRowId;
-    let data = this.table.items.get(rowId);
+    const [, host] = this.tree.selectedItem;
+    const front = this.getCurrentFront();
+    const rowId = this.table.contextMenuRowId;
+    const data = this.table.items.get(rowId);
 
     front.removeAll(host, data.host);
   }
 
   onRemoveTreeItem() {
-    let [type, host, ...path] = this.tree.selectedItem;
+    const [type, host, ...path] = this.tree.selectedItem;
 
     if (type == "indexedDB" && path.length == 1) {
       this.removeDatabase(host, path[0]);
@@ -1311,11 +1311,11 @@ class StorageUI {
   }
 
   removeDatabase(host, dbName) {
-    let front = this.getCurrentFront();
+    const front = this.getCurrentFront();
 
     front.removeDatabase(host, dbName).then(result => {
       if (result.blocked) {
-        let notificationBox = this._toolbox.getNotificationBox();
+        const notificationBox = this._toolbox.getNotificationBox();
         notificationBox.appendNotification(
           L10N.getFormatStr("storage.idb.deleteBlocked", dbName),
           "storage-idb-delete-blocked",
@@ -1323,7 +1323,7 @@ class StorageUI {
           notificationBox.PRIORITY_WARNING_LOW);
       }
     }).catch(error => {
-      let notificationBox = this._toolbox.getNotificationBox();
+      const notificationBox = this._toolbox.getNotificationBox();
       notificationBox.appendNotification(
         L10N.getFormatStr("storage.idb.deleteError", dbName),
         "storage-idb-delete-error",
@@ -1333,7 +1333,7 @@ class StorageUI {
   }
 
   removeCache(host, cacheName) {
-    let front = this.getCurrentFront();
+    const front = this.getCurrentFront();
 
     front.removeItem(host, JSON.stringify([ cacheName ]));
   }
@@ -1345,7 +1345,8 @@ exports.StorageUI = StorageUI;
 
 function createGUID() {
   return "{cccccccc-cccc-4ccc-yccc-cccccccccccc}".replace(/[cy]/g, c => {
-    let r = Math.random() * 16 | 0, v = c == "c" ? r : (r & 0x3 | 0x8);
+    const r = Math.random() * 16 | 0;
+    const v = c == "c" ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }

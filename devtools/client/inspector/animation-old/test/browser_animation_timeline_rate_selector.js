@@ -15,7 +15,7 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, controller, inspector, toolbox} = await openAnimationInspector();
+  const {panel, controller, inspector, toolbox} = await openAnimationInspector();
 
   // In this test, we disable the highlighter on purpose because of the way
   // events are simulated to select an option in the playbackRate <select>.
@@ -25,7 +25,7 @@ add_task(async function() {
   // and this might cause the test to fail if they happen after it has ended.
   disableHighlighter(toolbox);
 
-  let select = panel.rateSelectorEl.firstChild;
+  const select = panel.rateSelectorEl.firstChild;
 
   ok(select, "The rate selector exists");
 

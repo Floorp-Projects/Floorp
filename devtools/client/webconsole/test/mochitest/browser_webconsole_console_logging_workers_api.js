@@ -20,7 +20,7 @@ add_task(async function() {
     "log from SharedWorker is displayed as expected"
   );
 
-  let onMessagesCleared = hud.jsterm.once("messages-cleared");
+  const onMessagesCleared = hud.jsterm.once("messages-cleared");
   hud.jsterm.clearOutput(true);
   await onMessagesCleared;
 });

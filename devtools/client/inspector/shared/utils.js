@@ -40,9 +40,9 @@ function advanceValidate(keyCode, value, insertionPoint) {
   // value.  Otherwise it's been inserted in some spot where it has a
   // valid meaning, like a comment or string.
   value = value.slice(0, insertionPoint) + ";" + value.slice(insertionPoint);
-  let lexer = getCSSLexer(value);
+  const lexer = getCSSLexer(value);
   while (true) {
-    let token = lexer.nextToken();
+    const token = lexer.nextToken();
     if (token.endOffset > insertionPoint) {
       if (token.tokenType === "symbol" && token.text === ";") {
         // The ";" is a terminator.
@@ -74,7 +74,7 @@ function appendText(parent, text) {
 function blurOnMultipleProperties(cssProperties) {
   return (e) => {
     setTimeout(() => {
-      let props = parseDeclarations(cssProperties.isKnown, e.target.value);
+      const props = parseDeclarations(cssProperties.isKnown, e.target.value);
       if (props.length > 1) {
         e.target.blur();
       }
@@ -93,8 +93,8 @@ function blurOnMultipleProperties(cssProperties) {
  *        A set of attributes to set on the node.
  */
 function createChild(parent, tagName, attributes = {}) {
-  let elt = parent.ownerDocument.createElementNS(HTML_NS, tagName);
-  for (let attr in attributes) {
+  const elt = parent.ownerDocument.createElementNS(HTML_NS, tagName);
+  for (const attr in attributes) {
     if (attributes.hasOwnProperty(attr)) {
       if (attr === "textContent") {
         elt.textContent = attributes[attr];
@@ -135,8 +135,8 @@ function translateNodeFrontToGrip(nodeFront) {
 
   // The main difference between NodeFront and grips is that attributes are treated as
   // a map in grips and as an array in NodeFronts.
-  let attributesMap = {};
-  for (let {name, value} of attributes) {
+  const attributesMap = {};
+  for (const {name, value} of attributes) {
     attributesMap[name] = value;
   }
 

@@ -11,7 +11,7 @@ loadHelperScript("helper_inplace_editor.js");
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,inline editor tests");
-  let [host, , doc] = await createHost();
+  const [host, , doc] = await createHost();
 
   await testNonTrimmed(doc);
   await testTrimmed(doc);
@@ -22,10 +22,10 @@ add_task(async function() {
 
 function testNonTrimmed(doc) {
   info("Testing the trimOutput=false option");
-  let def = defer();
+  const def = defer();
 
-  let initial = "\nMultiple\nLines\n";
-  let changed = " \nMultiple\nLines\n with more whitespace ";
+  const initial = "\nMultiple\nLines\n";
+  const changed = " \nMultiple\nLines\n with more whitespace ";
   createInplaceEditorAndClick({
     trimOutput: false,
     multiline: true,
@@ -43,10 +43,10 @@ function testNonTrimmed(doc) {
 
 function testTrimmed(doc) {
   info("Testing the trimOutput=true option (default value)");
-  let def = defer();
+  const def = defer();
 
-  let initial = "\nMultiple\nLines\n";
-  let changed = " \nMultiple\nLines\n with more whitespace ";
+  const initial = "\nMultiple\nLines\n";
+  const changed = " \nMultiple\nLines\n with more whitespace ";
   createInplaceEditorAndClick({
     initial: initial,
     multiline: true,

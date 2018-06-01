@@ -9,23 +9,23 @@
 "use strict";
 
 async function checkTreeFromRootSelector(tree, selector, inspector) {
-  let {markup} = inspector;
+  const {markup} = inspector;
 
   info(`Find and expand the shadow DOM host matching selector ${selector}.`);
-  let rootFront = await getNodeFront(selector, inspector);
-  let rootContainer = markup.getContainer(rootFront);
+  const rootFront = await getNodeFront(selector, inspector);
+  const rootContainer = markup.getContainer(rootFront);
 
-  let parsedTree = parseTree(tree);
-  let treeRoot = parsedTree.children[0];
+  const parsedTree = parseTree(tree);
+  const treeRoot = parsedTree.children[0];
   await checkNode(treeRoot, rootContainer, inspector);
 }
 
 async function checkNode(treeNode, container, inspector) {
-  let {node, children, path} = treeNode;
+  const {node, children, path} = treeNode;
   info("Checking [" + path + "]");
   info("Checking node: " + node);
 
-  let slotted = node.includes("!slotted");
+  const slotted = node.includes("!slotted");
   if (slotted) {
     checkSlotted(container, node.replace("!slotted", ""));
   } else {
@@ -42,7 +42,7 @@ async function checkNode(treeNode, container, inspector) {
     await expandContainer(inspector, container);
   }
 
-  let containers = container.getChildContainers();
+  const containers = container.getChildContainers();
   is(containers.length, children.length,
      "Node [" + path + "] has the expected number of children");
   for (let i = 0; i < children.length; i++) {
@@ -65,7 +65,7 @@ async function checkNode(treeNode, container, inspector) {
  * markup view displays the expected structure.
  */
 function parseTree(inputString) {
-  let tree = {
+  const tree = {
     level: 0,
     children: []
   };
@@ -73,9 +73,9 @@ function parseTree(inputString) {
   lines = lines.filter(l => l.trim());
 
   let currentNode = tree;
-  for (let line of lines) {
-    let nodeString = line.trim();
-    let level = line.split("  ").length;
+  for (const line of lines) {
+    const nodeString = line.trim();
+    const level = line.split("  ").length;
 
     let parent;
     if (level > currentNode.level) {
@@ -87,7 +87,7 @@ function parseTree(inputString) {
       }
     }
 
-    let node = {
+    const node = {
       node: nodeString,
       children: [],
       parent,
@@ -110,7 +110,7 @@ function checkSlotted(container, expectedType = "div") {
 }
 
 function checkText(container, expectedText) {
-  let textContent = container.elt.textContent;
+  const textContent = container.elt.textContent;
   ok(textContent.includes(expectedText), "Container has expected text: " + expectedText);
 }
 
@@ -123,7 +123,7 @@ function waitForNMutations(inspector, type, count) {
   let receivedMutations = 0;
   return new Promise(resolve => {
     inspector.on("markupmutation", function onMutation(mutations) {
-      let validMutations = mutations.filter(m => m.type === type).length;
+      const validMutations = mutations.filter(m => m.type === type).length;
       receivedMutations = receivedMutations + validMutations;
       if (receivedMutations == count) {
         inspector.off("markupmutation", onMutation);

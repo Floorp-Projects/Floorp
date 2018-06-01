@@ -56,9 +56,9 @@ var TEST_DATA = [
 ];
 
 add_task(async function() {
-  let { inspector, toolbox, testActor } = await openInspectorForURL(PAGE_1);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(PAGE_1);
 
-  for (let { url, nodeToSelect, selectedNode } of TEST_DATA) {
+  for (const { url, nodeToSelect, selectedNode } of TEST_DATA) {
     if (nodeToSelect) {
       info("Selecting node " + nodeToSelect + " before navigation.");
       await selectNode(nodeToSelect, inspector);
@@ -66,7 +66,7 @@ add_task(async function() {
 
     await navigateToAndWaitForNewRoot(url);
 
-    let nodeFront = await getNodeFront(selectedNode, inspector);
+    const nodeFront = await getNodeFront(selectedNode, inspector);
     ok(nodeFront, "Got expected node front");
     is(inspector.selection.nodeFront, nodeFront,
        selectedNode + " is selected after navigation.");
@@ -75,14 +75,14 @@ add_task(async function() {
   async function navigateToAndWaitForNewRoot(url) {
     info("Navigating and waiting for new-root event after navigation.");
 
-    let current = await testActor.eval("location.href");
+    const current = await testActor.eval("location.href");
     if (url == current) {
       info("Reloading page.");
-      let markuploaded = inspector.once("markuploaded");
-      let onNewRoot = inspector.once("new-root");
-      let onUpdated = inspector.once("inspector-updated");
+      const markuploaded = inspector.once("markuploaded");
+      const onNewRoot = inspector.once("new-root");
+      const onUpdated = inspector.once("inspector-updated");
 
-      let activeTab = toolbox.target.activeTab;
+      const activeTab = toolbox.target.activeTab;
       await activeTab.reload();
       info("Waiting for inspector to be ready.");
       await markuploaded;

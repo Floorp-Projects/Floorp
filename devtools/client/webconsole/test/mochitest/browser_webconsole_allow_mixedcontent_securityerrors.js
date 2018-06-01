@@ -59,8 +59,8 @@ add_task(async function() {
     expectedTab: "tab"
   });
 
-  let isOSX = Services.appinfo.OS == "Darwin";
-  let ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
+  const isOSX = Services.appinfo.OS == "Darwin";
+  const ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
     bubbles: true,
     [isOSX ? "metaKey" : "ctrlKey"]: true,
     view: window

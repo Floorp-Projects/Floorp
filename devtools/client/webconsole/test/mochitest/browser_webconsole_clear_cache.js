@@ -22,7 +22,7 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, CACHED_MESSAGE));
 
   info("Click the clear output button");
-  let onOutputCleared = waitFor(() => !findMessage(hud, CACHED_MESSAGE));
+  const onOutputCleared = waitFor(() => !findMessage(hud, CACHED_MESSAGE));
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await onOutputCleared;
 

@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
     ok(true, "Shouldn't have gotten an error attaching.");
     await memory.detach();

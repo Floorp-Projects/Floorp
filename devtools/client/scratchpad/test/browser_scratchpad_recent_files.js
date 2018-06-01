@@ -87,7 +87,7 @@ function testOpenOldestRecent() {
 // This should disable the "Open Recent"-menu by hiding it (this should not
 // remove any files from the list). Test to see if it's been hidden.
 function testHideMenu() {
-  let menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
+  const menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
   ok(menu.hasAttribute("hidden"), "The menu was hidden successfully.");
 
   Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 2);
@@ -97,7 +97,7 @@ function testHideMenu() {
 // removes the two oldest files, rebuilds the menu and removes the
 // "hidden"-attribute from it. Test to see if this works.
 function testChangedMaxRecent() {
-  let menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
+  const menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
   ok(!menu.hasAttribute("hidden"), "The menu is visible. \\o/");
 
   lists.recentFiles04 = gScratchpad.getRecentFiles();
@@ -105,10 +105,10 @@ function testChangedMaxRecent() {
   is(lists.recentFiles04.length, 2,
      "Two recent files were successfully removed from the 'recent files'-list");
 
-  let doc = gScratchpadWindow.document;
-  let popup = doc.getElementById("sp-menu-open_recentPopup");
+  const doc = gScratchpadWindow.document;
+  const popup = doc.getElementById("sp-menu-open_recentPopup");
 
-  let menuitemLabel = popup.children[0].getAttribute("label");
+  const menuitemLabel = popup.children[0].getAttribute("label");
   let correctMenuItem = false;
   if (menuitemLabel === lists.recentFiles03[2] &&
       menuitemLabel === lists.recentFiles04[1]) {
@@ -141,8 +141,8 @@ function waitForFileDeletion() {
 // By now we should have two recent files stored in the list but one of the
 // files should be missing on the harddrive.
 function testOpenDeletedFile() {
-  let doc = gScratchpadWindow.document;
-  let popup = doc.getElementById("sp-menu-open_recentPopup");
+  const doc = gScratchpadWindow.document;
+  const popup = doc.getElementById("sp-menu-open_recentPopup");
 
   is(gScratchpad.getRecentFiles().length, 1,
      "The missing file was successfully removed from the list.");
@@ -162,9 +162,9 @@ function testOpenDeletedFile() {
 // We have cleared the last file. Test to see if the last file was removed,
 // the menu is empty and was disabled successfully.
 function testClearedAll() {
-  let doc = gScratchpadWindow.document;
-  let menu = doc.getElementById("sp-open_recent-menu");
-  let popup = doc.getElementById("sp-menu-open_recentPopup");
+  const doc = gScratchpadWindow.document;
+  const menu = doc.getElementById("sp-open_recent-menu");
+  const popup = doc.getElementById("sp-menu-open_recentPopup");
 
   is(gScratchpad.getRecentFiles().length, 0,
      "All recent files removed successfully.");
@@ -181,7 +181,7 @@ function createAndLoadTemporaryFile(aFile, aFileName, aFileContent) {
   aFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
-  let fout = Cc["@mozilla.org/network/file-output-stream;1"]
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   fout.init(aFile.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, fout.DEFER_OPEN);
@@ -207,12 +207,12 @@ function fileSaved(aStatus) {
 }
 
 function checkIfMenuIsPopulated() {
-  let doc = gScratchpadWindow.document;
-  let expectedMenuitemCount = doc.getElementById("sp-menu-open_recentPopup")
+  const doc = gScratchpadWindow.document;
+  const expectedMenuitemCount = doc.getElementById("sp-menu-open_recentPopup")
                               .children.length;
   // The number of recent files stored, plus the separator and the
   // clearRecentMenuItems-item.
-  let recentFilesPlusExtra = gScratchpad.getRecentFiles().length + 2;
+  const recentFilesPlusExtra = gScratchpad.getRecentFiles().length + 2;
 
   if (expectedMenuitemCount > 2) {
     is(expectedMenuitemCount, recentFilesPlusExtra,

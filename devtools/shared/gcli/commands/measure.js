@@ -36,11 +36,11 @@ exports.items = [
       offChange: (target, handler) => CommandState.off("changed", handler)
     },
     exec: function* (args, context) {
-      let { target } = context.environment;
+      const { target } = context.environment;
 
       // Pipe the call to the server command.
-      let response = yield context.updateExec("measure_server");
-      let isEnabled = response.data;
+      const response = yield context.updateExec("measure_server");
+      const isEnabled = response.data;
 
       if (isEnabled) {
         CommandState.enableForTarget(target, "measure");
@@ -63,21 +63,21 @@ exports.items = [
     hidden: true,
     returnType: "highlighterVisibility",
     exec: function(args, context) {
-      let env = context.environment;
-      let { document } = env;
+      const env = context.environment;
+      const { document } = env;
 
       // Calling the command again after the measuring tool has been shown once,
       // hides it.
       if (highlighters.has(document)) {
-        let { highlighter } = highlighters.get(document);
+        const { highlighter } = highlighters.get(document);
         highlighter.destroy();
         return false;
       }
 
       // Otherwise, display the measuring tool.
-      let environment = new HighlighterEnvironment();
+      const environment = new HighlighterEnvironment();
       environment.initFromWindow(env.window);
-      let highlighter = new MeasuringToolHighlighter(environment);
+      const highlighter = new MeasuringToolHighlighter(environment);
 
       // Store the instance of the measuring tool highlighter for this document
       // so we can hide it later.
@@ -87,7 +87,7 @@ exports.items = [
       // window is refreshed or closed with the measuring tool shown.
       EventEmitter.once(highlighter, "destroy", () => {
         if (highlighters.has(document)) {
-          let { environment: toDestroy } = highlighters.get(document);
+          const { environment: toDestroy } = highlighters.get(document);
           toDestroy.destroy();
           highlighters.delete(document);
         }

@@ -30,13 +30,13 @@ function test_longstring_grip() {
 
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
     try {
-      let fakeLongStringGrip = {
+      const fakeLongStringGrip = {
         type: "longString",
         length: 1000000,
         actor: "123fakeActor123",
         initial: ""
       };
-      let longStringClient = gThreadClient.pauseLongString(fakeLongStringGrip);
+      const longStringClient = gThreadClient.pauseLongString(fakeLongStringGrip);
       longStringClient.substring(22, 28, function(response) {
         try {
           Assert.ok(!!response.error,

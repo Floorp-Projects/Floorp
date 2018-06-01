@@ -23,17 +23,17 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector, testActor } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters, store } = inspector;
+  const { inspector, gridInspector, testActor } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters, store } = inspector;
 
   info("Clicking on the first checkbox to highlight the grid");
-  let checkbox = doc.querySelector("#grid-list input");
+  const checkbox = doc.querySelector("#grid-list input");
 
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 1 && state.grids[0].highlighted);
-  let onGridOutlineRendered = waitForDOM(doc, ".grid-outline-cell", 2);
+  const onGridOutlineRendered = waitForDOM(doc, ".grid-outline-cell", 2);
 
   checkbox.click();
 
@@ -45,8 +45,8 @@ add_task(async function() {
   is(elements.length, 2, "Grid outline is shown.");
 
   info("Changing the grid in the page");
-  let onReflow = new Promise(resolve => {
-    let listener = {
+  const onReflow = new Promise(resolve => {
+    const listener = {
       callback: () => {
         inspector.reflowTracker.untrackReflows(listener, listener.callback);
         resolve();
@@ -54,7 +54,7 @@ add_task(async function() {
     };
     inspector.reflowTracker.trackReflows(listener, listener.callback);
   });
-  let onGridOutlineChanged = waitForDOM(doc, ".grid-outline-cell", 4);
+  const onGridOutlineChanged = waitForDOM(doc, ".grid-outline-cell", 4);
 
   testActor.eval(`
     const div = document.createElement("div");

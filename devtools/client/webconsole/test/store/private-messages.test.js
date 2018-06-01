@@ -152,7 +152,7 @@ describe("private messages", () => {
       getPrivatePacket("XHR GET request"),
     ]));
 
-    let state = getState();
+    const state = getState();
     const publicMessageId = getFirstMessage(state).id;
     const privateMessageId = getLastMessage(state).id;
 
@@ -169,7 +169,7 @@ describe("private messages", () => {
   });
 
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {
-    let releasedActors = [];
+    const releasedActors = [];
     const { dispatch, getState } = setupStore([], {
       hud: {
         proxy: {

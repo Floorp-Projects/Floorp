@@ -19,23 +19,23 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
-    let allocs = [];
+    const allocs = [];
     function allocator() {
       for (let i = 0; i < 100; i++) {
         allocs.push({});
       }
     }
 
-    let testProbability = async function(p, expected) {
+    const testProbability = async function(p, expected) {
       info("probability = " + p);
       await memory.startRecordingAllocations({
         probability: p
       });
       allocator();
-      let response = await memory.getAllocations();
+      const response = await memory.getAllocations();
       await memory.stopRecordingAllocations();
       return response.allocations.length;
     };

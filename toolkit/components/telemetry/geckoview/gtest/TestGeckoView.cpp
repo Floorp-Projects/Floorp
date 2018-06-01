@@ -475,3 +475,172 @@ TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
   // Cleanup/remove the files.
   RemovePersistenceFile();
 }
+
+TEST_F(TelemetryGeckoViewFixture, EmptyPendingOperations) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  // Force loading mode
+  TelemetryScalar::DeserializationStarted();
+
+  // Do nothing explicitely
+
+  // Force pending operations to be applied and end load mode.
+  // It should not crash and don't change any scalars.
+  TelemetryScalar::ApplyPendingOperations();
+
+  // Check that the snapshot is empty
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+
+  ASSERT_TRUE(scalarsSnapshot.isUndefined()) << "Scalars snapshot should not contain any data.";
+}
+
+TEST_F(TelemetryGeckoViewFixture, SimpleAppendOperation) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  // Set an initial value, so we can test that it is not overwritten.
+  uint32_t initialValue = 1;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, initialValue);
+
+  // Force loading mode
+  TelemetryScalar::DeserializationStarted();
+
+  // Add to a scalar
+  uint32_t value = 37;
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, value);
+
+  // Verify that this was not yet applied.
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, initialValue);
+
+  // Force pending operations to be applied and end load mode
+  TelemetryScalar::ApplyPendingOperations();
+
+  // Verify recorded operations are applied
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, initialValue+value);
+}
+
+TEST_F(TelemetryGeckoViewFixture, ApplyPendingOperationsAfterLoad) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  const char persistedData[] = R"({
+ "scalars": {
+  "parent": {
+   "telemetry.test.unsigned_int_kind": 14
+  }
+ }
+})";
+
+  // Force loading mode
+  TelemetryScalar::DeserializationStarted();
+
+  // Add to a scalar, this should be recorded
+  uint32_t addValue = 10;
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, addValue);
+
+  // Load persistence file
+  RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
+  WritePersistenceFile(nsDependentCString(persistedData));
+  TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+
+  // At this point all pending operations should have been applied.
+
+  // Increment again, now directly applied
+  uint32_t val = 1;
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, val);
+
+
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+
+  uint32_t expectedValue = 25;
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue);
+}
+
+TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  // Force loading mode
+  TelemetryScalar::DeserializationStarted();
+
+  // Modify all kinds of scalars
+  uint32_t startValue = 35;
+  uint32_t expectedValue = 40;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, startValue);
+  Telemetry::ScalarSetMaximum(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, startValue + 2);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 3);
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, true);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND, NS_LITERAL_STRING("Star Wars VI"));
+
+  // Modify all kinds of keyed scalars
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+      NS_LITERAL_STRING("chewbacca"), startValue);
+  Telemetry::ScalarSetMaximum(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+      NS_LITERAL_STRING("chewbacca"), startValue + 2);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+      NS_LITERAL_STRING("chewbacca"), 3);
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_BOOLEAN_KIND,
+      NS_LITERAL_STRING("chewbacca"),
+      true);
+
+  // Force pending operations to be applied and end load mode
+  TelemetryScalar::ApplyPendingOperations();
+
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::RootedValue keyedScalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+  GetScalarsSnapshot(true, cx.GetJSContext(), &keyedScalarsSnapshot);
+
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue);
+  CheckBoolScalar("telemetry.test.boolean_kind", cx.GetJSContext(), scalarsSnapshot, true);
+  CheckStringScalar("telemetry.test.string_kind", cx.GetJSContext(), scalarsSnapshot, "Star Wars VI");
+
+  CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "chewbacca",
+      cx.GetJSContext(), keyedScalarsSnapshot, expectedValue);
+  CheckKeyedBoolScalar("telemetry.test.keyed_boolean_kind", "chewbacca",
+      cx.GetJSContext(), keyedScalarsSnapshot, true);
+}
+
+TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  uint32_t initialValue = 0;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, initialValue);
+
+  // Force loading mode
+  TelemetryScalar::DeserializationStarted();
+
+  // Fill up the pending operations list
+  uint32_t expectedValue = 10000;
+  for (uint32_t i=0; i < expectedValue; i++) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 1);
+  }
+
+  // Nothing should be applied yet
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, 0);
+
+  // Spill over the buffer to immediately apply all operations
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 1);
+
+  // Now we should see all values
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue+1);
+}

@@ -32,14 +32,14 @@ add_task(async function() {
 });
 
 async function testUriWarningMessage(uri, warningMessage) {
-  let hud = await openNewTabAndConsole(uri);
-  let message = await waitFor(()=> findMessage(hud, warningMessage, ".message.warn"));
+  const hud = await openNewTabAndConsole(uri);
+  const message = await waitFor(()=> findMessage(hud, warningMessage, ".message.warn"));
   ok(message, "Warning message displayed successfully");
   await testLearnMoreLinkClick(message, INSECURE_PASSWORDS_URI);
 }
 
 async function testLearnMoreLinkClick(message, expectedUri) {
-  let learnMoreLink = message.querySelector(".learn-more-link");
+  const learnMoreLink = message.querySelector(".learn-more-link");
   ok(learnMoreLink, "There is a [Learn More] link");
   const {link} = await simulateLinkClick(learnMoreLink);
   is(link, expectedUri, "Click on [Learn More] link navigates user to " + expectedUri);

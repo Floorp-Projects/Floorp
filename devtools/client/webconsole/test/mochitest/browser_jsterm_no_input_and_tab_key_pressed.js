@@ -10,13 +10,13 @@
 const TEST_URI = "data:text/html,Testing jsterm with no input";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   testCompletion(hud);
 });
 
 function testCompletion(hud) {
-  let jsterm = hud.jsterm;
-  let input = jsterm.inputNode;
+  const jsterm = hud.jsterm;
+  const input = jsterm.inputNode;
 
   jsterm.setInputValue("");
   EventUtils.synthesizeKey("KEY_Tab");

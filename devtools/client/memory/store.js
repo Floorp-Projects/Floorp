@@ -10,7 +10,7 @@ const reducers = require("./reducers");
 const flags = require("devtools/shared/flags");
 
 module.exports = function() {
-  let shouldLog = false;
+  const shouldLog = false;
   let history;
 
   // If testing, store the action history in an array
@@ -21,7 +21,7 @@ module.exports = function() {
     // shouldLog = true;
   }
 
-  let store = createStore({
+  const store = createStore({
     log: shouldLog,
     history
   })(combineReducers(reducers), {});

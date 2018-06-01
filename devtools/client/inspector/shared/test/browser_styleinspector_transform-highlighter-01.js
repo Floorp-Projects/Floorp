@@ -20,26 +20,26 @@ const TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   let overlay = view.highlighters;
 
   ok(!overlay.highlighters[TYPE], "No highlighter exists in the rule-view");
-  let h = await overlay._getHighlighter(TYPE);
+  const h = await overlay._getHighlighter(TYPE);
   ok(overlay.highlighters[TYPE],
     "The highlighter has been created in the rule-view");
   is(h, overlay.highlighters[TYPE], "The right highlighter has been created");
-  let h2 = await overlay._getHighlighter(TYPE);
+  const h2 = await overlay._getHighlighter(TYPE);
   is(h, h2,
     "The same instance of highlighter is returned everytime in the rule-view");
 
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
-  let cView = selectComputedView(inspector);
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
+  const cView = selectComputedView(inspector);
   await onComputedViewReady;
   overlay = cView.highlighters;
 
   ok(overlay.highlighters[TYPE], "The highlighter exists in the computed-view");
-  let h3 = await overlay._getHighlighter(TYPE);
+  const h3 = await overlay._getHighlighter(TYPE);
   is(h, h3, "The same instance of highlighter is returned everytime " +
     "in the computed-view");
 });

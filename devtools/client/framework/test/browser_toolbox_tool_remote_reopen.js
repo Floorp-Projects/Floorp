@@ -39,20 +39,20 @@ requestLongerTimeout(2);
 
 function runTools(target) {
   return (async function() {
-    let toolIds = gDevTools.getToolDefinitionArray()
+    const toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
 
     let toolbox;
     for (let index = 0; index < toolIds.length; index++) {
-      let toolId = toolIds[index];
+      const toolId = toolIds[index];
 
       info("About to open " + index + "/" + toolId);
       toolbox = await gDevTools.showToolbox(target, toolId, "window");
       ok(toolbox, "toolbox exists for " + toolId);
       is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
-      let panel = toolbox.getCurrentPanel();
+      const panel = toolbox.getCurrentPanel();
       ok(panel.isReady, toolId + " panel should be ready");
     }
 
@@ -64,17 +64,17 @@ function getClient() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let transport = DebuggerServer.connectPipe();
-  let client = new DebuggerClient(transport);
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
 
   return client.connect().then(() => client);
 }
 
 function getTarget(client) {
-  let deferred = defer();
+  const deferred = defer();
 
   client.listTabs().then(tabList => {
-    let target = TargetFactory.forRemoteTab({
+    const target = TargetFactory.forRemoteTab({
       client: client,
       form: tabList.tabs[tabList.selected],
       chrome: false
@@ -90,17 +90,17 @@ function test() {
     toggleAllTools(true);
     await addTab("about:blank");
 
-    let client = await getClient();
-    let target = await getTarget(client);
+    const client = await getClient();
+    const target = await getTarget(client);
     await runTools(target);
 
     // Actor fronts should be destroyed now that the toolbox has closed, but
     // look for any that remain.
-    for (let pool of client.__pools) {
+    for (const pool of client.__pools) {
       if (!pool.__poolMap) {
         continue;
       }
-      for (let actor of pool.__poolMap.keys()) {
+      for (const actor of pool.__poolMap.keys()) {
         // Bug 1056342: Profiler fails today because of framerate actor, but
         // this appears more complex to rework, so leave it for that bug to
         // resolve.

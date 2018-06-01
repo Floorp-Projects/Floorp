@@ -23,7 +23,7 @@ function stringify(obj) {
     if (DevToolsUtils.isCPOW(obj)) {
       return "<cpow>";
     }
-    let unwrapped = DevToolsUtils.unwrap(obj);
+    const unwrapped = DevToolsUtils.unwrap(obj);
     if (unwrapped === undefined) {
       return "<invisibleToDebugger>";
     } else if (unwrapped.isProxy) {

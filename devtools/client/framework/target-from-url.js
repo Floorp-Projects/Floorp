@@ -38,11 +38,11 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
  * @return A target object
  */
 exports.targetFromURL = async function targetFromURL(url) {
-  let client = await clientFromURL(url);
+  const client = await clientFromURL(url);
   await client.connect();
 
-  let params = url.searchParams;
-  let type = params.get("type");
+  const params = url.searchParams;
+  const type = params.get("type");
   if (!type) {
     throw new Error("targetFromURL, missing type parameter");
   }
@@ -59,7 +59,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       throw new Error(`targetFromURL, wrong tab id '${id}', should be a number`);
     }
     try {
-      let response = await client.getTab({ outerWindowID: id });
+      const response = await client.getTab({ outerWindowID: id });
       form = response.tab;
     } catch (ex) {
       if (ex.error == "noTab") {
@@ -75,7 +75,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       if (isNaN(id)) {
         id = 0;
       }
-      let response = await client.getProcess(id);
+      const response = await client.getProcess(id);
       form = response.form;
       chrome = true;
       if (id != 0) {
@@ -96,7 +96,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       if (isNaN(id)) {
         throw new Error("targetFromURL, window requires id parameter");
       }
-      let response = await client.mainRoot.getWindow({
+      const response = await client.mainRoot.getWindow({
         outerWindowID: id,
       });
       form = response.window;
@@ -129,10 +129,10 @@ exports.targetFromURL = async function targetFromURL(url) {
  * @return a promise that resolves a DebuggerClient object
  */
 async function clientFromURL(url) {
-  let params = url.searchParams;
-  let host = params.get("host");
-  let port = params.get("port");
-  let webSocket = !!params.get("ws");
+  const params = url.searchParams;
+  const host = params.get("host");
+  const port = params.get("port");
+  const webSocket = !!params.get("ws");
 
   let transport;
   if (port) {
