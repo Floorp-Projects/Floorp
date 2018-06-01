@@ -10,9 +10,9 @@
 const TEST_URI = "data:text/html,Testing jsterm focus";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let jsterm = hud.jsterm;
-  let input = jsterm.inputNode;
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const jsterm = hud.jsterm;
+  const input = jsterm.inputNode;
 
   is(hasFocus(input), true, "input has focus");
   EventUtils.synthesizeKey("KEY_Tab");

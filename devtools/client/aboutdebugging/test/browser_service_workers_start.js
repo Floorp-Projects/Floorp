@@ -19,13 +19,13 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
   // Open a tab that registers an empty service worker.
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
   // Wait for the service-workers list to update.
   info("Wait until the service worker appears in about:debugging");
@@ -39,10 +39,10 @@ add_task(async function() {
   await waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
   // Retrieve the Target element corresponding to the service worker.
-  let names = [...document.querySelectorAll("#service-workers .target-name")];
-  let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const names = [...document.querySelectorAll("#service-workers .target-name")];
+  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
   ok(name, "Found the service worker in the list");
-  let targetElement = name.parentNode.parentNode;
+  const targetElement = name.parentNode.parentNode;
 
   // The service worker may already be killed with the low 1s timeout.
   // At this stage, either the SW is started and the Debug button is visible or was
@@ -52,7 +52,7 @@ add_task(async function() {
   await waitUntilElement(".start-button", targetElement);
 
   // We should now have a Start button but no Debug button.
-  let startBtn = targetElement.querySelector(".start-button");
+  const startBtn = targetElement.querySelector(".start-button");
   ok(startBtn, "Found its start button");
   ok(!targetElement.querySelector(".debug-button"), "No debug button");
 

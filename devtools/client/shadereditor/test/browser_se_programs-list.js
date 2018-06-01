@@ -7,8 +7,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  let { gFront, EVENTS, L10N, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
+  const { gFront, EVENTS, L10N, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   is(ShadersListView.itemCount, 0,
     "The shaders list should initially be empty.");
@@ -19,7 +19,7 @@ async function ifWebGLSupported() {
 
   reload(target);
 
-  let [firstProgramActor, secondProgramActor] = await promise.all([
+  const [firstProgramActor, secondProgramActor] = await promise.all([
     getPrograms(gFront, 2, (actors) => {
       // Fired upon each actor addition, we want to check only
       // after the first actor has been added so we can test state
@@ -38,24 +38,24 @@ async function ifWebGLSupported() {
   is(ShadersListView.attachments[1].label, L10N.getFormatStr("shadersList.programLabel", 1),
     "The correct second label is shown in the shaders list.");
 
-  let vertexShader = await firstProgramActor.getVertexShader();
-  let fragmentShader = await firstProgramActor.getFragmentShader();
-  let vertSource = await vertexShader.getText();
-  let fragSource = await fragmentShader.getText();
+  const vertexShader = await firstProgramActor.getVertexShader();
+  const fragmentShader = await firstProgramActor.getFragmentShader();
+  const vertSource = await vertexShader.getText();
+  const fragSource = await fragmentShader.getText();
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   is(vertSource, vsEditor.getText(),
     "The vertex shader editor contains the correct text.");
   is(fragSource, fsEditor.getText(),
     "The vertex shader editor contains the correct text.");
 
-  let compiled = once(panel.panelWin, EVENTS.SHADER_COMPILED).then(() => {
+  const compiled = once(panel.panelWin, EVENTS.SHADER_COMPILED).then(() => {
     ok(false, "Selecting a different program shouldn't recompile its shaders.");
   });
 
-  let shown = once(panel.panelWin, EVENTS.SOURCES_SHOWN).then(() => {
+  const shown = once(panel.panelWin, EVENTS.SOURCES_SHOWN).then(() => {
     ok(true, "The vertex and fragment sources have changed in the editors.");
   });
 

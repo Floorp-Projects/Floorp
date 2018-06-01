@@ -26,9 +26,9 @@ function setup(cb, additionalOpts = {}) {
   return new Promise(resolve => {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
-    let win = Services.ww.openWindow(null, CHROME_URL_ROOT + "head.xul", "_blank", opt,
+    const win = Services.ww.openWindow(null, CHROME_URL_ROOT + "head.xul", "_blank", opt,
                                      null);
-    let opts = {
+    const opts = {
       value: "Hello.",
       lineNumbers: true,
       foldGutter: true,
@@ -36,14 +36,14 @@ function setup(cb, additionalOpts = {}) {
       cssProperties: getClientCssProperties()
     };
 
-    for (let o in additionalOpts) {
+    for (const o in additionalOpts) {
       opts[o] = additionalOpts[o];
     }
 
     win.addEventListener("load", function() {
       waitForFocus(function() {
-        let box = win.document.querySelector("box");
-        let editor = new Editor(opts);
+        const box = win.document.querySelector("box");
+        const editor = new Editor(opts);
 
         editor.appendTo(box)
           .then(() => {
@@ -86,7 +86,7 @@ function teardown(ed, win) {
  *                 - "../../../commandline/test/helpers.js"
  */
 function loadHelperScript(filePath) {
-  let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+  const testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
   Services.scriptloader.loadSubScript(testDir + "/" + filePath, this);
 }
 
@@ -96,7 +96,7 @@ function loadHelperScript(filePath) {
  */
 function limit(source, [line, char]) {
   line++;
-  let list = source.split("\n");
+  const list = source.split("\n");
   if (list.length < line) {
     return source;
   }
@@ -107,14 +107,14 @@ function limit(source, [line, char]) {
 }
 
 function read(url) {
-  let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
     .getService(Ci.nsIScriptableInputStream);
 
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true
   });
-  let input = channel.open2();
+  const input = channel.open2();
   scriptableStream.init(input);
 
   let data = "";

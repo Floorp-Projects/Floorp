@@ -92,7 +92,7 @@ function addMessage(state, filtersState, prefsState, newMessage) {
   }
 
   if (newMessage.allowRepeating && messagesById.size > 0) {
-    let lastMessage = [...messagesById.values()][messagesById.size - 1];
+    const lastMessage = [...messagesById.values()][messagesById.size - 1];
 
     if (
       lastMessage.repeatId === newMessage.repeatId
@@ -104,7 +104,7 @@ function addMessage(state, filtersState, prefsState, newMessage) {
   }
 
   // Add the new message with a reference to the parent group.
-  let parentGroups = getParentGroups(currentGroup, groupsById);
+  const parentGroups = getParentGroups(currentGroup, groupsById);
   newMessage.groupId = currentGroup;
   newMessage.indent = parentGroups.length;
 
@@ -161,11 +161,11 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
   switch (action.type) {
     case constants.MESSAGES_ADD:
       // Preemptively remove messages that will never be rendered
-      let list = [];
+      const list = [];
       let prunableCount = 0;
       let lastMessageRepeatId = -1;
       for (let i = action.messages.length - 1; i >= 0; i--) {
-        let message = action.messages[i];
+        const message = action.messages[i];
         if (
           !message.groupId && !isGroupType(message.type) &&
           message.type !== MESSAGE_TYPE.END_GROUP
@@ -223,7 +223,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
     case constants.MESSAGE_OPEN:
       const openState = {...state};
       openState.messagesUiById = [...messagesUiById, action.id];
-      let currMessage = messagesById.get(action.id);
+      const currMessage = messagesById.get(action.id);
 
       // If the message is a group
       if (isGroupType(currMessage.type)) {
@@ -269,8 +269,8 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
     case constants.MESSAGE_CLOSE:
       const closeState = {...state};
-      let messageId = action.id;
-      let index = closeState.messagesUiById.indexOf(messageId);
+      const messageId = action.id;
+      const index = closeState.messagesUiById.indexOf(messageId);
       closeState.messagesUiById.splice(index, 1);
       closeState.messagesUiById = [...closeState.messagesUiById];
 
@@ -303,7 +303,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
     case UPDATE_REQUEST:
     case constants.NETWORK_UPDATE_REQUEST: {
-      let request = networkMessagesUpdateById[action.id];
+      const request = networkMessagesUpdateById[action.id];
       if (!request) {
         return state;
       }
@@ -371,7 +371,7 @@ function getNewCurrentGroup(currentGroup, groupsById, ignoredIds = []) {
   }
 
   // Retrieve the parent groups of the current group.
-  let parents = groupsById.get(currentGroup);
+  const parents = groupsById.get(currentGroup);
 
   // If there's at least one parent, make the first one the new currentGroup.
   if (Array.isArray(parents) && parents.length > 0) {
@@ -393,7 +393,7 @@ function getParentGroups(currentGroup, groupsById) {
     groups = [currentGroup];
 
     // As well as all its parents, if it has some.
-    let parentGroups = groupsById.get(currentGroup);
+    const parentGroups = groupsById.get(currentGroup);
     if (Array.isArray(parentGroups) && parentGroups.length > 0) {
       groups = groups.concat(parentGroups);
     }
@@ -419,7 +419,7 @@ function limitTopLevelMessageCount(newState, logLimit) {
   const removedMessagesId = [];
 
   let cleaningGroup = false;
-  for (let [id, message] of newState.messagesById) {
+  for (const [id, message] of newState.messagesById) {
     // If we were cleaning a group and the current message does not have
     // a groupId, we're done cleaning.
     if (cleaningGroup === true && !message.groupId) {
@@ -541,7 +541,7 @@ function getAllActorsInMessage(message) {
     messageText,
   } = message;
 
-  let actors = [];
+  const actors = [];
   if (Array.isArray(parameters)) {
     message.parameters.forEach(parameter => {
       if (parameter.actor) {
@@ -743,7 +743,7 @@ function passCssFilters(message, filters) {
  * @returns {Boolean}
  */
 function passSearchFilters(message, filters) {
-  let text = (filters.text || "").trim();
+  const text = (filters.text || "").trim();
 
   // If there is no search, the message passes the filter.
   if (!text) {
@@ -816,8 +816,8 @@ function isTextInNetEvent(text, request) {
 
   text = text.toLocaleLowerCase();
 
-  let method = request.method.toLocaleLowerCase();
-  let url = request.url.toLocaleLowerCase();
+  const method = request.method.toLocaleLowerCase();
+  const url = request.url.toLocaleLowerCase();
   return method.includes(text) || url.includes(text);
 }
 
@@ -888,8 +888,8 @@ function isTextInPrefix(text, prefix) {
  */
 function getAllProps(grips) {
   let result = grips.reduce((res, grip) => {
-    let previewItems = getGripPreviewItems(grip);
-    let allProps = previewItems.length > 0 ? getAllProps(previewItems) : [];
+    const previewItems = getGripPreviewItems(grip);
+    const allProps = previewItems.length > 0 ? getAllProps(previewItems) : [];
     return [...res, grip, grip.class, ...allProps];
   }, []);
 

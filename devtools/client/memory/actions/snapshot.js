@@ -182,7 +182,7 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
    * @see `devtools/shared/heapsnapshot/HeapAnalysesClient.js`
    * @see `js/src/doc/Debugger/Debugger.Memory.md` for breakdown details
    */
-  let thisTakeCensusTaskId = ++takeCensusTaskCounter;
+  const thisTakeCensusTaskId = ++takeCensusTaskCounter;
   return TaskCache.declareCacheableTask({
     getCacheKey(_, id) {
       return `take-census-task-${thisTakeCensusTaskId}-${id}`;
@@ -225,7 +225,7 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
           display
         });
 
-        let opts = display.inverted
+        const opts = display.inverted
           ? { asInvertedTreeNode: true }
           : { asTreeNode: true };
 
@@ -452,7 +452,7 @@ exports.refreshIndividuals = function(heapWorker) {
  */
 exports.refreshSelectedCensus = function(heapWorker) {
   return async function(dispatch, getState) {
-    let snapshot = getState().snapshots.find(s => s.selected);
+    const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
     }
@@ -478,7 +478,7 @@ exports.refreshSelectedCensus = function(heapWorker) {
  */
 exports.refreshSelectedTreeMap = function(heapWorker) {
   return async function(dispatch, getState) {
-    let snapshot = getState().snapshots.find(s => s.selected);
+    const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
     }
@@ -682,7 +682,7 @@ TaskCache.declareCacheableTask({
  */
 exports.refreshSelectedDominatorTree = function(heapWorker) {
   return async function(dispatch, getState) {
-    let snapshot = getState().snapshots.find(s => s.selected);
+    const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot) {
       return;
     }
@@ -727,15 +727,15 @@ const selectSnapshot = exports.selectSnapshot = function(id) {
  */
 exports.clearSnapshots = function(heapWorker) {
   return async function(dispatch, getState) {
-    let snapshots = getState().snapshots.filter(s => {
-      let snapshotReady = s.state === states.READ || s.state === states.ERROR;
-      let censusReady = (s.treeMap && s.treeMap.state === treeMapState.SAVED) ||
+    const snapshots = getState().snapshots.filter(s => {
+      const snapshotReady = s.state === states.READ || s.state === states.ERROR;
+      const censusReady = (s.treeMap && s.treeMap.state === treeMapState.SAVED) ||
                         (s.census && s.census.state === censusState.SAVED);
 
       return snapshotReady && censusReady;
     });
 
-    let ids = snapshots.map(s => s.id);
+    const ids = snapshots.map(s => s.id);
 
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids });
 

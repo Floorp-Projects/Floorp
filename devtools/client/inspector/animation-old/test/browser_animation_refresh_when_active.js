@@ -13,7 +13,7 @@ add_task(async function() {
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
   await testRefresh(inspector, panel);
 });
 
@@ -31,7 +31,7 @@ async function testRefresh(inspector, panel) {
     "The panel doesn't show the animation data while inactive");
 
   info("Switch to the animation panel");
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onRendered = waitForAnimationTimelineRendering(panel);
   inspector.sidebar.select("animationinspector");
   await panel.once(panel.UI_UPDATED_EVENT);
   await onRendered;

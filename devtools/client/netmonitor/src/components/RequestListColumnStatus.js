@@ -22,7 +22,7 @@ class RequestListColumnStatus extends Component {
   }
 
   render() {
-    let { item } = this.props;
+    const { item } = this.props;
 
     return (
       div({

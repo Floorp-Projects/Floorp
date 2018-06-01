@@ -10,12 +10,12 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { DetailsView, JsCallTreeView } = panel.panelWin;
+  const { DetailsView, JsCallTreeView } = panel.panelWin;
 
   await DetailsView.selectView("js-calltree");
 

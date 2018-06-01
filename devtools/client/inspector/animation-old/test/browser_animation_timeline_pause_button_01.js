@@ -13,8 +13,8 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel} = await openAnimationInspector();
-  let btn = panel.playTimelineButtonEl;
+  const {panel} = await openAnimationInspector();
+  const btn = panel.playTimelineButtonEl;
 
   ok(btn, "The play/pause button exists");
   ok(!btn.classList.contains("paused"), "The play/pause button is in its playing state");

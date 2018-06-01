@@ -16,10 +16,10 @@ const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
                           "http://some.example.com/test.png (\u201cimg-src\u201d).";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
-  let onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
+  const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
   await loadDocument(TEST_VIOLATION);
   await onRepeatedMessage;
 

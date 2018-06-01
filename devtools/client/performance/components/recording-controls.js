@@ -21,7 +21,7 @@ class RecordingControls extends Component {
   }
 
   render() {
-    let {
+    const {
       onClearButtonClick,
       onRecordButtonClick,
       onImportButtonClick,
@@ -29,7 +29,7 @@ class RecordingControls extends Component {
       isLocked
     } = this.props;
 
-    let recordButtonClassList = ["devtools-button", "record-button"];
+    const recordButtonClassList = ["devtools-button", "record-button"];
 
     if (isRecording) {
       recordButtonClassList.push("checked");

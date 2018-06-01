@@ -36,13 +36,13 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
   testGraph(graph, normalDragStop);
   await graph.destroy();
 
-  let graph2 = new LineGraphWidget(doc.body, "fps");
+  const graph2 = new LineGraphWidget(doc.body, "fps");
   await graph2.once("ready");
   testGraph(graph2, buggyDragStop);
   await graph2.destroy();

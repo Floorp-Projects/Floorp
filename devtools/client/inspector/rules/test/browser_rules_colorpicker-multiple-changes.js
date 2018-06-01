@@ -27,7 +27,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await testSimpleMultipleColorChanges(inspector, view);
   await testComplexMultipleColorChanges(inspector, view);
@@ -37,22 +37,22 @@ async function testSimpleMultipleColorChanges(inspector, ruleView) {
   await selectNode("p", inspector);
 
   info("Getting the <p> tag's color property");
-  let swatch = getRuleViewProperty(ruleView, "p", "color").valueSpan
+  const swatch = getRuleViewProperty(ruleView, "p", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = ruleView.tooltips.getTooltip("colorPicker");
-  let onColorPickerReady = picker.once("ready");
+  const picker = ruleView.tooltips.getTooltip("colorPicker");
+  const onColorPickerReady = picker.once("ready");
   swatch.click();
   await onColorPickerReady;
 
   info("Changing the color several times");
-  let colors = [
+  const colors = [
     {rgba: [0, 0, 0, 1], computed: "rgb(0, 0, 0)"},
     {rgba: [100, 100, 100, 1], computed: "rgb(100, 100, 100)"},
     {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"}
   ];
-  for (let {rgba, computed} of colors) {
+  for (const {rgba, computed} of colors) {
     await simulateColorPickerChange(ruleView, picker, rgba, {
       selector: "p",
       name: "color",
@@ -68,22 +68,22 @@ async function testComplexMultipleColorChanges(inspector, ruleView) {
   await selectNode("body", inspector);
 
   info("Getting the <body> tag's color property");
-  let swatch = getRuleViewProperty(ruleView, "body", "background").valueSpan
+  const swatch = getRuleViewProperty(ruleView, "body", "background").valueSpan
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = ruleView.tooltips.getTooltip("colorPicker");
-  let onColorPickerReady = picker.once("ready");
+  const picker = ruleView.tooltips.getTooltip("colorPicker");
+  const onColorPickerReady = picker.once("ready");
   swatch.click();
   await onColorPickerReady;
 
   info("Changing the color several times");
-  let colors = [
+  const colors = [
     {rgba: [0, 0, 0, 1], computed: "rgb(0, 0, 0)"},
     {rgba: [100, 100, 100, 1], computed: "rgb(100, 100, 100)"},
     {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"}
   ];
-  for (let {rgba, computed} of colors) {
+  for (const {rgba, computed} of colors) {
     await simulateColorPickerChange(ruleView, picker, rgba, {
       selector: "body",
       name: "background-color",

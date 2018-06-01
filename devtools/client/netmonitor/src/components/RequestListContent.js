@@ -103,7 +103,7 @@ class RequestListContent extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    let node = this.refs.contentEl;
+    const node = this.refs.contentEl;
     // Keep the list scrolled to bottom if a new row was added
     if (this.shouldScrollBottom && node.scrollTop !== MAX_SCROLL_HEIGHT) {
       // Using maximum scroll height rather than node.scrollHeight to avoid sync reflow.
@@ -126,7 +126,7 @@ class RequestListContent extends Component {
   }
 
   onResize() {
-    let parent = this.refs.contentEl.parentNode;
+    const parent = this.refs.contentEl.parentNode;
     this.refs.contentEl.style.width = parent.offsetWidth + "px";
     this.refs.contentEl.style.height = parent.offsetHeight + "px";
   }
@@ -139,8 +139,8 @@ class RequestListContent extends Component {
       return false;
     }
 
-    let lastChildRect = lastChildEl.getBoundingClientRect();
-    let contentRect = contentEl.getBoundingClientRect();
+    const lastChildRect = lastChildEl.getBoundingClientRect();
+    const contentRect = contentEl.getBoundingClientRect();
 
     return (lastChildRect.height + lastChildRect.top) <= contentRect.bottom;
   }
@@ -156,15 +156,15 @@ class RequestListContent extends Component {
    * @return {Promise}
    */
   async onHover(target, tooltip) {
-    let itemEl = target.closest(".request-list-item");
+    const itemEl = target.closest(".request-list-item");
     if (!itemEl) {
       return false;
     }
-    let itemId = itemEl.dataset.id;
+    const itemId = itemEl.dataset.id;
     if (!itemId) {
       return false;
     }
-    let requestItem = this.props.displayedRequests.find(r => r.id == itemId);
+    const requestItem = this.props.displayedRequests.find(r => r.id == itemId);
     if (!requestItem) {
       return false;
     }
@@ -173,18 +173,18 @@ class RequestListContent extends Component {
       return false;
     }
 
-    let { mimeType } = requestItem;
+    const { mimeType } = requestItem;
     if (!mimeType || !mimeType.includes("image/")) {
       return false;
     }
 
-    let responseContent = await this.props.connector
+    const responseContent = await this.props.connector
       .requestData(requestItem.id, "responseContent");
-    let { encoding, text } = responseContent.content;
-    let src = formDataURI(mimeType, encoding, text);
-    let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
-    let { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);
-    let options = { maxDim, naturalWidth, naturalHeight };
+    const { encoding, text } = responseContent.content;
+    const src = formDataURI(mimeType, encoding, text);
+    const maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
+    const { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);
+    const options = { maxDim, naturalWidth, naturalHeight };
     setImageTooltip(tooltip, tooltip.doc, src, options);
 
     return itemEl.querySelector(".requests-list-file");
@@ -237,7 +237,7 @@ class RequestListContent extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    let { selectedRequest, displayedRequests } = this.props;
+    const { selectedRequest, displayedRequests } = this.props;
 
     if (!this.contextMenu) {
       const { connector, cloneSelectedRequest, openStatistics } = this.props;

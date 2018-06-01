@@ -7,7 +7,7 @@
 // field is focused when ctrl+F is pressed.
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL("data:text/html;charset=utf-8,Search!");
+  const {inspector} = await openInspectorForURL("data:text/html;charset=utf-8,Search!");
 
   info("Check that by default, the inspector search field gets focused");
   pressCtrlF();
@@ -48,12 +48,12 @@ function pressCtrlF() {
 }
 
 function clickInRuleView(inspector) {
-  let el = inspector.panelDoc.querySelector("#sidebar-panel-ruleview");
+  const el = inspector.panelDoc.querySelector("#sidebar-panel-ruleview");
   EventUtils.synthesizeMouseAtCenter(el, {}, inspector.panelDoc.defaultView);
 }
 
 function clickInComputedView(inspector) {
-  let el = inspector.panelDoc.querySelector("#sidebar-panel-computedview");
+  const el = inspector.panelDoc.querySelector("#sidebar-panel-computedview");
   EventUtils.synthesizeMouseAtCenter(el, {}, inspector.panelDoc.defaultView);
 }
 

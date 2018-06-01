@@ -131,10 +131,10 @@ class FirefoxConnector {
     // With FF60+ console actor supports listening to document events like
     // DOMContentLoaded and load. We used to query Timeline actor, but it was too CPU
     // intensive.
-    let { startedListeners } = await this.webConsoleClient.startListeners(
+    const { startedListeners } = await this.webConsoleClient.startListeners(
       ["DocumentEvents"]);
     // Allows to know if we are on FF60 and support these events.
-    let supportsDocEvents = startedListeners.includes("DocumentEvents");
+    const supportsDocEvents = startedListeners.includes("DocumentEvents");
 
     // Don't start up waiting for timeline markers if the server isn't
     // recent enough (<FF45) to emit the markers we're interested in.
@@ -179,7 +179,7 @@ class FirefoxConnector {
 
     // Resume is done automatically on page reload/navigation.
     if (this.actions && this.getState) {
-      let state = this.getState();
+      const state = this.getState();
       if (!state.requests.recording) {
         this.actions.toggleRecording();
       }
@@ -191,7 +191,7 @@ class FirefoxConnector {
       this.onReloaded();
       return;
     }
-    let listener = () => {
+    const listener = () => {
       if (this.dataProvider && !this.dataProvider.isPayloadQueueEmpty()) {
         return;
       }
@@ -210,7 +210,7 @@ class FirefoxConnector {
   }
 
   onReloaded() {
-    let panel = this.toolbox.getPanel("netmonitor");
+    const panel = this.toolbox.getPanel("netmonitor");
     if (panel) {
       panel.emit("reloaded");
     }
@@ -220,11 +220,11 @@ class FirefoxConnector {
    * Display any network events already in the cache.
    */
   displayCachedEvents() {
-    for (let networkInfo of this.webConsoleClient.getNetworkEvents()) {
+    for (const networkInfo of this.webConsoleClient.getNetworkEvents()) {
       // First add the request to the timeline.
       this.dataProvider.onNetworkEvent(networkInfo);
       // Then replay any updates already received.
-      for (let updateType of networkInfo.updates) {
+      for (const updateType of networkInfo.updates) {
         this.dataProvider.onNetworkEventUpdate({
           packet: { updateType },
           networkInfo,
@@ -243,7 +243,7 @@ class FirefoxConnector {
   onDocLoadingMarker(marker) {
     // Translate marker into event similar to newer "docEvent" event sent by the console
     // actor
-    let event = {
+    const event = {
       name: marker.name == "document::DOMContentLoaded" ?
             "dom-interactive" : "dom-complete",
       time: marker.unixTime / 1000
@@ -301,12 +301,12 @@ class FirefoxConnector {
    */
   triggerActivity(type) {
     // Puts the frontend into "standby" (when there's no particular activity).
-    let standBy = () => {
+    const standBy = () => {
       this.currentActivity = ACTIVITY_TYPE.NONE;
     };
 
     // Waits for a series of "navigation start" and "navigation stop" events.
-    let waitForNavigation = () => {
+    const waitForNavigation = () => {
       return new Promise((resolve) => {
         this.tabTarget.once("will-navigate", () => {
           this.tabTarget.once("navigate", () => {
@@ -317,16 +317,16 @@ class FirefoxConnector {
     };
 
     // Reconfigures the tab, optionally triggering a reload.
-    let reconfigureTab = (options) => {
+    const reconfigureTab = (options) => {
       return new Promise((resolve) => {
         this.tabTarget.activeTab.reconfigure(options, resolve);
       });
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
-    let reconfigureTabAndWaitForNavigation = (options) => {
+    const reconfigureTabAndWaitForNavigation = (options) => {
       options.performReload = true;
-      let navigationFinished = waitForNavigation();
+      const navigationFinished = waitForNavigation();
       return reconfigureTab(options).then(() => navigationFinished);
     };
     switch (type) {
@@ -426,7 +426,7 @@ class FirefoxConnector {
       return -1;
     }
 
-    let state = this.getState();
+    const state = this.getState();
     return getDisplayedTimingMarker(state, name);
   }
 

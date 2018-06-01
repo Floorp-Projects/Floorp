@@ -10,7 +10,7 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 
 function ScratchpadPanel(iframeWindow, toolbox) {
-  let { Scratchpad } = iframeWindow;
+  const { Scratchpad } = iframeWindow;
   this._toolbox = toolbox;
   this.panelWin = iframeWindow;
   this.scratchpad = Scratchpad;
@@ -18,7 +18,7 @@ function ScratchpadPanel(iframeWindow, toolbox) {
   Scratchpad.target = this.target;
   Scratchpad.hideMenu();
 
-  let deferred = defer();
+  const deferred = defer();
   this._readyObserver = deferred.promise;
   Scratchpad.addObserver({
     onReady: function() {

@@ -21,9 +21,9 @@ var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/i
 var openInspector = async function(hostType) {
   info("Opening the inspector");
 
-  let toolbox = await openToolboxForTab(gBrowser.selectedTab, "inspector",
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "inspector",
                                         hostType);
-  let inspector = toolbox.getPanel("inspector");
+  const inspector = toolbox.getPanel("inspector");
 
   if (inspector._updateProgress) {
     info("Need to wait for the inspector to update");
@@ -31,7 +31,7 @@ var openInspector = async function(hostType) {
   }
 
   await registerTestActor(toolbox.target.client);
-  let testActor = await getTestActor(toolbox);
+  const testActor = await getTestActor(toolbox);
 
   return {toolbox, inspector, testActor};
 };
@@ -46,15 +46,15 @@ var openInspector = async function(hostType) {
  * visible and ready
  */
 var openInspectorSidebarTab = async function(id) {
-  let {toolbox, inspector, testActor} = await openInspector();
+  const {toolbox, inspector, testActor} = await openInspector();
 
   info("Selecting the " + id + " sidebar");
 
-  let onSidebarSelect = inspector.sidebar.once("select");
+  const onSidebarSelect = inspector.sidebar.once("select");
   if (id === "layoutview") {
     // The layout view should wait until the box-model and grid-panel are ready.
-    let onBoxModelViewReady = inspector.once("boxmodel-view-updated");
-    let onGridPanelReady = inspector.once("grid-panel-updated");
+    const onBoxModelViewReady = inspector.once("boxmodel-view-updated");
+    const onGridPanelReady = inspector.once("grid-panel-updated");
     inspector.sidebar.select(id);
     await onBoxModelViewReady;
     await onGridPanelReady;
@@ -79,7 +79,7 @@ var openInspectorSidebarTab = async function(id) {
  */
 function openRuleView() {
   return openInspector().then(data => {
-    let view = data.inspector.getPanel("ruleview").view;
+    const view = data.inspector.getPanel("ruleview").view;
 
     // Replace the view to use a custom debounce function that can be triggered manually
     // through an additional ".flush()" property.
@@ -106,7 +106,7 @@ function openRuleView() {
  */
 function openComputedView() {
   return openInspectorSidebarTab("computedview").then(data => {
-    let view = data.inspector.getPanel("computedview").computedView;
+    const view = data.inspector.getPanel("computedview").computedView;
     // Adds the highlighters overlay in the computed view.
     view.addHighlightersToView();
 
@@ -158,7 +158,7 @@ function openLayoutView() {
  * @return {CssRuleView} the rule view
  */
 function selectRuleView(inspector) {
-  let view = inspector.getPanel("ruleview").view;
+  const view = inspector.getPanel("ruleview").view;
   view.addHighlightersToView();
   return view;
 }
@@ -172,7 +172,7 @@ function selectRuleView(inspector) {
  */
 function selectComputedView(inspector) {
   inspector.sidebar.select("computedview");
-  let view = inspector.getPanel("computedview").computedView;
+  const view = inspector.getPanel("computedview").computedView;
   view.addHighlightersToView();
   return view;
 }
@@ -215,8 +215,8 @@ function getNodeFront(selector, {walker}) {
  */
 var selectNode = async function(selector, inspector, reason = "test", isSlotted) {
   info("Selecting the node for '" + selector + "'");
-  let nodeFront = await getNodeFront(selector, inspector);
-  let updated = inspector.once("inspector-updated");
+  const nodeFront = await getNodeFront(selector, inspector);
+  const updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(nodeFront, { reason, isSlotted });
   await updated;
 };
@@ -234,7 +234,7 @@ function manualDebounce() {
 
   function debounce(func, wait, scope) {
     return function() {
-      let existingCall = calls.find(call => call.func === func);
+      const existingCall = calls.find(call => call.func === func);
       if (existingCall) {
         existingCall.args = arguments;
       } else {
@@ -263,7 +263,7 @@ function manualDebounce() {
 function waitForContentMessage(name) {
   info("Expecting message " + name + " from content");
 
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   return new Promise(resolve => {
     mm.addMessageListener(name, function onMessage(msg) {
@@ -293,7 +293,7 @@ function waitForContentMessage(name) {
 function executeInContent(name, data = {}, objects = {},
                           expectResponse = true) {
   info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
@@ -352,14 +352,14 @@ async function waitForComputedStyleProperty(selector, pseudo, name, expected) {
  */
 var focusEditableField = async function(ruleView, editable, xOffset = 1,
     yOffset = 1, options = {}) {
-  let onFocus = once(editable.parentNode, "focus", true);
+  const onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
   EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
     editable.ownerDocument.defaultView);
   await onFocus;
 
   info("Editable field gained focus, returning the input field now");
-  let onEdit = inplaceEditor(editable.ownerDocument.activeElement);
+  const onEdit = inplaceEditor(editable.ownerDocument.activeElement);
 
   return onEdit;
 };
@@ -381,8 +381,8 @@ var focusEditableField = async function(ruleView, editable, xOffset = 1,
 function getRuleViewRule(view, selectorText, index = 0) {
   let rule;
   let pos = 0;
-  for (let r of view.styleDocument.querySelectorAll(".ruleview-rule")) {
-    let selector = r.querySelector(".ruleview-selectorcontainer, " +
+  for (const r of view.styleDocument.querySelectorAll(".ruleview-rule")) {
+    const selector = r.querySelector(".ruleview-selectorcontainer, " +
                                    ".ruleview-selector-matched");
     if (selector && selector.textContent === selectorText) {
       if (index == pos) {
@@ -411,12 +411,12 @@ function getRuleViewRule(view, selectorText, index = 0) {
 function getRuleViewProperty(view, selectorText, propertyName) {
   let prop;
 
-  let rule = getRuleViewRule(view, selectorText);
+  const rule = getRuleViewRule(view, selectorText);
   if (rule) {
     // Look for the propertyName in that rule element
-    for (let p of rule.querySelectorAll(".ruleview-property")) {
-      let nameSpan = p.querySelector(".ruleview-propertyname");
-      let valueSpan = p.querySelector(".ruleview-propertyvalue");
+    for (const p of rule.querySelectorAll(".ruleview-property")) {
+      const nameSpan = p.querySelector(".ruleview-propertyname");
+      const valueSpan = p.querySelector(".ruleview-propertyvalue");
 
       if (nameSpan.textContent === propertyName) {
         prop = {nameSpan: nameSpan, valueSpan: valueSpan};
@@ -455,7 +455,7 @@ function getRuleViewPropertyValue(view, selectorText, propertyName) {
  * @return {DOMNode} The selector DOM element
  */
 function getRuleViewSelector(view, selectorText) {
-  let rule = getRuleViewRule(view, selectorText);
+  const rule = getRuleViewRule(view, selectorText);
   return rule.querySelector(".ruleview-selector, .ruleview-selector-matched");
 }
 
@@ -474,9 +474,9 @@ function getRuleViewSelector(view, selectorText) {
  */
 var getRuleViewSelectorHighlighterIcon = async function(view,
     selectorText, index = 0) {
-  let rule = getRuleViewRule(view, selectorText, index);
+  const rule = getRuleViewRule(view, selectorText, index);
 
-  let editor = rule._ruleEditor;
+  const editor = rule._ruleEditor;
   if (!editor.uniqueSelector) {
     await once(editor, "selector-icon-created");
   }
@@ -494,7 +494,7 @@ var getRuleViewSelectorHighlighterIcon = async function(view,
  * @return {DOMNode} The link if any at this index
  */
 function getRuleViewLinkByIndex(view, index) {
-  let links = view.styleDocument.querySelectorAll(".ruleview-rule-source");
+  const links = view.styleDocument.querySelectorAll(".ruleview-rule-source");
   return links[index];
 }
 
@@ -508,7 +508,7 @@ function getRuleViewLinkByIndex(view, index) {
  * @return {String} The string at this index
  */
 function getRuleViewLinkTextByIndex(view, index) {
-  let link = getRuleViewLinkByIndex(view, index);
+  const link = getRuleViewLinkByIndex(view, index);
   return link.querySelector(".ruleview-rule-source-label").textContent;
 }
 
@@ -525,7 +525,7 @@ var focusNewRuleViewProperty = async function(ruleEditor) {
 
   // Use bottom alignment to avoid scrolling out of the parent element area.
   ruleEditor.closeBrace.scrollIntoView(false);
-  let editor = await focusEditableField(ruleEditor.ruleView,
+  const editor = await focusEditableField(ruleEditor.ruleView,
     ruleEditor.closeBrace);
 
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
@@ -549,13 +549,13 @@ var focusNewRuleViewProperty = async function(ruleEditor) {
  */
 var createNewRuleViewProperty = async function(ruleEditor, inputValue) {
   info("Creating a new property editor");
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  const editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Entering the value " + inputValue);
   editor.input.value = inputValue;
 
   info("Submitting the new value and waiting for value field focus");
-  let onFocus = once(ruleEditor.element, "focus", true);
+  const onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey("VK_RETURN", {},
     ruleEditor.element.ownerDocument.defaultView);
   await onFocus;
@@ -574,10 +574,10 @@ var createNewRuleViewProperty = async function(ruleEditor, inputValue) {
 var setSearchFilter = async function(view, searchValue) {
   info("Setting filter text to \"" + searchValue + "\"");
 
-  let searchField = view.searchField;
+  const searchField = view.searchField;
   searchField.focus();
 
-  for (let key of searchValue.split("")) {
+  for (const key of searchValue.split("")) {
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
   }
 

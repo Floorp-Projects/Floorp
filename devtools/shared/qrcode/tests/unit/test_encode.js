@@ -11,7 +11,7 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", 
 const QR = require("devtools/shared/qrcode/index");
 
 function run_test() {
-  let imgData = QR.encodeToDataURI("HELLO", "L");
+  const imgData = QR.encodeToDataURI("HELLO", "L");
   Assert.equal(imgData.src,
                "data:image/gif;base64,R0lGODdhOgA6AIAAAAAAAP///ywAAAAAOgA6AAAC" +
                "/4yPqcvtD6OctNqLs968+w+G4gKU5nkaKKquLuW+QVy2tAkDTj3rfQts8CRDko" +

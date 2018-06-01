@@ -9,7 +9,7 @@ const { ANIMATION_TYPES, AnimationPlayerActor } =
 
 function run_test() {
   // Mock a window with just the properties the AnimationPlayerActor uses.
-  let window = {
+  const window = {
     MutationObserver: function() {
       this.observe = () => {};
     },
@@ -60,9 +60,9 @@ function run_test() {
     expectedType: ANIMATION_TYPES.UNKNOWN
   }];
 
-  for (let { desc, animation, expectedType } of TEST_DATA) {
+  for (const { desc, animation, expectedType } of TEST_DATA) {
     info(desc);
-    let actor = AnimationPlayerActor({}, animation);
+    const actor = AnimationPlayerActor({}, animation);
     Assert.equal(actor.getType(), expectedType);
   }
 }

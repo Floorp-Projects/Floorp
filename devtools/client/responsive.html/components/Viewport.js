@@ -38,7 +38,7 @@ class Viewport extends Component {
   }
 
   onChangeDevice(device, deviceType) {
-    let {
+    const {
       viewport,
       onChangeDevice,
     } = this.props;
@@ -47,7 +47,7 @@ class Viewport extends Component {
   }
 
   onRemoveDeviceAssociation() {
-    let {
+    const {
       viewport,
       onRemoveDeviceAssociation,
     } = this.props;
@@ -56,7 +56,7 @@ class Viewport extends Component {
   }
 
   onResizeViewport(width, height) {
-    let {
+    const {
       viewport,
       onResizeViewport,
     } = this.props;
@@ -65,7 +65,7 @@ class Viewport extends Component {
   }
 
   onRotateViewport() {
-    let {
+    const {
       viewport,
       onRotateViewport,
     } = this.props;
@@ -74,7 +74,7 @@ class Viewport extends Component {
   }
 
   render() {
-    let {
+    const {
       devices,
       screenshot,
       swapAfterMount,
@@ -84,7 +84,7 @@ class Viewport extends Component {
       onUpdateDeviceModal,
     } = this.props;
 
-    let {
+    const {
       onChangeDevice,
       onRemoveDeviceAssociation,
       onRotateViewport,

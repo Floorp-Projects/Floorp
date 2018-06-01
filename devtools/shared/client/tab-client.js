@@ -59,7 +59,7 @@ TabClient.prototype = {
       return promise.resolve([{}, this.thread]);
     }
 
-    let packet = {
+    const packet = {
       to: this._threadActor,
       type: "attach",
       options,

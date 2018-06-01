@@ -58,12 +58,12 @@ class ResponsePanel extends Component {
   }
 
   componentDidMount() {
-    let { request, connector } = this.props;
+    const { request, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { request, connector } = nextProps;
+    const { request, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
   }
 
@@ -98,9 +98,9 @@ class ResponsePanel extends Component {
       // Extract the actual json substring in case this might be a "JSONP".
       // This regex basically parses a function call and captures the
       // function name and arguments in two separate groups.
-      let jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
-      let [, jsonpCallback, jsonp] = response.match(jsonpRegex) || [];
-      let result = {};
+      const jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
+      const [, jsonpCallback, jsonp] = response.match(jsonpRegex) || [];
+      const result = {};
 
       // Make sure this is a valid JSON object first. If so, nicely display
       // the parsing results in a tree view.
@@ -133,8 +133,8 @@ class ResponsePanel extends Component {
   }
 
   render() {
-    let { openLink, request } = this.props;
-    let { responseContent, url } = request;
+    const { openLink, request } = this.props;
+    const { responseContent, url } = request;
 
     if (!responseContent || typeof responseContent.content.text !== "string") {
       return null;
@@ -143,7 +143,7 @@ class ResponsePanel extends Component {
     let { encoding, mimeType, text } = responseContent.content;
 
     if (mimeType.includes("image/")) {
-      let { width, height } = this.state.imageDimensions;
+      const { width, height } = this.state.imageDimensions;
 
       return (
         div({ className: "panel-container response-image-box devtools-monospace" },
@@ -174,8 +174,8 @@ class ResponsePanel extends Component {
     }
 
     // Display Properties View
-    let { json, jsonpCallback, error } = this.isJSON(mimeType, text) || {};
-    let object = {};
+    const { json, jsonpCallback, error } = this.isJSON(mimeType, text) || {};
+    const object = {};
     let sectionName;
 
     if (json) {
@@ -202,7 +202,7 @@ class ResponsePanel extends Component {
       },
     };
 
-    let classList = ["panel-container"];
+    const classList = ["panel-container"];
     if (Filters.html(this.props.request)) {
       classList.push("contains-html-preview");
     }

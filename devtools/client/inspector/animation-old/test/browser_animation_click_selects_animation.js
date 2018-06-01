@@ -9,21 +9,21 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
+  const {panel} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
 
-  let selected = timeline.rootWrapperEl.querySelectorAll(".animation.selected");
+  const selected = timeline.rootWrapperEl.querySelectorAll(".animation.selected");
   ok(!selected.length, "There are no animations selected by default");
 
   info("Click on the first animation, expect the right event and right class");
-  let animation0 = await clickOnAnimation(panel, 0);
+  const animation0 = await clickOnAnimation(panel, 0);
   is(animation0, timeline.animations[0],
      "The selected event was emitted with the right animation");
   ok(isTimeBlockSelected(timeline, 0),
      "The time block has the right selected class");
 
   info("Click on the second animation, expect it to be selected too");
-  let animation1 = await clickOnAnimation(panel, 1);
+  const animation1 = await clickOnAnimation(panel, 1);
   is(animation1, timeline.animations[1],
      "The selected event was emitted with the right animation");
   ok(isTimeBlockSelected(timeline, 1),
@@ -40,6 +40,6 @@ add_task(async function() {
 });
 
 function isTimeBlockSelected(timeline, index) {
-  let animation = timeline.rootWrapperEl.querySelectorAll(".animation")[index];
+  const animation = timeline.rootWrapperEl.querySelectorAll(".animation")[index];
   return animation.classList.contains("selected");
 }

@@ -22,11 +22,11 @@ const ISO_8859_1_BUFFER = new Uint8Array([0x61, 0xe9, 0x64]);
  * file://l10n.js' should load 'file://l10n.js'.
  */
 add_task(async function test_arrow_urls() {
-  let { path } = createTemporaryFile(".js");
-  let url = "resource://gre/modules/XPIProvider.jsm -> file://" + path;
+  const { path } = createTemporaryFile(".js");
+  const url = "resource://gre/modules/XPIProvider.jsm -> file://" + path;
 
   await OS.File.writeAtomic(path, TEST_CONTENT, { encoding: "utf-8" });
-  let { content } = await DevToolsUtils.fetch(url);
+  const { content } = await DevToolsUtils.fetch(url);
 
   deepEqual(content, TEST_CONTENT, "The file contents were correctly read.");
 });
@@ -35,8 +35,8 @@ add_task(async function test_arrow_urls() {
  * Tests that empty files are read correctly.
  */
 add_task(async function test_empty() {
-  let { path } = createTemporaryFile();
-  let { content } = await DevToolsUtils.fetch("file://" + path);
+  const { path } = createTemporaryFile();
+  const { content } = await DevToolsUtils.fetch("file://" + path);
   deepEqual(content, "", "The empty file was read correctly.");
 });
 
@@ -44,10 +44,10 @@ add_task(async function test_empty() {
  * Tests that UTF-8 encoded files are correctly read.
  */
 add_task(async function test_encoding_utf8() {
-  let { path } = createTemporaryFile();
+  const { path } = createTemporaryFile();
   await OS.File.writeAtomic(path, UTF8_TEST_BUFFER);
 
-  let { content } = await DevToolsUtils.fetch(path);
+  const { content } = await DevToolsUtils.fetch(path);
   deepEqual(content, TEST_CONTENT,
     "The UTF-8 encoded file was correctly read.");
 });
@@ -56,10 +56,10 @@ add_task(async function test_encoding_utf8() {
  * Tests that ISO 8859-1 (Latin-1) encoded files are correctly read.
  */
 add_task(async function test_encoding_iso_8859_1() {
-  let { path } = createTemporaryFile();
+  const { path } = createTemporaryFile();
   await OS.File.writeAtomic(path, ISO_8859_1_BUFFER);
 
-  let { content } = await DevToolsUtils.fetch(path);
+  const { content } = await DevToolsUtils.fetch(path);
   deepEqual(content, TEST_CONTENT,
     "The ISO 8859-1 encoded file was correctly read.");
 });
@@ -80,11 +80,11 @@ add_task(async function test_missing() {
  * Test that URLs without file:// scheme work.
  */
 add_task(async function test_schemeless_files() {
-  let { path } = createTemporaryFile();
+  const { path } = createTemporaryFile();
 
   await OS.File.writeAtomic(path, TEST_CONTENT, { encoding: "utf-8" });
 
-  let { content } = await DevToolsUtils.fetch(path);
+  const { content } = await DevToolsUtils.fetch(path);
   deepEqual(content, TEST_CONTENT, "The content was correct.");
 });
 
@@ -92,8 +92,8 @@ add_task(async function test_schemeless_files() {
  * Creates a temporary file that is removed after the test completes.
  */
 function createTemporaryFile(extension) {
-  let name = "test_fetch-file-" + Math.random() + (extension || "");
-  let file = FileUtils.getFile("TmpD", [name]);
+  const name = "test_fetch-file-" + Math.random() + (extension || "");
+  const file = FileUtils.getFile("TmpD", [name]);
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0755", 8));
 
   registerCleanupFunction(() => {

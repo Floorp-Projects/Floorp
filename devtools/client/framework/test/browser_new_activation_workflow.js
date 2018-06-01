@@ -38,7 +38,7 @@ function checkToolLoading() {
 
 function selectAndCheckById(id) {
   return toolbox.selectTool(id).then(function() {
-    let tab = toolbox.doc.getElementById("toolbox-tab-" + id);
+    const tab = toolbox.doc.getElementById("toolbox-tab-" + id);
     is(tab.classList.contains("selected"), true, "The " + id + " tab is selected");
     is(tab.getAttribute("aria-pressed"), "true", "The " + id + " tab is pressed");
   });

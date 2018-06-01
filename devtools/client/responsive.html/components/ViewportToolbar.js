@@ -25,7 +25,7 @@ class ViewportToolbar extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       devices,
       viewport,
       onChangeDevice,

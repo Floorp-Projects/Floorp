@@ -7,10 +7,10 @@
 // Ported from js/src/jit-test/tests/debug/Memory-take Census-10.js
 
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
-  let sizeOfAM = byteSize(allocationMarker());
+  const sizeOfAM = byteSize(allocationMarker());
 
   // Allocate a single allocation marker, and check that we can find it.
   g.eval("var hold = allocationMarker();");

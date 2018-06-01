@@ -24,7 +24,7 @@ function PerformanceTelemetry(emitter) {
   this.onRecordingStateChange = this.onRecordingStateChange.bind(this);
   this.onViewSelected = this.onViewSelected.bind(this);
 
-  for (let [event] of EVENT_MAP_FLAGS) {
+  for (const [event] of EVENT_MAP_FLAGS) {
     this._emitter.on(event, this.onFlagEvent.bind(this, event));
   }
 
@@ -38,7 +38,7 @@ PerformanceTelemetry.prototype.destroy = function() {
       SELECTED_VIEW_HISTOGRAM_NAME, this._previousView, this);
   }
 
-  for (let [event] of EVENT_MAP_FLAGS) {
+  for (const [event] of EVENT_MAP_FLAGS) {
     this._emitter.off(event, this.onFlagEvent);
   }
   this._emitter.off(EVENTS.RECORDING_STATE_CHANGE, this.onRecordingStateChange);
@@ -66,8 +66,8 @@ PerformanceTelemetry.prototype.onRecordingStateChange = function(status, model) 
   this._telemetry.getHistogramById("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS")
                  .add(model.getDuration());
 
-  let config = model.getConfiguration();
-  for (let k in config) {
+  const config = model.getConfiguration();
+  for (const k in config) {
     if (RECORDING_FEATURES.includes(k)) {
       this._telemetry
           .getKeyedHistogramById("DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED")

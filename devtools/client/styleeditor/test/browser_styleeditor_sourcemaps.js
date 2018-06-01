@@ -78,7 +78,7 @@ const origNames = ["sourcemaps.scss", "contained.scss", "test-stylus.styl"];
 waitForExplicitFinish();
 
 add_task(async function() {
-  let {ui} = await openStyleEditorForURL(TESTCASE_URI);
+  const {ui} = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 4,
     "correct number of editors with source maps enabled");
@@ -105,18 +105,18 @@ add_task(async function() {
 });
 
 function testFirstEditor(editor) {
-  let name = getStylesheetNameFor(editor);
+  const name = getStylesheetNameFor(editor);
   is(name, "simple.css", "First style sheet display name is correct");
 }
 
 function testEditor(editor, possibleNames) {
-  let name = getStylesheetNameFor(editor);
+  const name = getStylesheetNameFor(editor);
   ok(possibleNames.includes(name), name + " editor name is correct");
 
   return openEditor(editor).then(() => {
-    let expectedText = contents[name];
+    const expectedText = contents[name];
 
-    let text = editor.sourceEditor.getText();
+    const text = editor.sourceEditor.getText();
 
     is(text, expectedText, name + " editor contains expected text");
   });
@@ -125,8 +125,8 @@ function testEditor(editor, possibleNames) {
 /* Helpers */
 
 function togglePref(UI) {
-  let editorsPromise = UI.once("stylesheets-reset");
-  let selectedPromise = UI.once("editor-selected");
+  const editorsPromise = UI.once("stylesheets-reset");
+  const selectedPromise = UI.once("editor-selected");
 
   Services.prefs.setBoolPref(PREF, false);
 

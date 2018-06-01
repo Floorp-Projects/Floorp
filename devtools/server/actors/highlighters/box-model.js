@@ -111,19 +111,19 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 
-    let { pageListenerTarget } = highlighterEnv;
+    const { pageListenerTarget } = highlighterEnv;
     pageListenerTarget.addEventListener("pagehide", this.onPageHide);
   }
 
   _buildMarkup() {
-    let doc = this.win.document;
+    const doc = this.win.document;
 
-    let highlighterContainer = doc.createElement("div");
+    const highlighterContainer = doc.createElement("div");
     highlighterContainer.setAttribute("role", "presentation");
     highlighterContainer.className = "highlighter-container box-model";
 
     // Build the root wrapper, used to adapt to the page zoom.
-    let rootWrapper = createNode(this.win, {
+    const rootWrapper = createNode(this.win, {
       parent: highlighterContainer,
       attributes: {
         "id": "root",
@@ -135,7 +135,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     // Building the SVG element with its polygons and lines
 
-    let svg = createSVGNode(this.win, {
+    const svg = createSVGNode(this.win, {
       nodeType: "svg",
       parent: rootWrapper,
       attributes: {
@@ -148,7 +148,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let regions = createSVGNode(this.win, {
+    const regions = createSVGNode(this.win, {
       nodeType: "g",
       parent: svg,
       attributes: {
@@ -158,7 +158,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    for (let region of BOX_MODEL_REGIONS) {
+    for (const region of BOX_MODEL_REGIONS) {
       createSVGNode(this.win, {
         nodeType: "path",
         parent: regions,
@@ -171,7 +171,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       });
     }
 
-    for (let side of BOX_MODEL_SIDES) {
+    for (const side of BOX_MODEL_SIDES) {
       createSVGNode(this.win, {
         nodeType: "line",
         parent: svg,
@@ -187,7 +187,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     // Building the nodeinfo bar markup
 
-    let infobarContainer = createNode(this.win, {
+    const infobarContainer = createNode(this.win, {
       parent: rootWrapper,
       attributes: {
         "class": "infobar-container",
@@ -198,7 +198,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let infobar = createNode(this.win, {
+    const infobar = createNode(this.win, {
       parent: infobarContainer,
       attributes: {
         "class": "infobar"
@@ -206,7 +206,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let texthbox = createNode(this.win, {
+    const texthbox = createNode(this.win, {
       parent: infobar,
       attributes: {
         "class": "infobar-text"
@@ -268,7 +268,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   destroy() {
     this.highlighterEnv.off("will-navigate", this.onWillNavigate);
 
-    let { pageListenerTarget } = this.highlighterEnv;
+    const { pageListenerTarget } = this.highlighterEnv;
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
     }
@@ -299,7 +299,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       this.options.region = "content";
     }
 
-    let shown = this._update();
+    const shown = this._update();
     this._trackMutations();
     this.emit("ready");
     return shown;
@@ -311,7 +311,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    */
   _trackMutations() {
     if (isNodeValid(this.currentNode)) {
-      let win = this.currentNode.ownerGlobal;
+      const win = this.currentNode.ownerGlobal;
       this.currentNodeObserver = new win.MutationObserver(this.update);
       this.currentNodeObserver.observe(this.currentNode, {attributes: true});
     }
@@ -412,12 +412,12 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * @return {Object} A quad-like object {p1,p2,p3,p4,bounds}
    */
   _getOuterQuad(region) {
-    let quads = this.currentQuads[region];
+    const quads = this.currentQuads[region];
     if (!quads.length) {
       return null;
     }
 
-    let quad = {
+    const quad = {
       p1: {x: Infinity, y: Infinity},
       p2: {x: -Infinity, y: Infinity},
       p3: {x: -Infinity, y: -Infinity},
@@ -434,7 +434,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       }
     };
 
-    for (let q of quads) {
+    for (const q of quads) {
       quad.p1.x = Math.min(quad.p1.x, q.p1.x);
       quad.p1.y = Math.min(quad.p1.y, q.p1.y);
       quad.p2.x = Math.max(quad.p2.x, q.p2.x);
@@ -464,7 +464,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    *         True if the current node has a box model to be highlighted
    */
   _updateBoxModel() {
-    let options = this.options;
+    const options = this.options;
     options.region = options.region || "content";
 
     if (!this._nodeNeedsHighlighting()) {
@@ -473,9 +473,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     }
 
     for (let i = 0; i < BOX_MODEL_REGIONS.length; i++) {
-      let boxType = BOX_MODEL_REGIONS[i];
-      let nextBoxType = BOX_MODEL_REGIONS[i + 1];
-      let box = this.getElement(boxType);
+      const boxType = BOX_MODEL_REGIONS[i];
+      const nextBoxType = BOX_MODEL_REGIONS[i + 1];
+      const box = this.getElement(boxType);
 
       if (this.regionFill[boxType]) {
         box.setAttribute("style", "fill:" + this.regionFill[boxType]);
@@ -485,10 +485,10 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
       // Highlight all quads for this region by setting the "d" attribute of the
       // corresponding <path>.
-      let path = [];
+      const path = [];
       for (let j = 0; j < this.currentQuads[boxType].length; j++) {
-        let boxQuad = this.currentQuads[boxType][j];
-        let nextBoxQuad = this.currentQuads[nextBoxType]
+        const boxQuad = this.currentQuads[boxType][j];
+        const nextBoxQuad = this.currentQuads[nextBoxType]
                           ? this.currentQuads[nextBoxType][j]
                           : null;
         path.push(this._getBoxPathCoordinates(boxQuad, nextBoxQuad));
@@ -515,14 +515,14 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     }
 
     // Un-zoom the root wrapper if the page was zoomed.
-    let rootId = this.ID_CLASS_PREFIX + "elements";
+    const rootId = this.ID_CLASS_PREFIX + "elements";
     this.markup.scaleRootElement(this.currentNode, rootId);
 
     return true;
   }
 
   _getBoxPathCoordinates(boxQuad, nextBoxQuad) {
-    let {p1, p2, p3, p4} = boxQuad;
+    const {p1, p2, p3, p4} = boxQuad;
 
     let path;
     if (!nextBoxQuad || !this.options.onlyRegionArea) {
@@ -534,7 +534,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
              "L" + p4.x + "," + p4.y;
     } else {
       // Otherwise, just draw the region itself, not a filled rectangle.
-      let {p1: np1, p2: np2, p3: np3, p4: np4} = nextBoxQuad;
+      const {p1: np1, p2: np2, p3: np3, p4: np4} = nextBoxQuad;
       path = "M" + p1.x + "," + p1.y + " " +
              "L" + p2.x + "," + p2.y + " " +
              "L" + p3.x + "," + p3.y + " " +
@@ -562,15 +562,15 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   }
 
   _getOuterBounds() {
-    for (let region of ["margin", "border", "padding", "content"]) {
-      let quad = this._getOuterQuad(region);
+    for (const region of ["margin", "border", "padding", "content"]) {
+      const quad = this._getOuterQuad(region);
 
       if (!quad) {
         // Invisible element such as a script tag.
         break;
       }
 
-      let {bottom, height, left, right, top, width, x, y} = quad.bounds;
+      const {bottom, height, left, right, top, width, x, y} = quad.bounds;
 
       if (width > 0 || height > 0) {
         return {bottom, height, left, right, top, width, x, y};
@@ -595,16 +595,16 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * @param {String} region The region around which the guides should be shown.
    */
   _showGuides(region) {
-    let {p1, p2, p3, p4} = this._getOuterQuad(region);
+    const {p1, p2, p3, p4} = this._getOuterQuad(region);
 
-    let allX = [p1.x, p2.x, p3.x, p4.x].sort((a, b) => a - b);
-    let allY = [p1.y, p2.y, p3.y, p4.y].sort((a, b) => a - b);
-    let toShowX = [];
-    let toShowY = [];
+    const allX = [p1.x, p2.x, p3.x, p4.x].sort((a, b) => a - b);
+    const allY = [p1.y, p2.y, p3.y, p4.y].sort((a, b) => a - b);
+    const toShowX = [];
+    const toShowY = [];
 
-    for (let arr of [allX, allY]) {
+    for (const arr of [allX, allY]) {
       for (let i = 0; i < arr.length; i++) {
-        let val = arr[i];
+        const val = arr[i];
 
         if (i !== arr.lastIndexOf(val)) {
           if (arr === allX) {
@@ -625,7 +625,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   }
 
   _hideGuides() {
-    for (let side of BOX_MODEL_SIDES) {
+    for (const side of BOX_MODEL_SIDES) {
       this.getElement("guide-" + side).setAttribute("hidden", "true");
     }
   }
@@ -640,7 +640,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    *         x or y co-ordinate. If this is undefined we hide the guide.
    */
   _updateGuide(side, point = -1) {
-    let guide = this.getElement("guide-" + side);
+    const guide = this.getElement("guide-" + side);
 
     if (point <= 0) {
       guide.setAttribute("hidden", "true");
@@ -672,15 +672,15 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    let {bindingElement: node, pseudo} =
+    const {bindingElement: node, pseudo} =
         getBindingElementAndPseudo(this.currentNode);
 
     // Update the tag, id, classes, pseudo-classes and dimensions
-    let displayName = getNodeDisplayName(node);
+    const displayName = getNodeDisplayName(node);
 
-    let id = node.id ? "#" + node.id : "";
+    const id = node.id ? "#" + node.id : "";
 
-    let classList = (node.classList || []).length
+    const classList = (node.classList || []).length
                     ? "." + [...node.classList].join(".")
                     : "";
 
@@ -693,9 +693,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     // We want to display the original `width` and `height`, instead of the ones affected
     // by any zoom. Since the infobar can be displayed also for text nodes, we can't
     // access the computed style for that, and this is why we recalculate them here.
-    let zoom = getCurrentZoom(this.win);
-    let { width, height } = this._getOuterQuad("border").bounds;
-    let dim = parseFloat((width / zoom).toPrecision(6)) +
+    const zoom = getCurrentZoom(this.win);
+    const { width, height } = this._getOuterQuad("border").bounds;
+    const dim = parseFloat((width / zoom).toPrecision(6)) +
               " \u00D7 " +
               parseFloat((height / zoom).toPrecision(6));
 
@@ -721,8 +721,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * Move the Infobar to the right place in the highlighter.
    */
   _moveInfobar() {
-    let bounds = this._getOuterBounds();
-    let container = this.getElement("infobar-container");
+    const bounds = this._getOuterBounds();
+    const container = this.getElement("infobar-container");
 
     moveInfobar(container, bounds, this.win);
   }

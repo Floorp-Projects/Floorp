@@ -6,17 +6,17 @@
 // Test that changing filter state in the middle of taking a snapshot results in
 // the properly fitered census.
 
-let { snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
-let { setFilterString, setFilterStringAndRefresh } = require("devtools/client/memory/actions/filter");
-let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-let { changeView } = require("devtools/client/memory/actions/view");
+const { snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
+const { setFilterString, setFilterStringAndRefresh } = require("devtools/client/memory/actions/filter");
+const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
 

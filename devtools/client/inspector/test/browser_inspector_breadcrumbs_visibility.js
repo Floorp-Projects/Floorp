@@ -11,7 +11,7 @@
 const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
 PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
 
-let { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs_visibility.html";
 const NODE_ONE = "div#aVeryLongIdToExceedTheBreadcrumbTruncationLimit";
@@ -37,17 +37,17 @@ const NODES = [
 ];
 
 add_task(async function() {
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   // No way to wait for scrolling to end (Bug 1172171)
   // Rather than wait a max time; limit test to instant scroll behavior
   inspector.breadcrumbs.arrowScrollBox.scrollBehavior = "instant";
 
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
-  let hostWindow = toolbox.win.parent;
-  let originalWidth = hostWindow.outerWidth;
-  let originalHeight = hostWindow.outerHeight;
-  let inspectorResized = inspector.once("inspector-resize");
+  const hostWindow = toolbox.win.parent;
+  const originalWidth = hostWindow.outerWidth;
+  const originalHeight = hostWindow.outerHeight;
+  const inspectorResized = inspector.once("inspector-resize");
   hostWindow.resizeTo(640, 300);
   await inspectorResized;
 
@@ -63,22 +63,22 @@ add_task(async function() {
 });
 
 async function testBreadcrumbTransitions(hostWindow, inspector) {
-  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
-  let startBtn = breadcrumbs.querySelector(".scrollbutton-up");
-  let endBtn = breadcrumbs.querySelector(".scrollbutton-down");
-  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
-  let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
+  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const startBtn = breadcrumbs.querySelector(".scrollbutton-up");
+  const endBtn = breadcrumbs.querySelector(".scrollbutton-down");
+  const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
+  const breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
 
   info("Selecting initial node");
   await selectNode(NODE_SEVEN, inspector);
 
   // So just need to wait for a duration
   await breadcrumbsUpdated;
-  let initialCrumb = container.querySelector("button[checked]");
+  const initialCrumb = container.querySelector("button[checked]");
   is(isElementInViewport(hostWindow, initialCrumb), true,
      "initial element was visible");
 
-  for (let node of NODES) {
+  for (const node of NODES) {
     info("Checking for visibility of crumb " + node.title);
     if (node.action === "end") {
       info("Simulating click of end button");
@@ -89,15 +89,15 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
     }
 
     await breadcrumbsUpdated;
-    let selector = "button[title=\"" + node.title + "\"]";
-    let relevantCrumb = container.querySelector(selector);
+    const selector = "button[title=\"" + node.title + "\"]";
+    const relevantCrumb = container.querySelector(selector);
     is(isElementInViewport(hostWindow, relevantCrumb), true,
        node.title + " crumb is visible");
   }
 }
 
 function isElementInViewport(window, el) {
-  let rect = el.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
 
   return (
     rect.top >= 0 &&

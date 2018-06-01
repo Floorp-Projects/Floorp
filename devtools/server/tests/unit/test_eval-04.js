@@ -29,8 +29,8 @@ function run_test() {
 function test_different_frames_eval() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
     gThreadClient.getFrames(0, 2, function(response) {
-      let frame0 = response.frames[0];
-      let frame1 = response.frames[1];
+      const frame0 = response.frames[0];
+      const frame1 = response.frames[1];
 
       // Eval against the top frame...
       gThreadClient.eval(frame0.actor, "arg", function(response) {

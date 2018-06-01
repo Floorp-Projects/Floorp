@@ -35,12 +35,12 @@ add_task(async function() {
 
   info("Finding \"here\" message and waiting for source map to be applied");
   await waitFor(() => {
-    let node = findMessage(hud, "here");
+    const node = findMessage(hud, "here");
     if (!node) {
       return false;
     }
-    let frameLinkNode = node.querySelector(".message-location .frame-link");
-    let url = frameLinkNode.getAttribute("data-url");
+    const frameLinkNode = node.querySelector(".message-location .frame-link");
+    const url = frameLinkNode.getAttribute("data-url");
     return url.includes("nosuchfile");
   });
 

@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 const EventEmitter = require("devtools/shared/event-emitter");
 
 function toggleAllTools(state) {
-  for (let [, tool] of gDevTools._tools) {
+  for (const [, tool] of gDevTools._tools) {
     if (!tool.visibilityswitch) {
       continue;
     }
@@ -25,14 +25,14 @@ function toggleAllTools(state) {
 }
 
 function getChromeActors(callback) {
-  let { DebuggerServer } = require("devtools/server/main");
-  let { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect()
     .then(() => client.getProcess())
     .then(response => {
@@ -45,7 +45,7 @@ function getChromeActors(callback) {
 }
 
 function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  const item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item && item.value;
 }
 
@@ -56,8 +56,8 @@ function getSourceActor(aSources, aURL) {
  *         The new window object that holds Scratchpad.
  */
 async function openScratchpadWindow() {
-  let { promise: p, resolve } = defer();
-  let win = ScratchpadManager.openScratchpad();
+  const { promise: p, resolve } = defer();
+  const win = ScratchpadManager.openScratchpad();
 
   await once(win, "load");
 
@@ -80,9 +80,9 @@ async function openScratchpadWindow() {
 function waitForContentMessage(name) {
   info("Expecting message " + name + " from content");
 
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
-  let def = defer();
+  const def = defer();
   mm.addMessageListener(name, function onMessage(msg) {
     mm.removeMessageListener(name, onMessage);
     def.resolve(msg.data);
@@ -104,7 +104,7 @@ function waitForContentMessage(name) {
  */
 function executeInContent(name, data = {}, objects = {}, expectResponse = true) {
   info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
@@ -119,8 +119,8 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
  * @param {Element} el the <key> element to synthesize
  */
 function synthesizeKeyElement(el) {
-  let key = el.getAttribute("key") || el.getAttribute("keycode");
-  let mod = {};
+  const key = el.getAttribute("key") || el.getAttribute("keycode");
+  const mod = {};
   el.getAttribute("modifiers").split(" ").forEach((m) => mod[m + "Key"] = true);
   info(`Synthesizing: key=${key}, mod=${JSON.stringify(mod)}`);
   EventUtils.synthesizeKey(key, mod, el.ownerDocument.defaultView);
@@ -137,7 +137,7 @@ function synthesizeKeyElement(el) {
 function checkHostType(toolbox, hostType, previousHostType) {
   is(toolbox.hostType, hostType, "host type is " + hostType);
 
-  let pref = Services.prefs.getCharPref("devtools.toolbox.host");
+  const pref = Services.prefs.getCharPref("devtools.toolbox.host");
   is(pref, hostType, "host pref is " + hostType);
 
   if (previousHostType) {
@@ -158,7 +158,7 @@ function createScript(url) {
   // This is not ideal if called multiple times, as it loads the frame script
   // separately each time.  See bug 1443680.
   loadFrameScriptUtils();
-  let command = `
+  const command = `
     let script = document.createElement("script");
     script.setAttribute("src", "${url}");
     document.body.appendChild(script);
@@ -177,7 +177,7 @@ function createScript(url) {
 function waitForSourceLoad(toolbox, url) {
   info(`Waiting for source ${url} to be available...`);
   return new Promise(resolve => {
-    let target = toolbox.target;
+    const target = toolbox.target;
 
     function sourceHandler(sourceEvent) {
       if (sourceEvent && sourceEvent.source && sourceEvent.source.url === url) {
@@ -207,7 +207,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 
 DevToolPanel.prototype = {
   open: function() {
-    let deferred = defer();
+    const deferred = defer();
 
     executeSoon(() => {
       this._isReady = true;
@@ -250,10 +250,10 @@ function createTestPanel(iframeWindow, toolbox) {
 }
 
 async function openChevronMenu(toolbox) {
-  let chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  const chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
   EventUtils.synthesizeMouseAtCenter(chevronMenuButton, {}, toolbox.win);
 
-  let menuPopup = toolbox.doc.querySelector("#tools-chevron-menupopup");
+  const menuPopup = toolbox.doc.querySelector("#tools-chevron-menupopup");
   ok(menuPopup, "tools-chevron-menupopup is available");
 
   info("Waiting for the menu popup to be displayed");

@@ -11,16 +11,16 @@
  * Loaded into content processes by the service worker actors.
  */
 
-let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+const swm = Cc["@mozilla.org/serviceworkers/manager;1"]
   .getService(Ci.nsIServiceWorkerManager);
 
 addMessageListener("serviceWorkerRegistration:start", message => {
-  let { data } = message;
-  let array = swm.getAllRegistrations();
+  const { data } = message;
+  const array = swm.getAllRegistrations();
 
   // Find the service worker registration with the desired scope.
   for (let i = 0; i < array.length; i++) {
-    let registration =
+    const registration =
       array.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
     // XXX: In some rare cases, `registration.activeWorker` can be null for a
     // brief moment (e.g. while the service worker is first installing, or if

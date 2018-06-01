@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf8," +
                  "<div id='delattr' tobeinvalid='1' last='2'></div>";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   await testAttributeEditing(inspector);
   await testAttributeDeletion(inspector);
@@ -27,7 +27,7 @@ async function testAttributeEditing(inspector) {
   // focuses the first attr after id
   collapseSelectionAndTab(inspector);
 
-  let attrs = await getAttributesFromEditor("#attr", inspector);
+  const attrs = await getAttributesFromEditor("#attr", inspector);
 
   info("Editing this attribute, keeping the same name, " +
        "and tabbing to the next");
@@ -56,7 +56,7 @@ async function testAttributeDeletion(inspector) {
   // focuses the first attr after id
   collapseSelectionAndTab(inspector);
 
-  let attrs = await getAttributesFromEditor("#delattr", inspector);
+  const attrs = await getAttributesFromEditor("#delattr", inspector);
 
   info("Entering an invalid attribute to delete the attribute");
   await editAttributeAndTab('"', inspector);
@@ -66,14 +66,14 @@ async function testAttributeDeletion(inspector) {
   await editAttributeAndTab(" ", inspector);
 
   // Check we're on the newattr element
-  let focusedAttr = Services.focus.focusedElement;
+  const focusedAttr = Services.focus.focusedElement;
   ok(focusedAttr.classList.contains("styleinspector-propertyeditor"),
      "in newattr");
   is(focusedAttr.tagName, "textarea", "newattr is active");
 }
 
 async function editAttributeAndTab(newValue, inspector, goPrevious) {
-  let onEditMutation = inspector.markup.once("refocusedonedit");
+  const onEditMutation = inspector.markup.once("refocusedonedit");
   inspector.markup.doc.activeElement.value = newValue;
   if (goPrevious) {
     EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },
@@ -89,7 +89,7 @@ async function editAttributeAndTab(newValue, inspector, goPrevious) {
  * field.
  */
 async function activateFirstAttribute(container, inspector) {
-  let {editor} = await focusNode(container, inspector);
+  const {editor} = await focusNode(container, inspector);
   editor.tag.focus();
 
   // Go to "id" attribute and trigger edit mode.

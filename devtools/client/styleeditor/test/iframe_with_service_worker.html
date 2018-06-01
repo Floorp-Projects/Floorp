@@ -6,7 +6,7 @@ Iframe loading a stylesheet via a service worker
 "use strict";
 
 function waitForActive(swr) {
-  let sw = swr.installing || swr.waiting || swr.active;
+  const sw = swr.installing || swr.waiting || swr.active;
   return new Promise(resolve => {
     if (sw.state === "activated") {
       resolve(swr);
@@ -24,7 +24,7 @@ function waitForActive(swr) {
 navigator.serviceWorker.register("iframe_service_worker.js", {scope: "."})
   .then(registration => waitForActive(registration))
   .then(() => {
-    let link = document.createElement("link");
+    const link = document.createElement("link");
     link.setAttribute("rel", "stylesheet");
     link.setAttribute("type", "text/css");
     link.setAttribute("href", "sheet.css");

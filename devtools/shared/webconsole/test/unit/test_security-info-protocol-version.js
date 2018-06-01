@@ -44,7 +44,7 @@ const TEST_CASES = [
 function run_test() {
   info("Testing NetworkHelper.formatSecurityProtocol.");
 
-  for (let {description, input, expected} of TEST_CASES) {
+  for (const {description, input, expected} of TEST_CASES) {
     info("Testing " + description);
 
     equal(NetworkHelper.formatSecurityProtocol(input), expected,

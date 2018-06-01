@@ -24,7 +24,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testEditableFieldFocus(inspector, view, "KEY_Enter");
   await testEditableFieldFocus(inspector, view, "KEY_Tab");
@@ -33,7 +33,7 @@ add_task(async function() {
 async function testEditableFieldFocus(inspector, view, commitKey) {
   info("Click on the selector of the inline style ('element')");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let onFocus = once(ruleEditor.element, "focus", true);
+  const onFocus = once(ruleEditor.element, "focus", true);
   ruleEditor.selectorText.click();
   await onFocus;
   assertEditor(view, ruleEditor.newPropSpan,
@@ -46,14 +46,14 @@ async function testEditableFieldFocus(inspector, view, commitKey) {
     "Focus should have moved to the next rule selector");
 
   for (let i = 0; i < ruleEditor.rule.textProps.length; i++) {
-    let textProp = ruleEditor.rule.textProps[i];
-    let propEditor = textProp.editor;
+    const textProp = ruleEditor.rule.textProps[i];
+    const propEditor = textProp.editor;
 
     info("Focus the next field with " + commitKey);
     // Expect a ruleview-changed event if we are moving from a property value
     // to the next property name (which occurs after the first iteration, as for
     // i=0, the previous field is the selector).
-    let onRuleViewChanged = i > 0 ? view.once("ruleview-changed") : null;
+    const onRuleViewChanged = i > 0 ? view.once("ruleview-changed") : null;
     await focusNextEditableField(view, ruleEditor, commitKey);
     await onRuleViewChanged;
     assertEditor(view, propEditor.nameSpan,
@@ -66,7 +66,7 @@ async function testEditableFieldFocus(inspector, view, commitKey) {
   }
 
   // Expect a ruleview-changed event again as we're bluring a property value.
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   await focusNextEditableField(view, ruleEditor, commitKey);
   await onRuleViewChanged;
   assertEditor(view, ruleEditor.newPropSpan,
@@ -83,12 +83,12 @@ async function testEditableFieldFocus(inspector, view, commitKey) {
 }
 
 async function focusNextEditableField(view, ruleEditor, commitKey) {
-  let onFocus = once(ruleEditor.element, "focus", true);
+  const onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
   await onFocus;
 }
 
 function assertEditor(view, element, message) {
-  let editor = inplaceEditor(view.styleDocument.activeElement);
+  const editor = inplaceEditor(view.styleDocument.activeElement);
   is(inplaceEditor(element), editor, message);
 }

@@ -7,13 +7,13 @@
  * Tests reset column menu item
  */
 add_task(async function() {
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, parent, windowRequire } = monitor.panelWin;
-  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
+  const { document, parent, windowRequire } = monitor.panelWin;
+  const { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
-  let prefBefore = Prefs.visibleColumns;
+  const prefBefore = Prefs.visibleColumns;
 
   await hideColumn(monitor, "status");
   await hideColumn(monitor, "waterfall");

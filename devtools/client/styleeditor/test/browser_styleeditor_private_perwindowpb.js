@@ -12,23 +12,23 @@ const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
 
 add_task(async function() {
   info("Opening a new private window");
-  let win = OpenBrowserWindow({private: true});
+  const win = OpenBrowserWindow({private: true});
   await waitForDelayedStartupFinished(win);
 
   info("Clearing the browser cache");
   Services.cache2.clear();
 
-  let { toolbox, ui } = await openStyleEditorForURL(TEST_URL, win);
+  const { toolbox, ui } = await openStyleEditorForURL(TEST_URL, win);
 
   is(ui.editors.length, 1, "The style editor contains one sheet.");
-  let editor = ui.editors[0];
+  const editor = ui.editors[0];
 
   await editor.getSourceEditor();
   await checkDiskCacheFor(TEST_HOST);
 
   await toolbox.destroy();
 
-  let onUnload = new Promise(done => {
+  const onUnload = new Promise(done => {
     win.addEventListener("unload", function listener(event) {
       if (event.target == win.document) {
         win.removeEventListener("unload", listener);
@@ -49,7 +49,7 @@ function checkDiskCacheFor(host) {
         info("disk storage contains " + num + " entries");
       },
       onCacheEntryInfo: function(uri) {
-        let urispec = uri.asciiSpec;
+        const urispec = uri.asciiSpec;
         info(urispec);
         foundPrivateData |= urispec.includes(host);
       },
@@ -60,7 +60,7 @@ function checkDiskCacheFor(host) {
     };
     function Visitor() {}
 
-    let storage =
+    const storage =
       Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
     storage.asyncVisitStorage(new Visitor(),
       /* Do walk entries */

@@ -2,9 +2,9 @@
 function run_test() {
   ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(this);
-  let g = testGlobal("test");
-  let dbg = new Debugger();
-  let gw = dbg.addDebuggee(g);
+  const g = testGlobal("test");
+  const dbg = new Debugger();
+  const gw = dbg.addDebuggee(g);
 
   g.eval(`
     // This is not a CCW.
@@ -25,7 +25,7 @@ function run_test() {
   assert(!DevToolsUtils.hasSafeGetter(gw.getOwnPropertyDescriptor("foo")));
 
   // Create an object in a less privileged sandbox.
-  let obj = gw.makeDebuggeeValue(Cu.waiveXrays(Cu.Sandbox(null).eval(`
+  const obj = gw.makeDebuggeeValue(Cu.waiveXrays(Cu.Sandbox(null).eval(`
     Object.defineProperty({}, "bar", {
       get: function() { return "bar"; },
       configurable: true,

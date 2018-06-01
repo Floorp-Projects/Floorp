@@ -12,7 +12,7 @@ const LINE_NO = 5;
 const COL_NO = 3;
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "Two sheets present after load.");
 
@@ -26,7 +26,7 @@ add_task(async function() {
 
   is(ui.selectedEditor, ui.editors[0], "first editor is selected");
 
-  let {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
+  const {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
   is(line, 0, "first line is selected");
   is(ch, 0, "first column is selected");
 });

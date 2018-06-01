@@ -9,11 +9,11 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 add_task(async function() {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
-  let editor = await ui.editors[0].getSourceEditor();
+  const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const editor = await ui.editors[0].getSourceEditor();
 
-  let summary = editor.summary;
-  let enabledToggle = summary.querySelector(".stylesheet-enabled");
+  const summary = editor.summary;
+  const enabledToggle = summary.querySelector(".stylesheet-enabled");
   ok(enabledToggle, "enabled toggle button exists");
 
   is(editor.styleSheet.disabled, false,
@@ -39,7 +39,7 @@ add_task(async function() {
 });
 
 async function toggleEnabled(editor, enabledToggle, panelWindow) {
-  let changed = editor.once("property-change");
+  const changed = editor.once("property-change");
 
   info("Waiting for focus.");
   await SimpleTest.promiseFocus(panelWindow);

@@ -39,10 +39,10 @@ const keyShortcutsBundle = Services.strings.createBundle(KEY_SHORTCUTS_STRINGS);
 
 // URL constructor doesn't support about: scheme,
 // we have to use http in order to have working searchParams.
-let url = new URL(window.location.href.replace("about:", "http://"));
-let reason = url.searchParams.get("reason");
-let keyid = url.searchParams.get("keyid");
-let tabid = parseInt(url.searchParams.get("tabid"), 10);
+const url = new URL(window.location.href.replace("about:", "http://"));
+const reason = url.searchParams.get("reason");
+const keyid = url.searchParams.get("keyid");
+const tabid = parseInt(url.searchParams.get("tabid"), 10);
 
 // Keep track of the initial devtools.enabled value to track exits in telemetry.
 let isEnabledOnLoad;
@@ -140,9 +140,9 @@ const features = [
  * Helper to create a DOM element to represent a DevTools feature.
  */
 function createFeatureEl(feature) {
-  let li = document.createElement("li");
+  const li = document.createElement("li");
   li.classList.add("feature");
-  let learnMore = aboutDevtoolsBundle.GetStringFromName("features.learnMore");
+  const learnMore = aboutDevtoolsBundle.GetStringFromName("features.learnMore");
 
   let {icon, link, title, desc} = feature;
   title = aboutDevtoolsBundle.GetStringFromName(title);
@@ -178,9 +178,9 @@ window.addEventListener("load", function() {
   }
 
   // Display the message specific to the reason
-  let id = MESSAGES[reason];
+  const id = MESSAGES[reason];
   if (id) {
-    let message = document.getElementById(id);
+    const message = document.getElementById(id);
     message.removeAttribute("hidden");
   }
 
@@ -189,15 +189,15 @@ window.addEventListener("load", function() {
   document.getElementById("close").addEventListener("click", onCloseButtonClick);
   Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, updatePage);
 
-  let featuresContainer = document.querySelector(".features-list");
-  for (let feature of features) {
+  const featuresContainer = document.querySelector(".features-list");
+  for (const feature of features) {
     featuresContainer.appendChild(createFeatureEl(feature));
   }
 
   // Add Google Analytics parameters to all the external links.
-  let externalLinks = [...document.querySelectorAll("a.external")];
-  for (let link of externalLinks) {
-    let linkUrl = new URL(link.getAttribute("href"));
+  const externalLinks = [...document.querySelectorAll("a.external")];
+  for (const link of externalLinks) {
+    const linkUrl = new URL(link.getAttribute("href"));
     GA_PARAMETERS.forEach(([key, value]) => linkUrl.searchParams.set(key, value));
     link.setAttribute("href", linkUrl.href);
   }
@@ -228,10 +228,10 @@ window.addEventListener("beforeunload", function() {
   }
 
   // Retrieve the original tab if it is still available.
-  let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  let { gBrowser } = browserWindow;
-  let originalBrowser = gBrowser.getBrowserForOuterWindowID(tabid);
-  let originalTab = gBrowser.getTabForBrowser(originalBrowser);
+  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  const { gBrowser } = browserWindow;
+  const originalBrowser = gBrowser.getBrowserForOuterWindowID(tabid);
+  const originalTab = gBrowser.getTabForBrowser(originalBrowser);
 
   if (originalTab) {
     // If the original tab was found, select it.

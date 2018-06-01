@@ -9,14 +9,14 @@
 const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers-getBoxQuads.html";
 
 add_task(async function() {
-  let tab = await addTab(TEST_URI);
+  const tab = await addTab(TEST_URI);
 
   info("Running tests");
 
   // `FullZoom` isn't available from the ContentTask. This code is defined by browser
   // frontend and runs in the parent process. Here, we use the message manager
   // to allow the Content Task to call this zoom helper whenever it needs to.
-  let mm = tab.linkedBrowser.messageManager;
+  const mm = tab.linkedBrowser.messageManager;
   mm.addMessageListener("devtools-test:command", async function({ data }) {
     switch (data) {
       case "zoom-enlarge":
@@ -36,7 +36,7 @@ add_task(async function() {
     // This function allows the Content Task to easily call `FullZoom` API via
     // the message manager.
     function sendCommand(cmd) {
-      let onDone = new Promise(done => {
+      const onDone = new Promise(done => {
         addMessageListener("devtools-test:done", function listener() {
           removeMessageListener("devtools-test:done", listener);
           done();
@@ -66,8 +66,8 @@ add_task(async function() {
     function returnsTheRightDataStructure() {
       info("Checks that the returned data contains bounds and 4 points");
 
-      let node = doc.querySelector("body");
-      let [res] = getAdjustedQuads(doc.defaultView, node, "content");
+      const node = doc.querySelector("body");
+      const [res] = getAdjustedQuads(doc.defaultView, node, "content");
 
       ok("bounds" in res, "The returned data has a bounds property");
       ok("p1" in res, "The returned data has a p1 property");
@@ -75,13 +75,13 @@ add_task(async function() {
       ok("p3" in res, "The returned data has a p3 property");
       ok("p4" in res, "The returned data has a p4 property");
 
-      for (let boundProp of
+      for (const boundProp of
         ["bottom", "top", "right", "left", "width", "height", "x", "y"]) {
         ok(boundProp in res.bounds, "The bounds has a " + boundProp + " property");
       }
 
-      for (let point of ["p1", "p2", "p3", "p4"]) {
-        for (let pointProp of ["x", "y", "z", "w"]) {
+      for (const point of ["p1", "p2", "p3", "p4"]) {
+        for (const pointProp of ["x", "y", "z", "w"]) {
           ok(pointProp in res[point], point + " has a " + pointProp + " property");
         }
       }
@@ -90,7 +90,7 @@ add_task(async function() {
     function isEmptyForMissingNode() {
       info("Checks that null is returned for invalid nodes");
 
-      for (let input of [null, undefined, "", 0]) {
+      for (const input of [null, undefined, "", 0]) {
         is(getAdjustedQuads(doc.defaultView, input).length, 0,
           "A 0-length array is returned for input " + input);
       }
@@ -99,11 +99,11 @@ add_task(async function() {
     function isEmptyForHiddenNodes() {
       info("Checks that null is returned for nodes that aren't rendered");
 
-      let style = doc.querySelector("#styles");
+      const style = doc.querySelector("#styles");
       is(getAdjustedQuads(doc.defaultView, style).length, 0,
         "null is returned for a <style> node");
 
-      let hidden = doc.querySelector("#hidden-node");
+      const hidden = doc.querySelector("#hidden-node");
       is(getAdjustedQuads(doc.defaultView, hidden).length, 0,
         "null is returned for a hidden node");
     }
@@ -111,18 +111,18 @@ add_task(async function() {
     function defaultsToBorderBoxIfNoneProvided() {
       info("Checks that if no boxtype is passed, then border is the default one");
 
-      let node = doc.querySelector("#simple-node-with-margin-padding-border");
-      let [withBoxType] = getAdjustedQuads(doc.defaultView, node, "border");
-      let [withoutBoxType] = getAdjustedQuads(doc.defaultView, node);
+      const node = doc.querySelector("#simple-node-with-margin-padding-border");
+      const [withBoxType] = getAdjustedQuads(doc.defaultView, node, "border");
+      const [withoutBoxType] = getAdjustedQuads(doc.defaultView, node);
 
-      for (let boundProp of
+      for (const boundProp of
         ["bottom", "top", "right", "left", "width", "height", "x", "y"]) {
         is(withBoxType.bounds[boundProp], withoutBoxType.bounds[boundProp],
           boundProp + " bound is equal with or without the border box type");
       }
 
-      for (let point of ["p1", "p2", "p3", "p4"]) {
-        for (let pointProp of ["x", "y", "z", "w"]) {
+      for (const point of ["p1", "p2", "p3", "p4"]) {
+        for (const pointProp of ["x", "y", "z", "w"]) {
           is(withBoxType[point][pointProp], withoutBoxType[point][pointProp],
             point + "." + pointProp +
             " is equal with or without the border box type");
@@ -134,23 +134,23 @@ add_task(async function() {
       info("Checks that for an element in the main frame, without scroll nor zoom" +
         "that the returned value is similar to the returned value of getBoxQuads");
 
-      let node = doc.querySelector("#simple-node-with-margin-padding-border");
+      const node = doc.querySelector("#simple-node-with-margin-padding-border");
 
-      for (let region of ["content", "padding", "border", "margin"]) {
-        let expected = node.getBoxQuads({
+      for (const region of ["content", "padding", "border", "margin"]) {
+        const expected = node.getBoxQuads({
           box: region
         })[0];
-        let [actual] = getAdjustedQuads(doc.defaultView, node, region);
+        const [actual] = getAdjustedQuads(doc.defaultView, node, region);
 
-        for (let boundProp of
+        for (const boundProp of
           ["bottom", "top", "right", "left", "width", "height", "x", "y"]) {
           is(actual.bounds[boundProp], expected.bounds[boundProp],
             boundProp + " bound is equal to the one returned by getBoxQuads for " +
             region + " box");
         }
 
-        for (let point of ["p1", "p2", "p3", "p4"]) {
-          for (let pointProp of ["x", "y", "z", "w"]) {
+        for (const point of ["p1", "p2", "p3", "p4"]) {
+          for (const pointProp of ["x", "y", "z", "w"]) {
             is(actual[point][pointProp], expected[point][pointProp],
               point + "." + pointProp +
               " is equal to the one returned by getBoxQuads for " + region + " box");
@@ -163,18 +163,18 @@ add_task(async function() {
       info("Checks that the quad returned for a node inside iframes that have " +
         "margins takes those offsets into account");
 
-      let rootIframe = doc.querySelector("iframe");
-      let subIframe = rootIframe.contentDocument.querySelector("iframe");
-      let innerNode = subIframe.contentDocument.querySelector("#inner-node");
+      const rootIframe = doc.querySelector("iframe");
+      const subIframe = rootIframe.contentDocument.querySelector("iframe");
+      const innerNode = subIframe.contentDocument.querySelector("#inner-node");
 
-      let [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
+      const [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
 
       // rootIframe margin + subIframe margin + node margin + node border + node padding
-      let p1x = 10 + 10 + 10 + 10 + 10;
+      const p1x = 10 + 10 + 10 + 10 + 10;
       is(quad.p1.x, p1x, "The inner node's p1 x position is correct");
 
       // Same as p1x + the inner node width
-      let p2x = p1x + 100;
+      const p2x = p1x + 100;
       is(quad.p2.x, p2x, "The inner node's p2 x position is correct");
     }
 
@@ -186,11 +186,11 @@ add_task(async function() {
       // to simplify asserting the coordinates
 
       info("Scroll the container nodes down");
-      let scrolledNode = doc.querySelector("#scrolled-node");
+      const scrolledNode = doc.querySelector("#scrolled-node");
       scrolledNode.scrollTop = 100;
-      let subScrolledNode = doc.querySelector("#sub-scrolled-node");
+      const subScrolledNode = doc.querySelector("#sub-scrolled-node");
       subScrolledNode.scrollTop = 200;
-      let innerNode = doc.querySelector("#inner-scrolled-node");
+      const innerNode = doc.querySelector("#inner-scrolled-node");
 
       let [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
       is(quad.p1.x, 0, "p1.x of the scrolled node is correct after scrolling down");
@@ -212,12 +212,12 @@ add_task(async function() {
       // depending on the platform, so we simply test that zooming in produces a
       // bigger quad and zooming out produces a smaller quad
 
-      let node = doc.querySelector("#simple-node-with-margin-padding-border");
-      let [defaultQuad] = getAdjustedQuads(doc.defaultView, node);
+      const node = doc.querySelector("#simple-node-with-margin-padding-border");
+      const [defaultQuad] = getAdjustedQuads(doc.defaultView, node);
 
       info("Zoom in");
       await sendCommand("zoom-enlarge");
-      let [zoomedInQuad] = getAdjustedQuads(doc.defaultView, node);
+      const [zoomedInQuad] = getAdjustedQuads(doc.defaultView, node);
 
       ok(zoomedInQuad.bounds.width > defaultQuad.bounds.width,
         "The zoomed in quad is bigger than the default one");
@@ -228,7 +228,7 @@ add_task(async function() {
       await sendCommand("zoom-reset");
       await sendCommand("zoom-reduce");
 
-      let [zoomedOutQuad] = getAdjustedQuads(doc.defaultView, node);
+      const [zoomedOutQuad] = getAdjustedQuads(doc.defaultView, node);
 
       ok(zoomedOutQuad.bounds.width < defaultQuad.bounds.width,
         "The zoomed out quad is smaller than the default one");
@@ -242,8 +242,8 @@ add_task(async function() {
       info("Checks that several quads are returned " +
            "for inline elements that span line-breaks");
 
-      let node = doc.querySelector("#inline");
-      let quads = getAdjustedQuads(doc.defaultView, node, "content");
+      const node = doc.querySelector("#inline");
+      const quads = getAdjustedQuads(doc.defaultView, node, "content");
       // At least 3 because of the 2 <br />, maybe more depending on the window size.
       ok(quads.length >= 3, "Multiple quads were returned");
 

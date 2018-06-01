@@ -6,8 +6,8 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(CONNECT_PARAM_URL);
-  let [, , [destNode, carrierNode, modNode, gainNode], , connectParam] = await Promise.all([
+  const { target, front } = await initBackend(CONNECT_PARAM_URL);
+  const [, , [destNode, carrierNode, modNode, gainNode], , connectParam] = await Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
     getN(front, "create-node", 4),

@@ -15,8 +15,8 @@ add_task(async function() {
   // 0. DUMMY_1_URL
   // 1. TEST_URL
   // 2. DUMMY_2_URL
-  let tab = await addTab(DUMMY_1_URL);
-  let browser = tab.linkedBrowser;
+  const tab = await addTab(DUMMY_1_URL);
+  const browser = tab.linkedBrowser;
   await load(browser, TEST_URL);
   await load(browser, DUMMY_2_URL);
 
@@ -61,10 +61,10 @@ add_task(async function() {
   is(browser.documentURI.spec, DUMMY_1_URL, "documentURI matches page 0");
   is(browser.contentTitle, "mochitest index /", "contentTitle matches page 0");
 
-  let receivedStatusChanges = new Promise(resolve => {
+  const receivedStatusChanges = new Promise(resolve => {
     let statusChangesSeen = 0;
-    let statusChangesExpected = 2;
-    let progressListener = {
+    const statusChangesExpected = 2;
+    const progressListener = {
       onStatusChange(webProgress, request, status, message) {
         info(message);
         if (++statusChangesSeen == statusChangesExpected) {

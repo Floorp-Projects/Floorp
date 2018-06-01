@@ -25,10 +25,10 @@ var addTab = function(url, win) {
   info("Adding a new tab with URL: '" + url + "'");
 
   return new Promise(resolve => {
-    let targetWindow = win || window;
-    let targetBrowser = targetWindow.gBrowser;
+    const targetWindow = win || window;
+    const targetBrowser = targetWindow.gBrowser;
 
-    let tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
+    const tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
     BrowserTestUtils.browserLoaded(targetBrowser.selectedBrowser)
       .then(function() {
         info("URL '" + url + "' loading complete");
@@ -44,14 +44,14 @@ var addTab = function(url, win) {
  */
 var navigateTo = function(url) {
   info(`Navigating to ${url}`);
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
 
   browser.loadURI(url);
   return BrowserTestUtils.browserLoaded(browser);
 };
 
 var navigateToAndWaitForStyleSheets = async function(url, ui) {
-  let onReset = ui.once("stylesheets-reset");
+  const onReset = ui.once("stylesheets-reset");
   await navigateTo(url);
   await onReset;
 };
@@ -59,8 +59,8 @@ var navigateToAndWaitForStyleSheets = async function(url, ui) {
 var reloadPageAndWaitForStyleSheets = async function(ui) {
   info("Reloading the page.");
 
-  let onReset = ui.once("stylesheets-reset");
-  let browser = gBrowser.selectedBrowser;
+  const onReset = ui.once("stylesheets-reset");
+  const browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, null, "() => content.location.reload()");
   await onReset;
 };
@@ -72,13 +72,13 @@ var openStyleEditor = async function(tab) {
   if (!tab) {
     tab = gBrowser.selectedTab;
   }
-  let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "styleeditor");
-  let panel = toolbox.getPanel("styleeditor");
-  let ui = panel.UI;
+  const target = TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "styleeditor");
+  const panel = toolbox.getPanel("styleeditor");
+  const ui = panel.UI;
 
   // The stylesheet list appears with an animation. Let this animation finish.
-  let animations = ui._root.getAnimations({subtree: true});
+  const animations = ui._root.getAnimations({subtree: true});
   await Promise.all(animations.map(a => a.finished));
 
   return { toolbox, panel, ui };
@@ -89,8 +89,8 @@ var openStyleEditor = async function(tab) {
  * opens style editor in it.
  */
 var openStyleEditorForURL = async function(url, win) {
-  let tab = await addTab(url, win);
-  let result = await openStyleEditor(tab);
+  const tab = await addTab(url, win);
+  const result = await openStyleEditor(tab);
   result.tab = tab;
   return result;
 };
@@ -109,8 +109,8 @@ var openStyleEditorForURL = async function(url, win) {
 var getComputedStyleProperty = async function(args) {
   return ContentTask.spawn(gBrowser.selectedBrowser, args,
     function({selector, pseudo, name}) {
-      let element = content.document.querySelector(selector);
-      let style = content.getComputedStyle(element, pseudo);
+      const element = content.document.querySelector(selector);
+      const style = content.getComputedStyle(element, pseudo);
       return style.getPropertyValue(name);
     }
   );

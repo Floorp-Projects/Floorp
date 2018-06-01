@@ -33,7 +33,7 @@ add_task(async function() {
 });
 
 async function testToggle(key, modifiers) {
-  let tab = await addTab(URL + " ; key : '" + key + "'");
+  const tab = await addTab(URL + " ; key : '" + key + "'");
   await gDevTools.showToolbox(TargetFactory.forTab(tab));
 
   await testToggleDockedToolbox(tab, key, modifiers);
@@ -43,26 +43,26 @@ async function testToggle(key, modifiers) {
 }
 
 async function testToggleDockedToolbox(tab, key, modifiers) {
-  let toolbox = getToolboxForTab(tab);
+  const toolbox = getToolboxForTab(tab);
 
   isnot(toolbox.hostType, Toolbox.HostType.WINDOW,
     "Toolbox is docked in the main window");
 
   info("verify docked toolbox is destroyed when using toggle key");
-  let onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
+  const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxDestroyed;
   ok(true, "Docked toolbox is destroyed when using a toggle key");
 
   info("verify new toolbox is created when using toggle key");
-  let onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxReady;
   ok(true, "Toolbox is created by using when toggle key");
 }
 
 async function testToggleDetachedToolbox(tab, key, modifiers) {
-  let toolbox = getToolboxForTab(tab);
+  const toolbox = getToolboxForTab(tab);
 
   info("change the toolbox hostType to WINDOW");
 
@@ -75,15 +75,15 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
 
   info("Focus main window to put the toolbox window in the background");
 
-  let onMainWindowFocus = once(window, "focus");
+  const onMainWindowFocus = once(window, "focus");
   window.focus();
   await onMainWindowFocus;
   ok(true, "Main window focused");
 
   info("Verify windowed toolbox is focused instead of closed when using " +
     "toggle key from the main window");
-  let toolboxWindow = toolbox.win.top;
-  let onToolboxWindowFocus = once(toolboxWindow, "focus", true);
+  const toolboxWindow = toolbox.win.top;
+  const onToolboxWindowFocus = once(toolboxWindow, "focus", true);
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxWindowFocus;
   ok(true, "Toolbox focused and not destroyed");
@@ -91,7 +91,7 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
   info("Verify windowed toolbox is destroyed when using toggle key from its " +
     "own window");
 
-  let onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
+  const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers, toolboxWindow);
   await onToolboxDestroyed;
   ok(true, "Toolbox destroyed");

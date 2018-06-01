@@ -87,8 +87,8 @@ function duration(first, second) {
 }
 
 function latency(first, second) {
-  let { eventTimings: firstEventTimings = { timings: {} } } = first;
-  let { eventTimings: secondEventTimings = { timings: {} } } = second;
+  const { eventTimings: firstEventTimings = { timings: {} } } = first;
+  const { eventTimings: secondEventTimings = { timings: {} } } = second;
   const result = compareValues(firstEventTimings.timings.wait,
    secondEventTimings.timings.wait);
   return result || waterfall(first, second);

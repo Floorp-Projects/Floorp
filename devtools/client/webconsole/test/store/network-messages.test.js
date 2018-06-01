@@ -29,8 +29,8 @@ describe("Network message reducer:", () => {
     getState = store.getState;
     dispatch = store.dispatch;
 
-    let packet = clonePacket(stubPackets.get("GET request"));
-    let updatePacket = clonePacket(stubPackets.get("GET request update"));
+    const packet = clonePacket(stubPackets.get("GET request"));
+    const updatePacket = clonePacket(stubPackets.get("GET request update"));
 
     packet.actor = "message1";
     updatePacket.networkInfo.actor = "message1";
@@ -40,7 +40,7 @@ describe("Network message reducer:", () => {
 
   describe("networkMessagesUpdateById", () => {
     it("adds fetched HTTP request headers", () => {
-      let headers = {
+      const headers = {
         headers: []
       };
 
@@ -48,12 +48,12 @@ describe("Network message reducer:", () => {
         requestHeaders: headers
       }));
 
-      let networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      const networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(networkUpdates.message1.requestHeaders).toBe(headers);
     });
 
     it("adds fetched HTTP security info", () => {
-      let securityInfo = {
+      const securityInfo = {
         state: "insecure"
       };
 
@@ -61,13 +61,13 @@ describe("Network message reducer:", () => {
         securityInfo: securityInfo
       }));
 
-      let networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      const networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(networkUpdates.message1.securityInfo).toBe(securityInfo);
       expect(networkUpdates.message1.securityState).toBe("insecure");
     });
 
     it("adds fetched HTTP post data", () => {
-      let requestPostData = {
+      const requestPostData = {
         postData: {
           text: ""
         }
@@ -77,7 +77,7 @@ describe("Network message reducer:", () => {
         requestPostData: requestPostData
       }));
 
-      let networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      const networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(networkUpdates.message1.requestPostData).toBe(requestPostData);
       expect(networkUpdates.message1.requestHeadersFromUploadStream).toExist();
     });

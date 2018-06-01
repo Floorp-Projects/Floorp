@@ -101,7 +101,7 @@ TabStore.prototype = {
           reject(response.error);
           return;
         }
-        let tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
+        const tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
         this.response = response;
         this.tabs = response.tabs;
         this._checkSelectedTab();
@@ -137,7 +137,7 @@ TabStore.prototype = {
     if (!this._selectedTab) {
       return;
     }
-    let alive = this.tabs.some(tab => {
+    const alive = this.tabs.some(tab => {
       return tab.actor === this._selectedTab.actor;
     });
     if (!alive) {
@@ -151,7 +151,7 @@ TabStore.prototype = {
     if (this._selectedTabTargetPromise) {
       return this._selectedTabTargetPromise;
     }
-    let store = this;
+    const store = this;
     this._selectedTabTargetPromise = (async function() {
       // If you connect to a tab, then detach from it, the root actor may have
       // de-listed the actors that belong to the tab.  This breaks the toolbox

@@ -18,16 +18,16 @@ registerCleanupFunction(function() {
 });
 
 async function viewSource() {
-  let toolbox = await openNewTabAndToolbox(URL);
+  const toolbox = await openNewTabAndToolbox(URL);
 
   await toolbox.viewSourceInDebugger(JS_URL, 2);
 
-  let debuggerPanel = toolbox.getPanel("jsdebugger");
+  const debuggerPanel = toolbox.getPanel("jsdebugger");
   ok(debuggerPanel, "The debugger panel was opened.");
   is(toolbox.currentToolId, "jsdebugger", "The debugger panel was selected.");
 
-  let { DebuggerView } = debuggerPanel.panelWin;
-  let Sources = DebuggerView.Sources;
+  const { DebuggerView } = debuggerPanel.panelWin;
+  const Sources = DebuggerView.Sources;
 
   is(Sources.selectedValue, getSourceActor(Sources, JS_URL),
     "The correct source is shown in the debugger.");

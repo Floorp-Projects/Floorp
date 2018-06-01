@@ -7,32 +7,32 @@
 // Checks for the AccessibleWalkerActor
 
 add_task(async function() {
-  let {client, walker, accessibility} =
+  const {client, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = await accessibility.getWalker();
+  const a11yWalker = await accessibility.getWalker();
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
 
   await accessibility.enable();
-  let rootNode = await walker.getRootNode();
-  let a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
+  const rootNode = await walker.getRootNode();
+  const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
   ok(a11yDoc, "The AccessibleFront for root doc is created");
 
-  let children = await a11yWalker.children();
+  const children = await a11yWalker.children();
   is(children.length, 1,
     "AccessibleWalker only has 1 child - root doc accessible");
   is(a11yDoc, children[0],
     "Root accessible must be AccessibleWalker's only child");
 
-  let buttonNode = await walker.querySelector(walker.rootNode, "#button");
-  let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
+  const buttonNode = await walker.querySelector(walker.rootNode, "#button");
+  const accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
     role: "pushbutton"
   });
 
-  let ancestry = await a11yWalker.getAncestry(accessibleFront);
+  const ancestry = await a11yWalker.getAncestry(accessibleFront);
   is(ancestry.length, 1, "Button is a direct child of a root document.");
   is(ancestry[0].accessible, a11yDoc,
     "Button's only ancestor is a root document");
@@ -41,7 +41,7 @@ add_task(async function() {
   ok(ancestry[0].children.includes(accessibleFront),
     "Button accessible front is in root doc's children");
 
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
 
   // Ensure name-change event is emitted by walker when cached accessible's name
   // gets updated (via DOM manipularion).
@@ -61,7 +61,7 @@ add_task(async function() {
   await emitA11yEvent(a11yWalker, "reorder",
     front => checkA11yFront(front, { }, a11yDoc),
     () => ContentTask.spawn(browser, null, () => {
-      let input = content.document.createElement("input");
+      const input = content.document.createElement("input");
       input.type = "text";
       input.title = "This is a tooltip";
       input.value = "New input";
@@ -119,8 +119,8 @@ add_task(async function() {
 
   info("Checking document-ready event fired by walker when top level accessible " +
        "document is recreated.");
-  let reloaded = BrowserTestUtils.browserLoaded(browser);
-  let documentReady = a11yWalker.once("document-ready");
+  const reloaded = BrowserTestUtils.browserLoaded(browser);
+  const documentReady = a11yWalker.once("document-ready");
   browser.reload();
   await reloaded;
   await documentReady;

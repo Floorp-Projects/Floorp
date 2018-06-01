@@ -11,8 +11,8 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  let contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
-  let menuDeleteAllItem = contextMenu.querySelector(
+  const contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
+  const menuDeleteAllItem = contextMenu.querySelector(
     "#storage-tree-popup-delete-all");
 
   info("test state before delete");
@@ -44,17 +44,17 @@ add_task(async function() {
     ["Cache", "http://test1.example.org", "plop"],
   ];
 
-  for (let store of deleteHosts) {
-    let storeName = store.join(" > ");
+  for (const store of deleteHosts) {
+    const storeName = store.join(" > ");
 
     await selectTreeItem(store);
 
-    let eventName = "store-objects-" +
+    const eventName = "store-objects-" +
       (store[0] == "cookies" ? "edit" : "cleared");
-    let eventWait = gUI.once(eventName);
+    const eventWait = gUI.once(eventName);
 
-    let selector = `[data-id='${JSON.stringify(store)}'] > .tree-widget-item`;
-    let target = gPanelWindow.document.querySelector(selector);
+    const selector = `[data-id='${JSON.stringify(store)}'] > .tree-widget-item`;
+    const target = gPanelWindow.document.querySelector(selector);
     ok(target, `tree item found in ${storeName}`);
     await waitForContextMenu(contextMenu, target, () => {
       info(`Opened tree context menu in ${storeName}`);

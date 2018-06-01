@@ -66,7 +66,7 @@ exports.whenUnknownPrefChanged = function(branch, callback) {
  * Reverts all known preferences to their default values.
  */
 exports.rollbackPrefsToDefault = function() {
-  for (let prefName of Object.keys(exports.DEFAULT_PREF_VALUES)) {
+  for (const prefName of Object.keys(exports.DEFAULT_PREF_VALUES)) {
     Preferences.set(prefName, exports.DEFAULT_PREF_VALUES[prefName]);
   }
 };

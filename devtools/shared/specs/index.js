@@ -276,7 +276,7 @@ Types.forEach(item => {
  * @returns true, if it matched a lazy loaded type and tried to load it.
  */
 function lazyLoadSpec(type) {
-  let modulePath = lazySpecs.get(type);
+  const modulePath = lazySpecs.get(type);
   if (modulePath) {
     try {
       require(modulePath);
@@ -300,7 +300,7 @@ exports.lazyLoadSpec = lazyLoadSpec;
  * @returns true, if it matched a lazy loaded type and tried to load it.
  */
 function lazyLoadFront(type) {
-  let modulePath = lazyFronts.get(type);
+  const modulePath = lazyFronts.get(type);
   if (modulePath) {
     try {
       require(modulePath);

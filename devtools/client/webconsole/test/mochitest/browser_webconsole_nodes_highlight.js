@@ -29,21 +29,21 @@ add_task(async function() {
     content.wrappedJSObject.logNode("h1");
   });
 
-  let msg = await waitFor(() => findMessage(hud, "<h1>"));
-  let node = msg.querySelector(".objectBox-node");
+  const msg = await waitFor(() => findMessage(hud, "<h1>"));
+  const node = msg.querySelector(".objectBox-node");
   ok(node !== null, "Node was logged as expected");
   const view = node.ownerDocument.defaultView;
 
   info("Highlight the node by moving the cursor on it");
-  let onNodeHighlight = toolbox.once("node-highlight");
+  const onNodeHighlight = toolbox.once("node-highlight");
   EventUtils.synthesizeMouseAtCenter(node, {type: "mousemove"}, view);
 
-  let nodeFront = await onNodeHighlight;
+  const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "h1", "The correct node was highlighted");
 
   info("Unhighlight the node by moving away from the node");
-  let onNodeUnhighlight = toolbox.once("node-unhighlight");
-  let btn = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+  const onNodeUnhighlight = toolbox.once("node-unhighlight");
+  const btn = toolbox.doc.getElementById("toolbox-meatball-menu-button");
   EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"}, view);
 
   await onNodeUnhighlight;

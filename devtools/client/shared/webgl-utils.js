@@ -16,9 +16,9 @@ function isWebGLSupportedByGFX() {
   let supported = false;
 
   try {
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    let angle = gfxInfo.FEATURE_WEBGL_ANGLE;
-    let opengl = gfxInfo.FEATURE_WEBGL_OPENGL;
+    const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    const angle = gfxInfo.FEATURE_WEBGL_ANGLE;
+    const opengl = gfxInfo.FEATURE_WEBGL_OPENGL;
 
     // if either the Angle or OpenGL renderers are available, WebGL should work
     supported = gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_STATUS_OK ||
@@ -45,7 +45,7 @@ function createCanvas(doc) {
 }
 
 function isWebGLSupported(doc) {
-  let supported =
+  const supported =
     !isWebGLForceEnabled() &&
      isWebGLSupportedByGFX() &&
      create3DContext(createCanvas(doc));

@@ -12,19 +12,19 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  let {client, walker, animations} = await initAnimationsFrontForUrl(
+  const {client, walker, animations} = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
     "<iframe id='iframe' src='" + URL + "'></iframe>");
 
   info("Try retrieving all animations from the root doc's <body> node");
-  let rootBody = await walker.querySelector(walker.rootNode, "body");
+  const rootBody = await walker.querySelector(walker.rootNode, "body");
   let players = await animations.getAnimationPlayersForNode(rootBody);
   is(players.length, 0, "The node has no animation players");
 
   info("Retrieve all animations from the iframe's <body> node");
-  let iframe = await walker.querySelector(walker.rootNode, "#iframe");
-  let {nodes} = await walker.children(iframe);
-  let frameBody = await walker.querySelector(nodes[0], "body");
+  const iframe = await walker.querySelector(walker.rootNode, "#iframe");
+  const {nodes} = await walker.children(iframe);
+  const frameBody = await walker.querySelector(nodes[0], "body");
   players = await animations.getAnimationPlayersForNode(frameBody);
 
   // Testing for a hard-coded number of animations here would intermittently

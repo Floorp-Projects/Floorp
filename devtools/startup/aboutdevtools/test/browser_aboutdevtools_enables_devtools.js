@@ -9,17 +9,17 @@
 add_task(async function() {
   pushPref("devtools.enabled", false);
 
-  let {tab, doc, win} = await openAboutDevTools();
+  const {tab, doc, win} = await openAboutDevTools();
 
-  let installPage = doc.getElementById("install-page");
-  let welcomePage = doc.getElementById("welcome-page");
+  const installPage = doc.getElementById("install-page");
+  const welcomePage = doc.getElementById("welcome-page");
 
   info("Check that about:devtools is in the correct state with devtools.enabled=false");
   ok(!installPage.hasAttribute("hidden"), "install screen is visible");
   ok(welcomePage.hasAttribute("hidden"), "welcome screen is hidden");
 
   info("Click on the install button to enable DevTools.");
-  let installButton = doc.getElementById("install");
+  const installButton = doc.getElementById("install");
   EventUtils.synthesizeMouseAtCenter(installButton, {}, win);
 
   info("Wait until the UI updates");

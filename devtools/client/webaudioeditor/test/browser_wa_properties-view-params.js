@@ -7,31 +7,31 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_NODES_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
-  let gVars = PropertiesView._propsView;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_NODES_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  const gVars = PropertiesView._propsView;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
   await loadFrameScriptUtils();
 
-  let events = Promise.all([
+  const events = Promise.all([
     getN(gFront, "create-node", 15),
     waitForGraphRendered(panelWin, 15, 0)
   ]);
   reload(target);
-  let [actors] = await events;
-  let nodeIds = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const nodeIds = actors.map(actor => actor.actorID);
 
-  let types = [
+  const types = [
     "AudioDestinationNode", "AudioBufferSourceNode", "ScriptProcessorNode",
     "AnalyserNode", "GainNode", "DelayNode", "BiquadFilterNode", "WaveShaperNode",
     "PannerNode", "ConvolverNode", "ChannelSplitterNode", "ChannelMergerNode",
     "DynamicsCompressorNode", "OscillatorNode"
   ];
 
-  let defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
+  const defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
 
   for (let i = 0; i < types.length; i++) {
     click(panelWin, findGraphNode(panelWin, nodeIds[i]));

@@ -15,20 +15,20 @@ add_task(async function() {
   // Force the old debugger UI since it's directly used (see Bug 1301705)
   await pushPref("devtools.debugger.new-debugger-frontend", false);
 
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,
   } = jsterm;
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   const jstermComplete = value => jstermSetValueAndComplete(jsterm, value);
 
   // Test that document.title gives string methods. Native getters must execute.
   await jstermComplete("document.title.");
 
-  let newItemsLabels = getPopupLabels(popup);
+  const newItemsLabels = getPopupLabels(popup);
   ok(newItemsLabels.length > 0, "'document.title.' gave a list of suggestions");
   ok(newItemsLabels.includes("substr"), `results do contain "substr"`);
   ok(newItemsLabels.includes("toLowerCase"), `results do contain "toLowerCase"`);
@@ -50,7 +50,7 @@ add_task(async function() {
     `"foo1Obj.prop2." gave the expected suggestions`);
 
   info("Opening Debugger");
-  let {panel} = await openDebugger();
+  const {panel} = await openDebugger();
 
   info("Waiting for pause");
   const stackFrames = await pauseDebugger(panel);

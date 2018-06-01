@@ -59,13 +59,13 @@ class ServiceWorkerTarget extends Component {
   }
 
   componentDidMount() {
-    let { client } = this.props;
+    const { client } = this.props;
     client.addListener("push-subscription-modified", this.onPushSubscriptionModified);
     this.updatePushSubscription();
   }
 
   componentDidUpdate(oldProps, oldState) {
-    let wasActive = oldProps.target.active;
+    const wasActive = oldProps.target.active;
     if (!wasActive && this.isActive()) {
       // While the service worker isn't active, any calls to `updatePushSubscription`
       // won't succeed. If we just became active, make sure we didn't miss a push
@@ -75,7 +75,7 @@ class ServiceWorkerTarget extends Component {
   }
 
   componentWillUnmount() {
-    let { client } = this.props;
+    const { client } = this.props;
     client.removeListener("push-subscription-modified", this.onPushSubscriptionModified);
   }
 
@@ -85,7 +85,7 @@ class ServiceWorkerTarget extends Component {
       return;
     }
 
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     gDevToolsBrowser.openWorkerToolbox(client, target.workerActor);
   }
 
@@ -97,7 +97,7 @@ class ServiceWorkerTarget extends Component {
       return;
     }
 
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     client.request({
       to: target.workerActor,
       type: "push"
@@ -110,7 +110,7 @@ class ServiceWorkerTarget extends Component {
       return;
     }
 
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     client.request({
       to: target.registrationActor,
       type: "start"
@@ -118,7 +118,7 @@ class ServiceWorkerTarget extends Component {
   }
 
   unregister() {
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     client.request({
       to: target.registrationActor,
       type: "unregister"
@@ -126,7 +126,7 @@ class ServiceWorkerTarget extends Component {
   }
 
   onPushSubscriptionModified(type, data) {
-    let { target } = this.props;
+    const { target } = this.props;
     if (data.from === target.registrationActor) {
       this.updatePushSubscription();
     }
@@ -138,7 +138,7 @@ class ServiceWorkerTarget extends Component {
       return;
     }
 
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     client.request({
       to: target.registrationActor,
       type: "getPushSubscription"
@@ -169,19 +169,19 @@ class ServiceWorkerTarget extends Component {
   }
 
   renderButtons() {
-    let pushButton = dom.button({
+    const pushButton = dom.button({
       className: "push-button",
       onClick: this.push,
       disabled: this.props.debugDisabled
     }, Strings.GetStringFromName("push"));
 
-    let debugButton = dom.button({
+    const debugButton = dom.button({
       className: "debug-button",
       onClick: this.debug,
       disabled: this.props.debugDisabled
     }, Strings.GetStringFromName("debug"));
 
-    let startButton = dom.button({
+    const startButton = dom.button({
       className: "start-button",
       onClick: this.start,
       disabled: this.props.debugDisabled
@@ -210,11 +210,11 @@ class ServiceWorkerTarget extends Component {
   }
 
   render() {
-    let { target } = this.props;
-    let { pushSubscription } = this.state;
-    let status = this.getServiceWorkerStatus();
+    const { target } = this.props;
+    const { pushSubscription } = this.state;
+    const status = this.getServiceWorkerStatus();
 
-    let fetch = target.fetch ? Strings.GetStringFromName("listeningForFetchEvents") :
+    const fetch = target.fetch ? Strings.GetStringFromName("listeningForFetchEvents") :
       Strings.GetStringFromName("notListeningForFetchEvents");
 
     return dom.div({ className: "target-container" },

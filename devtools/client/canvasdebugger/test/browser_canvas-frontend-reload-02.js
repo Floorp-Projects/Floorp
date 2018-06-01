@@ -6,8 +6,8 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   is(SnapshotsListView.itemCount, 0,
     "There should be no snapshots initially displayed in the UI.");
@@ -23,10 +23,10 @@ async function ifTestingSupported() {
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
-  let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
-  let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  const thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
+  const screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([
     recordingFinished,
@@ -47,8 +47,8 @@ async function ifTestingSupported() {
   is($all(".filmstrip-thumbnail").length, 4,
     "All the thumbnails should now be displayed in the UI (2).");
 
-  let reset = once(window, EVENTS.UI_RESET);
-  let navigated = reload(target);
+  const reset = once(window, EVENTS.UI_RESET);
+  const navigated = reload(target);
 
   await reset;
   ok(true, "The UI was reset after the refresh button was clicked.");

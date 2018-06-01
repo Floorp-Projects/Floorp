@@ -74,7 +74,7 @@ function testUnsaved() {
   testCancelAfterLoad();
 
   function mockSaveFile(aScratchpad) {
-    let SaveFileStub = function(aCallback) {
+    const SaveFileStub = function(aCallback) {
       /*
        * An argument for aCallback must pass Components.isSuccessCode
        *
@@ -120,7 +120,7 @@ function testCancelAfterLoad() {
     win.Scratchpad.editor.dirty = true;
     promptButton = win.BUTTON_POSITION_CANCEL;
 
-    let EventStub = {
+    const EventStub = {
       called: false,
       preventDefault: function() {
         EventStub.called = true;
@@ -143,7 +143,7 @@ function testUnsavedFileSave(aCallback = function() {}) {
     win.Scratchpad.importFromFile(gFile, true, function(status, content) {
       aCallback(win.Scratchpad, gFile.path);
 
-      let text = "new text";
+      const text = "new text";
       win.Scratchpad.setText(text);
 
       promptButton = win.BUTTON_POSITION_SAVE;
@@ -180,28 +180,28 @@ function cleanup() {
 }
 
 function createTempFile(name) {
-  let file = FileUtils.getFile("TmpD", [name]);
+  const file = FileUtils.getFile("TmpD", [name]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   file.QueryInterface(Ci.nsIFile);
   return file;
 }
 
 function writeFile(file, content, callback) {
-  let fout = Cc["@mozilla.org/network/file-output-stream;1"]
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, fout.DEFER_OPEN);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  let fileContentStream = converter.convertToInputStream(content);
+  const fileContentStream = converter.convertToInputStream(content);
 
   NetUtil.asyncCopy(fileContentStream, fout, callback);
 }
 
 function readFile(file, callback) {
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(file),
     loadUsingSystemPrincipal: true});
   channel.contentType = "application/javascript";
@@ -210,7 +210,7 @@ function readFile(file, callback) {
     ok(Components.isSuccessCode(status),
        "file was read successfully");
 
-    let content = NetUtil.readInputStreamToString(inputStream,
+    const content = NetUtil.readInputStreamToString(inputStream,
                                                   inputStream.available());
     callback(content);
   });

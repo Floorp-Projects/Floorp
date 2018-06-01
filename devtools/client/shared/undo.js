@@ -61,14 +61,14 @@ UndoStack.prototype = {
 
     // Cut off the end of the undo stack at the current index,
     // and the beginning to prevent a stack larger than maxUndo.
-    let start = Math.max((this._index + 1) - this.maxUndo, 0);
+    const start = Math.max((this._index + 1) - this.maxUndo, 0);
     this._stack = this._stack.slice(start, this._index);
 
-    let batch = this._batch;
+    const batch = this._batch;
     delete this._batch;
-    let entry = {
+    const entry = {
       do: function() {
-        for (let item of batch) {
+        for (const item of batch) {
           item.do();
         }
       },
@@ -153,7 +153,7 @@ UndoStack.prototype = {
    * Install this object as a command controller.
    */
   installController: function(controllerWindow) {
-    let controllers = controllerWindow.controllers;
+    const controllers = controllerWindow.controllers;
     // Only available when running in a Firefox panel.
     if (!controllers || !controllers.appendController) {
       return;

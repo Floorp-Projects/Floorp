@@ -21,7 +21,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();
 

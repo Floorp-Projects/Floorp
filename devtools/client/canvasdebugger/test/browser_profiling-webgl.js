@@ -7,7 +7,7 @@
  */
 
 async function ifTestingSupported() {
-  let currentTime = window.performance.now();
+  const currentTime = window.performance.now();
   info("Start to estimate WebGL drawArrays function.");
   var { target, front } = await initCanvasDebuggerBackend(WEBGL_DRAW_ARRAYS);
 
@@ -42,7 +42,7 @@ async function ifTestingSupported() {
   await removeTab(target.tab);
 
   info("Start to estimate WebGL drawElements function.");
-  let result = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  const result = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
   target = result.target;
   front = result.front;
 

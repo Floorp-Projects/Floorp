@@ -9,10 +9,10 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   info("console.log with a string argument");
-  let receivedMessages = waitForMessages({
+  const receivedMessages = waitForMessages({
     hud,
     messages: [{
       // Test that the output does not include quotes.
@@ -27,10 +27,10 @@ add_task(async function() {
   await receivedMessages;
 
   info("evaluating a string constant");
-  let jsterm = hud.jsterm;
+  const jsterm = hud.jsterm;
   await jsterm.execute("\"string\\nconstant\"");
-  let msg = await waitFor(() => findMessage(hud, "constant"));
-  let body = msg.querySelector(".message-body");
+  const msg = await waitFor(() => findMessage(hud, "constant"));
+  const body = msg.querySelector(".message-body");
   // On the other hand, a string constant result should be quoted, but
   // newlines should be let through.
   ok(body.textContent.includes("\"string\nconstant\""), "found expected text");

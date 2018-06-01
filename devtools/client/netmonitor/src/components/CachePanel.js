@@ -40,12 +40,12 @@
    }
 
    componentDidMount() {
-     let { connector, request } = this.props;
+     const { connector, request } = this.props;
      fetchNetworkUpdatePacket(connector.requestData, request, ["responseCache"]);
    }
 
    componentWillReceiveProps(nextProps) {
-     let { connector, request } = nextProps;
+     const { connector, request } = nextProps;
      fetchNetworkUpdatePacket(connector.requestData, request, ["responseCache"]);
    }
 
@@ -85,19 +85,19 @@
      if (!timestamp) {
        return null;
      }
-     let d = new Date(parseInt(timestamp, 10) * 1000);
+     const d = new Date(parseInt(timestamp, 10) * 1000);
      return d.toLocaleDateString() + " " + d.toLocaleTimeString();
    }
 
    render() {
-     let {
+     const {
       request,
       openLink,
      } = this.props;
-     let { responseCache } = request;
+     const { responseCache } = request;
 
      let object;
-     let cache = this.getProperties(responseCache);
+     const cache = this.getProperties(responseCache);
 
      if (cache.lastFetched || cache.fetchCount || cache.dataSize
         || cache.lastModified | cache.expires || cache.device) {

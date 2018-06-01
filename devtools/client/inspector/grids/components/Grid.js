@@ -34,7 +34,7 @@ class Grid extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       getSwatchColorPickerTooltip,
       grids,
       highlighterSettings,

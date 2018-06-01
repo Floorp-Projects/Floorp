@@ -8,7 +8,7 @@
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 function test() {
-  let l10n = new LocalizationHelper();
+  const l10n = new LocalizationHelper();
 
   is(l10n.numberWithDecimals(1234.56789, 2), "1,234.57",
     "The first number was properly localized.");

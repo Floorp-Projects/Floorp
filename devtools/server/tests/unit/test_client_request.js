@@ -87,7 +87,7 @@ function test_client_request_callback() {
 
 function test_client_request_promise() {
   // Test that DebuggerClient.request returns a promise that resolves on response
-  let request = gClient.request({
+  const request = gClient.request({
     to: gActorId,
     type: "hello"
   });
@@ -103,7 +103,7 @@ function test_client_request_promise() {
 function test_client_request_promise_error() {
   // Test that DebuggerClient.request returns a promise that reject when server
   // returns an explicit error message
-  let request = gClient.request({
+  const request = gClient.request({
     to: gActorId,
     type: "error"
   });
@@ -121,7 +121,7 @@ function test_client_request_promise_error() {
 
 function test_client_request_event_emitter() {
   // Test that DebuggerClient.request returns also an EventEmitter object
-  let request = gClient.request({
+  const request = gClient.request({
     to: gActorId,
     type: "hello"
   });
@@ -137,19 +137,19 @@ function test_close_client_while_sending_requests() {
   // First send a first request that will be "active"
   // while the connection is closed.
   // i.e. will be sent but no response received yet.
-  let activeRequest = gClient.request({
+  const activeRequest = gClient.request({
     to: gActorId,
     type: "hello"
   });
 
   // Pile up a second one that will be "pending".
   // i.e. won't event be sent.
-  let pendingRequest = gClient.request({
+  const pendingRequest = gClient.request({
     to: gActorId,
     type: "hello"
   });
 
-  let expectReply = defer();
+  const expectReply = defer();
   gClient.expectReply("root", function(response) {
     Assert.equal(response.error, "connectionClosed");
     Assert.equal(response.message,
@@ -181,7 +181,7 @@ function test_close_client_while_sending_requests() {
 function test_client_request_after_close() {
   // Test that DebuggerClient.request fails after we called client.close()
   // (with promise API)
-  let request = gClient.request({
+  const request = gClient.request({
     to: gActorId,
     type: "hello"
   });

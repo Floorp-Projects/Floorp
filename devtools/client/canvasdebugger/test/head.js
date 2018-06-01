@@ -69,7 +69,7 @@ function ifTestingUnsupported() {
 }
 
 async function test() {
-  let generator = isTestingSupported() ? ifTestingSupported : ifTestingUnsupported;
+  const generator = isTestingSupported() ? ifTestingSupported : ifTestingUnsupported;
   try {
     await generator();
   } catch (e) {
@@ -87,7 +87,7 @@ function isTestingSupported() {
     return true;
   }
 
-  let supported = isWebGLSupported(document);
+  const supported = isWebGLSupported(document);
 
   info("This test requires WebGL support.");
   info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
@@ -119,12 +119,12 @@ function initCallWatcherBackend(aUrl) {
   initServer();
 
   return (async function() {
-    let tab = await addTab(aUrl);
-    let target = TargetFactory.forTab(tab);
+    const tab = await addTab(aUrl);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
-    let front = new CallWatcherFront(target.client, target.form);
+    const front = new CallWatcherFront(target.client, target.form);
     return { target, front };
   })();
 }
@@ -134,12 +134,12 @@ function initCanvasDebuggerBackend(aUrl) {
   initServer();
 
   return (async function() {
-    let tab = await addTab(aUrl);
-    let target = TargetFactory.forTab(tab);
+    const tab = await addTab(aUrl);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
-    let front = new CanvasFront(target.client, target.form);
+    const front = new CanvasFront(target.client, target.form);
     return { target, front };
   })();
 }
@@ -148,14 +148,14 @@ function initCanvasDebuggerFrontend(aUrl) {
   info("Initializing a canvas debugger pane.");
 
   return (async function() {
-    let tab = await addTab(aUrl);
-    let target = TargetFactory.forTab(tab);
+    const tab = await addTab(aUrl);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
-    let toolbox = await gDevTools.showToolbox(target, "canvasdebugger");
-    let panel = toolbox.getCurrentPanel();
+    const toolbox = await gDevTools.showToolbox(target, "canvasdebugger");
+    const panel = toolbox.getCurrentPanel();
     return { target, panel };
   })();
 }
@@ -163,13 +163,13 @@ function initCanvasDebuggerFrontend(aUrl) {
 function teardown({target}) {
   info("Destroying the specified canvas debugger.");
 
-  let {tab} = target;
+  const {tab} = target;
   return gDevTools.closeToolbox(target).then(() => {
     removeTab(tab);
   });
 }
 
 function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  const item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item ? item.value : null;
 }

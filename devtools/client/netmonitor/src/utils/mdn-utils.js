@@ -156,7 +156,7 @@ const getGAParams = (panelId = "netmonitor") => {
  */
 function getHeadersURL(header) {
   const lowerCaseHeader = header.toLowerCase();
-  let idx = SUPPORTED_HEADERS.findIndex(item =>
+  const idx = SUPPORTED_HEADERS.findIndex(item =>
     item.toLowerCase() === lowerCaseHeader);
   return idx > -1 ?
     `${MDN_URL}Web/HTTP/Headers/${SUPPORTED_HEADERS[idx] + getGAParams()}` : null;

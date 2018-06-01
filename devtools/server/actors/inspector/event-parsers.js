@@ -16,31 +16,31 @@ var parsers = [
   {
     id: "jQuery events",
     getListeners: function(node) {
-      let global = node.ownerGlobal.wrappedJSObject;
-      let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
+      const global = node.ownerGlobal.wrappedJSObject;
+      const hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
       if (!hasJQuery) {
         return undefined;
       }
 
-      let jQuery = global.jQuery;
-      let handlers = [];
+      const jQuery = global.jQuery;
+      const handlers = [];
 
       // jQuery 1.2+
-      let data = jQuery._data || jQuery.data;
+      const data = jQuery._data || jQuery.data;
       if (data) {
-        let eventsObj = data(node, "events");
-        for (let type in eventsObj) {
-          let events = eventsObj[type];
-          for (let key in events) {
-            let event = events[key];
+        const eventsObj = data(node, "events");
+        for (const type in eventsObj) {
+          const events = eventsObj[type];
+          for (const key in events) {
+            const event = events[key];
 
             if (node.wrappedJSObject == global.document && event.selector) {
               continue;
             }
 
             if (typeof event === "object" || typeof event === "function") {
-              let eventInfo = {
+              const eventInfo = {
                 type: type,
                 handler: event.handler || event,
                 tags: "jQuery",
@@ -57,23 +57,23 @@ var parsers = [
       }
 
       // JQuery 1.0 & 1.1
-      let entry = jQuery(node)[0];
+      const entry = jQuery(node)[0];
 
       if (!entry) {
         return handlers;
       }
 
-      for (let type in entry.events) {
-        let events = entry.events[type];
-        for (let key in events) {
-          let event = events[key];
+      for (const type in entry.events) {
+        const events = entry.events[type];
+        for (const key in events) {
+          const event = events[key];
 
           if (node.wrappedJSObject == global.document && event.selector) {
             continue;
           }
 
           if (typeof events[key] === "function") {
-            let eventInfo = {
+            const eventInfo = {
               type: type,
               handler: events[key],
               tags: "jQuery",
@@ -104,7 +104,7 @@ var parsers = [
         // If the anonymous function is inside the |proxy| function and the
         // function only has guessed atom, the guessed atom should starts with
         // "proxy/".
-        let displayName = funcDO.displayName;
+        const displayName = funcDO.displayName;
         if (displayName && displayName.startsWith("proxy/")) {
           return true;
         }
@@ -113,20 +113,20 @@ var parsers = [
         // function gets name at compile time by SetFunctionName, its guessed
         // atom doesn't contain "proxy/".  In that case, check if the caller is
         // "proxy" function, as a fallback.
-        let calleeDO = funcDO.environment.callee;
+        const calleeDO = funcDO.environment.callee;
         if (!calleeDO) {
           return false;
         }
-        let calleeName = calleeDO.displayName;
+        const calleeName = calleeDO.displayName;
         return calleeName == "proxy";
       }
 
       function getFirstFunctionVariable(funcDO) {
         // The handler function inside the |proxy| function should point the
         // unwrapped function via environment variable.
-        let names = funcDO.environment.names();
-        for (let varName of names) {
-          let varDO = handlerDO.environment.getVariable(varName);
+        const names = funcDO.environment.names();
+        for (const varName of names) {
+          const varDO = handlerDO.environment.getVariable(varName);
           if (!varDO) {
             continue;
           }
@@ -143,7 +143,7 @@ var parsers = [
 
       const MAX_NESTED_HANDLER_COUNT = 2;
       for (let i = 0; i < MAX_NESTED_HANDLER_COUNT; i++) {
-        let funcDO = getFirstFunctionVariable(handlerDO);
+        const funcDO = getFirstFunctionVariable(handlerDO);
         if (!funcDO) {
           return handlerDO;
         }
@@ -164,11 +164,11 @@ var parsers = [
       let listeners;
 
       if (node.nodeName.toLowerCase() === "html") {
-        let winListeners =
+        const winListeners =
           Services.els.getListenerInfoFor(node.ownerGlobal) || [];
-        let docElementListeners =
+        const docElementListeners =
           Services.els.getListenerInfoFor(node) || [];
-        let docListeners =
+        const docListeners =
           Services.els.getListenerInfoFor(node.parentNode) || [];
 
         listeners = [...winListeners, ...docElementListeners, ...docListeners];
@@ -176,7 +176,7 @@ var parsers = [
         listeners = Services.els.getListenerInfoFor(node) || [];
       }
 
-      for (let listener of listeners) {
+      for (const listener of listeners) {
         if (listener.listenerObject && listener.type) {
           return true;
         }
@@ -185,22 +185,22 @@ var parsers = [
       return false;
     },
     getListeners: function(node) {
-      let handlers = [];
-      let listeners = Services.els.getListenerInfoFor(node);
+      const handlers = [];
+      const listeners = Services.els.getListenerInfoFor(node);
 
       // The Node actor's getEventListenerInfo knows that when an html tag has
       // been passed we need the window object so we don't need to account for
       // event hoisting here as we did in hasListeners.
 
-      for (let listenerObj of listeners) {
-        let listener = listenerObj.listenerObject;
+      for (const listenerObj of listeners) {
+        const listener = listenerObj.listenerObject;
 
         // If there is no JS event listener skip this.
         if (!listener || JQUERY_LIVE_REGEX.test(listener.toString())) {
           continue;
         }
 
-        let eventInfo = {
+        const eventInfo = {
           capturing: listenerObj.capturing,
           type: listenerObj.type,
           handler: listener
@@ -230,8 +230,8 @@ var parsers = [
         handlerDO = handlerDO.boundTargetFunction;
       }
 
-      let introScript = handlerDO.script.source.introductionScript;
-      let script = handlerDO.script;
+      const introScript = handlerDO.script.source.introductionScript;
+      const script = handlerDO.script;
 
       // If this is a Babel transpiled function we have no access to the
       // source location so we need to hide the filename and debugger
@@ -250,7 +250,7 @@ var parsers = [
 
         functionText += ") {\n";
 
-        let scriptSource = script.source.text;
+        const scriptSource = script.source.text;
         functionText +=
           scriptSource.substr(script.sourceStart, script.sourceLength);
 
@@ -264,9 +264,9 @@ var parsers = [
 
 function reactGetListeners(node, boolOnEventFound) {
   function getProps() {
-    for (let key of Object.keys(node)) {
+    for (const key of Object.keys(node)) {
       if (key.startsWith("__reactInternalInstance$")) {
-        let value = node[key];
+        const value = node[key];
         if (value.memoizedProps) {
           return value.memoizedProps; // React 16
         }
@@ -278,14 +278,14 @@ function reactGetListeners(node, boolOnEventFound) {
 
   node = node.wrappedJSObject || node;
 
-  let handlers = [];
-  let props = getProps();
+  const handlers = [];
+  const props = getProps();
 
   if (props) {
-    for (let name in props) {
+    for (const name in props) {
       if (name.startsWith("on")) {
-        let prop = props[name];
-        let listener = prop.__reactBoundMethod || prop;
+        const prop = props[name];
+        const listener = prop.__reactBoundMethod || prop;
 
         if (typeof listener !== "function") {
           continue;
@@ -295,7 +295,7 @@ function reactGetListeners(node, boolOnEventFound) {
           return true;
         }
 
-        let handler = {
+        const handler = {
           type: name,
           handler: listener,
           tags: "React",
@@ -320,32 +320,32 @@ function reactGetListeners(node, boolOnEventFound) {
 }
 
 function jQueryLiveGetListeners(node, boolOnEventFound) {
-  let global = node.ownerGlobal.wrappedJSObject;
-  let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
+  const global = node.ownerGlobal.wrappedJSObject;
+  const hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
   if (!hasJQuery) {
     return undefined;
   }
 
-  let jQuery = global.jQuery;
-  let handlers = [];
-  let data = jQuery._data || jQuery.data;
+  const jQuery = global.jQuery;
+  const handlers = [];
+  const data = jQuery._data || jQuery.data;
 
   if (data) {
     // Live events are added to the document and bubble up to all elements.
     // Any element matching the specified selector will trigger the live
     // event.
-    let events = data(global.document, "events");
+    const events = data(global.document, "events");
 
-    for (let type in events) {
-      let eventHolder = events[type];
+    for (const type in events) {
+      const eventHolder = events[type];
 
-      for (let idx in eventHolder) {
+      for (const idx in eventHolder) {
         if (typeof idx !== "string" || isNaN(parseInt(idx, 10))) {
           continue;
         }
 
-        let event = eventHolder[idx];
+        const event = eventHolder[idx];
         let selector = event.selector;
 
         if (!selector && event.data) {
@@ -373,7 +373,7 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
 
         if (!boolOnEventFound &&
             (typeof event === "object" || typeof event === "function")) {
-          let eventInfo = {
+          const eventInfo = {
             type: event.origType || event.type.substr(selector.length + 1),
             handler: event.handler || event,
             tags: "jQuery,Live",
@@ -401,7 +401,7 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
 
 this.EventParsers = function EventParsers() {
   if (this._eventParsers.size === 0) {
-    for (let parserObj of parsers) {
+    for (const parserObj of parsers) {
       this.registerEventParser(parserObj);
     }
   }
@@ -470,7 +470,7 @@ EventParsers.prototype = {
    *   }
    */
   registerEventParser: function(parserObj) {
-    let parserId = parserObj.id;
+    const parserId = parserObj.id;
 
     if (!parserId) {
       throw new Error("Cannot register new event parser with id " + parserId);
@@ -500,7 +500,7 @@ EventParsers.prototype = {
    * Tidy up parsers.
    */
   destroy: function() {
-    for (let [id] of this._eventParsers) {
+    for (const [id] of this._eventParsers) {
       this.unregisterEventParser(id, true);
     }
   }

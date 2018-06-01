@@ -15,17 +15,17 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
-  let rec = await front.startRecording({ withMarkers: true });
+  const rec = await front.startRecording({ withMarkers: true });
 
   pmmLoadFrameScripts(gBrowser);
   pmmConsoleMethod("timeStamp");
   pmmConsoleMethod("timeStamp", "myLabel");
 
-  let markers = await waitForMarkerType(front, MARKER_NAME, m => m.length >= 2);
+  const markers = await waitForMarkerType(front, MARKER_NAME, m => m.length >= 2);
 
   await front.stopRecording(rec);
 

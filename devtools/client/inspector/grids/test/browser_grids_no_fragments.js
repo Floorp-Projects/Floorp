@@ -26,23 +26,23 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
 
-  let gridList = doc.querySelector("#grid-list");
+  const gridList = doc.querySelector("#grid-list");
   is(gridList.children.length, 2, "There are 2 grids in the list");
 
   info("Try to click the first grid's checkbox");
-  let checkbox1 = gridList.children[0].querySelector("input");
-  let onCheckbox1Change = waitUntilState(store, state =>
+  const checkbox1 = gridList.children[0].querySelector("input");
+  const onCheckbox1Change = waitUntilState(store, state =>
     state.grids[0] && state.grids[0].highlighted);
   checkbox1.click();
   await onCheckbox1Change;
 
   info("Try to click the second grid's checkbox");
-  let checkbox2 = gridList.children[1].querySelector("input");
-  let onCheckbox2Change = waitUntilState(store, state =>
+  const checkbox2 = gridList.children[1].querySelector("input");
+  const onCheckbox2Change = waitUntilState(store, state =>
     state.grids[1] && state.grids[1].highlighted);
   checkbox2.click();
   await onCheckbox2Change;

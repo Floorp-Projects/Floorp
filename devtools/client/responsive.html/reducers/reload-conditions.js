@@ -17,7 +17,7 @@ const INITIAL_RELOAD_CONDITIONS = {
   state: Types.loadableState.INITIALIZED,
 };
 
-let reducers = {
+const reducers = {
 
   [CHANGE_RELOAD_CONDITION](conditions, { id, value }) {
     return Object.assign({}, conditions, {
@@ -34,7 +34,7 @@ let reducers = {
 };
 
 module.exports = function(conditions = INITIAL_RELOAD_CONDITIONS, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return conditions;
   }

@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
   info("Selecting 'simple-animation' animation which is running on compositor");
   await selectNodeAndWaitForAnimations(".animated", inspector);

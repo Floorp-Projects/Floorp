@@ -40,7 +40,7 @@ windowPrototype.initialize = function(connection, window) {
   Actor.prototype.initialize.call(this, connection);
   TabActor.call(this, connection);
 
-  let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+  const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
   Object.defineProperty(this, "docShell", {
     value: docShell,

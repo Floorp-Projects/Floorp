@@ -17,7 +17,7 @@ const TEST_URI =
   `;
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
   await waitFor(() => findMessages(hud, "").length == 100);
@@ -40,7 +40,7 @@ add_task(async function() {
 
   // End
   EventUtils.synthesizeKey("KEY_End");
-  let scrollTop = outputScroller.scrollTop;
+  const scrollTop = outputScroller.scrollTop;
   ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
      "scroll position now at bottom");
 

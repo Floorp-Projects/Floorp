@@ -16,8 +16,8 @@ const SYMBOL_NAME = "abc";
 const TEST_SYMBOL = Symbol(SYMBOL_NAME);
 
 function makeMockSymbolActor() {
-  let symbol = TEST_SYMBOL;
-  let actor = new SymbolActor(symbol);
+  const symbol = TEST_SYMBOL;
+  const actor = new SymbolActor(symbol);
   actor.actorID = "symbol1";
   actor.registeredPool = {
     symbolActors: {
@@ -28,7 +28,7 @@ function makeMockSymbolActor() {
 }
 
 function test_SA_destroy() {
-  let actor = makeMockSymbolActor();
+  const actor = makeMockSymbolActor();
   strictEqual(actor.registeredPool.symbolActors[TEST_SYMBOL], actor);
 
   actor.destroy();
@@ -36,14 +36,14 @@ function test_SA_destroy() {
 }
 
 function test_SA_form() {
-  let actor = makeMockSymbolActor();
-  let form = actor.form();
+  const actor = makeMockSymbolActor();
+  const form = actor.form();
   strictEqual(form.type, "symbol");
   strictEqual(form.actor, actor.actorID);
   strictEqual(form.name, SYMBOL_NAME);
 }
 
 function test_SA_raw() {
-  let actor = makeMockSymbolActor();
+  const actor = makeMockSymbolActor();
   strictEqual(actor.rawValue(), TEST_SYMBOL);
 }

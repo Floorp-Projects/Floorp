@@ -6,12 +6,12 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  const programActor = await once(front, "program-linked");
+  const vertexShader = await programActor.getVertexShader();
+  const fragmentShader = await programActor.getFragmentShader();
 
   await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   await ensurePixelIs(front, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
@@ -24,7 +24,7 @@ async function ifWebGLSupported() {
   ok(!fragSource.includes("0.5"),
     "The fragment shader source is correct before changing it.");
 
-  let newVertSource = vertSource.replace("1.0", "2.0");
+  const newVertSource = vertSource.replace("1.0", "2.0");
   let status = await vertexShader.compile(newVertSource);
   ok(!status,
     "The new vertex shader source was compiled without errors.");
@@ -40,7 +40,7 @@ async function ifWebGLSupported() {
   ok(!fragSource.includes("0.5"),
     "The fragment shader source is correct after changing the vertex shader.");
 
-  let newFragSource = fragSource.replace("1.0", "0.5");
+  const newFragSource = fragSource.replace("1.0", "0.5");
   status = await fragmentShader.compile(newFragSource);
   ok(!status,
     "The new fragment shader source was compiled without errors.");

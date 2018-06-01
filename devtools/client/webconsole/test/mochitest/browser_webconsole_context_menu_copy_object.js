@@ -23,33 +23,33 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
 const copyObjectMenuItemId = "#console-menu-copy-object";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let [msgWithText, msgWithObj, msgNested] =
+  const [msgWithText, msgWithObj, msgNested] =
     await waitFor(() => findMessages(hud, "foo"));
   ok(msgWithText && msgWithObj && msgNested, "Three messages should have appeared");
 
-  let [groupMsgObj] = await waitFor(() => findMessages(hud, "group", ".message-body"));
-  let [collapsedGroupMsgObj] = await waitFor(() =>
+  const [groupMsgObj] = await waitFor(() => findMessages(hud, "group", ".message-body"));
+  const [collapsedGroupMsgObj] = await waitFor(() =>
     findMessages(hud, "collapsed", ".message-body"));
-  let [numberMsgObj] = await waitFor(() => findMessages(hud, `532`, ".message-body"));
-  let [trueMsgObj] = await waitFor(() => findMessages(hud, `true`, ".message-body"));
-  let [falseMsgObj] = await waitFor(() => findMessages(hud, `false`, ".message-body"));
-  let [undefinedMsgObj] = await waitFor(() => findMessages(hud, `undefined`,
+  const [numberMsgObj] = await waitFor(() => findMessages(hud, `532`, ".message-body"));
+  const [trueMsgObj] = await waitFor(() => findMessages(hud, `true`, ".message-body"));
+  const [falseMsgObj] = await waitFor(() => findMessages(hud, `false`, ".message-body"));
+  const [undefinedMsgObj] = await waitFor(() => findMessages(hud, `undefined`,
     ".message-body"));
-  let [nullMsgObj] = await waitFor(() => findMessages(hud, `null`, ".message-body"));
+  const [nullMsgObj] = await waitFor(() => findMessages(hud, `null`, ".message-body"));
   ok(nullMsgObj, "One message with null value should have appeared");
 
-  let text = msgWithText.querySelector(".objectBox-string");
-  let objInMsgWithObj = msgWithObj.querySelector(".objectBox-object");
-  let textInMsgWithObj = msgWithObj.querySelector(".objectBox-string");
+  const text = msgWithText.querySelector(".objectBox-string");
+  const objInMsgWithObj = msgWithObj.querySelector(".objectBox-object");
+  const textInMsgWithObj = msgWithObj.querySelector(".objectBox-string");
 
   // The third message has an object nested in an array, the array is therefore the top
   // object, the object is the nested object.
-  let topObjInMsg = msgNested.querySelector(".objectBox-array");
-  let nestedObjInMsg = msgNested.querySelector(".objectBox-object");
+  const topObjInMsg = msgNested.querySelector(".objectBox-array");
+  const nestedObjInMsg = msgNested.querySelector(".objectBox-object");
 
-  let consoleMessages = await waitFor(() => findMessages(hud, "console.log(\"foo\");",
+  const consoleMessages = await waitFor(() => findMessages(hud, "console.log(\"foo\");",
     ".message-location"));
   await testCopyObjectMenuItemDisabled(hud, consoleMessages[0]);
 
@@ -93,12 +93,12 @@ add_task(async function() {
 async function testCopyObject(hud, element, expectedMessage, objectInput) {
   info("Check `Copy object` is enabled");
   let menuPopup = await openContextMenu(hud, element);
-  let copyObjectMenuItem = menuPopup.querySelector(copyObjectMenuItemId);
+  const copyObjectMenuItem = menuPopup.querySelector(copyObjectMenuItemId);
   ok(!copyObjectMenuItem.disabled,
     "`Copy object` is enabled for object in complex message");
 
   const validatorFn = data => {
-    let prettifiedMessage = prettyPrintMessage(expectedMessage, objectInput);
+    const prettifiedMessage = prettyPrintMessage(expectedMessage, objectInput);
     return data === prettifiedMessage;
   };
 
@@ -111,8 +111,8 @@ async function testCopyObject(hud, element, expectedMessage, objectInput) {
 }
 
 async function testCopyObjectMenuItemDisabled(hud, element) {
-  let menuPopup = await openContextMenu(hud, element);
-  let copyObjectMenuItem = menuPopup.querySelector(copyObjectMenuItemId);
+  const menuPopup = await openContextMenu(hud, element);
+  const copyObjectMenuItem = menuPopup.querySelector(copyObjectMenuItemId);
   ok(copyObjectMenuItem.disabled, `"Copy object" is disabled for messages
     with no variables/objects`);
   await hideContextMenu(hud);

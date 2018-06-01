@@ -57,10 +57,10 @@ HarBuilder.prototype = {
     this.promises = [];
 
     // Build basic structure for data.
-    let log = buildHarLog(appInfo);
+    const log = buildHarLog(appInfo);
 
     // Build entries.
-    for (let file of this._options.items) {
+    for (const file of this._options.items) {
       log.log.entries.push(await this.buildEntry(log.log, file));
     }
 
@@ -74,7 +74,7 @@ HarBuilder.prototype = {
   // Helpers
 
   buildPage: function(file) {
-    let page = {};
+    const page = {};
 
     // Page start time is set when the first request is processed
     // (see buildEntry)
@@ -86,7 +86,7 @@ HarBuilder.prototype = {
   },
 
   getPage: function(log, file) {
-    let id = this._options.id;
+    const id = this._options.id;
     let page = this._pageMap[id];
     if (page) {
       return page;
@@ -99,9 +99,9 @@ HarBuilder.prototype = {
   },
 
   buildEntry: async function(log, file) {
-    let page = this.getPage(log, file);
+    const page = this.getPage(log, file);
 
-    let entry = {};
+    const entry = {};
     entry.pageref = page.id;
     entry.startedDateTime = dateToJSON(new Date(file.startedMillis));
 
@@ -124,7 +124,7 @@ HarBuilder.prototype = {
     // data thereby overlapping a sending data period and TLS
     // handshake period.
     entry.time = TIMING_KEYS.reduce((sum, type) => {
-      let time = entry.timings[type];
+      const time = entry.timings[type];
       return (typeof time != "undefined") ? (sum + time) : sum;
     }, 0);
 
@@ -151,12 +151,12 @@ HarBuilder.prototype = {
 
   buildPageTimings: function(page, file) {
     // Event timing info isn't available
-    let timings = {
+    const timings = {
       onContentLoad: -1,
       onLoad: -1
     };
 
-    let getTimingMarker = this._options.getTimingMarker;
+    const getTimingMarker = this._options.getTimingMarker;
     if (getTimingMarker) {
       timings.onContentLoad = getTimingMarker("firstDocumentDOMContentLoadedTimestamp");
       timings.onLoad = getTimingMarker("firstDocumentLoadTimestamp");
@@ -180,7 +180,7 @@ HarBuilder.prototype = {
       requestCookies = await this._options.requestData(file.id, "requestCookies");
     }
 
-    let request = {
+    const request = {
       bodySize: 0
     };
     request.method = file.method;
@@ -220,8 +220,8 @@ HarBuilder.prototype = {
     }
 
     this.fetchData(file.requestPostData.postData.text).then(value => {
-      let multipartHeaders = CurlUtils.getHeadersFromMultipartText(value);
-      for (let header of multipartHeaders) {
+      const multipartHeaders = CurlUtils.getHeadersFromMultipartText(value);
+      for (const header of multipartHeaders) {
         input.push(header);
       }
     });
@@ -238,7 +238,7 @@ HarBuilder.prototype = {
   },
 
   buildNameValuePairs: function(entries) {
-    let result = [];
+    const result = [];
 
     // HAR requires headers array to be presented, so always
     // return at least an empty array.
@@ -280,7 +280,7 @@ HarBuilder.prototype = {
       requestHeaders = await this._options.requestData(file.id, "requestHeaders");
     }
 
-    let postData = {
+    const postData = {
       mimeType: findValue(requestHeaders.headers, "content-type"),
       params: [],
       text: requestPostData.postData.text,
@@ -298,7 +298,7 @@ HarBuilder.prototype = {
     })) {
       postData.mimeType = "application/x-www-form-urlencoded";
       // Extract form parameters and produce nice HAR array.
-      let formDataSections = await getFormDataSections(
+      const formDataSections = await getFormDataSections(
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
@@ -306,7 +306,7 @@ HarBuilder.prototype = {
       );
 
       formDataSections.forEach((section) => {
-        let paramsArray = parseQueryString(section);
+        const paramsArray = parseQueryString(section);
         if (paramsArray) {
           postData.params = [...postData.params, ...paramsArray];
         }
@@ -331,7 +331,7 @@ HarBuilder.prototype = {
       responseCookies = await this._options.requestData(file.id, "responseCookies");
     }
 
-    let response = {
+    const response = {
       status: 0
     };
 
@@ -346,8 +346,8 @@ HarBuilder.prototype = {
     response.cookies = this.buildCookies(responseCookies);
     response.content = await this.buildContent(file);
 
-    let headers = responseHeaders ? responseHeaders.headers : null;
-    let headersSize = responseHeaders ? responseHeaders.headersSize : -1;
+    const headers = responseHeaders ? responseHeaders.headers : null;
+    const headersSize = responseHeaders ? responseHeaders.headersSize : -1;
 
     response.redirectURL = findValue(headers, "Location");
     response.headersSize = headersSize;
@@ -365,7 +365,7 @@ HarBuilder.prototype = {
   },
 
   buildContent: async function(file) {
-    let content = {
+    const content = {
       mimeType: file.mimeType,
       size: -1
     };
@@ -382,8 +382,8 @@ HarBuilder.prototype = {
       content.encoding = responseContent.content.encoding;
     }
 
-    let includeBodies = this._options.includeResponseBodies;
-    let contentDiscarded = responseContent ?
+    const includeBodies = this._options.includeResponseBodies;
+    const contentDiscarded = responseContent ?
       responseContent.contentDiscarded : false;
 
     // The comment is appended only if the response content
@@ -394,7 +394,7 @@ HarBuilder.prototype = {
     }
 
     if (responseContent) {
-      let text = responseContent.content.text;
+      const text = responseContent.content.text;
       this.fetchData(text).then(value => {
         content.text = value;
       });
@@ -404,7 +404,7 @@ HarBuilder.prototype = {
   },
 
   buildCache: function(file) {
-    let cache = {};
+    const cache = {};
 
     if (!file.fromCache) {
       return cache;
@@ -423,7 +423,7 @@ HarBuilder.prototype = {
   },
 
   buildCacheEntry: function(cacheEntry) {
-    let cache = {};
+    const cache = {};
 
     cache.expires = findValue(cacheEntry, "Expires");
     cache.lastAccess = findValue(cacheEntry, "Last Fetched");
@@ -453,7 +453,7 @@ HarBuilder.prototype = {
   // RDP Helpers
 
   fetchData: function(string) {
-    let promise = this._options.getString(string).then(value => {
+    const promise = this._options.getString(string).then(value => {
       return value;
     });
 
@@ -477,7 +477,7 @@ function findValue(arr, name) {
   }
 
   name = name.toLowerCase();
-  let result = arr.find(entry => entry.name.toLowerCase() == name);
+  const result = arr.find(entry => entry.name.toLowerCase() == name);
   return result ? result.value : "";
 }
 
@@ -507,7 +507,7 @@ function dateToJSON(date) {
     return s;
   }
 
-  let result = date.getFullYear() + "-" +
+  const result = date.getFullYear() + "-" +
     f(date.getMonth() + 1) + "-" +
     f(date.getDate()) + "T" +
     f(date.getHours()) + ":" +
@@ -516,13 +516,13 @@ function dateToJSON(date) {
     f(date.getMilliseconds(), 3);
 
   let offset = date.getTimezoneOffset();
-  let positive = offset > 0;
+  const positive = offset > 0;
 
   // Convert to positive number before using Math.floor (see issue 5512)
   offset = Math.abs(offset);
-  let offsetHours = Math.floor(offset / 60);
-  let offsetMinutes = Math.floor(offset % 60);
-  let prettyOffset = (positive > 0 ? "-" : "+") + f(offsetHours) +
+  const offsetHours = Math.floor(offset / 60);
+  const offsetMinutes = Math.floor(offset % 60);
+  const prettyOffset = (positive > 0 ? "-" : "+") + f(offsetHours) +
     ":" + f(offsetMinutes);
 
   return result + prettyOffset;

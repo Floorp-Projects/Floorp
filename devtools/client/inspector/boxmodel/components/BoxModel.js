@@ -34,7 +34,7 @@ class BoxModel extends PureComponent {
   }
 
   onKeyDown(event) {
-    let { target } = event;
+    const { target } = event;
 
     if (target == this.boxModelContainer) {
       this.boxModelMain.onKeyDown(event);
@@ -42,7 +42,7 @@ class BoxModel extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       boxModel,
       setSelectedNode,
       showBoxModelProperties,

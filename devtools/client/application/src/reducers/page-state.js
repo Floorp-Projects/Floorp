@@ -22,7 +22,7 @@ function getDomainFromUrl(url) {
 function pageReducer(state = PageState(), action) {
   switch (action.type) {
     case UPDATE_DOMAIN: {
-      let { url } = action;
+      const { url } = action;
       return {
         domain: getDomainFromUrl(url)
       };

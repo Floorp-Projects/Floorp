@@ -46,7 +46,7 @@ exports.getSnapshotTitle = function(snapshot) {
     return OS.Path.basename(snapshot.path.replace(/\.fxsnapshot$/, ""));
   }
 
-  let date = new Date(snapshot.creationTime / 1000);
+  const date = new Date(snapshot.creationTime / 1000);
   return date.toLocaleTimeString(void 0, {
     year: "2-digit",
     month: "2-digit",
@@ -387,7 +387,7 @@ exports.getSnapshotTotals = function(census) {
   let bytes = 0;
   let count = 0;
 
-  let report = census.report;
+  const report = census.report;
   if (report) {
     bytes = report.totalBytes;
     count = report.totalCount;
@@ -423,10 +423,10 @@ exports.openFilePicker = function({ title, filters, defaultName, mode }) {
     throw new Error("No valid mode specified for nsIFilePicker.");
   }
 
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   fp.init(window, title, fpMode);
 
-  for (let filter of (filters || [])) {
+  for (const filter of (filters || [])) {
     fp.appendFilter(filter[0], filter[1]);
   }
   fp.defaultString = defaultName;

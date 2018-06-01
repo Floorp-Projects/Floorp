@@ -23,7 +23,7 @@ var { getSourceText } = require("devtools/client/debugger/content/queries");
  */
 exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
                                                         sourceLine) {
-  let panel = await toolbox.loadTool("styleeditor");
+  const panel = await toolbox.loadTool("styleeditor");
 
   try {
     await panel.selectStyleSheet(sourceURL, sourceLine);
@@ -52,8 +52,8 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
   // If the Debugger was already open, switch to it and try to show the
   // source immediately. Otherwise, initialize it and wait for the sources
   // to be added first.
-  let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
-  let dbg = await toolbox.loadTool("jsdebugger");
+  const debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
+  const dbg = await toolbox.loadTool("jsdebugger");
 
   // New debugger frontend
   if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
@@ -75,10 +75,10 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
     await win.DebuggerController.waitForSourcesLoaded();
   }
 
-  let { DebuggerView } = win;
-  let { Sources } = DebuggerView;
+  const { DebuggerView } = win;
+  const { Sources } = DebuggerView;
 
-  let item = Sources.getItemForAttachment(a => a.source.url === sourceURL);
+  const item = Sources.getItemForAttachment(a => a.source.url === sourceURL);
   if (item) {
     await toolbox.selectTool("jsdebugger");
 
@@ -130,10 +130,10 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
  */
 exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
   // Check for matching top level scratchpad window.
-  let wins = Services.wm.getEnumerator("devtools:scratchpad");
+  const wins = Services.wm.getEnumerator("devtools:scratchpad");
 
   while (wins.hasMoreElements()) {
-    let win = wins.getNext();
+    const win = wins.getNext();
 
     if (!win.closed && win.Scratchpad.uniqueName === sourceURL) {
       win.focus();
@@ -143,10 +143,10 @@ exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
   }
 
   // For scratchpads within toolbox
-  for (let toolbox of gDevTools.getToolboxes()) {
-    let scratchpadPanel = toolbox.getPanel("scratchpad");
+  for (const toolbox of gDevTools.getToolboxes()) {
+    const scratchpadPanel = toolbox.getPanel("scratchpad");
     if (scratchpadPanel) {
-      let { scratchpad } = scratchpadPanel;
+      const { scratchpad } = scratchpadPanel;
       if (scratchpad.uniqueName === sourceURL) {
         toolbox.selectTool("scratchpad");
         toolbox.raise();
@@ -168,7 +168,7 @@ exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
  * @return {Promise}
  */
 exports.viewSource = async function(toolbox, sourceURL, sourceLine) {
-  let utils = toolbox.gViewSourceUtils;
+  const utils = toolbox.gViewSourceUtils;
   utils.viewSource({
     URL: sourceURL,
     lineNumber: sourceLine || 0,

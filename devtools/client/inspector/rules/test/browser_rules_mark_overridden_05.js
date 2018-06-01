@@ -18,15 +18,15 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
 
   await addProperty(view, 1, "background-color", "red");
 
-  let firstProp = rule.textProps[0];
-  let secondProp = rule.textProps[1];
+  const firstProp = rule.textProps[0];
+  const secondProp = rule.textProps[1];
 
   ok(firstProp.overridden, "First property should be overridden.");
   ok(!secondProp.overridden, "Second property should not be overridden.");

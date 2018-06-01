@@ -59,8 +59,8 @@ function run_test() {
   DebuggerServer.createRootActor = RootActor;
   DebuggerServer.init();
 
-  let trace = connectPipeTracing();
-  let client = new DebuggerClient(trace);
+  const trace = connectPipeTracing();
+  const client = new DebuggerClient(trace);
   let rootClient;
 
   client.connect().then(([applicationType, traits]) => {
@@ -70,7 +70,7 @@ function run_test() {
       ok(false, "Connection was aborted, request shouldn't resolve");
       do_test_finished();
     }, e => {
-      let error = e.toString();
+      const error = e.toString();
       ok(true, "Connection was aborted, request rejected correctly");
       ok(error.includes("Request stack:"), "Error includes request stack");
       ok(error.includes("test_protocol_abort.js"), "Stack includes this test");

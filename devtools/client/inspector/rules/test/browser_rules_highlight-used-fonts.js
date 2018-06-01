@@ -71,17 +71,17 @@ if (Services.appinfo.OS !== "Linux") {
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
-  for (let {selector, nb, used} of TESTS) {
-    let onFontHighlighted = view.once("font-highlighted");
+  for (const {selector, nb, used} of TESTS) {
+    const onFontHighlighted = view.once("font-highlighted");
     await selectNode(selector, inspector);
     await onFontHighlighted;
 
     info("Looking for fonts in font-family property in selector " + selector);
 
-    let prop = getRuleViewProperty(view, selector, "font-family").valueSpan;
-    let fonts = prop.querySelectorAll(".ruleview-font-family");
+    const prop = getRuleViewProperty(view, selector, "font-family").valueSpan;
+    const fonts = prop.querySelectorAll(".ruleview-font-family");
 
     ok(fonts.length, "Fonts found in the property");
     is(fonts.length, nb, "Correct number of fonts found in the property");

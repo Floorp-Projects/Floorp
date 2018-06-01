@@ -36,15 +36,15 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testMarkOverridden(inspector, view);
 });
 
 function testMarkOverridden(inspector, view) {
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let RESULTS = [
+  const RESULTS = [
     // We skip the first element
     [],
     [{name: "margin-left", value: "23px", overridden: true}],
@@ -56,11 +56,11 @@ function testMarkOverridden(inspector, view) {
   ];
 
   for (let i = 1; i < RESULTS.length; ++i) {
-    let idRule = elementStyle.rules[i];
+    const idRule = elementStyle.rules[i];
 
-    for (let propIndex in RESULTS[i]) {
-      let expected = RESULTS[i][propIndex];
-      let prop = idRule.textProps[propIndex];
+    for (const propIndex in RESULTS[i]) {
+      const expected = RESULTS[i][propIndex];
+      const prop = idRule.textProps[propIndex];
 
       info("Checking rule " + i + ", property " + propIndex);
 

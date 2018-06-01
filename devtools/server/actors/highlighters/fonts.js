@@ -46,27 +46,27 @@ class FontsHighlighter {
    */
   show(node, options) {
     this.currentNode = node;
-    let doc = this.currentNodeDocument;
+    const doc = this.currentNodeDocument;
 
     // Get all of the fonts used to render content inside the node.
-    let searchRange = doc.createRange();
+    const searchRange = doc.createRange();
     searchRange.selectNodeContents(node);
 
-    let fonts = InspectorUtils.getUsedFontFaces(searchRange, MAX_TEXT_RANGES);
+    const fonts = InspectorUtils.getUsedFontFaces(searchRange, MAX_TEXT_RANGES);
 
     // Find the ones we want, based on the provided option.
-    let matchingFonts = fonts.filter(f => f.CSSFamilyName === options.CSSFamilyName &&
+    const matchingFonts = fonts.filter(f => f.CSSFamilyName === options.CSSFamilyName &&
                                           f.name === options.name);
     if (!matchingFonts.length) {
       return;
     }
 
     // Create a multi-selection in the page to highlight the text runs.
-    let selection = doc.defaultView.getSelection();
+    const selection = doc.defaultView.getSelection();
     selection.removeAllRanges();
 
-    for (let matchingFont of matchingFonts) {
-      for (let range of matchingFont.ranges) {
+    for (const matchingFont of matchingFonts) {
+      for (const range of matchingFont.ranges) {
         selection.addRange(range);
       }
     }
@@ -79,8 +79,8 @@ class FontsHighlighter {
     }
 
     // Simply remove all current ranges in the seletion.
-    let doc = this.currentNodeDocument;
-    let selection = doc.defaultView.getSelection();
+    const doc = this.currentNodeDocument;
+    const selection = doc.defaultView.getSelection();
     selection.removeAllRanges();
   }
 }

@@ -11,19 +11,19 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, controller} = await openAnimationInspector();
+  const {panel, controller} = await openAnimationInspector();
 
   info("Getting the animation element from the panel");
-  let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
-  let timeBlockNameEls = timelineEl.querySelectorAll(".time-block .name");
+  const timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
+  const timeBlockNameEls = timelineEl.querySelectorAll(".time-block .name");
 
   // Verify that each time-block's name element has a tooltip that looks sort of
   // ok. We don't need to test the actual content.
   [...timeBlockNameEls].forEach((el, i) => {
     ok(el.hasAttribute("title"), "The tooltip is defined for animation " + i);
 
-    let title = el.getAttribute("title");
-    let state = controller.animationPlayers[i].state;
+    const title = el.getAttribute("title");
+    const state = controller.animationPlayers[i].state;
 
     if (state.delay) {
       ok(title.match(/Delay: [\d.,-]+s/), "The tooltip shows the delay");

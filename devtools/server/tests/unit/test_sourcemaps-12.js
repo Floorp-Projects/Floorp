@@ -64,7 +64,7 @@ function run_code() {
 function step_in() {
   gClient.addOneTimeListener("paused", function(event, packet) {
     Assert.equal(packet.why.type, "resumeLimit");
-    let { frame: { environment, where: { source, line } } } = packet;
+    const { frame: { environment, where: { source, line } } } = packet;
     // Stepping should have moved us to the next source mapped line.
     Assert.equal(source.url, "http://example.com/a.js");
     Assert.equal(line, 3);

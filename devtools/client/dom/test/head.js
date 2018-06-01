@@ -64,9 +64,9 @@ function addTestTab(url) {
  */
 function initDOMPanel(tab) {
   return new Promise(resolve => {
-    let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
+    const target = TargetFactory.forTab(tab || gBrowser.selectedTab);
     gDevTools.showToolbox(target, "dom").then(toolbox => {
-      let panel = toolbox.getCurrentPanel();
+      const panel = toolbox.getCurrentPanel();
       resolve(panel);
     });
   });
@@ -88,9 +88,9 @@ function synthesizeMouseClickSoon(panel, element) {
  * Returns tree row with specified label.
  */
 function getRowByLabel(panel, text) {
-  let doc = panel.panelWin.document;
-  let labels = [...doc.querySelectorAll(".treeLabel")];
-  let label = labels.find(node => node.textContent == text);
+  const doc = panel.panelWin.document;
+  const labels = [...doc.querySelectorAll(".treeLabel")];
+  const label = labels.find(node => node.textContent == text);
   return label ? label.closest(".treeRow") : null;
 }
 
@@ -101,9 +101,9 @@ function getRowByLabel(panel, text) {
 function getAllRowsForLabel(panel, text) {
   let rootObjectLevel;
   let node;
-  let result = [];
-  let doc = panel.panelWin.document;
-  let nodes = [...doc.querySelectorAll(".treeLabel")];
+  const result = [];
+  const doc = panel.panelWin.document;
+  const nodes = [...doc.querySelectorAll(".treeLabel")];
 
   // Find the label (object name) for which we want the children. We remove
   // nodes from the start of the array until we reach the property. The children
@@ -124,7 +124,7 @@ function getAllRowsForLabel(panel, text) {
 
   // Now get the children.
   for (node of nodes) {
-    let level = node.getAttribute("data-level");
+    const level = node.getAttribute("data-level");
 
     if (level > rootObjectLevel) {
       result.push({
@@ -167,7 +167,7 @@ function normalizeTreeValue(value) {
  * children are received from the backend.
  */
 function expandRow(panel, labelText) {
-  let row = getRowByLabel(panel, labelText);
+  const row = getRowByLabel(panel, labelText);
   return synthesizeMouseClickSoon(panel, row).then(() => {
     // Wait till children (properties) are fetched
     // from the backend.
@@ -184,8 +184,8 @@ function evaluateJSAsync(panel, expression) {
 }
 
 function refreshPanel(panel) {
-  let doc = panel.panelWin.document;
-  let button = doc.querySelector("#dom-refresh-button");
+  const doc = panel.panelWin.document;
+  const button = doc.querySelector("#dom-refresh-button");
   return synthesizeMouseClickSoon(panel, button).then(() => {
     // Wait till children (properties) are fetched
     // from the backend.

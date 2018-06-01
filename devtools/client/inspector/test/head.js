@@ -48,12 +48,12 @@ registerCleanupFunction(function() {
 });
 
 var navigateTo = async function(inspector, url) {
-  let markuploaded = inspector.once("markuploaded");
-  let onNewRoot = inspector.once("new-root");
-  let onUpdated = inspector.once("inspector-updated");
+  const markuploaded = inspector.once("markuploaded");
+  const onNewRoot = inspector.once("new-root");
+  const onUpdated = inspector.once("inspector-updated");
 
   info("Navigating to: " + url);
-  let activeTab = inspector.toolbox.target.activeTab;
+  const activeTab = inspector.toolbox.target.activeTab;
   await activeTab.navigateTo(url);
 
   info("Waiting for markup view to load after navigation.");
@@ -107,8 +107,8 @@ function selectAndHighlightNode(selector, inspector) {
  */
 async function focusNode(selector, inspector) {
   getContainerForNodeFront(inspector.walker.rootNode, inspector).elt.focus();
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
   await selectNode(nodeFront, inspector);
   EventUtils.sendKey("return", inspector.panelWin);
   return container;
@@ -123,7 +123,7 @@ async function focusNode(selector, inspector) {
  */
 function clearCurrentNodeSelection(inspector) {
   info("Clearing the current selection");
-  let updated = inspector.once("inspector-updated");
+  const updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(null);
   return updated;
 }
@@ -136,13 +136,13 @@ function clearCurrentNodeSelection(inspector) {
  *         with an object: { tab, toolbox, inspector }.
  */
 var openInspectorForURL = async function(url, hostType) {
-  let tab = await addTab(url);
-  let { inspector, toolbox, testActor } = await openInspector(hostType);
+  const tab = await addTab(url);
+  const { inspector, toolbox, testActor } = await openInspector(hostType);
   return { tab, inspector, toolbox, testActor };
 };
 
 function getActiveInspector() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
 }
 
@@ -154,9 +154,9 @@ function getActiveInspector() {
  */
 var clickOnInspectMenuItem = async function(testActor, selector) {
   info("Showing the contextual menu on node " + selector);
-  let contentAreaContextMenu = document.querySelector(
+  const contentAreaContextMenu = document.querySelector(
     "#contentAreaContextMenu");
-  let contextOpened = once(contentAreaContextMenu, "popupshown");
+  const contextOpened = once(contentAreaContextMenu, "popupshown");
 
   await testActor.synthesizeMouse({
     selector: selector,
@@ -170,7 +170,7 @@ var clickOnInspectMenuItem = async function(testActor, selector) {
   await gContextMenu.inspectNode();
 
   info("Hiding the menu");
-  let contextClosed = once(contentAreaContextMenu, "popuphidden");
+  const contextClosed = once(contentAreaContextMenu, "popuphidden");
   contentAreaContextMenu.hidePopup();
   await contextClosed;
 
@@ -189,15 +189,15 @@ var clickOnInspectMenuItem = async function(testActor, selector) {
  */
 var getNodeFrontInFrame = async function(selector, frameSelector,
                                                 inspector) {
-  let iframe = await getNodeFront(frameSelector, inspector);
-  let {nodes} = await inspector.walker.children(iframe);
+  const iframe = await getNodeFront(frameSelector, inspector);
+  const {nodes} = await inspector.walker.children(iframe);
   return inspector.walker.querySelector(nodes[0], selector);
 };
 
 var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
   info("Focusing search box");
-  let searchBox = panelWin.document.getElementById("inspector-searchbox");
-  let focused = once(searchBox, "focus");
+  const searchBox = panelWin.document.getElementById("inspector-searchbox");
+  const focused = once(searchBox, "focus");
 
   panelWin.focus();
 
@@ -234,8 +234,8 @@ function getContainerForNodeFront(nodeFront, {markup}) {
 var getContainerForSelector =
 async function(selector, inspector, expectFailure = false) {
   info("Getting the markup-container for node " + selector);
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
   if (expectFailure) {
     ok(!container, "Shouldn't find markup-container for selector: " + selector);
@@ -258,10 +258,10 @@ async function(selector, inspector, expectFailure = false) {
 var hoverContainer = async function(selector, inspector) {
   info("Hovering over the markup-container for node " + selector);
 
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
-  let highlit = inspector.toolbox.once("node-highlight");
+  const highlit = inspector.toolbox.once("node-highlight");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
     inspector.markup.doc.defaultView);
   return highlit;
@@ -278,10 +278,10 @@ var hoverContainer = async function(selector, inspector) {
 var clickContainer = async function(selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
-  let updated = inspector.once("inspector-updated");
+  const updated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
     inspector.markup.doc.defaultView);
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},
@@ -299,7 +299,7 @@ function mouseLeaveMarkupView(inspector) {
   info("Leaving the markup-view area");
 
   // Find another element to mouseover over in order to leave the markup-view
-  let btn = inspector.toolbox.doc.querySelector("#toolbox-controls");
+  const btn = inspector.toolbox.doc.querySelector("#toolbox-controls");
 
   EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
     inspector.toolbox.win);
@@ -313,7 +313,7 @@ function mouseLeaveMarkupView(inspector) {
  * Dispatch the copy event on the given element
  */
 function fireCopyEvent(element) {
-  let evt = element.ownerDocument.createEvent("Event");
+  const evt = element.ownerDocument.createEvent("Event");
   evt.initEvent("copy", true, true);
   element.dispatchEvent(evt);
 }
@@ -327,13 +327,13 @@ function fireCopyEvent(element) {
  * rejects if no undo action is possible
  */
 function undoChange(inspector) {
-  let canUndo = inspector.markup.undo.canUndo();
+  const canUndo = inspector.markup.undo.canUndo();
   ok(canUndo, "The last change in the markup-view can be undone");
   if (!canUndo) {
     return promise.reject();
   }
 
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   inspector.markup.undo.undo();
   return mutated;
 }
@@ -347,13 +347,13 @@ function undoChange(inspector) {
  * rejects if no redo action is possible
  */
 function redoChange(inspector) {
-  let canRedo = inspector.markup.undo.canRedo();
+  const canRedo = inspector.markup.undo.canRedo();
   ok(canRedo, "The last change in the markup-view can be redone");
   if (!canRedo) {
     return promise.reject();
   }
 
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   inspector.markup.undo.redo();
   return mutated;
 }
@@ -369,7 +369,7 @@ async function getNodeFrontForSelector(selector, inspector) {
   }
 
   info("Retrieving front for doctype node");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
+  const {nodes} = await inspector.walker.children(inspector.walker.rootNode);
   return nodes[0];
 }
 
@@ -407,8 +407,8 @@ async function poll(check, desc, attempts = 10, timeBetweenAttempts = 200) {
  *    properties. (see `openInspector`)
  */
 const getHighlighterHelperFor = (type) => async function({inspector, testActor}) {
-  let front = inspector.inspector;
-  let highlighter = await front.getHighlighterByType(type);
+  const front = inspector.inspector;
+  const highlighter = await front.getHighlighterByType(type);
 
   let prefix = "";
 
@@ -474,7 +474,7 @@ const getHighlighterHelperFor = (type) => async function({inspector, testActor})
 
     waitForElementAttributeSet: async function(id, name) {
       await poll(async function() {
-        let value = await testActor.getHighlighterNodeAttribute(
+        const value = await testActor.getHighlighterNodeAttribute(
           prefix + id, name, highlighter);
         return !!value;
       }, `Waiting for element ${id} to have attribute ${name} set`);
@@ -482,7 +482,7 @@ const getHighlighterHelperFor = (type) => async function({inspector, testActor})
 
     waitForElementAttributeRemoved: async function(id, name) {
       await poll(async function() {
-        let value = await testActor.getHighlighterNodeAttribute(
+        const value = await testActor.getHighlighterNodeAttribute(
           prefix + id, name, highlighter);
         return !value;
       }, `Waiting for element ${id} to have attribute ${name} removed`);
@@ -570,13 +570,13 @@ function waitForStyleEditor(toolbox, href) {
 
   return new Promise(resolve => {
     toolbox.once("styleeditor-selected").then(() => {
-      let panel = toolbox.getCurrentPanel();
+      const panel = toolbox.getCurrentPanel();
       ok(panel && panel.UI, "Styleeditor panel switched to front");
 
       // A helper that resolves the promise once it receives an editor that
       // matches the expected href. Returns false if the editor was not correct.
-      let gotEditor = editor => {
-        let currentHref = editor.styleSheet.href;
+      const gotEditor = editor => {
+        const currentHref = editor.styleSheet.href;
         if (!href || (href && currentHref.endsWith(href))) {
           info("Stylesheet editor selected");
           panel.UI.off("editor-selected", gotEditor);
@@ -630,7 +630,7 @@ function containsFocus(doc, container) {
 var waitForTab = async function() {
   info("Waiting for a tab to open");
   await once(gBrowser.tabContainer, "TabOpen");
-  let tab = gBrowser.selectedTab;
+  const tab = gBrowser.selectedTab;
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   info("The tab load completed");
   return tab;
@@ -645,7 +645,7 @@ var waitForTab = async function() {
  *        The window containing the panel
  */
 function synthesizeKeys(input, win) {
-  for (let key of input.split("")) {
+  for (const key of input.split("")) {
     EventUtils.synthesizeKey(key, {}, win);
   }
 }
@@ -675,7 +675,7 @@ function focusAndSendKey(win, key) {
  * @return a promise that resolves with the tooltip object
  */
 async function assertTooltipShownOnHover(tooltip, target) {
-  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
+  const mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
     bubbles: true,
   });
   target.dispatchEvent(mouseEvent);
@@ -702,15 +702,15 @@ async function assertTooltipShownOnHover(tooltip, target) {
  * @return a promise that resolves with the tooltip object
  */
 async function assertShowPreviewTooltip(view, target) {
-  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
+  const mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
     bubbles: true,
   });
   target.dispatchEvent(mouseEvent);
 
-  let name = "previewTooltip";
+  const name = "previewTooltip";
   ok(view.tooltips._instances.has(name),
     `Tooltip '${name}' has been instantiated`);
-  let tooltip = view.tooltips.getTooltip(name);
+  const tooltip = view.tooltips.getTooltip(name);
 
   if (!tooltip.isVisible()) {
     info("Waiting for tooltip to be shown");
@@ -733,7 +733,7 @@ async function assertShowPreviewTooltip(view, target) {
  */
 async function assertTooltipHiddenOnMouseOut(tooltip, target) {
   // The tooltip actually relies on mousemove events to check if it sould be hidden.
-  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
+  const mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
     bubbles: true,
     relatedTarget: target
   });
@@ -774,11 +774,11 @@ async function getDisplayedNodeTextContent(selector, inspector) {
   // Element has to be selected in the markup view and to be expanded.
   await selectNode(selector, inspector);
 
-  let container = await getContainerForSelector(selector, inspector);
+  const container = await getContainerForSelector(selector, inspector);
   await inspector.markup.expandNode(container.node);
   await waitForMultipleChildrenUpdates(inspector);
   if (container) {
-    let textContainer = container.elt.querySelector("pre");
+    const textContainer = container.elt.querySelector("pre");
     return textContainer.textContent;
   }
   return null;
@@ -806,16 +806,16 @@ async function toggleShapesHighlighter(view, selector, property, show, options =
   const container = getRuleViewProperty(view, selector, property).valueSpan;
   const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
-  let metaKey = options.transformMode;
-  let ctrlKey = options.transformMode;
+  const metaKey = options.transformMode;
+  const ctrlKey = options.transformMode;
 
   if (show) {
-    let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
+    const onHighlighterShown = highlighters.once("shapes-highlighter-shown");
     EventUtils.sendMouseEvent({type: "click", metaKey, ctrlKey },
       shapesToggle, view.styleWindow);
     await onHighlighterShown;
   } else {
-    let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
+    const onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
     EventUtils.sendMouseEvent({type: "click", metaKey, ctrlKey },
       shapesToggle, view.styleWindow);
     await onHighlighterHidden;
@@ -837,8 +837,8 @@ async function expandContainer(inspector, container) {
  * uses a click rather than programatically calling expandNode().
  */
 async function expandContainerByClick(inspector, container) {
-  let onChildren = waitForChildrenUpdated(inspector);
-  let onUpdated = inspector.once("inspector-updated");
+  const onChildren = waitForChildrenUpdated(inspector);
+  const onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.expander, {},
     inspector.markup.doc.defaultView);
   await onChildren;

@@ -8,10 +8,10 @@
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(async function() {
-  let generatedStubs = await generateCssMessageStubs();
+  const generatedStubs = await generateCssMessageStubs();
 
-  let repoStubFilePath = getTestFilePath("../stubs/cssMessage.js");
-  let repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFilePath = getTestFilePath("../stubs/cssMessage.js");
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
 
   if (generatedStubs != repoStubFileContent) {
     ok(false, "The cssMessage stubs file needs to be updated by running " +

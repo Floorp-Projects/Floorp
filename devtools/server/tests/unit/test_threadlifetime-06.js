@@ -29,9 +29,9 @@ function run_test() {
 
 function test_thread_lifetime() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let actors = [];
+    const actors = [];
     let last;
-    for (let grip of packet.frame.arguments) {
+    for (const grip of packet.frame.arguments) {
       actors.push(grip.actor);
       last = grip.actor;
     }

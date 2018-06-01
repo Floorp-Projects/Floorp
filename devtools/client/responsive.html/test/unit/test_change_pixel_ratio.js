@@ -10,13 +10,13 @@ const { addViewport, changePixelRatio } =
 const NEW_PIXEL_RATIO = 5.5;
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   dispatch(addViewport());
   dispatch(changePixelRatio(0, NEW_PIXEL_RATIO));
 
-  let viewport = getState().viewports[0];
+  const viewport = getState().viewports[0];
   equal(viewport.pixelRatio.value, NEW_PIXEL_RATIO,
     `Viewport's pixel ratio changed to ${NEW_PIXEL_RATIO}`);
 });

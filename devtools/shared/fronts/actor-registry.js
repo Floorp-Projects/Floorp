@@ -39,7 +39,7 @@ function request(uri) {
         return;
       }
 
-      let source = NetUtil.readInputStreamToString(stream, stream.available());
+      const source = NetUtil.readInputStreamToString(stream, stream.available());
       stream.close();
       resolve(source);
     });

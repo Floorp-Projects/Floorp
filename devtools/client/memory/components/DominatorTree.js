@@ -36,7 +36,7 @@ class DominatorTreeSubtreeFetchingClass extends Component {
   }
 
   render() {
-    let {
+    const {
       depth,
       focused,
     } = this.props;
@@ -75,7 +75,7 @@ class DominatorTreeSiblingLinkClass extends Component {
   }
 
   render() {
-    let {
+    const {
       depth,
       focused,
       item,

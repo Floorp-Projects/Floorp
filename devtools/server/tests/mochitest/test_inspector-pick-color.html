@@ -26,7 +26,7 @@ window.onload = function() {
   addAsyncTest(async function() {
     info("Setting up inspector actor");
 
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
 
     await new Promise(resolve => {
       attachURL(url, function(err, client, tab, doc) {
@@ -44,9 +44,9 @@ window.onload = function() {
     await inspector.pickColorFromPage();
 
     info("Click in the page and make sure a color-picked event is received");
-    let onColorPicked = waitForEvent("color-picked");
+    const onColorPicked = waitForEvent("color-picked");
     win.document.body.click();
-    let color = await onColorPicked;
+    const color = await onColorPicked;
 
     is(color, "#000000", "The color-picked event was received with the right color");
 
@@ -58,9 +58,9 @@ window.onload = function() {
     await inspector.pickColorFromPage();
 
     info("Use the escape key to dismiss the eyedropper");
-    let onPickCanceled = waitForEvent("color-pick-canceled");
+    const onPickCanceled = waitForEvent("color-pick-canceled");
 
-    let keyboardEvent = win.document.createEvent("KeyboardEvent");
+    const keyboardEvent = win.document.createEvent("KeyboardEvent");
     keyboardEvent.initKeyEvent("keydown", true, true, win, false, false,
                                false, false, 27, 0);
     win.document.dispatchEvent(keyboardEvent);

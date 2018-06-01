@@ -10,7 +10,7 @@ add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
 
-  let id = getCookieId("test1", ".test1.example.org", "/browser");
+  const id = getCookieId("test1", ".test1.example.org", "/browser");
   await startCellEdit(id, "name");
 
   PressKeyXTimes("VK_TAB", 18);

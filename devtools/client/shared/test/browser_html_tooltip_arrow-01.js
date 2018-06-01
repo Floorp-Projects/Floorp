@@ -22,7 +22,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 200);
 
   await addTab("about:blank");
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -35,34 +35,34 @@ add_task(async function() {
 
 async function runTests(doc) {
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
-  let div = doc.createElementNS(HTML_NS, "div");
+  const tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
+  const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "35px";
   tooltip.setContent(div, {width: 200, height: 35});
 
-  let {right: docRight} = doc.documentElement.getBoundingClientRect();
+  const {right: docRight} = doc.documentElement.getBoundingClientRect();
 
-  let elements = [...doc.querySelectorAll(".anchor")];
-  for (let el of elements) {
+  const elements = [...doc.querySelectorAll(".anchor")];
+  for (const el of elements) {
     info("Display the tooltip on an anchor.");
     await showTooltip(tooltip, el);
 
-    let arrow = tooltip.arrow;
+    const arrow = tooltip.arrow;
     ok(arrow, "Tooltip has an arrow");
 
     // Get the geometry of the anchor, the tooltip panel & arrow.
-    let arrowBounds = arrow.getBoxQuads({relativeTo: doc})[0].bounds;
-    let panelBounds = tooltip.panel.getBoxQuads({relativeTo: doc})[0].bounds;
-    let anchorBounds = el.getBoxQuads({relativeTo: doc})[0].bounds;
+    const arrowBounds = arrow.getBoxQuads({relativeTo: doc})[0].bounds;
+    const panelBounds = tooltip.panel.getBoxQuads({relativeTo: doc})[0].bounds;
+    const anchorBounds = el.getBoxQuads({relativeTo: doc})[0].bounds;
 
-    let intersects = arrowBounds.left <= anchorBounds.right &&
+    const intersects = arrowBounds.left <= anchorBounds.right &&
                      arrowBounds.right >= anchorBounds.left;
-    let isBlockedByViewport = arrowBounds.left == 0 ||
+    const isBlockedByViewport = arrowBounds.left == 0 ||
                               arrowBounds.right == docRight;
     ok(intersects || isBlockedByViewport,
       "Tooltip arrow is aligned with the anchor, or stuck on viewport's edge.");
 
-    let isInPanel = arrowBounds.left >= panelBounds.left &&
+    const isInPanel = arrowBounds.left >= panelBounds.left &&
                     arrowBounds.right <= panelBounds.right;
     ok(isInPanel,
       "The tooltip arrow remains inside the tooltip panel horizontally");

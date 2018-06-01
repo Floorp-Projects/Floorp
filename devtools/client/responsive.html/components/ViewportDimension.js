@@ -21,7 +21,7 @@ function getIncrement(event) {
   const mediumIncrement = 10;
 
   let increment = 0;
-  let key = event.keyCode;
+  const key = event.keyCode;
 
   if (isKeyIn(key, "UP", "PAGE_UP")) {
     increment = 1 * defaultIncrement;
@@ -51,7 +51,7 @@ class ViewportDimension extends Component {
 
   constructor(props) {
     super(props);
-    let { width, height } = props.viewport;
+    const { width, height } = props.viewport;
 
     this.state = {
       width,
@@ -70,7 +70,7 @@ class ViewportDimension extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { width, height } = nextProps.viewport;
+    const { width, height } = nextProps.viewport;
 
     this.setState({
       width,
@@ -93,7 +93,7 @@ class ViewportDimension extends Component {
   }
 
   onInputBlur() {
-    let { width, height } = this.props.viewport;
+    const { width, height } = this.props.viewport;
 
     if (this.state.width != width || this.state.height != height) {
       this.onInputSubmit();
@@ -128,8 +128,8 @@ class ViewportDimension extends Component {
   }
 
   onInputKeyDown(event) {
-    let { target } = event;
-    let increment = getIncrement(event);
+    const { target } = event;
+    const increment = getIncrement(event);
     if (!increment) {
       return;
     }
@@ -151,7 +151,7 @@ class ViewportDimension extends Component {
 
   onInputSubmit() {
     if (this.state.isInvalid) {
-      let { width, height } = this.props.viewport;
+      const { width, height } = this.props.viewport;
 
       this.setState({
         width,

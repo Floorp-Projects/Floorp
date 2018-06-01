@@ -42,9 +42,9 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   // active DevTools connection.  While browser.xml does dispatch it's own SwapDocShells
   // event, this one is easier for DevTools to follow because it's only emitted once per
   // transition, instead of twice like SwapDocShells.
-  let dispatchDevToolsBrowserSwap = (from, to) => {
-    let CustomEvent = browserWindow.CustomEvent;
-    let event = new CustomEvent("DevTools:BrowserSwap", {
+  const dispatchDevToolsBrowserSwap = (from, to) => {
+    const CustomEvent = browserWindow.CustomEvent;
+    const event = new CustomEvent("DevTools:BrowserSwap", {
       detail: to,
       bubbles: true,
     });
@@ -54,7 +54,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   // A version of `gBrowser.addTab` that absorbs the `TabOpen` event.
   // The swap process uses a temporary tab, and there's no real need for others to hear
   // about it.  This hides the temporary tab from things like WebExtensions.
-  let addTabSilently = (uri, options) => {
+  const addTabSilently = (uri, options) => {
     browserWindow.addEventListener("TabOpen", event => {
       event.stopImmediatePropagation();
     }, { capture: true, once: true });
@@ -64,7 +64,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   // A version of `gBrowser.swapBrowsersAndCloseOther` that absorbs the `TabClose` event.
   // The swap process uses a temporary tab, and there's no real need for others to hear
   // about it.  This hides the temporary tab from things like WebExtensions.
-  let swapBrowsersAndCloseOtherSilently = (ourTab, otherTab) => {
+  const swapBrowsersAndCloseOtherSilently = (ourTab, otherTab) => {
     browserWindow.addEventListener("TabClose", event => {
       event.stopImmediatePropagation();
     }, { capture: true, once: true });
@@ -77,12 +77,12 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   // silenced in the browser, because they are apparently expected in certain cases.
   // So, here we do our own check to verify that the swap actually did in fact take place,
   // making it much easier to track such errors when they happen.
-  let swapBrowserDocShells = (ourTab, otherBrowser) => {
+  const swapBrowserDocShells = (ourTab, otherBrowser) => {
     // The verification step here assumes both browsers are remote.
     if (!ourTab.linkedBrowser.isRemoteBrowser || !otherBrowser.isRemoteBrowser) {
       throw new Error("Both browsers should be remote before swapping.");
     }
-    let contentTabId = ourTab.linkedBrowser.frameLoader.tabParent.tabId;
+    const contentTabId = ourTab.linkedBrowser.frameLoader.tabParent.tabId;
     gBrowser._swapBrowserDocShells(ourTab, otherBrowser);
     if (otherBrowser.frameLoader.tabParent.tabId != contentTabId) {
       // Bug 1408602: Try to unwind to save tab content from being lost.
@@ -105,7 +105,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // will force a new frameloader on next navigation to ensure balanced process
       // assignment.  If this case will happen here, navigate to about:blank first to get
       // this out of way so that we stay within one process while RDM is open.
-      let { newFrameloader } = E10SUtils.shouldLoadURIInBrowser(
+      const { newFrameloader } = E10SUtils.shouldLoadURIInBrowser(
         tab.linkedBrowser,
         "about:blank"
       );
@@ -127,12 +127,12 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
       // 1. Create a temporary, hidden tab to load the tool UI.
       debug("Add blank tool tab");
-      let containerTab = addTabSilently("about:blank", {
+      const containerTab = addTabSilently("about:blank", {
         skipAnimation: true,
         forceNotRemote: true,
       });
       gBrowser.hideTab(containerTab);
-      let containerBrowser = containerTab.linkedBrowser;
+      const containerBrowser = containerTab.linkedBrowser;
       // Even though we load the `containerURL` with `LOAD_FLAGS_BYPASS_HISTORY` below,
       // `SessionHistory.jsm` has a fallback path for tabs with no history which
       // fabricates a history entry by reading the current URL, and this can cause the
@@ -156,7 +156,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // listener and state flags which cache document loading progress.  The state flags
       // are checked when switching tabs to update the browser UI.  The later step of
       // `swapBrowsersAndCloseOther` will fold the state back into the main tab.
-      let stateFlags = gBrowser._tabListeners.get(tab).mStateFlags;
+      const stateFlags = gBrowser._tabListeners.get(tab).mStateFlags;
       gBrowser._tabListeners.get(containerTab).mStateFlags = stateFlags;
 
       // 2. Mark the tool tab browser's docshell as active so the viewport frame
@@ -212,7 +212,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
       if (gBrowser.isFindBarInitialized(tab)) {
-        let findBar = gBrowser.getCachedFindBar(tab);
+        const findBar = gBrowser.getCachedFindBar(tab);
         findBar.browser = tab.linkedBrowser;
         if (!findBar.hidden) {
           // Force the find bar to activate again, restoring the search string.
@@ -239,11 +239,11 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       tunnel = null;
 
       // 2. Create a temporary, hidden tab to hold the content.
-      let contentTab = addTabSilently("about:blank", {
+      const contentTab = addTabSilently("about:blank", {
         skipAnimation: true,
       });
       gBrowser.hideTab(contentTab);
-      let contentBrowser = contentTab.linkedBrowser;
+      const contentBrowser = contentTab.linkedBrowser;
 
       // 3. Mark the content tab browser's docshell as active so the frame
       //    is created eagerly and will be ready to swap.
@@ -258,7 +258,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
       // Copy tab listener state flags to content tab.  See similar comment in `start`
       // above for more details.
-      let stateFlags = gBrowser._tabListeners.get(tab).mStateFlags;
+      const stateFlags = gBrowser._tabListeners.get(tab).mStateFlags;
       gBrowser._tabListeners.get(contentTab).mStateFlags = stateFlags;
 
       // 5. Force the original browser tab to be remote since web content is
@@ -277,7 +277,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
       if (gBrowser.isFindBarInitialized(tab)) {
-        let findBar = gBrowser.getCachedFindBar(tab);
+        const findBar = gBrowser.getCachedFindBar(tab);
         findBar.browser = tab.linkedBrowser;
         if (!findBar.hidden) {
           // Force the find bar to activate again, restoring the search string.
@@ -317,8 +317,8 @@ function freezeNavigationState(tab) {
   // Browser navigation properties we'll freeze temporarily to avoid "blinking" in the
   // location bar, etc. caused by the containerURL peeking through before the swap is
   // complete.
-  for (let property of NAVIGATION_PROPERTIES) {
-    let value = tab.linkedBrowser[property];
+  for (const property of NAVIGATION_PROPERTIES) {
+    const value = tab.linkedBrowser[property];
     Object.defineProperty(tab.linkedBrowser, property, {
       get() {
         return value;
@@ -331,7 +331,7 @@ function freezeNavigationState(tab) {
 
 function thawNavigationState(tab) {
   // Thaw out the properties we froze at the beginning now that the swap is complete.
-  for (let property of NAVIGATION_PROPERTIES) {
+  for (const property of NAVIGATION_PROPERTIES) {
     delete tab.linkedBrowser[property];
   }
 }

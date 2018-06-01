@@ -21,7 +21,7 @@ const OptionsView = function(options = {}) {
   this.branchName = options.branchName;
   this.menupopup = options.menupopup;
   this.window = this.menupopup.ownerDocument.defaultView;
-  let { document } = this.window;
+  const { document } = this.window;
   this.$ = document.querySelector.bind(document);
   this.$$ = (selector, parent = document) => parent.querySelectorAll(selector);
   // Get the corresponding button that opens the popup by looking
@@ -39,7 +39,7 @@ OptionsView.prototype = {
    * Binds the events and observers for the OptionsView.
    */
   initialize: function() {
-    let { MutationObserver } = this.window;
+    const { MutationObserver } = this.window;
     this._onPrefChange = this._onPrefChange.bind(this);
     this._onOptionChange = this._onOptionChange.bind(this);
     this._onPopupShown = this._onPopupShown.bind(this);
@@ -49,11 +49,11 @@ OptionsView.prototype = {
     // because the click handler is fired before the XUL menuitem updates its
     // checked status, which cascades incorrectly with the Preference observer.
     this.mutationObserver = new MutationObserver(this._onOptionChange);
-    let observerConfig = { attributes: true, attributeFilter: ["checked"]};
+    const observerConfig = { attributes: true, attributeFilter: ["checked"]};
 
     // Sets observers and default options for all options
-    for (let $el of this.$$("menuitem", this.menupopup)) {
-      let prefName = $el.getAttribute("data-pref");
+    for (const $el of this.$$("menuitem", this.menupopup)) {
+      const prefName = $el.getAttribute("data-pref");
 
       if (this.prefObserver.get(prefName)) {
         $el.setAttribute("checked", "true");
@@ -96,8 +96,8 @@ OptionsView.prototype = {
    * of the corresponding button.
    */
   _onPrefChange: function(prefName) {
-    let $el = this.$(`menuitem[data-pref="${prefName}"]`, this.menupopup);
-    let value = this.prefObserver.get(prefName);
+    const $el = this.$(`menuitem[data-pref="${prefName}"]`, this.menupopup);
+    const value = this.prefObserver.get(prefName);
 
     // If options panel does not contain a menuitem for the
     // pref, emit an event and do nothing.
@@ -120,9 +120,9 @@ OptionsView.prototype = {
    * Sets the preference accordingly.
    */
   _onOptionChange: function(mutations) {
-    let { target } = mutations[0];
-    let prefName = target.getAttribute("data-pref");
-    let value = target.getAttribute("checked") === "true";
+    const { target } = mutations[0];
+    const prefName = target.getAttribute("data-pref");
+    const value = target.getAttribute("checked") === "true";
 
     this.prefObserver.set(prefName, value);
   },
@@ -164,14 +164,14 @@ PrefObserver.prototype = {
    * Returns `prefName`'s value. Does not require the branch name.
    */
   get: function(prefName) {
-    let fullName = this.branchName + prefName;
+    const fullName = this.branchName + prefName;
     return Preferences.get(fullName);
   },
   /**
    * Sets `prefName`'s `value`. Does not require the branch name.
    */
   set: function(prefName, value) {
-    let fullName = this.branchName + prefName;
+    const fullName = this.branchName + prefName;
     Preferences.set(fullName, value);
   },
   register: function() {

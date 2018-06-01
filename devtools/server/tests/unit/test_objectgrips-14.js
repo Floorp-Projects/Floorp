@@ -27,7 +27,7 @@ function run_test() {
 
 function evalCode() {
   evalCallback(gDebuggee, function runTest() {
-    let ugh = [];
+    const ugh = [];
     let i = 0;
 
     (function() {

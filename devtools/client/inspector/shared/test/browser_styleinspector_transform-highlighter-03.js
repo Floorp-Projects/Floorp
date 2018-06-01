@@ -27,10 +27,10 @@ const TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
-  let HighlighterFront = {
+  const HighlighterFront = {
     isShown: false,
     nodeFront: null,
     nbOfTimesShown: 0,
@@ -49,7 +49,7 @@ add_task(async function() {
   };
 
   // Inject the mock highlighter in the rule-view
-  let hs = view.highlighters;
+  const hs = view.highlighters;
   hs.highlighters[TYPE] = HighlighterFront;
 
   let {valueSpan} = getRuleViewProperty(view, "body", "transform");
@@ -66,7 +66,7 @@ add_task(async function() {
 
   info("Checking that hovering several times over the same property doesn't" +
     " show the highlighter several times");
-  let nb = HighlighterFront.nbOfTimesShown;
+  const nb = HighlighterFront.nbOfTimesShown;
   onHighlighterShown = hs.once("highlighter-shown");
   hs.onMouseMove({target: valueSpan});
   await onHighlighterShown;

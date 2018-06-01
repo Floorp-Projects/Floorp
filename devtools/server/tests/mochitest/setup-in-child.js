@@ -10,8 +10,8 @@ exports.setupChild = function(a, b, c) {
 
 exports.callParent = function() {
   // Hack! Fetch DebuggerServerConnection objects directly within DebuggerServer guts.
-  for (let id in DebuggerServer._connections) {
-    let conn = DebuggerServer._connections[id];
+  for (const id in DebuggerServer._connections) {
+    const conn = DebuggerServer._connections[id];
     conn.setupInParent({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-parent.js",
       setupParent: "setupParent",

@@ -18,29 +18,29 @@ registerCleanupFunction(() => {
 
 add_task(async function checkMenuEntryStates() {
   info("Checking the state of edit menuitems with an empty clipboard");
-  let toolbox = await openNewTabAndToolbox(URL, "inspector");
-  let textboxContextMenu = toolbox.textBoxContextMenuPopup;
+  const toolbox = await openNewTabAndToolbox(URL, "inspector");
+  const textboxContextMenu = toolbox.textBoxContextMenuPopup;
 
   emptyClipboard();
 
   // Make sure the focus is predictable.
-  let inspector = toolbox.getPanel("inspector");
-  let onFocus = once(inspector.searchBox, "focus");
+  const inspector = toolbox.getPanel("inspector");
+  const onFocus = once(inspector.searchBox, "focus");
   inspector.searchBox.focus();
   await onFocus;
 
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
 
-  let cmdUndo = textboxContextMenu.querySelector("[command=cmd_undo]");
-  let cmdDelete = textboxContextMenu.querySelector("[command=cmd_delete]");
-  let cmdSelectAll = textboxContextMenu.querySelector("[command=cmd_selectAll]");
-  let cmdCut = textboxContextMenu.querySelector("[command=cmd_cut]");
-  let cmdCopy = textboxContextMenu.querySelector("[command=cmd_copy]");
-  let cmdPaste = textboxContextMenu.querySelector("[command=cmd_paste]");
+  const cmdUndo = textboxContextMenu.querySelector("[command=cmd_undo]");
+  const cmdDelete = textboxContextMenu.querySelector("[command=cmd_delete]");
+  const cmdSelectAll = textboxContextMenu.querySelector("[command=cmd_selectAll]");
+  const cmdCut = textboxContextMenu.querySelector("[command=cmd_cut]");
+  const cmdCopy = textboxContextMenu.querySelector("[command=cmd_copy]");
+  const cmdPaste = textboxContextMenu.querySelector("[command=cmd_paste]");
 
   info("Opening context menu");
 
-  let onContextMenuPopup = once(textboxContextMenu, "popupshowing");
+  const onContextMenuPopup = once(textboxContextMenu, "popupshowing");
   textboxContextMenu.openPopupAtScreen(0, 0, true);
   await onContextMenuPopup;
 
@@ -69,7 +69,7 @@ add_task(async function automaticallyBindTexbox() {
     },
   });
 
-  let toolbox = await openNewTabAndToolbox(URL, textboxToolId);
+  const toolbox = await openNewTabAndToolbox(URL, textboxToolId);
   is(toolbox.currentToolId, textboxToolId, "The custom tool has been opened");
 
   const doc = toolbox.getCurrentPanel().document;
@@ -84,7 +84,7 @@ async function checkNonTextInput(input, {textBoxContextMenuPopup}) {
   is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
 
   info("Simulating context click on the non text input and expecting no menu to open");
-  let eventBubbledUp = new Promise(resolve => {
+  const eventBubbledUp = new Promise(resolve => {
     input.ownerDocument.addEventListener("contextmenu", resolve, { once: true });
   });
   EventUtils.synthesizeMouse(input, 2, 2, {type: "contextmenu", button: 2},
@@ -98,7 +98,7 @@ async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
   is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
 
   info("Simulating context click on the textbox and expecting the menu to open");
-  let onContextMenu = once(textBoxContextMenuPopup, "popupshown");
+  const onContextMenu = once(textBoxContextMenuPopup, "popupshown");
   EventUtils.synthesizeMouse(textBox, 2, 2, {type: "contextmenu", button: 2},
                              textBox.ownerDocument.defaultView);
   await onContextMenu;
@@ -106,7 +106,7 @@ async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
   is(textBoxContextMenuPopup.state, "open", "The menu is now visible");
 
   info("Closing the menu");
-  let onContextMenuHidden = once(textBoxContextMenuPopup, "popuphidden");
+  const onContextMenuHidden = once(textBoxContextMenuPopup, "popuphidden");
   textBoxContextMenuPopup.hidePopup();
   await onContextMenuHidden;
 

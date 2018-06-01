@@ -8,11 +8,11 @@
  */
 
 add_task(function test() {
-  let {
+  const {
     JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome, SUCCESSFUL_OUTCOMES
   } = require("devtools/client/performance/modules/logic/jit");
 
-  let rawSites = [];
+  const rawSites = [];
   rawSites.push(gRawSite2);
   rawSites.push(gRawSite2);
   rawSites.push(gRawSite1);
@@ -20,10 +20,10 @@ add_task(function test() {
   rawSites.push(gRawSite2);
   rawSites.push(gRawSite3);
 
-  let jit = new JITOptimizations(rawSites, gStringTable.stringTable);
-  let sites = jit.optimizationSites;
+  const jit = new JITOptimizations(rawSites, gStringTable.stringTable);
+  const sites = jit.optimizationSites;
 
-  let [first, second, third] = sites;
+  const [first, second, third] = sites;
 
   /* hasSuccessfulOutcome */
   equal(hasSuccessfulOutcome(first), false,

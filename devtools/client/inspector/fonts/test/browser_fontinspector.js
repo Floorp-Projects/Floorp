@@ -29,10 +29,10 @@ const FONTS = [{
 }];
 
 add_task(async function() {
-  let { inspector, view } = await openFontInspectorForURL(TEST_URI);
+  const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   ok(!!view, "Font inspector document is alive.");
 
-  let viewDoc = view.document;
+  const viewDoc = view.document;
 
   await testBodyFonts(inspector, viewDoc);
   await testDivFonts(inspector, viewDoc);
@@ -43,12 +43,12 @@ function isRemote(fontLi) {
 }
 
 function testBodyFonts(inspector, viewDoc) {
-  let lis = getUsedFontsEls(viewDoc);
+  const lis = getUsedFontsEls(viewDoc);
   is(lis.length, 5, "Found 5 fonts");
 
   for (let i = 0; i < FONTS.length; i++) {
-    let li = lis[i];
-    let font = FONTS[i];
+    const li = lis[i];
+    const font = FONTS[i];
 
     is(getName(li), font.name, `font ${i} right font name`);
     is(isRemote(li), font.remote, `font ${i} remote value correct`);
@@ -56,12 +56,12 @@ function testBodyFonts(inspector, viewDoc) {
   }
 
   // test that the bold and regular fonts have different previews
-  let regSrc = lis[0].querySelector(".font-preview").src;
-  let boldSrc = lis[1].querySelector(".font-preview").src;
+  const regSrc = lis[0].querySelector(".font-preview").src;
+  const boldSrc = lis[1].querySelector(".font-preview").src;
   isnot(regSrc, boldSrc, "preview for bold font is different from regular");
 
   // test system font
-  let localFontName = getName(lis[4]);
+  const localFontName = getName(lis[4]);
 
   // On Linux test machines, the Arial font doesn't exist.
   // The fallback is "Liberation Sans"
@@ -71,11 +71,11 @@ function testBodyFonts(inspector, viewDoc) {
 }
 
 async function testDivFonts(inspector, viewDoc) {
-  let updated = inspector.once("fontinspector-updated");
+  const updated = inspector.once("fontinspector-updated");
   await selectNode("div", inspector);
   await updated;
 
-  let lis = getUsedFontsEls(viewDoc);
+  const lis = getUsedFontsEls(viewDoc);
   is(lis.length, 1, "Found 1 font on DIV");
   is(getName(lis[0]), "Ostrich Sans Medium", "The DIV font has the right name");
 }

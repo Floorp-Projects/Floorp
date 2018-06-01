@@ -16,16 +16,16 @@ add_task(async function() {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = findMessage(hud, "foo");
-  let [objectA, objectB] =
+  const message = findMessage(hud, "foo");
+  const [objectA, objectB] =
     message.querySelectorAll(".object-inspector .objectBox-object");
-  let number = findMessage(hud, "100", ".objectBox");
-  let string = findMessage(hud, "foo", ".objectBox");
-  let bool = findMessage(hud, "false", ".objectBox");
-  let nullMessage = findMessage(hud, "null", ".objectBox");
-  let undefinedMsg = findMessage(hud, "undefined", ".objectBox");
+  const number = findMessage(hud, "100", ".objectBox");
+  const string = findMessage(hud, "foo", ".objectBox");
+  const bool = findMessage(hud, "false", ".objectBox");
+  const nullMessage = findMessage(hud, "null", ".objectBox");
+  const undefinedMsg = findMessage(hud, "undefined", ".objectBox");
 
   info("Showing sidebar for {a:1}");
   await showSidebarWithContextMenu(hud, objectA, true);
@@ -70,32 +70,32 @@ add_task(async function() {
   ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
 
   info("Checking context menu entry is disabled for number");
-  let numberContextMenuEnabled = await isContextMenuEntryEnabled(hud, number);
+  const numberContextMenuEnabled = await isContextMenuEntryEnabled(hud, number);
   ok(!numberContextMenuEnabled, "Context menu entry is disabled for number");
 
   info("Checking context menu entry is disabled for string");
-  let stringContextMenuEnabled = await isContextMenuEntryEnabled(hud, string);
+  const stringContextMenuEnabled = await isContextMenuEntryEnabled(hud, string);
   ok(!stringContextMenuEnabled, "Context menu entry is disabled for string");
 
   info("Checking context menu entry is disabled for bool");
-  let boolContextMenuEnabled = await isContextMenuEntryEnabled(hud, bool);
+  const boolContextMenuEnabled = await isContextMenuEntryEnabled(hud, bool);
   ok(!boolContextMenuEnabled, "Context menu entry is disabled for bool");
 
   info("Checking context menu entry is disabled for null message");
-  let nullContextMenuEnabled = await isContextMenuEntryEnabled(hud, nullMessage);
+  const nullContextMenuEnabled = await isContextMenuEntryEnabled(hud, nullMessage);
   ok(!nullContextMenuEnabled, "Context menu entry is disabled for nullMessage");
 
   info("Checking context menu entry is disabled for undefined message");
-  let undefinedContextMenuEnabled = await isContextMenuEntryEnabled(hud, undefinedMsg);
+  const undefinedContextMenuEnabled = await isContextMenuEntryEnabled(hud, undefinedMsg);
   ok(!undefinedContextMenuEnabled, "Context menu entry is disabled for undefinedMsg");
 });
 
 async function showSidebarWithContextMenu(hud, node, expectMutation) {
-  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  const onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
 
-  let contextMenu = await openContextMenu(hud, node);
-  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  const contextMenu = await openContextMenu(hud, node);
+  const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
   openInSidebar.click();
   if (expectMutation) {
     await onSidebarShown;
@@ -104,9 +104,9 @@ async function showSidebarWithContextMenu(hud, node, expectMutation) {
 }
 
 async function isContextMenuEntryEnabled(hud, node) {
-  let contextMenu = await openContextMenu(hud, node);
-  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
-  let enabled = !openInSidebar.attributes.disabled;
+  const contextMenu = await openContextMenu(hud, node);
+  const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  const enabled = !openInSidebar.attributes.disabled;
   await hideContextMenu(hud);
   return enabled;
 }

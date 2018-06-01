@@ -15,13 +15,13 @@ const { idleWait } = require("devtools/client/performance/test/helpers/wait-util
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { PerformanceController } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings

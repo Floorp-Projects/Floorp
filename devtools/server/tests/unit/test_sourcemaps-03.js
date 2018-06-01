@@ -76,7 +76,7 @@ function testBreakpointMapping(name, callback) {
 }
 
 function test_simple_source_map() {
-  let expectedSources = new Set([
+  const expectedSources = new Set([
     "http://example.com/www/js/a.js",
     "http://example.com/www/js/b.js",
     "http://example.com/www/js/c.js"
@@ -100,7 +100,7 @@ function test_simple_source_map() {
     });
   });
 
-  let a = new SourceNode(null, null, null, [
+  const a = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "a.js", "function a() {\n"),
     new SourceNode(2, 0, "a.js", "  var ret;\n"),
     new SourceNode(3, 0, "a.js", "  // Empty line\n"),
@@ -108,7 +108,7 @@ function test_simple_source_map() {
     new SourceNode(5, 0, "a.js", "  return ret;\n"),
     new SourceNode(6, 0, "a.js", "}\n")
   ]);
-  let b = new SourceNode(null, null, null, [
+  const b = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "b.js", "function b() {\n"),
     new SourceNode(2, 0, "b.js", "  var ret;\n"),
     new SourceNode(3, 0, "b.js", "  // Empty line\n"),
@@ -116,7 +116,7 @@ function test_simple_source_map() {
     new SourceNode(5, 0, "b.js", "  return ret;\n"),
     new SourceNode(6, 0, "b.js", "}\n")
   ]);
-  let c = new SourceNode(null, null, null, [
+  const c = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "c.js", "function c() {\n"),
     new SourceNode(2, 0, "c.js", "  var ret;\n"),
     new SourceNode(3, 0, "c.js", "  // Empty line\n"),

@@ -7,12 +7,12 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  const programActor = await once(front, "program-linked");
+  const vertexShader = await programActor.getVertexShader();
+  const fragmentShader = await programActor.getFragmentShader();
 
   await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
@@ -45,15 +45,15 @@ async function ifWebGLSupported() {
 
   function checkShaderSource(aMessage) {
     return (async function() {
-      let newVertexShader = await programActor.getVertexShader();
-      let newFragmentShader = await programActor.getFragmentShader();
+      const newVertexShader = await programActor.getVertexShader();
+      const newFragmentShader = await programActor.getFragmentShader();
       is(vertexShader, newVertexShader,
         "The same vertex shader actor was retrieved.");
       is(fragmentShader, newFragmentShader,
         "The same fragment shader actor was retrieved.");
 
-      let vertSource = await newVertexShader.getText();
-      let fragSource = await newFragmentShader.getText();
+      const vertSource = await newVertexShader.getText();
+      const fragSource = await newFragmentShader.getText();
       ok(vertSource.includes("I'm special!") &&
          fragSource.includes("I'm also special!"), aMessage);
     })();

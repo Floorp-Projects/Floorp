@@ -16,11 +16,11 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8,test inspector destroy");
 
   info("Open the toolbox on the debugger panel");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "jsdebugger");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "jsdebugger");
 
   info("Switch to the inspector panel and immediately end the test");
-  let onInspectorSelected = toolbox.once("inspector-selected");
+  const onInspectorSelected = toolbox.once("inspector-selected");
   toolbox.selectTool("inspector");
   await onInspectorSelected;
 });

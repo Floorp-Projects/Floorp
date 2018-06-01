@@ -36,7 +36,7 @@ const TEST_DATA = [{
   desc: "Updating an ID to an displayed element should refresh",
   setup: function() {},
   run: async function({walker}) {
-    let node = await walker.querySelector(walker.rootNode, "#i1");
+    const node = await walker.querySelector(walker.rootNode, "#i1");
     await node.modifyAttributes([{
       attributeName: "id",
       newValue: "i1-changed"
@@ -49,7 +49,7 @@ const TEST_DATA = [{
   desc: "Updating an class to a displayed element should refresh",
   setup: function() {},
   run: async function({walker}) {
-    let node = await walker.querySelector(walker.rootNode, "body");
+    const node = await walker.querySelector(walker.rootNode, "body");
     await node.modifyAttributes([{
       attributeName: "class",
       newValue: "test-class"
@@ -63,7 +63,7 @@ const TEST_DATA = [{
         "refresh",
   setup: function() {},
   run: async function({walker}) {
-    let node = await walker.querySelector(walker.rootNode, "#i11");
+    const node = await walker.querySelector(walker.rootNode, "#i11");
     await node.modifyAttributes([{
       attributeName: "name",
       newValue: "value"
@@ -77,8 +77,8 @@ const TEST_DATA = [{
   setup: function() {},
   run: async function({walker}) {
     // Re-append #i1211 as a last child of #i2.
-    let parent = await walker.querySelector(walker.rootNode, "#i2");
-    let child = await walker.querySelector(walker.rootNode, "#i211");
+    const parent = await walker.querySelector(walker.rootNode, "#i2");
+    const child = await walker.querySelector(walker.rootNode, "#i211");
     await walker.insertBefore(child, parent);
   },
   shouldRefresh: false,
@@ -89,8 +89,8 @@ const TEST_DATA = [{
   setup: function() {},
   run: async function({walker}) {
     // Re-append #i2 in body (move it to the end).
-    let parent = await walker.querySelector(walker.rootNode, "body");
-    let child = await walker.querySelector(walker.rootNode, "#i2");
+    const parent = await walker.querySelector(walker.rootNode, "body");
+    const child = await walker.querySelector(walker.rootNode, "#i2");
     await walker.insertBefore(child, parent);
   },
   shouldRefresh: false,
@@ -101,7 +101,7 @@ const TEST_DATA = [{
         "refresh",
   setup: function() {},
   run: async function({walker}) {
-    let node = await walker.querySelector(walker.rootNode, "#i2");
+    const node = await walker.querySelector(walker.rootNode, "#i2");
     await node.modifyAttributes([{
       attributeName: "id",
       newValue: "i2-changed"
@@ -148,29 +148,29 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URI);
-  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
-  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
-  let win = container.ownerDocument.defaultView;
+  const {inspector} = await openInspectorForURL(TEST_URI);
+  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
+  const win = container.ownerDocument.defaultView;
 
-  for (let {desc, setup, run, shouldRefresh, output} of TEST_DATA) {
+  for (const {desc, setup, run, shouldRefresh, output} of TEST_DATA) {
     info("Running test case: " + desc);
 
     info("Listen to markupmutation events from the inspector to know when a " +
          "test case has completed");
-    let onContentMutation = inspector.once("markupmutation");
+    const onContentMutation = inspector.once("markupmutation");
 
     info("Running setup");
     await setup(inspector);
 
     info("Listen to mutations on the breadcrumbs container");
     let hasBreadcrumbsMutated = false;
-    let observer = new win.MutationObserver(mutations => {
+    const observer = new win.MutationObserver(mutations => {
       // Only consider childList changes or tooltiptext/checked attributes
       // changes. The rest may be mutations caused by the overflowing arrowbox.
-      for (let {type, attributeName} of mutations) {
-        let isChildList = type === "childList";
-        let isAttributes = type === "attributes" &&
+      for (const {type, attributeName} of mutations) {
+        const isChildList = type === "childList";
+        const isAttributes = type === "attributes" &&
                            (attributeName === "checked" ||
                             attributeName === "tooltiptext");
         if (isChildList || isAttributes) {

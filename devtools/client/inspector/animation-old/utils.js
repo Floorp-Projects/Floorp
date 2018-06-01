@@ -37,14 +37,14 @@ function createNode(options) {
     throw new Error("Missing parent DOMNode to create new node");
   }
 
-  let type = options.nodeType || "div";
-  let node =
+  const type = options.nodeType || "div";
+  const node =
     options.namespace
     ? options.parent.ownerDocument.createElementNS(options.namespace, type)
     : options.parent.ownerDocument.createElement(type);
 
-  for (let name in options.attributes || {}) {
-    let value = options.attributes[name];
+  for (const name in options.attributes || {}) {
+    const value = options.attributes[name];
     node.setAttribute(name, value);
   }
 
@@ -120,7 +120,7 @@ function formatStopwatchTime(time) {
   let seconds = parseInt((time / 1000) % 60, 10);
   let minutes = parseInt((time / (1000 * 60)), 10);
 
-  let pad = (nb, max) => {
+  const pad = (nb, max) => {
     if (nb < max) {
       return new Array((max + "").length - (nb + "").length + 1).join("0") + nb;
     }
@@ -161,17 +161,17 @@ var TimeScale = {
          iterationCount, playbackRate} = state;
 
     endDelay = typeof endDelay === "undefined" ? 0 : endDelay;
-    let toRate = v => v / playbackRate;
-    let minZero = v => Math.max(v, 0);
-    let rateRelativeDuration =
+    const toRate = v => v / playbackRate;
+    const minZero = v => Math.max(v, 0);
+    const rateRelativeDuration =
       toRate(duration * (!iterationCount ? 1 : iterationCount));
     // Negative-delayed animations have their startTimes set such that we would
     // be displaying the delay outside the time window if we didn't take it into
     // account here.
-    let relevantDelay = delay < 0 ? toRate(delay) : 0;
+    const relevantDelay = delay < 0 ? toRate(delay) : 0;
     previousStartTime = previousStartTime || 0;
 
-    let startTime = toRate(minZero(delay)) +
+    const startTime = toRate(minZero(delay)) +
                     rateRelativeDuration +
                     endDelay;
     this.minStartTime = Math.min(
@@ -180,10 +180,10 @@ var TimeScale = {
       relevantDelay +
       Math.min(startTime, 0)
     );
-    let length = toRate(delay) +
+    const length = toRate(delay) +
                  rateRelativeDuration +
                  toRate(minZero(endDelay));
-    let endTime = previousStartTime + length;
+    const endTime = previousStartTime + length;
     this.maxEndTime = Math.max(this.maxEndTime, endTime);
   },
 
@@ -230,7 +230,7 @@ var TimeScale = {
    * @return {Number}
    */
   distanceToRelativeTime: function(distance) {
-    let time = this.distanceToTime(distance);
+    const time = this.distanceToTime(distance);
     return time - this.minStartTime;
   },
 
@@ -259,29 +259,29 @@ var TimeScale = {
    * animation in the timeline.
    */
   getAnimationDimensions: function({state}) {
-    let start = state.previousStartTime || 0;
-    let duration = state.duration;
-    let rate = state.playbackRate;
-    let count = state.iterationCount;
-    let delay = state.delay || 0;
-    let endDelay = state.endDelay || 0;
+    const start = state.previousStartTime || 0;
+    const duration = state.duration;
+    const rate = state.playbackRate;
+    const count = state.iterationCount;
+    const delay = state.delay || 0;
+    const endDelay = state.endDelay || 0;
 
     // The start position.
-    let x = this.startTimeToDistance(start + (delay / rate));
+    const x = this.startTimeToDistance(start + (delay / rate));
     // The width for a single iteration.
-    let w = this.durationToDistance(duration / rate);
+    const w = this.durationToDistance(duration / rate);
     // The width for all iterations.
-    let iterationW = w * (count || 1);
+    const iterationW = w * (count || 1);
     // The start position of the delay.
-    let delayX = delay < 0 ? x : this.startTimeToDistance(start);
+    const delayX = delay < 0 ? x : this.startTimeToDistance(start);
     // The width of the delay.
-    let delayW = this.durationToDistance(Math.abs(delay) / rate);
+    const delayW = this.durationToDistance(Math.abs(delay) / rate);
     // The width of the delay if it is negative, 0 otherwise.
-    let negativeDelayW = delay < 0 ? delayW : 0;
+    const negativeDelayW = delay < 0 ? delayW : 0;
     // The width of the endDelay.
-    let endDelayW = this.durationToDistance(Math.abs(endDelay) / rate);
+    const endDelayW = this.durationToDistance(Math.abs(endDelay) / rate);
     // The start position of the endDelay.
-    let endDelayX = endDelay < 0 ? x + iterationW - endDelayW
+    const endDelayX = endDelay < 0 ? x + iterationW - endDelayW
                                  : x + iterationW;
 
     return {x, w, iterationW, delayX, delayW, negativeDelayW,

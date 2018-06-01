@@ -8,8 +8,8 @@
 
 /* eslint-disable strict */
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
   equal("AllocationMarker" in saveHeapSnapshotAndTakeCensus(dbg).objects, false,
         "No allocation markers should exist in the census.");

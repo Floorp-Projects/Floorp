@@ -57,7 +57,7 @@ const res2 = [
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let { inspector, boxmodel, testActor } = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
 
   await testInitialValues(inspector, boxmodel);
   await testChangingValues(inspector, boxmodel, testActor);
@@ -65,30 +65,30 @@ add_task(async function() {
 
 async function testInitialValues(inspector, boxmodel) {
   info("Test that the initial values of the box model offset parent are correct");
-  let viewdoc = boxmodel.document;
+  const viewdoc = boxmodel.document;
 
-  for (let { selector, offsetParentValue } of res1) {
+  for (const { selector, offsetParentValue } of res1) {
     await selectNode(selector, inspector);
 
-    let elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
+    const elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
     is(elt && elt.textContent, offsetParentValue, selector + " has the right value.");
   }
 }
 
 async function testChangingValues(inspector, boxmodel, testActor) {
   info("Test that changing the document updates the box model");
-  let viewdoc = boxmodel.document;
+  const viewdoc = boxmodel.document;
 
-  for (let { selector, update } of updates) {
-    let onUpdated = waitForUpdate(inspector);
+  for (const { selector, update } of updates) {
+    const onUpdated = waitForUpdate(inspector);
     await testActor.setAttribute(selector, "style", update);
     await onUpdated;
   }
 
-  for (let { selector, offsetParentValue } of res2) {
+  for (const { selector, offsetParentValue } of res2) {
     await selectNode(selector, inspector);
 
-    let elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
+    const elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
     is(elt && elt.textContent, offsetParentValue,
       selector + " has the right value after style update.");
   }

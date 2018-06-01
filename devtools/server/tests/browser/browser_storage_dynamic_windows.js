@@ -83,10 +83,10 @@ add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-dynamic-windows.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = StorageFront(client, form);
-  let data = await front.listStores();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = StorageFront(client, form);
+  const data = await front.listStores();
 
   await testStores(data, front);
 
@@ -108,12 +108,12 @@ async function testStores(data, front) {
 }
 
 function testWindowsBeforeReload(data) {
-  for (let storageType in beforeReload) {
+  for (const storageType in beforeReload) {
     ok(data[storageType], `${storageType} storage actor is present`);
     is(Object.keys(data[storageType].hosts).length,
        Object.keys(beforeReload[storageType]).length,
         `Number of hosts for ${storageType} match`);
-    for (let host in beforeReload[storageType]) {
+    for (const host in beforeReload[storageType]) {
       ok(data[storageType].hosts[host], `Host ${host} is present`);
     }
   }
@@ -122,20 +122,20 @@ function testWindowsBeforeReload(data) {
 async function testAddIframe(front) {
   info("Testing if new iframe addition works properly");
 
-  let update = front.once("stores-update");
+  const update = front.once("stores-update");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, ALT_DOMAIN_SECURED,
     secured => {
-      let doc = content.document;
+      const doc = content.document;
 
-      let iframe = doc.createElement("iframe");
+      const iframe = doc.createElement("iframe");
       iframe.src = secured + "storage-secured-iframe.html";
 
       doc.querySelector("body").appendChild(iframe);
     }
   );
 
-  let data = await update;
+  const data = await update;
 
   validateStorage(data, afterIframeAdded, "added");
 }
@@ -143,10 +143,10 @@ async function testAddIframe(front) {
 async function testRemoveIframe(front) {
   info("Testing if iframe removal works properly");
 
-  let update = front.once("stores-update");
+  const update = front.once("stores-update");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    for (let iframe of content.document.querySelectorAll("iframe")) {
+    for (const iframe of content.document.querySelectorAll("iframe")) {
       if (iframe.src.startsWith("http:")) {
         iframe.remove();
         break;
@@ -154,14 +154,14 @@ async function testRemoveIframe(front) {
     }
   });
 
-  let data = await update;
+  const data = await update;
 
   validateStorage(data, afterIframeRemoved, "deleted");
 }
 
 function validateStorage(actual, expected, category = "") {
   if (category) {
-    for (let cat of ["added", "changed", "deleted"]) {
+    for (const cat of ["added", "changed", "deleted"]) {
       if (cat === category) {
         ok(actual[cat], `Data from the iframe has been ${cat}.`);
       } else {
@@ -170,19 +170,19 @@ function validateStorage(actual, expected, category = "") {
     }
   }
 
-  for (let [type, expectedData] of Object.entries(expected)) {
-    let actualData = category ? actual[category][type] : actual[type];
+  for (const [type, expectedData] of Object.entries(expected)) {
+    const actualData = category ? actual[category][type] : actual[type];
 
     ok(actualData, `${type} contains data.`);
 
-    let actualKeys = Object.keys(actualData);
-    let expectedKeys = Object.keys(expectedData);
+    const actualKeys = Object.keys(actualData);
+    const expectedKeys = Object.keys(expectedData);
     is(actualKeys.length, expectedKeys.length, `${type} data is the correct length.`);
 
-    for (let [key, dataValues] of Object.entries(expectedData)) {
+    for (const [key, dataValues] of Object.entries(expectedData)) {
       ok(actualData[key], `${type} data contains the key ${key}.`);
 
-      for (let dataValue of dataValues) {
+      for (const dataValue of dataValues) {
         ok(actualData[key].includes(dataValue),
           `${type}[${key}] contains "${dataValue}".`);
       }

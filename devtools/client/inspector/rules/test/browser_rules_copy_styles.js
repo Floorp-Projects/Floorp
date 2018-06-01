@@ -15,12 +15,12 @@ const TEST_URI = URL_ROOT + "doc_copystyles.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let { inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  let data = [
+  const data = [
     {
       desc: "Test Copy Property Name",
       node: ruleEditor.rule.textProps[0].editor.nameSpan,
@@ -202,7 +202,7 @@ add_task(async function() {
     },
   ];
 
-  for (let { setup, desc, node, menuItemLabel, expectedPattern, visible } of data) {
+  for (const { setup, desc, node, menuItemLabel, expectedPattern, visible } of data) {
     if (setup) {
       await setup();
     }
@@ -213,22 +213,22 @@ add_task(async function() {
 });
 
 async function checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible) {
-  let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
-  let menuItem = allMenuItems.find(item =>
+  const allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
+  const menuItem = allMenuItems.find(item =>
     item.label === STYLE_INSPECTOR_L10N.getStr(menuItemLabel));
-  let menuitemCopy = allMenuItems.find(item => item.label ===
+  const menuitemCopy = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
-  let menuitemCopyLocation = allMenuItems.find(item => item.label ===
+  const menuitemCopyLocation = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyLocation"));
-  let menuitemCopyPropertyDeclaration = allMenuItems.find(item => item.label ===
+  const menuitemCopyPropertyDeclaration = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyDeclaration"));
-  let menuitemCopyPropertyName = allMenuItems.find(item => item.label ===
+  const menuitemCopyPropertyName = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyName"));
-  let menuitemCopyPropertyValue = allMenuItems.find(item => item.label ===
+  const menuitemCopyPropertyValue = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyValue"));
-  let menuitemCopySelector = allMenuItems.find(item => item.label ===
+  const menuitemCopySelector = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copySelector"));
-  let menuitemCopyRule = allMenuItems.find(item => item.label ===
+  const menuitemCopyRule = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyRule"));
 
   ok(menuitemCopy.disabled,
@@ -275,20 +275,20 @@ async function checkCopyStyle(view, node, menuItemLabel, expectedPattern, visibl
 }
 
 async function disableProperty(view, index) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let textProp = ruleEditor.rule.textProps[index];
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const textProp = ruleEditor.rule.textProps[index];
   await togglePropStatus(view, textProp);
 }
 
 function checkClipboardData(expectedPattern) {
-  let actual = SpecialPowers.getClipboardData("text/unicode");
-  let expectedRegExp = new RegExp(expectedPattern, "g");
+  const actual = SpecialPowers.getClipboardData("text/unicode");
+  const expectedRegExp = new RegExp(expectedPattern, "g");
   return expectedRegExp.test(actual);
 }
 
 function failedClipboard(expectedPattern) {
   // Format expected text for comparison
-  let terminator = osString == "WINNT" ? "\r\n" : "\n";
+  const terminator = osString == "WINNT" ? "\r\n" : "\n";
   expectedPattern = expectedPattern.replace(/\[\\r\\n\][+*]/g, terminator);
   expectedPattern = expectedPattern.replace(/\\\(/g, "(");
   expectedPattern = expectedPattern.replace(/\\\)/g, ")");

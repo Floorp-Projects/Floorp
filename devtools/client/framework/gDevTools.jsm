@@ -23,7 +23,7 @@ this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
  */
 Object.defineProperty(this, "require", {
   get() {
-    let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     return require;
   }
 });
@@ -44,7 +44,7 @@ Object.defineProperty(this, "browser", {
  * It is an instance of a DevTools class that holds a set of tools. It has the
  * same lifetime as the browser.
  */
-let gDevToolsMethods = [
+const gDevToolsMethods = [
   // Used by: - b2g desktop.js
   //          - nsContextMenu
   //          - /devtools code
@@ -102,7 +102,7 @@ gDevToolsMethods.forEach(name => {
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
  * Firefox instance.
  */
-let gDevToolsBrowserMethods = [
+const gDevToolsBrowserMethods = [
   // used by browser-sets.inc, command
   "toggleToolboxCommand",
 

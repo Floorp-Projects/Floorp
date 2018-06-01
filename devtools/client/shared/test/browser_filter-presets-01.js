@@ -11,11 +11,11 @@ const {getClientCssProperties} = require("devtools/shared/fronts/css-properties"
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
   // First render
   await widget.once("render");
 
@@ -24,14 +24,14 @@ add_task(async function() {
 
   await showFilterPopupPresetsAndCreatePreset(widget, NAME, VALUE);
 
-  let preset = widget.el.querySelector(".preset");
+  const preset = widget.el.querySelector(".preset");
   is(preset.querySelector("label").textContent, NAME,
      "Should show preset name correctly");
   is(preset.querySelector("span").textContent, VALUE,
      "Should show preset value preview correctly");
 
   let list = await widget.getPresets();
-  let input = widget.el.querySelector(".presets-list .footer input");
+  const input = widget.el.querySelector(".presets-list .footer input");
   let data = list[0];
 
   is(data.name, NAME,
@@ -91,7 +91,7 @@ add_task(async function() {
  * @return {Promise}
  */
 function savePreset(widget, expectEvent = "render") {
-  let onEvent = widget.once(expectEvent);
+  const onEvent = widget.once(expectEvent);
   widget._savePreset({
     preventDefault: () => {},
   });

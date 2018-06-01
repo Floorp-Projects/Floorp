@@ -12,17 +12,17 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
+  const { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  let rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  const rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   await DetailsView.selectView("js-flamegraph");
   await rendered;
 

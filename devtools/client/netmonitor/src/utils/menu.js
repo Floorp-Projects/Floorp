@@ -22,17 +22,17 @@ function showMenu(items, options) {
   }
 
   // Build the menu object from provided menu items.
-  let menu = new Menu();
+  const menu = new Menu();
   items.forEach((item) => {
     if (item == "-") {
       item = { type: "separator" };
     }
 
-    let menuItem = new MenuItem(item);
-    let subItems = item.submenu;
+    const menuItem = new MenuItem(item);
+    const subItems = item.submenu;
 
     if (subItems) {
-      let subMenu = new Menu();
+      const subMenu = new Menu();
       subItems.forEach((subItem) => {
         subMenu.append(new MenuItem(subItem));
       });

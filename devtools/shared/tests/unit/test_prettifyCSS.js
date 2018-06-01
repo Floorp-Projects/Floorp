@@ -147,23 +147,23 @@ function run_test() {
   prettifyCSS("");
 
   Services.prefs.setBoolPref(EXPAND_TAB, true);
-  for (let test of TESTS_SPACE_INDENT) {
+  for (const test of TESTS_SPACE_INDENT) {
     info(test.name);
 
-    let input = test.input.split("\n").join(prettifyCSS.LINE_SEPARATOR);
-    let output = prettifyCSS(input);
-    let expected = test.expected.join(prettifyCSS.LINE_SEPARATOR) +
+    const input = test.input.split("\n").join(prettifyCSS.LINE_SEPARATOR);
+    const output = prettifyCSS(input);
+    const expected = test.expected.join(prettifyCSS.LINE_SEPARATOR) +
         prettifyCSS.LINE_SEPARATOR;
     equal(output, expected, test.name);
   }
 
   Services.prefs.setBoolPref(EXPAND_TAB, false);
-  for (let test of TESTS_TAB_INDENT) {
+  for (const test of TESTS_TAB_INDENT) {
     info(test.name);
 
-    let input = test.input.split("\n").join(prettifyCSS.LINE_SEPARATOR);
-    let output = prettifyCSS(input);
-    let expected = test.expected.join(prettifyCSS.LINE_SEPARATOR) +
+    const input = test.input.split("\n").join(prettifyCSS.LINE_SEPARATOR);
+    const output = prettifyCSS(input);
+    const expected = test.expected.join(prettifyCSS.LINE_SEPARATOR) +
         prettifyCSS.LINE_SEPARATOR;
     equal(output, expected, test.name);
   }

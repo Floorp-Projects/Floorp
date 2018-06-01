@@ -58,7 +58,7 @@ exports.Formatters = {
   /* Group 1 - JS */
 
   DOMEventFields: function(marker) {
-    let fields = Object.create(null);
+    const fields = Object.create(null);
 
     if ("type" in marker) {
       fields[L10N.getStr("marker.field.DOMEventType")] = marker.type;
@@ -84,7 +84,7 @@ exports.Formatters = {
   },
 
   JSLabel: function(marker = {}) {
-    let generic = L10N.getStr("marker.label.javascript");
+    const generic = L10N.getStr("marker.label.javascript");
     if ("causeName" in marker) {
       return JS_MARKER_MAP[marker.causeName] || generic;
     }
@@ -93,7 +93,7 @@ exports.Formatters = {
 
   JSFields: function(marker) {
     if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
-      let label = PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL;
+      const label = PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL;
       return {
         [L10N.getStr("marker.field.causeName")]: label
       };
@@ -114,16 +114,16 @@ exports.Formatters = {
   },
 
   GCFields: function(marker) {
-    let fields = Object.create(null);
+    const fields = Object.create(null);
 
     if ("causeName" in marker) {
-      let cause = marker.causeName;
-      let label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
+      const cause = marker.causeName;
+      const label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
       fields[L10N.getStr("marker.field.causeName")] = label;
     }
 
     if ("nonincrementalReason" in marker) {
-      let label = marker.nonincrementalReason;
+      const label = marker.nonincrementalReason;
       fields[L10N.getStr("marker.field.nonIncrementalCause")] = label;
     }
 
@@ -131,11 +131,11 @@ exports.Formatters = {
   },
 
   MinorGCFields: function(marker) {
-    let fields = Object.create(null);
+    const fields = Object.create(null);
 
     if ("causeName" in marker) {
-      let cause = marker.causeName;
-      let label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
+      const cause = marker.causeName;
+      const label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
       fields[L10N.getStr("marker.field.causeName")] = label;
     }
 
@@ -145,7 +145,7 @@ exports.Formatters = {
   },
 
   CycleCollectionFields: function(marker) {
-    let label = marker.name.replace(/nsCycleCollector::/g, "");
+    const label = marker.name.replace(/nsCycleCollector::/g, "");
     return {
       [L10N.getStr("marker.field.type")]: label
     };
@@ -153,7 +153,7 @@ exports.Formatters = {
 
   WorkerFields: function(marker) {
     if ("workerOperation" in marker) {
-      let label = L10N.getStr(`marker.worker.${marker.workerOperation}`);
+      const label = L10N.getStr(`marker.worker.${marker.workerOperation}`);
       return {
         [L10N.getStr("marker.field.type")]: label
       };
@@ -163,7 +163,7 @@ exports.Formatters = {
 
   MessagePortFields: function(marker) {
     if ("messagePortOperation" in marker) {
-      let label = L10N.getStr(`marker.messagePort.${marker.messagePortOperation}`);
+      const label = L10N.getStr(`marker.messagePort.${marker.messagePortOperation}`);
       return {
         [L10N.getStr("marker.field.type")]: label
       };

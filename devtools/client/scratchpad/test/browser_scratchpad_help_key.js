@@ -14,12 +14,12 @@ function test() {
 }
 
 function runTest() {
-  let sp = gScratchpadWindow.Scratchpad;
+  const sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
   ok(sp.editor.hasFocus(), "the editor has focus");
 
-  let keyid = gScratchpadWindow.document.getElementById("key_openHelp");
-  let modifiers = keyid.getAttribute("modifiers");
+  const keyid = gScratchpadWindow.document.getElementById("key_openHelp");
+  const modifiers = keyid.getAttribute("modifiers");
 
   let key = null;
   if (keyid.getAttribute("keycode")) {

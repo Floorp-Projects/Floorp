@@ -14,7 +14,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = await openRuleView();
+  const {inspector, view, testActor} = await openRuleView();
 
   await selectNode("#id1", inspector);
   await modifyRuleViewWidth("300px", view, inspector);
@@ -39,11 +39,11 @@ function getStyleRule(ruleView) {
 
 async function modifyRuleViewWidth(value, ruleView, inspector) {
   info("Getting the property value element");
-  let valueSpan = getStyleRule(ruleView)
+  const valueSpan = getStyleRule(ruleView)
     .querySelector(".ruleview-propertyvalue");
 
   info("Focusing the property value to set it to edit mode");
-  let editor = await focusEditableField(ruleView, valueSpan.parentNode);
+  const editor = await focusEditableField(ruleView, valueSpan.parentNode);
 
   ok(editor.input, "The inplace-editor field is ready");
   info("Setting the new value");
@@ -51,25 +51,25 @@ async function modifyRuleViewWidth(value, ruleView, inspector) {
 
   info("Pressing return and waiting for the field to blur and for the " +
     "markup-view to show the mutation");
-  let onBlur = once(editor.input, "blur", true);
-  let onStyleChanged = waitForStyleModification(inspector);
+  const onBlur = once(editor.input, "blur", true);
+  const onStyleChanged = waitForStyleModification(inspector);
   EventUtils.sendKey("return");
   await onBlur;
   await onStyleChanged;
 
   info("Escaping out of the new property field that has been created after " +
     "the value was edited");
-  let onNewFieldBlur = once(ruleView.styleDocument.activeElement, "blur", true);
+  const onNewFieldBlur = once(ruleView.styleDocument.activeElement, "blur", true);
   EventUtils.sendKey("escape");
   await onNewFieldBlur;
 }
 
 async function getContainerStyleAttrValue(id, {walker, markup}) {
-  let front = await walker.querySelector(walker.rootNode, "#" + id);
-  let container = markup.getContainer(front);
+  const front = await walker.querySelector(walker.rootNode, "#" + id);
+  const container = markup.getContainer(front);
 
   let attrIndex = 0;
-  for (let attrName of container.elt.querySelectorAll(".attr-name")) {
+  for (const attrName of container.elt.querySelectorAll(".attr-name")) {
     if (attrName.textContent === "style") {
       return container.elt.querySelectorAll(".attr-value")[attrIndex];
     }
@@ -79,12 +79,12 @@ async function getContainerStyleAttrValue(id, {walker, markup}) {
 }
 
 async function assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {
-  let valueSpan = getStyleRule(ruleView)
+  const valueSpan = getStyleRule(ruleView)
     .querySelector(".ruleview-propertyvalue");
   is(valueSpan.textContent, value,
     "Rule-view style width is " + value + " as expected");
 
-  let attr = await getContainerStyleAttrValue(id, inspector);
+  const attr = await getContainerStyleAttrValue(id, inspector);
   is(attr.textContent.replace(/\s/g, ""),
     "width:" + value + ";", "Markup-view style attribute width is " + value);
 }

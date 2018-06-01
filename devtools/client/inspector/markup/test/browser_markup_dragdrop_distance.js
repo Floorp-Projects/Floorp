@@ -15,7 +15,7 @@ const TEST_NODE = "#test";
 const MIN_DISTANCE = 10;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Drag the test node by half of the minimum distance");
   await simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE / 2);
@@ -38,7 +38,7 @@ add_task(async function() {
 });
 
 async function checkIsDragging(inspector, selector, isDragging) {
-  let container = await getContainerForSelector(selector, inspector);
+  const container = await getContainerForSelector(selector, inspector);
   if (isDragging) {
     ok(container.isDragging, "The container is being dragged");
     ok(inspector.markup.isDragging, "And the markup-view knows it");

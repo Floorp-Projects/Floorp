@@ -9,13 +9,13 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  const wait = waitForNetworkEvents(monitor, 2);
   await ContentTask.spawn(tab.linkedBrowser, HTTPS_REDIRECT_SJS, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
@@ -24,7 +24,7 @@ add_task(async function() {
   is(store.getState().requests.requests.size, 2,
      "There were two requests due to redirect.");
 
-  let [
+  const [
     initialSecurityIcon,
     redirectSecurityIcon,
   ] = document.querySelectorAll(".requests-security-state-icon");

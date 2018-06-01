@@ -8,7 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-let MenuItem = {
+const MenuItem = {
   id: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   checked: PropTypes.bool,
@@ -37,7 +37,7 @@ class ToggleMenu extends PureComponent {
   }
 
   onItemChange({ target }) {
-    let {
+    const {
       onChange,
     } = this.props;
 
@@ -46,12 +46,12 @@ class ToggleMenu extends PureComponent {
       isOpen: false,
     });
 
-    let id = target.name;
+    const id = target.name;
     onChange(id, target.checked);
   }
 
   onToggleOpen() {
-    let {
+    const {
       isOpen,
     } = this.state;
 
@@ -61,24 +61,24 @@ class ToggleMenu extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       id: menuID,
       items,
       label: toggleLabel,
       title,
     } = this.props;
 
-    let {
+    const {
       isOpen,
     } = this.state;
 
-    let {
+    const {
       onItemChange,
       onToggleOpen,
     } = this;
 
-    let menuItems = items.map(({ id, label, checked }) => {
-      let inputID = `devtools-menu-item-${id}`;
+    const menuItems = items.map(({ id, label, checked }) => {
+      const inputID = `devtools-menu-item-${id}`;
 
       return dom.div(
         {
@@ -102,7 +102,7 @@ class ToggleMenu extends PureComponent {
     if (isOpen) {
       menuClass += " opened";
     }
-    let menu = dom.div(
+    const menu = dom.div(
       {
         className: menuClass,
       },

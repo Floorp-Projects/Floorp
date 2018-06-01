@@ -18,10 +18,10 @@ let gWalker = null;
 let gStyles = null;
 
 addTest(function() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -38,17 +38,17 @@ addTest(function() {
 });
 
 addAsyncTest(async function() {
-  let node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
-  let layout = await gStyles.getLayout(node, {});
+  const node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  const layout = await gStyles.getLayout(node, {});
 
-  let properties = ["width", "height",
-                    "margin-top", "margin-right", "margin-bottom",
-                    "margin-left", "padding-top", "padding-right",
-                    "padding-bottom", "padding-left", "border-top-width",
-                    "border-right-width", "border-bottom-width",
-                    "border-left-width", "z-index", "box-sizing", "display",
-                    "position"];
-  for (let prop of properties) {
+  const properties = ["width", "height",
+                      "margin-top", "margin-right", "margin-bottom",
+                      "margin-left", "padding-top", "padding-right",
+                      "padding-bottom", "padding-left", "border-top-width",
+                      "border-right-width", "border-bottom-width",
+                      "border-left-width", "z-index", "box-sizing", "display",
+                      "position"];
+  for (const prop of properties) {
     ok((prop in layout), "The layout object returned has " + prop);
   }
 
@@ -56,10 +56,10 @@ addAsyncTest(async function() {
 });
 
 addAsyncTest(async function() {
-  let node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
-  let layout = await gStyles.getLayout(node, {});
+  const node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  const layout = await gStyles.getLayout(node, {});
 
-  let expected = {
+  const expected = {
     "box-sizing": "border-box",
     "position": "absolute",
     "z-index": "2",
@@ -72,7 +72,7 @@ addAsyncTest(async function() {
     "margin-left": "0px"
   };
 
-  for (let name in expected) {
+  for (const name in expected) {
     is(layout[name], expected[name], "The " + name + " property is correct");
   }
 
@@ -80,7 +80,7 @@ addAsyncTest(async function() {
 });
 
 addAsyncTest(async function() {
-  let node = await gWalker.querySelector(gWalker.rootNode,
+  const node = await gWalker.querySelector(gWalker.rootNode,
                                          "#layout-auto-margin-element");
 
   let layout = await gStyles.getLayout(node, {});

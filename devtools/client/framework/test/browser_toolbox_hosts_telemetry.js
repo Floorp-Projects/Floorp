@@ -14,9 +14,9 @@ add_task(async function() {
   startTelemetry();
 
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
-  let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const tab = await addTab(URL);
+  const target = TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await changeToolboxHost(toolbox);
   await checkResults();

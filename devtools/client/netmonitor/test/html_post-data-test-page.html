@@ -31,12 +31,12 @@
       "use strict";
 
       function post(address, message, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
         let data = "";
-        for (let i in message) {
+        for (const i in message) {
           data += "&" + i + "=" + message[i];
         }
 
@@ -49,10 +49,10 @@
       }
 
       function form(address, formName, callback) {
-        let formData = new FormData(document.forms.namedItem(formName));
+        const formData = new FormData(document.forms.namedItem(formName));
         formData.append("Custom field", "Extra data");
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
 
         xhr.onreadystatechange = function() {

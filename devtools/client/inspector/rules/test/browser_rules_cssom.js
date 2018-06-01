@@ -11,10 +11,10 @@ const TEST_URI = URL_ROOT + "doc_cssom.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#target", inspector);
 
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
   let rule;
 
   rule = elementStyle.rules[1];

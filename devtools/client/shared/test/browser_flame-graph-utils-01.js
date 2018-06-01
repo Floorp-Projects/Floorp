@@ -16,7 +16,7 @@ add_task(async function() {
 });
 
 function performTest() {
-  let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
+  const out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
 
   ok(out, "Some data was outputted properly");
   is(out.length, PALLETTE_SIZE, "The outputted length is correct.");
@@ -24,8 +24,8 @@ function performTest() {
   info("Got flame graph data:\n" + out.toSource() + "\n");
 
   for (let i = 0; i < out.length; i++) {
-    let found = out[i];
-    let expected = EXPECTED_OUTPUT[i];
+    const found = out[i];
+    const expected = EXPECTED_OUTPUT[i];
 
     is(found.blocks.length, expected.blocks.length,
       "The correct number of blocks were found in this bucket.");

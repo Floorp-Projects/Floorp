@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
+  const {inspector, boxmodel} = await openLayoutView();
   await selectNode("div", inspector);
 
   await testInitialFocus(inspector, boxmodel);
@@ -28,8 +28,8 @@ add_task(async function() {
 
 function testInitialFocus(inspector, boxmodel) {
   info("Test that the focus is(on margin layout.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
+  const doc = boxmodel.document;
+  const container = doc.querySelector(".boxmodel-container");
   container.focus();
   EventUtils.synthesizeKey("KEY_Enter");
 
@@ -39,8 +39,8 @@ function testInitialFocus(inspector, boxmodel) {
 
 function testChangingLevels(inspector, boxmodel) {
   info("Test that using arrow keys updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
+  const doc = boxmodel.document;
+  const container = doc.querySelector(".boxmodel-container");
   container.focus();
   EventUtils.synthesizeKey("KEY_Enter");
   EventUtils.synthesizeKey("KEY_Escape");
@@ -80,14 +80,14 @@ function testChangingLevels(inspector, boxmodel) {
 
 function testTabbingWrapAround(inspector, boxmodel) {
   info("Test that using arrow keys updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
+  const doc = boxmodel.document;
+  const container = doc.querySelector(".boxmodel-container");
   container.focus();
   EventUtils.synthesizeKey("KEY_Enter");
 
-  let editLevel = container.getAttribute("activedescendant").split(" ")[0];
-  let dataLevel = doc.querySelector(`.${editLevel}`).getAttribute("data-box");
-  let editBoxes = [...doc.querySelectorAll(
+  const editLevel = container.getAttribute("activedescendant").split(" ")[0];
+  const dataLevel = doc.querySelector(`.${editLevel}`).getAttribute("data-box");
+  const editBoxes = [...doc.querySelectorAll(
     `[data-box="${dataLevel}"].boxmodel-editable`)];
 
   EventUtils.synthesizeKey("KEY_Escape");
@@ -102,15 +102,15 @@ function testTabbingWrapAround(inspector, boxmodel) {
 
 function testChangingLevelsByClicking(inspector, boxmodel) {
   info("Test that clicking on levels updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
+  const doc = boxmodel.document;
+  const container = doc.querySelector(".boxmodel-container");
   container.focus();
 
-  let marginLayout = doc.querySelector(".boxmodel-margins");
-  let borderLayout = doc.querySelector(".boxmodel-borders");
-  let paddingLayout = doc.querySelector(".boxmodel-paddings");
-  let contentLayout = doc.querySelector(".boxmodel-contents");
-  let layouts = [contentLayout, paddingLayout, borderLayout, marginLayout];
+  const marginLayout = doc.querySelector(".boxmodel-margins");
+  const borderLayout = doc.querySelector(".boxmodel-borders");
+  const paddingLayout = doc.querySelector(".boxmodel-paddings");
+  const contentLayout = doc.querySelector(".boxmodel-contents");
+  const layouts = [contentLayout, paddingLayout, borderLayout, marginLayout];
 
   layouts.forEach(layout => {
     layout.click();

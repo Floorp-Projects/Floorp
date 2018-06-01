@@ -75,7 +75,7 @@ describe("Testing UI", () => {
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
-      let state = store.getState().ui;
+      const state = store.getState().ui;
 
       store.dispatch(actions.showObjectInSidebar(actorId, messageId));
       expect(store.getState().ui).toEqual(state);

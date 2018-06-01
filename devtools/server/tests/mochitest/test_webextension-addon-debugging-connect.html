@@ -19,7 +19,7 @@ Bug 1302702 - Test connect to a webextension addon
 
 async function test_connect_addon(oopMode) {
   // Install and start a test webextension.
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     background: function() {
       browser.test.log("background script executed");

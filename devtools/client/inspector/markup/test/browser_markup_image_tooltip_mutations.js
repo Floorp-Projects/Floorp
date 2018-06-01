@@ -17,11 +17,11 @@ const INITIAL_SRC_SIZE = "64" + " \u00D7 " + "64";
 const UPDATED_SRC_SIZE = "22" + " \u00D7 " + "23";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(
+  const { inspector } = await openInspectorForURL(
     "data:text/html,<p>markup view tooltip test</p><img>");
 
   info("Retrieving NodeFront for the <img> element.");
-  let img = await getNodeFront("img", inspector);
+  const img = await getNodeFront("img", inspector);
 
   info("Selecting the <img> element");
   await selectNode(img, inspector);
@@ -29,7 +29,7 @@ add_task(async function() {
   info("Adding src attribute to the image.");
   await updateImageSrc(img, INITIAL_SRC, inspector);
 
-  let container = getContainerForNodeFront(img, inspector);
+  const container = getContainerForNodeFront(img, inspector);
   ok(container, "Found markup container for the image.");
 
   let target = container.editor.getAttributeElement("src")
@@ -62,8 +62,8 @@ add_task(async function() {
  * Updates the src attribute of the image. Return a Promise.
  */
 function updateImageSrc(img, newSrc, inspector) {
-  let onMutated = inspector.once("markupmutation");
-  let onModified = img.modifyAttributes([{
+  const onMutated = inspector.once("markupmutation");
+  const onModified = img.modifyAttributes([{
     attributeName: "src",
     newValue: newSrc
   }]);
@@ -76,11 +76,11 @@ function updateImageSrc(img, newSrc, inspector) {
  * size.
  */
 function checkImageTooltip(size, {markup}) {
-  let panel = markup.imagePreviewTooltip.panel;
-  let images = panel.getElementsByTagName("img");
+  const panel = markup.imagePreviewTooltip.panel;
+  const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
 
-  let label = panel.querySelector(".devtools-tooltip-caption");
+  const label = panel.querySelector(".devtools-tooltip-caption");
   is(label.textContent, size, "Tooltip label displays the right image size");
 
   markup.imagePreviewTooltip.hide();

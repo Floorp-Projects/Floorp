@@ -36,7 +36,7 @@ add_task(async function() {
 });
 
 function reloadTab(tab) {
-  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   tab.linkedBrowser.reload();
   return loaded;
 }

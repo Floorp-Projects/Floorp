@@ -20,10 +20,10 @@ const X = 32;
 const Y = 20;
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+  const helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
-  let { finalize } = helper;
+  const { finalize } = helper;
 
   helper.prefix = PREFIX;
 
@@ -79,9 +79,9 @@ async function areLabelsProperlyDisplayedWhenMouseMoved({isElementHidden,
   hidden = await isElementHidden("label-size");
   ok(hidden, "label's size still hidden");
 
-  let text = await getElementTextContent("label-position");
+  const text = await getElementTextContent("label-position");
 
-  let [x, y] = text.replace(/ /g, "").split(/\n/);
+  const [x, y] = text.replace(/ /g, "").split(/\n/);
 
   is(+x, X, "label's position shows the proper X coord");
   is(+y, Y, "label's position shows the proper Y coord");

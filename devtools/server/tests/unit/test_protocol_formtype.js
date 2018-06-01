@@ -153,7 +153,7 @@ const run_test = Test(async function() {
 
   await client.connect();
 
-  let rootFront = RootFront(conn);
+  const rootFront = RootFront(conn);
 
   // Trigger some methods that return forms.
   let retval = await rootFront.getDefault();

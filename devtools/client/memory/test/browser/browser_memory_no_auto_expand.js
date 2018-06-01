@@ -31,7 +31,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     ...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name")
   ];
 
-  for (let el of nameElems) {
+  for (const el of nameElems) {
     dumpn(`Found ${el.textContent.trim()}`);
     is(el.style.marginInlineStart, "0px",
        "None of the elements should be an indented/expanded child");

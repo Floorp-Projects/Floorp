@@ -98,7 +98,7 @@ const TEST_DATA_INNER = [
 ];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   await runStyleAttributeAutocompleteTests(inspector, TEST_DATA_DOUBLE);
   await runStyleAttributeAutocompleteTests(inspector, TEST_DATA_SINGLE);

@@ -148,7 +148,7 @@ class RequestListItem extends Component {
       this.refs.listItem.focus();
     }
 
-    let { connector, item, requestFilterTypes } = this.props;
+    const { connector, item, requestFilterTypes } = this.props;
     // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
     if (requestFilterTypes.xhr || requestFilterTypes.ws) {
       fetchNetworkUpdatePacket(connector.requestData, item, [
@@ -159,7 +159,7 @@ class RequestListItem extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { connector, item, requestFilterTypes } = nextProps;
+    const { connector, item, requestFilterTypes } = nextProps;
     // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
     if (requestFilterTypes.xhr || requestFilterTypes.ws) {
       fetchNetworkUpdatePacket(connector.requestData, item, [
@@ -185,7 +185,7 @@ class RequestListItem extends Component {
   }
 
   render() {
-    let {
+    const {
       connector,
       columns,
       item,
@@ -200,7 +200,7 @@ class RequestListItem extends Component {
       onWaterfallMouseDown,
     } = this.props;
 
-    let classList = ["request-list-item", index % 2 ? "odd" : "even"];
+    const classList = ["request-list-item", index % 2 ? "odd" : "even"];
     isSelected && classList.push("selected");
     fromCache && classList.push("fromCache");
 

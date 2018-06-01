@@ -47,13 +47,13 @@ EditingSession.prototype = {
    */
   getPropertyFromRule: function(rule, property) {
     // Use the parsed declarations in the StyleRuleFront object if available.
-    let index = this.getPropertyIndex(property, rule);
+    const index = this.getPropertyIndex(property, rule);
     if (index !== -1) {
       return rule.declarations[index].value;
     }
 
     // Fallback to parsing the cssText locally otherwise.
-    let dummyStyle = this._element.style;
+    const dummyStyle = this._element.style;
     dummyStyle.cssText = rule.cssText;
     return dummyStyle.getPropertyValue(property);
   },
@@ -67,7 +67,7 @@ EditingSession.prototype = {
    */
   getProperty: function(property) {
     // Create a hidden element for getPropertyFromRule to use
-    let div = this._doc.createElement("div");
+    const div = this._doc.createElement("div");
     div.setAttribute("style", "display: none");
     this._doc.getElementById("inspector-main-content").appendChild(div);
     this._element = this._doc.createElement("p");
@@ -75,8 +75,8 @@ EditingSession.prototype = {
 
     // As the rules are in order of priority we can just iterate until we find
     // the first that defines a value for the property and return that.
-    for (let rule of this._rules) {
-      let value = this.getPropertyFromRule(rule, property);
+    for (const rule of this._rules) {
+      const value = this.getPropertyFromRule(rule, property);
       if (value !== "") {
         div.remove();
         return value;
@@ -97,7 +97,7 @@ EditingSession.prototype = {
    * @return {Number} The property index in the rule.
    */
   getPropertyIndex: function(name, rule = this._rules[0]) {
-    let elementStyleRule = this._rules[0];
+    const elementStyleRule = this._rules[0];
     if (!elementStyleRule.declarations.length) {
       return -1;
     }
@@ -115,12 +115,12 @@ EditingSession.prototype = {
    * @return {Promise} Resolves when the modifications are complete.
    */
   async setProperties(properties) {
-    for (let property of properties) {
+    for (const property of properties) {
       // Get a RuleModificationList or RuleRewriter helper object from the
       // StyleRuleActor to make changes to CSS properties.
       // Note that RuleRewriter doesn't support modifying several properties at
       // once, so we do this in a sequence here.
-      let modifications = this._rules[0].startModifyingProperties(this.cssProperties);
+      const modifications = this._rules[0].startModifyingProperties(this.cssProperties);
 
       // Remember the property so it can be reverted.
       if (!this._modifications.has(property.name)) {
@@ -153,8 +153,8 @@ EditingSession.prototype = {
   async revert() {
     // Revert each property that we modified previously, one by one. See
     // setProperties for information about why.
-    for (let [property, value] of this._modifications) {
-      let modifications = this._rules[0].startModifyingProperties(this.cssProperties);
+    for (const [property, value] of this._modifications) {
+      const modifications = this._rules[0].startModifyingProperties(this.cssProperties);
 
       // Find the index of the property to be reverted.
       let index = this.getPropertyIndex(property);

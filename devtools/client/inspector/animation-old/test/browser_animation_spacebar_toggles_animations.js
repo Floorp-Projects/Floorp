@@ -12,8 +12,8 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, inspector, window, controller} = await openAnimationInspector();
-  let {toggleAllButtonEl} = panel;
+  const {panel, inspector, window, controller} = await openAnimationInspector();
+  const {toggleAllButtonEl} = panel;
 
   // select a node without animations
   await selectNodeAndWaitForAnimations(".still", inspector);

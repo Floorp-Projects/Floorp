@@ -7,17 +7,17 @@
 
 const TEST_URL = "http://example.com/";
 
-let checkToolbox = async function(tab, location) {
-  let target = TargetFactory.forTab(tab);
+const checkToolbox = async function(tab, location) {
+  const target = TargetFactory.forTab(tab);
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 };
 
 add_task(async function() {
-  let tab = await addTab(TEST_URL);
+  const tab = await addTab(TEST_URL);
 
   info("Open toolbox outside RDM");
   {
-    let { toolbox, inspector } = await openInspector();
+    const { toolbox, inspector } = await openInspector();
     inspector.walker.once("new-root", () => {
       ok(false, "Inspector saw new root, would reboot!");
     });
@@ -31,8 +31,8 @@ add_task(async function() {
 
   info("Open toolbox inside RDM");
   {
-    let { ui } = await openRDM(tab);
-    let { toolbox, inspector } = await openInspector();
+    const { ui } = await openRDM(tab);
+    const { toolbox, inspector } = await openInspector();
     inspector.walker.once("new-root", () => {
       ok(false, "Inspector saw new root, would reboot!");
     });

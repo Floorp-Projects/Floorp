@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, OverviewView } = panel.panelWin;
+  const { EVENTS, OverviewView } = panel.panelWin;
 
   try {
     OverviewView.setTimeInterval({ starTime: 0, endTime: 1 });
@@ -39,11 +39,11 @@ add_task(async function() {
 
   // Get/set the time interval and wait for the event propagation.
 
-  let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
+  const rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
   OverviewView.setTimeInterval({ startTime: 10, endTime: 20 });
   await rangeSelected;
 
-  let firstInterval = OverviewView.getTimeInterval();
+  const firstInterval = OverviewView.getTimeInterval();
   info("First interval start time: " + firstInterval.startTime);
   info("First interval end time: " + firstInterval.endTime);
   is(Math.round(firstInterval.startTime), 10,
@@ -61,7 +61,7 @@ add_task(async function() {
   OverviewView.setTimeInterval({ startTime: 30, endTime: 40 }, { stopPropagation: true });
   OverviewView.off(EVENTS.UI_OVERVIEW_RANGE_SELECTED, fail);
 
-  let secondInterval = OverviewView.getTimeInterval();
+  const secondInterval = OverviewView.getTimeInterval();
   info("Second interval start time: " + secondInterval.startTime);
   info("Second interval end time: " + secondInterval.endTime);
   is(Math.round(secondInterval.startTime), 30,

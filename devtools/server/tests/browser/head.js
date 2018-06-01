@@ -37,7 +37,7 @@ waitForExplicitFinish();
  */
 var addTab = async function(url) {
   info(`Adding a new tab with URL: ${url}`);
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
+  const tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info(`Tab added and URL ${url} loaded`);
@@ -52,11 +52,11 @@ async function initAnimationsFrontForUrl(url) {
   await addTab(url);
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = await inspector.getWalker();
-  let animations = AnimationsFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const inspector = InspectorFront(client, form);
+  const walker = await inspector.getWalker();
+  const animations = AnimationsFront(client, form);
 
   return {inspector, walker, animations, client};
 }
@@ -67,11 +67,11 @@ async function initLayoutFrontForUrl(url) {
   await addTab(url);
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = await inspector.getWalker();
-  let layout = await walker.getLayoutInspector();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const inspector = InspectorFront(client, form);
+  const walker = await inspector.getWalker();
+  const layout = await walker.getLayoutInspector();
 
   return {inspector, walker, layout, client};
 }
@@ -83,11 +83,11 @@ async function initAccessibilityFrontForUrl(url) {
   await addTab(url);
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = await inspector.getWalker();
-  let accessibility = AccessibilityFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const inspector = InspectorFront(client, form);
+  const walker = await inspector.getWalker();
+  const accessibility = AccessibilityFront(client, form);
 
   await accessibility.bootstrap();
 
@@ -110,7 +110,7 @@ async function initPerfFront() {
   const {PerfFront} = require("devtools/shared/fronts/perf");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   await waitUntilClientConnected(client);
   const rootForm = await getRootForm(client);
   const front = PerfFront(client, rootForm);
@@ -163,7 +163,7 @@ function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   return new Promise(resolve => {
-    for (let [add, remove] of [
+    for (const [add, remove] of [
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
       ["on", "off"]
@@ -217,7 +217,7 @@ function idleWait(time) {
 }
 
 function busyWait(time) {
-  let start = Date.now();
+  const start = Date.now();
   // eslint-disable-next-line
   let stack;
   while (Date.now() - start < time) {
@@ -252,7 +252,7 @@ function waitForMarkerType(front, types, predicate,
     return true;
   };
   let filteredMarkers = [];
-  let { promise, resolve } = defer();
+  const { promise, resolve } = defer();
 
   info("Waiting for markers of type: " + types);
 
@@ -261,7 +261,7 @@ function waitForMarkerType(front, types, predicate,
       return;
     }
 
-    let markers = unpackFun(name, data);
+    const markers = unpackFun(name, data);
     info("Got markers: " + JSON.stringify(markers, null, 2));
 
     filteredMarkers = filteredMarkers.concat(
@@ -290,7 +290,7 @@ function getCookieId(name, domain, path) {
  * @param  {Promise} task     A promise that resolves when DOM activity is done.
  */
 async function emitA11yEvent(emitter, name, handler, task) {
-  let promise = emitter.once(name, handler);
+  const promise = emitter.once(name, handler);
   await task();
   await promise;
 }
@@ -309,7 +309,7 @@ function checkA11yFront(front, expected, expectedFront) {
     is(front, expectedFront, "Matching accessibility front");
   }
 
-  for (let key in expected) {
+  for (const key in expected) {
     if (["actions", "states", "attributes"].includes(key)) {
       SimpleTest.isDeeply(front[key], expected[key],
         `Accessible Front has correct ${key}`);
@@ -321,7 +321,7 @@ function checkA11yFront(front, expected, expectedFront) {
 
 function getA11yInitOrShutdownPromise() {
   return new Promise(resolve => {
-    let observe = (subject, topic, data) => {
+    const observe = (subject, topic, data) => {
       Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
       resolve(data);
     };

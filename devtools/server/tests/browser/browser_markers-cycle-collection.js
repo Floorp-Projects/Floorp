@@ -16,13 +16,13 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_force_cc.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
-  let rec = await front.startRecording({ withMarkers: true });
+  const rec = await front.startRecording({ withMarkers: true });
 
-  let markers = await waitForMarkerType(front,
+  const markers = await waitForMarkerType(front,
     ["nsCycleCollector::Collect", "nsCycleCollector::ForgetSkippable"]);
   await front.stopRecording(rec);
 

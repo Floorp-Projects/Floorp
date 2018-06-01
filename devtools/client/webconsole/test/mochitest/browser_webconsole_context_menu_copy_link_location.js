@@ -17,13 +17,13 @@ add_task(async function() {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   info("Test Copy URL menu item for text log");
 
   info("Logging a text message in the content window");
-  let onLogMessage = waitForMessage(hud, "simple text message");
+  const onLogMessage = waitForMessage(hud, "simple text message");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.console.log("simple text message");
   });
@@ -41,7 +41,7 @@ add_task(async function() {
   info("Test Copy URL menu item for network log");
 
   info("Reload the content window to produce a network log");
-  let onNetworkMessage = waitForMessage(hud, "test-console.html");
+  const onNetworkMessage = waitForMessage(hud, "test-console.html");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });

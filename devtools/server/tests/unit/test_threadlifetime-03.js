@@ -29,9 +29,9 @@ function run_test() {
 function test_thread_lifetime() {
   // Get three thread-lifetime grips.
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let grips = [];
+    const grips = [];
 
-    let handler = function(response) {
+    const handler = function(response) {
       if (response.error) {
         Assert.equal(response.error, "");
         finishClient(gClient);
@@ -58,7 +58,7 @@ function test_thread_lifetime() {
 function test_release_many(grips) {
   // Release the first two grips, leave the third alive.
 
-  let release = [grips[0], grips[1]];
+  const release = [grips[0], grips[1]];
 
   gThreadClient.releaseMany(release, function(response) {
     // First two actors should return a noSuchActor error, because

@@ -63,7 +63,7 @@ class MessageContainer extends Component {
   render() {
     const message = this.props.getMessage();
 
-    let MessageComponent = getMessageComponent(message);
+    const MessageComponent = getMessageComponent(message);
     return MessageComponent(Object.assign({message}, this.props));
   }
 }

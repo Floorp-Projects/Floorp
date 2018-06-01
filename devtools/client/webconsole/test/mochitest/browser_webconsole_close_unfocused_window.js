@@ -12,13 +12,13 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  let tab1 = await addTab(TEST_URI, {window});
+  const tab1 = await addTab(TEST_URI, {window});
 
   info("Open a second window");
-  let win2 = await openNewBrowserWindow();
+  const win2 = await openNewBrowserWindow();
 
   info("Add a test tab in the second window");
-  let tab2 = await addTab(TEST_URI, {window: win2});
+  const tab2 = await addTab(TEST_URI, {window: win2});
   win2.gBrowser.selectedTab = tab2;
 
   info("Open console in tabs located in different windows");
@@ -39,6 +39,6 @@ add_task(async function() {
 });
 
 function closeToolboxForTab(tab) {
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   return gDevTools.closeToolbox(target);
 }

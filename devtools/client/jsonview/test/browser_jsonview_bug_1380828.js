@@ -10,14 +10,14 @@ const prettyPrintButtonClass = ".textPanelBox .toolbar button.prettyprint";
 add_task(async function() {
   info("Test 'Pretty Print' button disappears on parsing invalid JSON");
 
-  let count = await testPrettyPrintButton(INVALID_JSON_URL);
+  const count = await testPrettyPrintButton(INVALID_JSON_URL);
   is(count, 0, "There must be no pretty-print button for invalid json");
 });
 
 add_task(async function() {
   info("Test 'Pretty Print' button is present on parsing valid JSON");
 
-  let count = await testPrettyPrintButton(VALID_JSON_URL);
+  const count = await testPrettyPrintButton(VALID_JSON_URL);
   is(count, 1, "There must be pretty-print button for valid json");
 });
 
@@ -27,6 +27,6 @@ async function testPrettyPrintButton(url) {
   await selectJsonViewContentTab("rawdata");
   info("Switched to Raw Data tab.");
 
-  let count = await getElementCount(prettyPrintButtonClass);
+  const count = await getElementCount(prettyPrintButtonClass);
   return count;
 }

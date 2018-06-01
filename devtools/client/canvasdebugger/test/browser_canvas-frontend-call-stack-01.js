@@ -12,23 +12,23 @@ registerCleanupFunction(function() {
 });
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
-  let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
+  const { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([recordingFinished, callListPopulated]);
 
-  let callItem = CallsListView.getItemAtIndex(2);
-  let locationLink = $(".call-item-location", callItem.target);
+  const callItem = CallsListView.getItemAtIndex(2);
+  const locationLink = $(".call-item-location", callItem.target);
 
   is($(".call-item-stack", callItem.target), null,
     "There should be no stack container available yet for the draw call.");
 
-  let callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
+  const callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "mousedown" }, locationLink, window);
   await callStackDisplayed;
 
@@ -65,12 +65,12 @@ async function ifTestingSupported() {
     "doc_simple-canvas-deep-stack.html:35",
     "The fourth function on the stack has the correct location.");
 
-  let jumpedToSource = once(window, EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+  const jumpedToSource = once(window, EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
   EventUtils.sendMouseEvent({ type: "mousedown" }, $(".call-item-stack-fn-location", callItem.target));
   await jumpedToSource;
 
-  let toolbox = await gDevTools.getToolbox(target);
-  let { panelWin: { DebuggerView: view } } = toolbox.getPanel("jsdebugger");
+  const toolbox = await gDevTools.getToolbox(target);
+  const { panelWin: { DebuggerView: view } } = toolbox.getPanel("jsdebugger");
 
   is(view.Sources.selectedValue, getSourceActor(view.Sources, SIMPLE_CANVAS_DEEP_STACK_URL),
     "The expected source was shown in the debugger.");

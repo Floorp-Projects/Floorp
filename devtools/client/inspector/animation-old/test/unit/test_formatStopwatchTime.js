@@ -55,7 +55,7 @@ const TEST_DATA = [{
 }];
 
 function run_test() {
-  for (let {desc, time, expected} of TEST_DATA) {
+  for (const {desc, time, expected} of TEST_DATA) {
     equal(formatStopwatchTime(time), expected, desc);
   }
 }

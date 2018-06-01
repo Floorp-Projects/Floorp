@@ -18,9 +18,9 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let onMessage = waitForMessage(hud, "bogus is not defined");
+  const onMessage = waitForMessage(hud, "bogus is not defined");
   BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
   await onMessage;
 

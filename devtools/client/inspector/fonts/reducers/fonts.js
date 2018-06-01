@@ -13,7 +13,7 @@ const INITIAL_FONT_DATA = {
   otherFonts: []
 };
 
-let reducers = {
+const reducers = {
 
   [UPDATE_FONTS](_, { fonts, otherFonts }) {
     return { fonts, otherFonts };
@@ -22,7 +22,7 @@ let reducers = {
 };
 
 module.exports = function(fontData = INITIAL_FONT_DATA, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return fontData;
   }

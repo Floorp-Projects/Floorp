@@ -11,14 +11,14 @@ const { appendAndWaitForPaint } = require("devtools/client/performance/test/help
 const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(async function() {
-  let { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
+  const { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
-  let container = document.createElement("vbox");
+  const container = document.createElement("vbox");
   await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 
-  let treeRoot = new MyCustomTreeItem(myDataSrc, { parent: null });
+  const treeRoot = new MyCustomTreeItem(myDataSrc, { parent: null });
   treeRoot.autoExpandDepth = 1;
   treeRoot.attachTo(container);
 
@@ -27,8 +27,8 @@ add_task(async function() {
   ok(treeRoot.populated,
     "The root node should now be populated.");
 
-  let fooItem = treeRoot.getChild(0);
-  let barItem = treeRoot.getChild(1);
+  const fooItem = treeRoot.getChild(0);
+  const barItem = treeRoot.getChild(1);
   ok(!fooItem.expanded && !barItem.expanded,
     "The 'foo' and 'bar' nodes should not be expanded yet.");
   ok(!fooItem.populated && !barItem.populated,
@@ -43,7 +43,7 @@ add_task(async function() {
   ok(barItem.populated,
     "The 'bar' node should now be populated.");
 
-  let bazItem = barItem.getChild(0);
+  const bazItem = barItem.getChild(0);
   ok(!bazItem.expanded,
     "The 'bar' node should not be expanded yet.");
   ok(!bazItem.populated,

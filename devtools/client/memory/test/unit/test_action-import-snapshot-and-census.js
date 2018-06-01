@@ -8,22 +8,22 @@
  * importing a snapshot, and its sub-actions.
  */
 
-let { actions, snapshotState: states, treeMapState } = require("devtools/client/memory/constants");
-let { exportSnapshot, importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
-let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const { actions, snapshotState: states, treeMapState } = require("devtools/client/memory/constants");
+const { exportSnapshot, importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
+const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { subscribe, dispatch, getState } = store;
+  const store = Store();
+  const { subscribe, dispatch, getState } = store;
 
-  let destPath = await createTempFile();
+  const destPath = await createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   await waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
 
-  let exportEvents = Promise.all([
+  const exportEvents = Promise.all([
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_END)
   ]);
@@ -33,15 +33,15 @@ add_task(async function() {
   // Now import our freshly exported snapshot
   let snapshotI = 0;
   let censusI = 0;
-  let snapshotStates = ["IMPORTING", "READING", "READ"];
-  let censusStates = ["SAVING", "SAVED"];
-  let expectStates = () => {
-    let snapshot = getState().snapshots[1];
+  const snapshotStates = ["IMPORTING", "READING", "READ"];
+  const censusStates = ["SAVING", "SAVED"];
+  const expectStates = () => {
+    const snapshot = getState().snapshots[1];
     if (!snapshot) {
       return;
     }
     if (snapshotI < snapshotStates.length) {
-      let isCorrectState = snapshot.state === states[snapshotStates[snapshotI]];
+      const isCorrectState = snapshot.state === states[snapshotStates[snapshotI]];
       if (isCorrectState) {
         ok(true, `Found expected snapshot state ${snapshotStates[snapshotI]}`);
         snapshotI++;
@@ -55,7 +55,7 @@ add_task(async function() {
     }
   };
 
-  let unsubscribe = subscribe(expectStates);
+  const unsubscribe = subscribe(expectStates);
   dispatch(importSnapshotAndCensus(heapWorker, destPath));
 
   await waitUntilState(store, () => {
@@ -74,23 +74,23 @@ add_task(async function() {
   ok(getState().snapshots[1].selected, "imported snapshot is selected");
 
   // Check snapshot data
-  let snapshot1 = getState().snapshots[0];
-  let snapshot2 = getState().snapshots[1];
+  const snapshot1 = getState().snapshots[0];
+  const snapshot2 = getState().snapshots[1];
 
   equal(snapshot1.treeMap.display, snapshot2.treeMap.display,
         "imported snapshot has correct display");
 
   // Clone the census data so we can destructively remove the ID/parents to compare
   // equal census data
-  let census1 = stripUnique(JSON.parse(JSON.stringify(snapshot1.treeMap.report)));
-  let census2 = stripUnique(JSON.parse(JSON.stringify(snapshot2.treeMap.report)));
+  const census1 = stripUnique(JSON.parse(JSON.stringify(snapshot1.treeMap.report)));
+  const census2 = stripUnique(JSON.parse(JSON.stringify(snapshot2.treeMap.report)));
 
   equal(JSON.stringify(census1), JSON.stringify(census2),
     "Imported snapshot has correct census");
 
   function stripUnique(obj) {
-    let children = obj.children || [];
-    for (let child of children) {
+    const children = obj.children || [];
+    for (const child of children) {
       delete child.id;
       delete child.parent;
       stripUnique(child);

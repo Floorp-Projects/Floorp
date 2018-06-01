@@ -64,12 +64,12 @@ class DropHarHandler extends Component {
     event.preventDefault();
     stopDragging(findDOMNode(this));
 
-    let files = event.dataTransfer.files;
+    const files = event.dataTransfer.files;
     if (!files) {
       return;
     }
 
-    let {
+    const {
       actions,
       openSplitConsole,
     } = this.props;
@@ -78,7 +78,7 @@ class DropHarHandler extends Component {
     // See also:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1438792
     if (files.length) {
-      let file = files[0];
+      const file = files[0];
       readFile(file).then(har => {
         if (har) {
           HarMenuUtils.appendPreview(har, actions, openSplitConsole);
@@ -109,7 +109,7 @@ class DropHarHandler extends Component {
 
 function readFile(file) {
   return new Promise(resolve => {
-    let fileReader = new FileReader();
+    const fileReader = new FileReader();
     fileReader.onloadend = () => {
       resolve(fileReader.result);
     };

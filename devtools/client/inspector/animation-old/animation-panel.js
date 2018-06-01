@@ -60,14 +60,14 @@ var AnimationsPanel = {
     }
 
     // Binding functions that need to be called in scope.
-    for (let functionName of [
+    for (const functionName of [
       "onKeyDown", "onPickerStarted",
       "onPickerStopped", "refreshAnimationsUI", "onToggleAllClicked",
       "onTabNavigated", "onTimelineDataChanged", "onTimelinePlayClicked",
       "onTimelineRewindClicked", "onRateChanged"]) {
       this[functionName] = this[functionName].bind(this);
     }
-    let hUtils = gToolbox.highlighterUtils;
+    const hUtils = gToolbox.highlighterUtils;
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
 
     this.animationsTimelineComponent = new AnimationsTimeline(gInspector,
@@ -272,11 +272,11 @@ var AnimationsPanel = {
 
   onTimelineDataChanged: function(data) {
     this.timelineData = data;
-    let {isMoving, isUserDrag, time} = data;
+    const {isMoving, isUserDrag, time} = data;
 
     this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
 
-    let l10nPlayProperty = isMoving ? "timeline.resumedButtonTooltip" :
+    const l10nPlayProperty = isMoving ? "timeline.resumedButtonTooltip" :
                                       "timeline.pausedButtonTooltip";
 
     this.playTimelineButtonEl.setAttribute("title",
@@ -299,7 +299,7 @@ var AnimationsPanel = {
   },
 
   displayTimelineCurrentTime: function() {
-    let {time} = this.timelineData;
+    const {time} = this.timelineData;
     this.timelineCurrentTimeEl.textContent = formatStopwatchTime(time);
   },
 
@@ -309,7 +309,7 @@ var AnimationsPanel = {
    * animations aren't auto-refreshing), and then refresh the UI.
    */
   async refreshAnimationsStateAndUI() {
-    for (let player of AnimationsController.animationPlayers) {
+    for (const player of AnimationsController.animationPlayers) {
       await player.refreshState();
     }
     await this.refreshAnimationsUI();

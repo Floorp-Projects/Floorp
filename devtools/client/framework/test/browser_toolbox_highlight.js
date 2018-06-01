@@ -79,7 +79,7 @@ function unhighlightTab(toolId) {
 }
 
 function checkHighlighted(toolId) {
-  let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
+  const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
   ok(tab.classList.contains("highlighted"),
      `The highlighted class is present in ${toolId}.`);
   ok(!tab.classList.contains("selected"),
@@ -87,7 +87,7 @@ function checkHighlighted(toolId) {
 }
 
 function checkNoHighlightWhenSelected(toolId) {
-  let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
+  const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
   ok(tab.classList.contains("highlighted"),
      `The highlighted class is present in ${toolId}`);
   ok(tab.classList.contains("selected"),
@@ -95,7 +95,7 @@ function checkNoHighlightWhenSelected(toolId) {
 }
 
 function checkNoHighlight(toolId) {
-  let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
+  const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
   ok(!tab.classList.contains("highlighted"),
      `The highlighted class is not present in ${toolId}`);
 }

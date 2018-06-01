@@ -79,7 +79,7 @@ function clearHistory(state) {
  * added to the state in this session.
  */
 function historyLoaded(state, entries) {
-  let newEntries = [...entries, ...state.entries];
+  const newEntries = [...entries, ...state.entries];
   return {
     ...state,
     entries: newEntries,

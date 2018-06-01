@@ -11,14 +11,14 @@ const TEST_URI = "<div>Test Element</div>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("div", inspector);
   await testCreateNewMultiUnfinished(inspector, view);
 });
 
 async function testCreateNewMultiUnfinished(inspector, view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let onMutation = inspector.once("markupmutation");
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const onMutation = inspector.once("markupmutation");
   let onRuleViewChanged = view.once("ruleview-changed");
   await createNewRuleViewProperty(ruleEditor,
     "color:blue;background : orange   ; text-align:center; border-color: ");

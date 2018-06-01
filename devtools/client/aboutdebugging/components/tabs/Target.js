@@ -34,17 +34,17 @@ class TabTarget extends Component {
   }
 
   debug() {
-    let { target, connect } = this.props;
+    const { target, connect } = this.props;
     let url = "about:devtools-toolbox?type=tab&id=" + target.outerWindowID;
     if (connect.type == "REMOTE") {
-      let {host, port} = connect.params;
+      const {host, port} = connect.params;
       url += `&host=${encodeURIComponent(host)}&port=${encodeURIComponent(port)}`;
     }
     window.open(url);
   }
 
   render() {
-    let { target } = this.props;
+    const { target } = this.props;
 
     return dom.div({ className: "target-container" },
       dom.img({

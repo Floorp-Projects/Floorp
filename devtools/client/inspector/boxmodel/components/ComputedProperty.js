@@ -32,7 +32,7 @@ class ComputedProperty extends PureComponent {
   }
 
   renderReferenceElementPreview() {
-    let {
+    const {
       referenceElement,
       referenceElementType,
       setSelectedNode,

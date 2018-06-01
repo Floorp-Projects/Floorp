@@ -147,11 +147,11 @@
     "use strict";
 
     var el = document.getElementById("endDelayed");
-    let effect = new KeyframeEffect(el, [
+    const effect = new KeyframeEffect(el, [
       { opacity: 0, offset: 0 },
       { opacity: 1, offset: 1 }
     ], { duration: 1000000, endDelay: 500000, fill: "none" });
-    let animation = new Animation(effect, document.timeline);
+    const animation = new Animation(effect, document.timeline);
     animation.play();
   </script>
 </body>

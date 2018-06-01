@@ -33,7 +33,7 @@ function test_cached_original_sources() {
 
   gThreadClient.addOneTimeListener("newSource", onNewSource);
 
-  let node = new SourceNode(1, 0,
+  const node = new SourceNode(1, 0,
                             getFileUrl("temp.js"),
                             "function funcFromTemp() {}\n");
   let { code, map } = node.toStringWithSourceMap({
@@ -46,7 +46,7 @@ function test_cached_original_sources() {
 }
 
 function onNewSource(event, packet) {
-  let sourceClient = gThreadClient.source(packet.source);
+  const sourceClient = gThreadClient.source(packet.source);
   sourceClient.source(function(response) {
     Assert.ok(!response.error,
               "Should not be an error grabbing the source");

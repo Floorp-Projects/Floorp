@@ -8,19 +8,19 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null");
+  const { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null");
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  let onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
+  const onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
@@ -28,7 +28,7 @@ add_task(async function() {
 
   checkResponsePanelDisplaysJSON();
 
-  let tabpanel = document.querySelector("#response-panel");
+  const tabpanel = document.querySelector("#response-panel");
   is(tabpanel.querySelectorAll(".tree-section").length, 2,
     "There should be 2 tree sections displayed in this tabpanel.");
   is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 1,
@@ -36,9 +36,9 @@ add_task(async function() {
   is(tabpanel.querySelectorAll(".empty-notice").length, 0,
     "The empty notice should not be displayed in this tabpanel.");
 
-  let labels = tabpanel
+  const labels = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-  let values = tabpanel
+  const values = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
   is(labels[0].textContent, "greeting", "The first json property name was incorrect.");
@@ -51,10 +51,10 @@ add_task(async function() {
    * showing a preview of a JSON object.
    */
   function checkResponsePanelDisplaysJSON() {
-    let panel = document.querySelector("#response-panel");
+    const panel = document.querySelector("#response-panel");
     is(panel.querySelector(".response-error-header") === null, true,
       "The response error header doesn't have the intended visibility.");
-    let jsonView = panel.querySelector(".tree-section .treeLabel") || {};
+    const jsonView = panel.querySelector(".tree-section .treeLabel") || {};
     is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
       "The response json view has the intended visibility.");
     is(panel.querySelector(".CodeMirror-code") === null, false,

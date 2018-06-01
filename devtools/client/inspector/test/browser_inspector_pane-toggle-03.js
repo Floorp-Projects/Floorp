@@ -32,7 +32,7 @@ add_task(async function() {
 
     info("Checking the sizes of the 3 pane inspector");
     let sidebarWidth = inspector.splitBox.state.width;
-    let sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
+    const sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
     is(sidebarWidth, SIDEBAR_WIDTH * 2, "Got correct main split box width");
     is(sidebarSplitBoxWidth, SIDEBAR_WIDTH, "Got correct sidebar split box width");
 

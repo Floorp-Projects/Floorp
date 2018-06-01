@@ -22,30 +22,30 @@ const expectedText = `
 add_task(async function() {
   await addTab(TESTCASE_URI);
 
-  let { inspector, view, toolbox } = await openRuleView();
+  const { inspector, view, toolbox } = await openRuleView();
 
   // In this test, make sure the style editor is open before making
   // changes in the inspector.
-  let { ui } = await openStyleEditor();
-  let editor = await ui.editors[0].getSourceEditor();
+  const { ui } = await openStyleEditor();
+  const editor = await ui.editors[0].getSourceEditor();
 
-  let onEditorChange = new Promise(resolve => {
+  const onEditorChange = new Promise(resolve => {
     editor.sourceEditor.on("change", resolve);
   });
 
   await toolbox.getPanel("inspector");
   await selectNode("#testid", inspector);
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   // Disable the "font-size" property.
-  let propEditor = ruleEditor.rule.textProps[0].editor;
-  let onModification = view.once("ruleview-changed");
+  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const onModification = view.once("ruleview-changed");
   propEditor.enable.click();
   await onModification;
 
   await openStyleEditor();
   await onEditorChange;
 
-  let text = editor.sourceEditor.getText();
+  const text = editor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");
 });

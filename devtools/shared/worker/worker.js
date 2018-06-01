@@ -66,9 +66,9 @@
     if (this._destroyed) {
       return Promise.reject("Cannot call performTask on a destroyed DevToolsWorker");
     }
-    let worker = this._worker;
-    let id = ++MESSAGE_COUNTER;
-    let payload = { task, id, data };
+    const worker = this._worker;
+    const id = ++MESSAGE_COUNTER;
+    const payload = { task, id, data };
 
     if (this._verbose && dumpn) {
       dumpn("Sending message to worker" +
@@ -79,7 +79,7 @@
     worker.postMessage(payload);
 
     return new Promise((resolve, reject) => {
-      let listener = ({ data: result }) => {
+      const listener = ({ data: result }) => {
         if (this._verbose && dumpn) {
           dumpn("Received message from worker" +
                 (this._name ? (" (" + this._name + ")") : "") +
@@ -140,13 +140,13 @@
                  "used in production.");
     // Fetch modules here as we don't want to include it normally.
     const Services = require("Services");
-    let { URL, Blob } = Services.wm.getMostRecentWindow("navigator:browser");
-    let stringifiedFn = createWorkerString(fn);
-    let blob = new Blob([stringifiedFn]);
-    let url = URL.createObjectURL(blob);
-    let worker = new DevToolsWorker(url);
+    const { URL, Blob } = Services.wm.getMostRecentWindow("navigator:browser");
+    const stringifiedFn = createWorkerString(fn);
+    const blob = new Blob([stringifiedFn]);
+    const url = URL.createObjectURL(blob);
+    const worker = new DevToolsWorker(url);
 
-    let wrapperFn = data => worker.performTask("workerifiedTask", data);
+    const wrapperFn = data => worker.performTask("workerifiedTask", data);
 
     wrapperFn.destroy = function() {
       URL.revokeObjectURL(url);

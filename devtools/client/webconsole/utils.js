@@ -37,7 +37,7 @@ var WebConsoleUtils = {
    * @return nsISupportsString
    */
   supportsString: function(string) {
-    let str = Cc["@mozilla.org/supports-string;1"]
+    const str = Cc["@mozilla.org/supports-string;1"]
               .createInstance(Ci.nsISupportsString);
     str.data = string;
     return str;
@@ -75,8 +75,8 @@ var WebConsoleUtils = {
       });
     } else {
       temp = {};
-      for (let key in object) {
-        let value = object[key];
+      for (const key in object) {
+        const value = object[key];
         if (object.hasOwnProperty(key) &&
             (!filter || filter(key, value, object))) {
           temp[key] = recursive ? WebConsoleUtils.cloneObject(value) : value;
@@ -96,8 +96,8 @@ var WebConsoleUtils = {
    *        The destination node.
    */
   copyTextStyles: function(from, to) {
-    let win = from.ownerDocument.defaultView;
-    let style = win.getComputedStyle(from);
+    const win = from.ownerDocument.defaultView;
+    const style = win.getComputedStyle(from);
     to.style.fontFamily = style.fontFamily;
     to.style.fontSize = style.fontSize;
     to.style.fontWeight = style.fontWeight;
@@ -116,8 +116,8 @@ var WebConsoleUtils = {
    */
   isMixedHTTPSRequest: function(request, location) {
     try {
-      let requestURI = Services.io.newURI(request);
-      let contentURI = Services.io.newURI(location);
+      const requestURI = Services.io.newURI(request);
+      const contentURI = Services.io.newURI(location);
       return (contentURI.scheme == "https" && requestURI.scheme != "https");
     } catch (ex) {
       return false;
@@ -149,7 +149,7 @@ var WebConsoleUtils = {
     }
     if (!name) {
       try {
-        let str = (func.toString() || func.toSource()) + "";
+        const str = (func.toString() || func.toSource()) + "";
         name = (str.match(REGEX_MATCH_FUNCTION_NAME) || [])[1];
       } catch (ex) {
         // Ignore.
@@ -175,7 +175,7 @@ var WebConsoleUtils = {
       return "undefined";
     }
 
-    let type = typeof object;
+    const type = typeof object;
     if (type != "object") {
       // Grip class names should start with an uppercase letter.
       return type.charAt(0).toUpperCase() + type.substr(1);
@@ -244,7 +244,7 @@ var WebConsoleUtils = {
    *'drop' events on the input field
    */
   pasteHandlerGen: function(inputField, notificationBox, msg, okstring) {
-    let handler = function(event) {
+    const handler = function(event) {
       if (WebConsoleUtils.usageCount >= CONSOLE_ENTRY_THRESHOLD) {
         inputField.removeEventListener("paste", handler);
         inputField.removeEventListener("drop", handler);
@@ -256,7 +256,7 @@ var WebConsoleUtils = {
         return false;
       }
 
-      let notification = notificationBox.appendNotification(msg,
+      const notification = notificationBox.appendNotification(msg,
         "selfxss-notification", null,
         notificationBox.PRIORITY_WARNING_HIGH, null,
         function(eventType) {
@@ -267,7 +267,7 @@ var WebConsoleUtils = {
         });
 
       function pasteKeyUpHandler(event2) {
-        let value = inputField.value || inputField.textContent;
+        const value = inputField.value || inputField.textContent;
         if (value.includes(okstring)) {
           notificationBox.removeNotification(notification);
           inputField.removeEventListener("keyup", pasteKeyUpHandler);

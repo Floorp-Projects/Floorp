@@ -40,16 +40,16 @@ function run_test_with_server(server, callback) {
 
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let obj1 = packet.frame.arguments[0];
+    const obj1 = packet.frame.arguments[0];
     Assert.ok(obj1.sealed);
 
-    let obj1Client = gThreadClient.pauseGrip(obj1);
+    const obj1Client = gThreadClient.pauseGrip(obj1);
     Assert.ok(obj1Client.isSealed);
 
-    let obj2 = packet.frame.arguments[1];
+    const obj2 = packet.frame.arguments[1];
     Assert.ok(!obj2.sealed);
 
-    let obj2Client = gThreadClient.pauseGrip(obj2);
+    const obj2Client = gThreadClient.pauseGrip(obj2);
     Assert.ok(!obj2Client.isSealed);
 
     gThreadClient.resume(_ => {
@@ -59,7 +59,7 @@ function test_object_grip() {
 
   /* eslint-disable no-undef */
   gDebuggee.eval("(" + function() {
-    let obj1 = {};
+    const obj1 = {};
     Object.seal(obj1);
     stopMe(obj1, {});
   } + "())");

@@ -6,11 +6,11 @@
 /* global window, document, SimpleTest, requestAnimationFrame, is, ok */
 /* exported Cc, Ci, Cu, Cr, Assert, Task, TargetFactory, Toolbox, browserRequire,
    forceRender, setProps, dumpn, checkOptimizationHeader, checkOptimizationTree */
-let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 let { Assert } = require("resource://testing-common/Assert.jsm");
-let { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-let defer = require("devtools/shared/defer");
-let flags = require("devtools/shared/flags");
+const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
+const defer = require("devtools/shared/defer");
+const flags = require("devtools/shared/flags");
 let { TargetFactory } = require("devtools/client/framework/target");
 let { Toolbox } = require("devtools/client/framework/toolbox");
 
@@ -19,8 +19,8 @@ let { require: browserRequire } = BrowserLoader({
   window
 });
 
-let $ = (selector, scope = document) => scope.querySelector(selector);
-let $$ = (selector, scope = document) => scope.querySelectorAll(selector);
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const $$ = (selector, scope = document) => scope.querySelectorAll(selector);
 
 function forceRender(comp) {
   return setState(comp, {})
@@ -37,13 +37,13 @@ function onNextAnimationFrame(fn) {
 }
 
 function setState(component, newState) {
-  let deferred = defer();
+  const deferred = defer();
   component.setState(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
 
 function setProps(component, newState) {
-  let deferred = defer();
+  const deferred = defer();
   component.setProps(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
@@ -57,7 +57,7 @@ function dumpn(msg) {
  * and an IonType with an ObservedType, and a successful outcome.
  * Second site does not have a successful outcome.
  */
-let OPTS_DATA_GENERAL = [{
+const OPTS_DATA_GENERAL = [{
   id: 1,
   propertyName: "my property name",
   line: 100,
@@ -132,11 +132,11 @@ function checkOptimizationHeader(name, file, line) {
 }
 
 function checkOptimizationTree(rowData) {
-  let rows = $$(".tree .tree-node");
+  const rows = $$(".tree .tree-node");
 
   for (let i = 0; i < rowData.length; i++) {
-    let row = rows[i];
-    let expected = rowData[i];
+    const row = rows[i];
+    const expected = rowData[i];
 
     switch (expected.type) {
       case "site":

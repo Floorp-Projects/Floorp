@@ -16,7 +16,7 @@ function run_test() {
 }
 
 add_task(async function() {
-  let store = applyMiddleware(task)(createStore)(reducer);
+  const store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(generatorError());
   await waitUntilState(store, () => store.getState().length === 1);
@@ -28,7 +28,7 @@ add_task(async function() {
 
 function generatorError() {
   return function* (dispatch, getState) {
-    let error = "task-middleware-error-generator";
+    const error = "task-middleware-error-generator";
     throw error;
   };
 }

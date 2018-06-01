@@ -34,7 +34,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("span", inspector);
 
   await testCopySome(view);
@@ -42,7 +42,7 @@ add_task(async function() {
 });
 
 async function testCopySome(view) {
-  let expectedPattern = "font-family: helvetica, sans-serif;[\\r\\n]+" +
+  const expectedPattern = "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
@@ -53,7 +53,7 @@ async function testCopySome(view) {
 }
 
 async function testCopyAll(view) {
-  let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
+  const expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
                         "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";

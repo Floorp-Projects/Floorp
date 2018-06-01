@@ -39,7 +39,7 @@ function createController(ed) {
     },
 
     isCommandEnabled: function(cmd) {
-      let cm = ed.codeMirror;
+      const cm = ed.codeMirror;
 
       switch (cmd) {
         case "cmd_find":
@@ -60,9 +60,9 @@ function createController(ed) {
     },
 
     doCommand: function(cmd) {
-      let cm = ed.codeMirror;
+      const cm = ed.codeMirror;
 
-      let map = {
+      const map = {
         "cmd_selectAll": "selectAll",
         "cmd_find": "find",
         "cmd_undo": "undo",
@@ -89,8 +89,8 @@ function createController(ed) {
  * Create and insert a commands controller for the provided SourceEditor instance.
  */
 function insertCommandsController(sourceEditor) {
-  let input = sourceEditor.codeMirror.getInputField();
-  let controller = createController(sourceEditor);
+  const input = sourceEditor.codeMirror.getInputField();
+  const controller = createController(sourceEditor);
   input.controllers.insertControllerAt(0, controller);
 }
 

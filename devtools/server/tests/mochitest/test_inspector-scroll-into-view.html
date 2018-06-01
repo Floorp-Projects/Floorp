@@ -22,11 +22,11 @@ let gInspectee = null;
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -35,9 +35,9 @@ addTest(function setup() {
 });
 
 addTest(async function testScrollIntoView() {
-  let id = "#scroll-into-view";
+  const id = "#scroll-into-view";
   let rect = gInspectee.querySelector(id).getBoundingClientRect();
-  let nodeFront = await gWalker.querySelector(gWalker.rootNode, id);
+  const nodeFront = await gWalker.querySelector(gWalker.rootNode, id);
   let inViewport = rect.x >= 0 &&
                    rect.y >= 0 &&
                    rect.y <= gInspectee.defaultView.innerHeight &&

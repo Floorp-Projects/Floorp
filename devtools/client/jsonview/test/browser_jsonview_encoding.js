@@ -46,14 +46,14 @@ add_task(async function() {
     }
   ];
 
-  for (let {input, output} of tests) {
+  for (const {input, output} of tests) {
     info("Test decoding of " + JSON.stringify(input) + ".");
 
     await addJsonViewTab("data:application/json," + input);
     await selectJsonViewContentTab("rawdata");
 
     // Check displayed data.
-    let data = await getElementText(".textPanelBox .data");
+    const data = await getElementText(".textPanelBox .data");
     is(data, output, "The right data has been received.");
   }
 });

@@ -44,14 +44,14 @@ class AddonsControls extends Component {
   }
 
   onEnableAddonDebuggingChange(event) {
-    let enabled = event.target.checked;
+    const enabled = event.target.checked;
     Services.prefs.setBoolPref("devtools.chrome.enabled", enabled);
     Services.prefs.setBoolPref("devtools.debugger.remote-enabled", enabled);
   }
 
   loadAddonFromFile() {
     this.setState({ installError: null });
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window,
       Strings.GetStringFromName("selectAddonFromFile2"),
       Ci.nsIFilePicker.modeOpen);
@@ -88,7 +88,7 @@ class AddonsControls extends Component {
   }
 
   render() {
-    let { debugDisabled } = this.props;
+    const { debugDisabled } = this.props;
 
     return dom.div({ className: "addons-top" },
       dom.div({ className: "addons-controls" },

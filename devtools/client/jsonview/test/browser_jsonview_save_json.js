@@ -9,7 +9,7 @@
 const saveButton = "button.save";
 const prettifyButton = "button.prettyprint";
 
-let { MockFilePicker } = SpecialPowers;
+const { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
@@ -33,11 +33,11 @@ function awaitFileSave(name, ext) {
   return new Promise((resolve) => {
     MockFilePicker.showCallback = (fp) => {
       ok(true, "File picker was opened");
-      let fileName = fp.defaultString;
+      const fileName = fp.defaultString;
       is(fileName, name, "File picker should provide the correct default filename.");
       is(fp.defaultExtension, ext,
          "File picker should provide the correct default file extension.");
-      let destFile = destDir.clone();
+      const destFile = destDir.clone();
       destFile.append(fileName);
       MockFilePicker.setFiles([destFile]);
       MockFilePicker.showCallback = null;
@@ -52,7 +52,7 @@ function awaitFileSave(name, ext) {
 
 function getFileContents(file) {
   return new Promise((resolve, reject) => {
-    let channel = NetUtil.newChannel({
+    const channel = NetUtil.newChannel({
       uri: NetUtil.newURI(file),
       loadUsingSystemPrincipal: true,
     });
@@ -68,7 +68,7 @@ function getFileContents(file) {
 }
 
 function createTemporarySaveDirectory() {
-  let saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+  const saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("jsonview-testsavedir");
   if (!saveDir.exists()) {
     info("Creating temporary save directory.");
@@ -78,7 +78,7 @@ function createTemporarySaveDirectory() {
   return saveDir;
 }
 
-let destDir = createTemporarySaveDirectory();
+const destDir = createTemporarySaveDirectory();
 mockTransferRegisterer.register();
 MockFilePicker.displayDirectory = destDir;
 registerCleanupFunction(function() {
@@ -110,7 +110,7 @@ add_task(async function() {
     info("Register to handle popupshown.");
     document.addEventListener("popupshown", function(event) {
       info("Context menu opened.");
-      let savePageCommand = document.getElementById("context-savepage");
+      const savePageCommand = document.getElementById("context-savepage");
       savePageCommand.doCommand();
       info("SavePage command done.");
       event.target.hidePopup();
@@ -152,7 +152,7 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/json adds .json extension by default.");
-  let promise = awaitFileSave("index.json", "json");
+  const promise = awaitFileSave("index.json", "json");
   await click(saveButton);
   info("Clicked Save button.");
   await promise.then(getFileContents);
@@ -165,7 +165,7 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/manifest+json does not add .json extension.");
-  let promise = awaitFileSave("index", null);
+  const promise = awaitFileSave("index", null);
   await click(saveButton);
   info("Clicked Save button.");
   await promise.then(getFileContents);

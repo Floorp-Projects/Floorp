@@ -14,8 +14,8 @@ add_task(async function() {
   await pushPref("devtools.enabled", false);
 
   info("Add an about:blank tab");
-  let tab1 = await addTab("data:text/html;charset=utf-8,tab1");
-  let tab2 = await addTab("data:text/html;charset=utf-8,tab2");
+  const tab1 = await addTab("data:text/html;charset=utf-8,tab1");
+  const tab2 = await addTab("data:text/html;charset=utf-8,tab2");
   ok(tab1 === gBrowser.tabs[1], "tab1 is the second tab in the current browser window");
 
   info("Select the first tab");
@@ -27,7 +27,7 @@ add_task(async function() {
   await waitUntil(() => isAboutDevtoolsTab(gBrowser.selectedTab));
   info("about:devtools was opened as expected.");
 
-  let aboutDevtoolsTab = gBrowser.selectedTab;
+  const aboutDevtoolsTab = gBrowser.selectedTab;
   ok(aboutDevtoolsTab === gBrowser.tabs[2],
     "about:devtools was opened next to its owner tab");
 
@@ -50,8 +50,8 @@ add_task(async function() {
   await pushPref("devtools.enabled", false);
 
   info("Add an about:blank tab");
-  let tab1 = await addTab("data:text/html;charset=utf-8,tab1");
-  let tab2 = await addTab("data:text/html;charset=utf-8,tab2");
+  const tab1 = await addTab("data:text/html;charset=utf-8,tab1");
+  const tab2 = await addTab("data:text/html;charset=utf-8,tab2");
   ok(tab1 === gBrowser.tabs[1], "tab1 is the second tab in the current browser window");
 
   info("Select the first tab");
@@ -63,14 +63,14 @@ add_task(async function() {
   await waitUntil(() => isAboutDevtoolsTab(gBrowser.selectedTab));
   info("about:devtools was opened as expected.");
 
-  let aboutDevtoolsTab = gBrowser.selectedTab;
+  const aboutDevtoolsTab = gBrowser.selectedTab;
   ok(aboutDevtoolsTab === gBrowser.tabs[2],
     "about:devtools was opened next to its owner tab");
 
   info("Select the second tab");
   gBrowser.selectedTab = tab2;
 
-  let aboutDevtoolsDocument = aboutDevtoolsTab.linkedBrowser.contentDocument;
+  const aboutDevtoolsDocument = aboutDevtoolsTab.linkedBrowser.contentDocument;
   await waitUntil(() => aboutDevtoolsDocument.visibilityState === "hidden");
 
   await removeTab(aboutDevtoolsTab);

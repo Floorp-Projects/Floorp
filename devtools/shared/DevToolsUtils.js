@@ -24,7 +24,7 @@ var DevToolsUtils = exports;
 
 // Re-export the thread-safe utils.
 const ThreadSafeDevToolsUtils = require("./ThreadSafeDevToolsUtils.js");
-for (let key of Object.keys(ThreadSafeDevToolsUtils)) {
+for (const key of Object.keys(ThreadSafeDevToolsUtils)) {
   exports[key] = ThreadSafeDevToolsUtils[key];
 }
 
@@ -54,7 +54,7 @@ exports.executeSoon = function(fn) {
     // Only enable async stack reporting when DEBUG_JS_MODULES is set
     // (customized local builds) to avoid a performance penalty.
     if (AppConstants.DEBUG_JS_MODULES || flags.testing) {
-      let stack = getStack();
+      const stack = getStack();
       executor = () => {
         callFunctionWithAsyncStack(fn, stack, "DevToolsUtils.executeSoon");
       };
@@ -74,7 +74,7 @@ exports.executeSoon = function(fn) {
  *         A promise that is resolved after the next tick in the event loop.
  */
 exports.waitForTick = function() {
-  let deferred = defer();
+  const deferred = defer();
   exports.executeSoon(deferred.resolve);
   return deferred.promise;
 };
@@ -88,7 +88,7 @@ exports.waitForTick = function() {
  *         A promise that is resolved after the specified amount of time passes.
  */
 exports.waitForTime = function(delay) {
-  let deferred = defer();
+  const deferred = defer();
   setTimeout(deferred.resolve, delay);
   return deferred.promise;
 };
@@ -112,8 +112,8 @@ exports.yieldingEach = function(array, fn) {
   const deferred = defer();
 
   let i = 0;
-  let len = array.length;
-  let outstanding = [deferred.promise];
+  const len = array.length;
+  const outstanding = [deferred.promise];
 
   (function loop() {
     const start = Date.now();
@@ -183,7 +183,7 @@ exports.defineLazyPrototypeGetter = function(object, key, callback) {
  * @return Any
  */
 exports.getProperty = function(object, key) {
-  let root = object;
+  const root = object;
   while (object && exports.isSafeDebuggerObject(object)) {
     let desc;
     try {
@@ -264,7 +264,7 @@ exports.unwrap = function unwrap(obj) {
  * @return boolean
  */
 exports.isSafeDebuggerObject = function(obj) {
-  let unwrapped = exports.unwrap(obj);
+  const unwrapped = exports.unwrap(obj);
 
   // Objects belonging to an invisible-to-debugger compartment might be proxies,
   // so just in case consider them unsafe. CPOWs are included in this case.
@@ -336,7 +336,7 @@ exports.isSafeJSObject = function(obj) {
   }
 
   // If there aren't Xrays, only allow chrome objects.
-  let principal = Cu.getObjectPrincipal(obj);
+  const principal = Cu.getObjectPrincipal(obj);
   if (!Services.scriptSecurityManager.isSystemPrincipal(principal)) {
     return false;
   }
@@ -348,7 +348,7 @@ exports.isSafeJSObject = function(obj) {
 
   // Even if `obj` looks safe, an unsafe object in its prototype chain may still
   // run unintended code, e.g. when using the `instanceof` operator.
-  let proto = Object.getPrototypeOf(obj);
+  const proto = Object.getPrototypeOf(obj);
   if (proto && !exports.isSafeJSObject(proto)) {
     return false;
   }
@@ -469,7 +469,7 @@ Object.defineProperty(exports, "assert", {
  */
 exports.defineLazyModuleGetter = function(object, name, resource, symbol) {
   this.defineLazyGetter(object, name, function() {
-    let temp = {};
+    const temp = {};
     ChromeUtils.import(resource, temp);
     return temp[symbol || name];
   });
@@ -524,7 +524,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
                                              principal: null,
                                              cacheKey: 0 }) {
   // Create a channel.
-  let url = urlIn.split(" -> ").pop();
+  const url = urlIn.split(" -> ").pop();
   let channel;
   try {
     channel = newChannelForURL(url, aOptions);
@@ -552,8 +552,8 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
                           .loadGroup;
   }
 
-  let deferred = defer();
-  let onResponse = (stream, status, request) => {
+  const deferred = defer();
+  const onResponse = (stream, status, request) => {
     if (!components.isSuccessCode(status)) {
       deferred.reject(new Error(`Failed to fetch ${url}. Code ${status}.`));
       return;
@@ -566,7 +566,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
       // to using the locale default encoding (bug 1181345).
 
       // Read and decode the data according to the locale default encoding.
-      let available = stream.available();
+      const available = stream.available();
       let source = NetUtil.readInputStreamToString(stream, available);
       stream.close();
 
@@ -606,24 +606,24 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
       if (!charset) {
         charset = aOptions.charset || "UTF-8";
       }
-      let unicodeSource = NetworkHelper.convertToUnicode(source, charset);
+      const unicodeSource = NetworkHelper.convertToUnicode(source, charset);
 
       deferred.resolve({
         content: unicodeSource,
         contentType: request.contentType
       });
     } catch (ex) {
-      let uri = request.originalURI;
+      const uri = request.originalURI;
       if (ex.name === "NS_BASE_STREAM_CLOSED" && uri instanceof Ci.nsIFileURL) {
         // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
         // differentiate between empty files and other errors (bug 1170864).
         // This can be removed when bug 982654 is fixed.
 
         uri.QueryInterface(Ci.nsIFileURL);
-        let result = OS.File.read(uri.file.path).then(bytes => {
+        const result = OS.File.read(uri.file.path).then(bytes => {
           // Convert the bytearray to a String.
-          let decoder = new TextDecoder();
-          let content = decoder.decode(bytes);
+          const decoder = new TextDecoder();
+          const content = decoder.decode(bytes);
 
           // We can't detect the contentType without opening a channel
           // and that failed already. This is the best we can do here.
@@ -658,7 +658,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
  * @return {nsIChannel} - The newly created channel. Throws on failure.
  */
 function newChannelForURL(url, { policy, window, principal }) {
-  let securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  const securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
   let uri;
   try {
@@ -669,7 +669,7 @@ function newChannelForURL(url, { policy, window, principal }) {
     // scheme to see if it helps.
     uri = Services.io.newURI("file://" + url);
   }
-  let channelOptions = {
+  const channelOptions = {
     contentPolicyType: policy,
     securityFlags: securityFlags,
     uri: uri
@@ -796,13 +796,13 @@ function callPropertyOnObject(object, name) {
   if (descriptor === undefined) {
     throw new Error("No such property");
   }
-  let value = descriptor.value;
+  const value = descriptor.value;
   if (typeof value !== "object" || value === null || !("callable" in value)) {
     throw new Error("Not a callable object.");
   }
 
   // Call the property.
-  let result = value.call(object);
+  const result = value.call(object);
   if (result === null) {
     throw new Error("Code was terminated.");
   }

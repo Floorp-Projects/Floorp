@@ -28,7 +28,7 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let pauseActor = packet.actor;
+    const pauseActor = packet.actor;
 
     // Make a bogus request to the pause-lifetime actor.  Should get
     // unrecognized-packet-type (and not no-such-actor).

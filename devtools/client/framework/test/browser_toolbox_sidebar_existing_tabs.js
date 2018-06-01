@@ -26,18 +26,18 @@ const testToolDefinition = {
 };
 
 add_task(async function() {
-  let tab = await addTab("about:blank");
+  const tab = await addTab("about:blank");
 
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
 
   gDevTools.registerTool(testToolDefinition);
-  let toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
+  const toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
 
-  let toolPanel = toolbox.getPanel(testToolDefinition.id);
-  let tabbox = toolPanel.panelDoc.getElementById("sidebar");
+  const toolPanel = toolbox.getPanel(testToolDefinition.id);
+  const tabbox = toolPanel.panelDoc.getElementById("sidebar");
 
   info("Creating the sidebar widget");
-  let sidebar = new ToolSidebar(tabbox, toolPanel, "bug1101569");
+  const sidebar = new ToolSidebar(tabbox, toolPanel, "bug1101569");
 
   info("Checking that existing tabs have been registered");
   ok(sidebar.getTab("tab1"), "Existing tab 1 was found");

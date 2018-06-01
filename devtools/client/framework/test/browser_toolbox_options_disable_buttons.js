@@ -16,7 +16,7 @@ var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 function test() {
   addTab(TEST_URL).then(tab => {
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target)
       .then(testSelectTool)
       .then(testToggleToolboxButtons)
@@ -26,12 +26,12 @@ function test() {
 }
 
 function testPrefsAreRespectedWhenReopeningToolbox() {
-  let deferred = defer();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const deferred = defer();
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
   info("Closing toolbox to test after reopening");
   gDevTools.closeToolbox(target).then(() => {
-    let tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
+    const tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(tabTarget)
       .then(testSelectTool)
       .then(() => {
@@ -45,7 +45,7 @@ function testPrefsAreRespectedWhenReopeningToolbox() {
 }
 
 function testSelectTool(devtoolsToolbox) {
-  let deferred = defer();
+  const deferred = defer();
   info("Selecting the options panel");
 
   toolbox = devtoolsToolbox;
@@ -61,40 +61,40 @@ function testSelectTool(devtoolsToolbox) {
 }
 
 function testPreferenceAndUIStateIsConsistent() {
-  let checkNodes = [...panelWin.document.querySelectorAll(
+  const checkNodes = [...panelWin.document.querySelectorAll(
     "#enabled-toolbox-buttons-box input[type=checkbox]")];
-  let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
+  const toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
 
-  for (let tool of toolbox.toolbarButtons) {
-    let isVisible = getBoolPref(tool.visibilityswitch);
+  for (const tool of toolbox.toolbarButtons) {
+    const isVisible = getBoolPref(tool.visibilityswitch);
 
-    let button = toolboxButtonNodes.find(toolboxButton => toolboxButton.id === tool.id);
+    const button = toolboxButtonNodes.find(toolboxButton => toolboxButton.id === tool.id);
     is(!!button, isVisible,
       "Button visibility matches pref for " + tool.id);
 
-    let check = checkNodes.filter(node => node.id === tool.id)[0];
+    const check = checkNodes.filter(node => node.id === tool.id)[0];
     is(check.checked, isVisible,
       "Checkbox should be selected based on current pref for " + tool.id);
   }
 }
 
 function testToggleToolboxButtons() {
-  let checkNodes = [...panelWin.document.querySelectorAll(
+  const checkNodes = [...panelWin.document.querySelectorAll(
     "#enabled-toolbox-buttons-box input[type=checkbox]")];
 
-  let visibleToolbarButtons = toolbox.toolbarButtons.filter(tool => tool.isVisible);
+  const visibleToolbarButtons = toolbox.toolbarButtons.filter(tool => tool.isVisible);
 
-  let toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
+  const toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
 
   is(checkNodes.length, toolbox.toolbarButtons.length,
     "All of the buttons are toggleable.");
   is(visibleToolbarButtons.length, toolbarButtonNodes.length,
     "All of the DOM buttons are toggleable.");
 
-  for (let tool of toolbox.toolbarButtons) {
-    let id = tool.id;
-    let matchedCheckboxes = checkNodes.filter(node => node.id === id);
-    let matchedButtons = toolbarButtonNodes.filter(button => button.id === id);
+  for (const tool of toolbox.toolbarButtons) {
+    const id = tool.id;
+    const matchedCheckboxes = checkNodes.filter(node => node.id === id);
+    const matchedButtons = toolbarButtonNodes.filter(button => button.id === id);
     is(matchedCheckboxes.length, 1,
       "There should be a single toggle checkbox for: " + id);
     if (tool.isVisible) {
@@ -112,22 +112,22 @@ function testToggleToolboxButtons() {
   }
 
   // Store modified pref names so that they can be cleared on error.
-  for (let tool of toolbox.toolbarButtons) {
-    let pref = tool.visibilityswitch;
+  for (const tool of toolbox.toolbarButtons) {
+    const pref = tool.visibilityswitch;
     modifiedPrefs.push(pref);
   }
 
   // Try checking each checkbox, making sure that it changes the preference
-  for (let node of checkNodes) {
-    let tool = toolbox.toolbarButtons.filter(
+  for (const node of checkNodes) {
+    const tool = toolbox.toolbarButtons.filter(
       commandButton => commandButton.id === node.id)[0];
-    let isVisible = getBoolPref(tool.visibilityswitch);
+    const isVisible = getBoolPref(tool.visibilityswitch);
 
     testPreferenceAndUIStateIsConsistent();
     node.click();
     testPreferenceAndUIStateIsConsistent();
 
-    let isVisibleAfterClick = getBoolPref(tool.visibilityswitch);
+    const isVisibleAfterClick = getBoolPref(tool.visibilityswitch);
 
     is(isVisible, !isVisibleAfterClick,
       "Clicking on the node should have toggled visibility preference for " +
@@ -144,7 +144,7 @@ function getBoolPref(key) {
 function cleanup() {
   toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
-    for (let pref of modifiedPrefs) {
+    for (const pref of modifiedPrefs) {
       Services.prefs.clearUserPref(pref);
     }
     toolbox = doc = panelWin = modifiedPrefs = null;

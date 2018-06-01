@@ -10,7 +10,7 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
-let { l10n } = require("devtools/client/webconsole/utils/messages");
+const { l10n } = require("devtools/client/webconsole/utils/messages");
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + STATUS_CODES_GA_PARAMS;
 
 pushPref(NET_PREF, true);
@@ -20,9 +20,9 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(currentTab);
-  let toolbox = gDevTools.getToolbox(target);
-  let {ui} = toolbox.getCurrentPanel().hud;
+  const target = TargetFactory.forTab(currentTab);
+  const toolbox = gDevTools.getToolbox(target);
+  const {ui} = toolbox.getCurrentPanel().hud;
   const onNetworkMessageUpdate = ui.jsterm.hud.once("network-message-updated");
 
   // Fire an XHR POST request.
@@ -33,20 +33,20 @@ add_task(async function task() {
   info("XHR executed");
   await onNetworkMessageUpdate;
 
-  let xhrUrl = TEST_PATH + "test-data.json";
-  let messageNode = await waitFor(() => findMessage(hud, xhrUrl));
-  let statusCodeNode = messageNode.querySelector(".status-code");
+  const xhrUrl = TEST_PATH + "test-data.json";
+  const messageNode = await waitFor(() => findMessage(hud, xhrUrl));
+  const statusCodeNode = messageNode.querySelector(".status-code");
   info("Network message found.");
 
   ok(statusCodeNode.title, l10n.getStr("webConsoleMoreInfoLabel"));
-  let {
+  const {
     middleMouseEvent,
     ctrlOrCmdKeyMouseEvent,
     rightClickMouseEvent,
     rightClickCtrlOrCmdKeyMouseEvent,
   } = getMouseEvents();
 
-  let testCases = [
+  const testCases = [
     { clickEvent: middleMouseEvent, link: LEARN_MORE_URI, where: "tabshifted" },
     { clickEvent: null, link: LEARN_MORE_URI, where: "tab" },
     { clickEvent: ctrlOrCmdKeyMouseEvent, link: LEARN_MORE_URI, where: "tabshifted" },
@@ -54,14 +54,14 @@ add_task(async function task() {
     { clickEvent: rightClickCtrlOrCmdKeyMouseEvent, link: null, where: null }
   ];
 
-  for (let testCase of testCases) {
+  for (const testCase of testCases) {
     const { clickEvent } = testCase;
-    let onConsoleMenuOpened = [
+    const onConsoleMenuOpened = [
       rightClickMouseEvent,
       rightClickCtrlOrCmdKeyMouseEvent
     ].includes(clickEvent) ? hud.ui.consoleOutput.once("menu-open") : null;
 
-    let { link, where } = await simulateLinkClick(statusCodeNode, testCase.clickEvent);
+    const { link, where } = await simulateLinkClick(statusCodeNode, testCase.clickEvent);
     is(link, testCase.link, `Clicking the provided link opens ${link}`);
     is(where, testCase.where, `Link opened in correct tab`);
 
@@ -73,24 +73,24 @@ add_task(async function task() {
 });
 
 function getMouseEvents() {
-  let isOSX = Services.appinfo.OS == "Darwin";
+  const isOSX = Services.appinfo.OS == "Darwin";
 
-  let middleMouseEvent = new MouseEvent("click", {
+  const middleMouseEvent = new MouseEvent("click", {
     bubbles: true,
     button: 1,
     view: window
   });
-  let ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
+  const ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
     bubbles: true,
     [isOSX ? "metaKey" : "ctrlKey"]: true,
     view: window
   });
-  let rightClickMouseEvent = new MouseEvent("contextmenu", {
+  const rightClickMouseEvent = new MouseEvent("contextmenu", {
     bubbles: true,
     button: 2,
     view: window
   });
-  let rightClickCtrlOrCmdKeyMouseEvent = new MouseEvent("contextmenu", {
+  const rightClickCtrlOrCmdKeyMouseEvent = new MouseEvent("contextmenu", {
     bubbles: true,
     button: 2,
     [isOSX ? "metaKey" : "ctrlKey"]: true,

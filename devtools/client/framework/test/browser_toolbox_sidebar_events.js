@@ -8,16 +8,16 @@ function test() {
 
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";
 
-  let collectedEvents = [];
+  const collectedEvents = [];
 
-  let toolDefinition = {
+  const toolDefinition = {
     id: "testTool1072208",
     visibilityswitch: "devtools.testTool1072208.enabled",
     url: CHROME_URL_ROOT + "browser_toolbox_sidebar_events.xul",
     label: "Test tool",
     isTargetSupported: () => true,
     build: function(iframeWindow, toolbox) {
-      let deferred = defer();
+      const deferred = defer();
       executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
@@ -34,9 +34,9 @@ function test() {
   gDevTools.registerTool(toolDefinition);
 
   addTab("about:blank").then(function(aTab) {
-    let target = TargetFactory.forTab(aTab);
+    const target = TargetFactory.forTab(aTab);
     gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
-      let panel = toolbox.getPanel(toolDefinition.id);
+      const panel = toolbox.getPanel(toolDefinition.id);
       ok(true, "Tool open");
 
       panel.once("sidebar-created", function() {
@@ -47,7 +47,7 @@ function test() {
         collectedEvents.push("sidebar-destroyed");
       });
 
-      let tabbox = panel.panelDoc.getElementById("sidebar");
+      const tabbox = panel.panelDoc.getElementById("sidebar");
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug1072208", true);
 
       panel.sidebar.once("show", function() {
@@ -68,7 +68,7 @@ function test() {
     panel.sidebar.hide();
     panel.sidebar.destroy();
 
-    let events = collectedEvents.join(":");
+    const events = collectedEvents.join(":");
     is(events, "sidebar-created:show:hide:sidebar-destroyed",
       "Found the right amount of collected events.");
 

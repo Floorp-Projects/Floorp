@@ -60,7 +60,7 @@ class LayoutApp extends PureComponent {
         header: LAYOUT_L10N.getStr("layout.header"),
         opened: Services.prefs.getBoolPref(GRID_OPENED_PREF),
         onToggled: () => {
-          let opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
+          const opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
           Services.prefs.setBoolPref(GRID_OPENED_PREF, !opened);
         }
       },
@@ -70,7 +70,7 @@ class LayoutApp extends PureComponent {
         header: BOXMODEL_L10N.getStr("boxmodel.title"),
         opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
         onToggled: () => {
-          let opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
+          const opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
           Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, !opened);
         }
       },
@@ -84,7 +84,7 @@ class LayoutApp extends PureComponent {
           header: LAYOUT_L10N.getStr("flexbox.header"),
           opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
           onToggled: () => {
-            let opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
+            const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
             Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF, !opened);
           }
         },

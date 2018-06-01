@@ -15,31 +15,31 @@ const TEST_URI = "<style>.title {color: red;}</style>" +
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view} = await openRuleView();
+  const { inspector, view} = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("h1", inspector);
 
   info("Focusing the new property editable field");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Sending \"background\" to the editable field.");
-  for (let key of "background") {
-    let onSuggest = editor.once("after-suggest");
+  for (const key of "background") {
+    const onSuggest = editor.once("after-suggest");
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
     await onSuggest;
   }
 
   const itemIndex = 4;
-  let bgcItem = editor.popup.getItemAtIndex(itemIndex);
+  const bgcItem = editor.popup.getItemAtIndex(itemIndex);
   is(bgcItem.label, "background-color",
     "Check the expected completion element is background-color.");
   editor.popup.selectedIndex = itemIndex;
 
   info("Select the background-color suggestion with a mouse click.");
-  let onSuggest = editor.once("after-suggest");
-  let node = editor.popup.elements.get(bgcItem);
+  const onSuggest = editor.once("after-suggest");
+  const node = editor.popup.elements.get(bgcItem);
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
   await onSuggest;
@@ -53,7 +53,7 @@ add_task(async function() {
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.styleDocument.activeElement);
-  let textProp = ruleEditor.rule.textProps[1];
+  const textProp = ruleEditor.rule.textProps[1];
 
   is(ruleEditor.rule.textProps.length, 2,
     "Created a new text property.");

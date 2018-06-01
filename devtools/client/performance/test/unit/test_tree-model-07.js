@@ -9,13 +9,13 @@
 var { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
 
 add_task(function test() {
-  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let url = (n) => `http://content/${n}`;
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const url = (n) => `http://content/${n}`;
 
   // Create a root node from a given samples array.
 
-  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 30,
-                                                        contentOnly: true }), "(root)");
+  const root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 30,
+                                                          contentOnly: true }), "(root)");
 
   /*
    * should have a tree like:

@@ -18,7 +18,7 @@ registerCleanupFunction(() => {
 add_task(async function() {
   info("Switch to 2 pane inspector to avoid sidebar width issues with opening events");
   await pushPref("devtools.inspector.three-pane-enabled", false);
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
   await runTests(inspector);
 
   await toolbox.switchHost("window");
@@ -31,14 +31,14 @@ add_task(async function() {
 });
 
 async function runTests(inspector) {
-  let markupContainer = await getContainerForSelector("#events", inspector);
-  let evHolder = markupContainer.elt.querySelector(".markupview-event-badge");
-  let tooltip = inspector.markup.eventDetailsTooltip;
+  const markupContainer = await getContainerForSelector("#events", inspector);
+  const evHolder = markupContainer.elt.querySelector(".markupview-event-badge");
+  const tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
 
   let onInspectorUpdated = inspector.once("inspector-updated");
-  let onTooltipShown = tooltip.once("shown");
+  const onTooltipShown = tooltip.once("shown");
   EventUtils.synthesizeMouseAtCenter(evHolder, {}, inspector.markup.doc.defaultView);
 
   await onTooltipShown;
@@ -48,11 +48,11 @@ async function runTests(inspector) {
   ok(tooltip.isVisible(), "EventTooltip visible.");
 
   onInspectorUpdated = inspector.once("inspector-updated");
-  let onTooltipHidden = tooltip.once("hidden");
+  const onTooltipHidden = tooltip.once("hidden");
 
   info("Click on another tag to hide the event tooltip");
-  let h1 = await getContainerForSelector("h1", inspector);
-  let tag = h1.elt.querySelector(".tag");
+  const h1 = await getContainerForSelector("h1", inspector);
+  const tag = h1.elt.querySelector(".tag");
   EventUtils.synthesizeMouseAtCenter(tag, {}, inspector.markup.doc.defaultView);
 
   await onTooltipHidden;

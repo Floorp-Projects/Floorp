@@ -7,8 +7,8 @@
 
 const TEST_JSON_URL = URL_ROOT + "simple_json.json";
 
-let jsonText = "{\"name\": \"value\"}\n";
-let prettyJson = "{\n  \"name\": \"value\"\n}";
+const jsonText = "{\"name\": \"value\"}\n";
+const prettyJson = "{\n  \"name\": \"value\"\n}";
 
 add_task(async function() {
   info("Test copy raw data started");
@@ -19,10 +19,10 @@ add_task(async function() {
   await selectJsonViewContentTab("rawdata");
 
   // Check displayed JSON
-  let text = await getElementText(".textPanelBox .data");
+  const text = await getElementText(".textPanelBox .data");
   is(text, jsonText, "Proper JSON must be displayed in DOM");
 
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
   await waitForClipboardPromise(function setup() {
@@ -47,7 +47,7 @@ add_task(async function() {
       ".textPanelBox .toolbar button.copy",
       {}, browser);
   }, function validator(value) {
-    let str = normalizeNewLines(value);
+    const str = normalizeNewLines(value);
     return str == prettyJson;
   });
 });

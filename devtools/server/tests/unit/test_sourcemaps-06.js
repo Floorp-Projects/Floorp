@@ -47,7 +47,7 @@ function test_source_content() {
     });
   });
 
-  let node = new SourceNode(null, null, null, [
+  const node = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "a.js", "function a() { return 'a'; }\n"),
     new SourceNode(1, 0, "b.js", "function b() { return 'b'; }\n"),
     new SourceNode(1, 0, "c.js", "function c() { return 'c'; }\n"),
@@ -73,15 +73,15 @@ function testContents(sources, timesCalled, callback) {
     return;
   }
 
-  let source = sources[0];
-  let sourceClient = gThreadClient.source(sources[0]);
+  const source = sources[0];
+  const sourceClient = gThreadClient.source(sources[0]);
 
   if (sourceClient.url) {
     sourceClient.source((response) => {
       Assert.ok(!response.error,
                 "Should not get an error loading the source from sourcesContent");
 
-      let expectedContent = "content for " + source.url.replace(/^.*\//, "");
+      const expectedContent = "content for " + source.url.replace(/^.*\//, "");
       Assert.equal(response.source, expectedContent,
                    "Should have the expected source content");
 

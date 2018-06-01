@@ -45,12 +45,12 @@ function createContextMenu(hud, parentNode, {
   openSidebar,
   rootActorId,
 }) {
-  let win = parentNode.ownerDocument.defaultView;
-  let selection = win.getSelection();
+  const win = parentNode.ownerDocument.defaultView;
+  const selection = win.getSelection();
 
-  let { source, request } = message || {};
+  const { source, request } = message || {};
 
-  let menu = new Menu({
+  const menu = new Menu({
     id: "webconsole-menu"
   });
 
@@ -89,7 +89,7 @@ function createContextMenu(hud, parentNode, {
       if (!request) {
         return;
       }
-      let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+      const mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
       mainWindow.openWebLinkIn(request.url, "tab", {
         triggeringPrincipal: mainWindow.document.nodePrincipal,
       });
@@ -103,14 +103,14 @@ function createContextMenu(hud, parentNode, {
     accesskey: l10n.getStr("webconsole.menu.storeAsGlobalVar.accesskey"),
     disabled: !actor,
     click: () => {
-      let evalString = `{ let i = 0;
+      const evalString = `{ let i = 0;
         while (this.hasOwnProperty("temp" + i) && i < 1000) {
           i++;
         }
         this["temp" + i] = _self;
         "temp" + i;
       }`;
-      let options = {
+      const options = {
         selectedObjectActor: actor,
       };
 
@@ -165,7 +165,7 @@ function createContextMenu(hud, parentNode, {
     accesskey: l10n.getStr("webconsole.menu.selectAll.accesskey"),
     disabled: false,
     click: () => {
-      let webconsoleOutput = parentNode.querySelector(".webconsole-output");
+      const webconsoleOutput = parentNode.querySelector(".webconsole-output");
       selection.selectAllChildren(webconsoleOutput);
     },
   }));

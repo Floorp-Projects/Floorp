@@ -39,14 +39,14 @@ add_task(async function() {
 });
 
 async function testMessages(hud) {
-  for (let message of expectedMessages) {
+  for (const message of expectedMessages) {
     info(`checking that the message "${message}" exists`);
     await waitFor(() => findMessage(hud, message));
   }
 
   info("first messages matched");
 
-  let messages = await findMessages(hud, expectedDupedMessage);
+  const messages = await findMessages(hud, expectedDupedMessage);
   is(messages.length, 2, `${expectedDupedMessage} is present twice`);
 }
 

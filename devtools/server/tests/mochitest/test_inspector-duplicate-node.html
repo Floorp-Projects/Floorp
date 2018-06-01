@@ -21,10 +21,10 @@ window.onload = function() {
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -33,11 +33,11 @@ addTest(function setup() {
 });
 
 addTest(async function testDuplicateNode() {
-  let className = ".node-to-duplicate";
+  const className = ".node-to-duplicate";
   let matches = await gWalker.querySelectorAll(gWalker.rootNode, className);
   is(matches.length, 1, "There should initially be one node to duplicate.");
 
-  let nodeFront = await gWalker.querySelector(gWalker.rootNode, className);
+  const nodeFront = await gWalker.querySelector(gWalker.rootNode, className);
   await gWalker.duplicateNode(nodeFront);
 
   matches = await gWalker.querySelectorAll(gWalker.rootNode, className);

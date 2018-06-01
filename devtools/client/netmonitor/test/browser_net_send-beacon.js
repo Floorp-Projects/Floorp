@@ -8,10 +8,10 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SEND_BEACON_URL);
-  let { store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSortedRequests } =
+  const { tab, monitor } = await initNetMonitor(SEND_BEACON_URL);
+  const { store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { getSortedRequests } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -22,7 +22,7 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   is(store.getState().requests.requests.size, 1, "The beacon should be recorded.");
-  let request = getSortedRequests(store.getState()).get(0);
+  const request = getSortedRequests(store.getState()).get(0);
   is(request.method, "POST", "The method is correct.");
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");
   is(request.status, "404", "The status is correct.");

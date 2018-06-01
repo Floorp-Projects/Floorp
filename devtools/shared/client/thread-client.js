@@ -449,7 +449,7 @@ ThreadClient.prototype = {
       return false;
     }
 
-    let numFrames = this._frameCache.length;
+    const numFrames = this._frameCache.length;
 
     this.getFrames(numFrames, total - numFrames, (response) => {
       if (response.error) {
@@ -457,14 +457,14 @@ ThreadClient.prototype = {
         return;
       }
 
-      let threadGrips = DevToolsUtils.values(this._threadGrips);
+      const threadGrips = DevToolsUtils.values(this._threadGrips);
 
-      for (let i in response.frames) {
-        let frame = response.frames[i];
+      for (const i in response.frames) {
+        const frame = response.frames[i];
         if (!frame.where.source) {
           // Older servers use urls instead, so we need to resolve
           // them to source actors
-          for (let grip of threadGrips) {
+          for (const grip of threadGrips) {
             if (grip instanceof SourceClient && grip.url === frame.url) {
               frame.where.source = grip._form;
             }
@@ -506,7 +506,7 @@ ThreadClient.prototype = {
       return this._pauseGrips[grip.actor];
     }
 
-    let client = new ObjectClient(this.client, grip);
+    const client = new ObjectClient(this.client, grip);
     this._pauseGrips[grip.actor] = client;
     return client;
   },
@@ -526,7 +526,7 @@ ThreadClient.prototype = {
       return this[gripCacheName][grip.actor];
     }
 
-    let client = new LongStringClient(this.client, grip);
+    const client = new LongStringClient(this.client, grip);
     this[gripCacheName][grip.actor] = client;
     return client;
   },
@@ -568,7 +568,7 @@ ThreadClient.prototype = {
       return this[gripCacheName][grip.actor];
     }
 
-    let client = new ArrayBufferClient(this.client, grip);
+    const client = new ArrayBufferClient(this.client, grip);
     this[gripCacheName][grip.actor] = client;
     return client;
   },
@@ -591,7 +591,7 @@ ThreadClient.prototype = {
    *        The property name of the grip cache we want to clear.
    */
   _clearObjectClients: function(gripCacheName) {
-    for (let id in this[gripCacheName]) {
+    for (const id in this[gripCacheName]) {
       this[gripCacheName][id].valid = false;
     }
     this[gripCacheName] = {};

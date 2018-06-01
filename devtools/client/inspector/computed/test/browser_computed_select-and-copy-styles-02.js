@@ -10,7 +10,7 @@ const TEST_URI = `<div style="text-align:left;width:25px;">Hello world</div>`;
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("div", inspector);
 
   let expectedPattern = "text-align: left;[\\r\\n]+" +

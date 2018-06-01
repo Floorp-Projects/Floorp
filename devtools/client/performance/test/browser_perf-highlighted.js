@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let { target, toolbox, console } = await initConsoleInNewTab({
+  const { target, toolbox, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let tab = toolbox.doc.getElementById("toolbox-tab-performance");
+  const tab = toolbox.doc.getElementById("toolbox-tab-performance");
 
   await console.profile("rust");
   await waitUntil(() => tab.classList.contains("highlighted"));
@@ -32,7 +32,7 @@ add_task(async function() {
   ok(!tab.classList.contains("highlighted"),
     "Performance tab is no longer highlighted when console.profile recording finishes.");
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
 
   await startRecording(panel);
 

@@ -20,16 +20,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Getting the second property in the rule");
-  let rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   let prop = rule.textProps[1];
 
   info("Clearing the property value and pressing shift-tab");
   let editor = await focusEditableField(view, prop.editor.valueSpan);
-  let onValueDone = view.once("ruleview-changed");
+  const onValueDone = view.once("ruleview-changed");
   editor.input.value = "";
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
   await onValueDone;
@@ -44,7 +44,7 @@ add_task(async function() {
     "'' property value is correctly set.");
 
   info("Pressing shift-tab again to focus the previous property value");
-  let onValueFocused = view.once("ruleview-changed");
+  const onValueFocused = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
   await onValueFocused;
 
@@ -56,12 +56,12 @@ add_task(async function() {
     "Focus should have moved to the previous property value");
 
   info("Pressing shift-tab again to focus the property name");
-  let onNameFocused = view.once("ruleview-changed");
+  const onNameFocused = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
   await onNameFocused;
 
   info("Removing the name and pressing shift-tab to focus the selector");
-  let onNameDeleted = view.once("ruleview-changed");
+  const onNameDeleted = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
   await onNameDeleted;

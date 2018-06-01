@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
 
   info("Testing that the colors in gradient properties are parsed correctly");
   testColorParsing(view);
@@ -28,18 +28,18 @@ add_task(async function() {
 });
 
 function testColorParsing(view) {
-  let ruleEl = getRuleViewProperty(view, "body", "background-image");
+  const ruleEl = getRuleViewProperty(view, "body", "background-image");
   ok(ruleEl, "The background-image gradient declaration was found");
 
-  let swatchEls = ruleEl.valueSpan.querySelectorAll(".ruleview-colorswatch");
+  const swatchEls = ruleEl.valueSpan.querySelectorAll(".ruleview-colorswatch");
   ok(swatchEls, "The color swatch elements were found");
   is(swatchEls.length, 3, "There are 3 color swatches");
 
-  let colorEls = ruleEl.valueSpan.querySelectorAll(".ruleview-color");
+  const colorEls = ruleEl.valueSpan.querySelectorAll(".ruleview-color");
   ok(colorEls, "The color elements were found");
   is(colorEls.length, 3, "There are 3 color values");
 
-  let colors = ["#f06", "#333", "#000"];
+  const colors = ["#f06", "#333", "#000"];
   for (let i = 0; i < colors.length; i++) {
     is(colorEls[i].textContent, colors[i], "The right color value was found");
   }
@@ -47,17 +47,17 @@ function testColorParsing(view) {
 
 async function testPickingNewColor(view) {
   // Grab the first color swatch and color in the gradient
-  let ruleEl = getRuleViewProperty(view, "body", "background-image");
-  let swatchEl = ruleEl.valueSpan.querySelector(".ruleview-colorswatch");
-  let colorEl = ruleEl.valueSpan.querySelector(".ruleview-color");
+  const ruleEl = getRuleViewProperty(view, "body", "background-image");
+  const swatchEl = ruleEl.valueSpan.querySelector(".ruleview-colorswatch");
+  const colorEl = ruleEl.valueSpan.querySelector(".ruleview-color");
 
   info("Get the color picker tooltip and clicking on the swatch to show it");
-  let cPicker = view.tooltips.getTooltip("colorPicker");
-  let onColorPickerReady = cPicker.once("ready");
+  const cPicker = view.tooltips.getTooltip("colorPicker");
+  const onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
   await onColorPickerReady;
 
-  let change = {
+  const change = {
     selector: "body",
     name: "background-image",
     value: "linear-gradient(to left, rgb(1, 1, 1) 25%, " +

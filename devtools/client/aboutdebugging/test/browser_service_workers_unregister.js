@@ -17,10 +17,10 @@ const TAB_URL = SCOPE + "empty-sw.html";
 add_task(async function() {
   await enableServiceWorkerDebugging();
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
   // Open a tab that registers an empty service worker.
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
   await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
@@ -32,20 +32,20 @@ add_task(async function() {
   await waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
-  let targets = document.querySelectorAll("#service-workers .target");
+  const targets = document.querySelectorAll("#service-workers .target");
   is(targets.length, 1, "One service worker is now displayed.");
 
-  let target = targets[0];
-  let name = target.querySelector(".target-name");
+  const target = targets[0];
+  const name = target.querySelector(".target-name");
   is(name.textContent, SERVICE_WORKER, "Found the service worker in the list");
 
   info("Check the scope displayed scope is correct");
-  let scope = target.querySelector(".service-worker-scope");
+  const scope = target.querySelector(".service-worker-scope");
   is(scope.textContent, SCOPE,
     "The expected scope is displayed in the service worker info.");
 
   info("Unregister the service worker via the unregister link.");
-  let unregisterLink = target.querySelector(".unregister-link");
+  const unregisterLink = target.querySelector(".unregister-link");
   ok(unregisterLink, "Found the unregister link");
 
   unregisterLink.click();

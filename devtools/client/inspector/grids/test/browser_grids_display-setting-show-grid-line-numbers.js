@@ -22,12 +22,12 @@ const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
 
   await selectNode("#grid", inspector);
-  let checkbox = doc.getElementById("grid-setting-show-grid-line-numbers");
+  const checkbox = doc.getElementById("grid-setting-show-grid-line-numbers");
 
   info("Checking the initial state of the CSS grid highlighter setting.");
   ok(!Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),

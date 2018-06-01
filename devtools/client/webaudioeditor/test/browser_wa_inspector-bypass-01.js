@@ -6,22 +6,22 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let nodeIds = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const nodeIds = actors.map(actor => actor.actorID);
 
   // Wait for the node to be set as well as the inspector to come fully into the view
   await clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]), true);
 
-  let $bypass = $("toolbarbutton.bypass");
+  const $bypass = $("toolbarbutton.bypass");
 
   is((await actors[1].isBypassed()), false, "AudioNodeActor is not bypassed by default.");
   is($bypass.checked, true, "Button is 'on' for normal nodes");

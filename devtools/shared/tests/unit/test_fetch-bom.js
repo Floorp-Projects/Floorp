@@ -42,7 +42,7 @@ function getHandler(writer) {
   return function(request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
 
-    let bos = new BinaryOutputStream(response.bodyOutputStream);
+    const bos = new BinaryOutputStream(response.bodyOutputStream);
     writer(bos);
   };
 }

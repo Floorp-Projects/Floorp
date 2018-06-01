@@ -8,21 +8,21 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CORS_URL);
+  const { tab, monitor } = await initNetMonitor(CORS_URL);
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  const wait = waitForNetworkEvents(monitor, 2);
 
   info("Performing a CORS request");
-  let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
+  const requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
   await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });

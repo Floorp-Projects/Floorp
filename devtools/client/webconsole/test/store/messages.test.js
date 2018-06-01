@@ -196,9 +196,9 @@ describe("Message reducer:", () => {
         "console.log(null)",
       ], {actions});
 
-      let messages = getAllMessagesById(getState());
+      const messages = getAllMessagesById(getState());
       expect(messages.size).toBe(3);
-      let repeat = getAllRepeatById(getState());
+      const repeat = getAllRepeatById(getState());
       expect(Object.keys(repeat).length).toBe(0);
     });
 
@@ -903,7 +903,7 @@ describe("Message reducer:", () => {
 
       // Add 3 network messages and their updates
       let packet = clonePacket(stubPackets.get("XHR GET request"));
-      let updatePacket = clonePacket(stubPackets.get("XHR GET request update"));
+      const updatePacket = clonePacket(stubPackets.get("XHR GET request update"));
       packet.actor = "message1";
       updatePacket.networkInfo.actor = "message1";
       dispatch(actions.messagesAdd([packet]));
@@ -923,7 +923,7 @@ describe("Message reducer:", () => {
         actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       // Check that we have the expected data.
-      let messages = getAllMessagesById(getState());
+      const messages = getAllMessagesById(getState());
       const [
         firstNetworkMessageId,
         secondNetworkMessageId,
@@ -974,7 +974,7 @@ describe("Message reducer:", () => {
 
       const data = Symbol("tableData");
       dispatch(actions.messageTableDataReceive(getFirstMessage(getState()).id, data));
-      let table = getAllMessagesTableDataById(getState());
+      const table = getAllMessagesTableDataById(getState());
       expect(table.size).toBe(1);
       expect(table.get(getFirstMessage(getState()).id)).toBe(data);
 
@@ -995,7 +995,7 @@ describe("Message reducer:", () => {
       dispatch(actions.messagesAdd(
         [stubPackets.get("console.table(['red', 'green', 'blue']);")]));
 
-      let messages = getAllMessagesById(getState());
+      const messages = getAllMessagesById(getState());
 
       const tableData1 = Symbol();
       const tableData2 = Symbol();

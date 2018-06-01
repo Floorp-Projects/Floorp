@@ -36,7 +36,7 @@ function startReloadTest(aToolbox) {
 
   reloadsSent = 0;
   let reloads = 0;
-  let reloadCounter = (msg) => {
+  const reloadCounter = (msg) => {
     reloads++;
     info("Detected reload #" + reloads);
     is(reloads, reloadsSent, "Reloaded from devtools window once and only for " + description + "");
@@ -44,7 +44,7 @@ function startReloadTest(aToolbox) {
   gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", reloadCounter);
 
   testAllTheTools("docked", () => {
-    let origHostType = toolbox.hostType;
+    const origHostType = toolbox.hostType;
     toolbox.switchHost(Toolbox.HostType.WINDOW).then(() => {
       toolbox.win.focus();
       testAllTheTools("undocked", () => {
@@ -76,7 +76,7 @@ function testAllTheTools(docked, callback, toolNum = 0) {
 }
 
 function testReload(shortcut, docked, toolID, callback) {
-  let complete = () => {
+  const complete = () => {
     gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", complete);
     return callback();
   };

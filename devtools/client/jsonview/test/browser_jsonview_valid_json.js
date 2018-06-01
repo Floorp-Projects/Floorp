@@ -10,17 +10,17 @@ const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 add_task(async function() {
   info("Test valid JSON started");
 
-  let tab = await addJsonViewTab(TEST_JSON_URL);
+  const tab = await addJsonViewTab(TEST_JSON_URL);
 
   ok(tab.linkedBrowser.contentPrincipal.isNullPrincipal, "Should have null principal");
 
   is(await countRows(), 3, "There must be three rows");
 
-  let objectCellCount = await getElementCount(
+  const objectCellCount = await getElementCount(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellCount, 1, "There must be one object cell");
 
-  let objectCellText = await getElementText(
+  const objectCellText = await getElementText(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellText, "", "The summary is hidden when object is expanded");
 

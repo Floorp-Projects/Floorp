@@ -11,7 +11,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,Test document.body autocompletion";
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   const {
     autocompletePopup: popup,
@@ -19,7 +19,7 @@ add_task(async function() {
   } = jsterm;
 
   ok(!popup.isOpen, "popup is not open");
-  let onPopupOpen = popup.once("popup-opened");
+  const onPopupOpen = popup.once("popup-opened");
 
   jsterm.setInputValue("document.body");
   EventUtils.sendString(".");
@@ -35,14 +35,14 @@ add_task(async function() {
   ok(jsterm._autocompleteCache.includes("ATTRIBUTE_NODE"),
     "ATTRIBUTE_NODE is in the list of suggestions");
 
-  let onPopupClose = popup.once("popup-closed");
+  const onPopupClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Escape");
 
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open");
-  let onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
-  let inputStr = "document.b";
+  const onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
+  const inputStr = "document.b";
   jsterm.setInputValue(inputStr);
   EventUtils.sendString("o");
 

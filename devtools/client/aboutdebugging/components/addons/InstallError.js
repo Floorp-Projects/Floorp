@@ -26,7 +26,7 @@ class AddonsInstallError extends Component {
     if (!this.props.error) {
       return null;
     }
-    let text = Strings.formatStringFromName("addonInstallError", [this.props.error], 1);
+    const text = Strings.formatStringFromName("addonInstallError", [this.props.error], 1);
     return dom.div(
       { className: "addons-install-error" },
       dom.span(

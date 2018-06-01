@@ -8,7 +8,7 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<div class='c1 c2'>");
-  let {inspector, view, testActor} = await openRuleView();
+  const {inspector, view, testActor} = await openRuleView();
 
   await selectNode("div", inspector);
 

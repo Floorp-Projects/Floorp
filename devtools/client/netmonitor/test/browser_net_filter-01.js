@@ -173,10 +173,10 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(FILTERING_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSelectedRequest,
     getSortedRequests,
@@ -190,7 +190,7 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  let wait = waitForNetworkEvents(monitor,
+  const wait = waitForNetworkEvents(monitor,
                                   REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS.length);
   loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
@@ -377,15 +377,15 @@ add_task(async function() {
   }
 
   async function testContents(visibility) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
+    const requestItems = document.querySelectorAll(".request-list-item");
+    for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".status-code");
+      const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
 
-    let items = getSortedRequests(store.getState());
+    const items = getSortedRequests(store.getState());
     let visibleItems;
 
     // Filter results will be updated asynchronously, so we should wait until
@@ -401,15 +401,15 @@ add_task(async function() {
        "There should be a specific amount of visible items in the requests menu.");
 
     for (let i = 0; i < visibility.length; i++) {
-      let itemId = items.get(i).id;
-      let shouldBeVisible = !!visibility[i];
-      let isThere = visibleItems.some(r => r.id == itemId);
+      const itemId = items.get(i).id;
+      const shouldBeVisible = !!visibility[i];
+      const isThere = visibleItems.some(r => r.id == itemId);
 
       is(isThere, shouldBeVisible,
         `The item at index ${i} has visibility=${shouldBeVisible}`);
 
       if (shouldBeVisible) {
-        let { method, url, data } = EXPECTED_REQUESTS[i];
+        const { method, url, data } = EXPECTED_REQUESTS[i];
         verifyRequestItemTarget(
           document,
           getDisplayedRequests(store.getState()),

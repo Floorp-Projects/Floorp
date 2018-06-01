@@ -10,15 +10,15 @@
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
 add_task(async function() {
-  let {inspector, toolbox} = await openInspectorForURL(TEST_URL);
+  const {inspector, toolbox} = await openInspectorForURL(TEST_URL);
 
   info("Focusing the tag editor of the test element");
-  let {editor} = await getContainerForSelector("div", inspector);
+  const {editor} = await getContainerForSelector("div", inspector);
   editor.tag.focus();
 
   info("Pressing ESC and wait for the split-console to open");
   let onSplitConsole = toolbox.once("split-console");
-  let onConsoleReady = toolbox.once("webconsole-ready");
+  const onConsoleReady = toolbox.once("webconsole-ready");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, inspector.panelWin);
   await onSplitConsole;
   await onConsoleReady;

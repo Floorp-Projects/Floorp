@@ -9,21 +9,21 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, controller} = await openAnimationInspector();
+  const {panel, controller} = await openAnimationInspector();
 
   ok(controller.documentCurrentTime, "The documentCurrentTime getter exists");
   checkDocumentTimeIsCorrect(controller);
-  let time1 = controller.documentCurrentTime;
+  const time1 = controller.documentCurrentTime;
 
   await startNewAnimation(controller, panel);
   checkDocumentTimeIsCorrect(controller);
-  let time2 = controller.documentCurrentTime;
+  const time2 = controller.documentCurrentTime;
   ok(time2 > time1, "The new documentCurrentTime is higher than the old one");
 });
 
 function checkDocumentTimeIsCorrect(controller) {
   let time = 0;
-  for (let {state} of controller.animationPlayers) {
+  for (const {state} of controller.animationPlayers) {
     time = Math.max(time, state.documentCurrentTime);
   }
   is(controller.documentCurrentTime, time,
@@ -32,8 +32,8 @@ function checkDocumentTimeIsCorrect(controller) {
 
 async function startNewAnimation(controller, panel) {
   info("Add a new animation to the page and check the time again");
-  let onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
+  const onRendered = waitForAnimationTimelineRendering(panel);
 
   await executeInContent("devtools:test:setAttribute", {
     selector: ".still",

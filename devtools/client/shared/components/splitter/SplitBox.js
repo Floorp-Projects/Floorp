@@ -93,7 +93,7 @@ class SplitBox extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let {
+    const {
       endPanelControl,
       splitterSize,
       vert,
@@ -141,7 +141,7 @@ class SplitBox extends Component {
   onStartMove() {
     const splitBox = ReactDOM.findDOMNode(this);
     const doc = splitBox.ownerDocument;
-    let defaultCursor = doc.documentElement.style.cursor;
+    const defaultCursor = doc.documentElement.style.cursor;
     doc.documentElement.style.cursor = (this.state.vert ? "ew-resize" : "ns-resize");
 
     splitBox.classList.add("dragging");
@@ -205,7 +205,7 @@ class SplitBox extends Component {
     const { endPanelControl, splitterSize, vert } = this.state;
     const { startPanel, endPanel, minSize, maxSize } = this.props;
 
-    let style = Object.assign({}, this.props.style);
+    const style = Object.assign({}, this.props.style);
 
     // Calculate class names list.
     let classNames = ["split-box"];
@@ -243,7 +243,7 @@ class SplitBox extends Component {
     }
 
     // Calculate splitter size
-    let splitterStyle = {
+    const splitterStyle = {
       flex: "0 0 " + splitterSize + "px"
     };
 

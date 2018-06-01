@@ -22,17 +22,17 @@
 
     window.onload = function() {
       // Set up a basic shadow DOM
-      let host = document.querySelector("#shadow");
+      const host = document.querySelector("#shadow");
       if (host.attachShadow) {
-        let root = host.attachShadow({ mode: "open" });
+        const root = host.attachShadow({ mode: "open" });
 
-        let h3 = document.createElement("h3");
+        const h3 = document.createElement("h3");
         h3.append("Shadow ");
 
-        let em = document.createElement("em");
+        const em = document.createElement("em");
         em.append("DOM");
 
-        let select = document.createElement("select");
+        const select = document.createElement("select");
         select.setAttribute("multiple", "");
         h3.appendChild(em);
         root.appendChild(h3);
@@ -40,9 +40,9 @@
       }
 
       // Put a copy of the body in an iframe to test frame traversal.
-      let body = document.querySelector("body");
-      let data = "data:text/html,<html>" + body.outerHTML + "<html>";
-      let iframe = document.createElement("iframe");
+      const body = document.querySelector("body");
+      const data = "data:text/html,<html>" + body.outerHTML + "<html>";
+      const iframe = document.createElement("iframe");
       iframe.setAttribute("id", "childFrame");
       iframe.onload = function() {
         window.opener.postMessage("ready", "*");

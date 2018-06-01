@@ -21,7 +21,7 @@ var TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   let hs = view.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
@@ -37,8 +37,8 @@ add_task(async function() {
   hs.onMouseMove({target: valueSpan});
   await onHighlighterShown;
 
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
-  let cView = selectComputedView(inspector);
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
+  const cView = selectComputedView(inspector);
   await onComputedViewReady;
   hs = cView.highlighters;
 

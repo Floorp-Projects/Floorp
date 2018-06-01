@@ -29,28 +29,28 @@ const TEST_URI =
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view} = await openRuleView();
+  const { inspector, view} = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("h1", inspector);
 
   info("Focusing the property editable field");
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = rule.textProps[0];
 
   // Calculate offsets to click in the middle of the first box quad.
-  let rect = prop.editor.valueSpan.getBoundingClientRect();
-  let firstQuad = prop.editor.valueSpan.getBoxQuads()[0];
+  const rect = prop.editor.valueSpan.getBoundingClientRect();
+  const firstQuad = prop.editor.valueSpan.getBoxQuads()[0];
   // For a multiline value, the first quad left edge is not aligned with the
   // bounding rect left edge. The offsets expected by focusEditableField are
   // relative to the bouding rectangle, so we need to translate the x-offset.
-  let x = firstQuad.bounds.left - rect.left + firstQuad.bounds.width / 2;
+  const x = firstQuad.bounds.left - rect.left + firstQuad.bounds.width / 2;
   // The first quad top edge is aligned with the bounding top edge, no
   // translation needed here.
-  let y = firstQuad.bounds.height / 2;
+  const y = firstQuad.bounds.height / 2;
 
   info("Focusing the css property editable value");
-  let editor = await focusEditableField(view, prop.editor.valueSpan, x, y);
+  const editor = await focusEditableField(view, prop.editor.valueSpan, x, y);
 
   info("Moving the caret next to a number");
   let pos = editor.input.value.indexOf("0deg") + 1;
@@ -68,7 +68,7 @@ add_task(async function() {
   editor.input.setSelectionRange(pos, pos);
 
   info("Sending \", re\" to the editable field.");
-  for (let key of ", re") {
+  for (const key of ", re") {
     await synthesizeKeyForAutocomplete(key, editor, view.styleWindow);
   }
 
@@ -94,9 +94,9 @@ add_task(async function() {
 
   info("Select the background-color suggestion with a mouse click.");
   let onRuleviewChanged = view.once("ruleview-changed");
-  let onSuggest = editor.once("after-suggest");
+  const onSuggest = editor.once("after-suggest");
 
-  let node = editor.popup._list.childNodes[editor.popup.selectedIndex];
+  const node = editor.popup._list.childNodes[editor.popup.selectedIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
   view.debounce.flush();
@@ -125,7 +125,7 @@ add_task(async function() {
  *        Window in which the key event will be dispatched.
  */
 async function synthesizeKeyForAutocomplete(key, editor, win) {
-  let onSuggest = editor.once("after-suggest");
+  const onSuggest = editor.once("after-suggest");
   EventUtils.synthesizeKey(key, {}, win);
   await onSuggest;
 }

@@ -8,10 +8,10 @@
 const {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(async function() {
-  let hash1 = FlameGraphUtils._getStringHash("abc");
-  let hash2 = FlameGraphUtils._getStringHash("acb");
-  let hash3 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("a"));
-  let hash4 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("b"));
+  const hash1 = FlameGraphUtils._getStringHash("abc");
+  const hash2 = FlameGraphUtils._getStringHash("acb");
+  const hash3 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("a"));
+  const hash4 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("b"));
 
   isnot(hash1, hash2, "The hashes should not be equal (1).");
   isnot(hash2, hash3, "The hashes should not be equal (2).");

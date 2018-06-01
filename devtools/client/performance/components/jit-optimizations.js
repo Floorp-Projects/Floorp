@@ -96,12 +96,12 @@ class JITOptimizations extends Component {
    * @return {ReactElement}
    */
   _createHeader({ frameData, onViewSourceInDebugger }) {
-    let { isMetaCategory, url, line } = frameData;
-    let name = isMetaCategory ? frameData.categoryData.label :
+    const { isMetaCategory, url, line } = frameData;
+    const name = isMetaCategory ? frameData.categoryData.label :
                frameData.functionName || "";
 
     // Simulate `SavedFrame`s interface
-    let frame = { source: url, line: +line, functionDisplayName: name };
+    const frame = { source: url, line: +line, functionDisplayName: name };
 
     // Neither Meta Category nodes, or the lack of a selected frame node,
     // renders out a frame source, like "file.js:123"; so just use
@@ -124,27 +124,27 @@ class JITOptimizations extends Component {
   }
 
   _createTree(props) {
-    let {
+    const {
       autoExpandDepth,
       frameData,
       onViewSourceInDebugger,
       optimizationSites: sites
     } = this.props;
 
-    let getSite = id => sites.find(site => site.id === id);
-    let getIonTypeForObserved = type => {
+    const getSite = id => sites.find(site => site.id === id);
+    const getIonTypeForObserved = type => {
       return getSite(type.id).data.types
         .find(iontype => (iontype.typeset || [])
         .includes(type));
     };
-    let isSite = site => getSite(site.id) === site;
-    let isAttempts = attempts => getSite(attempts.id).data.attempts === attempts;
-    let isAttempt = attempt => getSite(attempt.id).data.attempts.includes(attempt);
-    let isTypes = types => getSite(types.id).data.types === types;
-    let isType = type => getSite(type.id).data.types.includes(type);
-    let isObservedType = type => getIonTypeForObserved(type);
+    const isSite = site => getSite(site.id) === site;
+    const isAttempts = attempts => getSite(attempts.id).data.attempts === attempts;
+    const isAttempt = attempt => getSite(attempt.id).data.attempts.includes(attempt);
+    const isTypes = types => getSite(types.id).data.types === types;
+    const isType = type => getSite(type.id).data.types.includes(type);
+    const isObservedType = type => getIonTypeForObserved(type);
 
-    let getRowType = node => {
+    const getRowType = node => {
       if (isSite(node)) {
         return "site";
       }
@@ -168,8 +168,8 @@ class JITOptimizations extends Component {
 
     // Creates a unique key for each node in the
     // optimizations data
-    let getKey = node => {
-      let site = getSite(node.id);
+    const getKey = node => {
+      const site = getSite(node.id);
       if (isSite(node)) {
         return node.id;
       } else if (isAttempts(node)) {
@@ -181,7 +181,7 @@ class JITOptimizations extends Component {
       } else if (isAttempt(node)) {
         return `${node.id}-A-${site.data.attempts.indexOf(node)}`;
       } else if (isObservedType(node)) {
-        let iontype = getIonTypeForObserved(node);
+        const iontype = getIonTypeForObserved(node);
         return `${getKey(iontype)}-O-${iontype.typeset.indexOf(node)}`;
       }
       return "";
@@ -191,7 +191,7 @@ class JITOptimizations extends Component {
       autoExpandDepth,
       preventNavigationOnArrowRight: false,
       getParent: node => {
-        let site = getSite(node.id);
+        const site = getSite(node.id);
         let parent;
         if (isAttempts(node) || isTypes(node)) {
           parent = site;
@@ -218,12 +218,12 @@ class JITOptimizations extends Component {
       },
       isExpanded: node => this.state.expanded.has(node),
       onExpand: node => this.setState(state => {
-        let expanded = new Set(state.expanded);
+        const expanded = new Set(state.expanded);
         expanded.add(node);
         return { expanded };
       }),
       onCollapse: node => this.setState(state => {
-        let expanded = new Set(state.expanded);
+        const expanded = new Set(state.expanded);
         expanded.delete(node);
         return { expanded };
       }),
@@ -246,8 +246,8 @@ class JITOptimizations extends Component {
   }
 
   render() {
-    let header = this._createHeader(this.props);
-    let tree = this._createTree(this.props);
+    const header = this._createHeader(this.props);
+    const tree = this._createTree(this.props);
 
     return dom.div({}, header, tree);
   }

@@ -12,7 +12,7 @@ module.exports = {
    * mis-type the value.
    */
   createEnum(array, target = {}) {
-    for (let key of array) {
+    for (const key of array) {
       target[key] = key;
     }
     return target;

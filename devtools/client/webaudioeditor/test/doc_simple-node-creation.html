@@ -13,14 +13,14 @@
     <script type="text/javascript">
       "use strict";
 
-      let ctx = new AudioContext();
-      let NODE_CREATION_METHODS = [
+      const ctx = new AudioContext();
+      const NODE_CREATION_METHODS = [
           "createBufferSource", "createScriptProcessor", "createAnalyser",
           "createGain", "createDelay", "createBiquadFilter", "createWaveShaper",
           "createPanner", "createConvolver", "createChannelSplitter", "createChannelMerger",
           "createDynamicsCompressor", "createOscillator", "createStereoPanner"
       ];
-      let nodes = NODE_CREATION_METHODS.map(method => ctx[method]());
+      const nodes = NODE_CREATION_METHODS.map(method => ctx[method]());
 
     </script>
   </body>

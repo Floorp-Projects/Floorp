@@ -15,7 +15,7 @@ const TEST_URI =
 `;
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  let {ui} = hud;
+  const {ui} = hud;
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   info("Console should be scrolled to bottom on initial load from page logs");
@@ -73,7 +73,7 @@ function isScrolledToBottom(container) {
   if (!container.lastChild) {
     return true;
   }
-  let lastNodeHeight = container.lastChild.clientHeight;
+  const lastNodeHeight = container.lastChild.clientHeight;
   return container.scrollTop + container.clientHeight >=
          container.scrollHeight - lastNodeHeight / 2;
 }

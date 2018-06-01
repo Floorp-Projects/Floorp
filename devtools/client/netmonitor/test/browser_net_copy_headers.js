@@ -8,29 +8,29 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const {
     getSortedRequests,
     getSelectedRequest,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  let requestItem = getSortedRequests(store.getState()).get(0);
-  let { method, httpVersion, status, statusText } = requestItem;
+  const requestItem = getSortedRequests(store.getState()).get(0);
+  const { method, httpVersion, status, statusText } = requestItem;
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  let selectedRequest = getSelectedRequest(store.getState());
+  const selectedRequest = getSelectedRequest(store.getState());
   is(selectedRequest, requestItem, "Proper request is selected");
 
   const EXPECTED_REQUEST_HEADERS = [

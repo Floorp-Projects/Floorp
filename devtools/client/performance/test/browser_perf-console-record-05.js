@@ -15,13 +15,13 @@ const { times } = require("devtools/client/performance/test/helpers/event-utils"
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings

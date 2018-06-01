@@ -46,18 +46,18 @@ function onRequestProperties(state, action) {
  * Handle receiveProperties action
  */
 function onReceiveProperties(cache, action) {
-  let response = action.response;
-  let from = response.from;
-  let className = action.grip.class;
+  const response = action.response;
+  const from = response.from;
+  const className = action.grip.class;
 
   // Properly deal with getters.
   mergeProperties(response);
 
   // Compute list of requested children.
-  let previewProps = response.preview ? response.preview.ownProperties : null;
-  let ownProps = response.ownProperties || previewProps || [];
+  const previewProps = response.preview ? response.preview.ownProperties : null;
+  const ownProps = response.ownProperties || previewProps || [];
 
-  let props = Object.keys(ownProps).map(key => {
+  const props = Object.keys(ownProps).map(key => {
     // Array indexes as a special case. We convert any keys that are string
     // representations of integers to integers.
     if (className === "Array" && isInteger(key)) {
@@ -69,7 +69,7 @@ function onReceiveProperties(cache, action) {
   props.sort(sortName);
 
   // Return new state/map.
-  let newCache = new Map(cache);
+  const newCache = new Map(cache);
   newCache.set(from, props);
 
   return newCache;
@@ -78,16 +78,16 @@ function onReceiveProperties(cache, action) {
 // Helpers
 
 function mergeProperties(response) {
-  let { ownProperties } = response;
+  const { ownProperties } = response;
 
   // 'safeGetterValues' is new and isn't necessary defined on old grips.
-  let safeGetterValues = response.safeGetterValues || {};
+  const safeGetterValues = response.safeGetterValues || {};
 
   // Merge the safe getter values into one object such that we can use it
   // in variablesView.
-  for (let name of Object.keys(safeGetterValues)) {
+  for (const name of Object.keys(safeGetterValues)) {
     if (name in ownProperties) {
-      let { getterValue, getterPrototypeLevel } = safeGetterValues[name];
+      const { getterValue, getterPrototypeLevel } = safeGetterValues[name];
       ownProperties[name].getterValue = getterValue;
       ownProperties[name].getterPrototypeLevel = getterPrototypeLevel;
     } else {

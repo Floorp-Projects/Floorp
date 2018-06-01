@@ -6,11 +6,11 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS } = panel.panelWin;
 
-  let reset = once(window, EVENTS.UI_RESET);
-  let navigated = reload(target);
+  const reset = once(window, EVENTS.UI_RESET);
+  const navigated = reload(target);
 
   await reset;
   ok(true, "The UI was reset after the refresh button was clicked.");

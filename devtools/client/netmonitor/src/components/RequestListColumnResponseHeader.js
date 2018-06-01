@@ -28,12 +28,12 @@ class RequestListColumnResponseHeader extends Component {
   }
 
   componentDidMount() {
-    let { item, connector } = this.props;
+    const { item, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, item, ["responseHeaders"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { item, connector } = nextProps;
+    const { item, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, item, ["responseHeaders"]);
   }
 
@@ -44,7 +44,7 @@ class RequestListColumnResponseHeader extends Component {
   }
 
   render() {
-    let header = getResponseHeader(this.props.item, this.props.header);
+    const header = getResponseHeader(this.props.item, this.props.header);
     return (
       div({
         className: "requests-list-column requests-list-response-header",

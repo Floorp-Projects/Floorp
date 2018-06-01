@@ -56,7 +56,7 @@ const BUFFER_SIZE = 0x8000;
  *         (unexpected) errors occur.
  */
 function copyStream(input, output, length) {
-  let copier = new StreamCopier(input, output, length);
+  const copier = new StreamCopier(input, output, length);
   return copier.copy();
 }
 
@@ -110,8 +110,8 @@ StreamCopier.prototype = {
   },
 
   _copy: function() {
-    let bytesAvailable = this.input.available();
-    let amountToCopy = Math.min(bytesAvailable, this._amountLeft);
+    const bytesAvailable = this.input.available();
+    const amountToCopy = Math.min(bytesAvailable, this._amountLeft);
     this._debug("Trying to copy: " + amountToCopy);
 
     let bytesCopied;

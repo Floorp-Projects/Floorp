@@ -79,7 +79,7 @@ var ToggleMixin = {
    *                   a few cycles or not
    */
   _viewController: function({ visible, animated, delayed }) {
-    let flags = {
+    const flags = {
       visible: visible,
       animated: animated != null ? animated : !!this._animated,
       delayed: delayed != null ? delayed : !!this._delayed,

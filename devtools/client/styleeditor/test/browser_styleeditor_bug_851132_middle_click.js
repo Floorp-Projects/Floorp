@@ -8,7 +8,7 @@
 const TESTCASE_URI = TEST_BASE_HTTP + "four.html";
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   gBrowser.tabContainer.addEventListener("TabOpen", onTabAdded);
 
   await ui.editors[0].getSourceEditor();
@@ -18,7 +18,7 @@ add_task(async function() {
   await clickOnStyleSheetLink(ui.editors[1], 0);
 
   info("Waiting for the second editor to be selected.");
-  let editor = await ui.once("editor-selected");
+  const editor = await ui.once("editor-selected");
 
   ok(editor.sourceEditor.hasFocus(),
      "Left mouse click gave second editor focus.");
@@ -37,8 +37,8 @@ add_task(async function() {
  *        The button to click the link with.
  */
 async function clickOnStyleSheetLink(editor, button) {
-  let window = editor._window;
-  let link = editor.summary.querySelector(".stylesheet-name");
+  const window = editor._window;
+  const link = editor.summary.querySelector(".stylesheet-name");
 
   info("Waiting for focus.");
   await SimpleTest.promiseFocus(window);

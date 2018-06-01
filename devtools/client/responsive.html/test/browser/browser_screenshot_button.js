@@ -11,10 +11,10 @@ const { OS } = require("resource://gre/modules/osfile.jsm");
 
 function waitUntilScreenshot() {
   return new Promise(async function(resolve) {
-    let { Downloads } = require("resource://gre/modules/Downloads.jsm");
-    let list = await Downloads.getList(Downloads.ALL);
+    const { Downloads } = require("resource://gre/modules/Downloads.jsm");
+    const list = await Downloads.getList(Downloads.ALL);
 
-    let view = {
+    const view = {
       onDownloadAdded: download => {
         download.whenSucceeded().then(() => {
           resolve(download.target.path);
@@ -28,26 +28,26 @@ function waitUntilScreenshot() {
 }
 
 addRDMTask(TEST_URL, async function({ ui: {toolWindow} }) {
-  let { store, document } = toolWindow;
+  const { store, document } = toolWindow;
 
   // Wait until the viewport has been added
   await waitUntilState(store, state => state.viewports.length == 1);
 
   info("Click the screenshot button");
-  let screenshotButton = document.getElementById("global-screenshot-button");
+  const screenshotButton = document.getElementById("global-screenshot-button");
   screenshotButton.click();
 
-  let whenScreenshotSucceeded = waitUntilScreenshot();
+  const whenScreenshotSucceeded = waitUntilScreenshot();
 
-  let filePath = await whenScreenshotSucceeded;
-  let image = new Image();
+  const filePath = await whenScreenshotSucceeded;
+  const image = new Image();
   image.src = OS.Path.toFileURI(filePath);
 
   await once(image, "load");
 
   // We have only one viewport at the moment
-  let viewport = store.getState().viewports[0];
-  let ratio = window.devicePixelRatio;
+  const viewport = store.getState().viewports[0];
+  const ratio = window.devicePixelRatio;
 
   is(image.width, viewport.width * ratio,
     "screenshot width has the expected width");

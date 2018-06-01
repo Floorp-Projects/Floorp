@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const {DEFAULT_VALUE_SUMMARY_LENGTH} = require("devtools/server/actors/inspector/walker");
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
   await inspector.markup.expandAll();
@@ -51,14 +51,14 @@ async function editContainer(inspector, testActor,
   is(nodeValue, oldValue, "The test node's text content is correct");
 
   info("Changing the text content");
-  let onMutated = inspector.once("markupmutation");
-  let container = await focusNode(selector, inspector);
+  const onMutated = inspector.once("markupmutation");
+  const container = await focusNode(selector, inspector);
 
-  let isOldValueInline = oldValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
+  const isOldValueInline = oldValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
   is(!!container.inlineTextChild, isOldValueInline, "inlineTextChild is as expected");
   is(!container.canExpand, isOldValueInline, "canExpand property is as expected");
 
-  let field = container.elt.querySelector("pre");
+  const field = container.elt.querySelector("pre");
   is(field.textContent, oldValue,
      "The text node has the correct original value after selecting");
   setEditableFieldValue(field, newValue, inspector);
@@ -69,7 +69,7 @@ async function editContainer(inspector, testActor,
   nodeValue = await getFirstChildNodeValue(selector, testActor);
   is(nodeValue, newValue, "The test node's text content has changed");
 
-  let isNewValueInline = newValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
+  const isNewValueInline = newValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
   is(!!container.inlineTextChild, isNewValueInline, "inlineTextChild is as expected");
   is(!container.canExpand, isNewValueInline, "canExpand property is as expected");
 
@@ -79,6 +79,6 @@ async function editContainer(inspector, testActor,
   }
 
   info("Selecting the <body> to reset the selection");
-  let bodyContainer = await getContainerForSelector("body", inspector);
+  const bodyContainer = await getContainerForSelector("body", inspector);
   inspector.markup.markNodeAsSelected(bodyContainer.node);
 }

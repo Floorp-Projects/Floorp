@@ -15,7 +15,7 @@ window.onload = async function() {
   SimpleTest.waitForExplicitFinish();
 
   try {
-    let {
+    const {
       consoleClient,
     } = await attachURL(TEST_URL);
     await testNotInTreeElementNode(consoleClient);
@@ -30,28 +30,28 @@ window.onload = async function() {
 
 async function testNotInTreeElementNode(consoleClient) {
   info("Testing isConnected property on a ElementNode not in the DOM tree");
-  let {result} = await consoleClient.evaluateJS("document.createElement(\"div\")");
+  const {result} = await consoleClient.evaluateJS("document.createElement(\"div\")");
   is(result.preview.isConnected, false,
     "isConnected is false since we only created the element");
 }
 
 async function testInTreeElementNode(consoleClient) {
   info("Testing isConnected property on a ElementNode in the DOM tree");
-  let {result} = await consoleClient.evaluateJS("document.body");
+  const {result} = await consoleClient.evaluateJS("document.body");
   is(result.preview.isConnected, true,
     "isConnected is true as expected, since the element was retrieved from the DOM tree");
 }
 
 async function testNotInTreeTextNode(consoleClient) {
   info("Testing isConnected property on a TextNode not in the DOM tree");
-  let {result} = await consoleClient.evaluateJS("document.createTextNode(\"Hello\")");
+  const {result} = await consoleClient.evaluateJS("document.createTextNode(\"Hello\")");
   is(result.preview.isConnected, false,
     "isConnected is false since we only created the element");
 }
 
 async function testInTreeTextNode(consoleClient) {
   info("Testing isConnected property on a TextNode in the DOM tree");
-  let {result} = await consoleClient.evaluateJS("document.body.firstChild");
+  const {result} = await consoleClient.evaluateJS("document.body.firstChild");
   is(result.preview.isConnected, true,
     "isConnected is true as expected, since the element was retrieved from the DOM tree");
 }

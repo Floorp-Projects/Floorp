@@ -73,7 +73,7 @@ this.SplitView = function SplitView(aRoot) {
     }
     if (newFocusOrdinal !== undefined) {
       aEvent.stopPropagation();
-      let el = this.getSummaryElementByOrdinal(newFocusOrdinal);
+      const el = this.getSummaryElementByOrdinal(newFocusOrdinal);
       if (el) {
         el.focus();
       }
@@ -121,7 +121,7 @@ SplitView.prototype = {
     }
 
     if (this._activeSummary) {
-      let binding = bindings.get(this._activeSummary);
+      const binding = bindings.get(this._activeSummary);
 
       if (binding.onHide) {
         binding.onHide(this._activeSummary, binding._details, binding.data);
@@ -135,7 +135,7 @@ SplitView.prototype = {
       return;
     }
 
-    let binding = bindings.get(aSummary);
+    const binding = bindings.get(aSummary);
     aSummary.classList.add("splitview-active");
     binding._details.classList.add("splitview-active");
 
@@ -151,7 +151,7 @@ SplitView.prototype = {
     * @return DOMElement
     */
   get activeDetails() {
-    let summary = this.activeSummary;
+    const summary = this.activeSummary;
     return summary ? bindings.get(summary)._details : null;
   },
 
@@ -192,7 +192,7 @@ SplitView.prototype = {
    *         higher ordinal.
    */
   appendItem: function ASV_appendItem(aSummary, aDetails, aOptions) {
-    let binding = aOptions || {};
+    const binding = aOptions || {};
 
     binding._summary = aSummary;
     binding._details = aDetails;
@@ -256,7 +256,7 @@ SplitView.prototype = {
       this.activeSummary = null;
     }
 
-    let binding = bindings.get(aSummary);
+    const binding = bindings.get(aSummary);
     aSummary.remove();
     binding._details.remove();
 
@@ -285,7 +285,7 @@ SplitView.prototype = {
    *        One or more space-separated CSS classes.
    */
   setItemClassName: function ASV_setItemClassName(aSummary, aClassName) {
-    let binding = bindings.get(aSummary);
+    const binding = bindings.get(aSummary);
     let viewSpecific;
 
     viewSpecific = aSummary.className.match(/(splitview\-[\w-]+)/g);

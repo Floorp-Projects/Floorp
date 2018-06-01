@@ -22,7 +22,7 @@ describe("Release actor enhancer:", () => {
   describe("Client proxy", () => {
     it("releases backend actors when limit reached adding a single message", () => {
       const logLimit = 100;
-      let releasedActors = [];
+      const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
         storeOptions: {logLimit},
         hud: {
@@ -64,7 +64,7 @@ describe("Release actor enhancer:", () => {
 
     it("releases backend actors when limit reached adding multiple messages", () => {
       const logLimit = 100;
-      let releasedActors = [];
+      const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
         storeOptions: {logLimit},
         hud: {
@@ -113,7 +113,7 @@ describe("Release actor enhancer:", () => {
     });
 
     it("properly releases backend actors after clear", () => {
-      let releasedActors = [];
+      const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
         hud: {
           proxy: {

@@ -9,24 +9,24 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 const NEW_RULE = "body { background-color: purple; }";
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "correct number of editors");
 
-  let editor = ui.editors[0];
+  const editor = ui.editors[0];
   await openEditor(editor);
 
   // Set text twice in a row
-  let styleChanges = listenForStyleChange(editor.styleSheet);
+  const styleChanges = listenForStyleChange(editor.styleSheet);
 
   editor.sourceEditor.setText(NEW_RULE);
   editor.sourceEditor.setText(NEW_RULE + " ");
 
   await styleChanges;
 
-  let rules = await ContentTask.spawn(gBrowser.selectedBrowser, 0,
+  const rules = await ContentTask.spawn(gBrowser.selectedBrowser, 0,
   async function(index) {
-    let sheet = content.document.styleSheets[index];
+    const sheet = content.document.styleSheets[index];
     return [...sheet.cssRules].map(rule => rule.cssText);
   });
 
@@ -38,7 +38,7 @@ add_task(async function() {
 /* Helpers */
 
 function openEditor(editor) {
-  let link = editor.summary.querySelector(".stylesheet-name");
+  const link = editor.summary.querySelector(".stylesheet-name");
   link.click();
 
   return editor.getSourceEditor();

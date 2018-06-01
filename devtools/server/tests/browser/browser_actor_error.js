@@ -19,11 +19,11 @@ async function test() {
 
   DebuggerServer.addActors(ACTORS_URL);
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   await gClient.connect();
 
-  let { errorActor } = await gClient.listTabs();
+  const { errorActor } = await gClient.listTabs();
   ok(errorActor, "Found the error actor.");
 
   await Assert.rejects(gClient.request({ to: errorActor, type: "error" }),

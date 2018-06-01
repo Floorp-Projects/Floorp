@@ -6,8 +6,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+  const { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
   await promise.all([
@@ -29,16 +29,16 @@ async function ifWebGLSupported() {
   is(ShadersListView.selectedIndex, 0,
     "The shaders list has a correct index selected.");
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   is(vsEditor.getText().indexOf("gl_Position"), 170,
     "The vertex shader editor contains the correct text.");
   is(fsEditor.getText().indexOf("gl_FragColor"), 97,
     "The fragment shader editor contains the correct text.");
 
-  let navigating = once(target, "will-navigate");
-  let navigated = once(target, "will-navigate");
+  const navigating = once(target, "will-navigate");
+  const navigated = once(target, "will-navigate");
   navigate(target, "about:blank");
 
   await promise.all([navigating, once(panel.panelWin, EVENTS.UI_RESET) ]);

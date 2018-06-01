@@ -80,7 +80,7 @@ class MonitorPanel extends Component {
   }
 
   componentDidUpdate() {
-    let { selectedRequestVisible, openNetworkDetails } = this.props;
+    const { selectedRequestVisible, openNetworkDetails } = this.props;
     if (!selectedRequestVisible) {
       openNetworkDetails(false);
     }
@@ -90,7 +90,7 @@ class MonitorPanel extends Component {
     MediaQuerySingleRow.removeListener(this.onLayoutChange);
     MediaQueryVert.removeListener(this.onLayoutChange);
 
-    let { clientWidth, clientHeight } = findDOMNode(this.refs.endPanel) || {};
+    const { clientWidth, clientHeight } = findDOMNode(this.refs.endPanel) || {};
 
     if (this.state.isVerticalSpliter && clientWidth) {
       Services.prefs.setIntPref(
@@ -112,7 +112,7 @@ class MonitorPanel extends Component {
   onNetworkDetailsResized(width, height) {
     // Cleaning width and height parameters, because SplitBox passes ALWAYS two values,
     // while depending on orientation ONLY ONE dimension is managed by it at a time.
-    let { isVerticalSpliter }  = this.state;
+    const { isVerticalSpliter }  = this.state;
     return this.props.onNetworkDetailsResized(
       isVerticalSpliter ? width : null,
       isVerticalSpliter ? null : height
@@ -120,7 +120,7 @@ class MonitorPanel extends Component {
   }
 
   render() {
-    let {
+    const {
       actions,
       connector,
       isEmpty,
@@ -130,9 +130,9 @@ class MonitorPanel extends Component {
       sourceMapService,
     } = this.props;
 
-    let initialWidth = Services.prefs.getIntPref(
+    const initialWidth = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-network-details-width");
-    let initialHeight = Services.prefs.getIntPref(
+    const initialHeight = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-network-details-height");
 
     return (

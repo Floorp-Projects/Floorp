@@ -59,15 +59,15 @@ function catchFail(func) {
  *        the |options| object and the last value returned by |validator|.
  */
 function waitForValue(options) {
-  let start = Date.now();
-  let timeout = options.timeout || 5000;
+  const start = Date.now();
+  const timeout = options.timeout || 5000;
   let lastValue;
 
   function wait(validatorFn, successFn, failureFn) {
     if ((Date.now() - start) > timeout) {
       // Log the failure.
       ok(false, "Timed out while waiting for: " + options.name);
-      let expected = "value" in options ?
+      const expected = "value" in options ?
                      "'" + options.value + "'" :
                      "a trueish value";
       info("timeout info :: got '" + lastValue + "', expected " + expected);
@@ -76,7 +76,7 @@ function waitForValue(options) {
     }
 
     lastValue = validatorFn(options, lastValue);
-    let successful = "value" in options ?
+    const successful = "value" in options ?
                       lastValue == options.value :
                       lastValue;
     if (successful) {
@@ -94,7 +94,7 @@ function waitForValue(options) {
 
 function oneTimeObserve(name, callback) {
   return new Promise((resolve) => {
-    let func = function() {
+    const func = function() {
       Services.obs.removeObserver(func, name);
       if (callback) {
         callback();
@@ -105,13 +105,13 @@ function oneTimeObserve(name, callback) {
   });
 }
 
-let createHost =
+const createHost =
 async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
-  let host = new Hosts[type](gBrowser.selectedTab);
-  let iframe = await host.create();
+  const host = new Hosts[type](gBrowser.selectedTab);
+  const iframe = await host.create();
 
   await new Promise(resolve => {
-    let domHelper = new DOMHelpers(iframe.contentWindow);
+    const domHelper = new DOMHelpers(iframe.contentWindow);
     iframe.setAttribute("src", src);
     domHelper.onceDOMReady(resolve);
   });
@@ -129,7 +129,7 @@ async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
 async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i++) {
     info("Opening toolbox " + (i + 1));
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = TargetFactory.forTab(gBrowser.selectedTab);
     await gDevTools.showToolbox(target, toolId);
 
     // We use a timeout to check the toolbox's active time
@@ -151,7 +151,7 @@ function synthesizeProfileForTest(samples) {
     frames: []
   });
 
-  let uniqueStacks = new RecordingUtils.UniqueStacks();
+  const uniqueStacks = new RecordingUtils.UniqueStacks();
   return RecordingUtils.deflateThread({
     samples: samples,
     markers: []
@@ -183,7 +183,7 @@ function waitUntil(predicate, interval = 10) {
  * @return {Promise}
  */
 function showFilterPopupPresets(widget) {
-  let onRender = widget.once("render");
+  const onRender = widget.once("render");
   widget._togglePresets();
   return onRender;
 }
@@ -195,7 +195,7 @@ function showFilterPopupPresets(widget) {
  * @param  {string} value
  * @return {Promise}
  */
-let showFilterPopupPresetsAndCreatePreset =
+const showFilterPopupPresetsAndCreatePreset =
 async function(widget, name, value) {
   await showFilterPopupPresets(widget);
 
@@ -203,7 +203,7 @@ async function(widget, name, value) {
   widget.setCssValue(value);
   await onRender;
 
-  let footer = widget.el.querySelector(".presets-list .footer");
+  const footer = widget.el.querySelector(".presets-list .footer");
   footer.querySelector("input").value = name;
 
   onRender = widget.once("render");

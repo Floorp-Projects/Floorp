@@ -24,7 +24,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("#testid", inspector);
   await testEditSelector(view, "span");
@@ -36,7 +36,7 @@ async function testEditSelector(view, name) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -45,14 +45,14 @@ async function testEditSelector(view, name) {
   editor.input.value = name;
 
   info("Entering the commit key");
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 1);
-  let rule = ruleEditor.rule;
-  let textPropEditor = rule.textProps[0].editor;
+  const rule = ruleEditor.rule;
+  const textPropEditor = rule.textProps[0].editor;
 
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");

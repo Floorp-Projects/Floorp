@@ -19,12 +19,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await testDisabledButton(inspector, view);
 });
 
 async function testDisabledButton(inspector, view) {
-  let node = "#testid";
+  const node = "#testid";
 
   info("Selecting a real element");
   await selectNode(node, inspector);
@@ -39,9 +39,9 @@ async function testDisabledButton(inspector, view) {
   ok(!view.addRuleButton.disabled, "Add rule button should be enabled");
 
   info("Selecting a pseudo element");
-  let pseudo = await getNodeFront("#pseudo", inspector);
-  let children = await inspector.walker.children(pseudo);
-  let before = children.nodes[0];
+  const pseudo = await getNodeFront("#pseudo", inspector);
+  const children = await inspector.walker.children(pseudo);
+  const before = children.nodes[0];
   await selectNode(before, inspector);
   ok(view.addRuleButton.disabled, "Add rule button should be disabled");
 

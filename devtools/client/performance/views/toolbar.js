@@ -27,7 +27,7 @@ var ToolbarView = {
 
     // Set the visibility of experimental UI options on load
     // based off of `devtools.performance.ui.experimental` preference
-    let experimentalEnabled = PerformanceController.getOption("experimental");
+    const experimentalEnabled = PerformanceController.getOption("experimental");
     this._toggleExperimentalUI(experimentalEnabled);
 
     await this.optionsView.initialize();
@@ -59,8 +59,8 @@ var ToolbarView = {
    * Creates the timeline markers filter popup.
    */
   _buildMarkersFilterPopup: function() {
-    for (let [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
-      let menuitem = document.createElement("menuitem");
+    for (const [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
+      const menuitem = document.createElement("menuitem");
       menuitem.setAttribute("closemenu", "none");
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("align", "center");
@@ -80,10 +80,10 @@ var ToolbarView = {
    * Updates the menu items checked state in the timeline markers filter popup.
    */
   _updateHiddenMarkersPopup: function() {
-    let menuItems = $$("#performance-filter-menupopup menuitem[marker-type]");
-    let hiddenMarkers = PerformanceController.getPref("hidden-markers");
+    const menuItems = $$("#performance-filter-menupopup menuitem[marker-type]");
+    const hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
-    for (let menuitem of menuItems) {
+    for (const menuitem of menuItems) {
       if (~hiddenMarkers.indexOf(menuitem.getAttribute("marker-type"))) {
         menuitem.removeAttribute("checked");
       } else {
@@ -134,9 +134,9 @@ var ToolbarView = {
    * Fired when a menu item in the markers filter popup is checked or unchecked.
    */
   _onHiddenMarkersChanged: function() {
-    let checkedMenuItems =
+    const checkedMenuItems =
       $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
-    let hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
+    const hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
     PerformanceController.setPref("hidden-markers", hiddenMarkers);
   },
 
@@ -145,7 +145,7 @@ var ToolbarView = {
    * Propogated by the PerformanceController.
    */
   _onPrefChanged: function(prefName) {
-    let value = PerformanceController.getOption(prefName);
+    const value = PerformanceController.getOption(prefName);
 
     if (prefName === "experimental") {
       this._toggleExperimentalUI(value);

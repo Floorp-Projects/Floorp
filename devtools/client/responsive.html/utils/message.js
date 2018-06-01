@@ -8,7 +8,7 @@ const REQUEST_DONE_SUFFIX = ":done";
 
 function wait(win, type) {
   return new Promise(resolve => {
-    let onMessage = event => {
+    const onMessage = event => {
       if (event.data.type !== type) {
         return;
       }
@@ -45,7 +45,7 @@ function post(win, typeOrMessage) {
 }
 
 function request(win, type) {
-  let done = wait(win, type + REQUEST_DONE_SUFFIX);
+  const done = wait(win, type + REQUEST_DONE_SUFFIX);
   post(win, type);
   return done;
 }

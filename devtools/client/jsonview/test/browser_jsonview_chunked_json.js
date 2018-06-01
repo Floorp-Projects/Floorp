@@ -46,7 +46,7 @@ add_task(async function() {
   await checkText();
 
   // Close the connection.
-  let appReady = waitForContentMessage("Test:JsonView:AppReadyStateChange");
+  const appReady = waitForContentMessage("Test:JsonView:AppReadyStateChange");
   await server("close");
   await appReady;
 
@@ -66,7 +66,7 @@ add_task(async function() {
 let data = " ";
 async function write(text) {
   data += text;
-  let dataReceived = waitForContentMessage("Test:JsonView:NewDataReceived");
+  const dataReceived = waitForContentMessage("Test:JsonView:NewDataReceived");
   await server("write", text);
   await dataReceived;
 }
@@ -76,7 +76,7 @@ async function checkText(text = data) {
 
 function server(action, value) {
   return new Promise(resolve => {
-    let xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.open("GET", TEST_JSON_URL + "?" + action + "=" + value);
     xhr.addEventListener("load", resolve, {once: true});
     xhr.send();

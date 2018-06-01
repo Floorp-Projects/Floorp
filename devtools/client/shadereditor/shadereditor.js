@@ -240,8 +240,8 @@ var ShadersListView = extend(WidgetMethods, {
     // in a way that helps humans. It will be a good idea to implement a
     // standard of allowing debuggees to add some identifiable metadata to their
     // program sources or instances.
-    let label = L10N.getFormatStr("shadersList.programLabel", this.itemCount);
-    let contents = document.createElement("label");
+    const label = L10N.getFormatStr("shadersList.programLabel", this.itemCount);
+    const contents = document.createElement("label");
     contents.className = "plain program-item";
     contents.setAttribute("value", label);
     contents.setAttribute("crop", "start");
@@ -290,7 +290,7 @@ var ShadersListView = extend(WidgetMethods, {
       return;
     }
     // The container is not empty and an actual item was selected.
-    let attachment = sourceItem.attachment;
+    const attachment = sourceItem.attachment;
 
     function getShaders() {
       return promise.all([
@@ -321,8 +321,8 @@ var ShadersListView = extend(WidgetMethods, {
    * The check listener for the programs container.
    */
   _onProgramCheck: function({ detail: { checked }, target }) {
-    let sourceItem = this.getItemForElement(target);
-    let attachment = sourceItem.attachment;
+    const sourceItem = this.getItemForElement(target);
+    const attachment = sourceItem.attachment;
     attachment.isBlackBoxed = !checked;
     attachment.programActor[checked ? "unblackbox" : "blackbox"]();
   },
@@ -331,7 +331,7 @@ var ShadersListView = extend(WidgetMethods, {
    * The mouseover listener for the programs container.
    */
   _onProgramMouseOver: function(e) {
-    let sourceItem = this.getItemForElement(e.target, { noSiblings: true });
+    const sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.highlight(HIGHLIGHT_TINT);
 
@@ -346,7 +346,7 @@ var ShadersListView = extend(WidgetMethods, {
    * The mouseout listener for the programs container.
    */
   _onProgramMouseOut: function(e) {
-    let sourceItem = this.getItemForElement(e.target, { noSiblings: true });
+    const sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.unhighlight();
 
@@ -379,8 +379,8 @@ var ShadersEditorsView = {
   destroy: Task.async(function* () {
     this._destroyed = true;
     yield this._toggleListeners("off");
-    for (let p of this._editorPromises.values()) {
-      let editor = yield p;
+    for (const p of this._editorPromises.values()) {
+      const editor = yield p;
       editor.destroy();
     }
   }),
@@ -396,7 +396,7 @@ var ShadersEditorsView = {
    *        A promise resolving upon completion of text setting.
    */
   setText: function(sources) {
-    let view = this;
+    const view = this;
     function setTextAndClearHistory(editor, text) {
       editor.setText(text);
       editor.clearHistory();
@@ -426,13 +426,13 @@ var ShadersEditorsView = {
       return this._editorPromises.get(type);
     }
 
-    let deferred = defer();
+    const deferred = defer();
     this._editorPromises.set(type, deferred.promise);
 
     // Initialize the source editor and store the newly created instance
     // in the ether of a resolved promise's value.
-    let parent = $("#" + type + "-editor");
-    let editor = new Editor(DEFAULT_EDITOR_CONFIG);
+    const parent = $("#" + type + "-editor");
+    const editor = new Editor(DEFAULT_EDITOR_CONFIG);
     editor.config.mode = Editor.modes[type];
 
     if (this._destroyed) {
@@ -496,8 +496,8 @@ var ShadersEditorsView = {
    */
   _doCompile: function(type) {
     (async function() {
-      let editor = await this._getEditor(type);
-      let shaderActor = await ShadersListView.selectedAttachment[type];
+      const editor = await this._getEditor(type);
+      const shaderActor = await ShadersListView.selectedAttachment[type];
 
       try {
         await shaderActor.compile(editor.getText());
@@ -520,9 +520,9 @@ var ShadersEditorsView = {
    * Called uppon an unsuccessful shader compilation.
    */
   _onFailedCompilation: function(type, editor, errors) {
-    let lineCount = editor.lineCount();
-    let currentLine = editor.getCursor().line;
-    let listeners = { mouseover: this._onMarkerMouseOver };
+    const lineCount = editor.lineCount();
+    const currentLine = editor.getCursor().line;
+    const listeners = { mouseover: this._onMarkerMouseOver };
 
     function matchLinesAndMessages(string) {
       return {
@@ -553,7 +553,7 @@ var ShadersEditorsView = {
     }
     function groupSameLineMessages(accumulator, current) {
       // Group errors corresponding to the same line number to a single object.
-      let previous = accumulator[accumulator.length - 1];
+      const previous = accumulator[accumulator.length - 1];
       if (!previous || previous.line != current.line) {
         return [...accumulator, {
           line: current.line,
@@ -591,7 +591,7 @@ var ShadersEditorsView = {
       return;
     }
 
-    let tooltip = node._markerErrorsTooltip = new Tooltip(document);
+    const tooltip = node._markerErrorsTooltip = new Tooltip(document);
     tooltip.defaultOffsetX = GUTTER_ERROR_PANEL_OFFSET_X;
     tooltip.setTextContent({ messages: messages });
     tooltip.startTogglingOnHover(node, () => true, {

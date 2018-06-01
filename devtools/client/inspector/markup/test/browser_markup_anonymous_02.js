@@ -10,10 +10,10 @@ requestLongerTimeout(2);
 const TEST_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
-  let toolbarbutton = await getNodeFront("toolbarbutton", inspector);
-  let children = await inspector.walker.children(toolbarbutton);
+  const toolbarbutton = await getNodeFront("toolbarbutton", inspector);
+  const children = await inspector.walker.children(toolbarbutton);
 
   is(toolbarbutton.numChildren, 3, "Correct number of children");
   is(children.nodes.length, 3, "Children returned from walker");
@@ -21,7 +21,7 @@ add_task(async function() {
   is(toolbarbutton.isAnonymous, false, "Toolbarbutton is not anonymous");
   await isEditingMenuEnabled(toolbarbutton, inspector);
 
-  for (let node of children.nodes) {
+  for (const node of children.nodes) {
     ok(node.isAnonymous, "Child is anonymous");
     ok(node._form.isXBLAnonymous, "Child is XBL anonymous");
     ok(!node._form.isShadowAnonymous, "Child is not shadow anonymous");

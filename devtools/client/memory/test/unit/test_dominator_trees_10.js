@@ -6,12 +6,12 @@
 // Test that we maintain focus of the selected dominator tree node across
 // changing breakdowns for labeling them.
 
-let {
+const {
   dominatorTreeState,
   labelDisplays,
   viewState,
 } = require("devtools/client/memory/constants");
-let {
+const {
   takeSnapshotAndCensus,
   focusDominatorTreeNode,
 } = require("devtools/client/memory/actions/snapshot");
@@ -23,11 +23,11 @@ const {
 } = require("devtools/client/memory/actions/label-display");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.DOMINATOR_TREE));
   dispatch(takeSnapshotAndCensus(front, heapWorker));

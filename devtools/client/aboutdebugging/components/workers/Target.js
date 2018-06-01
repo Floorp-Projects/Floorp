@@ -38,12 +38,12 @@ class WorkerTarget extends Component {
   }
 
   debug() {
-    let { client, target } = this.props;
+    const { client, target } = this.props;
     gDevToolsBrowser.openWorkerToolbox(client, target.workerActor);
   }
 
   render() {
-    let { target, debugDisabled } = this.props;
+    const { target, debugDisabled } = this.props;
 
     return dom.li({ className: "target-container" },
       dom.img({

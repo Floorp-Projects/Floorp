@@ -43,47 +43,47 @@ describe("Filtering", () => {
       store.dispatch(actions.filterToggle(FILTERS.LOG));
       store.dispatch(actions.filterToggle(FILTERS.WARN));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages);
     });
 
     it("filters log messages", () => {
       store.dispatch(actions.filterToggle(FILTERS.LOG));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 5);
     });
 
     it("filters debug messages", () => {
       store.dispatch(actions.filterToggle(FILTERS.DEBUG));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters info messages", () => {
       store.dispatch(actions.filterToggle(FILTERS.INFO));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters warning messages", () => {
       store.dispatch(actions.filterToggle(FILTERS.WARN));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters error messages", () => {
       store.dispatch(actions.filterToggle(FILTERS.ERROR));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 3);
     });
 
     it("filters css messages", () => {
-      let message = stubPreparedMessages.get(
+      const message = stubPreparedMessages.get(
         "Unknown property ‘such-unknown-property’.  Declaration dropped."
       );
       store.dispatch(messagesAdd([message]));
@@ -97,7 +97,7 @@ describe("Filtering", () => {
     });
 
     it("filters xhr messages", () => {
-      let message = stubPreparedMessages.get("XHR GET request");
+      const message = stubPreparedMessages.get("XHR GET request");
       store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
@@ -109,7 +109,7 @@ describe("Filtering", () => {
     });
 
     it("filters network messages", () => {
-      let message = stubPreparedMessages.get("GET request");
+      const message = stubPreparedMessages.get("GET request");
       store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
@@ -141,13 +141,13 @@ describe("Filtering", () => {
     it("matches unicode values", () => {
       store.dispatch(actions.filterTextSet("鼬"));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 
     it("matches locations", () => {
       // Add a message with a different filename.
-      let locationMsg =
+      const locationMsg =
         Object.assign({}, stubPackets.get("console.log('foobar', 'test')"));
       locationMsg.message =
         Object.assign({}, locationMsg.message, { filename: "search-location-test.js" });
@@ -155,22 +155,22 @@ describe("Filtering", () => {
 
       store.dispatch(actions.filterTextSet("search-location-test.js"));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 
     it("matches stacktrace functionName", () => {
-      let traceMessage = stubPackets.get("console.trace()");
+      const traceMessage = stubPackets.get("console.trace()");
       store.dispatch(messagesAdd([traceMessage]));
 
       store.dispatch(actions.filterTextSet("testStacktraceFiltering"));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 
     it("matches stacktrace location", () => {
-      let traceMessage = stubPackets.get("console.trace()");
+      const traceMessage = stubPackets.get("console.trace()");
       traceMessage.message =
         Object.assign({}, traceMessage.message, {
           filename: "search-location-test.js",
@@ -182,7 +182,7 @@ describe("Filtering", () => {
 
       store.dispatch(actions.filterTextSet("search-location-test.js:85:13"));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 
@@ -221,7 +221,7 @@ describe("Filtering", () => {
       store.dispatch(actions.filterTextSet("danger"));
       store.dispatch(actions.filterTextSet(""));
 
-      let messages = getVisibleMessages(store.getState());
+      const messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numMessages);
     });
   });

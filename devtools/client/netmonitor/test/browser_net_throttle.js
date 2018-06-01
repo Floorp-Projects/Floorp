@@ -13,11 +13,11 @@ add_task(async function() {
 async function throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
-  let { store, windowRequire, connector } = monitor.panelWin;
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
-  let { setPreferences, triggerActivity } = connector;
-  let {
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { store, windowRequire, connector } = monitor.panelWin;
+  const { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
+  const { setPreferences, triggerActivity } = connector;
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -45,13 +45,13 @@ async function throttleTest(actuallyThrottle) {
     });
   });
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
   await wait;
 
   await waitForRequestData(store, ["eventTimings"]);
 
-  let requestItem = getSortedRequests(store.getState()).get(0);
+  const requestItem = getSortedRequests(store.getState()).get(0);
   const reportedOneSecond = requestItem.eventTimings.timings.receive > 1000;
   if (actuallyThrottle) {
     ok(reportedOneSecond, "download reported as taking more than one second");

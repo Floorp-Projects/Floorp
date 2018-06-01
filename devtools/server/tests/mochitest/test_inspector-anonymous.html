@@ -34,10 +34,10 @@ window.onload = function() {
   addTest(function setup() {
     info("Setting up inspector and walker actors.");
 
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
     attachURL(url, function(err, client, tab, doc) {
       gInspectee = doc;
-      let inspector = InspectorFront(client, tab);
+      const inspector = InspectorFront(client, tab);
       promiseDone(inspector.getWalker().then(walker => {
         ok(walker, "getWalker() should return an actor.");
         gWalker = walker;
@@ -47,11 +47,11 @@ window.onload = function() {
 
   addAsyncTest(async function testXBLAnonymousInHTMLDocument() {
     info("Testing XBL anonymous in an HTML document.");
-    let rawToolbarbutton = gInspectee.createElementNS(XUL_NS, "toolbarbutton");
+    const rawToolbarbutton = gInspectee.createElementNS(XUL_NS, "toolbarbutton");
     gInspectee.documentElement.appendChild(rawToolbarbutton);
 
-    let toolbarbutton = await gWalker.querySelector(gWalker.rootNode, "toolbarbutton");
-    let children = await gWalker.children(toolbarbutton);
+    const toolbarbutton = await gWalker.querySelector(gWalker.rootNode, "toolbarbutton");
+    const children = await gWalker.children(toolbarbutton);
 
     is(toolbarbutton.numChildren, 0, "XBL content is not visible in HTML doc");
     is(children.nodes.length, 0, "XBL content is not returned in HTML doc");
@@ -62,8 +62,8 @@ window.onload = function() {
   addAsyncTest(async function testNativeAnonymous() {
     info("Testing native anonymous content with walker.");
 
-    let select = await gWalker.querySelector(gWalker.rootNode, "select");
-    let children = await gWalker.children(select);
+    const select = await gWalker.querySelector(gWalker.rootNode, "select");
+    const children = await gWalker.children(select);
 
     is(select.numChildren, 2, "No native anon content for form control");
     is(children.nodes.length, 2, "No native anon content for form control");
@@ -74,8 +74,8 @@ window.onload = function() {
   addAsyncTest(async function testNativeAnonymousStartingNode() {
     info("Tests attaching an element that a walker can't see.");
 
-    let serverWalker = DebuggerServer.searchAllConnectionsForActor(gWalker.actorID);
-    let docwalker = new _documentWalker(
+    const serverWalker = DebuggerServer.searchAllConnectionsForActor(gWalker.actorID);
+    const docwalker = new _documentWalker(
       gInspectee.querySelector("select"),
       gInspectee.defaultView,
       {
@@ -85,10 +85,10 @@ window.onload = function() {
         }
       }
     );
-    let scrollbar = docwalker.lastChild();
+    const scrollbar = docwalker.lastChild();
     is(scrollbar.tagName, "scrollbar", "An anonymous child has been fetched");
 
-    let node = await serverWalker.attachElement(scrollbar);
+    const node = await serverWalker.attachElement(scrollbar);
 
     ok(node, "A response has arrived");
     ok(node.node, "A node is in the response");
@@ -102,22 +102,22 @@ window.onload = function() {
     info("Testing pseudo elements with walker.");
 
     // Markup looks like: <div><::before /><span /><::after /></div>
-    let pseudo = await gWalker.querySelector(gWalker.rootNode, "#pseudo");
-    let children = await gWalker.children(pseudo);
+    const pseudo = await gWalker.querySelector(gWalker.rootNode, "#pseudo");
+    const children = await gWalker.children(pseudo);
 
     is(pseudo.numChildren, 1, "::before/::after are not counted if there is a child");
     is(children.nodes.length, 3, "Correct number of children");
 
-    let before = children.nodes[0];
+    const before = children.nodes[0];
     ok(before.isAnonymous, "Child is anonymous");
     ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
     ok(before._form.isNativeAnonymous, "Child is native anonymous");
 
-    let span = children.nodes[1];
+    const span = children.nodes[1];
     ok(!span.isAnonymous, "Child is not anonymous");
 
-    let after = children.nodes[2];
+    const after = children.nodes[2];
     ok(after.isAnonymous, "Child is anonymous");
     ok(!after._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(!after._form.isShadowAnonymous, "Child is not shadow anonymous");
@@ -130,14 +130,14 @@ window.onload = function() {
     info("Testing elements with no childrent, except for pseudos.");
 
     info("Checking an element whose only child is a pseudo element");
-    let pseudo = await gWalker.querySelector(gWalker.rootNode, "#pseudo-empty");
-    let children = await gWalker.children(pseudo);
+    const pseudo = await gWalker.querySelector(gWalker.rootNode, "#pseudo-empty");
+    const children = await gWalker.children(pseudo);
 
     is(pseudo.numChildren, 1,
        "::before/::after are is counted if there are no other children");
     is(children.nodes.length, 1, "Correct number of children");
 
-    let before = children.nodes[0];
+    const before = children.nodes[0];
     ok(before.isAnonymous, "Child is anonymous");
     ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
@@ -155,38 +155,38 @@ window.onload = function() {
 
     info("Testing shadow DOM content.");
 
-    let shadow = await gWalker.querySelector(gWalker.rootNode, "#shadow");
-    let children = await gWalker.children(shadow);
+    const shadow = await gWalker.querySelector(gWalker.rootNode, "#shadow");
+    const children = await gWalker.children(shadow);
 
     is(shadow.numChildren, 3, "Children of the shadow root are counted");
     is(children.nodes.length, 3, "Children returned from walker");
 
-    let before = children.nodes[0];
+    const before = children.nodes[0];
     ok(before.isAnonymous, "Child is anonymous");
     ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
     ok(before._form.isNativeAnonymous, "Child is native anonymous");
 
     // <h3>Shadow <em>DOM</em></h3>
-    let shadowChild1 = children.nodes[1];
+    const shadowChild1 = children.nodes[1];
     ok(shadowChild1.isAnonymous, "Child is anonymous");
     ok(!shadowChild1._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(shadowChild1._form.isShadowAnonymous, "Child is shadow anonymous");
     ok(!shadowChild1._form.isNativeAnonymous, "Child is not native anonymous");
 
-    let shadowSubChildren = await gWalker.children(children.nodes[1]);
+    const shadowSubChildren = await gWalker.children(children.nodes[1]);
     is(shadowChild1.numChildren, 2, "Subchildren of the shadow root are counted");
     is(shadowSubChildren.nodes.length, 2, "Subchildren are returned from walker");
 
     // <em>DOM</em>
-    let shadowSubChild = children.nodes[1];
+    const shadowSubChild = children.nodes[1];
     ok(shadowSubChild.isAnonymous, "Child is anonymous");
     ok(!shadowSubChild._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(shadowSubChild._form.isShadowAnonymous, "Child is shadow anonymous");
     ok(!shadowSubChild._form.isNativeAnonymous, "Child is not native anonymous");
 
     // <select multiple></select>
-    let shadowChild2 = children.nodes[2];
+    const shadowChild2 = children.nodes[2];
     ok(shadowChild2.isAnonymous, "Child is anonymous");
     ok(!shadowChild2._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(shadowChild2._form.isShadowAnonymous, "Child is shadow anonymous");

@@ -40,12 +40,12 @@ const test = async function() {
   await getSources(gThreadClient);
 
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  let source = gThreadClient.source(packet.frame.where.source);
-  let location = {
+  const source = gThreadClient.source(packet.frame.where.source);
+  const location = {
     line: gDebuggee.line0 + 8
   };
 
-  let [res, bpClient] = await setBreakpoint(source, location);
+  const [res, bpClient] = await setBreakpoint(source, location);
   ok(!res.error);
 
   await resume(gThreadClient);

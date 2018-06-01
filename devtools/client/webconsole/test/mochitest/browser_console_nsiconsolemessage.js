@@ -32,7 +32,7 @@ add_task(async function() {
   // Log a "foobarz" message so that we can be certain the previous message is
   // not displayed.
   let text = "foobarz";
-  let onFooBarzMessage = waitForMessage(hud, text);
+  const onFooBarzMessage = waitForMessage(hud, text);
   ContentTask.spawn(gBrowser.selectedBrowser, text, function(msg) {
     content.console.log(msg);
   });
@@ -57,7 +57,7 @@ add_task(async function() {
   Services.console.logStringMessage("liveBrowserConsoleMessage2");
   await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage2"));
 
-  let msg = await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage"));
+  const msg = await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage"));
   ok(msg, "message element for liveBrowserConsoleMessage (nsIConsoleMessage)");
 
   // Disable the log filter.

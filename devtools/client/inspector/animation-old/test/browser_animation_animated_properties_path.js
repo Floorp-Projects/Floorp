@@ -345,7 +345,7 @@ add_task(async function() {
     const timeBlock = getAnimationTimeBlocks(panel)[0];
     const state = timeBlock.animation.state;
     const properties = TEST_CASES[i];
-    for (let property in properties) {
+    for (const property in properties) {
       const testcase = properties[property];
       info(`Test path of ${ property }`);
       const className = testcase.expectedClass;

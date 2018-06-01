@@ -15,12 +15,12 @@ const HIGHLIGHTER_TYPE = "GeometryEditorHighlighter";
 const PROPS = ["left", "right", "top", "bottom"];
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+  const helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
-  let { finalize } = helper;
+  const { finalize } = helper;
 
   await checkArrowsLabelsAndHandlers(
     "#node2", ["top", "left", "bottom", "right"],
@@ -38,19 +38,19 @@ async function checkArrowsLabelsAndHandlers(selector, expectedProperties,
 
   await show(selector);
 
-  for (let name of expectedProperties) {
-    let hidden = (await isElementHidden("arrow-" + name)) &&
+  for (const name of expectedProperties) {
+    const hidden = (await isElementHidden("arrow-" + name)) &&
                  (await isElementHidden("handler-" + name));
     ok(!hidden,
       "The " + name + " label/arrow & handler is visible for node " + selector);
   }
 
   // Testing that the other arrows are hidden
-  for (let name of PROPS) {
+  for (const name of PROPS) {
     if (expectedProperties.includes(name)) {
       continue;
     }
-    let hidden = (await isElementHidden("arrow-" + name)) &&
+    const hidden = (await isElementHidden("arrow-" + name)) &&
                  (await isElementHidden("handler-" + name));
     ok(hidden,
       "The " + name + " arrow & handler is hidden for node " + selector);

@@ -25,7 +25,7 @@ class BoxModelEditable extends PureComponent {
   }
 
   componentDidMount() {
-    let { property, onShowBoxModelEditor } = this.props;
+    const { property, onShowBoxModelEditor } = this.props;
 
     editableItem({
       element: this.boxModelEditable,
@@ -35,7 +35,7 @@ class BoxModelEditable extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       box,
       direction,
       focusable,
@@ -44,7 +44,7 @@ class BoxModelEditable extends PureComponent {
       textContent,
     } = this.props;
 
-    let rotate = direction &&
+    const rotate = direction &&
                  (direction == "left" || direction == "right") &&
                  box !== "position" &&
                  textContent.toString().length > LONG_TEXT_ROTATE_LIMIT;

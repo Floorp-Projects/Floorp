@@ -4,8 +4,8 @@ var gClient;
 
 function test() {
   waitForExplicitFinish();
-  let {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
-  let actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
+  const {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
+  const actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
@@ -14,16 +14,16 @@ function test() {
   gClient.connect()
     .then(() => gClient.listTabs())
     .then(response => {
-      let options = {
+      const options = {
         prefix: "helloActor",
         constructor: "HelloActor",
         type: { tab: true }
       };
 
-      let registry = ActorRegistryFront(gClient, response);
+      const registry = ActorRegistryFront(gClient, response);
       registry.registerActor(actorURL, options).then(actorFront => {
         gClient.listTabs().then(res => {
-          let tab = res.tabs[res.selected];
+          const tab = res.tabs[res.selected];
           ok(!!tab.helloActor, "Hello actor must exist");
 
           // Make sure actor's state is maintained across listTabs requests.
@@ -60,8 +60,8 @@ var checkActorState = async function(helloActor, callback) {
   ok(!response.error, "No error");
   is(response.count, 2, "The counter must be valid");
 
-  let {tabs, selected} = await gClient.listTabs();
-  let tab = tabs[selected];
+  const {tabs, selected} = await gClient.listTabs();
+  const tab = tabs[selected];
   is(tab.helloActor, helloActor, "Hello actor must be valid");
 
   response = await getCount(helloActor);

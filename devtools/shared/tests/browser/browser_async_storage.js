@@ -30,7 +30,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let object = {
+  const object = {
     x: 1,
     y: "foo",
     z: true

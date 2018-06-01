@@ -39,19 +39,19 @@ add_task(async function task() {
   info("Network message found.");
 
   // Test that the request appears in the network panel.
-  let target = TargetFactory.forTab(currentTab);
-  let toolbox = await gDevTools.showToolbox(target, "netmonitor");
+  const target = TargetFactory.forTab(currentTab);
+  const toolbox = await gDevTools.showToolbox(target, "netmonitor");
   info("Network panel is open.");
 
   await testNetmonitor(toolbox);
 });
 
 async function testNetmonitor(toolbox) {
-  let monitor = toolbox.getCurrentPanel();
+  const monitor = toolbox.getCurrentPanel();
 
-  let { store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSortedRequests } =
+  const { store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { getSortedRequests } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -61,7 +61,7 @@ async function testNetmonitor(toolbox) {
   is(store.getState().requests.requests.size, 1,
     "Network request appears in the network panel");
 
-  let item = getSortedRequests(store.getState()).get(0);
+  const item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The attached method is correct.");
   is(item.url, TEST_PATH, "The attached url is correct.");
 }

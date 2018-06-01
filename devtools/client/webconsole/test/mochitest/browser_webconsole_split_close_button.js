@@ -7,11 +7,11 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for close but
                  "split console";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
 
   info("Check the split console toolbar has a close button.");
 
-  let onSplitConsoleReady = toolbox.once("webconsole-ready");
+  const onSplitConsoleReady = toolbox.once("webconsole-ready");
   toolbox.toggleSplitConsole();
   await onSplitConsoleReady;
 
@@ -49,7 +49,7 @@ add_task(async function() {
 });
 
 function getCloseButton(toolbox) {
-  let hud = toolbox.getPanel("webconsole").hud;
-  let doc = hud.ui.outputNode.ownerDocument;
+  const hud = toolbox.getPanel("webconsole").hud;
+  const doc = hud.ui.outputNode.ownerDocument;
   return doc.getElementById("split-console-close-button");
 }

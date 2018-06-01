@@ -11,7 +11,7 @@ loadHelperScript("helper_inplace_editor.js");
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,inline editor tests");
-  let [host, , doc] = await createHost();
+  const [host, , doc] = await createHost();
 
   await testMultipleInitialization(doc);
   await testReturnCommit(doc);
@@ -26,8 +26,8 @@ add_task(async function() {
 
 function testMultipleInitialization(doc) {
   doc.body.innerHTML = "";
-  let options = {};
-  let span = options.element = createSpan(doc);
+  const options = {};
+  const span = options.element = createSpan(doc);
 
   info("Creating multiple inplace-editor fields");
   editableField(options);
@@ -46,7 +46,7 @@ function testMultipleInitialization(doc) {
 
 function testReturnCommit(doc) {
   info("Testing that pressing return commits the new value");
-  let def = defer();
+  const def = defer();
 
   createInplaceEditorAndClick({
     initial: "explicit initial",
@@ -64,7 +64,7 @@ function testReturnCommit(doc) {
 
 function testBlurCommit(doc) {
   info("Testing that bluring the field commits the new value");
-  let def = defer();
+  const def = defer();
 
   createInplaceEditorAndClick({
     start: function(editor) {
@@ -80,7 +80,7 @@ function testBlurCommit(doc) {
 
 function testAdvanceCharCommit(doc) {
   info("Testing that configured advanceChars commit the new value");
-  let def = defer();
+  const def = defer();
 
   createInplaceEditorAndClick({
     advanceChars: ":",
@@ -95,7 +95,7 @@ function testAdvanceCharCommit(doc) {
 
 function testAdvanceCharsFunction(doc) {
   info("Testing advanceChars as a function");
-  let def = defer();
+  const def = defer();
 
   let firstTime = true;
 
@@ -114,7 +114,7 @@ function testAdvanceCharsFunction(doc) {
       return text.length > 0;
     },
     start: function(editor) {
-      for (let ch of ":Test:") {
+      for (const ch of ":Test:") {
         EventUtils.sendChar(ch);
       }
     },
@@ -126,7 +126,7 @@ function testAdvanceCharsFunction(doc) {
 
 function testEscapeCancel(doc) {
   info("Testing that escape cancels the new value");
-  let def = defer();
+  const def = defer();
 
   createInplaceEditorAndClick({
     initial: "initial text",

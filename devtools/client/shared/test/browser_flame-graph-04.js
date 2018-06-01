@@ -18,8 +18,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new FlameGraph(doc.body, 1);
+  const [host,, doc] = await createHost();
+  const graph = new FlameGraph(doc.body, 1);
   await graph.ready();
 
   testGraph(graph);
@@ -34,11 +34,11 @@ function testGraph(graph) {
   is(graph._overflowCharWidth, getCharWidth(ELLIPSIS),
     "The ellipsis char width was calculated correctly.");
 
-  let text = "This text is maybe overflowing";
-  let text1000px = graph._getFittedText(text, 1000);
-  let text50px = graph._getFittedText(text, 50);
-  let text10px = graph._getFittedText(text, 10);
-  let text1px = graph._getFittedText(text, 1);
+  const text = "This text is maybe overflowing";
+  const text1000px = graph._getFittedText(text, 1000);
+  const text50px = graph._getFittedText(text, 50);
+  const text10px = graph._getFittedText(text, 10);
+  const text1px = graph._getFittedText(text, 1);
 
   is(graph._getTextWidthApprox(text), getAverageCharWidth() * text.length,
     "The approximate width was calculated correctly.");
@@ -67,11 +67,11 @@ function testGraph(graph) {
 function getAverageCharWidth() {
   let letterWidthsSum = 0;
 
-  let start = " ".charCodeAt(0);
-  let end = "z".charCodeAt(0) + 1;
+  const start = " ".charCodeAt(0);
+  const end = "z".charCodeAt(0) + 1;
 
   for (let i = start; i < end; i++) {
-    let char = String.fromCharCode(i);
+    const char = String.fromCharCode(i);
     letterWidthsSum += getCharWidth(char);
   }
 
@@ -79,11 +79,11 @@ function getAverageCharWidth() {
 }
 
 function getCharWidth(char) {
-  let canvas = document.createElementNS(HTML_NS, "canvas");
-  let ctx = canvas.getContext("2d");
+  const canvas = document.createElementNS(HTML_NS, "canvas");
+  const ctx = canvas.getContext("2d");
 
-  let fontSize = FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE;
-  let fontFamily = FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY;
+  const fontSize = FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE;
+  const fontFamily = FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY;
   ctx.font = fontSize + "px " + fontFamily;
 
   return ctx.measureText(char).width;

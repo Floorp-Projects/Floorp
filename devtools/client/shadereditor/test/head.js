@@ -69,7 +69,7 @@ function ifWebGLUnsupported() {
 }
 
 async function test() {
-  let generator = isWebGLSupported(document) ? ifWebGLSupported : ifWebGLUnsupported;
+  const generator = isWebGLSupported(document) ? ifWebGLSupported : ifWebGLUnsupported;
   try {
     await generator();
   } catch (e) {
@@ -84,7 +84,7 @@ function createCanvas() {
 function observe(aNotificationName, aOwnsWeak = false) {
   info("Waiting for observer notification: '" + aNotificationName + ".");
 
-  let deferred = defer();
+  const deferred = defer();
 
   Services.obs.addObserver(function onNotification(...aArgs) {
     Services.obs.removeObserver(onNotification, aNotificationName);
@@ -107,7 +107,7 @@ function isApproxColor(aFirst, aSecond, aMargin) {
 
 function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
   return (async function() {
-    let pixel = await aFront.getPixel({ selector: aSelector, position: aPosition });
+    const pixel = await aFront.getPixel({ selector: aSelector, position: aPosition });
     if (isApproxColor(pixel, aColor)) {
       ok(true, "Expected pixel is shown at: " + aPosition.toSource());
       return;
@@ -126,7 +126,7 @@ function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector =
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
   if (!content) {
-    let mm = gBrowser.selectedBrowser.messageManager;
+    const mm = gBrowser.selectedBrowser.messageManager;
     mm.sendAsyncMessage("devtools:test:history", { direction: aDirection });
   } else {
     executeSoon(() => content.history[aDirection]());
@@ -151,12 +151,12 @@ function initBackend(aUrl) {
   DebuggerServer.registerAllActors();
 
   return (async function() {
-    let tab = await addTab(aUrl);
-    let target = TargetFactory.forTab(tab);
+    const tab = await addTab(aUrl);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
-    let front = new WebGLFront(target.client, target.form);
+    const front = new WebGLFront(target.client, target.form);
     return { target, front };
   })();
 }
@@ -165,14 +165,14 @@ function initShaderEditor(aUrl) {
   info("Initializing a shader editor pane.");
 
   return (async function() {
-    let tab = await addTab(aUrl);
-    let target = TargetFactory.forTab(tab);
+    const tab = await addTab(aUrl);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
-    let toolbox = await gDevTools.showToolbox(target, "shadereditor");
-    let panel = toolbox.getCurrentPanel();
+    const toolbox = await gDevTools.showToolbox(target, "shadereditor");
+    const panel = toolbox.getCurrentPanel();
     return { target, panel };
   })();
 }
@@ -195,8 +195,8 @@ function teardown(aPanel) {
 // programs that should be listened to and waited on, and an optional
 // `onAdd` function that calls with the entire actors array on program link
 function getPrograms(front, count, onAdd) {
-  let actors = [];
-  let deferred = defer();
+  const actors = [];
+  const deferred = defer();
   front.on("program-linked", function onLink(actor) {
     if (actors.length !== count) {
       actors.push(actor);

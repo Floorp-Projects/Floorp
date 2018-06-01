@@ -16,11 +16,11 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
   await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
@@ -30,15 +30,15 @@ add_task(async function() {
   ok(true, "Service worker registration resolved");
 
   // Retrieve the DEBUG button for the worker
-  let names = [...document.querySelectorAll("#service-workers .target-name")];
-  let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const names = [...document.querySelectorAll("#service-workers .target-name")];
+  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
   ok(name, "Found the service worker in the list");
-  let targetElement = name.parentNode.parentNode;
-  let debugBtn = targetElement.querySelector(".debug-button");
+  const targetElement = name.parentNode.parentNode;
+  const debugBtn = targetElement.querySelector(".debug-button");
   ok(debugBtn, "Found its debug button");
 
   // Click on it and wait for the toolbox to be ready
-  let onToolboxReady = new Promise(done => {
+  const onToolboxReady = new Promise(done => {
     gDevTools.once("toolbox-ready", function(toolbox) {
       done(toolbox);
     });

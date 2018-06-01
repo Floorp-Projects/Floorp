@@ -47,11 +47,11 @@ const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
         CanvasFront.LOOP_GENERATORS.has(functionCall.name)) {
       return promise.resolve(this._animationFrameEndScreenshot);
     }
-    let cachedScreenshot = this._cachedScreenshots.get(functionCall);
+    const cachedScreenshot = this._cachedScreenshots.get(functionCall);
     if (cachedScreenshot) {
       return cachedScreenshot;
     }
-    let screenshot = this._generateScreenshotFor(functionCall);
+    const screenshot = this._generateScreenshotFor(functionCall);
     this._cachedScreenshots.set(functionCall, screenshot);
     return screenshot;
   }, {

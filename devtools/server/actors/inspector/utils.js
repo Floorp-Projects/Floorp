@@ -49,7 +49,7 @@ function isNodeDead(node) {
 }
 
 function isInXULDocument(el) {
-  let doc = nodeDocument(el);
+  const doc = nodeDocument(el);
   return doc &&
          doc.documentElement &&
          doc.documentElement.namespaceURI === XUL_NS;
@@ -119,7 +119,7 @@ function nodeHasSize(node) {
     return false;
   }
 
-  let quads = node.getBoxQuads();
+  const quads = node.getBoxQuads();
   return quads.length && quads.some(quad => quad.bounds.width && quad.bounds.height);
 }
 
@@ -135,7 +135,7 @@ function nodeHasSize(node) {
  * fails to load or the load takes too long, the promise is rejected.
  */
 function ensureImageLoaded(image, timeout) {
-  let { HTMLImageElement } = image.ownerGlobal;
+  const { HTMLImageElement } = image.ownerGlobal;
   if (!(image instanceof HTMLImageElement)) {
     return Promise.reject("image must be an HTMLImageELement");
   }
@@ -146,10 +146,10 @@ function ensureImageLoaded(image, timeout) {
   }
 
   // This image is still loading.
-  let onLoad = AsyncUtils.listenOnce(image, "load");
+  const onLoad = AsyncUtils.listenOnce(image, "load");
 
   // Reject if loading fails.
-  let onError = AsyncUtils.listenOnce(image, "error").then(() => {
+  const onError = AsyncUtils.listenOnce(image, "error").then(() => {
     return Promise.reject("Image '" + image.src + "' failed to load.");
   });
 
@@ -190,10 +190,10 @@ function ensureImageLoaded(image, timeout) {
  * If something goes wrong, the promise is rejected.
  */
 const imageToImageData = async function(node, maxDim) {
-  let { HTMLCanvasElement, HTMLImageElement } = node.ownerGlobal;
+  const { HTMLCanvasElement, HTMLImageElement } = node.ownerGlobal;
 
-  let isImg = node instanceof HTMLImageElement;
-  let isCanvas = node instanceof HTMLCanvasElement;
+  const isImg = node instanceof HTMLImageElement;
+  const isCanvas = node instanceof HTMLCanvasElement;
 
   if (!isImg && !isCanvas) {
     throw new Error("node is not a <canvas> or <img> element.");
@@ -206,9 +206,9 @@ const imageToImageData = async function(node, maxDim) {
 
   // Get the image resize ratio if a maxDim was provided
   let resizeRatio = 1;
-  let imgWidth = node.naturalWidth || node.width;
-  let imgHeight = node.naturalHeight || node.height;
-  let imgMax = Math.max(imgWidth, imgHeight);
+  const imgWidth = node.naturalWidth || node.width;
+  const imgHeight = node.naturalHeight || node.height;
+  const imgMax = Math.max(imgWidth, imgHeight);
   if (maxDim && imgMax > maxDim) {
     resizeRatio = maxDim / imgMax;
   }
@@ -222,10 +222,10 @@ const imageToImageData = async function(node, maxDim) {
     imageData = node.src;
   } else {
     // Create a canvas to copy the rawNode into and get the imageData from
-    let canvas = node.ownerDocument.createElementNS(XHTML_NS, "canvas");
+    const canvas = node.ownerDocument.createElementNS(XHTML_NS, "canvas");
     canvas.width = imgWidth * resizeRatio;
     canvas.height = imgHeight * resizeRatio;
-    let ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
     // Copy the rawNode image or canvas in the new canvas and extract data
     ctx.drawImage(node, 0, 0, canvas.width, canvas.height);

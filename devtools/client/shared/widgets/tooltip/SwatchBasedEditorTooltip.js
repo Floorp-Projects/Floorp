@@ -103,12 +103,12 @@ class SwatchBasedEditorTooltip {
    *         immediately if there is no currently active swatch.
    */
   show() {
-    let tooltipAnchor = this.useInline ?
+    const tooltipAnchor = this.useInline ?
       this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`) :
       this.activeSwatch;
 
     if (tooltipAnchor) {
-      let onShown = this.tooltip.once("shown");
+      const onShown = this.tooltip.once("shown");
 
       this.tooltip.show(tooltipAnchor, "topcenter bottomleft");
       this.tooltip.once("hidden", () => this.onTooltipHidden());
@@ -188,7 +188,7 @@ class SwatchBasedEditorTooltip {
   }
 
   _onSwatchClick(event) {
-    let swatch = this.swatches.get(event.target);
+    const swatch = this.swatches.get(event.target);
 
     if (event.shiftKey) {
       event.stopPropagation();
@@ -207,7 +207,7 @@ class SwatchBasedEditorTooltip {
    */
   preview(value) {
     if (this.activeSwatch) {
-      let swatch = this.swatches.get(this.activeSwatch);
+      const swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onPreview(value);
     }
   }
@@ -218,7 +218,7 @@ class SwatchBasedEditorTooltip {
   revert() {
     if (this.activeSwatch) {
       this._reverted = true;
-      let swatch = this.swatches.get(this.activeSwatch);
+      const swatch = this.swatches.get(this.activeSwatch);
       this.tooltip.once("hidden", () => {
         swatch.callbacks.onRevert();
       });
@@ -230,7 +230,7 @@ class SwatchBasedEditorTooltip {
    */
   commit() {
     if (this.activeSwatch) {
-      let swatch = this.swatches.get(this.activeSwatch);
+      const swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onCommit();
     }
   }

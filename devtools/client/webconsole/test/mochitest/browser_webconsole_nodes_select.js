@@ -34,24 +34,24 @@ add_task(async function() {
     content.wrappedJSObject.logNode("h1");
   });
 
-  let msg = await waitFor(() => findMessage(hud, "<h1>"));
-  let node = msg.querySelector(".objectBox-node");
+  const msg = await waitFor(() => findMessage(hud, "<h1>"));
+  const node = msg.querySelector(".objectBox-node");
   ok(node !== null, "Node was logged as expected");
 
-  let openInInspectorIcon = node.querySelector(".open-inspector");
+  const openInInspectorIcon = node.querySelector(".open-inspector");
   ok(openInInspectorIcon !== null, "The is an open in inspector icon");
 
   info("Clicking on the inspector icon and waiting for the " +
        "inspector to be selected");
-  let onInspectorSelected = toolbox.once("inspector-selected");
-  let onInspectorUpdated = inspector.once("inspector-updated");
-  let onNewNode = toolbox.selection.once("new-node-front");
+  const onInspectorSelected = toolbox.once("inspector-selected");
+  const onInspectorUpdated = inspector.once("inspector-updated");
+  const onNewNode = toolbox.selection.once("new-node-front");
 
   openInInspectorIcon.click();
 
   await onInspectorSelected;
   await onInspectorUpdated;
-  let nodeFront = await onNewNode;
+  const nodeFront = await onNewNode;
 
   ok(true, "Inspector selected and new node got selected");
   is(nodeFront.displayName, "h1", "The expected node was selected");

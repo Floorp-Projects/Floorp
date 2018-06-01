@@ -13,21 +13,21 @@ const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require
 add_task(async function() {
   startTelemetry();
 
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
 
-  let started = waitForRecordingStartedEvents(panel, {
+  const started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
   await console.profile("rust");
   await started;
 
-  let stopped = waitForRecordingStoppedEvents(panel, {
+  const stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });

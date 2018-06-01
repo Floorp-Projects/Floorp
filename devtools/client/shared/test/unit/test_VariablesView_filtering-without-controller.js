@@ -16,14 +16,14 @@ const { globals } = require("devtools/shared/builtin-modules");
 const DOMParser = new globals.DOMParser();
 
 function run_test() {
-  let doc = DOMParser.parseFromString("<div>", "text/html");
-  let container = doc.body.firstChild;
+  const doc = DOMParser.parseFromString("<div>", "text/html");
+  const container = doc.body.firstChild;
   ok(container, "Got a container.");
 
-  let vv = new VariablesView(container, { searchEnabled: true });
-  let scope = vv.addScope("Test scope");
-  let item1 = scope.addItem("a", { value: "1" });
-  let item2 = scope.addItem("b", { value: "2" });
+  const vv = new VariablesView(container, { searchEnabled: true });
+  const scope = vv.addScope("Test scope");
+  const item1 = scope.addItem("a", { value: "1" });
+  const item2 = scope.addItem("b", { value: "2" });
 
   info("Performing a search without a controller.");
   vv._doSearch("a");

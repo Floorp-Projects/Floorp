@@ -32,8 +32,8 @@ async function runTests([win, sp]) {
      "The hint container should have the completions.");
 
   let i = 0;
-  for (let completion of completions) {
-    let active = hints.querySelector(".CodeMirror-hint-active");
+  for (const completion of completions) {
+    const active = hints.querySelector(".CodeMirror-hint-active");
     is(active.textContent, completion,
        "Check that completion " + i++ + " is what is expected.");
     await keyOnce("suggestion-entered", "VK_DOWN");

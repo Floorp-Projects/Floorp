@@ -58,13 +58,13 @@ const TEST_URL = URL_ROOT +
   "doc_inspector_search-suggestions.html";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
-  for (let [key, query] of KEY_STATES) {
+  for (const [key, query] of KEY_STATES) {
     info("Pressing key " + key + " to get searchbox value as " + query);
 
-    let done = inspector.searchSuggestions.once("processing-done");
+    const done = inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await done;
 
