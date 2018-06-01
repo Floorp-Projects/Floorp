@@ -15,6 +15,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
+#include "gfxPrefs.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"
@@ -1348,6 +1349,19 @@ DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 #endif
 }
 
+static bool
+SupportsVariationSettings(cairo_surface_t* surface)
+{
+  switch (cairo_surface_get_type(surface))
+  {
+    case CAIRO_SURFACE_TYPE_PDF:
+    case CAIRO_SURFACE_TYPE_PS:
+      return false;
+    default:
+      return true;
+  }
+}
+
 void
 DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const GlyphBuffer &aBuffer,
@@ -1403,7 +1417,17 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
     glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
   }
 
-  cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
+  if (!SupportsVariationSettings(mSurface) &&
+      aFont->HasVariationSettings() &&
+      gfxPrefs::PrintFontVariationsAsPaths()) {
+    cairo_set_fill_rule(mContext, CAIRO_FILL_RULE_WINDING);
+    cairo_new_path(mContext);
+    cairo_glyph_path(mContext, &glyphs[0], aBuffer.mNumGlyphs);
+    cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
+    cairo_fill(mContext);
+  } else {
+    cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
+  }
 
   if (cairo_surface_status(cairo_get_group_target(mContext))) {
     gfxDebug() << "Ending FillGlyphs with a bad surface " << cairo_surface_status(cairo_get_group_target(mContext));
