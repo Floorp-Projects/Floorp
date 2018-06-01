@@ -128,11 +128,15 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_DOM_QUOTA = 1 << 8;
 
+  /**
+   * Predictor network data
+   */
+  const uint32_t CLEAR_PREDICTOR_NETWORK_DATA = 1 << 9;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;
   const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 9;
-  const uint32_t CLEAR_PREDICTOR_CACHE = 1 << 10;
   const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 11;
   const uint32_t CLEAR_HSTS = 1 << 12;
   const uint32_t CLEAR_HPKP = 1 << 13;

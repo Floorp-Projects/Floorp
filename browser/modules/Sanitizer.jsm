@@ -361,14 +361,6 @@ var Sanitizer = {
           seenException = ex;
         }
 
-        try {
-          let predictor = Cc["@mozilla.org/network/predictor;1"]
-                            .getService(Ci.nsINetworkPredictor);
-          predictor.reset();
-        } catch (ex) {
-          seenException = ex;
-        }
-
         if (seenException) {
           throw seenException;
         }
