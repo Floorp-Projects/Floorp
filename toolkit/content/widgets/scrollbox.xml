@@ -606,16 +606,6 @@
     </handlers>
   </binding>
 
-  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <resources>
-      <stylesheet src="chrome://global/skin/scrollbox.css"/>
-    </resources>
-
-    <content repeat="hover">
-      <xul:image class="autorepeatbutton-icon"/>
-    </content>
-  </binding>
-
   <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
     <content>
       <xul:toolbarbutton class="scrollbutton-up"
