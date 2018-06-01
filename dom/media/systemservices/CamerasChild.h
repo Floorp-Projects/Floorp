@@ -142,7 +142,7 @@ int GetChildAndCall(MEM_FUN&& f, ARGS&&... args)
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
   CamerasChild* child = GetCamerasChild();
   if (child) {
-    return (child->*f)(mozilla::Forward<ARGS>(args)...);
+    return (child->*f)(std::forward<ARGS>(args)...);
   } else {
     return -1;
   }

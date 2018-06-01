@@ -303,7 +303,7 @@ public:
   HRESULT Invoke(SyncMethod aSyncMethod, AsyncMethod aAsyncMethod, Args... aArgs)
   {
     if (mSyncObj) {
-      return (mSyncObj->*aSyncMethod)(Forward<Args>(aArgs)...);
+      return (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
     }
 
     MOZ_ASSERT(mAsyncCall);
@@ -317,7 +317,7 @@ public:
       return E_POINTER;
     }
 
-    return (asyncInterface->*aAsyncMethod)(Forward<Args>(aArgs)...);
+    return (asyncInterface->*aAsyncMethod)(std::forward<Args>(aArgs)...);
   }
 
   AsyncInvoker(const AsyncInvoker& aOther) = delete;

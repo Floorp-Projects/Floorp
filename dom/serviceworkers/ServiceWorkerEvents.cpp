@@ -87,7 +87,7 @@ AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
 {
   nsTArray<nsString> paramsList(sizeof...(Params) + 1);
   StringArrayAppender::Append(paramsList, sizeof...(Params) + 1,
-                              aFirstParam, Forward<Params>(aParams)...);
+                              aFirstParam, std::forward<Params>(aParams)...);
   AsyncLog(aInterceptedChannel, aRespondWithScriptSpec, aRespondWithLineNumber,
            aRespondWithColumnNumber, aMessageName, paramsList);
 }
@@ -559,7 +559,7 @@ public:
     mMessageName = aMessageName;
     mParams.Clear();
     StringArrayAppender::Append(mParams, sizeof...(Params),
-                                Forward<Params>(aParams)...);
+                                std::forward<Params>(aParams)...);
   }
 
   template<typename... Params>
@@ -579,7 +579,7 @@ public:
     mMessageName = aMessageName;
     mParams.Clear();
     StringArrayAppender::Append(mParams, sizeof...(Params),
-                                Forward<Params>(aParams)...);
+                                std::forward<Params>(aParams)...);
   }
 
   void Reset()

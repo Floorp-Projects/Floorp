@@ -78,7 +78,7 @@ inline bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, Ts&&... aArgs)
 {
   binding_detail::ThrowErrorMessage(aCx, static_cast<unsigned>(aErrorNumber),
-                                    mozilla::Forward<Ts>(aArgs)...);
+                                    std::forward<Ts>(aArgs)...);
   return false;
 }
 
@@ -97,7 +97,7 @@ struct StringArrayAppender
       return;
     }
     aArgs.AppendElement(aFirst);
-    Append(aArgs, aCount - 1, Forward<Ts>(aOtherArgs)...);
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
   }
 };
 
@@ -293,14 +293,14 @@ public:
   void ThrowTypeError(Ts&&... messageArgs)
   {
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
-                                       Forward<Ts>(messageArgs)...);
+                                       std::forward<Ts>(messageArgs)...);
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowRangeError(Ts&&... messageArgs)
   {
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
-                                       Forward<Ts>(messageArgs)...);
+                                       std::forward<Ts>(messageArgs)...);
   }
 
   bool IsErrorWithMessage() const
@@ -434,7 +434,7 @@ private:
     nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
     dom::StringArrayAppender::Append(messageArgsArray, argCount,
-                                     Forward<Ts>(messageArgs)...);
+                                     std::forward<Ts>(messageArgs)...);
 #ifdef DEBUG
     mUnionState = HasMessage;
 #endif // DEBUG

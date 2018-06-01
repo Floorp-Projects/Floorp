@@ -2308,7 +2308,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     template<typename... Args>
     void push(Args&&... args) {
-        stk_.infallibleEmplaceBack(Stk(Forward<Args>(args)...));
+        stk_.infallibleEmplaceBack(Stk(std::forward<Args>(args)...));
     }
 
     void pushConstRef(intptr_t v) {

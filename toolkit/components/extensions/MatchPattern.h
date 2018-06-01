@@ -346,7 +346,7 @@ protected:
 private:
   explicit MatchPatternSet(nsISupports* aParent, ArrayType&& aPatterns)
     : mParent(aParent)
-    , mPatterns(Forward<ArrayType>(aPatterns))
+    , mPatterns(std::forward<ArrayType>(aPatterns))
   {}
 
   nsCOMPtr<nsISupports> mParent;

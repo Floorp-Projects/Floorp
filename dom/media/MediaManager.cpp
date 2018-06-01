@@ -2243,7 +2243,7 @@ MediaManager::PostTask(const char* aName, FunctionType&& aFunction)
   MozPromiseHolder<MozPromiseType> holder;
   RefPtr<MozPromiseType> promise = holder.Ensure(aName);
   MediaManager::PostTask(NS_NewRunnableFunction(aName,
-        [h = std::move(holder), func = Forward<FunctionType>(aFunction)]() mutable
+        [h = std::move(holder), func = std::forward<FunctionType>(aFunction)]() mutable
         {
           func(h);
         }));

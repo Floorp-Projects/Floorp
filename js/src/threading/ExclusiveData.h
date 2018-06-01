@@ -99,7 +99,7 @@ class ExclusiveData
     template <typename U>
     explicit ExclusiveData(const MutexId& id, U&& u)
       : lock_(id),
-        value_(mozilla::Forward<U>(u))
+        value_(std::forward<U>(u))
     {}
 
     /**
@@ -108,7 +108,7 @@ class ExclusiveData
     template <typename... Args>
     explicit ExclusiveData(const MutexId& id, Args&&... args)
       : lock_(id),
-        value_(mozilla::Forward<Args>(args)...)
+        value_(std::forward<Args>(args)...)
     {}
 
     ExclusiveData(ExclusiveData&& rhs)
@@ -196,12 +196,12 @@ class ExclusiveWaitableData : public ExclusiveData<T>
   public:
     template <typename U>
     explicit ExclusiveWaitableData(const MutexId& id, U&& u)
-      : Base(id, mozilla::Forward<U>(u))
+      : Base(id, std::forward<U>(u))
     {}
 
     template <typename... Args>
     explicit ExclusiveWaitableData(const MutexId& id, Args&&... args)
-      : Base(id, mozilla::Forward<Args>(args)...)
+      : Base(id, std::forward<Args>(args)...)
     {}
 
     class MOZ_STACK_CLASS Guard : public ExclusiveData<T>::Guard

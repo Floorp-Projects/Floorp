@@ -74,9 +74,9 @@ class MutableWrappedPtrOperations<TraceableFifo<T, Capacity, AllocPolicy>, Wrapp
   public:
     T& front() { return fifo().front(); }
 
-    template<typename U> bool pushBack(U&& u) { return fifo().pushBack(mozilla::Forward<U>(u)); }
+    template<typename U> bool pushBack(U&& u) { return fifo().pushBack(std::forward<U>(u)); }
     template<typename... Args> bool emplaceBack(Args&&... args) {
-        return fifo().emplaceBack(mozilla::Forward<Args...>(args...));
+        return fifo().emplaceBack(std::forward<Args...>(args...));
     }
 
     void popFront() { fifo().popFront(); }

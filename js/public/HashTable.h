@@ -155,20 +155,20 @@ class HashMap
     template<typename KeyInput, typename ValueInput>
     MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return impl.add(p,
-                        mozilla::Forward<KeyInput>(k),
-                        mozilla::Forward<ValueInput>(v));
+                        std::forward<KeyInput>(k),
+                        std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput>
     MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k) {
-        return impl.add(p, mozilla::Forward<KeyInput>(k), Value());
+        return impl.add(p, std::forward<KeyInput>(k), Value());
     }
 
     template<typename KeyInput, typename ValueInput>
     MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return impl.relookupOrAdd(p, k,
-                                  mozilla::Forward<KeyInput>(k),
-                                  mozilla::Forward<ValueInput>(v));
+                                  std::forward<KeyInput>(k),
+                                  std::forward<ValueInput>(v));
     }
 
     // |all()| returns a Range containing |count()| elements. E.g.:
@@ -241,22 +241,22 @@ class HashMap
     MOZ_MUST_USE bool put(KeyInput&& k, ValueInput&& v) {
         AddPtr p = lookupForAdd(k);
         if (p) {
-            p->value() = mozilla::Forward<ValueInput>(v);
+            p->value() = std::forward<ValueInput>(v);
             return true;
         }
-        return add(p, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        return add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     // Like put, but assert that the given key is not already present.
     template<typename KeyInput, typename ValueInput>
     MOZ_MUST_USE bool putNew(KeyInput&& k, ValueInput&& v) {
-        return impl.putNew(k, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        return impl.putNew(k, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     // Only call this to populate an empty map after reserving space with init().
     template<typename KeyInput, typename ValueInput>
     void putNewInfallible(KeyInput&& k, ValueInput&& v) {
-        impl.putNewInfallible(k, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        impl.putNewInfallible(k, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     // Add (k,defaultValue) if |k| is not found. Return a false-y Ptr on oom.
@@ -410,12 +410,12 @@ class HashSet
 
     template <typename U>
     MOZ_MUST_USE bool add(AddPtr& p, U&& u) {
-        return impl.add(p, mozilla::Forward<U>(u));
+        return impl.add(p, std::forward<U>(u));
     }
 
     template <typename U>
     MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, const Lookup& l, U&& u) {
-        return impl.relookupOrAdd(p, l, mozilla::Forward<U>(u));
+        return impl.relookupOrAdd(p, l, std::forward<U>(u));
     }
 
     // |all()| returns a Range containing |count()| elements:
@@ -487,24 +487,24 @@ class HashSet
     template <typename U>
     MOZ_MUST_USE bool put(U&& u) {
         AddPtr p = lookupForAdd(u);
-        return p ? true : add(p, mozilla::Forward<U>(u));
+        return p ? true : add(p, std::forward<U>(u));
     }
 
     // Like put, but assert that the given key is not already present.
     template <typename U>
     MOZ_MUST_USE bool putNew(U&& u) {
-        return impl.putNew(u, mozilla::Forward<U>(u));
+        return impl.putNew(u, std::forward<U>(u));
     }
 
     template <typename U>
     MOZ_MUST_USE bool putNew(const Lookup& l, U&& u) {
-        return impl.putNew(l, mozilla::Forward<U>(u));
+        return impl.putNew(l, std::forward<U>(u));
     }
 
     // Only call this to populate an empty set after reserving space with init().
     template <typename U>
     void putNewInfallible(const Lookup& l, U&& u) {
-        impl.putNewInfallible(l, mozilla::Forward<U>(u));
+        impl.putNewInfallible(l, std::forward<U>(u));
     }
 
     void remove(const Lookup& l) {
@@ -712,13 +712,13 @@ struct FallibleHashMethods
 template <typename HashPolicy, typename Lookup>
 static bool
 HasHash(Lookup&& l) {
-    return FallibleHashMethods<typename HashPolicy::Base>::hasHash(mozilla::Forward<Lookup>(l));
+    return FallibleHashMethods<typename HashPolicy::Base>::hasHash(std::forward<Lookup>(l));
 }
 
 template <typename HashPolicy, typename Lookup>
 static bool
 EnsureHash(Lookup&& l) {
-    return FallibleHashMethods<typename HashPolicy::Base>::ensureHash(mozilla::Forward<Lookup>(l));
+    return FallibleHashMethods<typename HashPolicy::Base>::ensureHash(std::forward<Lookup>(l));
 }
 
 /*****************************************************************************/
@@ -741,8 +741,8 @@ class HashMapEntry
   public:
     template<typename KeyInput, typename ValueInput>
     HashMapEntry(KeyInput&& k, ValueInput&& v)
-      : key_(mozilla::Forward<KeyInput>(k)),
-        value_(mozilla::Forward<ValueInput>(v))
+      : key_(std::forward<KeyInput>(k)),
+        value_(std::forward<ValueInput>(v))
     {}
 
     HashMapEntry(HashMapEntry&& rhs)
@@ -920,7 +920,7 @@ class HashTableEntry
     {
         MOZ_ASSERT(!isLive());
         keyHash = hn;
-        new (valuePtr()) T(mozilla::Forward<Args>(args)...);
+        new (valuePtr()) T(std::forward<Args>(args)...);
         MOZ_ASSERT(isLive());
     }
 };
@@ -1729,7 +1729,7 @@ class HashTable : private AllocPolicy
             keyHash |= sCollisionBit;
         }
 
-        entry->setLive(keyHash, mozilla::Forward<Args>(args)...);
+        entry->setLive(keyHash, std::forward<Args>(args)...);
         entryCount++;
 #ifdef JS_DEBUG
         mutationCount++;
@@ -1880,7 +1880,7 @@ class HashTable : private AllocPolicy
                 p.entry_ = &findFreeEntry(p.keyHash);
         }
 
-        p.entry_->setLive(p.keyHash, mozilla::Forward<Args>(args)...);
+        p.entry_->setLive(p.keyHash, std::forward<Args>(args)...);
         entryCount++;
 #ifdef JS_DEBUG
         mutationCount++;
@@ -1897,7 +1897,7 @@ class HashTable : private AllocPolicy
     {
         MOZ_ASSERT(!lookup(l).found());
         mozilla::ReentrancyGuard g(*this);
-        putNewInfallibleInternal(l, mozilla::Forward<Args>(args)...);
+        putNewInfallibleInternal(l, std::forward<Args>(args)...);
     }
 
     // Note: |l| may be alias arguments in |args|, so this function must take
@@ -1914,7 +1914,7 @@ class HashTable : private AllocPolicy
         if (checkOverloaded() == RehashFailed)
             return false;
 
-        putNewInfallible(l, mozilla::Forward<Args>(args)...);
+        putNewInfallible(l, std::forward<Args>(args)...);
         return true;
     }
 
@@ -1936,7 +1936,7 @@ class HashTable : private AllocPolicy
             MOZ_ASSERT(prepareHash(l) == p.keyHash); // l has not been destroyed
             p.entry_ = &lookup(l, p.keyHash, sCollisionBit);
         }
-        return p.found() || add(p, mozilla::Forward<Args>(args)...);
+        return p.found() || add(p, std::forward<Args>(args)...);
     }
 
     void remove(Ptr p)

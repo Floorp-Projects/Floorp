@@ -66,11 +66,11 @@ class WeakCache : protected detail::WeakCacheBase,
 
     template <typename... Args>
     explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone), cache(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(zone), cache(std::forward<Args>(args)...)
     {}
     template <typename... Args>
     explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt), cache(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(rt), cache(std::forward<Args>(args)...)
     {}
 
     const T& get() const { return cache; }

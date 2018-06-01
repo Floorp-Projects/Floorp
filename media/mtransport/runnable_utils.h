@@ -96,7 +96,7 @@ public:
   // |explicit| to pacify static analysis when there are no |args|.
   template<typename... Arguments>
   explicit runnable_args_func(FunType f, Arguments&&... args)
-    : mFunc(f), mArgs(Forward<Arguments>(args)...)
+    : mFunc(f), mArgs(std::forward<Arguments>(args)...)
   {}
 
   NS_IMETHOD Run() override {
@@ -113,7 +113,7 @@ template<typename FunType, typename... Args>
 runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>*
 WrapRunnableNM(FunType f, Args&&... args)
 {
-  return new runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>(f, Forward<Args>(args)...);
+  return new runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>(f, std::forward<Args>(args)...);
 }
 
 template<typename Ret, typename FunType, typename... Args>
@@ -122,7 +122,7 @@ class runnable_args_func_ret : public detail::runnable_args_base<detail::Returns
 public:
   template<typename... Arguments>
   runnable_args_func_ret(Ret* ret, FunType f, Arguments&&... args)
-    : mReturn(ret), mFunc(f), mArgs(Forward<Arguments>(args)...)
+    : mReturn(ret), mFunc(f), mArgs(std::forward<Arguments>(args)...)
   {}
 
   NS_IMETHOD Run() override {
@@ -140,7 +140,7 @@ template<typename R, typename FunType, typename... Args>
 runnable_args_func_ret<R, FunType, typename mozilla::Decay<Args>::Type...>*
 WrapRunnableNMRet(R* ret, FunType f, Args&&... args)
 {
-  return new runnable_args_func_ret<R, FunType, typename mozilla::Decay<Args>::Type...>(ret, f, Forward<Args>(args)...);
+  return new runnable_args_func_ret<R, FunType, typename mozilla::Decay<Args>::Type...>(ret, f, std::forward<Args>(args)...);
 }
 
 template<typename Class, typename M, typename... Args>
@@ -149,7 +149,7 @@ class runnable_args_memfn : public detail::runnable_args_base<detail::NoResult>
 public:
   template<typename... Arguments>
   runnable_args_memfn(Class obj, M method, Arguments&&... args)
-    : mObj(obj), mMethod(method), mArgs(Forward<Arguments>(args)...)
+    : mObj(obj), mMethod(method), mArgs(std::forward<Arguments>(args)...)
   {}
 
   NS_IMETHOD Run() override {
@@ -167,7 +167,7 @@ template<typename Class, typename M, typename... Args>
 runnable_args_memfn<Class, M, typename mozilla::Decay<Args>::Type...>*
 WrapRunnable(Class obj, M method, Args&&... args)
 {
-  return new runnable_args_memfn<Class, M, typename mozilla::Decay<Args>::Type...>(obj, method, Forward<Args>(args)...);
+  return new runnable_args_memfn<Class, M, typename mozilla::Decay<Args>::Type...>(obj, method, std::forward<Args>(args)...);
 }
 
 template<typename Ret, typename Class, typename M, typename... Args>
@@ -176,7 +176,7 @@ class runnable_args_memfn_ret : public detail::runnable_args_base<detail::Return
 public:
   template<typename... Arguments>
   runnable_args_memfn_ret(Ret* ret, Class obj, M method, Arguments... args)
-    : mReturn(ret), mObj(obj), mMethod(method), mArgs(Forward<Arguments>(args)...)
+    : mReturn(ret), mObj(obj), mMethod(method), mArgs(std::forward<Arguments>(args)...)
   {}
 
   NS_IMETHOD Run() override {
@@ -195,7 +195,7 @@ template<typename R, typename Class, typename M, typename... Args>
 runnable_args_memfn_ret<R, Class, M, typename mozilla::Decay<Args>::Type...>*
 WrapRunnableRet(R* ret, Class obj, M method, Args&&... args)
 {
-  return new runnable_args_memfn_ret<R, Class, M, typename mozilla::Decay<Args>::Type...>(ret, obj, method, Forward<Args>(args)...);
+  return new runnable_args_memfn_ret<R, Class, M, typename mozilla::Decay<Args>::Type...>(ret, obj, method, std::forward<Args>(args)...);
 }
 
 static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, detail::runnable_args_base<detail::NoResult> *runnable, uint32_t flags) {

@@ -536,7 +536,7 @@ class ICStub
     static T* New(JSContext* cx, ICStubSpace* space, JitCode* code, Args&&... args) {
         if (!code)
             return nullptr;
-        T* result = space->allocate<T>(code, mozilla::Forward<Args>(args)...);
+        T* result = space->allocate<T>(code, std::forward<Args>(args)...);
         if (!result)
             ReportOutOfMemory(cx);
         return result;
@@ -1130,7 +1130,7 @@ class ICStubCompiler
   protected:
     template <typename T, typename... Args>
     T* newStub(Args&&... args) {
-        return ICStub::New<T>(cx, mozilla::Forward<Args>(args)...);
+        return ICStub::New<T>(cx, std::forward<Args>(args)...);
     }
 
   public:

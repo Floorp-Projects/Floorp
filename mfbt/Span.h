@@ -60,7 +60,7 @@ template<class T, class U>
 inline constexpr T
 narrow_cast(U&& u)
 {
-  return static_cast<T>(mozilla::Forward<U>(u));
+  return static_cast<T>(std::forward<U>(u));
 }
 
 // end gsl_util

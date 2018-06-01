@@ -275,7 +275,7 @@ protected:
     // So we 1) pass the parameters by reference, but then 2) immediately copy
     // them into a Tuple to be safe against modification, and finally 3) move
     // the elements of the Tuple into the final function call.
-    auto copiedArgs = MakeTuple(Forward<Ts>(aArgs)...);
+    auto copiedArgs = MakeTuple(std::forward<Ts>(aArgs)...);
 
     // Copy mMaster which will reset to null.
     auto master = mMaster;

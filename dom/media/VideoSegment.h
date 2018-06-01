@@ -42,7 +42,7 @@ public:
   bool GetForceBlack() const { return mForceBlack; }
   void SetPrincipalHandle(PrincipalHandle aPrincipalHandle)
   {
-    mPrincipalHandle = Forward<PrincipalHandle>(aPrincipalHandle);
+    mPrincipalHandle = std::forward<PrincipalHandle>(aPrincipalHandle);
   }
   const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
   const gfx::IntSize& GetIntrinsicSize() const { return mIntrinsicSize; }

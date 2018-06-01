@@ -434,10 +434,10 @@ template <>
 struct FallibleHashMethods<ObjectGroupRealm::NewEntry>
 {
     template <typename Lookup> static bool hasHash(Lookup&& l) {
-        return ObjectGroupRealm::NewEntry::hasHash(mozilla::Forward<Lookup>(l));
+        return ObjectGroupRealm::NewEntry::hasHash(std::forward<Lookup>(l));
     }
     template <typename Lookup> static bool ensureHash(Lookup&& l) {
-        return ObjectGroupRealm::NewEntry::ensureHash(mozilla::Forward<Lookup>(l));
+        return ObjectGroupRealm::NewEntry::ensureHash(std::forward<Lookup>(l));
     }
 };
 } // namespace js

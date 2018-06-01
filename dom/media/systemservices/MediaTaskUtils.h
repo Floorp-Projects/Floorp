@@ -45,7 +45,7 @@ already_AddRefed<LambdaTask<OnRunType>>
 NewTaskFrom(OnRunType&& aOnRun)
 {
   typedef LambdaTask<OnRunType> LambdaType;
-  RefPtr<LambdaType> lambda = new LambdaType(Forward<OnRunType>(aOnRun));
+  RefPtr<LambdaType> lambda = new LambdaType(std::forward<OnRunType>(aOnRun));
   return lambda.forget();
 }
 

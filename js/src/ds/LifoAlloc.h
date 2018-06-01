@@ -606,7 +606,7 @@ class LifoAlloc
         if (!ptr)
             return nullptr;
 
-        return new (ptr) T(mozilla::Forward<Args>(args)...);
+        return new (ptr) T(std::forward<Args>(args)...);
     }
 
     MOZ_ALWAYS_INLINE

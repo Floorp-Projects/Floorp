@@ -74,7 +74,7 @@ public:
   {
     static_assert(IsBaseOf<DrawingCommand, T>::value,
                   "T must derive from DrawingCommand");
-    return mCommands->mStorage.Alloc<T>(Forward<Args>(aArgs)...);
+    return mCommands->mStorage.Alloc<T>(std::forward<Args>(aArgs)...);
   }
 
   bool HasCommands() const { return !!mCommands; }

@@ -61,7 +61,7 @@ public:
   {
     nsTArray<nsString> params;
     mozilla::dom::StringArrayAppender::Append(params, sizeof...(Params),
-                                              mozilla::Forward<Params>(aParams)...);
+                                              std::forward<Params>(aParams)...);
     AddConsoleReport(aErrorFlags, aCategory, aPropertiesFile, aSourceFileURI,
                      aLineNumber, aColumnNumber, aMessageName, params);
   }

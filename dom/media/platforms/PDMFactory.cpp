@@ -113,7 +113,7 @@ public:
   void
   AddToCheckList(Func&& aChecker)
   {
-    mCheckerList.AppendElement(mozilla::Forward<Func>(aChecker));
+    mCheckerList.AppendElement(std::forward<Func>(aChecker));
   }
 
   void
