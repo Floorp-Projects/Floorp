@@ -28,12 +28,21 @@ using mozilla::ipc::PrincipalInfo;
 namespace {
 
 const uint32_t kBadThreadLocalIndex = -1;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 const uint32_t kThreadLocalMagic1 = 0x8d57eea6;
 const uint32_t kThreadLocalMagic2 = 0x59f375c9;
+#endif
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 uint32_t sClientManagerThreadLocalMagic1 = kThreadLocalMagic1;
+#endif
+
 uint32_t sClientManagerThreadLocalIndex = kBadThreadLocalIndex;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 uint32_t sClientManagerThreadLocalMagic2 = kThreadLocalMagic2;
 uint32_t sClientManagerThreadLocalIndexDuplicate = kBadThreadLocalIndex;
+#endif
 
 } // anonymous namespace
 
@@ -84,11 +93,11 @@ ClientManager::~ClientManager()
 
   Shutdown();
 
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
-  MOZ_RELEASE_ASSERT(this == PR_GetThreadPrivate(sClientManagerThreadLocalIndex));
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
+  MOZ_DIAGNOSTIC_ASSERT(this == PR_GetThreadPrivate(sClientManagerThreadLocalIndex));
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   PRStatus status =
@@ -194,10 +203,10 @@ ClientManager::StartOp(const ClientOpConstructorArgs& aArgs,
 already_AddRefed<ClientManager>
 ClientManager::GetOrCreateForCurrentThread()
 {
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
   RefPtr<ClientManager> cm =
     static_cast<ClientManager*>(PR_GetThreadPrivate(sClientManagerThreadLocalIndex));
 
@@ -211,7 +220,7 @@ ClientManager::GetOrCreateForCurrentThread()
     MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
   }
 
-  MOZ_RELEASE_ASSERT(cm);
+  MOZ_DIAGNOSTIC_ASSERT(cm);
   return cm.forget();
 }
 
@@ -229,10 +238,10 @@ ClientManager::Startup()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex == kBadThreadLocalIndex);
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic1 == kThreadLocalMagic1);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalMagic2 == kThreadLocalMagic2);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex == kBadThreadLocalIndex);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex == sClientManagerThreadLocalIndexDuplicate);
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   PRStatus status =
@@ -240,8 +249,10 @@ ClientManager::Startup()
     PR_NewThreadPrivateIndex(&sClientManagerThreadLocalIndex, nullptr);
   MOZ_DIAGNOSTIC_ASSERT(status == PR_SUCCESS);
 
-  MOZ_RELEASE_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerThreadLocalIndex != kBadThreadLocalIndex);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   sClientManagerThreadLocalIndexDuplicate = sClientManagerThreadLocalIndex;
+#endif
 
   ClientPrefsInit();
 }
