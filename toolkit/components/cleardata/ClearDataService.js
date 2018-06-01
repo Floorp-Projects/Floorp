@@ -463,6 +463,17 @@ const SessionHistoryCleaner = {
   },
 };
 
+const AuthTokensCleaner = {
+  deleteAll() {
+    return new Promise(aResolve => {
+      let sdr = Cc["@mozilla.org/security/sdr;1"]
+                  .getService(Ci.nsISecretDecoderRing);
+      sdr.logoutAndTeardown();
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -503,6 +514,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_SESSION_HISTORY,
    cleaner: SessionHistoryCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_AUTH_TOKENS,
+   cleaner: AuthTokensCleaner, },
 ];
 
 this.ClearDataService = function() {};
