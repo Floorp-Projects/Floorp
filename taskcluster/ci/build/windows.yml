@@ -592,7 +592,7 @@ win64-asan/debug:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_debug.py
-    run-on-projects: []
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -622,7 +622,7 @@ win64-asan/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_opt.py
-    run-on-projects: []
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
