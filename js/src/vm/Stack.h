@@ -1950,8 +1950,14 @@ class JitFrameIter
     bool done() const;
     void operator++();
 
+    JS::Realm* realm() const;
+
     // Operations which have an effect only on JIT frames.
     void skipNonScriptedJSFrames();
+
+    // Returns true iff this is a JIT frame with a self-hosted script. Note: be
+    // careful, JitFrameIter does not consider functions inlined by Ion.
+    bool isSelfHostedIgnoringInlining() const;
 };
 
 // A JitFrameIter that skips all the non-JSJit frames, skipping interleaved
