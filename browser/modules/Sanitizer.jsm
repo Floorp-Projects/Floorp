@@ -324,17 +324,11 @@ var Sanitizer = {
     cookies: {
       async clear(range) {
         let refObj = {};
-
-        // Clear cookies and plugin data.
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
         await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES |
-                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
+                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+                               Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
-
-        // Clear deviceIds. Done asynchronously (returns before complete).
-        let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
-                         .getService(Ci.nsIMediaManagerService);
-        mediaMgr.sanitizeDeviceIds(range && range[0]);
       },
     },
 

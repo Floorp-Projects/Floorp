@@ -113,6 +113,11 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_PASSWORDS = 1 << 5;
 
+  /**
+   * Media devices.
+   */
+  const uint32_t CLEAR_MEDIA_DEVICES = 1 << 6;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;
