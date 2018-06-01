@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  Downloads: "resource://gre/modules/Downloads.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
@@ -521,22 +520,8 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
-        try {
-          let filterByTime = null;
-          if (range) {
-            // Convert microseconds back to milliseconds for date comparisons.
-            let rangeBeginMs = range[0] / 1000;
-            let rangeEndMs = range[1] / 1000;
-            filterByTime = download => download.startTime >= rangeBeginMs &&
-                                       download.startTime <= rangeEndMs;
-          }
-
-          // Clear all completed/cancelled downloads
-          let list = await Downloads.getList(Downloads.ALL);
-          list.removeFinished(filterByTime);
-        } finally {
-          TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
-        }
+        await clearData(range, Ci.nsIClearDataService.CLEAR_DOWNLOADS);
+        TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
       }
     },
 
