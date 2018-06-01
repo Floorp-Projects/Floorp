@@ -248,6 +248,10 @@ ScaledFontFontconfig::GetVariationSettings(std::vector<FontVariation>* aVariatio
     getCoords = (GetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Get_Var_Design_Coordinates");
   }
 
+  if (!getVar || !getCoords) {
+    return;
+  }
+
   cairo_scaled_font_t* sf = GetCairoScaledFont();
   FT_Face face = cairo_ft_scaled_font_lock_face(sf);
   if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
