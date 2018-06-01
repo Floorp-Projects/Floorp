@@ -16,6 +16,8 @@ from mozbuild.frontend.data import TestManifest
 class TestManifestBackend(PartialBackend):
     """Partial backend that generates test metadata files."""
 
+    __test__ = False
+
     def _init(self):
         self.tests_by_path = defaultdict(list)
         self.installs_by_path = defaultdict(list)
