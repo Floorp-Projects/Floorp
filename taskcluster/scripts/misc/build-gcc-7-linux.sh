@@ -14,8 +14,8 @@ data_dir=$HOME_DIR/src/build/unix/build-gcc
 
 gcc_version=7.3.0
 gcc_ext=xz
-binutils_version=2.25.1
-binutils_ext=bz2
+binutils_version=2.28.1
+binutils_ext=xz
 
 # GPG key used to sign GCC
 $GPG --import $data_dir/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
@@ -29,7 +29,7 @@ $GPG --import $data_dir/07F3DBBECC1A39605078094D980C197698C3739D.key
 $GPG --import $data_dir/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
 
 cat > $HOME_DIR/checksums <<EOF
-b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22  binutils-2.25.1.tar.bz2
+16328a906e55a3c633854beec8e9e255a639b366436470b4f6245eb0d2fde942  binutils-2.28.1.tar.xz
 832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c  gcc-7.3.0.tar.xz
 498449a994efeba527885c10405993427995d3f86b8768d8cdf8d9dd7c6b73e8  gmp-6.1.0.tar.bz2
 412538bb65c799ac98e17e8cfcdacbb257a57362acfaaff254b0fcae970126d2  isl-0.16.1.tar.bz2
