@@ -27,11 +27,9 @@ add_task(async function test_same_date_same_hash() {
   // check to ensure not renamed to jsonlz4
   Assert.equal(mostRecentBackupFile, backupFile);
   // inspect contents and check if valid json
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                        createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
   let result = await OS.File.read(mostRecentBackupFile);
-  let jsonString = converter.convertFromByteArray(result, result.length);
+  let decoder = new TextDecoder();
+  let jsonString = decoder.decode(result);
   info("Check is valid JSON");
   JSON.parse(jsonString);
 
@@ -57,11 +55,9 @@ add_task(async function test_same_date_diff_hash() {
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
 
   // Decode lz4 compressed file to json and check if json is valid
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                        createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
   let result = await OS.File.read(mostRecentBackupFile, { compression: "lz4" });
-  let jsonString = converter.convertFromByteArray(result, result.length);
+  let decoder = new TextDecoder();
+  let jsonString = decoder.decode(result);
   info("Check is valid JSON");
   JSON.parse(jsonString);
 
