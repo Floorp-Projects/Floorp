@@ -618,8 +618,10 @@ nsProfiler::StartGathering(double aSinceTime)
   RefPtr<nsProfiler> self = this;
   for (auto profile : profiles) {
     profile->Then(GetMainThreadSerialEventTarget(), __func__,
-      [self](const nsCString& aResult) {
-        self->GatheredOOPProfile(aResult);
+      [self](const mozilla::ipc::Shmem& aResult) {
+        const nsDependentCString profileString(aResult.get<char>(),
+                                               aResult.Size<char>());
+        self->GatheredOOPProfile(profileString);
       },
       [self](ipc::ResponseRejectReason aReason) {
         self->GatheredOOPProfile(NS_LITERAL_CSTRING(""));
