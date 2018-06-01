@@ -139,13 +139,13 @@ nsDOMDataChannel::Reliable() const
 mozilla::dom::Nullable<uint16_t>
 nsDOMDataChannel::GetMaxPacketLifeTime() const
 {
-  return mozilla::dom::Nullable<uint16_t>();
+  return mDataChannel->GetMaxPacketLifeTime();
 }
 
 mozilla::dom::Nullable<uint16_t>
 nsDOMDataChannel::GetMaxRetransmits() const
 {
-  return mozilla::dom::Nullable<uint16_t>();
+  return mDataChannel->GetMaxRetransmits();
 }
 
 bool
