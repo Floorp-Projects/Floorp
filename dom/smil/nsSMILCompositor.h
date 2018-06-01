@@ -35,8 +35,8 @@ public:
      mForceCompositing(false)
   { }
   nsSMILCompositor(nsSMILCompositor&& toMove)
-    : mKey(mozilla::Move(toMove.mKey)),
-      mAnimationFunctions(mozilla::Move(toMove.mAnimationFunctions)),
+    : mKey(std::move(toMove.mKey)),
+      mAnimationFunctions(std::move(toMove.mAnimationFunctions)),
       mForceCompositing(false)
   { }
   ~nsSMILCompositor() { }
@@ -69,7 +69,7 @@ public:
 
   // Transfers |aOther|'s mCachedBaseValue to |this|
   void StealCachedBaseValue(nsSMILCompositor* aOther) {
-    mCachedBaseValue = mozilla::Move(aOther->mCachedBaseValue);
+    mCachedBaseValue = std::move(aOther->mCachedBaseValue);
   }
 
  private:

@@ -404,9 +404,9 @@ LDefinition::toString() const
         buf = JS_smprintf("v%u<%s>", virtualRegister(), DefTypeName(type()));
         if (buf) {
             if (policy() == LDefinition::FIXED)
-                buf = JS_sprintf_append(Move(buf), ":%s", output()->toString().get());
+                buf = JS_sprintf_append(std::move(buf), ":%s", output()->toString().get());
             else if (policy() == LDefinition::MUST_REUSE_INPUT)
-                buf = JS_sprintf_append(Move(buf), ":tied(%u)", getReusedInput());
+                buf = JS_sprintf_append(std::move(buf), ":tied(%u)", getReusedInput());
         }
     }
 

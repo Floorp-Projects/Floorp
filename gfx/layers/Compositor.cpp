@@ -295,7 +295,7 @@ GenerateTexturedTriangles(const gfx::Polygon& aPolygon,
       // update the texture coordinates to account for the split.
       gfx::TexturedTriangle t(triangle);
       UpdateTextureCoordinates(t, rect, intersection, texRect);
-      texturedTriangles.AppendElement(Move(t));
+      texturedTriangles.AppendElement(std::move(t));
     }
   }
 

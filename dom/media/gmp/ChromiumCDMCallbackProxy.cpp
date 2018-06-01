@@ -90,7 +90,7 @@ ChromiumCDMCallbackProxy::SessionMessage(const nsACString& aSessionId,
                        &ChromiumCDMProxy::OnSessionMessage,
                        NS_ConvertUTF8toUTF16(aSessionId),
                        ToDOMMessageType(aMessageType),
-                       Move(aMessage));
+                       std::move(aMessage));
 }
 
 static dom::MediaKeyStatus

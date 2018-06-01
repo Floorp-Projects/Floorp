@@ -51,10 +51,10 @@ public:
   {
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
-      return currentThread->TailDispatcher().AddTask(this, Move(aRunnable));
+      return currentThread->TailDispatcher().AddTask(this, std::move(aRunnable));
     }
 
-    RefPtr<nsIRunnable> runner(new Runner(this, Move(aRunnable), false /* already drained by TaskGroupRunnable  */));
+    RefPtr<nsIRunnable> runner(new Runner(this, std::move(aRunnable), false /* already drained by TaskGroupRunnable  */));
     return mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
@@ -107,7 +107,7 @@ private:
   CreateDirectTaskDrainer(already_AddRefed<nsIRunnable> aRunnable) override
   {
     RefPtr<Runner> runner =
-      new Runner(this, Move(aRunnable), /* aDrainDirectTasks */ true);
+      new Runner(this, std::move(aRunnable), /* aDrainDirectTasks */ true);
     return runner.forget();
   }
 
@@ -221,7 +221,7 @@ AbstractThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 AbstractThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
-  return Dispatch(Move(aEvent), NormalDispatch);
+  return Dispatch(std::move(aEvent), NormalDispatch);
 }
 
 NS_IMETHODIMP
@@ -300,13 +300,13 @@ AbstractThread::InitMainThread()
 void
 AbstractThread::DispatchStateChange(already_AddRefed<nsIRunnable> aRunnable)
 {
-  GetCurrent()->TailDispatcher().AddStateChangeTask(this, Move(aRunnable));
+  GetCurrent()->TailDispatcher().AddStateChangeTask(this, std::move(aRunnable));
 }
 
 /* static */ void
 AbstractThread::DispatchDirectTask(already_AddRefed<nsIRunnable> aRunnable)
 {
-  GetCurrent()->TailDispatcher().AddDirectTask(Move(aRunnable));
+  GetCurrent()->TailDispatcher().AddDirectTask(std::move(aRunnable));
 }
 
 /* static */

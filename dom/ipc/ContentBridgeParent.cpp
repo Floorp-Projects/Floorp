@@ -78,7 +78,7 @@ ContentBridgeParent::RecvSyncMessage(const nsString& aMsg,
                                      const IPC::Principal& aPrincipal,
                                      nsTArray<StructuredCloneData>* aRetvals)
 {
-  return nsIContentParent::RecvSyncMessage(aMsg, aData, Move(aCpows),
+  return nsIContentParent::RecvSyncMessage(aMsg, aData, std::move(aCpows),
                                            aPrincipal, aRetvals);
 }
 
@@ -88,7 +88,7 @@ ContentBridgeParent::RecvAsyncMessage(const nsString& aMsg,
                                       const IPC::Principal& aPrincipal,
                                       const ClonedMessageData& aData)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows),
+  return nsIContentParent::RecvAsyncMessage(aMsg, std::move(aCpows),
                                             aPrincipal, aData);
 }
 

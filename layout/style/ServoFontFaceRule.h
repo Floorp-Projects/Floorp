@@ -33,7 +33,7 @@ protected:
   friend class ServoFontFaceRule;
 
   explicit ServoFontFaceRuleDecl(already_AddRefed<RawServoFontFaceRule> aDecl)
-    : mRawRule(Move(aDecl)) {}
+    : mRawRule(std::move(aDecl)) {}
 
   ~ServoFontFaceRuleDecl() = default;
 
@@ -52,7 +52,7 @@ public:
   ServoFontFaceRule(already_AddRefed<RawServoFontFaceRule> aRawRule,
                     uint32_t aLine, uint32_t aColumn)
     : css::Rule(aLine, aColumn)
-    , mDecl(Move(aRawRule))
+    , mDecl(std::move(aRawRule))
   {}
 
   ServoFontFaceRule(const ServoFontFaceRule&) = delete;

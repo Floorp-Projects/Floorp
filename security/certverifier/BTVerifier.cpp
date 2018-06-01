@@ -82,7 +82,7 @@ DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
       return rv;
     }
 
-    if (!inclusionPath.append(Move(hashBuffer))) {
+    if (!inclusionPath.append(std::move(hashBuffer))) {
       return pkix::Result::FATAL_ERROR_NO_MEMORY;
     }
   }
@@ -96,9 +96,9 @@ DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
     return rv;
   }
 
-  result.inclusionPath = Move(inclusionPath);
+  result.inclusionPath = std::move(inclusionPath);
 
-  output = Move(result);
+  output = std::move(result);
   return Success;
 }
 } } //namespace mozilla::ct

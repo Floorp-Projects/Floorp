@@ -621,9 +621,9 @@ private:
         // the old, because the mHashtable pointer in mSharedBlobData (if
         // present) will not be updated.
         FontTableHashEntry(FontTableHashEntry&& toMove)
-            : KeyClass(mozilla::Move(toMove))
-            , mSharedBlobData(mozilla::Move(toMove.mSharedBlobData))
-            , mBlob(mozilla::Move(toMove.mBlob))
+            : KeyClass(std::move(toMove))
+            , mSharedBlobData(std::move(toMove.mSharedBlobData))
+            , mBlob(std::move(toMove.mBlob))
         {
             toMove.mSharedBlobData = nullptr;
             toMove.mBlob = nullptr;

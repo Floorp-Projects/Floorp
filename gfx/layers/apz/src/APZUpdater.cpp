@@ -215,7 +215,7 @@ APZUpdater::UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
   ));
   RunOnUpdaterThread(aOriginatingLayersId, NS_NewRunnableFunction(
     "APZUpdater::UpdateHitTestingTree",
-    [=,aScrollData=Move(aScrollData)]() {
+    [=,aScrollData=std::move(aScrollData)]() {
       self->mApz->UpdateFocusState(aRootLayerTreeId,
           aOriginatingLayersId, aScrollData.GetFocusTarget());
 
@@ -242,7 +242,7 @@ APZUpdater::UpdateScrollOffsets(LayersId aRootLayerTreeId,
   RefPtr<APZUpdater> self = this;
   RunOnUpdaterThread(aOriginatingLayersId, NS_NewRunnableFunction(
     "APZUpdater::UpdateScrollOffsets",
-    [=,updates=Move(aUpdates)]() {
+    [=,updates=std::move(aUpdates)]() {
       self->mScrollData[aOriginatingLayersId].ApplyUpdates(updates, aPaintSequenceNumber);
       auto root = self->mScrollData.find(aRootLayerTreeId);
       if (root == self->mScrollData.end()) {
@@ -449,7 +449,7 @@ APZUpdater::RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable>
   RunOnUpdaterThread(aLayersId, NewRunnableFunction(
       "APZUpdater::RunOnControllerThread",
       &APZThreadUtils::RunOnControllerThread,
-      Move(aTask)));
+      std::move(aTask)));
 }
 
 bool

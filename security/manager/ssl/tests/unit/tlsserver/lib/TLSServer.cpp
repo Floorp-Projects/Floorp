@@ -482,7 +482,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc* fd, const char* certName,
   }
 
   if (certOut) {
-    *certOut = Move(cert);
+    *certOut = std::move(cert);
   }
 
   if (keaOut) {

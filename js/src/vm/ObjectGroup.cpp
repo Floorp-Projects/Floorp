@@ -1365,17 +1365,17 @@ struct ObjectGroupRealm::AllocationSiteKey : public DefaultHasher<AllocationSite
     { }
 
     AllocationSiteKey(AllocationSiteKey&& key)
-      : script(mozilla::Move(key.script)),
+      : script(std::move(key.script)),
         offset(key.offset),
         kind(key.kind),
-        proto(mozilla::Move(key.proto))
+        proto(std::move(key.proto))
     { }
 
     void operator=(AllocationSiteKey&& key) {
-        script = mozilla::Move(key.script);
+        script = std::move(key.script);
         offset = key.offset;
         kind = key.kind;
-        proto = mozilla::Move(key.proto);
+        proto = std::move(key.proto);
     }
 
     static inline uint32_t hash(AllocationSiteKey key) {

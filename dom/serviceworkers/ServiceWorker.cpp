@@ -185,7 +185,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  mInner->PostMessage(Move(data), clientInfo.ref(), clientState.ref());
+  mInner->PostMessage(std::move(data), clientInfo.ref(), clientState.ref());
 }
 
 

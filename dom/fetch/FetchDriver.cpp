@@ -386,7 +386,7 @@ FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
     return rv;
   }
 
-  mRequest->SetPrincipalInfo(Move(principalInfo));
+  mRequest->SetPrincipalInfo(std::move(principalInfo));
 
   // If the signal is aborted, it's time to inform the observer and terminate
   // the operation.

@@ -261,7 +261,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   }
 
   // Success! Populate our outparam with parsed value.
-  aResult = Move(val);
+  aResult = std::move(val);
 }
 
 int32_t

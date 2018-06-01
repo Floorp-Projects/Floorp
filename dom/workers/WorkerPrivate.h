@@ -247,7 +247,7 @@ public:
     MOZ_ASSERT(mDefaultLocale,
                "the default locale must have been successfully set for anyone "
                "to be trying to adopt it");
-    return Move(mDefaultLocale);
+    return std::move(mDefaultLocale);
   }
 
   void

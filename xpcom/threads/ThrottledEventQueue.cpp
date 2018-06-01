@@ -267,7 +267,7 @@ public:
 
     // Only add the event to the underlying queue if are able to
     // dispatch to our base target.
-    mEventQueue.PutEvent(Move(aEvent), EventPriority::Normal, lock);
+    mEventQueue.PutEvent(std::move(aEvent), EventPriority::Normal, lock);
     return NS_OK;
   }
 
@@ -345,14 +345,14 @@ NS_IMETHODIMP
 ThrottledEventQueue::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                                      uint32_t aFlags)
 {
-  return mInner->Dispatch(Move(aEvent), aFlags);
+  return mInner->Dispatch(std::move(aEvent), aFlags);
 }
 
 NS_IMETHODIMP
 ThrottledEventQueue::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                             uint32_t aFlags)
 {
-  return mInner->DelayedDispatch(Move(aEvent), aFlags);
+  return mInner->DelayedDispatch(std::move(aEvent), aFlags);
 }
 
 NS_IMETHODIMP

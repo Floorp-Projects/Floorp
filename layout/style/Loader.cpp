@@ -1042,7 +1042,7 @@ Loader::CreateSheet(nsIURI* aURI,
 
       RefPtr<StyleSheet> clonedSheet =
         sheet->Clone(nullptr, nullptr, nullptr, nullptr);
-      *aSheet = Move(clonedSheet);
+      *aSheet = std::move(clonedSheet);
       if (*aSheet && fromCompleteSheets &&
           !sheet->GetOwnerNode() &&
           !sheet->GetParentSheet()) {
@@ -1666,7 +1666,7 @@ Loader::DoParseSheetServo(const nsACString& aBytes,
   RefPtr<SheetLoadData> loadData = aLoadData;
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   sheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
-    [loadData = Move(loadData)](bool aDummy) {
+    [loadData = std::move(loadData)](bool aDummy) {
       MOZ_ASSERT(NS_IsMainThread());
       loadData->mIsBeingParsed = false;
       loadData->mLoader->UnblockOnload(/* aFireSync = */ false);

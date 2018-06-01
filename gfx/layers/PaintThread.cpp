@@ -212,7 +212,7 @@ PaintThread::Shutdown()
 
   sThread->Dispatch(NewRunnableFunction("DestroyPaintThreadRunnable",
                                         DestroyPaintThread,
-                                        Move(pt)));
+                                        std::move(pt)));
   sThread->Shutdown();
   sThread = nullptr;
 }

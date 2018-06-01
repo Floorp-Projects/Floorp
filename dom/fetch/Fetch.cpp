@@ -200,7 +200,7 @@ public:
       return nullptr;
     }
 
-    r->mWorkerRef = Move(workerRef);
+    r->mWorkerRef = std::move(workerRef);
 
     return r.forget();
   }

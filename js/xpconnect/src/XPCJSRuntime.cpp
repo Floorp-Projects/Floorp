@@ -2873,7 +2873,7 @@ XPCJSRuntime::Initialize(JSContext* cx)
     // JS::CompileFunction). In practice, this means content scripts and event
     // handlers.
     mozilla::UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);
-    js::SetSourceHook(cx, Move(hook));
+    js::SetSourceHook(cx, std::move(hook));
 
     // Register memory reporters and distinguished amount functions.
     RegisterStrongMemoryReporter(new JSMainRuntimeRealmsReporter());

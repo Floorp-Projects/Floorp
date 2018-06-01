@@ -190,7 +190,7 @@ public:
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
-    mPromise->Reject(Move(aStatus), __func__);
+    mPromise->Reject(std::move(aStatus), __func__);
   }
 
   RefPtr<ServiceWorkerRegistrationPromise>
@@ -210,7 +210,7 @@ class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallbac
 public:
   WorkerThreadUpdateCallback(RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
                              ServiceWorkerRegistrationPromise::Private* aPromise)
-    : mWorkerRef(Move(aWorkerRef))
+    : mWorkerRef(std::move(aWorkerRef))
     , mPromise(aPromise)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -226,7 +226,7 @@ public:
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
-    mPromise->Reject(Move(aStatus), __func__);
+    mPromise->Reject(std::move(aStatus), __func__);
     mWorkerRef = nullptr;
   }
 };
@@ -345,7 +345,7 @@ public:
     }
 
     RefPtr<WorkerThreadUpdateCallback> cb =
-      new WorkerThreadUpdateCallback(Move(mWorkerRef), promise);
+      new WorkerThreadUpdateCallback(std::move(mWorkerRef), promise);
     UpdateInternal(principal, mDescriptor.Scope(), cb);
 
     return NS_OK;
@@ -418,8 +418,8 @@ public:
 
   WorkerUnregisterCallback(RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
                            RefPtr<GenericPromise::Private>&& aPromise)
-    : mWorkerRef(Move(aWorkerRef))
-    , mPromise(Move(aPromise))
+    : mWorkerRef(std::move(aWorkerRef))
+    , mPromise(std::move(aPromise))
   {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerRef);
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
@@ -507,7 +507,7 @@ public:
     }
 
     RefPtr<WorkerUnregisterCallback> cb =
-      new WorkerUnregisterCallback(Move(mWorkerRef), Move(promise));
+      new WorkerUnregisterCallback(std::move(mWorkerRef), std::move(promise));
 
     nsresult rv = swm->Unregister(principal,
                                   cb,

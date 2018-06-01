@@ -688,7 +688,7 @@ public:
             // Invoke callbacks synchronously if we're already on Gecko thread.
             return aCall();
         }
-        NS_DispatchToMainThread(NS_NewRunnableFunction("OnNativeCall", Move(aCall)));
+        NS_DispatchToMainThread(NS_NewRunnableFunction("OnNativeCall", std::move(aCall)));
     }
 
     static void Finalize(const CallbackDelegate::LocalRef& aInstance)

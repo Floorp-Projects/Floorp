@@ -20,7 +20,7 @@ DeserializedEdge& DeserializedEdge::operator=(DeserializedEdge&& rhs)
 {
   MOZ_ASSERT(&rhs != this);
   this->~DeserializedEdge();
-  new(this) DeserializedEdge(Move(rhs));
+  new(this) DeserializedEdge(std::move(rhs));
   return *this;
 }
 
@@ -87,7 +87,7 @@ class DeserializedEdgeRange : public EdgeRange
 
     auto& edge = node->edges[i];
     auto referent = node->getEdgeReferent(edge);
-    currentEdge = mozilla::Move(Edge(edge.name ? NS_strdup(edge.name) : nullptr,
+    currentEdge = std::move(Edge(edge.name ? NS_strdup(edge.name) : nullptr,
                                      referent));
     front_ = &currentEdge;
   }

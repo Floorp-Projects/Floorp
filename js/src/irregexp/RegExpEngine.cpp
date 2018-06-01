@@ -1053,7 +1053,7 @@ ChoiceNode::FilterLATIN1(int depth, bool ignore_case, bool unicode)
         }
     }
 
-    alternatives_ = Move(new_alternatives);
+    alternatives_ = std::move(new_alternatives);
     return this;
 }
 
@@ -2533,7 +2533,7 @@ BoyerMooreLookahead::EmitSkipInstructions(RegExpMacroAssembler* masm)
     jit::Label cont, again;
     masm->Bind(&again);
     masm->LoadCurrentCharacter(max_lookahead, &cont, true);
-    masm->CheckBitInTable(Move(boolean_skip_table), &cont);
+    masm->CheckBitInTable(std::move(boolean_skip_table), &cont);
     masm->AdvanceCurrentPosition(skip_distance);
     masm->JumpOrBacktrack(&again);
     masm->Bind(&cont);
@@ -3331,7 +3331,7 @@ EmitUseLookupTable(RegExpMacroAssembler* masm,
     for (int i = 0; i < kSize; i++)
         ba[i] = templ[i];
 
-    masm->CheckBitInTable(Move(ba), on_bit_set);
+    masm->CheckBitInTable(std::move(ba), on_bit_set);
     if (on_bit_clear != fall_through)
         masm->JumpOrBacktrack(on_bit_clear);
 }

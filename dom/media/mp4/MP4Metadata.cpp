@@ -280,7 +280,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       }
       auto track = mozilla::MakeUnique<MP4AudioInfo>();
       track->Update(&info, &audio);
-      e = Move(track);
+      e = std::move(track);
     }
     break;
     case TrackInfo::TrackType::kVideoTrack: {
@@ -296,7 +296,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       }
       auto track = mozilla::MakeUnique<MP4VideoInfo>();
       track->Update(&info, &video);
-      e = Move(track);
+      e = std::move(track);
     }
     break;
     default:
@@ -318,7 +318,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   }
 
   if (e && e->IsValid()) {
-    return {NS_OK, Move(e)};
+    return {NS_OK, std::move(e)};
   }
   MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("TrackInfo didn't validate"));
 
@@ -370,7 +370,7 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
   UniquePtr<IndiceWrapper> indice;
   indice = mozilla::MakeUnique<IndiceWrapper>(indiceRawData);
 
-  return {NS_OK, Move(indice)};
+  return {NS_OK, std::move(indice)};
 }
 
 /*static*/ MP4Metadata::ResultAndByteBuffer
@@ -383,7 +383,7 @@ MP4Metadata::Metadata(ByteStream* aSource)
                         RESULT_DETAIL("Cannot parse metadata")),
             nullptr};
   }
-  return {NS_OK, Move(buffer)};
+  return {NS_OK, std::move(buffer)};
 }
 
 } // namespace mozilla

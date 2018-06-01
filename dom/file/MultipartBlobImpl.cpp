@@ -29,7 +29,7 @@ MultipartBlobImpl::Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                           ErrorResult& aRv)
 {
   RefPtr<MultipartBlobImpl> blobImpl =
-    new MultipartBlobImpl(Move(aBlobImpls), aName, aContentType);
+    new MultipartBlobImpl(std::move(aBlobImpls), aName, aContentType);
   blobImpl->SetLengthAndModifiedDate(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -44,7 +44,7 @@ MultipartBlobImpl::Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                           ErrorResult& aRv)
 {
   RefPtr<MultipartBlobImpl> blobImpl =
-    new MultipartBlobImpl(Move(aBlobImpls), aContentType);
+    new MultipartBlobImpl(std::move(aBlobImpls), aContentType);
   blobImpl->SetLengthAndModifiedDate(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -153,7 +153,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   }
 
   // we can create our blob now
-  RefPtr<BlobImpl> impl = Create(Move(blobImpls), aContentType, aRv);
+  RefPtr<BlobImpl> impl = Create(std::move(blobImpls), aContentType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

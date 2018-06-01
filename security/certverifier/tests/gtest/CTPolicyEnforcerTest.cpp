@@ -64,8 +64,8 @@ public:
     verifiedSct.sct.timestamp = timestamp;
     Buffer logId;
     GetLogId(logId, logNo);
-    verifiedSct.sct.logId = Move(logId);
-    ASSERT_TRUE(verifiedScts.append(Move(verifiedSct)));
+    verifiedSct.sct.logId = std::move(logId);
+    ASSERT_TRUE(verifiedScts.append(std::move(verifiedSct)));
   }
 
   void AddMultipleScts(VerifiedSCTList& verifiedScts,

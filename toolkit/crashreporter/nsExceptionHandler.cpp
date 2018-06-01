@@ -3794,7 +3794,7 @@ NotifyDumpResult(bool aResult,
   if (aAsync) {
     MOZ_ASSERT(!!aCallbackThread);
     Unused << aCallbackThread->Dispatch(NS_NewRunnableFunction("CrashReporter::InvokeCallback",
-                                                               Move(runnable)),
+                                                               std::move(runnable)),
                                         NS_DISPATCH_SYNC);
   } else {
     runnable();
@@ -3832,7 +3832,7 @@ CreatePairedChildMinidumpAsync(ProcessHandle aTargetPid,
          , GetMinidumpType()
 #endif
       )) {
-    NotifyDumpResult(false, aAsync, Move(aCallback), Move(aCallbackThread));
+    NotifyDumpResult(false, aAsync, std::move(aCallback), std::move(aCallbackThread));
     return;
   }
 
@@ -3841,7 +3841,7 @@ CreatePairedChildMinidumpAsync(ProcessHandle aTargetPid,
   if (!targetExtra) {
     targetMinidump->Remove(false);
 
-    NotifyDumpResult(false, aAsync, Move(aCallback), Move(aCallbackThread));
+    NotifyDumpResult(false, aAsync, std::move(aCallback), std::move(aCallbackThread));
     return;
   }
 
@@ -3856,7 +3856,7 @@ CreatePairedChildMinidumpAsync(ProcessHandle aTargetPid,
 
   targetMinidump.forget(aMainDumpOut);
 
-  NotifyDumpResult(true, aAsync, Move(aCallback), Move(aCallbackThread));
+  NotifyDumpResult(true, aAsync, std::move(aCallback), std::move(aCallbackThread));
 }
 
 void
@@ -3914,7 +3914,7 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   }
 
   nsCString incomingPairName(aIncomingPairName);
-  std::function<void(bool)> callback = Move(aCallback);
+  std::function<void(bool)> callback = std::move(aCallback);
   // Don't call do_GetCurrentThread() if this is called synchronously because
   // 1. it's unnecessary, and 2. more importantly, it might create one if called
   // from a native thread, and the thread will be leaked.
@@ -3927,14 +3927,14 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                                    incomingDumpToPair,
                                    aMainDumpOut,
                                    dump_path,
-                                   Move(callback),
-                                   Move(callbackThread),
+                                   std::move(callback),
+                                   std::move(callbackThread),
                                    aAsync);
   };
 
   if (aAsync) {
     sMinidumpWriterThread->Dispatch(NS_NewRunnableFunction("CrashReporter::CreateMinidumpsAndPair",
-                                                           Move(doDump)),
+                                                           std::move(doDump)),
                                     nsIEventTarget::DISPATCH_NORMAL);
   } else {
     doDump();

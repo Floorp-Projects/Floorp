@@ -1582,7 +1582,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   JS::StackCapture captureMode = ShouldIncludeStackTrace(aMethodName) ?
     JS::StackCapture(JS::MaxFrames(DEFAULT_MAX_STACKTRACE_DEPTH)) :
     JS::StackCapture(JS::FirstSubsumedFrame(aCx));
-  nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, mozilla::Move(captureMode));
+  nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, std::move(captureMode));
 
   if (stack) {
     callData->mTopStackFrame.emplace();
@@ -2887,7 +2887,7 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(docShell, Move(
+      timelines->AddMarkerForDocShell(docShell, std::move(
         MakeUnique<TimestampTimelineMarker>(key)));
     }
     // For `console.time(foo)` and `console.timeEnd(foo)`.
@@ -2903,7 +2903,7 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(docShell, Move(
+      timelines->AddMarkerForDocShell(docShell, std::move(
         MakeUnique<ConsoleTimelineMarker>(
           key, aMethodName == MethodTime ? MarkerTracingType::START
                                          : MarkerTracingType::END)));

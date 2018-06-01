@@ -148,7 +148,7 @@ struct GetOrInternStringMatcher
     auto tempString = reinterpret_cast<const CharT*>(str->data());
 
     UniqueFreePtr<CharT[]> owned(NS_strndup(tempString, length));
-    if (!owned || !internedStrings.append(Move(owned)))
+    if (!owned || !internedStrings.append(std::move(owned)))
       return nullptr;
 
     return internedStrings.back().get();
@@ -285,7 +285,7 @@ HeapSnapshot::saveNode(const protobuf::Node& node, NodeIdSet& edgeReferents)
   }
 
   if (NS_WARN_IF(!nodes.putNew(id, DeserializedNode(id, coarseType, typeName,
-                                                    size, Move(edges),
+                                                    size, std::move(edges),
                                                     allocationStack,
                                                     jsObjectClassName,
                                                     scriptFilename, *this))))
@@ -568,7 +568,7 @@ HeapSnapshot::ComputeDominatorTree(ErrorResult& rv)
     return nullptr;
   }
 
-  return MakeAndAddRef<DominatorTree>(Move(*maybeTree), this, mParent);
+  return MakeAndAddRef<DominatorTree>(std::move(*maybeTree), this, mParent);
 }
 
 void
@@ -624,7 +624,7 @@ HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
   {
     JS::AutoCheckCannotGC nogc(cx);
     maybeShortestPaths = ShortestPaths::Create(cx, nogc, maxNumPaths, *startNode,
-                                               Move(targetsSet));
+                                               std::move(targetsSet));
   }
 
   if (NS_WARN_IF(maybeShortestPaths.isNothing())) {
@@ -1032,7 +1032,7 @@ struct TwoByteString::HashPolicy {
   }
 
   static void rekey(TwoByteString& k, TwoByteString&& newKey) {
-    k = Move(newKey);
+    k = std::move(newKey);
   }
 };
 
@@ -1137,7 +1137,7 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     string.copyToBuffer(RangedPtr<char16_t>(buf, length), length);
 
     uint64_t ref = twoByteStringsAlreadySerialized.count();
-    if (!twoByteStringsAlreadySerialized.add(ptr, Move(string), ref))
+    if (!twoByteStringsAlreadySerialized.add(ptr, std::move(string), ref))
       return false;
 
     setString(stringData.release());
@@ -1303,7 +1303,7 @@ public:
         protobufEdge->set_referent(ubiEdge.referent.identifier());
 
         if (wantNames && ubiEdge.name) {
-          TwoByteString edgeName(Move(ubiEdge.name));
+          TwoByteString edgeName(std::move(ubiEdge.name));
           if (NS_WARN_IF(!attachTwoByteString(edgeName,
                                               [&] (std::string* name) { protobufEdge->set_allocated_name(name); },
                                               [&] (uint64_t ref) { protobufEdge->set_nameref(ref); })))

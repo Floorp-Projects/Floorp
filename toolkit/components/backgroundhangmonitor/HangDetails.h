@@ -31,7 +31,7 @@ public:
   NS_DECL_NSIHANGDETAILS
 
   explicit nsHangDetails(HangDetails&& aDetails)
-    : mDetails(Move(aDetails))
+    : mDetails(std::move(aDetails))
   {}
 
   // Submit these HangDetails to the main thread. This will dispatch a runnable
@@ -58,7 +58,7 @@ class ProcessHangStackRunnable final : public Runnable
 public:
   explicit ProcessHangStackRunnable(HangDetails&& aHangDetails)
     : Runnable("ProcessHangStackRunnable")
-    , mHangDetails(Move(aHangDetails))
+    , mHangDetails(std::move(aHangDetails))
   {}
 
   NS_IMETHOD Run() override;

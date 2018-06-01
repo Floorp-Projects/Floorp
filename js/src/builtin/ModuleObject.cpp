@@ -1140,7 +1140,7 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObje
         return nullptr;
     }
 
-    auto ns = ModuleNamespaceObject::create(cx, self, exports, Move(bindings));
+    auto ns = ModuleNamespaceObject::create(cx, self, exports, std::move(bindings));
     if (!ns)
         return nullptr;
 

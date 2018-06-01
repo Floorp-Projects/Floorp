@@ -87,7 +87,7 @@ struct DeserializedNode {
     , coarseType(coarseType)
     , typeName(typeName)
     , size(size)
-    , edges(Move(edges))
+    , edges(std::move(edges))
     , allocationStack(allocationStack)
     , jsObjectClassName(className)
     , scriptFilename(filename)
@@ -100,7 +100,7 @@ struct DeserializedNode {
     , coarseType(rhs.coarseType)
     , typeName(rhs.typeName)
     , size(rhs.size)
-    , edges(Move(rhs.edges))
+    , edges(std::move(rhs.edges))
     , allocationStack(rhs.allocationStack)
     , jsObjectClassName(rhs.jsObjectClassName)
     , scriptFilename(rhs.scriptFilename)
@@ -111,7 +111,7 @@ struct DeserializedNode {
   {
     MOZ_ASSERT(&rhs != this);
     this->~DeserializedNode();
-    new(this) DeserializedNode(Move(rhs));
+    new(this) DeserializedNode(std::move(rhs));
     return *this;
   }
 

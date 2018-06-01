@@ -1728,12 +1728,12 @@ AccessibleWrap::SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl)
     ClearOnShutdown(&sHandlerControllers);
   }
 
-  HandlerControllerData ctrlData(aPid, Move(aCtrl));
+  HandlerControllerData ctrlData(aPid, std::move(aCtrl));
   if (sHandlerControllers->Contains(ctrlData)) {
     return;
   }
 
-  sHandlerControllers->AppendElement(Move(ctrlData));
+  sHandlerControllers->AppendElement(std::move(ctrlData));
 }
 
 /* static */

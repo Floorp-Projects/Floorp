@@ -21,7 +21,7 @@ namespace layers {
 
 
 SharedSurfaceTextureData::SharedSurfaceTextureData(UniquePtr<gl::SharedSurface> surf)
-  : mSurf(Move(surf))
+  : mSurf(std::move(surf))
 {}
 
 SharedSurfaceTextureData::~SharedSurfaceTextureData()
@@ -65,7 +65,7 @@ SharedSurfaceTextureClient::Create(UniquePtr<gl::SharedSurface> surf, gl::Surfac
     return nullptr;
   }
   TextureFlags flags = aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags();
-  SharedSurfaceTextureData* data = new SharedSurfaceTextureData(Move(surf));
+  SharedSurfaceTextureData* data = new SharedSurfaceTextureData(std::move(surf));
   return MakeAndAddRef<SharedSurfaceTextureClient>(data, flags, aAllocator);
 }
 

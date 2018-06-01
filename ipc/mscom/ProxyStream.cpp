@@ -173,7 +173,7 @@ ProxyStream::ProxyStream(ProxyStream&& aOther)
   , mBufSize(0)
   , mPreserveStream(false)
 {
-  *this = mozilla::Move(aOther);
+  *this = std::move(aOther);
 }
 
 ProxyStream&
@@ -184,7 +184,7 @@ ProxyStream::operator=(ProxyStream&& aOther)
     MOZ_ASSERT(!result && ::GetLastError() == NO_ERROR);
   }
 
-  mStream = Move(aOther.mStream);
+  mStream = std::move(aOther.mStream);
 
   mGlobalLockedBuf = aOther.mGlobalLockedBuf;
   aOther.mGlobalLockedBuf = nullptr;
@@ -196,7 +196,7 @@ ProxyStream::operator=(ProxyStream&& aOther)
   mBufSize = aOther.mBufSize;
   aOther.mBufSize = 0;
 
-  mUnmarshaledProxy = Move(aOther.mUnmarshaledProxy);
+  mUnmarshaledProxy = std::move(aOther.mUnmarshaledProxy);
 
   mPreserveStream = aOther.mPreserveStream;
   return *this;
@@ -257,7 +257,7 @@ ProxyStream::GetPreservedStream()
   }
 
   mPreserveStream = false;
-  return ToPreservedStreamPtr(Move(cloned));
+  return ToPreservedStreamPtr(std::move(cloned));
 }
 
 bool
@@ -387,7 +387,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
         hrAsStr);
   }
 
-  mStream = mozilla::Move(stream);
+  mStream = std::move(stream);
 
   if (streamSize) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamSizeFrom"),

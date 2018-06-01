@@ -186,7 +186,7 @@ ReaderProxy::SeekInternal(const SeekTarget& aTarget)
                      mReader.get(),
                      __func__,
                      &MediaFormatReader::Seek,
-                     Move(adjustedTarget));
+                     std::move(adjustedTarget));
 }
 
 RefPtr<ReaderProxy::WaitForDataPromise>
@@ -253,7 +253,7 @@ ReaderProxy::OnMetadataRead(MetadataHolder&& aMetadata)
   if (mStartTime.isNothing()) {
     mStartTime.emplace(aMetadata.mInfo->mStartTime);
   }
-  return MetadataPromise::CreateAndResolve(Move(aMetadata), __func__);
+  return MetadataPromise::CreateAndResolve(std::move(aMetadata), __func__);
 }
 
 RefPtr<ReaderProxy::MetadataPromise>

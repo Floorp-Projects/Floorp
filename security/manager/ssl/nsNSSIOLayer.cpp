@@ -2317,7 +2317,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
     }
 
     if (!cert && lowPrioNonrepCert) {
-      cert = Move(lowPrioNonrepCert);
+      cert = std::move(lowPrioNonrepCert);
       privKey.reset(PK11_FindKeyByAnyCert(cert.get(), wincx));
     }
 

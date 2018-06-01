@@ -146,8 +146,8 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   }
   certificate->derCert = *signedCert;
 
-  RefPtr<DtlsIdentity> identity = new DtlsIdentity(Move(private_key),
-                                                   Move(certificate),
+  RefPtr<DtlsIdentity> identity = new DtlsIdentity(std::move(private_key),
+                                                   std::move(certificate),
                                                    ssl_kea_ecdh);
   return identity.forget();
 }

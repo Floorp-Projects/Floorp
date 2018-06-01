@@ -177,9 +177,9 @@ TableRowsCollection::EnsureInitialized()
   }
 
   mBodyStart = mRows.Length();
-  mRows.AppendElements(Move(body));
+  mRows.AppendElements(std::move(body));
   mFootStart = mRows.Length();
-  mRows.AppendElements(Move(foot));
+  mRows.AppendElements(std::move(foot));
 
   mParent->AddMutationObserver(this);
 }

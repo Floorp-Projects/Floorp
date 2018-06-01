@@ -79,7 +79,7 @@ struct CacheEntry
   CacheEntry() : size(0) { }
 
   // Takes possession of buf
-  CacheEntry(UniquePtr<char[]> buf, uint32_t len) : data(Move(buf)), size(len) { }
+  CacheEntry(UniquePtr<char[]> buf, uint32_t len) : data(std::move(buf)), size(len) { }
 
   ~CacheEntry()
   {

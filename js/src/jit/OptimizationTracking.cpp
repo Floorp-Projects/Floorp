@@ -32,7 +32,7 @@ using JS::ForEachTrackedOptimizationTypeInfoOp;
 bool
 TrackedOptimizations::trackTypeInfo(OptimizationTypeInfo&& ty)
 {
-    return types_.append(mozilla::Move(ty));
+    return types_.append(std::move(ty));
 }
 
 bool
@@ -1102,7 +1102,7 @@ IonBuilder::trackTypeInfoUnchecked(TrackedTypeSite kind, MIRType mirType,
         site->setOptimizations(nullptr);
         return;
     }
-    if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
+    if (!site->optimizations()->trackTypeInfo(std::move(typeInfo)))
         site->setOptimizations(nullptr);
 }
 
@@ -1114,7 +1114,7 @@ IonBuilder::trackTypeInfoUnchecked(TrackedTypeSite kind, JSObject* obj)
     OptimizationTypeInfo typeInfo(alloc(), kind, MIRType::Object);
     if (!typeInfo.trackType(TypeSet::ObjectType(obj)))
         return;
-    if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
+    if (!site->optimizations()->trackTypeInfo(std::move(typeInfo)))
         site->setOptimizations(nullptr);
 }
 

@@ -176,7 +176,7 @@ class SharedImmutableStringsCache
 
     SharedImmutableStringsCache& operator=(SharedImmutableStringsCache&& rhs) {
         MOZ_ASSERT(this != &rhs, "self move not allowed");
-        new (this) SharedImmutableStringsCache(mozilla::Move(rhs));
+        new (this) SharedImmutableStringsCache(std::move(rhs));
         return *this;
     }
 
@@ -242,7 +242,7 @@ class SharedImmutableStringsCache
         using Ptr = mozilla::UniquePtr<StringBox, JS::DeletePolicy<StringBox>>;
 
         StringBox(OwnedChars&& chars, size_t length)
-          : chars_(mozilla::Move(chars))
+          : chars_(std::move(chars))
           , length_(length)
           , refcount(0)
         {
@@ -250,7 +250,7 @@ class SharedImmutableStringsCache
         }
 
         static Ptr Create(OwnedChars&& chars, size_t length) {
-            return Ptr(js_new<StringBox>(mozilla::Move(chars), length));
+            return Ptr(js_new<StringBox>(std::move(chars), length));
         }
 
         StringBox(const StringBox&) = delete;

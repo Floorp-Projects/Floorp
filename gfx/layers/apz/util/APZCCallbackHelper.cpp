@@ -744,7 +744,7 @@ public:
     }
 
     APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
-    SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId, Move(mTargets));
+    SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId, std::move(mTargets));
 
     if (!mPresShell->RemovePostRefreshObserver(this)) {
       MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
@@ -775,7 +775,7 @@ SendSetTargetAPZCNotificationHelper(nsIWidget* aWidget,
   if (waitForRefresh) {
     APZCCH_LOG("At least one target got a new displayport, need to wait for refresh\n");
     waitForRefresh = aShell->AddPostRefreshObserver(
-      new DisplayportSetListener(aShell, aInputBlockId, Move(aTargets)));
+      new DisplayportSetListener(aShell, aInputBlockId, std::move(aTargets)));
   }
   if (!waitForRefresh) {
     APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
@@ -831,7 +831,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
           aWidget,
           shell,
           aInputBlockId,
-          Move(targets),
+          std::move(targets),
           waitForRefresh);
       }
 
@@ -859,7 +859,7 @@ APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
           TouchActionHelper::GetAllowedTouchBehavior(aWidget,
                 rootFrame, aEvent.mTouches[i]->mRefPoint));
       }
-      aCallback(aInputBlockId, Move(flags));
+      aCallback(aInputBlockId, std::move(flags));
     }
   }
 }

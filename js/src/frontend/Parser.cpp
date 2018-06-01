@@ -53,7 +53,6 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::Nothing;
 using mozilla::PodCopy;
 using mozilla::PodZero;
@@ -425,7 +424,7 @@ UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId, uint32_
         UsedNameInfo info(cx);
         if (!info.noteUsedInScope(scriptId, scopeId))
             return false;
-        if (!map_.add(p, name, Move(info)))
+        if (!map_.add(p, name, std::move(info)))
             return false;
     }
 
@@ -621,7 +620,7 @@ GeneralParser<ParseHandler, CharT>::error(unsigned errorNumber, ...)
 
     ErrorMetadata metadata;
     if (tokenStream.computeErrorMetadata(&metadata, pos().begin))
-        ReportCompileError(context, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
 }
@@ -636,7 +635,7 @@ GeneralParser<ParseHandler, CharT>::errorWithNotes(UniquePtr<JSErrorNotes> notes
 
     ErrorMetadata metadata;
     if (tokenStream.computeErrorMetadata(&metadata, pos().begin)) {
-        ReportCompileError(context, Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber,
+        ReportCompileError(context, std::move(metadata), std::move(notes), JSREPORT_ERROR, errorNumber,
                            args);
     }
 
@@ -652,7 +651,7 @@ GeneralParser<ParseHandler, CharT>::errorAt(uint32_t offset, unsigned errorNumbe
 
     ErrorMetadata metadata;
     if (tokenStream.computeErrorMetadata(&metadata, offset))
-        ReportCompileError(context, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
 }
@@ -667,7 +666,7 @@ GeneralParser<ParseHandler, CharT>::errorWithNotesAt(UniquePtr<JSErrorNotes> not
 
     ErrorMetadata metadata;
     if (tokenStream.computeErrorMetadata(&metadata, offset)) {
-        ReportCompileError(context, Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber,
+        ReportCompileError(context, std::move(metadata), std::move(notes), JSREPORT_ERROR, errorNumber,
                            args);
     }
 
@@ -684,7 +683,7 @@ GeneralParser<ParseHandler, CharT>::warning(unsigned errorNumber, ...)
     ErrorMetadata metadata;
     bool result =
         tokenStream.computeErrorMetadata(&metadata, pos().begin) &&
-        anyChars.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
+        anyChars.compileWarning(std::move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
 
     va_end(args);
     return result;
@@ -701,7 +700,7 @@ GeneralParser<ParseHandler, CharT>::warningAt(uint32_t offset, unsigned errorNum
     bool result = tokenStream.computeErrorMetadata(&metadata, offset);
     if (result) {
         result =
-            anyChars.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
+            anyChars.compileWarning(std::move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
     }
 
     va_end(args);
@@ -776,7 +775,7 @@ ParserBase::warningNoOffset(unsigned errorNumber, ...)
     anyChars.computeErrorMetadataNoOffset(&metadata);
 
     bool result =
-        anyChars.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
+        anyChars.compileWarning(std::move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
 
     va_end(args);
     return result;
@@ -791,7 +790,7 @@ ParserBase::errorNoOffset(unsigned errorNumber, ...)
     ErrorMetadata metadata;
     anyChars.computeErrorMetadataNoOffset(&metadata);
 
-    ReportCompileError(context, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+    ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
 }
@@ -1131,7 +1130,7 @@ GeneralParser<ParseHandler, CharT>::reportMissingClosing(unsigned errorNumber, u
         return;
     }
 
-    errorWithNotes(Move(notes), errorNumber);
+    errorWithNotes(std::move(notes), errorNumber);
 }
 
 template <class ParseHandler, typename CharT>
@@ -1173,7 +1172,7 @@ GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
         return;
     }
 
-    errorWithNotesAt(Move(notes), pos.begin, JSMSG_REDECLARED_VAR,
+    errorWithNotesAt(std::move(notes), pos.begin, JSMSG_REDECLARED_VAR,
                      DeclarationKindString(prevKind), bytes.ptr());
 }
 

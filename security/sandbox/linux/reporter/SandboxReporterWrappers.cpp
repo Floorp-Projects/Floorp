@@ -131,7 +131,7 @@ public:
 
   explicit SandboxReportArray(SandboxReporter::Snapshot&& aSnap)
   : mOffset(aSnap.mOffset)
-  , mArray(Move(aSnap.mReports))
+  , mArray(std::move(aSnap.mReports))
   { }
 
 private:

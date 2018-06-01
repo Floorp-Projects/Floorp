@@ -86,7 +86,7 @@ public:
   /* Move constructor. */
   Scoped(Scoped&& aOther
          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mValue(Move(aOther.mValue))
+    : mValue(std::move(aOther.mValue))
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     aOther.mValue = Traits::empty();
@@ -152,7 +152,7 @@ public:
   {
     MOZ_ASSERT(&aRhs != this, "self-move-assignment not allowed");
     this->~Scoped();
-    new(this) Scoped(Move(aRhs));
+    new(this) Scoped(std::move(aRhs));
     return *this;
   }
 
@@ -186,7 +186,7 @@ struct MOZ_NON_TEMPORARY_CLASS name : public mozilla::Scoped<Traits<Type> >   \
   }                                                                           \
   name& operator=(name&& aRhs)                                                \
   {                                                                           \
-    Super::operator=(Move(aRhs));                                             \
+    Super::operator=(std::move(aRhs));                                             \
     return *this;                                                             \
   }                                                                           \
   explicit name(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)                         \
@@ -199,7 +199,7 @@ struct MOZ_NON_TEMPORARY_CLASS name : public mozilla::Scoped<Traits<Type> >   \
   {}                                                                          \
   name(name&& aRhs                                                            \
        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                                       \
-    : Super(Move(aRhs)                                                        \
+    : Super(std::move(aRhs)                                                        \
             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)                        \
   {}                                                                          \
 private:                                                                      \

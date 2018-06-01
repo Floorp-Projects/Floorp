@@ -37,7 +37,7 @@ ItemInfo::ItemInfo(FrameBuilder* aBuilder,
    layerIndex(kInvalidResourceIndex),
    sortOrder(aSortOrder),
    bounds(aBounds),
-   geometry(Move(aGeometry))
+   geometry(std::move(aGeometry))
 {
   const Matrix4x4& transform = aLayer->GetLayer()->GetEffectiveTransform();
 

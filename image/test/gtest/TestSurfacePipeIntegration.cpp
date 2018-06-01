@@ -26,13 +26,13 @@ public:
   static SurfacePipe SimpleSurfacePipe()
   {
     SurfacePipe pipe;
-    return Move(pipe);
+    return std::move(pipe);
   }
 
   template <typename T>
   static SurfacePipe SurfacePipeFromPipeline(T&& aPipeline)
   {
-    return SurfacePipe { Move(aPipeline) };
+    return SurfacePipe { std::move(aPipeline) };
   }
 
 private:

@@ -68,8 +68,8 @@ struct AnimatedValue {
                 const TransformData& aData)
     : mType(AnimatedValue::TRANSFORM)
   {
-    mTransform.mTransformInDevSpace = Move(aTransformInDevSpace);
-    mTransform.mFrameTransform = Move(aFrameTransform);
+    mTransform.mTransformInDevSpace = std::move(aTransformInDevSpace);
+    mTransform.mFrameTransform = std::move(aFrameTransform);
     mTransform.mData = aData;
   }
 

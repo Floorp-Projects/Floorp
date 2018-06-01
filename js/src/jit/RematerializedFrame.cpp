@@ -103,7 +103,7 @@ RematerializedFrame::RematerializeInlineFrames(JSContext* cx, uint8_t* top,
         ++iter;
     }
 
-    frames = Move(tempFrames.get());
+    frames = std::move(tempFrames.get());
     return true;
 }
 

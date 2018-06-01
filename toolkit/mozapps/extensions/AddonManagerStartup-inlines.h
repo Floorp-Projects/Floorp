@@ -30,7 +30,7 @@ public:
   PropertyType begin() const
   {
     PropertyType elem(Self());
-    return Move(elem);
+    return std::move(elem);
   }
 
   PropertyType end() const
@@ -110,7 +110,7 @@ public:
   {
     SelfType end(mIter);
     end.mIndex = Length();
-    return Move(end);
+    return std::move(end);
   }
 
   void* Context() const { return mIter.Context(); }

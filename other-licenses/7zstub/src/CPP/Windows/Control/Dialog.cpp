@@ -177,7 +177,7 @@ void CDialog::NormalizeSize(bool fullNormalize)
     if (fullNormalize)
       Show(SW_SHOWMAXIMIZED);
     else
-      Move(rect.left, rect.top, xSize2, ySize2, true);
+      std::move(rect.left, rect.top, xSize2, ySize2, true);
   }
 }
 
@@ -187,7 +187,7 @@ void CDialog::NormalizePosition()
   GetWorkAreaRect(&workRect);
   GetWindowRect(&rect);
   if (rect.bottom > workRect.bottom && rect.top > workRect.top)
-    Move(rect.left, workRect.top, RECT_SIZE_X(rect), RECT_SIZE_Y(rect), true);
+    std::move(rect.left, workRect.top, RECT_SIZE_X(rect), RECT_SIZE_Y(rect), true);
 }
 
 bool CModelessDialog::Create(LPCTSTR templateName, HWND parentWindow)

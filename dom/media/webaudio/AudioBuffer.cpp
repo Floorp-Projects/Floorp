@@ -259,7 +259,7 @@ AudioBuffer::Create(nsPIDOMWindowInner* aWindow, float aSampleRate,
   if (rv.Failed()) {
     return nullptr;
   }
-  buffer->mSharedChannels = Move(aInitialContents);
+  buffer->mSharedChannels = std::move(aInitialContents);
 
   return buffer.forget();
 }

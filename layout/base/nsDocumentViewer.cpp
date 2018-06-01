@@ -792,7 +792,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
 
   // Now make the shell for the document
   mPresShell = mDocument->CreateShell(mPresContext, mViewManager,
-                                      mozilla::Move(styleSet));
+                                      std::move(styleSet));
   if (!mPresShell) {
     return NS_ERROR_FAILURE;
   }
@@ -1904,7 +1904,7 @@ nsDocumentViewer::Destroy()
 
 #ifdef NS_PRINTING
   if (mPrintJob) {
-    RefPtr<nsPrintJob> printJob = mozilla::Move(mPrintJob);
+    RefPtr<nsPrintJob> printJob = std::move(mPrintJob);
 #ifdef NS_PRINT_PREVIEW
     bool doingPrintPreview;
     printJob->GetDoingPrintPreview(&doingPrintPreview);

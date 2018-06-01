@@ -37,9 +37,9 @@ FileLocation::FileLocation(const FileLocation& aOther)
 }
 
 FileLocation::FileLocation(FileLocation&& aOther)
-  : mBaseFile(Move(aOther.mBaseFile))
-  , mBaseZip(Move(aOther.mBaseZip))
-  , mPath(Move(aOther.mPath))
+  : mBaseFile(std::move(aOther.mBaseFile))
+  , mBaseZip(std::move(aOther.mBaseZip))
+  , mPath(std::move(aOther.mPath))
 {
   aOther.mPath.Truncate();
 }

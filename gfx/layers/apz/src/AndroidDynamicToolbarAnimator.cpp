@@ -507,7 +507,7 @@ void
 AndroidDynamicToolbarAnimator::AdoptToolbarPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mCompositorToolbarPixels = Some(Move(aMem));
+  mCompositorToolbarPixels = Some(std::move(aMem));
   mCompositorToolbarPixelsSize = aSize;
 }
 

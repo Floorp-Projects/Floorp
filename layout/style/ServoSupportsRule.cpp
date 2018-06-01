@@ -18,7 +18,7 @@ ServoSupportsRule::ServoSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
                                      uint32_t aLine, uint32_t aColumn)
   : CSSSupportsRule(Servo_SupportsRule_GetRules(aRawRule).Consume(),
                     aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
 {
 }
 

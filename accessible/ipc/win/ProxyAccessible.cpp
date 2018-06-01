@@ -416,7 +416,7 @@ ProxyAccessible::RelationByType(RelationType aType) const
   }
   CoTaskMemFree(targets);
 
-  return Move(proxies);
+  return std::move(proxies);
 }
 
 double

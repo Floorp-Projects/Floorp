@@ -105,7 +105,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
     if (aRv.Failed()) {
       return;
     }
-    mContentScripts.AppendElement(Move(contentScript));
+    mContentScripts.AppendElement(std::move(contentScript));
   }
 
   nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
@@ -237,7 +237,7 @@ WebExtensionPolicy::RegisterContentScript(WebExtensionContentScript& script,
 
   RefPtr<WebExtensionContentScript> newScript = &script;
 
-  if (!mContentScripts.AppendElement(Move(newScript), fallible)) {
+  if (!mContentScripts.AppendElement(std::move(newScript), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

@@ -322,7 +322,7 @@ nsSVGViewBox::SMILViewBox
   }
   nsSMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<nsSVGViewBoxRect*>(val.mU.mPtr) = viewBox;
-  aValue = Move(val);
+  aValue = std::move(val);
   aPreventCachingOfSandwich = false;
 
   return NS_OK;

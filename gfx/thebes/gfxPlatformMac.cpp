@@ -103,7 +103,7 @@ gfxPlatformMac::GetBackendPrefs() const
   data.mCanvasDefault = BackendType::SKIA;
   data.mContentDefault = BackendType::SKIA;
 
-  return mozilla::Move(data);
+  return std::move(data);
 }
 
 bool

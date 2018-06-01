@@ -1581,7 +1581,7 @@ void
 nsRefreshDriver::DispatchPendingEvents()
 {
   // Swap out the current pending events
-  nsTArray<PendingEvent> pendingEvents(Move(mPendingEvents));
+  nsTArray<PendingEvent> pendingEvents(std::move(mPendingEvents));
   for (PendingEvent& event : pendingEvents) {
     event.mTarget->DispatchEvent(*event.mEvent);
   }

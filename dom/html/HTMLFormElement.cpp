@@ -1570,7 +1570,7 @@ HTMLFormElement::FlushPendingSubmission()
   if (mPendingSubmission) {
     // Transfer owning reference so that the submissioin doesn't get deleted
     // if we reenter
-    nsAutoPtr<HTMLFormSubmission> submission = Move(mPendingSubmission);
+    nsAutoPtr<HTMLFormSubmission> submission = std::move(mPendingSubmission);
 
     SubmitSubmission(submission);
   }

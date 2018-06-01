@@ -91,7 +91,7 @@ PrioritizableRunnable::PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRu
                                              uint32_t aPriority)
  // Real runnable name is managed by overridding the GetName function.
  : Runnable("PrioritizableRunnable")
- , mRunnable(Move(aRunnable))
+ , mRunnable(std::move(aRunnable))
  , mPriority(aPriority)
 {
 #if DEBUG
@@ -249,7 +249,7 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 nsresult
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
 {
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
+  LeakRefPtr<nsIRunnable> event(std::move(aEvent));
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -321,7 +321,7 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
 nsresult
 NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
-  return NS_IdleDispatchToThread(Move(aEvent),
+  return NS_IdleDispatchToThread(std::move(aEvent),
                                  NS_GetCurrentThread());
 }
 
@@ -329,7 +329,7 @@ class IdleRunnableWrapper : public IdleRunnable
 {
 public:
   explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
-    : mRunnable(Move(aEvent))
+    : mRunnable(std::move(aEvent))
   {
   }
 
@@ -402,7 +402,7 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
                         uint32_t aTimeout,
                         nsIThread* aThread)
 {
-  nsCOMPtr<nsIRunnable> event(Move(aEvent));
+  nsCOMPtr<nsIRunnable> event(std::move(aEvent));
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
 
   //XXX Using current thread for now as the nsIEventTarget.
@@ -427,7 +427,7 @@ extern nsresult
 NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
                                uint32_t aTimeout)
 {
-  return NS_IdleDispatchToThread(Move(aEvent), aTimeout,
+  return NS_IdleDispatchToThread(std::move(aEvent), aTimeout,
                                  NS_GetCurrentThread());
 }
 

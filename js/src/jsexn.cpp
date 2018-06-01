@@ -252,7 +252,7 @@ CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorReport* copy, JSErrorRepor
         auto copiedNotes = report->notes->copy(cx);
         if (!copiedNotes)
             return false;
-        copy->notes = Move(copiedNotes);
+        copy->notes = std::move(copiedNotes);
     } else {
         copy->notes.reset(nullptr);
     }

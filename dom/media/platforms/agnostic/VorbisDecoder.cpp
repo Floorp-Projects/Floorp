@@ -241,8 +241,8 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
-    AudioSampleBuffer data(Move(buffer));
-    data = mAudioConverter->Process(Move(data));
+    AudioSampleBuffer data(std::move(buffer));
+    data = mAudioConverter->Process(std::move(data));
 
     results.AppendElement(
       new AudioData(aOffset,
@@ -264,7 +264,7 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 
     frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>

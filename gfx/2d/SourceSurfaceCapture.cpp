@@ -164,7 +164,7 @@ SourceSurfaceCapture::DrawTargetWillDestroy()
   MutexAutoLock lock(mLock);
 
   // The source DrawTarget is going away, so we can just steal its commands.
-  mCommands = Move(mOwner->mCommands);
+  mCommands = std::move(mOwner->mCommands);
   mHasCommandList = true;
   mOwner = nullptr;
 }

@@ -53,7 +53,7 @@ Logger::printf(const char* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  mMsg = mozilla::VsmprintfAppend(mozilla::Move(mMsg), fmt, args);
+  mMsg = mozilla::VsmprintfAppend(std::move(mMsg), fmt, args);
   va_end(args);
 }
 

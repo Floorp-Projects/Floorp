@@ -1296,7 +1296,7 @@ class AssemblerMIPSShared : public AssemblerShared
         cl.patchAt()->bind(src.getOffset());
         cl.target()->bind(dst.getOffset());
         cl.setLinkMode(CodeLabel::JumpImmediate);
-        addCodeLabel(mozilla::Move(cl));
+        addCodeLabel(std::move(cl));
     }
 
   public:

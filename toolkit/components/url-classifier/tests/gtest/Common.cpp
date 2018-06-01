@@ -197,5 +197,5 @@ SetupLookupCache(const _PrefixArray& prefixArray)
   rv = BuildCache(cache.get(), prefixArray);
   EXPECT_EQ(rv, NS_OK);
 
-  return Move(cache);
+  return std::move(cache);
 }

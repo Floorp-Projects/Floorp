@@ -61,7 +61,7 @@ ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
 
 void ChildProcessHost::ListenerHook::OnMessageReceived(
     IPC::Message&& msg) {
-  host_->OnMessageReceived(mozilla::Move(msg));
+  host_->OnMessageReceived(std::move(msg));
 }
 
 void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {

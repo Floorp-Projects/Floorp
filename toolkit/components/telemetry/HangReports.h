@@ -29,19 +29,19 @@ public:
   struct AnnotationInfo {
     AnnotationInfo(uint32_t aHangIndex,
                    HangMonitor::HangAnnotations&& aAnnotations)
-      : mAnnotations(Move(aAnnotations))
+      : mAnnotations(std::move(aAnnotations))
     {
       mHangIndices.AppendElement(aHangIndex);
     }
     AnnotationInfo(AnnotationInfo&& aOther)
       : mHangIndices(aOther.mHangIndices)
-      , mAnnotations(Move(aOther.mAnnotations))
+      , mAnnotations(std::move(aOther.mAnnotations))
     {}
     ~AnnotationInfo() = default;
     AnnotationInfo& operator=(AnnotationInfo&& aOther)
     {
       mHangIndices = aOther.mHangIndices;
-      mAnnotations = Move(aOther.mAnnotations);
+      mAnnotations = std::move(aOther.mAnnotations);
       return *this;
     }
     // To save memory, a single AnnotationInfo can be associated to multiple chrome

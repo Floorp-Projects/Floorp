@@ -34,7 +34,6 @@ using namespace mozilla::tasktracer;
 using mozilla::Atomic;
 using mozilla::LogLevel;
 using mozilla::MakeRefPtr;
-using mozilla::Move;
 using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -86,7 +85,7 @@ NS_NewTimerWithObserver(nsIObserver* aObserver,
                                   aDelay,
                                   aType,
                                   aTarget));
-  return Move(timer);
+  return std::move(timer);
 }
 nsresult
 NS_NewTimerWithObserver(nsITimer** aTimer,
@@ -117,7 +116,7 @@ NS_NewTimerWithCallback(nsITimerCallback* aCallback,
                                   aDelay,
                                   aType,
                                   aTarget));
-  return Move(timer);
+  return std::move(timer);
 }
 nsresult
 NS_NewTimerWithCallback(nsITimer** aTimer,
@@ -148,7 +147,7 @@ NS_NewTimerWithCallback(nsITimerCallback* aCallback,
                                   aDelay,
                                   aType,
                                   aTarget));
-  return Move(timer);
+  return std::move(timer);
 }
 nsresult
 NS_NewTimerWithCallback(nsITimer** aTimer,
@@ -183,7 +182,7 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
                                       aType,
                                       aNameString,
                                       aTarget));
-  return Move(timer);
+  return std::move(timer);
 }
 nsresult
 NS_NewTimerWithFuncCallback(nsITimer** aTimer,
@@ -222,7 +221,7 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
                                       aType,
                                       aNameCallback,
                                       aTarget));
-  return Move(timer);
+  return std::move(timer);
 }
 nsresult
 NS_NewTimerWithFuncCallback(nsITimer** aTimer,
@@ -386,7 +385,7 @@ nsTimerImpl::InitCommon(uint32_t aDelayMS, uint32_t aType,
                         Callback&& aNewCallback)
 {
   return InitCommon(TimeDuration::FromMilliseconds(aDelayMS),
-                    aType, Move(aNewCallback));
+                    aType, std::move(aNewCallback));
 }
 
 
@@ -434,7 +433,7 @@ nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
   cb.mName = aName;
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, mozilla::Move(cb));
+  return InitCommon(aDelay, aType, std::move(cb));
 }
 
 nsresult
@@ -484,7 +483,7 @@ nsTimerImpl::InitHighResolutionWithCallback(nsITimerCallback* aCallback,
   NS_ADDREF(cb.mCallback.i);
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, mozilla::Move(cb));
+  return InitCommon(aDelay, aType, std::move(cb));
 }
 
 nsresult
@@ -500,7 +499,7 @@ nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay, uint32_t aType)
   NS_ADDREF(cb.mCallback.o);
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, mozilla::Move(cb));
+  return InitCommon(aDelay, aType, std::move(cb));
 }
 
 nsresult

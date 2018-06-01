@@ -23,7 +23,7 @@ DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
   }
 
   RefPtr<DebuggerOnGCRunnable> runOnGC =
-    new DebuggerOnGCRunnable(Move(gcEvent));
+    new DebuggerOnGCRunnable(std::move(gcEvent));
   if (NS_IsMainThread()) {
     return SystemGroup::Dispatch(TaskCategory::GarbageCollection, runOnGC.forget());
   } else {
@@ -36,7 +36,7 @@ DebuggerOnGCRunnable::Run()
 {
   AutoJSAPI jsapi;
   jsapi.Init();
-  if (!JS::dbg::FireOnGarbageCollectionHook(jsapi.cx(), Move(mGCData))) {
+  if (!JS::dbg::FireOnGarbageCollectionHook(jsapi.cx(), std::move(mGCData))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

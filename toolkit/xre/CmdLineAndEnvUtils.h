@@ -344,7 +344,7 @@ MakeCommandLine(int argc, wchar_t **argv)
 
   *c = '\0';
 
-  return Move(s);
+  return std::move(s);
 }
 
 #endif // defined(XP_WIN)

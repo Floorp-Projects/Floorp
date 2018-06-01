@@ -41,7 +41,7 @@ ServiceWorkerImpl::PostMessage(ipc::StructuredCloneData&& aData,
                                const ClientInfo& aClientInfo,
                                const ClientState& aClientState)
 {
-  mInfo->PostMessage(Move(aData), aClientInfo, aClientState);
+  mInfo->PostMessage(std::move(aData), aClientInfo, aClientState);
 }
 
 void

@@ -25,7 +25,7 @@ ChannelEventQueue::TakeEvent()
     return nullptr;
   }
 
-  UniquePtr<ChannelEvent> event(Move(mEventQueue[0]));
+  UniquePtr<ChannelEvent> event(std::move(mEventQueue[0]));
   mEventQueue.RemoveElementAt(0);
 
   return event.release();

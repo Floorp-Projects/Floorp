@@ -792,7 +792,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       Accessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc)) {
-          newChildDocs.AppendElement(Move(mHangingChildDocuments[idx]));
+          newChildDocs.AppendElement(std::move(mHangingChildDocuments[idx]));
           continue;
         }
 
@@ -864,7 +864,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   mEventGeneration = 0;
 
   // Now that we are done with them get rid of the events we fired.
-  RefPtr<AccTreeMutationEvent> mutEvent = Move(mFirstMutationEvent);
+  RefPtr<AccTreeMutationEvent> mutEvent = std::move(mFirstMutationEvent);
   mLastMutationEvent = nullptr;
   mFirstMutationEvent = nullptr;
   while (mutEvent) {

@@ -40,7 +40,7 @@ Worker::Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
 Worker::Worker(nsIGlobalObject* aGlobalObject,
                already_AddRefed<WorkerPrivate> aWorkerPrivate)
   : DOMEventTargetHelper(aGlobalObject)
-  , mWorkerPrivate(Move(aWorkerPrivate))
+  , mWorkerPrivate(std::move(aWorkerPrivate))
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->SetParentEventTargetRef(this);

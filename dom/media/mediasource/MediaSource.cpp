@@ -306,7 +306,7 @@ MediaSource::SourceBufferIsActive(SourceBuffer* aSourceBuffer)
   // It will be resolved once the HTMLMediaElement modifies its readyState.
   MozPromiseHolder<ActiveCompletionPromise> holder;
   RefPtr<ActiveCompletionPromise> promise = holder.Ensure(__func__);
-  mCompletionPromises.AppendElement(Move(holder));
+  mCompletionPromises.AppendElement(std::move(holder));
   return promise;
 }
 

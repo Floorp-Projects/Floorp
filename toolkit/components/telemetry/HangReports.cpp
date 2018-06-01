@@ -66,7 +66,7 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
   }
 
   // If the key was not found, add the annotations to the hash map.
-  mAnnotationInfo.Put(annotationsKey, new AnnotationInfo(hangIndex, Move(aAnnotations)));
+  mAnnotationInfo.Put(annotationsKey, new AnnotationInfo(hangIndex, std::move(aAnnotations)));
 }
 
 /**

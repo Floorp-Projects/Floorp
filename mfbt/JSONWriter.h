@@ -340,7 +340,7 @@ protected:
 
 public:
   explicit JSONWriter(UniquePtr<JSONWriteFunc> aWriter)
-    : mWriter(Move(aWriter))
+    : mWriter(std::move(aWriter))
     , mNeedComma()
     , mNeedNewlines()
     , mDepth(0)

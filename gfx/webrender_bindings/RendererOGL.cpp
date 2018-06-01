@@ -47,7 +47,7 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          wr::Renderer* aRenderer,
                          layers::CompositorBridgeParent* aBridge)
   : mThread(aThread)
-  , mCompositor(Move(aCompositor))
+  , mCompositor(std::move(aCompositor))
   , mRenderer(aRenderer)
   , mBridge(aBridge)
   , mWindowId(aWindowId)

@@ -298,7 +298,7 @@ GetSupportedKeySystems()
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP8);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP9);
-      keySystemConfigs.AppendElement(Move(clearkey));
+      keySystemConfigs.AppendElement(std::move(clearkey));
     }
   }
   {
@@ -372,7 +372,7 @@ GetSupportedKeySystems()
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
 #endif
-      keySystemConfigs.AppendElement(Move(widevine));
+      keySystemConfigs.AppendElement(std::move(widevine));
     }
   }
 
@@ -384,7 +384,7 @@ GetKeySystemConfig(const nsAString& aKeySystem, KeySystemConfig& aOutKeySystemCo
 {
   for (auto&& config : GetSupportedKeySystems()) {
     if (config.mKeySystem.Equals(aKeySystem)) {
-      aOutKeySystemConfig = mozilla::Move(config);
+      aOutKeySystemConfig = std::move(config);
       return true;
     }
   }
@@ -764,7 +764,7 @@ GetSupportedCapabilities(
     // Note: omitting steps 3.13.2, our robustness is not sophisticated enough
     // to require considering all requirements together.
   }
-  return Move(supportedCapabilities);
+  return std::move(supportedCapabilities);
 }
 
 // "Get Supported Configuration and Consent" algorithm, steps 4-7 for
@@ -955,7 +955,7 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
     }
   }
   // Set the sessionTypes member of accumulated configuration to session types.
-  config.mSessionTypes.Construct(Move(sessionTypes));
+  config.mSessionTypes.Construct(std::move(sessionTypes));
 
   // If the videoCapabilities and audioCapabilities members in candidate
   // configuration are both empty, return NotSupported.
@@ -988,7 +988,7 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
       return false;
     }
     // Set the videoCapabilities member of accumulated configuration to video capabilities.
-    config.mVideoCapabilities = Move(caps);
+    config.mVideoCapabilities = std::move(caps);
   } else {
     // Otherwise:
     // Set the videoCapabilities member of accumulated configuration to an empty sequence.
@@ -1014,7 +1014,7 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
       return false;
     }
     // Set the audioCapabilities member of accumulated configuration to audio capabilities.
-    config.mAudioCapabilities = Move(caps);
+    config.mAudioCapabilities = std::move(caps);
   } else {
     // Otherwise:
     // Set the audioCapabilities member of accumulated configuration to an empty sequence.

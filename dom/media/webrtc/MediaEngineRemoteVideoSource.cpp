@@ -104,7 +104,7 @@ MediaEngineRemoteVideoSource::SetName(nsString aName)
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
-  mDeviceName = Move(aName);
+  mDeviceName = std::move(aName);
   bool hasFacingMode = false;
   VideoFacingModeEnum facingMode = VideoFacingModeEnum::User;
 
@@ -958,7 +958,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(
         continue;
       }
       LogCapability("Hardcoded capability", cap, 0);
-      candidateSet.AppendElement(CapabilityCandidate(Move(cap)));
+      candidateSet.AppendElement(CapabilityCandidate(std::move(cap)));
     }
   }
 
@@ -995,7 +995,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(
       }
     }
     if (!candidateSet.Length()) {
-      candidateSet.AppendElements(Move(rejects));
+      candidateSet.AppendElements(std::move(rejects));
     }
   }
   MOZ_ASSERT(candidateSet.Length(),

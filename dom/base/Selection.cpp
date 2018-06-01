@@ -1777,7 +1777,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     return aDetailsHead;
   }
 
-  UniquePtr<SelectionDetails> detailsHead = Move(aDetailsHead);
+  UniquePtr<SelectionDetails> detailsHead = std::move(aDetailsHead);
 
   for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
     nsRange* range = overlappingRanges[i];
@@ -1823,7 +1823,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
 
     auto newHead = MakeUnique<SelectionDetails>();
 
-    newHead->mNext = Move(detailsHead);
+    newHead->mNext = std::move(detailsHead);
     newHead->mStart = start;
     newHead->mEnd = end;
     newHead->mSelectionType = aSelectionType;
@@ -1831,7 +1831,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     if (rd) {
       newHead->mTextRangeStyle = rd->mTextRangeStyle;
     }
-    detailsHead = Move(newHead);
+    detailsHead = std::move(newHead);
   }
   return detailsHead;
 }
@@ -2370,9 +2370,9 @@ Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv)
   // If the old range isn't referred by anybody other than this method,
   // we should reuse it for reducing the recreation cost.
   if (oldRange && oldRange->GetRefCount() == 1) {
-    range = Move(oldRange);
+    range = std::move(oldRange);
   } else if (mCachedRange) {
-    range = Move(mCachedRange);
+    range = std::move(mCachedRange);
   } else {
     range = new nsRange(aPoint.Container());
   }
@@ -3670,7 +3670,7 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
 
   // If there is cached range, we should reuse it for saving the allocation
   // const (and some other cost in nsRange::DoSetRange().
-  RefPtr<nsRange> newRange = Move(mCachedRange);
+  RefPtr<nsRange> newRange = std::move(mCachedRange);
 
   nsresult rv = NS_OK;
   if (newRange) {

@@ -116,7 +116,7 @@ public:
 
   void TakeExternalSurfaces(std::vector<RefPtr<SourceSurface>>& aSurfaces)
   {
-    aSurfaces = Move(mExternalSurfaces);
+    aSurfaces = std::move(mExternalSurfaces);
   }
 
   virtual void StoreSourceSurfaceRecording(SourceSurface *aSurface,

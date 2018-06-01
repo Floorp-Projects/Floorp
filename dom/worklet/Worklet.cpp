@@ -34,7 +34,7 @@ public:
                     const WorkletLoadInfo& aWorkletLoadInfo)
     : Runnable("Worklet::ExecutionRunnable")
     , mHandler(aHandler)
-    , mScriptBuffer(Move(aScriptBuffer))
+    , mScriptBuffer(std::move(aScriptBuffer))
     , mScriptLength(aScriptLength)
     , mWorkletType(aType)
     , mResult(NS_ERROR_FAILURE)
@@ -224,7 +224,7 @@ public:
 
     // Moving the ownership of the buffer
     nsCOMPtr<nsIRunnable> runnable =
-      new ExecutionRunnable(this, mWorklet->Type(), Move(scriptTextBuf),
+      new ExecutionRunnable(this, mWorklet->Type(), std::move(scriptTextBuf),
                             scriptTextLength, mWorklet->LoadInfo());
 
     RefPtr<WorkletThread> thread = mWorklet->GetOrCreateThread();

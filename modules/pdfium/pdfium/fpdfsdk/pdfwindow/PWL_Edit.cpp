@@ -583,12 +583,12 @@ void CPWL_Edit::ShowVScrollBar(bool bShow) {
         CFX_FloatRect rcWindow = GetWindowRect();
         m_rcOldWindow = rcWindow;
         rcWindow.right += PWL_SCROLLBAR_WIDTH;
-        Move(rcWindow, true, true);
+        std::move(rcWindow, true, true);
       }
     } else {
       if (pScroll->IsVisible()) {
         pScroll->SetVisible(false);
-        Move(m_rcOldWindow, true, true);
+        std::move(m_rcOldWindow, true, true);
       }
     }
   }

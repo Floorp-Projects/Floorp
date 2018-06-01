@@ -30,7 +30,7 @@ namespace wr {
 /* static */ UniquePtr<RenderCompositor>
 RenderCompositorANGLE::Create(RefPtr<widget::CompositorWidget>&& aWidget)
 {
-  UniquePtr<RenderCompositorANGLE> compositor = MakeUnique<RenderCompositorANGLE>(Move(aWidget));
+  UniquePtr<RenderCompositorANGLE> compositor = MakeUnique<RenderCompositorANGLE>(std::move(aWidget));
   if (!compositor->Initialize()) {
     return nullptr;
   }
@@ -38,7 +38,7 @@ RenderCompositorANGLE::Create(RefPtr<widget::CompositorWidget>&& aWidget)
 }
 
 RenderCompositorANGLE::RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget)
-  : RenderCompositor(Move(aWidget))
+  : RenderCompositor(std::move(aWidget))
   , mEGLConfig(nullptr)
   , mEGLSurface(nullptr)
 {

@@ -293,7 +293,7 @@ SandboxReporter::GetSnapshot()
   // doesn't require it; so, instead of possibly copying the entire
   // array contents, invoke the move constructor and copy at most a
   // few words.
-  return Move(snapshot);
+  return std::move(snapshot);
 }
 
 } // namespace mozilla

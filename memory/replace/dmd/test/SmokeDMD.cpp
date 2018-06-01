@@ -102,7 +102,7 @@ TestEmpty(const char* aTestName, const char* aMode)
   ResetEverything(options);
 
   // Zero for everything.
-  Analyze(Move(f));
+  Analyze(std::move(f));
 }
 
 void
@@ -245,7 +245,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 
   if (aNum == 1) {
     // Analyze 1.
-    Analyze(Move(f));
+    Analyze(std::move(f));
   }
 
   ClearReports();
@@ -272,7 +272,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 
   if (aNum == 2) {
     // Analyze 2.
-    Analyze(Move(f));
+    Analyze(std::move(f));
   }
 }
 
@@ -318,7 +318,7 @@ TestPartial(const char* aTestName, const char* aMode, int aSeven)
     UseItOrLoseIt(s, aSeven);
   }
 
-  Analyze(Move(f));
+  Analyze(std::move(f));
 }
 
 void
@@ -339,7 +339,7 @@ TestScan(int aSeven)
   p[4] = (uintptr_t)((uint8_t*)p + 1); // pointer into a block
   p[5] = 0x0; // trailing null
 
-  Analyze(Move(f));
+  Analyze(std::move(f));
 }
 
 void

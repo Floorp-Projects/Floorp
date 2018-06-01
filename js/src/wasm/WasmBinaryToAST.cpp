@@ -163,7 +163,7 @@ class AstDecodeContext
             if (!exprs.append(voidNode))
                 return nullptr;
 
-            return new(lifo) AstFirst(Move(exprs));
+            return new(lifo) AstFirst(std::move(exprs));
         }
 
         return voidNode;
@@ -320,7 +320,7 @@ AstDecodeCall(AstDecodeContext& c)
     if (!AstDecodeCallArgs(c, *sig, &args))
         return false;
 
-    AstCall* call = new(c.lifo) AstCall(Op::Call, sig->ret(), funcRef, Move(args));
+    AstCall* call = new(c.lifo) AstCall(Op::Call, sig->ret(), funcRef, std::move(args));
     if (!call)
         return false;
 
@@ -356,7 +356,7 @@ AstDecodeCallIndirect(AstDecodeContext& c)
     if (!AstDecodeCallArgs(c, sig, &args))
         return false;
 
-    AstCallIndirect* call = new(c.lifo) AstCallIndirect(sigRef, sig.ret(), Move(args), index.expr);
+    AstCallIndirect* call = new(c.lifo) AstCallIndirect(sigRef, sig.ret(), std::move(args), index.expr);
     if (!call)
         return false;
 
@@ -421,7 +421,7 @@ AstDecodeBrTable(AstDecodeContext& c)
     if (!AstDecodeGetBlockRef(c, defaultDepth, &def))
         return false;
 
-    auto branchTable = new(c.lifo) AstBranchTable(*index.expr, def, Move(table), value.expr);
+    auto branchTable = new(c.lifo) AstBranchTable(*index.expr, def, std::move(table), value.expr);
     if (!branchTable)
         return false;
 
@@ -472,7 +472,7 @@ AstDecodeBlock(AstDecodeContext& c, Op op)
     c.exprs().shrinkTo(c.depths().popCopy());
 
     AstName name = c.blockLabels().popCopy();
-    AstBlock* block = new(c.lifo) AstBlock(op, type, name, Move(exprs));
+    AstBlock* block = new(c.lifo) AstBlock(op, type, name, std::move(exprs));
     if (!block)
         return false;
 
@@ -549,7 +549,7 @@ AstDecodeIf(AstDecodeContext& c)
 
     AstName name = c.blockLabels().popCopy();
 
-    AstIf* if_ = new(c.lifo) AstIf(type, cond.expr, name, Move(thenExprs), Move(elseExprs));
+    AstIf* if_ = new(c.lifo) AstIf(type, cond.expr, name, std::move(thenExprs), std::move(elseExprs));
     if (!if_)
         return false;
 
@@ -1947,7 +1947,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     if (!GenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
         return false;
 
-    *func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(localsNames), Move(body));
+    *func = new(c.lifo) AstFunc(funcName, sigRef, std::move(vars), std::move(localsNames), std::move(body));
     if (!*func)
         return false;
     (*func)->setOffset(offset);
@@ -1971,13 +1971,13 @@ AstCreateSignatures(AstDecodeContext& c)
         if (!args.appendAll(sig.args()))
             return false;
 
-        AstSig sigNoName(Move(args), sig.ret());
+        AstSig sigNoName(std::move(args), sig.ret());
 
         AstName sigName;
         if (!GenerateName(c, AstName(u"type"), sigIndex, &sigName))
             return false;
 
-        AstSig* astSig = new(c.lifo) AstSig(sigName, Move(sigNoName));
+        AstSig* astSig = new(c.lifo) AstSig(sigName, std::move(sigNoName));
         if (!astSig || !c.module().append(astSig))
             return false;
     }
@@ -2218,7 +2218,7 @@ AstCreateElems(AstDecodeContext &c)
         if (!offset)
             return false;
 
-        AstElemSegment* segment = new(c.lifo) AstElemSegment(offset, Move(elems));
+        AstElemSegment* segment = new(c.lifo) AstElemSegment(offset, std::move(elems));
         if (!segment || !c.module().append(segment))
             return false;
     }
@@ -2317,7 +2317,7 @@ AstDecodeModuleTail(AstDecodeContext& c)
                 return false;
         }
 
-        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
+        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
         if (!segment || !c.module().append(segment))
             return false;
     }

@@ -88,7 +88,7 @@ LCovSource::LCovSource(LCovSource&& src)
     outBRDA_(src.outBRDA_),
     numBranchesFound_(src.numBranchesFound_),
     numBranchesHit_(src.numBranchesHit_),
-    linesHit_(Move(src.linesHit_)),
+    linesHit_(std::move(src.linesHit_)),
     numLinesInstrumented_(src.numLinesInstrumented_),
     numLinesHit_(src.numLinesHit_),
     maxLineHit_(src.maxLineHit_),
@@ -516,7 +516,7 @@ LCovRealm::lookupOrAdd(JS::Realm* realm, const char* name)
     }
 
     // Allocate a new LCovSource for the current top-level.
-    if (!sources_->append(Move(LCovSource(&alloc_, source_name)))) {
+    if (!sources_->append(std::move(LCovSource(&alloc_, source_name)))) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }

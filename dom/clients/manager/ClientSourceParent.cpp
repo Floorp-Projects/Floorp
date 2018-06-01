@@ -37,7 +37,7 @@ class KillContentParentRunnable final : public Runnable
 public:
   explicit KillContentParentRunnable(RefPtr<ContentParent>&& aContentParent)
     : Runnable("KillContentParentRunnable")
-    , mContentParent(Move(aContentParent))
+    , mContentParent(std::move(aContentParent))
   {
     MOZ_ASSERT(mContentParent);
   }
@@ -79,7 +79,7 @@ ClientSourceParent::KillInvalidChild()
   // trust that process any more.  We have to do this on the main thread, so
   // there is a small window of time before we kill the process.  This is why
   // we start the actor destruction immediately above.
-  nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(Move(process));
+  nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(std::move(process));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 

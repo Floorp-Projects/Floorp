@@ -924,7 +924,7 @@ public:
 
     MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
                "Lookup() not returning an exact match?");
-    return LookupResult(Move(drawableSurface), MatchType::EXACT);
+    return LookupResult(std::move(drawableSurface), MatchType::EXACT);
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
@@ -980,7 +980,7 @@ public:
       }
     }
 
-    return LookupResult(Move(drawableSurface), matchType, suggestedSize);
+    return LookupResult(std::move(drawableSurface), matchType, suggestedSize);
   }
 
   bool CanHold(const Cost aCost) const
@@ -1131,7 +1131,7 @@ public:
                    const StaticMutexAutoLock& aAutoLock)
   {
     MOZ_ASSERT(aDiscard.IsEmpty());
-    aDiscard = Move(mCachedSurfacesDiscard);
+    aDiscard = std::move(mCachedSurfacesDiscard);
   }
 
   void LockSurface(NotNull<CachedSurface*> aSurface,
@@ -1321,7 +1321,7 @@ private:
 
     void NotifyHandlerEnd() override
     {
-      nsTArray<RefPtr<CachedSurface>> discard(Move(mDiscard));
+      nsTArray<RefPtr<CachedSurface>> discard(std::move(mDiscard));
     }
 
     StaticMutex& GetMutex() override

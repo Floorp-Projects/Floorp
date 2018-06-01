@@ -294,7 +294,7 @@ private:
   void WithdrawPrecedingEvents(nsTArray<RefPtr<AccHideEvent>>* aEvs)
   {
     if (mPrecedingEvents.Length() > 0) {
-      aEvs->AppendElements(mozilla::Move(mPrecedingEvents));
+      aEvs->AppendElements(std::move(mPrecedingEvents));
     }
   }
   void StorePrecedingEvent(AccHideEvent* aEv)

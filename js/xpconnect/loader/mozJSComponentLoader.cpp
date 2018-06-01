@@ -289,7 +289,7 @@ ReportOnCallerUTF8(JSCLContextHelper& helper,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    helper.reportErrorAfterPop(Move(buf));
+    helper.reportErrorAfterPop(std::move(buf));
     return NS_ERROR_FAILURE;
 }
 
@@ -774,7 +774,7 @@ ReadScript(ComponentLoaderInfo& aInfo)
     if (bytesRead != len)
         return Err(NS_BASE_STREAM_OSERROR);
 
-    return Move(str);
+    return std::move(str);
 }
 
 nsresult
@@ -1482,5 +1482,5 @@ void
 JSCLContextHelper::reportErrorAfterPop(UniqueChars&& buf)
 {
     MOZ_ASSERT(!mBuf, "Already called reportErrorAfterPop");
-    mBuf = Move(buf);
+    mBuf = std::move(buf);
 }

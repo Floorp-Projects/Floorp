@@ -148,7 +148,7 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 
   hr = ProcessOutput(results);
   if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    return DecodePromise::CreateAndResolve(Move(results), __func__);
+    return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
   return ProcessError(hr, "MFTManager::Output(2)");
 }
@@ -161,7 +161,7 @@ WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults)
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output))) {
     MOZ_ASSERT(output.get(), "Upon success, we must receive an output");
     mHasSuccessfulOutput = true;
-    aResults.AppendElement(Move(output));
+    aResults.AppendElement(std::move(output));
     if (mDrainStatus == DrainStatus::DRAINING) {
       break;
     }
@@ -208,7 +208,7 @@ WMFMediaDataDecoder::ProcessDrain()
     mDrainStatus = DrainStatus::DRAINED;
   }
   if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    return DecodePromise::CreateAndResolve(Move(results), __func__);
+    return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
   return ProcessError(hr, "MFTManager::Output");
 }

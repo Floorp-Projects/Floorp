@@ -630,7 +630,7 @@ SetContentProcessSandbox(ContentProcessSandboxParams&& aParams)
     sBroker = new SandboxBrokerClient(brokerFd);
   }
 
-  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker, Move(aParams)));
+  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker, std::move(aParams)));
   return true;
 }
 #endif // MOZ_CONTENT_SANDBOX
@@ -666,7 +666,7 @@ SetMediaPluginSandbox(const char *aFilePath)
   }
 
   auto files = new SandboxOpenedFiles();
-  files->Add(Move(plugin));
+  files->Add(std::move(plugin));
   files->Add("/dev/urandom", true);
   files->Add("/sys/devices/system/cpu/cpu0/tsc_freq_khz");
   files->Add("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");

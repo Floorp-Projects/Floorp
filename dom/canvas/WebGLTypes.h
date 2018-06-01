@@ -214,8 +214,8 @@ public:
 
     void* get() const { return mBuffer; }
 
-    UniqueBuffer(const UniqueBuffer& other) = delete; // construct using Move()!
-    void operator =(const UniqueBuffer& other) = delete; // assign using Move()!
+    UniqueBuffer(const UniqueBuffer& other) = delete; // construct using std::move()!
+    void operator =(const UniqueBuffer& other) = delete; // assign using std::move()!
 };
 
 } // namespace mozilla

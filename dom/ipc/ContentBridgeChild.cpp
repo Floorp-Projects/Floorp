@@ -61,7 +61,7 @@ ContentBridgeChild::RecvAsyncMessage(const nsString& aMsg,
                                      const IPC::Principal& aPrincipal,
                                      const ClonedMessageData& aData)
 {
-  return nsIContentChild::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal, aData);
+  return nsIContentChild::RecvAsyncMessage(aMsg, std::move(aCpows), aPrincipal, aData);
 }
 
 bool

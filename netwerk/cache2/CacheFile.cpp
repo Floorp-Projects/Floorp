@@ -1422,7 +1422,7 @@ CacheFile::ReleaseOutsideLock(RefPtr<nsISupports> aObject)
 {
   AssertOwnsLock();
 
-  mObjsToRelease.AppendElement(Move(aObject));
+  mObjsToRelease.AppendElement(std::move(aObject));
 }
 
 nsresult

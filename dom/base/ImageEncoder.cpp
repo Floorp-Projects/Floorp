@@ -72,7 +72,7 @@ private:
 already_AddRefed<DataSourceSurface>
 GetBRGADataSourceSurfaceSync(already_AddRefed<layers::Image> aImage)
 {
-  RefPtr<SurfaceHelper> helper = new SurfaceHelper(Move(aImage));
+  RefPtr<SurfaceHelper> helper = new SurfaceHelper(std::move(aImage));
   return helper->GetDataSurfaceSafe();
 }
 
@@ -160,7 +160,7 @@ public:
     : Runnable("EncodingRunnable")
     , mType(aType)
     , mOptions(aOptions)
-    , mImageBuffer(Move(aImageBuffer))
+    , mImageBuffer(std::move(aImageBuffer))
     , mImage(aImage)
     , mEncoder(aEncoder)
     , mEncodingCompleteEvent(aEncodingCompleteEvent)
@@ -327,7 +327,7 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(aType,
                                                      aOptions,
-                                                     Move(aImageBuffer),
+                                                     std::move(aImageBuffer),
                                                      nullptr,
                                                      encoder,
                                                      completeEvent,

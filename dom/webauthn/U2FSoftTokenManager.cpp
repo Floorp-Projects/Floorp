@@ -730,7 +730,7 @@ U2FSoftTokenManager::Register(const WebAuthnMakeCredentialInfo& aInfo,
 
   WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObj,
                                       keyHandleBuf, registrationBuf);
-  return U2FRegisterPromise::CreateAndResolve(Move(result), __func__);
+  return U2FRegisterPromise::CreateAndResolve(std::move(result), __func__);
 }
 
 bool
@@ -942,7 +942,7 @@ U2FSoftTokenManager::Sign(const WebAuthnGetAssertionInfo& aInfo)
   WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                     signatureBuf, authenticatorData,
                                     extensions, signatureDataBuf);
-  return U2FSignPromise::CreateAndResolve(Move(result), __func__);
+  return U2FSignPromise::CreateAndResolve(std::move(result), __func__);
 }
 
 void

@@ -17,8 +17,6 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/XPathResultBinding.h"
 
-using mozilla::Move;
-
 namespace mozilla {
 namespace dom {
 
@@ -54,7 +52,7 @@ private:
 XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
                                  txResultRecycler* aRecycler,
                                  nsIDocument *aDocument)
-    : mExpression(Move(aExpression)),
+    : mExpression(std::move(aExpression)),
       mRecycler(aRecycler),
       mDocument(do_GetWeakReference(aDocument)),
       mCheckDocument(aDocument != nullptr)

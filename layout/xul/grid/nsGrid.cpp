@@ -324,7 +324,7 @@ nsGrid::BuildRows(nsIFrame* aBox, int32_t aRowCount, bool aIsHorizontal)
       for (int32_t i=0; i < mRowCount; i++)
         mRows[i].Init(nullptr, false);
 
-      row = Move(mRows);
+      row = std::move(mRows);
     }
   } else {
     if (aRowCount > mColumnCount) {
@@ -333,7 +333,7 @@ nsGrid::BuildRows(nsIFrame* aBox, int32_t aRowCount, bool aIsHorizontal)
        for (int32_t i=0; i < mColumnCount; i++)
          mColumns[i].Init(nullptr, false);
 
-       row = Move(mColumns);
+       row = std::move(mColumns);
     }
   }
 
@@ -371,7 +371,7 @@ nsGrid::BuildCellMap(int32_t aRows, int32_t aColumns)
     mCellMap[i].SetBoxInRow(nullptr);
     mCellMap[i].SetBoxInColumn(nullptr);
   }
-  return Move(mCellMap);
+  return std::move(mCellMap);
 }
 
 /**

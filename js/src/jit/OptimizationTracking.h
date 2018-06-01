@@ -67,7 +67,7 @@ class OptimizationTypeInfo
     OptimizationTypeInfo(OptimizationTypeInfo&& other)
       : site_(other.site_),
         mirType_(other.mirType_),
-        types_(mozilla::Move(other.types_))
+        types_(std::move(other.types_))
     { }
 
     OptimizationTypeInfo(TempAllocator& alloc, JS::TrackedTypeSite site, MIRType mirType)

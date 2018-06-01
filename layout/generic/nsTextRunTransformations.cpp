@@ -56,7 +56,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
   RefPtr<nsTransformedTextRun> result =
     new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
                                        aString, aLength, aFlags, aFlags2,
-                                       Move(aStyles), aOwnsFactory);
+                                       std::move(aStyles), aOwnsFactory);
   return result.forget();
 }
 
@@ -112,7 +112,7 @@ nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLen
                                           bool aOwnsFactory)
 {
   return nsTransformedTextRun::Create(aParams, this, aFontGroup,
-                                      aString, aLength, aFlags, aFlags2, Move(aStyles),
+                                      aString, aLength, aFlags, aFlags2, std::move(aStyles),
                                       aOwnsFactory);
 }
 
@@ -131,7 +131,7 @@ nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLeng
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
                      aFlags & ~gfx::ShapedTextFlags::TEXT_IS_8BIT,
                      aFlags2,
-                     Move(aStyles), aOwnsFactory);
+                     std::move(aStyles), aOwnsFactory);
 }
 
 void
@@ -682,7 +682,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
         &innerParams, fontGroup, flags, nsTextFrameUtils::Flags(),
-        Move(styleArray), false);
+        std::move(styleArray), false);
     child = transformedChild.get();
   } else {
     cachedChild = fontGroup->MakeTextRun(

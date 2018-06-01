@@ -51,11 +51,11 @@ void
 LifoAlloc::freeAll()
 {
     while (!chunks_.empty()) {
-        BumpChunk bc = mozilla::Move(chunks_.popFirst());
+        BumpChunk bc = std::move(chunks_.popFirst());
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
     while (!unused_.empty()) {
-        BumpChunk bc = mozilla::Move(unused_.popFirst());
+        BumpChunk bc = std::move(unused_.popFirst());
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
 
@@ -105,7 +105,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // chunks.
     if (!unused_.empty()) {
         if (unused_.begin()->canAlloc(n)) {
-            chunks_.append(mozilla::Move(unused_.popFirst()));
+            chunks_.append(std::move(unused_.popFirst()));
             return true;
         }
 
@@ -114,9 +114,9 @@ LifoAlloc::getOrCreateChunk(size_t n)
             detail::BumpChunk* elem = i->next();
             MOZ_ASSERT(elem->empty());
             if (elem->canAlloc(n)) {
-                BumpChunkList temp = mozilla::Move(unused_.splitAfter(i.get()));
-                chunks_.append(mozilla::Move(temp.popFirst()));
-                unused_.appendAll(mozilla::Move(temp));
+                BumpChunkList temp = std::move(unused_.splitAfter(i.get()));
+                chunks_.append(std::move(temp.popFirst()));
+                unused_.appendAll(std::move(temp));
                 return true;
             }
         }
@@ -127,7 +127,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     if (!newChunk)
         return false;
     size_t size = newChunk->computedSizeOfIncludingThis();
-    chunks_.append(mozilla::Move(newChunk));
+    chunks_.append(std::move(newChunk));
     incrementCurSize(size);
     return true;
 }
@@ -139,8 +139,8 @@ LifoAlloc::transferFrom(LifoAlloc* other)
     MOZ_ASSERT(!other->markCount);
 
     incrementCurSize(other->curSize_);
-    appendUnused(mozilla::Move(other->unused_));
-    appendUsed(mozilla::Move(other->chunks_));
+    appendUnused(std::move(other->unused_));
+    appendUsed(std::move(other->chunks_));
     other->curSize_ = 0;
 }
 
@@ -153,7 +153,7 @@ LifoAlloc::transferUnusedFrom(LifoAlloc* other)
     for (detail::BumpChunk& bc : other->unused_)
         size += bc.computedSizeOfIncludingThis();
 
-    appendUnused(mozilla::Move(other->unused_));
+    appendUnused(std::move(other->unused_));
     incrementCurSize(size);
     other->decrementCurSize(size);
 }

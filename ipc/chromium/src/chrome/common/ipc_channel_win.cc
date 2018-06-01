@@ -437,7 +437,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 	waiting_for_shared_secret_ = false;
 	listener_->OnChannelConnected(claimed_pid);
       } else {
-	listener_->OnMessageReceived(mozilla::Move(m));
+	listener_->OnMessageReceived(std::move(m));
       }
 
       incoming_message_.reset();

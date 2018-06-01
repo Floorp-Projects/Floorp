@@ -44,7 +44,7 @@ VideoDecoderManagerParent::StoreImage(Image* aImage, TextureClient* aTexture)
 
   mImageMap[ret.handle()] = aImage;
   mTextureMap[ret.handle()] = aTexture;
-  return Move(ret);
+  return std::move(ret);
 }
 
 StaticRefPtr<nsIThread> sVideoDecoderManagerThread;
@@ -178,7 +178,7 @@ VideoDecoderManagerParent::CreateForContent(Endpoint<PVideoDecoderManagerParent>
       "dom::VideoDecoderManagerParent::Open",
       parent,
       &VideoDecoderManagerParent::Open,
-      Move(aEndpoint));
+      std::move(aEndpoint));
   sVideoDecoderManagerThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return true;
 }

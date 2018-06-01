@@ -93,7 +93,7 @@ public:
   }
 
   SourceBufferIterator(SourceBufferIterator&& aOther)
-    : mOwner(Move(aOther.mOwner))
+    : mOwner(std::move(aOther.mOwner))
     , mState(aOther.mState)
     , mData(aOther.mData)
     , mChunkCount(aOther.mChunkCount)
