@@ -1078,7 +1078,7 @@ ChromiumCDMParent::RecvDrainComplete()
 
   MediaDataDecoder::DecodedData samples;
   while (!mReorderQueue.IsEmpty()) {
-    samples.AppendElement(std::move(mReorderQueue.Pop()));
+    samples.AppendElement(mReorderQueue.Pop());
   }
 
   mDecodePromise.ResolveIfExists(std::move(samples), __func__);

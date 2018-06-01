@@ -1792,7 +1792,7 @@ CollectJavaThreadProfileData()
     }
     sampleId++;
   }
-  return std::move(buffer);
+  return buffer;
 }
 #endif
 

@@ -139,7 +139,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
       ++offset;
     }
 
-    return std::move(sfntData);
+    return sfntData;
   }
 
   UniquePtr<SFNTData> sfntData(new SFNTData);
@@ -147,7 +147,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
     return nullptr;
   }
 
-  return std::move(sfntData);
+  return sfntData;
 }
 
 /* static */
