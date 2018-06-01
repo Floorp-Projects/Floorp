@@ -1417,7 +1417,10 @@ function SelectExpression(env, {exp, vars, def}) {
 function Type(env, expr) {
   // A fast-path for strings which are the most common case, and for
   // `FluentNone` which doesn't require any additional logic.
-  if (typeof expr === "string" || expr instanceof FluentNone) {
+  if (typeof expr === "string") {
+    return env.ctx._transform(expr);
+  }
+  if (expr instanceof FluentNone) {
     return expr;
   }
 
@@ -1614,7 +1617,7 @@ function Pattern(env, ptn) {
 
   for (const elem of ptn) {
     if (typeof elem === "string") {
-      result.push(elem);
+      result.push(ctx._transform(elem));
       continue;
     }
 
@@ -1713,13 +1716,14 @@ class MessageContext {
    * @param   {Object} [options]
    * @returns {MessageContext}
    */
-  constructor(locales, { functions = {}, useIsolating = true } = {}) {
+  constructor(locales, { functions = {}, useIsolating = true, transform = v => v } = {}) {
     this.locales = Array.isArray(locales) ? locales : [locales];
 
     this._terms = new Map();
     this._messages = new Map();
     this._functions = functions;
     this._useIsolating = useIsolating;
+    this._transform = transform;
     this._intls = new WeakMap();
   }
 
@@ -1829,12 +1833,12 @@ class MessageContext {
   format(message, args, errors) {
     // optimize entities which are simple strings with no attributes
     if (typeof message === "string") {
-      return message;
+      return this._transform(message);
     }
 
     // optimize simple-string entities with attributes
     if (typeof message.val === "string") {
-      return message.val;
+      return this._transform(message.val);
     }
 
     // optimize entities with null values
