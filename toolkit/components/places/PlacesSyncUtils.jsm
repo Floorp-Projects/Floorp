@@ -82,10 +82,9 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
   /**
    * Returns the current history sync ID, or `""` if one isn't set.
    */
-  async getSyncId() {
-    let syncId = await PlacesUtils.metadata.get(
-      HistorySyncUtils.SYNC_ID_META_KEY);
-    return syncId || "";
+  getSyncId() {
+    return PlacesUtils.metadata.get(
+      HistorySyncUtils.SYNC_ID_META_KEY, "");
   },
 
   /**
@@ -124,7 +123,7 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
       "HistorySyncUtils: ensureCurrentSyncId",
       async function(db) {
         let existingSyncId = await PlacesUtils.metadata.getWithConnection(
-          db, HistorySyncUtils.SYNC_ID_META_KEY);
+          db, HistorySyncUtils.SYNC_ID_META_KEY, "");
 
         if (existingSyncId == newSyncId) {
           HistorySyncLog.trace("History sync ID up-to-date",
@@ -147,8 +146,8 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
    */
   async getLastSync() {
     let lastSync = await PlacesUtils.metadata.get(
-      HistorySyncUtils.LAST_SYNC_META_KEY);
-    return lastSync ? lastSync / 1000 : 0;
+      HistorySyncUtils.LAST_SYNC_META_KEY, 0);
+    return lastSync / 1000;
   },
 
   /**
@@ -407,10 +406,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   /**
    * Returns the current bookmarks sync ID, or `""` if one isn't set.
    */
-  async getSyncId() {
-    let syncId = await PlacesUtils.metadata.get(
-      BookmarkSyncUtils.SYNC_ID_META_KEY);
-    return syncId || "";
+  getSyncId() {
+    return PlacesUtils.metadata.get(
+      BookmarkSyncUtils.SYNC_ID_META_KEY, "");
   },
 
   /**
@@ -420,7 +418,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    */
   async shouldWipeRemote() {
     let shouldWipeRemote = await PlacesUtils.metadata.get(
-      BookmarkSyncUtils.WIPE_REMOTE_META_KEY);
+      BookmarkSyncUtils.WIPE_REMOTE_META_KEY, false);
     return !!shouldWipeRemote;
   },
 
@@ -470,7 +468,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       "BookmarkSyncUtils: ensureCurrentSyncId",
       async function(db) {
         let existingSyncId = await PlacesUtils.metadata.getWithConnection(
-          db, BookmarkSyncUtils.SYNC_ID_META_KEY);
+          db, BookmarkSyncUtils.SYNC_ID_META_KEY, "");
 
         // If we don't have a sync ID, take the server's without resetting
         // sync statuses.
@@ -507,8 +505,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    */
   async getLastSync() {
     let lastSync = await PlacesUtils.metadata.get(
-      BookmarkSyncUtils.LAST_SYNC_META_KEY);
-    return lastSync ? lastSync / 1000 : 0;
+      BookmarkSyncUtils.LAST_SYNC_META_KEY, 0);
+    return lastSync / 1000;
   },
 
   /**

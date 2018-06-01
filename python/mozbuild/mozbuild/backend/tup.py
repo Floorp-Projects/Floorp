@@ -507,13 +507,17 @@ class TupBackend(CommonBackend):
             else:
                 self._process_generated_file(backend_file, obj)
         elif (isinstance(obj, ChromeManifestEntry) and
-              obj.install_target.startswith('dist/bin')):
-            top_level = mozpath.join(obj.install_target, 'chrome.manifest')
-            if obj.path != top_level:
-                entry = 'manifest %s' % mozpath.relpath(obj.path,
-                                                        obj.install_target)
-                self._manifest_entries[top_level].add(entry)
-            self._manifest_entries[obj.path].add(str(obj.entry))
+              obj.install_target.startswith(('dist/bin', 'dist/xpi-stage'))):
+            # The quitter extension specifies its chrome.manifest as a
+            # FINAL_TARGET_FILE, which conflicts with the manifest generation
+            # we do here, so skip it for now.
+            if obj.install_target != 'dist/xpi-stage/quitter':
+                top_level = mozpath.join(obj.install_target, 'chrome.manifest')
+                if obj.path != top_level:
+                    entry = 'manifest %s' % mozpath.relpath(obj.path,
+                                                            obj.install_target)
+                    self._manifest_entries[top_level].add(entry)
+                self._manifest_entries[obj.path].add(str(obj.entry))
         elif isinstance(obj, Defines):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):

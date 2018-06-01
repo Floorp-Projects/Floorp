@@ -9,6 +9,7 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.build_lints:transforms
     - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -31,6 +32,8 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-t-linux-large
         worker:
             max-run-time: 3600
+            env:
+                PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
         run:
             using: mozharness
             actions: [static-analysis-autotest]

@@ -135,6 +135,7 @@ private:
   void LoadMsidSemantics(RustAttributeList* attributeList);
   void LoadGroup(RustAttributeList* attributeList);
   void LoadRtcp(RustAttributeList* attributeList);
+  void LoadRtcpFb(RustAttributeList* attributeList);
   void LoadImageattr(RustAttributeList* attributeList);
   void LoadSctpmaps(RustAttributeList* attributeList);
   void LoadDirection(RustAttributeList* attributeList);

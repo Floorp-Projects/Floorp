@@ -400,29 +400,6 @@ html|input.urlbar-input {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-.editBookmarkPanelBottomButton {
-  @hudButton@
-  margin: 0;
-  min-width: 82px;
-  min-height: 22px;
-}
-
-.editBookmarkPanelBottomButton:hover:active {
-  @hudButtonPressed@
-}
-
-.editBookmarkPanelBottomButton:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
-.editBookmarkPanelBottomButton[default="true"] {
-  background-color: #666;
-}
-
-.editBookmarkPanelBottomButton:last-child {
-  margin-inline-start: 8px;
-}
-
 /* The following elements come from editBookmarkPanel.inc.xul. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that
    should be shared by all editBookmarkPanel.inc.xul consumers should be in

@@ -2,11 +2,12 @@ use std::slice;
 use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t};
 
 use rsdparsa::SdpSession;
-use rsdparsa::attribute_type::{SdpAttribute, SdpAttributeFingerprint, SdpAttributeSetup, SdpAttributeSsrc, SdpAttributeRtpmap, SdpAttributeMsid, SdpAttributeMsidSemantic, SdpAttributeGroupSemantic, SdpAttributeGroup, SdpAttributeRtcp, SdpAttributeSctpmap, SdpAttributeRemoteCandidate, SdpAttributeExtmap, SdpAttributeDirection};
+use rsdparsa::attribute_type::{SdpAttribute, SdpAttributePayloadType, SdpAttributeFingerprint, SdpAttributeSetup, SdpAttributeSsrc, SdpAttributeRtpmap, SdpAttributeMsid, SdpAttributeMsidSemantic, SdpAttributeGroupSemantic, SdpAttributeGroup, SdpAttributeRtcp, SdpAttributeRtcpFb, SdpAttributeSctpmap, SdpAttributeRemoteCandidate, SdpAttributeExtmap, SdpAttributeDirection};
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 
 use types::StringView;
 use network::RustIpAddr;
+
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -569,6 +570,47 @@ pub unsafe extern "C" fn sdp_get_rtcp(attributes: *const Vec<SdpAttribute>, ret:
     }
     NS_ERROR_INVALID_ARG
 }
+
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeRtcpFb {
+    pub payload_type: u32,
+    pub feedback_type: u32,
+    pub parameter: StringView,
+    pub extra: StringView
+}
+
+impl<'a> From<&'a SdpAttributeRtcpFb> for RustSdpAttributeRtcpFb {
+    fn from(other: &SdpAttributeRtcpFb) -> Self {
+        RustSdpAttributeRtcpFb {
+            payload_type: match other.payload_type{
+                SdpAttributePayloadType::Wildcard => u32::max_value(),
+                SdpAttributePayloadType::PayloadType(x) => x as u32,
+            },
+            feedback_type: other.feedback_type.clone() as u32,
+            parameter: StringView::from(other.parameter.as_str()),
+            extra: StringView::from(other.extra.as_str()),
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_rtcpfb_count(attributes: *const Vec<SdpAttribute>) -> size_t {
+    count_attribute((*attributes).as_slice(), RustSdpAttributeType::Rtcpfb)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_rtcpfbs(attributes: *const Vec<SdpAttribute>, ret_size: size_t, ret_rtcpfbs: *mut RustSdpAttributeRtcpFb) {
+    let attrs: Vec<_> = (*attributes).iter().filter_map(|x| if let SdpAttribute::Rtcpfb(ref data) = *x {
+        Some(RustSdpAttributeRtcpFb::from(data))
+    } else {
+        None
+    }).collect();
+    let rtcpfbs = slice::from_raw_parts_mut(ret_rtcpfbs, ret_size);
+    rtcpfbs.clone_from_slice(attrs.as_slice());
+}
+
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_imageattr_count(attributes: *const Vec<SdpAttribute>) -> size_t {

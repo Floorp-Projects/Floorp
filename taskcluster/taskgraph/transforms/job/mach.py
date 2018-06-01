@@ -20,6 +20,9 @@ mach_schema = Schema({
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
     Required('comm-checkout'): bool,
+
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 
@@ -29,7 +32,7 @@ def docker_worker_mach(config, job, taskdesc):
     run = job['run']
 
     # defer to the run_task implementation
-    run['command'] = 'cd /builds/worker/checkouts/gecko && ./mach ' + run['mach']
+    run['command'] = 'cd {workdir}/checkouts/gecko && ./mach {mach}'.format(**run)
     run['using'] = 'run-task'
     del run['mach']
     configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])

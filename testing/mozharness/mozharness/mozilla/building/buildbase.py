@@ -1736,11 +1736,6 @@ or run without that action (ie: --no-{action})"
         perfherder_data['suites'].extend(self._load_sccache_stats())
 
         # Ensure all extra options for this configuration are present.
-        for opt in self.config.get('perfherder_extra_options', []):
-            for suite in perfherder_data['suites']:
-                if opt not in suite.get('extraOptions', []):
-                    suite.setdefault('extraOptions', []).append(opt)
-
         for opt in os.environ.get('PERFHERDER_EXTRA_OPTIONS', '').split():
             for suite in perfherder_data['suites']:
                 if opt not in suite.get('extraOptions', []):
