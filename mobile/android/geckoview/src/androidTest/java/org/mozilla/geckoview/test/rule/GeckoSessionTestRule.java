@@ -1261,7 +1261,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
                     .extras(InstrumentationRegistry.getArguments())
-                    .remoteDebuggingEnabled(true);
+                    .remoteDebuggingEnabled(true)
+                    .consoleOutput(true);
 
             if (env.isAutomation()) {
                 runtimeSettingsBuilder
