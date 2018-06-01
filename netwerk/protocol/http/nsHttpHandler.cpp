@@ -189,8 +189,8 @@ nsHttpHandler::GetInstance()
 }
 
 nsHttpHandler::nsHttpHandler()
-    : mHttpVersion(NS_HTTP_VERSION_1_1)
-    , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
+    : mHttpVersion(HttpVersion::v1_1)
+    , mProxyHttpVersion(HttpVersion::v1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mSpoofReferrerSource(false)
@@ -1388,11 +1388,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         prefs->GetCharPref(HTTP_PREF("version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
-                mHttpVersion = NS_HTTP_VERSION_1_1;
+                mHttpVersion = HttpVersion::v1_1;
             else if (httpVersion.EqualsLiteral("0.9"))
-                mHttpVersion = NS_HTTP_VERSION_0_9;
+                mHttpVersion = HttpVersion::v0_9;
             else
-                mHttpVersion = NS_HTTP_VERSION_1_0;
+                mHttpVersion = HttpVersion::v1_0;
         }
     }
 
@@ -1401,9 +1401,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         prefs->GetCharPref(HTTP_PREF("proxy.version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
-                mProxyHttpVersion = NS_HTTP_VERSION_1_1;
+                mProxyHttpVersion = HttpVersion::v1_1;
             else
-                mProxyHttpVersion = NS_HTTP_VERSION_1_0;
+                mProxyHttpVersion = HttpVersion::v1_0;
             // it does not make sense to issue a HTTP/0.9 request to a proxy server
         }
     }

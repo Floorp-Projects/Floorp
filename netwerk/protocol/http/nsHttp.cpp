@@ -238,19 +238,18 @@ IsValidToken(const char *start, const char *end)
 }
 
 const char*
-GetProtocolVersion(uint32_t pv)
+GetProtocolVersion(HttpVersion pv)
 {
     switch (pv) {
-    case HTTP_VERSION_2:
-    case NS_HTTP_VERSION_2_0:
+    case HttpVersion::v2_0:
         return "h2";
-    case NS_HTTP_VERSION_1_0:
+    case HttpVersion::v1_0:
         return "http/1.0";
-    case NS_HTTP_VERSION_1_1:
+    case HttpVersion::v1_1:
         return "http/1.1";
     default:
         NS_WARNING(nsPrintfCString("Unkown protocol version: 0x%X. "
-                                   "Please file a bug", pv).get());
+                                   "Please file a bug", static_cast<uint32_t>(pv)).get());
         return "http/1.1";
     }
 }
@@ -571,6 +570,15 @@ SetLastActiveTabLoadOptimizationHit(TimeStamp const &when)
   if (gHttpHandler) {
     gHttpHandler->SetLastActiveTabLoadOptimizationHit(when);
   }
+}
+
+HttpVersion
+GetHttpVersionFromSpdy(SpdyVersion sv)
+{
+    MOZ_DIAGNOSTIC_ASSERT(sv != SpdyVersion::NONE);
+    MOZ_ASSERT(sv == SpdyVersion::HTTP_2);
+
+    return HttpVersion::v2_0;
 }
 
 } // namespace nsHttp

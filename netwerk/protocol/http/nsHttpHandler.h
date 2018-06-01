@@ -78,8 +78,8 @@ public:
 
     const nsCString& UserAgent();
 
-    nsHttpVersion  HttpVersion()             { return mHttpVersion; }
-    nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
+    enum HttpVersion    HttpVersion()             { return mHttpVersion; }
+    enum HttpVersion    ProxyHttpVersion()        { return mProxyHttpVersion; }
     uint8_t        ReferrerLevel()           { return mReferrerLevel; }
     bool           SpoofReferrerSource()     { return mSpoofReferrerSource; }
     bool           HideOnionReferrerSource() { return mHideOnionReferrerSource; }
@@ -466,8 +466,8 @@ private:
     // prefs
     //
 
-    uint8_t  mHttpVersion;
-    uint8_t  mProxyHttpVersion;
+    enum HttpVersion mHttpVersion;
+    enum HttpVersion mProxyHttpVersion;
     uint32_t mCapabilities;
     uint8_t  mReferrerLevel;
     uint8_t  mSpoofReferrerSource;
