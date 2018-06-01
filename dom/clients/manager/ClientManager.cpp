@@ -136,7 +136,7 @@ ClientManager::CreateSourceInternal(ClientType aType,
     ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
     UniquePtr<ClientSource> source(new ClientSource(this, aEventTarget, args));
     source->Shutdown();
-    return std::move(source);
+    return source;
   }
 
   ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
@@ -144,12 +144,12 @@ ClientManager::CreateSourceInternal(ClientType aType,
 
   if (IsShutdown()) {
     source->Shutdown();
-    return std::move(source);
+    return source;
   }
 
   source->Activate(GetActor());
 
-  return std::move(source);
+  return source;
 }
 
 already_AddRefed<ClientHandle>

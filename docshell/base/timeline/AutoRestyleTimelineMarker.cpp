@@ -32,10 +32,10 @@ AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(
   }
 
   mDocShell = aDocShell;
-  timelines->AddMarkerForDocShell(mDocShell, std::move(
+  timelines->AddMarkerForDocShell(mDocShell,
     MakeUnique<RestyleTimelineMarker>(
       mIsAnimationOnly,
-      MarkerTracingType::START)));
+      MarkerTracingType::START));
 }
 
 AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker()
@@ -51,10 +51,10 @@ AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker()
     return;
   }
 
-  timelines->AddMarkerForDocShell(mDocShell, std::move(
+  timelines->AddMarkerForDocShell(mDocShell,
     MakeUnique<RestyleTimelineMarker>(
       mIsAnimationOnly,
-      MarkerTracingType::END)));
+      MarkerTracingType::END));
 }
 
 } // namespace mozilla
