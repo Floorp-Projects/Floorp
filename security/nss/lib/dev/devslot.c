@@ -153,7 +153,7 @@ nssSlot_IsTokenPresent(
     /* set up condition so only one thread is active in this part of the code at a time */
     PZ_Lock(slot->isPresentLock);
     while (slot->isPresentThread) {
-        PR_WaitCondVar(slot->isPresentCondition, 0);
+        PR_WaitCondVar(slot->isPresentCondition, PR_INTERVAL_NO_TIMEOUT);
     }
     /* if we were one of multiple threads here, the first thread will have
      * given us the answer, no need to make more queries of the token. */

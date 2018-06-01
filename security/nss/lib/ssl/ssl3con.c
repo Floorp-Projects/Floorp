@@ -6948,8 +6948,10 @@ ssl3_ParseCertificateRequestCAs(sslSocket *ss, PRUint8 **b, PRUint32 *length,
             goto alert_loser; /* malformed */
 
         remaining -= 2;
+        if (SECITEM_MakeItem(ca_list->arena, &node->name, *b, len) != SECSuccess) {
+            goto no_mem;
+        }
         node->name.len = len;
-        node->name.data = *b;
         *b += len;
         *length -= len;
         remaining -= len;
@@ -6977,7 +6979,6 @@ ssl3_ParseCertificateRequestCAs(sslSocket *ss, PRUint8 **b, PRUint32 *length,
     return SECSuccess;
 
 no_mem:
-    PORT_SetError(SEC_ERROR_NO_MEMORY);
     return SECFailure;
 
 alert_loser:
@@ -11400,6 +11401,10 @@ ssl3_HandleHandshakeMessage(sslSocket *ss, PRUint8 *b, PRUint32 length,
         /* Increment the expected sequence number */
         ss->ssl3.hs.recvMessageSeq++;
     }
+
+    /* Taint the message so that it's easier to detect UAFs. */
+    PORT_Memset(b, 'N', length);
+
     return rv;
 }
 
