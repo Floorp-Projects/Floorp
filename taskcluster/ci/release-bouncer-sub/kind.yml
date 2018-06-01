@@ -34,18 +34,26 @@ job-defaults:
    run-on-projects: []
    shipping-phase: promote
    locales-file: browser/locales/shipped-locales
+   treeherder:
+      symbol: Rel(BncSub)
+      kind: test
+      tier: 1
 
 jobs:
    devedition:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
       bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
       shipping-product: devedition
+      treeherder:
+         platform: devedition-release/opt
 
    fennec:
       bouncer-platforms: ['android', 'android-x86']
       bouncer-products: ['apk']
       shipping-product: fennec
       locales-file: mobile/locales/l10n-changesets.json
+      treeherder:
+         platform: fennec-release/opt
 
    firefox:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
@@ -56,8 +64,12 @@ jobs:
             mozilla-esr60: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
             jamun: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
       shipping-product: firefox
+      treeherder:
+         platform: firefox-release/opt
 
    firefox-rc:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
       bouncer-products: ['complete-mar-candidates', 'partial-mar-candidates']
       shipping-product: firefox
+      treeherder:
+         platform: firefox-release/opt
