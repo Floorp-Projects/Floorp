@@ -4781,6 +4781,9 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     /* The vector that we are accumulating results in. */
     AutoObjectVector objects;
 
+    /* The set of debuggee compartments. */
+    JS::CompartmentSet debuggeeCompartments;
+
     /*
      * Parse the query object |query|, and prepare to match only the objects it
      * specifies.
@@ -4814,6 +4817,18 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     bool findObjects() {
         if (!prepareQuery())
             return false;
+
+        if (!debuggeeCompartments.init()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        for (WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
+            if (!debuggeeCompartments.put(r.front()->compartment())) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+        }
 
         {
             /*
@@ -4866,10 +4881,20 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
          * node.
          */
         JSCompartment* comp = referent.compartment();
-        if (comp && !dbg->isDebuggeeUnbarriered(JS::GetRealmForCompartment(comp))) {
+        if (comp && !debuggeeCompartments.has(comp)) {
             traversal.abandonReferent();
             return true;
         }
+
+        /*
+         * If the referent has an associated realm and it's not a debuggee
+         * realm, skip it. Don't abandonReferent() here like above: realms
+         * within a compartment can reference each other without going through
+         * cross-compartment wrappers.
+         */
+        Realm* realm = referent.realm();
+        if (realm && !dbg->isDebuggeeUnbarriered(realm))
+            return true;
 
         /*
          * If the referent is an object and matches our query's restrictions,
