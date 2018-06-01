@@ -10,30 +10,6 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
-/**
- * Returns true if the string passed in is part of the root domain of the
- * current string.  For example, if this is "www.mozilla.org", and we pass in
- * "mozilla.org", this will return true.  It would return false the other way
- * around.
- */
-function hasRootDomain(str, aDomain) {
-  let index = str.indexOf(aDomain);
-  // If aDomain is not found, we know we do not have it as a root domain.
-  if (index == -1)
-    return false;
-
-  // If the strings are the same, we obviously have a match.
-  if (str == aDomain)
-    return true;
-
-  // Otherwise, we have aDomain as our root domain iff the index of aDomain is
-  // aDomain.length subtracted from our length and (since we do not have an
-  // exact match) the character before the index is a dot or slash.
-  let prevChar = str[index - 1];
-  return (index == (str.length - aDomain.length)) &&
-         (prevChar == "." || prevChar == "/");
-}
-
 var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
     let promises = [];
@@ -54,40 +30,6 @@ var ForgetAboutSite = {
     })().catch(ex => {
       throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
     }));
-
-    // Permissions
-    // Enumerate all of the permissions, and if one matches, remove it
-    let enumerator = Services.perms.enumerator;
-    while (enumerator.hasMoreElements()) {
-      let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-      promises.push(new Promise((resolve, reject) => {
-        try {
-          if (hasRootDomain(perm.principal.URI.host, aDomain)) {
-            Services.perms.removePermission(perm);
-          }
-        } catch (ex) {
-          // Ignore entry
-        } finally {
-          resolve();
-        }
-      }));
-    }
-
-    // Content Preferences
-    promises.push((async function() {
-      let cps2 = Cc["@mozilla.org/content-pref/service;1"].
-                 getService(Ci.nsIContentPrefService2);
-      cps2.removeBySubdomain(aDomain, null, {
-        handleCompletion: (reason) => {
-          // Notify other consumers, including extensions
-          Services.obs.notifyObservers(null, "browser:purge-domain-data", aDomain);
-          if (reason === cps2.COMPLETE_ERROR) {
-            throw new Error("Exception occured while clearing content preferences");
-          }
-        },
-        handleError() {}
-      });
-    })());
 
     // HSTS and HPKP
     promises.push((async function() {
