@@ -14,6 +14,8 @@ pytest = "==3.2.5"
 jsmin = "==2.1.0"
 python-hglib = "==2.4"
 requests = "==2.9.1"
+json-e = "==2.5.0"
+
 
 [requires]
 python_version = "2.7"
