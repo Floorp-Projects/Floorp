@@ -30,6 +30,11 @@
   --lwt-toolbar-field-background-color: rgb(71, 71, 73);
   --lwt-toolbar-field-color: var(--chrome-color);
   --urlbar-separator-color: #5F6670;
+
+  /* !important to override LightweightThemeManager.addBuiltInTheme in
+     nsBrowserGlue.js */
+  --autocomplete-popup-background: #2A2A2E !important;
+  --autocomplete-popup-highlight-background: #0060DF;
 }
 
 :root:-moz-lwtheme-darktext {

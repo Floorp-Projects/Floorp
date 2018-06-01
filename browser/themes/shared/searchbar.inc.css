@@ -52,6 +52,10 @@
   color: var(--panel-disabled-color);
 }
 
+:root[lwt-popup-brighttext] .search-panel-header {
+  color: var(--autocomplete-popup-color);
+}
+
 .search-panel-header > label {
   margin-top: 2px !important;
   margin-bottom: 1px !important;

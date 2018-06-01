@@ -50,7 +50,11 @@
 }
 
 :root[lwt-popup-brighttext] {
-  --panel-separator-color: hsla(0,0%,80%,.25);
+  --panel-separator-color: rgba(249,249,250,.2);
+
+  --arrowpanel-dimmed: rgba(249,249,250,.1);
+  --arrowpanel-dimmed-further: rgba(249,249,250,.15);
+  --arrowpanel-dimmed-even-further: rgba(249,249,250,.2);
 }
 
 #menubar-items {
