@@ -421,13 +421,9 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SESSIONS", refObj);
+        await clearData(range, Ci.nsIClearDataService.CLEAR_AUTH_TOKENS);
 
         try {
-          // clear all auth tokens
-          let sdr = Cc["@mozilla.org/security/sdr;1"]
-                      .getService(Ci.nsISecretDecoderRing);
-          sdr.logoutAndTeardown();
-
           // clear FTP and plain HTTP auth sessions
           Services.obs.notifyObservers(null, "net:clear-active-logins");
         } finally {
