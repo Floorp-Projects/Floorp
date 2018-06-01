@@ -78,8 +78,9 @@ AccessibleCaretManager::sSelectionBarEnabled = false;
 AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
 /* static */ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
-/* static */ bool
-AccessibleCaretManager::sCaretsScriptUpdates = false;
+/* static */ int32_t
+AccessibleCaretManager::sCaretsScriptUpdates =
+    AccessibleCaretManager::kScriptAlwaysHide;
 /* static */ bool
 AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
 /* static */ bool
@@ -107,8 +108,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
       "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
     Preferences::AddBoolVarCache(&sCaretsAlwaysTilt,
                                  "layout.accessiblecaret.always_tilt");
-    Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
-      "layout.accessiblecaret.allow_script_change_updates");
+    Preferences::AddIntVarCache(&sCaretsScriptUpdates,
+      "layout.accessiblecaret.script_change_update_mode");
     Preferences::AddBoolVarCache(&sCaretsAllowDraggingAcrossOtherCaret,
       "layout.accessiblecaret.allow_dragging_across_other_caret", true);
     Preferences::AddBoolVarCache(&sHapticFeedback,
@@ -154,11 +155,12 @@ AccessibleCaretManager::OnSelectionChanged(nsIDocument* aDoc,
     return NS_OK;
   }
 
-  // Move the cursor by Javascript / or unknown internal.
+  // Move the cursor by JavaScript or unknown internal call.
   if (aReason == nsISelectionListener::NO_REASON) {
-    // Update visible carets, if javascript changes are allowed.
-    if (sCaretsScriptUpdates &&
-        (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible())) {
+    if (sCaretsScriptUpdates == kScriptAlwaysShow ||
+        (sCaretsScriptUpdates == kScriptUpdateVisible &&
+         (mFirstCaret->IsLogicallyVisible() ||
+          mSecondCaret->IsLogicallyVisible()))) {
         UpdateCarets();
         return NS_OK;
     }
