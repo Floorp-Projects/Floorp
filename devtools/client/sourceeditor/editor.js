@@ -218,6 +218,15 @@ Editor.prototype = {
   Doc: null,
 
   /**
+   * Exposes the CodeMirror class. We want to be able to
+   * invoke static commands such as runMode for syntax highlighting.
+   */
+  get CodeMirror() {
+    const codeMirror = editors.get(this);
+    return codeMirror && codeMirror.constructor;
+  },
+
+  /**
    * Exposes the CodeMirror instance. We want to get away from trying to
    * abstract away the API entirely, and this makes it easier to integrate in
    * various environments and do complex things.

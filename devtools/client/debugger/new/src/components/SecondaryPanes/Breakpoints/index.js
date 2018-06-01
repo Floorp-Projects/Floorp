@@ -81,7 +81,8 @@ class Breakpoints extends _react.Component {
       key: source.url,
       onClick: () => this.props.selectSource(source.id)
     }, _react2.default.createElement(_SourceIcon2.default, {
-      source: source
+      source: source,
+      shouldHide: icon => ["file", "javascript"].includes(icon)
     }), (0, _source.getFilename)(source)), ...breakpoints.map(breakpoint => _react2.default.createElement(_Breakpoint2.default, {
       breakpoint: breakpoint,
       source: source,
