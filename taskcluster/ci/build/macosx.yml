@@ -277,3 +277,37 @@ macosx64-nightly/opt:
         - linux64-llvm-dsymutil
         - linux64-rust-macos
         - linux64-sccache
+
+macosx64-ccov/debug:
+    description: "MacOS X x64 Cross-compile Code Coverage"
+    index:
+        product: firefox
+        job-name: macosx64-ccov-debug
+    treeherder:
+        platform: osx-cross-ccov/debug
+        symbol: B
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        max-run-time: 5400
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+    run:
+        using: mozharness
+        actions: [get-secrets build update]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: code-coverage-debug
+        tooltool-downloads: internal
+    run-on-projects: ['try']
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-6-pre-macosx-cross
+        - linux64-hfsplus
+        - linux64-libdmg
+        - linux64-llvm-dsymutil
+        - linux64-rust-macos
+        - linux64-sccache

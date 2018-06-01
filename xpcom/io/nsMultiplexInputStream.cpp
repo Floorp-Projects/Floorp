@@ -17,6 +17,7 @@
 #include "base/basictypes.h"
 
 #include "nsMultiplexInputStream.h"
+#include "nsIBufferedStreams.h"
 #include "nsICloneableInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
@@ -27,6 +28,8 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamLength.h"
+#include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -69,11 +72,12 @@ public:
 
   struct StreamData
   {
-    void Initialize(nsIInputStream* aStream)
+    void Initialize(nsIInputStream* aStream, bool aBuffered)
     {
       mStream = aStream;
       mAsyncStream = do_QueryInterface(aStream);
       mSeekableStream = do_QueryInterface(aStream);
+      mBuffered = aBuffered;
     }
 
     nsCOMPtr<nsIInputStream> mStream;
@@ -82,6 +86,9 @@ public:
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
     // This can be null.
     nsCOMPtr<nsISeekableStream> mSeekableStream;
+
+    // True if the stream is wrapped with nsIBufferedInputStream.
+    bool mBuffered;
   };
 
   Mutex& GetLock()
@@ -240,6 +247,18 @@ nsMultiplexInputStream::GetCount(uint32_t* aCount)
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 {
+  nsCOMPtr<nsIInputStream> stream = aStream;
+
+  bool buffered = false;
+  if (!NS_InputStreamIsBuffered(stream)) {
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                            stream.forget(), 4096);
+    NS_ENSURE_SUCCESS(rv, rv);
+    stream = bufferedStream.forget();
+    buffered = true;
+  }
+
   MutexAutoLock lock(mLock);
 
   StreamData* streamData = mStreams.AppendElement();
@@ -247,7 +266,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  streamData->Initialize(aStream);
+  streamData->Initialize(stream, buffered);
 
   UpdateQIMap(*streamData, 1);
 
@@ -271,6 +290,17 @@ nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream** aResult)
   StreamData& streamData = mStreams.ElementAt(aIndex);
 
   nsCOMPtr<nsIInputStream> stream = streamData.mStream;
+
+  if (streamData.mBuffered) {
+    nsCOMPtr<nsIBufferedInputStream> bufferedStream = do_QueryInterface(stream);
+    MOZ_ASSERT(bufferedStream);
+
+    nsresult rv = bufferedStream->GetData(getter_AddRefs(stream));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   stream.forget(aResult);
   return NS_OK;
 }
