@@ -1,3 +1,5 @@
+gczeal(0);
+
 var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onEnterFrame = function(frame) {};
