@@ -239,7 +239,7 @@ class Editor extends _react.PureComponent {
   }
 
   setupEditor() {
-    const editor = (0, _editor.createEditor)(); // disables the default search shortcuts
+    const editor = (0, _editor.getEditor)(); // disables the default search shortcuts
     // $FlowIgnore
 
     editor._initShortcuts = () => {};
@@ -284,7 +284,6 @@ class Editor extends _react.PureComponent {
     this.setState({
       editor
     });
-    (0, _editor.setEditor)(editor);
     return editor;
   }
 
