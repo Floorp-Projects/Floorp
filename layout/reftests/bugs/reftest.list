@@ -695,8 +695,8 @@ fuzzy(37,20) == 379349-1b.xhtml 379349-1-ref.xhtml
 fuzzy(37,20) == 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
-fuzzy-if(Android,2,140) == 379349-3a.xhtml 379349-3-ref.xhtml
-fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3-ref.xhtml
+fuzzy-if(Android,2,140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3a.xhtml 379349-3-ref.xhtml # bug 1392106
+fuzzy-if(Android,2,140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3b.xhtml 379349-3-ref.xhtml # bug 1392106
 == 379361-1.html 379361-1-ref.html
 == 379361-2.html 379361-2-ref.html
 == 379361-3.html 379361-3-ref.html
@@ -802,7 +802,7 @@ fuzzy-if(skiaContent,1,600) == 393649-1.html 393649-1-ref.html
 == 393671-1.html 393671-1-ref.html
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
-== 393760-1.xml 393760-1-ref.xml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
 fuzzy-if(skiaContent,1,500) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html

@@ -59,47 +59,47 @@ fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
 == bfc-shrink-1.html bfc-shrink-1-ref.html
 
 # Testcases that involve vertical writing mode.
-== float-in-rtl-vlr-1a.html float-in-rtl-vlr-1-ref.html
-== float-in-rtl-vlr-1b.html float-in-rtl-vlr-1-ref.html
-== float-in-rtl-vlr-1c.html float-in-rtl-vlr-1-ref.html
-== float-in-rtl-vlr-1d.html float-in-rtl-vlr-1-ref.html
-== float-in-rtl-vlr-2a.html float-in-rtl-vlr-2-ref.html
-== float-in-rtl-vlr-2b.html float-in-rtl-vlr-2-ref.html
-== float-in-rtl-vlr-2c.html float-in-rtl-vlr-2-ref.html
-== float-in-rtl-vlr-2d.html float-in-rtl-vlr-2-ref.html
-== float-in-rtl-vlr-3a.html float-in-rtl-vlr-3-ref.html
-== float-in-rtl-vlr-3b.html float-in-rtl-vlr-3-ref.html
-== float-in-rtl-vlr-3c.html float-in-rtl-vlr-3-ref.html
-== float-in-rtl-vlr-3d.html float-in-rtl-vlr-3-ref.html
-== float-in-rtl-vlr-4a.html float-in-rtl-vlr-4-ref.html
-== float-in-rtl-vlr-4b.html float-in-rtl-vlr-4-ref.html
-== float-in-rtl-vlr-4c.html float-in-rtl-vlr-4-ref.html
-== float-in-rtl-vlr-4d.html float-in-rtl-vlr-4-ref.html
-== float-in-rtl-vrl-1a.html float-in-rtl-vrl-1-ref.html
-== float-in-rtl-vrl-1b.html float-in-rtl-vrl-1-ref.html
-== float-in-rtl-vrl-1c.html float-in-rtl-vrl-1-ref.html
-== float-in-rtl-vrl-1d.html float-in-rtl-vrl-1-ref.html
-== float-in-rtl-vrl-2a.html float-in-rtl-vrl-2-ref.html
-== float-in-rtl-vrl-2b.html float-in-rtl-vrl-2-ref.html
-== float-in-rtl-vrl-2c.html float-in-rtl-vrl-2-ref.html
-== float-in-rtl-vrl-2d.html float-in-rtl-vrl-2-ref.html
-== float-in-rtl-vrl-3a.html float-in-rtl-vrl-3-ref.html
-== float-in-rtl-vrl-3b.html float-in-rtl-vrl-3-ref.html
-== float-in-rtl-vrl-3c.html float-in-rtl-vrl-3-ref.html
-== float-in-rtl-vrl-3d.html float-in-rtl-vrl-3-ref.html
-== float-in-rtl-vrl-4a.html float-in-rtl-vrl-4-ref.html
-== float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html
-== float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html
-== float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-1a.html float-in-rtl-vlr-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-1b.html float-in-rtl-vlr-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-1c.html float-in-rtl-vlr-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-1d.html float-in-rtl-vlr-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-2a.html float-in-rtl-vlr-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-2b.html float-in-rtl-vlr-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-2c.html float-in-rtl-vlr-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-2d.html float-in-rtl-vlr-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-3a.html float-in-rtl-vlr-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-3b.html float-in-rtl-vlr-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-3c.html float-in-rtl-vlr-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-3d.html float-in-rtl-vlr-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-4a.html float-in-rtl-vlr-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-4b.html float-in-rtl-vlr-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-4c.html float-in-rtl-vlr-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vlr-4d.html float-in-rtl-vlr-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-1a.html float-in-rtl-vrl-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-1b.html float-in-rtl-vrl-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-1c.html float-in-rtl-vrl-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-1d.html float-in-rtl-vrl-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-2a.html float-in-rtl-vrl-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-2b.html float-in-rtl-vrl-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-2c.html float-in-rtl-vrl-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-2d.html float-in-rtl-vrl-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-3a.html float-in-rtl-vrl-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-3b.html float-in-rtl-vrl-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-3c.html float-in-rtl-vrl-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-3d.html float-in-rtl-vrl-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4a.html float-in-rtl-vrl-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html # Bug 1392106
 fuzzy-if(OSX==1010,28,11) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,28,11) fuzzy-if(winWidget,137,3) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
 
-== logical-float-side-1.html logical-float-side-1-ref.html
-== logical-float-side-2.html logical-float-side-2-ref.html
-== logical-float-side-3.html logical-float-side-3-ref.html
-== logical-float-side-4.html logical-float-side-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-1.html logical-float-side-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-2.html logical-float-side-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-3.html logical-float-side-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-4.html logical-float-side-4-ref.html # Bug 1392106
 
 == float-in-rtl-slr-1a.html float-in-rtl-slr-1-ref.html
 == float-in-rtl-slr-1b.html float-in-rtl-slr-1-ref.html

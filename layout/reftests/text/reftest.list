@@ -67,7 +67,7 @@ fuzzy-if(Android,231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.
 == text-align-last-end.html text-align-last-end-ref.html
 == text-align-last-center.html text-align-last-center-ref.html
 == text-align-last-justify.html text-align-last-justify-ref.html
-== text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html # Bug 1392106
 #
 # Default values:
 # text-align defaults to start. text-align-last defaults to auto, which is

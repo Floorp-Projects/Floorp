@@ -187,10 +187,10 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html # Bug 1392106
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
-== mo-lspace-rspace.html mo-lspace-rspace-ref.html
-== mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
-== mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html
-== mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace.html mo-lspace-rspace-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html # Bug 1392106
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
@@ -285,9 +285,9 @@ fuzzy-if(d2d,7,1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482
-fails-if(Android) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
-fails-if(Android) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
-fails-if(Android) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
+fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
 fails-if(Android||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 == mathvariant-3.html mathvariant-3-ref.html

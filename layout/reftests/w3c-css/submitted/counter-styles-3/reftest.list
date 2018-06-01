@@ -1,4 +1,4 @@
-== system-cyclic.html     system-cyclic-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == system-cyclic.html     system-cyclic-ref.html # Bug 1392106
 == system-fixed.html      system-fixed-ref.html
 == system-symbolic.html   system-symbolic-ref.html
 fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref.html
@@ -26,10 +26,10 @@ fuzzy-if(webrender,15,8) == descriptor-suffix-invalid.html   descriptor-suffix-i
 == descriptor-pad-invalid.html      descriptor-pad-invalid-ref.html
 == descriptor-fallback-invalid.html descriptor-fallback-invalid-ref.html
 == descriptor-symbols-invalid.html  descriptor-symbols-invalid-ref.html
-== name-case-sensitivity.html       name-case-sensitivity-ref.html
-fails-if(webrender&&cocoaWidget) == dependent-builtin.html           dependent-builtin-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == name-case-sensitivity.html       name-case-sensitivity-ref.html # Bug 1392106
+fails-if(webrender&&cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dependent-builtin.html           dependent-builtin-ref.html # Bug 1392106
 == redefine-builtin.html            redefine-builtin-ref.html
-== redefine-attr-mapping.html       redefine-attr-mapping-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == redefine-attr-mapping.html       redefine-attr-mapping-ref.html # Bug 1392106
 == disclosure-styles.html           disclosure-styles-ref.html
 == symbols-function.html            symbols-function-ref.html
 == symbols-function-invalid.html    symbols-function-invalid-ref.html
