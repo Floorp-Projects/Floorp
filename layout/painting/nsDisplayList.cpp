@@ -4410,6 +4410,16 @@ nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(nsDisplayListBuilde
   , mStyleFrame(aCellFrame)
   , mTableType(GetTableTypeFromFrame(mStyleFrame))
 {
+  if (aBuilder->IsRetainingDisplayList()) {
+    mStyleFrame->AddDisplayItem(this);
+  }
+}
+
+nsDisplayTableBackgroundImage::~nsDisplayTableBackgroundImage()
+{
+  if (mStyleFrame) {
+    mStyleFrame->RemoveDisplayItem(this);
+  }
 }
 
 bool
@@ -7462,6 +7472,9 @@ nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(nsDisplayListBuilder* a
   , mAncestorFrame(aAncestorFrame)
   , mTableType(GetTableTypeFromFrame(aAncestorFrame))
 {
+  if (aBuilder->IsRetainingDisplayList()) {
+    mAncestorFrame->AddDisplayItem(this);
+  }
 }
 
 /* static */ nsDisplayTableFixedPosition*
