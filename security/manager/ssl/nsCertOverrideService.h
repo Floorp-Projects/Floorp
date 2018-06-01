@@ -46,7 +46,6 @@ public:
     mAsciiHost = other.mAsciiHost;
     mPort = other.mPort;
     mIsTemporary = other.mIsTemporary;
-    mFingerprintAlgOID = other.mFingerprintAlgOID;
     mFingerprint = other.mFingerprint;
     mOverrideBits = other.mOverrideBits;
     mDBKey = other.mDBKey;
@@ -58,7 +57,6 @@ public:
   int32_t mPort;
   bool mIsTemporary; // true: session only, false: stored on disk
   nsCString mFingerprint;
-  nsCString mFingerprintAlgOID;
   OverrideBits mOverrideBits;
   nsCString mDBKey;
   nsCOMPtr <nsIX509Cert> mCert;
@@ -167,9 +165,6 @@ protected:
     nsCOMPtr<nsIFile> mSettingsFile;
     nsTHashtable<nsCertOverrideEntry> mSettingsTable;
 
-    SECOidTag mOidTagForStoringNewHashes;
-    nsCString mDottedOidForStoringNewHashes;
-
     void CountPermanentOverrideTelemetry(const mozilla::MutexAutoLock& aProofOfLock);
 
     void RemoveAllFromMemory();
@@ -178,7 +173,6 @@ protected:
     nsresult AddEntryToList(const nsACString &host, int32_t port,
                             nsIX509Cert *aCert,
                             const bool aIsTemporary,
-                            const nsACString &algo_oid,
                             const nsACString &fingerprint,
                             nsCertOverride::OverrideBits ob,
                             const nsACString &dbKey,
