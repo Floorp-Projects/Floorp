@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "sas",
@@ -429,6 +430,23 @@ const PushNotificationsCleaner = {
   },
 };
 
+const HistoryCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return PlacesUtils.history.removeByFilter({ host: "." + aHost });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    return PlacesUtils.history.removeVisitsByFilter({
+      beginDate: new Date(aFrom / 1000),
+      endDate: new Date(aTo / 1000)
+    });
+  },
+
+  deleteAll() {
+    return PlacesUtils.history.clear();
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -463,6 +481,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS,
    cleaner: PushNotificationsCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_HISTORY,
+   cleaner: HistoryCleaner, },
 ];
 
 this.ClearDataService = function() {};
