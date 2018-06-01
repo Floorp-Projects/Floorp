@@ -35,12 +35,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
 var gPendingSanitizationSerial = 0;
 
 /**
- * A number of iterations after which to yield time back
- * to the system.
- */
-const YIELD_PERIOD = 10;
-
-/**
  * Cookie lifetime policy is currently used to cleanup on shutdown other
  * components such as QuotaManager, localStorage, ServiceWorkers.
  */
@@ -322,69 +316,22 @@ var Sanitizer = {
   items: {
     cache: {
       async clear(range) {
-        let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_CACHE", refObj);
-
-        try {
-          // Cache doesn't consult timespan, nor does it have the
-          // facility for timespan-based eviction.  Wipe it.
-          Services.cache2.clear();
-        } catch (ex) {
-          seenException = ex;
-        }
-
-        try {
-          let imageCache = Cc["@mozilla.org/image/tools;1"]
-                             .getService(Ci.imgITools)
-                             .getImgCacheForDocument(null);
-          imageCache.clearCache(false); // true=chrome, false=content
-        } catch (ex) {
-          seenException = ex;
-        }
-
+        await clearData(range, Ci.nsIClearDataService.CLEAR_ALL_CACHES);
         TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
-        if (seenException) {
-          throw seenException;
-        }
       }
     },
 
     cookies: {
       async clear(range) {
         let seenException;
-        let yieldCounter = 0;
         let refObj = {};
 
         // Clear cookies.
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
-        try {
-          if (range) {
-            // Iterate through the cookies and delete any created after our cutoff.
-            let cookiesEnum = Services.cookies.enumerator;
-            while (cookiesEnum.hasMoreElements()) {
-              let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
-
-              if (cookie.creationTime > range[0]) {
-                // This cookie was created after our cutoff, clear it
-                Services.cookies.remove(cookie.host, cookie.name, cookie.path,
-                                        false, cookie.originAttributes);
-
-                if (++yieldCounter % YIELD_PERIOD == 0) {
-                  await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
-                }
-              }
-            }
-          } else {
-            // Remove everything
-            Services.cookies.removeAll();
-            await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
-          }
-        } catch (ex) {
-          seenException = ex;
-        } finally {
-          TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
-        }
+        await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES);
+        TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
 
         // Clear deviceIds. Done asynchronously (returns before complete).
         try {
@@ -1153,5 +1100,18 @@ function safeGetPendingSanitizations() {
   } catch (ex) {
     Cu.reportError("Invalid JSON value for pending sanitizations: " + ex);
     return [];
+  }
+}
+
+async function clearData(range, flags) {
+  if (range) {
+    await new Promise(resolve => {
+      Services.clearData.deleteDataInTimeRange(range[0], range[1], true /* user request */,
+                                               flags, resolve);
+    });
+  } else {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(flags, resolve);
+    });
   }
 }

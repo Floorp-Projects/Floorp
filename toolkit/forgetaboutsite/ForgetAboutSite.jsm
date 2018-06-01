@@ -45,35 +45,14 @@ var ForgetAboutSite = {
     await PlacesUtils.history.removeByFilter({ host: "." + aDomain });
 
     let promises = [];
-    // Cache
-    promises.push((async function() {
-      // NOTE: there is no way to clear just that domain, so we clear out
-      //       everything)
-      Services.cache2.clear();
-    })().catch(ex => {
-      throw new Error("Exception thrown while clearing the cache: " + ex);
-    }));
 
-    // Image Cache
-    promises.push((async function() {
-      let imageCache = Cc["@mozilla.org/image/tools;1"].
-                       getService(Ci.imgITools).getImgCacheForDocument(null);
-      imageCache.clearCache(false); // true=chrome, false=content
-    })().catch(ex => {
-      throw new Error("Exception thrown while clearing the image cache: " + ex);
-    }));
-
-    // Cookies
-    // Need to maximize the number of cookies cleaned here
-    promises.push((async function() {
-      let enumerator = Services.cookies.getCookiesWithOriginAttributes(JSON.stringify({}), aDomain);
-      while (enumerator.hasMoreElements()) {
-        let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-        Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
-      }
-    })().catch(ex => {
-      throw new Error("Exception thrown while clearning cookies: " + ex);
-    }));
+    ["http://", "https://"].forEach(scheme => {
+      promises.push(new Promise(resolve => {
+        Services.clearData.deleteDataFromHost(aDomain, true /* user request */,
+                                              Ci.nsIClearDataService.CLEAR_ALL,
+                                              resolve);
+      }));
+    });
 
     // EME
     promises.push((async function() {
