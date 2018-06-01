@@ -47,7 +47,7 @@ class OpenTypeSTAT : public Table {
     uint16_t flags;
     uint16_t valueNameID;
     Fixed    value;
-    static const size_t Length() {
+    static size_t Length() {
       return 3 * sizeof(uint16_t) + sizeof(Fixed);
     }
   };
@@ -59,7 +59,7 @@ class OpenTypeSTAT : public Table {
     Fixed    nominalValue;
     Fixed    rangeMinValue;
     Fixed    rangeMaxValue;
-    static const size_t Length() {
+    static size_t Length() {
       return 3 * sizeof(uint16_t) + 3 * sizeof(Fixed);
     }
   };
@@ -70,7 +70,7 @@ class OpenTypeSTAT : public Table {
     uint16_t valueNameID;
     Fixed    value;
     Fixed    linkedValue;
-    static const size_t Length() {
+    static size_t Length() {
       return 3 * sizeof(uint16_t) + 2 * sizeof(Fixed);
     }
   };
@@ -84,7 +84,7 @@ class OpenTypeSTAT : public Table {
       Fixed    value;
     };
     std::vector<AxisValue> axisValues;
-    const size_t Length() const {
+    size_t Length() const {
       return 3 * sizeof(uint16_t) + axisValues.size() * (sizeof(uint16_t) + sizeof(Fixed));
     }
   };

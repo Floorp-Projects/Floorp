@@ -113,13 +113,84 @@ function checkMiscPrefixed(opcode, expect_failure) {
 }
 
 //-----------------------------------------------------------
-// Verification cases for memory.copy/fill
+// Verification cases for memory.copy/fill opcode encodings
 
 checkMiscPrefixed(0x3f, true);  // unassigned
 checkMiscPrefixed(0x40, false); // memory.copy
 checkMiscPrefixed(0x41, false); // memory.fill
 checkMiscPrefixed(0x42, true);  // unassigned
 
+//-----------------------------------------------------------
+// Verification cases for memory.copy/fill arguments
+
+// Invalid argument types
+{
+    const tys = ['i32', 'f32', 'i64', 'f64'];
+    const ops = ['copy', 'fill'];
+    for (let ty1 of tys) {
+    for (let ty2 of tys) {
+    for (let ty3 of tys) {
+    for (let op of ops) {
+        if (ty1 == 'i32' && ty2 == 'i32' && ty3 == 'i32')
+            continue;  // this is the only valid case
+        let text =
+        `(module
+          (memory (export "memory") 1 1)
+           (func (export "testfn")
+           (memory.${op} (${ty1}.const 10) (${ty2}.const 20) (${ty3}.const 30))
+          )
+         )`;
+        assertErrorMessage(() => wasmEvalText(text),
+                           WebAssembly.CompileError, /type mismatch/);
+    }}}}
+}
+
+// Not enough, or too many, args
+{
+    for (let op of ['copy', 'fill']) {
+        let text1 =
+        `(module
+          (memory (export "memory") 1 1)
+          (func (export "testfn")
+           (i32.const 10)
+           (i32.const 20)
+           memory.${op}
+         )
+        )`;
+        assertErrorMessage(() => wasmEvalText(text1),
+                           WebAssembly.CompileError,
+                           /popping value from empty stack/);
+        let text2 =
+        `(module
+          (memory (export "memory") 1 1)
+          (func (export "testfn")
+           (i32.const 10)
+           (i32.const 20)
+           (i32.const 30)
+           (i32.const 40)
+           memory.${op}
+         )
+        )`;
+        assertErrorMessage(() => wasmEvalText(text2),
+                           WebAssembly.CompileError,
+                           /unused values not explicitly dropped by end of block/);
+    }
+}
+
+// Module doesn't have a memory
+{
+    for (let op of ['copy', 'fill']) {
+        let text =
+        `(module
+          (func (export "testfn")
+           (memory.${op} (i32.const 10) (i32.const 20) (i32.const 30))
+         )
+        )`;
+        assertErrorMessage(() => wasmEvalText(text),
+                           WebAssembly.CompileError,
+                           /can't touch memory without memory/);
+    }
+}
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
@@ -139,14 +210,14 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Range valid
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0xFF00) (i32.const 0x55) (i32.const 256))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0x00000, 0x0FF00, 0x00);
@@ -155,42 +226,42 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Range invalid
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0xFF00) (i32.const 0x55) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Wraparound the end of 32-bit offset space
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0xFFFFFF00) (i32.const 0x55) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Zero len with offset in-bounds is a no-op
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0x12) (i32.const 0x55) (i32.const 0))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0x00000, 0x10000, 0x00);
@@ -198,28 +269,28 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Zero len with offset out-of-bounds gets an exception
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0x10000) (i32.const 0x55) (i32.const 0))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Very large range
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0x1) (i32.const 0xAA) (i32.const 0xFFFE))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0x00000, 0x00001, 0x00);
@@ -229,7 +300,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Sequencing
 {
-    let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let i = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn") (result i32)
@@ -238,7 +309,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
          i32.const 99
        )
      )`
-    )));
+    );
     i.exports.testfn();
     let b = new Uint8Array(i.exports.memory.buffer);
     checkRange(b, 0x0,     0x12+0,  0x00);
@@ -255,7 +326,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 // Both ranges valid.  Copy 5 bytes backwards by 1 (overlapping).
 // result = 0x00--(09) 0x55--(11) 0x00--(pagesize-20)
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
@@ -263,7 +334,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
          (memory.copy (i32.const 9) (i32.const 10) (i32.const 5))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0,    0+9,     0x00);
@@ -274,7 +345,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 // Both ranges valid.  Copy 5 bytes forwards by 1 (overlapping).
 // result = 0x00--(10) 0x55--(11) 0x00--(pagesize-19)
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
@@ -282,7 +353,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
          (memory.copy (i32.const 16) (i32.const 15) (i32.const 5))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0,     0+10,    0x00);
@@ -292,63 +363,63 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Destination range invalid
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0xFF00) (i32.const 0x8000) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Destination wraparound the end of 32-bit offset space
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0xFFFFFF00) (i32.const 0x4000) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Source range invalid
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x8000) (i32.const 0xFF00) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Source wraparound the end of 32-bit offset space
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x4000) (i32.const 0xFFFFFF00) (i32.const 257))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Zero len with both offsets in-bounds is a no-op
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
@@ -357,7 +428,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
          (memory.copy (i32.const 0x9000) (i32.const 0x7000) (i32.const 0))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0x00000, 0x08000, 0x55);
@@ -366,28 +437,28 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 
 // Zero len with dest offset out-of-bounds is an exception
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x10000) (i32.const 0x7000) (i32.const 0))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Zero len with src offset out-of-bounds is an exception
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x9000) (i32.const 0x10000) (i32.const 0))
        )
      )`
-    )));
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
@@ -395,7 +466,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
 // 100 random fills followed by 100 random copies, in a single-page buffer,
 // followed by verification of the (now heavily mashed-around) buffer.
 {
-    let inst = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
@@ -601,7 +672,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
          (memory.copy (i32.const 50370) (i32.const 41271) (i32.const 1406))
        )
      )`
-    )));
+    );
     inst.exports.testfn();
     let b = new Uint8Array(inst.exports.memory.buffer);
     checkRange(b, 0, 124, 0);

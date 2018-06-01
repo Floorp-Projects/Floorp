@@ -261,6 +261,11 @@ macosx64-qr/debug:
     test-sets:
         - macosx64-qr-tests
 
+macosx64-ccov/debug:
+    build-platform: macosx64-ccov/debug
+    test-sets:
+        - macosx64-tests
+
 ##
 # Android platforms (matching /android.*/)
 

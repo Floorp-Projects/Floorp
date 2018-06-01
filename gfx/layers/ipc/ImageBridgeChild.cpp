@@ -698,12 +698,16 @@ ImageBridgeChild::IdentifyCompositorTextureHost(const TextureFactoryIdentifier& 
 void
 ImageBridgeChild::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aIdentifier)
 {
+  // ImageHost is incompatible between WebRender enabled and WebRender disabled.
+  // Then drop all ImageContainers' ImageClients during disabling WebRender.
   bool disablingWebRender = GetCompositorBackendType() == LayersBackend::LAYERS_WR &&
                             aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
+  // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
+  // drop all ImageContainers' ImageClients.
+  bool needsDrop = GetCompositorBackendType() == LayersBackend::LAYERS_D3D11 || disablingWebRender;
+
   IdentifyTextureHost(aIdentifier);
-  if (disablingWebRender) {
-    // ImageHost is incompatible between WebRender enabled and WebRender disabled.
-    // Then drop all ImageContainers' ImageClients during disabling WebRender.
+  if (needsDrop) {
     nsTArray<RefPtr<ImageContainerListener> > listeners;
     {
       MutexAutoLock lock(mContainerMapLock);
