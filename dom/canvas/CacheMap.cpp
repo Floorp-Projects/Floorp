@@ -21,7 +21,7 @@ CacheMapInvalidator::InvalidateCaches() const
 namespace detail {
 
 CacheMapUntypedEntry::CacheMapUntypedEntry(std::vector<const CacheMapInvalidator*>&& invalidators)
-    : mInvalidators(Move(invalidators))
+    : mInvalidators(std::move(invalidators))
 {
     for (const auto& cur : mInvalidators) {
         // Don't assert that we insert, since there may be dupes in `invalidators`.

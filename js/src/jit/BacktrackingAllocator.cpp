@@ -2360,13 +2360,13 @@ LiveRange::toString() const
     UniqueChars buf = JS_smprintf("v%u [%u,%u)", hasVreg() ? vreg() : 0, from().bits(), to().bits());
 
     if (buf && bundle() && !bundle()->allocation().isBogus())
-        buf = JS_sprintf_append(Move(buf), " %s", bundle()->allocation().toString().get());
+        buf = JS_sprintf_append(std::move(buf), " %s", bundle()->allocation().toString().get());
 
     if (buf && hasDefinition())
-        buf = JS_sprintf_append(Move(buf), " (def)");
+        buf = JS_sprintf_append(std::move(buf), " (def)");
 
     for (UsePositionIterator iter = usesBegin(); buf && iter; iter++)
-        buf = JS_sprintf_append(Move(buf), " %s@%u", iter->use()->toString().get(), iter->pos.bits());
+        buf = JS_sprintf_append(std::move(buf), " %s@%u", iter->use()->toString().get(), iter->pos.bits());
 
     if (!buf)
         oomUnsafe.crash("LiveRange::toString()");
@@ -2383,7 +2383,7 @@ LiveBundle::toString() const
     UniqueChars buf = JS_smprintf("%s", "");
 
     for (LiveRange::BundleLinkIterator iter = rangesBegin(); buf && iter; iter++) {
-        buf = JS_sprintf_append(Move(buf), "%s %s",
+        buf = JS_sprintf_append(std::move(buf), "%s %s",
                                 (iter == rangesBegin()) ? "" : " ##",
                                 LiveRange::get(*iter)->toString().get());
     }

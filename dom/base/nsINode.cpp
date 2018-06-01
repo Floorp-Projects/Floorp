@@ -2435,7 +2435,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
   }
 
   auto* ret = selectorList.get();
-  cache.CacheList(aSelectorString, Move(selectorList));
+  cache.CacheList(aSelectorString, std::move(selectorList));
   return ret;
 }
 

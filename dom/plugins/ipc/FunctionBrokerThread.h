@@ -17,7 +17,7 @@ class FunctionBrokerThread
 public:
   void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
   {
-    mThread->Dispatch(Move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
+    mThread->Dispatch(std::move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
   }
 
   bool IsOnThread()

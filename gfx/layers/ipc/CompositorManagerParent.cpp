@@ -61,7 +61,7 @@ CompositorManagerParent::Create(Endpoint<PCompositorManagerParent>&& aEndpoint)
     "CompositorManagerParent::Bind",
     bridge,
     &CompositorManagerParent::Bind,
-    Move(aEndpoint));
+    std::move(aEndpoint));
   CompositorThreadHolder::Loop()->PostTask(runnable.forget());
 }
 

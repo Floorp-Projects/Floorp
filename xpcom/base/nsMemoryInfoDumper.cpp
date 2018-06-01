@@ -476,7 +476,7 @@ public:
   HandleReportAndFinishReportingCallbacks(UniquePtr<JSONWriter> aWriter,
                                           nsIFinishDumpingCallback* aFinishDumping,
                                           nsISupports* aFinishDumpingData)
-    : mWriter(Move(aWriter))
+    : mWriter(std::move(aWriter))
     , mFinishDumping(aFinishDumping)
     , mFinishDumpingData(aFinishDumpingData)
   {
@@ -671,7 +671,7 @@ DumpMemoryInfoToFile(
 
   RefPtr<HandleReportAndFinishReportingCallbacks>
     handleReportAndFinishReporting =
-      new HandleReportAndFinishReportingCallbacks(Move(jsonWriter),
+      new HandleReportAndFinishReportingCallbacks(std::move(jsonWriter),
                                                   aFinishDumping,
                                                   aFinishDumpingData);
   rv = mgr->GetReportsExtended(handleReportAndFinishReporting, nullptr,

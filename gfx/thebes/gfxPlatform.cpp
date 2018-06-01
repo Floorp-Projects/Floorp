@@ -1834,7 +1834,7 @@ gfxPlatform::GetBackendPrefs() const
   data.mCanvasDefault = BackendType::CAIRO;
   data.mContentDefault = BackendType::CAIRO;
 
-  return mozilla::Move(data);
+  return std::move(data);
 }
 
 void

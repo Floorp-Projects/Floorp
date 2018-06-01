@@ -238,7 +238,7 @@ private:
         if (rv != Success) {
           return rv;
         }
-        if (!mExtensionTLVs.append(Move(extensionTLV))) {
+        if (!mExtensionTLVs.append(std::move(extensionTLV))) {
           return Result::FATAL_ERROR_NO_MEMORY;
         }
       }
@@ -374,7 +374,7 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
   precertTBSBuffer.shrinkTo(precertTBS.GetLength());
 
   output.type = LogEntry::Type::Precert;
-  output.tbsCertificate = Move(precertTBSBuffer);
+  output.tbsCertificate = std::move(precertTBSBuffer);
 
   if (!output.issuerKeyHash.resizeUninitialized(SHA256_LENGTH)) {
     return Result::FATAL_ERROR_NO_MEMORY;

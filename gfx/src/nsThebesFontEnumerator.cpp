@@ -97,7 +97,7 @@ public:
                          nsTArray<nsString> aFontList)
         : Runnable("EnumerateFontsResult")
         , mRv(aRv)
-        , mEnumerateFontsPromise(Move(aEnumerateFontsPromise))
+        , mEnumerateFontsPromise(std::move(aEnumerateFontsPromise))
         , mFontList(aFontList)
         , mWorkerThread(do_GetCurrentThread())
     {
@@ -136,7 +136,7 @@ public:
         : Runnable("EnumerateFontsTask")
         , mLangGroupAtom(aLangGroupAtom)
         , mGeneric(aGeneric)
-        , mEnumerateFontsPromise(Move(aEnumerateFontsPromise))
+        , mEnumerateFontsPromise(std::move(aEnumerateFontsPromise))
         , mMainThreadTarget(aMainThreadTarget)
     {
         MOZ_ASSERT(NS_IsMainThread());
@@ -151,7 +151,7 @@ public:
         nsresult rv = gfxPlatform::GetPlatform()->
             GetFontList(mLangGroupAtom, mGeneric, fontList);
         nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsResult(
-            rv, Move(mEnumerateFontsPromise), Move(fontList));
+            rv, std::move(mEnumerateFontsPromise), std::move(fontList));
         mMainThreadTarget->Dispatch(runnable.forget());
 
         return NS_OK;
@@ -212,7 +212,7 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
 
     nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(mozilla::TaskCategory::Other);
     nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsTask(
-        langGroupAtom, generic, Move(enumerateFontsPromise), target);
+        langGroupAtom, generic, std::move(enumerateFontsPromise), target);
     thread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 
     if (!ToJSValue(aCx, promise, aRval)) {

@@ -248,7 +248,7 @@ CreateHTMLElement(uint32_t aNodeType,
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
-  RefPtr<nsGenericHTMLElement> result = cb(Move(aNodeInfo), aFromParser);
+  RefPtr<nsGenericHTMLElement> result = cb(std::move(aNodeInfo), aFromParser);
 
   return result.forget();
 }

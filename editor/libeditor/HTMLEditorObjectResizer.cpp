@@ -145,7 +145,7 @@ HTMLEditor::CreateResizer(int16_t aLocation,
   nsresult rv =
     ret->SetAttr(kNameSpaceID_None, nsGkAtoms::anonlocation, locationStr, true);
   NS_ENSURE_SUCCESS(rv, nullptr);
-  return Move(ret);
+  return std::move(ret);
 }
 
 ManualNACPtr
@@ -369,34 +369,34 @@ HTMLEditor::HideResizers()
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mTopLeftHandle), ps);
+                             std::move(mTopLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mTopHandle), ps);
+                             std::move(mTopHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mTopRightHandle), ps);
+                             std::move(mTopRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mLeftHandle), ps);
+                             std::move(mLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mRightHandle), ps);
+                             std::move(mRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mBottomLeftHandle), ps);
+                             std::move(mBottomLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mBottomHandle), ps);
+                             std::move(mBottomHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mBottomRightHandle), ps);
+                             std::move(mBottomRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mResizingShadow), ps);
+                             std::move(mResizingShadow), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             Move(mResizingInfo), ps);
+                             std::move(mResizingInfo), ps);
 
   if (mActivatedHandle) {
     mActivatedHandle->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,

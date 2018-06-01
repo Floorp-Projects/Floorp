@@ -197,28 +197,28 @@ TEST(PLDHashTableTest, MoveSemantics)
   PLDHashTable t2(&trivialOps, sizeof(PLDHashEntryStub));
   t2.Add((const void*)99);
 
-  t1 = mozilla::Move(t1);   // self-move
+  t1 = std::move(t1);   // self-move
 
-  t1 = mozilla::Move(t2);   // empty overwritten with empty
+  t1 = std::move(t2);   // empty overwritten with empty
 
   PLDHashTable t3(&trivialOps, sizeof(PLDHashEntryStub));
   PLDHashTable t4(&trivialOps, sizeof(PLDHashEntryStub));
   t3.Add((const void*)88);
 
-  t3 = mozilla::Move(t4);   // non-empty overwritten with empty
+  t3 = std::move(t4);   // non-empty overwritten with empty
 
   PLDHashTable t5(&trivialOps, sizeof(PLDHashEntryStub));
   PLDHashTable t6(&trivialOps, sizeof(PLDHashEntryStub));
   t6.Add((const void*)88);
 
-  t5 = mozilla::Move(t6);   // empty overwritten with non-empty
+  t5 = std::move(t6);   // empty overwritten with non-empty
 
   PLDHashTable t7(&trivialOps, sizeof(PLDHashEntryStub));
-  PLDHashTable t8(mozilla::Move(t7));  // new table constructed with uninited
+  PLDHashTable t8(std::move(t7));  // new table constructed with uninited
 
   PLDHashTable t9(&trivialOps, sizeof(PLDHashEntryStub));
   t9.Add((const void*)88);
-  PLDHashTable t10(mozilla::Move(t9));  // new table constructed with inited
+  PLDHashTable t10(std::move(t9));  // new table constructed with inited
 }
 
 TEST(PLDHashTableTest, Clear)
@@ -259,7 +259,7 @@ TEST(PLDHashTableTest, Iterator)
   // iterator use.
   {
     PLDHashTable::Iterator iter1(&t);
-    PLDHashTable::Iterator iter2(mozilla::Move(iter1));
+    PLDHashTable::Iterator iter2(std::move(iter1));
   }
 
   // Iterate through the empty table.

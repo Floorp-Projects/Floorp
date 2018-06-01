@@ -87,13 +87,13 @@ void RLogConnector::Log(int level, std::string&& log) {
   if (level <= LOG_INFO) {
     OffTheBooksMutexAutoLock lock(mutex_);
     if (disableCount_ == 0) {
-      AddMsg(Move(log));
+      AddMsg(std::move(log));
     }
   }
 }
 
 void RLogConnector::AddMsg(std::string&& msg) {
-  log_messages_.push_front(Move(msg));
+  log_messages_.push_front(std::move(msg));
   RemoveOld();
 }
 

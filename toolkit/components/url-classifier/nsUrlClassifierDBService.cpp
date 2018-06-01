@@ -905,7 +905,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
    }
 
   mClassifier->ApplyFullHashes(&updates);
-  mLastResults = Move(resultsPtr);
+  mLastResults = std::move(resultsPtr);
   return NS_OK;
 }
 

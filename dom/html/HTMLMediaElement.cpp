@@ -294,7 +294,7 @@ public:
     : nsMediaEvent(
         "HTMLMediaElement::nsResolveOrRejectPendingPlayPromisesRunner",
         aElement)
-    , mPromises(Move(aPromises))
+    , mPromises(std::move(aPromises))
     , mError(aError)
   {
     mElement->mPendingPlayPromisesRunners.AppendElement(this);
@@ -328,7 +328,7 @@ public:
     HTMLMediaElement* aElement,
     nsTArray<RefPtr<PlayPromise>>&& aPendingPlayPromises)
     : nsResolveOrRejectPendingPlayPromisesRunner(aElement,
-                                                 Move(aPendingPlayPromises))
+                                                 std::move(aPendingPlayPromises))
   {
   }
 
@@ -3453,7 +3453,7 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
     processedOutputSource, destinationTrackID);
 
   Pair<nsString, RefPtr<MediaInputPort>> p(aTrack->GetId(), port);
-  aOutputStream.mTrackPorts.AppendElement(Move(p));
+  aOutputStream.mTrackPorts.AppendElement(std::move(p));
 
   if (mSrcStreamIsPlaying) {
     processedOutputSource->SetTrackEnabled(destinationTrackID,
@@ -5420,7 +5420,7 @@ HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
 
   mIsEncrypted =
     aInfo->IsEncrypted() || mPendingEncryptedInitData.IsEncrypted();
-  mTags = Move(aTags);
+  mTags = std::move(aTags);
   mLoadedDataFired = false;
   ChangeReadyState(HAVE_METADATA);
 
@@ -7794,7 +7794,7 @@ HTMLMediaElement::AbstractMainThread() const
 nsTArray<RefPtr<PlayPromise>>
 HTMLMediaElement::TakePendingPlayPromises()
 {
-  return Move(mPendingPlayPromises);
+  return std::move(mPendingPlayPromises);
 }
 
 void

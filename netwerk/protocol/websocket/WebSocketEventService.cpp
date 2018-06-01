@@ -75,7 +75,7 @@ public:
                          already_AddRefed<WebSocketFrame> aFrame,
                          bool aFrameSent)
     : WebSocketBaseRunnable(aWebSocketSerialID, aInnerWindowID)
-    , mFrame(Move(aFrame))
+    , mFrame(std::move(aFrame))
     , mFrameSent(aFrameSent)
   {}
 
@@ -340,7 +340,7 @@ WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
                                      already_AddRefed<WebSocketFrame> aFrame,
                                      nsIEventTarget* aTarget)
 {
-  RefPtr<WebSocketFrame> frame(Move(aFrame));
+  RefPtr<WebSocketFrame> frame(std::move(aFrame));
   MOZ_ASSERT(frame);
 
   // Let's continue only if we have some listeners.
@@ -363,7 +363,7 @@ WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
                                  already_AddRefed<WebSocketFrame> aFrame,
                                  nsIEventTarget* aTarget)
 {
-  RefPtr<WebSocketFrame> frame(Move(aFrame));
+  RefPtr<WebSocketFrame> frame(std::move(aFrame));
   MOZ_ASSERT(frame);
 
   // Let's continue only if we have some listeners.

@@ -43,7 +43,7 @@ NamedPipeService::Init()
   // register shutdown event to stop NamedPipeSrv thread.
   nsCOMPtr<nsIObserver> self(this);
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("NamedPipeService::Init",
-                                                   [self = Move(self)] () -> void {
+                                                   [self = std::move(self)] () -> void {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIObserverService> svc = mozilla::services::GetObserverService();

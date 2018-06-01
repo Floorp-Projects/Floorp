@@ -82,7 +82,7 @@ bool
 PluginModuleChild::CreateForContentProcess(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
     auto* child = new PluginModuleChild(false);
-    return child->InitForContent(Move(aEndpoint));
+    return child->InitForContent(std::move(aEndpoint));
 }
 
 PluginModuleChild::PluginModuleChild(bool aIsChrome)
@@ -182,7 +182,7 @@ mozilla::ipc::IPCResult
 PluginModuleChild::RecvInitProfiler(Endpoint<mozilla::PProfilerChild>&& aEndpoint)
 {
 #ifdef MOZ_GECKO_PROFILER
-    mProfilerController = ChildProfilerController::Create(Move(aEndpoint));
+    mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
 #endif
     return IPC_OK();
 }
@@ -730,7 +730,7 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
 mozilla::ipc::IPCResult
 PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
-    if (!CreateForContentProcess(Move(aEndpoint))) {
+    if (!CreateForContentProcess(std::move(aEndpoint))) {
         return IPC_FAIL(this, "CreateForContentProcess failed");
     }
     return IPC_OK();
@@ -741,7 +741,7 @@ PluginModuleChild::RecvInitPluginFunctionBroker(Endpoint<PFunctionBrokerChild>&&
 {
 #if defined(XP_WIN)
     MOZ_ASSERT(mIsChrome);
-    if (!FunctionBrokerChild::Initialize(Move(aEndpoint))) {
+    if (!FunctionBrokerChild::Initialize(std::move(aEndpoint))) {
       return IPC_FAIL(this,
                       "InitPluginFunctionBroker failed to initialize broker child.");
     }

@@ -1433,7 +1433,7 @@ EventSourceImpl::DispatchCurrentMessageEvent()
 {
   AssertIsOnTargetThread();
   MOZ_ASSERT(!IsShutDown());
-  UniquePtr<Message> message(Move(mCurrentMessage));
+  UniquePtr<Message> message(std::move(mCurrentMessage));
   ClearFields();
 
   if (!message || message->mData.IsEmpty()) {
@@ -1803,7 +1803,7 @@ public:
                            already_AddRefed<nsIRunnable> aEvent)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mEventSourceImpl(aImpl)
-    , mEvent(Move(aEvent))
+    , mEvent(std::move(aEvent))
   {
   }
 

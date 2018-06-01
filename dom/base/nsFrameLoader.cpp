@@ -2239,13 +2239,13 @@ nsFrameLoader::MaybeCreateDocShell()
     // Make a copy, so we can modify it.
     ancestorPrincipals = doc->AncestorPrincipals();
     ancestorPrincipals.InsertElementAt(0, doc->NodePrincipal());
-    nsDocShell::Cast(mDocShell)->SetAncestorPrincipals(Move(ancestorPrincipals));
+    nsDocShell::Cast(mDocShell)->SetAncestorPrincipals(std::move(ancestorPrincipals));
 
     // Repeat for outer window IDs.
     nsTArray<uint64_t> ancestorOuterWindowIDs;
     ancestorOuterWindowIDs = doc->AncestorOuterWindowIDs();
     ancestorOuterWindowIDs.InsertElementAt(0, win->WindowID());
-    nsDocShell::Cast(mDocShell)->SetAncestorOuterWindowIDs(Move(ancestorOuterWindowIDs));
+    nsDocShell::Cast(mDocShell)->SetAncestorOuterWindowIDs(std::move(ancestorOuterWindowIDs));
   }
 
   ReallyLoadFrameScripts();

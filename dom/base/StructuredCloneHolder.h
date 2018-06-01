@@ -42,7 +42,7 @@ public:
   StructuredCloneHolderBase(StructuredCloneScope aScope = StructuredCloneScope::SameProcessSameThread);
   virtual ~StructuredCloneHolderBase();
 
-  // Note, it is unsafe to Move() a StructuredCloneHolderBase since a raw
+  // Note, it is unsafe to std::move() a StructuredCloneHolderBase since a raw
   // this pointer is passed to mBuffer as a callback closure.  That must
   // be fixed if you want to implement a move constructor here.
   StructuredCloneHolderBase(StructuredCloneHolderBase&& aOther) = delete;
@@ -240,7 +240,7 @@ public:
   nsTArray<RefPtr<MessagePort>>&& TakeTransferredPorts()
   {
     MOZ_ASSERT(mSupportsTransferring);
-    return Move(mTransferredPorts);
+    return std::move(mTransferredPorts);
   }
 
   // This method uses TakeTransferredPorts() to populate a sequence of

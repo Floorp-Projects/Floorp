@@ -99,7 +99,7 @@ void
 CanvasLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
 {
   aRegion.AndWith(LayerIntRect::FromUnknownRect(mPictureRect));
-  LayerMLGPU::SetRenderRegion(Move(aRegion));
+  LayerMLGPU::SetRenderRegion(std::move(aRegion));
 }
 
 } // namespace layers

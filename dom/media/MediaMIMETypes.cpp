@@ -169,7 +169,7 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const MediaMIMEType& aType)
 
 MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
   : mOriginalString(aType.AsString())
-  , mMIMEType(Move(aType))
+  , mMIMEType(std::move(aType))
 {
 }
 

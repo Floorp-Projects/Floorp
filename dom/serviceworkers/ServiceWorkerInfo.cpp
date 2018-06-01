@@ -247,7 +247,7 @@ ServiceWorkerInfo::PostMessage(ipc::StructuredCloneData&& aData,
                                const ClientInfo& aClientInfo,
                                const ClientState& aClientState)
 {
-  mServiceWorkerPrivate->SendMessageEvent(Move(aData),
+  mServiceWorkerPrivate->SendMessageEvent(std::move(aData),
                                           ClientInfoAndState(aClientInfo.ToIPC(),
                                                              aClientState.ToIPC()));
 }

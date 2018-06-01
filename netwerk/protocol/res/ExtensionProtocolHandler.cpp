@@ -91,7 +91,7 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
                           nsIFile* aJarFile)
       : mURI(aURI)
       , mLoadInfo(aLoadInfo)
-      , mJarChannel(Move(aJarChannel))
+      , mJarChannel(std::move(aJarChannel))
       , mJarFile(aJarFile)
       , mIsJarChannel(true)
     {
@@ -270,7 +270,7 @@ ExtensionStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream)
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mMainThreadEventTarget);
 
-  nsCOMPtr<nsIInputStream> stream = Move(aStream);
+  nsCOMPtr<nsIInputStream> stream = std::move(aStream);
 
   // We must keep an owning reference to the listener
   // until we pass it on to AsyncRead.

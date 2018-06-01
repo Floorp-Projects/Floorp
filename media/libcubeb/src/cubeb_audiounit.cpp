@@ -77,7 +77,7 @@ extern cubeb_ops const audiounit_ops;
 struct cubeb {
   cubeb_ops const * ops = &audiounit_ops;
   owned_critical_section mutex;
-  atomic<int> active_streams{ 0 };
+  int active_streams = 0;
   uint32_t global_latency_frames = 0;
   cubeb_device_collection_changed_callback collection_changed_callback = nullptr;
   void * collection_changed_user_ptr = nullptr;
@@ -321,11 +321,32 @@ AudioConvertHostTimeToNanos(uint64_t host_time)
 #endif
 
 static void
-audiounit_set_global_latency(cubeb_stream * stm, uint32_t latency_frames)
+audiounit_increment_active_streams(cubeb * ctx)
 {
-  stm->mutex.assert_current_thread_owns();
-  assert(stm->context->active_streams == 1);
-  stm->context->global_latency_frames = latency_frames;
+  ctx->mutex.assert_current_thread_owns();
+  ctx->active_streams += 1;
+}
+
+static void
+audiounit_decrement_active_streams(cubeb * ctx)
+{
+  ctx->mutex.assert_current_thread_owns();
+  ctx->active_streams -= 1;
+}
+
+static int
+audiounit_active_streams(cubeb * ctx)
+{
+  ctx->mutex.assert_current_thread_owns();
+  return ctx->active_streams;
+}
+
+static void
+audiounit_set_global_latency(cubeb * ctx, uint32_t latency_frames)
+{
+  ctx->mutex.assert_current_thread_owns();
+  assert(audiounit_active_streams(ctx) == 1);
+  ctx->global_latency_frames = latency_frames;
 }
 
 static void
@@ -1257,14 +1278,15 @@ static OSStatus audiounit_remove_device_listener(cubeb * context);
 static void
 audiounit_destroy(cubeb * ctx)
 {
-  // Disabling this assert for bug 1083664 -- we seem to leak a stream
-  // assert(ctx->active_streams == 0);
-  if (ctx->active_streams > 0) {
-    LOG("(%p) API misuse, %d streams active when context destroyed!", ctx, ctx->active_streams.load());
-  }
-
   {
     auto_lock lock(ctx->mutex);
+
+    // Disabling this assert for bug 1083664 -- we seem to leak a stream
+    // assert(ctx->active_streams == 0);
+    if (audiounit_active_streams(ctx) > 0) {
+      LOG("(%p) API misuse, %d streams active when context destroyed!", ctx, audiounit_active_streams(ctx));
+    }
+
     /* Unregister the callback if necessary. */
     if (ctx->collection_changed_callback) {
       audiounit_remove_device_listener(ctx);
@@ -1950,8 +1972,8 @@ static uint32_t
 audiounit_clamp_latency(cubeb_stream * stm, uint32_t latency_frames)
 {
   // For the 1st stream set anything within safe min-max
-  assert(stm->context->active_streams > 0);
-  if (stm->context->active_streams == 1) {
+  assert(audiounit_active_streams(stm->context) > 0);
+  if (audiounit_active_streams(stm->context) == 1) {
     return max(min<uint32_t>(latency_frames, SAFE_MAX_LATENCY_FRAMES),
                     SAFE_MIN_LATENCY_FRAMES);
   }
@@ -2410,7 +2432,7 @@ audiounit_setup_stream(cubeb_stream * stm)
 
   /* Latency cannot change if another stream is operating in parallel. In this case
   * latecy is set to the other stream value. */
-  if (stm->context->active_streams > 1) {
+  if (audiounit_active_streams(stm->context) > 1) {
     LOG("(%p) More than one active stream, use global latency.", stm);
     stm->latency_frames = stm->context->global_latency_frames;
   } else {
@@ -2419,7 +2441,7 @@ audiounit_setup_stream(cubeb_stream * stm)
     * often. */
     stm->latency_frames = audiounit_clamp_latency(stm, stm->latency_frames);
     assert(stm->latency_frames); // Ungly error check
-    audiounit_set_global_latency(stm, stm->latency_frames);
+    audiounit_set_global_latency(stm->context, stm->latency_frames);
   }
 
   /* Configure I/O stream */
@@ -2576,12 +2598,12 @@ audiounit_stream_init(cubeb * context,
                       cubeb_state_callback state_callback,
                       void * user_ptr)
 {
+  assert(context);
+  auto_lock context_lock(context->mutex);
+  audiounit_increment_active_streams(context);
   unique_ptr<cubeb_stream, decltype(&audiounit_stream_destroy)> stm(new cubeb_stream(context),
                                                                     audiounit_stream_destroy);
-  context->active_streams += 1;
   int r;
-
-  assert(context);
   *stream = NULL;
   assert(latency_frames > 0);
   if ((input_device && !input_stream_params) ||
@@ -2612,7 +2634,6 @@ audiounit_stream_init(cubeb * context,
     }
   }
 
-  auto_lock context_lock(context->mutex);
   {
     // It's not critical to lock here, because no other thread has been started
     // yet, but it allows to assert that the lock has been taken in
@@ -2690,8 +2711,9 @@ audiounit_stream_destroy(cubeb_stream * stm)
   dispatch_sync(stm->context->serial_queue, ^() {
     auto_lock lock(stm->mutex);
     audiounit_close_stream(stm);
-    assert(stm->context->active_streams >= 1);
-    stm->context->active_streams -= 1;
+    auto_lock context_lock(stm->context->mutex);
+    assert(audiounit_active_streams(stm->context) >= 1);
+    audiounit_decrement_active_streams(stm->context);
   });
 
   LOG("Cubeb stream (%p) destroyed successful.", stm);

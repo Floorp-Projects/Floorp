@@ -291,7 +291,7 @@ public:
   AudioSegment() : MediaSegmentBase<AudioSegment, AudioChunk>(AUDIO) {}
 
   AudioSegment(AudioSegment&& aSegment)
-    : MediaSegmentBase<AudioSegment, AudioChunk>(Move(aSegment))
+    : MediaSegmentBase<AudioSegment, AudioChunk>(std::move(aSegment))
   {}
 
   AudioSegment(const AudioSegment&)=delete;

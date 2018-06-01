@@ -18,7 +18,7 @@ public:
   ServoNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
                      uint32_t aLine, uint32_t aColumn)
     : CSSNamespaceRule(aLine, aColumn)
-    , mRawRule(Move(aRule))
+    , mRawRule(std::move(aRule))
   {
   }
 

@@ -195,7 +195,7 @@ class GlobalHelperThreadState
     {
         // Self-moving is undefined behavior.
         if (*index != vector.length() - 1)
-            vector[*index] = mozilla::Move(vector.back());
+            vector[*index] = std::move(vector.back());
         (*index)--;
         vector.popBack();
     }
@@ -304,6 +304,7 @@ class GlobalHelperThreadState
     bool finishParseTask(JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token, MutableHandle<ScriptVector> scripts);
 
     void cancelParseTask(JSRuntime* rt, ParseTaskKind kind, JS::OffThreadToken* token);
+    void destroyParseTask(JSRuntime* rt, ParseTask* parseTask);
 
     void mergeParseTaskRealm(JSContext* cx, ParseTask* parseTask, JS::Realm* dest);
 

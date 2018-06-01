@@ -159,7 +159,7 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
   // The PerformanceResourceTiming object will use the PerformanceTimingData
   // object to get all the required timings.
   RefPtr<PerformanceResourceTiming> performanceEntry =
-    new PerformanceResourceTiming(Move(performanceTimingData), this,
+    new PerformanceResourceTiming(std::move(performanceTimingData), this,
                                   entryName);
 
   performanceEntry->SetInitiatorType(initiatorType);
@@ -325,7 +325,7 @@ PerformanceMainThread::EnsureDocEntry()
     nsAutoString name;
     GetURLSpecFromChannel(mChannel, name);
 
-    mDocEntry = new PerformanceNavigationTiming(Move(timing), this, name);
+    mDocEntry = new PerformanceNavigationTiming(std::move(timing), this, name);
   }
 }
 
@@ -344,7 +344,7 @@ PerformanceMainThread::CreateDocumentEntry(nsITimedChannel* aChannel)
 
   UniquePtr<PerformanceTimingData> timing(
       new PerformanceTimingData(aChannel, nullptr, 0));
-  mDocEntry = new PerformanceNavigationTiming(Move(timing), this, name);
+  mDocEntry = new PerformanceNavigationTiming(std::move(timing), this, name);
 }
 
 void

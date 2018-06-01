@@ -27,7 +27,7 @@ template<size_t... Indices, class ObjT, class Method, typename... Args>
 void CallMethod(std::index_sequence<Indices...>, ObjT* obj, Method method,
                 mozilla::Tuple<Args...>& arg)
 {
-  (obj->*method)(mozilla::Move(mozilla::Get<Indices>(arg))...);
+  (obj->*method)(std::move(mozilla::Get<Indices>(arg))...);
 }
 
 // Same as above, but call a function.
@@ -35,7 +35,7 @@ template<size_t... Indices, typename Function, typename... Args>
 void CallFunction(std::index_sequence<Indices...>, Function function,
                   mozilla::Tuple<Args...>& arg)
 {
-  (*function)(mozilla::Move(mozilla::Get<Indices>(arg))...);
+  (*function)(std::move(mozilla::Get<Indices>(arg))...);
 }
 
 } // namespace details

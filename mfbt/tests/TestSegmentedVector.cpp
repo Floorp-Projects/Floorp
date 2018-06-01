@@ -54,7 +54,7 @@ void TestBasics()
   // Add 100 elements, then check various things.
   i = 0;
   for ( ; i < 100; i++) {
-    gDummy = v.Append(mozilla::Move(i));
+    gDummy = v.Append(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 100);
@@ -68,7 +68,7 @@ void TestBasics()
 
   // Add another 900 elements, then re-check.
   for ( ; i < 1000; i++) {
-    v.InfallibleAppend(mozilla::Move(i));
+    v.InfallibleAppend(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 1000);
@@ -91,7 +91,7 @@ void TestBasics()
 
   // Fill the vector up again to prepare for the clear.
   for (i = 0; i < 1000; i++) {
-    v.InfallibleAppend(mozilla::Move(i));
+    v.InfallibleAppend(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 1000);
@@ -102,7 +102,7 @@ void TestBasics()
 
   // Fill the vector up to verify PopLastN works.
   for (i = 0; i < 1000; ++i) {
-    v.InfallibleAppend(mozilla::Move(i));
+    v.InfallibleAppend(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 1000);
@@ -158,11 +158,11 @@ void TestConstructorsAndDestructors()
     copyCtorCalls++;
     NonPOD y(1);                          // explicit constructor called
     explicitCtorCalls++;
-    gDummy = v.Append(mozilla::Move(y));  // move constructor called
+    gDummy = v.Append(std::move(y));  // move constructor called
     moveCtorCalls++;
     NonPOD z(1);                          // explicit constructor called
     explicitCtorCalls++;
-    v.InfallibleAppend(mozilla::Move(z)); // move constructor called
+    v.InfallibleAppend(std::move(z)); // move constructor called
     moveCtorCalls++;
     v.PopLast();                          // destructor called 1 time
     dtorCalls++;

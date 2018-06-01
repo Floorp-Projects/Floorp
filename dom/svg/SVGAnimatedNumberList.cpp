@@ -140,7 +140,7 @@ SVGAnimatedNumberList::
   nsresult rv = nlai->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     nlai->SetInfo(mElement);
-    aValue = Move(val);
+    aValue = std::move(val);
   }
   aPreventCachingOfSandwich = false;
   return rv;

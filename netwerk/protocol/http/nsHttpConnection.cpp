@@ -2144,7 +2144,7 @@ nsHttpConnection::SetupProxyConnect()
     if (NS_FAILED(rv)) {
         return rv;
     }
-    return NS_NewCStringInputStream(getter_AddRefs(mProxyConnectStream), Move(buf));
+    return NS_NewCStringInputStream(getter_AddRefs(mProxyConnectStream), std::move(buf));
 }
 
 nsresult

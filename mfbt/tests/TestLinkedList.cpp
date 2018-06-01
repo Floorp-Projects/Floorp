@@ -143,18 +143,18 @@ TestMove()
   // Test move assignment of LinkedListElement from an element already in a
   // list.
   SomeClass c3;
-  c3 = Move(c2);
+  c3 = std::move(c2);
   MOZ_RELEASE_ASSERT(!c2.isInList());
   MOZ_RELEASE_ASSERT(c3.isInList());
 
   // Test move constructor for LinkedList.
-  LinkedList<SomeClass> list2(Move(list1));
+  LinkedList<SomeClass> list2(std::move(list1));
   { unsigned int check[] { 1, 2 }; CheckListValues(list2, check); }
   MOZ_RELEASE_ASSERT(list1.isEmpty());
 
   // Test move assignment for LinkedList.
   LinkedList<SomeClass> list3;
-  list3 = Move(list2);
+  list3 = std::move(list2);
   { unsigned int check[] { 1, 2 }; CheckListValues(list3, check); }
   MOZ_RELEASE_ASSERT(list2.isEmpty());
 
@@ -232,7 +232,7 @@ TestRefPtrList()
     MOZ_RELEASE_ASSERT(ptr->mCount == 2);
     RefPtr<CountedClass> next = ptr->getNext();
     ptr->remove();
-    ptr = Move(next);
+    ptr = std::move(next);
   }
   ptr = nullptr;
 

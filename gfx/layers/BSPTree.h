@@ -29,14 +29,14 @@ struct LayerPolygon {
 
   LayerPolygon(Layer* aLayer,
                gfx::Polygon&& aGeometry)
-    : layer(aLayer), geometry(Some(Move(aGeometry))) {}
+    : layer(aLayer), geometry(Some(std::move(aGeometry))) {}
 
   LayerPolygon(Layer* aLayer,
                nsTArray<gfx::Point4D>&& aPoints,
                const gfx::Point4D& aNormal)
     : layer(aLayer)
   {
-    geometry.emplace(Move(aPoints), aNormal);
+    geometry.emplace(std::move(aPoints), aNormal);
   }
 
   Layer* layer;

@@ -71,7 +71,7 @@ public:
                       already_AddRefed<nsIInputStream> aCreatedStream)
     : CancelableRunnable("dom::StreamReadyRunnable")
     , mDestinationStream(aDestinationStream)
-    , mCreatedStream(Move(aCreatedStream))
+    , mCreatedStream(std::move(aCreatedStream))
   {
     MOZ_ASSERT(mDestinationStream);
     // mCreatedStream can be null.

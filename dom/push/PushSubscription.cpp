@@ -65,7 +65,7 @@ public:
                             nsresult aStatus,
                             bool aSuccess)
     : WorkerRunnable(aWorkerPrivate)
-    , mProxy(Move(aProxy))
+    , mProxy(std::move(aProxy))
     , mStatus(aStatus)
     , mSuccess(aSuccess)
   {
@@ -203,8 +203,8 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    nsTArray<uint8_t>&& aAppServerKey)
   : mEndpoint(aEndpoint)
   , mScope(aScope)
-  , mRawP256dhKey(Move(aRawP256dhKey))
-  , mAuthSecret(Move(aAuthSecret))
+  , mRawP256dhKey(std::move(aRawP256dhKey))
+  , mAuthSecret(std::move(aAuthSecret))
 {
   if (NS_IsMainThread()) {
     mGlobal = aGlobal;
@@ -217,7 +217,7 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
     worker->AssertIsOnWorkerThread();
 #endif
   }
-  mOptions = new PushSubscriptionOptions(mGlobal, Move(aAppServerKey));
+  mOptions = new PushSubscriptionOptions(mGlobal, std::move(aAppServerKey));
 }
 
 PushSubscription::~PushSubscription()
@@ -277,9 +277,9 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
   RefPtr<PushSubscription> sub = new PushSubscription(global,
                                                       aInitDict.mEndpoint,
                                                       aInitDict.mScope,
-                                                      Move(rawKey),
-                                                      Move(authSecret),
-                                                      Move(appServerKey));
+                                                      std::move(rawKey),
+                                                      std::move(authSecret),
+                                                      std::move(appServerKey));
 
   return sub.forget();
 }

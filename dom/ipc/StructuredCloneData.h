@@ -48,7 +48,7 @@ class SharedJSAllocatedData final
 {
 public:
   explicit SharedJSAllocatedData(JSStructuredCloneData&& aData)
-    : mData(Move(aData))
+    : mData(std::move(aData))
   { }
 
   static already_AddRefed<SharedJSAllocatedData>
@@ -57,7 +57,7 @@ public:
     JSStructuredCloneData buf(JS::StructuredCloneScope::DifferentProcess);
     buf.AppendBytes(aData, aDataLength);
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(Move(buf));
+      new SharedJSAllocatedData(std::move(buf));
     return sharedData.forget();
   }
 
@@ -67,7 +67,7 @@ public:
     JSStructuredCloneData buf(aData.scope());
     buf.Append(aData);
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(Move(buf));
+      new SharedJSAllocatedData(std::move(buf));
     return sharedData.forget();
   }
 

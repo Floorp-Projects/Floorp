@@ -363,7 +363,7 @@ public:
   void
   AddPromise(RefPtr<ClientOpPromise>&& aPromise)
   {
-    mPromiseList.AppendElement(Move(aPromise));
+    mPromiseList.AppendElement(std::move(aPromise));
     MOZ_DIAGNOSTIC_ASSERT(mPromiseList.LastElement());
     mOutstandingPromiseCount += 1;
 
@@ -438,7 +438,7 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
     }
 
     promiseList->AddPromise(
-      source->StartOp(Move(ClientGetInfoAndStateArgs(source->Info().Id(),
+      source->StartOp(std::move(ClientGetInfoAndStateArgs(source->Info().Id(),
                                                      source->Info().PrincipalInfo()))));
   }
 
@@ -595,7 +595,7 @@ ClientManagerService::OpenWindow(const ClientOpenWindowArgs& aArgs,
     new ClientOpPromise::Private(__func__);
 
   nsCOMPtr<nsIRunnable> r = new OpenWindowRunnable(promise, aArgs,
-                                                   Move(aSourceProcess));
+                                                   std::move(aSourceProcess));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other,
                                             r.forget()));
 

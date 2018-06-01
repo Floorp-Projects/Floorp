@@ -16,7 +16,7 @@ DummyDataCreator::~DummyDataCreator() {}
 DummyMediaDataDecoder::DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCreator,
                                              const nsACString& aDescription,
                                              const CreateDecoderParams& aParams)
-  : mCreator(Move(aCreator))
+  : mCreator(std::move(aCreator))
   , mIsH264(MP4Decoder::IsH264(aParams.mConfig.mMimeType))
   , mMaxRefFrames(
       mIsH264

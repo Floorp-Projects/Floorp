@@ -778,7 +778,7 @@ private:
       return rv;
     }
 
-    ir->SetPrincipalInfo(Move(principalInfo));
+    ir->SetPrincipalInfo(std::move(principalInfo));
     ir->Headers()->FillResponseHeaders(loadInfo.mChannel);
 
     RefPtr<mozilla::dom::Response> response =
@@ -1054,7 +1054,7 @@ private:
     if (IsMainWorkerScript()) {
       MOZ_DIAGNOSTIC_ASSERT(loadInfo.mReservedClientInfo.isSome());
       rv = AddClientChannelHelper(channel,
-                                  Move(loadInfo.mReservedClientInfo),
+                                  std::move(loadInfo.mReservedClientInfo),
                                   Maybe<ClientInfo>(),
                                   mWorkerPrivate->HybridEventTarget());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1834,7 +1834,7 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mRunnable->DataReceivedFromCache(mIndex, (uint8_t*)"", 0, mChannelInfo,
-                                     Move(mPrincipalInfo), mCSPHeaderValue,
+                                     std::move(mPrincipalInfo), mCSPHeaderValue,
                                      mCSPReportOnlyHeaderValue,
                                      mReferrerPolicyHeaderValue);
     return;
@@ -1901,7 +1901,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 
   MOZ_ASSERT(mPrincipalInfo);
   mRunnable->DataReceivedFromCache(mIndex, aString, aStringLen, mChannelInfo,
-                                   Move(mPrincipalInfo), mCSPHeaderValue,
+                                   std::move(mPrincipalInfo), mCSPHeaderValue,
                                    mCSPReportOnlyHeaderValue,
                                    mReferrerPolicyHeaderValue);
   return NS_OK;

@@ -85,7 +85,7 @@ private:
       return;
     }
 
-    nsCOMPtr<nsIFile> file = Move(mFile);
+    nsCOMPtr<nsIFile> file = std::move(mFile);
     thread->Dispatch(NS_NewRunnableFunction(
       "TemporaryFileInputStream::Runnable",
       [file]() {

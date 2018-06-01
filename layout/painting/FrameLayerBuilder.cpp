@@ -1829,7 +1829,7 @@ struct CSSMaskLayerUserData : public LayerUserData
   void operator=(CSSMaskLayerUserData&& aOther)
   {
     mMaskBounds = aOther.mMaskBounds;
-    mMaskStyle = Move(aOther.mMaskStyle);
+    mMaskStyle = std::move(aOther.mMaskStyle);
     mMaskLayerOffset = aOther.mMaskLayerOffset;
   }
 
@@ -2925,7 +2925,7 @@ PaintedLayerDataNode::AddChildNodeFor(AnimatedGeometryRoot* aAnimatedGeometryRoo
   MOZ_ASSERT(aAnimatedGeometryRoot->mParentAGR == mAnimatedGeometryRoot);
   UniquePtr<PaintedLayerDataNode> child =
     MakeUnique<PaintedLayerDataNode>(mTree, this, aAnimatedGeometryRoot);
-  mChildren.AppendElement(Move(child));
+  mChildren.AppendElement(std::move(child));
   return mChildren.LastElement().get();
 }
 
@@ -3491,7 +3491,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
   layer->SetContentFlags(flags);
 
-  userData->mItems = Move(data->mAssignedDisplayItems);
+  userData->mItems = std::move(data->mAssignedDisplayItems);
   userData->mContainerLayerFrame = GetContainerFrame();
 
   PaintedLayerData* containingPaintedLayerData =
@@ -3641,7 +3641,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
     AssignedDisplayItem item(aItem, aLayerState,
                              nullptr, aContentRect, aType, hasOpacity);
-    mAssignedDisplayItems.AppendElement(Move(item));
+    mAssignedDisplayItems.AppendElement(std::move(item));
     return;
   }
 
@@ -3680,7 +3680,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                                                currentData);
   AssignedDisplayItem item(aItem, aLayerState,
                            oldData, aContentRect, aType, hasOpacity);
-  mAssignedDisplayItems.AppendElement(Move(item));
+  mAssignedDisplayItems.AppendElement(std::move(item));
 
   if (aType == DisplayItemEntryType::PUSH_OPACITY) {
     mOpacityIndices.AppendElement(mAssignedDisplayItems.Length() - 1);
@@ -3784,7 +3784,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
        // transparent are always added to the opaque region. This helps ensure
        // that we get as much subpixel-AA as possible in the chrome.
        if (tmp.GetNumRects() <= 4 || aItem->Frame()->PresContext()->IsChrome()) {
-        mOpaqueRegion = Move(tmp);
+        mOpaqueRegion = std::move(tmp);
       }
     }
   }
@@ -4261,7 +4261,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   maskLayer->SetContainer(imgContainer);
 
   if (isPaintFinished) {
-    *oldUserData = Move(newUserData);
+    *oldUserData = std::move(newUserData);
   }
   aLayer->SetMaskLayer(maskLayer);
 }
@@ -6232,7 +6232,7 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
       newVisible.Sub(visible, removed);
       // Don't let the visible region get too complex.
       if (newVisible.GetNumRects() <= 15) {
-        visible = Move(newVisible);
+        visible = std::move(newVisible);
       }
     }
   }
@@ -6618,7 +6618,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
     if (timelines && timelines->HasConsumer(docShell)) {
-      timelines->AddMarkerForDocShell(docShell, Move(
+      timelines->AddMarkerForDocShell(docShell, std::move(
         MakeUnique<LayerTimelineMarker>(aRegionToDraw)));
     }
   }
@@ -6828,7 +6828,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data
-  *userData = Move(newData);
+  *userData = std::move(newData);
   userData->mImageKey.Reset(lookupKey);
 
   return maskLayer.forget();

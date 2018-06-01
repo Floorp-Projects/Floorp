@@ -37,7 +37,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
         surf->ReleasePixmap();
 
     ret.reset(new SharedSurface_GLXDrawable(prodGL, size, inSameProcess, surf));
-    return Move(ret);
+    return std::move(ret);
 }
 
 
@@ -129,7 +129,7 @@ SurfaceFactory_GLXDrawable::Create(GLContext* prodGL,
     typedef SurfaceFactory_GLXDrawable ptrT;
     UniquePtr<ptrT> ret(new ptrT(prodGL, caps, allocator,
                                  flags & ~layers::TextureFlags::ORIGIN_BOTTOM_LEFT));
-    return Move(ret);
+    return std::move(ret);
 }
 
 UniquePtr<SharedSurface>

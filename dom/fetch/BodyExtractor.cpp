@@ -141,7 +141,7 @@ BodyExtractor<const nsAString>::GetAsStream(nsIInputStream** aResult,
   }
 
   uint32_t encodedLength = encoded.Length();
-  nsresult rv = NS_NewCStringInputStream(aResult, Move(encoded));
+  nsresult rv = NS_NewCStringInputStream(aResult, std::move(encoded));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

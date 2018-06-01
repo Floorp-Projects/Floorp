@@ -183,7 +183,7 @@ public:
 };
 
 NativeInputRunnable::NativeInputRunnable(already_AddRefed<nsIRunnable>&& aEvent)
-  : PrioritizableRunnable(Move(aEvent), nsIRunnablePriority::PRIORITY_INPUT)
+  : PrioritizableRunnable(std::move(aEvent), nsIRunnablePriority::PRIORITY_INPUT)
 {
 }
 
@@ -191,7 +191,7 @@ NativeInputRunnable::NativeInputRunnable(already_AddRefed<nsIRunnable>&& aEvent)
 NativeInputRunnable::Create(already_AddRefed<nsIRunnable>&& aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIRunnable> event(new NativeInputRunnable(Move(aEvent)));
+  nsCOMPtr<nsIRunnable> event(new NativeInputRunnable(std::move(aEvent)));
   return event.forget();
 }
 

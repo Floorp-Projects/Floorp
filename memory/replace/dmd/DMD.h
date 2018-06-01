@@ -256,7 +256,7 @@ Analyze(UniquePtr<JSONWriteFunc> aWriteFunc)
 {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
-    funcs->Analyze(Move(aWriteFunc));
+    funcs->Analyze(std::move(aWriteFunc));
   }
 }
 

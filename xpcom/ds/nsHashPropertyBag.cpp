@@ -266,14 +266,14 @@ public:
   using HashtableType = nsInterfaceHashtable<nsStringHashKey, nsIVariant>;
   explicit ProxyHashtableDestructor(HashtableType&& aTable)
     : mozilla::Runnable("ProxyHashtableDestructor")
-    , mPropertyHash(mozilla::Move(aTable))
+    , mPropertyHash(std::move(aTable))
   {}
 
   NS_IMETHODIMP
   Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    HashtableType table(mozilla::Move(mPropertyHash));
+    HashtableType table(std::move(mPropertyHash));
     return NS_OK;
   }
 
@@ -285,7 +285,7 @@ nsHashPropertyBag::~nsHashPropertyBag()
 {
   if (!NS_IsMainThread()) {
     RefPtr<ProxyHashtableDestructor> runnable =
-      new ProxyHashtableDestructor(mozilla::Move(mPropertyHash));
+      new ProxyHashtableDestructor(std::move(mPropertyHash));
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   }
 }

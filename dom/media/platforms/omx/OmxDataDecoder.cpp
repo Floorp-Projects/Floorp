@@ -182,7 +182,7 @@ OmxDataDecoder::Decode(MediaRawData* aSample)
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(mOmxTaskQueue, __func__, [self, this, sample]() {
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-    mMediaRawDatas.AppendElement(Move(sample));
+    mMediaRawDatas.AppendElement(std::move(sample));
 
     // Start to fill/empty buffers.
     if (mOmxState == OMX_StateIdle ||
@@ -367,7 +367,7 @@ OmxDataDecoder::Output(BufferData* aData)
     aData->mStatus = BufferData::BufferStatus::FREE;
   }
 
-  mDecodedData.AppendElement(Move(data));
+  mDecodedData.AppendElement(std::move(data));
 }
 
 void

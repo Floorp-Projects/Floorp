@@ -265,7 +265,7 @@ FetchStreamReader::ResolvedCallback(JSContext* aCx,
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!mBuffer);
-  mBuffer = Move(value);
+  mBuffer = std::move(value);
 
   mBufferOffset = 0;
   mBufferRemaining = len;

@@ -130,7 +130,7 @@ public:
 
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
   {
-    aNotifications->AppendElements(Move(mImageCompositeNotifications));
+    aNotifications->AppendElements(std::move(mImageCompositeNotifications));
   }
 
   void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
@@ -551,7 +551,7 @@ public:
   }
   void SetShadowVisibleRegion(LayerIntRegion&& aRegion)
   {
-    mShadowVisibleRegion = Move(aRegion);
+    mShadowVisibleRegion = std::move(aRegion);
   }
 
   void SetShadowOpacity(float aOpacity)

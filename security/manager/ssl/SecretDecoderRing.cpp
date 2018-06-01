@@ -50,7 +50,7 @@ void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
 
   nsCOMPtr<nsIRunnable> runnable(
     NS_NewRunnableFunction("BackgroundSdrEncryptStringsResolve",
-                           [rv, aPromise = Move(aPromise), cipherTexts = Move(cipherTexts)]() {
+                           [rv, aPromise = std::move(aPromise), cipherTexts = std::move(cipherTexts)]() {
                              if (NS_FAILED(rv)) {
                                aPromise->MaybeReject(rv);
                              } else {
@@ -170,7 +170,7 @@ SecretDecoderRing::AsyncEncryptStrings(uint32_t plaintextsCount,
   }
   nsCOMPtr<nsIRunnable> runnable(
     NS_NewRunnableFunction("BackgroundSdrEncryptStrings",
-      [promise, plaintextsUtf8 = Move(plaintextsUtf8)]() mutable {
+      [promise, plaintextsUtf8 = std::move(plaintextsUtf8)]() mutable {
         BackgroundSdrEncryptStrings(plaintextsUtf8, promise);
       }));
 

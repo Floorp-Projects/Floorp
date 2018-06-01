@@ -21,7 +21,7 @@ namespace css {
 GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules,
                      uint32_t aLineNumber, uint32_t aColumnNumber)
   : Rule(aLineNumber, aColumnNumber)
-  , mRuleList(new ServoCSSRuleList(Move(aRules), nullptr))
+  , mRuleList(new ServoCSSRuleList(std::move(aRules), nullptr))
 {
   mRuleList->SetParentRule(this);
 }

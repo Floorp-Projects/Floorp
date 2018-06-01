@@ -21,7 +21,7 @@ public:
 protected:
   class BufferedData : public LinkedListElement<BufferedData> {
   public:
-    explicit BufferedData(Data&& aData) : mData(Move(aData)) {}
+    explicit BufferedData(Data&& aData) : mData(std::move(aData)) {}
 
     Data mData;
   };
@@ -30,7 +30,7 @@ protected:
 
   inline void
   BufferData(Data&& aData) {
-    mBufferedData.insertBack(new BufferedData(Move(aData)));
+    mBufferedData.insertBack(new BufferedData(std::move(aData)));
   };
 };
 

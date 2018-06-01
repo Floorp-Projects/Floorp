@@ -280,35 +280,35 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 mozilla::ipc::IPCResult
 GPUParent::RecvInitCompositorManager(Endpoint<PCompositorManagerParent>&& aEndpoint)
 {
-  CompositorManagerParent::Create(Move(aEndpoint));
+  CompositorManagerParent::Create(std::move(aEndpoint));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
 {
-  mVsyncBridge = VsyncBridgeParent::Start(Move(aVsyncEndpoint));
+  mVsyncBridge = VsyncBridgeParent::Start(std::move(aVsyncEndpoint));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUParent::RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
-  ImageBridgeParent::CreateForGPUProcess(Move(aEndpoint));
+  ImageBridgeParent::CreateForGPUProcess(std::move(aEndpoint));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUParent::RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  VRManagerParent::CreateForGPUProcess(Move(aEndpoint));
+  VRManagerParent::CreateForGPUProcess(std::move(aEndpoint));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUParent::RecvInitUiCompositorController(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
 {
-  UiCompositorControllerParent::Start(aRootLayerTreeId, Move(aEndpoint));
+  UiCompositorControllerParent::Start(aRootLayerTreeId, std::move(aEndpoint));
   return IPC_OK();
 }
 
@@ -316,7 +316,7 @@ mozilla::ipc::IPCResult
 GPUParent::RecvInitProfiler(Endpoint<PProfilerChild>&& aEndpoint)
 {
 #ifdef MOZ_GECKO_PROFILER
-  mProfilerController = ChildProfilerController::Create(Move(aEndpoint));
+  mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
 #endif
   return IPC_OK();
 }
@@ -391,14 +391,14 @@ GPUParent::RecvSimulateDeviceReset(GPUDeviceData* aOut)
 mozilla::ipc::IPCResult
 GPUParent::RecvNewContentCompositorManager(Endpoint<PCompositorManagerParent>&& aEndpoint)
 {
-  CompositorManagerParent::Create(Move(aEndpoint));
+  CompositorManagerParent::Create(std::move(aEndpoint));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUParent::RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
-  if (!ImageBridgeParent::CreateForContent(Move(aEndpoint))) {
+  if (!ImageBridgeParent::CreateForContent(std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -407,7 +407,7 @@ GPUParent::RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
 mozilla::ipc::IPCResult
 GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  if (!VRManagerParent::CreateForContent(Move(aEndpoint))) {
+  if (!VRManagerParent::CreateForContent(std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -416,7 +416,7 @@ GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 mozilla::ipc::IPCResult
 GPUParent::RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint)
 {
-  if (!dom::VideoDecoderManagerParent::CreateForContent(Move(aEndpoint))) {
+  if (!dom::VideoDecoderManagerParent::CreateForContent(std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

@@ -380,7 +380,7 @@ StreamFilterChild::Write(Data&& aData, ErrorResult& aRv)
     return;
   }
 
-  SendWrite(Move(aData));
+  SendWrite(std::move(aData));
 }
 
 StreamFilterStatus
@@ -522,11 +522,11 @@ StreamFilterChild::RecvData(Data&& aData)
 
   case State::Suspending:
   case State::Suspended:
-    BufferData(Move(aData));
+    BufferData(std::move(aData));
     break;
 
   case State::Disconnecting:
-    SendWrite(Move(aData));
+    SendWrite(std::move(aData));
     break;
 
   case State::Closing:

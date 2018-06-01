@@ -332,7 +332,7 @@ txStylesheetCompiler::endElement()
         txInScopeVariable* var = mInScopeVariables[i];
         if (!--(var->mLevel)) {
             nsAutoPtr<txInstruction> instr(new txRemoveVariable(var->mName));
-            rv = addInstruction(Move(instr));
+            rv = addInstruction(std::move(instr));
             NS_ENSURE_SUCCESS(rv, rv);
 
             mInScopeVariables.RemoveElementAt(i);
@@ -480,7 +480,7 @@ txStylesheetCompiler::ensureNewElementContext()
     NS_ENSURE_SUCCESS(rv, rv);
 
     mElementContext.forget();
-    mElementContext = Move(context);
+    mElementContext = std::move(context);
 
     return NS_OK;
 }

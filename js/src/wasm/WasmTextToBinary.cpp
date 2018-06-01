@@ -1890,14 +1890,14 @@ ParseBlock(WasmParseContext& c, Op op, bool inParens)
             return nullptr;
     }
 
-    AstBlock* result = new(c.lifo) AstBlock(op, type, name, Move(exprs));
+    AstBlock* result = new(c.lifo) AstBlock(op, type, name, std::move(exprs));
     if (!result)
         return nullptr;
 
     if (op == Op::Loop && !otherName.empty()) {
         if (!exprs.append(result))
             return nullptr;
-        result = new(c.lifo) AstBlock(Op::Block, type, otherName, Move(exprs));
+        result = new(c.lifo) AstBlock(Op::Block, type, otherName, std::move(exprs));
     }
 
     return result;
@@ -1968,7 +1968,7 @@ ParseCall(WasmParseContext& c, bool inParens)
             return nullptr;
     }
 
-    return new(c.lifo) AstCall(Op::Call, ExprType::Void, func, Move(args));
+    return new(c.lifo) AstCall(Op::Call, ExprType::Void, func, std::move(args));
 }
 
 static AstCallIndirect*
@@ -1995,7 +1995,7 @@ ParseCallIndirect(WasmParseContext& c, bool inParens)
     if (!index)
         return nullptr;
 
-    return new(c.lifo) AstCallIndirect(sig, ExprType::Void, Move(args), index);
+    return new(c.lifo) AstCallIndirect(sig, ExprType::Void, std::move(args), index);
 }
 
 static uint_fast8_t
@@ -2533,7 +2533,7 @@ ParseIf(WasmParseContext& c, bool inParens)
         }
     }
 
-    return new(c.lifo) AstIf(type, cond, name, Move(thenExprs), Move(elseExprs));
+    return new(c.lifo) AstIf(type, cond, name, std::move(thenExprs), std::move(elseExprs));
 }
 
 static bool
@@ -2954,7 +2954,7 @@ ParseBranchTable(WasmParseContext& c, bool inParens)
         }
     }
 
-    return new(c.lifo) AstBranchTable(*index, def, Move(table), value);
+    return new(c.lifo) AstBranchTable(*index, def, std::move(table), value);
 }
 
 static AstGrowMemory*
@@ -3216,7 +3216,7 @@ ParseFuncSig(WasmParseContext& c, AstSig* sig)
             return false;
     }
 
-    *sig = AstSig(Move(args), result);
+    *sig = AstSig(std::move(args), result);
     return true;
 }
 
@@ -3231,7 +3231,7 @@ ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module)
         if (!ParseFuncSig(c, &sig))
             return false;
         uint32_t sigIndex;
-        if (!module->declare(Move(sig), &sigIndex))
+        if (!module->declare(std::move(sig), &sigIndex))
             return false;
         ref->setIndex(sigIndex);
     }
@@ -3326,12 +3326,12 @@ ParseFunc(WasmParseContext& c, AstModule* module)
 
     if (sigRef.isInvalid()) {
         uint32_t sigIndex;
-        if (!module->declare(AstSig(Move(args), result), &sigIndex))
+        if (!module->declare(AstSig(std::move(args), result), &sigIndex))
             return false;
         sigRef.setIndex(sigIndex);
     }
 
-    auto* func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(locals), Move(body));
+    auto* func = new(c.lifo) AstFunc(funcName, sigRef, std::move(vars), std::move(locals), std::move(body));
     return func && module->append(func);
 }
 
@@ -3352,7 +3352,7 @@ ParseTypeDef(WasmParseContext& c)
     if (!c.ts.match(WasmToken::CloseParen, c.error))
         return nullptr;
 
-    return new(c.lifo) AstSig(name, Move(sig));
+    return new(c.lifo) AstSig(name, std::move(sig));
 }
 
 static bool
@@ -3402,7 +3402,7 @@ ParseDataSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstDataSegment(offset, Move(fragments));
+    return new(c.lifo) AstDataSegment(offset, std::move(fragments));
 }
 
 static bool
@@ -3486,7 +3486,7 @@ ParseMemory(WasmParseContext& c, AstModule* module)
             if (!offset)
                 return false;
 
-            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
+            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
             if (!segment || !module->append(segment))
                 return false;
 
@@ -3642,7 +3642,7 @@ ParseImport(WasmParseContext& c, AstModule* module)
             return nullptr;
 
         uint32_t sigIndex;
-        if (!module->declare(Move(sig), &sigIndex))
+        if (!module->declare(std::move(sig), &sigIndex))
             return nullptr;
         sigRef.setIndex(sigIndex);
     }
@@ -3800,7 +3800,7 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     if (!zero)
         return false;
 
-    AstElemSegment* segment = new(c.lifo) AstElemSegment(zero, Move(elems));
+    AstElemSegment* segment = new(c.lifo) AstElemSegment(zero, std::move(elems));
     return segment && module->append(segment);
 }
 
@@ -3822,7 +3822,7 @@ ParseElemSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstElemSegment(offset, Move(elems));
+    return new(c.lifo) AstElemSegment(offset, std::move(elems));
 }
 
 static bool
@@ -3892,7 +3892,7 @@ ParseBinaryModule(WasmParseContext& c, AstModule* module)
             return nullptr;
     }
 
-    auto* data = new(c.lifo) AstDataSegment(nullptr, Move(fragments));
+    auto* data = new(c.lifo) AstDataSegment(nullptr, std::move(fragments));
     if (!data || !module->append(data))
         return nullptr;
 

@@ -6,11 +6,9 @@
 #include "txRtfHandler.h"
 #include "mozilla/Move.h"
 
-using mozilla::Move;
-
 txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer)
     : txAExprResult(nullptr),
-      mBuffer(Move(aBuffer))
+      mBuffer(std::move(aBuffer))
 {
 }
 
@@ -61,7 +59,7 @@ nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler* aHandler)
 nsresult
 txRtfHandler::getAsRTF(txAExprResult** aResult)
 {
-    *aResult = new txResultTreeFragment(Move(mBuffer));
+    *aResult = new txResultTreeFragment(std::move(mBuffer));
     NS_ADDREF(*aResult);
     return NS_OK;
 }

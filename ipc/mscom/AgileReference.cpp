@@ -64,7 +64,7 @@ AgileReference::AgileReference(REFIID aIid, IUnknown* aObject)
 
 AgileReference::AgileReference(AgileReference&& aOther)
   : mIid(aOther.mIid)
-  , mAgileRef(Move(aOther.mAgileRef))
+  , mAgileRef(std::move(aOther.mAgileRef))
   , mGitCookie(aOther.mGitCookie)
 {
   aOther.mGitCookie = 0;

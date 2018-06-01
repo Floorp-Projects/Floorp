@@ -88,9 +88,9 @@ NS_NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo, T* context, F1&& aStar
   using namespace mozilla;
 
   auto callbacks = MakeUnique<net::SimpleChannelCallbacksImpl<F1, F2, T>>(
-      Move(aStartAsyncRead), Move(aOpenContentStream), context);
+      std::move(aStartAsyncRead), std::move(aOpenContentStream), context);
 
-  return net::NS_NewSimpleChannelInternal(aURI, aLoadInfo, Move(callbacks));
+  return net::NS_NewSimpleChannelInternal(aURI, aLoadInfo, std::move(callbacks));
 }
 
 template <typename T, typename F1>
@@ -104,7 +104,7 @@ NS_NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo, T* context, F1&& aStar
   };
 
   return NS_NewSimpleChannel(
-      aURI, aLoadInfo, context, Move(aStartAsyncRead), Move(openContentStream));
+      aURI, aLoadInfo, context, std::move(aStartAsyncRead), std::move(openContentStream));
 }
 
 #endif // SimpleChannel_h

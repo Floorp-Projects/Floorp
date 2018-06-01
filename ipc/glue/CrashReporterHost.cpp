@@ -168,7 +168,7 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
     aCallback(false);
     return;
   }
-  mCreateMinidumpCallback.Init(Move(aCallback), aAsync);
+  mCreateMinidumpCallback.Init(std::move(aCallback), aAsync);
 
   if (!childHandle) {
     NS_WARNING("Failed to get child process handle.");
@@ -214,7 +214,7 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
                                         aPairName,
                                         aMinidumpToPair,
                                         getter_AddRefs(mTargetDump),
-                                        Move(callback),
+                                        std::move(callback),
                                         aAsync);
 }
 

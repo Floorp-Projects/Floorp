@@ -487,10 +487,10 @@ Instance::Instance(JSContext* cx,
   : realm_(cx->realm()),
     object_(object),
     code_(code),
-    debug_(Move(debug)),
-    tlsData_(Move(tlsDataIn)),
+    debug_(std::move(debug)),
+    tlsData_(std::move(tlsDataIn)),
     memory_(memory),
-    tables_(Move(tables)),
+    tables_(std::move(tables)),
     enterFrameTrapsEnabled_(false)
 {
 #ifdef DEBUG

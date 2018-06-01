@@ -193,6 +193,6 @@ ParseCENCInitData(const uint8_t* aInitData,
       reader.Seek(end);
     }
   }
-  aOutKeyIds = mozilla::Move(keyIds);
+  aOutKeyIds = std::move(keyIds);
   return true;
 }

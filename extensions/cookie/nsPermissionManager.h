@@ -114,8 +114,8 @@ public:
     {}
 
     PermissionHashKey(PermissionHashKey&& toCopy)
-      : nsRefPtrHashKey<PermissionKey>(mozilla::Move(toCopy))
-      , mPermissions(mozilla::Move(toCopy.mPermissions))
+      : nsRefPtrHashKey<PermissionKey>(std::move(toCopy))
+      , mPermissions(std::move(toCopy.mPermissions))
     {}
 
     bool KeyEquals(const PermissionKey* aKey) const

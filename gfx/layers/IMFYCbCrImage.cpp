@@ -33,94 +33,14 @@ IMFYCbCrImage::~IMFYCbCrImage()
   }
 }
 
-static already_AddRefed<IDirect3DTexture9>
-InitTextures(IDirect3DDevice9* aDevice,
-             const IntSize &aSize,
-            _D3DFORMAT aFormat,
-            RefPtr<IDirect3DSurface9>& aSurface,
-            HANDLE& aHandle,
-            D3DLOCKED_RECT& aLockedRect)
-{
-  if (!aDevice) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DTexture9> result;
-  if (FAILED(aDevice->CreateTexture(aSize.width, aSize.height,
-                                    1, 0, aFormat, D3DPOOL_DEFAULT,
-                                    getter_AddRefs(result), &aHandle))) {
-    return nullptr;
-  }
-  if (!result) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DTexture9> tmpTexture;
-  if (FAILED(aDevice->CreateTexture(aSize.width, aSize.height,
-                                    1, 0, aFormat, D3DPOOL_SYSTEMMEM,
-                                    getter_AddRefs(tmpTexture), nullptr))) {
-    return nullptr;
-  }
-  if (!tmpTexture) {
-    return nullptr;
-  }
-
-  tmpTexture->GetSurfaceLevel(0, getter_AddRefs(aSurface));
-  if (FAILED(aSurface->LockRect(&aLockedRect, nullptr, 0)) ||
-      !aLockedRect.pBits) {
-    NS_WARNING("Could not lock surface");
-    return nullptr;
-  }
-
-  return result.forget();
-}
-
-static bool
-FinishTextures(IDirect3DDevice9* aDevice,
-               IDirect3DTexture9* aTexture,
-               IDirect3DSurface9* aSurface)
-{
-  if (!aDevice) {
-    return false;
-  }
-
-  HRESULT hr = aSurface->UnlockRect();
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  RefPtr<IDirect3DSurface9> dstSurface;
-  hr = aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  hr = aDevice->UpdateSurface(aSurface, nullptr, dstSurface, nullptr);
-  if (FAILED(hr)) {
-    return false;
-  }
-  return true;
-}
-
 DXGIYCbCrTextureData*
 IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
 {
   HRESULT hr;
   RefPtr<ID3D10Multithread> mt;
 
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
-
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
   if (!device) {
-    device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-  }
-
-  hr = device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
-
-  if (FAILED(hr)) {
-    return nullptr;
-  }
-
-  if (!mt->GetMultithreadProtected()) {
     return nullptr;
   }
 
@@ -218,13 +138,7 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
     return mTextureClient;
   }
 
-  RefPtr<ID3D11Device> device =
-    gfx::DeviceManagerDx::Get()->GetContentDevice();
-  if (!device) {
-    device =
-      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-  }
-
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
   if (!device || !aForwarder->SupportsD3D11()) {
     return nullptr;
   }

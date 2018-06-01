@@ -48,8 +48,8 @@ public:
                      imgIContainerCallback* aCallback,
                      nsIEventTarget* aCallbackEventTarget)
     : Runnable("ImageDecoderHelper")
-    , mImage(Move(aImage))
-    , mInputStream(Move(aInputStream))
+    , mImage(std::move(aImage))
+    , mInputStream(std::move(aInputStream))
     , mEventTarget(aEventTarget)
     , mCallback(aCallback)
     , mCallbackEventTarget(aCallbackEventTarget)

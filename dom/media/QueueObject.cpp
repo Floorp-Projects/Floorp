@@ -24,7 +24,7 @@ QueueObject::Dispatch(nsIRunnable* aRunnable)
 void
 QueueObject::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
 {
-  mThread->Dispatch(Move(aRunnable));
+  mThread->Dispatch(std::move(aRunnable));
 }
 
 bool

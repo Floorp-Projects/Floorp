@@ -154,14 +154,14 @@ class EitherParser : public BCEParserHandle
 
     const JS::ReadOnlyCompileOptions& options() const final {
         InvokeMemberFunction<detail::GetParser, detail::ParserOptions> optionsMatcher;
-        return parser.match(mozilla::Move(optionsMatcher));
+        return parser.match(std::move(optionsMatcher));
     }
 
     ObjectBox* newObjectBox(JSObject* obj) final {
         InvokeMemberFunction<detail::GetParser, detail::ParserNewObjectBox,
                              JSObject*>
             matcher { obj };
-        return parser.match(mozilla::Move(matcher));
+        return parser.match(std::move(matcher));
     }
 
 };

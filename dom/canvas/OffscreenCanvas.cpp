@@ -161,7 +161,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
           gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
 
         if (factory)
-          screen->Morph(Move(factory));
+          screen->Morph(std::move(factory));
       }
     }
   }

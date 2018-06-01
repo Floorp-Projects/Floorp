@@ -742,7 +742,7 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
 {
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
     mPlaceholderTransaction =
-      PlaceholderTransaction::Create(*this, mPlaceholderName, Move(mSelState));
+      PlaceholderTransaction::Create(*this, mPlaceholderName, std::move(mSelState));
     MOZ_ASSERT(mSelState.isNothing());
 
     // We will recurse, but will not hit this case in the nested call

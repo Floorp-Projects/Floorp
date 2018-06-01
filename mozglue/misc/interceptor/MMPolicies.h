@@ -77,7 +77,7 @@ public:
     , mReservationSize(0)
     , mCommitOffset(0)
   {
-    *this = Move(aOther);
+    *this = std::move(aOther);
   }
 
   MMPolicyInProcess& operator=(MMPolicyInProcess&& aOther)
@@ -271,7 +271,7 @@ public:
     , mReservationSize(0)
     , mCommitOffset(0)
   {
-    *this = Move(aOther);
+    *this = std::move(aOther);
   }
 
   MMPolicyOutOfProcess(const MMPolicyOutOfProcess& aOther) = delete;

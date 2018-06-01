@@ -161,7 +161,7 @@ public:
    */
   void Put(KeyType aKey, UserDataType&& aData)
   {
-    if (!Put(aKey, mozilla::Move(aData), mozilla::fallible)) {
+    if (!Put(aKey, std::move(aData), mozilla::fallible)) {
       NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
   }
@@ -173,7 +173,7 @@ public:
       return false;
     }
 
-    ent->mData = mozilla::Move(aData);
+    ent->mData = std::move(aData);
 
     return true;
   }
@@ -191,13 +191,13 @@ public:
   {
     if (auto* ent = this->GetEntry(aKey)) {
       if (aData) {
-        *aData = mozilla::Move(ent->mData);
+        *aData = std::move(ent->mData);
       }
       this->RemoveEntry(ent);
       return true;
     }
     if (aData) {
-      *aData = mozilla::Move(DataType());
+      *aData = std::move(DataType());
     }
     return false;
   }
@@ -455,8 +455,8 @@ nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(KeyTypePointer aKey)
 template<class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(
       nsBaseHashtableET<KeyClass, DataType>&& aToMove)
-  : KeyClass(mozilla::Move(aToMove))
-  , mData(mozilla::Move(aToMove.mData))
+  : KeyClass(std::move(aToMove))
+  , mData(std::move(aToMove.mData))
 {
 }
 

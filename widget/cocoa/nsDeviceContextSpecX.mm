@@ -274,7 +274,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget()
       NS_ENSURE_SUCCESS(rv, nullptr);
       mTempFile->GetNativePath(tempPath);
       auto stream = MakeUnique<SkFILEWStream>(tempPath.get());
-      return PrintTargetSkPDF::CreateOrNull(Move(stream), size);
+      return PrintTargetSkPDF::CreateOrNull(std::move(stream), size);
     }
 #endif
 

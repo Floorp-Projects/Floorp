@@ -144,7 +144,7 @@ CompositorVsyncScheduler::PostVRTask(TimeStamp aTimestamp)
       &CompositorVsyncScheduler::DispatchVREvents,
       aTimestamp);
     mCurrentVRListenerTask = task;
-    VRListenerThreadHolder::Loop()->PostDelayedTask(Move(task.forget()), 0);
+    VRListenerThreadHolder::Loop()->PostDelayedTask(std::move(task.forget()), 0);
   }
 }
 
@@ -336,7 +336,7 @@ void
 CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTask)
 {
   MOZ_ASSERT(CompositorThreadHolder::Loop());
-  CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), 0);
+  CompositorThreadHolder::Loop()->PostDelayedTask(std::move(aTask), 0);
 }
 
 const TimeStamp&

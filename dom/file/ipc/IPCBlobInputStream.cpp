@@ -468,7 +468,7 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 void
 IPCBlobInputStream::StreamReady(already_AddRefed<nsIInputStream> aInputStream)
 {
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
 
   // If inputStream is null, it means that the serialization went wrong or the
   // stream is not available anymore. We keep the state as pending just to block

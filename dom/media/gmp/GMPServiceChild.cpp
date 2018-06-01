@@ -118,7 +118,7 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       RefPtr<GMPContentParent> parent =
-        child->GetBridgedGMPContentParent(otherProcess, Move(endpoint));
+        child->GetBridgedGMPContentParent(otherProcess, std::move(endpoint));
       if (!alreadyBridgedTo.Contains(otherProcess)) {
         parent->SetDisplayName(displayName);
         parent->SetPluginId(pluginId);
@@ -202,7 +202,7 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       RefPtr<GMPContentParent> parent = child->GetBridgedGMPContentParent(otherProcess,
-                                                                          Move(endpoint));
+                                                                          std::move(endpoint));
       if (!alreadyBridgedTo.Contains(otherProcess)) {
         parent->SetDisplayName(displayName);
         parent->SetPluginId(pluginId);
@@ -234,7 +234,7 @@ struct GMPCapabilityAndVersion
       for (const nsCString& tag : tags.tags()) {
         cap.mAPITags.AppendElement(tag);
       }
-      mCapabilities.AppendElement(Move(cap));
+      mCapabilities.AppendElement(std::move(cap));
     }
   }
 
@@ -428,7 +428,7 @@ GeckoMediaPluginServiceChild::SetServiceChild(UniquePtr<GMPServiceChild>&& aServ
 {
   MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
 
-  mServiceChild = Move(aServiceChild);
+  mServiceChild = std::move(aServiceChild);
 
   nsTArray<MozPromiseHolder<GetServiceChildPromise>> holders;
   holders.SwapElements(mGetServiceChildPromises);
@@ -510,8 +510,8 @@ public:
   OpenPGMPServiceChild(UniquePtr<GMPServiceChild>&& aGMPServiceChild,
                        ipc::Endpoint<PGMPServiceChild>&& aEndpoint)
     : Runnable("gmp::OpenPGMPServiceChild")
-    , mGMPServiceChild(Move(aGMPServiceChild))
-    , mEndpoint(Move(aEndpoint))
+    , mGMPServiceChild(std::move(aGMPServiceChild))
+    , mEndpoint(std::move(aEndpoint))
   {
   }
 
@@ -521,7 +521,7 @@ public:
       GeckoMediaPluginServiceChild::GetSingleton();
     MOZ_ASSERT(!gmp->mServiceChild);
     if (mEndpoint.Bind(mGMPServiceChild.get())) {
-      gmp->SetServiceChild(Move(mGMPServiceChild));
+      gmp->SetServiceChild(std::move(mGMPServiceChild));
     } else {
       gmp->SetServiceChild(nullptr);
     }
@@ -547,8 +547,8 @@ GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService)
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
   NS_ENSURE_SUCCESS(rv, false);
 
-  rv = gmpThread->Dispatch(new OpenPGMPServiceChild(Move(serviceChild),
-                                                    Move(aGMPService)),
+  rv = gmpThread->Dispatch(new OpenPGMPServiceChild(std::move(serviceChild),
+                                                    std::move(aGMPService)),
                            NS_DISPATCH_NORMAL);
   return NS_SUCCEEDED(rv);
 }

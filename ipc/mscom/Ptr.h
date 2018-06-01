@@ -236,7 +236,7 @@ ToSTAUniquePtr(const InterceptorTargetPtr<U>& aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<T> newRef(static_cast<T*>(aTarget.get()));
-  return ToSTAUniquePtr(Move(newRef));
+  return ToSTAUniquePtr(std::move(newRef));
 }
 
 template <typename T>

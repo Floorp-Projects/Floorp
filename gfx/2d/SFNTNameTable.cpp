@@ -256,7 +256,7 @@ SFNTNameTable::GetU16FullName(mozilla::u16string& aU16FullName)
     return false;
   }
 
-  aU16FullName.assign(Move(familyName));
+  aU16FullName.assign(std::move(familyName));
   aU16FullName.append(u" ");
   aU16FullName.append(styleName);
   return true;

@@ -41,7 +41,6 @@ using base::Time;
 using base::TimeDelta;
 using base::TimeTicks;
 
-using mozilla::Move;
 using mozilla::Runnable;
 
 static base::ThreadLocalPointer<MessageLoop>& get_tls_ptr() {
@@ -145,7 +144,7 @@ MessageLoop::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  mLoop->PostTask(Move(aEvent));
+  mLoop->PostTask(std::move(aEvent));
   return NS_OK;
 }
 
@@ -157,7 +156,7 @@ MessageLoop::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mLoop->PostDelayedTask(Move(aEvent), aDelayMs);
+  mLoop->PostDelayedTask(std::move(aEvent), aDelayMs);
   return NS_OK;
 }
 
@@ -355,19 +354,19 @@ void MessageLoop::Quit() {
 }
 
 void MessageLoop::PostTask(already_AddRefed<nsIRunnable> task) {
-  PostTask_Helper(Move(task), 0);
+  PostTask_Helper(std::move(task), 0);
 }
 
 void MessageLoop::PostDelayedTask(already_AddRefed<nsIRunnable> task, int delay_ms) {
-  PostTask_Helper(Move(task), delay_ms);
+  PostTask_Helper(std::move(task), delay_ms);
 }
 
 void MessageLoop::PostIdleTask(already_AddRefed<nsIRunnable> task) {
   DCHECK(current() == this);
   MOZ_ASSERT(NS_IsMainThread());
 
-  PendingTask pending_task(Move(task), false);
-  deferred_non_nestable_work_queue_.push(Move(pending_task));
+  PendingTask pending_task(std::move(task), false);
+  deferred_non_nestable_work_queue_.push(std::move(pending_task));
 }
 
 // Possibly called on a background thread!
@@ -375,9 +374,9 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task, int delay_
   if (nsIEventTarget* target = pump_->GetXPCOMThread()) {
     nsresult rv;
     if (delay_ms) {
-      rv = target->DelayedDispatch(Move(task), delay_ms);
+      rv = target->DelayedDispatch(std::move(task), delay_ms);
     } else {
-      rv = target->Dispatch(Move(task), 0);
+      rv = target->Dispatch(std::move(task), 0);
     }
     MOZ_ALWAYS_SUCCEEDS(rv);
     return;
@@ -394,7 +393,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task, int delay_
   }
   PendingTask pending_task(tracedTask.forget(), true);
 #else
-  PendingTask pending_task(Move(task), true);
+  PendingTask pending_task(std::move(task), true);
 #endif
 
   if (delay_ms > 0) {
@@ -411,7 +410,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task, int delay_
   RefPtr<base::MessagePump> pump;
   {
     AutoLock locked(incoming_queue_lock_);
-    incoming_queue_.push(Move(pending_task));
+    incoming_queue_.push(std::move(pending_task));
     pump = pump_;
   }
   // Since the incoming_queue_ may contain a task that destroys this message
@@ -465,7 +464,7 @@ bool MessageLoop::DeferOrRunPendingTask(PendingTask&& pending_task) {
 
   // We couldn't run the task now because we're in a nested message loop
   // and the task isn't nestable.
-  deferred_non_nestable_work_queue_.push(Move(pending_task));
+  deferred_non_nestable_work_queue_.push(std::move(pending_task));
   return false;
 }
 
@@ -476,7 +475,7 @@ void MessageLoop::AddToDelayedWorkQueue(const PendingTask& pending_task) {
   // delayed_run_time value.
   PendingTask new_pending_task(pending_task);
   new_pending_task.sequence_num = next_sequence_num_++;
-  delayed_work_queue_.push(Move(new_pending_task));
+  delayed_work_queue_.push(std::move(new_pending_task));
 }
 
 void MessageLoop::ReloadWorkQueue() {
@@ -523,7 +522,7 @@ bool MessageLoop::DoWork() {
 
     // Execute oldest task.
     do {
-      PendingTask pending_task = Move(work_queue_.front());
+      PendingTask pending_task = std::move(work_queue_.front());
       work_queue_.pop();
       if (!pending_task.delayed_run_time.is_null()) {
         // NB: Don't move, because we use this later!
@@ -532,7 +531,7 @@ bool MessageLoop::DoWork() {
         if (delayed_work_queue_.top().task == pending_task.task)
           pump_->ScheduleDelayedWork(pending_task.delayed_run_time);
       } else {
-        if (DeferOrRunPendingTask(Move(pending_task)))
+        if (DeferOrRunPendingTask(std::move(pending_task)))
           return true;
       }
     } while (!work_queue_.empty());
@@ -559,7 +558,7 @@ bool MessageLoop::DoDelayedWork(TimeTicks* next_delayed_work_time) {
   if (!delayed_work_queue_.empty())
     *next_delayed_work_time = delayed_work_queue_.top().delayed_run_time;
 
-  return DeferOrRunPendingTask(Move(pending_task));
+  return DeferOrRunPendingTask(std::move(pending_task));
 }
 
 bool MessageLoop::DoIdleWork() {

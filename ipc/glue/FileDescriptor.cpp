@@ -46,7 +46,7 @@ FileDescriptor::FileDescriptor(const FileDescriptor& aOther)
 FileDescriptor::FileDescriptor(FileDescriptor&& aOther)
   : mHandle(INVALID_HANDLE)
 {
-  *this = mozilla::Move(aOther);
+  *this = std::move(aOther);
 }
 
 FileDescriptor::FileDescriptor(PlatformHandleType aHandle)

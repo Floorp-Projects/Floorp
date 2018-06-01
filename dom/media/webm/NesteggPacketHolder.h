@@ -98,7 +98,7 @@ class WebMPacketQueue {
   }
 
   void PushFront(NesteggPacketHolder* aItem) {
-    mQueue.push_front(Move(aItem));
+    mQueue.push_front(std::move(aItem));
   }
 
   already_AddRefed<NesteggPacketHolder> PopFront() {

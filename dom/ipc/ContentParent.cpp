@@ -982,9 +982,9 @@ ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId,
       return IPC_FAIL(this, "CreateEndpoints failed");
     }
 
-    *aEndpoint = Move(parent);
+    *aEndpoint = std::move(parent);
 
-    if (!cp->SendInitContentBridgeChild(Move(child))) {
+    if (!cp->SendInitContentBridgeChild(std::move(child))) {
       return IPC_FAIL(this, "SendInitContentBridgeChild failed");
     }
 
@@ -1031,12 +1031,12 @@ ContentParent::RecvCreateGMPService()
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (!GMPServiceParent::Create(Move(parent))) {
+  if (!GMPServiceParent::Create(std::move(parent))) {
     MOZ_ASSERT(false, "GMPServiceParent::Create failed");
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (!SendInitGMPService(Move(child))) {
+  if (!SendInitGMPService(std::move(child))) {
     MOZ_ASSERT(false, "SendInitGMPService failed");
     return IPC_FAIL_NO_REASON(this);
   }
@@ -1247,7 +1247,7 @@ ContentParent::CreateContentBridgeParent(const TabContext& aContext,
   if (!child->SendBridgeToChildProcess(cpId, &endpoint)) {
     return nullptr;
   }
-  ContentBridgeParent* parent = ContentBridgeParent::Create(Move(endpoint));
+  ContentBridgeParent* parent = ContentBridgeParent::Create(std::move(endpoint));
   parent->SetChildID(cpId);
   parent->SetIsForBrowser(isForBrowser);
   parent->SetIsForJSPlugin(aContext.IsJSPlugin());
@@ -2368,10 +2368,10 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
                                                      &namespaces);
   MOZ_ASSERT(opened);
 
-  Unused << SendInitRendering(Move(compositor),
-                              Move(imageBridge),
-                              Move(vrBridge),
-                              Move(videoManager),
+  Unused << SendInitRendering(std::move(compositor),
+                              std::move(imageBridge),
+                              std::move(vrBridge),
+                              std::move(videoManager),
                               namespaces);
 
   gpm->AddListener(this);
@@ -2432,7 +2432,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
       sSandboxBrokerPolicyFactory->GetContentPolicy(Pid(), isFileProcess);
     if (policy) {
       brokerFd = FileDescriptor();
-      mSandboxBroker = SandboxBroker::Create(Move(policy), Pid(), brokerFd);
+      mSandboxBroker = SandboxBroker::Create(std::move(policy), Pid(), brokerFd);
       if (!mSandboxBroker) {
         KillHard("SandboxBroker::Create failed");
         return;
@@ -2535,10 +2535,10 @@ ContentParent::OnCompositorUnexpectedShutdown()
   MOZ_ASSERT(opened);
 
   Unused << SendReinitRendering(
-    Move(compositor),
-    Move(imageBridge),
-    Move(vrBridge),
-    Move(videoManager),
+    std::move(compositor),
+    std::move(imageBridge),
+    std::move(vrBridge),
+    std::move(videoManager),
     namespaces);
 }
 
@@ -3030,7 +3030,7 @@ ContentParent::GetInterface(const nsIID& aIID, void** aResult)
 mozilla::ipc::IPCResult
 ContentParent::RecvInitBackground(Endpoint<PBackgroundParent>&& aEndpoint)
 {
-  if (!BackgroundParent::Alloc(this, Move(aEndpoint))) {
+  if (!BackgroundParent::Alloc(this, std::move(aEndpoint))) {
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 
@@ -3179,7 +3179,7 @@ ContentParent::KillHard(const char* aReason)
     mCrashReporter->GenerateMinidumpAndPair(Process(),
                                             nullptr,
                                             NS_LITERAL_CSTRING("browser"),
-                                            Move(callback),
+                                            std::move(callback),
                                             true);
     return;
   }
@@ -3440,7 +3440,7 @@ ContentParent::RecvInitStreamFilter(const uint64_t& aChannelId,
   Endpoint<PStreamFilterChild> endpoint;
   Unused << extensions::StreamFilterParent::Create(this, aChannelId, aAddonId, &endpoint);
 
-  aResolver(Move(endpoint));
+  aResolver(std::move(endpoint));
 
   return IPC_OK();
 }
@@ -3806,7 +3806,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                nsTArray<StructuredCloneData>* aRetvals)
 {
-  return nsIContentParent::RecvSyncMessage(aMsg, aData, Move(aCpows),
+  return nsIContentParent::RecvSyncMessage(aMsg, aData, std::move(aCpows),
                                            aPrincipal, aRetvals);
 }
 
@@ -3817,7 +3817,7 @@ ContentParent::RecvRpcMessage(const nsString& aMsg,
                               const IPC::Principal& aPrincipal,
                               nsTArray<StructuredCloneData>* aRetvals)
 {
-  return nsIContentParent::RecvRpcMessage(aMsg, aData, Move(aCpows), aPrincipal,
+  return nsIContentParent::RecvRpcMessage(aMsg, aData, std::move(aCpows), aPrincipal,
                                           aRetvals);
 }
 
@@ -3827,7 +3827,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
                                 const IPC::Principal& aPrincipal,
                                 const ClonedMessageData& aData)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal,
+  return nsIContentParent::RecvAsyncMessage(aMsg, std::move(aCpows), aPrincipal,
                                             aData);
 }
 
@@ -3846,7 +3846,7 @@ AddGeolocationListener(nsIDOMGeoPositionCallback* watcher,
   options->mMaximumAge = 0;
   options->mEnableHighAccuracy = highAccuracy;
   int32_t retval = 1;
-  geo->WatchPosition(watcher, errorCallBack, Move(options), &retval);
+  geo->WatchPosition(watcher, errorCallBack, std::move(options), &retval);
   return retval;
 }
 
@@ -4335,7 +4335,7 @@ ContentParent::RecvCreateAudioIPCConnection(CreateAudioIPCConnectionResolver&& a
   if (!fd.IsValid()) {
     return IPC_FAIL(this, "CubebUtils::CreateAudioIPCConnection failed");
   }
-  aResolver(Move(fd));
+  aResolver(std::move(fd));
   return IPC_OK();
 }
 
@@ -4473,7 +4473,7 @@ ContentParent::RecvNotifyTabDestroying(const TabId& aTabId,
 nsTArray<TabContext>
 ContentParent::GetManagedTabContext()
 {
-  return Move(ContentProcessManager::GetSingleton()->
+  return std::move(ContentProcessManager::GetSingleton()->
           GetTabContextByContentProcess(this->ChildID()));
 }
 
@@ -5058,7 +5058,7 @@ ContentParent::RecvBeginDriverCrashGuard(const uint32_t& aGuardType, bool* aOutC
   }
 
   *aOutCrashed = false;
-  mDriverCrashGuard = Move(guard);
+  mDriverCrashGuard = std::move(guard);
   return IPC_OK();
 }
 
@@ -5238,7 +5238,7 @@ ContentParent::RecvA11yHandlerControl(const uint32_t& aPid,
 #if defined(XP_WIN32) && defined(ACCESSIBILITY)
   MOZ_ASSERT(!aHandlerControl.IsNull());
   RefPtr<IHandlerControl> proxy(aHandlerControl.Get());
-  a11y::AccessibleWrap::SetHandlerControl(aPid, Move(proxy));
+  a11y::AccessibleWrap::SetHandlerControl(aPid, std::move(proxy));
   return IPC_OK();
 #else
   return IPC_FAIL_NO_REASON(this);

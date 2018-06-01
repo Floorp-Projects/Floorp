@@ -28,16 +28,16 @@ ScriptCounts::ScriptCounts()
 }
 
 ScriptCounts::ScriptCounts(PCCountsVector&& jumpTargets)
-  : pcCounts_(Move(jumpTargets)),
+  : pcCounts_(std::move(jumpTargets)),
     throwCounts_(),
     ionCounts_(nullptr)
 {
 }
 
 ScriptCounts::ScriptCounts(ScriptCounts&& src)
-  : pcCounts_(Move(src.pcCounts_)),
-    throwCounts_(Move(src.throwCounts_)),
-    ionCounts_(Move(src.ionCounts_))
+  : pcCounts_(std::move(src.pcCounts_)),
+    throwCounts_(std::move(src.throwCounts_)),
+    ionCounts_(std::move(src.ionCounts_))
 {
     src.ionCounts_ = nullptr;
 }
@@ -45,9 +45,9 @@ ScriptCounts::ScriptCounts(ScriptCounts&& src)
 ScriptCounts&
 ScriptCounts::operator=(ScriptCounts&& src)
 {
-    pcCounts_ = Move(src.pcCounts_);
-    throwCounts_ = Move(src.throwCounts_);
-    ionCounts_ = Move(src.ionCounts_);
+    pcCounts_ = std::move(src.pcCounts_);
+    throwCounts_ = std::move(src.throwCounts_);
+    ionCounts_ = std::move(src.ionCounts_);
     src.ionCounts_ = nullptr;
     return *this;
 }
@@ -65,8 +65,8 @@ ScriptAndCounts::ScriptAndCounts(JSScript* script)
 }
 
 ScriptAndCounts::ScriptAndCounts(ScriptAndCounts&& sac)
-  : script(Move(sac.script)),
-    scriptCounts(Move(sac.scriptCounts))
+  : script(std::move(sac.script)),
+    scriptCounts(std::move(sac.scriptCounts))
 {
 }
 

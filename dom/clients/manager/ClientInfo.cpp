@@ -44,7 +44,7 @@ ClientInfo::operator=(const ClientInfo& aRight)
 }
 
 ClientInfo::ClientInfo(ClientInfo&& aRight)
-  : mData(Move(aRight.mData))
+  : mData(std::move(aRight.mData))
 {
 }
 
@@ -52,7 +52,7 @@ ClientInfo&
 ClientInfo::operator=(ClientInfo&& aRight)
 {
   mData.reset();
-  mData = Move(aRight.mData);
+  mData = std::move(aRight.mData);
   return *this;
 }
 
@@ -145,7 +145,7 @@ ClientInfo::GetPrincipal() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
-  return Move(ref);
+  return std::move(ref);
 }
 
 } // namespace dom

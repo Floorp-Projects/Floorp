@@ -218,7 +218,7 @@ public:
     : mIsSome(false)
   {
     if (aOther.mIsSome) {
-      emplace(Move(*aOther));
+      emplace(std::move(*aOther));
       aOther.reset();
     }
   }
@@ -234,7 +234,7 @@ public:
     : mIsSome(false)
   {
     if (aOther.isSome()) {
-      emplace(Move(*aOther));
+      emplace(std::move(*aOther));
       aOther.reset();
     }
   }
@@ -278,9 +278,9 @@ public:
 
     if (aOther.mIsSome) {
       if (mIsSome) {
-        ref() = Move(aOther.ref());
+        ref() = std::move(aOther.ref());
       } else {
-        emplace(Move(*aOther));
+        emplace(std::move(*aOther));
       }
       aOther.reset();
     } else {
@@ -297,9 +297,9 @@ public:
   {
     if (aOther.isSome()) {
       if (mIsSome) {
-        ref() = Move(aOther.ref());
+        ref() = std::move(aOther.ref());
       } else {
-        emplace(Move(*aOther));
+        emplace(std::move(*aOther));
       }
       aOther.reset();
     } else {

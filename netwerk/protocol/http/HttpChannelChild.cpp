@@ -240,7 +240,7 @@ HttpChannelChild::ReleaseMainThreadOnlyReferences()
   arrayToRelease.AppendElement(mInterceptedRedirectListener.forget());
   arrayToRelease.AppendElement(mInterceptedRedirectContext.forget());
 
-  NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
+  NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsISupports
@@ -461,7 +461,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mCacheKey(aCacheKey)
   , mAltDataType(altDataType)
   , mAltDataLen(altDataLen)
-  , mController(Move(aController))
+  , mController(std::move(aController))
   , mLoadInfoForwarder(loadInfoForwarder)
   {}
 
@@ -547,7 +547,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
                                               altDataType, altDataLen,
-                                              Move(controller),
+                                              std::move(controller),
                                               aApplyConversion));
 
   {
@@ -2155,7 +2155,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId)
       gSocketTransportService->Dispatch(
         NewRunnableMethod<RefPtr<HttpChannelChild>>(
           "HttpBackgroundChannelChild::Init",
-          bgChild, &HttpBackgroundChannelChild::Init, Move(self)),
+          bgChild, &HttpBackgroundChannelChild::Init, std::move(self)),
         NS_DISPATCH_NORMAL);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3948,7 +3948,7 @@ HttpChannelChild::RecvSetPriority(const int16_t& aPriority)
 mozilla::ipc::IPCResult
 HttpChannelChild::RecvAttachStreamFilter(Endpoint<extensions::PStreamFilterParent>&& aEndpoint)
 {
-  extensions::StreamFilterParent::Attach(this, Move(aEndpoint));
+  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
   return IPC_OK();
 }
 

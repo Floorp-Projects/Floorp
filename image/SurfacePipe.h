@@ -609,7 +609,7 @@ public:
   { }
 
   SurfacePipe(SurfacePipe&& aOther)
-    : mHead(Move(aOther.mHead))
+    : mHead(std::move(aOther.mHead))
   { }
 
   ~SurfacePipe()
@@ -618,7 +618,7 @@ public:
   SurfacePipe& operator=(SurfacePipe&& aOther)
   {
     MOZ_ASSERT(this != &aOther);
-    mHead = Move(aOther.mHead);
+    mHead = std::move(aOther.mHead);
     return *this;
   }
 
@@ -732,7 +732,7 @@ private:
   friend class TestSurfacePipeFactory;
 
   explicit SurfacePipe(UniquePtr<SurfaceFilter>&& aHead)
-    : mHead(Move(aHead))
+    : mHead(std::move(aHead))
   { }
 
   SurfacePipe(const SurfacePipe&) = delete;

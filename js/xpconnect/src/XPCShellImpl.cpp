@@ -501,21 +501,21 @@ Options(JSContext* cx, unsigned argc, Value* vp)
 
     UniqueChars names;
     if (oldContextOptions.extraWarnings()) {
-        names = JS_sprintf_append(Move(names), "%s", "strict");
+        names = JS_sprintf_append(std::move(names), "%s", "strict");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
     if (oldContextOptions.werror()) {
-        names = JS_sprintf_append(Move(names), "%s%s", names ? "," : "", "werror");
+        names = JS_sprintf_append(std::move(names), "%s%s", names ? "," : "", "werror");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
     if (names && oldContextOptions.strictMode()) {
-        names = JS_sprintf_append(Move(names), "%s%s", names ? "," : "", "strict_mode");
+        names = JS_sprintf_append(std::move(names), "%s%s", names ? "," : "", "strict_mode");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;

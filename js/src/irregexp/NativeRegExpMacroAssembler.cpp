@@ -967,7 +967,7 @@ NativeRegExpMacroAssembler::CheckBitInTable(RegExpShared::JitCodeTable table, La
     // Transfer ownership of |table| to the |tables| Vector.
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!tables.append(Move(table)))
+        if (!tables.append(std::move(table)))
             oomUnsafe.crash("RegExp table append");
     }
 }

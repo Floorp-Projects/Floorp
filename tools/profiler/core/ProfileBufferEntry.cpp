@@ -125,12 +125,12 @@ public:
       location ? Some(nsCString(location)) : Nothing(),
       lineno
     };
-    mTypesetForUpcomingEntry.AppendElement(Move(info));
+    mTypesetForUpcomingEntry.AppendElement(std::move(info));
   }
 
   void operator()(JS::TrackedTypeSite site, const char* mirType) override
   {
-    nsTArray<TypeInfo> typeset(Move(mTypesetForUpcomingEntry));
+    nsTArray<TypeInfo> typeset(std::move(mTypesetForUpcomingEntry));
     mLambda(site, mirType, typeset);
   }
 
@@ -142,7 +142,7 @@ private:
 template<typename LambdaT> ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>
 MakeForEachTrackedOptimizationTypeInfoLambdaOp(LambdaT&& aLambda)
 {
-  return ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>(Move(aLambda));
+  return ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>(std::move(aLambda));
 }
 
 // As mentioned in ProfileBufferEntry.h, the JSON format contains many
@@ -230,7 +230,7 @@ class ForEachTrackedOptimizationAttemptsLambdaOp
 {
 public:
   explicit ForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
-    : mLambda(Move(aLambda))
+    : mLambda(std::move(aLambda))
   {}
   void operator()(JS::TrackedStrategy aStrategy, JS::TrackedOutcome aOutcome) override {
     mLambda(aStrategy, aOutcome);
@@ -242,7 +242,7 @@ private:
 template<typename LambdaT> ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>
 MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
 {
-  return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(Move(aLambda));
+  return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(std::move(aLambda));
 }
 
 UniqueJSONStrings::UniqueJSONStrings()
@@ -327,7 +327,7 @@ JITFrameInfoForBufferRange::Clone() const
   CopyClassHashtable(jitFrameToFrameJSONMap, mJITFrameToFrameJSONMap);
   return JITFrameInfoForBufferRange{
     mRangeStart, mRangeEnd,
-    Move(jitAddressToJITFramesMap), Move(jitFrameToFrameJSONMap) };
+    std::move(jitAddressToJITFramesMap), std::move(jitFrameToFrameJSONMap) };
 }
 
 JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
@@ -383,8 +383,8 @@ UniqueStacks::FrameKey::Hash() const
 // JIT frame info's string table, so our string table needs to have the same
 // strings at the same indices.
 UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
-  : mUniqueStrings(Move(aJITFrameInfo.mUniqueStrings))
-  , mJITInfoRanges(Move(aJITFrameInfo.mRanges))
+  : mUniqueStrings(std::move(aJITFrameInfo.mUniqueStrings))
+  , mJITInfoRanges(std::move(aJITFrameInfo.mRanges))
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -452,9 +452,9 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
       mFrameTableWriter.Splice(frameJSON->get());
       mFrameToIndexMap.Put(frameKey, index);
     }
-    frameKeys.AppendElement(Move(frameKey));
+    frameKeys.AppendElement(std::move(frameKey));
   }
-  return Some(Move(frameKeys));
+  return Some(std::move(frameKeys));
 }
 
 uint32_t
@@ -712,7 +712,7 @@ JITFrameInfo::AddInfoForRange(uint64_t aRangeStart, uint64_t aRangeEnd,
 
   mRanges.AppendElement(JITFrameInfoForBufferRange{
     aRangeStart, aRangeEnd,
-    Move(jitAddressToJITFrameMap), Move(jitFrameToFrameJSONMap)
+    std::move(jitAddressToJITFrameMap), std::move(jitFrameToFrameJSONMap)
   });
 }
 

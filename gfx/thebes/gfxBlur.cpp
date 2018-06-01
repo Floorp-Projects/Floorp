@@ -349,7 +349,7 @@ struct BlurCacheData {
   BlurCacheData(SourceSurface* aBlur, const IntMargin& aBlurMargin, BlurCacheKey&& aKey)
     : mBlur(aBlur)
     , mBlurMargin(aBlurMargin)
-    , mKey(Move(aKey))
+    , mKey(std::move(aKey))
   {}
 
   BlurCacheData(BlurCacheData&& aOther) = default;
@@ -504,7 +504,7 @@ CacheBlur(DrawTarget* aDT,
           SourceSurface* aBoxShadow)
 {
   BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor, aDT->GetBackendType());
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, Move(key));
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, aBlurMargin, std::move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }
@@ -1086,7 +1086,7 @@ CacheInsetBlur(const IntSize& aMinOuterSize,
                    aShadowColor, isInsetBlur,
                    aBackendType);
   IntMargin blurMargin(0, 0, 0, 0);
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, Move(key));
+  BlurCacheData* data = new BlurCacheData(aBoxShadow, blurMargin, std::move(key));
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
   }

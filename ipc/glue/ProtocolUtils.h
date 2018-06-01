@@ -333,7 +333,7 @@ protected:
         : mId(0)
         , mSide(aSide)
         , mManager(nullptr)
-        , mState(Move(aState))
+        , mState(std::move(aState))
     {}
 
     friend class IToplevelProtocol;
@@ -457,7 +457,7 @@ public:
 
     void SetTransport(UniquePtr<Transport> aTrans)
     {
-        mTrans = Move(aTrans);
+        mTrans = std::move(aTrans);
     }
 
     Transport* GetTransport() const { return mTrans.get(); }
@@ -871,7 +871,7 @@ public:
             return false;
         }
         mValid = false;
-        aActor->SetTransport(Move(t));
+        aActor->SetTransport(std::move(t));
         return true;
     }
 

@@ -33,7 +33,7 @@ BEGIN_TEST(testThreadingThreadDetach)
     // because it might do the write after we have returned and pushed a new frame.
     bool* flag = js_new<bool>(false);
     js::Thread thread;
-    CHECK(thread.init([](bool* flag){*flag = true; js_delete(flag);}, mozilla::Move(flag)));
+    CHECK(thread.init([](bool* flag){*flag = true; js_delete(flag);}, std::move(flag)));
     CHECK(thread.joinable());
     thread.detach();
     CHECK(!thread.joinable());

@@ -46,7 +46,7 @@ AnimationEventDispatcher::QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
   MOZ_ASSERT(mPresContext,
              "The pres context should be valid");
 
-  mPendingEvents.AppendElements(Move(aEvents));
+  mPendingEvents.AppendElements(std::move(aEvents));
   mIsSorted = false;
   if (!mIsObserving) {
     mPresContext->RefreshDriver()->ScheduleAnimationEventDispatch(this);

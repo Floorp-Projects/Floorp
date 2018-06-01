@@ -153,7 +153,7 @@ PerformanceMonitoring::commit()
     // The move operation is generally constant time, unless
     // `recentGroups_.length()` is very small, in which case
     // it's fast just because it's small.
-    PerformanceGroupVector recentGroups(Move(recentGroups_));
+    PerformanceGroupVector recentGroups(std::move(recentGroups_));
     recentGroups_ = PerformanceGroupVector(); // Reconstruct after `Move`.
 
     bool success = true;

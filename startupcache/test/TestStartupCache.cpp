@@ -177,7 +177,7 @@ TEST_F(TestStartupCache, WriteObject)
 
   // Since this is a post-startup write, it should be written and
   // available.
-  rv = sc->PutBuffer(id, Move(buf), len);
+  rv = sc->PutBuffer(id, std::move(buf), len);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   UniquePtr<char[]> buf2;
@@ -186,7 +186,7 @@ TEST_F(TestStartupCache, WriteObject)
   rv = sc->GetBuffer(id, &buf2, &len2);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  rv = NewObjectInputStreamFromBuffer(Move(buf2), len2,
+  rv = NewObjectInputStreamFromBuffer(std::move(buf2), len2,
                                       getter_AddRefs(objectInput));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 

@@ -21,7 +21,7 @@ FunctionBrokerChild::IsDispatchThread()
 void
 FunctionBrokerChild::PostToDispatchThread(already_AddRefed<nsIRunnable>&& runnable)
 {
-  mThread->Dispatch(Move(runnable));
+  mThread->Dispatch(std::move(runnable));
 }
 
 /* static */ bool
@@ -35,7 +35,7 @@ FunctionBrokerChild::Initialize(Endpoint<PFunctionBrokerChild>&& aBrokerEndpoint
   if (!thread) {
     return false;
   }
-  sInstance = new FunctionBrokerChild(thread, Move(aBrokerEndpoint));
+  sInstance = new FunctionBrokerChild(thread, std::move(aBrokerEndpoint));
   return true;
 }
 
@@ -58,7 +58,7 @@ FunctionBrokerChild::FunctionBrokerChild(FunctionBrokerThread* aThread,
   MOZ_ASSERT(aThread);
   PostToDispatchThread(NewNonOwningRunnableMethod<Endpoint<PFunctionBrokerChild>&&>(
                        "FunctionBrokerChild::Bind", this, &FunctionBrokerChild::Bind,
-                       Move(aEndpoint)));
+                       std::move(aEndpoint)));
 }
 
 void

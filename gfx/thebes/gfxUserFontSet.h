@@ -394,10 +394,10 @@ public:
             { }
 
             Entry(Entry&& aOther)
-                : mURI(mozilla::Move(aOther.mURI))
-                , mPrincipal(mozilla::Move(aOther.mPrincipal))
-                , mFontEntry(mozilla::Move(aOther.mFontEntry))
-                , mPrivate(mozilla::Move(aOther.mPrivate))
+                : mURI(std::move(aOther.mURI))
+                , mPrincipal(std::move(aOther.mPrincipal))
+                , mFontEntry(std::move(aOther.mFontEntry))
+                , mPrivate(std::move(aOther.mPrivate))
             { }
 
             ~Entry() { }

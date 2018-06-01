@@ -62,7 +62,7 @@ public:
       // the exact right size in order to not waste space.
       uint32_t newLength = AvailableSamples() + inputSamples;
       uint32_t toCopy = AvailableSamples();
-      UniquePtr<InputType[]> oldStorage = mozilla::Move(mStorage);
+      UniquePtr<InputType[]> oldStorage = std::move(mStorage);
       mStorage = mozilla::MakeUnique<InputType[]>(newLength);
       // Copy the old data at the beginning of the new storage.
       if (WriteIndex() >= ReadIndex()) {

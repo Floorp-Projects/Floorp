@@ -39,7 +39,7 @@ public:
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
     , mBridge(aBridge)
-    , mCompositorWidget(Move(aWidget))
+    , mCompositorWidget(std::move(aWidget))
     , mTask(aTask)
     , mSize(aSize)
     , mSyncHandle(aHandle)
@@ -56,7 +56,7 @@ public:
   {
     layers::AutoCompleteTask complete(mTask);
 
-    UniquePtr<RenderCompositor> compositor = RenderCompositor::Create(Move(mCompositorWidget));
+    UniquePtr<RenderCompositor> compositor = RenderCompositor::Create(std::move(mCompositorWidget));
     if (!compositor) {
       // RenderCompositor::Create puts a message into gfxCriticalNote if it is nullptr
       return;
@@ -75,8 +75,8 @@ public:
     MOZ_ASSERT(wrRenderer);
 
     RefPtr<RenderThread> thread = &aRenderThread;
-    auto renderer = MakeUnique<RendererOGL>(Move(thread),
-                                            Move(compositor),
+    auto renderer = MakeUnique<RendererOGL>(std::move(thread),
+                                            std::move(compositor),
                                             aWindowId,
                                             wrRenderer,
                                             mBridge);
@@ -95,7 +95,7 @@ public:
       }
     }
 
-    aRenderThread.AddRenderer(aWindowId, Move(renderer));
+    aRenderThread.AddRenderer(aWindowId, std::move(renderer));
   }
 
 private:
@@ -278,9 +278,9 @@ WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
   // the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize, &useANGLE,
-                                       Move(aWidget), &task, aSize,
+                                       std::move(aWidget), &task, aSize,
                                        &syncHandle);
-  RenderThread::Get()->RunEvent(aWindowId, Move(event));
+  RenderThread::Get()->RunEvent(aWindowId, std::move(event));
 
   task.Wait();
 
@@ -337,7 +337,7 @@ WebRenderAPI::~WebRenderAPI()
 
     layers::SynchronousTask task("Destroy WebRenderAPI");
     auto event = MakeUnique<RemoveRenderer>(&task);
-    RunOnRenderThread(Move(event));
+    RunOnRenderThread(std::move(event));
     task.Wait();
 
     wr_api_shut_down(mDocHandle);
@@ -407,7 +407,7 @@ WebRenderAPI::Readback(gfx::IntSize size,
     // implies that all frame data have been processed when the renderer runs this
     // read-back event. Then, we could make sure this read-back event gets the
     // latest result.
-    RunOnRenderThread(Move(event));
+    RunOnRenderThread(std::move(event));
 
     task.Wait();
 }
@@ -442,7 +442,7 @@ WebRenderAPI::Pause()
     auto event = MakeUnique<PauseEvent>(&task);
     // This event will be passed from wr_backend thread to renderer thread. That
     // implies that all frame data have been processed when the renderer runs this event.
-    RunOnRenderThread(Move(event));
+    RunOnRenderThread(std::move(event));
 
     task.Wait();
 }
@@ -480,7 +480,7 @@ WebRenderAPI::Resume()
     auto event = MakeUnique<ResumeEvent>(&task, &result);
     // This event will be passed from wr_backend thread to renderer thread. That
     // implies that all frame data have been processed when the renderer runs this event.
-    RunOnRenderThread(Move(event));
+    RunOnRenderThread(std::move(event));
 
     task.Wait();
     return result;
@@ -527,7 +527,7 @@ WebRenderAPI::WaitFlushed()
     auto event = MakeUnique<WaitFlushedEvent>(&task);
     // This event will be passed from wr_backend thread to renderer thread. That
     // implies that all frame data have been processed when the renderer runs this event.
-    RunOnRenderThread(Move(event));
+    RunOnRenderThread(std::move(event));
 
     task.Wait();
 }
@@ -707,7 +707,7 @@ void
 WebRenderAPI::SetFrameStartTime(const TimeStamp& aTime)
 {
   auto event = MakeUnique<FrameStartTime>(aTime);
-  RunOnRenderThread(Move(event));
+  RunOnRenderThread(std::move(event));
 }
 
 void

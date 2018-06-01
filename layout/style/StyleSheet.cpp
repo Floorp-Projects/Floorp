@@ -1046,7 +1046,7 @@ StyleSheet::ParseSheet(css::Loader* aLoader,
                                         aLoader->GetCompatibilityMode());
   }
 
-  return Move(p);
+  return std::move(p);
 }
 
 void

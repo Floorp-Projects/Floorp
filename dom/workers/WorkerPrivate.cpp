@@ -2864,7 +2864,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
     return nullptr;
   }
 
-  worker->mDefaultLocale = Move(defaultLocale);
+  worker->mDefaultLocale = std::move(defaultLocale);
 
   if (!runtimeService->RegisterWorker(worker)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -3407,7 +3407,7 @@ nsresult
 WorkerPrivate::DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
                                     uint32_t aFlags)
 {
-  return mMainThreadEventTarget->Dispatch(Move(aRunnable), aFlags);
+  return mMainThreadEventTarget->Dispatch(std::move(aRunnable), aFlags);
 }
 
 nsISerialEventTarget*
@@ -3497,10 +3497,10 @@ WorkerPrivate::GetClientInfo() const
   Maybe<ClientInfo> clientInfo;
   if (!mClientSource) {
     MOZ_DIAGNOSTIC_ASSERT(mStatus >= Terminating);
-    return Move(clientInfo);
+    return std::move(clientInfo);
   }
   clientInfo.emplace(mClientSource->Info());
-  return Move(clientInfo);
+  return std::move(clientInfo);
 }
 
 const ClientState
@@ -3510,7 +3510,7 @@ WorkerPrivate::GetClientState() const
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   ClientState state;
   mClientSource->SnapshotState(&state);
-  return Move(state);
+  return std::move(state);
 }
 
 const Maybe<ServiceWorkerDescriptor>
@@ -5299,7 +5299,7 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
 
     // RegisterBindings() can spin a nested event loop so we have to set mScope
     // before calling it, and we have to make sure to unset mScope if it fails.
-    mScope = Move(globalScope);
+    mScope = std::move(globalScope);
 
     if (!RegisterBindings(aCx, global)) {
       mScope = nullptr;
@@ -5330,7 +5330,7 @@ WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
   // RegisterDebuggerBindings() can spin a nested event loop so we have to set
   // mDebuggerScope before calling it, and we have to make sure to unset
   // mDebuggerScope if it fails.
-  mDebuggerScope = Move(globalScope);
+  mDebuggerScope = std::move(globalScope);
 
   if (!RegisterDebuggerBindings(aCx, global)) {
     mDebuggerScope = nullptr;

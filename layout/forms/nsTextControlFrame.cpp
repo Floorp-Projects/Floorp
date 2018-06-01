@@ -789,7 +789,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
       nsresult rv = mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                                    do_AddRef(event));
       if (NS_SUCCEEDED(rv)) {
-        mScrollEvent = Move(event);
+        mScrollEvent = std::move(event);
       }
     }
   }

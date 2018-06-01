@@ -255,7 +255,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     }
 
     mNumCoords = cnt;
-    mCoords = Move(value_list);
+    mCoords = std::move(value_list);
 
     free(cp);
   }
@@ -839,7 +839,7 @@ nsImageMap::AddArea(HTMLAreaElement* aArea)
   nsAutoString coords;
   aArea->GetAttr(kNameSpaceID_None, nsGkAtoms::coords, coords);
   area->ParseCoords(coords);
-  mAreas.AppendElement(Move(area));
+  mAreas.AppendElement(std::move(area));
 }
 
 nsIContent*
@@ -926,7 +926,7 @@ TakeArea(nsImageMap::AreaList& aAreas, HTMLAreaElement* aArea)
   size_t index = 0;
   for (UniquePtr<Area>& area : aAreas) {
     if (area->mArea == aArea) {
-      result = Move(area);
+      result = std::move(area);
       break;
     }
     index++;
