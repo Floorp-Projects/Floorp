@@ -158,8 +158,8 @@
 #endif
 #endif
 
-@RESPATH@/components/ClearDataService.manifest
-@RESPATH@/components/ClearDataService.js
+@BINPATH@/components/ClearDataService.manifest
+@BINPATH@/components/ClearDataService.js
 
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
