@@ -13,7 +13,7 @@ class TestWindowMinimize(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
 
-        self.original_size = self.marionette.window_size
+        self.original_size = self.marionette.window_rect
 
     def is_minimized(self):
         return self.marionette.execute_script("return document.hidden", sandbox=None)
