@@ -29,7 +29,7 @@ namespace mozilla { namespace net {
 class nsHttpResponseHead
 {
 public:
-    nsHttpResponseHead() : mVersion(NS_HTTP_VERSION_1_1)
+    nsHttpResponseHead() : mVersion(HttpVersion::v1_1)
                          , mStatus(200)
                          , mContentLength(-1)
                          , mCacheControlPrivate(false)
@@ -46,7 +46,7 @@ public:
     void Enter() { mRecursiveMutex.Lock(); }
     void Exit() { mRecursiveMutex.Unlock(); }
 
-    nsHttpVersion Version();
+    HttpVersion Version();
 // X11's Xlib.h #defines 'Status' to 'int' on some systems!
 #undef Status
     uint16_t Status();
@@ -173,7 +173,7 @@ private:
 private:
     // All members must be copy-constructable and assignable
     nsHttpHeaderArray mHeaders;
-    nsHttpVersion     mVersion;
+    HttpVersion       mVersion;
     uint16_t          mStatus;
     nsCString         mStatusText;
     int64_t           mContentLength;
