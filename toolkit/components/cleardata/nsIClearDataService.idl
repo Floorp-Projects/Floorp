@@ -123,10 +123,14 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_APPCACHE = 1 << 7;
 
+  /**
+   * LocalStorage, IndexedDB, ServiceWorkers, DOM Cache and so on.
+   */
+  const uint32_t CLEAR_DOM_QUOTA = 1 << 8;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;
-  const uint32_t CLEAR_DOM_QUOTA = 1 << 8;
   const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 9;
   const uint32_t CLEAR_PREDICTOR_CACHE = 1 << 10;
   const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 11;
@@ -157,9 +161,9 @@ interface nsIClearDataService : nsISupports
 
   /**
    * Delete all DOM storages
-   * TODO: add CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
+   * TODO: add CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
    */
-  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE;
+  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA;
 
   /*
   const uint32_t CLEAR_BROWSER_DATA = CLEAR_DOWNLOADS | CLEAR_PASSWORDS | CLEAR_PERMISSIONS | CLEAR_CONTENT_PREFERENCES | CLEAR_HISTORY | CLEAR_LOGINS;
