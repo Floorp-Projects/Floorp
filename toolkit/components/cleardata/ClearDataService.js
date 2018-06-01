@@ -447,6 +447,22 @@ const HistoryCleaner = {
   },
 };
 
+const SessionHistoryCleaner = {
+  deleteByRange(aFrom, aTo) {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "browser:purge-session-history", String(aFrom));
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "browser:purge-session-history");
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -484,6 +500,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_HISTORY,
    cleaner: HistoryCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_SESSION_HISTORY,
+   cleaner: SessionHistoryCleaner, },
 ];
 
 this.ClearDataService = function() {};
