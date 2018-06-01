@@ -264,6 +264,7 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
   BASIC_RULE_FUNCS(type_) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetRules, ServoCssRulesStrong, \
                      RawServo##type_##RuleBorrowed rule)
+
 BASIC_RULE_FUNCS(Style)
 BASIC_RULE_FUNCS(Import)
 BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)

@@ -8,6 +8,7 @@
 
 #include "mozilla/ServoCSSRuleList.h"
 
+#include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCounterStyleRule.h"
@@ -17,7 +18,6 @@
 #include "mozilla/ServoFontFeatureValuesRule.h"
 #include "mozilla/ServoKeyframesRule.h"
 #include "mozilla/ServoMediaRule.h"
-#include "mozilla/ServoNamespaceRule.h"
 #include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoSupportsRule.h"
@@ -93,10 +93,21 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         ruleObj = new Servo##name_##Rule(rule.forget(), line, column);      \
         break;                                                              \
       }
+#define CASE_RULE_CSS(const_, name_)                                        \
+      case CSSRuleBinding::const_##_RULE: {                                 \
+        uint32_t line = 0, column = 0;                                      \
+        RefPtr<RawServo##name_##Rule> rule =                                \
+          Servo_CssRules_Get##name_##RuleAt(                                \
+              mRawRules, aIndex, &line, &column                             \
+          ).Consume();                                                      \
+        MOZ_ASSERT(rule);                                                   \
+        ruleObj = new CSS##name_##Rule(rule.forget(), line, column);        \
+        break;                                                              \
+      }
       CASE_RULE(STYLE, Style)
       CASE_RULE(KEYFRAMES, Keyframes)
       CASE_RULE(MEDIA, Media)
-      CASE_RULE(NAMESPACE, Namespace)
+      CASE_RULE_CSS(NAMESPACE, Namespace)
       CASE_RULE(PAGE, Page)
       CASE_RULE(SUPPORTS, Supports)
       CASE_RULE(DOCUMENT, Document)
