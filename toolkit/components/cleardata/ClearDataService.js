@@ -229,6 +229,26 @@ const PasswordsCleaner = {
   },
 };
 
+const MediaDevicesCleaner = {
+  deleteByRange(aFrom, aTo) {
+    return new Promise(aResolve => {
+      let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                       .getService(Ci.nsIMediaManagerService);
+      mediaMgr.sanitizeDeviceIds(aFrom);
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                       .getService(Ci.nsIMediaManagerService);
+      mediaMgr.sanitizeDeviceIds(null);
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -248,6 +268,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_PASSWORDS,
    cleaner: PasswordsCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
+   cleaner: MediaDevicesCleaner, },
 ];
 
 this.ClearDataService = function() {};
