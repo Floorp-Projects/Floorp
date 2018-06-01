@@ -48,4 +48,12 @@ interface TestFunctions {
   // Throws an InvalidStateError to auto-create a rejected promise.
   [Throws]
   static Promise<any> throwToRejectPromise();
+
+  // Some attributes for the toJSON to work with.
+  readonly attribute long one;
+  [Func="mozilla::dom::TestFunctions::ObjectFromAboutBlank"]
+  readonly attribute long two;
+
+  // Testing for how default toJSON behaves.
+  [Default] object toJSON();
 };
