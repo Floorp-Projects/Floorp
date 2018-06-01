@@ -1194,31 +1194,6 @@ public:
     const ActiveScrolledRoot* mOldValue;
   };
 
-  class AutoSaveRestorePerspectiveIndex {
-  public:
-    AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder,
-                                    const bool aChildrenHavePerspective)
-      : mBuilder(nullptr)
-    {
-      if (aChildrenHavePerspective) {
-        mBuilder = aBuilder;
-        mCachedItemIndex = aBuilder->mPerspectiveItemIndex;
-        aBuilder->mPerspectiveItemIndex = 0;
-      }
-    }
-
-    ~AutoSaveRestorePerspectiveIndex()
-    {
-      if (mBuilder) {
-        mBuilder->mPerspectiveItemIndex = mCachedItemIndex;
-      }
-    }
-
-  private:
-    nsDisplayListBuilder* mBuilder;
-    uint32_t mCachedItemIndex;
-  };
-
   /**
    * A helper class to temporarily set the value of mCurrentScrollParentId.
    */
@@ -1641,8 +1616,6 @@ public:
   void SetContainsBlendMode(bool aContainsBlendMode) { mContainsBlendMode = aContainsBlendMode; }
   bool ContainsBlendMode() const { return mContainsBlendMode; }
 
-  uint32_t AllocatePerspectiveItemIndex() { return mPerspectiveItemIndex++; }
-
   DisplayListClipState& ClipState() { return mClipState; }
   const ActiveScrolledRoot* CurrentActiveScrolledRoot() { return mCurrentActiveScrolledRoot; }
   const ActiveScrolledRoot* CurrentAncestorASRStackingContextContents() { return mCurrentContainerASR; }
@@ -1822,6 +1795,7 @@ private:
   friend class nsDisplayCanvasBackgroundImage;
   friend class nsDisplayBackgroundImage;
   friend class nsDisplayFixedPosition;
+  friend class nsDisplayPerspective;
   AnimatedGeometryRoot* FindAnimatedGeometryRootFor(nsDisplayItem* aItem);
 
   friend class nsDisplayItem;
@@ -1963,7 +1937,6 @@ private:
   ViewID                         mCurrentScrollbarTarget;
   MaybeScrollDirection           mCurrentScrollbarDirection;
   Preserves3DContext             mPreserves3DCtx;
-  uint32_t                       mPerspectiveItemIndex;
   int32_t                        mSVGEffectsBuildingDepth;
   // When we are inside a filter, the current ASR at the time we entered the
   // filter. Otherwise nullptr.
@@ -6769,18 +6742,10 @@ class nsDisplayPerspective : public nsDisplayItem
 public:
   NS_DISPLAY_DECL_NAME("nsDisplayPerspective", TYPE_PERSPECTIVE)
 
-  nsDisplayPerspective(nsDisplayListBuilder* aBuilder, nsIFrame* aTransformFrame,
-                       nsIFrame* aPerspectiveFrame,
+  nsDisplayPerspective(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                        nsDisplayList* aList);
   ~nsDisplayPerspective()
   {
-    if (mTransformFrame) {
-      mTransformFrame->RemoveDisplayItem(this);
-    }
-  }
-
-  virtual uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -6865,12 +6830,6 @@ public:
     return mList.GetComponentAlphaBounds(aBuilder);
   }
 
-  nsIFrame* TransformFrame() { return mTransformFrame; }
-
-  virtual nsIFrame* FrameForInvalidation() const override { return mTransformFrame; }
-
-  virtual int32_t ZIndex() const override;
-
   virtual void
   DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
     if (mList.GetChildren()->GetTop()) {
@@ -6884,21 +6843,14 @@ public:
     nsDisplayItem::Destroy(aBuilder);
   }
 
-  virtual bool HasDeletedFrame() const override { return !mTransformFrame || nsDisplayItem::HasDeletedFrame(); }
-
   virtual void RemoveFrame(nsIFrame* aFrame) override
   {
-    if (aFrame == mTransformFrame) {
-      mTransformFrame = nullptr;
-    }
     nsDisplayItem::RemoveFrame(aFrame);
     mList.RemoveFrame(aFrame);
   }
 
 private:
   nsDisplayWrapList mList;
-  nsIFrame* mTransformFrame;
-  uint32_t mIndex;
 };
 
 /**

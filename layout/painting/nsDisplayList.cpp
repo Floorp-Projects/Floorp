@@ -998,7 +998,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mMode(aMode),
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
-      mPerspectiveItemIndex(0),
       mSVGEffectsBuildingDepth(0),
       mFilterASR(nullptr),
       mContainsBlendMode(false),
@@ -2971,7 +2970,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       (itemType == DisplayItemType::TYPE_TRANSFORM &&
        static_cast<nsDisplayTransform*>(item)->IsParticipating3DContext()) ||
       (itemType == DisplayItemType::TYPE_PERSPECTIVE &&
-       static_cast<nsDisplayPerspective*>(item)->TransformFrame()->Extend3DContext());
+       item->Frame()->Extend3DContext());
     if (same3DContext &&
         (itemType != DisplayItemType::TYPE_TRANSFORM ||
          !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext())) {
@@ -9158,20 +9157,14 @@ nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
 }
 
 nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aTransformFrame,
-                                           nsIFrame* aPerspectiveFrame,
+                                           nsIFrame* aFrame,
                                            nsDisplayList* aList)
-  : nsDisplayItem(aBuilder, aPerspectiveFrame)
-  , mList(aBuilder, aPerspectiveFrame, aList, true)
-  , mTransformFrame(aTransformFrame)
-  , mIndex(aBuilder->AllocatePerspectiveItemIndex())
+  : nsDisplayItem(aBuilder, aFrame)
+  , mList(aBuilder, aFrame, aList, true)
 {
   MOZ_ASSERT(mList.GetChildren()->Count() == 1);
   MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
-
-  if (aBuilder->IsRetainingDisplayList()) {
-    mTransformFrame->AddDisplayItem(this);
-  }
+  mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME));
 }
 
 already_AddRefed<Layer>
@@ -9183,7 +9176,7 @@ nsDisplayPerspective::BuildLayer(nsDisplayListBuilder *aBuilder,
 
   Matrix4x4 perspectiveMatrix;
   DebugOnly<bool> hasPerspective =
-    nsDisplayTransform::ComputePerspectiveMatrix(mTransformFrame, appUnitsPerPixel,
+    nsDisplayTransform::ComputePerspectiveMatrix(mFrame, appUnitsPerPixel,
                                                  perspectiveMatrix);
   MOZ_ASSERT(hasPerspective, "Why did we create nsDisplayPerspective?");
 
@@ -9246,7 +9239,7 @@ nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& a
   float appUnitsPerPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   Matrix4x4 perspectiveMatrix;
   DebugOnly<bool> hasPerspective =
-    nsDisplayTransform::ComputePerspectiveMatrix(mTransformFrame, appUnitsPerPixel,
+    nsDisplayTransform::ComputePerspectiveMatrix(mFrame, appUnitsPerPixel,
                                                  perspectiveMatrix);
   MOZ_ASSERT(hasPerspective, "Why did we create nsDisplayPerspective?");
 
@@ -9290,12 +9283,6 @@ nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& a
 
   return mList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                        aManager, aDisplayListBuilder);
-}
-
-int32_t
-nsDisplayPerspective::ZIndex() const
-{
-  return ZIndexForFrame(mTransformFrame);
 }
 
 nsDisplayItemGeometry*
