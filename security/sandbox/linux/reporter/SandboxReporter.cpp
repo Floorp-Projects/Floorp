@@ -289,11 +289,7 @@ SandboxReporter::GetSnapshot()
     MOZ_ASSERT(rep->IsValid());
     snapshot.mReports.AppendElement(*rep);
   }
-  // Named Return Value Optimization would apply here, but C++11
-  // doesn't require it; so, instead of possibly copying the entire
-  // array contents, invoke the move constructor and copy at most a
-  // few words.
-  return std::move(snapshot);
+  return snapshot;
 }
 
 } // namespace mozilla

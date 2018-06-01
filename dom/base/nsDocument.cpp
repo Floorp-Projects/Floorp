@@ -5565,9 +5565,9 @@ nsIDocument::GetClientInfo() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return std::move(inner->GetClientInfo());
+    return inner->GetClientInfo();
   }
-  return std::move(Maybe<ClientInfo>());
+  return Maybe<ClientInfo>();
 }
 
 Maybe<ClientState>
@@ -5575,9 +5575,9 @@ nsIDocument::GetClientState() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return std::move(inner->GetClientState());
+    return inner->GetClientState();
   }
-  return std::move(Maybe<ClientState>());
+  return Maybe<ClientState>();
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -5585,9 +5585,9 @@ nsIDocument::GetController() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return std::move(inner->GetController());
+    return inner->GetController();
   }
-  return std::move(Maybe<ServiceWorkerDescriptor>());
+  return Maybe<ServiceWorkerDescriptor>();
 }
 
 //

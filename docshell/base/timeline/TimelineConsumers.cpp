@@ -185,7 +185,7 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasConsumer(aDocShell)) {
-    aDocShell->mObserved->AddMarker(std::move(MakeUnique<TimelineMarker>(aName, aTracingType, aStackRequest)));
+    aDocShell->mObserved->AddMarker(MakeUnique<TimelineMarker>(aName, aTracingType, aStackRequest));
   }
 }
 
@@ -198,7 +198,7 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasConsumer(aDocShell)) {
-    aDocShell->mObserved->AddMarker(std::move(MakeUnique<TimelineMarker>(aName, aTime, aTracingType, aStackRequest)));
+    aDocShell->mObserved->AddMarker(MakeUnique<TimelineMarker>(aName, aTime, aTracingType, aStackRequest));
   }
 }
 
