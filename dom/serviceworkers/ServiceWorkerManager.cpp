@@ -312,7 +312,7 @@ RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
                                              ServiceWorkerRegistrationInfo* aRegistrationInfo)
 {
-  MOZ_RELEASE_ASSERT(aRegistrationInfo->GetActive());
+  MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
 
   RefPtr<GenericPromise> ref;
 
