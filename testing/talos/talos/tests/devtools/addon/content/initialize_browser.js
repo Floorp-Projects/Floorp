@@ -9,12 +9,6 @@ function initializeBrowser(win) {
     runTest(config, callback) {
       (new win.Damp()).startTest(callback, config);
     },
-
-    toClipboard(text) {
-      const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"]
-                                   .getService(Ci.nsIClipboardHelper);
-      gClipboardHelper.copyString(text);
-    }
   };
 
   var groupMM = win.getGroupMessageManager("browsers");
