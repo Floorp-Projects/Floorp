@@ -72,7 +72,6 @@ DevToolsModules(
     'webextension-parent.js',
     'webextension.js',
     'webgl.js',
-    'window.js',
 )
 
 with Files('animation.js'):

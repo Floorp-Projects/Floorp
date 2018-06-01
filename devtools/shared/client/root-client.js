@@ -241,7 +241,7 @@ RootClient.prototype = {
   },
 
   /**
-   * Fetch the WindowActor for a specific window, like a browser window in
+   * Fetch the ChromeWindowTargetActor for a specific window, like a browser window in
    * Firefox, but it can be used to reach any window in the process.
    *
    * @param number outerWindowID
