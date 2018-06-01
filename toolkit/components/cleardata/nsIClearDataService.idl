@@ -153,6 +153,11 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_AUTH_TOKENS = 1 << 13;
 
+  /**
+   * Login cache
+   */
+  const uint32_t CLEAR_AUTH_CACHE = 1 << 14;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;
@@ -160,7 +165,6 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_HSTS = 1 << 12;
   const uint32_t CLEAR_HPKP = 1 << 13;
   const uint32_t CLEAR_FORMDATA = 1 << 16;
-  const uint32_t CLEAR_LOGINS = 1 << 18;
   */
 
   /**
