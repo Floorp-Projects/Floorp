@@ -1893,7 +1893,7 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 
 bool
 gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
-                                          nsTArray<FamilyAndGeneric>* aOutput,
+                                          nsTArray<gfxFontFamily*>* aOutput,
                                           FindFamiliesFlags aFlags,
                                           gfxFontStyle* aStyle,
                                           gfxFloat aDevToCssSize)
@@ -1941,7 +1941,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     // Because the FcConfigSubstitute call is quite expensive, we cache the
     // actual font families found via this process. So check the cache first:
     NS_ConvertUTF16toUTF8 familyToFind(familyName);
-    AutoTArray<FamilyAndGeneric,10> cachedFamilies;
+    AutoTArray<gfxFontFamily*,10> cachedFamilies;
     if (mFcSubstituteCache.Get(familyToFind, &cachedFamilies)) {
         if (cachedFamilies.IsEmpty()) {
             return false;
@@ -2090,7 +2090,7 @@ gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
 void
 gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
                                        nsAtom* aLanguage,
-                                       nsTArray<FamilyAndGeneric>& aFamilyList)
+                                       nsTArray<gfxFontFamily*>& aFamilyList)
 {
     bool usePrefFontList = false;
 
@@ -2147,10 +2147,7 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
 
     PrefFontList* prefFonts = FindGenericFamilies(genericToLookup, aLanguage);
     NS_ASSERTION(prefFonts, "null generic font list");
-    aFamilyList.SetCapacity(aFamilyList.Length() + prefFonts->Length());
-    for (auto& f : *prefFonts) {
-        aFamilyList.AppendElement(FamilyAndGeneric(f.get(), aGenericType));
-    }
+    aFamilyList.AppendElements(*prefFonts);
 }
 
 void
@@ -2261,14 +2258,14 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
         FcPatternGetString(font, FC_FAMILY, 0, &mappedGeneric);
         if (mappedGeneric) {
             NS_ConvertUTF8toUTF16 mappedGenericName(ToCharPtr(mappedGeneric));
-            AutoTArray<FamilyAndGeneric,1> genericFamilies;
+            AutoTArray<gfxFontFamily*,1> genericFamilies;
             if (gfxPlatformFontList::FindAndAddFamilies(mappedGenericName,
                                                         &genericFamilies,
                                                         FindFamiliesFlags(0))) {
                 MOZ_ASSERT(genericFamilies.Length() == 1,
                            "expected a single family");
-                if (!prefFonts->Contains(genericFamilies[0].mFamily)) {
-                    prefFonts->AppendElement(genericFamilies[0].mFamily);
+                if (!prefFonts->Contains(genericFamilies[0])) {
+                    prefFonts->AppendElement(genericFamilies[0]);
                     bool foundLang =
                         !fcLang.IsEmpty() &&
                         PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
