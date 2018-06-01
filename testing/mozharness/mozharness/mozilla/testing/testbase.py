@@ -8,11 +8,8 @@
 import copy
 import os
 import platform
-import pprint
-import re
 import urllib2
 import json
-import socket
 from urlparse import urlparse, ParseResult
 
 from mozharness.base.errors import BaseErrorList
@@ -58,7 +55,8 @@ testing_config_options = [
      {"action": "store",
       "dest": "installer_path",
       "default": None,
-      "help": "Path to the installer to install.  This is set automatically if run with --download-and-extract.",
+      "help": "Path to the installer to install. "
+      "This is set automatically if run with --download-and-extract.",
       }],
     [["--binary-path"],
      {"action": "store",
@@ -224,8 +222,8 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
             self.exception("You must use --installer-url with developer_config.py")
         if c.get("require_test_zip"):
             if not c.get('test_url') and not c.get('test_packages_url'):
-                self.exception(
-                    "You must use --test-url or --test-packages-url with developer_config.py")
+                self.exception("You must use --test-url or --test-packages-url with "
+                               "developer_config.py")
 
         c["installer_url"] = _replace_url(c["installer_url"], c["replace_urls"])
         if c.get("test_url"):
@@ -257,7 +255,8 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
             self.https_username, self.https_password = get_credentials()
             # This creates a password manager
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            # Because we have put None at the start it will use this username/password combination from here on
+            # Because we have put None at the start it will use this username/password
+            # combination from here on
             passman.add_password(None, url, self.https_username, self.https_password)
             authhandler = urllib2.HTTPBasicAuthHandler(passman)
 
@@ -281,7 +280,9 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
 
 You can set this by specifying --installer-url URL
 """
-        if self.config.get("require_test_zip") and not self.test_url and not self.test_packages_url:
+        if (self.config.get("require_test_zip") and
+            not self.test_url and
+            not self.test_packages_url):
             message += """test_url isn't set!
 
 You can set this by specifying --test-url URL
@@ -624,8 +625,9 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
                 self.chmod(abs_nodejs_path, 0755)
             self.nodejs_path = abs_nodejs_path
         else:
-            self.warning(
-                "nodejs path was given but couldn't be found. Tried looking in '%s'" % abs_nodejs_path)
+            msg = """nodejs path was given but couldn't be found. Tried looking in '%s'""" % \
+                abs_nodejs_path
+            self.warning(msg)
             self.record_status(TBPL_WARNING, WARNING)
 
         return self.nodejs_path
