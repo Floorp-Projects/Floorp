@@ -435,9 +435,9 @@ RootActor.prototype = {
         pool.addActor(actor);
       }
 
-      this.conn.removeActorPool(this._workerActorPool);
-      this._workerActorPool = pool;
-      this.conn.addActorPool(this._workerActorPool);
+      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool = pool;
+      this.conn.addActorPool(this._workerTargetActorPool);
 
       return {
         "from": this.actorID,

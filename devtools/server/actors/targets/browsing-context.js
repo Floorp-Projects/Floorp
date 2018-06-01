@@ -39,7 +39,7 @@ const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/bro
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker/worker-list", true);
+loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(this, "StyleSheetActor", "devtools/server/actors/stylesheets", true);
@@ -249,9 +249,10 @@ const browsingContextTargetPrototype = {
       logInPage: true,
     };
 
-    this._workerActorList = null;
-    this._workerActorPool = null;
-    this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
+    this._workerTargetActorList = null;
+    this._workerTargetActorPool = null;
+    this._onWorkerTargetActorListChanged =
+      this._onWorkerTargetActorListChanged.bind(this);
   },
 
   traits: null,
@@ -657,24 +658,24 @@ const browsingContextTargetPrototype = {
       return { error: "wrongState" };
     }
 
-    if (this._workerActorList === null) {
-      this._workerActorList = new WorkerActorList(this.conn, {
+    if (this._workerTargetActorList === null) {
+      this._workerTargetActorList = new WorkerTargetActorList(this.conn, {
         type: Ci.nsIWorkerDebugger.TYPE_DEDICATED,
         window: this.window
       });
     }
 
-    return this._workerActorList.getList().then((actors) => {
+    return this._workerTargetActorList.getList().then((actors) => {
       const pool = new ActorPool(this.conn);
       for (const actor of actors) {
         pool.addActor(actor);
       }
 
-      this.conn.removeActorPool(this._workerActorPool);
-      this._workerActorPool = pool;
-      this.conn.addActorPool(this._workerActorPool);
+      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool = pool;
+      this.conn.addActorPool(this._workerTargetActorPool);
 
-      this._workerActorList.onListChanged = this._onWorkerActorListChanged;
+      this._workerTargetActorList.onListChanged = this._onWorkerTargetActorListChanged;
 
       return {
         "from": this.actorID,
@@ -693,8 +694,8 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  _onWorkerActorListChanged() {
-    this._workerActorList.onListChanged = null;
+  _onWorkerTargetActorListChanged() {
+    this._workerTargetActorList.onListChanged = null;
     this.conn.sendActorEvent(this.actorID, "workerListChanged");
   },
 
@@ -935,14 +936,14 @@ const browsingContextTargetPrototype = {
     }
 
     // Make sure that no more workerListChanged notifications are sent.
-    if (this._workerActorList !== null) {
-      this._workerActorList.onListChanged = null;
-      this._workerActorList = null;
+    if (this._workerTargetActorList !== null) {
+      this._workerTargetActorList.onListChanged = null;
+      this._workerTargetActorList = null;
     }
 
-    if (this._workerActorPool !== null) {
-      this.conn.removeActorPool(this._workerActorPool);
-      this._workerActorPool = null;
+    if (this._workerTargetActorPool !== null) {
+      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool = null;
     }
 
     this._attached = false;

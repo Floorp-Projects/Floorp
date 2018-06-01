@@ -14,7 +14,7 @@ const { ActorPool } = require("devtools/server/main");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("./utils/TabSources");
 
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker/worker-list", true);
+loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
 
 function ChildProcessActor(connection) {
   this.conn = connection;
@@ -55,7 +55,7 @@ function ChildProcessActor(connection) {
   this._consoleScope = sandbox;
 
   this._workerList = null;
-  this._workerActorPool = null;
+  this._workerTargetActorPool = null;
   this._onWorkerListChanged = this._onWorkerListChanged.bind(this);
 }
 exports.ChildProcessActor = ChildProcessActor;
@@ -114,7 +114,7 @@ ChildProcessActor.prototype = {
 
   onListWorkers: function() {
     if (!this._workerList) {
-      this._workerList = new WorkerActorList(this.conn, {});
+      this._workerList = new WorkerTargetActorList(this.conn, {});
     }
     return this._workerList.getList().then(actors => {
       const pool = new ActorPool(this.conn);
@@ -122,9 +122,9 @@ ChildProcessActor.prototype = {
         pool.addActor(actor);
       }
 
-      this.conn.removeActorPool(this._workerActorPool);
-      this._workerActorPool = pool;
-      this.conn.addActorPool(this._workerActorPool);
+      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool = pool;
+      this.conn.addActorPool(this._workerTargetActorPool);
 
       this._workerList.onListChanged = this._onWorkerListChanged;
 
