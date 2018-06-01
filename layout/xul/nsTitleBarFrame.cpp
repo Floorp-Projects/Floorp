@@ -168,23 +168,9 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 void
 nsTitleBarFrame::MouseClicked(WidgetMouseEvent* aEvent)
 {
-  bool isTrusted = false;
-  bool isShift = false;
-  bool isControl = false;
-  bool isAlt = false;
-  bool isMeta = false;
-  uint16_t inputSource = dom::MouseEventBinding::MOZ_SOURCE_UNKNOWN;
-
-  if(aEvent) {
-    isShift = aEvent->IsShift();
-    isControl = aEvent->IsControl();
-    isAlt = aEvent->IsAlt();
-    isMeta = aEvent->IsMeta();
-    inputSource = aEvent->inputSource;
-  }
-
   // Execute the oncommand event handler.
-  nsContentUtils::DispatchXULCommand(mContent, isTrusted, nullptr,
-                                     nullptr, isControl, isAlt,
-                                     isShift, isMeta, inputSource);
+  nsContentUtils::DispatchXULCommand(mContent, false, nullptr,
+                                     nullptr, aEvent->IsControl(),
+                                     aEvent->IsAlt(), aEvent->IsShift(),
+                                     aEvent->IsMeta(), aEvent->inputSource);
 }

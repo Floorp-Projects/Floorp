@@ -49,7 +49,6 @@ UNIFIED_SOURCES += [
     'nsRootBoxFrame.cpp',
     'nsScrollbarButtonFrame.cpp',
     'nsScrollbarFrame.cpp',
-    'nsScrollBoxFrame.cpp',
     'nsSliderFrame.cpp',
     'nsSprocketLayout.cpp',
     'nsStackFrame.cpp',
