@@ -50,7 +50,10 @@ xpcshell:
         by-test-platform:
             android.*: xlarge
             default: default
-    max-run-time: 5400
+    max-run-time:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 7200
+            default: 5400
     e10s: false
     allow-software-gl-layers: false
     tier:
