@@ -2592,7 +2592,7 @@ MediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode)
         return;
       }
     }
-    mDisabledTracks.AppendElement(std::move(DisabledTrack(aTrackID, aMode)));
+    mDisabledTracks.AppendElement(DisabledTrack(aTrackID, aMode));
   }
 }
 

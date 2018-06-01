@@ -516,7 +516,7 @@ LCovRealm::lookupOrAdd(JS::Realm* realm, const char* name)
     }
 
     // Allocate a new LCovSource for the current top-level.
-    if (!sources_->append(std::move(LCovSource(&alloc_, source_name)))) {
+    if (!sources_->append(LCovSource(&alloc_, source_name))) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }
