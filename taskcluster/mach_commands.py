@@ -272,7 +272,6 @@ class MachCommands(MachCommandBase):
                      help='Action callback name (Python function name)')
     def test_action_callback(self, **options):
         import taskgraph.parameters
-        from taskgraph.util.taskcluster import get_task_definition
         import taskgraph.actions
         import yaml
 
@@ -288,12 +287,6 @@ class MachCommands(MachCommandBase):
         try:
             self.setup_logging()
             task_id = options['task_id']
-            if options['task']:
-                task = load_data(options['task'])
-            elif task_id:
-                task = get_task_definition(task_id)
-            else:
-                task = None
 
             if options['input']:
                 input = load_data(options['input'])
@@ -308,7 +301,6 @@ class MachCommands(MachCommandBase):
             return taskgraph.actions.trigger_action_callback(
                     task_group_id=options['task_group_id'],
                     task_id=task_id,
-                    task=task,
                     input=input,
                     callback=options['callback'],
                     parameters=parameters,

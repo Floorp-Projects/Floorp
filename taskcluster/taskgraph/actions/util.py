@@ -18,6 +18,7 @@ from taskgraph.decision import write_artifact
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.optimize import optimize_task_graph
 from taskgraph.util.taskcluster import get_session, find_task_id, get_artifact, list_tasks
+from taskgraph.util.parameterization import resolve_task_references
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,16 @@ def create_task_from_def(task_id, task_def, level):
     label = task_def['metadata']['name']
     session = get_session()
     create.create_task(session, task_id, label, task_def)
+
+
+def fix_task_dependencies(task_def, label_to_taskid):
+    """fix up the task's dependencies, similar to how optimization would
+    have done in the decision"""
+    dependencies = {name: label_to_taskid[label]
+                    for name, label in task_def.dependencies.iteritems()}
+    new_task_definition = resolve_task_references(task_def.label, task_def.task, dependencies)
+    new_task_definition.setdefault('dependencies', []).extend(dependencies.itervalues())
+    return new_task_definition
 
 
 def update_parent(task, graph):
