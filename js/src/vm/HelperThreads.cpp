@@ -643,8 +643,8 @@ js::CancelOffThreadParses(JSRuntime* rt)
             next = task->getNext();
             if (task->runtimeMatches(rt)) {
                 found = true;
-                AutoUnlockHelperThreadState unlock(lock);
-                HelperThreadState().cancelParseTask(rt, task->kind, task);
+                task->remove();
+                HelperThreadState().destroyParseTask(rt, task);
             }
             task = next;
         }
@@ -1642,7 +1642,6 @@ GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, JS::OffThre
     MOZ_ASSERT(found);
 #endif
 
-
     task->remove();
     return task;
 }
@@ -1823,8 +1822,15 @@ void
 GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
                                          JS::OffThreadToken* token)
 {
-    ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
+    destroyParseTask(rt, removeFinishedParseTask(kind, token));
+}
+
+void
+GlobalHelperThreadState::destroyParseTask(JSRuntime* rt, ParseTask* parseTask)
+{
+    MOZ_ASSERT(!parseTask->isInList());
     LeaveParseTaskZone(rt, parseTask);
+    js_delete(parseTask);
 }
 
 void
