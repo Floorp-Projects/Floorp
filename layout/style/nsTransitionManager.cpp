@@ -489,6 +489,9 @@ nsTransitionManager::DoUpdateTransitions(
       for (nsCSSPropertyID p = nsCSSPropertyID(0);
            p < eCSSProperty_COUNT_no_shorthands;
            p = nsCSSPropertyID(p + 1)) {
+        if (!nsCSSProps::IsEnabled(p, CSSEnabledState::eForAllContent)) {
+          continue;
+        }
         startedAny |=
           ConsiderInitiatingTransition(p, aDisp, i, aElement, aPseudoType,
                                        aElementTransitions,
@@ -665,13 +668,6 @@ nsTransitionManager::ConsiderInitiatingTransition(
   }
 
   aPropertiesChecked.AddProperty(aProperty);
-
-  // Ignore disabled properties. We can arrive here if the transition-property
-  // is 'all' and the disabled property has a default value which derives value
-  // from another property, e.g. color.
-  if (!nsCSSProps::IsEnabled(aProperty, CSSEnabledState::eForAllContent)) {
-    return false;
-  }
 
   if (!IsTransitionable(aProperty)) {
     return false;
