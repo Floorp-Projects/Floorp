@@ -191,29 +191,29 @@ class MutableWrappedPtrOperations<JS::GCHashMap<Args...>, Wrapper>
 
     template<typename KeyInput, typename ValueInput>
     bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-        return map().add(p, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        return map().add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput>
     bool add(AddPtr& p, KeyInput&& k) {
-        return map().add(p, mozilla::Forward<KeyInput>(k), Map::Value());
+        return map().add(p, std::forward<KeyInput>(k), Map::Value());
     }
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return map().relookupOrAdd(p, k,
-                                   mozilla::Forward<KeyInput>(k),
-                                   mozilla::Forward<ValueInput>(v));
+                                   std::forward<KeyInput>(k),
+                                   std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool put(KeyInput&& k, ValueInput&& v) {
-        return map().put(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        return map().put(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool putNew(KeyInput&& k, ValueInput&& v) {
-        return map().putNew(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        return map().putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 };
 
@@ -336,27 +336,27 @@ class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 
     template<typename TInput>
     bool add(AddPtr& p, TInput&& t) {
-        return set().add(p, mozilla::Forward<TInput>(t));
+        return set().add(p, std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool relookupOrAdd(AddPtr& p, const Lookup& l, TInput&& t) {
-        return set().relookupOrAdd(p, l, mozilla::Forward<TInput>(t));
+        return set().relookupOrAdd(p, l, std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool put(TInput&& t) {
-        return set().put(mozilla::Forward<TInput>(t));
+        return set().put(std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool putNew(TInput&& t) {
-        return set().putNew(mozilla::Forward<TInput>(t));
+        return set().putNew(std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool putNew(const Lookup& l, TInput&& t) {
-        return set().putNew(l, mozilla::Forward<TInput>(t));
+        return set().putNew(l, std::forward<TInput>(t));
     }
 };
 
@@ -380,11 +380,11 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
   public:
     template <typename... Args>
     explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone), map(mozilla::Forward<Args>(args)...), needsBarrier(false)
+      : WeakCacheBase(zone), map(std::forward<Args>(args)...), needsBarrier(false)
     {}
     template <typename... Args>
     explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt), map(mozilla::Forward<Args>(args)...), needsBarrier(false)
+      : WeakCacheBase(rt), map(std::forward<Args>(args)...), needsBarrier(false)
     {}
     ~WeakCache() {
         MOZ_ASSERT(!needsBarrier);
@@ -558,32 +558,27 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 
     template<typename KeyInput>
     bool add(AddPtr& p, KeyInput&& k) {
-        using mozilla::Forward;
-        return map.add(p, Forward<KeyInput>(k));
+        return map.add(p, std::forward<KeyInput>(k));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-        using mozilla::Forward;
-        return map.add(p, Forward<KeyInput>(k), Forward<ValueInput>(v));
+        return map.add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-        using mozilla::Forward;
-        return map.relookupOrAdd(p, Forward<KeyInput>(k), Forward<ValueInput>(v));
+        return map.relookupOrAdd(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool put(KeyInput&& k, ValueInput&& v) {
-        using mozilla::Forward;
-        return map.put(Forward<KeyInput>(k), Forward<ValueInput>(v));
+        return map.put(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool putNew(KeyInput&& k, ValueInput&& v) {
-        using mozilla::Forward;
-        return map.putNew(Forward<KeyInput>(k), Forward<ValueInput>(v));
+        return map.putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
     }
 };
 
@@ -604,11 +599,11 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
     template <typename... Args>
     explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone), set(mozilla::Forward<Args>(args)...), needsBarrier(false)
+      : WeakCacheBase(zone), set(std::forward<Args>(args)...), needsBarrier(false)
     {}
     template <typename... Args>
     explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt), set(mozilla::Forward<Args>(args)...), needsBarrier(false)
+      : WeakCacheBase(rt), set(std::forward<Args>(args)...), needsBarrier(false)
     {}
 
     size_t sweep() override {
@@ -775,27 +770,27 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
     template<typename TInput>
     bool add(AddPtr& p, TInput&& t) {
-        return set.add(p, mozilla::Forward<TInput>(t));
+        return set.add(p, std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool relookupOrAdd(AddPtr& p, const Lookup& l, TInput&& t) {
-        return set.relookupOrAdd(p, l, mozilla::Forward<TInput>(t));
+        return set.relookupOrAdd(p, l, std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool put(TInput&& t) {
-        return set.put(mozilla::Forward<TInput>(t));
+        return set.put(std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool putNew(TInput&& t) {
-        return set.putNew(mozilla::Forward<TInput>(t));
+        return set.putNew(std::forward<TInput>(t));
     }
 
     template<typename TInput>
     bool putNew(const Lookup& l, TInput&& t) {
-        return set.putNew(l, mozilla::Forward<TInput>(t));
+        return set.putNew(l, std::forward<TInput>(t));
     }
 };
 

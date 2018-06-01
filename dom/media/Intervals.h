@@ -49,8 +49,8 @@ public:
 
   template<typename StartArg, typename EndArg>
   Interval(StartArg&& aStart, EndArg&& aEnd)
-    : mStart(Forward<StartArg>(aStart))
-    , mEnd(Forward<EndArg>(aEnd))
+    : mStart(std::forward<StartArg>(aStart))
+    , mEnd(std::forward<EndArg>(aEnd))
     , mFuzz()
   {
     MOZ_ASSERT(aStart <= aEnd);
@@ -58,9 +58,9 @@ public:
 
   template<typename StartArg, typename EndArg, typename FuzzArg>
   Interval(StartArg&& aStart, EndArg&& aEnd, FuzzArg&& aFuzz)
-    : mStart(Forward<StartArg>(aStart))
-    , mEnd(Forward<EndArg>(aEnd))
-    , mFuzz(Forward<FuzzArg>(aFuzz))
+    : mStart(std::forward<StartArg>(aStart))
+    , mEnd(std::forward<EndArg>(aEnd))
+    , mFuzz(std::forward<FuzzArg>(aFuzz))
   {
     MOZ_ASSERT(aStart <= aEnd);
   }

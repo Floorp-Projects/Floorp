@@ -310,7 +310,7 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
 
   // Initialize the decoder, copying settings from @aICODecoder.
   decoder->SetMetadataDecode(aIsMetadataDecode);
-  decoder->SetIterator(Forward<SourceBufferIterator>(aIterator));
+  decoder->SetIterator(std::forward<SourceBufferIterator>(aIterator));
   if (!aIsMetadataDecode) {
     decoder->SetOutputSize(aICODecoder->OutputSize());
   }

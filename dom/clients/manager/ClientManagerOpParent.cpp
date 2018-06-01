@@ -20,7 +20,7 @@ ClientManagerOpParent::DoServiceOp(Method aMethod, Args&&... aArgs)
 {
   // Note, we need perfect forarding of the template type in order
   // to allow already_AddRefed<> to be passed as an arg.
-  RefPtr<ClientOpPromise> p = (mService->*aMethod)(Forward<Args>(aArgs)...);
+  RefPtr<ClientOpPromise> p = (mService->*aMethod)(std::forward<Args>(aArgs)...);
 
   // Capturing `this` is safe here because we disconnect the promise in
   // ActorDestroy() which ensures neither lambda is called if the actor

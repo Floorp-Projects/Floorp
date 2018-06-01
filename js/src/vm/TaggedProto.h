@@ -137,10 +137,10 @@ class WrappedPtrOperations<TaggedProto, Wrapper>
 template <typename F, typename... Args>
 auto
 DispatchTyped(F f, const TaggedProto& proto, Args&&... args)
-  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSObject*>(nullptr), std::forward<Args>(args)...))
 {
     if (proto.isObject())
-        return f(proto.toObject(), mozilla::Forward<Args>(args)...);
+        return f(proto.toObject(), std::forward<Args>(args)...);
     return F::defaultValue(proto);
 }
 

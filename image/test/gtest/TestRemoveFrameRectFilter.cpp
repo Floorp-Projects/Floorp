@@ -26,7 +26,7 @@ WithRemoveFrameRectFilter(const IntSize& aSize,
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  WithFilterPipeline(decoder, Forward<Func>(aFunc),
+  WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      RemoveFrameRectConfig { aFrameRect },
                      SurfaceConfig { decoder, aSize,
                                      SurfaceFormat::B8G8R8A8, false });

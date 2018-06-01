@@ -176,7 +176,6 @@ class StackFrame;
 namespace JS {
 namespace ubi {
 
-using mozilla::Forward;
 using mozilla::Maybe;
 using mozilla::RangedPtr;
 using mozilla::Variant;
@@ -196,13 +195,13 @@ class JS_PUBLIC_API(AtomOrTwoByteChars) : public Variant<JSAtom*, const char16_t
 
   public:
     template<typename T>
-    MOZ_IMPLICIT AtomOrTwoByteChars(T&& rhs) : Base(Forward<T>(rhs)) { }
+    MOZ_IMPLICIT AtomOrTwoByteChars(T&& rhs) : Base(std::forward<T>(rhs)) { }
 
     template<typename T>
     AtomOrTwoByteChars& operator=(T&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move disallowed");
         this->~AtomOrTwoByteChars();
-        new (this) AtomOrTwoByteChars(Forward<T>(rhs));
+        new (this) AtomOrTwoByteChars(std::forward<T>(rhs));
         return *this;
     }
 

@@ -519,7 +519,7 @@ struct Dispatcher
     {
         Impl::OnNativeCall(ProxyNativeCall<
                 Impl, typename Traits::Owner, IsStatic,
-                HasThisArg, Args...>(Forward<ProxyArgs>(args)...));
+                HasThisArg, Args...>(std::forward<ProxyArgs>(args)...));
     }
 
     template<class Traits, bool IsStatic = Traits::isStatic,
@@ -534,7 +534,7 @@ struct Dispatcher
         auto proxy = ProxyNativeCall<Impl, typename Traits::Owner, IsStatic,
                                      HasThisArg, Args...>(
                 (HasThisArg || !IsStatic) ? thisArg : nullptr,
-                Forward<ProxyArgs>(args)...);
+                std::forward<ProxyArgs>(args)...);
         DispatchToGeckoPriorityQueue(
                 NS_NewRunnableFunction("PriorityNativeCall", std::move(proxy)));
     }
@@ -551,7 +551,7 @@ struct Dispatcher
         auto proxy = ProxyNativeCall<Impl, typename Traits::Owner, IsStatic,
                                      HasThisArg, Args...>(
                 (HasThisArg || !IsStatic) ? thisArg : nullptr,
-                Forward<ProxyArgs>(args)...);
+                std::forward<ProxyArgs>(args)...);
         NS_DispatchToMainThread(
                 NS_NewRunnableFunction("GeckoNativeCall", std::move(proxy)));
     }

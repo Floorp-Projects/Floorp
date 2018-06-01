@@ -46,7 +46,7 @@ struct InvokeMemberFunction
   public:
     template<typename... ActualArgs>
     explicit InvokeMemberFunction(ActualArgs&&... actualArgs)
-      : args { mozilla::Forward<ActualArgs>(actualArgs)... }
+      : args { std::forward<ActualArgs>(actualArgs)... }
     {}
 
     template<class Parser>

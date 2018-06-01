@@ -347,12 +347,12 @@ class JS_FRIEND_API(GCCellPtr)
 template <typename F, typename... Args>
 auto
 DispatchTyped(F f, GCCellPtr thing, Args&&... args)
-  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSObject*>(nullptr), std::forward<Args>(args)...))
 {
     switch (thing.kind()) {
 #define JS_EXPAND_DEF(name, type, _) \
       case JS::TraceKind::name: \
-          return f(&thing.as<type>(), mozilla::Forward<Args>(args)...);
+          return f(&thing.as<type>(), std::forward<Args>(args)...);
       JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
       default:

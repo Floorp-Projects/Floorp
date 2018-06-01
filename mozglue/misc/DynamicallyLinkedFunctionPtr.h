@@ -54,7 +54,7 @@ public:
 
   R operator()(Args... args) const
   {
-    return mFunction(mozilla::Forward<Args>(args)...);
+    return mFunction(std::forward<Args>(args)...);
   }
 
   explicit operator bool() const
