@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'browsing-context.js',
+    'chrome-window.js',
     'frame-proxy.js',
     'frame.js',
     'worker.js',
