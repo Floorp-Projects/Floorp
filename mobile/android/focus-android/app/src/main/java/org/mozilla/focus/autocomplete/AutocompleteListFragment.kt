@@ -189,22 +189,22 @@ open class AutocompleteListFragment : Fragment() {
                     else -> DomainViewHolder.LAYOUT_ID
                 }
 
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder =
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
                 when (viewType) {
                     AddActionViewHolder.LAYOUT_ID ->
                             AddActionViewHolder(
                                     this@AutocompleteListFragment,
-                                    LayoutInflater.from(parent!!.context).inflate(viewType, parent, false))
+                                    LayoutInflater.from(parent.context).inflate(viewType, parent, false))
                     DomainViewHolder.LAYOUT_ID ->
                             DomainViewHolder(
-                                    LayoutInflater.from(parent!!.context).inflate(viewType, parent, false),
+                                    LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                                     { AutocompleteDomainFormatter.format(it) })
                     else -> throw IllegalArgumentException("Unknown view type: $viewType")
                 }
 
         override fun getItemCount(): Int = domains.size + if (isSelectionMode()) 0 else 1
 
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (holder is DomainViewHolder) {
                 holder.bind(
                         domains[position],
@@ -215,7 +215,7 @@ open class AutocompleteListFragment : Fragment() {
             }
         }
 
-        override fun onViewRecycled(holder: RecyclerView.ViewHolder?) {
+        override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
             if (holder is DomainViewHolder) {
                 holder.checkBoxView.setOnCheckedChangeListener(null)
             }

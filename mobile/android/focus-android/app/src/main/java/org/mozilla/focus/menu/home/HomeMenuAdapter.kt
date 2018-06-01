@@ -29,8 +29,8 @@ class HomeMenuAdapter(
             MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
     )
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent!!.context).inflate(viewType, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
             WhatsNewViewHolder.LAYOUT_ID -> WhatsNewViewHolder(view, listener)
@@ -39,7 +39,7 @@ class HomeMenuAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is MenuItemViewHolder -> holder.bind(items[position])
             is WhatsNewViewHolder -> holder.bind()
