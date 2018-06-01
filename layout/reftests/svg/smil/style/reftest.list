@@ -79,14 +79,14 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
 
 # 'font-size' mapped attribute (accepts unitless values)
-== anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg
-== anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg
-== anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg # Bug 1392106
 
 # 'font-size' property, from/by/to with percent values
-== anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg # Bug 1392106

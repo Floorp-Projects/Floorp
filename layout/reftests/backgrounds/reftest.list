@@ -178,10 +178,10 @@ fuzzy(30,474) fuzzy-if(skiaContent,31,474) == background-tiling-zoom-1.html back
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling-ref.html
 
-fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) == background-clip-text-1a.html background-clip-text-1-ref.html
-fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) == background-clip-text-1b.html background-clip-text-1-ref.html
-fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) == background-clip-text-1c.html background-clip-text-1-ref.html
-fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) == background-clip-text-1d.html background-clip-text-1-ref.html
-fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) == background-clip-text-1e.html background-clip-text-1-ref.html
+fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1a.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1b.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1c.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1d.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1e.html background-clip-text-1-ref.html # Bug 1392106
 
-== background-clip-text-2.html background-clip-text-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-2.html background-clip-text-2-ref.html # Bug 1392106
