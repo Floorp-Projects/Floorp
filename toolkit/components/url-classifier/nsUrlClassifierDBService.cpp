@@ -38,7 +38,6 @@
 #include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "Entries.h"
-#include "HashStore.h"
 #include "Classifier.h"
 #include "ProtocolParser.h"
 #include "mozilla/Attributes.h"
@@ -420,6 +419,8 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
   }
 
   mUpdateStatus = NS_OK;
+  MOZ_ASSERT(mTableUpdates.IsEmpty(),
+             "mTableUpdates should have been cleared in FinishUpdate()");
   mUpdateObserver = observer;
   Classifier::SplitTables(tables, mUpdateTables);
 
@@ -599,6 +600,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   if (NS_FAILED(mUpdateStatus)) {
     LOG(("nsUrlClassifierDBServiceWorker::FinishUpdate() Not running "
          "ApplyUpdate() since the update has already failed."));
+    mTableUpdates.Clear();
     return NotifyUpdateObserver(mUpdateStatus);
   }
 
@@ -608,7 +610,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   }
 
   RefPtr<nsUrlClassifierDBServiceWorker> self = this;
-  nsresult rv = mClassifier->AsyncApplyUpdates(&mTableUpdates,
+  nsresult rv = mClassifier->AsyncApplyUpdates(mTableUpdates,
                                                [=] (nsresult aRv) -> void {
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
     if (NS_FAILED(aRv) &&
@@ -622,6 +624,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 
     self->NotifyUpdateObserver(aRv);
   });
+  mTableUpdates.Clear(); // Classifier is working on its copy.
 
   if (NS_FAILED(rv)) {
     LOG(("Failed to start async update. Notify immediately."));
@@ -870,7 +873,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     LOG(("Active tables: %s", s.get()));
   }
 
-  nsTArray<TableUpdate*> updates;
+  TableUpdateArray updates;
 
   for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
     bool activeTable = false;
@@ -888,7 +891,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
                  static_cast<ProtocolParser*>(new ProtocolParserV2()) :
                  static_cast<ProtocolParser*>(new ProtocolParserProtobuf());
 
-      TableUpdate* tu = pParse->GetTableUpdate(result->table);
+      RefPtr<TableUpdate> tu = pParse->GetTableUpdate(result->table);
 
       rv = CacheResultToTableUpdate(result, tu);
       if (NS_FAILED(rv)) {
@@ -902,9 +905,9 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
       LOG(("Completion received, but table %s is not active, so not caching.",
            result->table.get()));
     }
-   }
+  }
 
-  rv = mClassifier->ApplyFullHashes(&updates);
+  rv = mClassifier->ApplyFullHashes(updates);
   if (NS_SUCCEEDED(rv)) {
     mLastResults = std::move(resultsPtr);
   }
@@ -913,9 +916,9 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 
 nsresult
 nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResult,
-                                                         TableUpdate* aUpdate)
+                                                         RefPtr<TableUpdate> aUpdate)
 {
-  auto tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+  RefPtr<TableUpdateV2> tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
   if (tuV2) {
     const CacheResultV2* result = CacheResult::Cast<CacheResultV2>(aCacheResult);
     MOZ_ASSERT(result);
@@ -934,7 +937,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
     }
   }
 
-  auto tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
+  RefPtr<TableUpdateV4> tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
   if (tuV4) {
     const CacheResultV4* result = CacheResult::Cast<CacheResultV4>(aCacheResult);
     MOZ_ASSERT(result);

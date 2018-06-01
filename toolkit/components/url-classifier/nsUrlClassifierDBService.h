@@ -25,6 +25,7 @@
 
 #include "Entries.h"
 #include "LookupCache.h"
+#include "HashStore.h"
 
 // GCC < 6.1 workaround, see bug 1329593
 #if defined(XP_WIN) && defined(__MINGW32__)
@@ -73,7 +74,6 @@ namespace mozilla {
 namespace safebrowsing {
 class Classifier;
 class ProtocolParser;
-class TableUpdate;
 
 nsresult
 TablesToResponse(const nsACString& tables);
@@ -267,7 +267,7 @@ private:
                     LookupResultArray& results);
 
   nsresult CacheResultToTableUpdate(CacheResult* aCacheResult,
-                                    TableUpdate* aUpdate);
+                                    RefPtr<TableUpdate> aUpdate);
 
   bool IsSameAsLastResults(const CacheResultArray& aResult) const;
 
@@ -280,9 +280,7 @@ private:
 
   RefPtr<nsUrlClassifierDBService> mDBService;
 
-  // XXX: maybe an array of autoptrs.  Or maybe a class specifically
-  // storing a series of updates.
-  nsTArray<mozilla::safebrowsing::TableUpdate*> mTableUpdates;
+  TableUpdateArray mTableUpdates;
 
   uint32_t mUpdateWaitSec;
 

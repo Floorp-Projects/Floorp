@@ -261,7 +261,7 @@ UpdateChecksum(nsICryptoHash* aCrypto, const nsACString& aPrefix)
 // Please see https://bug1287058.bmoattachments.org/attachment.cgi?id=8795366
 // for detail about partial update algorithm.
 nsresult
-LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
+LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
                            PrefixStringMap& aInputMap,
                            PrefixStringMap& aOutputMap)
 {

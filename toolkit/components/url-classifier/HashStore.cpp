@@ -619,7 +619,7 @@ Merge(ChunkSet* aStoreChunks,
 }
 
 nsresult
-HashStore::ApplyUpdate(TableUpdateV2 *aUpdate)
+HashStore::ApplyUpdate(RefPtr<TableUpdateV2> aUpdate)
 {
   MOZ_ASSERT(mTableName.Equals(aUpdate->TableName()));
 

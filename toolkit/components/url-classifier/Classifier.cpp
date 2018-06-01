@@ -41,33 +41,6 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
-namespace {
-
-// A scoped-clearer for nsTArray<TableUpdate*>.
-// The owning elements will be deleted and the array itself
-// will be cleared on exiting the scope.
-class ScopedUpdatesClearer {
-public:
-  explicit ScopedUpdatesClearer(nsTArray<TableUpdate*> *aUpdates)
-    : mUpdatesArrayRef(aUpdates)
-  {
-    for (auto update : *aUpdates) {
-      mUpdatesPointerHolder.AppendElement(update);
-    }
-  }
-
-  ~ScopedUpdatesClearer()
-  {
-    mUpdatesArrayRef->Clear();
-  }
-
-private:
-  nsTArray<TableUpdate*>* mUpdatesArrayRef;
-  nsTArray<UniquePtr<TableUpdate>> mUpdatesPointerHolder;
-};
-
-} // End of unnamed namespace.
-
 void
 Classifier::SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
 {
@@ -708,7 +681,7 @@ void Classifier::FlushAndDisableAsyncUpdate()
 }
 
 nsresult
-Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
+Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
                               const AsyncUpdateCallback& aCallback)
 {
   LOG(("Classifier::AsyncApplyUpdates"));
@@ -741,9 +714,19 @@ Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
       MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread,
                  "MUST be on update thread");
 
-      LOG(("Step 1. ApplyUpdatesBackground on update thread."));
+      nsresult bgRv;
       nsCString failedTableName;
-      nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
+      TableUpdateArray updates;
+
+      // Make a copy of the array since we'll be removing entries as
+      // we process them on the background thread.
+      if (updates.AppendElements(aUpdates, fallible)) {
+        LOG(("Step 1. ApplyUpdatesBackground on update thread."));
+        bgRv = ApplyUpdatesBackground(updates, failedTableName);
+      } else {
+        LOG(("Step 1. Not enough memory to run ApplyUpdatesBackground on update thread."));
+        bgRv = NS_ERROR_OUT_OF_MEMORY;
+      }
 
       nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction(
         "safebrowsing::Classifier::AsyncApplyUpdates", [=] {
@@ -765,7 +748,7 @@ Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
 }
 
 nsresult
-Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
                                    nsACString& aFailedTableName)
 {
   // |mUpdateInterrupted| is guaranteed to have been unset.
@@ -773,7 +756,7 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
   // been called then we need to interrupt the update process.
   // We only add checkpoints for non-trivial tasks.
 
-  if (!aUpdates || aUpdates->Length() == 0) {
+  if (aUpdates.IsEmpty()) {
     return NS_OK;
   }
 
@@ -782,7 +765,7 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
 
   nsCString provider;
   // Assume all TableUpdate objects should have the same provider.
-  urlUtil->GetTelemetryProvider((*aUpdates)[0]->TableName(), provider);
+  urlUtil->GetTelemetryProvider(aUpdates[0]->TableName(), provider);
 
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_KEYED_UPDATE_TIME>
     keyedTimer(provider);
@@ -794,53 +777,49 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
 
   nsresult rv;
 
-  {
-    ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
+  // Check point 1: Copying file takes time so we check here.
+  if (mUpdateInterrupted) {
+    LOG(("Update is interrupted. Don't copy files."));
+    return NS_OK;
+  }
 
-    {
-      // Check point 1: Copying file takes time so we check here.
-      if (mUpdateInterrupted) {
-        LOG(("Update is interrupted. Don't copy files."));
-        return NS_OK;
-      }
+  rv = CopyInUseDirForUpdate(); // i.e. mUpdatingDirectory will be setup.
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to copy in-use directory for update."));
+    return rv;
+  }
 
-      rv = CopyInUseDirForUpdate(); // i.e. mUpdatingDirectory will be setup.
-      if (NS_FAILED(rv)) {
-        LOG(("Failed to copy in-use directory for update."));
-        return rv;
-      }
-    }
+  LOG(("Applying %zu table updates.", aUpdates.Length()));
 
-    LOG(("Applying %zu table updates.", aUpdates->Length()));
-
-    for (uint32_t i = 0; i < aUpdates->Length(); i++) {
+  for (uint32_t i = 0; i < aUpdates.Length(); i++) {
+    RefPtr<TableUpdate> update = aUpdates[i];
+    if (!update) {
       // Previous UpdateHashStore() may have consumed this update..
-      if ((*aUpdates)[i]) {
-        // Run all updates for one table
-        nsCString updateTable(aUpdates->ElementAt(i)->TableName());
-
-        // Check point 2: Processing downloaded data takes time.
-        if (mUpdateInterrupted) {
-          LOG(("Update is interrupted. Stop building new tables."));
-          return NS_OK;
-        }
-
-        // Will update the mirrored in-memory and on-disk databases.
-        if (TableUpdate::Cast<TableUpdateV2>((*aUpdates)[i])) {
-          rv = UpdateHashStore(aUpdates, updateTable);
-        } else {
-          rv = UpdateTableV4(aUpdates, updateTable);
-        }
-
-        if (NS_FAILED(rv)) {
-          aFailedTableName = updateTable;
-          RemoveUpdateIntermediaries();
-          return rv;
-        }
-      }
+      continue;
     }
 
-  } // End of scopedUpdatesClearer scope.
+    // Run all updates for one table
+    nsAutoCString updateTable(update->TableName());
+
+    // Check point 2: Processing downloaded data takes time.
+    if (mUpdateInterrupted) {
+      LOG(("Update is interrupted. Stop building new tables."));
+      return NS_OK;
+    }
+
+    // Will update the mirrored in-memory and on-disk databases.
+    if (TableUpdate::Cast<TableUpdateV2>(update)) {
+      rv = UpdateHashStore(aUpdates, updateTable);
+    } else {
+      rv = UpdateTableV4(aUpdates, updateTable);
+    }
+
+    if (NS_FAILED(rv)) {
+      aFailedTableName = updateTable;
+      RemoveUpdateIntermediaries();
+      return rv;
+    }
+  }
 
   if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
@@ -874,23 +853,20 @@ Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
 }
 
 nsresult
-Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
+Classifier::ApplyFullHashes(TableUpdateArray& aUpdates)
 {
   MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
              "ApplyFullHashes() MUST NOT be called on update thread");
   MOZ_ASSERT(!NS_IsMainThread(),
              "ApplyFullHashes() must be called on the classifier worker thread.");
 
-  LOG(("Applying %zu table gethashes.", aUpdates->Length()));
+  LOG(("Applying %zu table gethashes.", aUpdates.Length()));
 
-  ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
-  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
-    TableUpdate *update = aUpdates->ElementAt(i);
-
-    nsresult rv = UpdateCache(update);
+  for (uint32_t i = 0; i < aUpdates.Length(); i++) {
+    nsresult rv = UpdateCache(aUpdates[i]);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aUpdates->ElementAt(i) = nullptr;
+    aUpdates[i] = nullptr;
   }
 
   return NS_OK;
@@ -1160,19 +1136,20 @@ Classifier::RecoverBackups()
 }
 
 bool
-Classifier::CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
+Classifier::CheckValidUpdate(TableUpdateArray& aUpdates,
                              const nsACString& aTable)
 {
   // take the quick exit if there is no valid update for us
   // (common case)
   uint32_t validupdates = 0;
 
-  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
-    TableUpdate *update = aUpdates->ElementAt(i);
-    if (!update || !update->TableName().Equals(aTable))
+  for (uint32_t i = 0; i < aUpdates.Length(); i++) {
+    RefPtr<TableUpdate> update = aUpdates[i];
+    if (!update || !update->TableName().Equals(aTable)) {
       continue;
+    }
     if (update->Empty()) {
-      aUpdates->ElementAt(i) = nullptr;
+      aUpdates[i] = nullptr;
       continue;
     }
     validupdates++;
@@ -1202,7 +1179,7 @@ Classifier::GetProvider(const nsACString& aTableName)
  * This will consume+delete updates from the passed nsTArray.
 */
 nsresult
-Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
+Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
                             const nsACString& aTable)
 {
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
@@ -1238,13 +1215,13 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 
   uint32_t applied = 0;
 
-  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
-    TableUpdate *update = aUpdates->ElementAt(i);
+  for (uint32_t i = 0; i < aUpdates.Length(); i++) {
+    RefPtr<TableUpdate> update = aUpdates[i];
     if (!update || !update->TableName().Equals(store.TableName())) {
       continue;
     }
 
-    TableUpdateV2* updateV2 = TableUpdate::Cast<TableUpdateV2>(update);
+    RefPtr<TableUpdateV2> updateV2 = TableUpdate::Cast<TableUpdateV2>(update);
     NS_ENSURE_TRUE(updateV2, NS_ERROR_UC_UPDATE_UNEXPECTED_VERSION);
 
     rv = store.ApplyUpdate(updateV2);
@@ -1262,7 +1239,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
     LOG(("  %d add expirations", updateV2->AddExpirations().Length()));
     LOG(("  %d sub expirations", updateV2->SubExpirations().Length()));
 
-    aUpdates->ElementAt(i) = nullptr;
+    aUpdates[i] = nullptr;
   }
 
   LOG(("Applied %d update(s) to %s.", applied, store.TableName().get()));
@@ -1298,7 +1275,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 }
 
 nsresult
-Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
+Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
                           const nsACString& aTable)
 {
   MOZ_ASSERT(!NS_IsMainThread(),
@@ -1328,13 +1305,13 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   PrefixStringMap* output = &prefixes2;
 
   TableUpdateV4* lastAppliedUpdate = nullptr;
-  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
-    TableUpdate *update = aUpdates->ElementAt(i);
+  for (uint32_t i = 0; i < aUpdates.Length(); i++) {
+    RefPtr<TableUpdate> update = aUpdates[i];
     if (!update || !update->TableName().Equals(aTable)) {
       continue;
     }
 
-    auto updateV4 = TableUpdate::Cast<TableUpdateV4>(update);
+    RefPtr<TableUpdateV4> updateV4 = TableUpdate::Cast<TableUpdateV4>(update);
     NS_ENSURE_TRUE(updateV4, NS_ERROR_UC_UPDATE_UNEXPECTED_VERSION);
 
     if (updateV4->IsFullUpdate()) {
@@ -1371,7 +1348,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     // Keep track of the last applied update.
     lastAppliedUpdate = updateV4;
 
-    aUpdates->ElementAt(i) = nullptr;
+    aUpdates[i] = nullptr;
   }
 
   rv = lookupCache->Build(*output);
@@ -1392,7 +1369,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
 }
 
 nsresult
-Classifier::UpdateCache(TableUpdate* aUpdate)
+Classifier::UpdateCache(RefPtr<TableUpdate> aUpdate)
 {
   if (!aUpdate) {
     return NS_OK;
@@ -1408,7 +1385,7 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
 
   auto lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
   if (lookupV2) {
-    auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+    RefPtr<TableUpdateV2> updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
     lookupV2->AddGethashResultToCache(updateV2->AddCompletes(),
                                       updateV2->MissPrefixes());
   } else {
@@ -1417,7 +1394,7 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
       return NS_ERROR_FAILURE;
     }
 
-    auto updateV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
+    RefPtr<TableUpdateV4> updateV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
     lookupV4->AddFullHashResponseToCache(updateV4->FullHashResponse());
   }
 
