@@ -16,6 +16,8 @@ from mozbuild.test.backend.common import BackendTester
 
 class TestTestManifestBackend(BackendTester):
 
+    __test__ = False
+
     def test_all_tests_metadata_file_written(self):
         """Ensure all-tests.pkl is generated."""
         env = self._consume('test-manifests-written', TestManifestBackend)
