@@ -112,9 +112,14 @@ public:
         return sk_sp<T>(SkRef(this->make<T>(std::forward<Args>(args)...)));
     }
 
+    uint32_t safeU32(size_t n) {
+        SkASSERT_RELEASE(SkTFitsIn<uint32_t>(n));
+        return uint32_t(n);
+    }
+
     template <typename T>
     T* makeArrayDefault(size_t count) {
-        uint32_t safeCount = SkTo<uint32_t>(count);
+        uint32_t safeCount = safeU32(count);
         T* array = (T*)this->commonArrayAlloc<T>(safeCount);
 
         // If T is primitive then no initialization takes place.
@@ -126,7 +131,7 @@ public:
 
     template <typename T>
     T* makeArray(size_t count) {
-        uint32_t safeCount = SkTo<uint32_t>(count);
+        uint32_t safeCount = safeU32(count);
         T* array = (T*)this->commonArrayAlloc<T>(safeCount);
 
         // If T is primitive then the memory is initialized. For example, an array of chars will
@@ -139,7 +144,7 @@ public:
 
     // Only use makeBytesAlignedTo if none of the typed variants are impractical to use.
     void* makeBytesAlignedTo(size_t size, size_t align) {
-        auto objStart = this->allocObject(SkTo<uint32_t>(size), SkTo<uint32_t>(align));
+        auto objStart = this->allocObject(safeU32(size), safeU32(align));
         fCursor = objStart + size;
         return objStart;
     }
