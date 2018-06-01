@@ -1628,7 +1628,7 @@ static const char kSystemFont_system[] = "-apple-system";
 
 bool
 gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
-                                           nsTArray<FamilyAndGeneric>* aOutput,
+                                           nsTArray<gfxFontFamily*>* aOutput,
                                            FindFamiliesFlags aFlags,
                                            gfxFontStyle* aStyle,
                                            gfxFloat aDevToCssSize)

@@ -1796,7 +1796,7 @@ void
 gfxFontGroup::BuildFontList()
 {
     // initialize fonts in the font family list
-    AutoTArray<FamilyAndGeneric,10> fonts;
+    AutoTArray<gfxFontFamily*,10> fonts;
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
 
     // lookup fonts in the fontlist
@@ -1822,14 +1822,14 @@ gfxFontGroup::BuildFontList()
     }
 
     // build the fontlist from the specified families
-    for (const auto& f : fonts) {
-        AddFamilyToFontList(f.mFamily, f.mGeneric);
+    for (gfxFontFamily* fontFamily : fonts) {
+        AddFamilyToFontList(fontFamily);
     }
 }
 
 void
 gfxFontGroup::AddPlatformFont(const nsAString& aName,
-                              nsTArray<FamilyAndGeneric>& aFamilyList)
+                              nsTArray<gfxFontFamily*>& aFamilyList)
 {
     // First, look up in the user font set...
     // If the fontSet matches the family, we must not look for a platform
@@ -1853,8 +1853,7 @@ gfxFontGroup::AddPlatformFont(const nsAString& aName,
 }
 
 void
-gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
-                                  FontFamilyType aGeneric)
+gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily)
 {
     NS_ASSERTION(aFamily, "trying to add a null font family to fontlist");
     AutoTArray<gfxFontEntry*,4> fontEntryList;
@@ -1862,7 +1861,7 @@ gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
     // add these to the fontlist
     for (gfxFontEntry* fe : fontEntryList) {
         if (!HasFont(fe)) {
-            FamilyFace ff(aFamily, fe, aGeneric);
+            FamilyFace ff(aFamily, fe);
             if (fe->mIsUserFontContainer) {
                 ff.CheckState(mSkipDrawing);
             }
@@ -2065,7 +2064,7 @@ gfxFontGroup::GetDefaultFont()
 }
 
 gfxFont*
-gfxFontGroup::GetFirstValidFont(uint32_t aCh, FontFamilyType* aGeneric)
+gfxFontGroup::GetFirstValidFont(uint32_t aCh)
 {
     uint32_t count = mFonts.Length();
     for (uint32_t i = 0; i < count; ++i) {
@@ -2077,9 +2076,6 @@ gfxFontGroup::GetFirstValidFont(uint32_t aCh, FontFamilyType* aGeneric)
         // already have a font?
         gfxFont* font = ff.Font();
         if (font) {
-            if (aGeneric) {
-                *aGeneric = ff.Generic();
-            }
             return font;
         }
 
@@ -2103,14 +2099,8 @@ gfxFontGroup::GetFirstValidFont(uint32_t aCh, FontFamilyType* aGeneric)
 
         font = GetFontAt(i, aCh);
         if (font) {
-            if (aGeneric) {
-                *aGeneric = mFonts[i].Generic();
-            }
             return font;
         }
-    }
-    if (aGeneric) {
-        *aGeneric = eFamily_none;
     }
     return GetDefaultFont();
 }
@@ -2899,8 +2889,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
         gfxFont* firstFont = GetFontAt(0, aCh);
         if (firstFont) {
             if (firstFont->HasCharacter(aCh)) {
-                *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                              gfxTextRange::MatchType(mFonts[0].Generic());
+                *aMatchType = gfxTextRange::MatchType::kFontGroup;
                 return firstFont;
             }
 
@@ -2915,8 +2904,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                 font = FindFallbackFaceForChar(mFonts[0].Family(), aCh);
             }
             if (font) {
-                *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                              gfxTextRange::MatchType(mFonts[0].Generic());
+                *aMatchType = gfxTextRange::MatchType::kFontGroup;
                 return font;
             }
         }
@@ -2966,8 +2954,6 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
         gfxFont* font = ff.Font();
         if (font) {
             if (font->HasCharacter(aCh)) {
-                *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                              gfxTextRange::MatchType(ff.Generic());
                 return font;
             }
             continue;
@@ -2996,8 +2982,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
             if (pfe && pfe->HasCharacter(aCh)) {
                 font = GetFontAt(i, aCh);
                 if (font) {
-                    *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                                  gfxTextRange::MatchType(mFonts[i].Generic());
+                    *aMatchType = gfxTextRange::MatchType::kFontGroup;
                     return font;
                 }
             }
@@ -3006,8 +2991,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
             // build the font via GetFontAt
             font = GetFontAt(i, aCh);
             if (font) {
-                *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                              gfxTextRange::MatchType(mFonts[i].Generic());
+                *aMatchType = gfxTextRange::MatchType::kFontGroup;
                 return font;
             }
         }
@@ -3020,8 +3004,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                          "should only do fallback once per font family");
             font = FindFallbackFaceForChar(ff.Family(), aCh);
             if (font) {
-                *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                              gfxTextRange::MatchType(ff.Generic());
+                *aMatchType = gfxTextRange::MatchType::kFontGroup;
                 return font;
             }
         } else {
@@ -3032,8 +3015,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
             if (!fe->mIsUserFontContainer && !fe->IsUserFont()) {
                 font = FindFallbackFaceForChar(ff.Family(), aCh);
                 if (font) {
-                    *aMatchType = gfxTextRange::MatchType::kFontGroup |
-                                  gfxTextRange::MatchType(ff.Generic());
+                    *aMatchType = gfxTextRange::MatchType::kFontGroup;
                     return font;
                 }
             }
@@ -3102,13 +3084,11 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     // initialize prevFont to the group's primary font, so that this will be
     // used for string-initial control chars, etc rather than risk hitting font
     // fallback for these (bug 716229)
-    FontFamilyType generic = eFamily_none;
-    gfxFont *prevFont = GetFirstValidFont(' ', &generic);
+    gfxFont *prevFont = GetFirstValidFont();
 
     // if we use the initial value of prevFont, we treat this as a match from
     // the font group; fixes bug 978313
-    gfxTextRange::MatchType matchType = gfxTextRange::MatchType::kFontGroup |
-                                        gfxTextRange::MatchType(generic);
+    gfxTextRange::MatchType matchType = gfxTextRange::MatchType::kFontGroup;
 
     for (uint32_t i = 0; i < aLength; i++) {
 
@@ -3158,8 +3138,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
                     && !gfxFontUtils::IsJoinControl(ch)
                     && !gfxFontUtils::IsJoinCauser(prevCh)
                     && !gfxFontUtils::IsVarSelector(ch)))) {
-            matchType = gfxTextRange::MatchType::kFontGroup |
-                        gfxTextRange::MatchType(mFonts[0].Generic());
+            matchType = gfxTextRange::MatchType::kFontGroup;
         } else {
             font = FindFontForChar(ch, prevCh, nextCh, aRunScript, prevFont,
                                    &matchType);
@@ -3167,9 +3146,9 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
 
 #ifndef RELEASE_OR_BETA
         if (MOZ_UNLIKELY(mTextPerf)) {
-            if (matchType & gfxTextRange::MatchType::kPrefsFallback) {
+            if (matchType == gfxTextRange::MatchType::kPrefsFallback) {
                 mTextPerf->current.fallbackPrefs++;
-            } else if (matchType & gfxTextRange::MatchType::kSystemFallback) {
+            } else if (matchType == gfxTextRange::MatchType::kSystemFallback) {
                 mTextPerf->current.fallbackSystem++;
             }
         }
