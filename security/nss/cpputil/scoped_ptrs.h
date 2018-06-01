@@ -45,6 +45,7 @@ struct ScopedDelete {
   void operator()(SEC_PKCS12DecoderContext* dcx) {
     SEC_PKCS12DecoderFinish(dcx);
   }
+  void operator()(CERTDistNames* names) { CERT_FreeDistNames(names); }
 };
 
 template <class T>
@@ -78,6 +79,7 @@ SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(SSLResumptionTokenInfo);
 SCOPED(SEC_PKCS12DecoderContext);
+SCOPED(CERTDistNames);
 
 #undef SCOPED
 
