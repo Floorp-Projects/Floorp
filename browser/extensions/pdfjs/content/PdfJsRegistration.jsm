@@ -72,7 +72,6 @@ var PdfJsRegistration = {
       return;
     }
     this._pdfStreamConverterFactory.unregister();
-    Cu.unload("resource://pdf.js/PdfStreamConverter.jsm");
     delete this._pdfStreamConverterFactory;
 
     this._registered = false;
