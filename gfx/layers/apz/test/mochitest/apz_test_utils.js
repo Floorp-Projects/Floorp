@@ -622,17 +622,10 @@ function hitTestScrollbar(params) {
   // behaviour on different platforms which makes testing harder.
   var expectedHitInfo = APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR;
   if (params.expectThumb) {
-    // WebRender will hit-test scroll thumbs even inside inactive scrollframes,
-    // because the hit-test is based on display items and we do in fact generate
-    // the display items for the scroll thumb. The user-observed behaviour is
-    // going to be unaffected because the dispatch-to-content flag will also be
-    // set on these thumbs so it's not like APZ will allow async-scrolling them
-    // before the scrollframe has been activated/layerized. In non-WebRender we
-    // do not generate the layers for thumbs on inactive scrollframes, so the
-    // hit test will be accordingly different.
+    // We do not generate the layers for thumbs on inactive scrollframes.
     expectedHitInfo |= APZHitResultFlags.DISPATCH_TO_CONTENT;
-    if (config.isWebRender || params.layerState == LayerState.ACTIVE) {
-        expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
+    if (params.layerState == LayerState.ACTIVE) {
+      expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
   }
 
