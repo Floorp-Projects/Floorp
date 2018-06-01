@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Test that the PromisesActor exists in the TabActors and ChromeActors.
+ * Test that the PromisesActor exists in the TabActors and ParentProcessTargetActors.
  */
 
 add_task(async function() {
@@ -29,7 +29,7 @@ add_task(async function() {
     });
   });
 
-  const chromeActors = await getChromeActors(client);
-  Assert.ok(typeof chromeActors.promisesActor === "string",
+  const parentProcessActors = await getParentProcessActors(client);
+  Assert.ok(typeof parentProcessActors.promisesActor === "string",
     "Should have a chrome context PromisesActor.");
 });

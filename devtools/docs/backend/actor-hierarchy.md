@@ -82,10 +82,11 @@ RootActor (root.js)
    |   Extends the abstract class BrowsingContextTargetActor.
    |   Returned by "getWindow" request to the root actor.
    |
-   |-- ChromeActor (chrome.js)
-   |   Targets all resources in the parent process of firefox
-   |   (chrome documents, JSM, JS XPCOM, etc.).
+   |-- ParentProcessTargetActor (parent-process.js)
+   |   Targets all resources in the parent process of Firefox (chrome documents,
+   |   JSMs, JS XPCOM, etc.).
    |   Extends the abstract class BrowsingContextTargetActor.
+   |   Extended by WebExtensionChildActor.
    |   Returned by "getProcess" request without any argument.
    |
    |-- ChildProcessActor (child-process.js)
@@ -125,7 +126,7 @@ actor:
    ThreadActor instance for the given target,
    only defined once `attach` request is called, or on construction.
  - isRootActor: (historical name)
-   Always false, except on ChromeActor.
+   Always false, except on ParentProcessTargetActor.
    Despite the attribute name, it is being used to accept all resources
    (like chrome one) instead of limiting only to content resources.
  - makeDebugger:

@@ -52,7 +52,7 @@ async function testTarget(client, target) {
 function test() {
   waitForExplicitFinish();
 
-  getChromeActors((client, response) => {
+  getParentProcessActors((client, response) => {
     const options = {
       form: response,
       client: client,

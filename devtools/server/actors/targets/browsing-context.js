@@ -10,7 +10,8 @@
  * BrowsingContextTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
  *
- * This class is extended by FrameTargetActor, ChromeActor, and ChromeWindowTargetActor.
+ * This class is extended by FrameTargetActor, ParentProcessTargetActor, and
+ * ChromeWindowTargetActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  *
@@ -234,7 +235,7 @@ const browsingContextTargetPrototype = {
     });
 
     // Flag eventually overloaded by sub classes in order to watch new docshells
-    // Used by the ChromeActor to list all frames in the Browser Toolbox
+    // Used by the ParentProcessTargetActor to list all frames in the Browser Toolbox
     this.listenForNewDocShells = false;
 
     this.traits = {
@@ -781,7 +782,7 @@ const browsingContextTargetPrototype = {
 
   _isRootDocShell(docShell) {
     // Should report as root docshell:
-    //  - New top level window's docshells, when using ChromeActor against a
+    //  - New top level window's docshells, when using ParentProcessTargetActor against a
     // process. It allows tracking iframes of the newly opened windows
     // like Browser console or new browser windows.
     //  - MozActivities or window.open frames on B2G, where a new root docshell

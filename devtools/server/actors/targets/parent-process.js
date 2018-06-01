@@ -4,26 +4,42 @@
 
 "use strict";
 
+/*
+ * Target actor for the entire parent process.
+ *
+ * This actor extends BrowsingContextTargetActor.
+ * This actor is extended by WebExtensionChildActor.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { DebuggerServer } = require("../main");
+const { DebuggerServer } = require("devtools/server/main");
 const {
   getChildDocShells,
   BrowsingContextTargetActor,
   browsingContextTargetPrototype
 } = require("devtools/server/actors/targets/browsing-context");
-const makeDebugger = require("./utils/make-debugger");
+const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
+const { parentProcessTargetSpec } = require("devtools/shared/specs/targets/parent-process");
 
 /**
- * Creates a target actor for debugging all the chrome content in the current process.
- * Most of the implementation is inherited from BrowsingContextTargetActor. ChromeActor is
- * a child of RootActor, it can be instantiated via RootActor.getProcess request.
- * ChromeActor exposes all tab actors via its form() request, like
- * BrowsingContextTargetActor.
+ * Protocol.js expects only the prototype object, and does not maintain the prototype
+ * chain when it constructs the ActorClass. For this reason we are using `extend` to
+ * maintain the properties of BrowsingContextTargetActor.prototype
+ */
+const parentProcessTargetPrototype = extend({}, browsingContextTargetPrototype);
+
+/**
+ * Creates a target actor for debugging all the chrome content in the parent process.
+ * Most of the implementation is inherited from BrowsingContextTargetActor.
+ * ParentProcessTargetActor is a child of RootActor, it can be instantiated via
+ * RootActor.getProcess request. ParentProcessTargetActor exposes all tab actors via its
+ * form() request, like BrowsingContextTargetActor.
  *
  * History lecture:
  * All tab actors used to also be registered as global actors, so that the root actor was
@@ -37,16 +53,7 @@ const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/bro
  * @param connection DebuggerServerConnection
  *        The connection to the client.
  */
-
-/**
- * Protocol.js expects only the prototype object, and does not maintain the prototype
- * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of BrowsingContextTargetActor.prototype
- * */
-
-const chromePrototype = extend({}, browsingContextTargetPrototype);
-
-chromePrototype.initialize = function(connection) {
+parentProcessTargetPrototype.initialize = function(connection) {
   BrowsingContextTargetActor.prototype.initialize.call(this, connection);
 
   // This creates a Debugger instance for chrome debugging all globals.
@@ -87,13 +94,13 @@ chromePrototype.initialize = function(connection) {
   });
 };
 
-chromePrototype.isRootActor = true;
+parentProcessTargetPrototype.isRootActor = true;
 
 /**
  * Getter for the list of all docshells in this targetActor
  * @return {Array}
  */
-Object.defineProperty(chromePrototype, "docShells", {
+Object.defineProperty(parentProcessTargetPrototype, "docShells", {
   get: function() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
@@ -110,7 +117,7 @@ Object.defineProperty(chromePrototype, "docShells", {
   }
 });
 
-chromePrototype.observe = function(subject, topic, data) {
+parentProcessTargetPrototype.observe = function(subject, topic, data) {
   BrowsingContextTargetActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
@@ -125,7 +132,7 @@ chromePrototype.observe = function(subject, topic, data) {
   }
 };
 
-chromePrototype._attach = function() {
+parentProcessTargetPrototype._attach = function() {
   if (this.attached) {
     return false;
   }
@@ -151,7 +158,7 @@ chromePrototype._attach = function() {
   return undefined;
 };
 
-chromePrototype._detach = function() {
+parentProcessTargetPrototype._detach = function() {
   if (!this.attached) {
     return false;
   }
@@ -181,7 +188,7 @@ chromePrototype._detach = function() {
 /**
  * Prepare to enter a nested event loop by disabling debuggee events.
  */
-chromePrototype.preNest = function() {
+parentProcessTargetPrototype.preNest = function() {
   // Disable events in all open windows.
   const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
@@ -196,7 +203,7 @@ chromePrototype.preNest = function() {
 /**
  * Prepare to exit a nested event loop by enabling debuggee events.
  */
-chromePrototype.postNest = function(nestData) {
+parentProcessTargetPrototype.postNest = function(nestData) {
   // Enable events in all open windows.
   const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
@@ -208,6 +215,6 @@ chromePrototype.postNest = function(nestData) {
   }
 };
 
-chromePrototype.typeName = "Chrome";
-exports.chromePrototype = chromePrototype;
-exports.ChromeActor = ActorClassWithSpec(browsingContextTargetSpec, chromePrototype);
+exports.parentProcessTargetPrototype = parentProcessTargetPrototype;
+exports.ParentProcessTargetActor =
+  ActorClassWithSpec(parentProcessTargetSpec, parentProcessTargetPrototype);
