@@ -146,7 +146,9 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
     } else if (aEvent.selectionEditable &&
                aEvent.collapsed &&
                reason !== "longpressonemptycontent" &&
-               reason !== "taponcaret") {
+               reason !== "taponcaret" &&
+               !Services.prefs.getBoolPref(
+                   "geckoview.selection_action.show_on_focus", false)) {
       // Don't show selection actions when merely focusing on an editor or
       // repositioning the cursor. Wait until long press or the caret is tapped
       // in order to match Android behavior.
@@ -205,10 +207,12 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
         onSuccess: response => {
           if (response.seqNo !== this._seqNo) {
             // Stale action.
+            warn `Stale response ${response.id}`;
             return;
           }
           let action = actions.find(action => action.id === response.id);
           if (action) {
+            debug `Performing ${response.id}`;
             action.perform.call(this, aEvent, response);
           } else {
             warn `Invalid action ${response.id}`;
