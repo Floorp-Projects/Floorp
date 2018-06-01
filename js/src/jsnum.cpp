@@ -1326,6 +1326,7 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
 
     ToCStringBuf cbuf;
     char* numStr;
+    size_t numStrLen;
 
     Realm* realm = cx->realm();
 
@@ -1346,9 +1347,9 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
         if (JSFlatString* str = realm->dtoaCache.lookup(base, d))
             return str;
 
-        size_t len;
-        numStr = Int32ToCString(&cbuf, i, &len, base);
+        numStr = Int32ToCString(&cbuf, i, &numStrLen, base);
         MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
+        MOZ_ASSERT(numStrLen == strlen(numStr));
     } else {
         if (JSFlatString* str = realm->dtoaCache.lookup(base, d))
             return str;
@@ -1362,9 +1363,11 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
                       !cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
         MOZ_ASSERT_IF(base != 10,
                       cbuf.dbuf && cbuf.dbuf == numStr);
+
+        numStrLen = strlen(numStr);
     }
 
-    JSFlatString* s = NewStringCopyZ<allowGC>(cx, numStr);
+    JSFlatString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
     if (!s)
         return nullptr;
 
@@ -1460,10 +1463,6 @@ js::NumberValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb)
         cstrlen = strlen(cstr);
     }
 
-    /*
-     * Inflate to char16_t string.  The input C-string characters are < 127, so
-     * even if char16_t units are UTF-8, all chars should map to one char16_t.
-     */
     MOZ_ASSERT(!cbuf.dbuf && cstrlen < cbuf.sbufSize);
     return sb.append(cstr, cstrlen);
 }
