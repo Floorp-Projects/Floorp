@@ -152,8 +152,8 @@ TabClient.prototype = {
     type: "listWorkers"
   }),
 
-  attachWorker: function(workerActor, onResponse) {
-    return this.client.attachWorker(workerActor, onResponse);
+  attachWorker: function(workerTargetActor, onResponse) {
+    return this.client.attachWorker(workerTargetActor, onResponse);
   },
 };
 

@@ -6,7 +6,7 @@
 
 const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-loader.lazyRequireGetter(this, "WorkerActor", "devtools/server/actors/worker", true);
+loader.lazyRequireGetter(this, "WorkerTargetActor", "devtools/server/actors/targets/worker", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActor", "devtools/server/actors/worker/service-worker", true);
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -39,7 +39,7 @@ function matchWorkerDebugger(dbg, options) {
   return true;
 }
 
-function WorkerActorList(conn, options) {
+function WorkerTargetActorList(conn, options) {
   this._conn = conn;
   this._options = options;
   this._actors = new Map();
@@ -49,7 +49,7 @@ function WorkerActorList(conn, options) {
   this.onUnregister = this.onUnregister.bind(this);
 }
 
-WorkerActorList.prototype = {
+WorkerTargetActorList.prototype = {
   getList() {
     // Create a set of debuggers.
     const dbgs = new Set();
@@ -71,7 +71,7 @@ WorkerActorList.prototype = {
     // Create an actor for each debugger for which we don't have one.
     for (const dbg of dbgs) {
       if (!this._actors.has(dbg)) {
-        this._actors.set(dbg, new WorkerActor(this._conn, dbg));
+        this._actors.set(dbg, new WorkerTargetActor(this._conn, dbg));
       }
     }
 
@@ -135,7 +135,7 @@ WorkerActorList.prototype = {
   }
 };
 
-exports.WorkerActorList = WorkerActorList;
+exports.WorkerTargetActorList = WorkerTargetActorList;
 
 function ServiceWorkerRegistrationActorList(conn) {
   this._conn = conn;

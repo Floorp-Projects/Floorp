@@ -4,12 +4,18 @@
 
 "use strict";
 
+/*
+ * Target actor for any of the various kinds of workers.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const { DebuggerServer } = require("devtools/server/main");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
-const { workerSpec } = require("devtools/shared/specs/worker/worker");
+const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
 
@@ -19,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIServiceWorkerManager"
 );
 
-const WorkerActor = protocol.ActorClassWithSpec(workerSpec, {
+const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
   initialize(conn, dbg) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._dbg = dbg;
@@ -179,4 +185,4 @@ const WorkerActor = protocol.ActorClassWithSpec(workerSpec, {
   }
 });
 
-exports.WorkerActor = WorkerActor;
+exports.WorkerTargetActor = WorkerTargetActor;

@@ -813,7 +813,7 @@ WorkerTarget.prototype = {
   },
 
   hasActor: function(name) {
-    // console is the only one actor implemented by WorkerActor
+    // console is the only one actor implemented by WorkerTargetActor
     if (name == "console") {
       return true;
     }

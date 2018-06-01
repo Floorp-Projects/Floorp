@@ -5,8 +5,8 @@
 
 const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
-const workerSpec = generateActorSpec({
-  typeName: "worker",
+const workerTargetSpec = generateActorSpec({
+  typeName: "workerTarget",
 
   methods: {
     attach: {
@@ -30,4 +30,4 @@ const workerSpec = generateActorSpec({
   },
 });
 
-exports.workerSpec = workerSpec;
+exports.workerTargetSpec = workerTargetSpec;

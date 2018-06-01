@@ -362,8 +362,8 @@ DebuggerClient.prototype = {
     });
   },
 
-  attachWorker: function(workerActor, onResponse = noop) {
-    let workerClient = this._clients.get(workerActor);
+  attachWorker: function(workerTargetActor, onResponse = noop) {
+    let workerClient = this._clients.get(workerTargetActor);
     if (workerClient !== undefined) {
       const response = {
         from: workerClient.actor,
@@ -374,7 +374,7 @@ DebuggerClient.prototype = {
       return promise.resolve([response, workerClient]);
     }
 
-    return this.request({ to: workerActor, type: "attach" }).then(response => {
+    return this.request({ to: workerTargetActor, type: "attach" }).then(response => {
       if (response.error) {
         onResponse(response, null);
         return [response, null];
