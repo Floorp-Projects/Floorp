@@ -589,6 +589,10 @@ ScaledFontFontconfig::ApplyVariations(const FontVariation* aVariations,
     setCoords = (SetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
   }
 
+  if (!setCoords) {
+    return;
+  }
+
   cairo_scaled_font_t* sf = GetCairoScaledFont();
   FT_Face face = cairo_ft_scaled_font_lock_face(sf);
   if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
