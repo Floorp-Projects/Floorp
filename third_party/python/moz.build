@@ -12,7 +12,7 @@ with Files('PyECC/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
 
 with Files('attrs/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
+    BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
 
 with Files('blessings/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
@@ -84,7 +84,7 @@ with Files('virtualenv/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('voluptuous/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
+    BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
 
 with Files('which/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
