@@ -93,16 +93,6 @@ var ForgetAboutSite = {
       });
     })());
 
-    // Predictive network data - like cache, no way to clear this per
-    // domain, so just trash it all
-    promises.push((async function() {
-      let np = Cc["@mozilla.org/network/predictor;1"].
-               getService(Ci.nsINetworkPredictor);
-      np.reset();
-    })().catch(ex => {
-      throw new Error("Exception occured while clearing predictive network data: " + ex);
-    }));
-
     // Push notifications.
     promises.push((async function() {
       var push = Cc["@mozilla.org/push/Service;1"].
