@@ -63,21 +63,6 @@ var ForgetAboutSite = {
       throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
     }));
 
-    // Passwords
-    promises.push((async function() {
-      // Clear all passwords for domain
-      let logins = Services.logins.getAllLogins();
-      for (let i = 0; i < logins.length; i++)
-        if (hasRootDomain(logins[i].hostname, aDomain))
-          Services.logins.removeLogin(logins[i]);
-    })().catch(ex => {
-      // XXXehsan: is there a better way to do this rather than this
-      // hacky comparison?
-      if (!ex.message.includes("User canceled Master Password entry")) {
-        throw new Error("Exception occured in clearing passwords :" + ex);
-      }
-    }));
-
     // Permissions
     // Enumerate all of the permissions, and if one matches, remove it
     let enumerator = Services.perms.enumerator;
