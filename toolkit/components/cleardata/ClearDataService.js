@@ -388,6 +388,17 @@ const QuotaCleaner = {
   },
 };
 
+const PredictorNetworkCleaner = {
+  deleteAll() {
+    // Predictive network data - like cache, no way to clear this per
+    // domain, so just trash it all
+    let np = Cc["@mozilla.org/network/predictor;1"].
+             getService(Ci.nsINetworkPredictor);
+    np.reset();
+    return Promise.resolve();
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -416,6 +427,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
    cleaner: QuotaCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA,
+   cleaner: PredictorNetworkCleaner, },
 ];
 
 this.ClearDataService = function() {};
