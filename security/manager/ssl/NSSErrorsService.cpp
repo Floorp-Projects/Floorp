@@ -169,6 +169,23 @@ ErrorIsOverridable(PRErrorCode code)
   }
 }
 
+static const char*
+getOverrideErrorStringName(PRErrorCode aErrorCode)
+{
+  switch (aErrorCode) {
+    case SSL_ERROR_SSL_DISABLED:
+      return "PSMERR_SSL_Disabled";
+    case SSL_ERROR_SSL2_DISABLED:
+      return "PSMERR_SSL2_Disabled";
+    case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
+      return "PSMERR_HostReusedIssuerSerial";
+    case mozilla::pkix::MOZILLA_PKIX_ERROR_MITM_DETECTED:
+      return "certErrorTrust_MitM";
+    default:
+      return nullptr;
+  }
+}
+
 NS_IMETHODIMP
 NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMessage)
 {
@@ -184,19 +201,19 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
   }
 
   nsCOMPtr<nsIStringBundle> theBundle = mPIPNSSBundle;
-  const char *id_str = nsNSSErrors::getOverrideErrorStringName(aNSPRCode);
+  const char* idStr = getOverrideErrorStringName(aNSPRCode);
 
-  if (!id_str) {
-    id_str = nsNSSErrors::getDefaultErrorStringName(aNSPRCode);
+  if (!idStr) {
+    idStr = PR_ErrorToName(aNSPRCode);
     theBundle = mNSSErrorsBundle;
   }
 
-  if (!id_str || !theBundle) {
+  if (!idStr || !theBundle) {
     return NS_ERROR_FAILURE;
   }
 
   nsAutoString msg;
-  nsresult rv = theBundle->GetStringFromName(id_str, msg);
+  nsresult rv = theBundle->GetStringFromName(idStr, msg);
   if (NS_SUCCEEDED(rv)) {
     aErrorMessage = msg;
   }
