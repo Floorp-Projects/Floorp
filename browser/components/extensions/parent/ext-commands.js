@@ -8,6 +8,7 @@ ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
 
 var {
+  chromeModifierKeyMap,
   ExtensionError,
 } = ExtensionUtils;
 
@@ -290,15 +291,8 @@ this.commands = class extends ExtensionAPI {
    * @returns {string} The constructed value for the Key's 'modifiers' attribute.
    */
   getModifiersAttribute(chromeModifiers) {
-    let modifiersMap = {
-      "Alt": "alt",
-      "Command": "accel",
-      "Ctrl": "accel",
-      "MacCtrl": "control",
-      "Shift": "shift",
-    };
     return Array.from(chromeModifiers, modifier => {
-      return modifiersMap[modifier];
+      return chromeModifierKeyMap[modifier];
     }).join(" ");
   }
 
