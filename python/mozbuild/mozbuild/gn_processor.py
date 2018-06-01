@@ -323,7 +323,6 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
             context_attrs['DEFINES']['_UNICODE'] = True
 
         context_attrs['COMPILE_FLAGS'] = {
-            'STL': [],
             'OS_INCLUDES': [],
         }
 
