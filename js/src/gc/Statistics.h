@@ -166,6 +166,8 @@ struct Statistics
     void nonincremental(gc::AbortReason reason) {
         MOZ_ASSERT(reason != gc::AbortReason::None);
         nonincrementalReason_ = reason;
+        writeLogMessage("Non-incremental reason: %s",
+            nonincrementalReason());
     }
 
     bool nonincremental() const {
@@ -266,11 +268,21 @@ struct Statistics
     // Return JSON for the previous nursery collection.
     UniqueChars renderNurseryJson(JSRuntime* rt) const;
 
+#ifdef DEBUG
+    // Print a logging message.
+    void writeLogMessage(const char* fmt, ...);
+#else
+    void writeLogMessage(const char* fmt, ...) { };
+#endif
+
   private:
     JSRuntime* runtime;
 
-    /* File pointer used for MOZ_GCTIMER output. */
-    FILE* fp;
+    /* File used for MOZ_GCTIMER output. */
+    FILE* gcTimerFile;
+
+    /* File used for JS_GC_DEBUG output. */
+    FILE* gcDebugFile;
 
     ZoneGCStats zoneStats;
 

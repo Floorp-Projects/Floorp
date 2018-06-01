@@ -852,7 +852,8 @@ nsContentList::MatchSelf(nsIContent *aContent)
 }
 
 void
-nsContentList::PopulateSelf(uint32_t aNeededLength)
+nsContentList::PopulateSelf(uint32_t aNeededLength,
+                            uint32_t aExpectedElementsIfDirty)
 {
   if (!mRootNode) {
     return;
@@ -861,7 +862,7 @@ nsContentList::PopulateSelf(uint32_t aNeededLength)
   ASSERT_IN_SYNC;
 
   uint32_t count = mElements.Length();
-  NS_ASSERTION(mState != LIST_DIRTY || count == 0,
+  NS_ASSERTION(mState != LIST_DIRTY || count == aExpectedElementsIfDirty,
                "Reset() not called when setting state to LIST_DIRTY?");
 
   if (count >= aNeededLength) // We're all set
@@ -1153,7 +1154,8 @@ nsLabelsNodeList::MaybeResetRoot(nsINode* aRootNode)
 }
 
 void
-nsLabelsNodeList::PopulateSelf(uint32_t aNeededLength)
+nsLabelsNodeList::PopulateSelf(uint32_t aNeededLength,
+                               uint32_t aExpectedElementsIfDirty)
 {
   if (!mRootNode) {
     return;
@@ -1163,7 +1165,8 @@ nsLabelsNodeList::PopulateSelf(uint32_t aNeededLength)
   nsINode* cur = mRootNode;
   if (mElements.IsEmpty() && cur->IsElement() && Match(cur->AsElement())) {
     mElements.AppendElement(cur->AsElement());
+    ++aExpectedElementsIfDirty;
   }
 
-  nsContentList::PopulateSelf(aNeededLength);
+  nsContentList::PopulateSelf(aNeededLength, aExpectedElementsIfDirty);
 }
