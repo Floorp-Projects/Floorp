@@ -12,7 +12,6 @@ import socket
 import sys
 import time
 import traceback
-import warnings
 
 from contextlib import contextmanager
 
@@ -1318,25 +1317,6 @@ class Marionette(object):
 
         return self.chrome_window
 
-    def get_window_position(self):
-        """Get the current window's position.
-
-        :returns: a dictionary with x and y
-        """
-        warnings.warn("get_window_position() has been deprecated, please use get_window_rect()",
-                      DeprecationWarning)
-        return self._send_message("getWindowPosition")
-
-    def set_window_position(self, x, y):
-        """Set the position of the current window
-
-        :param x: x coordinate for the top left of the window
-        :param y: y coordinate for the top left of the window
-        """
-        warnings.warn("set_window_position() has been deprecated, please use set_window_rect()",
-                      DeprecationWarning)
-        self._send_message("setWindowPosition", {"x": x, "y": y})
-
     def set_window_rect(self, x=None, y=None, height=None, width=None):
         """Set the position and size of the current window.
 
@@ -1986,39 +1966,6 @@ class Marionette(object):
             self._send_message("Marionette:SetScreenOrientation", body)
         except errors.UnknownCommandException:
             self._send_message("setScreenOrientation", body)
-
-    @property
-    def window_size(self):
-        """Get the current browser window size.
-
-        Will return the current browser window size in pixels. Refers to
-        window outerWidth and outerHeight values, which include scroll bars,
-        title bars, etc.
-
-        :returns: Window rect.
-        """
-        warnings.warn("window_size property has been deprecated, please use get_window_rect()",
-                      DeprecationWarning)
-        return self._send_message("getWindowSize")
-
-    def set_window_size(self, width, height):
-        """Resize the browser window currently in focus.
-
-        The supplied ``width`` and ``height`` values refer to the window `outerWidth`
-        and `outerHeight` values, which include scroll bars, title bars, etc.
-
-        An error will be returned if the requested window size would result
-        in the window being in the maximised state.
-
-        :param width: The width to resize the window to.
-        :param height: The height to resize the window to.
-
-        :returns Window rect.
-        """
-        warnings.warn("set_window_size() has been deprecated, please use set_window_rect()",
-                      DeprecationWarning)
-        body = {"width": width, "height": height}
-        return self._send_message("setWindowSize", body)
 
     def minimize_window(self):
         """Iconify the browser window currently receiving commands.
