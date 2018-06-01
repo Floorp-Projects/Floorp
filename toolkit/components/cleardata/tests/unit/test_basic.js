@@ -7,13 +7,13 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 add_task(async function test_basic() {
-  const service = Cc["@mozilla.org/clear-data-service;1"]
-                  .getService(Ci.nsIClearDataService);
-  Assert.ok(!!service);
+  Assert.ok(!!Services.clearData);
 
   await new Promise(aResolve => {
-    service.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => {
       Assert.equal(value, 0);
       aResolve();
     });
