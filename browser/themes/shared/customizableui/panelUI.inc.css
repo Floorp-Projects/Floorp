@@ -194,14 +194,6 @@ panelview {
   -moz-box-flex: 1;
 }
 
-#appMenu-popup > arrowscrollbox > autorepeatbutton {
-  display: none;
-}
-
-#appMenu-popup > arrowscrollbox > scrollbox {
-  overflow: visible;
-}
-
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
 panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
@@ -1109,8 +1101,8 @@ menuitem.panel-subview-footer@menuStateActive@,
   margin-inline-end: 3px;
 }
 
-#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-up,
-#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-down {
+#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-up,
+#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-down {
   -moz-appearance: none;
   margin-top: 0;
   margin-bottom: 0;
