@@ -4,14 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-backports-abc = "==0.5"
-boto3 = "==1.4.4"
-livereload = "==2.5.1"
-recommonmark = "==0.4.0"
-singledispatch = "==3.4.0.3"
-sphinx = "==1.6.7"
+backports-abc = "*"
+boto3 = "*"
+livereload = "*"
+recommonmark = "*"
+singledispatch = "*"
+sphinx = "*"
+# Upgrading to 2.5 causes an intermittent in the Doc task
 sphinx-js = "==2.1"
-sphinx-rtd-theme = "==0.2.4"
+sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "2.7"
