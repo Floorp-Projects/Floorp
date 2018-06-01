@@ -478,6 +478,33 @@ public:
    */
   static bool IsControlChar(char16_t aChar);
 
+  bool IsControl() const { return mModKeyState.IsControl(); }
+  bool IsAlt() const { return mModKeyState.IsAlt(); }
+  Modifiers GetModifiers() const { return mModKeyState.GetModifiers(); }
+  const ModifierKeyState& ModifierKeyStateRef() const
+  {
+    return mModKeyState;
+  }
+  VirtualKey::ShiftState GetShiftState() const
+  {
+    return VirtualKey::ModifierKeyStateToShiftState(mModKeyState);
+  }
+
+  /**
+   * GenericVirtualKeyCode() returns virtual keycode which cannot distinguish
+   * position of modifier keys.  E.g., VK_CONTROL for both ControlLeft and
+   * ControlRight.
+   */
+  uint8_t GenericVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
+
+  /**
+   * SpecificVirtualKeyCode() returns virtual keycode which can distinguish
+   * position of modifier keys.  E.g., returns VK_LCONTROL or VK_RCONTROL
+   * instead of VK_CONTROL.  If the key message is synthesized with not
+   * enough information, this prefers left position's keycode.
+   */
+  uint8_t SpecificVirtualKeyCode() const { return mVirtualKeyCode; }
+
 private:
   NativeKey* mLastInstance;
   // mRemovingMsg is set at removing a char message from
@@ -594,12 +621,11 @@ private:
 
   /**
    * InitCommittedCharsAndModifiersWithFollowingCharMessages() initializes
-   * mCommittedCharsAndModifiers with mFollowingCharMsgs and aModKeyState.
+   * mCommittedCharsAndModifiers with mFollowingCharMsgs and mModKeyState.
    * If mFollowingCharMsgs includes non-printable char messages, they are
    * ignored (skipped).
    */
-  void InitCommittedCharsAndModifiersWithFollowingCharMessages(
-         const ModifierKeyState& aModKeyState);
+  void InitCommittedCharsAndModifiersWithFollowingCharMessages();
 
   UINT GetScanCodeWithExtendedFlag() const;
 
@@ -864,6 +890,11 @@ public:
    */
   bool IsDeadKey(uint8_t aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
+  bool IsDeadKey(const NativeKey& aNativeKey) const
+  {
+    return IsDeadKey(aNativeKey.GenericVirtualKeyCode(),
+                     aNativeKey.ModifierKeyStateRef());
+  }
 
   /**
    * IsInDeadKeySequence() returns true when it's in a dead key sequence.
@@ -878,6 +909,11 @@ public:
    */
   bool IsSysKey(uint8_t aVirtualKey,
                 const ModifierKeyState& aModKeyState) const;
+  bool IsSysKey(const NativeKey& aNativeKey) const
+  {
+    return IsSysKey(aNativeKey.GenericVirtualKeyCode(),
+                    aNativeKey.ModifierKeyStateRef());
+  }
 
   /**
    * GetUniCharsAndModifiers() returns characters which are inputted by
@@ -885,24 +921,20 @@ public:
    * Note that if the combination causes text input, the result's Ctrl and
    * Alt key state are never active.
    */
-  UniCharsAndModifiers GetUniCharsAndModifiers(
-                         uint8_t aVirtualKey,
-                         const ModifierKeyState& aModKeyState) const
+  UniCharsAndModifiers
+  GetUniCharsAndModifiers(uint8_t aVirtualKey,
+                          const ModifierKeyState& aModKeyState) const
   {
     VirtualKey::ShiftState shiftState =
       VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
     return GetUniCharsAndModifiers(aVirtualKey, shiftState);
   }
-
-  /**
-   * GetNativeUniCharsAndModifiers() returns characters which are inputted by
-   * aVirtualKey with aModKeyState.  The method isn't stateful.
-   * Note that different from GetUniCharsAndModifiers(), this returns
-   * actual modifier state of Ctrl and Alt.
-   */
-  UniCharsAndModifiers GetNativeUniCharsAndModifiers(
-                         uint8_t aVirtualKey,
-                         const ModifierKeyState& aModKeyState) const;
+  UniCharsAndModifiers
+  GetUniCharsAndModifiers(const NativeKey& aNativeKey) const
+  {
+    return GetUniCharsAndModifiers(aNativeKey.GenericVirtualKeyCode(),
+                                   aNativeKey.GetShiftState());
+  }
 
   /**
    * OnLayoutChange() must be called before the first keydown message is
@@ -1004,9 +1036,9 @@ private:
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
                                    void* aData);
   static bool AddDeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar,
-                                DeadKeyEntry* aDeadKeyArray, uint32_t aEntries);
+                              DeadKeyEntry* aDeadKeyArray, uint32_t aEntries);
   bool EnsureDeadKeyActive(bool aIsActive, uint8_t aDeadKey,
-                             const PBYTE aDeadKeyKbdState);
+                           const PBYTE aDeadKeyKbdState);
   uint32_t GetDeadKeyCombinations(uint8_t aDeadKey,
                                   const PBYTE aDeadKeyKbdState,
                                   uint16_t aShiftStatesWithBaseChars,
@@ -1015,8 +1047,7 @@ private:
   /**
    * Activates or deactivates dead key state.
    */
-  void ActivateDeadKeyState(const NativeKey& aNativeKey,
-                            const ModifierKeyState& aModKeyState);
+  void ActivateDeadKeyState(const NativeKey& aNativeKey);
   void DeactivateDeadKeyState();
 
   const DeadKeyTable* AddDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
@@ -1041,8 +1072,7 @@ private:
    * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
    * them to the aNativeKey.
    */
-  void InitNativeKey(NativeKey& aNativeKey,
-                     const ModifierKeyState& aModKeyState);
+  void InitNativeKey(NativeKey& aNativeKey);
 
   /**
    * MaybeInitNativeKeyAsDeadKey() initializes aNativeKey only when aNativeKey
@@ -1053,24 +1083,21 @@ private:
    * be caused by aNativeKey.
    * Returns true when this initializes aNativeKey.  Otherwise, false.
    */
-  bool MaybeInitNativeKeyAsDeadKey(NativeKey& aNativeKey,
-                                   const ModifierKeyState& aModKeyState);
+  bool MaybeInitNativeKeyAsDeadKey(NativeKey& aNativeKey);
 
   /**
    * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
    * proper composite character when dead key produces a composite character.
    * Otherwise, just returns false.
    */
-  bool MaybeInitNativeKeyWithCompositeChar(
-         NativeKey& aNativeKey,
-         const ModifierKeyState& aModKeyState);
+  bool MaybeInitNativeKeyWithCompositeChar(NativeKey& aNativeKey);
 
   /**
    * See the comment of GetUniCharsAndModifiers() below.
    */
-  UniCharsAndModifiers GetUniCharsAndModifiers(
-                         uint8_t aVirtualKey,
-                         VirtualKey::ShiftState aShiftState) const;
+  UniCharsAndModifiers
+  GetUniCharsAndModifiers(uint8_t aVirtualKey,
+                          VirtualKey::ShiftState aShiftState) const;
 
   /**
    * GetDeadUniCharsAndModifiers() returns dead chars which are stored in
