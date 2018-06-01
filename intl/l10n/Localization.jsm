@@ -243,6 +243,7 @@ class Localization {
    */
   registerObservers() {
     Services.obs.addObserver(this, "intl:app-locales-changed", true);
+    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
   }
 
   /**
@@ -256,6 +257,13 @@ class Localization {
     switch (topic) {
       case "intl:app-locales-changed":
         this.onChange();
+        break;
+      case "nsPref:changed":
+        switch (data) {
+          case "intl.l10n.pseudo":
+            L10nRegistry.ctxCache.clear();
+            this.onChange();
+        }
         break;
       default:
         break;
