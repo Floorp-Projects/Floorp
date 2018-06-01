@@ -237,6 +237,18 @@ WaylandDataOffer::GetSelectedDragAction()
     return wl_to_gdk_actions(mSelectedDragAction);
 }
 
+void
+WaylandDataOffer::SetAvailableDragActions(uint32_t aWaylandActions)
+{
+    mAvailableDragAction = aWaylandActions;
+}
+
+GdkDragAction
+WaylandDataOffer::GetAvailableDragActions()
+{
+    return wl_to_gdk_actions(mAvailableDragAction);
+}
+
 static void
 data_offer_offer (void                 *data,
                   struct wl_data_offer *wl_data_offer,
@@ -255,6 +267,8 @@ data_offer_source_actions(void *data,
                           struct wl_data_offer *wl_data_offer,
                           uint32_t source_actions)
 {
+    auto *offer = static_cast<WaylandDataOffer*>(data);
+    offer->SetAvailableDragActions(source_actions);
 }
 
 /* Advertise recently selected drag and drop action by compositor, based
@@ -388,7 +402,14 @@ nsWaylandDragContext::SetDragStatus(GdkDragAction aAction)
 GdkDragAction
 nsWaylandDragContext::GetSelectedDragAction()
 {
-    return mDataOffer->GetSelectedDragAction();
+    GdkDragAction gdkAction = mDataOffer->GetSelectedDragAction();
+
+    // We emulate gdk_drag_context_get_actions() here.
+    if (!gdkAction) {
+        gdkAction = mDataOffer->GetAvailableDragActions();
+    }
+
+    return gdkAction;
 }
 
 GList*
