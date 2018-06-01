@@ -505,22 +505,7 @@ var Sanitizer = {
         }
 
         // Clear all push notification subscriptions
-        try {
-          await new Promise((resolve, reject) => {
-            let push = Cc["@mozilla.org/push/Service;1"]
-                         .getService(Ci.nsIPushService);
-            push.clearForDomain("*", status => {
-              if (Components.isSuccessCode(status)) {
-                resolve();
-              } else {
-                reject(new Error("Error clearing push subscriptions: " +
-                                 status));
-              }
-            });
-          });
-        } catch (ex) {
-          seenException = ex;
-        }
+        await clearData(range, Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS);
 
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
         if (seenException) {
