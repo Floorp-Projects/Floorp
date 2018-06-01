@@ -23,15 +23,9 @@ interface ScrollBoxObject : BoxObject {
   [Throws]
   void scrollBy(long dx, long dy);
   [Throws]
-  void scrollByLine(long dlines);
-  [Throws]
   void scrollByIndex(long dindexes);
   [Throws]
-  void scrollToLine(long line);
-  [Throws]
   void scrollToElement(Element child);
-  [Throws]
-  void scrollToIndex(long index);
 
   /**
    * Get the current scroll position in css pixels.
@@ -46,25 +40,6 @@ interface ScrollBoxObject : BoxObject {
   [Pure, Throws]
   readonly attribute long scrolledHeight;
 
-  /**
-   * DEPRECATED: Please use positionX and positionY
-   *
-   * Get the current scroll position in css pixels.
-   * @see scrollTo for the definition of x and y.
-   */
-  [Throws]
-  void getPosition(object x, object y);
-
-  /**
-   * DEPRECATED: Please use scrolledWidth and scrolledHeight
-   */
-  [Throws]
-  void getScrolledSize(object width, object height);
-
   [Throws]
   void ensureElementIsVisible(Element child);
-  [Throws]
-  void ensureIndexIsVisible(long index);
-  [Throws]
-  void ensureLineIsVisible(long line);
 };
