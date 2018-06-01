@@ -63,16 +63,6 @@ var ForgetAboutSite = {
       throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
     }));
 
-
-    // Downloads
-    promises.push((async function() {
-      let list = await Downloads.getList(Downloads.ALL);
-      list.removeFinished(download => hasRootDomain(
-        NetUtil.newURI(download.source.url).host, aDomain));
-    })().catch(ex => {
-      throw new Error("Exception in clearing Downloads: " + ex);
-    }));
-
     // Passwords
     promises.push((async function() {
       // Clear all passwords for domain
