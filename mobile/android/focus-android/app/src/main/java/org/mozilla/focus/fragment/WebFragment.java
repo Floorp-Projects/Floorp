@@ -9,11 +9,9 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +21,9 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.session.Session;
-import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.web.IWebView;
 
-import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Base implementation for fragments that use an IWebView instance. Based on Android's WebViewFragment.
@@ -112,27 +107,9 @@ public abstract class WebFragment extends LocaleAwareFragment {
             webView.saveWebViewState(session);
         }
 
-        if (AppConstants.isGeckoBuild() && midnightCrossed()) {
-            // Record new edited date
-            PreferenceManager.getDefaultSharedPreferences(getContext()).edit().putLong("lastPing", System.currentTimeMillis()).apply();
-            final CountDownLatch latch = new CountDownLatch(1);
-            webView.uploadData(latch);
-        }
-
         webView.onPause();
 
         super.onPause();
-    }
-
-
-    private boolean midnightCrossed() {
-        // Get last time that we uploaded data
-        final long lastPing = PreferenceManager.getDefaultSharedPreferences(getContext()).getLong("lastPing", 0);
-        final Date lastDate = new Date(lastPing);
-        // Get Current time
-        final Date currentDate = new Date();
-        // Make sure currentDate is after lastDate
-        return currentDate.after(lastDate);
     }
 
     @Override
