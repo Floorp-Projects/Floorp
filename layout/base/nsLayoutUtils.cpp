@@ -5529,6 +5529,12 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis       aAxis,
         // We have a definite width/height.  This is the "specified size" in:
         // https://drafts.csswg.org/css-grid/#min-size-auto
         fixedMinSize = &minSize;
+      } else if (::IsReplacedBoxResolvedAgainstZero(aFrame, *style,
+                     eAxisHorizontal ? stylePos->mMaxWidth
+                                     : stylePos->mMaxHeight)) {
+        // XXX bug 1463700: this doesn't handle calc() according to spec
+        minSize = 0;
+        fixedMinSize = &minSize;
       }
       // fall through - the caller will have to deal with "transferred size"
     } else {
