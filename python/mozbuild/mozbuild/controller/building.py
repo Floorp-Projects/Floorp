@@ -993,6 +993,19 @@ class BuildDriver(MozbuildObject):
                 return False
 
             def backend_out_of_date(backend_file):
+                if not os.path.isfile(backend_file):
+                    return True
+
+                # Check if any of our output files have been removed since
+                # we last built the backend, re-generate the backend if
+                # so.
+                outputs = []
+                with open(backend_file, 'r') as fh:
+                    outputs = fh.read().splitlines()
+                for output in outputs:
+                    if not os.path.isfile(mozpath.join(self.topobjdir, output)):
+                        return True
+
                 dep_file = '%s.in' % backend_file
                 return build_out_of_date(backend_file, dep_file)
 

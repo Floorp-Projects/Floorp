@@ -2669,10 +2669,9 @@ static bool
 ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
 {
   nsIFrame* transformFrame;
-  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM ||
+      aItem->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
     transformFrame = aItem->Frame();
-  } else if (aItem->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
-    transformFrame = static_cast<nsDisplayPerspective*>(aItem)->TransformFrame();
   } else {
     return false;
   }
@@ -2866,7 +2865,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   const bool extend3DContext = Extend3DContext(disp, effectSet);
   const bool combines3DTransformWithAncestors =
     (extend3DContext || isTransformed) && Combines3DTransformWithAncestors(disp);
-  const bool childrenHavePerspective = ChildrenHavePerspective(disp);
 
   Maybe<nsDisplayListBuilder::AutoPreserves3DContext> autoPreserves3DContext;
   if (extend3DContext && !combines3DTransformWithAncestors) {
@@ -2883,15 +2881,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       dirtyRect = visibleRect;
       aBuilder->SetDisablePartialUpdates(true);
     }
-  }
-
-  // nsDisplayPerspective items use an index to keep their PerFrameKey unique.
-  // We need to make sure we build all of them for them to be consistent, so
-  // rebuild all items if we have perspective. Bug 1431249 should remove
-  // this requirement.
-  if (aBuilder->IsRetainingDisplayList() && childrenHavePerspective) {
-    dirtyRect = visibleRect;
-    aBuilder->SetDisablePartialUpdates(true);
   }
 
   // reset blend mode so we can keep track if this stacking context needs have
@@ -3064,8 +3053,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
-    nsDisplayListBuilder::AutoSaveRestorePerspectiveIndex
-      perspectiveIndex(aBuilder, childrenHavePerspective);
     nsDisplayListBuilder::AutoFilterASRSetter
       filterASRSetter(aBuilder, usingFilter);
 
@@ -3382,9 +3369,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       }
       resultList.AppendToTop(
         MakeDisplayItem<nsDisplayPerspective>(
-          aBuilder, this,
-          GetContainingBlock(0, disp)->GetContent()->GetPrimaryFrame(),
-          &resultList));
+          aBuilder, this, &resultList));
     }
 
     if (aCreatedContainerItem) {

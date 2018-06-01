@@ -5,7 +5,9 @@
 @import url("resource://devtools/client/themes/splitters.css");
 
 .devtools-toolbox-side-iframe {
-  min-width: 250px;
+  /* Toolbar should display the chevron and meatball (and close) button.
+    This size is sum of chevron and meatball and close button. */
+  min-width: 74px;
 }
 
 /* Eyedropper Widget */

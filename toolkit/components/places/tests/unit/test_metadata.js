@@ -27,27 +27,38 @@ add_task(async function test_metadata() {
   Assert.equal(await PlacesUtils.metadata.get("test/string"), "hi",
     "Should return string value after clearing cache");
 
+  await Assert.rejects(PlacesUtils.metadata.get("test/nonexistent"),
+    /No data stored for key test\/nonexistent/,
+    "Should reject for a non-existent key and no default value.");
+  Assert.equal(await PlacesUtils.metadata.get("test/nonexistent", "defaultValue"), "defaultValue",
+    "Should return the default value for a non-existent key.");
+
   // Values are untyped; it's OK to store a value of a different type for the
   // same key.
   await PlacesUtils.metadata.set("test/string", 111);
   Assert.strictEqual(await PlacesUtils.metadata.get("test/string"), 111,
     "Should replace string with integer");
   await PlacesUtils.metadata.set("test/string", null);
-  Assert.strictEqual(await PlacesUtils.metadata.get("test/string"), null,
+  await Assert.rejects(PlacesUtils.metadata.get("test/string"),
+    /No data stored for key test\/string/,
     "Should clear value when setting to NULL");
 
   await PlacesUtils.metadata.delete("test/string", "test/boolean");
-  Assert.strictEqual(await PlacesUtils.metadata.get("test/string"), null,
+  await Assert.rejects(PlacesUtils.metadata.get("test/string"),
+    /No data stored for key test\/string/,
     "Should delete string value");
-  Assert.strictEqual(await PlacesUtils.metadata.get("test/boolean"), null,
+  await Assert.rejects(PlacesUtils.metadata.get("test/boolean"),
+    /No data stored for key test\/boolean/,
     "Should delete Boolean value");
   Assert.strictEqual(await PlacesUtils.metadata.get("test/integer"), 123,
     "Should keep undeleted integer value");
 
   await PlacesTestUtils.clearMetadata();
-  Assert.strictEqual(await PlacesUtils.metadata.get("test/integer"), null,
+  await Assert.rejects(PlacesUtils.metadata.get("test/integer"),
+    /No data stored for key test\/integer/,
     "Should clear integer value");
-  Assert.strictEqual(await PlacesUtils.metadata.get("test/double"), null,
+  await Assert.rejects(PlacesUtils.metadata.get("test/double"),
+    /No data stored for key test\/double/,
     "Should clear double value");
 });
 
@@ -80,7 +91,7 @@ add_task(async function test_metadata_blobs() {
   let sameBlob = await PlacesUtils.metadata.get("test/blob");
   Assert.equal(ChromeUtils.getClassName(sameBlob), "Uint8Array",
     "Should cache typed array for blob value");
-  deepEqual(sameBlob, blob,
+  Assert.deepEqual(sameBlob, blob,
     "Should store new blob value");
 
   info("Remove blob from cache");
@@ -89,8 +100,67 @@ add_task(async function test_metadata_blobs() {
   let newBlob = await PlacesUtils.metadata.get("test/blob");
   Assert.equal(ChromeUtils.getClassName(newBlob), "Uint8Array",
     "Should inflate blob into typed array");
-  deepEqual(newBlob, blob,
+  Assert.deepEqual(newBlob, blob,
     "Should return same blob after clearing cache");
+
+  await PlacesTestUtils.clearMetadata();
+});
+
+add_task(async function test_metadata_arrays() {
+  let array = [1, 2, 3, "\u2713 \u00E0 la mode"];
+  await PlacesUtils.metadata.set("test/array", array);
+
+  let sameArray = await PlacesUtils.metadata.get("test/array");
+  Assert.ok(Array.isArray(sameArray), "Should cache array for array value");
+  Assert.deepEqual(sameArray, array,
+    "Should store new array value");
+
+  info("Remove array from cache");
+  await PlacesUtils.metadata.cache.clear();
+
+  let newArray = await PlacesUtils.metadata.get("test/array");
+  Assert.ok(Array.isArray(newArray), "Should inflate into array");
+  Assert.deepEqual(newArray, array,
+    "Should return same array after clearing cache");
+
+  await PlacesTestUtils.clearMetadata();
+});
+
+add_task(async function test_metadata_objects() {
+  let object = {foo: 123, bar: "test", meow: "\u2713 \u00E0 la mode"};
+  await PlacesUtils.metadata.set("test/object", object);
+
+  let sameObject = await PlacesUtils.metadata.get("test/object");
+  Assert.equal(typeof sameObject, "object", "Should cache object for object value");
+  Assert.deepEqual(sameObject, object,
+    "Should store new object value");
+
+  info("Remove object from cache");
+  await PlacesUtils.metadata.cache.clear();
+
+  let newObject = await PlacesUtils.metadata.get("test/object");
+  Assert.equal(typeof newObject, "object", "Should inflate into object");
+  Assert.deepEqual(newObject, object,
+    "Should return same object after clearing cache");
+
+  await PlacesTestUtils.clearMetadata();
+});
+
+add_task(async function test_metadata_unparsable() {
+  await PlacesUtils.withConnectionWrapper("test_medata", db => {
+    let data = PlacesUtils.metadata._base64Encode("{hjjkhj}");
+
+    return db.execute(`
+      INSERT INTO moz_meta (key, value)
+      VALUES ("test/unparsable", "data:application/json;base64,${data}")
+    `);
+  });
+
+  await Assert.rejects(PlacesUtils.metadata.get("test/unparsable"),
+    /SyntaxError: JSON.parse/,
+    "Should reject for an unparsable value with no default");
+  Assert.deepEqual(await PlacesUtils.metadata.get("test/unparsable", {foo: 1}),
+    {foo: 1}, "Should return the default when encountering an unparsable value.");
 
   await PlacesTestUtils.clearMetadata();
 });

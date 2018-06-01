@@ -9,6 +9,7 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.build_lints:transforms
     - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -28,6 +29,8 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
             max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: artifact
         run:
             using: mozharness
             actions: [get-secrets build]

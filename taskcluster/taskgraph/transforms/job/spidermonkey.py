@@ -25,6 +25,9 @@ sm_run_schema = Schema({
 
     # The SPIDERMONKEY_VARIANT
     Required('spidermonkey-variant'): basestring,
+
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 
@@ -43,7 +46,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/builds/worker/workspace",
+        'mount-point': "{workdir}/workspace".format(**run),
         'skip-untrusted': True,
     })
 
@@ -69,12 +72,13 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-rust-bindings.sh"
 
     worker['command'] = [
-        '/builds/worker/bin/run-task',
-        '--vcs-checkout', '/builds/worker/workspace/build/src',
+        '{workdir}/bin/run-task'.format(**run),
+        '--vcs-checkout', '{workdir}/workspace/build/src'.format(**run),
         '--',
         '/bin/bash',
         '-c',
-        'cd /builds/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
+        'cd {workdir} && workspace/build/src/taskcluster/scripts/builder/{script}'.format(
+            workdir=run['workdir'], script=script)
     ]
 
 

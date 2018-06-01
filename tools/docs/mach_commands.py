@@ -58,9 +58,7 @@ class Documentation(MachCommandBase):
         except which.WhichError:
             return die('jsdoc not found - please install from npm.')
 
-        self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_requirements(
-            os.path.join(here, 'requirements.txt'), quiet=True)
+        self.activate_pipenv(os.path.join(here, 'Pipfile'))
 
         import webbrowser
         from livereload import Server
@@ -176,8 +174,6 @@ class Documentation(MachCommandBase):
                 return p
 
     def _s3_upload(self, root, project, version=None):
-        self.virtualenv_manager.install_pip_package('boto3==1.4.4')
-
         from moztreedocs.package import distribution_files
         from moztreedocs.upload import s3_upload
 

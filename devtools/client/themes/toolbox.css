@@ -23,7 +23,16 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  display: flex;
+  /* For narrow devtool width, we define the each column width of tabbar.
+    Defined layout is as follow:
+
+    -------------------------------------------------
+    | Picker |  tooltabs  |  commands |   controls  |
+    |  auto  | 26px ~ 1fr |    auto   |  max-content|
+    -------------------------------------------------
+  */
+  display: grid;
+  grid-template-columns: auto minmax(26px, 1fr) auto max-content;
   background: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   box-sizing: border-box;
@@ -34,6 +43,22 @@
   position: relative;
   display: flex;
   flex: 1;
+}
+
+/* These classes use to stretch the tool tabs wrapper width if toolbox does'n
+  have start buttons or end buttons element. */
+
+.devtools-tabbar .toolbox-tabs-wrapper {
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
+.devtools-tabbar-has-start .toolbox-tabs-wrapper {
+  grid-column-start: 1;
+}
+
+.devtools-tabbar-has-end .toolbox-tabs-wrapper {
+  grid-column-end: 4;
 }
 
 .toolbox-tabs-wrapper .tools-chevron-menu {
@@ -60,6 +85,7 @@
 #toolbox-controls {
   display: flex;
   align-items: stretch;
+  overflow: hidden;
 }
 
 /* Toolbox tabs */
@@ -175,9 +201,17 @@
   margin-inline-end: 5px;
 }
 
+#toolbox-close {
+  min-width: 24px;
+}
+
 #toolbox-close::before {
   fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
+}
+
+#toolbox-meatball-menu-button {
+  min-width: 24px;
 }
 
 #toolbox-meatball-menu-button::before {

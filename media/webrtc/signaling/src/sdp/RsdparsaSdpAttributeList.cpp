@@ -13,6 +13,8 @@
 #include <ostream>
 #include "mozilla/Assertions.h"
 
+#include <limits>
+
 namespace mozilla
 {
 
@@ -455,6 +457,9 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kRtcpAttribute:
         LoadRtcp(attributeList);
         return;
+      case SdpAttribute::kRtcpFbAttribute:
+        LoadRtcpFb(attributeList);
+        return;
       case SdpAttribute::kImageattrAttribute:
         LoadImageattr(attributeList);
         return;
@@ -473,12 +478,12 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kExtmapAttribute:
         LoadExtmap(attributeList);
         return;
+
       case SdpAttribute::kDtlsMessageAttribute:
       case SdpAttribute::kLabelAttribute:
       case SdpAttribute::kMaxptimeAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
       case SdpAttribute::kMaxMessageSizeAttribute:
-      case SdpAttribute::kRtcpFbAttribute:
       case SdpAttribute::kRtcpRsizeAttribute:
       case SdpAttribute::kSctpPortAttribute:
       case SdpAttribute::kCandidateAttribute:
@@ -844,6 +849,39 @@ RsdparsaSdpAttributeList::LoadRtcp(RustAttributeList* attributeList)
                                         addrType, addr));
     }
   }
+}
+
+void
+RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList)
+{
+  auto rtcpfbsCount = sdp_get_rtcpfb_count(attributeList);
+  if (!rtcpfbsCount) {
+    return;
+  }
+
+  auto rustRtcpfbs = MakeUnique<RustSdpAttributeRtcpFb[]>(rtcpfbsCount);
+  sdp_get_rtcpfbs(attributeList, rtcpfbsCount, rustRtcpfbs.get());
+
+  auto rtcpfbList = MakeUnique<SdpRtcpFbAttributeList>();
+  for(size_t i = 0; i < rtcpfbsCount; i++) {
+    RustSdpAttributeRtcpFb& rtcpfb = rustRtcpfbs[i];
+    uint32_t payloadTypeU32 = rtcpfb.payloadType;
+
+    std::stringstream ss;
+    if(payloadTypeU32 == std::numeric_limits<uint32_t>::max()){
+      ss << "*";
+    } else {
+      ss << payloadTypeU32;
+    }
+
+    uint32_t feedbackType = rtcpfb.feedbackType;
+    std::string parameter = convertStringView(rtcpfb.parameter);
+    std::string extra = convertStringView(rtcpfb.extra);
+
+    rtcpfbList->PushEntry(ss.str(), static_cast<SdpRtcpFbAttributeList::Type>(feedbackType), parameter, extra);
+  }
+
+  SetAttribute(rtcpfbList.release());
 }
 
 void
