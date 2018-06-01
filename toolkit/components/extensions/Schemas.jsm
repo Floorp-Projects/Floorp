@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
+  chromeModifierKeyMap,
   DefaultMap,
   DefaultWeakMap,
 } = ExtensionUtils;
@@ -977,6 +978,58 @@ const FORMATS = {
     if (isNaN(new Date(string))) {
       throw new Error(`Invalid date string ${string}`);
     }
+    return string;
+  },
+
+  manifestShortcutKey(string, context) {
+    // A valid shortcut key for a webextension manifest
+    const MEDIA_KEYS = /^(MediaNextTrack|MediaPlayPause|MediaPrevTrack|MediaStop)$/;
+    const BASIC_KEYS = /^([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right)$/;
+    const FUNCTION_KEYS = /^(F[1-9]|F1[0-2])$/;
+    let errorMessage = (`Value "${string}" must consist of `
+                        + `either a combination of one or two modifiers, including `
+                        + `a mandatory primary modifier and a key, separated by '+', `
+                        + `or a media key. For details see: `
+                        + `https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations`);
+    if (MEDIA_KEYS.test(string.trim())) {
+      return string;
+    }
+
+    let modifiers = string.split("+").map(s => s.trim());
+    let key = modifiers.pop();
+
+    if (!BASIC_KEYS.test(key) && !FUNCTION_KEYS.test(key)) {
+      throw new Error(errorMessage);
+    }
+
+    let chromeModifiers = modifiers.map(m => chromeModifierKeyMap[m]);
+    // If the modifier wasn't found it will be undefined.
+    if (chromeModifiers.some(modifier => !modifier)) {
+      throw new Error(errorMessage);
+    }
+
+    switch (modifiers.length) {
+      case 0:
+        // A lack of modifiers is only allowed with function keys.
+        if (!FUNCTION_KEYS.test(key)) {
+          throw new Error(errorMessage);
+        }
+        break;
+      case 1:
+        // Shift is only allowed on its own with function keys.
+        if (chromeModifiers[0] == "shift" && !FUNCTION_KEYS.test(key)) {
+          throw new Error(errorMessage);
+        }
+        break;
+      case 2:
+        if (chromeModifiers[0] == chromeModifiers[1]) {
+          throw new Error(errorMessage);
+        }
+        break;
+      default:
+        throw new Error(errorMessage);
+    }
+
     return string;
   },
 };

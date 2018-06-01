@@ -676,8 +676,17 @@ function makeWidgetId(id) {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
+const chromeModifierKeyMap = {
+  "Alt": "alt",
+  "Command": "accel",
+  "Ctrl": "accel",
+  "MacCtrl": "control",
+  "Shift": "shift",
+};
+
 var ExtensionUtils = {
   checkLoadURL,
+  chromeModifierKeyMap,
   defineLazyGetter,
   flushJarCache,
   getConsole,
