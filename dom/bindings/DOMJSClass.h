@@ -8,6 +8,7 @@
 #define mozilla_dom_DOMJSClass_h
 
 #include "jsfriendapi.h"
+#include "js/Wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
@@ -154,6 +155,7 @@ struct PrefableDisablers {
 template<typename T>
 struct Prefable {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
+    MOZ_ASSERT(!js::IsWrapper(obj));
     if (MOZ_LIKELY(!disablers)) {
       return true;
     }

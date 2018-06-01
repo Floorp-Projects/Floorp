@@ -2869,10 +2869,10 @@ class CGCollectJSONAttributesMethod(CGAbstractMethod):
     Generate the CollectJSONAttributes method for an interface descriptor
     """
     def __init__(self, descriptor, toJSONMethod):
-        args = [Argument('JSContext*', 'aCx'),
+        args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
-                Argument('JS::Rooted<JSObject*>&', 'aResult')]
+                Argument('JS::Rooted<JSObject*>&', 'result')]
         CGAbstractMethod.__init__(self, descriptor, 'CollectJSONAttributes',
                                   'bool', args, canRunScript=True)
         self.toJSONMethod = toJSONMethod
@@ -2882,15 +2882,16 @@ class CGCollectJSONAttributesMethod(CGAbstractMethod):
         interface = self.descriptor.interface
         toJSONCondition = PropertyDefiner.getControllingCondition(self.toJSONMethod,
                                                                   self.descriptor)
+        needUnwrappedObj = False
         for m in interface.members:
             if m.isAttr() and not m.isStatic() and m.type.isJSONType():
                 getAndDefine = fill(
                     """
-                    JS::Rooted<JS::Value> temp(aCx);
-                    if (!get_${name}(aCx, obj, self, JSJitGetterCallArgs(&temp))) {
+                    JS::Rooted<JS::Value> temp(cx);
+                    if (!get_${name}(cx, obj, self, JSJitGetterCallArgs(&temp))) {
                       return false;
                     }
-                    if (!JS_DefineProperty(aCx, aResult, "${name}", temp, JSPROP_ENUMERATE)) {
+                    if (!JS_DefineProperty(cx, result, "${name}", temp, JSPROP_ENUMERATE)) {
                       return false;
                     }
                     """,
@@ -2901,12 +2902,13 @@ class CGCollectJSONAttributesMethod(CGAbstractMethod):
                 # possibly be disabled, but other things might be.
                 condition = PropertyDefiner.getControllingCondition(m, self.descriptor)
                 if condition.hasDisablers() and condition != toJSONCondition:
+                    needUnwrappedObj = True;
                     ret += fill(
                         """
                         // This is unfortunately a linear scan through sAttributes, but we
                         // only do it for things which _might_ be disabled, which should
                         // help keep the performance problems down.
-                        if (IsGetterEnabled(aCx, obj, (JSJitGetterOp)get_${name}, sAttributes)) {
+                        if (IsGetterEnabled(cx, unwrappedObj, (JSJitGetterOp)get_${name}, sAttributes)) {
                           $*{getAndDefine}
                         }
                         """,
@@ -2921,6 +2923,21 @@ class CGCollectJSONAttributesMethod(CGAbstractMethod):
                         """,
                         getAndDefine=getAndDefine)
         ret += 'return true;\n'
+
+        if needUnwrappedObj:
+            ret= fill(
+                """
+                JS::Rooted<JSObject*> unwrappedObj(cx, js::CheckedUnwrap(obj));
+                if (!unwrappedObj) {
+                  // How did that happen?  We managed to get called with that
+                  // object as "this"!  Just give up on sanity.
+                  return false;
+                }
+
+                $*{ret}
+                """,
+                ret=ret);
+
         return ret
 
 
