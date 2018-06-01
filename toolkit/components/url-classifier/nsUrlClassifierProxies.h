@@ -130,7 +130,7 @@ public:
   {
   public:
     CacheCompletionsRunnable(nsUrlClassifierDBServiceWorker* aTarget,
-                             mozilla::safebrowsing::CacheResultArray* aEntries)
+                             const mozilla::safebrowsing::ConstCacheResultArray& aEntries)
       : mozilla::Runnable(
           "UrlClassifierDBServiceWorkerProxy::CacheCompletionsRunnable")
       , mTarget(aTarget)
@@ -141,7 +141,7 @@ public:
 
   private:
     RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
-     mozilla::safebrowsing::CacheResultArray *mEntries;
+    mozilla::safebrowsing::ConstCacheResultArray mEntries;
   };
 
   class DoLocalLookupRunnable : public mozilla::Runnable
@@ -231,7 +231,7 @@ public:
   nsresult CloseDb();
   nsresult PreShutdown();
 
-  nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray * aEntries);
+  nsresult CacheCompletions(const mozilla::safebrowsing::ConstCacheResultArray& aEntries);
 
   nsresult GetCacheInfo(const nsACString& aTable,
                         nsIUrlClassifierGetCacheCallback* aCallback);

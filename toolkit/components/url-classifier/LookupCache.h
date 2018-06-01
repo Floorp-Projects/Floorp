@@ -89,12 +89,12 @@ typedef nsTArray<LookupResult> LookupResultArray;
 
 class CacheResult {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheResult);
+
   enum { V2, V4 };
 
   virtual int Ver() const = 0;
   virtual bool findCompletion(const Completion& aCompletion) const = 0;
-
-  virtual ~CacheResult() {}
 
   template<typename T>
   static const T* Cast(const CacheResult* aThat) {
@@ -104,6 +104,9 @@ public:
 
   nsCString table;
   Prefix prefix;
+
+protected:
+  virtual ~CacheResult() {}
 };
 
 class CacheResultV2 final : public CacheResult
@@ -161,7 +164,7 @@ public:
   virtual int Ver() const override { return VER; }
 };
 
-typedef nsTArray<UniquePtr<CacheResult>> CacheResultArray;
+typedef nsTArray<RefPtr<const CacheResult>> ConstCacheResultArray;
 
 class LookupCache {
 public:
