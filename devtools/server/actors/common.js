@@ -51,7 +51,7 @@ function RegisteredActorFactory(options, prefix) {
                           e.message + "\n" + e.stack + "\n");
         }
         // Fetch the actor constructor
-        let c = mod[options.constructorName];
+        const c = mod[options.constructorName];
         if (!c) {
           throw new Error("Unable to find actor constructor named '" +
                           options.constructorName + "'. (Is it exported?)");
@@ -110,9 +110,9 @@ function ObservedActorFactory(getConstructor, prefix, conn, parentActor) {
 }
 ObservedActorFactory.prototype.createActor = function() {
   // Fetch the actor constructor
-  let C = this._getConstructor();
+  const C = this._getConstructor();
   // Instantiate a new actor instance
-  let instance = new C(this._conn, this._parentActor);
+  const instance = new C(this._conn, this._parentActor);
   instance.conn = this._conn;
   instance.parentID = this._parentActor.actorID;
   // We want the newly-constructed actor to completely replace the factory
@@ -163,7 +163,7 @@ exports.ObservedActorFactory = ObservedActorFactory;
  */
 exports.createExtraActors = function createExtraActors(factories, pool) {
   // Walk over global actors added by extensions.
-  for (let name in factories) {
+  for (const name in factories) {
     let actor = this._extraActors[name];
     if (!actor) {
       // Register another factory, but this time specific to this connection.
@@ -196,8 +196,8 @@ exports.createExtraActors = function createExtraActors(factories, pool) {
  *     should use; see above.
  */
 exports.appendExtraActors = function appendExtraActors(object) {
-  for (let name in this._extraActors) {
-    let actor = this._extraActors[name];
+  for (const name in this._extraActors) {
+    const actor = this._extraActors[name];
     object[name] = actor.actorID;
   }
 };
@@ -219,7 +219,7 @@ ActorPool.prototype = {
    * Destroy the pool. This will remove all actors from the pool.
    */
   destroy: function APDestroy() {
-    for (let id in this._actors) {
+    for (const id in this._actors) {
       this.removeActor(this._actors[id]);
     }
   },
@@ -289,7 +289,7 @@ ActorPool.prototype = {
   },
 
   forEach: function(callback) {
-    for (let name in this._actors) {
+    for (const name in this._actors) {
       callback(this._actors[name]);
     }
   },
@@ -331,8 +331,8 @@ OriginalLocation.prototype = {
   },
 
   get originalUrl() {
-    let actor = this.originalSourceActor;
-    let source = actor.source;
+    const actor = this.originalSourceActor;
+    const source = actor.source;
     return source ? source.url : actor._originalUrl;
   },
 

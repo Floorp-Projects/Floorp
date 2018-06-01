@@ -9,8 +9,9 @@ const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
 
 add_task(async function() {
-  let helper = await openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
-               .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper =
+    await openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
+      .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
   await isInitiallyHidden(helper);
@@ -22,7 +23,7 @@ add_task(async function() {
 async function isInitiallyHidden({isElementHidden}) {
   info("Checking that the eyedropper is hidden by default");
 
-  let hidden = await isElementHidden("root");
+  const hidden = await isElementHidden("root");
   ok(hidden, "The eyedropper is hidden by default");
 }
 
@@ -33,7 +34,7 @@ async function canBeShownAndHidden({show, hide, isElementHidden, getElementAttri
   let hidden = await isElementHidden("root");
   ok(!hidden, "The eyedropper is now shown");
 
-  let style = await getElementAttribute("root", "style");
+  const style = await getElementAttribute("root", "style");
   is(style, "top:100px;left:100px;", "The eyedropper is correctly positioned");
 
   await hide();

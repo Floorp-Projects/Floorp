@@ -87,7 +87,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * with a real form by the end of the deserialization.
    */
   ensureParentFront: function(id) {
-    let front = this.get(id);
+    const front = this.get(id);
     if (front) {
       return front;
     }
@@ -138,7 +138,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
   releaseNode: custom(function(node, options = {}) {
     // NodeFront.destroy will destroy children in the ownership tree too,
     // mimicking what the server will do here.
-    let actorID = node.actorID;
+    const actorID = node.actorID;
     this._releaseFront(node, !!options.force);
     return this._releaseNode({ actorID: actorID });
   }, {
@@ -209,15 +209,15 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
   search: custom(async function(query, options = { }) {
     let nodeList;
     let searchType;
-    let searchData = this.searchData = this.searchData || { };
-    let selectorOnly = !!options.selectorOnly;
+    const searchData = this.searchData = this.searchData || { };
+    const selectorOnly = !!options.selectorOnly;
 
     if (selectorOnly) {
       searchType = "selector";
       nodeList = await this.multiFrameQuerySelectorAll(query);
     } else {
       searchType = "search";
-      let result = await this._search(query, options);
+      const result = await this._search(query, options);
       nodeList = result.list;
     }
 
@@ -244,7 +244,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     }
 
     // Send back the single node, along with any relevant search data
-    let node = await nodeList.item(searchData.index);
+    const node = await nodeList.item(searchData.index);
     return {
       type: searchType,
       node: node,
@@ -268,7 +268,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     }
 
     // Release any children
-    for (let child of node.treeChildren()) {
+    for (const child of node.treeChildren()) {
       this._releaseFront(child, force);
     }
 
@@ -282,8 +282,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    */
   getMutations: custom(function(options = {}) {
     return this._getMutations(options).then(mutations => {
-      let emitMutations = [];
-      for (let change of mutations) {
+      const emitMutations = [];
+      for (const change of mutations) {
         // The target is only an actorID, get the associated front.
         let targetID;
         let targetFront;
@@ -310,15 +310,15 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           continue;
         }
 
-        let emittedMutation = Object.assign(change, { target: targetFront });
+        const emittedMutation = Object.assign(change, { target: targetFront });
 
         if (change.type === "childList" ||
             change.type === "nativeAnonymousChildList") {
           // Update the ownership tree according to the mutation record.
-          let addedFronts = [];
-          let removedFronts = [];
-          for (let removed of change.removed) {
-            let removedFront = this.get(removed);
+          const addedFronts = [];
+          const removedFronts = [];
+          for (const removed of change.removed) {
+            const removedFront = this.get(removed);
             if (!removedFront) {
               console.error("Got a removal of an actor we didn't know about: " +
                 removed);
@@ -332,8 +332,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
             this._orphaned.add(removedFront);
             removedFronts.push(removedFront);
           }
-          for (let added of change.added) {
-            let addedFront = this.get(added);
+          for (const added of change.added) {
+            const addedFront = this.get(added);
             if (!addedFront) {
               console.error("Got an addition of an actor we didn't know " +
                 "about: " + added);
@@ -362,7 +362,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           // Nothing we need to do here, except verify that we don't have any
           // document children, because we should have gotten a documentUnload
           // first.
-          for (let child of targetFront.treeChildren()) {
+          for (const child of targetFront.treeChildren()) {
             if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
               console.warn("Got an unexpected frameLoad in the inspector, " +
                 "please file a bug on bugzilla.mozilla.org!");
@@ -384,8 +384,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
         } else if (change.type === "unretained") {
           // Retained orphans were force-released without the intervention of
           // client (probably a navigated frame).
-          for (let released of change.nodes) {
-            let releasedFront = this.get(released);
+          for (const released of change.nodes) {
+            const releasedFront = this.get(released);
             this._retainedOrphans.delete(released);
             this._releaseFront(releasedFront, true);
           }
@@ -410,7 +410,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       }
 
       if (options.cleanup) {
-        for (let node of this._orphaned) {
+        for (const node of this._orphaned) {
           // This will move retained nodes to this._retainedOrphans.
           this._releaseFront(node);
         }
@@ -437,8 +437,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
   },
 
   removeNode: custom(async function(node) {
-    let previousSibling = await this.previousSibling(node);
-    let nextSibling = await this._removeNode(node);
+    const previousSibling = await this.previousSibling(node);
+    const nextSibling = await this._removeNode(node);
     return {
       previousSibling: previousSibling,
       nextSibling: nextSibling,

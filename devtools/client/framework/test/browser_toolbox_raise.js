@@ -12,7 +12,7 @@ var toolbox, tab1, tab2;
 function test() {
   addTab(TEST_URL).then(tab => {
     tab2 = BrowserTestUtils.addTab(gBrowser);
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target)
              .then(testBottomHost, console.error)
              .catch(console.error);
@@ -41,7 +41,7 @@ function testWindowHost() {
 
   // Need to wait for focus  as otherwise window.focus() is overridden by
   // toolbox window getting focused first on Linux and Mac.
-  let onToolboxFocus = () => {
+  const onToolboxFocus = () => {
     toolbox.win.parent.removeEventListener("focus", onToolboxFocus, true);
     info("focusing main window.");
     window.focus();
@@ -55,7 +55,7 @@ function onFocus() {
   window.removeEventListener("focus", onFocus, true);
 
   // Check if toolbox window got focus.
-  let onToolboxFocusAgain = () => {
+  const onToolboxFocusAgain = () => {
     toolbox.win.parent.removeEventListener("focus", onToolboxFocusAgain);
     ok(true, "Toolbox window is the focused window after calling toolbox.raise()");
     cleanup();

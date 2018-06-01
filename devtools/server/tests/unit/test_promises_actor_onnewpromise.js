@@ -13,8 +13,8 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("promises-actor-test");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("promises-actor-test");
+  const chromeActors = await getChromeActors(client);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise");
 
@@ -23,8 +23,8 @@ add_task(async function() {
   await testNewPromisesEvent(client, chromeActors,
     v => new Promise(resolve => resolve(v)));
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "promises-actor-test");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
   await testNewPromisesEvent(client, targetTab, v => {
@@ -36,16 +36,16 @@ add_task(async function() {
 });
 
 async function testNewPromisesEvent(client, form, makePromise) {
-  let front = PromisesFront(client, form);
-  let resolution = "MyLittleSecret" + Math.random();
+  const front = PromisesFront(client, form);
+  const resolution = "MyLittleSecret" + Math.random();
   let found = false;
 
   await front.attach();
   await front.listPromises();
 
-  let onNewPromise = new Promise(resolve => {
+  const onNewPromise = new Promise(resolve => {
     EventEmitter.on(front, "new-promises", promises => {
-      for (let p of promises) {
+      for (const p of promises) {
         equal(p.type, "object", "Expect type to be Object");
         equal(p.class, "Promise", "Expect class to be Promise");
         equal(typeof p.promiseState.creationTimestamp, "number",
@@ -62,7 +62,7 @@ async function testNewPromisesEvent(client, form, makePromise) {
     });
   });
 
-  let promise = makePromise(resolution);
+  const promise = makePromise(resolution);
 
   await onNewPromise;
   ok(found, "Found our new promise");

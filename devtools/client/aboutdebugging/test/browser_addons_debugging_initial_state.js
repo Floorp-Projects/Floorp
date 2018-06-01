@@ -31,7 +31,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  for (let testData of TEST_DATA) {
+  for (const testData of TEST_DATA) {
     await testCheckboxState(testData);
   }
 });
@@ -39,14 +39,14 @@ add_task(async function() {
 async function testCheckboxState(testData) {
   info("Set preferences as defined by the current test data.");
   await new Promise(resolve => {
-    let options = {"set": [
+    const options = {"set": [
       ["devtools.chrome.enabled", testData.chromeEnabled],
       ["devtools.debugger.remote-enabled", testData.debuggerRemoteEnable],
     ]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = await openAboutDebugging("addons");
+  const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
   info("Install a test addon.");
@@ -57,12 +57,12 @@ async function testCheckboxState(testData) {
   });
 
   info("Test checkbox checked state.");
-  let addonDebugCheckbox = document.querySelector("#enable-addon-debugging");
+  const addonDebugCheckbox = document.querySelector("#enable-addon-debugging");
   is(addonDebugCheckbox.checked, testData.expected,
     "Addons debugging checkbox should be in expected state.");
 
   info("Test debug buttons disabled state.");
-  let debugButtons = [...document.querySelectorAll("#addons .debug-button")];
+  const debugButtons = [...document.querySelectorAll("#addons .debug-button")];
   ok(debugButtons.every(b => b.disabled != testData.expected),
     "Debug buttons should be in the expected state");
 

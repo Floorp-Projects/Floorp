@@ -22,7 +22,7 @@
 function runEditOuterHTMLTests(tests, inspector, testActor) {
   info("Running " + tests.length + " edit-outer-html tests");
   return (async function() {
-    for (let step of tests) {
+    for (const step of tests) {
       await runEditOuterHTMLTest(step, inspector, testActor);
     }
   })();
@@ -46,18 +46,18 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
   info("Running an edit outerHTML test on '" + test.selector + "'");
   await selectNode(test.selector, inspector);
 
-  let onUpdated = inspector.once("inspector-updated");
+  const onUpdated = inspector.once("inspector-updated");
 
   info("Listen for reselectedonremoved and edit the outerHTML");
-  let onReselected = inspector.markup.once("reselectedonremoved");
+  const onReselected = inspector.markup.once("reselectedonremoved");
   await inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront,
                                              test.newHTML, test.oldHTML);
   await onReselected;
 
   // Typically selectedNode will === pageNode, but if a new element has been
   // injected in front of it, this will not be the case. If this happens.
-  let selectedNodeFront = inspector.selection.nodeFront;
-  let pageNodeFront = await inspector.walker.querySelector(
+  const selectedNodeFront = inspector.selection.nodeFront;
+  const pageNodeFront = await inspector.walker.querySelector(
     inspector.walker.rootNode, test.selector);
 
   if (test.validate) {
@@ -66,7 +66,7 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
   } else {
     is(pageNodeFront, selectedNodeFront,
        "Original node (grabbed by selector) is selected");
-    let {outerHTML} = await testActor.getNodeInfo(test.selector);
+    const {outerHTML} = await testActor.getNodeInfo(test.selector);
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
@@ -74,7 +74,7 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
   // abruptly closing hanging requests when the test ends
   await onUpdated;
 
-  let closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
+  const closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
   if (closeTagLine) {
     is(closeTagLine.querySelectorAll(".theme-fg-contrast").length, 0,
        "No contrast class");

@@ -21,7 +21,7 @@ const EXPECTED_SHEETS = [
 ];
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "The UI contains two style sheets.");
   checkSheet(ui.editors[0], EXPECTED_SHEETS[0]);
@@ -32,12 +32,12 @@ function checkSheet(editor, expected) {
   is(editor.styleSheet.styleSheetIndex, expected.sheetIndex,
     "Style sheet has correct index.");
 
-  let summary = editor.summary;
-  let name = summary.querySelector(".stylesheet-name > label")
+  const summary = editor.summary;
+  const name = summary.querySelector(".stylesheet-name > label")
                     .getAttribute("value");
   ok(expected.name.test(name), "The name '" + name + "' is correct.");
 
-  let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
+  const ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), expected.rules, "the rule count is correct");
 
   is(summary.classList.contains("splitview-active"), expected.active,

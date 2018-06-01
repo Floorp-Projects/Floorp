@@ -19,7 +19,7 @@ function run_test() {
   // A non-main loader should get a new object via |lazyRequireGetter|, just
   // as it would via a direct |require|.
   const o2 = {};
-  let loader = new DevToolsLoader();
+  const loader = new DevToolsLoader();
 
   // We have to init the loader by loading any module before
   // lazyRequireGetter is available
@@ -30,7 +30,7 @@ function run_test() {
 
   // A module required via a non-main loader that then uses |lazyRequireGetter|
   // should also get the same object from that non-main loader.
-  let exposeLoader = loader.require("xpcshell-test/exposeLoader");
+  const exposeLoader = loader.require("xpcshell-test/exposeLoader");
   const o3 = exposeLoader.exerciseLazyRequire(name, path);
   Assert.ok(o3.asyncUtils === o2.asyncUtils);
 }

@@ -13,11 +13,11 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 add_task(async function() {
-  let tab = await addTab("about:blank");
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab("about:blank");
+  const target = TargetFactory.forTab(tab);
   await target.makeRemote();
 
-  let toolIDs = gDevTools.getToolDefinitionArray()
+  const toolIDs = gDevTools.getToolDefinitionArray()
                          .filter(
                            def =>
                              def.isTargetSupported(target) &&
@@ -25,9 +25,9 @@ add_task(async function() {
                          )
                          .map(def => def.id);
 
-  let toolbox = await gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM);
-  let nextShortcut = L10N.getStr("toolbox.nextTool.key");
-  let prevShortcut = L10N.getStr("toolbox.previousTool.key");
+  const toolbox = await gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM);
+  const nextShortcut = L10N.getStr("toolbox.nextTool.key");
+  const prevShortcut = L10N.getStr("toolbox.previousTool.key");
 
   // Iterate over all tools, starting from options to netmonitor, in normal
   // order.
@@ -61,9 +61,9 @@ async function testShortcuts(toolbox, index, shortcut, toolIDs) {
   info("Testing shortcut to switch to tool " + index + ":" + toolIDs[index] +
        " using shortcut " + shortcut);
 
-  let onToolSelected = toolbox.once("select");
+  const onToolSelected = toolbox.once("select");
   synthesizeKeyShortcut(shortcut);
-  let id = await onToolSelected;
+  const id = await onToolSelected;
 
   info("toolbox-select event from " + id);
 

@@ -43,7 +43,7 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(
 
 add_task(async function() {
   await addTab(DOCUMENT_URL);
-  let {toolbox, inspector, view, testActor} = await openComputedView();
+  const {toolbox, inspector, view, testActor} = await openComputedView();
   await selectNode("span", inspector);
 
   await testInlineStyle(view);
@@ -57,13 +57,13 @@ async function testInlineStyle(view) {
 
   await expandComputedViewPropertyByIndex(view, 0);
 
-  let onTab = waitForTab();
+  const onTab = waitForTab();
   info("Clicking on the first rule-link in the computed-view");
   clickLinkByIndex(view, 0);
 
-  let tab = await onTab;
+  const tab = await onTab;
 
-  let tabURI = tab.linkedBrowser.documentURI.spec;
+  const tabURI = tab.linkedBrowser.documentURI.spec;
   ok(tabURI.startsWith("view-source:"), "View source tab is open");
   info("Closing tab");
   gBrowser.removeTab(tab);
@@ -73,11 +73,11 @@ async function testFirstInlineStyleSheet(view, toolbox, testActor) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
-  let onSwitch = waitForStyleEditor(toolbox);
+  const onSwitch = waitForStyleEditor(toolbox);
 
   info("Clicking an inline stylesheet");
   clickLinkByIndex(view, 2);
-  let editor = await onSwitch;
+  const editor = await onSwitch;
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
@@ -88,15 +88,15 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
-  let panel = toolbox.getCurrentPanel();
-  let onSelected = panel.UI.once("editor-selected");
+  const panel = toolbox.getCurrentPanel();
+  const onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
   await toolbox.selectTool("inspector");
 
   info("Clicking on second inline stylesheet link");
   clickLinkByIndex(view, 4);
-  let editor = await onSelected;
+  const editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
@@ -107,15 +107,15 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
-  let panel = toolbox.getCurrentPanel();
-  let onSelected = panel.UI.once("editor-selected");
+  const panel = toolbox.getCurrentPanel();
+  const onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
   await toolbox.selectTool("inspector");
 
   info("Clicking on an external stylesheet link");
   clickLinkByIndex(view, 1);
-  let editor = await onSelected;
+  const editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
@@ -124,7 +124,7 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
 
 async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   info("Validating style editor stylesheet");
-  let expectedHref = await testActor.eval(`
+  const expectedHref = await testActor.eval(`
     document.styleSheets[${expectedSheetIndex}].href;
   `);
   is(editor.styleSheet.href, expectedHref,
@@ -132,7 +132,7 @@ async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
 }
 
 function clickLinkByIndex(view, index) {
-  let link = getComputedViewLinkByIndex(view, index);
+  const link = getComputedViewLinkByIndex(view, index);
   link.scrollIntoView();
   link.click();
 }

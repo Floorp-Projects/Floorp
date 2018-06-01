@@ -24,8 +24,8 @@ const WATERFALL_TREE_ROW_HEIGHT = 15; // px
  *         True if the marker fits inside the specified time range.
  */
 function isMarkerInRange(e, start, end) {
-  let mStart = e.start | 0;
-  let mEnd = e.end | 0;
+  const mStart = e.start | 0;
+  const mEnd = e.end | 0;
 
   return (
     // bounds inside
@@ -73,7 +73,7 @@ class WaterfallTree extends Component {
   }
 
   _getRoots(node) {
-    let roots = this.props.marker.submarkers || [];
+    const roots = this.props.marker.submarkers || [];
     return roots.filter(this._filter);
   }
 
@@ -83,12 +83,12 @@ class WaterfallTree extends Component {
   _getParent(node) {
     function findParent(marker) {
       if (marker.submarkers) {
-        for (let submarker of marker.submarkers) {
+        for (const submarker of marker.submarkers) {
           if (submarker === node) {
             return marker;
           }
 
-          let parent = findParent(submarker);
+          const parent = findParent(submarker);
           if (parent) {
             return parent;
           }
@@ -98,8 +98,8 @@ class WaterfallTree extends Component {
       return null;
     }
 
-    let rootMarker = this.props.marker;
-    let parent = findParent(rootMarker);
+    const rootMarker = this.props.marker;
+    const parent = findParent(rootMarker);
 
     // We are interested only in parent markers that are rendered,
     // which rootMarker is not. Return null if the parent is rootMarker.
@@ -107,7 +107,7 @@ class WaterfallTree extends Component {
   }
 
   _getChildren(node) {
-    let submarkers = node.submarkers || [];
+    const submarkers = node.submarkers || [];
     return submarkers.filter(this._filter);
   }
 
@@ -121,7 +121,7 @@ class WaterfallTree extends Component {
 
   _onExpand(node) {
     this.setState(state => {
-      let expanded = new Set(state.expanded);
+      const expanded = new Set(state.expanded);
       expanded.add(node);
       return { expanded };
     });
@@ -129,7 +129,7 @@ class WaterfallTree extends Component {
 
   _onCollapse(node) {
     this.setState(state => {
-      let expanded = new Set(state.expanded);
+      const expanded = new Set(state.expanded);
       expanded.delete(node);
       return { expanded };
     });
@@ -143,12 +143,12 @@ class WaterfallTree extends Component {
   }
 
   _filter(node) {
-    let { startTime, endTime } = this.props;
+    const { startTime, endTime } = this.props;
     return isMarkerInRange(node, startTime, endTime);
   }
 
   _renderItem(marker, level, focused, arrow, expanded) {
-    let { startTime, dataScale, sidebarWidth } = this.props;
+    const { startTime, dataScale, sidebarWidth } = this.props;
     return WaterfallTreeRow({
       marker,
       level,

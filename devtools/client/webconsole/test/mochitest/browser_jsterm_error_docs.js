@@ -19,8 +19,8 @@ add_task(async function() {
     "JSMSG_PRECISION_RANGE": "77.1234.toExponential(-1);",
   };
 
-  for (let [errorMessageName, expression] of Object.entries(ErrorDocStatements)) {
-    let title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
+  for (const [errorMessageName, expression] of Object.entries(ErrorDocStatements)) {
+    const title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
 
     jsterm.clearOutput();
     const onMessage = waitForMessage(hud, "RangeError:");

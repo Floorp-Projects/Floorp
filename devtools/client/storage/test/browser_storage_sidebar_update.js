@@ -14,7 +14,7 @@ add_task(async function() {
 
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
 
-  let updated = gUI.once("sidebar-updated");
+  const updated = gUI.once("sidebar-updated");
   await selectTreeItem(["localStorage", "http://test1.example.org"]);
   await selectTableItem(ITEM_NAME);
   await updated;
@@ -22,7 +22,7 @@ add_task(async function() {
   is(gUI.sidebar.hidden, false, "sidebar is visible");
 
   // do several updates in a row and wait for them to finish
-  let updates = [];
+  const updates = [];
   for (let i = 0; i < UPDATE_COUNT; i++) {
     info(`Performing update #${i}`);
     updates.push(gUI.once("sidebar-updated"));
@@ -31,8 +31,8 @@ add_task(async function() {
   await promise.all(updates);
 
   info("Updates performed, going to verify result");
-  let parsedScope = gUI.view.getScopeAtIndex(1);
-  let elements = parsedScope.target.querySelectorAll(
+  const parsedScope = gUI.view.getScopeAtIndex(1);
+  const elements = parsedScope.target.querySelectorAll(
     `.name[value="${ITEM_NAME}"]`);
   is(elements.length, 1,
     `There is only one displayed variable named '${ITEM_NAME}'`);

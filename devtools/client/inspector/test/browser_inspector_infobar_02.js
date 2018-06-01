@@ -21,9 +21,9 @@ const XHTML = `
 const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
 
-  let testData = [
+  const testData = [
     {
       selector: "svg",
       tag: "svg:svg"
@@ -34,7 +34,7 @@ add_task(async function() {
     },
   ];
 
-  for (let currTest of testData) {
+  for (const currTest of testData) {
     await testNode(currTest, inspector, testActor);
   }
 });
@@ -44,7 +44,7 @@ async function testNode(test, inspector, testActor) {
 
   await selectAndHighlightNode(test.selector, inspector);
 
-  let tag = await testActor.getHighlighterNodeTextContent(
+  const tag = await testActor.getHighlighterNodeTextContent(
     "box-model-infobar-tagname");
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 }

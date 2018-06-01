@@ -64,7 +64,7 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   },
 
   form() {
-    let policy = ExtensionParent.WebExtensionPolicy.getByID(this.id);
+    const policy = ExtensionParent.WebExtensionPolicy.getByID(this.id);
     return {
       actor: this.actorID,
       id: this.id,
@@ -86,7 +86,7 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       return this._childFormPromise;
     }
 
-    let proxy = new ProxyChildActor(this.conn, this);
+    const proxy = new ProxyChildActor(this.conn, this);
     this._childFormPromise = proxy.connect().then(form => {
       // Merge into the child actor form, some addon metadata
       // (e.g. the addon name shown in the addon debugger window title).

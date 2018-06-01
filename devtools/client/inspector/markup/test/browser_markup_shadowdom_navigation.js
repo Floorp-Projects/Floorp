@@ -48,13 +48,13 @@ add_task(async function() {
   await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
 
   info("Starting to iterate through the test data");
-  for (let [key, expected, slottedClassName] of TEST_DATA) {
+  for (const [key, expected, slottedClassName] of TEST_DATA) {
     info("Testing step: " + key + " to navigate to " + expected);
     EventUtils.synthesizeKey(key);
 
@@ -70,8 +70,8 @@ add_task(async function() {
 });
 
 function checkSelectedNode(key, expected, slottedClassName, inspector) {
-  let selectedContainer = inspector.markup.getSelectedContainer();
-  let slotted = !!slottedClassName;
+  const selectedContainer = inspector.markup.getSelectedContainer();
+  const slotted = !!slottedClassName;
 
   is(selectedContainer.isSlotted(), slotted,
     `Selected container is ${slotted ? "slotted" : "not slotted"} as expected`);

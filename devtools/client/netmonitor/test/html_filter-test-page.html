@@ -19,7 +19,7 @@
       "use strict";
 
       function get(address, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         // Use a random parameter to defeat caching.
         xhr.open("GET", address + "&" + Math.random(), true);
 

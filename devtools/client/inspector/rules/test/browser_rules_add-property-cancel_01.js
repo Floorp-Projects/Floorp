@@ -20,16 +20,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(elementRuleEditor);
+  const elementRuleEditor = getRuleViewRuleEditor(view, 0);
+  const editor = await focusNewRuleViewProperty(elementRuleEditor);
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "The new property editor got focused");
 
   info("Escape the new property editor");
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   await onBlur;
 

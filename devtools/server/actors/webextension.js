@@ -101,7 +101,7 @@ webExtensionChildPrototype.initialize = function(conn, chromeGlobal, prefix, add
 
   // Try to discovery an existent extension page to attach (which will provide the initial
   // URL shown in the window tittle when the addon debugger is opened).
-  let extensionWindow = this._searchForExtensionWindow();
+  const extensionWindow = this._searchForExtensionWindow();
 
   if (extensionWindow) {
     this._setWindow(extensionWindow);
@@ -120,7 +120,7 @@ webExtensionChildPrototype.isRootActor = true;
  */
 webExtensionChildPrototype.exit = function() {
   if (this._chromeGlobal) {
-    let chromeGlobal = this._chromeGlobal;
+    const chromeGlobal = this._chromeGlobal;
     this._chromeGlobal = null;
 
     chromeGlobal.removeMessageListener("debug:webext_parent_exit", this._onParentExit);
@@ -174,9 +174,9 @@ webExtensionChildPrototype._destroyFallbackWindow = function() {
 // windowless browser when running in non-oop mode, and the background page
 // is set later using _onNewExtensionWindow.
 webExtensionChildPrototype._searchForExtensionWindow = function() {
-  let e = Services.ww.getWindowEnumerator(null);
+  const e = Services.ww.getWindowEnumerator(null);
   while (e.hasMoreElements()) {
-    let window = e.getNext();
+    const window = e.getNext();
 
     if (window.document.nodePrincipal.addonId == this.id) {
       return window;
@@ -194,7 +194,7 @@ webExtensionChildPrototype._onDocShellDestroy = function(docShell) {
   this._unwatchDocShell(docShell);
 
   // Let the _onDocShellDestroy notify that the docShell has been destroyed.
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+  const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIWebProgress);
   this._notifyDocShellDestroy(webProgress);
 
@@ -220,7 +220,7 @@ webExtensionChildPrototype._attach = function() {
 
   if (!this.window || this.window.document.nodePrincipal.addonId !== this.id) {
     // Discovery an existent extension page to attach.
-    let extensionWindow = this._searchForExtensionWindow();
+    const extensionWindow = this._searchForExtensionWindow();
 
     if (!extensionWindow) {
       this._createFallbackWindow();
@@ -248,14 +248,14 @@ webExtensionChildPrototype._detach = function() {
 webExtensionChildPrototype._docShellToWindow = function(docShell) {
   const baseWindowDetails = ChromeActor.prototype._docShellToWindow.call(this, docShell);
 
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+  const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress);
-  let window = webProgress.DOMWindow;
+  const window = webProgress.DOMWindow;
 
   // Collect the addonID from the document origin attributes and its sameType top level
   // frame.
-  let addonID = window.document.nodePrincipal.addonId;
-  let sameTypeRootAddonID = docShell.QueryInterface(Ci.nsIDocShellTreeItem)
+  const addonID = window.document.nodePrincipal.addonId;
+  const sameTypeRootAddonID = docShell.QueryInterface(Ci.nsIDocShellTreeItem)
                                     .sameTypeRootTreeItem
                                     .QueryInterface(Ci.nsIInterfaceRequestor)
                                     .getInterface(Ci.nsIDOMWindow)
@@ -286,9 +286,9 @@ webExtensionChildPrototype.isExtensionWindow = function(window) {
 
 webExtensionChildPrototype.isExtensionWindowDescendent = function(window) {
   // Check if the source is coming from a descendant docShell of an extension window.
-  let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+  const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
-  let rootWin = docShell.sameTypeRootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+  const rootWin = docShell.sameTypeRootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
                                              .getInterface(Ci.nsIDOMWindow);
   return this.isExtensionWindow(rootWin);
 };
@@ -300,7 +300,7 @@ webExtensionChildPrototype.isExtensionWindowDescendent = function(window) {
 webExtensionChildPrototype._allowSource = function(source) {
   // Use the source.element to detect the allowed source, if any.
   if (source.element) {
-    let domEl = unwrapDebuggerObjectGlobal(source.element);
+    const domEl = unwrapDebuggerObjectGlobal(source.element);
     return (this.isExtensionWindow(domEl.ownerGlobal) ||
             this.isExtensionWindowDescendent(domEl.ownerGlobal));
   }
@@ -308,7 +308,7 @@ webExtensionChildPrototype._allowSource = function(source) {
   // Fallback to check the uri if there is no source.element associated to the source.
 
   // Retrieve the first component of source.url in the form "url1 -> url2 -> ...".
-  let url = source.url.split(" -> ").pop();
+  const url = source.url.split(" -> ").pop();
 
   // Filter out the code introduced by evaluating code in the webconsole.
   if (url === "debugger eval code") {
@@ -331,7 +331,7 @@ webExtensionChildPrototype._allowSource = function(source) {
   }
 
   try {
-    let addonID = this.aps.extensionURIToAddonId(uri);
+    const addonID = this.aps.extensionURIToAddonId(uri);
 
     return addonID == this.id;
   } catch (err) {
@@ -374,7 +374,7 @@ webExtensionChildPrototype._shouldAddNewGlobalAsDebuggee = function(newGlobal) {
 
   try {
     // This will fail for non-Sandbox objects, hence the try-catch block.
-    let metadata = Cu.getSandboxMetadata(global);
+    const metadata = Cu.getSandboxMetadata(global);
     if (metadata) {
       return metadata.addonID === this.id;
     }

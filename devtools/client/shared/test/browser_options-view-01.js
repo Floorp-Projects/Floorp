@@ -21,7 +21,7 @@ add_task(async function() {
 
   info("Opening a test tab and a toolbox host to create the options view in");
   await addTab("about:blank");
-  let [host, win] = await createHost("bottom", OPTIONS_VIEW_URL);
+  const [host, win] = await createHost("bottom", OPTIONS_VIEW_URL);
 
   await testOptionsView(win);
 
@@ -35,16 +35,16 @@ add_task(async function() {
 });
 
 async function testOptionsView(win) {
-  let events = [];
-  let options = createOptionsView(win);
+  const events = [];
+  const options = createOptionsView(win);
   await options.initialize();
 
-  let $ = win.document.querySelector.bind(win.document);
+  const $ = win.document.querySelector.bind(win.document);
 
   options.on("pref-changed", pref => events.push(pref));
 
-  let ppEl = $("menuitem[data-pref='auto-pretty-print']");
-  let bbEl = $("menuitem[data-pref='auto-black-box']");
+  const ppEl = $("menuitem[data-pref='auto-pretty-print']");
+  const bbEl = $("menuitem[data-pref='auto-black-box']");
 
   // Test default config
   is(ppEl.getAttribute("checked"), "true", "`true` prefs are checked on start");
@@ -96,10 +96,10 @@ function createOptionsView(win) {
 }
 
 async function click(view, win, menuitem) {
-  let opened = view.once("options-shown");
-  let closed = view.once("options-hidden");
+  const opened = view.once("options-shown");
+  const closed = view.once("options-hidden");
 
-  let button = win.document.querySelector("#options-button");
+  const button = win.document.querySelector("#options-button");
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   await opened;
   is(button.getAttribute("open"), "true", "button has `open` attribute");

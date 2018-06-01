@@ -26,8 +26,8 @@ const PERF_TOOL_SERIALIZER_CURRENT_VERSION = 2;
  * @return object
  */
 function getUnicodeConverter() {
-  let cname = "@mozilla.org/intl/scriptableunicodeconverter";
-  let converter = Cc[cname].createInstance(Ci.nsIScriptableUnicodeConverter);
+  const cname = "@mozilla.org/intl/scriptableunicodeconverter";
+  const converter = Cc[cname].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   return converter;
 }
@@ -48,9 +48,9 @@ function saveRecordingToFile(recordingData, file) {
   recordingData.fileType = PERF_TOOL_SERIALIZER_IDENTIFIER;
   recordingData.version = PERF_TOOL_SERIALIZER_CURRENT_VERSION;
 
-  let string = JSON.stringify(recordingData);
-  let inputStream = getUnicodeConverter().convertToInputStream(string);
-  let outputStream = FileUtils.openSafeFileOutputStream(file);
+  const string = JSON.stringify(recordingData);
+  const inputStream = getUnicodeConverter().convertToInputStream(string);
+  const outputStream = FileUtils.openSafeFileOutputStream(file);
 
   return new Promise(resolve => {
     NetUtil.asyncCopy(inputStream, outputStream, resolve);
@@ -67,7 +67,7 @@ function saveRecordingToFile(recordingData, file) {
  *         if there was an error.
  */
 function loadRecordingFromFile(file) {
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(file),
     loadUsingSystemPrincipal: true
   });
@@ -79,7 +79,7 @@ function loadRecordingFromFile(file) {
       let recordingData;
 
       try {
-        let string = NetUtil.readInputStreamToString(inputStream,
+        const string = NetUtil.readInputStreamToString(inputStream,
                                                      inputStream.available());
         recordingData = JSON.parse(string);
       } catch (e) {
@@ -139,11 +139,11 @@ function isValidSerializerVersion(version) {
  * @return object
  */
 function convertLegacyData(legacyData) {
-  let { profilerData, ticksData, recordingDuration } = legacyData;
+  const { profilerData, ticksData, recordingDuration } = legacyData;
 
   // The `profilerData` and `ticksData` stay, but the previously unrecorded
   // fields just are empty arrays or objects.
-  let data = {
+  const data = {
     label: profilerData.profilerLabel,
     duration: recordingDuration,
     markers: [],

@@ -6,24 +6,24 @@
 // Test that changing the currently selected snapshot to a snapshot that does
 // not have a dominator tree will automatically compute and fetch one for it.
 
-let {
+const {
   dominatorTreeState,
   viewState,
   treeMapState,
 } = require("devtools/client/memory/constants");
-let {
+const {
   takeSnapshotAndCensus,
   selectSnapshotAndRefresh,
 } = require("devtools/client/memory/actions/snapshot");
 
-let { changeView } = require("devtools/client/memory/actions/view");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));

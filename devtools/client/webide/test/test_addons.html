@@ -27,7 +27,7 @@
           return new Promise((resolve, reject) => {
             Devices.on("addon-status-updated", function onUpdate() {
               nextTick().then(() => {
-                let li = doc.querySelector('[status="uninstalled"][addon="adb"]');
+                const li = doc.querySelector('[status="uninstalled"][addon="adb"]');
                 if (li) {
                   Devices.off("addon-status-updated", onUpdate);
                   resolve();
@@ -36,7 +36,7 @@
                 }
               });
             });
-            let li = doc.querySelector('[status="installed"][addon="adb"]');
+            const li = doc.querySelector('[status="installed"][addon="adb"]');
             li.querySelector(".uninstall-button").click();
           });
         }
@@ -44,13 +44,13 @@
         (async function() {
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
-          let win = await openWebIDE(true);
+          const win = await openWebIDE(true);
 
           ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
 
           await nextTick();
 
-          let w = addonDoc.querySelector(".warning");
+          const w = addonDoc.querySelector(".warning");
           let display = addonDoc.defaultView.getComputedStyle(w).display;
           is(display, "none", "Warning about missing ADB hidden");
 

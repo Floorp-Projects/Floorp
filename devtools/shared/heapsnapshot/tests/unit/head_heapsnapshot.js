@@ -102,7 +102,7 @@ function assertThrows(f, val, msg) {
  * platform-independent and URL-like form.
  */
 function getFilePath(name, allowMissing = false, usePlatformPathSeparator = false) {
-  let file = do_get_file(name, allowMissing);
+  const file = do_get_file(name, allowMissing);
   let path = Services.io.newFileURI(file).spec;
   let filePrePath = "file://";
   if ("nsILocalFileWin" in Ci &&
@@ -247,7 +247,7 @@ function assertStructurallyEquivalent(actual, expected, path = "root") {
     if (actualProtoString === "[object Map]") {
       const expectedKeys = new Set([...expected.keys()]);
 
-      for (let key of actual.keys()) {
+      for (const key of actual.keys()) {
         ok(expectedKeys.has(key),
           `${path}: every key in actual is expected: ${String(key).slice(0, 10)}`);
         expectedKeys.delete(key);
@@ -262,7 +262,7 @@ function assertStructurallyEquivalent(actual, expected, path = "root") {
     } else if (actualProtoString === "[object Set]") {
       const expectedItems = new Set([...expected]);
 
-      for (let item of actual) {
+      for (const item of actual) {
         ok(expectedItems.has(item),
            `${path}: every set item in actual should exist in expected: ${item}`);
         expectedItems.delete(item);
@@ -274,7 +274,7 @@ function assertStructurallyEquivalent(actual, expected, path = "root") {
     } else {
       const expectedKeys = new Set(Object.keys(expected));
 
-      for (let key of Object.keys(actual)) {
+      for (const key of Object.keys(actual)) {
         ok(expectedKeys.has(key),
            `${path}: every key in actual should exist in expected: ${key}`);
         expectedKeys.delete(key);
@@ -421,13 +421,13 @@ function assertDeduplicatedPaths({ target, paths, expectedNodes, expectedEdges }
   ok(nodeSet.size === nodes.length,
      "each returned node should be unique");
 
-  for (let node of nodes) {
+  for (const node of nodes) {
     ok(expectedNodeSet.has(node), `the ${node} node was expected`);
   }
 
-  for (let expectedEdge of expectedEdges) {
+  for (const expectedEdge of expectedEdges) {
     let count = 0;
-    for (let edge of edges) {
+    for (const edge of edges) {
       if (edge.from === expectedEdge.from &&
           edge.to === expectedEdge.to &&
           edge.name === expectedEdge.name) {

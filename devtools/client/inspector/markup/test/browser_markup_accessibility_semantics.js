@@ -10,22 +10,22 @@
 const TOP_CONTAINER_LEVEL = 3;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(`
+  const {inspector} = await openInspectorForURL(`
     data:text/html;charset=utf-8,
     <h1>foo</h1>
     <span>bar</span>
     <ul>
       <li></li>
     </ul>`);
-  let markup = inspector.markup;
-  let doc = markup.doc;
-  let win = doc.defaultView;
+  const markup = inspector.markup;
+  const doc = markup.doc;
+  const win = doc.defaultView;
 
-  let rootElt = markup.getContainer(markup._rootNode).elt;
-  let bodyContainer = await getContainerForSelector("body", inspector);
-  let spanContainer = await getContainerForSelector("span", inspector);
-  let headerContainer = await getContainerForSelector("h1", inspector);
-  let listContainer = await getContainerForSelector("ul", inspector);
+  const rootElt = markup.getContainer(markup._rootNode).elt;
+  const bodyContainer = await getContainerForSelector("body", inspector);
+  const spanContainer = await getContainerForSelector("span", inspector);
+  const headerContainer = await getContainerForSelector("h1", inspector);
+  const listContainer = await getContainerForSelector("ul", inspector);
 
   // Focus on the tree element.
   rootElt.focus();
@@ -41,7 +41,7 @@ add_task(async function() {
   is(bodyContainer.tagLine.getAttribute("aria-level"), TOP_CONTAINER_LEVEL - 1,
     "Body container tagLine should have nested level up to date");
   [spanContainer, headerContainer, listContainer].forEach(container => {
-    let treeitem = container.tagLine;
+    const treeitem = container.tagLine;
     is(treeitem.getAttribute("role"), "treeitem",
       "Child container tagLine elements should have tree item semantics");
     is(treeitem.getAttribute("aria-level"), TOP_CONTAINER_LEVEL,
@@ -80,7 +80,7 @@ add_task(async function() {
     "Active descendant should not be set to list container tagLine");
   is(listContainer.tagLine.getAttribute("aria-expanded"), "true",
     "Open tree item should have aria-expanded set");
-  let listItemContainer = await getContainerForSelector("li", inspector);
+  const listItemContainer = await getContainerForSelector("li", inspector);
   is(listItemContainer.tagLine.getAttribute("aria-level"),
     TOP_CONTAINER_LEVEL + 1,
     "Grand child container tagLine should have nested level up to date");

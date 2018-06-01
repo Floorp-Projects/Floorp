@@ -10,10 +10,10 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let timeline = panel.animationsTimelineComponent;
-  let el = timeline.rootWrapperEl;
+  const timeline = panel.animationsTimelineComponent;
+  const el = timeline.rootWrapperEl;
 
   ok(el.querySelector(".time-header"),
      "The header element is in the DOM of the timeline");
@@ -34,8 +34,8 @@ add_task(async function() {
   isnot(evenColor, oddColor,
         "Background color of an even animation should be different from odd");
   for (let i = 0; i < timeline.animations.length; i++) {
-    let animation = timeline.animations[i];
-    let animationEl = animationEls[i];
+    const animation = timeline.animations[i];
+    const animationEl = animationEls[i];
 
     ok(animationEl.querySelector(".target"),
        "The animated node target element is in the DOM");

@@ -9,7 +9,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_add_animation.html");
-  let {panel, controller} = await openAnimationInspector();
+  const {panel, controller} = await openAnimationInspector();
   const timelineComponent = panel.animationsTimelineComponent;
 
   // Add new animation which has delay and endDelay.
@@ -53,8 +53,8 @@ add_task(async function() {
 
 async function startNewAnimation(controller, panel, selector) {
   info("Add a new animation to the page and check the time again");
-  let onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
+  const onRendered = waitForAnimationTimelineRendering(panel);
 
   await executeInContent("devtools:test:setAttribute", {
     selector: selector,

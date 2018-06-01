@@ -26,9 +26,9 @@ function test() {
 async function runTests() {
   sp = gScratchpadWindow.Scratchpad;
 
-  let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
-  let browserMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
-  let notificationBox = sp.notificationBox;
+  const contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
+  const browserMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
+  const notificationBox = sp.notificationBox;
 
   ok(contentMenu, "found #sp-menu-content");
   ok(browserMenu, "found #sp-menu-browser");
@@ -71,7 +71,7 @@ async function runTests2() {
   ok(!window.foosbug653108, "no window.foosbug653108");
 
   sp.setText("window.foosbug653108");
-  let [, , result] = await sp.run();
+  const [, , result] = await sp.run();
   isnot(result, "aloha", "window.foosbug653108 is not aloha");
 
   sp.setText("window.foosbug653108 = 'ahoyhoy';");

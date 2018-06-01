@@ -37,8 +37,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
 
   testGraph(graph);
@@ -53,18 +53,18 @@ function testGraph(graph) {
 
   // Measure the color of the first pixel before any selection is made.
   graph._onAnimationFrame();
-  let pixelNoSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
+  const pixelNoSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
 
   graph.setSelection({ start: 0, end: 10 });
   graph._onAnimationFrame();
-  let pixelNormalSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
+  const pixelNormalSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
 
   Assert.notDeepEqual(pixelNormalSelection, pixelNoSelection,
     "The first pixel is part of the drawn selection.");
 
   graph.setSelection({ start: graph.width + 100, end: -100 });
   graph._onAnimationFrame();
-  let pixelFullSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
+  const pixelFullSelection = graph._ctx.getImageData(1, 1, 1, 1).data;
 
   Assert.deepEqual(pixelFullSelection, pixelNormalSelection,
     "The first pixel is still part of the drawn selection.");

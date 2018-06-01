@@ -39,31 +39,31 @@ add_task(async function() {
   await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {markup} = inspector;
-  let ruleview = inspector.getPanel("ruleview").view;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {markup} = inspector;
+  const ruleview = inspector.getPanel("ruleview").view;
 
   // <test-component> is a shadow host.
   info("Find and expand the test-component shadow DOM host.");
-  let hostFront = await getNodeFront("test-component", inspector);
+  const hostFront = await getNodeFront("test-component", inspector);
 
   await markup.expandNode(hostFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Test that expanding a shadow host shows shadow root and one host child.");
-  let hostContainer = markup.getContainer(hostFront);
+  const hostContainer = markup.getContainer(hostFront);
 
   info("Expand the shadow root");
-  let childContainers = hostContainer.getChildContainers();
-  let shadowRootContainer = childContainers[0];
+  const childContainers = hostContainer.getChildContainers();
+  const shadowRootContainer = childContainers[0];
   await expandContainer(inspector, shadowRootContainer);
 
   info("Expand the slot");
-  let shadowChildContainers = shadowRootContainer.getChildContainers();
-  let slotContainer = shadowChildContainers[0];
+  const shadowChildContainers = shadowRootContainer.getChildContainers();
+  const slotContainer = shadowChildContainers[0];
   await expandContainer(inspector, slotContainer);
 
-  let slotChildContainers = slotContainer.getChildContainers();
+  const slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 2, "Expecting 2 slotted children");
 
   info("Select slotted node and check that the rule view displays correct content");
@@ -76,8 +76,8 @@ add_task(async function() {
 });
 
 function checkRule(ruleview, selector, name, expectedValue) {
-  let rule = getRuleViewRule(ruleview, selector);
+  const rule = getRuleViewRule(ruleview, selector);
   ok(rule, "ruleview shows the expected rule for slotted " + selector);
-  let value = getRuleViewPropertyValue(ruleview, selector, name);
+  const value = getRuleViewPropertyValue(ruleview, selector, name);
   is(value, expectedValue, "ruleview shows the expected value for slotted " + selector);
 }

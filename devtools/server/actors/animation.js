@@ -41,7 +41,7 @@ const ANIMATION_TYPES = {
 exports.ANIMATION_TYPES = ANIMATION_TYPES;
 
 function getAnimationTypeForLonghand(property) {
-  for (let [type, props] of ANIMATION_TYPE_FOR_LONGHANDS) {
+  for (const [type, props] of ANIMATION_TYPE_FOR_LONGHANDS) {
     if (props.has(property)) {
       return type;
     }
@@ -132,7 +132,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       return this.actorID;
     }
 
-    let data = this.getCurrentState();
+    const data = this.getCurrentState();
     data.actor = this.actorID;
 
     // If we know the WalkerActor, and if the animated node is known by it, then
@@ -220,7 +220,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * infinitely.
    */
   getIterationCount: function() {
-    let iterations = this.player.effect.getComputedTiming().iterations;
+    const iterations = this.player.effect.getComputedTiming().iterations;
     return iterations === Infinity ? null : iterations;
   },
 
@@ -277,7 +277,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   getPropertiesCompositorStatus: function() {
-    let properties = this.player.effect.getProperties();
+    const properties = this.player.effect.getProperties();
     return properties.map(prop => {
       return {
         property: prop.property,
@@ -347,7 +347,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * @return {Object}
    */
   getCurrentState: function() {
-    let newState = this.getState();
+    const newState = this.getState();
 
     // If we've saved a state before, compare and only send what has changed.
     // It's expected of the front to also save old states to re-construct the
@@ -355,7 +355,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     // This is to minimize protocol traffic.
     let sentState = {};
     if (this.currentState) {
-      for (let key in newState) {
+      for (const key in newState) {
         if (typeof this.currentState[key] === "undefined" ||
             this.currentState[key] !== newState[key]) {
           sentState[key] = newState[key];
@@ -374,11 +374,11 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * the the front.
    */
   onAnimationMutation: function(mutations) {
-    let isCurrentAnimation = animation => animation === this.player;
-    let hasCurrentAnimation = animations => animations.some(isCurrentAnimation);
+    const isCurrentAnimation = animation => animation === this.player;
+    const hasCurrentAnimation = animations => animations.some(isCurrentAnimation);
     let hasChanged = false;
 
-    for (let {removedAnimations, changedAnimations} of mutations) {
+    for (const {removedAnimations, changedAnimations} of mutations) {
       if (hasCurrentAnimation(removedAnimations)) {
         // Reset the local copy of the state on removal, since the animation can
         // be kept on the client and re-added, its state needs to be sent in
@@ -390,8 +390,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
         // Only consider the state has having changed if any of delay, duration,
         // iterationCount, iterationStart, or playbackRate has changed (for now
         // at least).
-        let newState = this.getState();
-        let oldState = this.currentState;
+        const newState = this.getState();
+        const oldState = this.currentState;
         hasChanged = newState.delay !== oldState.delay ||
                      newState.iterationCount !== oldState.iterationCount ||
                      newState.iterationStart !== oldState.iterationStart ||
@@ -492,7 +492,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
           .getInterface(Ci.nsIDOMWindowUtils);
 
     // Fill missing keyframe with computed value.
-    for (let property of properties) {
+    for (const property of properties) {
       let underlyingValue = null;
       // Check only 0% and 100% keyframes.
       [0, property.values.length - 1].forEach(index => {
@@ -521,7 +521,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
 
     // Calculate the distance.
-    for (let property of properties) {
+    for (const property of properties) {
       const propertyName = property.name;
       const maxObject = { distance: -1 };
       for (let i = 0; i < property.values.length - 1; i++) {
@@ -551,7 +551,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       }
       const baseValue =
         maxObject.value1 < maxObject.value2 ? maxObject.value1 : maxObject.value2;
-      for (let values of property.values) {
+      for (const values of property.values) {
         const value = values.value;
         const distance = this.getDistance(this.player.effect.target, propertyName,
                                           baseValue, value, DOMWindowUtils);
@@ -568,7 +568,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getAnimationTypes: function(propertyNames) {
     const animationTypes = {};
-    for (let propertyName of propertyNames) {
+    for (const propertyName of propertyNames) {
       animationTypes[propertyName] = getAnimationTypeForLonghand(propertyName);
     }
     return animationTypes;
@@ -657,7 +657,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   getAnimationPlayersForNode: function(nodeActor) {
     this.updateAllAnimationsCreatedTime();
 
-    let animations = nodeActor.rawNode.getAnimations({subtree: true});
+    const animations = nodeActor.rawNode.getAnimations({subtree: true});
 
     // Destroy previously stored actors
     if (this.actors) {
@@ -681,7 +681,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     this.stopAnimationPlayerUpdates();
     // ownerGlobal doesn't exist in content privileged windows.
     // eslint-disable-next-line mozilla/use-ownerGlobal
-    let win = nodeActor.rawNode.ownerDocument.defaultView;
+    const win = nodeActor.rawNode.ownerDocument.defaultView;
     this.observer = new win.MutationObserver(this.onAnimationMutation);
     this.observer.observe(nodeActor.rawNode, {
       animations: true,
@@ -692,11 +692,11 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   },
 
   onAnimationMutation: function(mutations) {
-    let eventData = [];
-    let readyPromises = [];
+    const eventData = [];
+    const readyPromises = [];
 
-    for (let {addedAnimations, removedAnimations} of mutations) {
-      for (let player of removedAnimations) {
+    for (const {addedAnimations, removedAnimations} of mutations) {
+      for (const player of removedAnimations) {
         // Note that animations are reported as removed either when they are
         // actually removed from the node (e.g. css class removed) or when they
         // are finished and don't have forwards animation-fill-mode.
@@ -707,7 +707,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
           continue;
         }
 
-        let index = this.actors.findIndex(a => a.player === player);
+        const index = this.actors.findIndex(a => a.player === player);
         if (index !== -1) {
           eventData.push({
             type: "removed",
@@ -717,7 +717,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         }
       }
 
-      for (let player of addedAnimations) {
+      for (const player of addedAnimations) {
         // If the added player already exists, it means we previously filtered
         // it out when it was reported as removed. So filter it out here too.
         if (this.actors.find(a => a.player === player)) {
@@ -727,13 +727,13 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         // If the added player has the same name and target node as a player we
         // already have, it means it's a transition that's re-starting. So send
         // a "removed" event for the one we already have.
-        let index = this.actors.findIndex(a => {
-          let isSameType = a.player.constructor === player.constructor;
-          let isSameName = (a.isCssAnimation() &&
+        const index = this.actors.findIndex(a => {
+          const isSameType = a.player.constructor === player.constructor;
+          const isSameName = (a.isCssAnimation() &&
                             a.player.animationName === player.animationName) ||
                            (a.isCssTransition() &&
                             a.player.transitionProperty === player.transitionProperty);
-          let isSameNode = a.player.effect.target === player.effect.target;
+          const isSameNode = a.player.effect.target === player.effect.target;
 
           return isSameType && isSameNode && isSameName;
         });
@@ -792,7 +792,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
 
     let animations = [];
-    for (let {document} of this.tabActor.windows) {
+    for (const {document} of this.tabActor.windows) {
       animations = [...animations, ...document.getAnimations({subtree: true})];
     }
     return animations;
@@ -816,7 +816,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   pauseAll: function() {
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
-    for (let player of
+    for (const player of
          this.getAllAnimations(this.tabActor.window.document, true)) {
       this.pauseSync(player);
     }
@@ -830,7 +830,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   playAll: function() {
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
-    for (let player of
+    for (const player of
       this.getAllAnimations(this.tabActor.window.document, true)) {
       this.playSync(player);
     }
@@ -892,7 +892,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     // We can drop following procedures after dropping old one.
     if (!options.relativeToCreatedTime) {
       return Promise.all(players.map(player => {
-        let pause = shouldPause ? player.pause() : Promise.resolve();
+        const pause = shouldPause ? player.pause() : Promise.resolve();
         return pause.then(() => player.setCurrentTime(time));
       }));
     }

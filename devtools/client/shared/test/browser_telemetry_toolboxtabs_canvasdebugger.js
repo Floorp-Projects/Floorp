@@ -12,7 +12,7 @@ const TOOL_DELAY = 200;
 
 add_task(async function() {
   info("Activate the canvasdebugger");
-  let originalPref = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
+  const originalPref = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
 
   await addTab(TEST_URI);

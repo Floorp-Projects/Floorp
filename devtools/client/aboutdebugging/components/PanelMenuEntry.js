@@ -29,11 +29,11 @@ class PanelMenuEntry extends Component {
   }
 
   render() {
-    let { id, name, icon, selected } = this.props;
+    const { id, name, icon, selected } = this.props;
 
     // Here .category, .category-icon, .category-name classnames are used to
     // apply common styles defined.
-    let className = "category" + (selected ? " selected" : "");
+    const className = "category" + (selected ? " selected" : "");
     return dom.button({
       "aria-selected": selected,
       "aria-controls": id + "-panel",

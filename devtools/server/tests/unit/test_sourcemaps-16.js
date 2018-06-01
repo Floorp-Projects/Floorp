@@ -27,8 +27,8 @@ const testSourcemap = async function(threadResponse, tabClient, threadClient,
 
   const { sources } = await getSources(threadClient);
 
-  for (let form of sources) {
-    let sourceResponse = await getSourceContent(threadClient.source(form));
+  for (const form of sources) {
+    const sourceResponse = await getSourceContent(threadClient.source(form));
     ok(sourceResponse, "Should be able to get the source response");
     ok(sourceResponse.source, "Should have the source text as well");
   }

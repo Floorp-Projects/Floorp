@@ -68,7 +68,7 @@ add_task(async function() {
 
   const EXPECTED_STYLE_SHEET_COUNT = 12;
 
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, EXPECTED_STYLE_SHEET_COUNT,
     "Got the expected number of style sheets.");

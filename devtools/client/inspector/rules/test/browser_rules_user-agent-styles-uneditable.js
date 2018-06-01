@@ -22,7 +22,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF_UA_STYLES, true);
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await userAgentStylesUneditable(inspector, view);
 
@@ -34,13 +34,13 @@ async function userAgentStylesUneditable(inspector, view) {
   info("Making sure that UI is not editable for user agent styles");
 
   await selectNode("a", inspector);
-  let uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
+  const uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
 
-  for (let rule of uaRules) {
+  for (const rule of uaRules) {
     ok(rule.editor.element.hasAttribute("uneditable"),
       "UA rules have uneditable attribute");
 
-    let firstProp = rule.textProps.filter(p => !p.invisible)[0];
+    const firstProp = rule.textProps.filter(p => !p.invisible)[0];
 
     ok(!firstProp.editor.nameSpan._editable,
       "nameSpan is not editable");
@@ -48,7 +48,7 @@ async function userAgentStylesUneditable(inspector, view) {
       "valueSpan is not editable");
     ok(!rule.editor.closeBrace._editable, "closeBrace is not editable");
 
-    let colorswatch = rule.editor.element
+    const colorswatch = rule.editor.element
       .querySelector(".ruleview-colorswatch");
     if (colorswatch) {
       ok(!view.tooltips.getTooltip("colorPicker").swatches.has(colorswatch),

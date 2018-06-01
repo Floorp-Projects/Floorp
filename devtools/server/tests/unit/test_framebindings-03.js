@@ -28,15 +28,15 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let env = packet.frame.environment;
+    const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
-    let parentEnv = env.parent;
+    const parentEnv = env.parent;
     Assert.notEqual(parentEnv, undefined);
 
-    let bindings = parentEnv.bindings;
-    let args = bindings.arguments;
-    let vars = bindings.variables;
+    const bindings = parentEnv.bindings;
+    const args = bindings.arguments;
+    const vars = bindings.variables;
     Assert.equal(args.length, 1);
     Assert.equal(args[0].number.value, 10);
     Assert.equal(vars.r.value, 10);
@@ -44,7 +44,7 @@ function test_pause_frame() {
     Assert.equal(vars.arguments.value.class, "Arguments");
     Assert.ok(!!vars.arguments.value.actor);
 
-    let objClient = gThreadClient.pauseGrip(env.object);
+    const objClient = gThreadClient.pauseGrip(env.object);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.PI.value, Math.PI);
       Assert.equal(response.ownProperties.cos.value.type, "object");

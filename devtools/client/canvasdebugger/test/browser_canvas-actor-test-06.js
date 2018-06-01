@@ -6,9 +6,9 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_TRANSPARENT_URL);
+  const { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_TRANSPARENT_URL);
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -16,10 +16,10 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
+  const snapshotActor = await front.recordAnimationFrame();
+  const animationOverview = await snapshotActor.getOverview();
 
-  let functionCalls = animationOverview.calls;
+  const functionCalls = animationOverview.calls;
   ok(functionCalls,
     "An array of function call actors was sent after recording.");
   is(functionCalls.length, 8,
@@ -34,10 +34,10 @@ async function ifTestingSupported() {
   is(functionCalls[6].name, "fillRect",
     "The fourth called function's name is correct.");
 
-  let firstDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
-  let secondDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
-  let thirdDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[4]);
-  let fourthDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
+  const firstDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
+  const secondDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
+  const thirdDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[4]);
+  const fourthDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
 
   ok(firstDrawCallScreenshot,
     "The first draw call has a screenshot attached.");
@@ -95,6 +95,6 @@ async function ifTestingSupported() {
 }
 
 function Uint32(src) {
-  let charView = new Uint8Array(src);
+  const charView = new Uint8Array(src);
   return new Uint32Array(charView.buffer);
 }

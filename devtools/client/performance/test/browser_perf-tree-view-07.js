@@ -12,20 +12,20 @@ const { CallView } = require("devtools/client/performance/modules/widgets/tree-v
 const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(function() {
-  let profile = synthesizeProfile();
-  let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const profile = synthesizeProfile();
+  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode });
+  const container = document.createElement("vbox");
   container.id = "call-tree-container";
   treeRoot.attachTo(container);
 
-  let A = treeRoot.getChild();
-  let B = A.getChild();
-  let D = B.getChild();
+  const A = treeRoot.getChild();
+  const B = A.getChild();
+  const D = B.getChild();
 
   is(D.root, treeRoot,
     "The .A.B.D node has the correct root.");

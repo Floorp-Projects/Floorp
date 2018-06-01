@@ -8,23 +8,23 @@
 const { setTheme } = require("devtools/client/shared/theme");
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, MARKER_STYLING } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, MARKER_STYLING } = panelWin;
 
-  let currentTheme = Services.prefs.getCharPref("devtools.theme");
+  const currentTheme = Services.prefs.getCharPref("devtools.theme");
 
   ok(MARKER_STYLING.light, "Marker styling exists for light theme.");
   ok(MARKER_STYLING.dark, "Marker styling exists for dark theme.");
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  const [actors] = await events;
 
   is(getFill($("#arrowhead")), MARKER_STYLING[currentTheme],
     "marker initially matches theme.");

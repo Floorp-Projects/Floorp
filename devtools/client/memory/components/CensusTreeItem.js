@@ -68,7 +68,7 @@ class CensusTreeItem extends Component {
   }
 
   render() {
-    let {
+    const {
       item,
       depth,
       arrow,

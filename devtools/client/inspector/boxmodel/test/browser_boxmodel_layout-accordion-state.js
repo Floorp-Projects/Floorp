@@ -20,8 +20,8 @@ const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, boxmodel, toolbox } = await openLayoutView();
-  let { document: doc } = boxmodel;
+  const { inspector, boxmodel, toolbox } = await openLayoutView();
+  const { document: doc } = boxmodel;
 
   await testAccordionStateAfterClickingHeader(doc);
   await testAccordionStateAfterSwitchingSidebars(inspector, doc);
@@ -31,8 +31,8 @@ add_task(async function() {
 });
 
 function testAccordionStateAfterClickingHeader(doc) {
-  let header = doc.querySelector("#layout-container .box-model-pane ._header");
-  let bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const header = doc.querySelector("#layout-container .box-model-pane ._header");
+  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
 
   info("Checking initial state of the box model panel.");
   is(bContent.style.display, "block", "The box model panel content is 'display: block'.");
@@ -51,7 +51,7 @@ function testAccordionStateAfterClickingHeader(doc) {
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   info("Checking the box model accordion state is persistent after switching sidebars.");
 
-  let bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
 
   info("Selecting the computed view.");
   inspector.sidebar.select("computedview");
@@ -73,9 +73,9 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   await toolbox.destroy();
 
   info("Re-opening the layout view.");
-  let { boxmodel } = await openLayoutView();
-  let { document: doc } = boxmodel;
-  let bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const { boxmodel } = await openLayoutView();
+  const { document: doc } = boxmodel;
+  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
 
   info("Checking the state of the box model panel.");
   ok(!bContent, "The box model panel content is not rendered.");

@@ -616,7 +616,7 @@ function filter(tree, predicate) {
   function addMatchingNodes(node) {
     path.push(node);
 
-    let oldMatch = match;
+    const oldMatch = match;
     if (!match && predicate(node)) {
       match = true;
     }

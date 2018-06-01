@@ -21,7 +21,7 @@ function getExtensionSidebarActors(inspector) {
 
   const actors = [];
 
-  for (let sidebarId of Object.keys(state.extensionsSidebar)) {
+  for (const sidebarId of Object.keys(state.extensionsSidebar)) {
     const sidebarState = state.extensionsSidebar[sidebarId];
 
     if (sidebarState.viewMode === "object-value-grip-view" &&
@@ -38,7 +38,7 @@ function getExtensionSidebarActors(inspector) {
 // (used in browser_ext_devtools_panels_elements_sidebar.js).
 async function expectNoSuchActorIDs(client, actors) {
   info(`Test that all the objectValueGrip actors have been released`);
-  for (let actor of actors) {
+  for (const actor of actors) {
     await Assert.rejects(client.request({to: actor, type: "requestTypes"}),
                          `No such actor for ID: ${actor}`);
   }
@@ -61,19 +61,19 @@ async function testSetExpressionSidebarPanel(panel, expected) {
 
   await waitForObjectInspector(panel);
 
-  let objectInspectors = [...panel.querySelectorAll(".tree")];
+  const objectInspectors = [...panel.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
-  let [objectInspector] = objectInspectors;
+  const [objectInspector] = objectInspectors;
 
   // Wait the objectInspector to have been fully rendered.
   await ContentTaskUtils.waitForCondition(() => {
     return objectInspector.querySelectorAll(".node").length >= nodesLength;
   });
 
-  let oiNodes = objectInspector.querySelectorAll(".node");
+  const oiNodes = objectInspector.querySelectorAll(".node");
 
   is(oiNodes.length, nodesLength, "Got the expected number of nodes in the tree");
-  let propertiesNodes = [...objectInspector.querySelectorAll(".object-label")]
+  const propertiesNodes = [...objectInspector.querySelectorAll(".object-label")]
         .map(el => el.textContent);
   is(JSON.stringify(propertiesNodes), JSON.stringify(propertiesNames),
      "Got the expected property names");
@@ -128,8 +128,8 @@ async function assertObjectInspector(panelDoc, expectedContent) {
 
   // Get and verify the DOMNode and the "open inspector"" icon
   // rendered inside the ObjectInspector.
-  let nodes = panelDoc.querySelectorAll(".objectBox-node");
-  let nodeOpenInspectors = panelDoc.querySelectorAll(
+  const nodes = panelDoc.querySelectorAll(".objectBox-node");
+  const nodeOpenInspectors = panelDoc.querySelectorAll(
     ".objectBox-node .open-inspector"
   );
 
@@ -140,8 +140,8 @@ async function assertObjectInspector(panelDoc, expectedContent) {
 }
 
 function moveMouseOnObjectInspectorDOMNode(panelDoc, nodeIndex = 0) {
-  let nodes = panelDoc.querySelectorAll(".objectBox-node");
-  let node = nodes[nodeIndex];
+  const nodes = panelDoc.querySelectorAll(".objectBox-node");
+  const node = nodes[nodeIndex];
 
   ok(node, "Found the ObjectInspector DOMNode");
 
@@ -154,8 +154,8 @@ function moveMouseOnPanelCenter(panelDoc) {
 }
 
 function clickOpenInspectorIcon(panelDoc, nodeIndex = 0) {
-  let nodes = panelDoc.querySelectorAll(".objectBox-node .open-inspector");
-  let node = nodes[nodeIndex];
+  const nodes = panelDoc.querySelectorAll(".objectBox-node .open-inspector");
+  const node = nodes[nodeIndex];
 
   ok(node, "Found the ObjectInspector open-inspector icon");
 

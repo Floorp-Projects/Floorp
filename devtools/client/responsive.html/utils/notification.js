@@ -30,14 +30,14 @@ function showNotification(window, tab, { command, msg, priority } = {}) {
   // toolbox for the tab.  If one exists, use the toolbox's notification box so that the
   // message is placed closer to the action taken by the user.
   if (command) {
-    let target = TargetFactory.forTab(tab);
-    let toolbox = gDevTools.getToolbox(target);
+    const target = TargetFactory.forTab(tab);
+    const toolbox = gDevTools.getToolbox(target);
     if (toolbox) {
       nbox = toolbox.notificationBox;
     }
   }
 
-  let value = "devtools-responsive";
+  const value = "devtools-responsive";
   if (nbox.getNotificationWithValue(value)) {
     // Notification already displayed
     return;

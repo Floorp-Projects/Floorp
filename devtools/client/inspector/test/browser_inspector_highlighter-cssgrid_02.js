@@ -20,13 +20,13 @@ const TEST_URL = `
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(
+  const {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL));
-  let front = inspector.inspector;
-  let highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
+  const front = inspector.inspector;
+  const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
   info("Try to show the highlighter on the grid container");
-  let node = await getNodeFront(".grid", inspector);
+  const node = await getNodeFront(".grid", inspector);
   await highlighter.show(node);
 
   let hidden = await testActor.getHighlighterNodeAttribute(

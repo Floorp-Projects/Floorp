@@ -76,7 +76,7 @@ let completer = null;
 let inspector;
 
 add_task(async function test() {
-  let tab = await addTab(TEST_URI);
+  const tab = await addTab(TEST_URI);
   browser = tab.linkedBrowser;
   await runTests();
   browser = null;
@@ -84,10 +84,10 @@ add_task(async function test() {
 });
 
 async function runTests() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await target.makeRemote();
   inspector = InspectorFront(target.client, target.form);
-  let walker = await inspector.getWalker();
+  const walker = await inspector.getWalker();
   completer = new CSSCompleter({walker: walker,
                                 cssProperties: getClientCssProperties()});
   await checkStateAndMoveOn();
@@ -102,18 +102,18 @@ async function checkStateAndMoveOn() {
     return;
   }
 
-  let [lineCh, expectedSuggestions] = tests[index];
-  let [line, ch] = lineCh;
+  const [lineCh, expectedSuggestions] = tests[index];
+  const [line, ch] = lineCh;
 
   ++index;
   await ContentTask.spawn(browser, [index, tests.length], function([idx, len]) {
-    let progress = content.document.getElementById("progress");
-    let progressDiv = content.document.querySelector("#progress > div");
+    const progress = content.document.getElementById("progress");
+    const progressDiv = content.document.querySelector("#progress > div");
     progress.dataset.progress = idx;
     progressDiv.style.width = 100 * idx / len + "%";
   });
 
-  let actualSuggestions = await completer.complete(limit(source, lineCh), {line, ch});
+  const actualSuggestions = await completer.complete(limit(source, lineCh), {line, ch});
   await checkState(expectedSuggestions, actualSuggestions);
   await checkStateAndMoveOn();
 }
@@ -123,7 +123,7 @@ async function checkState(expected, actual) {
     ok(false, "Number of suggestions did not match up for state " + index +
               ". Expected: " + expected.length + ", Actual: " + actual.length);
     await ContentTask.spawn(browser, null, function() {
-      let progress = content.document.getElementById("progress");
+      const progress = content.document.getElementById("progress");
       progress.classList.add("failed");
     });
     return;

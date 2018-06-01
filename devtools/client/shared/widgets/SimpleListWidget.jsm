@@ -52,7 +52,7 @@ SimpleListWidget.prototype = {
   insertItemAt: function(aIndex, aContents) {
     aContents.classList.add("simple-list-widget-item");
 
-    let list = this._list;
+    const list = this._list;
     return list.insertBefore(aContents, list.childNodes[aIndex]);
   },
 
@@ -86,8 +86,8 @@ SimpleListWidget.prototype = {
    * Removes all of the child nodes from this container.
    */
   removeAllItems: function() {
-    let list = this._list;
-    let parent = this._parent;
+    const list = this._list;
+    const parent = this._parent;
 
     while (list.hasChildNodes()) {
       list.firstChild.remove();
@@ -111,12 +111,12 @@ SimpleListWidget.prototype = {
    * @param Node aChild
    */
   set selectedItem(aChild) {
-    let childNodes = this._list.childNodes;
+    const childNodes = this._list.childNodes;
 
     if (!aChild) {
       this._selectedItem = null;
     }
-    for (let node of childNodes) {
+    for (const node of childNodes) {
       if (node == aChild) {
         node.classList.add("selected");
         this._selectedItem = node;
@@ -170,7 +170,7 @@ SimpleListWidget.prototype = {
     }
 
     // Ensure the element is visible but not scrolled horizontally.
-    let boxObject = this._list.boxObject;
+    const boxObject = this._list.boxObject;
     boxObject.ensureElementIsVisible(aElement);
     boxObject.scrollBy(-this._list.clientWidth, 0);
   },
@@ -206,7 +206,7 @@ SimpleListWidget.prototype = {
     if (this._headerTextNode || !this._headerTextValue) {
       return;
     }
-    let label = this.document.createElement("label");
+    const label = this.document.createElement("label");
     label.className = "plain simple-list-widget-perma-text";
     label.setAttribute("value", this._headerTextValue);
 
@@ -221,7 +221,7 @@ SimpleListWidget.prototype = {
     if (this._emptyTextNode || !this._emptyTextValue) {
       return;
     }
-    let label = this.document.createElement("label");
+    const label = this.document.createElement("label");
     label.className = "plain simple-list-widget-empty-text";
     label.setAttribute("value", this._emptyTextValue);
 

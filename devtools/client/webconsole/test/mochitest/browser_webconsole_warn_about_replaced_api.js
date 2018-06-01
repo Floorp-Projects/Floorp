@@ -22,7 +22,7 @@ add_task(async function() {
 
   await loadDocument(TEST_URI_REPLACED);
 
-  let toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");
   hud = toolbox.getCurrentPanel().hud;
   await testWarningPresent(hud);
 });

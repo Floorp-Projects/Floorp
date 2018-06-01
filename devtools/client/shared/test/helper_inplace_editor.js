@@ -25,7 +25,7 @@ const {colorUtils} = require("devtools/shared/css/color");
  *        (optional) String that will be used as the text content of the span.
  */
 const createInplaceEditorAndClick = async function(options, doc, textContent) {
-  let span = options.element = createSpan(doc);
+  const span = options.element = createSpan(doc);
   if (textContent) {
     span.textContent = textContent;
   }
@@ -46,8 +46,8 @@ const createInplaceEditorAndClick = async function(options, doc, textContent) {
  */
 function createSpan(doc) {
   info("Creating a new span element");
-  let div = doc.createElementNS(HTML_NS, "div");
-  let span = doc.createElementNS(HTML_NS, "span");
+  const div = doc.createElementNS(HTML_NS, "div");
+  const span = doc.createElementNS(HTML_NS, "span");
   span.setAttribute("tabindex", "0");
   span.style.fontSize = "11px";
   span.style.display = "inline-block";
@@ -59,7 +59,7 @@ function createSpan(doc) {
   div.style.position = "absolute";
   div.appendChild(span);
 
-  let parent = doc.querySelector("window") || doc.body;
+  const parent = doc.querySelector("window") || doc.body;
   parent.appendChild(div);
   return span;
 }
@@ -84,7 +84,7 @@ async function testCompletion([key, completion, index, total,
   info("Expecting " + completion);
 
   let onVisibilityChange = null;
-  let open = total > 0;
+  const open = total > 0;
   if (editor.popup.isOpen != open) {
     onVisibilityChange = editor.popup.once(open ? "popup-opened" : "popup-closed");
   }
@@ -111,21 +111,21 @@ async function testCompletion([key, completion, index, total,
   }
 
   if (postLabel) {
-    let selectedItem = editor.popup.getItems()[index];
-    let selectedElement = editor.popup.elements.get(selectedItem);
+    const selectedItem = editor.popup.getItems()[index];
+    const selectedElement = editor.popup.elements.get(selectedItem);
     ok(selectedElement.textContent.includes(postLabel),
       "Selected popup element contains the expected post-label");
 
     // Determines if there is a color swatch attached to the label
     // and if the color swatch's background color matches the post label
-    let swatchSpan = selectedElement.getElementsByClassName(
+    const swatchSpan = selectedElement.getElementsByClassName(
       "autocomplete-swatch autocomplete-colorswatch");
     if (colorSwatch) {
       ok(swatchSpan.length === 1, "Displayed the expected color swatch");
-      let color = new colorUtils.CssColor(swatchSpan[0].style.backgroundColor);
-      let swatchColor = color.rgba;
+      const color = new colorUtils.CssColor(swatchSpan[0].style.backgroundColor);
+      const swatchColor = color.rgba;
       color.newColor(postLabel);
-      let postColor = color.rgba;
+      const postColor = color.rgba;
       ok(swatchColor == postColor, "Color swatch matches postLabel value");
     } else {
       ok(swatchSpan.length === 0, "As expected no swatches were available");

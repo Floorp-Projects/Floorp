@@ -59,9 +59,9 @@ function disallowXUL() {
 }
 
 async function checkSheets(targetSelector, testActor) {
-  let sheets = await testActor.getStyleSheetsInfoForNode(targetSelector);
+  const sheets = await testActor.getStyleSheetsInfoForNode(targetSelector);
 
-  for (let sheet of sheets) {
+  for (const sheet of sheets) {
     if (!sheet.href ||
         /doc_content_stylesheet_/.test(sheet.href) ||
         // For the "authored" case.

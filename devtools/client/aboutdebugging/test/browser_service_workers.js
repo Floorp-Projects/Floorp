@@ -11,11 +11,11 @@ const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 add_task(async function() {
   await enableServiceWorkerDebugging();
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
   await waitUntil(() => {
     // Check that the service worker appears in the UI

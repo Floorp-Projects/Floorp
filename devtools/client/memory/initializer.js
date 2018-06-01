@@ -18,7 +18,7 @@ let root, store, unsubscribe;
 
 const initialize = async function() {
   // Exposed by panel.js
-  let { gFront, gToolbox, gHeapAnalysesClient } = window;
+  const { gFront, gToolbox, gHeapAnalysesClient } = window;
 
   root = document.querySelector("#app");
   store = Store();
@@ -50,9 +50,9 @@ let isHighlighted;
  * the highlighting of the tool when recording allocations.
  */
 function onStateChange() {
-  let { gToolbox } = window;
+  const { gToolbox } = window;
 
-  let isRecording = store.getState().allocations.recording;
+  const isRecording = store.getState().allocations.recording;
   if (isRecording === isHighlighted) {
     return;
   }

@@ -293,16 +293,16 @@ function normalizeCssData(db) {
       db = { properties: db };
     }
 
-    let missingSupports = !db.properties.color.supports;
-    let missingValues = !db.properties.color.values;
-    let missingSubproperties = !db.properties.background.subproperties;
-    let missingIsInherited = !db.properties.font.isInherited;
+    const missingSupports = !db.properties.color.supports;
+    const missingValues = !db.properties.color.values;
+    const missingSubproperties = !db.properties.background.subproperties;
+    const missingIsInherited = !db.properties.font.isInherited;
 
-    let missingSomething = missingSupports || missingValues || missingSubproperties ||
+    const missingSomething = missingSupports || missingValues || missingSubproperties ||
       missingIsInherited;
 
     if (missingSomething) {
-      for (let name in db.properties) {
+      for (const name in db.properties) {
         // Skip the current property if we can't find it in CSS_PROPERTIES_DB.
         if (typeof CSS_PROPERTIES_DB.properties[name] !== "object") {
           continue;
@@ -348,7 +348,7 @@ function reattachCssColorValues(db) {
   if (db.properties.color.values[0] === "COLOR") {
     const colors = Object.keys(cssColors);
 
-    for (let name in db.properties) {
+    for (const name in db.properties) {
       const property = db.properties[name];
       // "values" can be undefined if {name} was not found in CSS_PROPERTIES_DB.
       if (property.values && property.values[0] === "COLOR") {

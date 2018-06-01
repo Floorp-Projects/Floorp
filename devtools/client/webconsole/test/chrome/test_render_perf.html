@@ -87,9 +87,9 @@ async function addMessage(wrapper, message) {
 
 function getTimes(times) {
   times = times.sort();
-  let totalTime = times.reduce((sum, t) => sum + t);
-  let avg = totalTime / times.length;
-  let median = times.length % 2 !== 0
+  const totalTime = times.reduce((sum, t) => sum + t);
+  const avg = totalTime / times.length;
+  const median = times.length % 2 !== 0
     ? times[Math.floor(times.length / 2)]
     : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
   return {avg, median};
@@ -102,7 +102,7 @@ async function clearMessages(wrapper) {
 
 async function testBulkLogging(wrapper) {
   await clearMessages(wrapper);
-  let bulkTimes = [];
+  const bulkTimes = [];
   const iterations = 5;
   for (let i = 0; i < iterations; i++) {
     const measure = startMeasure("bulk log");
@@ -120,7 +120,7 @@ async function testBulkLogging(wrapper) {
       await wait(500);
     }
   }
-  let {avg, median} = getTimes(bulkTimes);
+  const {avg, median} = getTimes(bulkTimes);
 
   info(`BULK: On average, it took ${avg} ms (median ${median} ms) ` +
        `to render ${NUM_MESSAGES} messages`);
@@ -156,10 +156,10 @@ async function testStreamLogging(wrapper, clear = true) {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
-  let streamTimes = performance.getEntriesByName(measureLabel)
+  const streamTimes = performance.getEntriesByName(measureLabel)
     .map(entry => entry.duration);
   performance.clearMeasures(measureLabel);
-  let { avg, median } = getTimes(streamTimes);
+  const { avg, median } = getTimes(streamTimes);
   info(`STREAMING${clear === false ? " AND PRUNING" : ""}: On average, ` +
     `it took ${avg} ms (median ${median} ms) for each message`);
   streamMeasure.stop();
@@ -215,7 +215,7 @@ window.onload = async function() {
 
   ok(true, "Tests finished");
 
-  let file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
+  const file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
   Services.profiler.dumpProfileToFile(file.path);
   Services.profiler.StopProfiler();
 

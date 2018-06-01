@@ -13,10 +13,10 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-error.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Reload the content window");
-  let onNavigate = hud.target.once("navigate");
+  const onNavigate = hud.target.once("navigate");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });
@@ -29,7 +29,7 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  let onMessage = waitForMessage(hud, "fooBazBaz is not defined");
+  const onMessage = waitForMessage(hud, "fooBazBaz is not defined");
   BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
   await onMessage;
 

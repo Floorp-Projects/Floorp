@@ -12,19 +12,19 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $, PerformanceView } = panel.panelWin;
+  const { $, PerformanceView } = panel.panelWin;
 
-  let MAIN_CONTAINER = $("#performance-view");
-  let EMPTY = $("#empty-notice");
-  let CONTENT = $("#performance-view-content");
-  let DETAILS_CONTAINER = $("#details-pane-container");
-  let RECORDING = $("#recording-notice");
-  let DETAILS = $("#details-pane");
+  const MAIN_CONTAINER = $("#performance-view");
+  const EMPTY = $("#empty-notice");
+  const CONTENT = $("#performance-view-content");
+  const DETAILS_CONTAINER = $("#details-pane-container");
+  const RECORDING = $("#recording-notice");
+  const DETAILS = $("#details-pane");
 
   is(PerformanceView.getState(), "empty", "Correct default state.");
   is(MAIN_CONTAINER.selectedPanel, EMPTY, "Showing empty panel on load.");

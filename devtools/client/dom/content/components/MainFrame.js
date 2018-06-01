@@ -37,7 +37,7 @@ class MainFrame extends Component {
    * Render DOM panel content
    */
   render() {
-    let {
+    const {
       filter,
       object,
     } = this.props;

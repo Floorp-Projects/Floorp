@@ -36,7 +36,7 @@ add_task(async function() {
   // Load some other URL before opening the toolbox, then navigate to
   // the test URL.  This ensures that source map service will see the
   // sources as they are loaded, avoiding any races.
-  let {toolbox, inspector, testActor} = await openInspectorForURL(INITIAL_URL);
+  const {toolbox, inspector, testActor} = await openInspectorForURL(INITIAL_URL);
 
   // Ensure the source map service is operating.  This looks a bit
   // funny, but sourceMapURLService is a getter, and we don't need the
@@ -47,7 +47,7 @@ add_task(async function() {
 
   await inspector.markup.expandAll();
 
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     await checkEventsForNode(test, inspector, testActor);
   }
 

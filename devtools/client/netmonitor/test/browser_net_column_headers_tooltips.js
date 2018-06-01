@@ -8,13 +8,13 @@
  */
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document } = monitor.panelWin;
+  const { document } = monitor.panelWin;
 
-  let headers = document.querySelectorAll(".requests-list-header-button");
-  for (let header of headers) {
+  const headers = document.querySelectorAll(".requests-list-header-button");
+  for (const header of headers) {
     const buttonText = header.querySelector(".button-text").textContent;
     const tooltip = header.getAttribute("title");
     is(buttonText, tooltip,

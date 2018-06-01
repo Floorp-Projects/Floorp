@@ -6,14 +6,14 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_NODES_URL);
+  const [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 14)
   ]);
 
-  let actualTypes = nodes.map(node => node.type);
-  let expectedTypes = [
+  const actualTypes = nodes.map(node => node.type);
+  const expectedTypes = [
     "AudioDestinationNode",
     "AudioBufferSourceNode", "ScriptProcessorNode", "AnalyserNode", "GainNode",
     "DelayNode", "BiquadFilterNode", "WaveShaperNode", "PannerNode", "ConvolverNode",

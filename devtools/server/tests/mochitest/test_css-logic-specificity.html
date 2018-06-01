@@ -50,28 +50,28 @@ Test that css-logic calculates CSS specificity properly
     SimpleTest.waitForExplicitFinish();
 
     createDocument();
-    let cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
+    const cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
 
     cssLogic.highlight(document.body);
-    let cssSheet = cssLogic.sheets[0];
-    let cssRule = cssSheet.domSheet.cssRules[0];
-    let selectors = CssLogic.getSelectors(cssRule);
+    const cssSheet = cssLogic.sheets[0];
+    const cssRule = cssSheet.domSheet.cssRules[0];
+    const selectors = CssLogic.getSelectors(cssRule);
 
     info("Iterating over the test selectors");
     for (let i = 0; i < selectors.length; i++) {
-      let selectorText = selectors[i];
+      const selectorText = selectors[i];
       info("Testing selector " + selectorText);
 
-      let selector = new CssSelector(cssRule, selectorText, i);
-      let expected = getExpectedSpecificity(selectorText);
-      let specificity = InspectorUtils.getSpecificity(selector.cssRule,
+      const selector = new CssSelector(cssRule, selectorText, i);
+      const expected = getExpectedSpecificity(selectorText);
+      const specificity = InspectorUtils.getSpecificity(selector.cssRule,
                                                       selector.selectorIndex);
       is(specificity, expected,
         'Selector "' + selectorText + '" has a specificity of ' + expected);
     }
 
     info("Testing specificity of element.style");
-    let colorProp = cssLogic.getPropertyInfo("background");
+    const colorProp = cssLogic.getPropertyInfo("background");
     is(colorProp.matchedSelectors[0].specificity, 0x40000000,
        "Element styles have specificity of 0x40000000 (1073741824).");
 

@@ -13,7 +13,7 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel, toolbox } = await initPerformanceInNewTab({
+  const { panel, toolbox } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,7 +24,7 @@ add_task(async function() {
   Services.prefs.setIntPref(MEMORY_MAX_LOG_LEN_PREF, 777777);
 
   await startRecording(panel);
-  let { probability, maxLogLength } = await toolbox.performance.getConfiguration();
+  const { probability, maxLogLength } = await toolbox.performance.getConfiguration();
   await stopRecording(panel);
 
   is(probability, 0.213,

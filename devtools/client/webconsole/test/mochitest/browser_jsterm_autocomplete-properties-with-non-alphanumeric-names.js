@@ -10,7 +10,7 @@
 const TEST_URI = "data:text/html;charset=utf8,test autocompletion with $ or _";
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   await jsterm.execute("var testObject = {$$aaab: '', $$aaac: ''}");
 
@@ -34,6 +34,6 @@ async function testAutocomplete(jsterm, inputString) {
   jsterm.setInputValue(inputString);
   await new Promise(resolve => jsterm.complete(jsterm.COMPLETE_HINT_ONLY, resolve));
 
-  let popup = jsterm.autocompletePopup;
+  const popup = jsterm.autocompletePopup;
   ok(popup.itemCount > 0, `There's ${popup.itemCount} suggestions for '${inputString}'`);
 }

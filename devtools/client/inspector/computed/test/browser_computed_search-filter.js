@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#matches", inspector);
   await testToggleDefaultStyles(inspector, view);
   await testAddTextInFilter(inspector, view);
@@ -25,17 +25,17 @@ add_task(async function() {
 
 async function testToggleDefaultStyles(inspector, computedView) {
   info("checking \"Browser styles\" checkbox");
-  let checkbox = computedView.includeBrowserStylesCheckbox;
-  let onRefreshed = inspector.once("computed-view-refreshed");
+  const checkbox = computedView.includeBrowserStylesCheckbox;
+  const onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
   await onRefreshed;
 }
 
 async function testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
-  let searchField = computedView.searchField;
-  let onRefreshed = inspector.once("computed-view-refreshed");
-  let win = computedView.styleWindow;
+  const searchField = computedView.searchField;
+  const onRefreshed = inspector.once("computed-view-refreshed");
+  const win = computedView.styleWindow;
 
   // First check to make sure that accel + F doesn't focus search if the
   // container isn't focused
@@ -53,9 +53,9 @@ async function testAddTextInFilter(inspector, computedView) {
 
   info("check that the correct properties are visible");
 
-  let propertyViews = computedView.propertyViews;
+  const propertyViews = computedView.propertyViews;
   propertyViews.forEach(propView => {
-    let name = propView.name;
+    const name = propView.name;
     is(propView.visible, name.indexOf("color") > -1,
       "span " + name + " property visibility check");
   });

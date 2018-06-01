@@ -13,7 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
 
-let SHOULD_ENTER_MULTILINE = [
+const SHOULD_ENTER_MULTILINE = [
   {input: "function foo() {" },
   {input: "var a = 1," },
   {input: "var a = 1;", shiftKey: true },
@@ -29,7 +29,7 @@ let SHOULD_ENTER_MULTILINE = [
   // shift + enter creates a new line despite parse errors
   {input: "{2,}", shiftKey: true },
 ];
-let SHOULD_EXECUTE = [
+const SHOULD_EXECUTE = [
   {input: "function foo() { }" },
   {input: "var a = 1;" },
   {input: "function foo() { var a = 1; }" },
@@ -83,28 +83,28 @@ add_task(async function() {
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let { inputNode } = hud.jsterm;
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { inputNode } = hud.jsterm;
 
-  for (let {input, shiftKey} of SHOULD_ENTER_MULTILINE) {
+  for (const {input, shiftKey} of SHOULD_ENTER_MULTILINE) {
     hud.jsterm.setInputValue(input);
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
 
-    let inputValue = hud.jsterm.getInputValue();
+    const inputValue = hud.jsterm.getInputValue();
     is(inputNode.selectionStart, inputNode.selectionEnd, "selection is collapsed");
     is(inputNode.selectionStart, inputValue.length, "caret at end of multiline input");
 
-    let inputWithNewline = input + "\n";
+    const inputWithNewline = input + "\n";
     is(inputValue, inputWithNewline, "Input value is correct");
   }
 
-  for (let {input, shiftKey} of SHOULD_EXECUTE) {
+  for (const {input, shiftKey} of SHOULD_EXECUTE) {
     hud.jsterm.setInputValue(input);
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
 
     await waitFor(() => !hud.jsterm.getInputValue());
 
-    let inputValue = hud.jsterm.getInputValue();
+    const inputValue = hud.jsterm.getInputValue();
     is(inputNode.selectionStart, 0, "selection starts/ends at 0");
     is(inputNode.selectionEnd, 0, "selection starts/ends at 0");
     is(inputValue, "", "Input value is cleared");
@@ -123,7 +123,7 @@ function checkEventTelemetry() {
                                                   event[4] === null
   );
 
-  for (let i in DATA) {
+  for (const i in DATA) {
     const [ timestamp, category, method, object, value, extra ] = events[i];
     const expected = DATA[i];
 

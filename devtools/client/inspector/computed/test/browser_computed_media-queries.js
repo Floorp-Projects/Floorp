@@ -13,19 +13,19 @@ var {PropertyView} = require("devtools/client/inspector/computed/computed");
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("div", inspector);
   await checkPropertyView(view);
 });
 
 function checkPropertyView(view) {
-  let propertyView = new PropertyView(view, "width");
+  const propertyView = new PropertyView(view, "width");
   propertyView.buildMain();
   propertyView.buildSelectorContainer();
   propertyView.matchedExpanded = true;
 
   return propertyView.refreshMatchedSelectors().then(() => {
-    let numMatchedSelectors = propertyView.matchedSelectors.length;
+    const numMatchedSelectors = propertyView.matchedSelectors.length;
 
     is(numMatchedSelectors, 2,
         "Property view has the correct number of matched selectors for div");

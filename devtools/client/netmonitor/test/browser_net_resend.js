@@ -13,12 +13,12 @@ const ADD_UA_HEADER = "User-Agent: Custom-Agent";
 const ADD_POSTDATA = "&t3=t4";
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(POST_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -28,7 +28,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  let origItemId = getSortedRequests(store.getState()).get(0).id;
+  const origItemId = getSortedRequests(store.getState()).get(0).id;
 
   store.dispatch(Actions.selectRequest(origItemId));
   await waitForRequestData(store, ["requestHeaders", "requestPostData"], origItemId);
@@ -82,8 +82,8 @@ add_task(async function() {
   }
 
   function testCustomItemChanged(item, orig) {
-    let url = item.url;
-    let expectedUrl = orig.url + "&" + ADD_QUERY;
+    const url = item.url;
+    const expectedUrl = orig.url + "&" + ADD_QUERY;
 
     is(url, expectedUrl, "menu item is updated to reflect url entered in form");
   }
@@ -99,16 +99,16 @@ add_task(async function() {
     is(document.getElementById("custom-url-value").value, data.url,
        "new request form showing correct url");
 
-    let query = document.getElementById("custom-query-value");
+    const query = document.getElementById("custom-query-value");
     is(query.value, "foo=bar\nbaz=42\ntype=urlencoded",
        "new request form showing correct query string");
 
-    let headers = document.getElementById("custom-headers-value").value.split("\n");
-    for (let {name, value} of data.requestHeaders.headers) {
+    const headers = document.getElementById("custom-headers-value").value.split("\n");
+    for (const {name, value} of data.requestHeaders.headers) {
       ok(headers.includes(name + ": " + value), "form contains header from request");
     }
 
-    let postData = document.getElementById("custom-postdata-value");
+    const postData = document.getElementById("custom-postdata-value");
     is(postData.value, data.requestPostData.postData.text,
        "new request form showing correct post data");
   }
@@ -119,8 +119,8 @@ add_task(async function() {
   async function editCustomForm() {
     monitor.panelWin.focus();
 
-    let query = document.getElementById("custom-query-value");
-    let queryFocus = once(query, "focus", false);
+    const query = document.getElementById("custom-query-value");
+    const queryFocus = once(query, "focus", false);
     // Bug 1195825: Due to some unexplained dark-matter with promise,
     // focus only works if delayed by one tick.
     query.setSelectionRange(query.value.length, query.value.length);
@@ -131,8 +131,8 @@ add_task(async function() {
     type(["VK_RETURN"]);
     type(ADD_QUERY);
 
-    let headers = document.getElementById("custom-headers-value");
-    let headersFocus = once(headers, "focus", false);
+    const headers = document.getElementById("custom-headers-value");
+    const headersFocus = once(headers, "focus", false);
     headers.setSelectionRange(headers.value.length, headers.value.length);
     headers.focus();
     await headersFocus;
@@ -146,8 +146,8 @@ add_task(async function() {
     type(["VK_RETURN"]);
     type(ADD_UA_HEADER);
 
-    let postData = document.getElementById("custom-postdata-value");
-    let postFocus = once(postData, "focus", false);
+    const postData = document.getElementById("custom-postdata-value");
+    const postFocus = once(postData, "focus", false);
     postData.setSelectionRange(postData.value.length, postData.value.length);
     postData.focus();
     await postFocus;
@@ -164,11 +164,11 @@ add_task(async function() {
     is(data.method, origData.method, "correct method in sent request");
     is(data.url, origData.url + "&" + ADD_QUERY, "correct url in sent request");
 
-    let { headers } = data.requestHeaders;
-    let hasHeader = headers.some(h => `${h.name}: ${h.value}` == ADD_HEADER);
+    const { headers } = data.requestHeaders;
+    const hasHeader = headers.some(h => `${h.name}: ${h.value}` == ADD_HEADER);
     ok(hasHeader, "new header added to sent request");
 
-    let hasUAHeader = headers.some(h => `${h.name}: ${h.value}` == ADD_UA_HEADER);
+    const hasUAHeader = headers.some(h => `${h.name}: ${h.value}` == ADD_UA_HEADER);
     ok(hasUAHeader, "User-Agent header added to sent request");
 
     is(data.requestPostData.postData.text,
@@ -177,7 +177,7 @@ add_task(async function() {
   }
 
   function type(string) {
-    for (let ch of string) {
+    for (const ch of string) {
       EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
     }
   }

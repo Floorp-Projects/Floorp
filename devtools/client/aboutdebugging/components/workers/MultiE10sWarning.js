@@ -21,7 +21,7 @@ class multiE10SWarning extends Component {
   }
 
   onUpdatePreferenceClick() {
-    let message = Strings.GetStringFromName("multiProcessWarningConfirmUpdate2");
+    const message = Strings.GetStringFromName("multiProcessWarningConfirmUpdate2");
     if (window.confirm(message)) {
       // Disable multi until at least the next experiment.
       Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,

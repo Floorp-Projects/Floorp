@@ -9,7 +9,7 @@ const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
                      .getService(Ci.nsIHandlerService);
 
-let contentTypes = {
+const contentTypes = {
   valid: [
     "application/json",
     "application/manifest+json",
@@ -30,19 +30,19 @@ add_task(async function() {
   info("Test JSON content types started");
 
   // Prevent saving files to disk.
-  let useDownloadDir = SpecialPowers.getBoolPref("browser.download.useDownloadDir");
+  const useDownloadDir = SpecialPowers.getBoolPref("browser.download.useDownloadDir");
   SpecialPowers.setBoolPref("browser.download.useDownloadDir", false);
-  let { MockFilePicker } = SpecialPowers;
+  const { MockFilePicker } = SpecialPowers;
   MockFilePicker.init(window);
   MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
-  for (let kind of Object.keys(contentTypes)) {
-    let isValid = kind === "valid";
-    for (let type of contentTypes[kind]) {
+  for (const kind of Object.keys(contentTypes)) {
+    const isValid = kind === "valid";
+    for (const type of contentTypes[kind]) {
       // Prevent "Open or Save" dialogs, which would make the test fail.
-      let mimeInfo = mimeSvc.getFromTypeAndExtension(type, null);
-      let exists = handlerSvc.exists(mimeInfo);
-      let {alwaysAskBeforeHandling} = mimeInfo;
+      const mimeInfo = mimeSvc.getFromTypeAndExtension(type, null);
+      const exists = handlerSvc.exists(mimeInfo);
+      const {alwaysAskBeforeHandling} = mimeInfo;
       mimeInfo.alwaysAskBeforeHandling = false;
       handlerSvc.store(mimeInfo);
 
@@ -74,7 +74,7 @@ function testType(isValid, type, params = "") {
       is(content.document.contentType, contentType, "Got the right content type");
     });
 
-    let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+    const count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
     is(count, 3, "There must be expected number of rows");
   }, function() {
     ok(!isValid, "The JSON Viewer should only not load for invalid content types.");

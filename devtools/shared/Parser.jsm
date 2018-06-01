@@ -43,9 +43,9 @@ Parser.prototype = {
     // all the scripts. Fastest/easiest way is with a regular expression.
     // Don't worry, the rules of using a <script> tag are really strict,
     // this will work.
-    let regexp = /<script[^>]*?(?:>([^]*?)<\/script\s*>|\/>)/gim;
-    let syntaxTrees = [];
-    let scriptMatches = [];
+    const regexp = /<script[^>]*?(?:>([^]*?)<\/script\s*>|\/>)/gim;
+    const syntaxTrees = [];
+    const scriptMatches = [];
     let scriptMatch;
 
     if (source.match(/^\s*</)) {
@@ -62,8 +62,8 @@ Parser.prototype = {
     if (!scriptMatches.length) {
       // Reflect.parse throws when encounters a syntax error.
       try {
-        let nodes = Reflect.parse(source);
-        let length = source.length;
+        const nodes = Reflect.parse(source);
+        const length = source.length;
         syntaxTrees.push(new SyntaxTree(nodes, url, length));
       } catch (e) {
         this.errors.push(e);
@@ -73,12 +73,12 @@ Parser.prototype = {
       }
     } else {
       // Generate the AST nodes for each script.
-      for (let script of scriptMatches) {
+      for (const script of scriptMatches) {
         // Reflect.parse throws when encounters a syntax error.
         try {
-          let nodes = Reflect.parse(script);
-          let offset = source.indexOf(script);
-          let length = script.length;
+          const nodes = Reflect.parse(script);
+          const offset = source.indexOf(script);
+          const length = script.length;
           syntaxTrees.push(new SyntaxTree(nodes, url, length, offset));
         } catch (e) {
           this.errors.push(e);
@@ -89,7 +89,7 @@ Parser.prototype = {
       }
     }
 
-    let pool = new SyntaxTreesPool(syntaxTrees, url);
+    const pool = new SyntaxTreesPool(syntaxTrees, url);
 
     // Cache the syntax trees pool by the specified url. This is entirely
     // optional, but it's strongly encouraged to cache ASTs because
@@ -178,9 +178,9 @@ SyntaxTreesPool.prototype = {
    *         The offset and length relative to the enclosing script.
    */
   getScriptInfo(atOffset) {
-    let info = { start: -1, length: -1, index: -1 };
+    const info = { start: -1, length: -1, index: -1 };
 
-    for (let { offset, length } of this._trees) {
+    for (const { offset, length } of this._trees) {
       info.index++;
       if (offset <= atOffset && offset + length >= atOffset) {
         info.start = offset;
@@ -208,19 +208,19 @@ SyntaxTreesPool.prototype = {
    *         The results given by all known syntax trees.
    */
   _call(functionName, syntaxTreeIndex, ...params) {
-    let results = [];
-    let requestId = [functionName, syntaxTreeIndex, params].toSource();
+    const results = [];
+    const requestId = [functionName, syntaxTreeIndex, params].toSource();
 
     if (this._cache.has(requestId)) {
       return this._cache.get(requestId);
     }
 
-    let requestedTree = this._trees[syntaxTreeIndex];
-    let targettedTrees = requestedTree ? [requestedTree] : this._trees;
+    const requestedTree = this._trees[syntaxTreeIndex];
+    const targettedTrees = requestedTree ? [requestedTree] : this._trees;
 
-    for (let syntaxTree of targettedTrees) {
+    for (const syntaxTree of targettedTrees) {
       try {
-        let parseResults = syntaxTree[functionName].apply(syntaxTree, params);
+        const parseResults = syntaxTree[functionName].apply(syntaxTree, params);
         if (parseResults) {
           parseResults.sourceUrl = syntaxTree.url;
           parseResults.scriptLength = syntaxTree.length;
@@ -331,8 +331,8 @@ SyntaxTree.prototype = {
    *         { functionName, functionLocation ... } object hashes.
    */
   getNamedFunctionDefinitions(substring) {
-    let lowerCaseToken = substring.toLowerCase();
-    let store = [];
+    const lowerCaseToken = substring.toLowerCase();
+    const store = [];
 
     function includesToken(name) {
       return name && name.toLowerCase().includes(lowerCaseToken);
@@ -344,7 +344,7 @@ SyntaxTree.prototype = {
        * @param Node node
        */
       onFunctionDeclaration(node) {
-        let functionName = node.id.name;
+        const functionName = node.id.name;
         if (includesToken(functionName)) {
           store.push({
             functionName: functionName,
@@ -359,14 +359,14 @@ SyntaxTree.prototype = {
        */
       onFunctionExpression(node) {
         // Function expressions don't necessarily have a name.
-        let functionName = node.id ? node.id.name : "";
-        let functionLocation = ParserHelpers.getNodeLocation(node);
+        const functionName = node.id ? node.id.name : "";
+        const functionLocation = ParserHelpers.getNodeLocation(node);
 
         // Infer the function's name from an enclosing syntax tree node.
-        let inferredInfo = ParserHelpers.inferFunctionExpressionInfo(node);
-        let inferredName = inferredInfo.name;
-        let inferredChain = inferredInfo.chain;
-        let inferredLocation = inferredInfo.loc;
+        const inferredInfo = ParserHelpers.inferFunctionExpressionInfo(node);
+        const inferredName = inferredInfo.name;
+        const inferredChain = inferredInfo.chain;
+        const inferredLocation = inferredInfo.loc;
 
         // Current node may be part of a larger assignment expression stack.
         if (node._parent.type == "AssignmentExpression") {
@@ -390,10 +390,10 @@ SyntaxTree.prototype = {
        */
       onArrowFunctionExpression(node) {
         // Infer the function's name from an enclosing syntax tree node.
-        let inferredInfo = ParserHelpers.inferFunctionExpressionInfo(node);
-        let inferredName = inferredInfo.name;
-        let inferredChain = inferredInfo.chain;
-        let inferredLocation = inferredInfo.loc;
+        const inferredInfo = ParserHelpers.inferFunctionExpressionInfo(node);
+        const inferredName = inferredInfo.name;
+        const inferredChain = inferredInfo.chain;
+        const inferredLocation = inferredInfo.loc;
 
         // Current node may be part of a larger assignment expression stack.
         if (node._parent.type == "AssignmentExpression") {
@@ -439,14 +439,14 @@ var ParserHelpers = {
     }
     // Work around the fact that some identifier nodes don't have the
     // correct location attached.
-    let { loc: parentLocation, type: parentType } = node._parent;
-    let { loc: nodeLocation } = node;
+    const { loc: parentLocation, type: parentType } = node._parent;
+    const { loc: nodeLocation } = node;
     if (!nodeLocation) {
       if (parentType == "FunctionDeclaration" ||
           parentType == "FunctionExpression") {
         // e.g. "function foo() {}" or "{ bar: function foo() {} }"
         // The location is unavailable for the identifier node "foo".
-        let loc = Cu.cloneInto(parentLocation, {});
+        const loc = Cu.cloneInto(parentLocation, {});
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + node.name.length;
         return loc;
@@ -454,7 +454,7 @@ var ParserHelpers = {
       if (parentType == "MemberExpression") {
         // e.g. "foo.bar"
         // The location is unavailable for the identifier node "bar".
-        let loc = Cu.cloneInto(parentLocation, {});
+        const loc = Cu.cloneInto(parentLocation, {});
         loc.start.line = loc.end.line;
         loc.start.column = loc.end.column - node.name.length;
         return loc;
@@ -462,7 +462,7 @@ var ParserHelpers = {
       if (parentType == "LabeledStatement") {
         // e.g. label: ...
         // The location is unavailable for the identifier node "label".
-        let loc = Cu.cloneInto(parentLocation, {});
+        const loc = Cu.cloneInto(parentLocation, {});
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + node.name.length;
         return loc;
@@ -470,7 +470,7 @@ var ParserHelpers = {
       if (parentType == "ContinueStatement" || parentType == "BreakStatement") {
         // e.g. continue label; or break label;
         // The location is unavailable for the identifier node "label".
-        let loc = Cu.cloneInto(parentLocation, {});
+        const loc = Cu.cloneInto(parentLocation, {});
         loc.start.line = loc.end.line;
         loc.start.column = loc.end.column - node.name.length;
         return loc;
@@ -479,7 +479,7 @@ var ParserHelpers = {
       // e.g. "let foo = 42"
       // The location incorrectly spans across the whole variable declaration,
       // not just the identifier node "foo".
-      let loc = Cu.cloneInto(nodeLocation, {});
+      const loc = Cu.cloneInto(nodeLocation, {});
       loc.end.line = loc.start.line;
       loc.end.column = loc.start.column + node.name.length;
       return loc;
@@ -498,7 +498,7 @@ var ParserHelpers = {
    *         True if the line and column is contained in the node's bounds.
    */
   nodeContainsLine(node, line) {
-    let { start: s, end: e } = this.getNodeLocation(node);
+    const { start: s, end: e } = this.getNodeLocation(node);
     return s.line <= line && e.line >= line;
   },
 
@@ -515,7 +515,7 @@ var ParserHelpers = {
    *         True if the line and column is contained in the node's bounds.
    */
   nodeContainsPoint(node, line, column) {
-    let { start: s, end: e } = this.getNodeLocation(node);
+    const { start: s, end: e } = this.getNodeLocation(node);
     return s.line == line && e.line == line &&
            s.column <= column && e.column >= column;
   },
@@ -532,7 +532,7 @@ var ParserHelpers = {
    *         and location if available.
    */
   inferFunctionExpressionInfo(node) {
-    let parent = node._parent;
+    const parent = node._parent;
 
     // A function expression may be defined in a variable declarator,
     // e.g. var foo = function(){}, in which case it is possible to infer
@@ -549,8 +549,8 @@ var ParserHelpers = {
     // e.g. foo = function(){} or foo.bar = function(){}, in which case it is
     // possible to infer the assignee name ("foo" and "bar" respectively).
     if (parent.type == "AssignmentExpression") {
-      let propertyChain = this._getMemberExpressionPropertyChain(parent.left);
-      let propertyLeaf = propertyChain.pop();
+      const propertyChain = this._getMemberExpressionPropertyChain(parent.left);
+      const propertyLeaf = propertyChain.pop();
       return {
         name: propertyLeaf,
         chain: propertyChain,
@@ -562,9 +562,9 @@ var ParserHelpers = {
     // e.g. { foo: function(){} }, then it is possible to infer the name
     // from the corresponding property.
     if (parent.type == "ObjectExpression") {
-      let propertyKey = this._getObjectExpressionPropertyKeyForValue(node);
-      let propertyChain = this._getObjectExpressionPropertyChain(parent);
-      let propertyLeaf = propertyKey.name;
+      const propertyKey = this._getObjectExpressionPropertyKeyForValue(node);
+      const propertyChain = this._getObjectExpressionPropertyChain(parent);
+      const propertyLeaf = propertyKey.name;
       return {
         name: propertyLeaf,
         chain: propertyChain,
@@ -597,11 +597,11 @@ var ParserHelpers = {
    *         The key identifier node in the object expression.
    */
   _getObjectExpressionPropertyKeyForValue(node) {
-    let parent = node._parent;
+    const parent = node._parent;
     if (parent.type != "ObjectExpression") {
       return null;
     }
-    for (let property of parent.properties) {
+    for (const property of parent.properties) {
       if (property.value == node) {
         return property.key;
       }
@@ -631,7 +631,7 @@ var ParserHelpers = {
     switch (node.type) {
       case "ObjectExpression":
         this._getObjectExpressionPropertyChain(node._parent, aStore);
-        let propertyKey = this._getObjectExpressionPropertyKeyForValue(node);
+        const propertyKey = this._getObjectExpressionPropertyKeyForValue(node);
         if (propertyKey) {
           aStore.push(propertyKey.name);
         }
@@ -708,9 +708,9 @@ var ParserHelpers = {
         // directly as an evaluation string. Otherwise, construct the property
         // access chain, since the value might have changed.
         if (!this._getObjectExpressionPropertyKeyForValue(node)) {
-          let propertyChain =
+          const propertyChain =
             this._getObjectExpressionPropertyChain(node._parent);
-          let propertyLeaf = node.name;
+          const propertyLeaf = node.name;
           return [...propertyChain, propertyLeaf].join(".");
         }
         break;
@@ -770,7 +770,7 @@ var SyntaxTreeVisitor = {
    *         An array of nodes validating the predicate.
    */
   filter(tree, predicate) {
-    let store = [];
+    const store = [];
     this.walk(tree, {
       onNode: e => {
         if (predicate(e)) {
@@ -799,7 +799,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onProgram) {
       callbacks.onProgram(node);
     }
-    for (let statement of node.body) {
+    for (const statement of node.body) {
       this[statement.type](statement, node, callbacks);
     }
   },
@@ -870,7 +870,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onBlockStatement) {
       callbacks.onBlockStatement(node);
     }
-    for (let statement of node.body) {
+    for (const statement of node.body) {
       this[statement.type](statement, node, callbacks);
     }
   },
@@ -1067,7 +1067,7 @@ var SyntaxTreeVisitor = {
       callbacks.onSwitchStatement(node);
     }
     this[node.discriminant.type](node.discriminant, node, callbacks);
-    for (let _case of node.cases) {
+    for (const _case of node.cases) {
       this[_case.type](_case, node, callbacks);
     }
   },
@@ -1330,7 +1330,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onLetStatement) {
       callbacks.onLetStatement(node);
     }
-    for (let { id, init } of node.head) {
+    for (const { id, init } of node.head) {
       this[id.type](id, node, callbacks);
       if (init) {
         this[init.type](init, node, callbacks);
@@ -1414,10 +1414,10 @@ var SyntaxTreeVisitor = {
       callbacks.onFunctionDeclaration(node);
     }
     this[node.id.type](node.id, node, callbacks);
-    for (let param of node.params) {
+    for (const param of node.params) {
       this[param.type](param, node, callbacks);
     }
-    for (let _default of node.defaults) {
+    for (const _default of node.defaults) {
       if (_default) {
         this[_default.type](_default, node, callbacks);
       }
@@ -1451,7 +1451,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onVariableDeclaration) {
       callbacks.onVariableDeclaration(node);
     }
-    for (let declaration of node.declarations) {
+    for (const declaration of node.declarations) {
       this[declaration.type](declaration, node, callbacks);
     }
   },
@@ -1552,7 +1552,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onArrayExpression) {
       callbacks.onArrayExpression(node);
     }
-    for (let element of node.elements) {
+    for (const element of node.elements) {
       if (element) {
         this[element.type](element, node, callbacks);
       }
@@ -1611,7 +1611,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onObjectExpression) {
       callbacks.onObjectExpression(node);
     }
-    for (let { key, value } of node.properties) {
+    for (const { key, value } of node.properties) {
       this[key.type](key, node, callbacks);
       this[value.type](value, node, callbacks);
     }
@@ -1673,10 +1673,10 @@ var SyntaxTreeVisitor = {
     if (node.id) {
       this[node.id.type](node.id, node, callbacks);
     }
-    for (let param of node.params) {
+    for (const param of node.params) {
       this[param.type](param, node, callbacks);
     }
-    for (let _default of node.defaults) {
+    for (const _default of node.defaults) {
       if (_default) {
         this[_default.type](_default, node, callbacks);
       }
@@ -1714,10 +1714,10 @@ var SyntaxTreeVisitor = {
     if (callbacks.onArrowFunctionExpression) {
       callbacks.onArrowFunctionExpression(node);
     }
-    for (let param of node.params) {
+    for (const param of node.params) {
       this[param.type](param, node, callbacks);
     }
-    for (let _default of node.defaults) {
+    for (const _default of node.defaults) {
       if (_default) {
         this[_default.type](_default, node, callbacks);
       }
@@ -1750,7 +1750,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onSequenceExpression) {
       callbacks.onSequenceExpression(node);
     }
-    for (let expression of node.expressions) {
+    for (const expression of node.expressions) {
       this[expression.type](expression, node, callbacks);
     }
   },
@@ -1946,7 +1946,7 @@ var SyntaxTreeVisitor = {
       callbacks.onNewExpression(node);
     }
     this[node.callee.type](node.callee, node, callbacks);
-    for (let argument of node.arguments) {
+    for (const argument of node.arguments) {
       if (argument) {
         this[argument.type](argument, node, callbacks);
       }
@@ -1977,7 +1977,7 @@ var SyntaxTreeVisitor = {
       callbacks.onCallExpression(node);
     }
     this[node.callee.type](node.callee, node, callbacks);
-    for (let argument of node.arguments) {
+    for (const argument of node.arguments) {
       if (argument) {
         if (!this[argument.type]) {
           console.error("Unknown parser object:", argument.type);
@@ -2070,7 +2070,7 @@ var SyntaxTreeVisitor = {
       callbacks.onComprehensionExpression(node);
     }
     this[node.body.type](node.body, node, callbacks);
-    for (let block of node.blocks) {
+    for (const block of node.blocks) {
       this[block.type](block, node, callbacks);
     }
     if (node.filter) {
@@ -2104,7 +2104,7 @@ var SyntaxTreeVisitor = {
       callbacks.onGeneratorExpression(node);
     }
     this[node.body.type](node.body, node, callbacks);
-    for (let block of node.blocks) {
+    for (const block of node.blocks) {
       this[block.type](block, node, callbacks);
     }
     if (node.filter) {
@@ -2183,7 +2183,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onLetExpression) {
       callbacks.onLetExpression(node);
     }
-    for (let { id, init } of node.head) {
+    for (const { id, init } of node.head) {
       this[id.type](id, node, callbacks);
       if (init) {
         this[init.type](init, node, callbacks);
@@ -2236,7 +2236,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onObjectPattern) {
       callbacks.onObjectPattern(node);
     }
-    for (let { key, value } of node.properties) {
+    for (const { key, value } of node.properties) {
       this[key.type](key, node, callbacks);
       this[value.type](value, node, callbacks);
     }
@@ -2264,7 +2264,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onArrayPattern) {
       callbacks.onArrayPattern(node);
     }
-    for (let element of node.elements) {
+    for (const element of node.elements) {
       if (element) {
         this[element.type](element, node, callbacks);
       }
@@ -2298,7 +2298,7 @@ var SyntaxTreeVisitor = {
     if (node.test) {
       this[node.test.type](node.test, node, callbacks);
     }
-    for (let consequent of node.consequent) {
+    for (const consequent of node.consequent) {
       this[consequent.type](consequent, node, callbacks);
     }
   },
@@ -2433,7 +2433,7 @@ var SyntaxTreeVisitor = {
     if (callbacks.onTemplateLiteral) {
       callbacks.onTemplateLiteral(node);
     }
-    for (let element of node.elements) {
+    for (const element of node.elements) {
       if (element) {
         this[element.type](element, node, callbacks);
       }

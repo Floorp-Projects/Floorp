@@ -14,7 +14,7 @@ add_task(async function() {
   // We need to load TESTPAGE using a file:// path so we need to get that from
   // the current test path.
   const testPath = getResolvedURI(gTestPath);
-  let dir = getChromeDir(testPath);
+  const dir = getChromeDir(testPath);
 
   // Then append TESTPAGE to the test path.
   dir.append(TESTPAGE);
@@ -34,8 +34,8 @@ add_task(async function() {
   //
   // The easiest way to get the actual path is to request it from the content
   // process.
-  let browser = gBrowser.selectedBrowser;
-  let actualPath = await ContentTask.spawn(browser, null, () => {
+  const browser = gBrowser.selectedBrowser;
+  const actualPath = await ContentTask.spawn(browser, null, () => {
     return content.document.location.href;
   });
 

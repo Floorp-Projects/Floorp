@@ -49,7 +49,7 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
         propertyDescription: index => undefined,
       };
     } else if (options.enumEntries) {
-      let cls = objectActor.obj.class;
+      const cls = objectActor.obj.class;
       if (cls == "Map") {
         this.iterator = enumMapEntries(objectActor);
       } else if (cls == "WeakMap") {
@@ -83,8 +83,8 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
   },
 
   names({ indexes }) {
-    let list = [];
-    for (let idx of indexes) {
+    const list = [];
+    for (const idx of indexes) {
       list.push(this.iterator.propertyName(idx));
     }
     return {
@@ -93,9 +93,9 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
   },
 
   slice({ start, count }) {
-    let ownProperties = Object.create(null);
+    const ownProperties = Object.create(null);
     for (let i = start, m = start + count; i < m; i++) {
-      let name = this.iterator.propertyName(i);
+      const name = this.iterator.propertyName(i);
       ownProperties[name] = this.iterator.propertyDescription(i);
     }
 
@@ -139,7 +139,7 @@ function enumObjectProperties(objectActor, options) {
   }
 
   if (options.ignoreNonIndexedProperties || options.ignoreIndexedProperties) {
-    let length = DevToolsUtils.getProperty(objectActor.obj, "length");
+    const length = DevToolsUtils.getProperty(objectActor.obj, "length");
     let sliceIndex;
 
     const isLengthTrustworthy = isUint32(length)
@@ -180,10 +180,10 @@ function enumObjectProperties(objectActor, options) {
     }
   }
 
-  let safeGetterValues = objectActor._findSafeGetterValues(names, 0);
-  let safeGetterNames = Object.keys(safeGetterValues);
+  const safeGetterValues = objectActor._findSafeGetterValues(names, 0);
+  const safeGetterNames = Object.keys(safeGetterValues);
   // Merge the safe getter values into the existing properties list.
-  for (let name of safeGetterNames) {
+  for (const name of safeGetterNames) {
     if (!names.includes(name)) {
       names.push(name);
     }
@@ -223,13 +223,13 @@ function enumObjectProperties(objectActor, options) {
       return names[index];
     },
     propertyDescription(index) {
-      let name = names[index];
+      const name = names[index];
       let desc = objectActor._propertyDescriptor(name);
       if (!desc) {
         desc = safeGetterValues[name];
       } else if (name in safeGetterValues) {
         // Merge the safe getter values into the existing properties list.
-        let { getterValue, getterPrototypeLevel } = safeGetterValues[name];
+        const { getterValue, getterPrototypeLevel } = safeGetterValues[name];
         desc.getterValue = getterValue;
         desc.getterPrototypeLevel = getterPrototypeLevel;
       }
@@ -251,13 +251,13 @@ function enumMapEntries(objectActor) {
   // Even then though, we might want to continue waiving Xrays here for the
   // same reason we do so for Arrays above - this filtering behavior is likely
   // to be more confusing than beneficial in the case of Object previews.
-  let raw = objectActor.obj.unsafeDereference();
+  const raw = objectActor.obj.unsafeDereference();
 
-  let keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
+  const keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
   return {
     [Symbol.iterator]: function* () {
-      for (let key of keys) {
-        let value = Map.prototype.get.call(raw, key);
+      for (const key of keys) {
+        const value = Map.prototype.get.call(raw, key);
         yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
     },
@@ -266,8 +266,8 @@ function enumMapEntries(objectActor) {
       return index;
     },
     propertyDescription(index) {
-      let key = keys[index];
-      let val = Map.prototype.get.call(raw, key);
+      const key = keys[index];
+      const val = Map.prototype.get.call(raw, key);
       return {
         enumerable: true,
         value: {
@@ -287,15 +287,15 @@ function enumStorageEntries(objectActor) {
   // intermediate objects - an Iterator object, then a 2-element Array object,
   // then the actual values we care about. We don't have Xrays to Iterator
   // objects, so we get Opaque wrappers for them.
-  let raw = objectActor.obj.unsafeDereference();
-  let keys = [];
+  const raw = objectActor.obj.unsafeDereference();
+  const keys = [];
   for (let i = 0; i < raw.length; i++) {
     keys.push(raw.key(i));
   }
   return {
     [Symbol.iterator]: function* () {
-      for (let key of keys) {
-        let value = raw.getItem(key);
+      for (const key of keys) {
+        const value = raw.getItem(key);
         yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
     },
@@ -304,8 +304,8 @@ function enumStorageEntries(objectActor) {
       return index;
     },
     propertyDescription(index) {
-      let key = keys[index];
-      let val = raw.getItem(key);
+      const key = keys[index];
+      const val = raw.getItem(key);
       return {
         enumerable: true,
         value: {
@@ -331,14 +331,14 @@ function enumWeakMapEntries(objectActor) {
   // This code is designed to handle untrusted objects, so we can safely
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
-  let raw = objectActor.obj.unsafeDereference();
-  let keys = Cu.waiveXrays(
+  const raw = objectActor.obj.unsafeDereference();
+  const keys = Cu.waiveXrays(
     ChromeUtils.nondeterministicGetWeakMapKeys(raw));
 
   return {
     [Symbol.iterator]: function* () {
-      for (let key of keys) {
-        let value = WeakMap.prototype.get.call(raw, key);
+      for (const key of keys) {
+        const value = WeakMap.prototype.get.call(raw, key);
         yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
     },
@@ -347,8 +347,8 @@ function enumWeakMapEntries(objectActor) {
       return index;
     },
     propertyDescription(index) {
-      let key = keys[index];
-      let val = WeakMap.prototype.get.call(raw, key);
+      const key = keys[index];
+      const val = WeakMap.prototype.get.call(raw, key);
       return {
         enumerable: true,
         value: {
@@ -374,12 +374,12 @@ function enumSetEntries(objectActor) {
   // This code is designed to handle untrusted objects, so we can safely
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
-  let raw = objectActor.obj.unsafeDereference();
-  let values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
+  const raw = objectActor.obj.unsafeDereference();
+  const values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
 
   return {
     [Symbol.iterator]: function* () {
-      for (let item of values) {
+      for (const item of values) {
         yield gripFromEntry(objectActor, item);
       }
     },
@@ -388,7 +388,7 @@ function enumSetEntries(objectActor) {
       return index;
     },
     propertyDescription(index) {
-      let val = values[index];
+      const val = values[index];
       return {
         enumerable: true,
         value: gripFromEntry(objectActor, val)
@@ -408,13 +408,13 @@ function enumWeakSetEntries(objectActor) {
   // This code is designed to handle untrusted objects, so we can safely
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
-  let raw = objectActor.obj.unsafeDereference();
-  let keys = Cu.waiveXrays(
+  const raw = objectActor.obj.unsafeDereference();
+  const keys = Cu.waiveXrays(
     ChromeUtils.nondeterministicGetWeakSetKeys(raw));
 
   return {
     [Symbol.iterator]: function* () {
-      for (let item of keys) {
+      for (const item of keys) {
         yield gripFromEntry(objectActor, item);
       }
     },
@@ -423,7 +423,7 @@ function enumWeakSetEntries(objectActor) {
       return index;
     },
     propertyDescription(index) {
-      let val = keys[index];
+      const val = keys[index];
       return {
         enumerable: true,
         value: gripFromEntry(objectActor, val)

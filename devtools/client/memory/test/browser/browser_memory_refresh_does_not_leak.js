@@ -85,7 +85,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     dumpn("Shortest retaining paths for leaking Window 0x" +
           startWindows[i].toString(16) + " =========================");
     let j = 0;
-    for (let retainingPath of paths.get(startWindows[i])) {
+    for (const retainingPath of paths.get(startWindows[i])) {
       if (retainingPath.find(part => part.predecessor === startWindows[i])) {
         // Skip paths that loop out from the target window and back to it again.
         continue;
@@ -93,7 +93,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
       dumpn("    Path #" + (++j) +
             ": --------------------------------------------------------------------");
-      for (let part of retainingPath) {
+      for (const part of retainingPath) {
         const { label } = getLabelAndShallowSize(part.predecessor, snapshot, DESCRIPTION);
         dumpn("        0x" + part.predecessor.toString(16) +
               " (" + label.join(" > ") + ")");

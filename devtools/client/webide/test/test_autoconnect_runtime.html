@@ -23,9 +23,9 @@
           DebuggerServer.registerAllActors();
 
           let win = await openWebIDE();
-          let docRuntime = getRuntimeDocument(win);
+          const docRuntime = getRuntimeDocument(win);
 
-          let fakeRuntime = {
+          const fakeRuntime = {
             type: "USB",
             connect: function(connection) {
               is(connection, win.AppManager.connection, "connection is valid");
@@ -45,8 +45,8 @@
           win.AppManager.runtimeList.usb.push(fakeRuntime);
           win.AppManager.update("runtime-list");
 
-          let panelNode = docRuntime.querySelector("#runtime-panel");
-          let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
+          const panelNode = docRuntime.querySelector("#runtime-panel");
+          const items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 1, "Found one runtime button");
 
           let connectionsChanged = waitForConnectionChange("opened", 2);

@@ -40,25 +40,25 @@ function setTooltipVariableContent(tooltip, objectActor,
                                    viewOptions = {}, controllerOptions = {},
                                    relayEvents = {}, extraButtons = [],
                                    toolbox = null) {
-  let doc = tooltip.doc;
-  let vbox = doc.createElement("vbox");
+  const doc = tooltip.doc;
+  const vbox = doc.createElement("vbox");
   vbox.className = "devtools-tooltip-variables-view-box";
   vbox.setAttribute("flex", "1");
 
-  let innerbox = doc.createElement("vbox");
+  const innerbox = doc.createElement("vbox");
   innerbox.className = "devtools-tooltip-variables-view-innerbox";
   innerbox.setAttribute("flex", "1");
   vbox.appendChild(innerbox);
 
-  for (let { label, className, command } of extraButtons) {
-    let button = doc.createElement("button");
+  for (const { label, className, command } of extraButtons) {
+    const button = doc.createElement("button");
     button.className = className;
     button.setAttribute("label", label);
     button.addEventListener("command", command);
     vbox.appendChild(button);
   }
 
-  let widget = new VariablesView(innerbox, viewOptions);
+  const widget = new VariablesView(innerbox, viewOptions);
 
   // If a toolbox was provided, link it to the vview
   if (toolbox) {
@@ -68,7 +68,7 @@ function setTooltipVariableContent(tooltip, objectActor,
   // Analyzing state history isn't useful with transient object inspectors.
   widget.commitHierarchy = () => {};
 
-  for (let e in relayEvents) {
+  for (const e in relayEvents) {
     widget.on(e, relayEvents[e]);
   }
   VariablesViewController.attach(widget, controllerOptions);

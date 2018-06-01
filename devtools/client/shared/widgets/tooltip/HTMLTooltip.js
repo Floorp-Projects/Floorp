@@ -66,7 +66,7 @@ const EXTRA_BORDER = {
  */
 const calculateVerticalPosition =
 function(anchorRect, viewportRect, height, pos, offset) {
-  let {TOP, BOTTOM} = POSITION;
+  const {TOP, BOTTOM} = POSITION;
 
   let {top: anchorTop, height: anchorHeight} = anchorRect;
 
@@ -74,8 +74,8 @@ function(anchorRect, viewportRect, height, pos, offset) {
   anchorTop -= viewportRect.top;
 
   // Calculate available space for the tooltip.
-  let availableTop = anchorTop;
-  let availableBottom = viewportRect.height - (anchorTop + anchorHeight);
+  const availableTop = anchorTop;
+  const availableBottom = viewportRect.height - (anchorTop + anchorHeight);
 
   // Find POSITION
   let keepPosition = false;
@@ -89,7 +89,7 @@ function(anchorRect, viewportRect, height, pos, offset) {
   }
 
   // Calculate HEIGHT.
-  let availableHeight = pos === TOP ? availableTop : availableBottom;
+  const availableHeight = pos === TOP ? availableTop : availableBottom;
   height = Math.min(height, availableHeight - offset);
   height = Math.floor(height);
 
@@ -127,7 +127,7 @@ function(anchorRect, viewportRect, height, pos, offset) {
  */
 const calculateHorizontalPosition =
 function(anchorRect, viewportRect, width, type, offset, isRtl) {
-  let anchorWidth = anchorRect.width;
+  const anchorWidth = anchorRect.width;
   let anchorStart = isRtl ? anchorRect.right : anchorRect.left;
 
   // Translate to the available viewport space before calculating dimensions and position.
@@ -147,8 +147,8 @@ function(anchorRect, viewportRect, width, type, offset, isRtl) {
   let arrowLeft;
   // Arrow style tooltips may need to be shifted to the left
   if (type === TYPE.ARROW) {
-    let arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
-    let anchorCenter = anchorStart + anchorWidth / 2;
+    const arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
+    const anchorCenter = anchorStart + anchorWidth / 2;
     // If the anchor is too narrow, align the arrow and the anchor center.
     if (arrowCenter > anchorCenter) {
       left = Math.max(0, left - (arrowCenter - anchorCenter));
@@ -177,22 +177,22 @@ const getRelativeRect = function(node, relativeTo) {
   // getBoxQuads is a non-standard WebAPI which will not work on non-firefox
   // browser when running launchpad on Chrome.
   if (!node.getBoxQuads) {
-    let {top, left, width, height} = node.getBoundingClientRect();
-    let right = left + width;
-    let bottom = top + height;
+    const {top, left, width, height} = node.getBoundingClientRect();
+    const right = left + width;
+    const bottom = top + height;
     return {top, right, bottom, left, width, height};
   }
 
   // Width and Height can be taken from the rect.
-  let {width, height} = node.getBoundingClientRect();
+  const {width, height} = node.getBoundingClientRect();
 
-  let quads = node.getBoxQuads({relativeTo});
-  let top = quads[0].bounds.top;
-  let left = quads[0].bounds.left;
+  const quads = node.getBoxQuads({relativeTo});
+  const top = quads[0].bounds.top;
+  const left = quads[0].bounds.left;
 
   // Compute right and bottom coordinates using the rest of the data.
-  let right = left + width;
-  let bottom = top + height;
+  const right = left + width;
+  const bottom = top + height;
 
   return {top, right, bottom, left, width, height};
 };
@@ -250,7 +250,7 @@ function HTMLTooltip(toolboxDoc, {
     //   <div> <!-- div wrapper used to isolate the tooltip container -->
     //     <div> <! the actual tooltip.container element -->
     this.xulPanelWrapper = this._createXulPanelWrapper();
-    let inner = this.doc.createElementNS(XHTML_NS, "div");
+    const inner = this.doc.createElementNS(XHTML_NS, "div");
     inner.classList.add("tooltip-xul-wrapper-inner");
 
     this.doc.documentElement.appendChild(this.xulPanelWrapper);
@@ -332,17 +332,17 @@ HTMLTooltip.prototype = {
     }
 
     // Get viewport size
-    let viewportRect = this._getViewportRect();
+    const viewportRect = this._getViewportRect();
 
-    let themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
-    let preferredHeight = this.preferredHeight + themeHeight;
+    const themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
+    const preferredHeight = this.preferredHeight + themeHeight;
 
-    let {top, height, computedPosition} =
+    const {top, height, computedPosition} =
       calculateVerticalPosition(anchorRect, viewportRect, preferredHeight, position, y);
 
     this._position = computedPosition;
     // Apply height before measuring the content width (if width="auto").
-    let isTop = computedPosition === POSITION.TOP;
+    const isTop = computedPosition === POSITION.TOP;
     this.container.classList.toggle("tooltip-top", isTop);
     this.container.classList.toggle("tooltip-bottom", !isTop);
 
@@ -357,13 +357,13 @@ HTMLTooltip.prototype = {
     if (this.preferredWidth === "auto") {
       preferredWidth = this._measureContainerWidth();
     } else {
-      let themeWidth = 2 * EXTRA_BORDER[this.type];
+      const themeWidth = 2 * EXTRA_BORDER[this.type];
       preferredWidth = this.preferredWidth + themeWidth;
     }
 
-    let anchorWin = anchor.ownerDocument.defaultView;
-    let isRtl = anchorWin.getComputedStyle(anchor).direction === "rtl";
-    let {left, width, arrowLeft} = calculateHorizontalPosition(
+    const anchorWin = anchor.ownerDocument.defaultView;
+    const isRtl = anchorWin.getComputedStyle(anchor).direction === "rtl";
+    const {left, width, arrowLeft} = calculateHorizontalPosition(
       anchorRect, viewportRect, preferredWidth, this.type, x, isRtl);
 
     this.container.style.width = width + "px";
@@ -409,7 +409,7 @@ HTMLTooltip.prototype = {
       // applications (excluding space dedicated for OS toolbars, menus etc...)
       // availWidth/Height are the dimensions available to applications excluding all
       // the OS reserved space
-      let {availLeft, availTop, availHeight, availWidth} = this.doc.defaultView.screen;
+      const {availLeft, availTop, availHeight, availWidth} = this.doc.defaultView.screen;
       return {
         top: availTop,
         right: availLeft + availWidth,
@@ -424,7 +424,7 @@ HTMLTooltip.prototype = {
   },
 
   _measureContainerWidth: function() {
-    let xulParent = this.container.parentNode;
+    const xulParent = this.container.parentNode;
     if (this.useXulWrapper && !this.isVisible()) {
       // Move the container out of the XUL Panel to measure it.
       this.doc.documentElement.appendChild(this.container);
@@ -432,7 +432,7 @@ HTMLTooltip.prototype = {
 
     this.container.classList.add("tooltip-hidden");
     this.container.style.width = "auto";
-    let width = this.container.getBoundingClientRect().width;
+    const width = this.container.getBoundingClientRect().width;
     this.container.classList.remove("tooltip-hidden");
 
     if (this.useXulWrapper && !this.isVisible()) {
@@ -461,7 +461,7 @@ HTMLTooltip.prototype = {
 
     this.emit("hidden");
 
-    let tooltipHasFocus = this.container.contains(this.doc.activeElement);
+    const tooltipHasFocus = this.container.contains(this.doc.activeElement);
     if (tooltipHasFocus && this._focusedElement) {
       this._focusedElement.focus();
       this._focusedElement = null;
@@ -490,7 +490,7 @@ HTMLTooltip.prototype = {
   },
 
   _createContainer: function() {
-    let container = this.doc.createElementNS(XHTML_NS, "div");
+    const container = this.doc.createElementNS(XHTML_NS, "div");
     container.setAttribute("type", this.type);
     container.classList.add("tooltip-container");
 
@@ -524,7 +524,7 @@ HTMLTooltip.prototype = {
       return true;
     }
 
-    let tooltipWindow = this.panel.ownerDocument.defaultView;
+    const tooltipWindow = this.panel.ownerDocument.defaultView;
     let win = node.ownerDocument.defaultView;
 
     // Check if the tooltip panel contains the node if they live in the same document.
@@ -558,8 +558,8 @@ HTMLTooltip.prototype = {
   _maybeFocusTooltip: function() {
     // Simplied selector targetting elements that can receive the focus, full version at
     // http://stackoverflow.com/questions/1599660/which-html-elements-can-receive-focus .
-    let focusableSelector = "a, button, iframe, input, select, textarea";
-    let focusableElement = this.panel.querySelector(focusableSelector);
+    const focusableSelector = "a, button, iframe, input, select, textarea";
+    const focusableElement = this.panel.querySelector(focusableSelector);
     if (this.autofocus && focusableElement) {
       focusableElement.focus();
     }
@@ -577,7 +577,7 @@ HTMLTooltip.prototype = {
   },
 
   _createXulPanelWrapper: function() {
-    let panel = this.doc.createElementNS(XUL_NS, "panel");
+    const panel = this.doc.createElementNS(XUL_NS, "panel");
 
     // XUL panel is only a way to display DOM elements outside of the document viewport,
     // so disable all features that impact the behavior.
@@ -598,7 +598,7 @@ HTMLTooltip.prototype = {
 
   _showXulWrapperAt: function(left, top) {
     this.xulPanelWrapper.addEventListener("popuphidden", this._onXulPanelHidden);
-    let onPanelShown = listenOnce(this.xulPanelWrapper, "popupshown");
+    const onPanelShown = listenOnce(this.xulPanelWrapper, "popupshown");
     let zoom = parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
     if (!zoom || isNaN(zoom)) {
       zoom = 1.0;
@@ -615,7 +615,7 @@ HTMLTooltip.prototype = {
       return Promise.resolve();
     }
 
-    let onPanelHidden = listenOnce(this.xulPanelWrapper, "popuphidden");
+    const onPanelHidden = listenOnce(this.xulPanelWrapper, "popuphidden");
     this.xulPanelWrapper.hidePopup();
     return onPanelHidden;
   },

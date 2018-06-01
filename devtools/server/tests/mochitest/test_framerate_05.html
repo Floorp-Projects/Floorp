@@ -33,11 +33,11 @@ window.onload = function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      let form = response.tabs[response.selected];
-      let front = FramerateFront(client, form);
+      const form = response.tabs[response.selected];
+      const front = FramerateFront(client, form);
 
       front.startRecording().then(() => {
         /* eslint-disable max-nested-callbacks */

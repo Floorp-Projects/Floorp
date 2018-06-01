@@ -35,7 +35,7 @@ const HIGHLIGHTER_TYPE = "CssGridHighlighter";
  */
 var simulateColorPickerChange = async function(colorPicker, newRgba) {
   info("Getting the spectrum colorpicker object");
-  let spectrum = await colorPicker.spectrum;
+  const spectrum = await colorPicker.spectrum;
   info("Setting the new color");
   spectrum.rgb = newRgba;
   info("Applying the change");

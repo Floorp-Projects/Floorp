@@ -34,7 +34,7 @@
       "use strict";
 
       function ajaxGet(url, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("GET", url + "?param1=value1&param2=value2&param3=value3", true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.onload = function() {
@@ -44,7 +44,7 @@
       }
 
       function ajaxPost(url, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -56,7 +56,7 @@
       }
 
       function ajaxPatch(url, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("PATCH", url, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.onload = function() {
@@ -67,7 +67,7 @@
       }
 
       function ajaxMultipart(url, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.onload = function() {
@@ -75,7 +75,7 @@
         };
 
         getCanvasElem().toBlob((blob) => {
-          let formData = new FormData();
+          const formData = new FormData();
           formData.append("param1", "value1");
           formData.append("file", blob, "filename.png");
           xhr.send(formData);
@@ -83,7 +83,7 @@
       }
 
       function submitForm() {
-        let form = document.querySelector("#post-form");
+        const form = document.querySelector("#post-form");
         form.submit();
       }
 
@@ -92,8 +92,8 @@
       }
 
       function initCanvas() {
-        let canvas = getCanvasElem();
-        let ctx = canvas.getContext("2d");
+        const canvas = getCanvasElem();
+        const ctx = canvas.getContext("2d");
         ctx.fillRect(0, 0, 100, 100);
         ctx.clearRect(20, 20, 60, 60);
         ctx.strokeRect(25, 25, 50, 50);

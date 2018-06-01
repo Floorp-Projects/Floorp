@@ -12,17 +12,17 @@ const wasmdis = require("devtools/client/shared/vendor/WasmDis");
 const wasmStates = new WeakMap();
 
 function getWasmText(subject, data) {
-  let parser = new wasmparser.BinaryReader();
+  const parser = new wasmparser.BinaryReader();
   parser.setData(data.buffer, 0, data.length);
-  let dis = new wasmdis.WasmDisassembler();
+  const dis = new wasmdis.WasmDisassembler();
   dis.addOffsets = true;
-  let done = dis.disassembleChunk(parser);
+  const done = dis.disassembleChunk(parser);
   let result = dis.getResult();
   if (result.lines.length === 0) {
     result = { lines: ["No luck with wast conversion"], offsets: [0], done, };
   }
 
-  let offsets = result.offsets, lines = [];
+  const offsets = result.offsets, lines = [];
   for (let i = 0; i < offsets.length; i++) {
     lines[offsets[i]] = i;
   }
@@ -34,17 +34,17 @@ function getWasmText(subject, data) {
 
 function getWasmLineNumberFormatter(subject) {
   const codeOf0 = 48, codeOfA = 65;
-  let buffer =
+  const buffer =
     [codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0];
   let last0 = 7;
   return function(number) {
-    let offset = lineToWasmOffset(subject, number - 1);
+    const offset = lineToWasmOffset(subject, number - 1);
     if (offset === undefined) {
       return "";
     }
     let i = 7;
     for (let n = offset | 0; n !== 0 && i >= 0; n >>= 4, i--) {
-      let nibble = n & 15;
+      const nibble = n & 15;
       buffer[i] = nibble < 10 ? codeOf0 + nibble : codeOfA - 10 + nibble;
     }
     for (let j = i; j > last0; j--) {
@@ -60,7 +60,7 @@ function isWasm(subject) {
 }
 
 function lineToWasmOffset(subject, number) {
-  let wasmState = wasmStates.get(subject);
+  const wasmState = wasmStates.get(subject);
   if (!wasmState) {
     return undefined;
   }
@@ -72,7 +72,7 @@ function lineToWasmOffset(subject, number) {
 }
 
 function wasmOffsetToLine(subject, offset) {
-  let wasmState = wasmStates.get(subject);
+  const wasmState = wasmStates.get(subject);
   return wasmState.lines[offset];
 }
 

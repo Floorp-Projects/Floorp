@@ -39,7 +39,7 @@ const TEST_URI = "<h1 style='border: 1px solid red'>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view, testActor} = await openRuleView();
+  const {toolbox, inspector, view, testActor} = await openRuleView();
 
   info("Test autocompletion after 1st page load");
   await runAutocompletionTest(toolbox, inspector, view);
@@ -54,8 +54,8 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   await selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
@@ -80,8 +80,10 @@ async function testCompletion([key, completion, open, isSelected], editor, view)
   }
 
   // Also listening for popup opened/closed events if needed.
-  let popupEvent = open ? "popup-opened" : "popup-closed";
-  let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+  const popupEvent = open ? "popup-opened" : "popup-closed";
+  const onPopupEvent = editor.popup.isOpen !== open
+    ? once(editor.popup, popupEvent)
+    : null;
 
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);

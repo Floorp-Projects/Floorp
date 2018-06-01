@@ -50,14 +50,14 @@ function createFakeAddonWindow({addonId} = {}) {
   });
   policy.active = true;
 
-  let baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
-  let principal = Services.scriptSecurityManager
+  const baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
+  const principal = Services.scriptSecurityManager
         .createCodebasePrincipal(baseURI, {});
-  let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
-  let docShell = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor)
+  const chromeWebNav = Services.appShell.createWindowlessBrowser(true);
+  const docShell = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDocShell);
   docShell.createAboutBlankContentViewer(principal);
-  let addonWindow = docShell.contentViewer.DOMDocument.defaultView;
+  const addonWindow = docShell.contentViewer.DOMDocument.defaultView;
 
   return {addonWindow, chromeWebNav};
 }
@@ -69,14 +69,14 @@ function createFakeAddonWindow({addonId} = {}) {
 function run_test() {
   // console1 Test Console.jsm messages tagged by the Addon SDK
   // are still filtered correctly.
-  let console1 = new ConsoleAPI({
+  const console1 = new ConsoleAPI({
     consoleID: "addon/foo"
   });
 
   // console2 - WebExtension page's console messages tagged
   // by 'originAttributes.addonId' are filtered correctly.
-  let {addonWindow, chromeWebNav} = createFakeAddonWindow({addonId: "bar"});
-  let console2 = addonWindow.console;
+  const {addonWindow, chromeWebNav} = createFakeAddonWindow({addonId: "bar"});
+  const console2 = addonWindow.console;
 
   // console - Plain console object (messages are tagged with window ids
   // and originAttributes, but the addonId will be empty).

@@ -68,7 +68,7 @@ function run_test() {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         assertEveryNodeCanFindItsLeaf(child);
       }
     }
@@ -82,7 +82,7 @@ function run_test() {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         const found = find(name, child);
         if (found) {
           return found;

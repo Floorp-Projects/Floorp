@@ -13,11 +13,11 @@
  * 4) Number of requests displayed
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -58,7 +58,7 @@ add_task(async function() {
   return teardown(monitor);
 
   function reloadAndWait() {
-    let wait = waitForNetworkEvents(monitor, 1);
+    const wait = waitForNetworkEvents(monitor, 1);
     tab.linkedBrowser.reload();
     return wait;
   }

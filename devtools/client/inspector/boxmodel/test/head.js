@@ -30,8 +30,8 @@ registerCleanupFunction(() => {
 async function selectAndHighlightNode(selectorOrNodeFront, inspector) {
   info("Highlighting and selecting the node " + selectorOrNodeFront);
 
-  let nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
-  let updated = inspector.toolbox.once("highlighter-ready");
+  const nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
+  const updated = inspector.toolbox.once("highlighter-ready");
   inspector.selection.setNodeFront(nodeFront, { reason: "test-highlight" });
   await updated;
 }
@@ -101,7 +101,7 @@ function setStyle(testActor, selector, propertyName, value) {
  */
 var _selectNode = selectNode;
 selectNode = async function(node, inspector, reason) {
-  let onUpdate = waitForUpdate(inspector, true);
+  const onUpdate = waitForUpdate(inspector, true);
   await _selectNode(node, inspector, reason);
   await onUpdate;
 };

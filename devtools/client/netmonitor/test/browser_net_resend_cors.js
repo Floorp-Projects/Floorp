@@ -9,22 +9,22 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CORS_URL);
+  const { tab, monitor } = await initNetMonitor(CORS_URL);
   info("Starting test... ");
 
-  let { store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getRequestById,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
+  const requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
 
   info("Waiting for OPTIONS, then POST");
-  let wait = waitForNetworkEvents(monitor, 2);
+  const wait = waitForNetworkEvents(monitor, 2);
   await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });
@@ -41,7 +41,7 @@ add_task(async function() {
 
   // Resend both requests without modification. Wait for resent OPTIONS, then POST.
   // POST is supposed to have no preflight OPTIONS request this time (CORS is disabled)
-  let onRequests = waitForNetworkEvents(monitor, 1);
+  const onRequests = waitForNetworkEvents(monitor, 1);
   for (let item of ITEMS) {
     info(`Selecting the ${item.method} request`);
     store.dispatch(Actions.selectRequest(item.id));
@@ -53,7 +53,7 @@ add_task(async function() {
       return item.requestHeaders && item.responseHeaders;
     });
 
-    let { size } = getSortedRequests(store.getState());
+    const { size } = getSortedRequests(store.getState());
 
     info("Cloning the selected request into a custom clone");
     store.dispatch(Actions.cloneSelectedRequest());

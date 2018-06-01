@@ -408,7 +408,7 @@ class Heap extends Component {
   }
 
   render() {
-    let {
+    const {
       snapshot,
       diffing,
       onSnapshotClick,

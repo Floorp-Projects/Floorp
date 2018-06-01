@@ -88,9 +88,9 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    let classnames = ["devtools-tabbar"];
-    let startButtons = renderToolboxButtonsStart(this.props);
-    let endButtons = renderToolboxButtonsEnd(this.props);
+    const classnames = ["devtools-tabbar"];
+    const startButtons = renderToolboxButtonsStart(this.props);
+    const endButtons = renderToolboxButtonsEnd(this.props);
 
     if (!startButtons) {
       classnames.push("devtools-tabbar-has-start");
@@ -195,7 +195,7 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
     });
 
   // Add the appropriate separator, if needed.
-  let children = renderedButtons;
+  const children = renderedButtons;
   if (renderedButtons.length) {
     if (isStart) {
       children.push(renderSeparator());

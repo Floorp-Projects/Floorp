@@ -51,12 +51,12 @@ SelectorHighlighter.prototype = {
     delete options.selector;
 
     let i = 0;
-    for (let matchingNode of nodes) {
+    for (const matchingNode of nodes) {
       if (i >= MAX_HIGHLIGHTED_ELEMENTS) {
         break;
       }
 
-      let highlighter = new BoxModelHighlighter(this.highlighterEnv);
+      const highlighter = new BoxModelHighlighter(this.highlighterEnv);
       if (options.fill) {
         highlighter.regionFill[options.region || "border"] = options.fill;
       }
@@ -69,7 +69,7 @@ SelectorHighlighter.prototype = {
   },
 
   hide: function() {
-    for (let highlighter of this._highlighters) {
+    for (const highlighter of this._highlighters) {
       highlighter.destroy();
     }
     this._highlighters = [];

@@ -27,17 +27,17 @@ add_task(async function() {
   });
 
   // copy all our files over so we don't screw them up for other tests
-  let HTMLFile = await copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
-  let CSSFile = await copy(TESTCASE_URI_CSS,
+  const HTMLFile = await copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
+  const CSSFile = await copy(TESTCASE_URI_CSS,
     ["sourcemap-css", "sourcemaps.css"]);
   await copy(TESTCASE_URI_SCSS, ["sourcemap-sass", "sourcemaps.scss"]);
   await copy(TESTCASE_URI_MAP, ["sourcemap-css", "sourcemaps.css.map"]);
   await copy(TESTCASE_URI_REG_CSS, ["simple.css"]);
 
-  let uri = Services.io.newFileURI(HTMLFile);
-  let testcaseURI = uri.resolve("");
+  const uri = Services.io.newFileURI(HTMLFile);
+  const testcaseURI = uri.resolve("");
 
-  let { ui } = await openStyleEditorForURL(testcaseURI);
+  const { ui } = await openStyleEditorForURL(testcaseURI);
 
   let editor = ui.editors[1];
   if (getStylesheetNameFor(editor) != TESTCASE_SCSS_NAME) {
@@ -46,7 +46,7 @@ add_task(async function() {
 
   is(getStylesheetNameFor(editor), TESTCASE_SCSS_NAME, "found scss editor");
 
-  let link = getLinkFor(editor);
+  const link = getLinkFor(editor);
   link.click();
 
   await editor.getSourceEditor();
@@ -55,7 +55,7 @@ add_task(async function() {
   is(color, "rgb(255, 0, 102)", "div is red before saving file");
 
   // let styleApplied = defer();
-  let styleApplied = editor.once("style-applied");
+  const styleApplied = editor.once("style-applied");
 
   await pauseForTimeChange();
 
@@ -114,19 +114,19 @@ function getStylesheetNameFor(editor) {
 }
 
 function copy(srcChromeURL, destFilePath) {
-  let destFile = FileUtils.getFile("ProfD", destFilePath);
+  const destFile = FileUtils.getFile("ProfD", destFilePath);
   return write(read(srcChromeURL), destFile);
 }
 
 function read(srcChromeURL) {
-  let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
     .getService(Ci.nsIScriptableInputStream);
 
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: srcChromeURL,
     loadUsingSystemPrincipal: true
   });
-  let input = channel.open2();
+  const input = channel.open2();
   scriptableStream.init(input);
 
   let data = "";
@@ -141,13 +141,13 @@ function read(srcChromeURL) {
 
 function write(data, file) {
   return new Promise(resolve => {
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+    const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
       .createInstance(Ci.nsIScriptableUnicodeConverter);
 
     converter.charset = "UTF-8";
 
-    let istream = converter.convertToInputStream(data);
-    let ostream = FileUtils.openSafeFileOutputStream(file);
+    const istream = converter.convertToInputStream(data);
+    const ostream = FileUtils.openSafeFileOutputStream(file);
 
     NetUtil.asyncCopy(istream, ostream, function(status) {
       if (!Components.isSuccessCode(status)) {

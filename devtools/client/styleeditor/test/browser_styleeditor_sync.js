@@ -20,15 +20,15 @@ const expectedText = `
   `;
 
 async function closeAndReopenToolbox() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
-  let { ui: newui } = await openStyleEditor();
+  const { ui: newui } = await openStyleEditor();
   return newui;
 }
 
 add_task(async function() {
   await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
@@ -63,7 +63,7 @@ add_task(async function() {
 
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
-  let textContent = await ContentTask.spawn(gBrowser.selectedBrowser, null,
+  const textContent = await ContentTask.spawn(gBrowser.selectedBrowser, null,
     async function() {
       return content.document.querySelector("style").textContent;
     });

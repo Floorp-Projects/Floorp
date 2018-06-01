@@ -7,7 +7,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
 
   once(front, "program-linked").then(() => {
     ok(false, "A 'program-linked' notification shouldn't have been sent!");

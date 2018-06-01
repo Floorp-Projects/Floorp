@@ -73,25 +73,25 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     info("Selecting test node " + test.selector);
     await selectNode(test.selector, inspector);
 
     info("Finding the popupNode to anchor the context-menu to");
-    let {editor} = await getContainerForSelector(test.selector, inspector);
-    let popupNode = editor.attrElements.get(test.attributeName)
+    const {editor} = await getContainerForSelector(test.selector, inspector);
+    const popupNode = editor.attrElements.get(test.attributeName)
                     .querySelector(test.popupNodeSelector);
     ok(popupNode, "Found the popupNode in attribute " + test.attributeName);
 
     info("Simulating a context click on the popupNode");
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: popupNode,
     });
 
-    let linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
-    let linkCopy = allMenuItems.find(i => i.id === "node-menu-link-copy");
+    const linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
+    const linkCopy = allMenuItems.find(i => i.id === "node-menu-link-copy");
 
     is(linkFollow.visible, test.isLinkFollowItemVisible,
       "The follow-link item display is correct");

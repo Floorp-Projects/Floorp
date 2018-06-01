@@ -15,22 +15,22 @@ add_task(async function() {
 
   requestLongerTimeout(2);
 
-  let { tab, monitor } = await initNetMonitor(FILTERING_URL);
+  const { tab, monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getDisplayedRequestsSummary } =
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { getDisplayedRequestsSummary } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
-  let { PluralForm } = windowRequire("devtools/shared/plural-form");
+  const { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
+  const { PluralForm } = windowRequire("devtools/shared/plural-form");
 
   store.dispatch(Actions.batchEnable(false));
   testStatus();
 
   for (let i = 0; i < 2; i++) {
     info(`Performing requests in batch #${i}`);
-    let wait = waitForNetworkEvents(monitor, 8);
+    const wait = waitForNetworkEvents(monitor, 8);
     await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
       content.wrappedJSObject.performRequests('{ "getMedia": true, "getFlash": true }');
     });
@@ -38,9 +38,9 @@ add_task(async function() {
 
     testStatus();
 
-    let buttons = ["html", "css", "js", "xhr", "fonts", "images", "media"];
-    for (let button of buttons) {
-      let buttonEl = document.querySelector(`.requests-list-filter-${button}-button`);
+    const buttons = ["html", "css", "js", "xhr", "fonts", "images", "media"];
+    for (const button of buttons) {
+      const buttonEl = document.querySelector(`.requests-list-filter-${button}-button`);
       EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
       testStatus();
     }
@@ -49,15 +49,15 @@ add_task(async function() {
   await teardown(monitor);
 
   function testStatus() {
-    let state = store.getState();
-    let totalRequestsCount = state.requests.requests.size;
-    let requestsSummary = getDisplayedRequestsSummary(state);
+    const state = store.getState();
+    const totalRequestsCount = state.requests.requests.size;
+    const requestsSummary = getDisplayedRequestsSummary(state);
     info(`Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`);
 
-    let valueCount = document.querySelector(".requests-list-network-summary-count")
+    const valueCount = document.querySelector(".requests-list-network-summary-count")
                         .textContent;
     info("Current summary count: " + valueCount);
-    let expectedCount = PluralForm.get(requestsSummary.count,
+    const expectedCount = PluralForm.get(requestsSummary.count,
       L10N.getStr("networkMenu.summary.requestsCount2"))
         .replace("#1", requestsSummary.count);
 
@@ -67,17 +67,18 @@ add_task(async function() {
       return;
     }
 
-    let valueTransfer = document.querySelector(".requests-list-network-summary-transfer")
-                        .textContent;
+    const valueTransfer =
+      document.querySelector(".requests-list-network-summary-transfer").textContent;
     info("Current summary transfer: " + valueTransfer);
-    let expectedTransfer = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
+    const expectedTransfer = L10N.getFormatStrWithNumbers(
+      "networkMenu.summary.transferred",
       getFormattedSize(requestsSummary.contentSize),
       getFormattedSize(requestsSummary.transferredSize));
 
-    let valueFinish = document.querySelector(".requests-list-network-summary-finish")
+    const valueFinish = document.querySelector(".requests-list-network-summary-finish")
                         .textContent;
     info("Current summary finish: " + valueFinish);
-    let expectedFinish = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
+    const expectedFinish = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
       getFormattedTime(requestsSummary.millis));
 
     info(`Computed total bytes: ${requestsSummary.bytes}`);

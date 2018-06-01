@@ -116,14 +116,14 @@ function JSONPacket(transport) {
  *         The parsed packet, or null if it's not a match.
  */
 JSONPacket.fromHeader = function(header, transport) {
-  let match = this.HEADER_PATTERN.exec(header);
+  const match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
     return null;
   }
 
   dumpv("Header matches JSON packet");
-  let packet = new JSONPacket(transport);
+  const packet = new JSONPacket(transport);
   packet.length = +match[1];
   return packet;
 };
@@ -145,7 +145,7 @@ Object.defineProperty(JSONPacket.prototype, "object", {
    */
   set: function(object) {
     this._object = object;
-    let data = JSON.stringify(object);
+    const data = JSON.stringify(object);
     this._data = unicodeConverter.ConvertFromUnicode(data);
     this.length = this._data.length;
   }
@@ -167,7 +167,7 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
     json = unicodeConverter.ConvertToUnicode(json);
     this._object = JSON.parse(json);
   } catch (e) {
-    let msg = "Error parsing incoming packet: " + json + " (" + e +
+    const msg = "Error parsing incoming packet: " + json + " (" + e +
               " - " + e.stack + ")";
     console.error(msg);
     dumpn(msg);
@@ -182,7 +182,7 @@ JSONPacket.prototype._readData = function(stream, scriptableStream) {
     dumpv("Reading JSON data: _l: " + this.length + " dL: " +
           this._data.length + " sA: " + stream.available());
   }
-  let bytesToRead = Math.min(this.length - this._data.length,
+  const bytesToRead = Math.min(this.length - this._data.length,
                              stream.available());
   this._data += scriptableStream.readBytes(bytesToRead);
   this._done = this._data.length === this.length;
@@ -196,7 +196,7 @@ JSONPacket.prototype.write = function(stream) {
     this._outgoing = this.length + ":" + this._data;
   }
 
-  let written = stream.write(this._outgoing, this._outgoing.length);
+  const written = stream.write(this._outgoing, this._outgoing.length);
   this._outgoing = this._outgoing.slice(written);
   this._done = !this._outgoing.length;
 };
@@ -245,14 +245,14 @@ function BulkPacket(transport) {
  *         The parsed packet, or null if it's not a match.
  */
 BulkPacket.fromHeader = function(header, transport) {
-  let match = this.HEADER_PATTERN.exec(header);
+  const match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
     return null;
   }
 
   dumpv("Header matches bulk packet");
-  let packet = new BulkPacket(transport);
+  const packet = new BulkPacket(transport);
   packet.header = {
     actor: match[1],
     type: match[2],
@@ -271,7 +271,7 @@ BulkPacket.prototype.read = function(stream) {
   // Temporarily pause monitoring of the input stream
   this._transport.pauseIncoming();
 
-  let deferred = defer();
+  const deferred = defer();
 
   this._transport._onBulkReadReady({
     actor: this.actor,
@@ -279,7 +279,7 @@ BulkPacket.prototype.read = function(stream) {
     length: this.length,
     copyTo: (output) => {
       dumpv("CT length: " + this.length);
-      let copying = StreamUtils.copyStream(stream, output, this.length);
+      const copying = StreamUtils.copyStream(stream, output, this.length);
       deferred.resolve(copying);
       return copying;
     },
@@ -313,7 +313,7 @@ BulkPacket.prototype.write = function(stream) {
   // Write the header, or whatever's left of it to write.
   if (this._outgoingHeader.length) {
     dumpv("Writing bulk packet header");
-    let written = stream.write(this._outgoingHeader,
+    const written = stream.write(this._outgoingHeader,
                                this._outgoingHeader.length);
     this._outgoingHeader = this._outgoingHeader.slice(written);
     return;
@@ -324,12 +324,12 @@ BulkPacket.prototype.write = function(stream) {
   // Temporarily pause the monitoring of the output stream
   this._transport.pauseOutgoing();
 
-  let deferred = defer();
+  const deferred = defer();
 
   this._readyForWriting.resolve({
     copyFrom: (input) => {
       dumpv("CF length: " + this.length);
-      let copying = StreamUtils.copyStream(input, stream, this.length);
+      const copying = StreamUtils.copyStream(input, stream, this.length);
       deferred.resolve(copying);
       return copying;
     },
@@ -407,7 +407,7 @@ RawPacket.prototype.read = function(stream) {
 };
 
 RawPacket.prototype.write = function(stream) {
-  let written = stream.write(this._data, this._data.length);
+  const written = stream.write(this._data, this._data.length);
   this._data = this._data.slice(written);
   this._done = !this._data.length;
 };

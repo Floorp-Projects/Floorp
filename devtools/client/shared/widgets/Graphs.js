@@ -106,14 +106,14 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     this._document = iframe.contentDocument;
     this._pixelRatio = sharpness || this._window.devicePixelRatio;
 
-    let container =
+    const container =
       this._container = this._document.getElementById("graph-container");
     container.className = name + "-widget-container graph-widget-container";
 
-    let canvas = this._canvas = this._document.getElementById("graph-canvas");
+    const canvas = this._canvas = this._document.getElementById("graph-canvas");
     canvas.className = name + "-widget-canvas graph-widget-canvas";
 
-    let bounds = parent.getBoundingClientRect();
+    const bounds = parent.getBoundingClientRect();
     bounds.width = this.fixedWidth || bounds.width;
     bounds.height = this.fixedHeight || bounds.height;
     iframe.setAttribute("width", bounds.width);
@@ -144,7 +144,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
     this._window.addEventListener("mouseout", this._onMouseOut);
 
-    let ownerWindow = this._parent.ownerDocument.defaultView;
+    const ownerWindow = this._parent.ownerDocument.defaultView;
     ownerWindow.addEventListener("resize", this._onResize);
 
     this._animationId =
@@ -195,7 +195,7 @@ AbstractCanvasGraph.prototype = {
     this._window.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
     this._window.removeEventListener("mouseout", this._onMouseOut);
 
-    let ownerWindow = this._parent.ownerDocument.defaultView;
+    const ownerWindow = this._parent.ownerDocument.defaultView;
     if (ownerWindow) {
       ownerWindow.removeEventListener("resize", this._onResize);
     }
@@ -255,7 +255,7 @@ AbstractCanvasGraph.prototype = {
    * only when the data source changes.
    */
   buildGraphImage: function() {
-    let error = "This method needs to be implemented by inheriting classes.";
+    const error = "This method needs to be implemented by inheriting classes.";
     throw new Error(error);
   },
 
@@ -424,9 +424,9 @@ AbstractCanvasGraph.prototype = {
       throw new Error("Invalid selection coordinates");
     }
 
-    let { mapStart, mapEnd } = mapping;
-    let startTime = (mapStart || (e => e.delta))(this._data[0]);
-    let endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
+    const { mapStart, mapEnd } = mapping;
+    const startTime = (mapStart || (e => e.delta))(this._data[0]);
+    const endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
 
     // The selection's start and end values are not guaranteed to be ascending.
     // Also make sure that the selection bounds fit inside the data bounds.
@@ -457,14 +457,14 @@ AbstractCanvasGraph.prototype = {
       return { min: null, max: null };
     }
 
-    let { mapStart, mapEnd } = mapping;
-    let startTime = (mapStart || (e => e.delta))(this._data[0]);
-    let endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
+    const { mapStart, mapEnd } = mapping;
+    const startTime = (mapStart || (e => e.delta))(this._data[0]);
+    const endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
 
     // The selection's start and end values are not guaranteed to be ascending.
     // This can happen, for example, when click & dragging from right to left.
     // Also make sure that the selection bounds fit inside the canvas bounds.
-    let selection = this.getSelection();
+    const selection = this.getSelection();
     let min = Math.max(Math.min(selection.start, selection.end), 0);
     let max = Math.min(Math.max(selection.start, selection.end), this._width);
     min = map(min, 0, this._width, startTime, endTime);
@@ -571,7 +571,7 @@ AbstractCanvasGraph.prototype = {
     if (!other) {
       return true;
     }
-    let current = this.getSelection();
+    const current = this.getSelection();
     return current.start != other.start || current.end != other.end;
   },
 
@@ -585,7 +585,7 @@ AbstractCanvasGraph.prototype = {
     if (!other) {
       return true;
     }
-    let current = this.getCursor();
+    const current = this.getCursor();
     return current.x != other.x || current.y != other.y;
   },
 
@@ -597,7 +597,7 @@ AbstractCanvasGraph.prototype = {
    *         The selection width.
    */
   getSelectionWidth: function() {
-    let selection = this.getSelection();
+    const selection = this.getSelection();
     return Math.abs(selection.start - selection.end);
   },
 
@@ -612,7 +612,7 @@ AbstractCanvasGraph.prototype = {
     if (!this.hasRegions() || !this.hasCursor()) {
       return null;
     }
-    let { x } = this._cursor;
+    const { x } = this._cursor;
     return this._regions.find(({ start, end }) =>
       (start < end && start < x && end > x) ||
       (start > end && end < x && start > x));
@@ -625,9 +625,9 @@ AbstractCanvasGraph.prototype = {
    *        Force redrawing everything
    */
   refresh: function(options = {}) {
-    let bounds = this._parent.getBoundingClientRect();
-    let newWidth = this.fixedWidth || bounds.width;
-    let newHeight = this.fixedHeight || bounds.height;
+    const bounds = this._parent.getBoundingClientRect();
+    const newWidth = this.fixedWidth || bounds.width;
+    const newHeight = this.fixedHeight || bounds.height;
 
     // Prevent redrawing everything if the graph's width & height won't change,
     // except if force=true.
@@ -640,7 +640,7 @@ AbstractCanvasGraph.prototype = {
 
     // Handle a changed size by mapping the old selection to the new width
     if (this._width && newWidth && this.hasSelection()) {
-      let ratio = this._width / (newWidth * this._pixelRatio);
+      const ratio = this._width / (newWidth * this._pixelRatio);
       this._selection.start = Math.round(this._selection.start / ratio);
       this._selection.end = Math.round(this._selection.end / ratio);
     }
@@ -680,21 +680,21 @@ AbstractCanvasGraph.prototype = {
    *        container canvas width and height.
    */
   _getNamedCanvas: function(name, width = this._width, height = this._height) {
-    let cachedRenderTarget = this._renderTargets.get(name);
+    const cachedRenderTarget = this._renderTargets.get(name);
     if (cachedRenderTarget) {
-      let { canvas, ctx } = cachedRenderTarget;
+      const { canvas, ctx } = cachedRenderTarget;
       canvas.width = width;
       canvas.height = height;
       ctx.clearRect(0, 0, width, height);
       return cachedRenderTarget;
     }
 
-    let canvas = this._document.createElementNS(HTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
+    const canvas = this._document.createElementNS(HTML_NS, "canvas");
+    const ctx = canvas.getContext("2d");
     canvas.width = width;
     canvas.height = height;
 
-    let renderTarget = { canvas: canvas, ctx: ctx };
+    const renderTarget = { canvas: canvas, ctx: ctx };
     this._renderTargets.set(name, renderTarget);
     return renderTarget;
   },
@@ -723,7 +723,7 @@ AbstractCanvasGraph.prototype = {
     if (!this._shouldRedraw) {
       return;
     }
-    let ctx = this._ctx;
+    const ctx = this._ctx;
     ctx.clearRect(0, 0, this._width, this._height);
 
     if (this._cachedGraphImage) {
@@ -763,7 +763,7 @@ AbstractCanvasGraph.prototype = {
       return;
     }
 
-    let ctx = this._ctx;
+    const ctx = this._ctx;
     ctx.lineWidth = this.clipheadLineWidth;
     ctx.strokeStyle = this.clipheadLineColor;
     ctx.beginPath();
@@ -776,22 +776,22 @@ AbstractCanvasGraph.prototype = {
    * Draws the selection, if available and necessary.
    */
   _drawSelection: function() {
-    let { start, end } = this.getSelection();
-    let input = this._canvas.getAttribute("input");
+    const { start, end } = this.getSelection();
+    const input = this._canvas.getAttribute("input");
 
-    let ctx = this._ctx;
+    const ctx = this._ctx;
     ctx.strokeStyle = this.selectionLineColor;
 
     // Fill selection.
 
-    let pattern = AbstractCanvasGraph.getStripePattern({
+    const pattern = AbstractCanvasGraph.getStripePattern({
       ownerDocument: this._document,
       backgroundColor: this.selectionBackgroundColor,
       stripesColor: this.selectionStripesColor
     });
     ctx.fillStyle = pattern;
-    let rectStart = Math.min(this._width, Math.max(0, start));
-    let rectEnd = Math.min(this._width, Math.max(0, end));
+    const rectStart = Math.min(this._width, Math.max(0, start));
+    const rectEnd = Math.min(this._width, Math.max(0, end));
     ctx.fillRect(rectStart, 0, rectEnd - rectStart, this._height);
 
     // Draw left boundary.
@@ -824,9 +824,9 @@ AbstractCanvasGraph.prototype = {
    * Called when new regions are set.
    */
   _bakeRegions: function(regions, destination) {
-    let ctx = destination.getContext("2d");
+    const ctx = destination.getContext("2d");
 
-    let pattern = AbstractCanvasGraph.getStripePattern({
+    const pattern = AbstractCanvasGraph.getStripePattern({
       ownerDocument: this._document,
       backgroundColor: this.regionBackgroundColor,
       stripesColor: this.regionStripesColor
@@ -835,12 +835,12 @@ AbstractCanvasGraph.prototype = {
     ctx.strokeStyle = GRAPH_REGION_LINE_COLOR;
     ctx.lineWidth = GRAPH_REGION_LINE_WIDTH;
 
-    let y = -GRAPH_REGION_LINE_WIDTH;
-    let height = this._height + GRAPH_REGION_LINE_WIDTH;
+    const y = -GRAPH_REGION_LINE_WIDTH;
+    const height = this._height + GRAPH_REGION_LINE_WIDTH;
 
-    for (let { start, end } of regions) {
-      let x = start;
-      let width = end - start;
+    for (const { start, end } of regions) {
+      const x = start;
+      const width = end - start;
       ctx.fillRect(x, y, width, height);
       ctx.strokeRect(x, y, width, height);
     }
@@ -854,9 +854,9 @@ AbstractCanvasGraph.prototype = {
     if (!this.hasSelection() || !this.hasCursor()) {
       return false;
     }
-    let { x } = this._cursor;
-    let { start } = this._selection;
-    let threshold = GRAPH_SELECTION_BOUNDARY_HOVER_THRESHOLD * this._pixelRatio;
+    const { x } = this._cursor;
+    const { start } = this._selection;
+    const threshold = GRAPH_SELECTION_BOUNDARY_HOVER_THRESHOLD * this._pixelRatio;
     return Math.abs(start - x) < threshold;
   },
 
@@ -868,9 +868,9 @@ AbstractCanvasGraph.prototype = {
     if (!this.hasSelection() || !this.hasCursor()) {
       return false;
     }
-    let { x } = this._cursor;
-    let { end } = this._selection;
-    let threshold = GRAPH_SELECTION_BOUNDARY_HOVER_THRESHOLD * this._pixelRatio;
+    const { x } = this._cursor;
+    const { end } = this._selection;
+    const threshold = GRAPH_SELECTION_BOUNDARY_HOVER_THRESHOLD * this._pixelRatio;
     return Math.abs(end - x) < threshold;
   },
 
@@ -882,8 +882,8 @@ AbstractCanvasGraph.prototype = {
     if (!this.hasSelection() || !this.hasCursor()) {
       return false;
     }
-    let { x } = this._cursor;
-    let { start, end } = this._selection;
+    const { x } = this._cursor;
+    const { start, end } = this._selection;
     return (start < end && start < x && end > x) ||
            (start > end && end < x && start > x);
   },
@@ -933,26 +933,26 @@ AbstractCanvasGraph.prototype = {
     // It'd sure be nice if we could use `getBoundsWithoutFlushing`, but it's
     // not taking the document zoom factor into consideration consistently.
     if (!this._boundingBox || this._maybeDirtyBoundingBox) {
-      let topDocument = this._topWindow.document;
-      let boxQuad = this._canvas.getBoxQuads({ relativeTo: topDocument })[0];
+      const topDocument = this._topWindow.document;
+      const boxQuad = this._canvas.getBoxQuads({ relativeTo: topDocument })[0];
       this._boundingBox = boxQuad;
       this._maybeDirtyBoundingBox = false;
     }
 
-    let bb = this._boundingBox;
-    let x = (e.screenX - this._topWindow.screenX) - bb.p1.x;
-    let y = (e.screenY - this._topWindow.screenY) - bb.p1.y;
+    const bb = this._boundingBox;
+    const x = (e.screenX - this._topWindow.screenX) - bb.p1.x;
+    const y = (e.screenY - this._topWindow.screenY) - bb.p1.y;
 
     // Don't allow the event coordinates to be bigger than the canvas
     // or less than 0.
-    let maxX = bb.p2.x - bb.p1.x;
-    let maxY = bb.p3.y - bb.p1.y;
+    const maxX = bb.p2.x - bb.p1.x;
+    const maxY = bb.p3.y - bb.p1.y;
     let mouseX = Math.max(0, Math.min(x, maxX)) * this._pixelRatio;
     let mouseY = Math.max(0, Math.min(y, maxY)) * this._pixelRatio;
 
     // The coordinates need to be modified with the current zoom level
     // to prevent them from being wrong.
-    let zoom = getCurrentZoom(this._canvas);
+    const zoom = getCurrentZoom(this._canvas);
     mouseX /= zoom;
     mouseY /= zoom;
 
@@ -963,8 +963,8 @@ AbstractCanvasGraph.prototype = {
    * Listener for the "mousemove" event on the graph's container.
    */
   _onMouseMove: function(e) {
-    let resizer = this._selectionResizer;
-    let dragger = this._selectionDragger;
+    const resizer = this._selectionResizer;
+    const dragger = this._selectionDragger;
 
     // Need to stop propagation here, since this function can be bound
     // to both this._window and this._topWindow.  It's only attached to
@@ -983,7 +983,7 @@ AbstractCanvasGraph.prototype = {
       return;
     }
 
-    let {mouseX, mouseY} = this._getRelativeEventCoordinates(e);
+    const {mouseX, mouseY} = this._getRelativeEventCoordinates(e);
     this._cursor.x = mouseX;
     this._cursor.y = mouseY;
 
@@ -1026,7 +1026,7 @@ AbstractCanvasGraph.prototype = {
       }
     }
 
-    let region = this.getHoveredRegion();
+    const region = this.getHoveredRegion();
     if (region) {
       this._canvas.setAttribute("input", "hovering-region");
     } else {
@@ -1041,7 +1041,7 @@ AbstractCanvasGraph.prototype = {
    */
   _onMouseDown: function(e) {
     this._isMouseActive = true;
-    let {mouseX} = this._getRelativeEventCoordinates(e);
+    const {mouseX} = this._getRelativeEventCoordinates(e);
 
     switch (this._canvas.getAttribute("input")) {
       case "hovering-background":
@@ -1091,7 +1091,7 @@ AbstractCanvasGraph.prototype = {
           break;
         }
         if (this.getSelectionWidth() < 1) {
-          let region = this.getHoveredRegion();
+          const region = this.getHoveredRegion();
           if (region) {
             this._selection.start = region.start;
             this._selection.end = region.end;
@@ -1134,17 +1134,17 @@ AbstractCanvasGraph.prototype = {
       return;
     }
 
-    let {mouseX} = this._getRelativeEventCoordinates(e);
-    let focusX = mouseX;
+    const {mouseX} = this._getRelativeEventCoordinates(e);
+    const focusX = mouseX;
 
-    let selection = this._selection;
+    const selection = this._selection;
     let vector = 0;
 
     // If the selection is hovered, "zoom" towards or away the cursor,
     // by shrinking or growing the selection.
     if (this._isHoveringSelectionContentsOrBoundaries()) {
-      let distStart = selection.start - focusX;
-      let distEnd = selection.end - focusX;
+      const distStart = selection.start - focusX;
+      const distEnd = selection.end - focusX;
       vector = e.detail * GRAPH_WHEEL_ZOOM_SENSITIVITY;
       selection.start = selection.start + distStart * vector;
       selection.end = selection.end + distEnd * vector;
@@ -1164,8 +1164,8 @@ AbstractCanvasGraph.prototype = {
     // Make sure the selection bounds are still comfortably inside the
     // graph's bounds when zooming out, to keep the margin handles accessible.
 
-    let minStart = GRAPH_MAX_SELECTION_LEFT_PADDING;
-    let maxEnd = this._width - GRAPH_MAX_SELECTION_RIGHT_PADDING;
+    const minStart = GRAPH_MAX_SELECTION_LEFT_PADDING;
+    const maxEnd = this._width - GRAPH_MAX_SELECTION_RIGHT_PADDING;
     if (selection.start < minStart) {
       selection.start = minStart;
     }
@@ -1181,9 +1181,9 @@ AbstractCanvasGraph.prototype = {
 
     // Make sure the selection doesn't get too narrow when zooming in.
 
-    let thickness = Math.abs(selection.start - selection.end);
+    const thickness = Math.abs(selection.start - selection.end);
     if (thickness < GRAPH_WHEEL_MIN_SELECTION_WIDTH) {
-      let midPoint = (selection.start + selection.end) / 2;
+      const midPoint = (selection.start + selection.end) / 2;
       selection.start = midPoint - GRAPH_WHEEL_MIN_SELECTION_WIDTH / 2;
       selection.end = midPoint + GRAPH_WHEEL_MIN_SELECTION_WIDTH / 2;
     }
@@ -1235,7 +1235,7 @@ AbstractCanvasGraph.prototype = {
  *        Invoked once the content is loaded, with the iframe as an argument.
  */
 AbstractCanvasGraph.createIframe = function(url, parent, callback) {
-  let iframe = parent.ownerDocument.createElementNS(HTML_NS, "iframe");
+  const iframe = parent.ownerDocument.createElementNS(HTML_NS, "iframe");
 
   iframe.addEventListener("DOMContentLoaded", function() {
     callback(iframe);
@@ -1264,24 +1264,24 @@ AbstractCanvasGraph.createIframe = function(url, parent, callback) {
  *         The custom striped pattern.
  */
 AbstractCanvasGraph.getStripePattern = function(data) {
-  let { ownerDocument, backgroundColor, stripesColor } = data;
-  let id = [backgroundColor, stripesColor].join(",");
+  const { ownerDocument, backgroundColor, stripesColor } = data;
+  const id = [backgroundColor, stripesColor].join(",");
 
   if (gCachedStripePattern.has(id)) {
     return gCachedStripePattern.get(id);
   }
 
-  let canvas = ownerDocument.createElementNS(HTML_NS, "canvas");
-  let ctx = canvas.getContext("2d");
-  let width = canvas.width = GRAPH_STRIPE_PATTERN_WIDTH;
-  let height = canvas.height = GRAPH_STRIPE_PATTERN_HEIGHT;
+  const canvas = ownerDocument.createElementNS(HTML_NS, "canvas");
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width = GRAPH_STRIPE_PATTERN_WIDTH;
+  const height = canvas.height = GRAPH_STRIPE_PATTERN_HEIGHT;
 
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  let pixelRatio = ownerDocument.defaultView.devicePixelRatio;
-  let scaledLineWidth = GRAPH_STRIPE_PATTERN_LINE_WIDTH * pixelRatio;
-  let scaledLineSpacing = GRAPH_STRIPE_PATTERN_LINE_SPACING * pixelRatio;
+  const pixelRatio = ownerDocument.defaultView.devicePixelRatio;
+  const scaledLineWidth = GRAPH_STRIPE_PATTERN_LINE_WIDTH * pixelRatio;
+  const scaledLineSpacing = GRAPH_STRIPE_PATTERN_LINE_SPACING * pixelRatio;
 
   ctx.strokeStyle = stripesColor;
   ctx.lineWidth = scaledLineWidth;
@@ -1295,7 +1295,7 @@ AbstractCanvasGraph.getStripePattern = function(data) {
 
   ctx.stroke();
 
-  let pattern = ctx.createPattern(canvas, "repeat");
+  const pattern = ctx.createPattern(canvas, "repeat");
   gCachedStripePattern.set(id, pattern);
   return pattern;
 };
@@ -1322,11 +1322,11 @@ this.CanvasGraphUtils = {
     await graph1.ready();
     await graph2.ready();
 
-    let window = graph1._window;
+    const window = graph1._window;
     window.cancelAnimationFrame(graph1._animationId);
     window.cancelAnimationFrame(graph2._animationId);
 
-    let loop = () => {
+    const loop = () => {
       window.requestAnimationFrame(loop);
       graph1._drawWidget();
       graph2._drawWidget();
@@ -1374,7 +1374,7 @@ this.CanvasGraphUtils = {
    *         A promise that is resolved once the worker finishes the task.
    */
   _performTaskInWorker: function(task, data) {
-    let worker = this._graphUtilsWorker || new DevToolsWorker(WORKER_URL);
+    const worker = this._graphUtilsWorker || new DevToolsWorker(WORKER_URL);
     return worker.performTask(task, data);
   }
 };
@@ -1385,7 +1385,7 @@ this.CanvasGraphUtils = {
  * @return number
  */
 function map(value, istart, istop, ostart, ostop) {
-  let ratio = istop - istart;
+  const ratio = istop - istart;
   if (ratio == 0) {
     return value;
   }

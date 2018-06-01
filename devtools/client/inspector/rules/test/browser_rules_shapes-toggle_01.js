@@ -22,13 +22,13 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Select a node with a shape value");
   await selectNode("#shape", inspector);
-  let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
+  const container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
+  const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Checking the initial state of the CSS shape toggle in the rule-view.");
   ok(shapesToggle, "Shapes highlighter toggle is visible.");
@@ -38,7 +38,7 @@ add_task(async function() {
     "No CSS shapes highlighter exists in the rule-view.");
   ok(!highlighters.shapesHighlighterShown, "No CSS shapes highlighter is shown.");
   info("Toggling ON the CSS shapes highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
+  const onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapesToggle.click();
   await onHighlighterShown;
 
@@ -51,7 +51,7 @@ add_task(async function() {
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
 
   info("Toggling OFF the CSS shapes highlighter from the rule-view.");
-  let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
+  const onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
   shapesToggle.click();
   await onHighlighterHidden;
 

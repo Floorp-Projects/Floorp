@@ -10,14 +10,14 @@
 const TEST_URL = URL_ROOT + "doc_markup_xul.xul";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
-  let panelFront = await getNodeFront("#test", inspector);
+  const panelFront = await getNodeFront("#test", inspector);
   ok(panelFront.hasAttribute("id"),
      "panelFront has id attribute in the beginning");
 
   info("Removing panel's id attribute");
-  let onMutation = inspector.once("markupmutation");
+  const onMutation = inspector.once("markupmutation");
   await testActor.removeAttribute("#test", "id");
 
   info("Waiting for markupmutation");

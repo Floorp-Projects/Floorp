@@ -7,7 +7,7 @@ const { drawBox } = require("devtools/client/memory/components/tree-map/draw");
 
 add_task(async function() {
   let fillRectValues, strokeRectValues;
-  let ctx = {
+  const ctx = {
     fillRect: (...args) => {
       fillRectValues = args;
     },
@@ -15,7 +15,7 @@ add_task(async function() {
       strokeRectValues = args;
     }
   };
-  let node = {
+  const node = {
     x: 20,
     y: 30,
     dx: 50,
@@ -23,9 +23,9 @@ add_task(async function() {
     type: "other",
     depth: 2
   };
-  let padding = [10, 10];
-  let borderWidth = () => 1;
-  let dragZoom = {
+  const padding = [10, 10];
+  const borderWidth = () => 1;
+  const dragZoom = {
     offsetX: 0,
     offsetY: 0,
     zoom: 0

@@ -24,7 +24,7 @@
 
     // Create/remove an iframe on DOMContentLoaded.
     document.addEventListener("DOMContentLoaded", function() {
-      let newIframe = document.createElement("iframe");
+      const newIframe = document.createElement("iframe");
       document.body.appendChild(newIframe);
       newIframe.remove();
       yay.textContent = "DOMContentLoaded";
@@ -32,7 +32,7 @@
 
     // Create/remove an iframe on window load.
     window.addEventListener("load", function() {
-      let newIframe = document.createElement("iframe");
+      const newIframe = document.createElement("iframe");
       document.body.appendChild(newIframe);
       newIframe.remove();
       yay.textContent = "load";

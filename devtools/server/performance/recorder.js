@@ -159,7 +159,7 @@ PerformanceRecorder.prototype = {
    *        the nsIProfiler module was started.
    */
   async _onConsoleProfileStart({ profileLabel, currentTime }) {
-    let recordings = this._recordings;
+    const recordings = this._recordings;
 
     // Abort if a profile with this label already exists.
     if (recordings.find(e => e.getLabel() === profileLabel)) {
@@ -191,9 +191,9 @@ PerformanceRecorder.prototype = {
     if (!data) {
       return;
     }
-    let { profileLabel } = data;
+    const { profileLabel } = data;
 
-    let pending = this._recordings.filter(r => r.isConsole() && r.isRecording());
+    const pending = this._recordings.filter(r => r.isConsole() && r.isRecording());
     if (pending.length === 0) {
       return;
     }
@@ -262,7 +262,7 @@ PerformanceRecorder.prototype = {
 
     // Filter by only recordings that are currently recording;
     // TODO should filter by recordings that have realtimeMarkers enabled.
-    let activeRecordings = this._recordings.filter(r => r.isRecording());
+    const activeRecordings = this._recordings.filter(r => r.isRecording());
 
     if (activeRecordings.length) {
       this.emit("timeline-data", eventName, eventData, activeRecordings);
@@ -275,7 +275,7 @@ PerformanceRecorder.prototype = {
    */
   canCurrentlyRecord: function() {
     let success = true;
-    let reasons = [];
+    const reasons = [];
 
     if (!Profiler.canProfile()) {
       success = false;
@@ -306,14 +306,14 @@ PerformanceRecorder.prototype = {
    *         A promise that is resolved once recording has started.
    */
   async startRecording(options) {
-    let profilerStart, timelineStart, memoryStart;
+    let timelineStart, memoryStart;
 
-    profilerStart = (async function() {
-      let data = await this._profiler.isActive();
+    const profilerStart = (async function() {
+      const data = await this._profiler.isActive();
       if (data.isActive) {
         return data;
       }
-      let startData = await this._profiler.start(
+      const startData = await this._profiler.start(
         mapRecordingOptions("profiler", options)
       );
 
@@ -336,20 +336,20 @@ PerformanceRecorder.prototype = {
       if (this._memory.getState() === "detached") {
         this._memory.attach();
       }
-      let recordingOptions = Object.assign(mapRecordingOptions("memory", options), {
+      const recordingOptions = Object.assign(mapRecordingOptions("memory", options), {
         drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT
       });
       memoryStart = this._memory.startRecordingAllocations(recordingOptions);
     }
 
-    let [profilerStartData, timelineStartData, memoryStartData] = await Promise.all([
+    const [profilerStartData, timelineStartData, memoryStartData] = await Promise.all([
       profilerStart, timelineStart, memoryStart
     ]);
 
-    let data = Object.create(null);
+    const data = Object.create(null);
     // Filter out start times that are not actually used (0 or undefined), and
     // find the earliest time since all sources use same epoch.
-    let startTimes = [
+    const startTimes = [
       profilerStartData.currentTime,
       memoryStartData,
       timelineStartData
@@ -362,7 +362,7 @@ PerformanceRecorder.prototype = {
     data.systemClient = this._systemClient;
     data.systemHost = await getSystemInfo();
 
-    let model = new PerformanceRecordingActor(this.conn, options, data);
+    const model = new PerformanceRecordingActor(this.conn, options, data);
     this._recordings.push(model);
 
     this.emit("recording-started", model);
@@ -401,8 +401,8 @@ PerformanceRecorder.prototype = {
     // open), we initialize the Performance tool so it can listen to those events.
     this._recordings.splice(this._recordings.indexOf(model), 1);
 
-    let startTime = model._startTime;
-    let profilerData = this._profiler.getProfile({ startTime });
+    const startTime = model._startTime;
+    const profilerData = this._profiler.getProfile({ startTime });
 
     // Only if there are no more sessions recording do we stop
     // the underlying memory and timeline actors. If we're still recording,
@@ -417,7 +417,7 @@ PerformanceRecorder.prototype = {
       this._timeline.stop();
     }
 
-    let recordingData = {
+    const recordingData = {
       // Data available only at the end of a recording.
       profile: profilerData.profile,
       // End times for all the actors.

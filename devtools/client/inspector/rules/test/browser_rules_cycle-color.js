@@ -21,21 +21,21 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let container = getRuleViewProperty(view, "body", "color").valueSpan;
+  const {inspector, view} = await openRuleView();
+  const container = getRuleViewProperty(view, "body", "color").valueSpan;
   await checkColorCycling(container, view);
   await checkAlphaColorCycling(inspector, view);
   await checkColorCyclingPersist(inspector, view);
 });
 
 async function checkColorCycling(container, view) {
-  let valueNode = container.querySelector(".ruleview-color");
-  let win = view.styleWindow;
+  const valueNode = container.querySelector(".ruleview-color");
+  const win = view.styleWindow;
 
   // Hex
   is(valueNode.textContent, "#f00", "Color displayed as a hex value.");
 
-  let tests = [{
+  const tests = [{
     value: "hsl(0, 100%, 50%)",
     comment: "Color displayed as an HSL value."
   }, {
@@ -52,21 +52,21 @@ async function checkColorCycling(container, view) {
     comment: "Color displayed as an HSL value again."
   }];
 
-  for (let test of tests) {
+  for (const test of tests) {
     await checkSwatchShiftClick(container, win, test.value, test.comment);
   }
 }
 
 async function checkAlphaColorCycling(inspector, view) {
   await selectNode("span", inspector);
-  let container = getRuleViewProperty(view, "span", "border-color").valueSpan;
-  let valueNode = container.querySelector(".ruleview-color");
-  let win = view.styleWindow;
+  const container = getRuleViewProperty(view, "span", "border-color").valueSpan;
+  const valueNode = container.querySelector(".ruleview-color");
+  const win = view.styleWindow;
 
   is(valueNode.textContent, "#ff000080",
     "Color displayed as an alpha hex value.");
 
-  let tests = [{
+  const tests = [{
     value: "hsla(0, 100%, 50%, 0.5)",
     comment: "Color displayed as an HSLa value."
   }, {
@@ -77,7 +77,7 @@ async function checkAlphaColorCycling(inspector, view) {
     comment: "Color displayed as an alpha hex value again."
   }];
 
-  for (let test of tests) {
+  for (const test of tests) {
     await checkSwatchShiftClick(container, win, test.value, test.comment);
   }
 }
@@ -86,7 +86,7 @@ async function checkColorCyclingPersist(inspector, view) {
   await selectNode("span", inspector);
   let container = getRuleViewProperty(view, "span", "color").valueSpan;
   let valueNode = container.querySelector(".ruleview-color");
-  let win = view.styleWindow;
+  const win = view.styleWindow;
 
   is(valueNode.textContent, "blue", "Color displayed as a color name.");
 
@@ -107,10 +107,10 @@ async function checkColorCyclingPersist(inspector, view) {
 }
 
 async function checkSwatchShiftClick(container, win, expectedValue, comment) {
-  let swatch = container.querySelector(".ruleview-colorswatch");
-  let valueNode = container.querySelector(".ruleview-color");
+  const swatch = container.querySelector(".ruleview-colorswatch");
+  const valueNode = container.querySelector(".ruleview-color");
 
-  let onUnitChange = swatch.once("unit-change");
+  const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {
     type: "mousedown",
     shiftKey: true

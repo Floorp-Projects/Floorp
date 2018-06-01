@@ -16,7 +16,7 @@ const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
                             ".delayed-animation"];
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Pause all animations in the test document");
@@ -36,7 +36,7 @@ add_task(async function() {
   await checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
   info("Play all animations from multiple animated node using toggleSeveral");
-  let players = await getPlayersFor(walker, animations,
+  const players = await getPlayersFor(walker, animations,
                                    [".multiple-animations"]);
   is(players.length, 2, "Node has 2 animation players");
   await animations.toggleSeveral(players, false);
@@ -72,21 +72,21 @@ async function checkStates(walker, animations, selectors, playState) {
   info("Checking the playState of all the nodes that have infinite running " +
        "animations");
 
-  for (let selector of selectors) {
+  for (const selector of selectors) {
     info("Getting the AnimationPlayerFront for node " + selector);
-    let [player] = await getPlayersFor(walker, animations, selector);
+    const [player] = await getPlayersFor(walker, animations, selector);
     await player.ready();
     await checkPlayState(player, selector, playState);
   }
 }
 
 async function getPlayersFor(walker, animations, selector) {
-  let node = await walker.querySelector(walker.rootNode, selector);
+  const node = await walker.querySelector(walker.rootNode, selector);
   return animations.getAnimationPlayersForNode(node);
 }
 
 async function checkPlayState(player, selector, expectedState) {
-  let state = await player.getCurrentState();
+  const state = await player.getCurrentState();
   is(state.playState, expectedState,
     "The playState of node " + selector + " is " + expectedState);
 }

@@ -7,9 +7,9 @@
  */
 
 add_task(function() {
-  let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
-  let { PREFS } = require("devtools/client/performance/modules/global");
-  let { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
+  const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+  const { PREFS } = require("devtools/client/performance/modules/global");
+  const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 
   PREFS.registerObserver();
 

@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 
 add_task(async function() {
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   await testUseInConsole();
 
@@ -16,19 +16,19 @@ add_task(async function() {
     info("Testing 'Use in Console' menu item.");
 
     await selectNode("#console-var", inspector);
-    let container = await getContainerForSelector("#console-var", inspector);
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const container = await getContainerForSelector("#console-var", inspector);
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: container.tagLine,
     });
-    let menuItem = allMenuItems.find(i => i.id === "node-menu-useinconsole");
+    const menuItem = allMenuItems.find(i => i.id === "node-menu-useinconsole");
     menuItem.click();
 
     await inspector.once("console-var-ready");
 
-    let hud = toolbox.getPanel("webconsole").hud;
-    let jsterm = hud.jsterm;
+    const hud = toolbox.getPanel("webconsole").hud;
+    const jsterm = hud.jsterm;
 
-    let jstermInput = jsterm.hud.document.querySelector(".jsterm-input-node");
+    const jstermInput = jsterm.hud.document.querySelector(".jsterm-input-node");
     is(jstermInput.value, "temp0", "first console variable is named temp0");
 
     let result = await jsterm.execute();

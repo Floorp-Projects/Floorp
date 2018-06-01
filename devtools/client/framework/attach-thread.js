@@ -37,10 +37,10 @@ function handleThreadState(toolbox, event, packet) {
 }
 
 function attachThread(toolbox) {
-  let deferred = defer();
+  const deferred = defer();
 
-  let target = toolbox.target;
-  let { form: { chromeDebugger, actor } } = target;
+  const target = toolbox.target;
+  const { form: { chromeDebugger, actor } } = target;
 
   // Sourcemaps are always turned off when using the new debugger
   // frontend. This is because it does sourcemapping on the
@@ -56,9 +56,9 @@ function attachThread(toolbox) {
     ignoreFrameEnvironment = true;
   }
 
-  let threadOptions = { useSourceMaps, autoBlackBox, ignoreFrameEnvironment };
+  const threadOptions = { useSourceMaps, autoBlackBox, ignoreFrameEnvironment };
 
-  let handleResponse = (res, threadClient) => {
+  const handleResponse = (res, threadClient) => {
     if (res.error) {
       deferred.reject(new Error("Couldn't attach to thread: " + res.error));
       return;

@@ -7,19 +7,19 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(AUTOMATION_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, AutomationView } = panelWin;
+  const { target, panel } = await initWebAudioEditor(AUTOMATION_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, AutomationView } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let nodeIds = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const nodeIds = actors.map(actor => actor.actorID);
 
   // Oscillator node
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));

@@ -141,7 +141,7 @@ function recursiveWalk(breakdown, edge, report, visitor) {
     visitor.exit(breakdown, report, edge);
   } else {
     visitor.enter(breakdown, report, edge);
-    for (let { edge: ed, referent, breakdown: subBreakdown }
+    for (const { edge: ed, referent, breakdown: subBreakdown }
       of getReportEdges(breakdown, report)) {
       recursiveWalk(subBreakdown, ed, referent, visitor);
     }
@@ -273,7 +273,7 @@ DiffVisitor.prototype.exit = function(breakdown, report, edge) {
       .map(e => e.edge)
       .filter(e => !visited.has(e));
     const results = this._resultsStack[this._resultsStack.length - 1];
-    for (let edg of unvisited) {
+    for (const edg of unvisited) {
       this._set(results, edg, this._get(other, edg));
     }
   }

@@ -18,9 +18,9 @@ add_task(async function() {
   await createIndexedDB();
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = StorageFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = StorageFront(client, form);
 
   await testInternalDBs(front);
   await clearStorage();
@@ -34,11 +34,11 @@ add_task(async function() {
 });
 
 async function createIndexedDB() {
-  let request = indexedDB.open("MyDatabase", 1);
+  const request = indexedDB.open("MyDatabase", 1);
 
   request.onupgradeneeded = function() {
-    let db = request.result;
-    let store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
+    const db = request.result;
+    const store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
     store.createIndex("NameIndex", ["name.last", "name.first"]);
   };
 
@@ -46,12 +46,12 @@ async function createIndexedDB() {
 }
 
 async function testInternalDBs(front) {
-  let data = await front.listStores();
-  let hosts = data.indexedDB.hosts;
+  const data = await front.listStores();
+  const hosts = data.indexedDB.hosts;
 
   ok(hosts.chrome, `indexedDB hosts contains "chrome"`);
 
-  let path = `["MyDatabase (persistent)","MyObjectStore"]`;
-  let foundDB = hosts.chrome.includes(path);
+  const path = `["MyDatabase (persistent)","MyObjectStore"]`;
+  const foundDB = hosts.chrome.includes(path);
   ok(foundDB, `Host "chrome" includes ${path}`);
 }

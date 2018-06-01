@@ -12,12 +12,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     OverviewView,
     DetailsView,
@@ -29,9 +29,9 @@ add_task(async function() {
   let updatedWaterfall = 0;
   let updatedCallTree = 0;
   let updatedFlameGraph = 0;
-  let updateWaterfall = () => updatedWaterfall++;
-  let updateCallTree = () => updatedCallTree++;
-  let updateFlameGraph = () => updatedFlameGraph++;
+  const updateWaterfall = () => updatedWaterfall++;
+  const updateCallTree = () => updatedCallTree++;
+  const updateFlameGraph = () => updatedFlameGraph++;
   WaterfallView.on(EVENTS.UI_WATERFALL_RENDERED, updateWaterfall);
   JsCallTreeView.on(EVENTS.UI_JS_CALL_TREE_RENDERED, updateCallTree);
   JsFlameGraphView.on(EVENTS.UI_JS_FLAMEGRAPH_RENDERED, updateFlameGraph);

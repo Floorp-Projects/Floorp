@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testFilterOverriddenProperty(inspector, view);
 });
@@ -46,8 +46,8 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
   ok(!textPropEditor.filterProperty.hidden,
     "Overridden search button is not hidden.");
 
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
+  const searchField = ruleView.searchField;
+  const onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   info("Click the overridden search");
   textPropEditor.filterProperty.click();

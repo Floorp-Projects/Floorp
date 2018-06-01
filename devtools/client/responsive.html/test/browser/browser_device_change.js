@@ -29,7 +29,7 @@ const testDevice = {
 addDeviceForTest(testDevice);
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { store } = ui.toolWindow;
+  const { store } = ui.toolWindow;
 
   reloadOnUAChange(true);
 
@@ -56,7 +56,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await testTouchEventsOverride(ui, true);
 
   // Test resetting device when resizing viewport
-  let deviceRemoved = once(ui, "device-association-removed");
+  const deviceRemoved = once(ui, "device-association-removed");
   reloaded = waitForViewportLoad(ui);
   await testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
@@ -82,7 +82,7 @@ add_task(async function() {
   const tab = await addTab(TEST_URL);
   const { ui } = await openRDM(tab);
 
-  let { store } = ui.toolWindow;
+  const { store } = ui.toolWindow;
 
   reloadOnUAChange(true);
 
@@ -113,7 +113,7 @@ add_task(async function() {
 });
 
 function testViewportDimensions(ui, w, h) {
-  let viewport = ui.toolWindow.document.querySelector(".viewport-content");
+  const viewport = ui.toolWindow.document.querySelector(".viewport-content");
 
   is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
      `${w}px`, `Viewport should have width of ${w}px`);
@@ -122,6 +122,6 @@ function testViewportDimensions(ui, w, h) {
 }
 
 async function testDevicePixelRatio(ui, expected) {
-  let dppx = await getViewportDevicePixelRatio(ui);
+  const dppx = await getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
 }

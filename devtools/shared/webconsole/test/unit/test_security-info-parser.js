@@ -46,7 +46,7 @@ const MockSecurityInfo = {
 };
 
 function run_test() {
-  let result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
+  const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
 
   equal(result.state, "secure", "State is correct.");
 

@@ -11,10 +11,10 @@ requestLongerTimeout(2);
 const TEST_URL = "data:text/html;charset=utf8,<div id='test' a b c d e></div>";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Focusing the tag editor of the test element");
-  let {editor} = await focusNode("div", inspector);
+  const {editor} = await focusNode("div", inspector);
   editor.tag.focus();
 
   info("Pressing tab and expecting to focus the ID attribute, always first");
@@ -27,10 +27,10 @@ add_task(async function() {
 
   // Check the order of the other attributes in the DOM to the check they appear
   // correctly in the markup-view
-  let attributes = (await getAttributesFromEditor("div", inspector)).slice(1);
+  const attributes = (await getAttributesFromEditor("div", inspector)).slice(1);
 
   info("Tabbing forward through attributes in edit mode");
-  for (let attribute of attributes) {
+  for (const attribute of attributes) {
     collapseSelectionAndTab(inspector);
     checkFocusedAttribute(attribute, true);
   }
@@ -39,10 +39,10 @@ add_task(async function() {
 
   // Just reverse the attributes other than id and remove the first one since
   // it's already focused now.
-  let reverseAttributes = attributes.reverse();
+  const reverseAttributes = attributes.reverse();
   reverseAttributes.shift();
 
-  for (let attribute of reverseAttributes) {
+  for (const attribute of reverseAttributes) {
     collapseSelectionAndShiftTab(inspector);
     checkFocusedAttribute(attribute, true);
   }

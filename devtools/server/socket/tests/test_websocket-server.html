@@ -21,7 +21,7 @@ window.onload = function() {
 
   add_task(async function() {
     // Create a TCP server on auto-assigned port
-    let server = new ServerSocket(-1, true, -1);
+    const server = new ServerSocket(-1, true, -1);
     ok(server, `Launched WebSocket server on port ${server.port}`);
 
     let input, output;
@@ -33,7 +33,7 @@ window.onload = function() {
         output = transport.openOutputStream(0, 0, 0);
 
         // Perform the WebSocket handshake
-        let webSocket = await WebSocketServer.accept(transport, input, output);
+        const webSocket = await WebSocketServer.accept(transport, input, output);
 
         // Echo the received message back to the sender
         webSocket.onmessage = ({ data }) => {
@@ -52,24 +52,24 @@ window.onload = function() {
     });
 
     // Create client connection
-    let client = await new Promise((resolve, reject) => {
-      let socket = new WebSocket(`ws://localhost:${server.port}`);
+    const client = await new Promise((resolve, reject) => {
+      const socket = new WebSocket(`ws://localhost:${server.port}`);
       socket.onopen = () => resolve(socket);
       socket.onerror = reject;
     });
     ok(client, `Created WebSocket connection to port ${server.port}`);
 
     // Create a promise that resolves when the WebSocket closes
-    let closed = new Promise(resolve => {
+    const closed = new Promise(resolve => {
       client.onclose = resolve;
     });
 
     // Send a message
-    let message = "hello there";
+    const message = "hello there";
     client.send(message);
     info("Sent a message to server");
     // Check that it was echoed
-    let echoedMessage = await new Promise((resolve, reject) => {
+    const echoedMessage = await new Promise((resolve, reject) => {
       client.onmessage = ({ data }) => resolve(data);
       client.onerror = reject;
     });

@@ -11,10 +11,10 @@ add_task(async function() {
   Services.prefs.setCharPref("devtools.netmonitor.visibleColumns",
     '["status", "contentSize", "waterfall"]');
 
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document } = monitor.panelWin;
+  const { document } = monitor.panelWin;
 
   ok(document.querySelector("#requests-list-status-button"),
      "Status column should be shown");

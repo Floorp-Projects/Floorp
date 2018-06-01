@@ -6,12 +6,12 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(NO_CANVAS_URL);
-  let { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(NO_CANVAS_URL);
+  const { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
+  const recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
   SnapshotsListView._onRecordButtonClick();
 
   await recordingStarted;
@@ -19,8 +19,8 @@ async function ifTestingSupported() {
   is($("#empty-notice").hidden, true, "Empty notice not shown");
   is($("#waiting-notice").hidden, false, "Waiting notice shown");
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let recordingCancelled = once(window, EVENTS.SNAPSHOT_RECORDING_CANCELLED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const recordingCancelled = once(window, EVENTS.SNAPSHOT_RECORDING_CANCELLED);
 
   await Promise.all([recordingFinished, recordingCancelled]);
 

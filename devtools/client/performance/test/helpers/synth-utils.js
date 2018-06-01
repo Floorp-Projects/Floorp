@@ -63,7 +63,7 @@ exports.synthesizeCustomTreeClass = () => {
 
   MyCustomTreeItem.prototype = extend(AbstractTreeItem.prototype, {
     _displaySelf: function(document, arrowNode) {
-      let node = document.createElement("hbox");
+      const node = document.createElement("hbox");
       node.style.marginInlineStart = (this.level * 10) + "px";
       node.appendChild(arrowNode);
       node.appendChild(document.createTextNode(this.itemDataSrc.label));
@@ -71,7 +71,7 @@ exports.synthesizeCustomTreeClass = () => {
     },
 
     _populateSelf: function(children) {
-      for (let childDataSrc of this.itemDataSrc.children) {
+      for (const childDataSrc of this.itemDataSrc.children) {
         children.push(new MyCustomTreeItem(childDataSrc, {
           parent: this,
           level: this.level + 1

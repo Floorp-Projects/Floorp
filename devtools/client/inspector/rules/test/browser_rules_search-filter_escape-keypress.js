@@ -23,7 +23,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testAddTextInFilter(inspector, view);
   await testEscapeKeypress(inspector, view);
@@ -37,7 +37,7 @@ async function testAddTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(rule.textProps[0].editor.container.classList
@@ -48,10 +48,10 @@ async function testAddTextInFilter(inspector, view) {
 async function testEscapeKeypress(inspector, view) {
   info("Pressing the escape key on search filter");
 
-  let doc = view.styleDocument;
-  let win = view.styleWindow;
-  let searchField = view.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
+  const doc = view.styleDocument;
+  const win = view.styleWindow;
+  const searchField = view.searchField;
+  const onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_ESCAPE", {}, win);

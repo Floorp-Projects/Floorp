@@ -31,8 +31,8 @@ window.onload = function() {
   const { FramerateFront } = require("devtools/shared/fronts/framerate");
 
   function plotFPS(ticks, interval = 100, clamp = 60) {
-    let timeline = [];
-    let totalTicks = ticks.length;
+    const timeline = [];
+    const totalTicks = ticks.length;
 
     // If the refresh driver didn't get a chance to tick before the
     // recording was stopped, assume framerate was 0.
@@ -46,15 +46,15 @@ window.onload = function() {
     let prevTime = ticks[0];
 
     for (let i = 1; i < totalTicks; i++) {
-      let currTime = ticks[i];
+      const currTime = ticks[i];
       frameCount++;
 
-      let elapsedTime = currTime - prevTime;
+      const elapsedTime = currTime - prevTime;
       if (elapsedTime < interval) {
         continue;
       }
 
-      let framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
+      const framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
       timeline.push({ delta: prevTime, value: framerate });
       timeline.push({ delta: currTime, value: framerate });
 
@@ -68,11 +68,11 @@ window.onload = function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      let form = response.tabs[response.selected];
-      let front = FramerateFront(client, form);
+      const form = response.tabs[response.selected];
+      const front = FramerateFront(client, form);
 
       window.setTimeout(() => {
         /* eslint-disable max-nested-callbacks */
@@ -91,15 +91,15 @@ window.onload = function() {
   function onRecordingStopped(front, rawData) {
     ok(rawData, "There should be a recording available.");
 
-    let timeline = plotFPS(rawData);
+    const timeline = plotFPS(rawData);
     ok(timeline.length >= 2,
       "There should be at least one measurement available, with two entries.");
 
     let prevTimeStart = timeline[0].delta;
 
     for (let i = 0; i < timeline.length; i += 2) {
-      let currTimeStart = timeline[i].delta;
-      let currTimeEnd = timeline[i + 1].delta;
+      const currTimeStart = timeline[i].delta;
+      const currTimeEnd = timeline[i + 1].delta;
       info("Testing delta: " + currTimeStart + " vs. " + currTimeEnd);
 
       ok(currTimeStart < currTimeEnd,
@@ -111,8 +111,8 @@ window.onload = function() {
     }
 
     for (let i = 0; i < timeline.length; i += 2) {
-      let currFramerateStart = timeline[i].value;
-      let currFramerateEnd = timeline[i + 1].value;
+      const currFramerateStart = timeline[i].value;
+      const currFramerateEnd = timeline[i + 1].value;
       info("Testing framerate: " + currFramerateStart);
 
       is(currFramerateStart, currFramerateEnd,

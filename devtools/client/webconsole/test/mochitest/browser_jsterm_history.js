@@ -20,7 +20,7 @@ add_task(async function() {
   const { inputNode } = jsterm;
   jsterm.clearOutput();
 
-  for (let command of COMMANDS) {
+  for (const command of COMMANDS) {
     info(`Executing command ${command}`);
     jsterm.setInputValue(command);
     await jsterm.execute();
@@ -53,7 +53,7 @@ add_task(async function() {
 
   is(inputNode.value, "", "check input is still empty");
 
-  let idxLast = COMMANDS.length - 1;
+  const idxLast = COMMANDS.length - 1;
   jsterm.historyPeruse(HISTORY_BACK);
   is(inputNode.value, COMMANDS[idxLast], "check history next idx:" + idxLast);
 });

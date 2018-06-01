@@ -18,7 +18,7 @@ let useXulWrapper;
 
 add_task(async function() {
   await addTab("about:blank");
-  let [, , doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -40,7 +40,7 @@ async function testNoAutoFocus(doc) {
   ok(doc.activeElement.closest("#box4-input"), "Focus is in the #box4-input");
 
   info("Test a tooltip without autofocus will not take focus");
-  let tooltip = await createTooltip(doc, false);
+  const tooltip = await createTooltip(doc, false);
 
   await showTooltip(tooltip, doc.getElementById("box1"));
   ok(doc.activeElement.closest("#box4-input"), "Focus is still in the #box4-input");
@@ -57,7 +57,7 @@ async function testAutoFocus(doc) {
 
   info("Test autofocus tooltip takes focus when displayed, " +
     "and restores the focus when hidden");
-  let tooltip = await createTooltip(doc, true);
+  const tooltip = await createTooltip(doc, true);
 
   await showTooltip(tooltip, doc.getElementById("box1"));
   ok(doc.activeElement.closest(".tooltip-content"), "Focus is in the tooltip");
@@ -77,7 +77,7 @@ async function testAutoFocusPreservesFocusChange(doc) {
 
   info("Test autofocus tooltip takes focus when displayed, " +
     "but does not try to restore the active element if it is not focused when hidden");
-  let tooltip = await createTooltip(doc, true);
+  const tooltip = await createTooltip(doc, true);
 
   await showTooltip(tooltip, doc.getElementById("box1"));
   ok(doc.activeElement.closest(".tooltip-content"), "Focus is in the tooltip");
@@ -100,8 +100,8 @@ async function testAutoFocusPreservesFocusChange(doc) {
  * a promise that will resolve when receiving the focus event on the node.
  */
 function focusNode(doc, selector) {
-  let node = doc.querySelector(selector);
-  let onFocus = once(node, "focus");
+  const node = doc.querySelector(selector);
+  const onFocus = once(node, "focus");
   node.focus();
   return onFocus;
 }
@@ -111,8 +111,8 @@ function focusNode(doc, selector) {
  * a promise that will resolve when receiving the blur event on the node.
  */
 function blurNode(doc, selector) {
-  let node = doc.querySelector(selector);
-  let onBlur = once(node, "blur");
+  const node = doc.querySelector(selector);
+  const onBlur = once(node, "blur");
   node.blur();
   return onBlur;
 }
@@ -127,12 +127,12 @@ function blurNode(doc, selector) {
  *         tooltip content will be ready.
  */
 function createTooltip(doc, autofocus) {
-  let tooltip = new HTMLTooltip(doc, {autofocus, useXulWrapper});
-  let div = doc.createElementNS(HTML_NS, "div");
+  const tooltip = new HTMLTooltip(doc, {autofocus, useXulWrapper});
+  const div = doc.createElementNS(HTML_NS, "div");
   div.classList.add("tooltip-content");
   div.style.height = "50px";
 
-  let input = doc.createElementNS(HTML_NS, "input");
+  const input = doc.createElementNS(HTML_NS, "input");
   input.setAttribute("type", "text");
   div.appendChild(input);
 

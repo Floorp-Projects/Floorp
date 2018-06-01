@@ -57,7 +57,7 @@ WorkerClient.prototype = {
 
   attachThread: function(options = {}, onResponse = noop) {
     if (this.thread) {
-      let response = [{
+      const response = [{
         type: "connected",
         threadActor: this.thread._actor,
         consoleActor: this.consoleActor,

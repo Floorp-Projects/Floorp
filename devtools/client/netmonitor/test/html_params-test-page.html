@@ -19,13 +19,13 @@
       "use strict";
 
       function get(address, query) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("GET", address + query, true);
         xhr.send();
       }
 
       function post(address, query, contentType, postBody) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", address + query, true);
         xhr.setRequestHeader("content-type", contentType);
         xhr.send(postBody);

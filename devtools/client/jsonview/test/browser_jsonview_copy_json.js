@@ -12,20 +12,20 @@ add_task(async function() {
 
   await addJsonViewTab(TEST_JSON_URL);
 
-  let countBefore = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  const countBefore = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(countBefore == 1, "There must be one row");
 
-  let text = await getElementText(".jsonPanelBox .treeTable .treeRow");
+  const text = await getElementText(".jsonPanelBox .treeTable .treeRow");
   is(text, "name\"value\"", "There must be proper JSON displayed");
 
   // Verify JSON copy into the clipboard.
-  let value = "{\"name\": \"value\"}\n";
-  let browser = gBrowser.selectedBrowser;
-  let selector = ".jsonPanelBox .toolbar button.copy";
+  const value = "{\"name\": \"value\"}\n";
+  const browser = gBrowser.selectedBrowser;
+  const selector = ".jsonPanelBox .toolbar button.copy";
   await waitForClipboardPromise(function setup() {
     BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
   }, function validator(result) {
-    let str = normalizeNewLines(result);
+    const str = normalizeNewLines(result);
     return str == value;
   });
 });

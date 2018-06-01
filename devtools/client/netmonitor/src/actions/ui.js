@@ -27,7 +27,9 @@ const { getDisplayedRequests } = require("../selectors/index");
 function openNetworkDetails(open) {
   return (dispatch, getState) => {
     const visibleRequestItems = getDisplayedRequests(getState());
-    let defaultSelectedId = visibleRequestItems.length ? visibleRequestItems[0].id : null;
+    const defaultSelectedId = visibleRequestItems.length
+      ? visibleRequestItems[0].id
+      : null;
 
     return dispatch({
       type: OPEN_NETWORK_DETAILS,

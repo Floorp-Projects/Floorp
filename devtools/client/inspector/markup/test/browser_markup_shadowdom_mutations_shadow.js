@@ -34,7 +34,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
 add_task(async function() {
   await enableWebComponents();
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   const tree = `
     test-component
@@ -51,13 +51,13 @@ add_task(async function() {
   info("Delete a shadow dom element and check the updated markup view");
   let mutated = waitForMutation(inspector, "childList");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let shadowRoot = content.document.querySelector("test-component").shadowRoot;
-    let slotContainer = shadowRoot.getElementById("slot1-container");
+    const shadowRoot = content.document.querySelector("test-component").shadowRoot;
+    const slotContainer = shadowRoot.getElementById("slot1-container");
     slotContainer.remove();
   });
   await mutated;
 
-  let treeAfterDelete = `
+  const treeAfterDelete = `
     test-component
       #shadow-root
         another-div
@@ -67,14 +67,14 @@ add_task(async function() {
 
   mutated = inspector.once("markupmutation");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    let shadowRoot = content.document.querySelector("test-component").shadowRoot;
-    let shadowDiv = shadowRoot.getElementById("another-div");
+    const shadowRoot = content.document.querySelector("test-component").shadowRoot;
+    const shadowDiv = shadowRoot.getElementById("another-div");
     shadowDiv.setAttribute("random-attribute", "1");
   });
   await mutated;
 
   info("Add an attribute on a shadow dom element and check the updated markup view");
-  let treeAfterAttrChange = `
+  const treeAfterAttrChange = `
     test-component
       #shadow-root
         random-attribute

@@ -38,7 +38,7 @@ function test_executable_lines() {
 
     gThreadClient.getSources(function({error, sources}) {
       Assert.ok(!error);
-      let source = gThreadClient.source(sources[0]);
+      const source = gThreadClient.source(sources[0]);
       source.getExecutableLines(function(lines) {
         Assert.ok(arrays_equal([1, 2, 4, 6], lines));
         finishClient(gClient);
@@ -46,7 +46,7 @@ function test_executable_lines() {
     });
   });
 
-  let code = readFile("sourcemapped.js") + "\n//# sourceMappingURL=" +
+  const code = readFile("sourcemapped.js") + "\n//# sourceMappingURL=" +
     getFileUrl("source-map-data/sourcemapped.map");
 
   Cu.evalInSandbox(code, gDebuggee, "1.8",

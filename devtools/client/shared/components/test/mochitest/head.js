@@ -90,7 +90,7 @@ function isAccessibleTree(tree, options = {}) {
   }
 
   const treeNodes = [...treeNode.querySelectorAll(".tree-node")];
-  for (let node of treeNodes) {
+  for (const node of treeNodes) {
     ok(node.id, "TreeNode has an id");
     is(node.getAttribute("role"), "treeitem", "Tree item semantics is present");
     is(parseInt(node.getAttribute("aria-level"), 10),
@@ -160,13 +160,13 @@ var TEST_TREE = {
 function checkFrameString({
   el, file, line, column, source, functionName, shouldLink, tooltip
 }) {
-  let $ = selector => el.querySelector(selector);
+  const $ = selector => el.querySelector(selector);
 
-  let $func = $(".frame-link-function-display-name");
-  let $source = $(".frame-link-source");
-  let $sourceInner = $(".frame-link-source-inner");
-  let $filename = $(".frame-link-filename");
-  let $line = $(".frame-link-line");
+  const $func = $(".frame-link-function-display-name");
+  const $source = $(".frame-link-source");
+  const $sourceInner = $(".frame-link-source-inner");
+  const $filename = $(".frame-link-filename");
+  const $line = $(".frame-link-line");
 
   is($filename.textContent, file, "Correct filename");
   is(el.getAttribute("data-line"), line ? `${line}` : null, "Expected `data-line` found");

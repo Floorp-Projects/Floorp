@@ -23,7 +23,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("#testid", inspector);
   is(view.element.querySelectorAll("#ruleview-no-results").length, 0,
@@ -43,7 +43,7 @@ add_task(async function() {
   is(linkText, "inline:7",
     "link text at index 2 contains no media query text.");
 
-  let selector = getRuleViewRuleEditor(view, 2).selectorText;
+  const selector = getRuleViewRuleEditor(view, 2).selectorText;
   is(selector.querySelector(".ruleview-selector-matched").textContent,
     ".testclass", ".textclass should be matched.");
   is(selector.querySelector(".ruleview-selector-unmatched").textContent,

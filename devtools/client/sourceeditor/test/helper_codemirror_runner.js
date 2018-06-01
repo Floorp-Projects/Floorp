@@ -10,7 +10,7 @@
 function runCodeMirrorTest(browser) {
   let mm = browser.messageManager;
   mm.addMessageListener("setStatus", function listener({data}) {
-    let {statusMsg, type, customMsg} = data;
+    const {statusMsg, type, customMsg} = data;
     codemirrorSetStatus(statusMsg, type, customMsg);
   });
   mm.addMessageListener("done", function listener({data}) {

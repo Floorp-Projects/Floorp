@@ -28,7 +28,7 @@ this.openMemoryPanel = async function(tab) {
   const target = TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "memory");
   info("Memory panel shown successfully.");
-  let panel = toolbox.getCurrentPanel();
+  const panel = toolbox.getCurrentPanel();
   return { tab, panel };
 };
 
@@ -94,8 +94,8 @@ function dumpn(msg) {
  * @return {Promise}
  */
 function waitUntilDominatorTreeState(store, expected) {
-  let predicate = () => {
-    let snapshots = store.getState().snapshots;
+  const predicate = () => {
+    const snapshots = store.getState().snapshots;
     return snapshots.length === expected.length &&
             expected.every((state, i) => {
               return snapshots[i].dominatorTree &&
@@ -107,8 +107,8 @@ function waitUntilDominatorTreeState(store, expected) {
 }
 
 function takeSnapshot(window) {
-  let { gStore, document } = window;
-  let snapshotCount = gStore.getState().snapshots.length;
+  const { gStore, document } = window;
+  const snapshotCount = gStore.getState().snapshots.length;
   info("Taking snapshot...");
   document.querySelector(".devtools-toolbar .take-snapshot").click();
   return waitUntilState(gStore,
@@ -116,7 +116,7 @@ function takeSnapshot(window) {
 }
 
 function clearSnapshots(window) {
-  let { gStore, document } = window;
+  const { gStore, document } = window;
   document.querySelector(".devtools-toolbar .clear-snapshots").click();
   return waitUntilState(gStore, () => gStore.getState().snapshots.every(
     (snapshot) => snapshot.state !== states.READ)
@@ -129,7 +129,7 @@ function clearSnapshots(window) {
  */
 function setCensusDisplay(window, display) {
   info(`Setting census display to ${display}...`);
-  let { gStore, gHeapAnalysesClient } = window;
+  const { gStore, gHeapAnalysesClient } = window;
   // XXX: Should handle this via clicking the DOM, but React doesn't
   // fire the onChange event, so just change it in the store.
   // window.document.querySelector(`.select-display`).value = type;
@@ -137,7 +137,7 @@ function setCensusDisplay(window, display) {
                          .setCensusDisplayAndRefresh(gHeapAnalysesClient, display));
 
   return waitUntilState(window.gStore, () => {
-    let selected = window.gStore.getState().snapshots.find(s => s.selected);
+    const selected = window.gStore.getState().snapshots.find(s => s.selected);
     return selected.state === states.READ &&
       selected.census &&
       selected.census.state === censusState.SAVED &&
@@ -162,8 +162,8 @@ function getDisplayedSnapshotStatus(document) {
  * @return {Number}
  */
 function getSelectedSnapshotIndex(store) {
-  let snapshots = store.getState().snapshots;
-  let selectedSnapshot = snapshots.find(s => s.selected);
+  const snapshots = store.getState().snapshots;
+  const selectedSnapshot = snapshots.find(s => s.selected);
   return snapshots.indexOf(selectedSnapshot);
 }
 
@@ -185,15 +185,15 @@ function waitUntilSnapshotSelected(store, snapshotIndex) {
  * @return {Promise}
  */
 function waitUntilCensusState(store, getCensus, expected) {
-  let predicate = () => {
-    let snapshots = store.getState().snapshots;
+  const predicate = () => {
+    const snapshots = store.getState().snapshots;
 
     info("Current census state:" +
              snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
 
     return snapshots.length === expected.length &&
            expected.every((state, i) => {
-             let census = getCensus(snapshots[i]);
+             const census = getCensus(snapshots[i]);
              return (state === "*") ||
                     (!census && !state) ||
                     (census && census.state === state);
@@ -216,10 +216,10 @@ function waitUntilCensusState(store, getCensus, expected) {
  */
 function createRAFMock() {
   let queuedFns = [];
-  let mock = { timesCalled: 0 };
+  const mock = { timesCalled: 0 };
 
   mock.nextFrame = function() {
-    let thisQueue = queuedFns;
+    const thisQueue = queuedFns;
     queuedFns = [];
     for (let i = 0; i < thisQueue.length; i++) {
       thisQueue[i]();

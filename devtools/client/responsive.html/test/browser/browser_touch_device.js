@@ -38,7 +38,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 async function waitStartup(ui) {
-  let { store } = ui.toolWindow;
+  const { store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1

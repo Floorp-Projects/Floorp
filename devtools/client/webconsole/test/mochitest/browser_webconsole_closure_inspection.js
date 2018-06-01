@@ -38,12 +38,12 @@ function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then((hud) => {
       openDebugger().then(({ toolbox, panelWin }) => {
-        let deferred = defer();
+        const deferred = defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
         // eslint-disable-next-line
         ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-          let button = content.document.querySelector("button");
+          const button = content.document.querySelector("button");
           ok(button, "button element found");
           button.click();
         });
@@ -70,14 +70,14 @@ function consoleOpened(hud) {
 }
 
 function onExecuteGetName(results) {
-  let clickable = results[0].clickableElements[0];
+  const clickable = results[0].clickableElements[0];
   ok(clickable, "clickable object found");
 
   gJSTerm.once("variablesview-fetched", onGetNameFetch);
-  let contextMenu =
+  const contextMenu =
       gWebConsole.iframeWindow.document.getElementById("output-contextmenu");
   waitForContextMenu(contextMenu, clickable, () => {
-    let openInVarView = contextMenu.querySelector("#menu_openInVarView");
+    const openInVarView = contextMenu.querySelector("#menu_openInVarView");
     ok(openInVarView.disabled === false,
        "the \"Open In Variables View\" context menu item should be clickable");
     // EventUtils.synthesizeMouseAtCenter seems to fail here in Mac OSX
@@ -95,7 +95,7 @@ function onGetNameFetch(view) {
 }
 
 function onExpandClosure(results) {
-  let prop = results[0].matchedProp;
+  const prop = results[0].matchedProp;
   ok(prop, "matched the name property in the variables view");
 
   gVariablesView.window.focus();

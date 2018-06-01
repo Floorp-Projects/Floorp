@@ -20,8 +20,8 @@
  *        Element expected to be the aria activedescendant of the root node
  */
 function testNavigationState(inspector, elms, focused, activedescendant) {
-  let doc = inspector.markup.doc;
-  let id = activedescendant.getAttribute("id");
+  const doc = inspector.markup.doc;
+  const id = activedescendant.getAttribute("id");
   is(doc.activeElement, focused, `Keyboard focus should be set to ${focused}`);
   is(elms.root.elt.getAttribute("aria-activedescendant"), id,
     `Active descendant should be set to ${id}`);
@@ -50,9 +50,9 @@ async function runAccessibilityNavigationTest(inspector, elms,
   {desc, key, options, focused, activedescendant, waitFor}) {
   info(desc);
 
-  let markup = inspector.markup;
-  let doc = markup.doc;
-  let win = doc.defaultView;
+  const markup = inspector.markup;
+  const doc = markup.doc;
+  const win = doc.defaultView;
 
   let updated;
   if (waitFor) {
@@ -64,7 +64,7 @@ async function runAccessibilityNavigationTest(inspector, elms,
   EventUtils.synthesizeKey(key, options, win);
   await updated;
 
-  let focusedElement = lookupPath(elms, focused);
-  let activeDescendantElement = lookupPath(elms, activedescendant);
+  const focusedElement = lookupPath(elms, focused);
+  const activeDescendantElement = lookupPath(elms, activedescendant);
   testNavigationState(inspector, elms, focusedElement, activeDescendantElement);
 }

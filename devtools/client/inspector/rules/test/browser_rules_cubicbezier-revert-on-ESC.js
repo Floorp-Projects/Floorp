@@ -17,12 +17,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
   await testPressingEscapeRevertsChanges(view);
 });
 
 async function testPressingEscapeRevertsChanges(view) {
-  let {propEditor} = await openCubicBezierAndChangeCoords(view, 1, 0,
+  const {propEditor} = await openCubicBezierAndChangeCoords(view, 1, 0,
     [0.1, 2, 0.9, -1], {
       selector: "body",
       name: "animation-timing-function",
@@ -43,10 +43,10 @@ async function testPressingEscapeRevertsChanges(view) {
 async function escapeTooltip(view) {
   info("Pressing ESCAPE to close the tooltip");
 
-  let bezierTooltip = view.tooltips.getTooltip("cubicBezier");
-  let widget = await bezierTooltip.widget;
-  let onHidden = bezierTooltip.tooltip.once("hidden");
-  let onModifications = view.once("ruleview-changed");
+  const bezierTooltip = view.tooltips.getTooltip("cubicBezier");
+  const widget = await bezierTooltip.widget;
+  const onHidden = bezierTooltip.tooltip.once("hidden");
+  const onModifications = view.once("ruleview-changed");
   focusAndSendKey(widget.parent.ownerDocument.defaultView, "ESCAPE");
   await onHidden;
   await onModifications;

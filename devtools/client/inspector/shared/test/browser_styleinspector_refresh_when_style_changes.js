@@ -39,16 +39,16 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let tab = await addTab(TEST_URI);
+  const tab = await addTab(TEST_URI);
 
-  let { inspector } = await openRuleView();
+  const { inspector } = await openRuleView();
   await selectNode("#test", inspector);
 
   info("Run the test on the rule-view");
   await runViewTest(inspector, tab, "rule");
 
   info("Switch to the computed view");
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
   selectComputedView(inspector);
   await onComputedViewReady;
 
@@ -57,7 +57,7 @@ add_task(async function() {
 });
 
 async function runViewTest(inspector, tab, viewName) {
-  for (let { target, className, force } of TEST_DATA) {
+  for (const { target, className, force } of TEST_DATA) {
     info((force ? "Adding" : "Removing") +
          ` class ${className} on ${target} and expecting a ${viewName}-view refresh`);
 
@@ -67,7 +67,7 @@ async function runViewTest(inspector, tab, viewName) {
 }
 
 async function toggleClassAndWaitForViewChange(whatToMutate, inspector, tab, eventName) {
-  let onRefreshed = inspector.once(eventName);
+  const onRefreshed = inspector.once(eventName);
 
   await ContentTask.spawn(tab.linkedBrowser, whatToMutate,
     function({ target, className, force }) {

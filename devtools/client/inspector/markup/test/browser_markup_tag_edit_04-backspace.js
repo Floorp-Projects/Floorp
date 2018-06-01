@@ -51,9 +51,9 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await checkDeleteAndSelection(inspector, "back_space", data);
   }
 });

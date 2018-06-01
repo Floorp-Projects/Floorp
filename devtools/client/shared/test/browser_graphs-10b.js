@@ -37,11 +37,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost("window");
+  const [host,, doc] = await createHost("window");
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const graph = new LineGraphWidget(doc.body, "fps");
   graph.fixedWidth = 200;
   graph.fixedHeight = 100;
   await graph.once("ready");

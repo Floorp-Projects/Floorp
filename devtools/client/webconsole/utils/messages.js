@@ -68,7 +68,7 @@ function transformPacket(packet) {
 }
 
 function transformConsoleAPICallPacket(packet) {
-  let { message } = packet;
+  const { message } = packet;
 
   let parameters = message.arguments;
   let type = message.level;
@@ -86,7 +86,7 @@ function transformConsoleAPICallPacket(packet) {
     case "countReset":
       // Chrome RDP doesn't have a special type for count.
       type = MESSAGE_TYPE.LOG;
-      let {counter} = message;
+      const {counter} = message;
 
       if (!counter) {
         // We don't show anything if we don't have counter data.
@@ -96,7 +96,7 @@ function transformConsoleAPICallPacket(packet) {
         level = MESSAGE_LEVEL.WARN;
         parameters = null;
       } else {
-        let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
+        const label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
         messageText = `${label}: ${counter.count}`;
         parameters = null;
       }
@@ -120,7 +120,7 @@ function transformConsoleAPICallPacket(packet) {
       } else if (timer) {
         // We show the duration to users when calls console.timeLog/timeEnd is called,
         // if corresponding console.time() was called before.
-        let duration = Math.round(timer.duration * 100) / 100;
+        const duration = Math.round(timer.duration * 100) / 100;
         if (type === "timeEnd") {
           messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
           parameters = null;
@@ -193,7 +193,7 @@ function transformConsoleAPICallPacket(packet) {
 }
 
 function transformNavigationMessagePacket(packet) {
-  let { message } = packet;
+  const { message } = packet;
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
     type: MESSAGE_TYPE.LOG,
@@ -205,7 +205,7 @@ function transformNavigationMessagePacket(packet) {
 }
 
 function transformLogMessagePacket(packet) {
-  let {
+  const {
     message,
     timeStamp,
   } = packet;
@@ -221,7 +221,7 @@ function transformLogMessagePacket(packet) {
 }
 
 function transformPageErrorPacket(packet) {
-  let { pageError } = packet;
+  const { pageError } = packet;
   let level = MESSAGE_LEVEL.ERROR;
   if (pageError.warning || pageError.strict) {
     level = MESSAGE_LEVEL.WARN;
@@ -235,8 +235,8 @@ function transformPageErrorPacket(packet) {
     column: pageError.columnNumber
   } : null;
 
-  let matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
-  let messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
+  const matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
+  const messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
                                   : MESSAGE_SOURCE.JAVASCRIPT;
   return new ConsoleMessage({
     source: messageSource,
@@ -253,7 +253,7 @@ function transformPageErrorPacket(packet) {
 }
 
 function transformNetworkEventPacket(packet) {
-  let { networkEvent } = packet;
+  const { networkEvent } = packet;
 
   return new NetworkEventMessage({
     actor: networkEvent.actor,

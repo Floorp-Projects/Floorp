@@ -12,7 +12,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   const messageNumber = 100;
   await testSimpleBatchLogging(hud, messageNumber);
   await testBatchLoggingAndClear(hud, messageNumber);
@@ -26,7 +26,7 @@ async function testSimpleBatchLogging(hud, messageNumber) {
   );
 
   for (let i = 0; i < messageNumber; i++) {
-    let node = await waitFor(() => findMessageAtIndex(hud, i, i));
+    const node = await waitFor(() => findMessageAtIndex(hud, i, i));
     is(node.textContent, i.toString(), `message at index "${i}" is the expected one`);
   }
 }

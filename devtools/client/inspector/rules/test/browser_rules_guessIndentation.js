@@ -32,16 +32,16 @@ div {
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = await openRuleView();
+  const {toolbox, inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Add a new property in the rule-view");
   await addProperty(view, 2, "color", "chartreuse");
 
   info("Switch to the style-editor");
-  let { UI } = await toolbox.selectTool("styleeditor");
+  const { UI } = await toolbox.selectTool("styleeditor");
 
-  let styleEditor = await UI.editors[0].getSourceEditor();
-  let text = styleEditor.sourceEditor.getText();
+  const styleEditor = await UI.editors[0].getSourceEditor();
+  const text = styleEditor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");
 });

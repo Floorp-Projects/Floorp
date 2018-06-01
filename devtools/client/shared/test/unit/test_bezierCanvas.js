@@ -48,7 +48,7 @@ function offsetsGetterReturnsData() {
 function convertsOffsetsToCoordinates() {
   info("Converts offsets to coordinates");
 
-  let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
+  const b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
 
   let coordinates = b.offsetsToCoordinates({style: {
     left: "0px",
@@ -77,7 +77,7 @@ function plotsCanvas() {
   info("Plots the curve to the canvas");
 
   let hasDrawnCurve = false;
-  let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
+  const b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
   b.ctx.bezierCurveTo = () => {
     hasDrawnCurve = true;
   };

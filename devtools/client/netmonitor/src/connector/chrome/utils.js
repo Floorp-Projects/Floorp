@@ -14,9 +14,9 @@ class Payload {
     this.update = this.update.bind(this);
   }
   async update(payload) {
-    let { request, response, requestId, timestamp,
+    const { request, response, requestId, timestamp,
           content, dataLength, encodedDataLength } = payload;
-    let {
+    const {
       headers,
       postData,
       timing
@@ -27,7 +27,7 @@ class Payload {
     this.requestId = requestId;
 
     this.updateTimestamp(timestamp);
-    let data = await this.mappingAll(
+    const data = await this.mappingAll(
       requestId,
       {
         payload, response, postData,
@@ -46,7 +46,7 @@ class Payload {
   }
 
   updateTimestamp(timestamp) {
-    let {request} = this.payload;
+    const {request} = this.payload;
     this.updatePayload(
       request ? { response: timestamp } : { request: timestamp }
     );
@@ -57,10 +57,10 @@ class Payload {
   }
 
   async mappingAll(requestId, data) {
-    let {payload, response, postData,
+    const {payload, response, postData,
          header, content, timing,
          dataLength, encodedDataLength } = data;
-    let [requests, headers, post,
+    const [requests, headers, post,
          status, timings, responses]
         = await Promise.all(
           [
@@ -82,7 +82,7 @@ class Payload {
   }
 
   async mappingRequest(requestId, payload) {
-    let {request} = payload;
+    const {request} = payload;
     return !request ? undefined : Request(requestId, payload);
   }
 
@@ -122,7 +122,7 @@ class Payloads {
 
   clear() {
     this.payloads.clear();
-    let loader = getBulkLoader();
+    const loader = getBulkLoader();
     loader.reset();
   }
 }

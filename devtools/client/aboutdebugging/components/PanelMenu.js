@@ -24,9 +24,9 @@ class PanelMenu extends Component {
   }
 
   render() {
-    let { panels, selectedPanelId, selectPanel } = this.props;
-    let panelLinks = panels.map(({ id, name, icon }) => {
-      let selected = id == selectedPanelId;
+    const { panels, selectedPanelId, selectPanel } = this.props;
+    const panelLinks = panels.map(({ id, name, icon }) => {
+      const selected = id == selectedPanelId;
       return PanelMenuEntry({
         id,
         name,

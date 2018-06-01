@@ -25,8 +25,8 @@ function doLiveAndOfflineCensus(g, dbg, opts) {
 }
 
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
   g.eval("this.markers = []");
   const markerSize = byteSize(allocationMarker());

@@ -22,19 +22,19 @@ add_task(async function() {
   // Force the toolbox to be 200px high;
   await pushPref("devtools.toolbox.footer.height", 200);
   await addTab("about:blank");
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
-  let div = doc.createElementNS(HTML_NS, "div");
+  const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
+  const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
   tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
-  let box1 = doc.getElementById("box1");
-  let box2 = doc.getElementById("box2");
-  let box3 = doc.getElementById("box3");
-  let box4 = doc.getElementById("box4");
-  let width = TOOLTIP_WIDTH;
+  const box1 = doc.getElementById("box1");
+  const box2 = doc.getElementById("box2");
+  const box3 = doc.getElementById("box3");
+  const box4 = doc.getElementById("box4");
+  const width = TOOLTIP_WIDTH;
 
   // box1: Can not fit above or below box1, default to bottom with a reduced
   // height of 150px.

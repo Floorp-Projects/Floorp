@@ -17,7 +17,7 @@ const TEST_URI2 = "http://example.org/" + BASE_URI;
 add_task(async function() {
   pushPref("devtools.webconsole.persistlog", false);
 
-  let hud = await openNewTabAndConsole(TEST_URI1);
+  const hud = await openNewTabAndConsole(TEST_URI1);
 
   let onMessages = waitForMessages({
     hud,
@@ -57,7 +57,7 @@ add_task(async function() {
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
   // 1270234).
-  let cleared = hud.jsterm.once("messages-cleared");
+  const cleared = hud.jsterm.once("messages-cleared");
 
   gBrowser.goBack();
 

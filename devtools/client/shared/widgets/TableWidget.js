@@ -67,7 +67,7 @@ function TableWidget(node, options = {}) {
   this.window = this.document.defaultView;
   this._parent = node;
 
-  let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
+  const {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
        firstColumn, wrapTextInElements, cellContextMenuId} = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
@@ -142,7 +142,7 @@ TableWidget.prototype = {
    * Select the row corresponding to the json object `id`
    */
   set selectedRow(id) {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       if (id) {
         column.selectRow(id[this.uniqueId] || id);
       } else {
@@ -174,7 +174,7 @@ TableWidget.prototype = {
    * Selects the row at index `index`.
    */
   set selectedIndex(index) {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.selectRowAt(index);
     }
   },
@@ -190,8 +190,8 @@ TableWidget.prototype = {
    * Returns the index of the selected row disregarding hidden rows.
    */
   get visibleSelectedIndex() {
-    let column = this.firstVisibleColumn;
-    let cells = column.visibleCellNodes;
+    const column = this.firstVisibleColumn;
+    const cells = column.visibleCellNodes;
 
     for (let i = 0; i < cells.length; i++) {
       if (cells[i].classList.contains("theme-selected")) {
@@ -206,7 +206,7 @@ TableWidget.prototype = {
    * Returns the first visible column.
    */
   get firstVisibleColumn() {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       if (column._private) {
         continue;
       }
@@ -223,15 +223,15 @@ TableWidget.prototype = {
    * returns all editable columns.
    */
   get editableColumns() {
-    let filter = columns => {
+    const filter = columns => {
       columns = [...columns].filter(col => {
         if (col.clientWidth === 0) {
           return false;
         }
 
-        let cell = col.querySelector(".table-widget-cell");
+        const cell = col.querySelector(".table-widget-cell");
 
-        for (let selector of this._editableFieldsEngine.selectors) {
+        for (const selector of this._editableFieldsEngine.selectors) {
           if (cell.matches(selector)) {
             return true;
           }
@@ -243,7 +243,7 @@ TableWidget.prototype = {
       return columns;
     };
 
-    let columns = this._parent.querySelectorAll(".table-widget-column");
+    const columns = this._parent.querySelectorAll(".table-widget-column");
     return filter(columns);
   },
 
@@ -251,18 +251,18 @@ TableWidget.prototype = {
    * Emit all cell edit events.
    */
   onChange: function(data) {
-    let changedField = data.change.field;
-    let colName = changedField.parentNode.id;
-    let column = this.columns.get(colName);
-    let uniqueId = column.table.uniqueId;
-    let itemIndex = column.cellNodes.indexOf(changedField);
-    let items = {};
+    const changedField = data.change.field;
+    const colName = changedField.parentNode.id;
+    const column = this.columns.get(colName);
+    const uniqueId = column.table.uniqueId;
+    const itemIndex = column.cellNodes.indexOf(changedField);
+    const items = {};
 
-    for (let [name, col] of this.columns) {
+    for (const [name, col] of this.columns) {
       items[name] = col.cellNodes[itemIndex].value;
     }
 
-    let change = {
+    const change = {
       host: this.host,
       key: uniqueId,
       field: colName,
@@ -295,14 +295,14 @@ TableWidget.prototype = {
    *         Keydown event
    */
   onEditorTab: function(event) {
-    let textbox = event.target;
-    let editor = this._editableFieldsEngine;
+    const textbox = event.target;
+    const editor = this._editableFieldsEngine;
 
     if (textbox.id !== editor.INPUT_ID) {
       return;
     }
 
-    let column = textbox.parentNode;
+    const column = textbox.parentNode;
 
     // Changing any value can change the position of the row depending on which
     // column it is currently sorted on. In addition to this, the table cell may
@@ -314,12 +314,10 @@ TableWidget.prototype = {
       // within the table can change. Because of this we need to wait for
       // EVENTS.ROW_EDIT and then move the textbox.
       this.once(EVENTS.ROW_EDIT, uniqueId => {
-        let cell;
-        let cells;
         let columnObj;
-        let cols = this.editableColumns;
+        const cols = this.editableColumns;
         let rowIndex = this.visibleSelectedIndex;
-        let colIndex = cols.indexOf(column);
+        const colIndex = cols.indexOf(column);
         let newIndex;
 
         // If the row has been deleted we should bail out.
@@ -339,9 +337,9 @@ TableWidget.prototype = {
             newIndex = colIndex - 1;
           }
         } else if (colIndex === cols.length - 1) {
-          let id = cols[0].id;
+          const id = cols[0].id;
           columnObj = this.columns.get(id);
-          let maxRowIndex = columnObj.visibleCellNodes.length - 1;
+          const maxRowIndex = columnObj.visibleCellNodes.length - 1;
           if (rowIndex === maxRowIndex) {
             return;
           }
@@ -350,11 +348,11 @@ TableWidget.prototype = {
           newIndex = colIndex + 1;
         }
 
-        let newcol = cols[newIndex];
+        const newcol = cols[newIndex];
         columnObj = this.columns.get(newcol.id);
 
         // Select the correct row even if it has moved due to sorting.
-        let dataId = editor.currentTarget.getAttribute("data-id");
+        const dataId = editor.currentTarget.getAttribute("data-id");
         if (this.items.get(dataId)) {
           this.emit(EVENTS.ROW_SELECTED, dataId);
         } else {
@@ -366,8 +364,8 @@ TableWidget.prototype = {
         rowIndex = this.visibleSelectedIndex;
 
         // Edit the appropriate cell.
-        cells = columnObj.visibleCellNodes;
-        cell = cells[rowIndex];
+        const cells = columnObj.visibleCellNodes;
+        const cell = cells[rowIndex];
         editor.edit(cell);
 
         // Remove flash-out class... it won't have been auto-removed because the
@@ -378,7 +376,7 @@ TableWidget.prototype = {
 
     // Begin cell edit. We always do this so that we can begin editing even in
     // the case that the previous edit will cause the row to move.
-    let cell = this.getEditedCellOnTab(event, column);
+    const cell = this.getEditedCellOnTab(event, column);
     editor.edit(cell);
   },
 
@@ -394,11 +392,11 @@ TableWidget.prototype = {
    */
   getEditedCellOnTab: function(event, column) {
     let cell = null;
-    let cols = this.editableColumns;
-    let rowIndex = this.visibleSelectedIndex;
-    let colIndex = cols.indexOf(column);
-    let maxCol = cols.length - 1;
-    let maxRow = this.columns.get(column.id).visibleCellNodes.length - 1;
+    const cols = this.editableColumns;
+    const rowIndex = this.visibleSelectedIndex;
+    const colIndex = cols.indexOf(column);
+    const maxCol = cols.length - 1;
+    const maxRow = this.columns.get(column.id).visibleCellNodes.length - 1;
 
     if (event.shiftKey) {
       // Navigate backwards on shift tab.
@@ -409,14 +407,14 @@ TableWidget.prototype = {
         }
 
         column = cols[cols.length - 1];
-        let cells = this.columns.get(column.id).visibleCellNodes;
+        const cells = this.columns.get(column.id).visibleCellNodes;
         cell = cells[rowIndex - 1];
 
-        let rowId = cell.getAttribute("data-id");
+        const rowId = cell.getAttribute("data-id");
         this.emit(EVENTS.ROW_SELECTED, rowId);
       } else {
         column = cols[colIndex - 1];
-        let cells = this.columns.get(column.id).visibleCellNodes;
+        const cells = this.columns.get(column.id).visibleCellNodes;
         cell = cells[rowIndex];
       }
     } else if (colIndex === maxCol) {
@@ -429,15 +427,15 @@ TableWidget.prototype = {
       // If in the rightmost column of a row then move to the first column of
       // the next row.
       column = cols[0];
-      let cells = this.columns.get(column.id).visibleCellNodes;
+      const cells = this.columns.get(column.id).visibleCellNodes;
       cell = cells[rowIndex + 1];
 
-      let rowId = cell.getAttribute("data-id");
+      const rowId = cell.getAttribute("data-id");
       this.emit(EVENTS.ROW_SELECTED, rowId);
     } else {
       // Navigate forwards on tab.
       column = cols[colIndex + 1];
-      let cells = this.columns.get(column.id).visibleCellNodes;
+      const cells = this.columns.get(column.id).visibleCellNodes;
       cell = cells[rowIndex];
     }
 
@@ -457,8 +455,8 @@ TableWidget.prototype = {
       return;
     }
 
-    let removedKey = row[this.uniqueId];
-    let column = this.columns.get(this.uniqueId);
+    const removedKey = row[this.uniqueId];
+    const column = this.columns.get(this.uniqueId);
 
     if (removedKey in column.items) {
       return;
@@ -473,7 +471,7 @@ TableWidget.prototype = {
    * Cancel an edit because the edit target has been lost.
    */
   onEditorTargetLost: function() {
-    let editor = this._editableFieldsEngine;
+    const editor = this._editableFieldsEngine;
 
     if (!editor || !editor.isEditing) {
       return;
@@ -557,7 +555,7 @@ TableWidget.prototype = {
    * label is clicked.
    */
   onMousedown: function({target}) {
-    let nodeName = target.nodeName;
+    const nodeName = target.nodeName;
 
     if (nodeName === "textbox" || !this._editableFieldsEngine) {
       return;
@@ -574,17 +572,17 @@ TableWidget.prototype = {
    *         An array or comma separated list of editable column names.
    */
   makeFieldsEditable: function(editableColumns) {
-    let selectors = [];
+    const selectors = [];
 
     if (typeof editableColumns === "string") {
       editableColumns = [editableColumns];
     }
 
-    for (let id of editableColumns) {
+    for (const id of editableColumns) {
       selectors.push("#" + id + " .table-widget-cell");
     }
 
-    for (let [name, column] of this.columns) {
+    for (const [name, column] of this.columns) {
       if (!editableColumns.includes(name)) {
         column.column.setAttribute("readonly", "");
       }
@@ -675,12 +673,12 @@ TableWidget.prototype = {
       this.menupopup.firstChild.remove();
     }
 
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       if (privateColumns.includes(column.id)) {
         continue;
       }
 
-      let menuitem = this.document.createElementNS(XUL_NS, "menuitem");
+      const menuitem = this.document.createElementNS(XUL_NS, "menuitem");
       menuitem.setAttribute("label", column.header.getAttribute("value"));
       menuitem.setAttribute("data-id", column.id);
       menuitem.setAttribute("type", "checkbox");
@@ -690,7 +688,7 @@ TableWidget.prototype = {
       }
       this.menupopup.appendChild(menuitem);
     }
-    let checked = this.menupopup.querySelectorAll("menuitem[checked]");
+    const checked = this.menupopup.querySelectorAll("menuitem[checked]");
     if (checked.length == 2) {
       checked[checked.length - 1].setAttribute("disabled", "true");
     }
@@ -700,12 +698,12 @@ TableWidget.prototype = {
    * Event handler for the `command` event on the column headers context menu
    */
   onPopupCommand: function(event) {
-    let item = event.originalTarget;
+    const item = event.originalTarget;
     let checked = !!item.getAttribute("checked");
-    let id = item.getAttribute("data-id");
+    const id = item.getAttribute("data-id");
     this.emit(EVENTS.HEADER_CONTEXT_MENU, id, checked);
     checked = this.menupopup.querySelectorAll("menuitem[checked]");
-    let disabled = this.menupopup.querySelectorAll("menuitem[disabled]");
+    const disabled = this.menupopup.querySelectorAll("menuitem[disabled]");
     if (checked.length == 2) {
       checked[checked.length - 1].setAttribute("disabled", "true");
     } else if (disabled.length > 1) {
@@ -732,7 +730,7 @@ TableWidget.prototype = {
    */
   setColumns: function(columns, sortOn = this.sortedOn, hiddenColumns = [],
                         privateColumns = []) {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.destroy();
     }
 
@@ -751,7 +749,7 @@ TableWidget.prototype = {
         new Column(this, this.firstColumn, columns[this.firstColumn]));
     }
 
-    for (let id in columns) {
+    for (const id in columns) {
       if (!sortOn) {
         sortOn = id;
       }
@@ -798,7 +796,7 @@ TableWidget.prototype = {
    * Selects the next row. Cycles over to the first row if last row is selected
    */
   selectNextRow: function() {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.selectNextRow();
     }
   },
@@ -808,7 +806,7 @@ TableWidget.prototype = {
    * selected.
    */
   selectPreviousRow: function() {
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.selectPreviousRow();
     }
   },
@@ -847,8 +845,8 @@ TableWidget.prototype = {
       this.editBookmark = item[this.uniqueId];
     }
 
-    let index = this.columns.get(this.sortedOn).push(item);
-    for (let [key, column] of this.columns) {
+    const index = this.columns.get(this.sortedOn).push(item);
+    for (const [key, column] of this.columns) {
       if (key != this.sortedOn) {
         column.insertAt(item, index);
       }
@@ -874,12 +872,12 @@ TableWidget.prototype = {
     if (!item) {
       return;
     }
-    let removed = this.items.delete(item[this.uniqueId]);
+    const removed = this.items.delete(item[this.uniqueId]);
 
     if (!removed) {
       return;
     }
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.remove(item);
       column.updateZebra();
     }
@@ -897,14 +895,14 @@ TableWidget.prototype = {
    * `uniqueId` key's value.
    */
   update: function(item) {
-    let oldItem = this.items.get(item[this.uniqueId]);
+    const oldItem = this.items.get(item[this.uniqueId]);
     if (!oldItem) {
       return;
     }
     this.items.set(item[this.uniqueId], item);
 
     let changed = false;
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       if (item[column.id] != oldItem[column.id]) {
         column.update(item);
         changed = true;
@@ -921,7 +919,7 @@ TableWidget.prototype = {
    */
   clear: function() {
     this.items.clear();
-    for (let column of this.columns.values()) {
+    for (const column of this.columns.values()) {
       column.clear();
     }
     this.tbody.setAttribute("empty", "empty");
@@ -946,8 +944,8 @@ TableWidget.prototype = {
       return;
     }
 
-    let sortedItems = this.columns.get(column).sort([...this.items.values()]);
-    for (let [id, col] of this.columns) {
+    const sortedItems = this.columns.get(column).sort([...this.items.values()]);
+    for (const [id, col] of this.columns) {
       if (id != col) {
         col.sort(sortedItems);
       }
@@ -976,16 +974,16 @@ TableWidget.prototype = {
     // Shouldn't be case-sensitive
     value = value.toLowerCase();
 
-    let itemsToHide = [...this.items.keys()];
+    const itemsToHide = [...this.items.keys()];
     // Loop through all items and hide unmatched items
-    for (let [id, val] of this.items) {
-      for (let prop in val) {
-        let column = this.columns.get(prop);
+    for (const [id, val] of this.items) {
+      for (const prop in val) {
+        const column = this.columns.get(prop);
         if (ignoreProps.includes(prop) || column.hidden) {
           continue;
         }
 
-        let propValue = val[prop].toString().toLowerCase();
+        const propValue = val[prop].toString().toLowerCase();
         if (propValue.includes(value)) {
           itemsToHide.splice(itemsToHide.indexOf(id), 1);
           break;
@@ -1007,7 +1005,7 @@ TableWidget.prototype = {
    * Emits the "scroll-end" event when the whole table is scrolled
    */
   afterScroll: function() {
-    let scrollHeight = this.tbody.getBoundingClientRect().height -
+    const scrollHeight = this.tbody.getBoundingClientRect().height -
         this.tbody.querySelector(".table-widget-column-header").clientHeight;
 
     // Emit scroll-end event when 9/10 of the table is scrolled
@@ -1169,8 +1167,8 @@ Column.prototype = {
   },
 
   get visibleCellNodes() {
-    let editor = this.table._editableFieldsEngine;
-    let nodes = this.cellNodes.filter(node => {
+    const editor = this.table._editableFieldsEngine;
+    const nodes = this.cellNodes.filter(node => {
       // If the cell is currently being edited we should class it as visible.
       if (editor && editor.currentTarget === node) {
         return true;
@@ -1206,10 +1204,10 @@ Column.prototype = {
     if (!this.cells) {
       return;
     }
-    for (let cell of this.cells) {
+    for (const cell of this.cells) {
       cell.hidden = false;
     }
-    for (let id of itemsToHide) {
+    for (const id of itemsToHide) {
       this.cells[this.items[id]].hidden = true;
     }
     this.updateZebra();
@@ -1230,7 +1228,7 @@ Column.prototype = {
 
     if (this.highlightUpdated && this.items[id] != null) {
       if (this.table.scrollIntoViewOnUpdate) {
-        let cell = this.cells[this.items[id]];
+        const cell = this.cells[this.items[id]];
 
         // When a new row is created this method is called once for each column
         // as each cell is updated. We can only scroll to cells if they are
@@ -1283,7 +1281,7 @@ Column.prototype = {
       this.cells[this.items[this.selectedRow]].classList.remove("theme-selected");
     }
 
-    let cell = this.cells[index];
+    const cell = this.cells[index];
     if (cell) {
       cell.classList.add("theme-selected");
       this.selectedRow = cell.id;
@@ -1333,7 +1331,7 @@ Column.prototype = {
    *          The index of the currently pushed item.
    */
   push: function(item) {
-    let value = item[this.id];
+    const value = item[this.id];
 
     if (this.sorted) {
       let index;
@@ -1405,7 +1403,7 @@ Column.prototype = {
    */
   remove: function(item) {
     this._updateItems();
-    let index = this.items[item[this.uniqueId]];
+    const index = this.items[item[this.uniqueId]];
     if (index == null) {
       return;
     }
@@ -1424,7 +1422,7 @@ Column.prototype = {
   update: function(item) {
     this._updateItems();
 
-    let index = this.items[item[this.uniqueId]];
+    const index = this.items[item[this.uniqueId]];
     if (index == null) {
       return;
     }
@@ -1466,17 +1464,17 @@ Column.prototype = {
     // Only sort the array if we are sorting based on this column
     if (this.sorted == 1) {
       items.sort((a, b) => {
-        let val1 = (a[this.id] instanceof Node) ?
+        const val1 = (a[this.id] instanceof Node) ?
             a[this.id].textContent : a[this.id];
-        let val2 = (b[this.id] instanceof Node) ?
+        const val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
         return naturalSortCaseInsensitive(val1, val2);
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
-        let val1 = (a[this.id] instanceof Node) ?
+        const val1 = (a[this.id] instanceof Node) ?
             a[this.id].textContent : a[this.id];
-        let val2 = (b[this.id] instanceof Node) ?
+        const val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
         return naturalSortCaseInsensitive(val2, val1);
       });
@@ -1503,12 +1501,12 @@ Column.prototype = {
   updateZebra() {
     this._updateItems();
     let i = 0;
-    for (let cell of this.cells) {
+    for (const cell of this.cells) {
       if (!cell.hidden) {
         i++;
       }
 
-      let even = !(i % 2);
+      const even = !(i % 2);
       cell.classList.toggle("even", even);
     }
   },
@@ -1518,7 +1516,7 @@ Column.prototype = {
    * for sorting.
    */
   onClick: function(event) {
-    let target = event.originalTarget;
+    const target = event.originalTarget;
 
     if (target.nodeType !== target.ELEMENT_NODE || target == this.column) {
       return;
@@ -1533,7 +1531,7 @@ Column.prototype = {
    * Mousedown event handler for the column. Used to select rows.
    */
   onMousedown: function(event) {
-    let target = event.originalTarget;
+    const target = event.originalTarget;
 
     if (target.nodeType !== target.ELEMENT_NODE ||
         target == this.column ||
@@ -1541,12 +1539,12 @@ Column.prototype = {
       return;
     }
     if (event.button == 0) {
-      let closest = target.closest("[data-id]");
+      const closest = target.closest("[data-id]");
       if (!closest) {
         return;
       }
 
-      let dataid = closest.getAttribute("data-id");
+      const dataid = closest.getAttribute("data-id");
       this.table.emit(EVENTS.ROW_SELECTED, dataid);
     }
   },
@@ -1566,7 +1564,7 @@ Column.prototype = {
  *        cell of the column
  */
 function Cell(column, item, nextCell) {
-  let document = column.document;
+  const document = column.document;
 
   this.wrapTextInElements = column.wrapTextInElements;
   this.label = document.createElementNS(XUL_NS, "label");
@@ -1623,7 +1621,7 @@ Cell.prototype = {
     }
 
     if (this.wrapTextInElements && !(value instanceof Node)) {
-      let span = this.label.ownerDocument.createElementNS(HTML_NS, "span");
+      const span = this.label.ownerDocument.createElementNS(HTML_NS, "span");
       span.textContent = value;
       value = span;
     }
@@ -1660,7 +1658,7 @@ Cell.prototype = {
     this.label.classList.remove("flash-out");
     // Cause a reflow so that the animation retriggers on adding back the class
     let a = this.label.parentNode.offsetWidth; // eslint-disable-line
-    let onAnimEnd = () => {
+    const onAnimEnd = () => {
       this.label.classList.remove("flash-out");
       this.label.removeEventListener("animationend", onAnimEnd);
     };
@@ -1740,7 +1738,7 @@ EditableFieldsEngine.prototype = {
 
   get textbox() {
     if (!this._textbox) {
-      let doc = this.root.ownerDocument;
+      const doc = this.root.ownerDocument;
       this._textbox = doc.createElementNS(XUL_NS, "textbox");
       this._textbox.id = this.INPUT_ID;
 
@@ -1837,9 +1835,9 @@ EditableFieldsEngine.prototype = {
       return;
     }
 
-    let oldValue = this.currentValue;
-    let newValue = this.textbox.value;
-    let changed = oldValue !== newValue;
+    const oldValue = this.currentValue;
+    const newValue = this.textbox.value;
+    const changed = oldValue !== newValue;
 
     this.textbox.hidden = true;
 
@@ -1851,7 +1849,7 @@ EditableFieldsEngine.prototype = {
     if (changed) {
       this.currentTarget.value = newValue;
 
-      let data = {
+      const data = {
         change: {
           field: this.currentTarget,
           oldValue: oldValue,
@@ -1895,8 +1893,8 @@ EditableFieldsEngine.prototype = {
    *         The node to copy styles to.
    */
   copyStyles: function(source, destination) {
-    let style = source.ownerDocument.defaultView.getComputedStyle(source);
-    let props = [
+    const style = source.ownerDocument.defaultView.getComputedStyle(source);
+    const props = [
       "borderTopWidth",
       "borderRightWidth",
       "borderBottomWidth",
@@ -1913,7 +1911,7 @@ EditableFieldsEngine.prototype = {
       "marginInlineEnd"
     ];
 
-    for (let prop of props) {
+    for (const prop of props) {
       destination.style[prop] = style[prop];
     }
 

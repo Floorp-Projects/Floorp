@@ -76,7 +76,7 @@ function NetworkEventMessage({
   let statusCode, statusInfo;
 
   if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
-    let statusCodeDocURL = getHTTPStatusCodeURL(status.toString(), "webconsole");
+    const statusCodeDocURL = getHTTPStatusCodeURL(status.toString(), "webconsole");
     statusCode = dom.span({
       className: "status-code",
       "data-code": status,
@@ -118,7 +118,7 @@ function NetworkEventMessage({
   // are not needed in context of the Console panel (atm) and thus
   // let's just provide empty implementation.
   // Individual methods might be implemented step by step as needed.
-  let connector = {
+  const connector = {
     viewSourceInDebugger: (url, line) => {
       serviceContainer.onViewSourceInDebugger({url, line});
     },

@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "doc_variables_2.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await testBasic(inspector, view);
   await testNestedCssFunctions(inspector, view);
@@ -25,10 +25,10 @@ async function testBasic(inspector, view) {
        "Format: var(--var1, var(--var2))");
 
   await selectNode("#a", inspector);
-  let unsetVar = getRuleViewProperty(view, "#a", "font-size").valueSpan
+  const unsetVar = getRuleViewProperty(view, "#a", "font-size").valueSpan
     .querySelector(".ruleview-unmatched-variable");
-  let setVarParent = unsetVar.nextElementSibling;
-  let setVar = getVarFromParent(setVarParent);
+  const setVarParent = unsetVar.nextElementSibling;
+  const setVar = getVarFromParent(setVarParent);
   is(unsetVar.textContent, "--var-not-defined",
     "--var-not-defined is not set correctly");
   is(unsetVar.dataset.variable, "--var-not-defined is not set",
@@ -46,10 +46,10 @@ async function testNestedCssFunctions(inspector, view) {
   "another CSS function. Format: rgb(0, 0, var(--var1, var(--var2)))");
 
   await selectNode("#b", inspector);
-  let unsetVarParent = getRuleViewProperty(view, "#b", "color").valueSpan
+  const unsetVarParent = getRuleViewProperty(view, "#b", "color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
-  let unsetVar = getVarFromParent(unsetVarParent);
-  let setVar = unsetVarParent.previousElementSibling;
+  const unsetVar = getVarFromParent(unsetVarParent);
+  const setVar = unsetVarParent.previousElementSibling;
   is(unsetVarParent.textContent, " var(--var-defined-r-2)",
     "var(--var-defined-r-2) not parsed correctly");
   is(unsetVar.textContent, "--var-defined-r-2",
@@ -68,23 +68,23 @@ async function testBorderShorthandAndInheritance(inspector, view) {
   " variables. Format: var(l, var(m)) var(x) rgb(var(r) var(g) var(b))");
 
   await selectNode("#c", inspector);
-  let unsetVarL = getRuleViewProperty(view, "#c", "border").valueSpan
+  const unsetVarL = getRuleViewProperty(view, "#c", "border").valueSpan
     .querySelector(".ruleview-unmatched-variable");
-  let setVarMParent = unsetVarL.nextElementSibling;
+  const setVarMParent = unsetVarL.nextElementSibling;
 
   // var(x) is the next sibling of the parent of M
-  let setVarXParent = setVarMParent.parentNode.nextElementSibling;
+  const setVarXParent = setVarMParent.parentNode.nextElementSibling;
 
   // var(r) is the next sibling of var(x), and var(g) is the next sibling of var(r), etc.
-  let setVarRParent = setVarXParent.nextElementSibling;
-  let setVarGParent = setVarRParent.nextElementSibling;
-  let setVarBParent = setVarGParent.nextElementSibling;
+  const setVarRParent = setVarXParent.nextElementSibling;
+  const setVarGParent = setVarRParent.nextElementSibling;
+  const setVarBParent = setVarGParent.nextElementSibling;
 
-  let setVarM = getVarFromParent(setVarMParent);
-  let setVarX = setVarXParent.firstElementChild;
-  let setVarR = setVarRParent.firstElementChild;
-  let setVarG = setVarGParent.firstElementChild;
-  let setVarB = setVarBParent.firstElementChild;
+  const setVarM = getVarFromParent(setVarMParent);
+  const setVarX = setVarXParent.firstElementChild;
+  const setVarR = setVarRParent.firstElementChild;
+  const setVarG = setVarGParent.firstElementChild;
+  const setVarB = setVarBParent.firstElementChild;
 
   is(unsetVarL.textContent, "--var-undefined",
     "--var-undefined is not set correctly");
@@ -122,7 +122,7 @@ async function testSingleLevelVariable(inspector, view) {
   "undefined variables. Format: var(x, constant)");
 
   await selectNode("#d", inspector);
-  let unsetVar = getRuleViewProperty(view, "#d", "font-size").valueSpan
+  const unsetVar = getRuleViewProperty(view, "#d", "font-size").valueSpan
     .querySelector(".ruleview-unmatched-variable");
 
   is(unsetVar.textContent, "--var-undefined",
@@ -136,13 +136,13 @@ async function testDoubleLevelVariable(inspector, view) {
   "undefined variables. Format: var(x, var(y, constant))");
 
   await selectNode("#e", inspector);
-  let allUnsetVars = getRuleViewProperty(view, "#e", "color").valueSpan
+  const allUnsetVars = getRuleViewProperty(view, "#e", "color").valueSpan
     .querySelectorAll(".ruleview-unmatched-variable");
 
   is(allUnsetVars.length, 2, "The number of unset variables is mismatched.");
 
-  let unsetVar1 = allUnsetVars[0];
-  let unsetVar2 = allUnsetVars[1];
+  const unsetVar1 = allUnsetVars[0];
+  const unsetVar2 = allUnsetVars[1];
 
   is(unsetVar1.textContent, "--var-undefined",
     "--var-undefined is not set correctly");
@@ -160,14 +160,14 @@ async function testTripleLevelVariable(inspector, view) {
   "undefined variables. Format: var(x, var(y, var(z, constant)))");
 
   await selectNode("#f", inspector);
-  let allUnsetVars = getRuleViewProperty(view, "#f", "border-style").valueSpan
+  const allUnsetVars = getRuleViewProperty(view, "#f", "border-style").valueSpan
     .querySelectorAll(".ruleview-unmatched-variable");
 
   is(allUnsetVars.length, 3, "The number of unset variables is mismatched.");
 
-  let unsetVar1 = allUnsetVars[0];
-  let unsetVar2 = allUnsetVars[1];
-  let unsetVar3 = allUnsetVars[2];
+  const unsetVar1 = allUnsetVars[0];
+  const unsetVar2 = allUnsetVars[1];
+  const unsetVar3 = allUnsetVars[2];
 
   is(unsetVar1.textContent, "--var-undefined",
     "--var-undefined is not set correctly");

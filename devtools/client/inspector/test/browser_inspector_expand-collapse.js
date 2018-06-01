@@ -13,11 +13,11 @@ add_task(async function() {
   // Test is often exceeding time-out threshold, similar to Bug 1137765
   requestLongerTimeout(2);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Selecting the parent node");
 
-  let front = await getNodeFrontForSelector("#parent-node", inspector);
+  const front = await getNodeFrontForSelector("#parent-node", inspector);
 
   await selectNode(front, inspector);
 
@@ -38,7 +38,7 @@ add_task(async function() {
 
   info("Waiting for expansion to occur");
   await waitForMultipleChildrenUpdates(inspector);
-  let markUpContainer = getContainerForNodeFront(front, inspector);
+  const markUpContainer = getContainerForNodeFront(front, inspector);
   ok(markUpContainer.expanded, "node has been successfully expanded");
 
   // reselecting node after expansion

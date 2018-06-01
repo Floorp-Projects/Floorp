@@ -16,23 +16,23 @@ add_task(async function() {
     "localhost": "security-state-local",
   };
 
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   await performRequests();
 
-  for (let subitemNode of Array.from(document.querySelectorAll(
+  for (const subitemNode of Array.from(document.querySelectorAll(
     "requests-list-column.requests-list-security-and-domain"))) {
-    let domain = subitemNode.querySelector(".requests-list-domain").textContent;
+    const domain = subitemNode.querySelector(".requests-list-domain").textContent;
 
     info("Found a request to " + domain);
     ok(domain in EXPECTED_SECURITY_STATES, "Domain " + domain + " was expected.");
 
-    let classes = subitemNode.querySelector(".requests-security-state-icon").classList;
-    let expectedClass = EXPECTED_SECURITY_STATES[domain];
+    const classes = subitemNode.querySelector(".requests-security-state-icon").classList;
+    const expectedClass = EXPECTED_SECURITY_STATES[domain];
 
     info("Classes of security state icon are: " + classes);
     info("Security state icon is expected to contain class: " + expectedClass);

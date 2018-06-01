@@ -16,10 +16,10 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
-  let HighlighterFront = {
+  const HighlighterFront = {
     isShown: false,
     nodeFront: null,
     options: null,
@@ -39,7 +39,7 @@ add_task(async function() {
 
   info("Checking that the right NodeFront reference and options are passed");
   await selectNode("p", inspector);
-  let icon = await getRuleViewSelectorHighlighterIcon(view, "element");
+  const icon = await getRuleViewSelectorHighlighterIcon(view, "element");
 
   await clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "P",

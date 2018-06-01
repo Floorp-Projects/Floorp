@@ -20,9 +20,9 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe src=\"" + OUTER_FRAME_SRC + "\" />";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
-  let outerFrameDiv = ["iframe", "div"];
-  let innerFrameDiv = ["iframe", "iframe", "div"];
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const outerFrameDiv = ["iframe", "div"];
+  const innerFrameDiv = ["iframe", "iframe", "div"];
 
   info("Waiting for element picker to activate.");
   await startPicker(inspector.toolbox);
@@ -41,9 +41,9 @@ add_task(async function() {
   await selectNode(inspector.walker.rootNode, inspector);
 
   info("Selecting an element from the nested iframe directly");
-  let innerFrameFront = await getNodeFrontInFrame("iframe", "iframe",
+  const innerFrameFront = await getNodeFrontInFrame("iframe", "iframe",
                                                   inspector);
-  let innerFrameDivFront = await getNodeFrontInFrame("div", innerFrameFront,
+  const innerFrameDivFront = await getNodeFrontInFrame("div", innerFrameFront,
                                                      inspector);
   await selectNode(innerFrameDivFront, inspector);
 

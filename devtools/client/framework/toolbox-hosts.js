@@ -57,8 +57,8 @@ BottomHost.prototype = {
   create: async function() {
     await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
 
-    let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
-    let ownerDocument = gBrowser.ownerDocument;
+    const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
+    const ownerDocument = gBrowser.ownerDocument;
     this._nbox = gBrowser.getNotificationBox(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createElement("splitter");
@@ -82,9 +82,9 @@ BottomHost.prototype = {
     // we have to load something so we can switch documents if we have to
     this.frame.setAttribute("src", "about:blank");
 
-    let frame = await new Promise(resolve => {
-      let domHelper = new DOMHelpers(this.frame.contentWindow);
-      let frameLoad = () => {
+    const frame = await new Promise(resolve => {
+      const domHelper = new DOMHelpers(this.frame.contentWindow);
+      const frameLoad = () => {
         this.emit("ready", this.frame);
         resolve(this.frame);
       };
@@ -147,8 +147,8 @@ SidebarHost.prototype = {
   create: async function() {
     await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
 
-    let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
-    let ownerDocument = gBrowser.ownerDocument;
+    const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
+    const ownerDocument = gBrowser.ownerDocument;
     this._sidebar = gBrowser.getSidebarContainer(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createElement("splitter");
@@ -169,9 +169,9 @@ SidebarHost.prototype = {
     this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
 
-    let frame = await new Promise(resolve => {
-      let domHelper = new DOMHelpers(this.frame.contentWindow);
-      let frameLoad = () => {
+    const frame = await new Promise(resolve => {
+      const domHelper = new DOMHelpers(this.frame.contentWindow);
+      const frameLoad = () => {
         this.emit("ready", this.frame);
         resolve(this.frame);
       };
@@ -229,13 +229,13 @@ WindowHost.prototype = {
    * Create a new xul window to contain the toolbox.
    */
   create: function() {
-    let deferred = defer();
+    const deferred = defer();
 
-    let flags = "chrome,centerscreen,resizable,dialog=no";
-    let win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
+    const flags = "chrome,centerscreen,resizable,dialog=no";
+    const win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
                                      flags, null);
 
-    let frameLoad = () => {
+    const frameLoad = () => {
       win.removeEventListener("load", frameLoad, true);
       win.focus();
 
@@ -317,11 +317,11 @@ CustomHost.prototype = {
   _sendMessageToTopWindow: function(msg, data) {
     // It's up to the custom frame owner (parent window) to honor
     // "close" or "raise" instructions.
-    let topWindow = this.frame.ownerDocument.defaultView;
+    const topWindow = this.frame.ownerDocument.defaultView;
     if (!topWindow) {
       return;
     }
-    let json = {name: "toolbox-" + msg, uid: this.uid};
+    const json = {name: "toolbox-" + msg, uid: this.uid};
     if (data) {
       json.data = data;
     }
@@ -365,7 +365,7 @@ CustomHost.prototype = {
  *  Switch to the given tab in a browser and focus the browser window
  */
 function focusTab(tab) {
-  let browserWindow = tab.ownerDocument.defaultView;
+  const browserWindow = tab.ownerDocument.defaultView;
   browserWindow.focus();
   browserWindow.gBrowser.selectedTab = tab;
 }

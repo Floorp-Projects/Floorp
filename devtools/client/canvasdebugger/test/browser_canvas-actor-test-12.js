@@ -7,10 +7,10 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(NO_CANVAS_URL);
+  const { target, front } = await initCanvasDebuggerBackend(NO_CANVAS_URL);
   loadFrameScriptUtils();
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -18,7 +18,7 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let startRecording = front.recordAnimationFrame();
+  const startRecording = front.recordAnimationFrame();
   await front.stopRecordingAnimationFrame();
 
   ok(!(await startRecording),

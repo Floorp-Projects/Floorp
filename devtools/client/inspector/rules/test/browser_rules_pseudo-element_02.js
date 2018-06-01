@@ -10,19 +10,19 @@ const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector} = await openRuleView();
+  const {inspector} = await openRuleView();
 
-  let node = await getNodeFront("#topleft", inspector);
-  let children = await inspector.markup.walker.children(node);
+  const node = await getNodeFront("#topleft", inspector);
+  const children = await inspector.markup.walker.children(node);
 
   is(children.nodes.length, 3, "Element has correct number of children");
 
-  let beforeElement = children.nodes[0];
+  const beforeElement = children.nodes[0];
   is(beforeElement.tagName, "_moz_generated_content_before",
     "tag name is correct");
   await selectNode(beforeElement, inspector);
 
-  let afterElement = children.nodes[children.nodes.length - 1];
+  const afterElement = children.nodes[children.nodes.length - 1];
   is(afterElement.tagName, "_moz_generated_content_after",
     "tag name is correct");
   await selectNode(afterElement, inspector);

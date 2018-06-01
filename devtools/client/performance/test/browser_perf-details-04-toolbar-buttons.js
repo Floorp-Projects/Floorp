@@ -14,23 +14,23 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { setSelectedRecording, getSelectedRecordingIndex } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     $,
     PerformanceController,
     WaterfallView
   } = panel.panelWin;
 
-  let waterfallBtn = $("toolbarbutton[data-view='waterfall']");
-  let jsFlameBtn = $("toolbarbutton[data-view='js-flamegraph']");
-  let jsCallBtn = $("toolbarbutton[data-view='js-calltree']");
-  let memFlameBtn = $("toolbarbutton[data-view='memory-flamegraph']");
-  let memCallBtn = $("toolbarbutton[data-view='memory-calltree']");
+  const waterfallBtn = $("toolbarbutton[data-view='waterfall']");
+  const jsFlameBtn = $("toolbarbutton[data-view='js-flamegraph']");
+  const jsCallBtn = $("toolbarbutton[data-view='js-calltree']");
+  const memFlameBtn = $("toolbarbutton[data-view='memory-flamegraph']");
+  const memCallBtn = $("toolbarbutton[data-view='memory-calltree']");
 
   is(waterfallBtn.hidden, true,
     "The `waterfall` button is hidden when tool starts.");

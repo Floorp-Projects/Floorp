@@ -82,7 +82,7 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
 var ConnectionManager = {
   _connections: new Set(),
   createConnection: function(host, port) {
-    let c = new Connection(host, port);
+    const c = new Connection(host, port);
     c.once("destroy", () => this.destroyConnection(c));
     this._connections.add(c);
     this.emit("new", c);
@@ -100,10 +100,10 @@ var ConnectionManager = {
     return [...this._connections];
   },
   getFreeTCPPort: function() {
-    let serv = Cc["@mozilla.org/network/server-socket;1"]
+    const serv = Cc["@mozilla.org/network/server-socket;1"]
                  .createInstance(Ci.nsIServerSocket);
     serv.init(-1, true, -1);
-    let port = serv.port;
+    const port = serv.port;
     serv.close();
     return port;
   },
@@ -149,11 +149,11 @@ Connection.Events = {
 Connection.prototype = {
   logs: "",
   log: function(str) {
-    let d = new Date();
-    let hours = ("0" + d.getHours()).slice(-2);
-    let minutes = ("0" + d.getMinutes()).slice(-2);
-    let seconds = ("0" + d.getSeconds()).slice(-2);
-    let timestamp = [hours, minutes, seconds].join(":") + ": ";
+    const d = new Date();
+    const hours = ("0" + d.getHours()).slice(-2);
+    const minutes = ("0" + d.getMinutes()).slice(-2);
+    const seconds = ("0" + d.getSeconds()).slice(-2);
+    const timestamp = [hours, minutes, seconds].join(":") + ": ";
     str = timestamp + str;
     this.logs += "\n" + str;
     this.emit(Connection.Events.NEW_LOG, str);
@@ -198,7 +198,7 @@ Connection.prototype = {
       this.authenticator = null;
       return;
     }
-    let AuthenticatorType = DebuggerClient.Authenticators.get(value);
+    const AuthenticatorType = DebuggerClient.Authenticators.get(value);
     this.authenticator = new AuthenticatorType.Client();
   },
 
@@ -221,7 +221,7 @@ Connection.prototype = {
    * Settings to be passed to |socketConnect| at connection time.
    */
   get socketSettings() {
-    let settings = {};
+    const settings = {};
     if (this.advertisement) {
       // Use the advertisement as starting point if it exists, as it may contain
       // extra data, like the server's cert.
@@ -279,7 +279,7 @@ Connection.prototype = {
       }
       this._clientConnect();
     } else {
-      let msg = "Can't connect. Client is not fully disconnected";
+      const msg = "Can't connect. Client is not fully disconnected";
       this.log(msg);
       throw new Error(msg);
     }
@@ -303,8 +303,8 @@ Connection.prototype = {
     if (!this.host) {
       return DebuggerServer.connectPipe();
     }
-    let settings = this.socketSettings;
-    let transport = await DebuggerClient.socketConnect(settings);
+    const settings = this.socketSettings;
+    const transport = await DebuggerClient.socketConnect(settings);
     return transport;
   },
 

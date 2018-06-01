@@ -20,10 +20,10 @@ const HEADER_MAX_LEN = 8000;
 function readLine(input) {
   return new Promise((resolve, reject) => {
     let line = "";
-    let wait = () => {
+    const wait = () => {
       input.asyncWait(stream => {
         try {
-          let amountToRead = HEADER_MAX_LEN - line.length;
+          const amountToRead = HEADER_MAX_LEN - line.length;
           line += delimitedRead(input, "\n", amountToRead);
 
           if (line.endsWith("\n")) {
@@ -54,7 +54,7 @@ function readLine(input) {
  */
 function writeString(output, data) {
   return new Promise((resolve, reject) => {
-    let wait = () => {
+    const wait = () => {
       if (data.length === 0) {
         resolve();
         return;
@@ -62,7 +62,7 @@ function writeString(output, data) {
 
       output.asyncWait(stream => {
         try {
-          let written = output.write(data, data.length);
+          const written = output.write(data, data.length);
           data = data.slice(written);
           wait();
         } catch (ex) {
@@ -81,10 +81,10 @@ function writeString(output, data) {
  */
 const readHttpRequest = async function(input) {
   let requestLine = "";
-  let headers = new Map();
+  const headers = new Map();
 
   while (true) {
-    let line = await readLine(input);
+    const line = await readLine(input);
     if (line.length == 0) {
       break;
     }
@@ -92,13 +92,13 @@ const readHttpRequest = async function(input) {
     if (!requestLine) {
       requestLine = line;
     } else {
-      let colon = line.indexOf(":");
+      const colon = line.indexOf(":");
       if (colon == -1) {
         throw new Error(`Malformed HTTP header: ${line}`);
       }
 
-      let name = line.slice(0, colon).toLowerCase();
-      let value = line.slice(colon + 1).trim();
+      const name = line.slice(0, colon).toLowerCase();
+      const value = line.slice(colon + 1).trim();
       headers.set(name, value);
     }
   }
@@ -110,7 +110,7 @@ const readHttpRequest = async function(input) {
  * Write HTTP response (array of strings) to async output stream.
  */
 function writeHttpResponse(output, response) {
-  let responseString = response.join("\r\n") + "\r\n\r\n";
+  const responseString = response.join("\r\n") + "\r\n\r\n";
   return writeString(output, responseString);
 }
 
@@ -119,7 +119,7 @@ function writeHttpResponse(output, response) {
  * Sec-WebSocket-Accept response header.
  */
 function processRequest({ requestLine, headers }) {
-  let [ method, path ] = requestLine.split(" ");
+  const [ method, path ] = requestLine.split(" ");
   if (method !== "GET") {
     throw new Error("The handshake request must use GET method");
   }
@@ -128,23 +128,23 @@ function processRequest({ requestLine, headers }) {
     throw new Error("The handshake request has unknown path");
   }
 
-  let upgrade = headers.get("upgrade");
+  const upgrade = headers.get("upgrade");
   if (!upgrade || upgrade !== "websocket") {
     throw new Error("The handshake request has incorrect Upgrade header");
   }
 
-  let connection = headers.get("connection");
+  const connection = headers.get("connection");
   if (!connection || !connection.split(",").map(t => t.trim()).includes("Upgrade")) {
     throw new Error("The handshake request has incorrect Connection header");
   }
 
-  let version = headers.get("sec-websocket-version");
+  const version = headers.get("sec-websocket-version");
   if (!version || version !== "13") {
     throw new Error("The handshake request must have Sec-WebSocket-Version: 13");
   }
 
   // Compute the accept key
-  let key = headers.get("sec-websocket-key");
+  const key = headers.get("sec-websocket-key");
   if (!key) {
     throw new Error("The handshake request must have a Sec-WebSocket-Key header");
   }
@@ -153,10 +153,10 @@ function processRequest({ requestLine, headers }) {
 }
 
 function computeKey(key) {
-  let str = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+  const str = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-  let data = Array.from(str, ch => ch.charCodeAt(0));
-  let hash = new CryptoHash("sha1");
+  const data = Array.from(str, ch => ch.charCodeAt(0));
+  const hash = new CryptoHash("sha1");
   hash.update(data, data.length);
   return hash.finish(true);
 }
@@ -166,11 +166,11 @@ function computeKey(key) {
  */
 const serverHandshake = async function(input, output) {
   // Read the request
-  let request = await readHttpRequest(input);
+  const request = await readHttpRequest(input);
 
   try {
     // Check and extract info from the request
-    let { acceptKey } = processRequest(request);
+    const { acceptKey } = processRequest(request);
 
     // Send response headers
     await writeHttpResponse(output, [
@@ -195,7 +195,7 @@ const serverHandshake = async function(input, output) {
 const accept = async function(transport, input, output) {
   await serverHandshake(input, output);
 
-  let transportProvider = {
+  const transportProvider = {
     setListener(upgradeListener) {
       // The onTransportAvailable callback shouldn't be called synchronously.
       executeSoon(() => {
@@ -205,7 +205,7 @@ const accept = async function(transport, input, output) {
   };
 
   return new Promise((resolve, reject) => {
-    let socket = WebSocket.createServerWebSocket(null, [], transportProvider, "");
+    const socket = WebSocket.createServerWebSocket(null, [], transportProvider, "");
     socket.addEventListener("close", () => {
       input.close();
       output.close();

@@ -8,21 +8,21 @@
 var connectCount = 0;
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
   gAudioNodes.on("connect", onConnectNode);
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let [destId, oscId, gainId] = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const [destId, oscId, gainId] = actors.map(actor => actor.actorID);
 
   ok(findGraphNode(panelWin, oscId).classList.contains("type-OscillatorNode"), "found OscillatorNode with class");
   ok(findGraphNode(panelWin, gainId).classList.contains("type-GainNode"), "found GainNode with class");

@@ -8,7 +8,7 @@
 // multiple animations.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await playerHasAnInitialState(walker, animations);
@@ -40,10 +40,10 @@ async function playerHasAnInitialState(walker, animations) {
 }
 
 async function getAnimationStateForNode(walker, animations, selector, playerIndex) {
-  let node = await walker.querySelector(walker.rootNode, selector);
-  let players = await animations.getAnimationPlayersForNode(node);
-  let player = players[playerIndex];
+  const node = await walker.querySelector(walker.rootNode, selector);
+  const players = await animations.getAnimationPlayersForNode(node);
+  const player = players[playerIndex];
   await player.ready();
-  let state = await player.getCurrentState();
+  const state = await player.getCurrentState();
   return state;
 }

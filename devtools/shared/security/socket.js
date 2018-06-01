@@ -80,8 +80,8 @@ DebuggerSocket.connect = async function(settings) {
   }
   _validateSettings(settings);
   // eslint-disable-next-line no-shadow
-  let { host, port, encryption, authenticator, cert } = settings;
-  let transport = await _getTransport(settings);
+  const { host, port, encryption, authenticator, cert } = settings;
+  const transport = await _getTransport(settings);
   await authenticator.authenticate({
     host,
     port,
@@ -97,7 +97,7 @@ DebuggerSocket.connect = async function(settings) {
  * Validate that the connection settings have been set to a supported configuration.
  */
 function _validateSettings(settings) {
-  let { encryption, webSocket, authenticator } = settings;
+  const { encryption, webSocket, authenticator } = settings;
 
   if (webSocket && encryption) {
     throw new Error("Encryption not supported on WebSocket transport");
@@ -127,12 +127,12 @@ function _validateSettings(settings) {
  *         are actually alive and working)
  */
 var _getTransport = async function(settings) {
-  let { host, port, encryption, webSocket } = settings;
+  const { host, port, encryption, webSocket } = settings;
 
   if (webSocket) {
     // Establish a connection and wait until the WebSocket is ready to send and receive
-    let socket = await new Promise((resolve, reject) => {
-      let s = new WebSocket(`ws://${host}:${port}`);
+    const socket = await new Promise((resolve, reject) => {
+      const s = new WebSocket(`ws://${host}:${port}`);
       s.onopen = () => resolve(s);
       s.onerror = err => reject(err);
     });
@@ -189,16 +189,16 @@ var _getTransport = async function(settings) {
  *         Underlying socket transport, in case more details are needed.
  */
 var _attemptTransport = async function(settings) {
-  let { authenticator } = settings;
+  const { authenticator } = settings;
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
-  let { s, input, output } = await _attemptConnect(settings);
+  const { s, input, output } = await _attemptConnect(settings);
 
   // Check if the input stream is alive.  If encryption is enabled, we need to
   // watch out for cert errors by testing the input stream.
   let alive, certError;
   try {
-    let results = await _isInputAlive(input);
+    const results = await _isInputAlive(input);
     alive = results.alive;
     certError = results.certError;
   } catch (e) {
@@ -265,7 +265,7 @@ var _attemptConnect = async function({ host, port, encryption }) {
     clientCert = await cert.local.getOrCreate();
   }
 
-  let deferred = defer();
+  const deferred = defer();
   let input;
   let output;
   // Delay opening the input stream until the transport has fully connected.
@@ -281,7 +281,7 @@ var _attemptConnect = async function({ host, port, encryption }) {
         return;
       }
       if (encryption) {
-        let sslSocketControl =
+        const sslSocketControl =
           transport.securityInfo.QueryInterface(Ci.nsISSLSocketControl);
         sslSocketControl.clientCert = clientCert;
       }
@@ -322,7 +322,7 @@ var _attemptConnect = async function({ host, port, encryption }) {
  * first connection to a new host because the cert is self-signed.
  */
 function _isInputAlive(input) {
-  let deferred = defer();
+  const deferred = defer();
   input.asyncWait({
     onInputStreamReady(stream) {
       try {
@@ -331,7 +331,7 @@ function _isInputAlive(input) {
       } catch (e) {
         try {
           // getErrorClass may throw if you pass a non-NSS error
-          let errorClass = nssErrorsService.getErrorClass(e.result);
+          const errorClass = nssErrorsService.getErrorClass(e.result);
           if (errorClass === Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
             deferred.resolve({ certError: true });
           } else {
@@ -353,9 +353,9 @@ function _isInputAlive(input) {
  */
 function _storeCertOverride(s, host, port) {
   // eslint-disable-next-line no-shadow
-  let cert = s.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+  const cert = s.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
               .SSLStatus.serverCert;
-  let overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+  const overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                      Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(host, port, cert, overrideBits,
                                                true /* temporary */);
@@ -429,15 +429,15 @@ SocketListener.prototype = {
       flags |= Ci.nsIServerSocket.LoopbackOnly;
     }
 
-    let self = this;
+    const self = this;
     return (async function() {
-      let backlog = 4;
+      const backlog = 4;
       self._socket = self._createSocketInstance();
       if (self.isPortBased) {
-        let port = Number(self.portOrPath);
+        const port = Number(self.portOrPath);
         self._socket.initSpecialConnection(port, flags, backlog);
       } else {
-        let file = nsFile(self.portOrPath);
+        const file = nsFile(self.portOrPath);
         if (file.exists()) {
           file.remove(false);
         }
@@ -460,7 +460,7 @@ SocketListener.prototype = {
       return;
     }
 
-    let advertisement = {
+    const advertisement = {
       port: this.port,
       encryption: this.encryption,
     };
@@ -484,7 +484,7 @@ SocketListener.prototype = {
       this._socket.serverCert = await cert.local.getOrCreate();
       this._socket.setSessionCache(false);
       this._socket.setSessionTickets(false);
-      let requestCert = Ci.nsITLSServerSocket.REQUEST_NEVER;
+      const requestCert = Ci.nsITLSServerSocket.REQUEST_NEVER;
       this._socket.setRequestClientCertificate(requestCert);
     }
     this.authenticator.augmentSocketOptions(this, this._socket);
@@ -600,7 +600,7 @@ ServerSocketConnection.prototype = {
   },
 
   get client() {
-    let client = {
+    const client = {
       host: this.host,
       port: this.port
     };
@@ -611,7 +611,7 @@ ServerSocketConnection.prototype = {
   },
 
   get server() {
-    let server = {
+    const server = {
       host: this._listener.host,
       port: this._listener.port
     };
@@ -628,7 +628,7 @@ ServerSocketConnection.prototype = {
    */
   _handle() {
     dumpn("Debugging connection starting authentication on " + this.address);
-    let self = this;
+    const self = this;
     (async function() {
       self._listenForTLSHandshake();
       await self._createTransport();
@@ -642,11 +642,11 @@ ServerSocketConnection.prototype = {
    * TLS sockets to keep the handshake moving.
    */
   async _createTransport() {
-    let input = this._socketTransport.openInputStream(0, 0, 0);
-    let output = this._socketTransport.openOutputStream(0, 0, 0);
+    const input = this._socketTransport.openInputStream(0, 0, 0);
+    const output = this._socketTransport.openOutputStream(0, 0, 0);
 
     if (this._listener.webSocket) {
-      let socket = await WebSocketServer.accept(this._socketTransport, input, output);
+      const socket = await WebSocketServer.accept(this._socketTransport, input, output);
       this._transport = new WebSocketDebuggerTransport(socket);
     } else {
       this._transport = new DebuggerTransport(input, output);
@@ -670,7 +670,7 @@ ServerSocketConnection.prototype = {
     if (!this._socketTransport || !this._socketTransport.securityInfo) {
       return;
     }
-    let connectionInfo = this._socketTransport.securityInfo
+    const connectionInfo = this._socketTransport.securityInfo
                          .QueryInterface(Ci.nsITLSServerConnectionInfo);
     connectionInfo.setSecurityObserver(observer);
   },
@@ -726,7 +726,7 @@ ServerSocketConnection.prototype = {
   },
 
   async _authenticate() {
-    let result = await this._listener.authenticator.authenticate({
+    const result = await this._listener.authenticator.authenticate({
       client: this.client,
       server: this.server,
       transport: this._transport
@@ -751,7 +751,7 @@ ServerSocketConnection.prototype = {
       return;
     }
     let errorName = result;
-    for (let name in Cr) {
+    for (const name in Cr) {
       if (Cr[name] === result) {
         errorName = name;
         break;

@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#matches", inspector);
   await testAddTextInFilter(inspector, view);
   await testClearSearchFilter(inspector, view);
@@ -28,9 +28,9 @@ add_task(async function() {
 async function testAddTextInFilter(inspector, computedView) {
   info("Setting filter text to \"background-color\"");
 
-  let win = computedView.styleWindow;
-  let propertyViews = computedView.propertyViews;
-  let searchField = computedView.searchField;
+  const win = computedView.styleWindow;
+  const propertyViews = computedView.propertyViews;
+  const searchField = computedView.searchField;
 
   searchField.focus();
   synthesizeKeys("background-color", win);
@@ -39,7 +39,7 @@ async function testAddTextInFilter(inspector, computedView) {
   info("Check that the correct properties are visible");
 
   propertyViews.forEach((propView) => {
-    let name = propView.name;
+    const name = propView.name;
     is(propView.visible, name.indexOf("background-color") > -1,
       "span " + name + " property visibility check");
   });
@@ -48,11 +48,11 @@ async function testAddTextInFilter(inspector, computedView) {
 async function testClearSearchFilter(inspector, computedView) {
   info("Clearing the search filter");
 
-  let win = computedView.styleWindow;
-  let propertyViews = computedView.propertyViews;
-  let searchField = computedView.searchField;
-  let searchClearButton = computedView.searchClearButton;
-  let onRefreshed = inspector.once("computed-view-refreshed");
+  const win = computedView.styleWindow;
+  const propertyViews = computedView.propertyViews;
+  const searchField = computedView.searchField;
+  const searchClearButton = computedView.searchClearButton;
+  const onRefreshed = inspector.once("computed-view-refreshed");
 
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);
   await onRefreshed;

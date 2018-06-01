@@ -15,17 +15,17 @@ const TEST_URI =
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("div", inspector);
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "red");
 
-  let innerFrameDiv1 = await getNodeFrontInFrame("div", "#frame1", inspector);
+  const innerFrameDiv1 = await getNodeFrontInFrame("div", "#frame1", inspector);
   await selectNode(innerFrameDiv1, inspector);
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "blue");
 
-  let innerFrameDiv2 = await getNodeFrontInFrame("div", "#frame2", inspector);
+  const innerFrameDiv2 = await getNodeFrontInFrame("div", "#frame2", inspector);
   await selectNode(innerFrameDiv2, inspector);
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "green");
@@ -43,15 +43,15 @@ add_task(async function() {
  *        The value of the new property.
  */
 async function addNewProperty(view, index, name, value) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
+  const idRuleEditor = getRuleViewRuleEditor(view, index);
   info(`Adding new property "${name}: ${value};"`);
 
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   idRuleEditor.addProperty(name, value, "", true);
   await onRuleViewChanged;
 
-  let textProps = idRuleEditor.rule.textProps;
-  let lastProperty = textProps[textProps.length - 1];
+  const textProps = idRuleEditor.rule.textProps;
+  const lastProperty = textProps[textProps.length - 1];
   is(lastProperty.name, name, "Last property has the expected name");
   is(lastProperty.value, value, "Last property has the expected value");
 }

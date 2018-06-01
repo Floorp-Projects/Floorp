@@ -25,17 +25,17 @@ function run_test() {
 var test_bulk_transfer_transport = async function(transportFactory) {
   info("Starting bulk transfer test at " + new Date().toTimeString());
 
-  let clientDeferred = defer();
-  let serverDeferred = defer();
+  const clientDeferred = defer();
+  const serverDeferred = defer();
 
   // Ensure test files are not present from a failed run
   cleanup_files();
-  let reallyLong = really_long();
+  const reallyLong = really_long();
   writeTestTempFile("bulk-input", reallyLong);
 
   Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
-  let transport = await transportFactory();
+  const transport = await transportFactory();
 
   // Sending from client to server
   function write_data({copyFrom}) {
@@ -55,10 +55,10 @@ var test_bulk_transfer_transport = async function(transportFactory) {
     Assert.equal(type, "file-stream");
     Assert.equal(length, reallyLong.length);
 
-    let outputFile = getTestTempFile("bulk-output", true);
+    const outputFile = getTestTempFile("bulk-output", true);
     outputFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-    let output = FileUtils.openSafeFileOutputStream(outputFile);
+    const output = FileUtils.openSafeFileOutputStream(outputFile);
 
     copyTo(output).then(() => {
       FileUtils.closeSafeFileOutputStream(output);
@@ -81,7 +81,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
       // Server
       Assert.equal(Object.keys(DebuggerServer._connections).length, 1);
       info(Object.keys(DebuggerServer._connections));
-      for (let connId in DebuggerServer._connections) {
+      for (const connId in DebuggerServer._connections) {
         DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
       }
 
@@ -111,21 +111,21 @@ var test_bulk_transfer_transport = async function(transportFactory) {
 /** * Test Utils ***/
 
 function verify() {
-  let reallyLong = really_long();
+  const reallyLong = really_long();
 
-  let inputFile = getTestTempFile("bulk-input");
-  let outputFile = getTestTempFile("bulk-output");
+  const inputFile = getTestTempFile("bulk-input");
+  const outputFile = getTestTempFile("bulk-output");
 
   Assert.equal(inputFile.fileSize, reallyLong.length);
   Assert.equal(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
-  let compareDeferred = defer();
+  const compareDeferred = defer();
   NetUtil.asyncFetch({
     uri: NetUtil.newURI(getTestTempFile("bulk-output")),
     loadUsingSystemPrincipal: true
   }, input => {
-    let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
+    const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
       // Avoid do_check_eq here so we don't log the contents
     Assert.ok(outputData === reallyLong);
     input.close();
@@ -136,12 +136,12 @@ function verify() {
 }
 
 function cleanup_files() {
-  let inputFile = getTestTempFile("bulk-input", true);
+  const inputFile = getTestTempFile("bulk-input", true);
   if (inputFile.exists()) {
     inputFile.remove(false);
   }
 
-  let outputFile = getTestTempFile("bulk-output", true);
+  const outputFile = getTestTempFile("bulk-output", true);
   if (outputFile.exists()) {
     outputFile.remove(false);
   }

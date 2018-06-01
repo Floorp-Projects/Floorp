@@ -15,7 +15,7 @@ var doc, table;
 
 function test() {
   waitForExplicitFinish();
-  let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
+  const win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
   win.addEventListener("load", function() {
     waitForFocus(function() {
@@ -134,8 +134,8 @@ function getNodeByValue(value) {
 var testKeyboardInteraction = async function() {
   info("Testing keyboard interaction with the table");
   info("clicking on the row containing id2");
-  let node = getNodeByValue("id2");
-  let event = table.once(TableWidget.EVENTS.ROW_SELECTED);
+  const node = getNodeByValue("id2");
+  const event = table.once(TableWidget.EVENTS.ROW_SELECTED);
   click(node);
   await event;
 
@@ -160,21 +160,21 @@ var testKeyboardInteraction = async function() {
 };
 
 async function testRow(id, key, destination) {
-  let node = getNodeByValue(id);
+  const node = getNodeByValue(id);
   // node should not have selected class
   ok(!node.classList.contains("theme-selected"),
      "Row should not have selected class");
   info(`Pressing ${key} to select ${destination}`);
 
-  let event = table.once(TableWidget.EVENTS.ROW_SELECTED);
+  const event = table.once(TableWidget.EVENTS.ROW_SELECTED);
   EventUtils.sendKey(key, doc.defaultView);
 
-  let uniqueId = await event;
+  const uniqueId = await event;
   is(id, uniqueId, `Correct row was selected after pressing ${key}`);
 
   ok(node.classList.contains("theme-selected"), "row has selected class");
 
-  let nodes = doc.querySelectorAll(".theme-selected");
+  const nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
     is(nodes[i].getAttribute("data-id"), id,
        "Correct cell selected in all columns");

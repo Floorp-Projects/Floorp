@@ -8,8 +8,8 @@ function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
     // appendTo
-    let cmFrame = win.document.querySelector("iframe");
-    let cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
+    const cmFrame = win.document.querySelector("iframe");
+    const cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
     ok(~cmStyle.innerHTML.indexOf(".CodeMirror"), "correct iframe is there");
 
     // getOption/setOption
@@ -53,7 +53,7 @@ function test() {
     ok(!ed.hasLineClass(0, "test"), "test line class is gone");
 
     // Font size
-    let size = ed.getFontSize();
+    const size = ed.getFontSize();
     is("number", typeof size, "we have the default font size");
     ed.setFontSize(ed.getFontSize() + 1);
     is(ed.getFontSize(), size + 1, "new font size was set");

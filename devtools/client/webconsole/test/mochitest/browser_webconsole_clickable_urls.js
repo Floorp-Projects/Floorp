@@ -18,7 +18,7 @@ add_task(async function() {
     content.wrappedJSObject.console.log(uri);
   });
 
-  let node = await waitFor(() => findMessage(hud, url));
+  const node = await waitFor(() => findMessage(hud, url));
   const link = node.querySelector("a.url");
 
   const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url, true);

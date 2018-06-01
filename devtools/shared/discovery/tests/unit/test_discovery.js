@@ -43,7 +43,7 @@ TestTransport.prototype = {
       log("No listener on port " + port);
       return;
     }
-    let message = JSON.stringify(object);
+    const message = JSON.stringify(object);
     gTestTransports[port].onPacketReceived(null, message);
   },
 
@@ -54,7 +54,7 @@ TestTransport.prototype = {
   // nsIUDPSocketListener
 
   onPacketReceived: function(socket, message) {
-    let object = JSON.parse(message);
+    const object = JSON.parse(message);
     object.from = "localhost";
     log("Recv on " + this.port + ":\n" + JSON.stringify(object, null, 2));
     this.emit("message", object);
@@ -127,8 +127,8 @@ add_task(async function() {
 });
 
 function scanForChange(service, changeType) {
-  let deferred = defer();
-  let timer = setTimeout(() => {
+  const deferred = defer();
+  const timer = setTimeout(() => {
     deferred.reject(new Error("Reply never arrived"));
   }, discovery.replyTimeout + 500);
   discovery.on(service + "-device-" + changeType, function onChange() {
@@ -141,8 +141,8 @@ function scanForChange(service, changeType) {
 }
 
 function scanForNoChange(service, changeType) {
-  let deferred = defer();
-  let timer = setTimeout(() => {
+  const deferred = defer();
+  const timer = setTimeout(() => {
     deferred.resolve();
   }, discovery.replyTimeout + 500);
   discovery.on(service + "-device-" + changeType, function onChange() {

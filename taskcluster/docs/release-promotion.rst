@@ -48,4 +48,5 @@ In-depth relpro guide
     release-promotion-action
     balrog
     partials
+    pushapk
     signing

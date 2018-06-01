@@ -54,7 +54,7 @@ var DetailsView = {
     this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(this);
     this.setAvailableViews = this.setAvailableViews.bind(this);
 
-    for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
+    for (const button of $$("toolbarbutton[data-view]", this.toolbar)) {
       button.addEventListener("command", this._onViewToggle);
     }
 
@@ -71,11 +71,11 @@ var DetailsView = {
    * Unbinds events, destroys subviews.
    */
   async destroy() {
-    for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
+    for (const button of $$("toolbarbutton[data-view]", this.toolbar)) {
       button.removeEventListener("command", this._onViewToggle);
     }
 
-    for (let component of Object.values(this.components)) {
+    for (const component of Object.values(this.components)) {
       component.initialized && (await component.view.destroy());
     }
 
@@ -93,12 +93,12 @@ var DetailsView = {
    * `devtools.performance.ui.`.
    */
   async setAvailableViews() {
-    let recording = PerformanceController.getCurrentRecording();
-    let isCompleted = recording && recording.isCompleted();
+    const recording = PerformanceController.getCurrentRecording();
+    const isCompleted = recording && recording.isCompleted();
     let invalidCurrentView = false;
 
-    for (let [name, { view }] of Object.entries(this.components)) {
-      let isSupported = this._isViewSupported(name);
+    for (const [name, { view }] of Object.entries(this.components)) {
+      const isSupported = this._isViewSupported(name);
 
       $(`toolbarbutton[data-view=${name}]`).hidden = !isSupported;
 
@@ -131,14 +131,14 @@ var DetailsView = {
    * @return {boolean}
    */
   _isViewSupported: function(viewName) {
-    let { features, prefs } = this.components[viewName];
-    let recording = PerformanceController.getCurrentRecording();
+    const { features, prefs } = this.components[viewName];
+    const recording = PerformanceController.getCurrentRecording();
 
     if (!recording || !recording.isCompleted()) {
       return false;
     }
 
-    let prefSupported = (prefs && prefs.length) ?
+    const prefSupported = (prefs && prefs.length) ?
                         prefs.every(p => PerformanceController.getPref(p)) :
                         true;
     return PerformanceController.isFeatureSupported(features) && prefSupported;
@@ -152,12 +152,12 @@ var DetailsView = {
    *        Name of the view to be shown.
    */
   async selectView(viewName) {
-    let component = this.components[viewName];
+    const component = this.components[viewName];
     this.el.selectedPanel = $("#" + component.id);
 
     await this._whenViewInitialized(component);
 
-    for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
+    for (const button of $$("toolbarbutton[data-view]", this.toolbar)) {
       if (button.getAttribute("data-view") === viewName) {
         button.setAttribute("checked", true);
       } else {
@@ -201,10 +201,10 @@ var DetailsView = {
       return false;
     }
 
-    let selectedPanel = this.el.selectedPanel;
-    let selectedId = selectedPanel.id;
+    const selectedPanel = this.el.selectedPanel;
+    const selectedId = selectedPanel.id;
 
-    for (let { id, view } of Object.values(this.components)) {
+    for (const { id, view } of Object.values(this.components)) {
       if (id == selectedId && view == viewObject) {
         return true;
       }
@@ -231,7 +231,7 @@ var DetailsView = {
     // any data. Make sure it's populated by setting `shouldUpdateWhenShown`.
     // All detail views require a recording to be complete, so do not
     // attempt to render if recording is in progress or does not exist.
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     if (recording && recording.isCompleted()) {
       component.view.shouldUpdateWhenShown = true;
     }

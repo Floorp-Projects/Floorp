@@ -23,7 +23,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - autocomplete popup escape key usage test</body>`;
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const {
@@ -31,7 +31,7 @@ add_task(async function() {
     completeNode,
   } = jsterm;
 
-  let onPopUpOpen = popup.once("popup-opened");
+  const onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion: window.foo.");
   jsterm.setInputValue("window.foo");

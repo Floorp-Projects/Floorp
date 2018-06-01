@@ -25,7 +25,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - autocomplete popup navigation and tab key usage test</body>`;
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const {
@@ -60,7 +60,7 @@ add_task(async function() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
-  let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
   is(completeNode.value, prefix + "item3", "completeNode.value holds item3");

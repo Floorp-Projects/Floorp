@@ -13,12 +13,12 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 const TEST_URL = URL + "service-workers/status-codes.html";
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(TEST_URL, true);
+  const { tab, monitor } = await initNetMonitor(TEST_URL, true);
   info("Starting test... ");
 
-  let { document, store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -51,21 +51,21 @@ add_task(async function() {
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.
-  let requests = getSortedRequests(store.getState());
+  const requests = getSortedRequests(store.getState());
   await Promise.all(requests.map(requestItem =>
     connector.requestData(requestItem.id, "stackTrace")));
 
-  let requestItems = document.querySelectorAll(".request-list-item");
-  for (let requestItem of requestItems) {
+  const requestItems = document.querySelectorAll(".request-list-item");
+  for (const requestItem of requestItems) {
     requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".status-code");
+    const requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
   }
 
   let index = 0;
-  for (let request of REQUEST_DATA) {
-    let item = getSortedRequests(store.getState()).get(index);
+  for (const request of REQUEST_DATA) {
+    const item = getSortedRequests(store.getState()).get(index);
 
     info(`Verifying request #${index}`);
     await verifyRequestItemTarget(
@@ -77,8 +77,8 @@ add_task(async function() {
       request.details
     );
 
-    let { stacktrace } = item;
-    let stackLen = stacktrace ? stacktrace.length : 0;
+    const { stacktrace } = item;
+    const stackLen = stacktrace ? stacktrace.length : 0;
 
     ok(stacktrace, `Request #${index} has a stacktrace`);
     ok(stackLen >= request.stackFunctions.length,

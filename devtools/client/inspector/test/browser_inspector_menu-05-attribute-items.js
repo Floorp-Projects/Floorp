@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
   await selectNode("#attributes", inspector);
 
   await testAddAttribute();
@@ -19,21 +19,21 @@ add_task(async function() {
 
   async function testAddAttribute() {
     info("Triggering 'Add Attribute' and waiting for mutation to occur");
-    let addAttribute = getMenuItem("node-menu-add-attribute");
+    const addAttribute = getMenuItem("node-menu-add-attribute");
     addAttribute.click();
 
     EventUtils.sendString('class="u-hidden"');
-    let onMutation = inspector.once("markupmutation");
+    const onMutation = inspector.once("markupmutation");
     EventUtils.synthesizeKey("KEY_Enter");
     await onMutation;
 
-    let hasAttribute = testActor.hasNode("#attributes.u-hidden");
+    const hasAttribute = testActor.hasNode("#attributes.u-hidden");
     ok(hasAttribute, "attribute was successfully added");
   }
 
   async function testCopyAttributeValue() {
     info("Testing 'Copy Attribute Value' and waiting for clipboard promise to resolve");
-    let copyAttributeValue = getMenuItem("node-menu-copy-attribute");
+    const copyAttributeValue = getMenuItem("node-menu-copy-attribute");
 
     info("Triggering 'Copy Attribute Value' and waiting for clipboard to copy the value");
     inspector.nodeMenuTriggerInfo = {
@@ -47,8 +47,8 @@ add_task(async function() {
 
   async function testCopyLongAttributeValue() {
     info("Testing 'Copy Attribute Value' copies very long attribute values");
-    let copyAttributeValue = getMenuItem("node-menu-copy-attribute");
-    let longAttribute = "#01234567890123456789012345678901234567890123456789" +
+    const copyAttributeValue = getMenuItem("node-menu-copy-attribute");
+    const longAttribute = "#01234567890123456789012345678901234567890123456789" +
     "12345678901234567890123456789012345678901234567890123456789012345678901" +
     "23456789012345678901234567890123456789012345678901234567890123456789012" +
     "34567890123456789012345678901234567890123456789012345678901234567890123";
@@ -64,7 +64,7 @@ add_task(async function() {
 
   async function testEditAttribute() {
     info("Testing 'Edit Attribute' menu item");
-    let editAttribute = getMenuItem("node-menu-edit-attribute");
+    const editAttribute = getMenuItem("node-menu-edit-attribute");
 
     info("Triggering 'Edit Attribute' and waiting for mutation to occur");
     inspector.nodeMenuTriggerInfo = {
@@ -73,37 +73,37 @@ add_task(async function() {
     };
     editAttribute.click();
     EventUtils.sendString("data-edit='edited'");
-    let onMutation = inspector.once("markupmutation");
+    const onMutation = inspector.once("markupmutation");
     EventUtils.synthesizeKey("KEY_Enter");
     await onMutation;
 
-    let isAttributeChanged =
+    const isAttributeChanged =
       await testActor.hasNode("#attributes[data-edit='edited']");
     ok(isAttributeChanged, "attribute was successfully edited");
   }
 
   async function testRemoveAttribute() {
     info("Testing 'Remove Attribute' menu item");
-    let removeAttribute = getMenuItem("node-menu-remove-attribute");
+    const removeAttribute = getMenuItem("node-menu-remove-attribute");
 
     info("Triggering 'Remove Attribute' and waiting for mutation to occur");
     inspector.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-remove"
     };
-    let onMutation = inspector.once("markupmutation");
+    const onMutation = inspector.once("markupmutation");
     removeAttribute.click();
     await onMutation;
 
-    let hasAttribute = await testActor.hasNode("#attributes[data-remove]");
+    const hasAttribute = await testActor.hasNode("#attributes[data-remove]");
     ok(!hasAttribute, "attribute was successfully removed");
   }
 
   function getMenuItem(id) {
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: getContainerForSelector("#attributes", inspector).tagLine,
     });
-    let menuItem = allMenuItems.find(i => i.id === id);
+    const menuItem = allMenuItems.find(i => i.id === id);
     ok(menuItem, "Menu item '" + id + "' found");
     // Close the menu so synthesizing future keys won't select menu items.
     EventUtils.synthesizeKey("KEY_Escape");

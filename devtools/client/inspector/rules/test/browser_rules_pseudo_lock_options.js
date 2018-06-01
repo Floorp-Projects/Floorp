@@ -26,7 +26,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("div", inspector);
 
   await assertPseudoPanelClosed(view);
@@ -79,7 +79,7 @@ add_task(async function() {
 
 async function togglePseudoClass(inspector, pseudoClassOption) {
   info("Toggle the pseudoclass, wait for it to be applied");
-  let onRefresh = inspector.once("rule-view-refreshed");
+  const onRefresh = inspector.once("rule-view-refreshed");
   pseudoClassOption.click();
   await onRefresh;
 }

@@ -7,11 +7,11 @@
  * Test if the 'Same site' cookie attribute is correctly set in the cookie panel
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SET_COOKIE_SAME_SITE_SJS);
+  const { tab, monitor } = await initNetMonitor(SET_COOKIE_SAME_SITE_SJS);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
   tab.linkedBrowser.reload();
@@ -54,8 +54,8 @@ add_task(async function() {
         value: "bar"
     },
   ];
-  let labelCells = document.querySelectorAll(".treeLabelCell");
-  let valueCells = document.querySelectorAll(".treeValueCell");
+  const labelCells = document.querySelectorAll(".treeLabelCell");
+  const valueCells = document.querySelectorAll(".treeValueCell");
   is(valueCells.length, labelCells.length, "Number of labels "
         + labelCells.length + " different from number of values " + valueCells.length);
 

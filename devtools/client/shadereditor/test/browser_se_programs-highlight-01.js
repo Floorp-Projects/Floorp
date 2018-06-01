@@ -6,21 +6,21 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
+  const { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   once(panel.panelWin, EVENTS.SHADER_COMPILED).then(() => {
     ok(false, "No shaders should be publicly compiled during this test.");
   });
 
   reload(target);
-  let [[firstProgramActor, secondProgramActor]] = await promise.all([
+  const [[firstProgramActor, secondProgramActor]] = await promise.all([
     getPrograms(gFront, 2),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.once("change", () => {
     ok(false, "The vertex shader source was unexpectedly changed.");

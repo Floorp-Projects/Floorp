@@ -21,7 +21,7 @@ const NEW_HTML = '<div id="keyboard">Edited</div>';
 requestLongerTimeout(2);
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();
 
@@ -47,7 +47,7 @@ add_task(async function() {
 async function testEscapeCancels(inspector, testActor) {
   await selectNode(SELECTOR, inspector);
 
-  let onHtmlEditorCreated = once(inspector.markup, "begin-editing");
+  const onHtmlEditorCreated = once(inspector.markup, "begin-editing");
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
   await onHtmlEditorCreated;
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
@@ -57,7 +57,7 @@ async function testEscapeCancels(inspector, testActor) {
 
   inspector.markup.htmlEditor.editor.setText(NEW_HTML);
 
-  let onEditorHiddem = once(inspector.markup.htmlEditor, "popuphidden");
+  const onEditorHiddem = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
   await onEditorHiddem;
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
@@ -67,7 +67,7 @@ async function testEscapeCancels(inspector, testActor) {
 }
 
 async function testF2Commits(inspector, testActor) {
-  let onEditorShown = once(inspector.markup.htmlEditor, "popupshown");
+  const onEditorShown = once(inspector.markup.htmlEditor, "popupshown");
   inspector.markup._frame.contentDocument.documentElement.focus();
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
   await onEditorShown;
@@ -76,7 +76,7 @@ async function testF2Commits(inspector, testActor) {
   is((await testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
      "The node is starting with old HTML.");
 
-  let onMutations = inspector.once("markupmutation");
+  const onMutations = inspector.once("markupmutation");
   inspector.markup.htmlEditor.editor.setText(NEW_HTML);
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
   await onMutations;
@@ -88,34 +88,34 @@ async function testF2Commits(inspector, testActor) {
 }
 
 async function testBody(inspector, testActor) {
-  let currentBodyHTML = await testActor.getProperty("body", "outerHTML");
-  let bodyHTML = '<body id="updated"><p></p></body>';
-  let bodyFront = await getNodeFront("body", inspector);
+  const currentBodyHTML = await testActor.getProperty("body", "outerHTML");
+  const bodyHTML = '<body id="updated"><p></p></body>';
+  const bodyFront = await getNodeFront("body", inspector);
 
-  let onUpdated = inspector.once("inspector-updated");
-  let onReselected = inspector.markup.once("reselectedonremoved");
+  const onUpdated = inspector.once("inspector-updated");
+  const onReselected = inspector.markup.once("reselectedonremoved");
   await inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML,
                                              currentBodyHTML);
   await onReselected;
   await onUpdated;
 
-  let newBodyHTML = await testActor.getProperty("body", "outerHTML");
+  const newBodyHTML = await testActor.getProperty("body", "outerHTML");
   is(newBodyHTML, bodyHTML, "<body> HTML has been updated");
 
-  let headsNum = await testActor.getNumberOfElementMatches("head");
+  const headsNum = await testActor.getNumberOfElementMatches("head");
   is(headsNum, 1, "no extra <head>s have been added");
 }
 
 async function testHead(inspector, testActor) {
   await selectNode("head", inspector);
 
-  let currentHeadHTML = await testActor.getProperty("head", "outerHTML");
-  let headHTML = "<head id=\"updated\"><title>New Title</title>" +
+  const currentHeadHTML = await testActor.getProperty("head", "outerHTML");
+  const headHTML = "<head id=\"updated\"><title>New Title</title>" +
                  "<script>window.foo=\"bar\";</script></head>";
-  let headFront = await getNodeFront("head", inspector);
+  const headFront = await getNodeFront("head", inspector);
 
-  let onUpdated = inspector.once("inspector-updated");
-  let onReselected = inspector.markup.once("reselectedonremoved");
+  const onUpdated = inspector.once("inspector-updated");
+  const onReselected = inspector.markup.once("reselectedonremoved");
   await inspector.markup.updateNodeOuterHTML(headFront, headHTML,
                                              currentHeadHTML);
   await onReselected;
@@ -132,15 +132,15 @@ async function testHead(inspector, testActor) {
 }
 
 async function testDocumentElement(inspector, testActor) {
-  let currentDocElementOuterHMTL = await testActor.eval(
+  const currentDocElementOuterHMTL = await testActor.eval(
     "document.documentElement.outerHMTL");
-  let docElementHTML = "<html id=\"updated\" foo=\"bar\"><head>" +
+  const docElementHTML = "<html id=\"updated\" foo=\"bar\"><head>" +
                        "<title>Updated from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
                        "<p>Hello</p></body></html>";
-  let docElementFront = await inspector.markup.walker.documentElement();
+  const docElementFront = await inspector.markup.walker.documentElement();
 
-  let onReselected = inspector.markup.once("reselectedonremoved");
+  const onReselected = inspector.markup.once("reselectedonremoved");
   await inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML,
     currentDocElementOuterHMTL);
   await onReselected;
@@ -166,15 +166,15 @@ async function testDocumentElement(inspector, testActor) {
 }
 
 async function testDocumentElement2(inspector, testActor) {
-  let currentDocElementOuterHMTL = await testActor.eval(
+  const currentDocElementOuterHMTL = await testActor.eval(
     "document.documentElement.outerHMTL");
-  let docElementHTML = "<html id=\"somethingelse\" class=\"updated\"><head>" +
+  const docElementHTML = "<html id=\"somethingelse\" class=\"updated\"><head>" +
                        "<title>Updated again from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
                        "<p>Hello again</p></body></html>";
-  let docElementFront = await inspector.markup.walker.documentElement();
+  const docElementFront = await inspector.markup.walker.documentElement();
 
-  let onReselected = inspector.markup.once("reselectedonremoved");
+  const onReselected = inspector.markup.once("reselectedonremoved");
   inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML,
     currentDocElementOuterHMTL);
   await onReselected;

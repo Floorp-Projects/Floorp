@@ -84,10 +84,10 @@ const CATEGORY_MAPPINGS = {
  * an additional argument specifying the desired id (in ascending order).
  */
 const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (() => {
-  let bitmasksForCategory = {};
-  let all = Object.keys(CATEGORY_MAPPINGS);
+  const bitmasksForCategory = {};
+  const all = Object.keys(CATEGORY_MAPPINGS);
 
-  for (let category of CATEGORIES) {
+  for (const category of CATEGORIES) {
     bitmasksForCategory[category.abbrev] = all
       .filter(mask => CATEGORY_MAPPINGS[mask] == category)
       .map(mask => +mask)

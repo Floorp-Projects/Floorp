@@ -61,7 +61,7 @@ const key = (id, win = window) => {
   const PrefUtils = require("devtools/client/performance/test/helpers/prefs");
 
   // Make sure all the prefs are reverted to their defaults once tests finish.
-  let stopObservingPrefs = PrefUtils.whenUnknownPrefChanged("devtools.performance",
+  const stopObservingPrefs = PrefUtils.whenUnknownPrefChanged("devtools.performance",
     pref => {
       ok(false, `Unknown pref changed: ${pref}. Please add it to test/helpers/prefs.js ` +
         "to make sure it's reverted to its default value when the tests finishes, " +

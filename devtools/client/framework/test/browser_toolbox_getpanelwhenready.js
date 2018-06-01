@@ -11,18 +11,18 @@ var toolbox = null;
 const URL = "data:text/html;charset=utf8,test for getPanelWhenReady";
 
 add_task(async function() {
-  let tab = await addTab(URL);
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab(URL);
+  const target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target);
 
-  let debuggerPanelPromise = toolbox.getPanelWhenReady("jsdebugger");
+  const debuggerPanelPromise = toolbox.getPanelWhenReady("jsdebugger");
   await toolbox.selectTool("jsdebugger");
-  let debuggerPanel = await debuggerPanelPromise;
+  const debuggerPanel = await debuggerPanelPromise;
 
   is(debuggerPanel, toolbox.getPanel("jsdebugger"),
       "The debugger panel from getPanelWhenReady before loading is the actual panel");
 
-  let debuggerPanel2 = await toolbox.getPanelWhenReady("jsdebugger");
+  const debuggerPanel2 = await toolbox.getPanelWhenReady("jsdebugger");
   is(debuggerPanel2, toolbox.getPanel("jsdebugger"),
       "The debugger panel from getPanelWhenReady after loading is the actual panel");
 

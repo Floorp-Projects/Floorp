@@ -27,13 +27,13 @@ const TEST_DATA = [
 
 function run_test() {
   let i = 0;
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     ++i;
     info("Test #" + i);
 
-    let escaped = escapeCSSComment(test.input);
+    const escaped = escapeCSSComment(test.input);
     equal(escaped, test.expected);
-    let unescaped = _unescapeCSSComment(escaped);
+    const unescaped = _unescapeCSSComment(escaped);
     equal(unescaped, test.input);
   }
 }

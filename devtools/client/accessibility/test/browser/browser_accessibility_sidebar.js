@@ -48,8 +48,8 @@ const tests = [{
 }, {
   desc: "Append a new child to the document.",
   action: async ({ browser }) => ContentTask.spawn(browser, {}, () => {
-    let doc = content.document;
-    let button = doc.createElement("button");
+    const doc = content.document;
+    const button = doc.createElement("button");
     button.textContent = "Press Me!";
     doc.body.appendChild(button);
   }),

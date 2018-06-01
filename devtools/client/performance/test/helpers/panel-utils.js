@@ -13,7 +13,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
  * Initializes a toolbox panel in a new tab.
  */
 exports.initPanelInNewTab = async function({ tool, url, win }, options = {}) {
-  let tab = await addTab({ url, win }, options);
+  const tab = await addTab({ url, win }, options);
   return exports.initPanelInTab({ tool, tab });
 };
 
@@ -23,16 +23,16 @@ exports.initPanelInNewTab = async function({ tool, url, win }, options = {}) {
 exports.initPanelInTab = async function({ tool, tab }) {
   dump(`Initializing a ${tool} panel.\n`);
 
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   await target.makeRemote();
 
   // Open a toolbox and wait for the connection to the performance actors
   // to be opened. This is necessary because of the WebConsole's
   // `profile` and `profileEnd` methods.
-  let toolbox = await gDevTools.showToolbox(target, tool);
+  const toolbox = await gDevTools.showToolbox(target, tool);
   await toolbox.initPerformance();
 
-  let panel = toolbox.getCurrentPanel();
+  const panel = toolbox.getCurrentPanel();
   return { target, toolbox, panel };
 };
 
@@ -40,7 +40,7 @@ exports.initPanelInTab = async function({ tool, tab }) {
  * Initializes a performance panel in a new tab.
  */
 exports.initPerformanceInNewTab = async function({ url, win }, options = {}) {
-  let tab = await addTab({ url, win }, options);
+  const tab = await addTab({ url, win }, options);
   return exports.initPerformanceInTab({ tab });
 };
 
@@ -59,7 +59,7 @@ exports.initPerformanceInTab = async function({ tab }) {
  * Returns a console property that allows calls to `profile` and `profileEnd`.
  */
 exports.initConsoleInNewTab = async function({ url, win }, options = {}) {
-  let tab = await addTab({ url, win }, options);
+  const tab = await addTab({ url, win }, options);
   return exports.initConsoleInTab({ tab });
 };
 
@@ -68,13 +68,13 @@ exports.initConsoleInNewTab = async function({ url, win }, options = {}) {
  * Returns a console property that allows calls to `profile` and `profileEnd`.
  */
 exports.initConsoleInTab = async function({ tab }) {
-  let { target, toolbox, panel } = await exports.initPanelInTab({
+  const { target, toolbox, panel } = await exports.initPanelInTab({
     tool: "webconsole",
     tab: tab
   });
 
-  let consoleMethod = async function(method, label, event) {
-    let recordingEventReceived = once(toolbox.performance, event);
+  const consoleMethod = async function(method, label, event) {
+    const recordingEventReceived = once(toolbox.performance, event);
     if (label === undefined) {
       await panel.hud.jsterm.execute(`console.${method}()`);
     } else {
@@ -83,11 +83,11 @@ exports.initConsoleInTab = async function({ tab }) {
     await recordingEventReceived;
   };
 
-  let profile = async function(label) {
+  const profile = async function(label) {
     return consoleMethod("profile", label, "recording-started");
   };
 
-  let profileEnd = async function(label) {
+  const profileEnd = async function(label) {
     return consoleMethod("profileEnd", label, "recording-stopped");
   };
 
@@ -100,7 +100,7 @@ exports.initConsoleInTab = async function({ tab }) {
 exports.teardownToolboxAndRemoveTab = async function(panel) {
   dump("Destroying panel.\n");
 
-  let tab = panel.target.tab;
+  const tab = panel.target.tab;
   await panel.toolbox.destroy();
   await removeTab(tab);
 };

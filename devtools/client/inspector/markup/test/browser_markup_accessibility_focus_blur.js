@@ -8,14 +8,14 @@
 // view, its root and other containers, and other parts of inspector.
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(
+  const {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
-  let markup = inspector.markup;
-  let doc = markup.doc;
-  let win = doc.defaultView;
+  const markup = inspector.markup;
+  const doc = markup.doc;
+  const win = doc.defaultView;
 
-  let spanContainer = await getContainerForSelector("span", inspector);
-  let rootContainer = markup.getContainer(markup._rootNode);
+  const spanContainer = await getContainerForSelector("span", inspector);
+  const rootContainer = markup.getContainer(markup._rootNode);
 
   is(doc.activeElement, doc.body,
     "Keyboard focus by default is on document body");

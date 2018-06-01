@@ -7,8 +7,8 @@
 // Ported from js/src/jit-test/tests/debug/Memory-takeCensus-08.js
 
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
   g.eval(`
          var stuff = [];
@@ -48,7 +48,7 @@ function run_test() {
 
   let baseline = 0;
   function countIncreasedByAtLeast(n) {
-    let oldBaseline = baseline;
+    const oldBaseline = baseline;
 
     // Since a census counts only reachable objects, one might assume that calling
     // GC here would have no effect on the census results. But GC also throws away

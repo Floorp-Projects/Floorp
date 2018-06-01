@@ -8,10 +8,10 @@
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(async function() {
-  let generatedStubs = await generateNetworkEventStubs();
+  const generatedStubs = await generateNetworkEventStubs();
 
-  let repoStubFilePath = getTestFilePath("../stubs/networkEvent.js");
-  let repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFilePath = getTestFilePath("../stubs/networkEvent.js");
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
 
   is(generatedStubs, repoStubFileContent, "Generated stub has the expected content");
   if (generatedStubs != repoStubFileContent) {

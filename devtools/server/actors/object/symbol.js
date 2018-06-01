@@ -37,11 +37,11 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
    * Returns a grip for this actor for returning in a protocol message.
    */
   form: function() {
-    let form = {
+    const form = {
       type: this.typeName,
       actor: this.actorID,
     };
-    let name = getSymbolName(this.symbol);
+    const name = getSymbolName(this.symbol);
     if (name !== undefined) {
       // Create a grip for the name because it might be a longString.
       form.name = createValueGrip(name, this.registeredPool);
@@ -92,7 +92,7 @@ function symbolGrip(sym, pool) {
     return pool.symbolActors[sym].form();
   }
 
-  let actor = new SymbolActor(sym);
+  const actor = new SymbolActor(sym);
   pool.addActor(actor);
   pool.symbolActors[sym] = actor;
   return actor.form();

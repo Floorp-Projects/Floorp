@@ -20,7 +20,7 @@ module.exports = function() {
     shouldLog = true;
   }
 
-  let store = createStore({
+  const store = createStore({
     log: shouldLog,
     history
   })(combineReducers(reducers), {});

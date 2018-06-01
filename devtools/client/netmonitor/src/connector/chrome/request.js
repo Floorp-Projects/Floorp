@@ -5,17 +5,17 @@
 "use strict";
 
 function mappingCallFrames(callFrames) {
-  let stacktrace = [];
+  const stacktrace = [];
   callFrames.forEach(
     (frame) => {
-      let {
+      const {
         functionName,
         scriptId,
         url,
         lineNumber,
         columnNumber
       } = frame;
-      let stack = {
+      const stack = {
         scriptId,
         filename: url,
         lineNumber,
@@ -29,12 +29,12 @@ function mappingCallFrames(callFrames) {
 }
 
 function Cause(initiator) {
-  let {url, type, stack} = initiator;
-  let {callFrames} = stack || {};
+  const {url, type, stack} = initiator;
+  const {callFrames} = stack || {};
   if (!stack || !callFrames.length) {
     return undefined;
   }
-  let cause = {
+  const cause = {
     type: type,
     loadingDocumentUri: url,
     stacktrace: mappingCallFrames(callFrames)
@@ -43,7 +43,7 @@ function Cause(initiator) {
 }
 
 function Header(id, headers) {
-  let header = [];
+  const header = [];
   let headersSize = 0;
   Object.keys(headers).map((value) => {
     header.push(
@@ -63,11 +63,11 @@ function Header(id, headers) {
   };
 }
 function PostData(id, postData, header) {
-  let {headers, headersSize} = header;
-  let payload = {},
-    requestPostData = {
-      from: id, postDataDiscarded: false, postData: {}
-    };
+  const {headers, headersSize} = header;
+  const payload = {};
+  const requestPostData = {
+    from: id, postDataDiscarded: false, postData: {}
+  };
   if (postData) {
     requestPostData.postData.text = postData;
     payload.requestPostData = Object.assign({}, requestPostData);
@@ -86,9 +86,9 @@ function Cookie(id, Network) {
 }
 
 function Request(id, requestData) {
-  let {request, initiator, timestamp} = requestData;
-  let {url, method} = request;
-  let cause = !initiator ? undefined : Cause(initiator);
+  const {request, initiator, timestamp} = requestData;
+  const {url, method} = request;
+  const cause = !initiator ? undefined : Cause(initiator);
   return {
     method, url, cause,
     isXHR: false, // TODO: verify

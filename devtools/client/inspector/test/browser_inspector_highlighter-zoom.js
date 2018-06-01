@@ -20,27 +20,27 @@ const expectedStyle = (w, h, z) =>
         "overflow:hidden";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
-  let highlighterUtils = inspector.toolbox.highlighterUtils;
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const highlighterUtils = inspector.toolbox.highlighterUtils;
 
-  let div = await getNodeFront("div", inspector);
+  const div = await getNodeFront("div", inspector);
 
-  for (let level of TEST_LEVELS) {
+  for (const level of TEST_LEVELS) {
     info(`Zoom to level ${level}`);
     await testActor.zoomPageTo(level, false);
 
     info("Highlight the test node");
     await highlighterUtils.highlightNodeFront(div);
 
-    let isVisible = await testActor.isHighlighting();
+    const isVisible = await testActor.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
 
     await testActor.isNodeCorrectlyHighlighted("div", is);
 
     info("Check that the highlighter root wrapper node was scaled down");
 
-    let style = await getElementsNodeStyle(testActor);
-    let { width, height } = await testActor.getWindowDimensions();
+    const style = await getElementsNodeStyle(testActor);
+    const { width, height } = await testActor.getWindowDimensions();
     is(style, expectedStyle(width, height, level),
       "The style attribute of the root element is correct");
 
@@ -50,6 +50,7 @@ add_task(async function() {
 });
 
 async function getElementsNodeStyle(testActor) {
-  let value = await testActor.getHighlighterNodeAttribute("box-model-elements", "style");
+  const value =
+    await testActor.getHighlighterNodeAttribute("box-model-elements", "style");
   return value;
 }

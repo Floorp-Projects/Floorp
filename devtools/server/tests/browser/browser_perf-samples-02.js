@@ -18,26 +18,26 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
-  let rec = await front.startRecording();
+  const rec = await front.startRecording();
   // allow the profiler module to sample some cpu activity
   busyWait(WAIT_TIME);
 
   await front.stopRecording(rec);
-  let profile = rec.getProfile();
+  const profile = rec.getProfile();
   let sampleCount = 0;
 
-  for (let thread of profile.threads) {
+  for (const thread of profile.threads) {
     info("Checking thread: " + thread.name);
 
-    for (let sample of thread.samples.data) {
+    for (const sample of thread.samples.data) {
       sampleCount++;
 
-      let stack = getInflatedStackLocations(thread, sample);
+      const stack = getInflatedStackLocations(thread, sample);
       if (stack[0] != "(root)") {
         ok(false, "The sample " + stack.toSource() + " doesn't have a root node.");
       }
@@ -56,21 +56,21 @@ add_task(async function() {
  * Inflate a particular sample's stack and return an array of strings.
  */
 function getInflatedStackLocations(thread, sample) {
-  let stackTable = thread.stackTable;
-  let frameTable = thread.frameTable;
-  let stringTable = thread.stringTable;
-  let SAMPLE_STACK_SLOT = thread.samples.schema.stack;
-  let STACK_PREFIX_SLOT = stackTable.schema.prefix;
-  let STACK_FRAME_SLOT = stackTable.schema.frame;
-  let FRAME_LOCATION_SLOT = frameTable.schema.location;
+  const stackTable = thread.stackTable;
+  const frameTable = thread.frameTable;
+  const stringTable = thread.stringTable;
+  const SAMPLE_STACK_SLOT = thread.samples.schema.stack;
+  const STACK_PREFIX_SLOT = stackTable.schema.prefix;
+  const STACK_FRAME_SLOT = stackTable.schema.frame;
+  const FRAME_LOCATION_SLOT = frameTable.schema.location;
 
   // Build the stack from the raw data and accumulate the locations in
   // an array.
   let stackIndex = sample[SAMPLE_STACK_SLOT];
-  let locations = [];
+  const locations = [];
   while (stackIndex !== null) {
-    let stackEntry = stackTable.data[stackIndex];
-    let frame = frameTable.data[stackEntry[STACK_FRAME_SLOT]];
+    const stackEntry = stackTable.data[stackIndex];
+    const frame = frameTable.data[stackEntry[STACK_FRAME_SLOT]];
     locations.push(stringTable[frame[FRAME_LOCATION_SLOT]]);
     stackIndex = stackEntry[STACK_PREFIX_SLOT];
   }

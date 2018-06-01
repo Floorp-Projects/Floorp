@@ -34,14 +34,14 @@ define(function(require, exports, module) {
     }
 
     onSearch(event) {
-      let searchBox = event.target;
-      let win = searchBox.ownerDocument.defaultView;
+      const searchBox = event.target;
+      const win = searchBox.ownerDocument.defaultView;
 
       if (this.searchTimeout) {
         win.clearTimeout(this.searchTimeout);
       }
 
-      let callback = this.doSearch.bind(this, searchBox);
+      const callback = this.doSearch.bind(this, searchBox);
       this.searchTimeout = win.setTimeout(callback, searchDelay);
     }
 

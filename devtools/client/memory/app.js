@@ -98,24 +98,24 @@ class MemoryApp extends Component {
   }
 
   onKeyDown(e) {
-    let { snapshots, dispatch, heapWorker } = this.props;
+    const { snapshots, dispatch, heapWorker } = this.props;
     const selectedSnapshot = snapshots.find(s => s.selected);
     const selectedIndex = snapshots.indexOf(selectedSnapshot);
 
-    let isOSX = appinfo.OS == "Darwin";
-    let isAccelKey = (isOSX && e.metaKey) || (!isOSX && e.ctrlKey);
+    const isOSX = appinfo.OS == "Darwin";
+    const isAccelKey = (isOSX && e.metaKey) || (!isOSX && e.ctrlKey);
 
     // On ACCEL+UP, select previous snapshot.
     if (isAccelKey && e.key === "ArrowUp") {
-      let previousIndex = Math.max(0, selectedIndex - 1);
-      let previousSnapshotId = snapshots[previousIndex].id;
+      const previousIndex = Math.max(0, selectedIndex - 1);
+      const previousSnapshotId = snapshots[previousIndex].id;
       dispatch(selectSnapshotAndRefresh(heapWorker, previousSnapshotId));
     }
 
     // On ACCEL+DOWN, select next snapshot.
     if (isAccelKey && e.key === "ArrowDown") {
-      let nextIndex = Math.min(snapshots.length - 1, selectedIndex + 1);
-      let nextSnapshotId = snapshots[nextIndex].id;
+      const nextIndex = Math.min(snapshots.length - 1, selectedIndex + 1);
+      const nextSnapshotId = snapshots[nextIndex].id;
       dispatch(selectSnapshotAndRefresh(heapWorker, nextSnapshotId));
     }
   }
@@ -160,7 +160,7 @@ class MemoryApp extends Component {
   }
 
   render() {
-    let {
+    const {
       dispatch,
       snapshots,
       front,

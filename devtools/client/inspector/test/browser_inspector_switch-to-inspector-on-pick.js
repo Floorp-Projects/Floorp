@@ -10,8 +10,8 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
   "<p>Switch to inspector on pick</p>";
 
 add_task(async function() {
-  let tab = await addTab(TEST_URI);
-  let toolbox = await openToolbox(tab);
+  const tab = await addTab(TEST_URI);
+  const toolbox = await openToolbox(tab);
 
   await startPickerAndAssertSwitchToInspector(toolbox);
 
@@ -21,13 +21,13 @@ add_task(async function() {
 
 function openToolbox(tab) {
   info("Opening webconsole.");
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   return gDevTools.showToolbox(target, "webconsole");
 }
 
 async function startPickerAndAssertSwitchToInspector(toolbox) {
   info("Clicking element picker button.");
-  let pickButton = toolbox.doc.querySelector("#command-button-pick");
+  const pickButton = toolbox.doc.querySelector("#command-button-pick");
   pickButton.click();
 
   info("Waiting for inspector to be selected.");

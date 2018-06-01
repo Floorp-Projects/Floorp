@@ -9,13 +9,13 @@ const { addViewport, resizeViewport } =
   require("devtools/client/responsive.html/actions/viewports");
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   dispatch(addViewport());
   dispatch(resizeViewport(0, 500, 500));
 
-  let viewport = getState().viewports[0];
+  const viewport = getState().viewports[0];
   equal(viewport.width, 500, "Resized width of 500");
   equal(viewport.height, 500, "Resized height of 500");
 });

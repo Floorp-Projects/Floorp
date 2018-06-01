@@ -10,7 +10,7 @@ const {
 // Tests for menuitem functionality that doesn't fit into any specific category
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 add_task(async function() {
-  let { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
   await testShowDOMProperties();
   await testDuplicateNode();
   await testDeleteNode();
@@ -19,23 +19,23 @@ add_task(async function() {
   await testScrollIntoView();
   async function testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
-    let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let showDOMPropertiesNode =
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const showDOMPropertiesNode =
       allMenuItems.find(item => item.id === "node-menu-showdomproperties");
     ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
 
-    let consoleOpened = toolbox.once("webconsole-ready");
+    const consoleOpened = toolbox.once("webconsole-ready");
 
     info("Triggering 'Show DOM Properties' and waiting for inspector open");
     showDOMPropertiesNode.click();
     await consoleOpened;
 
-    let webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
-    let messagesAdded = webconsoleUI.once("new-messages");
+    const webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
+    const messagesAdded = webconsoleUI.once("new-messages");
     await messagesAdded;
     info("Checking if 'inspect($0)' was evaluated");
 
-    let state = webconsoleUI.consoleOutput.getStore().getState();
+    const state = webconsoleUI.consoleOutput.getStore().getState();
     ok(getHistoryEntries(state)[0] === "inspect($0)");
     await toolbox.toggleSplitConsole();
   }
@@ -46,20 +46,20 @@ add_task(async function() {
     is((await testActor.getNumberOfElementMatches(".duplicate")), 1,
        "There should initially be 1 .duplicate node");
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let menuItem =
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const menuItem =
       allMenuItems.find(item => item.id === "node-menu-duplicatenode");
     ok(menuItem, "'Duplicate node' menu item should exist");
 
     info("Triggering 'Duplicate Node' and waiting for inspector to update");
-    let updated = inspector.once("markupmutation");
+    const updated = inspector.once("markupmutation");
     menuItem.click();
     await updated;
 
     is((await testActor.getNumberOfElementMatches(".duplicate")), 2,
        "The duplicated node should be in the markup.");
 
-    let container = await getContainerForSelector(".duplicate + .duplicate",
+    const container = await getContainerForSelector(".duplicate + .duplicate",
                                                    inspector);
     ok(container, "A MarkupContainer should be created for the new node");
   }
@@ -67,10 +67,10 @@ add_task(async function() {
   async function testDeleteNode() {
     info("Testing 'Delete Node' menu item for normal elements.");
     await selectNode("#delete", inspector);
-    let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
-    let updated = inspector.once("inspector-updated");
+    const updated = inspector.once("inspector-updated");
 
     info("Triggering 'Delete Node' and waiting for inspector to update");
     deleteNode.click();
@@ -81,23 +81,23 @@ add_task(async function() {
 
   async function testDeleteTextNode() {
     info("Testing 'Delete Node' menu item for text elements.");
-    let { walker } = inspector;
-    let divBefore = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
-    let { nodes } = await walker.children(divBefore);
+    const { walker } = inspector;
+    const divBefore = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    const { nodes } = await walker.children(divBefore);
     await selectNode(nodes[0], inspector, "test-highlight");
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
     ok(!deleteNode.disabled, "the delete menu item is not disabled");
-    let updated = inspector.once("inspector-updated");
+    const updated = inspector.once("inspector-updated");
 
     info("Triggering 'Delete Node' and waiting for inspector to update");
     deleteNode.click();
     await updated;
 
-    let divAfter = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
-    let nodesAfter = (await walker.children(divAfter)).nodes;
+    const divAfter = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    const nodesAfter = (await walker.children(divAfter)).nodes;
     ok(nodesAfter.length == 0, "the node still had children");
   }
 
@@ -105,8 +105,8 @@ add_task(async function() {
     info("Testing 'Delete Node' menu item does not delete root node.");
     await selectNode("html", inspector);
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     deleteNode.click();
 
     await new Promise(resolve => {

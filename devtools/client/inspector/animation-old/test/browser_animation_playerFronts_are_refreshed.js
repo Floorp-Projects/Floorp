@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {controller, inspector} = await openAnimationInspector();
+  const {controller, inspector} = await openAnimationInspector();
 
   info("Selecting an animated node");
   // selectNode waits for the inspector-updated event before resolving, which

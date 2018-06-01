@@ -8,17 +8,17 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_script_animation.html");
-  let {panel} = await openAnimationInspector();
-  let timelineComponent = panel.animationsTimelineComponent;
-  let timeBlockComponents = getAnimationTimeBlocks(panel);
-  let detailsComponent = timelineComponent.details;
+  const {panel} = await openAnimationInspector();
+  const timelineComponent = panel.animationsTimelineComponent;
+  const timeBlockComponents = getAnimationTimeBlocks(panel);
+  const detailsComponent = timelineComponent.details;
 
   for (let i = 0; i < timeBlockComponents.length; i++) {
     info(`Expand time block ${i} so its keyframes are visible`);
     await clickOnAnimation(panel, i);
 
     info(`Check the state of time block ${i}`);
-    let {containerEl, animation: {state}} = timeBlockComponents[i];
+    const {containerEl, animation: {state}} = timeBlockComponents[i];
 
     checkAnimationTooltip(containerEl, state);
     checkProgressAtStartingTime(containerEl, state);
@@ -26,24 +26,24 @@ add_task(async function() {
     // Get the first set of keyframes (there's only one animated property
     // anyway), and the first frame element from there, we're only interested in
     // its offset.
-    let keyframeComponent = detailsComponent.keyframeComponents[0];
-    let frameEl = keyframeComponent.keyframesEl.querySelector(".frame");
+    const keyframeComponent = detailsComponent.keyframeComponents[0];
+    const frameEl = keyframeComponent.keyframesEl.querySelector(".frame");
     checkKeyframeOffset(containerEl, frameEl, state);
   }
 });
 
 function checkAnimationTooltip(el, {iterationStart, duration}) {
   info("Check an animation's iterationStart data in its tooltip");
-  let title = el.querySelector(".name").getAttribute("title");
+  const title = el.querySelector(".name").getAttribute("title");
 
-  let iterationStartTime = iterationStart * duration / 1000;
-  let iterationStartTimeString = iterationStartTime.toLocaleString(undefined, {
+  const iterationStartTime = iterationStart * duration / 1000;
+  const iterationStartTimeString = iterationStartTime.toLocaleString(undefined, {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2
   }).replace(".", "\\.");
-  let iterationStartString = iterationStart.toString().replace(".", "\\.");
+  const iterationStartString = iterationStart.toString().replace(".", "\\.");
 
-  let regex = new RegExp("Iteration start: " + iterationStartString +
+  const regex = new RegExp("Iteration start: " + iterationStartString +
                          " \\(" + iterationStartTimeString + "s\\)");
   ok(title.match(regex), "The tooltip shows the expected iteration start");
 }
@@ -84,7 +84,7 @@ function checkProgressAtStartingTime(el, { delay, iterationStart }) {
 function checkKeyframeOffset(timeBlockEl, frameEl, {iterationStart}) {
   info("Check that the first keyframe is offset correctly");
 
-  let start = getKeyframeOffset(frameEl);
+  const start = getKeyframeOffset(frameEl);
   is(start, 0, "The frame offset for iteration start");
 }
 

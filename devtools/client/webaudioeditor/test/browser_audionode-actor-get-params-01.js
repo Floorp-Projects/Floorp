@@ -6,16 +6,16 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_NODES_URL);
+  const [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
   await loadFrameScriptUtils();
 
-  let allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
-  let nodeTypes = [
+  const allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
+  const nodeTypes = [
     "AudioDestinationNode",
     "AudioBufferSourceNode", "ScriptProcessorNode", "AnalyserNode", "GainNode",
     "DelayNode", "BiquadFilterNode", "WaveShaperNode", "PannerNode", "ConvolverNode",
@@ -23,10 +23,10 @@ add_task(async function() {
     "StereoPannerNode"
   ];
 
-  let defaults = await Promise.all(nodeTypes.map(type => nodeDefaultValues(type)));
+  const defaults = await Promise.all(nodeTypes.map(type => nodeDefaultValues(type)));
 
   nodeTypes.map((type, i) => {
-    let params = allNodeParams[i];
+    const params = allNodeParams[i];
 
     params.forEach(({param, value, flags}) => {
       ok(param in defaults[i], "expected parameter for " + type);

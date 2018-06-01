@@ -12,27 +12,27 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
 const PSEUDOS = ["hover", "active", "focus"];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
   await selectNode("div", inspector);
 
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
   await testMenuItems(testActor, allMenuItems, inspector);
 });
 
 async function testMenuItems(testActor, allMenuItems, inspector) {
-  for (let pseudo of PSEUDOS) {
-    let menuItem =
+  for (const pseudo of PSEUDOS) {
+    const menuItem =
       allMenuItems.find(item => item.id === "node-menu-pseudo-" + pseudo);
     ok(menuItem, ":" + pseudo + " menuitem exists");
     is(menuItem.disabled, false, ":" + pseudo + " menuitem is enabled");
 
     // Give the inspector panels a chance to update when the pseudoclass changes
-    let onPseudo = inspector.selection.once("pseudoclass");
-    let onRefresh = inspector.once("rule-view-refreshed");
+    const onPseudo = inspector.selection.once("pseudoclass");
+    const onRefresh = inspector.once("rule-view-refreshed");
 
     // Walker uses SDK-events so calling walker.once does not return a promise.
-    let onMutations = once(inspector.walker, "mutations");
+    const onMutations = once(inspector.walker, "mutations");
 
     menuItem.click();
 
@@ -40,7 +40,7 @@ async function testMenuItems(testActor, allMenuItems, inspector) {
     await onRefresh;
     await onMutations;
 
-    let hasLock = await testActor.hasPseudoClassLock("div", ":" + pseudo);
+    const hasLock = await testActor.hasPseudoClassLock("div", ":" + pseudo);
     ok(hasLock, "pseudo-class lock has been applied");
   }
 }

@@ -13,22 +13,22 @@ const { synthesizeProfile } = require("devtools/client/performance/test/helpers/
 const { idleWait, waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let profile = synthesizeProfile();
-  let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const profile = synthesizeProfile();
+  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode });
+  const container = document.createElement("vbox");
   treeRoot.attachTo(container);
 
-  let A = treeRoot.getChild();
-  let B = A.getChild();
-  let D = B.getChild();
+  const A = treeRoot.getChild();
+  const B = A.getChild();
+  const D = B.getChild();
 
   let linkEvent = null;
-  let handler = (e) => {
+  const handler = (e) => {
     linkEvent = e;
   };
 

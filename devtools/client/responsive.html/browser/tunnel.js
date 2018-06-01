@@ -113,7 +113,7 @@ function tunnelToInnerBrowser(outer, inner) {
       outer[FRAME_LOADER] = outer.frameLoader;
       Object.defineProperty(outer, "frameLoader", {
         get() {
-          let stack = getStack();
+          const stack = getStack();
           // One exception is `receiveMessage` from SessionStore.jsm.  SessionStore
           // expects data updates to come in as messages targeted to a <xul:browser>.
           // In addition, it verifies[1] correctness by checking that the received
@@ -194,7 +194,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // remote-browser.xml binding creates.  We do not care about it's original value
       // because stop() will remove the remote-browser.xml binding and these will no
       // longer be used.
-      let webNavigation = new BrowserElementWebNavigation(inner);
+      const webNavigation = new BrowserElementWebNavigation(inner);
       webNavigation.copyStateFrom(inner._remoteWebNavigationImpl);
       outer._remoteWebNavigation = webNavigation;
       outer._remoteWebNavigationImpl = webNavigation;
@@ -205,8 +205,8 @@ function tunnelToInnerBrowser(outer, inner) {
       // above, it caused a fresh webProgress object to be created which does not have any
       // listeners added.  So, we get the listener that gBrowser is using for the tab and
       // reattach it here.
-      let tab = gBrowser.getTabForBrowser(outer);
-      let filteredProgressListener = gBrowser._tabFilters.get(tab);
+      const tab = gBrowser.getTabForBrowser(outer);
+      const filteredProgressListener = gBrowser._tabFilters.get(tab);
       outer.webProgress.addProgressListener(filteredProgressListener);
 
       // Add the inner browser to tabbrowser's WeakMap from browser to tab.  This assists
@@ -217,14 +217,14 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // All of the browser state from content was swapped onto the inner browser.  Pull
       // this state up to the outer browser.
-      for (let property of SWAPPED_BROWSER_STATE) {
+      for (const property of SWAPPED_BROWSER_STATE) {
         outer[property] = inner[property];
       }
 
       // Expose various properties from the browser window on the RDM tool's global.  This
       // aids various bits of code that expect to find a browser window, such as event
       // handlers that reach for the window via the event's target.
-      for (let property of PROPERTIES_FROM_BROWSER_WINDOW) {
+      for (const property of PROPERTIES_FROM_BROWSER_WINDOW) {
         Object.defineProperty(inner.ownerGlobal, property, {
           get() {
             return outer.ownerGlobal[property];
@@ -250,9 +250,9 @@ function tunnelToInnerBrowser(outer, inner) {
       //   * window.opener
       // These things are deferred for now, since content which does depend on them seems
       // outside the main focus of RDM.
-      let { detail } = event;
+      const { detail } = event;
       event.preventDefault();
-      let uri = Services.io.newURI(detail.url);
+      const uri = Services.io.newURI(detail.url);
       // This API is used mainly because it's near the path used for <a target/> with
       // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
       // that support openers, window features, etc. didn't seem callable from JS and / or
@@ -264,13 +264,13 @@ function tunnelToInnerBrowser(outer, inner) {
     },
 
     stop() {
-      let tab = gBrowser.getTabForBrowser(outer);
-      let filteredProgressListener = gBrowser._tabFilters.get(tab);
+      const tab = gBrowser.getTabForBrowser(outer);
+      const filteredProgressListener = gBrowser._tabFilters.get(tab);
 
       // The browser's state has changed over time while the tunnel was active.  Push the
       // the current state down to the inner browser, so that it follows the content in
       // case that browser will be swapped elsewhere.
-      for (let property of SWAPPED_BROWSER_STATE) {
+      for (const property of SWAPPED_BROWSER_STATE) {
         inner[property] = outer[property];
       }
 
@@ -288,7 +288,7 @@ function tunnelToInnerBrowser(outer, inner) {
       outer.removeAttribute("remoteType");
 
       // Delete browser window properties exposed on content's owner global
-      for (let property of PROPERTIES_FROM_BROWSER_WINDOW) {
+      for (const property of PROPERTIES_FROM_BROWSER_WINDOW) {
         delete inner.ownerGlobal[property];
       }
 
@@ -466,7 +466,7 @@ MessageManagerTunnel.prototype = {
     // This is only possible because we require the outer browser to be
     // non-remote, so we're able to reach into its window and use the child
     // side message manager there.
-    let docShell = this.outer[FRAME_LOADER].docShell;
+    const docShell = this.outer[FRAME_LOADER].docShell;
     return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
   },
@@ -483,7 +483,7 @@ MessageManagerTunnel.prototype = {
   },
 
   init() {
-    for (let method of this.PASS_THROUGH_METHODS) {
+    for (const method of this.PASS_THROUGH_METHODS) {
       this[method] = (...args) => {
         if (!this.outerParentMM) {
           return null;
@@ -492,7 +492,7 @@ MessageManagerTunnel.prototype = {
       };
     }
 
-    for (let name of this.INNER_TO_OUTER_MESSAGES) {
+    for (const name of this.INNER_TO_OUTER_MESSAGES) {
       this.innerParentMM.addMessageListener(name, this);
       this.tunneledMessageNames.add(name);
     }
@@ -524,14 +524,14 @@ MessageManagerTunnel.prototype = {
     // original XBL binding definitions which are on the prototype.
     delete this.outer.messageManager;
 
-    for (let name of this.tunneledMessageNames) {
+    for (const name of this.tunneledMessageNames) {
       this.innerParentMM.removeMessageListener(name, this);
     }
 
     // Some objects may have cached this tunnel as the messageManager for a frame.  To
     // ensure it keeps working after tunnel close, rewrite the overidden methods as pass
     // through methods.
-    for (let method of this.OVERRIDDEN_METHODS) {
+    for (const method of this.OVERRIDDEN_METHODS) {
       this[method] = (...args) => {
         if (!this.outerParentMM) {
           return null;

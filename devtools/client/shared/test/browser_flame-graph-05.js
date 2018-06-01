@@ -37,11 +37,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
+  const graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   await graph.ready();
 
   await testGraph(host, graph);
@@ -87,8 +87,8 @@ async function testGraph(host, graph) {
   ok(graph._selection.end < TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
     "The graph's selection end value is correct after pressing UP.");
 
-  let distanceLeft = graph._selection.start;
-  let distanceRight = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY - graph._selection.end;
+  const distanceLeft = graph._selection.start;
+  const distanceRight = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY - graph._selection.end;
 
   ok(Math.abs(distanceRight - distanceLeft) < 0.1,
     "The graph zoomed correctly towards the center point.");

@@ -23,12 +23,12 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
-  for (let {selector, isDisplayed} of TEST_DATA) {
+  for (const {selector, isDisplayed} of TEST_DATA) {
     info("Getting node " + selector);
-    let nodeFront = await getNodeFront(selector, inspector);
-    let container = getContainerForNodeFront(nodeFront, inspector);
+    const nodeFront = await getNodeFront(selector, inspector);
+    const container = getContainerForNodeFront(nodeFront, inspector);
     is(!container.elt.classList.contains("not-displayed"), isDisplayed,
        `The container for ${selector} is marked as displayed ${isDisplayed}`);
   }

@@ -7,19 +7,19 @@
 // Test for as-authored styles.
 
 async function createTestContent(style) {
-  let html = `<style type="text/css">
+  const html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   return view;
 }
 
 add_task(async function() {
-  let view = await createTestContent("#testid {" +
+  const view = await createTestContent("#testid {" +
                                      // Invalid property.
                                      "  something: random;" +
                                      // Invalid value.
@@ -29,19 +29,19 @@ add_task(async function() {
                                      "  background-color: #f06;" +
                                      "} ");
 
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let expected = [
+  const expected = [
     {name: "something", overridden: true, isNameValid: false, isValid: false},
     {name: "color", overridden: true, isNameValid: true, isValid: false},
     {name: "background-color", overridden: true, isNameValid: true, isValid: true},
     {name: "background-color", overridden: false, isNameValid: true, isValid: true}
   ];
 
-  let rule = elementStyle.rules[1];
+  const rule = elementStyle.rules[1];
 
   for (let i = 0; i < expected.length; ++i) {
-    let prop = rule.textProps[i];
+    const prop = rule.textProps[i];
     is(prop.name, expected[i].name,
       "Check name for prop " + i);
     is(prop.overridden, expected[i].overridden,

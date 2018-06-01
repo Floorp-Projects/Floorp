@@ -16,18 +16,18 @@ function run_test() {
 
 async function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
-  let principals = [
+  const principals = [
     ["test-grips-system-principal", systemPrincipal, systemPrincipalTests],
     ["test-grips-null-principal", null, nullPrincipalTests],
   ];
-  for (let [title, principal, tests] of principals) {
+  for (const [title, principal, tests] of principals) {
     gDebuggee = Cu.Sandbox(principal);
     gDebuggee.__name = title;
     server.addTestGlobal(gDebuggee);
     gDebuggee.eval(function stopMe(arg1, arg2) {
       debugger;
     }.toString());
-    let client = new DebuggerClient(server.connectPipe());
+    const client = new DebuggerClient(server.connectPipe());
     await client.connect();
     const [,, threadClient] = await attachTestTabAndResume(client, title);
     gThreadClient = threadClient;
@@ -48,7 +48,7 @@ async function run_test_with_server(server, callback) {
 //   object in the prototype. The specified test parameters do not apply.
 
 // The following tests are defined via properties with the following defaults.
-let defaults = {
+const defaults = {
   // The class of the grip.
   class: "Restricted",
 
@@ -84,7 +84,7 @@ let defaults = {
 // devtools/client/webconsole/test/browser_console.js
 
 // The following tests use a system principal debuggee.
-let systemPrincipalTests = [{
+const systemPrincipalTests = [{
   // Dead objects throw a TypeError when accessing properties.
   class: "DeadObject",
   string: "<dead object>",
@@ -149,7 +149,7 @@ let systemPrincipalTests = [{
 
 // The following tests run code in a system principal, but the resulting object
 // is debugged in a null principal.
-let nullPrincipalTests = [{
+const nullPrincipalTests = [{
   // The null principal gets undefined when attempting to access properties.
   string: "[object Object]",
   code: `var obj = {x: -1};`,
@@ -221,9 +221,9 @@ async function test_unsafe_grips(principal, tests) {
   for (let data of tests) {
     await new Promise(function(resolve) {
       gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-        let [objGrip, inheritsGrip] = packet.frame.arguments;
-        for (let grip of [objGrip, inheritsGrip]) {
-          let isUnsafe = grip === objGrip;
+        const [objGrip, inheritsGrip] = packet.frame.arguments;
+        for (const grip of [objGrip, inheritsGrip]) {
+          const isUnsafe = grip === objGrip;
           // If `isUnsafe` is true, the parameters in `data` will be used to assert
           // against `objGrip`, the grip of the object `obj` created by the test.
           // Otherwise, the grip will refer to `inherits`, an ordinary object which
@@ -294,11 +294,11 @@ async function test_unsafe_grips(principal, tests) {
       data = {...defaults, ...data};
 
       // Run the code and test the results.
-      let sandbox = Cu.Sandbox(systemPrincipal);
+      const sandbox = Cu.Sandbox(systemPrincipal);
       Object.assign(sandbox, {Services, systemPrincipal, Cu});
       sandbox.eval(data.code);
       gDebuggee.obj = sandbox.obj;
-      let inherits = `Object.create(obj, {
+      const inherits = `Object.create(obj, {
         x: {value: 1},
         [Symbol.for("x")]: {value: 2}
       })`;
@@ -319,7 +319,7 @@ function check_grip(grip, data, isUnsafe) {
 }
 
 function check_properties(props, data, isUnsafe) {
-  let propNames = Reflect.ownKeys(props);
+  const propNames = Reflect.ownKeys(props);
   check_property_names(propNames, data, isUnsafe);
   if (isUnsafe) {
     deepEqual(props.x, undefined, "The property does not exist.");

@@ -17,7 +17,7 @@
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 async function openTabAndSetupStorage(url) {
-  let content = await addTab(url);
+  const content = await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -31,9 +31,9 @@ async function openTabAndSetupStorage(url) {
      *         A set of windows.
      */
     function getAllWindows(baseWindow) {
-      let windows = new Set();
+      const windows = new Set();
 
-      let _getAllWindows = function(win) {
+      const _getAllWindows = function(win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -45,8 +45,8 @@ async function openTabAndSetupStorage(url) {
       return windows;
     }
 
-    let windows = getAllWindows(content);
-    for (let win of windows) {
+    const windows = getAllWindows(content);
+    for (const win of windows) {
       if (win.setup) {
         await win.setup();
       }
@@ -66,9 +66,9 @@ async function clearStorage() {
      *         A set of windows.
      */
     function getAllWindows(baseWindow) {
-      let windows = new Set();
+      const windows = new Set();
 
-      let _getAllWindows = function(win) {
+      const _getAllWindows = function(win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -80,8 +80,8 @@ async function clearStorage() {
       return windows;
     }
 
-    let windows = getAllWindows(content);
-    for (let win of windows) {
+    const windows = getAllWindows(content);
+    for (const win of windows) {
       if (win.clear) {
         await win.clear();
       }

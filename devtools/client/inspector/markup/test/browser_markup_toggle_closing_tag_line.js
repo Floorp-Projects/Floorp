@@ -13,7 +13,7 @@ const TEST_URL = `data:text/html;charset=utf8,
 <iframe src="data:text/html;charset=utf8,<div>test</div>"></iframe>`;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for .outer-div parent element");
   let container = await getContainerForSelector(".outer-div", inspector);
@@ -32,9 +32,9 @@ add_task(async function() {
      "IFRAME has a close tag-line with the correct content");
 
   info("Retrieve the nodefront for the #document root inside the iframe");
-  let iframe = await getNodeFront("iframe", inspector);
-  let {nodes} = await inspector.walker.children(iframe);
-  let documentFront = nodes[0];
+  const iframe = await getNodeFront("iframe", inspector);
+  const {nodes} = await inspector.walker.children(iframe);
+  const documentFront = nodes[0];
   ok(documentFront.displayName === "#document", "First child of IFRAME is #document");
 
   info("Expand the iframe's #document node element");

@@ -15,12 +15,12 @@ function test() {
 }
 
 function runTests(aWindow, aScratchpad) {
-  let editor = aScratchpad.editor;
-  let text = "foobar bug650345\nBug650345 bazbaz\nfoobar omg\ntest";
+  const editor = aScratchpad.editor;
+  const text = "foobar bug650345\nBug650345 bazbaz\nfoobar omg\ntest";
   editor.setText(text);
   editor.setCursor({ line: 0, ch: 0 });
 
-  let oldPrompt = editor.openDialog;
+  const oldPrompt = editor.openDialog;
   let desiredValue;
 
   editor.openDialog = function(text, cb) {

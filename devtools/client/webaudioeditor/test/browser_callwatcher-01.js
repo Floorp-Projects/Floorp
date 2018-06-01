@@ -11,11 +11,11 @@
 const BUG_1130901_URL = EXAMPLE_URL + "doc_bug_1130901.html";
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(BUG_1130901_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(BUG_1130901_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  let rendered = waitForGraphRendered(panelWin, 3, 0);
+  const rendered = waitForGraphRendered(panelWin, 3, 0);
   reload(target);
   await rendered;
 

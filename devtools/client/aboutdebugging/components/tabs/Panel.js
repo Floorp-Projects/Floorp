@@ -41,13 +41,13 @@ class TabsPanel extends Component {
   }
 
   componentDidMount() {
-    let { client } = this.props;
+    const { client } = this.props;
     client.addListener("tabListChanged", this.update);
     this.update();
   }
 
   componentWillUnmount() {
-    let { client } = this.props;
+    const { client } = this.props;
     client.removeListener("tabListChanged", this.update);
   }
 
@@ -57,9 +57,9 @@ class TabsPanel extends Component {
     // Filter out closed tabs (represented as `null`).
     tabs = tabs.filter(tab => !!tab);
 
-    for (let tab of tabs) {
+    for (const tab of tabs) {
       if (tab.favicon) {
-        let base64Favicon = btoa(String.fromCharCode.apply(String, tab.favicon));
+        const base64Favicon = btoa(String.fromCharCode.apply(String, tab.favicon));
         tab.icon = "data:image/png;base64," + base64Favicon;
       } else {
         tab.icon = "chrome://devtools/skin/images/globe.svg";
@@ -70,8 +70,8 @@ class TabsPanel extends Component {
   }
 
   render() {
-    let { client, connect, id } = this.props;
-    let { tabs } = this.state;
+    const { client, connect, id } = this.props;
+    const { tabs } = this.state;
 
     return dom.div({
       id: id + "-panel",

@@ -23,9 +23,9 @@ add_task(async function() {
   // Calling console.time('aTimer') followed by console.timeEnd('aTimer')
   // should result in the aTimer being ended, and a message like aTimer: 123ms
   // printed to the console
-  let hud1 = await openNewTabAndConsole(TEST_URI);
+  const hud1 = await openNewTabAndConsole(TEST_URI);
 
-  let aTimerCompleted = await waitFor(() => findMessage(hud1, "aTimer: "));
+  const aTimerCompleted = await waitFor(() => findMessage(hud1, "aTimer: "));
   ok(aTimerCompleted, "Calling console.time('a') and console.timeEnd('a')"
     + "ends the 'a' timer");
 
@@ -33,9 +33,10 @@ add_task(async function() {
   // and calling console.timeEnd('bTimer') in the new tab should not result in
   // the bTimer in the initial tab being ended, but rather a warning message
   // output to the console: Timer "bTimer" doesn't exist
-  let hud2 = await openNewTabAndConsole(TEST_URI2);
+  const hud2 = await openNewTabAndConsole(TEST_URI2);
 
-  let error1 = await waitFor(() => findMessage(hud2, "bTimer", ".message.timeEnd.warn"));
+  const error1 =
+    await waitFor(() => findMessage(hud2, "bTimer", ".message.timeEnd.warn"));
   ok(error1, "Timers with the same name but in separate tabs do not contain "
     + "the same value");
 
@@ -62,7 +63,8 @@ add_task(async function() {
   // as the timers in different pages are not related
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI4);
 
-  let error2 = await waitFor(() => findMessage(hud2, "bTimer", ".message.timeEnd.warn"));
+  const error2 =
+    await waitFor(() => findMessage(hud2, "bTimer", ".message.timeEnd.warn"));
   ok(error2, "Timers with the same name but in separate pages do not contain "
     + "the same value");
 });

@@ -124,7 +124,7 @@ function setDetailsPanelTab(state, action) {
 }
 
 function toggleColumn(state, action) {
-  let { column } = action;
+  const { column } = action;
 
   if (!state.columns.hasOwnProperty(column)) {
     return state;

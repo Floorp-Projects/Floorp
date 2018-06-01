@@ -47,7 +47,7 @@ const REPLY_TIMEOUT = 5000;
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "converter", () => {
-  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
              .createInstance(Ci.nsIScriptableUnicodeConverter);
   conv.charset = "utf8";
   return conv;
@@ -94,8 +94,8 @@ Transport.prototype = {
     if (logging) {
       log("Send to " + port + ":\n" + JSON.stringify(object, null, 2));
     }
-    let message = JSON.stringify(object);
-    let rawMessage = converter.convertToByteArray(message);
+    const message = JSON.stringify(object);
+    const rawMessage = converter.convertToByteArray(message);
     try {
       this.socket.send(ADDRESS, port, rawMessage, rawMessage.length);
     } catch (e) {
@@ -110,10 +110,10 @@ Transport.prototype = {
   // nsIUDPSocketListener
 
   onPacketReceived: function(socket, message) {
-    let messageData = message.data;
-    let object = JSON.parse(messageData);
+    const messageData = message.data;
+    const object = JSON.parse(messageData);
     object.from = message.fromAddr.address;
-    let port = message.fromAddr.port;
+    const port = message.fromAddr.port;
     if (port == this.socket.port) {
       log("Ignoring looped message");
       return;
@@ -243,9 +243,9 @@ Discovery.prototype = {
    * Get a list of all remote devices currently offering some service.:w
    */
   getRemoteDevices: function() {
-    let devices = new Set();
-    for (let service in this.remoteServices) {
-      for (let device in this.remoteServices[service]) {
+    const devices = new Set();
+    for (const service in this.remoteServices) {
+      for (const device in this.remoteServices[service]) {
         devices.add(device);
       }
     }
@@ -256,7 +256,7 @@ Discovery.prototype = {
    * Get a list of all remote devices currently offering a particular service.
    */
   getRemoteDevicesWithService: function(service) {
-    let devicesWithService = this.remoteServices[service] || {};
+    const devicesWithService = this.remoteServices[service] || {};
     return Object.keys(devicesWithService);
   },
 
@@ -265,7 +265,7 @@ Discovery.prototype = {
    * service on a device.
    */
   getRemoteService: function(service, device) {
-    let devicesWithService = this.remoteServices[service] || {};
+    const devicesWithService = this.remoteServices[service] || {};
     return devicesWithService[device];
   },
 
@@ -346,7 +346,7 @@ Discovery.prototype = {
   },
 
   _sendStatusTo: function(port) {
-    let status = {
+    const status = {
       device: this.device.name,
       services: this.localServices
     };
@@ -362,17 +362,17 @@ Discovery.prototype = {
   _onRemoteUpdate: function(update) {
     log("GOT REMOTE UPDATE");
 
-    let remoteDevice = update.device;
-    let remoteHost = update.from;
+    const remoteDevice = update.device;
+    const remoteHost = update.from;
 
     // Record the reply as received so it won't be purged as missing
     this._expectingReplies.from.delete(remoteDevice);
 
     // First, loop over the known services
-    for (let service in this.remoteServices) {
-      let devicesWithService = this.remoteServices[service];
-      let hadServiceForDevice = !!devicesWithService[remoteDevice];
-      let haveServiceForDevice = service in update.services;
+    for (const service in this.remoteServices) {
+      const devicesWithService = this.remoteServices[service];
+      const hadServiceForDevice = !!devicesWithService[remoteDevice];
+      const haveServiceForDevice = service in update.services;
       // If the remote device used to have service, but doesn't any longer, then
       // it was deleted, so we remove it here.
       if (hadServiceForDevice && !haveServiceForDevice) {
@@ -383,18 +383,18 @@ Discovery.prototype = {
     }
 
     // Second, loop over the services in the received update
-    for (let service in update.services) {
+    for (const service in update.services) {
       // Detect if this is a new device for this service
-      let newDevice = !this.remoteServices[service] ||
+      const newDevice = !this.remoteServices[service] ||
                       !this.remoteServices[service][remoteDevice];
 
       // Look up the service info we may have received previously from the same
       // remote device
-      let devicesWithService = this.remoteServices[service] || {};
-      let oldDeviceInfo = devicesWithService[remoteDevice];
+      const devicesWithService = this.remoteServices[service] || {};
+      const oldDeviceInfo = devicesWithService[remoteDevice];
 
       // Store the service info from the remote device
-      let newDeviceInfo = Cu.cloneInto(update.services[service], {});
+      const newDeviceInfo = Cu.cloneInto(update.services[service], {});
       newDeviceInfo.host = remoteHost;
       devicesWithService[remoteDevice] = newDeviceInfo;
       this.remoteServices[service] = devicesWithService;
@@ -417,9 +417,9 @@ Discovery.prototype = {
 
   _purgeMissingDevices: function() {
     log("PURGING MISSING DEVICES");
-    for (let service in this.remoteServices) {
-      let devicesWithService = this.remoteServices[service];
-      for (let remoteDevice in devicesWithService) {
+    for (const service in this.remoteServices) {
+      const devicesWithService = this.remoteServices[service];
+      for (const remoteDevice in devicesWithService) {
         // If we're still expecting a reply from a remote device when it's time
         // to purge, then the service is removed.
         if (this._expectingReplies.from.has(remoteDevice)) {

@@ -13,7 +13,7 @@ const { waitUntil } = require("devtools/client/performance/test/helpers/wait-uti
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -21,13 +21,13 @@ add_task(async function() {
   await console.profile("rust");
   await console.profileEnd("rust");
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController, WaterfallView } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { PerformanceController, WaterfallView } = panel.panelWin;
 
   await waitUntil(() => PerformanceController.getRecordings().length == 1);
   await waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
 
-  let recordings = PerformanceController.getRecordings();
+  const recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "One recording found in the performance panel.");
   is(recordings[0].isConsole(), true, "Recording came from console.profile.");
   is(recordings[0].getLabel(), "rust", "Correct label in the recording model.");

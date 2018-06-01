@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
     await memory.startRecordingAllocations();
@@ -28,18 +28,18 @@ window.onload = function() {
     // allocating directly in the generator), but with getAllocations() calls in
     // between.
 
-    let allocs = [];
+    const allocs = [];
     function allocator() {
       allocs.push({});
     }
 
     setTimeout(allocator, 1);
     await waitForTime(2);
-    let first = await memory.getAllocations();
+    const first = await memory.getAllocations();
 
     setTimeout(allocator, 1);
     await waitForTime(2);
-    let second = await memory.getAllocations();
+    const second = await memory.getAllocations();
 
     await memory.stopRecordingAllocations();
 

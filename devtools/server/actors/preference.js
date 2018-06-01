@@ -43,7 +43,7 @@ var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
   },
 
   getAllPrefs: function() {
-    let prefs = {};
+    const prefs = {};
     Services.prefs.getChildList("").forEach(function(name, index) {
       // append all key/value pairs into a huge json object.
       try {

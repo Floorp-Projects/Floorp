@@ -31,7 +31,7 @@ body > h1 {
 "3QuY3NzIgp9Cg== */";
 
 add_task(async function() {
-  let {ui} = await openStyleEditorForURL(TESTCASE_URI);
+  const {ui} = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 1,
     "correct number of editors with source maps enabled");
@@ -50,19 +50,19 @@ add_task(async function() {
 });
 
 async function testEditor(editor, expectedName, expectedText) {
-  let name = getStylesheetNameFor(editor);
+  const name = getStylesheetNameFor(editor);
   is(expectedName, name, name + " editor name is correct");
 
   await openEditor(editor);
-  let text = editor.sourceEditor.getText();
+  const text = editor.sourceEditor.getText();
   is(text, expectedText, name + " editor contains expected text");
 }
 
 /* Helpers */
 
 function togglePref(UI) {
-  let editorsPromise = UI.once("stylesheets-reset");
-  let selectedPromise = UI.once("editor-selected");
+  const editorsPromise = UI.once("stylesheets-reset");
+  const selectedPromise = UI.once("editor-selected");
 
   Services.prefs.setBoolPref(PREF, false);
 

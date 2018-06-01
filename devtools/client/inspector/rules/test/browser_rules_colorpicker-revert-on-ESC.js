@@ -17,12 +17,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
   await testPressingEscapeRevertsChanges(view);
 });
 
 async function testPressingEscapeRevertsChanges(view) {
-  let {swatch, propEditor, cPicker} = await openColorPickerAndSelectColor(view,
+  const {swatch, propEditor, cPicker} = await openColorPickerAndSelectColor(view,
     1, 0, [0, 0, 0, 1], {
       selector: "body",
       name: "background-color",
@@ -34,11 +34,11 @@ async function testPressingEscapeRevertsChanges(view) {
   is(propEditor.valueSpan.textContent, "#000",
     "The text of the background-color css property was updated");
 
-  let spectrum = cPicker.spectrum;
+  const spectrum = cPicker.spectrum;
 
   info("Pressing ESCAPE to close the tooltip");
-  let onHidden = cPicker.tooltip.once("hidden");
-  let onModifications = view.once("ruleview-changed");
+  const onHidden = cPicker.tooltip.once("hidden");
+  const onModifications = view.once("ruleview-changed");
   EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
   await onHidden;
   await onModifications;

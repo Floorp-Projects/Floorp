@@ -7,7 +7,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
 
   front.setup({ reload: true });
   await testHighlighting((await once(front, "program-linked")));

@@ -31,18 +31,18 @@ add_task(async function() {
     }
   ];
 
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSelectedRequest } =
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { getSelectedRequest } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  for (let testcase of TEST_DATA) {
+  for (const testcase of TEST_DATA) {
     info("Testing Security tab visibility for " + testcase.desc);
-    let onNewItem = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
-    let onComplete = testcase.isBroken ?
+    const onNewItem = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
+    const onComplete = testcase.isBroken ?
                        waitForSecurityBrokenNetworkEvent() :
                        waitForNetworkEvents(monitor, 1);
 
@@ -100,12 +100,12 @@ add_task(async function() {
    * completed.
    */
   function waitForSecurityBrokenNetworkEvent() {
-    let awaitedEvents = [
+    const awaitedEvents = [
       "UPDATING_EVENT_TIMINGS",
       "RECEIVED_EVENT_TIMINGS",
     ];
 
-    let promises = awaitedEvents.map((event) => {
+    const promises = awaitedEvents.map((event) => {
       return monitor.panelWin.api.once(EVENTS[event]);
     });
 

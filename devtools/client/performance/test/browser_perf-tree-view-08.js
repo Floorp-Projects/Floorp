@@ -13,14 +13,14 @@ const { CATEGORY_MASK } = require("devtools/client/performance/modules/categorie
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
 add_task(function() {
-  let threadNode = new ThreadNode(gProfile.threads[0], { startTime: 0, endTime: 20,
-                                                         contentOnly: true });
+  const threadNode = new ThreadNode(gProfile.threads[0], { startTime: 0, endTime: 20,
+                                                           contentOnly: true });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode, autoExpandDepth: 10 });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode, autoExpandDepth: 10 });
+  const container = document.createElement("vbox");
   treeRoot.attachTo(container);
 
   /*
@@ -36,10 +36,10 @@ add_task(function() {
    *   - (JS)
    */
 
-  let A = treeRoot.getChild(0);
-  let JS = treeRoot.getChild(1);
-  let GC = A.getChild(1);
-  let JS2 = A.getChild(2).getChild().getChild();
+  const A = treeRoot.getChild(0);
+  const JS = treeRoot.getChild(1);
+  const GC = A.getChild(1);
+  const JS2 = A.getChild(2).getChild().getChild();
 
   is(JS.target.getAttribute("category"), "js",
     "Generalized JS node has correct category");

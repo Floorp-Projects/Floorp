@@ -10,6 +10,9 @@ const { createFactory, Component } = require("devtools/client/shared/vendor/reac
 const { a, article, footer, h1, ul } = require("devtools/client/shared/vendor/react-dom-factories");
 const Worker = createFactory(require("./Worker"));
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 /**
  * This component handles the list of service workers displayed in the application panel
  * and also displays a suggestion to use about debugging for debugging other service
@@ -28,7 +31,10 @@ class WorkerList extends Component {
 
     return [
       article({ className: "workers-container" },
-        h1({}, "Service Workers"),
+        Localized(
+          { id: "serviceworker-list-header" },
+          h1({})
+        ),
         ul({},
           workers.map(worker => Worker({
             client,
@@ -36,12 +42,17 @@ class WorkerList extends Component {
             worker,
           })))
       ),
-      footer({ className: "aboutdebugging-plug" },
-        "See about:debugging for Service Workers from other domains",
-        a({ className: "aboutdebugging-plug__link",
-            onClick: () => openTrustedLink("about:debugging#workers") },
-          "Open about:debugging"
-        )
+      Localized(
+        {
+          id: "serviceworker-list-aboutdebugging",
+          a: a(
+            {
+              className: "aboutdebugging-plug__link",
+              onClick: () => openTrustedLink("about:debugging#workers")
+            }
+          )
+        },
+        footer({ className: "aboutdebugging-plug" })
       )
     ];
   }

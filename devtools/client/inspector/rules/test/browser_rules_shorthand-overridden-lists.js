@@ -23,17 +23,17 @@ var TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testComputedList(inspector, view);
 });
 
 function testComputedList(inspector, view) {
-  let rule = getRuleViewRuleEditor(view, 2).rule;
-  let propEditor = rule.textProps[0].editor;
-  let expander = propEditor.expander;
-  let overriddenItems = propEditor.shorthandOverridden.children;
-  let propNames = [
+  const rule = getRuleViewRuleEditor(view, 2).rule;
+  const propEditor = rule.textProps[0].editor;
+  const expander = propEditor.expander;
+  const overriddenItems = propEditor.shorthandOverridden.children;
+  const propNames = [
     "margin-right",
     "margin-left"
   ];
@@ -45,7 +45,7 @@ function testComputedList(inspector, view) {
   is(overriddenItems.length, propNames.length,
       "There should be 2 overridden shorthand value.");
   for (let i = 0; i < propNames.length; i++) {
-    let overriddenItem = overriddenItems[i].querySelector(".ruleview-propertyname");
+    const overriddenItem = overriddenItems[i].querySelector(".ruleview-propertyname");
     is(overriddenItem.textContent, propNames[i],
         "The overridden item #" + i + " should be " + propNames[i]);
   }
@@ -63,7 +63,7 @@ function testComputedList(inspector, view) {
       "The shorthandOverridden list should be open.");
 
   for (let i = 0; i < propNames.length; i++) {
-    let overriddenItem = overriddenItems[i].querySelector(".ruleview-propertyname");
+    const overriddenItem = overriddenItems[i].querySelector(".ruleview-propertyname");
     is(overriddenItem.textContent, propNames[i],
         "The overridden item #" + i + " should still be " + propNames[i]);
   }

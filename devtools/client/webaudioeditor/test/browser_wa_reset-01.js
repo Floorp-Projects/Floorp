@@ -7,8 +7,8 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { gFront, $ } = panel.panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,
     "The 'reload this page' notice should initially be visible.");
@@ -46,7 +46,7 @@ add_task(async function() {
   reload(target);
 
   await Promise.all([navigating, started]);
-  let rendered = waitForGraphRendered(panel.panelWin, 3, 2);
+  const rendered = waitForGraphRendered(panel.panelWin, 3, 2);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden after context found after reload.");

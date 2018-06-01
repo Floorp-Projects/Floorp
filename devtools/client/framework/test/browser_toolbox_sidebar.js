@@ -4,24 +4,24 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  let {ToolSidebar} = require("devtools/client/framework/sidebar");
+  const {ToolSidebar} = require("devtools/client/framework/sidebar");
 
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";
   const tab2URL = "data:text/html;charset=utf8,<title>2</title><p>2</p>";
   const tab3URL = "data:text/html;charset=utf8,<title>3</title><p>3</p>";
 
   let tab1Selected = false;
-  let registeredTabs = {};
-  let readyTabs = {};
+  const registeredTabs = {};
+  const readyTabs = {};
 
-  let toolDefinition = {
+  const toolDefinition = {
     id: "fakeTool4242",
     visibilityswitch: "devtools.fakeTool4242.enabled",
     url: CHROME_URL_ROOT + "browser_toolbox_sidebar_toolURL.xul",
     label: "FAKE TOOL!!!",
     isTargetSupported: () => true,
     build: function(iframeWindow, toolbox) {
-      let deferred = defer();
+      const deferred = defer();
       executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
@@ -38,13 +38,13 @@ function test() {
   gDevTools.registerTool(toolDefinition);
 
   addTab("about:blank").then(function(aTab) {
-    let target = TargetFactory.forTab(aTab);
+    const target = TargetFactory.forTab(aTab);
     gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
-      let panel = toolbox.getPanel(toolDefinition.id);
+      const panel = toolbox.getPanel(toolDefinition.id);
       panel.toolbox = toolbox;
       ok(true, "Tool open");
 
-      let tabbox = panel.panelDoc.getElementById("sidebar");
+      const tabbox = panel.panelDoc.getElementById("sidebar");
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
 
       panel.sidebar.on("new-tab-registered", function(id) {
@@ -95,10 +95,10 @@ function test() {
     ok(readyTabs.tab2, "tab2 ready");
     ok(readyTabs.tab3, "tab3 ready");
 
-    let tabs = panel.sidebar._tabbox.querySelectorAll("tab");
-    let panels = panel.sidebar._tabbox.querySelectorAll("tabpanel");
+    const tabs = panel.sidebar._tabbox.querySelectorAll("tab");
+    const panels = panel.sidebar._tabbox.querySelectorAll("tabpanel");
     let label = 1;
-    for (let tab of tabs) {
+    for (const tab of tabs) {
       is(tab.getAttribute("label"), label++, "Tab has the right title");
     }
 
@@ -132,8 +132,8 @@ function test() {
 
       is(id, "tab3", "The right tab must be removed");
 
-      let tabs = panel.sidebar._tabbox.querySelectorAll("tab");
-      let panels = panel.sidebar._tabbox.querySelectorAll("tabpanel");
+      const tabs = panel.sidebar._tabbox.querySelectorAll("tab");
+      const panels = panel.sidebar._tabbox.querySelectorAll("tabpanel");
 
       is(tabs.length, 2, "There is the right number of tabs");
       is(panels.length, 2, "There is the right number of panels");
@@ -145,7 +145,7 @@ function test() {
   }
 
   function testWidth(panel) {
-    let tabbox = panel.panelDoc.getElementById("sidebar");
+    const tabbox = panel.panelDoc.getElementById("sidebar");
     tabbox.width = 420;
     panel.sidebar.destroy().then(function() {
       tabbox.width = 0;

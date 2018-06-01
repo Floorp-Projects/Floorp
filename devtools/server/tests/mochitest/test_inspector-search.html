@@ -32,7 +32,7 @@ window.onload = function() {
   addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
@@ -43,7 +43,7 @@ window.onload = function() {
       });
     });
 
-    let walkerFront = await inspector.getWalker();
+    const walkerFront = await inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
 
     walkerActor = DebuggerServer.searchAllConnectionsForActor(walkerFront.actorID);
@@ -58,7 +58,7 @@ window.onload = function() {
   addAsyncTest(function testIndexExists() {
     info("Testing basic index APIs exist.");
 
-    let index = new WalkerIndex(walkerActor);
+    const index = new WalkerIndex(walkerActor);
     ok(index.data.size > 0, "public index is filled after getting");
 
     index.clearIndex();
@@ -77,7 +77,7 @@ window.onload = function() {
     ok(walkerSearch.index, "walker search has `index` property");
     is(walkerSearch.walker, walkerActor, "referencing the correct WalkerActor");
 
-    let search = new WalkerSearch(walkerActor);
+    const search = new WalkerSearch(walkerActor);
     ok(search, "a new search instance can be created");
     ok(search.search, "new search instance has `search` method");
     ok(search.index, "new search instance has `index` property");
@@ -105,7 +105,7 @@ window.onload = function() {
   });
 
   addAsyncTest(function testBasicSearchData() {
-    let testData = [
+    const testData = [
     {
       desc: "Search for tag with one result.",
       search: "body",
@@ -167,9 +167,9 @@ window.onload = function() {
     },
     ];
 
-    for (let {desc, search, expected} of testData) {
+    for (const {desc, search, expected} of testData) {
       info("Running test: " + desc);
-      let results = walkerSearch.search(search);
+      const results = walkerSearch.search(search);
       isDeeply(results, expected,
         "Search returns correct results with '" + search + "'");
     }
@@ -180,11 +180,11 @@ window.onload = function() {
   addAsyncTest(function testPseudoElements() {
     info("Testing ::before and ::after element matching");
 
-    let beforeElt = new _documentWalker(inspectee.querySelector("#pseudo"),
+    const beforeElt = new _documentWalker(inspectee.querySelector("#pseudo"),
                                         inspectee.defaultView).firstChild();
-    let afterElt = new _documentWalker(inspectee.querySelector("#pseudo"),
+    const afterElt = new _documentWalker(inspectee.querySelector("#pseudo"),
                                        inspectee.defaultView).lastChild();
-    let styleText = inspectee.querySelector("style").childNodes[0];
+    const styleText = inspectee.querySelector("style").childNodes[0];
 
     // ::before
     let results = walkerSearch.search("::before");
@@ -219,7 +219,7 @@ window.onload = function() {
 
   addAsyncTest(async function testSearchMutationChangeResults() {
     info("Testing search before and after a mutation.");
-    let expected = [
+    const expected = [
       {node: inspectee.querySelectorAll("h3")[0], type: "tag"},
       {node: inspectee.querySelectorAll("h3")[1], type: "tag"},
       {node: inspectee.querySelectorAll("h3")[2], type: "tag"},
@@ -241,7 +241,7 @@ window.onload = function() {
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
       info("Waiting for a mutation to happen");
-      let observer = new inspectee.defaultView.MutationObserver(() => {
+      const observer = new inspectee.defaultView.MutationObserver(() => {
         resolve();
       });
       observer.observe(inspectee, {attributes: true, subtree: true});
@@ -258,7 +258,7 @@ window.onload = function() {
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
       info("Waiting for a mutation to happen");
-      let observer = new inspectee.defaultView.MutationObserver(() => {
+      const observer = new inspectee.defaultView.MutationObserver(() => {
         resolve();
       });
       observer.observe(inspectee, {attributes: true, childList: true, subtree: true});
@@ -279,7 +279,7 @@ window.onload = function() {
     // eslint-disable-next-line new-cap
     return new Promise(resolve => {
       info("Listening to markup mutation on the inspectee");
-      let observer = new inspectee.defaultView.MutationObserver(resolve);
+      const observer = new inspectee.defaultView.MutationObserver(resolve);
       observer.observe(inspectee, {childList: true, subtree: true});
       mutationFn();
     });

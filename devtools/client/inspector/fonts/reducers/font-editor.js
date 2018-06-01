@@ -32,11 +32,11 @@ const INITIAL_STATE = {
   properties: {},
 };
 
-let reducers = {
+const reducers = {
 
   // Update font editor with the axes and values defined by a font variation instance.
   [APPLY_FONT_VARIATION_INSTANCE](state, { name, values }) {
-    let newState = { ...state };
+    const newState = { ...state };
     newState.instance.name = name;
     newState.instance.values = values;
 
@@ -55,7 +55,7 @@ let reducers = {
   },
 
   [UPDATE_AXIS_VALUE](state, { axis, value }) {
-    let newState = { ...state };
+    const newState = { ...state };
     newState.axes[axis] = value;
     return newState;
   },
@@ -71,21 +71,21 @@ let reducers = {
   },
 
   [UPDATE_EDITOR_STATE](state, { fonts, properties }) {
-    let axes = parseFontVariationAxes(properties["font-variation-settings"]);
+    const axes = parseFontVariationAxes(properties["font-variation-settings"]);
 
     // If not defined in font-variation-settings, setup "wght" axis with the value of
     // "font-weight" if it is numeric and not a keyword.
-    let weight = properties["font-weight"];
+    const weight = properties["font-weight"];
     if (axes.wght === undefined && parseFloat(weight).toString() === weight.toString()) {
       axes.wght = weight;
     }
 
     // If not defined in font-variation-settings, setup "wdth" axis with the percentage
     // number from the value of "font-stretch" if it is not a keyword.
-    let stretch = properties["font-stretch"];
+    const stretch = properties["font-stretch"];
     // Match the number part from values like: 10%, 10.55%, 0.2%
     // If there's a match, the number is the second item in the match array.
-    let match = stretch.trim().match(/^(\d+(.\d+)?)%$/);
+    const match = stretch.trim().match(/^(\d+(.\d+)?)%$/);
     if (axes.wdth === undefined && match && match[1]) {
       axes.wdth = match[1];
     }
@@ -94,7 +94,7 @@ let reducers = {
   },
 
   [UPDATE_PROPERTY_VALUE](state, { property, value }) {
-    let newState = { ...state };
+    const newState = { ...state };
     newState.properties[property] = value;
     return newState;
   }
@@ -102,7 +102,7 @@ let reducers = {
 };
 
 module.exports = function(state = INITIAL_STATE, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return state;
   }

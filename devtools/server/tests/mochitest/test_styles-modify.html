@@ -25,13 +25,13 @@ var gStyles = null;
 var gInspectee = null;
 
 addAsyncTest(async function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   let inspector;
 
   await new Promise(resolve => {
     attachURL(url, function(err, client, tab, doc) {
       gInspectee = doc;
-      let {InspectorFront} = require("devtools/shared/fronts/inspector");
+      const {InspectorFront} = require("devtools/shared/fronts/inspector");
       inspector = InspectorFront(client, tab);
       resolve();
     });
@@ -44,15 +44,15 @@ addAsyncTest(async function setup() {
 });
 
 addAsyncTest(async function modifyProperties() {
-  let localNode = gInspectee.querySelector("#inheritable-rule-inheritable-style");
+  const localNode = gInspectee.querySelector("#inheritable-rule-inheritable-style");
 
-  let node = await gWalker.querySelector(gWalker.rootNode,
+  const node = await gWalker.querySelector(gWalker.rootNode,
     "#inheritable-rule-inheritable-style");
 
-  let applied = await gStyles.getApplied(node,
+  const applied = await gStyles.getApplied(node,
     { inherited: false, filter: "user" });
 
-  let elementStyle = applied[0].rule;
+  const elementStyle = applied[0].rule;
   is(elementStyle.cssText, localNode.style.cssText, "Got expected css text");
 
   // Change an existing property...
@@ -83,13 +83,13 @@ addAsyncTest(async function modifyProperties() {
 });
 
 async function setProperty(rule, index, name, value) {
-  let changes = rule.startModifyingProperties(isCssPropertyKnown);
+  const changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.setProperty(index, name, value);
   await changes.apply();
 }
 
 async function removeProperty(rule, index, name) {
-  let changes = rule.startModifyingProperties(isCssPropertyKnown);
+  const changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.removeProperty(index, name);
   await changes.apply();
 }

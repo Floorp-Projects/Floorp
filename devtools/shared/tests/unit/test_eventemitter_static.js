@@ -21,8 +21,8 @@ const fail = (message) => ok(false, message);
  */
 const TESTS = {
   testAddListener() {
-    let events = [ { name: "event#1" }, "event#2" ];
-    let target = { name: "target" };
+    const events = [ { name: "event#1" }, "event#2" ];
+    const target = { name: "target" };
 
     on(target, "message", function(message) {
       equal(this, target, "this is a target object");
@@ -34,8 +34,8 @@ const TESTS = {
   },
 
   testListenerIsUniquePerType() {
-    let actual = [];
-    let target = {};
+    const actual = [];
+    const target = {};
     listener = () => actual.push(1);
 
     on(target, "message", listener);
@@ -52,7 +52,7 @@ const TESTS = {
   },
 
   testEventTypeMatters() {
-    let target = { name: "target" };
+    const target = { name: "target" };
     on(target, "message", () => fail("no event is expected"));
     on(target, "done", () => pass("event is emitted"));
 
@@ -61,8 +61,8 @@ const TESTS = {
   },
 
   testAllArgumentsArePassed() {
-    let foo = { name: "foo" }, bar = "bar";
-    let target = { name: "target" };
+    const foo = { name: "foo" }, bar = "bar";
+    const target = { name: "target" };
 
     on(target, "message", (a, b) => {
       equal(a, foo, "first argument passed");
@@ -73,7 +73,7 @@ const TESTS = {
   },
 
   testNoSideEffectsInEmit() {
-    let target = { name: "target" };
+    const target = { name: "target" };
 
     on(target, "message", () => {
       pass("first listener is called");
@@ -84,7 +84,7 @@ const TESTS = {
   },
 
   testCanRemoveNextListener() {
-    let target = { name: "target"};
+    const target = { name: "target"};
 
     on(target, "data", () => {
       pass("first listener called");
@@ -96,8 +96,8 @@ const TESTS = {
   },
 
   testOrderOfPropagation() {
-    let actual = [];
-    let target = { name: "target" };
+    const actual = [];
+    const target = { name: "target" };
 
     on(target, "message", () => actual.push(1));
     on(target, "message", () => actual.push(2));
@@ -108,8 +108,8 @@ const TESTS = {
   },
 
   testRemoveListener() {
-    let target = { name: "target" };
-    let actual = [];
+    const target = { name: "target" };
+    const actual = [];
 
     on(target, "message", function listener() {
       actual.push(1);
@@ -130,8 +130,8 @@ const TESTS = {
   },
 
   testRemoveAllListenersForType() {
-    let actual = [];
-    let target = { name: "target" };
+    const actual = [];
+    const target = { name: "target" };
 
     on(target, "message", () => actual.push(1));
     on(target, "message", () => actual.push(2));
@@ -146,8 +146,8 @@ const TESTS = {
   },
 
   testRemoveAllListeners() {
-    let actual = [];
-    let target = { name: "target" };
+    const actual = [];
+    const target = { name: "target" };
 
     on(target, "message", () => actual.push(1));
     on(target, "message", () => actual.push(2));
@@ -163,8 +163,8 @@ const TESTS = {
   },
 
   testFalsyArgumentsAreFine() {
-    let type, listener, actual = [];
-    let target = { name: "target" };
+    let type, listener;
+    const target = { name: "target" }, actual = [];
     on(target, "bar", () => actual.push(0));
 
     off(target, "bar", listener);
@@ -181,7 +181,7 @@ const TESTS = {
   },
 
   testUnhandledExceptions(done) {
-    let listener = new ConsoleAPIListener(null, {
+    const listener = new ConsoleAPIListener(null, {
       onConsoleAPICall(message) {
         equal(message.level, "error", "Got the first exception");
         ok(message.arguments[0].startsWith("Error: Boom!"),
@@ -194,7 +194,7 @@ const TESTS = {
 
     listener.init();
 
-    let target = {};
+    const target = {};
 
     on(target, "message", () => {
       throw Error("Boom!");
@@ -204,7 +204,7 @@ const TESTS = {
   },
 
   testCount() {
-    let target = { name: "target" };
+    const target = { name: "target" };
 
     equal(count(target, "foo"), 0, "no listeners for 'foo' events");
     on(target, "foo", () => {});
@@ -216,15 +216,15 @@ const TESTS = {
   },
 
   async testOnce() {
-    let target = { name: "target" };
-    let called = false;
+    const target = { name: "target" };
+    const called = false;
 
-    let pFoo = once(target, "foo", function(value) {
+    const pFoo = once(target, "foo", function(value) {
       ok(!called, "listener called only once");
       equal(value, "bar", "correct argument was passed");
       equal(this, target, "the contextual object is correct");
     });
-    let pDone = once(target, "done");
+    const pDone = once(target, "done");
 
     emit(target, "foo", "bar");
     emit(target, "foo", "baz");
@@ -234,7 +234,7 @@ const TESTS = {
   },
 
   testRemovingOnce(done) {
-    let target = { name: "target" };
+    const target = { name: "target" };
 
     once(target, "foo", fail);
     once(target, "done", done);
@@ -246,14 +246,14 @@ const TESTS = {
   },
 
   testAddListenerWithHandlerMethod() {
-    let target = { name: "target" };
-    let actual = [];
-    let listener = function(...args) {
+    const target = { name: "target" };
+    const actual = [];
+    const listener = function(...args) {
       equal(this, target, "the contextual object is correct for function listener");
       deepEqual(args, [10, 20, 30], "arguments are properly passed");
     };
 
-    let object = {
+    const object = {
       name: "target",
       [handler](type, ...rest) {
         actual.push(type);
@@ -274,10 +274,10 @@ const TESTS = {
   },
 
   testRemoveListenerWithHandlerMethod() {
-    let target = {};
-    let actual = [];
+    const target = {};
+    const actual = [];
 
-    let object = {
+    const object = {
       [handler](type) {
         actual.push(1);
         on(target, "message", () => {
@@ -300,10 +300,10 @@ const TESTS = {
   },
 
   async testOnceListenerWithHandlerMethod() {
-    let target = { name: "target" };
-    let called = false;
+    const target = { name: "target" };
+    const called = false;
 
-    let object = {
+    const object = {
       [handler](type, value) {
         ok(!called, "listener called only once");
         equal(type, "foo", "event type is properly passed");
@@ -312,9 +312,9 @@ const TESTS = {
       }
     };
 
-    let pFoo = once(target, "foo", object);
+    const pFoo = once(target, "foo", object);
 
-    let pDone = once(target, "done");
+    const pDone = once(target, "done");
 
     emit(target, "foo", "bar");
     emit(target, "foo", "baz");
@@ -332,7 +332,7 @@ const TESTS = {
  *  The tests descriptor object, contains the tests to run.
  */
 const runnable = (tests) => (async function() {
-  for (let name of Object.keys(tests)) {
+  for (const name of Object.keys(tests)) {
     info(name);
     if (tests[name].length === 1) {
       await (new Promise(resolve => tests[name](resolve)));

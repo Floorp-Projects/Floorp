@@ -9,7 +9,7 @@ function clickme() {
 }
 
 function init() {
-  let s = document.querySelector("#clicky");
+  const s = document.querySelector("#clicky");
   s.addEventListener("click", clickme);
 }
 

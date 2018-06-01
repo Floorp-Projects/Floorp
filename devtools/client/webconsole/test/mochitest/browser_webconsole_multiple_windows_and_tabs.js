@@ -16,8 +16,8 @@ add_task(async function() {
   const win1 = window;
 
   info("Add test tabs in first window");
-  let tab1 = await addTab(TEST_URI, {window: win1});
-  let tab2 = await addTab(TEST_URI, {window: win1});
+  const tab1 = await addTab(TEST_URI, {window: win1});
+  const tab2 = await addTab(TEST_URI, {window: win1});
   info("Test tabs added in first window");
 
   info("Open a second window");
@@ -27,26 +27,26 @@ add_task(async function() {
   });
 
   info("Add test tabs in second window");
-  let tab3 = await addTab(TEST_URI, {window: win2});
-  let tab4 = await addTab(TEST_URI, {window: win2});
+  const tab3 = await addTab(TEST_URI, {window: win2});
+  const tab4 = await addTab(TEST_URI, {window: win2});
 
   info("Opening console in each test tab");
-  let tabs = [tab1, tab2, tab3, tab4];
-  for (let tab of tabs) {
+  const tabs = [tab1, tab2, tab3, tab4];
+  for (const tab of tabs) {
     // Open the console in tab${i}.
-    let hud = await openConsole(tab);
-    let browser = hud.target.tab.linkedBrowser;
-    let message = "message for tab " + tabs.indexOf(tab);
+    const hud = await openConsole(tab);
+    const browser = hud.target.tab.linkedBrowser;
+    const message = "message for tab " + tabs.indexOf(tab);
 
     // Log a message in the newly opened console.
-    let onMessage = waitForMessage(hud, message);
+    const onMessage = waitForMessage(hud, message);
     await ContentTask.spawn(browser, message, function(msg) {
       content.console.log(msg);
     });
     await onMessage;
   }
 
-  let onConsolesDestroyed = waitForNEvents("web-console-destroyed", 4);
+  const onConsolesDestroyed = waitForNEvents("web-console-destroyed", 4);
 
   info("Close the second window");
   win2.close();

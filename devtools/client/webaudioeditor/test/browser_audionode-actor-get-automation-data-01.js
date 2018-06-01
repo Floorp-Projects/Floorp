@@ -7,14 +7,14 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
-  let [_, [destNode, oscNode, gainNode]] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
+  const [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),
     get3(front, "create-node")
   ]);
 
-  let t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
-  let curve = [-1, 0, 1];
+  const t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
+  const curve = [-1, 0, 1];
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.2, t0]);
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.3, t1]);
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.4, t2]);
@@ -26,7 +26,7 @@ add_task(async function() {
   // duration)
   await oscNode.addAutomationEvent("frequency", "setValueCurveAtTime", [curve, t6, t7 - t6]);
 
-  let { events, values } = await oscNode.getAutomationData("frequency");
+  const { events, values } = await oscNode.getAutomationData("frequency");
 
   is(events.length, 8, "8 recorded events returned.");
   is(values.length, 2000, "2000 value points returned.");

@@ -11,8 +11,8 @@
 const { ConsoleMessage } =
   require("devtools/client/webconsole/types");
 
-let stubPreparedMessages = new Map();
-let stubPackets = new Map();
+const stubPreparedMessages = new Map();
+const stubPackets = new Map();
 stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,

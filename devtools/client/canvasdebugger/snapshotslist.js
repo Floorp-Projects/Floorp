@@ -47,36 +47,36 @@ var SnapshotsListView = extend(WidgetMethods, {
    *         The newly inserted item.
    */
   addSnapshot: function() {
-    let contents = document.createElement("hbox");
+    const contents = document.createElement("hbox");
     contents.className = "snapshot-item";
 
-    let thumbnail = document.createElementNS(HTML_NS, "canvas");
+    const thumbnail = document.createElementNS(HTML_NS, "canvas");
     thumbnail.className = "snapshot-item-thumbnail";
     thumbnail.width = CanvasFront.THUMBNAIL_SIZE;
     thumbnail.height = CanvasFront.THUMBNAIL_SIZE;
 
-    let title = document.createElement("label");
+    const title = document.createElement("label");
     title.className = "plain snapshot-item-title";
     title.setAttribute("value",
       L10N.getFormatStr("snapshotsList.itemLabel", this.itemCount + 1));
 
-    let calls = document.createElement("label");
+    const calls = document.createElement("label");
     calls.className = "plain snapshot-item-calls";
     calls.setAttribute("value",
       L10N.getStr("snapshotsList.loadingLabel"));
 
-    let save = document.createElement("label");
+    const save = document.createElement("label");
     save.className = "plain snapshot-item-save";
     save.addEventListener("click", this._onSaveButtonClick);
 
-    let spacer = document.createElement("spacer");
+    const spacer = document.createElement("spacer");
     spacer.setAttribute("flex", "1");
 
-    let footer = document.createElement("hbox");
+    const footer = document.createElement("hbox");
     footer.className = "snapshot-item-footer";
     footer.appendChild(save);
 
-    let details = document.createElement("vbox");
+    const details = document.createElement("vbox");
     details.className = "snapshot-item-details";
     details.appendChild(title);
     details.appendChild(calls);
@@ -125,30 +125,30 @@ var SnapshotsListView = extend(WidgetMethods, {
     // Make sure the function call actors are stored on the item,
     // to be used when populating the CallsListView.
     snapshotItem.attachment.actor = snapshotActor;
-    let functionCalls = snapshotItem.attachment.calls = snapshotOverview.calls;
-    let thumbnails = snapshotItem.attachment.thumbnails = snapshotOverview.thumbnails;
-    let screenshot = snapshotItem.attachment.screenshot = snapshotOverview.screenshot;
+    const functionCalls = snapshotItem.attachment.calls = snapshotOverview.calls;
+    const thumbnails = snapshotItem.attachment.thumbnails = snapshotOverview.thumbnails;
+    const screenshot = snapshotItem.attachment.screenshot = snapshotOverview.screenshot;
 
-    let lastThumbnail = thumbnails[thumbnails.length - 1];
-    let { width, height, flipped, pixels } = lastThumbnail;
+    const lastThumbnail = thumbnails[thumbnails.length - 1];
+    const { width, height, flipped, pixels } = lastThumbnail;
 
-    let thumbnailNode = $(".snapshot-item-thumbnail", snapshotItem.target);
+    const thumbnailNode = $(".snapshot-item-thumbnail", snapshotItem.target);
     thumbnailNode.setAttribute("flipped", flipped);
     drawImage(thumbnailNode, width, height, pixels, { centered: true });
 
-    let callsNode = $(".snapshot-item-calls", snapshotItem.target);
-    let drawCalls = functionCalls.filter(e => CanvasFront.DRAW_CALLS.has(e.name));
+    const callsNode = $(".snapshot-item-calls", snapshotItem.target);
+    const drawCalls = functionCalls.filter(e => CanvasFront.DRAW_CALLS.has(e.name));
 
-    let drawCallsStr = PluralForm.get(drawCalls.length,
+    const drawCallsStr = PluralForm.get(drawCalls.length,
       L10N.getStr("snapshotsList.drawCallsLabel"));
-    let funcCallsStr = PluralForm.get(functionCalls.length,
+    const funcCallsStr = PluralForm.get(functionCalls.length,
       L10N.getStr("snapshotsList.functionCallsLabel"));
 
     callsNode.setAttribute("value",
       drawCallsStr.replace("#1", drawCalls.length) + ", " +
       funcCallsStr.replace("#1", functionCalls.length));
 
-    let saveNode = $(".snapshot-item-save", snapshotItem.target);
+    const saveNode = $(".snapshot-item-save", snapshotItem.target);
     saveNode.setAttribute("disabled", !!snapshotItem.isLoadedFromDisk);
     saveNode.setAttribute("value", snapshotItem.isLoadedFromDisk
       ? L10N.getStr("snapshotsList.loadedLabel")
@@ -169,7 +169,7 @@ var SnapshotsListView = extend(WidgetMethods, {
     if (!snapshotItem || !snapshotItem.attachment.actor) {
       return;
     }
-    let { calls, thumbnails, screenshot } = snapshotItem.attachment;
+    const { calls, thumbnails, screenshot } = snapshotItem.attachment;
 
     $("#reload-notice").hidden = true;
     $("#empty-notice").hidden = true;
@@ -302,7 +302,7 @@ var SnapshotsListView = extend(WidgetMethods, {
    */
   async _stopRecordingAnimation() {
     clearNamedTimeout("canvas-actor-recording");
-    let actorCanStop = await gTarget.actorHasMethod("canvas", "stopRecordingAnimationFrame");
+    const actorCanStop = await gTarget.actorHasMethod("canvas", "stopRecordingAnimationFrame");
 
     if (actorCanStop) {
       await gFront.stopRecordingAnimationFrame();
@@ -325,8 +325,8 @@ var SnapshotsListView = extend(WidgetMethods, {
   async _onRecordSuccess(snapshotActor) {
     // Clear bail-out case if frame found in CANVAS_ACTOR_RECORDING_ATTEMPT milliseconds
     clearNamedTimeout("canvas-actor-recording");
-    let snapshotItem = this.getItemAtIndex(this.itemCount - 1);
-    let snapshotOverview = await snapshotActor.getOverview();
+    const snapshotItem = this.getItemAtIndex(this.itemCount - 1);
+    const snapshotOverview = await snapshotActor.getOverview();
     this.customizeSnapshot(snapshotItem, snapshotActor, snapshotOverview);
 
     this._recording = false;
@@ -351,7 +351,7 @@ var SnapshotsListView = extend(WidgetMethods, {
    * The click listener for the "import" button in this container.
    */
   _onImportButtonClick: function() {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("snapshotsList.saveDialogTitle"), Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogAllFilter"), "*.*");
@@ -361,7 +361,7 @@ var SnapshotsListView = extend(WidgetMethods, {
         return;
       }
 
-      let channel = NetUtil.newChannel({
+      const channel = NetUtil.newChannel({
         uri: NetUtil.newURI(fp.file), loadUsingSystemPrincipal: true});
       channel.contentType = "text/plain";
 
@@ -372,7 +372,7 @@ var SnapshotsListView = extend(WidgetMethods, {
         }
         var data;
         try {
-          let string = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+          const string = NetUtil.readInputStreamToString(inputStream, inputStream.available());
           data = JSON.parse(string);
         } catch (e) {
           console.error("Could not read animation frame snapshot file.");
@@ -385,7 +385,7 @@ var SnapshotsListView = extend(WidgetMethods, {
 
         // Add a `isLoadedFromDisk` flag on everything to avoid sending invalid
         // requests to the backend, since we're not dealing with actors anymore.
-        let snapshotItem = this.addSnapshot();
+        const snapshotItem = this.addSnapshot();
         snapshotItem.isLoadedFromDisk = true;
         data.calls.forEach(e => e.isLoadedFromDisk = true);
 
@@ -398,9 +398,9 @@ var SnapshotsListView = extend(WidgetMethods, {
    * The click listener for the "save" button of each item in this container.
    */
   _onSaveButtonClick: function(e) {
-    let snapshotItem = this.getItemForElement(e.target);
+    const snapshotItem = this.getItemForElement(e.target);
 
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("snapshotsList.saveDialogTitle"), Ci.nsIFilePicker.modeSave);
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogAllFilter"), "*.*");
@@ -408,21 +408,21 @@ var SnapshotsListView = extend(WidgetMethods, {
 
     // Start serializing all the function call actors for the specified snapshot,
     // while the nsIFilePicker dialog is being opened. Snappy.
-    let serialized = (async function() {
-      let data = {
+    const serialized = (async function() {
+      const data = {
         fileType: CALLS_LIST_SERIALIZER_IDENTIFIER,
         version: CALLS_LIST_SERIALIZER_VERSION,
         calls: [],
         thumbnails: [],
         screenshot: null
       };
-      let functionCalls = snapshotItem.attachment.calls;
-      let thumbnails = snapshotItem.attachment.thumbnails;
-      let screenshot = snapshotItem.attachment.screenshot;
+      const functionCalls = snapshotItem.attachment.calls;
+      const thumbnails = snapshotItem.attachment.thumbnails;
+      const screenshot = snapshotItem.attachment.screenshot;
 
       // Prepare all the function calls for serialization.
       await DevToolsUtils.yieldingEach(functionCalls, (call, i) => {
-        let { type, name, file, line, timestamp, argsPreview, callerPreview } = call;
+        const { type, name, file, line, timestamp, argsPreview, callerPreview } = call;
         return call.getDetails().then(({ stack }) => {
           data.calls[i] = {
             type: type,
@@ -439,16 +439,16 @@ var SnapshotsListView = extend(WidgetMethods, {
 
       // Prepare all the thumbnails for serialization.
       await DevToolsUtils.yieldingEach(thumbnails, (thumbnail, i) => {
-        let { index, width, height, flipped, pixels } = thumbnail;
+        const { index, width, height, flipped, pixels } = thumbnail;
         data.thumbnails.push({ index, width, height, flipped, pixels });
       });
 
       // Prepare the screenshot for serialization.
-      let { index, width, height, flipped, pixels } = screenshot;
+      const { index, width, height, flipped, pixels } = screenshot;
       data.screenshot = { index, width, height, flipped, pixels };
 
-      let string = JSON.stringify(data);
-      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+      const string = JSON.stringify(data);
+      const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
         .createInstance(Ci.nsIScriptableUnicodeConverter);
 
       converter.charset = "UTF-8";
@@ -461,8 +461,8 @@ var SnapshotsListView = extend(WidgetMethods, {
       if (result == Ci.nsIFilePicker.returnCancel) {
         return;
       }
-      let footer = $(".snapshot-item-footer", snapshotItem.target);
-      let save = $(".snapshot-item-save", snapshotItem.target);
+      const footer = $(".snapshot-item-footer", snapshotItem.target);
+      const save = $(".snapshot-item-save", snapshotItem.target);
 
       // Show a throbber and a "Saving…" label if serializing isn't immediate.
       setNamedTimeout("call-list-save", CALLS_LIST_SLOW_SAVE_DELAY, () => {
@@ -472,7 +472,7 @@ var SnapshotsListView = extend(WidgetMethods, {
       });
 
       serialized.then(inputStream => {
-        let outputStream = FileUtils.openSafeFileOutputStream(fp.file);
+        const outputStream = FileUtils.openSafeFileOutputStream(fp.file);
 
         NetUtil.asyncCopy(inputStream, outputStream, status => {
           if (!Components.isSuccessCode(status)) {
@@ -489,8 +489,8 @@ var SnapshotsListView = extend(WidgetMethods, {
 });
 
 function showNotification(toolbox, name, message) {
-  let notificationBox = toolbox.getNotificationBox();
-  let notification = notificationBox.getNotificationWithValue(name);
+  const notificationBox = toolbox.getNotificationBox();
+  const notification = notificationBox.getNotificationWithValue(name);
   if (!notification) {
     notificationBox.appendNotification(message, name, "", notificationBox.PRIORITY_WARNING_HIGH);
   }

@@ -31,11 +31,11 @@ class SnapshotListItem extends Component {
   }
 
   render() {
-    let { item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
+    const { item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
     let className = `snapshot-list-item ${snapshot.selected ? " selected" : ""}`;
     let statusText = getStatusText(snapshot.state);
     let wantThrobber = !!statusText;
-    let title = getSnapshotTitle(snapshot);
+    const title = getSnapshotTitle(snapshot);
 
     const selectedForDiffing = diffing
           && (diffing.firstSnapshotId === snapshot.id
@@ -69,12 +69,12 @@ class SnapshotListItem extends Component {
     let details;
     if (!selectedForDiffing) {
       // See if a tree map or census is in the read state.
-      let census = getSavedCensus(snapshot);
+      const census = getSavedCensus(snapshot);
 
       // If there is census data, fill in the total bytes.
       if (census) {
-        let { bytes } = getSnapshotTotals(census);
-        let formatBytes = L10N.getFormatStr("aggregate.mb",
+        const { bytes } = getSnapshotTotals(census);
+        const formatBytes = L10N.getFormatStr("aggregate.mb",
           L10N.numberWithDecimals(bytes / 1000000, 2));
 
         details = dom.span({ className: "snapshot-totals" },
@@ -86,12 +86,12 @@ class SnapshotListItem extends Component {
       details = dom.span({ className: "snapshot-state" }, statusText);
     }
 
-    let saveLink = !snapshot.path ? void 0 : dom.a({
+    const saveLink = !snapshot.path ? void 0 : dom.a({
       onClick: () => onSave(snapshot),
       className: "save",
     }, L10N.getStr("snapshot.io.save"));
 
-    let deleteButton = !snapshot.path ? void 0 : dom.button({
+    const deleteButton = !snapshot.path ? void 0 : dom.button({
       onClick: () => onDelete(snapshot),
       className: "delete",
       title: L10N.getStr("snapshot.io.delete")

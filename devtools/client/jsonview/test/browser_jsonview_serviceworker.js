@@ -18,14 +18,14 @@ add_task(async function() {
     ["dom.serviceWorkers.testing.enabled", true],
   ]});
 
-  let swTab = BrowserTestUtils.addTab(gBrowser, EMPTY_PAGE);
-  let browser = gBrowser.getBrowserForTab(swTab);
+  const swTab = BrowserTestUtils.addTab(gBrowser, EMPTY_PAGE);
+  const browser = gBrowser.getBrowserForTab(swTab);
   await BrowserTestUtils.browserLoaded(browser);
   await ContentTask.spawn(browser, { script: SW, scope: TEST_JSON_URL }, async opts => {
-    let reg = await content.navigator.serviceWorker.register(opts.script,
+    const reg = await content.navigator.serviceWorker.register(opts.script,
                                                              { scope: opts.scope });
     return new content.window.Promise(resolve => {
-      let worker = reg.installing;
+      const worker = reg.installing;
       if (worker.state === "activated") {
         resolve();
         return;
@@ -38,17 +38,17 @@ add_task(async function() {
     });
   });
 
-  let tab = await addJsonViewTab(TEST_JSON_URL);
+  const tab = await addJsonViewTab(TEST_JSON_URL);
 
   ok(tab.linkedBrowser.contentPrincipal.isNullPrincipal, "Should have null principal");
 
   is(await countRows(), 3, "There must be three rows");
 
-  let objectCellCount = await getElementCount(
+  const objectCellCount = await getElementCount(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellCount, 1, "There must be one object cell");
 
-  let objectCellText = await getElementText(
+  const objectCellText = await getElementText(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellText, "", "The summary is hidden when object is expanded");
 
@@ -61,7 +61,7 @@ add_task(async function() {
   is(await countRows(), 1, "There must be one row");
 
   await ContentTask.spawn(browser, { script: SW, scope: TEST_JSON_URL }, async opts => {
-    let reg = await content.navigator.serviceWorker.getRegistration(opts.scope);
+    const reg = await content.navigator.serviceWorker.getRegistration(opts.scope);
     await reg.unregister();
   });
 

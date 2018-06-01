@@ -25,7 +25,7 @@ function prefsMiddleware(store) {
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
-        let filters = Object.entries(store.getState().filters.requestFilterTypes)
+        const filters = Object.entries(store.getState().filters.requestFilterTypes)
           .filter(([type, check]) => check)
           .map(([type, check]) => type);
         Services.prefs.setCharPref(
@@ -41,9 +41,9 @@ function prefsMiddleware(store) {
         break;
       case TOGGLE_COLUMN:
       case RESET_COLUMNS:
-        let visibleColumns = [];
-        let columns = store.getState().ui.columns;
-        for (let column in columns) {
+        const visibleColumns = [];
+        const columns = store.getState().ui.columns;
+        for (const column in columns) {
           if (columns[column]) {
             visibleColumns.push(column);
           }

@@ -21,14 +21,14 @@ function test() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(function() {
-      let sw = gScratchpadWindow;
-      let {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-      let {TargetFactory} = require("devtools/client/framework/target");
+      const sw = gScratchpadWindow;
+      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const {TargetFactory} = require("devtools/client/framework/target");
 
       openScratchpad(function() {
-        let target = TargetFactory.forTab(gBrowser.selectedTab);
+        const target = TargetFactory.forTab(gBrowser.selectedTab);
         gDevTools.showToolbox(target, "webconsole").then((toolbox) => {
-          let hud = toolbox.getCurrentPanel().hud;
+          const hud = toolbox.getCurrentPanel().hud;
           hud.jsterm.clearOutput(true);
           testFocus(sw, hud);
         });
@@ -40,11 +40,11 @@ function test() {
 }
 
 function testFocus(sw, hud) {
-  let sp = sw.Scratchpad;
+  const sp = sw.Scratchpad;
 
   function onMessage(messages) {
-    let msg = [...messages][0];
-    let node = msg.node;
+    const msg = [...messages][0];
+    const node = msg.node;
 
     var loc = node.querySelector(".frame-link");
     ok(loc, "location element exists");
@@ -53,7 +53,7 @@ function testFocus(sw, hud) {
     is(loc.getAttribute("data-column"), "1", "column value is correct");
 
     sw.addEventListener("focus", function() {
-      let win = Services.wm.getMostRecentWindow("devtools:scratchpad");
+      const win = Services.wm.getMostRecentWindow("devtools:scratchpad");
 
       ok(win, "there are active Scratchpad windows");
       is(win.Scratchpad.uniqueName, sw.Scratchpad.uniqueName,

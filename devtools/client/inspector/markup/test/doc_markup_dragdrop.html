@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=858038
     customElements.define("test-component", class extends HTMLElement {
       constructor() {
         super();
-        let shadowRoot = this.attachShadow({mode: "open"});
+        const shadowRoot = this.attachShadow({mode: "open"});
         shadowRoot.innerHTML = '<slot class="slot1" name="slot1"></slot>';
       }
     });

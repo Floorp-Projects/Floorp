@@ -8,8 +8,8 @@
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(async function() {
-  let fileContent = await generateEvaluationResultStubs();
-  let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "evaluationResult.js");
+  const fileContent = await generateEvaluationResultStubs();
+  const filePath = OS.Path.join(`${BASE_PATH}/stubs`, "evaluationResult.js");
   await OS.File.writeAtomic(filePath, fileContent);
   ok(true, "Make the test not fail");
 });

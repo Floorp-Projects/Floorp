@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     PerformanceController,
     DetailsView,
@@ -35,8 +35,8 @@ add_task(async function() {
   await DetailsView.selectView("js-flamegraph");
   await rendered;
 
-  let thread1 = PerformanceController.getCurrentRecording().getProfile().threads[0];
-  let rendering1 = FlameGraphUtils._cache.get(thread1);
+  const thread1 = PerformanceController.getCurrentRecording().getProfile().threads[0];
+  const rendering1 = FlameGraphUtils._cache.get(thread1);
 
   ok(thread1,
     "The samples were retrieved from the controller.");
@@ -48,8 +48,8 @@ add_task(async function() {
   await rendered;
   ok(true, "JsFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
-  let thread2 = PerformanceController.getCurrentRecording().getProfile().threads[0];
-  let rendering2 = FlameGraphUtils._cache.get(thread2);
+  const thread2 = PerformanceController.getCurrentRecording().getProfile().threads[0];
+  const rendering2 = FlameGraphUtils._cache.get(thread2);
 
   is(thread1, thread2,
     "The same samples data should be retrieved from the controller (1).");
@@ -61,8 +61,8 @@ add_task(async function() {
   await rendered;
   ok(true, "JsFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
-  let thread3 = PerformanceController.getCurrentRecording().getProfile().threads[0];
-  let rendering3 = FlameGraphUtils._cache.get(thread3);
+  const thread3 = PerformanceController.getCurrentRecording().getProfile().threads[0];
+  const rendering3 = FlameGraphUtils._cache.get(thread3);
 
   is(thread2, thread3,
     "The same samples data should be retrieved from the controller (2).");

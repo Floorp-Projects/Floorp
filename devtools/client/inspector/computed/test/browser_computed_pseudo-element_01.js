@@ -10,27 +10,27 @@ const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await testTopLeft(inspector, view);
 });
 
 async function testTopLeft(inspector, view) {
-  let node = await getNodeFront("#topleft", inspector.markup);
+  const node = await getNodeFront("#topleft", inspector.markup);
   await selectNode(node, inspector);
-  let float = getComputedViewPropertyValue(view, "float");
+  const float = getComputedViewPropertyValue(view, "float");
   is(float, "left", "The computed view shows the correct float");
 
-  let children = await inspector.markup.walker.children(node);
+  const children = await inspector.markup.walker.children(node);
   is(children.nodes.length, 3, "Element has correct number of children");
 
-  let beforeElement = children.nodes[0];
+  const beforeElement = children.nodes[0];
   await selectNode(beforeElement, inspector);
   let top = getComputedViewPropertyValue(view, "top");
   is(top, "0px", "The computed view shows the correct top");
   let left = getComputedViewPropertyValue(view, "left");
   is(left, "0px", "The computed view shows the correct left");
 
-  let afterElement = children.nodes[children.nodes.length - 1];
+  const afterElement = children.nodes[children.nodes.length - 1];
   await selectNode(afterElement, inspector);
   top = getComputedViewPropertyValue(view, "top");
   is(top, "96px", "The computed view shows the correct top");

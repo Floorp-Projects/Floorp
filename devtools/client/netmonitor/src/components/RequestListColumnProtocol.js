@@ -24,7 +24,7 @@ class RequestListColumnProtocol extends Component {
   }
 
   render() {
-    let protocol = getFormattedProtocol(this.props.item);
+    const protocol = getFormattedProtocol(this.props.item);
 
     return (
       div({

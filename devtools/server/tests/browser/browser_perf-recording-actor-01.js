@@ -14,12 +14,12 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
-  let rec = await front.startRecording(
+  const rec = await front.startRecording(
     { withMarkers: true, withTicks: true, withMemory: true });
   ok(rec.isRecording(), "RecordingModel is recording when created");
   await busyWait(100);
@@ -32,8 +32,8 @@ add_task(async function() {
 
   ok(!rec.isCompleted(), "RecordingModel is not completed when still recording");
 
-  let stopping = once(front, "recording-stopping");
-  let stopped = once(front, "recording-stopped");
+  const stopping = once(front, "recording-stopping");
+  const stopped = once(front, "recording-stopped");
   front.stopRecording(rec);
 
   await stopping;
@@ -57,11 +57,11 @@ add_task(async function() {
   checkSystemInfo(rec, "Client");
 
   // Export and import a rec, and ensure it has the correct state.
-  let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
+  const file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
   await rec.exportRecording(file);
 
-  let importedModel = await front.importRecording(file);
+  const importedModel = await front.importRecording(file);
 
   ok(importedModel.isCompleted(), "All imported recordings should be completed");
   ok(!importedModel.isRecording(), "All imported recordings should not be recording");
@@ -76,8 +76,8 @@ add_task(async function() {
 });
 
 function checkSystemInfo(recording, type) {
-  let data = recording[`get${type}SystemInfo`]();
-  for (let field of ["appid", "apptype", "vendor", "name", "version"]) {
+  const data = recording[`get${type}SystemInfo`]();
+  for (const field of ["appid", "apptype", "vendor", "name", "version"]) {
     ok(data[field], `get${type}SystemInfo() has ${field} property`);
   }
 }

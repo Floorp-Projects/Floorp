@@ -11,27 +11,27 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  let contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
-  let menuDeleteItem = contextMenu.querySelector("#storage-tree-popup-delete");
+  const contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
+  const menuDeleteItem = contextMenu.querySelector("#storage-tree-popup-delete");
 
-  let cacheToDelete = ["Cache", "http://test1.example.org", "plop"];
+  const cacheToDelete = ["Cache", "http://test1.example.org", "plop"];
 
   info("test state before delete");
   await selectTreeItem(cacheToDelete);
   ok(gUI.tree.isSelected(cacheToDelete), "Cache item is present in the tree");
 
   info("do the delete");
-  let eventWait = gUI.once("store-objects-updated");
+  const eventWait = gUI.once("store-objects-updated");
 
-  let selector = `[data-id='${JSON.stringify(cacheToDelete)}'] > .tree-widget-item`;
-  let target = gPanelWindow.document.querySelector(selector);
+  const selector = `[data-id='${JSON.stringify(cacheToDelete)}'] > .tree-widget-item`;
+  const target = gPanelWindow.document.querySelector(selector);
   ok(target, "Cache item's tree element is present");
 
   await waitForContextMenu(contextMenu, target, () => {
     info("Opened tree context menu");
     menuDeleteItem.click();
 
-    let cacheName = cacheToDelete[2];
+    const cacheName = cacheToDelete[2];
     ok(menuDeleteItem.getAttribute("label").includes(cacheName),
       `Context menu item label contains '${cacheName}')`);
   });

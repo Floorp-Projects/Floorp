@@ -16,13 +16,13 @@ const TEST_CASES = [
 ];
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  for (let test of TEST_CASES) {
+  for (const test of TEST_CASES) {
     info("Testing site with " + test.desc);
 
     info("Performing request to " + test.uri);

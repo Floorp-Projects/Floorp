@@ -14,7 +14,7 @@ add_task(async function() {
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 
-  let otherFontsAccordion = viewDoc.querySelector("#font-container .accordion");
+  const otherFontsAccordion = viewDoc.querySelector("#font-container .accordion");
   ok(otherFontsAccordion, "There's an accordion in the panel");
   is(otherFontsAccordion.textContent, "Other fonts in page", "It has the right title");
 
@@ -23,7 +23,7 @@ add_task(async function() {
 
   is(otherFontsEls.length, 1, "There is one font listed in the other fonts section");
   // On Linux Times New Roman does not exist, Liberation Serif is used instead
-  let name = getName(otherFontsEls[0]);
+  const name = getName(otherFontsEls[0]);
   ok(name === "Times New Roman" || name === "Liberation Serif",
      "The other font listed is the right one");
 
@@ -32,7 +32,7 @@ add_task(async function() {
   await expandOtherFontsAccordion(viewDoc);
   otherFontsEls = getOtherFontsEls(viewDoc);
 
-  for (let otherFontEl of otherFontsEls) {
+  for (const otherFontEl of otherFontsEls) {
     ok(![...getUsedFontsEls(viewDoc)].some(el => getName(el) === getName(otherFontEl)),
        "Other font isn't listed in the main fonts section");
   }

@@ -21,7 +21,7 @@ add_task(async function() {
   await enableTheFirstGrid(doc, inspector);
 
   is(gridList.childNodes.length, 1, "There's one grid in the list");
-  let checkbox = gridList.querySelector("input");
+  const checkbox = gridList.querySelector("input");
   ok(checkbox.checked, "The checkbox is checked");
   ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
 

@@ -11,16 +11,16 @@ add_task(async function() {
   let { inspector, toolbox } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>", "window");
 
-  let hostWindow = toolbox.win.parent;
-  let originalWidth = hostWindow.outerWidth;
-  let originalHeight = hostWindow.outerHeight;
+  const hostWindow = toolbox.win.parent;
+  const originalWidth = hostWindow.outerWidth;
+  const originalHeight = hostWindow.outerHeight;
 
   let splitter = inspector.panelDoc.querySelector(".inspector-sidebar-splitter");
 
   // If the inspector is not already in landscape mode.
   if (!splitter.classList.contains("vert")) {
     info("Resize toolbox window to force inspector to landscape mode");
-    let onClassnameMutation = waitForClassMutation(splitter);
+    const onClassnameMutation = waitForClassMutation(splitter);
     hostWindow.resizeTo(800, 500);
     await onClassnameMutation;
 
@@ -28,7 +28,7 @@ add_task(async function() {
   }
 
   info("Resize toolbox window to force inspector to portrait mode");
-  let onClassnameMutation = waitForClassMutation(splitter);
+  const onClassnameMutation = waitForClassMutation(splitter);
   hostWindow.resizeTo(500, 500);
   await onClassnameMutation;
 
@@ -59,8 +59,8 @@ add_task(async function() {
  */
 function waitForClassMutation(target) {
   return new Promise(resolve => {
-    let observer = new MutationObserver((mutations) => {
-      for (let mutation of mutations) {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
         if (mutation.attributeName === "class") {
           observer.disconnect();
           resolve();

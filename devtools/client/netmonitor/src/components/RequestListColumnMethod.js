@@ -22,7 +22,7 @@ class RequestListColumnMethod extends Component {
   }
 
   render() {
-    let { method } = this.props.item;
+    const { method } = this.props.item;
     return div({ className: "requests-list-column requests-list-method" }, method);
   }
 }

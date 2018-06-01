@@ -34,8 +34,8 @@ window.onload = function() {
   const runCssPropertiesTests = async function(url, useActor) {
     info(`Opening two tabs ${useActor ? "with" : "without"} CssPropertiesActor support.`);
 
-    let attachmentA = await promiseAttachUrl(url);
-    let attachmentB = await promiseAttachUrl(url);
+    const attachmentA = await promiseAttachUrl(url);
+    const attachmentB = await promiseAttachUrl(url);
 
     const toolboxMockA = {
       target: {
@@ -104,7 +104,7 @@ window.onload = function() {
   };
 
   addAsyncTest(async function setup() {
-    let url = document.getElementById("cssProperties").href;
+    const url = document.getElementById("cssProperties").href;
     await runCssPropertiesTests(url, true);
     await runCssPropertiesTests(url, false);
 

@@ -23,8 +23,8 @@ class RequestListColumnContentSize extends Component {
   }
 
   render() {
-    let { contentSize } = this.props.item;
-    let size = typeof contentSize === "number" ? getFormattedSize(contentSize) : null;
+    const { contentSize } = this.props.item;
+    const size = typeof contentSize === "number" ? getFormattedSize(contentSize) : null;
     return (
       div({ className: "requests-list-column requests-list-size", title: size }, size)
     );

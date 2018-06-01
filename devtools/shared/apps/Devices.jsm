@@ -22,7 +22,7 @@ const Devices = {
   set helperAddonInstalled(v) {
     addonInstalled = v;
     if (!addonInstalled) {
-      for (let name in this._devices) {
+      for (const name in this._devices) {
         this.unregister(name);
       }
     }

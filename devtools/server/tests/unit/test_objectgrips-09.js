@@ -40,12 +40,12 @@ function run_test_with_server(server, callback) {
 
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
     gThreadClient.getPrototypesAndProperties(
       [args[0].actor, args[1].actor], function(response) {
-        let obj1 = response.actors[args[0].actor];
-        let obj2 = response.actors[args[1].actor];
+        const obj1 = response.actors[args[0].actor];
+        const obj2 = response.actors[args[1].actor];
         Assert.equal(obj1.ownProperties.x.configurable, true);
         Assert.equal(obj1.ownProperties.x.enumerable, true);
         Assert.equal(obj1.ownProperties.x.writable, true);

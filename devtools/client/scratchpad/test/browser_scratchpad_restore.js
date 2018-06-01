@@ -6,8 +6,8 @@
    calling the final callback with all the results
    after every iterator call has sent its result */
 function asyncMap(items, iterator, callback) {
-  let expected = items.length;
-  let results = [];
+  const expected = items.length;
+  const results = [];
 
   items.forEach(function(item) {
     iterator(item, function(result) {
@@ -25,7 +25,7 @@ function test() {
 }
 
 function testRestore() {
-  let states = [
+  const states = [
     {
       filename: "testfile",
       text: "test1",
@@ -49,7 +49,7 @@ function testRestore() {
     ScratchpadManager.saveOpenWindows();
 
     // Then get their states
-    let session = ScratchpadManager.getSessionState();
+    const session = ScratchpadManager.getSessionState();
 
     // Then close them
     wins.forEach(function(win) {
@@ -60,13 +60,13 @@ function testRestore() {
     ScratchpadManager.saveOpenWindows();
 
     // Then restore them
-    let restoredWins = ScratchpadManager.restoreSession(session);
+    const restoredWins = ScratchpadManager.restoreSession(session);
 
     is(restoredWins.length, 3, "Three scratchad windows restored");
 
     asyncMap(restoredWins, function(restoredWin, done) {
       openScratchpad(function(aWin) {
-        let state = aWin.Scratchpad.getState();
+        const state = aWin.Scratchpad.getState();
         aWin.close();
         done(state);
       }, {window: restoredWin, noFocus: true});

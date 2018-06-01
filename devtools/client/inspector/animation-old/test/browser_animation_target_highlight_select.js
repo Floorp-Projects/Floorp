@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {toolbox, inspector, panel} = await openAnimationInspector();
+  const {toolbox, inspector, panel} = await openAnimationInspector();
 
   info("Select the simple animated node");
   await selectNodeAndWaitForAnimations(".animated", inspector);
@@ -22,13 +22,13 @@ add_task(async function() {
   let targetNodeComponent = targets[0];
 
   info("Retrieve the part of the widget that highlights the node on hover");
-  let highlightingEl = targetNodeComponent.previewer.previewEl;
+  const highlightingEl = targetNodeComponent.previewer.previewEl;
 
   info("Listen to node-highlight event and mouse over the widget");
-  let onHighlight = toolbox.once("node-highlight");
+  const onHighlight = toolbox.once("node-highlight");
   EventUtils.synthesizeMouse(highlightingEl, 10, 5, {type: "mouseover"},
                              highlightingEl.ownerDocument.defaultView);
-  let nodeFront = await onHighlight;
+  const nodeFront = await onHighlight;
 
   // Do not forget to mouseout, otherwise we get random mouseover event
   // when selecting another node, which triggers some requests in animation
@@ -54,9 +54,9 @@ add_task(async function() {
 
   info("Click on the first animated node component and wait for the " +
        "selection to change");
-  let onSelection = inspector.selection.once("new-node-front");
-  let onRendered = waitForAnimationTimelineRendering(panel);
-  let nodeEl = targetNodeComponent.previewer.previewEl;
+  const onSelection = inspector.selection.once("new-node-front");
+  const onRendered = waitForAnimationTimelineRendering(panel);
+  const nodeEl = targetNodeComponent.previewer.previewEl;
   EventUtils.sendMouseEvent({type: "click"}, nodeEl,
                             nodeEl.ownerDocument.defaultView);
   await onSelection;

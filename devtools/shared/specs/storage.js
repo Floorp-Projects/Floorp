@@ -6,11 +6,11 @@
 const protocol = require("devtools/shared/protocol");
 const { Arg, RetVal, types } = protocol;
 
-let childSpecs = {};
+const childSpecs = {};
 
 function createStorageSpec(options) {
   // common methods for all storage types
-  let methods = {
+  const methods = {
     getStoreObjects: {
       request: {
         host: Arg(0),

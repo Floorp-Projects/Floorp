@@ -25,7 +25,7 @@ add_task(async function() {
   info("Selecting the ruleview sidebar");
   inspector.sidebar.select("ruleview");
 
-  let view = inspector.getPanel("ruleview").view;
+  const view = inspector.getPanel("ruleview").view;
 
   info("Selecting the test node");
   await selectNode("#div-1", inspector);
@@ -51,11 +51,11 @@ add_task(async function() {
   await selectNode("#div-2", inspector);
   await togglePseudoClass(inspector);
   await assertPseudoAddedToNode(inspector, testActor, view, "#div-2");
-  let hasLock = await testActor.hasPseudoClassLock("#div-1", PSEUDO);
+  const hasLock = await testActor.hasPseudoClassLock("#div-1", PSEUDO);
   ok(!hasLock, "pseudo-class lock has been removed for the previous locked node");
 
   info("Destroying the toolbox");
-  let tab = toolbox.target.tab;
+  const tab = toolbox.target.tab;
   await toolbox.destroy();
 
   // As the toolbox get detroyed, we need to fetch a new test-actor
@@ -69,11 +69,11 @@ async function togglePseudoClass(inspector) {
   info("Toggle the pseudoclass, wait for it to be applied");
 
   // Give the inspector panels a chance to update when the pseudoclass changes
-  let onPseudo = inspector.selection.once("pseudoclass");
-  let onRefresh = inspector.once("rule-view-refreshed");
+  const onPseudo = inspector.selection.once("pseudoclass");
+  const onRefresh = inspector.once("rule-view-refreshed");
 
   // Walker uses SDK-events so calling walker.once does not return a promise.
-  let onMutations = once(inspector.walker, "mutations");
+  const onMutations = once(inspector.walker, "mutations");
 
   await inspector.togglePseudoClass(PSEUDO);
 
@@ -101,7 +101,7 @@ async function testNavigate(inspector, testActor, ruleview) {
 }
 
 async function showPickerOn(selector, inspector) {
-  let nodeFront = await getNodeFront(selector, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
   await inspector.highlighter.showBoxModel(nodeFront);
 }
 
@@ -116,7 +116,7 @@ async function assertPseudoAddedToNode(inspector, testActor, ruleview, selector)
   ok(hasLock, "pseudo-class lock has been applied");
 
   info("Check that the ruleview contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(".ruleview-rule");
+  const rules = ruleview.element.querySelectorAll(".ruleview-rule");
   is(rules.length, 3,
      "rule view is showing 3 rules for pseudo-class locked div");
   is(rules[1]._ruleEditor.rule.selectorText, "div:hover",
@@ -126,7 +126,7 @@ async function assertPseudoAddedToNode(inspector, testActor, ruleview, selector)
   await showPickerOn(selector, inspector);
 
   info("Check that the infobar selector contains the pseudo-class");
-  let value = await testActor.getHighlighterNodeTextContent(
+  const value = await testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes");
   is(value, PSEUDO, "pseudo-class in infobar selector");
   await inspector.highlighter.hideBoxModel();
@@ -146,12 +146,12 @@ async function assertPseudoRemovedFromNode(testActor, selector) {
 
 async function assertPseudoRemovedFromView(inspector, testActor, ruleview, selector) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(".ruleview-rule");
+  const rules = ruleview.element.querySelectorAll(".ruleview-rule");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
 
   await showPickerOn(selector, inspector);
 
-  let value = await testActor.getHighlighterNodeTextContent(
+  const value = await testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes");
   is(value, "", "pseudo-class removed from infobar selector");
   await inspector.highlighter.hideBoxModel();

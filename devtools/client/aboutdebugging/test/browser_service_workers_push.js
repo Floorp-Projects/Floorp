@@ -16,25 +16,25 @@ const TAB_URL = URL_ROOT + "service-workers/push-sw.html";
 
 add_task(async function() {
   await enableServiceWorkerDebugging();
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
   // Open a tab that registers a push service worker.
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
   info("Make the test page notify us when the service worker sends a message.");
 
   await ContentTask.spawn(swTab.linkedBrowser, {}, function() {
-    let win = content.wrappedJSObject;
+    const win = content.wrappedJSObject;
     win.navigator.serviceWorker.addEventListener("message", function(event) {
       sendAsyncMessage(event.data);
     });
   });
 
   // Expect the service worker to claim the test window when activating.
-  let onClaimed = onTabMessage(swTab, "sw-claimed");
+  const onClaimed = onTabMessage(swTab, "sw-claimed");
 
   info("Wait until the service worker appears in the UI");
   await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
@@ -47,13 +47,13 @@ add_task(async function() {
   await waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
   // Retrieve the Push button for the worker.
-  let names = [...document.querySelectorAll("#service-workers .target-name")];
-  let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const names = [...document.querySelectorAll("#service-workers .target-name")];
+  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
   ok(name, "Found the service worker in the list");
 
-  let targetElement = name.parentNode.parentNode;
+  const targetElement = name.parentNode.parentNode;
 
-  let pushBtn = targetElement.querySelector(".push-button");
+  const pushBtn = targetElement.querySelector(".push-button");
   ok(pushBtn, "Found its push button");
 
   info("Wait for the service worker to claim the test window before proceeding.");
@@ -61,7 +61,7 @@ add_task(async function() {
 
   info("Click on the Push button and wait for the service worker to receive " +
     "a push notification");
-  let onPushNotification = onTabMessage(swTab, "sw-pushed");
+  const onPushNotification = onTabMessage(swTab, "sw-pushed");
 
   pushBtn.click();
   await onPushNotification;
@@ -83,7 +83,7 @@ add_task(async function() {
  * Helper to listen once on a message sent using postMessage from the provided tab.
  */
 function onTabMessage(tab, message) {
-  let mm = tab.linkedBrowser.messageManager;
+  const mm = tab.linkedBrowser.messageManager;
   return new Promise(done => {
     mm.addMessageListener(message, function listener() {
       mm.removeMessageListener(message, listener);

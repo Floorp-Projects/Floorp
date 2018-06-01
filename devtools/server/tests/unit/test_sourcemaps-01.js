@@ -30,9 +30,9 @@ function run_test() {
 function test_simple_source_map() {
   // Because we are source mapping, we should be notified of a.js, b.js, and
   // c.js as sources, and shouldn't receive abc.js or test_sourcemaps-01.js.
-  let expectedSources = new Set(["http://example.com/www/js/a.js",
-                                 "http://example.com/www/js/b.js",
-                                 "http://example.com/www/js/c.js"]);
+  const expectedSources = new Set(["http://example.com/www/js/a.js",
+                                   "http://example.com/www/js/b.js",
+                                   "http://example.com/www/js/c.js"]);
 
   gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
     Assert.equal(event, "newSource");

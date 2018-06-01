@@ -46,17 +46,17 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let { toolbox, inspector } = await openInspectorForURL(TEST_URL);
-  let doc = inspector.panelDoc;
-  let {breadcrumbs} = inspector;
+  const { toolbox, inspector } = await openInspectorForURL(TEST_URL);
+  const doc = inspector.panelDoc;
+  const {breadcrumbs} = inspector;
 
   await selectNode("#i2", inspector);
 
   info("Clicking on the corresponding breadcrumbs node to focus it");
-  let container = doc.getElementById("inspector-breadcrumbs");
+  const container = doc.getElementById("inspector-breadcrumbs");
 
-  let button = container.querySelector("button[checked]");
-  let onHighlight = toolbox.once("node-highlight");
+  const button = container.querySelector("button[checked]");
+  const onHighlight = toolbox.once("node-highlight");
   button.click();
   await onHighlight;
 
@@ -65,7 +65,7 @@ add_task(async function() {
   is(container.getAttribute("aria-activedescendant"), button.id,
     "aria-activedescendant is set correctly");
 
-  for (let { desc, focused, key, options } of TEST_DATA) {
+  for (const { desc, focused, key, options } of TEST_DATA) {
     info(desc);
 
     EventUtils.synthesizeKey(key, options);

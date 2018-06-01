@@ -13,26 +13,26 @@ const TAB_URL = URL_ROOT + "service-workers/debug.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  let { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
-  let doc = panel.panelWin.document;
+  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const doc = panel.panelWin.document;
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  let container = getWorkerContainers(doc)[0];
+  const container = getWorkerContainers(doc)[0];
   info("Wait until the debug link is displayed and enabled");
   await waitUntil(() =>
     container.querySelector(".js-debug-link:not(.worker__debug-link--disabled)"));
 
   info("Click on the debug link and wait for the new toolbox to be ready");
-  let onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
 
-  let debugLink = container.querySelector(".js-debug-link");
+  const debugLink = container.querySelector(".js-debug-link");
   debugLink.click();
 
-  let serviceWorkerToolbox = await onToolboxReady;
+  const serviceWorkerToolbox = await onToolboxReady;
   await serviceWorkerToolbox.selectTool("jsdebugger");
-  let debuggerContext = createDebuggerContext(serviceWorkerToolbox);
+  const debuggerContext = createDebuggerContext(serviceWorkerToolbox);
 
   await waitForSources(debuggerContext, "debug-sw.js");
   await selectSource(debuggerContext, "debug-sw.js");

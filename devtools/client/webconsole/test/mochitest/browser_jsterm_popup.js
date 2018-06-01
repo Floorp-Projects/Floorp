@@ -16,7 +16,7 @@ add_task(async function() {
     inputNode: input,
   } = jsterm;
 
-  let items = [
+  const items = [
     {label: "item0", value: "value0"},
     {label: "item1", value: "value1"},
     {label: "item2", value: "value2"},
@@ -25,7 +25,7 @@ add_task(async function() {
   ok(!popup.isOpen, "popup is not open");
   ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 
-  let onPopupOpen = popup.once("popup-opened");
+  const onPopupOpen = popup.once("popup-opened");
   popup.openPopup(input);
   await onPopupOpen;
 
@@ -102,10 +102,10 @@ function stripNS(text) {
 }
 
 function checkActiveDescendant(popup, input) {
-  let activeElement = input.ownerDocument.activeElement;
-  let descendantId = activeElement.getAttribute("aria-activedescendant");
-  let popupItem = popup._tooltip.panel.querySelector("#" + descendantId);
-  let cloneItem = input.ownerDocument.querySelector("#" + descendantId);
+  const activeElement = input.ownerDocument.activeElement;
+  const descendantId = activeElement.getAttribute("aria-activedescendant");
+  const popupItem = popup._tooltip.panel.querySelector("#" + descendantId);
+  const cloneItem = input.ownerDocument.querySelector("#" + descendantId);
 
   ok(popupItem, "Active descendant is found in the popup list");
   ok(cloneItem, "Active descendant is found in the list clone");

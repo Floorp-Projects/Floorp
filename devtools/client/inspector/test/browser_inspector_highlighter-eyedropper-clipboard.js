@@ -10,11 +10,11 @@ const ID = "eye-dropper-";
 const TEST_URI = "data:text/html;charset=utf-8,<style>html{background:red}</style>";
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URI)
+  const helper = await openInspectorForURL(TEST_URI)
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
-  let {show, finalize,
+  const {show, finalize,
        waitForElementAttributeSet, waitForElementAttributeRemoved} = helper;
 
   info("Show the eyedropper with the copyOnSelect option");

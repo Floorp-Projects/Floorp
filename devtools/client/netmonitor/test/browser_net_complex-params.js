@@ -9,12 +9,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(PARAMS_URL);
+  const { tab, monitor } = await initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -54,8 +54,8 @@ add_task(async function() {
   testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
-  let waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
-  let waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
+  const waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
+  const waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]);
   await Promise.all([waitSections, waitSourceEditor]);
@@ -69,7 +69,7 @@ add_task(async function() {
 
   function testParamsTab1(queryStringParamName, queryStringParamValue,
                           formDataParamName, formDataParamValue) {
-    let tabpanel = document.querySelector("#params-panel");
+    const tabpanel = document.querySelector("#params-panel");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 2,
       "The number of param tree sections displayed in this tabpanel is incorrect.");
@@ -83,10 +83,10 @@ add_task(async function() {
     ok(tabpanel.querySelector(".CodeMirror-code") === null,
       "The request post data editor should not be displayed.");
 
-    let treeSections = tabpanel.querySelectorAll(".tree-section");
-    let labels = tabpanel
+    const treeSections = tabpanel.querySelectorAll(".tree-section");
+    const labels = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = tabpanel
+    const values = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
     is(treeSections[0].querySelector(".treeLabel").textContent,
@@ -109,8 +109,8 @@ add_task(async function() {
 
   function testParamsTab2(queryStringParamName, queryStringParamValue,
                           requestPayload, editorMode) {
-    let isJSON = editorMode === "js";
-    let tabpanel = document.querySelector("#params-panel");
+    const isJSON = editorMode === "js";
+    const tabpanel = document.querySelector("#params-panel");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 2,
       "The number of param tree sections displayed in this tabpanel is incorrect.");
@@ -125,7 +125,7 @@ add_task(async function() {
       isJSON,
       "The request post data editor should be not displayed.");
 
-    let treeSections = tabpanel.querySelectorAll(".tree-section");
+    const treeSections = tabpanel.querySelectorAll(".tree-section");
 
     is(treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
@@ -134,9 +134,9 @@ add_task(async function() {
       isJSON ? L10N.getStr("jsonScopeName") : L10N.getStr("paramsPostPayload"),
       "The post section doesn't have the correct title.");
 
-    let labels = tabpanel
+    const labels = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = tabpanel
+    const values = tabpanel
       .querySelectorAll("tr:not(.treeS-section) .treeValueCell .objectBox");
 
     is(labels[0].textContent, queryStringParamName,
@@ -145,11 +145,11 @@ add_task(async function() {
       "The first query string param value was incorrect.");
 
     if (isJSON) {
-      let requestPayloadObject = JSON.parse(requestPayload);
-      let requestPairs = Object.keys(requestPayloadObject)
+      const requestPayloadObject = JSON.parse(requestPayload);
+      const requestPairs = Object.keys(requestPayloadObject)
         .map(k => [k, requestPayloadObject[k]]);
       for (let i = 1; i < requestPairs.length; i++) {
-        let [requestPayloadName, requestPayloadValue] = requestPairs[i];
+        const [requestPayloadName, requestPayloadValue] = requestPairs[i];
         is(requestPayloadName, labels[i].textContent,
           "JSON property name " + i + " should be displayed correctly");
         is('"' + requestPayloadValue + '"', values[i].textContent,
@@ -162,7 +162,7 @@ add_task(async function() {
   }
 
   function testParamsTab3() {
-    let tabpanel = document.querySelector("#params-panel");
+    const tabpanel = document.querySelector("#params-panel");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 0,
       "The number of param tree sections displayed in this tabpanel is incorrect.");

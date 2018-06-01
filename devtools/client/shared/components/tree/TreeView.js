@@ -158,8 +158,8 @@ define(function(require, exports, module) {
     }
 
     componentWillReceiveProps(nextProps) {
-      let { expandedNodes, selected } = nextProps;
-      let state = {
+      const { expandedNodes, selected } = nextProps;
+      const state = {
         expandedNodes,
         lastSelectedIndex: this.getSelectedRowIndex()
       };
@@ -172,7 +172,7 @@ define(function(require, exports, module) {
     }
 
     componentDidUpdate() {
-      let selected = this.getSelectedRow();
+      const selected = this.getSelectedRow();
       if (!selected && this.rows.length > 0) {
         this.selectRow(this.rows[
           Math.min(this.state.lastSelectedIndex, this.rows.length - 1)]);
@@ -195,24 +195,24 @@ define(function(require, exports, module) {
      * }
      */
     static getExpandedNodes(rootObj, { maxLevel = Infinity, maxNodes = Infinity } = {}) {
-      let expandedNodes = new Set();
-      let queue = [{
+      const expandedNodes = new Set();
+      const queue = [{
         object: rootObj,
         level: 1,
         path: ""
       }];
       while (queue.length) {
-        let {object, level, path} = queue.shift();
+        const {object, level, path} = queue.shift();
         if (Object(object) !== object) {
           continue;
         }
-        let keys = Object.keys(object);
+        const keys = Object.keys(object);
         if (expandedNodes.size + keys.length > maxNodes) {
           // Avoid having children half expanded.
           break;
         }
-        for (let key of keys) {
-          let nodePath = TreeView.subPath(path, key);
+        for (const key of keys) {
+          const nodePath = TreeView.subPath(path, key);
           expandedNodes.add(nodePath);
           if (level < maxLevel) {
             queue.push({
@@ -229,7 +229,7 @@ define(function(require, exports, module) {
     // Node expand/collapse
 
     toggle(nodePath) {
-      let nodes = this.state.expandedNodes;
+      const nodes = this.state.expandedNodes;
       if (this.isExpanded(nodePath)) {
         nodes.delete(nodePath);
       } else {
@@ -253,15 +253,15 @@ define(function(require, exports, module) {
         return;
       }
 
-      let row = this.getSelectedRow();
+      const row = this.getSelectedRow();
       if (!row) {
         return;
       }
 
-      let index = this.rows.indexOf(row);
+      const index = this.rows.indexOf(row);
       switch (event.key) {
         case "ArrowRight":
-          let { hasChildren, open } = row.props.member;
+          const { hasChildren, open } = row.props.member;
           if (hasChildren && !open) {
             this.toggle(this.state.selected);
           }
@@ -270,7 +270,7 @@ define(function(require, exports, module) {
           if (row && row.props.member.open) {
             this.toggle(this.state.selected);
           } else {
-            let parentRow = this.rows.slice(0, index).reverse().find(
+            const parentRow = this.rows.slice(0, index).reverse().find(
               r => r.props.member.level < row.props.member.level);
             if (parentRow) {
               this.selectRow(parentRow);
@@ -278,25 +278,25 @@ define(function(require, exports, module) {
           }
           break;
         case "ArrowDown":
-          let nextRow = this.rows[index + 1];
+          const nextRow = this.rows[index + 1];
           if (nextRow) {
             this.selectRow(nextRow);
           }
           break;
         case "ArrowUp":
-          let previousRow = this.rows[index - 1];
+          const previousRow = this.rows[index - 1];
           if (previousRow) {
             this.selectRow(previousRow);
           }
           break;
         case "Home":
-          let firstRow = this.rows[0];
+          const firstRow = this.rows[0];
           if (firstRow) {
             this.selectRow(firstRow);
           }
           break;
         case "End":
-          let lastRow = this.rows[this.rows.length - 1];
+          const lastRow = this.rows[this.rows.length - 1];
           if (lastRow) {
             this.selectRow(lastRow);
           }
@@ -309,7 +309,7 @@ define(function(require, exports, module) {
     }
 
     onClickRow(nodePath, event) {
-      let onClickRow = this.props.onClickRow;
+      const onClickRow = this.props.onClickRow;
 
       if (onClickRow) {
         onClickRow.call(this, nodePath, event);
@@ -317,7 +317,7 @@ define(function(require, exports, module) {
       }
 
       event.stopPropagation();
-      let cell = event.target.closest("td");
+      const cell = event.target.closest("td");
       if (cell && cell.classList.contains("treeLabelCell")) {
         this.toggle(nodePath);
       }
@@ -332,7 +332,7 @@ define(function(require, exports, module) {
     }
 
     getSelectedRowIndex() {
-      let row = this.getSelectedRow();
+      const row = this.getSelectedRow();
       if (!row) {
         // If selected row is not found, return index of the first row.
         return 0;
@@ -364,12 +364,12 @@ define(function(require, exports, module) {
      * @return {Boolean} true if the node should be visible otherwise false.
      */
     onFilter(object) {
-      let onFilter = this.props.onFilter;
+      const onFilter = this.props.onFilter;
       return onFilter ? onFilter(object) : true;
     }
 
     onSort(parent, children) {
-      let onSort = this.props.onSort;
+      const onSort = this.props.onSort;
       return onSort ? onSort(parent, children) : children;
     }
 
@@ -387,7 +387,7 @@ define(function(require, exports, module) {
         return [];
       }
 
-      let { expandableStrings, provider } = this.props;
+      const { expandableStrings, provider } = this.props;
       let children = provider.getChildren(parent) || [];
 
       // If the return value is non-array, the children
@@ -399,15 +399,15 @@ define(function(require, exports, module) {
       children = this.onSort(parent, children) || children;
 
       return children.map(child => {
-        let key = provider.getKey(child);
-        let nodePath = TreeView.subPath(path, key);
-        let type = provider.getType(child);
+        const key = provider.getKey(child);
+        const nodePath = TreeView.subPath(path, key);
+        const type = provider.getType(child);
         let hasChildren = provider.hasChildren(child);
 
         // Value with no column specified is used for optimization.
         // The row is re-rendered only if this value changes.
         // Value for actual column is get when a cell is rendered.
-        let value = provider.getValue(child);
+        const value = provider.getValue(child);
 
         if (expandableStrings && isLongString(value)) {
           hasChildren = true;
@@ -447,14 +447,14 @@ define(function(require, exports, module) {
      */
     renderRows(parent, level = 0, path = "") {
       let rows = [];
-      let decorator = this.props.decorator;
+      const decorator = this.props.decorator;
       let renderRow = this.props.renderRow || TreeRow;
 
       // Get children for given parent node, iterate over them and render
       // a row for every one. Use row template (a component) from properties.
       // If the return value is non-array, the children are being loaded
       // asynchronously.
-      let members = this.getMembers(parent, level, path);
+      const members = this.getMembers(parent, level, path);
       if (!Array.isArray(members)) {
         return members;
       }
@@ -464,7 +464,7 @@ define(function(require, exports, module) {
           renderRow = decorator.renderRow(member.object) || renderRow;
         }
 
-        let props = Object.assign({}, this.props, {
+        const props = Object.assign({}, this.props, {
           key: member.path,
           member: member,
           columns: this.state.columns,
@@ -478,14 +478,14 @@ define(function(require, exports, module) {
 
         // If a child node is expanded render its rows too.
         if (member.hasChildren && member.open) {
-          let childRows = this.renderRows(member.object, level + 1,
+          const childRows = this.renderRows(member.object, level + 1,
             member.path);
 
           // If children needs to be asynchronously fetched first,
           // set 'loading' property to the parent row. Otherwise
           // just append children rows to the array of all rows.
           if (!Array.isArray(childRows)) {
-            let lastIndex = rows.length - 1;
+            const lastIndex = rows.length - 1;
             props.member.loading = true;
             rows[lastIndex] = cloneElement(rows[lastIndex], props);
           } else {
@@ -498,12 +498,12 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let root = this.props.object;
-      let classNames = ["treeTable"];
+      const root = this.props.object;
+      const classNames = ["treeTable"];
       this.rows = [];
 
       // Use custom class name from props.
-      let className = this.props.className;
+      const className = this.props.className;
       if (className) {
         classNames.push(...className.split(" "));
       }
@@ -518,7 +518,7 @@ define(function(require, exports, module) {
         rows = [];
       }
 
-      let props = Object.assign({}, this.props, {
+      const props = Object.assign({}, this.props, {
         columns: this.state.columns
       });
 
@@ -556,7 +556,7 @@ define(function(require, exports, module) {
       columns = [];
     }
 
-    let defaultColumn = columns.filter(col => col.id == "default");
+    const defaultColumn = columns.filter(col => col.id == "default");
     if (defaultColumn.length) {
       return columns;
     }

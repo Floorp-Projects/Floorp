@@ -24,7 +24,7 @@ const INITIAL_DEVICES = {
   listState: Types.loadableState.INITIALIZED,
 };
 
-let reducers = {
+const reducers = {
 
   [ADD_DEVICE](devices, { device, deviceType }) {
     return Object.assign({}, devices, {
@@ -40,7 +40,7 @@ let reducers = {
   },
 
   [UPDATE_DEVICE_DISPLAYED](devices, { device, deviceType, displayed }) {
-    let newDevices = devices[deviceType].map(d => {
+    const newDevices = devices[deviceType].map(d => {
       if (d == device) {
         d.displayed = displayed;
       }
@@ -72,12 +72,12 @@ let reducers = {
   },
 
   [REMOVE_DEVICE](devices, { device, deviceType }) {
-    let index = devices[deviceType].indexOf(device);
+    const index = devices[deviceType].indexOf(device);
     if (index < 0) {
       return devices;
     }
 
-    let list = [...devices[deviceType]];
+    const list = [...devices[deviceType]];
     list.splice(index, 1);
     return Object.assign({}, devices, {
       [deviceType]: list
@@ -94,7 +94,7 @@ let reducers = {
 };
 
 module.exports = function(devices = INITIAL_DEVICES, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return devices;
   }

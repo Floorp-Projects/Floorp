@@ -94,32 +94,32 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  const timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function() {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   // Make sure mutated nodes flash for a very long time so we can more easily
   // assert they do
   inspector.markup.CONTAINER_FLASHING_DURATION = 1000 * 60 * 60;
 
   info("Getting the <ul.list> root node to test mutations on");
-  let rootNodeFront = await getNodeFront(".list", inspector);
+  const rootNodeFront = await getNodeFront(".list", inspector);
 
   info("Selecting the last element of the root node before starting");
   await selectNode(".list .item:nth-child(2)", inspector);
 
-  for (let {mutate, flashedNode, desc, attribute} of TEST_DATA) {
+  for (const {mutate, flashedNode, desc, attribute} of TEST_DATA) {
     info("Starting test: " + desc);
 
     info("Mutating the DOM and listening for markupmutation event");
-    let onMutation = inspector.once("markupmutation");
+    const onMutation = inspector.once("markupmutation");
     await mutate(testActor);
-    let mutations = await onMutation;
+    const mutations = await onMutation;
 
     info("Wait for the breadcrumbs widget to update if it needs to");
     if (inspector.breadcrumbs._hasInterestingMutations(mutations)) {
@@ -141,7 +141,7 @@ add_task(async function() {
 });
 
 function assertNodeFlashing(nodeFront, inspector) {
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
   ok(container, "Markup container for node found");
   ok(container.tagState.classList.contains("theme-bg-contrast"),
     "Markup container for node is flashing");
@@ -154,12 +154,12 @@ function assertNodeFlashing(nodeFront, inspector) {
 }
 
 function assertAttributeFlashing(nodeFront, attribute, inspector) {
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
   ok(container, "Markup container for node found");
   ok(container.editor.attrElements.get(attribute),
      "Attribute exists on editor");
 
-  let attributeElement = container.editor.getAttributeElement(attribute);
+  const attributeElement = container.editor.getAttributeElement(attribute);
 
   ok(attributeElement.classList.contains("theme-bg-contrast"),
     "Element for " + attribute + " attribute is flashing");

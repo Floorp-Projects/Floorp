@@ -16,7 +16,7 @@ const { times } = require("devtools/client/performance/test/helpers/event-utils"
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,12 +24,12 @@ add_task(async function() {
   await console.profile("rust");
   await console.profile("rust2");
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   await waitUntil(() => PerformanceController.getRecordings().length == 2);
 
-  let recordings = PerformanceController.getRecordings();
+  const recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
   is(recordings[0].isConsole(), true, "Recording came from console.profile (1).");
   is(recordings[0].getLabel(), "rust", "Correct label in the recording model (1).");

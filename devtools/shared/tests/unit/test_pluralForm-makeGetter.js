@@ -14,15 +14,15 @@ const {PluralForm} = require("devtools/shared/plural-form");
 
 function run_test() {
   // Irish is plural rule #11
-  let [get, numForms] = PluralForm.makeGetter(11);
+  const [get, numForms] = PluralForm.makeGetter(11);
 
   // Irish has 5 plural forms
   Assert.equal(5, numForms());
 
   // I don't really know Irish, so I'll stick in some dummy text
-  let words = "is 1;is 2;is 3-6;is 7-10;everything else";
+  const words = "is 1;is 2;is 3-6;is 7-10;everything else";
 
-  let test = function(text, low, high) {
+  const test = function(text, low, high) {
     for (let num = low; num <= high; num++) {
       Assert.equal(text, get(num, words));
     }

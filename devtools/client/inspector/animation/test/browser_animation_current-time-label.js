@@ -46,7 +46,7 @@ function formatStopwatchTime(time) {
   let seconds = parseInt((time / 1000) % 60, 10);
   let minutes = parseInt((time / (1000 * 60)), 10);
 
-  let pad = (nb, max) => {
+  const pad = (nb, max) => {
     if (nb < max) {
       return new Array((max + "").length - (nb + "").length + 1).join("0") + nb;
     }

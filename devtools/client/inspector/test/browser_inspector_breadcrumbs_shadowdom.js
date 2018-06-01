@@ -26,23 +26,23 @@ add_task(async function() {
   await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {markup} = inspector;
-  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {markup} = inspector;
+  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
 
   info("Find and expand the test-component shadow DOM host.");
-  let hostFront = await getNodeFront("test-component", inspector);
-  let hostContainer = markup.getContainer(hostFront);
+  const hostFront = await getNodeFront("test-component", inspector);
+  const hostContainer = markup.getContainer(hostFront);
   await expandContainer(inspector, hostContainer);
 
   info("Expand the shadow root");
-  let shadowRootContainer = hostContainer.getChildContainers()[0];
+  const shadowRootContainer = hostContainer.getChildContainers()[0];
   await expandContainer(inspector, shadowRootContainer);
 
-  let slotContainer = shadowRootContainer.getChildContainers()[0];
+  const slotContainer = shadowRootContainer.getChildContainers()[0];
 
   info("Select the slot node and wait for the breadcrumbs update");
-  let slotNodeFront = slotContainer.node;
+  const slotNodeFront = slotContainer.node;
   let onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   inspector.selection.setNodeFront(slotNodeFront);
   await onBreadcrumbsUpdated;
@@ -53,11 +53,11 @@ add_task(async function() {
   info("Expand the slot");
   await expandContainer(inspector, slotContainer);
 
-  let slotChildContainers = slotContainer.getChildContainers();
+  const slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 1, "Expecting 1 slotted child");
 
   info("Select the slotted node and wait for the breadcrumbs update");
-  let slottedNodeFront = slotChildContainers[0].node;
+  const slottedNodeFront = slotChildContainers[0].node;
   onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   inspector.selection.setNodeFront(slottedNodeFront);
   await onBreadcrumbsUpdated;
@@ -77,7 +77,7 @@ add_task(async function() {
 
 function checkBreadcrumbsContent(breadcrumbs, selectors) {
   info("Check the output of the breadcrumbs widget");
-  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
+  const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
   is(container.childNodes.length, selectors.length, "Correct number of buttons");
   for (let i = 0; i < container.childNodes.length; i++) {
     is(container.childNodes[i].textContent, selectors[i],

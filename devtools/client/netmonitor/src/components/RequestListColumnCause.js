@@ -23,7 +23,7 @@ class RequestListColumnCause extends Component {
   }
 
   render() {
-    let {
+    const {
       item: { cause },
       onCauseBadgeMouseDown,
     } = this.props;

@@ -47,9 +47,9 @@ exports.immutableUpdate = function(...objs) {
  *        can pass as many as you like.
  */
 exports.update = function update(target, ...args) {
-  for (let attrs of args) {
-    for (let key in attrs) {
-      let desc = Object.getOwnPropertyDescriptor(attrs, key);
+  for (const attrs of args) {
+    for (const key in attrs) {
+      const desc = Object.getOwnPropertyDescriptor(attrs, key);
 
       if (desc) {
         Object.defineProperty(target, key, desc);
@@ -131,7 +131,7 @@ exports.safeErrorString = function(error) {
       // isn't a string, don't use it.
       try {
         if (error.stack) {
-          let stack = error.stack.toString();
+          const stack = error.stack.toString();
           if (typeof stack == "string") {
             errorString += "\nStack: " + stack;
           }
@@ -200,7 +200,7 @@ exports.entries = function entries(obj) {
  */
 exports.toObject = function(arr) {
   const obj = {};
-  for (let [k, v] of arr) {
+  for (const [k, v] of arr) {
     obj[k] = v;
   }
   return obj;
@@ -231,11 +231,11 @@ exports.isGenerator = function(fn) {
   if (typeof fn !== "function") {
     return false;
   }
-  let proto = Object.getPrototypeOf(fn);
+  const proto = Object.getPrototypeOf(fn);
   if (!proto) {
     return false;
   }
-  let ctor = proto.constructor;
+  const ctor = proto.constructor;
   if (!ctor) {
     return false;
   }
@@ -249,11 +249,11 @@ exports.isAsyncFunction = function(fn) {
   if (typeof fn !== "function") {
     return false;
   }
-  let proto = Object.getPrototypeOf(fn);
+  const proto = Object.getPrototypeOf(fn);
   if (!proto) {
     return false;
   }
-  let ctor = proto.constructor;
+  const ctor = proto.constructor;
   if (!ctor) {
     return false;
   }
@@ -318,7 +318,7 @@ exports.settleAll = values => {
   return new Promise((resolve, reject) => {
     values = Array.isArray(values) ? values : [...values];
     let countdown = values.length;
-    let resolutionValues = new Array(countdown);
+    const resolutionValues = new Array(countdown);
     let rejectionValue;
     let rejectionOccurred = false;
 
@@ -339,13 +339,13 @@ exports.settleAll = values => {
     }
 
     for (let i = 0; i < values.length; i++) {
-      let index = i;
-      let value = values[i];
-      let resolver = result => {
+      const index = i;
+      const value = values[i];
+      const resolver = result => {
         resolutionValues[index] = result;
         checkForCompletion();
       };
-      let rejecter = error => {
+      const rejecter = error => {
         if (!rejectionOccurred) {
           rejectionValue = error;
           rejectionOccurred = true;

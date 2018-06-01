@@ -24,7 +24,7 @@ exports.debounce = function(func, wait, scope) {
       clearTimeout(timer);
     }
 
-    let args = arguments;
+    const args = arguments;
     timer = setTimeout(function() {
       timer = null;
       func.apply(scope, args);

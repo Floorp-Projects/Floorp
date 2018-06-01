@@ -17,8 +17,8 @@ define(function(require, exports, module) {
    *   } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
    */
   function createFactories(args) {
-    let result = {};
-    for (let p in args) {
+    const result = {};
+    for (const p in args) {
       result[p] = React.createFactory(args[p]);
     }
     return result;

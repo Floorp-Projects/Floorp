@@ -35,7 +35,7 @@ var DEFAULT_PROFILER_OPTIONS = {
  * Main interface for interacting with nsIProfiler
  */
 const ProfilerManager = (function() {
-  let consumers = new Set();
+  const consumers = new Set();
 
   return {
 
@@ -74,7 +74,7 @@ const ProfilerManager = (function() {
       consumers.delete(instance);
 
       if (this.length < 0) {
-        let msg = "Somehow the number of started profilers is now negative.";
+        const msg = "Somehow the number of started profilers is now negative.";
         DevToolsUtils.reportException("Profiler", msg);
       }
 
@@ -96,7 +96,7 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     start: function(options = {}) {
-      let config = this._profilerStartOptions = {
+      const config = this._profilerStartOptions = {
         entries: options.entries || DEFAULT_PROFILER_OPTIONS.entries,
         interval: options.interval || DEFAULT_PROFILER_OPTIONS.interval,
         features: options.features || DEFAULT_PROFILER_OPTIONS.features,
@@ -105,7 +105,7 @@ const ProfilerManager = (function() {
 
       // The start time should be before any samples we might be
       // interested in.
-      let currentTime = Services.profiler.getElapsedTime();
+      const currentTime = Services.profiler.getElapsedTime();
 
       try {
         Services.profiler.StartProfiler(
@@ -126,7 +126,7 @@ const ProfilerManager = (function() {
 
       this._updateProfilerStatusPolling();
 
-      let { position, totalSize, generation } = this.getBufferInfo();
+      const { position, totalSize, generation } = this.getBufferInfo();
       return { started: true, position, totalSize, generation, currentTime };
     },
 
@@ -184,8 +184,8 @@ const ProfilerManager = (function() {
      *        save JSON parse/stringify cycle if emitting over RDP.
      */
     getProfile: function(options) {
-      let startTime = options.startTime || 0;
-      let profile = options.stringify ?
+      const startTime = options.startTime || 0;
+      const profile = options.stringify ?
         Services.profiler.GetProfile(startTime) :
         Services.profiler.getProfileData(startTime);
 
@@ -211,7 +211,7 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     getBufferInfo: function() {
-      let position = {}, totalSize = {}, generation = {};
+      const position = {}, totalSize = {}, generation = {};
       Services.profiler.GetBufferInfo(position, totalSize, generation);
       return {
         position: position.value,
@@ -237,9 +237,9 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     isActive: function() {
-      let isActive = Services.profiler.IsActive();
-      let elapsedTime = isActive ? Services.profiler.getElapsedTime() : undefined;
-      let { position, totalSize, generation } = this.getBufferInfo();
+      const isActive = Services.profiler.IsActive();
+      const elapsedTime = isActive ? Services.profiler.getElapsedTime() : undefined;
+      const { position, totalSize, generation } = this.getBufferInfo();
       return {
         isActive,
         currentTime: elapsedTime,
@@ -280,15 +280,15 @@ const ProfilerManager = (function() {
 
       // An optional label may be specified when calling `console.profile`.
       // If that's the case, stringify it and send it over with the response.
-      let { action, arguments: args } = subject || {};
-      let profileLabel = args && args.length > 0 ? `${args[0]}` : void 0;
+      const { action, arguments: args } = subject || {};
+      const profileLabel = args && args.length > 0 ? `${args[0]}` : void 0;
 
       // If the event was generated from `console.profile` or `console.profileEnd`
       // we need to start the profiler right away and then just notify the client.
       // Otherwise, we'll lose precious samples.
       if (topic === "console-api-profiler" &&
           (action === "profile" || action === "profileEnd")) {
-        let { isActive, currentTime } = this.isActive();
+        const { isActive, currentTime } = this.isActive();
 
         // Start the profiler only if it wasn't already active. Otherwise, any
         // samples that might have been accumulated so far will be discarded.
@@ -350,11 +350,11 @@ const ProfilerManager = (function() {
      * @param {object} data
      */
     emitEvent: function(eventName, data) {
-      let subscribers = Array.from(consumers).filter(c => {
+      const subscribers = Array.from(consumers).filter(c => {
         return c.subscribedEvents.has(eventName);
       });
 
-      for (let subscriber of subscribers) {
+      for (const subscriber of subscribers) {
         subscriber.emit(eventName, data);
       }
     },
@@ -499,7 +499,7 @@ class Profiler {
    * @return {object}
    */
   registerEventNotifications(data = {}) {
-    let response = [];
+    const response = [];
     (data.events || []).forEach(e => {
       if (!this.subscribedEvents.has(e)) {
         if (e === "profiler-status") {
@@ -520,7 +520,7 @@ class Profiler {
    * @return {object}
    */
   unregisterEventNotifications(data = {}) {
-    let response = [];
+    const response = [];
     (data.events || []).forEach(e => {
       if (this.subscribedEvents.has(e)) {
         if (e === "profiler-status") {

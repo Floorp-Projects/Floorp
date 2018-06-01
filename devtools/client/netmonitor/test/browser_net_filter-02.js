@@ -130,15 +130,15 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(FILTERING_URL);
+  const { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSelectedRequest,
     getSortedRequests,
@@ -206,10 +206,10 @@ add_task(async function() {
   }
 
   async function testContents(visibility) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
+    const requestItems = document.querySelectorAll(".request-list-item");
+    for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".status-code");
+      const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
@@ -230,15 +230,15 @@ add_task(async function() {
       "There should be a specific amount of visible items in the requests menu.");
 
     for (let i = 0; i < visibility.length; i++) {
-      let itemId = items.get(i).id;
-      let shouldBeVisible = !!visibility[i];
-      let isThere = visibleItems.some(r => r.id == itemId);
+      const itemId = items.get(i).id;
+      const shouldBeVisible = !!visibility[i];
+      const isThere = visibleItems.some(r => r.id == itemId);
       is(isThere, shouldBeVisible,
         `The item at index ${i} has visibility=${shouldBeVisible}`);
     }
 
     for (let i = 0; i < EXPECTED_REQUESTS.length; i++) {
-      let { method, url, data } = EXPECTED_REQUESTS[i];
+      const { method, url, data } = EXPECTED_REQUESTS[i];
       for (let j = i; j < visibility.length; j += EXPECTED_REQUESTS.length) {
         if (visibility[j]) {
           verifyRequestItemTarget(
