@@ -1152,7 +1152,7 @@ class BuildDriver(MozbuildObject):
                     new_status = backend_cls.post_build(self, output, jobs, verbose, status)
                     status = new_status
             except Exception as ex:
-                self.log(logging.DEBUG, 'post_build', {'ex': ex},
+                self.log(logging.DEBUG, 'post_build', {'ex': str(ex)},
                          "Unable to run active build backend's post-build step; " +
                          "failing the build due to exception: {ex}.")
                 if not status:
