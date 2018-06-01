@@ -202,11 +202,9 @@ async function cleanUpStorage() {
 }
 
 function patchRecordCCNumber(record) {
-  const number = record["cc-number"];
-  const ccNumberFmt = {
-    affix: "****",
-    label: number.substr(-4),
-  };
+  const ccNumber = record["cc-number"];
+  const normalizedCCNumber = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
+  const ccNumberFmt = FormAutofillUtils.fmtMaskedCreditCardLabel(normalizedCCNumber);
 
   return Object.assign({}, record, {ccNumberFmt});
 }
