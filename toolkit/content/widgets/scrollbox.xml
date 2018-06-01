@@ -27,6 +27,10 @@
   </binding>
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up"
                             anonid="scrollbutton-up"
@@ -574,6 +578,10 @@
   </binding>
 
   <binding id="autorepeatbutton" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+
     <content repeat="hover">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
