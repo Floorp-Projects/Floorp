@@ -79,15 +79,23 @@ ServerTimingParser::Parse()
 
       // We should only take the value from the first
       // occurrence of server-timing-param-name ("dur" and "desc").
+      // This is true whether or not the value makes any sense (or, indeed, if
+      // there even is a value).
       if (currentName.LowerCaseEqualsASCII("dur") &&
-          currentValue.BeginReading() &&
           !foundDuration) {
-        timingHeader->SetDuration(ParseDouble(currentValue));
+        if (currentValue.BeginReading()) {
+          timingHeader->SetDuration(ParseDouble(currentValue));
+        } else {
+          timingHeader->SetDuration(0.0);
+        }
         foundDuration = true;
       } else if (currentName.LowerCaseEqualsASCII("desc") &&
-                 !currentValue.IsEmpty() &&
                  !foundDescription) {
-        timingHeader->SetDescription(currentValue);
+        if (!currentValue.IsEmpty()) {
+          timingHeader->SetDescription(currentValue);
+        } else {
+          timingHeader->SetDescription(EmptyCString());
+        }
         foundDescription = true;
       }
 
