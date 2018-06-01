@@ -67,10 +67,6 @@ mochitest:
             android.*: 7200
             default: 5400
     allow-software-gl-layers: false
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -92,10 +88,6 @@ mochitest-a11y:
     run-on-projects: built-projects
     mozharness:
         mochitest-flavor: a11y
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
@@ -125,10 +117,6 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: xlarge
             default: default
     allow-software-gl-layers: false
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 browser-instrumentation:
     description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
@@ -194,10 +182,6 @@ mochitest-chrome:
             by-test-platform:
                 android.*: false
                 default: true
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
@@ -222,10 +206,6 @@ mochitest-clipboard:
                     - --test-suite=mochitest-plain-clipboard
                 default:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -256,10 +236,6 @@ mochitest-devtools-chrome:
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 mochitest-gpu:
     description: "Mochitest GPU run"
@@ -288,7 +264,6 @@ mochitest-gpu:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
 
 mochitest-media:
@@ -326,7 +301,6 @@ mochitest-media:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
 
 mochitest-plain-headless:
@@ -404,5 +378,4 @@ mochitest-webgl:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
