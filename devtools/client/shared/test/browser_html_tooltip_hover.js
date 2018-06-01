@@ -19,7 +19,7 @@ add_task(async function() {
   // Wait for full page load before synthesizing events on the page.
   await waitUntil(() => doc.readyState === "complete");
 
-  let width = 100, height = 50;
+  const width = 100, height = 50;
   const tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.textContent = "tooltip";
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});

@@ -427,8 +427,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     try {
       // If the node is the child of a shadow host, we can not use an anonymous walker to
       // get the shadow host parent.
-      const walker = node.isDirectShadowHostChild ? this.getNonAnonymousWalker(node.rawNode)
-                                                : this.getDocumentWalker(node.rawNode);
+      const walker = node.isDirectShadowHostChild
+        ? this.getNonAnonymousWalker(node.rawNode)
+        : this.getDocumentWalker(node.rawNode);
       parent = walker.parentNode();
     } catch (e) {
       // When getting the parent node for a child of a non-slotted shadow host child,

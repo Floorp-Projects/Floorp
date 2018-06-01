@@ -481,7 +481,8 @@ class FirefoxDataProvider {
     // The name of the callback that processes request response
     const callbackMethodName = `on${method.charAt(0).toUpperCase()}${method.slice(1)}`;
     // And the event to fire before updating this data
-    const updatingEventName = `UPDATING_${method.replace(/([A-Z])/g, "_$1").toUpperCase()}`;
+    const updatingEventName =
+      `UPDATING_${method.replace(/([A-Z])/g, "_$1").toUpperCase()}`;
 
     // Emit event that tell we just start fetching some data
     this.emit(EVENTS[updatingEventName], actor);

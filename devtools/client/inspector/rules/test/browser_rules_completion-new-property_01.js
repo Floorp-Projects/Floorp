@@ -81,7 +81,9 @@ async function testCompletion([key, completion, open, isSelected], editor, view)
 
   // Also listening for popup opened/closed events if needed.
   const popupEvent = open ? "popup-opened" : "popup-closed";
-  const onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+  const onPopupEvent = editor.popup.isOpen !== open
+    ? once(editor.popup, popupEvent)
+    : null;
 
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);

@@ -50,6 +50,7 @@ add_task(async function() {
 });
 
 async function getElementsNodeStyle(testActor) {
-  const value = await testActor.getHighlighterNodeAttribute("box-model-elements", "style");
+  const value =
+    await testActor.getHighlighterNodeAttribute("box-model-elements", "style");
   return value;
 }

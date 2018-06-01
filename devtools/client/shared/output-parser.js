@@ -336,8 +336,8 @@ OutputParser.prototype = {
             const variableNode = this._parseVariable(token, text, tokenStream, options);
             this.parsed.push(variableNode);
           } else {
-            const {functionData, sawVariable} = this._parseMatchingParens(text, tokenStream,
-              options);
+            const {functionData, sawVariable} =
+              this._parseMatchingParens(text, tokenStream, options);
 
             const functionName = text.substring(token.startOffset, token.endOffset);
 

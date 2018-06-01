@@ -251,7 +251,9 @@ function formatStub(key, packet) {
 
 function formatNetworkEventStub(key, packet) {
   const cleanedPacket = getCleanedPacket(key, packet);
-  const networkInfo = cleanedPacket.networkInfo ? cleanedPacket.networkInfo : cleanedPacket;
+  const networkInfo = cleanedPacket.networkInfo
+    ? cleanedPacket.networkInfo
+    : cleanedPacket;
 
   const prepared = prepareMessage(
     networkInfo,

@@ -45,7 +45,8 @@ exports.removeTab = function(tab) {
  * Adds a browser window with the provided options.
  */
 exports.addWindow = async function(options) {
-  const { OpenBrowserWindow } = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+  const { OpenBrowserWindow } =
+    Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   const win = OpenBrowserWindow(options);
   await waitForDelayedStartupFinished(win);
   return win;

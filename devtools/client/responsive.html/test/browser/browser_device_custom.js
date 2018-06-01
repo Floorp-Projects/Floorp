@@ -63,7 +63,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
   submitButton.click();
 
   info("Look for custom device in device selector");
-  const selectorOption = [...deviceSelector.options].find(opt => opt.value == device.name);
+  const selectorOption =
+    [...deviceSelector.options].find(opt => opt.value == device.name);
   ok(selectorOption, "Custom device option added to device selector");
 });
 
@@ -103,7 +104,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Ensure custom device was removed from device selector");
   await waitUntilState(store, state => state.viewports[0].device == "");
   is(deviceSelector.value, "", "Device selector reset to no device");
-  const selectorOption = [...deviceSelector.options].find(opt => opt.value == device.name);
+  const selectorOption =
+    [...deviceSelector.options].find(opt => opt.value == device.name);
   ok(!selectorOption, "Custom device option removed from device selector");
 
   info("Ensure device properties like UA have been reset");
@@ -167,7 +169,8 @@ function testDeviceAdder(ui, expected) {
   const { document } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-adder-name input");
-  const [ widthInput, heightInput ] = document.querySelectorAll("#device-adder-size input");
+  const [ widthInput, heightInput ] =
+    document.querySelectorAll("#device-adder-size input");
   const pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
   const userAgentInput = document.querySelector("#device-adder-user-agent input");
   const touchInput = document.querySelector("#device-adder-touch input");

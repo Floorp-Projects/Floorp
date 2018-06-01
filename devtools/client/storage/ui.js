@@ -1345,7 +1345,8 @@ exports.StorageUI = StorageUI;
 
 function createGUID() {
   return "{cccccccc-cccc-4ccc-yccc-cccccccccccc}".replace(/[cy]/g, c => {
-    let r = Math.random() * 16 | 0, v = c == "c" ? r : (r & 0x3 | 0x8);
+    const r = Math.random() * 16 | 0;
+    const v = c == "c" ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }

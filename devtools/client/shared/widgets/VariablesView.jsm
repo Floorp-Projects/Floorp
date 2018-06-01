@@ -3524,7 +3524,8 @@ VariablesView.stringifiers.byObjectKind = {
       return null;
     }
 
-    let shown = 0, result = [], lastHole = null;
+    let shown = 0, lastHole = null;
+    const result = [];
     for (const item of preview.items) {
       if (item === null) {
         if (lastHole !== null) {

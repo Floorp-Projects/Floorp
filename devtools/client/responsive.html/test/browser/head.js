@@ -394,7 +394,8 @@ function addDeviceInModal(ui, device) {
   const { store, document } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-adder-name input");
-  const [ widthInput, heightInput ] = document.querySelectorAll("#device-adder-size input");
+  const [ widthInput, heightInput ] =
+    document.querySelectorAll("#device-adder-size input");
   const pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
   const userAgentInput = document.querySelector("#device-adder-user-agent input");
   const touchInput = document.querySelector("#device-adder-touch input");

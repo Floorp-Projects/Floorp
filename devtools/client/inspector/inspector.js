@@ -1065,7 +1065,8 @@ Inspector.prototype = {
       this.eyeDropperButton.title = INSPECTOR_L10N.getStr("inspector.eyedropper.label");
       this.eyeDropperButton.addEventListener("click", this.onEyeDropperButtonClicked);
     } else {
-      const eyeDropperButton = this.panelDoc.getElementById("inspector-eyedropper-toggle");
+      const eyeDropperButton =
+        this.panelDoc.getElementById("inspector-eyedropper-toggle");
       eyeDropperButton.disabled = true;
       eyeDropperButton.title = INSPECTOR_L10N.getStr("eyedropper.disabled.title");
     }

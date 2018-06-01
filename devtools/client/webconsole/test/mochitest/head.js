@@ -575,7 +575,8 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
   });
 
   const menuPopup = await openContextMenu(hud, message);
-  const openInNetMenuItem = menuPopup.querySelector("#console-menu-open-in-network-panel");
+  const openInNetMenuItem =
+    menuPopup.querySelector("#console-menu-open-in-network-panel");
   ok(openInNetMenuItem, "open in network panel item is enabled");
   openInNetMenuItem.click();
 

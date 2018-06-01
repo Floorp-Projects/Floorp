@@ -55,13 +55,11 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     const container = doc.createElementNS(XHTML_NS, "div");
     container.id = "spectrum-tooltip";
 
-    let widget;
-
     const node = doc.createElementNS(XHTML_NS, "div");
     node.id = "spectrum";
     container.appendChild(node);
 
-    widget = new Spectrum(node, color);
+    const widget = new Spectrum(node, color);
     this.tooltip.setContent(container, { width: 218, height: 224 });
 
     widget.inspector = this.inspector;

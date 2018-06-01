@@ -108,7 +108,8 @@ const GRID_FRAGMENT_DATA = {
 };
 
 add_task(async function() {
-  const { client, walker, layout } = await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
+  const { client, walker, layout } =
+    await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
   const grids = await layout.getGrids(walker.rootNode);
   const grid = grids[0];
   const { gridFragments } = grid;

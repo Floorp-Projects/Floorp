@@ -27,7 +27,8 @@ exports.once = function(target, eventName, options = {}) {
  * Possible options: `useCapture`, `spreadArgs`, `expectedArgs`
  */
 exports.times = function(target, eventName, receiveCount, options = {}) {
-  const msg = `Waiting for event: '${eventName}' on ${target} for ${receiveCount} time(s)`;
+  const msg =
+    `Waiting for event: '${eventName}' on ${target} for ${receiveCount} time(s)`;
   if ("expectedArgs" in options) {
     dump(`${msg} with arguments: ${JSON.stringify(options.expectedArgs)}.\n`);
   } else {

@@ -25,7 +25,8 @@ add_task(async function() {
   await selectNode("#testid", inspector);
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const propEditor = ruleEditor.rule.textProps[0].editor;
-  const anchor = propEditor.valueSpan.querySelector(".ruleview-propertyvalue .theme-link");
+  const anchor =
+    propEditor.valueSpan.querySelector(".ruleview-propertyvalue .theme-link");
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);

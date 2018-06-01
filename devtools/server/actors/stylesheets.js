@@ -774,7 +774,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
       doc.styleSheetChangeEventsEnabled = true;
 
-      const isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
+      const isChrome =
+        Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
       const styleSheets =
         isChrome ? InspectorUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];

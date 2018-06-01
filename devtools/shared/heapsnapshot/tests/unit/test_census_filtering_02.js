@@ -13,7 +13,7 @@ function run_test() {
     noStack: countBreakdown,
   };
 
-  let stack1, stack2, stack3, stack4, stack5;
+  let stack1, stack2, stack3, stack4;
 
   (function foo() {
     (function bar() {
@@ -28,7 +28,7 @@ function run_test() {
     stack4 = saveStack(2);
   }());
 
-  stack5 = saveStack(1);
+  const stack5 = saveStack(1);
 
   const REPORT = new Map([
     [stack1, { bytes: 10, count: 1 }],

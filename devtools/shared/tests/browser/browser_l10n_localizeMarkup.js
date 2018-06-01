@@ -9,8 +9,10 @@ const { localizeMarkup, LocalizationHelper } = require("devtools/shared/l10n");
 
 add_task(async function() {
   info("Check that the strings used for this test are still valid");
-  const STARTUP_L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
-  const TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+  const STARTUP_L10N =
+    new LocalizationHelper("devtools/client/locales/startup.properties");
+  const TOOLBOX_L10N =
+    new LocalizationHelper("devtools/client/locales/toolbox.properties");
   const str1 = STARTUP_L10N.getStr("inspector.label");
   const str2 = STARTUP_L10N.getStr("inspector.accesskey");
   const str3 = TOOLBOX_L10N.getStr("toolbox.defaultTitle");

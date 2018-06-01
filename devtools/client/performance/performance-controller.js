@@ -256,7 +256,8 @@ var PerformanceController = {
     if (!hasActor) {
       return true;
     }
-    const actorCanCheck = await gTarget.actorHasMethod("performance", "canCurrentlyRecord");
+    const actorCanCheck =
+      await gTarget.actorHasMethod("performance", "canCurrentlyRecord");
     if (!actorCanCheck) {
       return true;
     }

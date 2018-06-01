@@ -12,9 +12,9 @@ const TEST_MESSAGE = "testmessage";
 const { Tools } = require("devtools/client/definitions");
 
 add_task(async function() {
-  let currWindow, hud, mainWindow;
+  let currWindow, hud;
 
-  mainWindow = Services.wm.getMostRecentWindow(null);
+  const mainWindow = Services.wm.getMostRecentWindow(null);
 
   await HUDService.openBrowserConsoleOrFocus();
 
