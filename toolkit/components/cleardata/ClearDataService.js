@@ -399,6 +399,36 @@ const PredictorNetworkCleaner = {
   },
 };
 
+const PushNotificationsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise((aResolve, aReject) => {
+      let push = Cc["@mozilla.org/push/Service;1"]
+                   .getService(Ci.nsIPushService);
+      push.clearForDomain(aHost, aStatus => {
+        if (!Components.isSuccessCode(aStatus)) {
+          aReject();
+        } else {
+          aResolve();
+        }
+      });
+    });
+  },
+
+  deleteAll() {
+    return new Promise((aResolve, aReject) => {
+      let push = Cc["@mozilla.org/push/Service;1"]
+                   .getService(Ci.nsIPushService);
+      push.clearForDomain("*", aStatus => {
+        if (!Components.isSuccessCode(aStatus)) {
+          aReject();
+        } else {
+          aResolve();
+        }
+      });
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -430,6 +460,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA,
    cleaner: PredictorNetworkCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS,
+   cleaner: PushNotificationsCleaner, },
 ];
 
 this.ClearDataService = function() {};
