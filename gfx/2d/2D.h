@@ -881,6 +881,8 @@ public:
 
   virtual bool CanSerialize() { return false; }
 
+  virtual bool HasVariationSettings() { return false; }
+
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }
