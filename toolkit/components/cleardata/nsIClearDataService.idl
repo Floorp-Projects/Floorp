@@ -173,8 +173,12 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_SECURITY_SETTINGS = 1 << 17;
 
+  /**
+   * Media plugin data
+   */
+  const uint32_t CLEAR_EME = 1 << 18;
+
   /* TODO
-  const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_FORMDATA = 1 << 16;
   */
 
