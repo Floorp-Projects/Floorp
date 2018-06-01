@@ -385,7 +385,7 @@
 <groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
   <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header"/></caption>
 
-  <grid>
+  <grid data-subcategory="permissions">
     <columns>
       <column flex="1"/>
       <column/>
