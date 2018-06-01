@@ -81,15 +81,15 @@ function run_test() {
   assert.deepEqual(/a/i, /a/i);
   assert.deepEqual(/a/m, /a/m);
   assert.deepEqual(/a/igm, /a/igm);
-  assert.throws(makeBlock(assert.deepEqual, /ab/, /a/));
-  assert.throws(makeBlock(assert.deepEqual, /a/g, /a/));
-  assert.throws(makeBlock(assert.deepEqual, /a/i, /a/));
-  assert.throws(makeBlock(assert.deepEqual, /a/m, /a/));
-  assert.throws(makeBlock(assert.deepEqual, /a/igm, /a/im));
+  assert.throws(makeBlock(assert.deepEqual, /ab/, /a/), ns.Assert.AssertionError);
+  assert.throws(makeBlock(assert.deepEqual, /a/g, /a/), ns.Assert.AssertionError);
+  assert.throws(makeBlock(assert.deepEqual, /a/i, /a/), ns.Assert.AssertionError);
+  assert.throws(makeBlock(assert.deepEqual, /a/m, /a/), ns.Assert.AssertionError);
+  assert.throws(makeBlock(assert.deepEqual, /a/igm, /a/im), ns.Assert.AssertionError);
 
   let re1 = /a/;
   re1.lastIndex = 3;
-  assert.throws(makeBlock(assert.deepEqual, re1, /a/));
+  assert.throws(makeBlock(assert.deepEqual, re1, /a/), ns.Assert.AssertionError);
 
   // 7.4
   assert.deepEqual(4, "4", "deepEqual == check");
@@ -158,10 +158,10 @@ function run_test() {
   assert.throws(makeBlock(thrower, ns.Assert.AssertionError),
                 ns.Assert.AssertionError, "message");
   assert.throws(makeBlock(thrower, ns.Assert.AssertionError), ns.Assert.AssertionError);
-  assert.throws(makeBlock(thrower, ns.Assert.AssertionError));
+  assert.throws(makeBlock(thrower, ns.Assert.AssertionError), ns.Assert.AssertionError);
 
   // if not passing an error, catch all.
-  assert.throws(makeBlock(thrower, TypeError));
+  assert.throws(makeBlock(thrower, TypeError), TypeError);
 
   // when passing a type, only catch errors of the appropriate type
   let threw = false;
@@ -183,7 +183,7 @@ function run_test() {
   }
   assert.throws(function() {
     ifError(new Error("test error"));
-  });
+  }, /test error/);
 
   // make sure that validating using constructor really works
   threw = false;
@@ -253,7 +253,7 @@ function run_test() {
     });
   } catch (e) {
     threw = true;
-    assert.equal(e.message, "Missing expected exception..");
+    assert.equal(e.message, "Error: The 'expected' argument was not supplied to Assert.throws() - false == true");
   }
   assert.ok(threw);
 
@@ -355,9 +355,6 @@ add_task(async function test_rejects() {
   let SomeErrorLikeThing = function() {};
 
   // The actual tests...
-  // No "expected" or "message" values supplied.
-  await assert.rejects(Promise.reject(new Error("oh no")));
-  await assert.rejects(Promise.reject("oh no"));
 
   // An explicit error object:
   // An instance to check against.
