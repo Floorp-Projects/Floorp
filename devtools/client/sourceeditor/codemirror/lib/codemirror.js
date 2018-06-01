@@ -746,6 +746,16 @@ function collapsedSpanAtSide(line, start) {
 function collapsedSpanAtStart(line) { return collapsedSpanAtSide(line, true) }
 function collapsedSpanAtEnd(line) { return collapsedSpanAtSide(line, false) }
 
+function collapsedSpanAround(line, ch) {
+  var sps = sawCollapsedSpans && line.markedSpans, found
+  if (sps) { for (var i = 0; i < sps.length; ++i) {
+    var sp = sps[i]
+    if (sp.marker.collapsed && (sp.from == null || sp.from < ch) && (sp.to == null || sp.to > ch) &&
+        (!found || compareCollapsedMarkers(found, sp.marker) < 0)) { found = sp.marker }
+  } }
+  return found
+}
+
 // Test whether there exists a collapsed span that partially
 // overlaps (covers the start or end, but not both) of a new span.
 // Such overlap is not allowed.
@@ -2778,12 +2788,11 @@ function coordsChar(cm, x, y) {
   var lineObj = getLine(doc, lineN)
   for (;;) {
     var found = coordsCharInner(cm, lineObj, lineN, x, y)
-    var merged = collapsedSpanAtEnd(lineObj)
-    var mergedPos = merged && merged.find(0, true)
-    if (merged && (found.ch > mergedPos.from.ch || found.ch == mergedPos.from.ch && found.xRel > 0))
-      { lineN = lineNo(lineObj = mergedPos.to.line) }
-    else
-      { return found }
+    var collapsed = collapsedSpanAround(lineObj, found.ch + (found.xRel > 0 ? 1 : 0))
+    if (!collapsed) { return found }
+    var rangeEnd = collapsed.find(1)
+    if (rangeEnd.line == lineN) { return rangeEnd }
+    lineObj = getLine(doc, lineN = rangeEnd.line)
   }
 }
 
@@ -3543,6 +3552,7 @@ var NativeScrollbars = function(place, scroll, cm) {
   this.cm = cm
   var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar")
   var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar")
+  vert.tabIndex = horiz.tabIndex = -1
   place(vert); place(horiz)
 
   on(vert, "scroll", function () {
@@ -7476,7 +7486,7 @@ function leftButtonSelect(cm, event, start, behavior) {
   }
 
   var move = operation(cm, function (e) {
-    if (!e_button(e)) { done(e) }
+    if (e.buttons === 0 || !e_button(e)) { done(e) }
     else { extend(e) }
   })
   var up = operation(cm, done)
@@ -8755,8 +8765,12 @@ ContentEditableInput.prototype.showSelection = function (info, takeFocus) {
   this.showMultipleSelections(info)
 };
 
+ContentEditableInput.prototype.getSelection = function () {
+  return this.cm.display.wrapper.ownerDocument.getSelection()
+};
+
 ContentEditableInput.prototype.showPrimarySelection = function () {
-  var sel = window.getSelection(), cm = this.cm, prim = cm.doc.sel.primary()
+  var sel = this.getSelection(), cm = this.cm, prim = cm.doc.sel.primary()
   var from = prim.from(), to = prim.to()
 
   if (cm.display.viewTo == cm.display.viewFrom || from.line >= cm.display.viewTo || to.line < cm.display.viewFrom) {
@@ -8823,13 +8837,13 @@ ContentEditableInput.prototype.showMultipleSelections = function (info) {
 };
 
 ContentEditableInput.prototype.rememberSelection = function () {
-  var sel = window.getSelection()
+  var sel = this.getSelection()
   this.lastAnchorNode = sel.anchorNode; this.lastAnchorOffset = sel.anchorOffset
   this.lastFocusNode = sel.focusNode; this.lastFocusOffset = sel.focusOffset
 };
 
 ContentEditableInput.prototype.selectionInEditor = function () {
-  var sel = window.getSelection()
+  var sel = this.getSelection()
   if (!sel.rangeCount) { return false }
   var node = sel.getRangeAt(0).commonAncestorContainer
   return contains(this.div, node)
@@ -8864,14 +8878,14 @@ ContentEditableInput.prototype.receivedFocus = function () {
 };
 
 ContentEditableInput.prototype.selectionChanged = function () {
-  var sel = window.getSelection()
+  var sel = this.getSelection()
   return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset ||
     sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset
 };
 
 ContentEditableInput.prototype.pollSelection = function () {
   if (this.readDOMTimeout != null || this.gracePeriod || !this.selectionChanged()) { return }
-  var sel = window.getSelection(), cm = this.cm
+  var sel = this.getSelection(), cm = this.cm
   // On Android Chrome (version 56, at least), backspacing into an
   // uneditable block element will put the cursor in that element,
   // and then, because it's not editable, hide the virtual keyboard.
@@ -9045,12 +9059,13 @@ function isInGutter(node) {
 function badPos(pos, bad) { if (bad) { pos.bad = true; } return pos }
 
 function domTextBetween(cm, from, to, fromLine, toLine) {
-  var text = "", closing = false, lineSep = cm.doc.lineSeparator()
+  var text = "", closing = false, lineSep = cm.doc.lineSeparator(), extraLinebreak = false
   function recognizeMarker(id) { return function (marker) { return marker.id == id; } }
   function close() {
     if (closing) {
       text += lineSep
-      closing = false
+      if (extraLinebreak) { text += lineSep }
+      closing = extraLinebreak = false
     }
   }
   function addText(str) {
@@ -9062,8 +9077,8 @@ function domTextBetween(cm, from, to, fromLine, toLine) {
   function walk(node) {
     if (node.nodeType == 1) {
       var cmText = node.getAttribute("cm-text")
-      if (cmText != null) {
-        addText(cmText || node.textContent.replace(/\u200b/g, ""))
+      if (cmText) {
+        addText(cmText)
         return
       }
       var markerID = node.getAttribute("cm-marker"), range
@@ -9074,19 +9089,24 @@ function domTextBetween(cm, from, to, fromLine, toLine) {
         return
       }
       if (node.getAttribute("contenteditable") == "false") { return }
-      var isBlock = /^(pre|div|p)$/i.test(node.nodeName)
+      var isBlock = /^(pre|div|p|li|table|br)$/i.test(node.nodeName)
+      if (!/^br$/i.test(node.nodeName) && node.textContent.length == 0) { return }
+
       if (isBlock) { close() }
       for (var i = 0; i < node.childNodes.length; i++)
         { walk(node.childNodes[i]) }
+
+      if (/^(pre|p)$/i.test(node.nodeName)) { extraLinebreak = true }
       if (isBlock) { closing = true }
     } else if (node.nodeType == 3) {
-      addText(node.nodeValue)
+      addText(node.nodeValue.replace(/\u200b/g, "").replace(/\u00a0/g, " "))
     }
   }
   for (;;) {
     walk(from)
     if (from == to) { break }
     from = from.nextSibling
+    extraLinebreak = false
   }
   return text
 }
@@ -9658,7 +9678,7 @@ CodeMirror.fromTextArea = fromTextArea
 
 addLegacyProps(CodeMirror)
 
-CodeMirror.version = "5.37.0"
+CodeMirror.version = "5.38.0"
 
 return CodeMirror;
 
