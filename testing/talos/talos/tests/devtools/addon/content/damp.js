@@ -199,7 +199,7 @@ Damp.prototype = {
   async testSetup(url) {
     let tab = await this.addTab(url);
     await new Promise(resolve => {
-      setTimeout(resolve, this._config.rest);
+      setTimeout(resolve, 100);
     });
     return tab;
   },
@@ -219,7 +219,6 @@ Damp.prototype = {
   _win: undefined,
   _dampTab: undefined,
   _results: [],
-  _config: {subtests: [], repeat: 1, rest: 100},
   _nextTestIndex: 0,
   _tests: [],
   _onSequenceComplete: 0,
@@ -397,7 +396,7 @@ Damp.prototype = {
     await this.garbageCollect();
   },
 
-  startTest(doneCallback, config) {
+  startTest(doneCallback) {
     try {
       dump("Initialize the head file with a reference to this DAMP instance\n");
       let head = require("chrome://damp/content/tests/head.js");
@@ -407,7 +406,6 @@ Damp.prototype = {
         TalosParentProfiler.pause("DAMP - end");
         doneCallback(results);
       };
-      this._config = config;
 
       this._win = Services.wm.getMostRecentWindow("navigator:browser");
       this._dampTab = this._win.gBrowser.selectedTab;
@@ -418,8 +416,9 @@ Damp.prototype = {
       // Filter tests via `./mach --subtests filter` command line argument
       let filter = Services.prefs.getCharPref("talos.subtests", "");
 
-      let tests = config.subtests.filter(test => !test.disabled)
-                                 .filter(test => test.name.includes(filter));
+      let DAMP_TESTS = require("chrome://damp/content/damp-tests.js");
+      let tests = DAMP_TESTS.filter(test => !test.disabled)
+                            .filter(test => test.name.includes(filter));
 
       if (tests.length === 0) {
         this.error(`Unable to find any test matching '${filter}'`);
@@ -436,9 +435,7 @@ Damp.prototype = {
       // Construct the sequence array while filtering tests
       let sequenceArray = [];
       for (let test of tests) {
-        for (let r = 0; r < config.repeat; r++) {
-          sequenceArray.push(test.path);
-        }
+        sequenceArray.push(test.path);
       }
 
      this.waitBeforeRunningTests().then(() => {
