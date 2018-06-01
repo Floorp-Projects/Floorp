@@ -40,7 +40,7 @@ async function expectNoSuchActorIDs(client, actors) {
   info(`Test that all the objectValueGrip actors have been released`);
   for (const actor of actors) {
     await Assert.rejects(client.request({to: actor, type: "requestTypes"}),
-                         `No such actor for ID: ${actor}`);
+                         err => err.message == `No such actor for ID: ${actor}`);
   }
 }
 
