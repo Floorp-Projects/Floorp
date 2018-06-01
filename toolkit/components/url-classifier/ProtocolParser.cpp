@@ -78,16 +78,6 @@ ProtocolParser::ProtocolParser()
 
 ProtocolParser::~ProtocolParser()
 {
-  CleanupUpdates();
-}
-
-void
-ProtocolParser::CleanupUpdates()
-{
-  for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
-    delete mTableUpdates[i];
-  }
-  mTableUpdates.Clear();
 }
 
 nsresult
@@ -109,7 +99,7 @@ ProtocolParser::Begin(const nsACString& aTable,
   return NS_OK;
 }
 
-TableUpdate *
+RefPtr<TableUpdate>
 ProtocolParser::GetTableUpdate(const nsACString& aTable)
 {
   for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
@@ -122,7 +112,7 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
   // updates can be transferred to DBServiceWorker, which passes
   // them back to Classifier when doing the updates, and that
   // will free them.
-  TableUpdate *update = CreateTableUpdate(aTable);
+  RefPtr<TableUpdate> update = CreateTableUpdate(aTable);
   mTableUpdates.AppendElement(update);
   return update;
 }
@@ -143,7 +133,7 @@ ProtocolParserV2::~ProtocolParserV2()
 void
 ProtocolParserV2::SetCurrentTable(const nsACString& aTable)
 {
-  auto update = GetTableUpdate(aTable);
+  RefPtr<TableUpdate> update = GetTableUpdate(aTable);
   mTableUpdate = TableUpdate::Cast<TableUpdateV2>(update);
 }
 
@@ -698,7 +688,7 @@ ProtocolParserV2::ProcessHostAddComplete(uint8_t aNumEntries,
 
 nsresult
 ProtocolParserV2::ProcessHostSubComplete(uint8_t aNumEntries,
-                                       const nsACString& aChunk, uint32_t* aStart)
+                                         const nsACString& aChunk, uint32_t* aStart)
 {
   MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
@@ -748,7 +738,7 @@ ProtocolParserV2::NextLine(nsACString& aLine)
   return true;
 }
 
-TableUpdate*
+RefPtr<TableUpdate>
 ProtocolParserV2::CreateTableUpdate(const nsACString& aTableName) const
 {
   return new TableUpdateV2(aTableName);
@@ -773,7 +763,7 @@ ProtocolParserProtobuf::SetCurrentTable(const nsACString& aTable)
 }
 
 
-TableUpdate*
+RefPtr<TableUpdate>
 ProtocolParserProtobuf::CreateTableUpdate(const nsACString& aTableName) const
 {
   return new TableUpdateV4(aTableName);

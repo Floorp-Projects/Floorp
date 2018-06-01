@@ -40,7 +40,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
 
   // Apply V2 update
   {
-    auto update = new TableUpdateV2(NS_LITERAL_CSTRING(V2_TABLE));
+    RefPtr<TableUpdateV2> update = new TableUpdateV2(NS_LITERAL_CSTRING(V2_TABLE));
     Unused << update->NewAddChunk(1);
 
     ApplyUpdate(update);
@@ -50,7 +50,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
   }
 
   // Helper function to generate table update data
-  auto func = [](TableUpdateV4* update, bool full, const char* str) {
+  auto func = [](RefPtr<TableUpdateV4> update, bool full, const char* str) {
     update->SetFullUpdate(full);
     nsCString prefix(str);
     update->NewPrefixes(prefix.Length(), prefix);
@@ -58,7 +58,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
 
   // Apply V4 update for table1
   {
-    auto update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
+    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
     func(update, FULL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);
@@ -69,7 +69,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
 
   // Apply V4 update for table2
   {
-    auto update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE2));
+    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE2));
     func(update, FULL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);
@@ -80,7 +80,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
   // Apply V4 update with the same prefix in previous full udpate
   // This should cause an update error.
   {
-    auto update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
+    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
     func(update, PARTIAL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);

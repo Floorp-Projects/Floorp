@@ -37,7 +37,7 @@ public:
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
 
   // ApplyUpdate will merge data stored in aTableUpdate with prefixes in aInputMap.
-  nsresult ApplyUpdate(TableUpdateV4* aTableUpdate,
+  nsresult ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
                        PrefixStringMap& aInputMap,
                        PrefixStringMap& aOutputMap);
 

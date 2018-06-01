@@ -25,7 +25,7 @@ void RunTestInNewThread(Function&& aFunction) {
 }
 
 nsresult SyncApplyUpdates(Classifier* aClassifier,
-                          nsTArray<TableUpdate*>* aUpdates)
+                          TableUpdateArray& aUpdates)
 {
   // We need to spin a new thread specifically because the callback
   // will be on the caller thread. If we call Classifier::AsyncApplyUpdates
@@ -84,7 +84,7 @@ GetFile(const nsTArray<nsString>& path)
   return file.forget();
 }
 
-void ApplyUpdate(nsTArray<TableUpdate*>& updates)
+void ApplyUpdate(TableUpdateArray& updates)
 {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
@@ -102,12 +102,12 @@ void ApplyUpdate(nsTArray<TableUpdate*>& updates)
       ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
-  SyncApplyUpdates(classifier.get(), &updates);
+  SyncApplyUpdates(classifier.get(), updates);
 }
 
 void ApplyUpdate(TableUpdate* update)
 {
-  nsTArray<TableUpdate*> updates = { update };
+  TableUpdateArray updates = { update };
   ApplyUpdate(updates);
 }
 
