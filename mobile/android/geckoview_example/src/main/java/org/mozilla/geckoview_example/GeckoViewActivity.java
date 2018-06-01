@@ -114,6 +114,7 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .remoteDebuggingEnabled(true)
                     .nativeCrashReportingEnabled(true)
                     .javaCrashReportingEnabled(true)
+                    .consoleOutput(true)
                     .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
