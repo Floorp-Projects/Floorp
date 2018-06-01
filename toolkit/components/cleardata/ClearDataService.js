@@ -11,12 +11,20 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(this, "sas",
+                                   "@mozilla.org/storage/activity-service;1",
+                                   "nsIStorageActivityService");
 
 // A Cleaner is an object with 3 methods. These methods must return a Promise
 // object. Here a description of these methods:
 // * deleteAll() - this method _must_ exist. When called, it deletes all the
 //                 data owned by the cleaner.
+// * deleteByPrincipal() - this method is implemented only if the cleaner knows
+//                         how to delete data by nsIPrincipal. If not
+//                         implemented, deleteByHost will be used instead.
 // * deleteByHost() - this method is implemented only if the cleaner knows
 //                    how to delete data by host + originAttributes pattern. If
 //                    not implemented, deleteAll() will be used as fallback.
@@ -261,6 +269,125 @@ const AppCacheCleaner = {
   },
 };
 
+const QuotaCleaner = {
+  deleteByPrincipal(aPrincipal) {
+    // localStorage
+    Services.obs.notifyObservers(null, "browser:purge-domain-data",
+                                 aPrincipal.URI.host);
+
+    // ServiceWorkers: they must be removed before cleaning QuotaManager.
+    return ServiceWorkerCleanUp.removeFromPrincipal(aPrincipal)
+      .then(_ => /* exceptionThrown = */ false, _ => /* exceptionThrown = */ true)
+      .then(exceptionThrown => {
+        // QuotaManager
+        return new Promise((aResolve, aReject) => {
+          let req = Services.qms.clearStoragesForPrincipal(aPrincipal, null, false);
+          req.callback = () => {
+            if (exceptionThrown) {
+              aReject();
+            } else {
+              aResolve();
+            }
+          };
+        });
+      });
+  },
+
+  deleteByHost(aHost, aOriginAttributes) {
+    // localStorage
+    Services.obs.notifyObservers(null, "browser:purge-domain-data", aHost);
+
+    let exceptionThrown = false;
+
+    // ServiceWorkers: they must be removed before cleaning QuotaManager.
+    return Promise.all([
+      ServiceWorkerCleanUp.removeFromHost("http://" + aHost).catch(_ => { exceptionThrown = true; }),
+      ServiceWorkerCleanUp.removeFromHost("https://" + aHost).catch(_ => { exceptionThrown = true; }),
+    ]).then(() => {
+        // QuotaManager
+        // delete data from both HTTP and HTTPS sites
+        let httpURI = Services.io.newURI("http://" + aHost);
+        let httpsURI = Services.io.newURI("https://" + aHost);
+        let httpPrincipal = Services.scriptSecurityManager
+                                     .createCodebasePrincipal(httpURI, aOriginAttributes);
+        let httpsPrincipal = Services.scriptSecurityManager
+                                     .createCodebasePrincipal(httpsURI, aOriginAttributes);
+        return Promise.all([
+          new Promise(aResolve => {
+            let req = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, true);
+            req.callback = () => { aResolve(); };
+          }),
+          new Promise(aResolve => {
+            let req = Services.qms.clearStoragesForPrincipal(httpsPrincipal, null, true);
+            req.callback = () => { aResolve(); };
+          }),
+        ]).then(() => {
+          return exceptionThrown ? Promise.reject() : Promise.resolve();
+        });
+      });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    let principals = sas.getActiveOrigins(aFrom, aTo)
+                        .QueryInterface(Ci.nsIArray);
+
+    let promises = [];
+    for (let i = 0; i < principals.length; ++i) {
+      let principal = principals.queryElementAt(i, Ci.nsIPrincipal);
+
+      if (principal.URI.scheme != "http" &&
+          principal.URI.scheme != "https" &&
+          principal.URI.scheme != "file") {
+        continue;
+      }
+
+      promises.push(this.deleteByPrincipal(principal));
+    }
+
+    return Promise.all(promises);
+  },
+
+  deleteAll() {
+    // localStorage
+    Services.obs.notifyObservers(null, "extension:purge-localStorage");
+
+    // ServiceWorkers
+    return ServiceWorkerCleanUp.removeAll()
+      .then(_ => /* exceptionThrown = */ false, _ => /* exceptionThrown = */ true)
+      .then(exceptionThrown => {
+        // QuotaManager
+        return new Promise((aResolve, aReject) => {
+          Services.qms.getUsage(aRequest => {
+            if (aRequest.resultCode != Cr.NS_OK) {
+              // We are probably shutting down.
+              if (exceptionThrown) {
+                aReject();
+              } else {
+                aResolve();
+              }
+              return;
+            }
+
+            let promises = [];
+            for (let item of aRequest.result) {
+              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+              if (principal.URI.scheme == "http" ||
+                  principal.URI.scheme == "https" ||
+                  principal.URI.scheme == "file") {
+                promises.push(new Promise(aResolve => {
+                  let req = Services.qms.clearStoragesForPrincipal(principal, null, false);
+                  req.callback = () => { aResolve(); };
+                }));
+              }
+            }
+
+            Promise.all(promises).then(exceptionThrown ? aReject : aResolve);
+          });
+        });
+      });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -286,6 +413,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_APPCACHE,
    cleaner: AppCacheCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+   cleaner: QuotaCleaner, },
 ];
 
 this.ClearDataService = function() {};
@@ -322,13 +452,16 @@ ClearDataService.prototype = Object.freeze({
     }
 
     return this._deleteInternal(aFlags, aCallback, aCleaner => {
-      // Some of the 'Cleaners' do not support to delete by principal. Let's
-      // use deleteAll() as fallback.
+      if ("deleteByPrincipal" in aCleaner && aCleaner.deleteByPrincipal) {
+        return aCleaner.deleteByPrincipal(aPrincipal);
+      }
+      // Some of the 'Cleaners' do not support to delete by principal. Fallback
+      // is to delete by host.
       if (aCleaner.deleteByHost) {
         return aCleaner.deleteByHost(aPrincipal.URI.host,
                                      aPrincipal.originAttributes);
       }
-      // The user wants to delete data. Let's remove as much as we can.
+      // Next fallback is to use deleteAll(), but only if this was a user request.
       if (aIsUserRequest) {
         return aCleaner.deleteAll();
       }
