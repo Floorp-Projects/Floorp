@@ -95,6 +95,9 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public void onCrash(GeckoSession session) {
+            if (System.getenv("MOZ_CRASHREPORTER_SHUTDOWN") != null) {
+                sRuntime.shutdown();
+            }
         }
     };
 
@@ -109,6 +112,7 @@ public class TestRunnerActivity extends Activity {
 
         final GeckoSession session = new GeckoSession(settings);
         session.setNavigationDelegate(mNavigationDelegate);
+        session.setContentDelegate(mContentDelegate);
         return session;
     }
 
