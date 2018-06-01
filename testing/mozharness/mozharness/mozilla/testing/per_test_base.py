@@ -5,7 +5,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
-import argparse
 import math
 import os
 import posixpath
@@ -13,7 +12,6 @@ import re
 import sys
 import mozinfo
 from manifestparser import TestManifest
-from mozharness.base.script import PostScriptAction
 
 
 class SingleTestMixin(object):
@@ -63,7 +61,9 @@ class SingleTestMixin(object):
             if os.path.exists(path):
                 man = manifest.ReftestManifest()
                 man.load(path)
-                tests_by_path.update({os.path.relpath(t, self.reftest_test_dir): (suite, subsuite) for t in man.files})
+                tests_by_path.update({
+                    os.path.relpath(t, self.reftest_test_dir): (suite, subsuite) for t in man.files
+                })
                 self.info("Per-test run updated with manifest %s" % path)
 
         suite = 'jsreftest'
@@ -199,7 +199,7 @@ class SingleTestMixin(object):
 
         if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
-        elif self.config.get('gpu_required') == True:
+        elif self.config.get('gpu_required'):
             self._find_misc_tests(dirs, changed_files, gpu=True)
         else:
             self._find_misc_tests(dirs, changed_files)
