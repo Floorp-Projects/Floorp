@@ -285,11 +285,11 @@ public:
               JSExnType aExnType);
 
   already_AddRefed<GenericPromise>
-  MaybeClaimClient(const ClientInfo& aClientInfo,
+  MaybeClaimClient(nsIDocument* aDocument,
                    ServiceWorkerRegistrationInfo* aWorkerRegistration);
 
   already_AddRefed<GenericPromise>
-  MaybeClaimClient(const ClientInfo& aClientInfo,
+  MaybeClaimClient(nsIDocument* aDoc,
                    const ServiceWorkerDescriptor& aServiceWorker);
 
   void
