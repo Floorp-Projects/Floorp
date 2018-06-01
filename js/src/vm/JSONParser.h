@@ -124,11 +124,11 @@ class MOZ_STACK_CLASS JSONParserBase
       : v(other.v),
         cx(other.cx),
         errorHandling(other.errorHandling),
-        stack(mozilla::Move(other.stack)),
-        freeElements(mozilla::Move(other.freeElements)),
-        freeProperties(mozilla::Move(other.freeProperties))
+        stack(std::move(other.stack)),
+        freeElements(std::move(other.freeElements)),
+        freeProperties(std::move(other.freeProperties))
 #ifdef DEBUG
-      , lastToken(mozilla::Move(other.lastToken))
+      , lastToken(std::move(other.lastToken))
 #endif
     {}
 
@@ -214,7 +214,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 
     /* Allow move construction for use with Rooted. */
     JSONParser(JSONParser&& other)
-      : JSONParserBase(mozilla::Move(other)),
+      : JSONParserBase(std::move(other)),
         current(other.current),
         begin(other.begin),
         end(other.end)

@@ -138,12 +138,12 @@ class AstSig : public AstBase
         ret_(ExprType::Void)
     {}
     AstSig(AstValTypeVector&& args, ExprType ret)
-      : args_(Move(args)),
+      : args_(std::move(args)),
         ret_(ret)
     {}
     AstSig(AstName name, AstSig&& rhs)
       : name_(name),
-        args_(Move(rhs.args_)),
+        args_(std::move(rhs.args_)),
         ret_(rhs.ret_)
     {}
     const AstValTypeVector& args() const {
@@ -401,7 +401,7 @@ class AstBlock : public AstExpr
       : AstExpr(Kind, type),
         op_(op),
         name_(name),
-        exprs_(Move(exprs))
+        exprs_(std::move(exprs))
     {}
 
     Op op() const { return op_; }
@@ -442,7 +442,7 @@ class AstCall : public AstExpr
   public:
     static const AstExprKind Kind = AstExprKind::Call;
     AstCall(Op op, ExprType type, AstRef func, AstExprVector&& args)
-      : AstExpr(Kind, type), op_(op), func_(func), args_(Move(args))
+      : AstExpr(Kind, type), op_(op), func_(func), args_(std::move(args))
     {}
 
     Op op() const { return op_; }
@@ -459,7 +459,7 @@ class AstCallIndirect : public AstExpr
   public:
     static const AstExprKind Kind = AstExprKind::CallIndirect;
     AstCallIndirect(AstRef sig, ExprType type, AstExprVector&& args, AstExpr* index)
-      : AstExpr(Kind, type), sig_(sig), args_(Move(args)), index_(index)
+      : AstExpr(Kind, type), sig_(sig), args_(std::move(args)), index_(index)
     {}
     AstRef& sig() { return sig_; }
     const AstExprVector& args() const { return args_; }
@@ -493,8 +493,8 @@ class AstIf : public AstExpr
       : AstExpr(Kind, type),
         cond_(cond),
         name_(name),
-        thenExprs_(Move(thenExprs)),
-        elseExprs_(Move(elseExprs))
+        thenExprs_(std::move(thenExprs)),
+        elseExprs_(std::move(elseExprs))
     {}
 
     AstExpr& cond() const { return *cond_; }
@@ -759,7 +759,7 @@ class AstBranchTable : public AstExpr
       : AstExpr(Kind, ExprType::Void),
         index_(index),
         default_(def),
-        table_(Move(table)),
+        table_(std::move(table)),
         value_(maybeValue)
     {}
     AstExpr& index() const { return index_; }
@@ -782,9 +782,9 @@ class AstFunc : public AstNode
                 AstNameVector&& locals, AstExprVector&& body)
       : name_(name),
         sig_(sig),
-        vars_(Move(vars)),
-        localNames_(Move(locals)),
-        body_(Move(body)),
+        vars_(std::move(vars)),
+        localNames_(std::move(locals)),
+        body_(std::move(body)),
         endOffset_(AstNodeUnknownOffset)
     {}
     AstRef& sig() { return sig_; }
@@ -889,7 +889,7 @@ class AstDataSegment : public AstNode
 
   public:
     AstDataSegment(AstExpr* offset, AstNameVector&& fragments)
-      : offset_(offset), fragments_(Move(fragments))
+      : offset_(offset), fragments_(std::move(fragments))
     {}
 
     AstExpr* offset() const { return offset_; }
@@ -905,7 +905,7 @@ class AstElemSegment : public AstNode
 
   public:
     AstElemSegment(AstExpr* offset, AstRefVector&& elems)
-      : offset_(offset), elems_(Move(elems))
+      : offset_(offset), elems_(std::move(elems))
     {}
 
     AstExpr* offset() const { return offset_; }
@@ -1039,7 +1039,7 @@ class AstModule : public AstNode
             return true;
         }
         *sigIndex = sigs_.length();
-        auto* lifoSig = new (lifo_) AstSig(AstName(), Move(sig));
+        auto* lifoSig = new (lifo_) AstSig(AstName(), std::move(sig));
         return lifoSig &&
                sigs_.append(lifoSig) &&
                sigMap_.add(p, sigs_.back(), *sigIndex);
@@ -1249,7 +1249,7 @@ class AstFirst : public AstExpr
     static const AstExprKind Kind = AstExprKind::First;
     explicit AstFirst(AstExprVector&& exprs)
       : AstExpr(Kind, ExprType::Limit),
-        exprs_(Move(exprs))
+        exprs_(std::move(exprs))
     {}
 
     AstExprVector& exprs() { return exprs_; }

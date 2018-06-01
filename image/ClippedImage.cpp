@@ -284,7 +284,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
   if (!ShouldClip()) {
     RefPtr<SourceSurface> surface = InnerImage()->GetFrame(aWhichFrame, aFlags);
     return MakePair(surface ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_READY,
-                    Move(surface));
+                    std::move(surface));
   }
 
   float frameToDraw = InnerImage()->GetFrameIndex(aWhichFrame);
@@ -326,7 +326,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
 
   MOZ_ASSERT(mCachedSurface, "Should have a cached surface now");
   RefPtr<SourceSurface> surface = mCachedSurface->Surface();
-  return MakePair(mCachedSurface->GetDrawResult(), Move(surface));
+  return MakePair(mCachedSurface->GetDrawResult(), std::move(surface));
 }
 
 NS_IMETHODIMP_(bool)

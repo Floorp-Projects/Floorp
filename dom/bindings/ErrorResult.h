@@ -154,7 +154,7 @@ public:
     // (nothing).
     : TErrorResult()
   {
-    *this = Move(aRHS);
+    *this = std::move(aRHS);
   }
   TErrorResult& operator=(TErrorResult&& aRHS);
 
@@ -607,7 +607,7 @@ public:
   {}
 
   ErrorResult(ErrorResult&& aRHS)
-    : BaseErrorResult(Move(aRHS))
+    : BaseErrorResult(std::move(aRHS))
   {}
 
   explicit ErrorResult(nsresult aRv)
@@ -621,7 +621,7 @@ public:
 
   ErrorResult& operator=(ErrorResult&& aRHS)
   {
-    BaseErrorResult::operator=(Move(aRHS));
+    BaseErrorResult::operator=(std::move(aRHS));
     return *this;
   }
 
@@ -704,7 +704,7 @@ public:
   }
 
   CopyableErrorResult(CopyableErrorResult&& aRHS)
-    : BaseErrorResult(Move(aRHS))
+    : BaseErrorResult(std::move(aRHS))
   {}
 
   explicit CopyableErrorResult(nsresult aRv)
@@ -718,7 +718,7 @@ public:
 
   CopyableErrorResult& operator=(CopyableErrorResult&& aRHS)
   {
-    BaseErrorResult::operator=(Move(aRHS));
+    BaseErrorResult::operator=(std::move(aRHS));
     return *this;
   }
 

@@ -3263,7 +3263,7 @@ template<class T, class S>
 inline RefPtr<T>
 StrongOrRawPtr(already_AddRefed<S>&& aPtr)
 {
-  return Move(aPtr);
+  return std::move(aPtr);
 }
 
 template<class T,

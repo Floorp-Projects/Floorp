@@ -30,8 +30,6 @@
 using namespace mozilla::tasktracer;
 #endif
 
-using mozilla::Move;
-
 // Undo the damage done by mozzconf.h
 #undef compress
 
@@ -192,7 +190,7 @@ public:
     {
         MOZ_RELEASE_ASSERT(&aOther != this);
         this->~InterruptFrame();
-        new (this) InterruptFrame(Move(aOther));
+        new (this) InterruptFrame(std::move(aOther));
         return *this;
     }
 
@@ -418,7 +416,7 @@ public:
         MOZ_RELEASE_ASSERT(aMessage.transaction_id() == mTransaction);
         MOZ_RELEASE_ASSERT(!mReply);
         IPC_LOG("Reply received on worker thread: seqno=%d", mSeqno);
-        mReply = MakeUnique<IPC::Message>(Move(aMessage));
+        mReply = MakeUnique<IPC::Message>(std::move(aMessage));
         MOZ_RELEASE_ASSERT(IsComplete());
     }
 
@@ -428,7 +426,7 @@ public:
         while (cur) {
             MOZ_RELEASE_ASSERT(cur->mActive);
             if (aMessage.seqno() == cur->mSeqno) {
-                cur->ReceivedReply(Move(aMessage));
+                cur->ReceivedReply(std::move(aMessage));
                 break;
             }
             cur = cur->mNext;
@@ -458,7 +456,7 @@ public:
     }
 
     UniquePtr<IPC::Message> GetReply() {
-        return Move(mReply);
+        return std::move(mReply);
     }
 
 private:
@@ -938,7 +936,7 @@ MessageChannel::SendMessageToLink(Message* aMsg)
 {
     if (mIsPostponingSends) {
         UniquePtr<Message> msg(aMsg);
-        mPostponedSends.push_back(Move(msg));
+        mPostponedSends.push_back(std::move(msg));
         return;
     }
     mLink->SendMessage(aMsg);
@@ -980,7 +978,7 @@ MessageChannel::PopCallback(const Message& aMsg)
 {
     auto iter = mPendingResponses.find(aMsg.seqno());
     if (iter != mPendingResponses.end()) {
-        UniquePtr<MessageChannel::UntypedCallbackHolder> ret = Move(iter->second);
+        UniquePtr<MessageChannel::UntypedCallbackHolder> ret = std::move(iter->second);
         mPendingResponses.erase(iter);
         gUnresolvedResponses--;
         return ret;
@@ -1182,7 +1180,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
         MOZ_RELEASE_ASSERT(AwaitingSyncReply());
         MOZ_RELEASE_ASSERT(!mTimedOutMessageSeqno);
 
-        mTransactionStack->HandleReply(Move(aMsg));
+        mTransactionStack->HandleReply(std::move(aMsg));
         NotifyWorkerThread();
         return;
     }
@@ -1202,7 +1200,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
             // Replace it with the newer message.
             MOZ_RELEASE_ASSERT(mPending.getLast()->Msg().compress_type() ==
                                IPC::Message::COMPRESSION_ENABLED);
-            mPending.getLast()->Msg() = Move(aMsg);
+            mPending.getLast()->Msg() = std::move(aMsg);
 
             reuseTask = true;
         }
@@ -1269,7 +1267,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
 #ifdef MOZ_TASK_TRACER
     aMsg.TaskTracerDispatch();
 #endif
-    RefPtr<MessageTask> task = new MessageTask(this, Move(aMsg));
+    RefPtr<MessageTask> task = new MessageTask(this, std::move(aMsg));
     mPending.insertBack(task);
 
     if (!alwaysDeferred) {
@@ -1340,7 +1338,7 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
             if (!defer) {
                 MOZ_ASSERT(!IsAlwaysDeferred(msg));
 
-                if (!toProcess.append(Move(msg)))
+                if (!toProcess.append(std::move(msg)))
                     MOZ_CRASH();
 
                 mMaybeDeferredPendingCount--;
@@ -1359,7 +1357,7 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
         // loop around to check for more afterwards.
 
         for (auto it = toProcess.begin(); it != toProcess.end(); it++) {
-            ProcessPendingRequest(Move(*it));
+            ProcessPendingRequest(std::move(*it));
         }
     }
 
@@ -1564,7 +1562,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     MOZ_RELEASE_ASSERT(reply->type() == replyType, "wrong reply type");
     MOZ_RELEASE_ASSERT(reply->is_sync());
 
-    *aReply = Move(*reply);
+    *aReply = std::move(*reply);
     if (aReply->size() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_REPLY_SIZE,
                               nsDependentCString(msgName), aReply->size());
@@ -1666,11 +1664,11 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         if ((it = mOutOfTurnReplies.find(mInterruptStack.top().seqno()))
             != mOutOfTurnReplies.end())
         {
-            recvd = Move(it->second);
+            recvd = std::move(it->second);
             mOutOfTurnReplies.erase(it);
         } else if (!mPending.isEmpty()) {
             RefPtr<MessageTask> task = mPending.popFirst();
-            recvd = Move(task->Msg());
+            recvd = std::move(task->Msg());
             if (!IsAlwaysDeferred(recvd)) {
                 mMaybeDeferredPendingCount--;
             }
@@ -1685,7 +1683,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
         // If the message is not Interrupt, we can dispatch it as normal.
         if (!recvd.is_interrupt()) {
-            DispatchMessage(Move(recvd));
+            DispatchMessage(std::move(recvd));
             if (!Connected()) {
                 ReportConnectionError("MessageChannel::DispatchMessage");
                 return false;
@@ -1708,7 +1706,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
                 if ((mSide == ChildSide && recvd.seqno() > outcall.seqno()) ||
                     (mSide != ChildSide && recvd.seqno() < outcall.seqno()))
                 {
-                    mOutOfTurnReplies[recvd.seqno()] = Move(recvd);
+                    mOutOfTurnReplies[recvd.seqno()] = std::move(recvd);
                     continue;
                 }
 
@@ -1724,7 +1722,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
             bool is_reply_error = recvd.is_reply_error();
             if (!is_reply_error) {
-                *aReply = Move(recvd);
+                *aReply = std::move(recvd);
             }
 
             // If we have no more pending out calls waiting on replies, then
@@ -1746,7 +1744,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
             MonitorAutoUnlock unlock(*mMonitor);
 
             CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
-            DispatchInterruptMessage(Move(recvd), stackDepth);
+            DispatchInterruptMessage(std::move(recvd), stackDepth);
         }
         if (!Connected()) {
             ReportConnectionError("MessageChannel::DispatchInterruptMessage");
@@ -1810,7 +1808,7 @@ MessageChannel::ProcessPendingRequest(Message &&aUrgent)
 
     IPC_LOG("Process pending: seqno=%d, xid=%d", aUrgent.seqno(), aUrgent.transaction_id());
 
-    DispatchMessage(Move(aUrgent));
+    DispatchMessage(std::move(aUrgent));
     if (!Connected()) {
         ReportConnectionError("MessageChannel::ProcessPendingRequest");
         return false;
@@ -1905,11 +1903,11 @@ MessageChannel::RunMessage(MessageTask& aTask)
     if (IsOnCxxStack() && msg.is_interrupt() && msg.is_reply()) {
         // We probably just received a reply in a nested loop for an
         // Interrupt call sent before entering that loop.
-        mOutOfTurnReplies[msg.seqno()] = Move(msg);
+        mOutOfTurnReplies[msg.seqno()] = std::move(msg);
         return;
     }
 
-    DispatchMessage(Move(msg));
+    DispatchMessage(std::move(msg));
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable, nsIRunnablePriority)
@@ -1917,7 +1915,7 @@ NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable, nsI
 MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel, Message&& aMessage)
   : CancelableRunnable(aMessage.name())
   , mChannel(aChannel)
-  , mMessage(Move(aMessage))
+  , mMessage(std::move(aMessage))
   , mScheduled(false)
 {
 }
@@ -2061,7 +2059,7 @@ MessageChannel::DispatchMessage(Message &&aMsg)
             if (aMsg.is_sync())
                 DispatchSyncMessage(aMsg, *getter_Transfers(reply));
             else if (aMsg.is_interrupt())
-                DispatchInterruptMessage(Move(aMsg), 0);
+                DispatchInterruptMessage(std::move(aMsg), 0);
             else
                 DispatchAsyncMessage(aMsg);
 
@@ -2150,7 +2148,7 @@ MessageChannel::DispatchInterruptMessage(Message&& aMsg, size_t stackDepth)
         // We now know the other side's stack has one more frame
         // than we thought.
         ++mRemoteStackDepthGuess; // decremented in MaybeProcessDeferred()
-        mDeferred.push(Move(aMsg));
+        mDeferred.push(std::move(aMsg));
         return;
     }
 
@@ -2249,7 +2247,7 @@ MessageChannel::MaybeUndeferIncall()
     }
 
     // maybe time to process this message
-    Message call(Move(deferred));
+    Message call(std::move(deferred));
     mDeferred.pop();
 
     // fix up fudge factor we added to account for race
@@ -2257,7 +2255,7 @@ MessageChannel::MaybeUndeferIncall()
     --mRemoteStackDepthGuess;
 
     MOZ_RELEASE_ASSERT(call.nested_level() == IPC::Message::NOT_NESTED);
-    RefPtr<MessageTask> task = new MessageTask(this, Move(call));
+    RefPtr<MessageTask> task = new MessageTask(this, std::move(call));
     mPending.insertBack(task);
     MOZ_ASSERT(IsAlwaysDeferred(task->Msg()));
     task->Post();
@@ -2704,7 +2702,7 @@ MessageChannel::Close()
 
         // Instead just use a ScopeExit to manage the unlock.
         RefPtr<RefCountedMonitor> monitor(mMonitor);
-        auto exit = MakeScopeExit([m = Move(monitor)] () {
+        auto exit = MakeScopeExit([m = std::move(monitor)] () {
           m->Unlock();
         });
 
@@ -2792,7 +2790,7 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
     printf_stderr("  out-of-turn Interrupt replies stack size: %zu\n",
                   mOutOfTurnReplies.size());
 
-    MessageQueue pending = Move(mPending);
+    MessageQueue pending = std::move(mPending);
     while (!pending.isEmpty()) {
         printf_stderr("    [ %s%s ]\n",
                       pending.getFirst()->Msg().is_interrupt() ? "intr" :
@@ -2869,9 +2867,9 @@ MessageChannel::RepostAllMessages()
     // those messages since the messages after them in mPending would then be
     // before them in the event queue. So instead we cancel everything and
     // re-post all messages in the correct order.
-    MessageQueue queue = Move(mPending);
+    MessageQueue queue = std::move(mPending);
     while (RefPtr<MessageTask> task = queue.popFirst()) {
-        RefPtr<MessageTask> newTask = new MessageTask(this, Move(task->Msg()));
+        RefPtr<MessageTask> newTask = new MessageTask(this, std::move(task->Msg()));
         mPending.insertBack(newTask);
         newTask->Post();
     }

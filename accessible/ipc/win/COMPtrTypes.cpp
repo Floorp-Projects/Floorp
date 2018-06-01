@@ -49,14 +49,14 @@ CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap)
   }
 
   ProxyUniquePtr<IAccessible> intercepted;
-  HRESULT hr = MainThreadHandoff::WrapInterface(Move(iaToProxy), payload,
+  HRESULT hr = MainThreadHandoff::WrapInterface(std::move(iaToProxy), payload,
                                                 (IAccessible**) mscom::getter_AddRefs(intercepted));
   MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return nullptr;
   }
 
-  return IAccessibleHolder(Move(intercepted));
+  return IAccessibleHolder(std::move(intercepted));
 }
 
 IHandlerControlHolder
@@ -69,7 +69,7 @@ CreateHolderFromHandlerControl(mscom::ProxyUniquePtr<IHandlerControl> aHandlerCo
     return nullptr;
   }
 
-  return IHandlerControlHolder(Move(aHandlerControl));
+  return IHandlerControlHolder(std::move(aHandlerControl));
 }
 
 } // namespace a11y

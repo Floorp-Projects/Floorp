@@ -408,7 +408,7 @@ class ScriptSource
         SharedImmutableTwoByteString string;
 
         explicit Uncompressed(SharedImmutableTwoByteString&& str)
-          : string(mozilla::Move(str))
+          : string(std::move(str))
         { }
     };
 
@@ -418,7 +418,7 @@ class ScriptSource
         size_t uncompressedLength;
 
         Compressed(SharedImmutableString&& raw, size_t uncompressedLength)
-          : raw(mozilla::Move(raw))
+          : raw(std::move(raw))
           , uncompressedLength(uncompressedLength)
         { }
     };

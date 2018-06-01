@@ -2249,10 +2249,10 @@ public:
   MOZ_IMPLICIT BaseIntRegion (const Rect& aRect) : mImpl (ToRect(aRect)) {}
   explicit BaseIntRegion (mozilla::gfx::ArrayView<pixman_box32_t> aRects) : mImpl (aRects) {}
   BaseIntRegion (const BaseIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
-  BaseIntRegion (BaseIntRegion&& aRegion) : mImpl (mozilla::Move(aRegion.mImpl)) {}
+  BaseIntRegion (BaseIntRegion&& aRegion) : mImpl (std::move(aRegion.mImpl)) {}
   Derived& operator = (const Rect& aRect) { mImpl = ToRect (aRect); return This(); }
   Derived& operator = (const Derived& aRegion) { mImpl = aRegion.mImpl; return This(); }
-  Derived& operator = (Derived&& aRegion) { mImpl = mozilla::Move(aRegion.mImpl); return This(); }
+  Derived& operator = (Derived&& aRegion) { mImpl = std::move(aRegion.mImpl); return This(); }
 
   bool operator==(const Derived& aRgn) const
   {
@@ -2595,7 +2595,7 @@ public:
   MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect) : Super(aRect) {}
   IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
   explicit IntRegionTyped(mozilla::gfx::ArrayView<pixman_box32_t> aRects) : Super(aRects) {}
-  IntRegionTyped(IntRegionTyped&& aRegion) : Super(mozilla::Move(aRegion)) {}
+  IntRegionTyped(IntRegionTyped&& aRegion) : Super(std::move(aRegion)) {}
 
   // Assignment operators need to be forwarded as well, otherwise the compiler
   // will declare deleted ones.
@@ -2605,7 +2605,7 @@ public:
   }
   IntRegionTyped& operator=(IntRegionTyped&& aRegion)
   {
-    return Super::operator=(mozilla::Move(aRegion));
+    return Super::operator=(std::move(aRegion));
   }
 
   static IntRegionTyped FromUnknownRegion(const IntRegion& aRegion)

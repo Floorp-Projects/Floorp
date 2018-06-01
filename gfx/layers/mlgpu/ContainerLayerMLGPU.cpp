@@ -54,12 +54,12 @@ ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
 
     Maybe<IntRect> bounds = ComputeIntermediateSurfaceBounds();
     if (bounds) {
-      LayerIntRegion region = Move(GetShadowVisibleRegion());
+      LayerIntRegion region = std::move(GetShadowVisibleRegion());
       region.AndWith(LayerIntRect::FromUnknownRect(bounds.value()));
       AL_LOG("  computed bounds: %s\n", Stringify(bounds.value()).c_str());
       AL_LOG("  new visible: %s\n", Stringify(region).c_str());
 
-      SetShadowVisibleRegion(Move(region));
+      SetShadowVisibleRegion(std::move(region));
     }
   }
   mChildrenChanged = false;

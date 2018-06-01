@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 
-using mozilla::Move;
 using mozilla::NonDereferenceable;
 
 #define CHECK MOZ_RELEASE_ASSERT
@@ -47,7 +46,7 @@ TestNonDereferenceableSimple()
   CHECK(nd3.value() == reinterpret_cast<uintptr_t>(&i));
 
   // Move-assignment.
-  nd3 = Move(nd1);
+  nd3 = std::move(nd1);
   CHECK(nd3.value() == reinterpret_cast<uintptr_t>(&i2));
   // Note: Not testing nd1's value because we don't want to assume what state
   // it is left in after move. But at least it should be reusable:

@@ -257,9 +257,9 @@ AppleVTDecoder::ProcessDrain()
   MonitorAutoLock mon(mMonitor);
   DecodedData samples;
   while (!mReorderQueue.IsEmpty()) {
-    samples.AppendElement(Move(mReorderQueue.Pop()));
+    samples.AppendElement(std::move(mReorderQueue.Pop()));
   }
-  return DecodePromise::CreateAndResolve(Move(samples), __func__);
+  return DecodePromise::CreateAndResolve(std::move(samples), __func__);
 }
 
 AppleVTDecoder::AppleFrameRef*
@@ -462,7 +462,7 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   while (mReorderQueue.Length() > mMaxRefFrames) {
     results.AppendElement(mReorderQueue.Pop());
   }
-  mPromise.Resolve(Move(results), __func__);
+  mPromise.Resolve(std::move(results), __func__);
 
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));

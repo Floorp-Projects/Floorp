@@ -199,7 +199,7 @@ void
 RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
   (MessageLoop::current() ? MessageLoop::current() : mCompositorThread)->
-    PostDelayedTask(Move(aTask), aDelayMs);
+    PostDelayedTask(std::move(aTask), aDelayMs);
 }
 
 bool
@@ -211,7 +211,7 @@ RemoteContentController::IsRepaintThread()
 void
 RemoteContentController::DispatchToRepaintThread(already_AddRefed<Runnable> aTask)
 {
-  mCompositorThread->PostTask(Move(aTask));
+  mCompositorThread->PostTask(std::move(aTask));
 }
 
 void

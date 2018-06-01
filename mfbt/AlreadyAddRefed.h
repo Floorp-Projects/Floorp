@@ -34,7 +34,7 @@ struct unused_t;
  *   off-main-thread code)
  * * The ref pointer type you're using doesn't support move construction
  *
- * Otherwise, use Move(RefPtr/nsCOMPtr/etc).
+ * Otherwise, use std::move(RefPtr/nsCOMPtr/etc).
  */
 template<class T>
 struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed

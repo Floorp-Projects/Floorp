@@ -44,7 +44,7 @@ InputStreamLengthWrapper::InputStreamLengthWrapper(already_AddRefed<nsIInputStre
 {
   MOZ_ASSERT(mLength >= 0);
 
-  nsCOMPtr<nsIInputStream> inputStream = mozilla::Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   SetSourceStream(inputStream.forget());
 }
 
@@ -65,7 +65,7 @@ InputStreamLengthWrapper::SetSourceStream(already_AddRefed<nsIInputStream> aInpu
 {
   MOZ_ASSERT(!mInputStream);
 
-  mInputStream = mozilla::Move(aInputStream);
+  mInputStream = std::move(aInputStream);
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
     do_QueryInterface(mInputStream);

@@ -2000,14 +2000,14 @@ WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
       CSFLogDebug(LOGTAG, "queuing packet: seq# %u, Len %d ",
                   (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
       if (queue) {
-        mQueuedPackets.AppendElement(Move(packet));
+        mQueuedPackets.AppendElement(std::move(packet));
         return kMediaConduitNoError;
       }
       // a new switch needs to be done
       // any queued packets are from a previous switch that hasn't completed
       // yet; drop them and only process the latest SSRC
       mQueuedPackets.Clear();
-      mQueuedPackets.AppendElement(Move(packet));
+      mQueuedPackets.AppendElement(std::move(packet));
 
       CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
                   mRecvSSRC, ssrc);

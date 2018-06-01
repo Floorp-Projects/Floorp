@@ -126,7 +126,7 @@ public:
 
     auto result = Some(*reinterpret_cast<uintptr_t*>(mLocalBase + mOffset));
     mOffset += sizeof(uintptr_t);
-    return Move(result);
+    return std::move(result);
   }
 
   Maybe<uintptr_t> ReadEncodedPointer()

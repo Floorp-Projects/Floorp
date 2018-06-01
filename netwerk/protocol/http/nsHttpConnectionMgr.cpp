@@ -1122,7 +1122,7 @@ nsHttpConnectionMgr::PreparePendingQForDispatching(
 
     // Append elements in |remainingPendingQ| to |pendingQ|. The order in
     // |pendingQ| is like: [focusedWindowTrans...nonFocusedWindowTrans].
-    pendingQ.AppendElements(Move(remainingPendingQ));
+    pendingQ.AppendElements(std::move(remainingPendingQ));
 }
 
 bool

@@ -95,7 +95,7 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
       spawnThread = true;
     }
 
-    mEvents.PutEvent(Move(aEvent), EventPriority::Normal, lock);
+    mEvents.PutEvent(std::move(aEvent), EventPriority::Normal, lock);
     mEventsAvailable.Notify();
     stackSize = mStackSize;
   }
@@ -268,7 +268,7 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
     }
 
     RefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(thread.forget(), Move(aEvent));
+      new nsThreadSyncDispatch(thread.forget(), std::move(aEvent));
     PutEvent(wrapper);
 
     SpinEventLoopUntil([&, wrapper]() -> bool {
@@ -277,7 +277,7 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
   } else {
     NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
                  aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");
-    PutEvent(Move(aEvent), aFlags);
+    PutEvent(std::move(aEvent), aFlags);
   }
   return NS_OK;
 }

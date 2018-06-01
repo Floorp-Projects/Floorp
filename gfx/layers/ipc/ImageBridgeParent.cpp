@@ -105,7 +105,7 @@ ImageBridgeParent::CreateForGPUProcess(Endpoint<PImageBridgeParent>&& aEndpoint)
     "layers::ImageBridgeParent::Bind",
     parent,
     &ImageBridgeParent::Bind,
-    Move(aEndpoint)));
+    std::move(aEndpoint)));
 
   sImageBridgeParentSingleton = parent;
   return true;
@@ -224,7 +224,7 @@ ImageBridgeParent::CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint)
     "layers::ImageBridgeParent::Bind",
     bridge,
     &ImageBridgeParent::Bind,
-    Move(aEndpoint)));
+    std::move(aEndpoint)));
 
   return true;
 }

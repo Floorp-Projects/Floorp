@@ -2764,7 +2764,7 @@ nsGenericHTMLFormElementWithState::GetPrimaryPresState()
   if (!result) {
     UniquePtr<PresState> newState = NewPresState();
     result = newState.get();
-    history->AddState(mStateKey, Move(newState));
+    history->AddState(mStateKey, std::move(newState));
   }
 
   return result;

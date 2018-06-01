@@ -82,7 +82,7 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
 
         block.setStopPc(blocks[i]->stopPc());
         block.setId(i);
-        blocks_.infallibleAppend(mozilla::Move(block));
+        blocks_.infallibleAppend(std::move(block));
     }
 
     for (size_t i = 0; i < blocks.length(); i++) {

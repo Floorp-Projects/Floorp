@@ -2149,7 +2149,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
         if (!table || !table->init())
             return nullptr;
 
-        realm.lazyArrayBuffers = Move(table);
+        realm.lazyArrayBuffers = std::move(table);
     }
 
     ObjectWeakMap* table = realm.lazyArrayBuffers.get();

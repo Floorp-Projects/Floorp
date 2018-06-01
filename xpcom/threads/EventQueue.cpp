@@ -19,7 +19,7 @@ EventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                      const MutexAutoLock& aProofOfLock)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
-  mQueue.Push(Move(event));
+  mQueue.Push(std::move(event));
 }
 
 already_AddRefed<nsIRunnable>

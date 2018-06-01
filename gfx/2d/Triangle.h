@@ -53,7 +53,7 @@ struct TexturedTriangleTyped : public TriangleTyped<Units, F>
     : TriangleTyped<Units, F>(aTriangle) {}
 
   explicit TexturedTriangleTyped(TriangleTyped<Units, F>&& aTriangle)
-    : TriangleTyped<Units, F>(Move(aTriangle)) {}
+    : TriangleTyped<Units, F>(std::move(aTriangle)) {}
 
   TriangleTyped<Units, F> textureCoords;
 };

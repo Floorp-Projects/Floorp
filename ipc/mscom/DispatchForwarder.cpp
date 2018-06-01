@@ -35,7 +35,7 @@ DispatchForwarder::DispatchForwarder(IInterceptor* aInterceptor,
                                      STAUniquePtr<IDispatch>& aTarget)
   : mRefCnt(1)
   , mInterceptor(aInterceptor)
-  , mTarget(Move(aTarget))
+  , mTarget(std::move(aTarget))
 {
 }
 

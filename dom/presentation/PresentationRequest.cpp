@@ -109,14 +109,14 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<PresentationRequest> request =
-    new PresentationRequest(window, Move(urls));
+    new PresentationRequest(window, std::move(urls));
   return NS_WARN_IF(!request->Init()) ? nullptr : request.forget();
 }
 
 PresentationRequest::PresentationRequest(nsPIDOMWindowInner* aWindow,
                                          nsTArray<nsString>&& aUrls)
   : DOMEventTargetHelper(aWindow)
-  , mUrls(Move(aUrls))
+  , mUrls(std::move(aUrls))
 {
 }
 

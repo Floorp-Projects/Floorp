@@ -1569,7 +1569,7 @@ MediaFormatReader::AsyncReadMetadata()
     // We are returning from dormant.
     MetadataHolder metadata;
     metadata.mInfo = MakeUnique<MediaInfo>(mInfo);
-    return MetadataPromise::CreateAndResolve(Move(metadata), __func__);
+    return MetadataPromise::CreateAndResolve(std::move(metadata), __func__);
   }
 
   RefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
@@ -1630,7 +1630,7 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
       for (const MetadataTag& tag : videoInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
-      mVideo.mOriginalInfo = Move(videoInfo);
+      mVideo.mOriginalInfo = std::move(videoInfo);
       mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
     } else {
       mVideo.mTrackDemuxer->BreakCycles();
@@ -1660,7 +1660,7 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
       for (const MetadataTag& tag : audioInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
-      mAudio.mOriginalInfo = Move(audioInfo);
+      mAudio.mOriginalInfo = std::move(audioInfo);
       mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
     } else {
       mAudio.mTrackDemuxer->BreakCycles();
@@ -1695,7 +1695,7 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
     return;
   }
 
-  mTags = Move(tags);
+  mTags = std::move(tags);
   mInitDone = true;
 
   // Try to get the start time.
@@ -1742,14 +1742,14 @@ MediaFormatReader::MaybeResolveMetadataPromise()
 
   MetadataHolder metadata;
   metadata.mInfo = MakeUnique<MediaInfo>(mInfo);
-  metadata.mTags = mTags->Count() ? Move(mTags) : nullptr;
+  metadata.mTags = mTags->Count() ? std::move(mTags) : nullptr;
 
   // We now have all the informations required to calculate the initial buffered
   // range.
   mHasStartTime = true;
   UpdateBuffered();
 
-  mMetadataPromise.Resolve(Move(metadata), __func__);
+  mMetadataPromise.Resolve(std::move(metadata), __func__);
 }
 
 bool
@@ -2450,7 +2450,7 @@ MediaFormatReader::HandleDemuxedSamples(
 
     if (sample->mKeyframe) {
       if (samples.Length()) {
-        decoder.mQueuedSamples = Move(samples);
+        decoder.mQueuedSamples = std::move(samples);
       }
     } else {
       auto time = TimeInterval(sample->mTime, sample->GetEndTime());

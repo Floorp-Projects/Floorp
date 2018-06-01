@@ -466,7 +466,7 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
   memcpy(data.get(), aFromSegment, aCount);
   cacheStream->OwnerThread()->Dispatch(NS_NewRunnableFunction(
     "MediaCacheStream::NotifyDataReceived",
-    [ self, loadID, data = Move(data), aCount ]() {
+    [ self, loadID, data = std::move(data), aCount ]() {
       self->mCacheStream.NotifyDataReceived(loadID, aCount, data.get());
     }));
 

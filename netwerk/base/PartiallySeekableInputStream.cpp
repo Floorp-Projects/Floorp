@@ -36,7 +36,7 @@ NS_INTERFACE_MAP_END
 
 PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aInputStream,
                                                            uint64_t aBufferSize)
-  : mInputStream(Move(aInputStream))
+  : mInputStream(std::move(aInputStream))
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
@@ -52,7 +52,7 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsII
 
 PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aClonedBaseStream,
                                                            PartiallySeekableInputStream* aClonedFrom)
-  : mInputStream(Move(aClonedBaseStream))
+  : mInputStream(std::move(aClonedBaseStream))
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)

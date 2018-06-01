@@ -49,7 +49,7 @@ private:
   {
   public:
     MaybeVariant() : mValue(InvalidType()) {}
-    MaybeVariant(MaybeVariant&& o) : mValue(Move(o.mValue)) {}
+    MaybeVariant(MaybeVariant&& o) : mValue(std::move(o.mValue)) {}
 
     template <typename Param> void Set(const Param& aParam)
     {

@@ -70,10 +70,10 @@ class CacheMap final
 
         Entry(std::vector<const CacheMapInvalidator*>&& invalidators, CacheMap& parent,
               KeyT&& key, ValueT&& value)
-            : detail::CacheMapUntypedEntry(Move(invalidators))
+            : detail::CacheMapUntypedEntry(std::move(invalidators))
             , mParent(parent)
-            , mKey(Move(key))
-            , mValue(Move(value))
+            , mKey(std::move(key))
+            , mValue(std::move(value))
         { }
 
         void Invalidate() const override {
@@ -93,16 +93,16 @@ public:
     const ValueT* Insert(KeyT&& key, ValueT&& value,
                          std::vector<const CacheMapInvalidator*>&& invalidators)
     {
-        UniquePtr<const Entry> entry( new Entry(Move(invalidators), *this, Move(key),
-                                                Move(value)) );
+        UniquePtr<const Entry> entry( new Entry(std::move(invalidators), *this, std::move(key),
+                                                std::move(value)) );
 
         typename MapT::value_type insertable{
             &entry->mKey,
             nullptr
         };
-        insertable.second = Move(entry);
+        insertable.second = std::move(entry);
 
-        const auto res = mMap.insert(Move(insertable));
+        const auto res = mMap.insert(std::move(insertable));
         const auto& didInsert = res.second;
         MOZ_ALWAYS_TRUE( didInsert );
 

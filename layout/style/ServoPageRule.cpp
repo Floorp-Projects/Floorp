@@ -19,7 +19,7 @@ namespace mozilla {
 
 ServoPageRuleDeclaration::ServoPageRuleDeclaration(
   already_AddRefed<RawServoDeclarationBlock> aDecls)
-  : mDecls(new DeclarationBlock(Move(aDecls)))
+  : mDecls(new DeclarationBlock(std::move(aDecls)))
 {
 }
 
@@ -98,7 +98,7 @@ ServoPageRuleDeclaration::GetParsingEnvironment(
 ServoPageRule::ServoPageRule(RefPtr<RawServoPageRule> aRawRule,
                              uint32_t aLine, uint32_t aColumn)
   : CSSPageRule(aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
   , mDecls(Servo_PageRule_GetStyle(mRawRule).Consume())
 {
 }

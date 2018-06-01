@@ -97,7 +97,7 @@ public:
     explicit CheckResult(Reason aReason,
                          MediaResult aResult = MediaResult(NS_OK))
       : mReason(aReason),
-        mMediaResult(mozilla::Move(aResult))
+        mMediaResult(std::move(aResult))
     {
     }
     CheckResult(const CheckResult& aOther) = default;

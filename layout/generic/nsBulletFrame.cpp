@@ -144,7 +144,7 @@ nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
       DeregisterAndCancelImageRequest();
 
       // Register the new request.
-      mImageRequest = Move(newRequestClone);
+      mImageRequest = std::move(newRequestClone);
       RegisterImageRequest(/* aKnownToBeAnimated = */ false);
     }
   } else {

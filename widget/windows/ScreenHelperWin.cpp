@@ -70,9 +70,9 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
                            dpi);
   if (info.dwFlags & MONITORINFOF_PRIMARY) {
     // The primary monitor must be the first element of the screen list.
-    screens->InsertElementAt(0, Move(screen));
+    screens->InsertElementAt(0, std::move(screen));
   } else {
-    screens->AppendElement(Move(screen));
+    screens->AppendElement(std::move(screen));
   }
   return TRUE;
 }
@@ -90,7 +90,7 @@ ScreenHelperWin::RefreshScreens()
     NS_WARNING("Unable to EnumDisplayMonitors");
   }
   ScreenManager& screenManager = ScreenManager::GetSingleton();
-  screenManager.Refresh(Move(screens));
+  screenManager.Refresh(std::move(screens));
 }
 
 } // namespace widget

@@ -385,11 +385,11 @@ nsIdentifierMapEntry::~nsIdentifierMapEntry()
 {}
 
 nsIdentifierMapEntry::nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther)
-  : mKey(mozilla::Move(aOther.mKey))
-  , mIdContentList(mozilla::Move(aOther.mIdContentList))
-  , mNameContentList(mozilla::Move(aOther.mNameContentList))
-  , mChangeCallbacks(mozilla::Move(aOther.mChangeCallbacks))
-  , mImageElement(mozilla::Move(aOther.mImageElement))
+  : mKey(std::move(aOther.mKey))
+  , mIdContentList(std::move(aOther.mIdContentList))
+  , mNameContentList(std::move(aOther.mNameContentList))
+  , mChangeCallbacks(std::move(aOther.mChangeCallbacks))
+  , mImageElement(std::move(aOther.mImageElement))
 {}
 
 void
@@ -3202,9 +3202,9 @@ nsIDocument::Dispatch(TaskCategory aCategory,
 {
   // Note that this method may be called off the main thread.
   if (mDocGroup) {
-    return mDocGroup->Dispatch(aCategory, Move(aRunnable));
+    return mDocGroup->Dispatch(aCategory, std::move(aRunnable));
   }
-  return DispatcherTrait::Dispatch(aCategory, Move(aRunnable));
+  return DispatcherTrait::Dispatch(aCategory, std::move(aRunnable));
 }
 
 nsISerialEventTarget*
@@ -3841,7 +3841,7 @@ nsIDocument::CreateShell(nsPresContext* aContext,
   RefPtr<PresShell> shell = new PresShell;
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = shell;
-  shell->Init(this, aContext, aViewManager, Move(aStyleSet));
+  shell->Init(this, aContext, aViewManager, std::move(aStyleSet));
 
   // Make sure to never paint if we belong to an invisible DocShell.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
@@ -5566,9 +5566,9 @@ nsIDocument::GetClientInfo() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return Move(inner->GetClientInfo());
+    return std::move(inner->GetClientInfo());
   }
-  return Move(Maybe<ClientInfo>());
+  return std::move(Maybe<ClientInfo>());
 }
 
 Maybe<ClientState>
@@ -5576,9 +5576,9 @@ nsIDocument::GetClientState() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return Move(inner->GetClientState());
+    return std::move(inner->GetClientState());
   }
-  return Move(Maybe<ClientState>());
+  return std::move(Maybe<ClientState>());
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -5586,9 +5586,9 @@ nsIDocument::GetController() const
 {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
-    return Move(inner->GetController());
+    return std::move(inner->GetController());
   }
-  return Move(Maybe<ServiceWorkerDescriptor>());
+  return std::move(Maybe<ServiceWorkerDescriptor>());
 }
 
 //
@@ -6423,7 +6423,7 @@ nsIDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
                                &nsIDocument::DoNotifyPossibleTitleChange);
   nsresult rv = Dispatch(TaskCategory::Other, do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
-    mPendingTitleChangeEvent = Move(event);
+    mPendingTitleChangeEvent = std::move(event);
   }
 }
 
@@ -9530,7 +9530,7 @@ nsIDocument::FlushPendingLinkUpdates()
   mFlushingPendingLinkUpdates = true;
 
   while (!mLinksToUpdate.IsEmpty()) {
-    LinksToUpdateList links(Move(mLinksToUpdate));
+    LinksToUpdateList links(std::move(mLinksToUpdate));
     for (auto iter = links.Iter(); !iter.Done(); iter.Next()) {
       Link* link = iter.Get();
       Element* element = link->GetElement();
@@ -10487,7 +10487,7 @@ class ExitFullscreenScriptRunnable : public Runnable
 public:
   explicit ExitFullscreenScriptRunnable(nsCOMArray<nsIDocument>&& aDocuments)
     : mozilla::Runnable("ExitFullscreenScriptRunnable")
-    , mDocuments(Move(aDocuments))
+    , mDocuments(std::move(aDocuments))
   {
   }
 
@@ -10557,7 +10557,7 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
   FullscreenRoots::Remove(root);
 
   nsContentUtils::AddScriptRunner(
-    new ExitFullscreenScriptRunnable(Move(changed)));
+    new ExitFullscreenScriptRunnable(std::move(changed)));
 }
 
 bool
@@ -10683,13 +10683,13 @@ class nsCallRequestFullScreen : public Runnable
 public:
   explicit nsCallRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     : mozilla::Runnable("nsCallRequestFullScreen")
-    , mRequest(Move(aRequest))
+    , mRequest(std::move(aRequest))
   {
   }
 
   NS_IMETHOD Run() override
   {
-    mRequest->GetDocument()->RequestFullScreen(Move(mRequest));
+    mRequest->GetDocument()->RequestFullScreen(std::move(mRequest));
     return NS_OK;
   }
 
@@ -10707,7 +10707,7 @@ nsIDocument::AsyncRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
 
   // Request full-screen asynchronously.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIRunnable> event = new nsCallRequestFullScreen(Move(aRequest));
+  nsCOMPtr<nsIRunnable> event = new nsCallRequestFullScreen(std::move(aRequest));
   Dispatch(TaskCategory::Other, event.forget());
 }
 
@@ -10888,7 +10888,7 @@ nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
   auto request = MakeUnique<FullscreenRequest>(aFrameElement);
   request->mIsCallerChrome = false;
   request->mShouldNotifyNewOrigin = false;
-  RequestFullScreen(Move(request));
+  RequestFullScreen(std::move(request));
 
   return NS_OK;
 }
@@ -11184,7 +11184,7 @@ nsIDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     return;
   }
 
-  PendingFullscreenRequestList::Add(Move(aRequest));
+  PendingFullscreenRequestList::Add(std::move(aRequest));
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // If we are not the top level process, dispatch an event to make
     // our parent process go fullscreen first.

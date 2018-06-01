@@ -177,7 +177,7 @@ URLPreloader::GetCacheFile(const nsAString& suffix)
 
     MOZ_TRY(cacheFile->Append(NS_LITERAL_STRING("urlCache") + suffix));
 
-    return Move(cacheFile);
+    return std::move(cacheFile);
 }
 
 static const uint8_t URL_MAGIC[] = "mozURLcachev002";
@@ -200,7 +200,7 @@ URLPreloader::FindCacheFile()
         }
     }
 
-    return Move(cacheFile);
+    return std::move(cacheFile);
 }
 
 Result<Ok, nsresult>
@@ -624,11 +624,11 @@ URLPreloader::CacheKey::ToFileLocation()
         nsCOMPtr<nsIFile> file;
         MOZ_TRY(NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPath), false,
                                 getter_AddRefs(file)));
-        return Move(FileLocation(file));
+        return std::move(FileLocation(file));
     }
 
     RefPtr<nsZipArchive> zip = Archive();
-    return Move(FileLocation(zip, mPath.get()));
+    return std::move(FileLocation(zip, mPath.get()));
 }
 
 Result<const nsCString, nsresult>
@@ -654,7 +654,7 @@ URLPreloader::URLEntry::ReadLocation(FileLocation& location)
     result.SetLength(size);
     MOZ_TRY(data.Copy(result.BeginWriting(), size));
 
-    return Move(result);
+    return std::move(result);
 }
 
 Result<const nsCString, nsresult>

@@ -314,7 +314,7 @@ RTCCertificate::CreateDtlsIdentity() const
   }
   UniqueSECKEYPrivateKey key(SECKEY_CopyPrivateKey(mPrivateKey.get()));
   UniqueCERTCertificate cert(CERT_DupCertificate(mCertificate.get()));
-  RefPtr<DtlsIdentity> id = new DtlsIdentity(Move(key), Move(cert), mAuthType);
+  RefPtr<DtlsIdentity> id = new DtlsIdentity(std::move(key), std::move(cert), mAuthType);
   return id;
 }
 

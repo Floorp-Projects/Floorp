@@ -155,7 +155,7 @@ StructuredCloneBlob::ReadStructuredCloneInternal(JSContext* aCx, JSStructuredClo
   mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(mStructuredCloneScope,
                                                     &StructuredCloneHolder::sCallbacks,
                                                     this);
-  mBuffer->adopt(Move(data), version, &StructuredCloneHolder::sCallbacks);
+  mBuffer->adopt(std::move(data), version, &StructuredCloneHolder::sCallbacks);
 
   return true;
 }

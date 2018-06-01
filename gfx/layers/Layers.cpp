@@ -1145,7 +1145,7 @@ SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
     polygon.TransformToScreenSpace(transform);
 
     if (polygon.GetPoints().Length() >= 3) {
-      inputLayers.push_back(LayerPolygon(layer, Move(polygon)));
+      inputLayers.push_back(LayerPolygon(layer, std::move(polygon)));
     }
   }
 
@@ -1206,7 +1206,7 @@ ContainerLayer::SortChildrenBy3DZOrder(SortMode aSortMode)
       // Sort the 3D layers.
       if (toSort.Length() > 0) {
         nsTArray<LayerPolygon> sorted = SortLayersWithBSPTree(toSort);
-        drawOrder.AppendElements(Move(sorted));
+        drawOrder.AppendElements(std::move(sorted));
 
         toSort.ClearAndRetainStorage();
       }

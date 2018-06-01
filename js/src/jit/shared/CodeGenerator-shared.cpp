@@ -992,7 +992,7 @@ struct ReadTempTypeInfoVectorOp : public IonTrackedOptimizationsTypeInfo::ForEac
             if (!ty.trackType(accTypes_[i]))
                 oom_ = true;
         }
-        if (!types_->append(mozilla::Move(ty)))
+        if (!types_->append(std::move(ty)))
             oom_ = true;
         accTypes_.clear();
     }
@@ -1717,7 +1717,7 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, const char* text,
     masm.Push(eventReg);
 
     PatchableTLEvent patchEvent(masm.movWithPatch(ImmWord(0), eventReg), text);
-    masm.propagateOOM(patchableTLEvents_.append(Move(patchEvent)));
+    masm.propagateOOM(patchableTLEvents_.append(std::move(patchEvent)));
 
     if (isStart)
         masm.tracelogStartId(loggerReg, eventReg);

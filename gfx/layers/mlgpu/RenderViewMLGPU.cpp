@@ -183,7 +183,7 @@ RenderViewMLGPU::AddItem(LayerMLGPU* aItem,
   // Note that we do not use 0 as a sorting index (when depth-testing is
   // enabled) because this would result in a z-value of 1.0, which would be
   // culled.
-  ItemInfo info(mBuilder, this, aItem, mNextSortIndex++, aRect, Move(aGeometry));
+  ItemInfo info(mBuilder, this, aItem, mNextSortIndex++, aRect, std::move(aGeometry));
 
   // If the item is not visible, or we can't add it to the layer constant
   // buffer for some reason, bail out.
@@ -217,7 +217,7 @@ RenderViewMLGPU::UpdateVisibleRegion(ItemInfo& aItem)
     // layer types (like Canvas and Image) need to have the visible region
     // clamped.
     LayerIntRegion region = aItem.layer->GetShadowVisibleRegion();
-    aItem.layer->SetRenderRegion(Move(region));
+    aItem.layer->SetRenderRegion(std::move(region));
 
     AL_LOG("RenderView %p simple occlusion test, bounds=%s, translation?=%d\n",
       this,
@@ -254,7 +254,7 @@ RenderViewMLGPU::UpdateVisibleRegion(ItemInfo& aItem)
   region.MoveBy(-translation);
   AL_LOG("  new-local-visible=%s\n", Stringify(region).c_str());
 
-  aItem.layer->SetRenderRegion(Move(region));
+  aItem.layer->SetRenderRegion(std::move(region));
 
   // Apply the new occluded area. We do another dance with the translation to
   // avoid copying the region. We do this after the SetRegionToRender call to
@@ -576,7 +576,7 @@ RenderViewMLGPU::PrepareClears()
   }
 
   nsTArray<IntRect> rects = ToRectArray(region);
-  mDevice->PrepareClearRegion(&mPreClear, Move(rects), sortIndex);
+  mDevice->PrepareClearRegion(&mPreClear, std::move(rects), sortIndex);
 
   if (!mPostClearRegion.IsEmpty()) {
     // Prepare the final clear as well. Note that we always do this clear at the
@@ -585,7 +585,7 @@ RenderViewMLGPU::PrepareClears()
     // buffer, we would execute this clear earlier in the pipeline and give it
     // the closest possible z-ordering to the screen.
     nsTArray<IntRect> rects = ToRectArray(mPostClearRegion);
-    mDevice->PrepareClearRegion(&mPostClear, Move(rects), Nothing());
+    mDevice->PrepareClearRegion(&mPostClear, std::move(rects), Nothing());
   }
 }
 

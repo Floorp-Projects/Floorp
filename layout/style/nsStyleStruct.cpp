@@ -622,7 +622,7 @@ void
 nsStyleList::SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues)
 {
   mQuotes = new nsStyleQuoteValues;
-  mQuotes->mQuotePairs = Move(aValues);
+  mQuotes->mQuotePairs = std::move(aValues);
 }
 
 const nsStyleQuoteValues::QuotePairArray&
@@ -1047,7 +1047,7 @@ void
 StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage)
 {
   MOZ_ASSERT(aShapeImage);
-  mShapeImage = Move(aShapeImage);
+  mShapeImage = std::move(aShapeImage);
   mType = StyleShapeSourceType::Image;
 }
 
@@ -1068,7 +1068,7 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)
 {
   MOZ_ASSERT(aBasicShape);
-  mBasicShape = Move(aBasicShape);
+  mBasicShape = std::move(aBasicShape);
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Shape;
 }
@@ -2333,7 +2333,7 @@ nsStyleImage::DoCopy(const nsStyleImage& aOther)
   if (aOther.mCropRect) {
     cropRectCopy = MakeUnique<nsStyleSides>(*aOther.mCropRect.get());
   }
-  SetCropRect(Move(cropRectCopy));
+  SetCropRect(std::move(cropRectCopy));
 }
 
 void
@@ -2404,7 +2404,7 @@ nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId)
 void
 nsStyleImage::SetCropRect(UniquePtr<nsStyleSides> aCropRect)
 {
-    mCropRect = Move(aCropRect);
+    mCropRect = std::move(aCropRect);
 }
 
 void
@@ -2884,7 +2884,7 @@ nsStyleImageLayers::operator=(nsStyleImageLayers&& aOther)
   mMaskModeCount = aOther.mMaskModeCount;
   mBlendModeCount = aOther.mBlendModeCount;
   mCompositeCount = aOther.mCompositeCount;
-  mLayers = Move(aOther.mLayers);
+  mLayers = std::move(aOther.mLayers);
 
   uint32_t count = mLayers.Length();
   if (count != aOther.mLayers.Length()) {

@@ -45,7 +45,7 @@ public:
       ++mNextChunkIndex;
     }
 
-    return Move(result);
+    return std::move(result);
   }
 
   TrampolineCollection<MMPolicy> Items() const
@@ -65,7 +65,7 @@ public:
   VMSharingPolicyUnique& operator=(const VMSharingPolicyUnique&) = delete;
 
   VMSharingPolicyUnique(VMSharingPolicyUnique&& aOther)
-    : MMPolicy(Move(aOther))
+    : MMPolicy(std::move(aOther))
     , mNextChunkIndex(aOther.mNextChunkIndex)
   {
     aOther.mNextChunkIndex = 0;
@@ -73,7 +73,7 @@ public:
 
   VMSharingPolicyUnique& operator=(VMSharingPolicyUnique&& aOther)
   {
-    static_cast<MMPolicy&>(*this) = Move(aOther);
+    static_cast<MMPolicy&>(*this) = std::move(aOther);
     mNextChunkIndex = aOther.mNextChunkIndex;
     aOther.mNextChunkIndex = 0;
     return *this;
@@ -146,12 +146,12 @@ public:
   TrampolineCollection<MMPolicyInProcess> Items() const
   {
     AutoCriticalSection lock(&sCS);
-    TrampolineCollection<MMPolicyInProcess> items(Move(sUniqueVM.Items()));
+    TrampolineCollection<MMPolicyInProcess> items(std::move(sUniqueVM.Items()));
 
     // We need to continue holding the lock until items is destroyed.
     items.Lock(sCS);
 
-    return Move(items);
+    return std::move(items);
   }
 
   void Clear()

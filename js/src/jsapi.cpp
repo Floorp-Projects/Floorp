@@ -7104,7 +7104,7 @@ JSErrorNotes::addNoteASCII(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(Move(note)))
+    if (!notes_.append(std::move(note)))
         return false;
     return true;
 }
@@ -7123,7 +7123,7 @@ JSErrorNotes::addNoteLatin1(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(Move(note)))
+    if (!notes_.append(std::move(note)))
         return false;
     return true;
 }
@@ -7142,7 +7142,7 @@ JSErrorNotes::addNoteUTF8(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(Move(note)))
+    if (!notes_.append(std::move(note)))
         return false;
     return true;
 }
@@ -7167,7 +7167,7 @@ JSErrorNotes::copy(JSContext* cx)
         if (!copied)
             return nullptr;
 
-        if (!copiedNotes->notes_.append(Move(copied)))
+        if (!copiedNotes->notes_.append(std::move(copied)))
             return nullptr;
     }
 
@@ -7489,7 +7489,7 @@ void AutoFilename::setUnowned(const char* filename)
 void AutoFilename::setOwned(UniqueChars&& filename)
 {
     MOZ_ASSERT(!get());
-    filename_ = AsVariant(Move(filename));
+    filename_ = AsVariant(std::move(filename));
 }
 
 const char* AutoFilename::get() const
@@ -7529,7 +7529,7 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
             if (!copy)
                 filename->setUnowned("out of memory");
             else
-                filename->setOwned(Move(copy));
+                filename->setOwned(std::move(copy));
         } else {
             // All other frames have a script source to read the filename from.
             filename->setScriptSource(i.scriptSource());
@@ -7783,7 +7783,7 @@ JS::GetWasmModule(HandleObject obj)
 JS_PUBLIC_API(bool)
 JS::CompiledWasmModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId)
 {
-    return wasm::CompiledModuleAssumptionsMatch(compiled, Move(buildId));
+    return wasm::CompiledModuleAssumptionsMatch(compiled, std::move(buildId));
 }
 
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)
@@ -7791,7 +7791,7 @@ JS::DeserializeWasmModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled,
                           JS::BuildIdCharVector&& buildId, UniqueChars file,
                           unsigned line)
 {
-    return wasm::DeserializeModule(bytecode, maybeCompiled, Move(buildId), Move(file), line);
+    return wasm::DeserializeModule(bytecode, maybeCompiled, std::move(buildId), std::move(file), line);
 }
 
 JS_PUBLIC_API(void)
@@ -7823,7 +7823,7 @@ JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp,
 
     Realm* realm = cx->realm();
     Rooted<SavedFrame*> frame(cx);
-    if (!realm->savedStacks().saveCurrentStack(cx, &frame, mozilla::Move(capture)))
+    if (!realm->savedStacks().saveCurrentStack(cx, &frame, std::move(capture)))
         return false;
     stackp.set(frame.get());
     return true;

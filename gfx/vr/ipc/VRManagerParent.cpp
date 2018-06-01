@@ -92,7 +92,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
     "gfx::VRManagerParent::Bind",
     vmp,
     &VRManagerParent::Bind,
-    Move(aEndpoint)));
+    std::move(aEndpoint)));
 
   return true;
 }
@@ -137,7 +137,7 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
     "gfx::VRManagerParent::Bind",
     vmp,
     &VRManagerParent::Bind,
-    Move(aEndpoint)));
+    std::move(aEndpoint)));
   return true;
 }
 

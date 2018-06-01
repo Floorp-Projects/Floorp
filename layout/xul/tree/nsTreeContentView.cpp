@@ -1280,7 +1280,7 @@ nsTreeContentView::SerializeSeparator(Element* aContent,
 
   auto row = MakeUnique<Row>(aContent, aParentIndex);
   row->SetSeparator(true);
-  aRows.AppendElement(Move(row));
+  aRows.AppendElement(std::move(row));
 }
 
 void
@@ -1341,7 +1341,7 @@ nsTreeContentView::EnsureSubtree(int32_t aIndex)
   UniquePtr<Row>* newRows = mRows.InsertElementsAt(aIndex + 1,
                                                    rows.Length());
   for (nsTArray<Row>::index_type i = 0; i < rows.Length(); i++) {
-    newRows[i] = Move(rows[i]);
+    newRows[i] = std::move(rows[i]);
   }
   int32_t count = rows.Length();
 
@@ -1420,7 +1420,7 @@ nsTreeContentView::InsertRow(int32_t aParentIndex, int32_t aIndex, nsIContent* a
   // ownership from its const source argument.
   int32_t count = rows.Length();
   for (nsTArray<Row>::index_type i = 0; i < size_t(count); i++) {
-    mRows.InsertElementAt(aParentIndex + aIndex + i + 1, Move(rows[i]));
+    mRows.InsertElementAt(aParentIndex + aIndex + i + 1, std::move(rows[i]));
   }
 
   UpdateSubtreeSizes(aParentIndex, count);

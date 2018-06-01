@@ -459,7 +459,7 @@ ChromiumCDMParent::RecvOnSessionMessage(const nsCString& aSessionId,
     return IPC_OK();
   }
 
-  mCDMCallback->SessionMessage(aSessionId, aMessageType, Move(aMessage));
+  mCDMCallback->SessionMessage(aSessionId, aMessageType, std::move(aMessage));
   return IPC_OK();
 }
 
@@ -473,7 +473,7 @@ ChromiumCDMParent::RecvOnSessionKeysChange(
     return IPC_OK();
   }
 
-  mCDMCallback->SessionKeysChange(aSessionId, Move(aKeysInfo));
+  mCDMCallback->SessionKeysChange(aSessionId, std::move(aKeysInfo));
   return IPC_OK();
 }
 
@@ -733,7 +733,7 @@ ChromiumCDMParent::RecvDecodedData(const CDMVideoFrame& aFrame,
     return IPC_OK();
   }
 
-  ReorderAndReturnOutput(Move(v));
+  ReorderAndReturnOutput(std::move(v));
 
   return IPC_OK();
 }
@@ -781,7 +781,7 @@ ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
   // for it again.
   autoDeallocateShmem.release();
 
-  ReorderAndReturnOutput(Move(v));
+  ReorderAndReturnOutput(std::move(v));
 
   return IPC_OK();
 }
@@ -790,15 +790,15 @@ void
 ChromiumCDMParent::ReorderAndReturnOutput(RefPtr<VideoData>&& aFrame)
 {
   if (mMaxRefFrames == 0) {
-    mDecodePromise.ResolveIfExists({ Move(aFrame) }, __func__);
+    mDecodePromise.ResolveIfExists({ std::move(aFrame) }, __func__);
     return;
   }
-  mReorderQueue.Push(Move(aFrame));
+  mReorderQueue.Push(std::move(aFrame));
   MediaDataDecoder::DecodedData results;
   while (mReorderQueue.Length() > mMaxRefFrames) {
     results.AppendElement(mReorderQueue.Pop());
   }
-  mDecodePromise.Resolve(Move(results), __func__);
+  mDecodePromise.Resolve(std::move(results), __func__);
 }
 
 already_AddRefed<VideoData>
@@ -1078,10 +1078,10 @@ ChromiumCDMParent::RecvDrainComplete()
 
   MediaDataDecoder::DecodedData samples;
   while (!mReorderQueue.IsEmpty()) {
-    samples.AppendElement(Move(mReorderQueue.Pop()));
+    samples.AppendElement(std::move(mReorderQueue.Pop()));
   }
 
-  mDecodePromise.ResolveIfExists(Move(samples), __func__);
+  mDecodePromise.ResolveIfExists(std::move(samples), __func__);
   return IPC_OK();
 }
 RefPtr<ShutdownPromise>

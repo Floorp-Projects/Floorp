@@ -313,9 +313,9 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
       return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
-    results.AppendElement(Move(v));
+    results.AppendElement(std::move(v));
   }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>

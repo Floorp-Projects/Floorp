@@ -746,7 +746,7 @@ void
 nsDeviceContext::RegisterPageDoneCallback(PrintTarget::PageDoneCallback&& aCallback)
 {
   MOZ_ASSERT(mPrintTarget && aCallback && !IsSyncPagePrinting());
-  mPrintTarget->RegisterPageDoneCallback(Move(aCallback));
+  mPrintTarget->RegisterPageDoneCallback(std::move(aCallback));
 }
 void
 nsDeviceContext::UnregisterPageDoneCallback()

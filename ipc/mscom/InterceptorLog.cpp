@@ -37,7 +37,6 @@ using mozilla::DebugOnly;
 using mozilla::mscom::ArrayData;
 using mozilla::mscom::FindArrayData;
 using mozilla::mscom::IsValidGUID;
-using mozilla::Move;
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
 using mozilla::NewNonOwningRunnableMethod;
@@ -309,7 +308,7 @@ Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
   line.AppendPrintf(", [out] 0x%p)\t0x%08X\n", aInterface, aResult);
 
   MutexAutoLock lock(mMutex);
-  mEntries.AppendElement(Move(line));
+  mEntries.AppendElement(std::move(line));
   mThread->Dispatch(NewNonOwningRunnableMethod("Logger::Flush",
                                                this, &Logger::Flush),
                     NS_DISPATCH_NORMAL);
@@ -419,7 +418,7 @@ Logger::CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
   HRESULT callResult = aCallFrame->GetReturnValue();
   line.AppendPrintf("0x%08X\n", callResult);
 
-  aCapturedFrame = Move(line);
+  aCapturedFrame = std::move(line);
 }
 
 void

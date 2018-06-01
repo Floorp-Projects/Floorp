@@ -65,14 +65,14 @@ ShareableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
   if (mGLFrontbuffer) {
     // We're using a source other than the one in the default screen.
     // (SkiaGL)
-    mFactory = Move(factory);
+    mFactory = std::move(factory);
     if (!mFactory) {
       // Absolutely must have a factory here, so create a basic one
       mFactory = MakeUnique<gl::SurfaceFactory_Basic>(mGLContext, caps, mFlags);
     }
   } else {
     if (factory)
-      screen->Morph(Move(factory));
+      screen->Morph(std::move(factory));
   }
 }
 

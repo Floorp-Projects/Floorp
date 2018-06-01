@@ -316,7 +316,7 @@ ContentCacheInChild::QueryCharRectArray(nsIWidget* aWidget,
     aCharRectArray.Clear();
     return false;
   }
-  aCharRectArray = Move(textRects.mReply.mRectArray);
+  aCharRectArray = std::move(textRects.mReply.mRectArray);
   return true;
 }
 

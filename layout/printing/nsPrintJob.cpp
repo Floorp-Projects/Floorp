@@ -662,7 +662,7 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
     mProgressDialogIsShown = pps != nullptr;
 
     if (mIsDoingPrintPreview) {
-      mOldPrtPreview = Move(mPrtPreview);
+      mOldPrtPreview = std::move(mPrtPreview);
     }
   } else {
     mProgressDialogIsShown = false;
@@ -1414,7 +1414,7 @@ nsPrintJob::BuildDocTree(nsIDocShell*      aParentNode,
         nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
         if (NS_FAILED(rv))
           NS_NOTREACHED("Init failed?");
-        aPO->mKids.AppendElement(Move(po));
+        aPO->mKids.AppendElement(std::move(po));
         aDocList->AppendElement(aPO->mKids.LastElement().get());
         BuildDocTree(childAsShell, aDocList, aPO->mKids.LastElement());
       }
@@ -2353,7 +2353,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
 
   aPO->mPresShell = aPO->mDocument->CreateShell(aPO->mPresContext,
                                                 aPO->mViewManager,
-                                                Move(styleSet));
+                                                std::move(styleSet));
   if (!aPO->mPresShell) {
     return NS_ERROR_FAILURE;
   }
@@ -3474,7 +3474,7 @@ nsPrintJob::FinishPrintPreview()
 
   // PrintPreview was built using the mPrt (code reuse)
   // then we assign it over
-  mPrtPreview = Move(mPrt);
+  mPrtPreview = std::move(mPrt);
 
 #endif // NS_PRINT_PREVIEW
 

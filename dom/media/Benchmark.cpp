@@ -207,10 +207,10 @@ BenchmarkPlayback::DemuxNextSample()
   promise->Then(
     Thread(), __func__,
     [this, ref](RefPtr<MediaTrackDemuxer::SamplesHolder> aHolder) {
-      mSamples.AppendElements(Move(aHolder->mSamples));
+      mSamples.AppendElements(std::move(aHolder->mSamples));
       if (ref->mParameters.mStopAtFrame &&
           mSamples.Length() == (size_t)ref->mParameters.mStopAtFrame.ref()) {
-        InitDecoder(Move(*mTrackDemuxer->GetInfo()));
+        InitDecoder(std::move(*mTrackDemuxer->GetInfo()));
       } else {
         Dispatch(NS_NewRunnableFunction("BenchmarkPlayback::DemuxNextSample",
                                         [this, ref]() { DemuxNextSample(); }));
@@ -219,7 +219,7 @@ BenchmarkPlayback::DemuxNextSample()
     [this, ref](const MediaResult& aError) {
       switch (aError.Code()) {
         case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-          InitDecoder(Move(*mTrackDemuxer->GetInfo()));
+          InitDecoder(std::move(*mTrackDemuxer->GetInfo()));
           break;
         default:
           Error(aError);

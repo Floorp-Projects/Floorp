@@ -5683,7 +5683,7 @@ void
 nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable)
 {
   MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
-  CycleCollectedJSContext::Get()->RunInStableState(Move(aRunnable));
+  CycleCollectedJSContext::Get()->RunInStableState(std::move(aRunnable));
 }
 
 /* static */
@@ -5691,7 +5691,7 @@ void
 nsContentUtils::AddPendingIDBTransaction(already_AddRefed<nsIRunnable> aTransaction)
 {
   MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
-  CycleCollectedJSContext::Get()->AddPendingIDBTransaction(Move(aTransaction));
+  CycleCollectedJSContext::Get()->AddPendingIDBTransaction(std::move(aTransaction));
 }
 
 /* static */

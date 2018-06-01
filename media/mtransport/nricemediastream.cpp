@@ -311,9 +311,9 @@ nsresult NrIceMediaStream::GetActivePair(int component,
     return NS_ERROR_FAILURE;
 
   if (localp)
-    *localp = Move(local);
+    *localp = std::move(local);
   if (remotep)
-    *remotep = Move(remote);
+    *remotep = std::move(remote);
 
   return NS_OK;
 }

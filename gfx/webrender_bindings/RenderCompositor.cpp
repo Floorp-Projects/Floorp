@@ -24,10 +24,10 @@ RenderCompositor::Create(RefPtr<widget::CompositorWidget>&& aWidget)
 {
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
-    return RenderCompositorANGLE::Create(Move(aWidget));
+    return RenderCompositorANGLE::Create(std::move(aWidget));
   }
 #endif
-  return RenderCompositorOGL::Create(Move(aWidget));
+  return RenderCompositorOGL::Create(std::move(aWidget));
 }
 
 RenderCompositor::RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget)

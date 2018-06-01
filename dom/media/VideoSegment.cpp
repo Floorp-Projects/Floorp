@@ -108,7 +108,7 @@ VideoSegment::VideoSegment()
 {}
 
 VideoSegment::VideoSegment(VideoSegment&& aSegment)
-  : MediaSegmentBase<VideoSegment, VideoChunk>(Move(aSegment))
+  : MediaSegmentBase<VideoSegment, VideoChunk>(std::move(aSegment))
 {}
 
 VideoSegment::~VideoSegment()

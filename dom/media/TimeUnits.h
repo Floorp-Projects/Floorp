@@ -226,7 +226,7 @@ public:
   {
   }
   MOZ_IMPLICIT TimeIntervals(BaseType&& aOther)
-    : BaseType(Move(aOther))
+    : BaseType(std::move(aOther))
   {
   }
   explicit TimeIntervals(const BaseType::ElemType& aOther)
@@ -234,7 +234,7 @@ public:
   {
   }
   explicit TimeIntervals(BaseType::ElemType&& aOther)
-    : BaseType(Move(aOther))
+    : BaseType(std::move(aOther))
   {
   }
 

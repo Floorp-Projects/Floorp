@@ -125,7 +125,7 @@ ContentProcessManager::GetAllChildProcessById(const ContentParentId& aParentCpId
   auto iter = mContentParentMap.find(aParentCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
     ASSERT_UNLESS_FUZZING();
-    return Move(cpIdArray);
+    return std::move(cpIdArray);
   }
 
   for (auto cpIter = iter->second.mChildrenCpId.begin();
@@ -134,7 +134,7 @@ ContentProcessManager::GetAllChildProcessById(const ContentParentId& aParentCpId
     cpIdArray.AppendElement(*cpIter);
   }
 
-  return Move(cpIdArray);
+  return std::move(cpIdArray);
 }
 
 bool
@@ -236,7 +236,7 @@ ContentProcessManager::GetTabContextByContentProcess(const ContentParentId& aChi
   auto iter = mContentParentMap.find(aChildCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
     ASSERT_UNLESS_FUZZING();
-    return Move(tabContextArray);
+    return std::move(tabContextArray);
   }
 
   for (auto remoteFrameIter = iter->second.mRemoteFrames.begin();
@@ -245,7 +245,7 @@ ContentProcessManager::GetTabContextByContentProcess(const ContentParentId& aChi
     tabContextArray.AppendElement(remoteFrameIter->second.mContext);
   }
 
-  return Move(tabContextArray);
+  return std::move(tabContextArray);
 }
 
 bool
@@ -337,7 +337,7 @@ ContentProcessManager::GetTabParentsByProcessId(const ContentParentId& aChildCpI
   auto iter = mContentParentMap.find(aChildCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
     ASSERT_UNLESS_FUZZING();
-    return Move(tabIdList);
+    return std::move(tabIdList);
   }
 
   for (auto remoteFrameIter = iter->second.mRemoteFrames.begin();
@@ -346,7 +346,7 @@ ContentProcessManager::GetTabParentsByProcessId(const ContentParentId& aChildCpI
     tabIdList.AppendElement(remoteFrameIter->first);
   }
 
-  return Move(tabIdList);
+  return std::move(tabIdList);
 }
 
 uint32_t

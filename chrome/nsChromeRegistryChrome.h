@@ -123,8 +123,8 @@ class nsChromeRegistryChrome : public nsChromeRegistry
     typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
 
     explicit OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
-    OverlayListEntry(OverlayListEntry&& toMove) : nsURIHashKey(mozilla::Move(toMove)),
-                                                  mArray(mozilla::Move(toMove.mArray)) { }
+    OverlayListEntry(OverlayListEntry&& toMove) : nsURIHashKey(std::move(toMove)),
+                                                  mArray(std::move(toMove.mArray)) { }
     ~OverlayListEntry() { }
 
     void AddURI(nsIURI* aURI);

@@ -384,7 +384,7 @@ ScriptPreloader::GetCacheFile(const nsAString& suffix)
 
     MOZ_TRY(cacheFile->Append(mBaseName + suffix));
 
-    return Move(cacheFile);
+    return std::move(cacheFile);
 }
 
 static const uint8_t MAGIC[] = "mozXDRcachev001";
@@ -540,7 +540,7 @@ ScriptPreloader::InitCacheInternal(JS::HandleObject scope)
             return Err(NS_ERROR_UNEXPECTED);
         }
 
-        mPendingScripts = Move(scripts);
+        mPendingScripts = std::move(scripts);
         cleanup.release();
     }
 

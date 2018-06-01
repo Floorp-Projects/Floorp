@@ -21,7 +21,7 @@ public:
   explicit AutoProfilerStyleMarker(UniqueProfilerBacktrace aCause)
     : mActive(profiler_is_active())
     , mStartTime(TimeStamp::Now())
-    , mCause(Move(aCause))
+    , mCause(std::move(aCause))
   {
     if (!mActive) {
       return;
@@ -39,7 +39,7 @@ public:
     }
     ServoTraversalStatistics::sActive = false;
     profiler_add_marker("Styles", MakeUnique<StyleMarkerPayload>(
-      mStartTime, TimeStamp::Now(), Move(mCause),
+      mStartTime, TimeStamp::Now(), std::move(mCause),
       ServoTraversalStatistics::sSingleton));
   }
 
