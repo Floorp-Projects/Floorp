@@ -210,7 +210,71 @@ class JSTerm extends Component {
               this.execute();
               return null;
             },
-          },
+            "Up": () => {
+              let inputUpdated;
+              if (this.autocompletePopup.isOpen) {
+                inputUpdated = this.complete(this.COMPLETE_BACKWARD);
+                if (inputUpdated) {
+                  this._autocompletePopupNavigated = true;
+                }
+              } else if (this.canCaretGoPrevious()) {
+                inputUpdated = this.historyPeruse(HISTORY_BACK);
+              }
+
+              if (!inputUpdated) {
+                return "CodeMirror.Pass";
+              }
+              return null;
+            },
+            "Down": () => {
+              let inputUpdated;
+              if (this.autocompletePopup.isOpen) {
+                inputUpdated = this.complete(this.COMPLETE_FORWARD);
+                if (inputUpdated) {
+                  this._autocompletePopupNavigated = true;
+                }
+              } else if (this.canCaretGoNext()) {
+                inputUpdated = this.historyPeruse(HISTORY_FORWARD);
+              }
+
+              if (!inputUpdated) {
+                return "CodeMirror.Pass";
+              }
+              return null;
+            },
+
+            "Ctrl-N": () => {
+              // Control-N differs from down arrow: it ignores autocomplete state.
+              // Note that we preserve the default 'down' navigation within
+              // multiline text.
+              if (
+                Services.appinfo.OS === "Darwin"
+                && this.canCaretGoNext()
+                && this.historyPeruse(HISTORY_FORWARD)
+              ) {
+                return null;
+              }
+
+              this.clearCompletion();
+              return "CodeMirror.Pass";
+            },
+
+            "Ctrl-P": () => {
+              // Control-N differs from down arrow: it ignores autocomplete state.
+              // Note that we preserve the default 'down' navigation within
+              // multiline text.
+              if (
+                Services.appinfo.OS === "Darwin"
+                && this.canCaretGoPrevious()
+                && this.historyPeruse(HISTORY_BACK)
+              ) {
+                return null;
+              }
+
+              this.clearCompletion();
+              return "CodeMirror.Pass";
+            }
+          }
         });
         this.editor.appendToLocalElement(this.node);
       }
@@ -525,6 +589,8 @@ class JSTerm extends Component {
     if (this.props.codeMirrorEnabled) {
       if (this.editor) {
         this.editor.setText(newValue);
+        // Set the cursor at the end of the input.
+        this.editor.setCursor({line: this.editor.getDoc().lineCount(), ch: 0});
       }
     } else {
       if (!this.inputNode) {
@@ -860,14 +926,21 @@ class JSTerm extends Component {
    *         otherwise false.
    */
   canCaretGoPrevious() {
+    const inputValue = this.getInputValue();
+
+    if (this.editor) {
+      const {line, ch} = this.editor.getCursor();
+      return (line === 0 && ch === 0) || (line === 0 && ch === inputValue.length);
+    }
+
     const node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
     }
 
-    const multiline = /[\r\n]/.test(node.value);
+    const multiline = /[\r\n]/.test(inputValue);
     return node.selectionStart == 0 ? true :
-           node.selectionStart == node.value.length && !multiline;
+           node.selectionStart == inputValue.length && !multiline;
   }
 
   /**
@@ -880,12 +953,22 @@ class JSTerm extends Component {
    *         false.
    */
   canCaretGoNext() {
+    const inputValue = this.getInputValue();
+    const multiline = /[\r\n]/.test(inputValue);
+
+    if (this.editor) {
+      const {line, ch} = this.editor.getCursor();
+      return (!multiline && ch === 0) ||
+        this.editor.getDoc()
+          .getRange({line: 0, ch: 0}, {line, ch})
+          .length === inputValue.length;
+    }
+
     const node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
     }
 
-    const multiline = /[\r\n]/.test(node.value);
     return node.selectionStart == node.value.length ? true :
            node.selectionStart == 0 && !multiline;
   }
