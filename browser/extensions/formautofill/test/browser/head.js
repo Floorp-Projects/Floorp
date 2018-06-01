@@ -100,20 +100,20 @@ const TEST_ADDRESS_DE_1 = {
 
 const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
-  "cc-number": "4111111111111111",
+  "cc-number": "1234567812345678",
   "cc-exp-month": 4,
   "cc-exp-year": new Date().getFullYear(),
 };
 
 const TEST_CREDIT_CARD_2 = {
   "cc-name": "Timothy Berners-Lee",
-  "cc-number": "4929001587121045",
+  "cc-number": "1111222233334444",
   "cc-exp-month": 12,
   "cc-exp-year": new Date().getFullYear() + 10,
 };
 
 const TEST_CREDIT_CARD_3 = {
-  "cc-number": "5103059495477870",
+  "cc-number": "9999888877776666",
   "cc-exp-month": 1,
   "cc-exp-year": 2000,
 };
