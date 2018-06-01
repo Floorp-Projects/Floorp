@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-  OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
 });
 
@@ -334,8 +333,7 @@ var Sanitizer = {
 
     offlineApps: {
       async clear(range) {
-        // AppCache: this doesn't wait for the cleanup to be complete.
-        OfflineAppCacheHelper.clear();
+        await clearData(range, Ci.nsIClearDataService.CLEAR_DOM_STORAGES);
 
         if (range) {
           let principals = sas.getActiveOrigins(range[0], range[1])

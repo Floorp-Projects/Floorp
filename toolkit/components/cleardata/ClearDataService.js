@@ -6,8 +6,12 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
+});
 
 // A Cleaner is an object with 3 methods. These methods must return a Promise
 // object. Here a description of these methods:
@@ -249,6 +253,14 @@ const MediaDevicesCleaner = {
   },
 };
 
+const AppCacheCleaner = {
+  deleteAll() {
+    // AppCache: this doesn't wait for the cleanup to be complete.
+    OfflineAppCacheHelper.clear();
+    return Promise.resolve();
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -271,6 +283,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
    cleaner: MediaDevicesCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_APPCACHE,
+   cleaner: AppCacheCleaner, },
 ];
 
 this.ClearDataService = function() {};
