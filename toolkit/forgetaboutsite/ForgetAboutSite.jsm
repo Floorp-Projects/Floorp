@@ -93,17 +93,6 @@ var ForgetAboutSite = {
       });
     })());
 
-    // Push notifications.
-    promises.push((async function() {
-      var push = Cc["@mozilla.org/push/Service;1"].
-                 getService(Ci.nsIPushService);
-      push.clearForDomain(aDomain, status => {
-        if (!Components.isSuccessCode(status)) {
-          throw new Error("Exception occured while clearing push notifications: " + status);
-        }
-      });
-    })());
-
     // HSTS and HPKP
     promises.push((async function() {
       let sss = Cc["@mozilla.org/ssservice;1"].

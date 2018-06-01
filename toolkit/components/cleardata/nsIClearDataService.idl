@@ -133,11 +133,15 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_PREDICTOR_NETWORK_DATA = 1 << 9;
 
+  /**
+   * DOM Push notifications
+   */
+  const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 10;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;
   const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 9;
-  const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 11;
   const uint32_t CLEAR_HSTS = 1 << 12;
   const uint32_t CLEAR_HPKP = 1 << 13;
   const uint32_t CLEAR_HISTORY = 1 << 14;
@@ -165,9 +169,9 @@ interface nsIClearDataService : nsISupports
 
   /**
    * Delete all DOM storages
-   * TODO: add CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
+   * TODO: add CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
    */
-  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA;
+  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS;
 
   /*
   const uint32_t CLEAR_BROWSER_DATA = CLEAR_DOWNLOADS | CLEAR_PASSWORDS | CLEAR_PERMISSIONS | CLEAR_CONTENT_PREFERENCES | CLEAR_HISTORY | CLEAR_LOGINS;
