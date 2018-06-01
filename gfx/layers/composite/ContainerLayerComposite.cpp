@@ -650,9 +650,7 @@ ContainerLayerComposite::~ContainerLayerComposite()
   // LayerManagerComposite::Destroy(), a parent
   // *ContainerLayerComposite::Destroy(), or Disconnect() will trigger
   // cleanup of our resources.
-  while (mFirstChild) {
-    RemoveChild(mFirstChild);
-  }
+  RemoveAllChildren();
 }
 
 void
