@@ -67,7 +67,7 @@ nsHttpResponseHead::operator=(const nsHttpResponseHead &aOther)
     return *this;
 }
 
-nsHttpVersion
+HttpVersion
 nsHttpResponseHead::Version()
 {
     RecursiveMutexAutoLock monitor(mRecursiveMutex);
@@ -263,13 +263,13 @@ void
 nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
 {
     RecursiveMutexAutoLock monitor(mRecursiveMutex);
-    if (mVersion == NS_HTTP_VERSION_0_9)
+    if (mVersion == HttpVersion::v0_9)
         return;
 
     buf.AppendLiteral("HTTP/");
-    if (mVersion == NS_HTTP_VERSION_2_0)
+    if (mVersion == HttpVersion::v2_0)
         buf.AppendLiteral("2.0 ");
-    else if (mVersion == NS_HTTP_VERSION_1_1)
+    else if (mVersion == HttpVersion::v1_1)
         buf.AppendLiteral("1.1 ");
     else
         buf.AppendLiteral("1.0 ");
@@ -287,7 +287,7 @@ void
 nsHttpResponseHead::FlattenNetworkOriginalHeaders(nsACString &buf)
 {
     RecursiveMutexAutoLock monitor(mRecursiveMutex);
-    if (mVersion == NS_HTTP_VERSION_0_9) {
+    if (mVersion == HttpVersion::v0_9) {
         return;
     }
 
@@ -555,7 +555,7 @@ nsHttpResponseHead::ParseStatusLine_locked(const nsACString &line)
 
     int32_t index = line.FindChar(' ');
 
-    if ((mVersion == NS_HTTP_VERSION_0_9) || (index == -1)) {
+    if ((mVersion == HttpVersion::v0_9) || (index == -1)) {
         mStatus = 200;
         AssignDefaultStatusText();
     }
@@ -846,7 +846,7 @@ nsHttpResponseHead::IsResumable()
     // is not 200, it is unlikely to be worth the trouble, especially for
     // non-2xx responses.
     return mStatus == 200 &&
-           mVersion >= NS_HTTP_VERSION_1_1 &&
+           mVersion >= HttpVersion::v1_1 &&
            mHeaders.PeekHeader(nsHttp::Content_Length) &&
            (mHeaders.PeekHeader(nsHttp::ETag) ||
             mHeaders.PeekHeader(nsHttp::Last_Modified)) &&
@@ -939,7 +939,7 @@ nsHttpResponseHead::Reset()
 
     mHeaders.Clear();
 
-    mVersion = NS_HTTP_VERSION_1_1;
+    mVersion = HttpVersion::v1_1;
     mStatus = 200;
     mContentLength = -1;
     mCacheControlPrivate = false;
@@ -1126,11 +1126,11 @@ nsHttpResponseHead::ParseVersion(const char *str)
         if (PL_strncasecmp(str, "ICY ", 4) == 0) {
             // ShoutCast ICY is HTTP/1.0-like. Assume it is HTTP/1.0.
             LOG(("Treating ICY as HTTP 1.0\n"));
-            mVersion = NS_HTTP_VERSION_1_0;
+            mVersion = HttpVersion::v1_0;
             return;
         }
         LOG(("looks like a HTTP/0.9 response\n"));
-        mVersion = NS_HTTP_VERSION_0_9;
+        mVersion = HttpVersion::v0_9;
         return;
     }
     str += 4;
@@ -1139,14 +1139,14 @@ nsHttpResponseHead::ParseVersion(const char *str)
         LOG(("server did not send a version number; assuming HTTP/1.0\n"));
         // NCSA/1.5.2 has a bug in which it fails to send a version number
         // if the request version is HTTP/1.1, so we fall back on HTTP/1.0
-        mVersion = NS_HTTP_VERSION_1_0;
+        mVersion = HttpVersion::v1_0;
         return;
     }
 
     char *p = PL_strchr(str, '.');
     if (p == nullptr) {
         LOG(("mal-formed server version; assuming HTTP/1.0\n"));
-        mVersion = NS_HTTP_VERSION_1_0;
+        mVersion = HttpVersion::v1_0;
         return;
     }
 
@@ -1156,13 +1156,13 @@ nsHttpResponseHead::ParseVersion(const char *str)
     int minor = atoi(p);
 
     if ((major > 2) || ((major == 2) && (minor >= 0)))
-        mVersion = NS_HTTP_VERSION_2_0;
+        mVersion = HttpVersion::v2_0;
     else if ((major == 1) && (minor >= 1))
         // at least HTTP/1.1
-        mVersion = NS_HTTP_VERSION_1_1;
+        mVersion = HttpVersion::v1_1;
     else
         // treat anything else as version 1.0
-        mVersion = NS_HTTP_VERSION_1_0;
+        mVersion = HttpVersion::v1_0;
 }
 
 void

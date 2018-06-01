@@ -46,13 +46,13 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  Http2Session(nsISocketTransport *, uint32_t version, bool attemptingEarlyData);
+  Http2Session(nsISocketTransport *, enum SpdyVersion version, bool attemptingEarlyData);
 
   MOZ_MUST_USE bool AddStream(nsAHttpTransaction *, int32_t,
                               bool, nsIInterfaceRequestor *) override;
   bool CanReuse() override { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams() override;
-  uint32_t SpdyVersion() override;
+  enum SpdyVersion SpdyVersion() override;
   bool TestJoinConnection(const nsACString &hostname, int32_t port) override;
   bool JoinConnection(const nsACString &hostname, int32_t port) override;
 
