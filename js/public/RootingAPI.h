@@ -768,10 +768,10 @@ template <typename T>
 struct FallibleHashMethods<MovableCellHasher<T>>
 {
     template <typename Lookup> static bool hasHash(Lookup&& l) {
-        return MovableCellHasher<T>::hasHash(mozilla::Forward<Lookup>(l));
+        return MovableCellHasher<T>::hasHash(std::forward<Lookup>(l));
     }
     template <typename Lookup> static bool ensureHash(Lookup&& l) {
-        return MovableCellHasher<T>::ensureHash(mozilla::Forward<Lookup>(l));
+        return MovableCellHasher<T>::ensureHash(std::forward<Lookup>(l));
     }
 };
 
@@ -801,7 +801,7 @@ class alignas(8) DispatchWrapper
     template <typename U>
     MOZ_IMPLICIT DispatchWrapper(U&& initial)
       : tracer(&JS::GCPolicy<T>::trace),
-        storage(mozilla::Forward<U>(initial))
+        storage(std::forward<U>(initial))
     { }
 
     // Mimic a pointer type, so that we can drop into Rooted.
@@ -995,7 +995,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
 
     template <typename RootingContext, typename S>
     Rooted(const RootingContext& cx, S&& initial)
-      : ptr(mozilla::Forward<S>(initial))
+      : ptr(std::forward<S>(initial))
     {
         MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
         registerWithRootLists(rootLists(cx));
@@ -1279,14 +1279,14 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
 
     template <typename U>
     PersistentRooted(RootingContext* cx, U&& initial)
-      : ptr(mozilla::Forward<U>(initial))
+      : ptr(std::forward<U>(initial))
     {
         registerWithRootLists(cx);
     }
 
     template <typename U>
     PersistentRooted(JSContext* cx, U&& initial)
-      : ptr(mozilla::Forward<U>(initial))
+      : ptr(std::forward<U>(initial))
     {
         registerWithRootLists(RootingContext::get(cx));
     }
@@ -1299,7 +1299,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
 
     template <typename U>
     PersistentRooted(JSRuntime* rt, U&& initial)
-      : ptr(mozilla::Forward<U>(initial))
+      : ptr(std::forward<U>(initial))
     {
         registerWithRootLists(rt);
     }
@@ -1329,7 +1329,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
 
     template <typename U>
     void init(JSContext* cx, U&& initial) {
-        ptr = mozilla::Forward<U>(initial);
+        ptr = std::forward<U>(initial);
         registerWithRootLists(RootingContext::get(cx));
     }
 
@@ -1360,7 +1360,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
     template <typename U>
     void set(U&& value) {
         MOZ_ASSERT(initialized());
-        ptr = mozilla::Forward<U>(value);
+        ptr = std::forward<U>(value);
     }
 
     detail::MaybeWrapped<T> ptr;

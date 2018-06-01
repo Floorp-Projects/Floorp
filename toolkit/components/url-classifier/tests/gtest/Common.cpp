@@ -16,7 +16,7 @@ using namespace mozilla::safebrowsing;
 template<typename Function>
 void RunTestInNewThread(Function&& aFunction) {
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "RunTestInNewThread", mozilla::Forward<Function>(aFunction));
+    "RunTestInNewThread", std::forward<Function>(aFunction));
   nsCOMPtr<nsIThread> testingThread;
   nsresult rv =
     NS_NewNamedThread("Testing Thread", getter_AddRefs(testingThread), r);

@@ -480,7 +480,7 @@ LIRGeneratorShared::allocateVariadic(uint32_t numOperands, Args&&... args)
         return nullptr;
 
     LClass* ins = static_cast<LClass*>(buf);
-    new(ins) LClass(numOperands, mozilla::Forward<Args>(args)...);
+    new(ins) LClass(numOperands, std::forward<Args>(args)...);
 
     ins->initOperandsOffset(sizeof(LClass));
 

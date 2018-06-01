@@ -69,7 +69,7 @@ public:
 
   template<typename... Args>
   void Add(Args&&... aArgs) {
-    mFiles.emplace_back(Forward<Args>(aArgs)...);
+    mFiles.emplace_back(std::forward<Args>(aArgs)...);
   }
 
   int GetDesc(const char* aPath) const;

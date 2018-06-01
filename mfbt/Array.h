@@ -28,7 +28,7 @@ public:
 
   template <typename... Args>
   MOZ_IMPLICIT Array(Args&&... aArgs)
-    : mArr{mozilla::Forward<Args>(aArgs)...}
+    : mArr{std::forward<Args>(aArgs)...}
   {
     static_assert(sizeof...(aArgs) == Length,
                   "The number of arguments should be equal to the template parameter Length");

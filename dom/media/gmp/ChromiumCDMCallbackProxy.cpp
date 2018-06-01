@@ -21,7 +21,7 @@ void ChromiumCDMCallbackProxy::DispatchToMainThread(const char* const aLabel,
       aLabel,
       mProxy,
       aFunc,
-      Forward<Args>(aArgs)...),
+      std::forward<Args>(aArgs)...),
     NS_DISPATCH_NORMAL);
 }
 

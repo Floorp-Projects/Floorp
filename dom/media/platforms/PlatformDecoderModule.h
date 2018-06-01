@@ -71,7 +71,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
     : mConfig(aConfig)
   {
-    Set(mozilla::Forward<T1>(a1), mozilla::Forward<Ts>(args)...);
+    Set(std::forward<T1>(a1), std::forward<Ts>(args)...);
   }
 
   const VideoInfo& VideoConfig() const
@@ -140,8 +140,8 @@ private:
   template <typename T1, typename T2, typename... Ts>
   void Set(T1&& a1, T2&& a2, Ts&&... args)
   {
-    Set(mozilla::Forward<T1>(a1));
-    Set(mozilla::Forward<T2>(a2), mozilla::Forward<Ts>(args)...);
+    Set(std::forward<T1>(a1));
+    Set(std::forward<T2>(a2), std::forward<Ts>(args)...);
   }
 };
 

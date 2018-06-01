@@ -436,7 +436,7 @@ public:
     template<typename AInitDatas>
     InitData(const nsAString& aType, AInitDatas&& aInitData)
       : mType(aType)
-      , mInitData(Forward<AInitDatas>(aInitData))
+      , mInitData(std::forward<AInitDatas>(aInitData))
     {
     }
 
@@ -463,7 +463,7 @@ public:
   template<typename AInitDatas>
   void AddInitData(const nsAString& aType, AInitDatas&& aInitData)
   {
-    mInitDatas.AppendElement(InitData(aType, Forward<AInitDatas>(aInitData)));
+    mInitDatas.AppendElement(InitData(aType, std::forward<AInitDatas>(aInitData)));
     mEncrypted = true;
   }
 

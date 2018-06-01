@@ -479,7 +479,7 @@ JS_PUBLIC_API(char*) js_strdup(const char* s);
     NEWNAME(Args&&... args) MOZ_HEAP_ALLOCATOR { \
         void* memory = ALLOCATOR(sizeof(T)); \
         return MOZ_LIKELY(memory) \
-            ? new(memory) T(mozilla::Forward<Args>(args)...) \
+            ? new(memory) T(std::forward<Args>(args)...) \
             : nullptr; \
     }
 
@@ -497,7 +497,7 @@ JS_PUBLIC_API(char*) js_strdup(const char* s);
     template <class T, typename... Args> \
     QUALIFIERS mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
     MAKENAME(Args&&... args) MOZ_HEAP_ALLOCATOR { \
-        T* ptr = NEWNAME<T>(mozilla::Forward<Args>(args)...); \
+        T* ptr = NEWNAME<T>(std::forward<Args>(args)...); \
         return mozilla::UniquePtr<T, JS::DeletePolicy<T>>(ptr); \
     }
 

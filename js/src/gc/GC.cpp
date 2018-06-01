@@ -6252,7 +6252,7 @@ struct IncrementalIter
       : maybeIter(maybeIter)
     {
         if (maybeIter.isNothing())
-            maybeIter.emplace(mozilla::Forward<Args>(args)...);
+            maybeIter.emplace(std::forward<Args>(args)...);
     }
 
     ~IncrementalIter() {

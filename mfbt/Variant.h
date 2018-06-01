@@ -279,7 +279,7 @@ struct AsVariantTemporary
 
   template<typename U>
   explicit AsVariantTemporary(U&& aValue)
-    : mValue(Forward<U>(aValue))
+    : mValue(std::forward<U>(aValue))
   {}
 
   AsVariantTemporary(const AsVariantTemporary& aOther)
@@ -528,7 +528,7 @@ public:
   {
     static_assert(detail::SelectVariantType<RefT, Ts...>::count == 1,
                   "Variant can only be selected by type if that type is unique");
-    ::new (KnownNotNull, ptr()) T(Forward<RefT>(aT));
+    ::new (KnownNotNull, ptr()) T(std::forward<RefT>(aT));
   }
 
   /**
@@ -541,7 +541,7 @@ public:
   MOZ_IMPLICIT Variant(const VariantType<T>&, Args&&... aTs)
     : tag(Impl::template tag<T>())
   {
-    ::new (KnownNotNull, ptr()) T(Forward<Args>(aTs)...);
+    ::new (KnownNotNull, ptr()) T(std::forward<Args>(aTs)...);
   }
 
   /**
@@ -556,7 +556,7 @@ public:
     : tag(N)
   {
     using T = typename detail::Nth<N, Ts...>::Type;
-    ::new (KnownNotNull, ptr()) T(Forward<Args>(aTs)...);
+    ::new (KnownNotNull, ptr()) T(std::forward<Args>(aTs)...);
   }
 
   /**
@@ -752,7 +752,7 @@ template<typename T>
 detail::AsVariantTemporary<T>
 AsVariant(T&& aValue)
 {
-  return detail::AsVariantTemporary<T>(Forward<T>(aValue));
+  return detail::AsVariantTemporary<T>(std::forward<T>(aValue));
 }
 
 } // namespace mozilla

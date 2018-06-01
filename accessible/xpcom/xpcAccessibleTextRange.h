@@ -63,7 +63,7 @@ public:
 
 private:
   explicit xpcAccessibleTextRange(TextRange&& aRange) :
-    mRange(Forward<TextRange>(aRange)) {}
+    mRange(std::forward<TextRange>(aRange)) {}
   xpcAccessibleTextRange() {}
 
   ~xpcAccessibleTextRange() {}

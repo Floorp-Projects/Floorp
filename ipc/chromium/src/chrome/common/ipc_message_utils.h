@@ -132,7 +132,7 @@ template<typename P>
 static inline void
 WriteParam(Message* m, P&& p) {
   ParamTraits<typename ParamTraitsSelector<P>::Type>
-    ::Write(m, mozilla::Forward<P>(p));
+    ::Write(m, std::forward<P>(p));
 }
 
 template<typename P>

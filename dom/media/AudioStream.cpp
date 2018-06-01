@@ -331,7 +331,7 @@ template <typename Function, typename... Args>
 int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs)
 {
   MonitorAutoUnlock mon(mMonitor);
-  return aFunction(mCubebStream.get(), Forward<Args>(aArgs)...);
+  return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
 nsresult
