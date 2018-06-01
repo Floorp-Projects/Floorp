@@ -11,6 +11,8 @@ import android.view.View;
 
 import org.mozilla.focus.session.Session;
 
+import java.util.concurrent.CountDownLatch;
+
 public interface IWebView {
     class HitTarget {
         public final boolean isLink;
@@ -140,6 +142,7 @@ public interface IWebView {
 
     void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL);
 
+    void uploadData(CountDownLatch latch);
     /**
      * Get the title of the currently displayed website.
      */

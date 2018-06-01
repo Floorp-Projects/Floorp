@@ -16,17 +16,24 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+
+import java.util.concurrent.CountDownLatch;
 
 import kotlin.text.Charsets;
 
@@ -480,6 +487,31 @@ public class WebViewProvider {
         @Override
         public void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL) {
             geckoSession.loadData(data.getBytes(Charsets.UTF_8), mimeType, baseURL);
+        }
+
+        @Override
+        public void uploadData(final CountDownLatch latch) {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    final GeckoResponse<GeckoBundle> response = new GeckoResponse<GeckoBundle>() {
+                        @Override
+                        public void respond(GeckoBundle value) {
+                            if (value != null) {
+                                try {
+                                    final JSONObject jsonData = value.toJSONObject();
+                                    TelemetryWrapper.addMobileMetricsPing(jsonData);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            latch.countDown();
+                        }
+                    };
+
+                    geckoRuntime.getTelemetry().getSnapshots(true, response);
+                }
+            });
         }
 
         @Override

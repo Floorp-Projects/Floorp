@@ -19,6 +19,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
+import org.json.JSONObject
 import org.mozilla.focus.Components
 import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.utils.Settings
@@ -31,6 +32,7 @@ import org.mozilla.telemetry.measurement.SearchesMeasurement
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder
+import org.mozilla.telemetry.ping.TelemetryMobileMetricsPingBuilder
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler
 import org.mozilla.telemetry.serialize.JSONPingSerializer
 import org.mozilla.telemetry.storage.FileTelemetryStorage
@@ -291,6 +293,14 @@ object TelemetryWrapper {
         averageTime = 0.0
     }
 
+    private var shouldSendMobileMetrics: Boolean = false
+
+    @JvmStatic
+    fun addMobileMetricsPing(mobileMetrics: JSONObject) {
+        TelemetryHolder.get().addPingBuilder(TelemetryMobileMetricsPingBuilder(mobileMetrics, TelemetryHolder.get().configuration))
+        shouldSendMobileMetrics = true
+    }
+
     @JvmStatic
     fun stopSession() {
         TelemetryHolder.get().recordSessionEnd()
@@ -306,10 +316,18 @@ object TelemetryWrapper {
 
     @JvmStatic
     fun stopMainActivity() {
-        TelemetryHolder.get()
-                .queuePing(TelemetryCorePingBuilder.TYPE)
-                .queuePing(TelemetryEventPingBuilder.TYPE)
-                .scheduleUpload()
+        if (shouldSendMobileMetrics) {
+            TelemetryHolder.get()
+                    .queuePing(TelemetryCorePingBuilder.TYPE)
+                    .queuePing(TelemetryEventPingBuilder.TYPE)
+                    .queuePing(TelemetryMobileMetricsPingBuilder.TYPE)
+                    .scheduleUpload()
+        } else {
+            TelemetryHolder.get()
+                    .queuePing(TelemetryCorePingBuilder.TYPE)
+                    .queuePing(TelemetryEventPingBuilder.TYPE)
+                    .scheduleUpload()
+        }
     }
 
     @JvmStatic
