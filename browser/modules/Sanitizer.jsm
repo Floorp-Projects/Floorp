@@ -765,11 +765,9 @@ async function maybeSanitizeSessionPrincipals(principals) {
 
 async function sanitizeSessionPrincipal(principal) {
   await new Promise(resolve => {
-    let service = Cc["@mozilla.org/clear-data-service;1"]
-                    .getService(Ci.nsIClearDataService);
-    service.deleteDataFromPrincipal(principal, true /* user request */,
-                                    Ci.nsIClearDataService.CLEAR_DOM_STORAGES,
-                                    resolve);
+    Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
+                                               Ci.nsIClearDataService.CLEAR_DOM_STORAGES,
+                                               resolve);
   });
 }
 

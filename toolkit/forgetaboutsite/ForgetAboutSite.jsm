@@ -18,7 +18,7 @@ var ForgetAboutSite = {
     ["http://", "https://"].forEach(scheme => {
       promises.push(new Promise(resolve => {
         Services.clearData.deleteDataFromHost(aDomain, true /* user request */,
-                                              Ci.nsIClearDataService.CLEAR_ALL,
+                                              Ci.nsIClearDataService.CLEAR_FORGET_ABOUT_SITE,
                                               value => {
           errorCount += bitCounting(value);
           resolve();
