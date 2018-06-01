@@ -126,8 +126,11 @@ HarnessErrorList = [
 ]
 
 LogcatErrorList = [
-    {'substr': 'Fatal signal 11 (SIGSEGV)', 'level': ERROR, 'explanation': 'This usually indicates the B2G process has crashed'},
-    {'substr': 'Fatal signal 7 (SIGBUS)', 'level': ERROR, 'explanation': 'This usually indicates the B2G process has crashed'},
+    {'substr': 'Fatal signal 11 (SIGSEGV)', 'level': ERROR,
+     'explanation': 'This usually indicates the B2G process has crashed'},
+    {'substr': 'Fatal signal 7 (SIGBUS)', 'level': ERROR,
+     'explanation': 'This usually indicates the B2G process has crashed'},
     {'substr': '[JavaScript Error:', 'level': WARNING},
-    {'substr': 'seccomp sandbox violation', 'level': ERROR, 'explanation': 'A content process has violated the system call sandbox (bug 790923)'},
+    {'substr': 'seccomp sandbox violation', 'level': ERROR,
+        'explanation': 'A content process has violated the system call sandbox (bug 790923)'},
 ]

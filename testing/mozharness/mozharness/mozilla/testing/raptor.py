@@ -41,6 +41,7 @@ RaptorErrorList = PythonErrorList + [
      'explanation': r"""Most likely the browser failed to launch, or the test was otherwise unsuccessful in even starting."""},
 ]
 
+
 class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin):
     """
     install and run raptor tests
@@ -95,10 +96,11 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         self.tests = None
         self.gecko_profile = self.config.get('gecko_profile')
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
-        self.mitmproxy_rel_bin = None # some platforms download a mitmproxy release binary
-        self.mitmproxy_pageset = None # zip file found on tooltool that contains all of the mitmproxy recordings
-        self.mitmproxy_recordings_file_list = self.config.get('mitmproxy', None) # files inside the recording set
-        self.mitmdump = None # path to mitmdump tool itself, in py3 venv
+        self.mitmproxy_rel_bin = None  # some platforms download a mitmproxy release binary
+        self.mitmproxy_pageset = None  # zip file found on tooltool that contains all of the mitmproxy recordings
+        self.mitmproxy_recordings_file_list = self.config.get(
+            'mitmproxy', None)  # files inside the recording set
+        self.mitmdump = None  # path to mitmdump tool itself, in py3 venv
 
     # We accept some configuration options from the try commit message in the format mozharness: <options>
     # Example try commit message:
@@ -118,7 +120,8 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         if self.abs_dirs:
             return self.abs_dirs
         abs_dirs = super(Raptor, self).query_abs_dirs()
-        abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
+        abs_dirs['abs_blob_upload_dir'] = os.path.join(
+            abs_dirs['abs_work_dir'], 'blobber_upload_dir')
         abs_dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -128,7 +131,8 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         # binary path
         binary_path = self.binary_path or self.config.get('binary_path')
         if not binary_path:
-            self.fatal("Raptor requires a path to the binary.  You can specify binary_path or add download-and-extract to your action list.")
+            self.fatal(
+                "Raptor requires a path to the binary.  You can specify binary_path or add download-and-extract to your action list.")
         # raptor options
         if binary_path.endswith('.exe'):
             binary_path = binary_path[:-4]
@@ -286,7 +290,7 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         python = self.query_python_path()
         self.run_command([python, "--version"])
         parser = RaptorOutputParser(config=self.config, log_obj=self.log_obj,
-                                   error_list=RaptorErrorList)
+                                    error_list=RaptorErrorList)
         env = {}
         env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
         if not self.run_local:
@@ -338,9 +342,9 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
             raptor_process.wait()
         else:
             self.return_code = self.run_command(command, cwd=self.workdir,
-                                            output_timeout=output_timeout,
-                                            output_parser=parser,
-                                            env=env)
+                                                output_timeout=output_timeout,
+                                                output_parser=parser,
+                                                env=env)
         if parser.minidump_output:
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
@@ -383,4 +387,3 @@ class RaptorOutputParser(OutputParser):
         if m:
             self.found_perf_data.append(m.group(1))
         super(RaptorOutputParser, self).parse_single_line(line)
-
