@@ -13,8 +13,6 @@
 #include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ServiceWorkerManager.h"
-#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -450,40 +448,6 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
   return promiseList->GetResultPromise();
 }
 
-namespace {
-
-RefPtr<ClientOpPromise>
-ClaimOnMainThread(const ClientInfo& aClientInfo,
-                  const ServiceWorkerDescriptor& aDescriptor)
-{
-  RefPtr<ClientOpPromise::Private> promise =
-    new ClientOpPromise::Private(__func__);
-
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
-    [promise, clientInfo = Move(aClientInfo), desc = Move(aDescriptor)] () {
-      auto scopeExit = MakeScopeExit([&] {
-        promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
-      });
-
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      NS_ENSURE_TRUE_VOID(swm);
-
-      RefPtr<GenericPromise> inner = swm->MaybeClaimClient(clientInfo, desc);
-      inner->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-        [promise] (bool aResult) {
-          promise->Resolve(NS_OK, __func__);
-        }, [promise] (nsresult aRv) {
-          promise->Reject(aRv, __func__);
-        });
-    });
-
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
-
-  return promise.forget();
-}
-
-} // anonymous namespace
-
 RefPtr<ClientOpPromise>
 ClientManagerService::Claim(const ClientClaimArgs& aArgs)
 {
@@ -523,13 +487,7 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
       continue;
     }
 
-    if (ServiceWorkerParentInterceptEnabled()) {
-      promiseList->AddPromise(
-        ClaimOnMainThread(source->Info(),
-                          ServiceWorkerDescriptor(serviceWorker)));
-    } else {
-      promiseList->AddPromise(source->StartOp(aArgs));
-    }
+    promiseList->AddPromise(source->StartOp(aArgs));
   }
 
   // Maybe finish the promise now in case we didn't find any matching clients.
