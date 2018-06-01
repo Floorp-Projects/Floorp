@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* globals module */
+
 /**
  * This is the registry for all DAMP tests. Tests will be run in the order specified by
  * the DAMP_TESTS array.
@@ -17,7 +19,7 @@
  * - {Boolean} cold: set to true to run the test only during the first run of the browser
  */
 
-window.DAMP_TESTS = [
+module.exports = [
   {
     name: "inspector.cold-open",
     path: "inspector/cold-open.js",
