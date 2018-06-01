@@ -666,8 +666,6 @@ public:
 
   uint32_t CountGraphemeClusters() const;
 
-  bool HasAnyNoncollapsedCharacters() override;
-
 protected:
   virtual ~nsTextFrame();
 
@@ -883,6 +881,8 @@ protected:
     bool aForInsertionPoint);
 
   void ClearFrameOffsetCache();
+
+  bool HasAnyNoncollapsedCharacters() override;
 
   void ClearMetrics(ReflowOutput& aMetrics);
 

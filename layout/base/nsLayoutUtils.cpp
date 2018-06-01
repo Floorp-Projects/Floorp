@@ -7851,16 +7851,14 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
 static void
 GetFontFacesForFramesInner(nsIFrame* aFrame,
                            nsLayoutUtils::UsedFontFaceTable& aFontFaces,
-                           uint32_t aMaxRanges,
-                           bool aSkipCollapsedWhitespace)
+                           uint32_t aMaxRanges)
 {
   MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   if (aFrame->IsTextFrame()) {
     if (!aFrame->GetPrevContinuation()) {
       nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, true,
-                                         aFontFaces, aMaxRanges,
-                                         aSkipCollapsedWhitespace);
+                                         aFontFaces, aMaxRanges);
     }
     return;
   }
@@ -7872,8 +7870,7 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       child = nsPlaceholderFrame::GetRealFrameFor(child);
-      GetFontFacesForFramesInner(child, aFontFaces, aMaxRanges,
-                                 aSkipCollapsedWhitespace);
+      GetFontFacesForFramesInner(child, aFontFaces, aMaxRanges);
     }
   }
 }
@@ -7881,14 +7878,12 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
 /* static */ nsresult
 nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
                                      UsedFontFaceTable& aFontFaces,
-                                     uint32_t aMaxRanges,
-                                     bool aSkipCollapsedWhitespace)
+                                     uint32_t aMaxRanges)
 {
   MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   while (aFrame) {
-    GetFontFacesForFramesInner(aFrame, aFontFaces, aMaxRanges,
-                               aSkipCollapsedWhitespace);
+    GetFontFacesForFramesInner(aFrame, aFontFaces, aMaxRanges);
     aFrame = GetNextContinuationOrIBSplitSibling(aFrame);
   }
 
@@ -7959,8 +7954,7 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                    int32_t aEndOffset,
                                    bool aFollowContinuations,
                                    UsedFontFaceTable& aFontFaces,
-                                   uint32_t aMaxRanges,
-                                   bool aSkipCollapsedWhitespace)
+                                   uint32_t aMaxRanges)
 {
   MOZ_ASSERT(aFrame, "NULL frame pointer");
 
@@ -8000,13 +7994,9 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
       }
     }
 
-    if (!aSkipCollapsedWhitespace ||
-        (curr->HasAnyNoncollapsedCharacters() &&
-         curr->HasNonSuppressedText())) {
-      gfxTextRun::Range range(iter.ConvertOriginalToSkipped(fstart),
-                              iter.ConvertOriginalToSkipped(fend));
-      AddFontsFromTextRun(textRun, curr, iter, range, aFontFaces, aMaxRanges);
-    }
+    gfxTextRun::Range range(iter.ConvertOriginalToSkipped(fstart),
+                            iter.ConvertOriginalToSkipped(fend));
+    AddFontsFromTextRun(textRun, curr, iter, range, aFontFaces, aMaxRanges);
 
     curr = next;
   } while (aFollowContinuations && curr);
