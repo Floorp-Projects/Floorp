@@ -97,6 +97,30 @@ js::gcstats::ExplainAbortReason(gc::AbortReason reason)
     }
 }
 
+static FILE*
+MaybeOpenFileFromEnv(const char* env)
+{
+    FILE *file;
+    const char* value = getenv(env);
+
+    if (!value)
+        return nullptr;
+
+    if (strcmp(value, "none") == 0) {
+        file = nullptr;
+    } else if (strcmp(value, "stdout") == 0) {
+        file = stdout;
+    } else if (strcmp(value, "stderr") == 0) {
+        file = stderr;
+    } else {
+        file = fopen(value, "a");
+        if (!file)
+            MOZ_CRASH("Failed to open log file.");
+    }
+
+    return file;
+}
+
 struct PhaseKindInfo
 {
     Phase firstPhase;
@@ -551,6 +575,24 @@ Statistics::renderNurseryJson(JSRuntime* rt) const
     return UniqueChars(printer.release());
 }
 
+#ifdef DEBUG
+void
+Statistics::writeLogMessage(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    if (gcDebugFile) {
+        TimeDuration sinceStart = TimeStamp::Now() -
+            TimeStamp::ProcessCreation();
+        fprintf(gcDebugFile, "%12.3f: ", sinceStart.ToMicroseconds());
+        vfprintf(gcDebugFile, fmt, args);
+        fprintf(gcDebugFile, "\n");
+        fflush(gcDebugFile);
+    }
+    va_end(args);
+}
+#endif
+
 UniqueChars
 Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 {
@@ -695,7 +737,8 @@ Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter& 
 
 Statistics::Statistics(JSRuntime* rt)
   : runtime(rt),
-    fp(nullptr),
+    gcTimerFile(nullptr),
+    gcDebugFile(nullptr),
     nonincrementalReason_(gc::AbortReason::None),
     preBytes(0),
     thresholdTriggered(false),
@@ -734,22 +777,10 @@ Statistics::Statistics(JSRuntime* rt)
     MOZ_ALWAYS_TRUE(phaseStack.reserve(MAX_PHASE_NESTING));
     MOZ_ALWAYS_TRUE(suspendedPhases.reserve(MAX_SUSPENDED_PHASES));
 
-    const char* env = getenv("MOZ_GCTIMER");
-    if (env) {
-        if (strcmp(env, "none") == 0) {
-            fp = nullptr;
-        } else if (strcmp(env, "stdout") == 0) {
-            fp = stdout;
-        } else if (strcmp(env, "stderr") == 0) {
-            fp = stderr;
-        } else {
-            fp = fopen(env, "a");
-            if (!fp)
-                MOZ_CRASH("Failed to open MOZ_GCTIMER log file.");
-        }
-    }
+    gcTimerFile = MaybeOpenFileFromEnv("MOZ_GCTIMER");
+    gcDebugFile = MaybeOpenFileFromEnv("JS_GC_DEBUG");
 
-    env = getenv("JS_GC_PROFILE");
+    const char* env = getenv("JS_GC_PROFILE");
     if (env) {
         if (0 == strcmp(env, "help")) {
             fprintf(stderr, "JS_GC_PROFILE=N\n"
@@ -763,8 +794,10 @@ Statistics::Statistics(JSRuntime* rt)
 
 Statistics::~Statistics()
 {
-    if (fp && fp != stdout && fp != stderr)
-        fclose(fp);
+    if (gcTimerFile && gcTimerFile != stdout && gcTimerFile != stderr)
+        fclose(gcTimerFile);
+    if (gcDebugFile && gcDebugFile != stdout && gcDebugFile != stderr)
+        fclose(gcDebugFile);
 }
 
 /* static */ bool
@@ -918,16 +951,16 @@ void
 Statistics::printStats()
 {
     if (aborted) {
-        fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
+        fprintf(gcTimerFile, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
     } else {
         UniqueChars msg = formatDetailedMessage();
         if (msg) {
             double secSinceStart =
                 (slices_[0].start - TimeStamp::ProcessCreation()).ToSeconds();
-            fprintf(fp, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
+            fprintf(gcTimerFile, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
         }
     }
-    fflush(fp);
+    fflush(gcTimerFile);
 }
 
 void
@@ -1035,6 +1068,8 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
             (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
         (*sliceCallback)(cx, JS::GC_SLICE_BEGIN, desc);
     }
+
+    writeLogMessage("begin slice");
 }
 
 void
@@ -1049,6 +1084,7 @@ Statistics::endSlice()
         slice.endFaults = GetPageFaultCount();
         slice.finalState = runtime->gc.state();
 
+        writeLogMessage("end slice");
         TimeDuration sliceTime = slice.end - slice.start;
         runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
         runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slice.wasReset());
@@ -1086,7 +1122,7 @@ Statistics::endSlice()
 
     bool last = !runtime->gc.isIncrementalGCInProgress();
     if (last) {
-        if (fp)
+        if (gcTimerFile)
             printStats();
 
         if (!aborted)
@@ -1250,6 +1286,7 @@ Statistics::recordPhaseBegin(Phase phase)
 
     phaseStack.infallibleAppend(phase);
     phaseStartTimes[phase] = now;
+    writeLogMessage("begin: %s", phases[phase].path);
 }
 
 void
@@ -1299,6 +1336,7 @@ Statistics::recordPhaseEnd(Phase phase)
 
 #ifdef DEBUG
     phaseEndTimes[phase] = now;
+    writeLogMessage("end: %s", phases[phase].path);
 #endif
 }
 

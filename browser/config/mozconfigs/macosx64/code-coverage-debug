@@ -1,0 +1,3 @@
+. "$topsrcdir/browser/config/mozconfigs/macosx64/code-coverage"
+
+ac_add_options --enable-debug

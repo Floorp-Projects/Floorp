@@ -95,3 +95,5 @@ bool OpenTypeVVAR::Serialize(OTSStream* out) {
 }
 
 }  // namespace ots
+
+#undef TABLE_NAME
