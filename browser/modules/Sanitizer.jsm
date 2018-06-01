@@ -429,28 +429,13 @@ var Sanitizer = {
 
     siteSettings: {
       async clear(range) {
-        let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SITESETTINGS", refObj);
-
         await clearData(range, Ci.nsIClearDataService.CLEAR_PERMISSIONS |
                                Ci.nsIClearDataService.CLEAR_PREFERENCES |
-                               Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS);
-
-        try {
-          // Clear site security settings - no support for ranges in this
-          // interface either, so we clearAll().
-          let sss = Cc["@mozilla.org/ssservice;1"]
-                      .getService(Ci.nsISiteSecurityService);
-          sss.clearAll();
-        } catch (ex) {
-          seenException = ex;
-        }
-
+                               Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
+                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS);
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
-        if (seenException) {
-          throw seenException;
-        }
       }
     },
 

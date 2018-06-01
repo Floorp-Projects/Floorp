@@ -168,10 +168,13 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 16;
 
+  /**
+   * Secure site settings
+   */
+  const uint32_t CLEAR_SECURITY_SETTINGS = 1 << 17;
+
   /* TODO
   const uint32_t CLEAR_EME = 1 << 4;
-  const uint32_t CLEAR_HSTS = 1 << 12;
-  const uint32_t CLEAR_HPKP = 1 << 13;
   const uint32_t CLEAR_FORMDATA = 1 << 16;
   */
 

@@ -553,6 +553,43 @@ const PreferencesCleaner = {
   },
 };
 
+const SecuritySettingsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      let sss = Cc["@mozilla.org/ssservice;1"]
+                  .getService(Ci.nsISiteSecurityService);
+      for (let type of [Ci.nsISiteSecurityService.HEADER_HSTS,
+                        Ci.nsISiteSecurityService.HEADER_HPKP]) {
+        // Also remove HSTS/HPKP/OMS information for subdomains by enumerating
+        // the information in the site security service.
+        let enumerator = sss.enumerate(type);
+        while (enumerator.hasMoreElements()) {
+          let entry = enumerator.getNext();
+          let hostname = entry.QueryInterface(Ci.nsISiteSecurityState).hostname;
+          if (hasRootDomain(hostname, aHost)) {
+            // This uri is used as a key to remove the state.
+            let uri = Services.io.newURI("https://" + hostname);
+            sss.removeState(type, uri, 0, entry.originAttributes);
+          }
+        }
+      }
+
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      // Clear site security settings - no support for ranges in this
+      // interface either, so we clearAll().
+      let sss = Cc["@mozilla.org/ssservice;1"]
+                    .getService(Ci.nsISiteSecurityService);
+      sss.clearAll();
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -605,6 +642,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES,
    cleaner: PreferencesCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
+   cleaner: SecuritySettingsCleaner, },
 ];
 
 this.ClearDataService = function() {};
