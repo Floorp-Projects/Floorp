@@ -10,8 +10,7 @@
 
 requestLongerTimeout(2);
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
-                 "persisting history - bug 943306";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for persisting history";
 const INPUT_HISTORY_COUNT = 10;
 
 const {
@@ -19,6 +18,14 @@ const {
 } = require("devtools/client/webconsole/selectors/history");
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await testHistory();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await testHistory();
+});
+
+async function testHistory() {
   info("Setting custom input history pref to " + INPUT_HISTORY_COUNT);
   Services.prefs.setIntPref("devtools.webconsole.inputHistoryCount", INPUT_HISTORY_COUNT);
 
@@ -101,7 +108,7 @@ add_task(async function() {
 
   info("Clearing custom input history pref");
   Services.prefs.clearUserPref("devtools.webconsole.inputHistoryCount");
-});
+}
 
 /**
  * Populate the history by running the following commands:
@@ -111,9 +118,8 @@ async function populateInputHistory(hud) {
   const jsterm = hud.jsterm;
 
   for (let i = 0; i < INPUT_HISTORY_COUNT; i++) {
-    // Set input value separately from execute so UP arrow accurately navigates
-    // history.
-    jsterm.setInputValue(i);
+    // Set input value separately from execute so UP arrow accurately navigates history.
+    jsterm.setInputValue(i.toString());
     await jsterm.execute();
   }
 }
@@ -123,7 +129,7 @@ async function populateInputHistory(hud) {
  *  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
  */
 function testNavigatingHistoryInUI(hud) {
-  const jsterm = hud.jsterm;
+  const {jsterm} = hud;
   jsterm.focus();
 
   // Count backwards from original input and make sure that pressing up
