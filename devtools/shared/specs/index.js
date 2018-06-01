@@ -255,8 +255,13 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/webgl",
   },
   {
-    types: ["worker", "pushSubscription", "serviceWorkerRegistration", "serviceWorker"],
-    spec: "devtools/shared/specs/worker",
+    types: ["pushSubscription", "serviceWorkerRegistration", "serviceWorker"],
+    spec: "devtools/shared/specs/worker/service-worker",
+    front: null,
+  },
+  {
+    types: ["worker"],
+    spec: "devtools/shared/specs/worker/worker",
     front: null,
   },
 ];

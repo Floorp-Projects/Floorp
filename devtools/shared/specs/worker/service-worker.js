@@ -3,34 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
-
-const workerSpec = generateActorSpec({
-  typeName: "worker",
-
-  methods: {
-    attach: {
-      request: {},
-      response: RetVal("json")
-    },
-    detach: {
-      request: {},
-      response: RetVal("json")
-    },
-    connect: {
-      request: {
-        options: Arg(0, "json"),
-      },
-      response: RetVal("json")
-    },
-    push: {
-      request: {},
-      response: RetVal("json")
-    },
-  },
-});
-
-exports.workerSpec = workerSpec;
+const {RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
 const pushSubscriptionSpec = generateActorSpec({
   typeName: "pushSubscription",
