@@ -65,8 +65,7 @@ namespace InspectorUtils {
   // to access via its .ranges attribute.
   [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(
       Range range,
-      optional unsigned long maxRanges = 0,
-      optional boolean skipCollapsedWhitespace = true);
+      optional unsigned long maxRanges = 0);
 
   sequence<DOMString> getCSSPseudoElementNames();
   void addPseudoClassLock(Element element,

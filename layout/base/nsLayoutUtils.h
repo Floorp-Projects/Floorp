@@ -2288,8 +2288,7 @@ public:
    */
   static nsresult GetFontFacesForFrames(nsIFrame* aFrame,
                                         UsedFontFaceTable& aResult,
-                                        uint32_t aMaxRanges,
-                                        bool aSkipCollapsedWhitespace);
+                                        uint32_t aMaxRanges);
 
   /**
    * Adds all font faces used within the specified range of text in aFrame,
@@ -2303,8 +2302,7 @@ public:
                                   int32_t aEndOffset,
                                   bool aFollowContinuations,
                                   UsedFontFaceTable& aResult,
-                                  uint32_t aMaxRanges,
-                                  bool aSkipCollapsedWhitespace);
+                                  uint32_t aMaxRanges);
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.
