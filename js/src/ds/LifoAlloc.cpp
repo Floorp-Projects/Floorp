@@ -51,11 +51,11 @@ void
 LifoAlloc::freeAll()
 {
     while (!chunks_.empty()) {
-        BumpChunk bc = std::move(chunks_.popFirst());
+        BumpChunk bc = chunks_.popFirst();
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
     while (!unused_.empty()) {
-        BumpChunk bc = std::move(unused_.popFirst());
+        BumpChunk bc = unused_.popFirst();
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
 
@@ -105,7 +105,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // chunks.
     if (!unused_.empty()) {
         if (unused_.begin()->canAlloc(n)) {
-            chunks_.append(std::move(unused_.popFirst()));
+            chunks_.append(unused_.popFirst());
             return true;
         }
 
@@ -114,8 +114,8 @@ LifoAlloc::getOrCreateChunk(size_t n)
             detail::BumpChunk* elem = i->next();
             MOZ_ASSERT(elem->empty());
             if (elem->canAlloc(n)) {
-                BumpChunkList temp = std::move(unused_.splitAfter(i.get()));
-                chunks_.append(std::move(temp.popFirst()));
+                BumpChunkList temp = unused_.splitAfter(i.get());
+                chunks_.append(temp.popFirst());
                 unused_.appendAll(std::move(temp));
                 return true;
             }

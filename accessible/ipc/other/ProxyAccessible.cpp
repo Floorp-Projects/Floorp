@@ -78,7 +78,7 @@ ProxyAccessible::RelationByType(RelationType aType) const
     if (ProxyAccessible* proxy = mDoc->GetAccessible(targetIDs[i]))
       targets.AppendElement(proxy);
 
-  return std::move(targets);
+  return targets;
 }
 
 void

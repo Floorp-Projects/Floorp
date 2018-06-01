@@ -197,7 +197,14 @@ TEST(PLDHashTableTest, MoveSemantics)
   PLDHashTable t2(&trivialOps, sizeof(PLDHashEntryStub));
   t2.Add((const void*)99);
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-move"
+#endif
   t1 = std::move(t1);   // self-move
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
   t1 = std::move(t2);   // empty overwritten with empty
 

@@ -6021,8 +6021,7 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument)
   }
 
   // process clearing any styles first
-  UniquePtr<PropItem> item =
-    std::move(HTMLEditorRef().mTypeInState->TakeClearProperty());
+  UniquePtr<PropItem> item = HTMLEditorRef().mTypeInState->TakeClearProperty();
 
   {
     // Transactions may set selection, but we will set selection if necessary.
@@ -6040,14 +6039,14 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      item = std::move(HTMLEditorRef().mTypeInState->TakeClearProperty());
+      item = HTMLEditorRef().mTypeInState->TakeClearProperty();
       weDidSomething = true;
     }
   }
 
   // then process setting any styles
   int32_t relFontSize = HTMLEditorRef().mTypeInState->TakeRelativeFontSize();
-  item = std::move(HTMLEditorRef().mTypeInState->TakeSetProperty());
+  item = HTMLEditorRef().mTypeInState->TakeSetProperty();
 
   if (item || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
