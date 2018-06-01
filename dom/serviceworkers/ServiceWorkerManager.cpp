@@ -2554,7 +2554,7 @@ ServiceWorkerManager::UpdateInternal(nsIPrincipal* aPrincipal,
 }
 
 already_AddRefed<GenericPromise>
-ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
+ServiceWorkerManager::MaybeClaimClient(const ClientInfo& aClientInfo,
                                        ServiceWorkerRegistrationInfo* aWorkerRegistration)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration);
@@ -2568,26 +2568,19 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
   }
 
   // Same origin check
-  if (!aWorkerRegistration->Principal()->Equals(aDocument->NodePrincipal())) {
+  nsCOMPtr<nsIPrincipal> principal(aClientInfo.GetPrincipal());
+  if (!aWorkerRegistration->Principal()->Equals(principal)) {
     ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
-    return ref.forget();
-  }
-
-  Maybe<ClientInfo> clientInfo(aDocument->GetClientInfo());
-  if (NS_WARN_IF(clientInfo.isNothing())) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
     return ref.forget();
   }
 
   // The registration that should be controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> matchingRegistration =
-    GetServiceWorkerRegistrationInfo(aDocument);
+    GetServiceWorkerRegistrationInfo(aClientInfo);
 
   // The registration currently controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> controllingRegistration;
-  GetClientRegistration(clientInfo.ref(),
-                        getter_AddRefs(controllingRegistration));
+  GetClientRegistration(aClientInfo, getter_AddRefs(controllingRegistration));
 
   if (aWorkerRegistration != matchingRegistration ||
       aWorkerRegistration == controllingRegistration) {
@@ -2595,18 +2588,17 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
     return ref.forget();
   }
 
-  ref = StartControllingClient(clientInfo.ref(), aWorkerRegistration);
+  ref = StartControllingClient(aClientInfo, aWorkerRegistration);
   return ref.forget();
 }
 
 already_AddRefed<GenericPromise>
-ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDoc,
+ServiceWorkerManager::MaybeClaimClient(const ClientInfo& aClientInfo,
                                        const ServiceWorkerDescriptor& aServiceWorker)
 {
   RefPtr<GenericPromise> ref;
 
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(aServiceWorker.PrincipalInfo());
+  nsCOMPtr<nsIPrincipal> principal = aServiceWorker.GetPrincipal();
   if (!principal) {
     ref = GenericPromise::CreateAndResolve(false, __func__);
     return ref.forget();
@@ -2625,7 +2617,7 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDoc,
     return ref.forget();
   }
 
-  ref = MaybeClaimClient(aDoc, registration);
+  ref = MaybeClaimClient(aClientInfo, registration);
   return ref.forget();
 }
 
