@@ -813,7 +813,7 @@ linux64-jsdcov/opt:
         platform: linux64-jsdcov/opt
         symbol: B
         tier: 2
-    run-on-projects: []
+    run-on-projects: ['mozilla-central', 'try']
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -842,7 +842,7 @@ linux64-ccov/debug:
         platform: linux64-ccov/debug
         symbol: B
         tier: 2
-    run-on-projects: []
+    run-on-projects: ['mozilla-central', 'try']
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -871,7 +871,7 @@ linux64-ccov/opt:
         platform: linux64-ccov/opt
         symbol: B
         tier: 2
-    run-on-projects: []
+    run-on-projects: ['try']
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
