@@ -30,22 +30,9 @@ ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mer
 # %include taskcluster/docker/recipes/hgrc
 COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
 
-# %include taskcluster/docker/recipes/install-node.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /build/install-node.sh
-
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
-# %include tools/lint/eslint/manifest.tt
-ADD topsrcdir/tools/lint/eslint/manifest.tt /tmp/eslint.tt
-# %include tools/lint/eslint/eslint-plugin-mozilla/manifest.tt
-ADD topsrcdir/tools/lint/eslint/eslint-plugin-mozilla/manifest.tt /tmp/eslint-plugin-mozilla.tt
-# %include tools/lint/python/flake8_requirements.txt
-ADD topsrcdir/tools/lint/python/flake8_requirements.txt /tmp/flake8_requirements.txt
-# %include tools/lint/spell/codespell_requirements.txt
-ADD topsrcdir/tools/lint/spell/codespell_requirements.txt /tmp/codespell_requirements.txt
-# %include tools/lint/tox/tox_requirements.txt
-ADD topsrcdir/tools/lint/tox/tox_requirements.txt /tmp/tox_requirements.txt
 RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/scripts/run-task

@@ -10,7 +10,6 @@ mkdir -p /setup
 cd /setup
 
 apt_packages=()
-apt_packages+=('codespell')
 apt_packages+=('curl')
 apt_packages+=('locales')
 apt_packages+=('git')
@@ -43,58 +42,6 @@ tooltool_fetch() {
 cd /build
 # shellcheck disable=SC1091
 . install-mercurial.sh
-
-###
-# ESLint Setup
-###
-
-# install node
-# shellcheck disable=SC1091
-. install-node.sh
-
-###
-# jsdoc Setup
-###
-
-npm install -g jsdoc@3.5.5
-
-/build/tooltool.py fetch -m /tmp/eslint.tt
-mv /build/node_modules /build/node_modules_eslint
-/build/tooltool.py fetch -m /tmp/eslint-plugin-mozilla.tt
-mv /build/node_modules /build/node_modules_eslint-plugin-mozilla
-
-###
-# fzf setup
-###
-
-tooltool_fetch <<EOF
-[
-  {
-    "size": 866160,
-    "digest": "9f0ef6bf44b8622bd0e4e8b0b5b5c714c0a2ce4487e6f234e7d4caac458164c521949f4d84b8296274e8bd20966f835e26f6492ba499405d38b620181e82429e",
-    "algorithm": "sha512",
-    "filename": "fzf-0.16.11-linux_amd64.tgz",
-    "unpack": true
-  }
-]
-EOF
-mv fzf /usr/local/bin
-
-###
-# Flake8 Setup
-###
-
-cd /setup
-
-pip install --require-hashes -r /tmp/flake8_requirements.txt
-
-###
-# tox Setup
-###
-
-cd /setup
-
-pip install --require-hashes -r /tmp/tox_requirements.txt
 
 cd /
 rm -rf /setup
