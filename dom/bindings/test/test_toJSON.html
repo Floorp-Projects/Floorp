@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1465602
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1465602</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1465602">Mozilla Bug 1465602</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 1465602 **/
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+
+  function go() {
+    var ourObj = new TestFunctions();
+    is(ourObj.one, 1, "Basic sanity check for our 'one'");
+    is(ourObj.two, undefined, "Basic sanity check for our 'two'");
+
+    var otherObj = new frames[0].TestFunctions();
+    is(otherObj.one, 1, "Basic sanity check for subframe 'one'");
+    is(otherObj.two, 2, "Basic sanity check for subframe 'two'");
+
+    var ourToJSON = ourObj.toJSON();
+    is(ourToJSON.one, 1, "We should have correct value for 'one'");
+    is(ourToJSON.two, undefined, "We should have correct value for 'two'");
+    ok(!Object.hasOwnProperty(ourToJSON, "two"),
+       "We should not have a property named 'two'");
+
+    var otherToJSON = otherObj.toJSON();
+    is(otherToJSON.one, 1, "Subframe should have correct value for 'one'");
+    is(otherToJSON.two, 2, "Subframe should have correct value for 'two'");
+
+    var mixedToJSON = ourObj.toJSON.call(otherObj);
+    is(mixedToJSON.one, 1, "First test should have correct value for 'one'");
+    is(mixedToJSON.two, 2, "First test should have correct value for 'two'");
+
+    mixedToJSON = otherObj.toJSON.call(ourObj);
+    is(mixedToJSON.one, 1, "Second test should have correct value for 'one'");
+    is(mixedToJSON.two, undefined,
+       "Second test should have correct value for 'two'");
+
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>
