@@ -43,6 +43,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLFrameElement.h"
+#include "RetainedDisplayListBuilder.h"
 
 using namespace mozilla;
 using mozilla::layout::RenderFrameParent;
@@ -1157,6 +1158,9 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  ClearDisplayItems();
+  other->ClearDisplayItems();
+
   if (mInnerView && other->mInnerView) {
     nsView* ourSubdocViews = mInnerView->GetFirstChild();
     nsView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
@@ -1258,6 +1262,30 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
     other->PresShell()->
       FrameNeedsReflow(other, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     other->InvalidateFrameSubtree();
+  }
+}
+
+void
+nsSubDocumentFrame::ClearDisplayItems()
+{
+  DisplayItemArray* items = GetProperty(DisplayItems());
+  if (!items) {
+    return;
+  }
+
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  MOZ_ASSERT(displayRoot);
+
+  RetainedDisplayListBuilder* retainedBuilder =
+    displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
+  MOZ_ASSERT(retainedBuilder);
+
+  for (nsDisplayItem* i : *items) {
+    if (i->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
+      i->GetChildren()->DeleteAll(retainedBuilder->Builder());
+      static_cast<nsDisplaySubDocument*>(i)->Disown();
+      break;
+    }
   }
 }
 
