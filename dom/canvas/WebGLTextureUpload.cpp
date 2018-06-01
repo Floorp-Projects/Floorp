@@ -227,7 +227,7 @@ FromImageBitmap(WebGLContext* webgl, const char* funcName, TexImageTarget target
                 uint32_t width, uint32_t height, uint32_t depth,
                 const dom::ImageBitmap& imageBitmap)
 {
-    UniquePtr<dom::ImageBitmapCloneData> cloneData = std::move(imageBitmap.ToCloneData());
+    UniquePtr<dom::ImageBitmapCloneData> cloneData = imageBitmap.ToCloneData();
     if (!cloneData) {
       return nullptr;
     }
@@ -460,7 +460,7 @@ ValidateTexOrSubImage(WebGLContext* webgl, const char* funcName, TexImageTarget 
     if (!blob || !blob->Validate(webgl, funcName, pi))
         return nullptr;
 
-    return std::move(blob);
+    return blob;
 }
 
 void

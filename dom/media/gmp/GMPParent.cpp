@@ -946,7 +946,7 @@ already_AddRefed<GMPContentParent>
 GMPParent::ForgetGMPContentParent()
 {
   MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
-  return std::move(mGMPContentParent.forget());
+  return mGMPContentParent.forget();
 }
 
 bool

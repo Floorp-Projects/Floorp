@@ -764,7 +764,7 @@ GetSupportedCapabilities(
     // Note: omitting steps 3.13.2, our robustness is not sophisticated enough
     // to require considering all requirements together.
   }
-  return std::move(supportedCapabilities);
+  return supportedCapabilities;
 }
 
 // "Get Supported Configuration and Consent" algorithm, steps 4-7 for

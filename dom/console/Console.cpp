@@ -2887,8 +2887,8 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(docShell, std::move(
-        MakeUnique<TimestampTimelineMarker>(key)));
+      timelines->AddMarkerForDocShell(docShell,
+        MakeUnique<TimestampTimelineMarker>(key));
     }
     // For `console.time(foo)` and `console.timeEnd(foo)`.
     else if (isTimelineRecording && aData.Length() == 1) {
@@ -2903,10 +2903,10 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(docShell, std::move(
+      timelines->AddMarkerForDocShell(docShell,
         MakeUnique<ConsoleTimelineMarker>(
           key, aMethodName == MethodTime ? MarkerTracingType::START
-                                         : MarkerTracingType::END)));
+                                         : MarkerTracingType::END));
     }
 
     return true;

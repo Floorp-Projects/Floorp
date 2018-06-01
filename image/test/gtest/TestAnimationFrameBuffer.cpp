@@ -28,7 +28,7 @@ Fill(AnimationFrameBuffer& buffer, size_t aLength)
   bool keepDecoding = false;
   for (size_t i = 0; i < aLength; ++i) {
     RawAccessFrameRef frame = CreateEmptyFrame();
-    keepDecoding = buffer.Insert(std::move(frame->RawAccessRef()));
+    keepDecoding = buffer.Insert(frame->RawAccessRef());
   }
   return keepDecoding;
 }
@@ -133,7 +133,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold)
   RawAccessFrameRef firstFrame;
   for (size_t i = 0; i < 5; ++i) {
     RawAccessFrameRef frame = CreateEmptyFrame();
-    bool keepDecoding = buffer.Insert(std::move(frame->RawAccessRef()));
+    bool keepDecoding = buffer.Insert(frame->RawAccessRef());
     EXPECT_TRUE(keepDecoding);
     EXPECT_FALSE(buffer.SizeKnown());
 
