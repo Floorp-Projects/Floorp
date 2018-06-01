@@ -7,6 +7,8 @@ CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
 RUSTDOC="${TOOLTOOL_DIR}/rustc/bin/rustdoc"
 RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
 
+NODEJS="${TOOLTOOL_DIR}/node/node.exe"
+
 ac_add_options --target=x86_64-pc-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
