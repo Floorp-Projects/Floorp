@@ -14,7 +14,7 @@ function test() {
 }
 
 function testThrowOutput() {
-  let scratchpad = gScratchpadWindow.Scratchpad, tests = [];
+  const scratchpad = gScratchpadWindow.Scratchpad, tests = [];
 
   const falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
                        "-Infinity", "NaN"];

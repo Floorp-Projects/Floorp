@@ -30,7 +30,7 @@ add_task(async function() {
   const box3 = doc.getElementById("box3");
   const box4 = doc.getElementById("box4");
 
-  let width = 100, height = 50;
+  const width = 100, height = 50;
 
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   tooltip.setContent(getTooltipContent(doc), {width, height});

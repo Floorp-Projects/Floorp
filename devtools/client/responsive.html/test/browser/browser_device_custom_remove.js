@@ -100,11 +100,13 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const deviceSelector = document.querySelector(".viewport-device-selector");
 
   info("Ensure device 1 is still in device selector");
-  const deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);
+  const deviceOption1 =
+    [...deviceSelector.options].find(opt => opt.value == device1.name);
   ok(deviceOption1, "Test device 1 option exists");
 
   info("Ensure device 2 is no longer in device selector");
-  const deviceOption2 = [...deviceSelector.options].find(opt => opt.value == device2.name);
+  const deviceOption2 =
+    [...deviceSelector.options].find(opt => opt.value == device2.name);
   ok(!deviceOption2, "Test device 2 option removed");
 
   openDeviceModal(ui);

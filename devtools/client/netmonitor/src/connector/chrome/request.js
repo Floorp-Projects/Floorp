@@ -64,10 +64,10 @@ function Header(id, headers) {
 }
 function PostData(id, postData, header) {
   const {headers, headersSize} = header;
-  let payload = {},
-    requestPostData = {
-      from: id, postDataDiscarded: false, postData: {}
-    };
+  const payload = {};
+  const requestPostData = {
+    from: id, postDataDiscarded: false, postData: {}
+  };
   if (postData) {
     requestPostData.postData.text = postData;
     payload.requestPostData = Object.assign({}, requestPostData);

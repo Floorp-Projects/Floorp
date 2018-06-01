@@ -27,7 +27,8 @@ async function testZoomSize(testActor, helper) {
   await helper.show("#polygon", {mode: "cssClipPath"});
   const quads = await testActor.getAllAdjustedQuads("#polygon");
   const { top, left, width, height } = quads.border[0].bounds;
-  const expectedStyle = `top:${top}px;left:${left}px;width:${width}px;height:${height}px;`;
+  const expectedStyle =
+    `top:${top}px;left:${left}px;width:${width}px;height:${height}px;`;
 
   // The top/left/width/height of the highlighter should not change at any zoom level.
   // It should always match the element being highlighted.

@@ -1083,8 +1083,9 @@ var Scratchpad = {
    * @return string
    */
   _getUnicodeContent: function SP__getUnicodeContent(aContent, aCharsetArray) {
-    let content = null,
-      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+    const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+
+    let content = null;
     aCharsetArray.some(charset => {
       try {
         converter.charset = charset;

@@ -93,7 +93,7 @@ add_task(async function() {
 
 function testRenderedFilters(filters, expected) {
   for (const [index, filter] of [...filters].entries()) {
-    let [name, value] = filter.children,
+    const [name, value] = filter.children,
       label = name.children[1],
       [input, unit] = value.children;
 

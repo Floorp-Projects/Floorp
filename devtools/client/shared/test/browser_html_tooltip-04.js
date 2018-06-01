@@ -35,7 +35,7 @@ add_task(async function() {
   const box2 = doc.getElementById("box2");
   const box3 = doc.getElementById("box3");
   const box4 = doc.getElementById("box4");
-  let height = TOOLTIP_HEIGHT, width = TOOLTIP_WIDTH;
+  const height = TOOLTIP_HEIGHT, width = TOOLTIP_WIDTH;
 
   // box1: Can only fit below box1
   info("Display the tooltip on box1.");

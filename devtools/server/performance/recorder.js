@@ -306,9 +306,9 @@ PerformanceRecorder.prototype = {
    *         A promise that is resolved once recording has started.
    */
   async startRecording(options) {
-    let profilerStart, timelineStart, memoryStart;
+    let timelineStart, memoryStart;
 
-    profilerStart = (async function() {
+    const profilerStart = (async function() {
       const data = await this._profiler.isActive();
       if (data.isActive) {
         return data;

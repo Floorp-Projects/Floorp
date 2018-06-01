@@ -211,7 +211,7 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     getBufferInfo: function() {
-      let position = {}, totalSize = {}, generation = {};
+      const position = {}, totalSize = {}, generation = {};
       Services.profiler.GetBufferInfo(position, totalSize, generation);
       return {
         position: position.value,

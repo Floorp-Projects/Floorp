@@ -22,7 +22,8 @@ const l10n = {
    */
   timestampString: function(milliseconds) {
     const d = new Date(milliseconds ? milliseconds : null);
-    let hours = d.getHours(), minutes = d.getMinutes();
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
     const seconds = d.getSeconds();
     milliseconds = d.getMilliseconds();
     const parameters = [hours, minutes, seconds, milliseconds];

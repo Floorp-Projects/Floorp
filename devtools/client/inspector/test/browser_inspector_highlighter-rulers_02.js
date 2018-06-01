@@ -47,7 +47,7 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Ask the content window to scroll to specific coords");
 
-  let x = 200, y = 300;
+  const x = 200, y = 300;
 
   let data = await testActor.scrollWindow(x, y);
 

@@ -13,7 +13,7 @@ add_task(async function() {
     get3(front, "create-node")
   ]);
 
-  let t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
+  const t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
   const curve = [-1, 0, 1];
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.2, t0]);
   await oscNode.addAutomationEvent("frequency", "setValueAtTime", [0.3, t1]);

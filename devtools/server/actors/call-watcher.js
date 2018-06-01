@@ -432,7 +432,8 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
           if (self._recording) {
             const type = CallWatcherFront.GETTER_FUNCTION;
             const stack = getStack(name);
-            const timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
+            const timestamp =
+              self.tabActor.window.performance.now() - self._timestampEpoch;
             subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
               args, result);
           }
@@ -447,7 +448,8 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
           if (self._recording) {
             const type = CallWatcherFront.SETTER_FUNCTION;
             const stack = getStack(name);
-            const timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
+            const timestamp =
+              self.tabActor.window.performance.now() - self._timestampEpoch;
             subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
               args, undefined);
           }

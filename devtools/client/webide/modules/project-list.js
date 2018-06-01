@@ -267,13 +267,10 @@ ProjectList.prototype = {
 
   updateCommands: function() {
     const doc = this._doc;
-    let newAppCmd;
-    let packagedAppCmd;
-    let hostedAppCmd;
 
-    newAppCmd = doc.querySelector("#new-app");
-    packagedAppCmd = doc.querySelector("#packaged-app");
-    hostedAppCmd = doc.querySelector("#hosted-app");
+    const newAppCmd = doc.querySelector("#new-app");
+    const packagedAppCmd = doc.querySelector("#packaged-app");
+    const hostedAppCmd = doc.querySelector("#hosted-app");
 
     if (!newAppCmd || !packagedAppCmd || !hostedAppCmd) {
       return;

@@ -25,7 +25,10 @@ const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm"
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const promise = require("promise");
+
+// This is overridden in files that load shared-head via loadSubScript.
+// eslint-disable-next-line prefer-const
+let promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");

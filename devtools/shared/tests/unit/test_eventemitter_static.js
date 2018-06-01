@@ -61,7 +61,7 @@ const TESTS = {
   },
 
   testAllArgumentsArePassed() {
-    let foo = { name: "foo" }, bar = "bar";
+    const foo = { name: "foo" }, bar = "bar";
     const target = { name: "target" };
 
     on(target, "message", (a, b) => {
@@ -163,8 +163,8 @@ const TESTS = {
   },
 
   testFalsyArgumentsAreFine() {
-    let type, listener, actual = [];
-    const target = { name: "target" };
+    let type, listener;
+    const target = { name: "target" }, actual = [];
     on(target, "bar", () => actual.push(0));
 
     off(target, "bar", listener);

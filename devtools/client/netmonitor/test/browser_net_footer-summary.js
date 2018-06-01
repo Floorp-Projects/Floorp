@@ -67,10 +67,11 @@ add_task(async function() {
       return;
     }
 
-    const valueTransfer = document.querySelector(".requests-list-network-summary-transfer")
-                        .textContent;
+    const valueTransfer =
+      document.querySelector(".requests-list-network-summary-transfer").textContent;
     info("Current summary transfer: " + valueTransfer);
-    const expectedTransfer = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
+    const expectedTransfer = L10N.getFormatStrWithNumbers(
+      "networkMenu.summary.transferred",
       getFormattedSize(requestsSummary.contentSize),
       getFormattedSize(requestsSummary.transferredSize));
 

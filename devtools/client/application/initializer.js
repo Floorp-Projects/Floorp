@@ -66,7 +66,8 @@ window.Application = {
    */
   async createMessageContexts() {
     const locales = Services.locale.getAppLocalesAsBCP47();
-    const generator = L10nRegistry.generateContexts(locales, ["devtools/application.ftl"]);
+    const generator =
+      L10nRegistry.generateContexts(locales, ["devtools/application.ftl"]);
 
     // Return value of generateContexts is a generator and should be converted to
     // a sync iterable before using it with React.

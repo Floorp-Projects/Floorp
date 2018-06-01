@@ -44,7 +44,8 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelector(`#requests-list-${column}-button`));
 
-    const menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+    const menuItem =
+      parent.document.querySelector(`#request-list-header-${column}-toggle`);
     ok(menuItem.disabled, "Last visible column menu item should be disabled.");
   }
 });

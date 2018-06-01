@@ -54,7 +54,6 @@ async function getSystemInfo() {
     height,
     physicalWidth,
     physicalHeight,
-    os,
     brandName;
   const appid = appInfo.ID;
   const apptype = APP_MAP[appid];
@@ -62,7 +61,7 @@ async function getSystemInfo() {
   const hardware = "unknown";
   let version = "unknown";
 
-  os = appInfo.OS;
+  const os = appInfo.OS;
   version = appInfo.version;
 
   const bundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");

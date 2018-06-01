@@ -750,12 +750,13 @@ var DebuggerServer = {
         }
       }
 
-      const onMessageManagerClose = DevToolsUtils.makeInfallible((subject, topic, data) => {
-        if (subject == mm) {
-          onClose();
-          connection.send({ from: actor.actor, type: "tabDetached" });
-        }
-      });
+      const onMessageManagerClose =
+        DevToolsUtils.makeInfallible((subject, topic, data) => {
+          if (subject == mm) {
+            onClose();
+            connection.send({ from: actor.actor, type: "tabDetached" });
+          }
+        });
       Services.obs.addObserver(onMessageManagerClose,
                                "message-manager-close");
 

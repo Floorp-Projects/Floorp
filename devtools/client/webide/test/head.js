@@ -184,12 +184,9 @@ function getProjectWindow(win) {
 function connectToLocalRuntime(win) {
   info("Loading local runtime.");
 
-  let panelNode;
-  let runtimePanel;
+  const runtimePanel = getRuntimeDocument(win);
 
-  runtimePanel = getRuntimeDocument(win);
-
-  panelNode = runtimePanel.querySelector("#runtime-panel");
+  const panelNode = runtimePanel.querySelector("#runtime-panel");
   const items = panelNode.querySelectorAll(".runtime-panel-item-other");
   is(items.length, 2, "Found 2 custom runtime buttons");
 

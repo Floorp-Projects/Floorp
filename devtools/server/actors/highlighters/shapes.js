@@ -1133,14 +1133,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const newCx = `${round(valueX + deltaX, unitX)}${unitX}`;
       const newCy = `${round(valueY + deltaY, unitY)}${unitY}`;
       // if not defined by the user, geometryBox will be an empty string; trim() cleans up
-      const circleDef = `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
+      const circleDef =
+        `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", { type: "shape-change", value: circleDef });
     } else if (point === "radius") {
       const { value, unit, origRadius, ratio } = this[_dragging];
       // convert center point to px, then get distance between center and mouse.
-      const { x: pageCx, y: pageCy } = this.convertPercentToPageCoords(this.coordinates.cx,
-                                                                     this.coordinates.cy);
+      const { x: pageCx, y: pageCy } =
+        this.convertPercentToPageCoords(this.coordinates.cx, this.coordinates.cy);
       const newRadiusPx = getDistance(pageCx, pageCy, pageX, pageY);
 
       const delta = (newRadiusPx - origRadius) * ratio;
@@ -1531,7 +1532,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *          to the shape.
    */
   getTransformPointAt(pageX, pageY) {
-    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } = this.transformedBoundingBox;
+    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } =
+      this.transformedBoundingBox;
     const { width, height } = this.currentDimensions;
     const zoom = getCurrentZoom(this.win);
     const clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
@@ -1609,7 +1611,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     for (let i = 0; i < coordinates.length; i++) {
       const [x1, y1] = coordinates[i];
-      const [x2, y2] = (i === coordinates.length - 1) ? coordinates[0] : coordinates[i + 1];
+      const [x2, y2] = (i === coordinates.length - 1)
+        ? coordinates[0]
+        : coordinates[i + 1];
       // Get the distance between clicked point and line drawn between points 1 and 2
       // to check if the click was on the line between those two points.
       const distance = distanceToLine(x1, y1, x2, y2, pageX, pageY);
@@ -2291,7 +2295,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} zoom the zoom level of the window
    */
   _updateTransformMode(width, height, zoom) {
-    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } = this.transformedBoundingBox;
+    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } =
+      this.transformedBoundingBox;
     const boundingBox = this.getElement("bounding-box");
     const path = `M${nw.join(" ")} L${ne.join(" ")} L${se.join(" ")} L${sw.join(" ")} Z`;
     boundingBox.setAttribute("d", path);

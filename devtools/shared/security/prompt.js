@@ -120,9 +120,11 @@ Server.defaultAllowConnection = ({ client, server }) => {
   const title = L10N.getStr("remoteIncomingPromptTitle");
   const header = L10N.getStr("remoteIncomingPromptHeader");
   const clientEndpoint = `${client.host}:${client.port}`;
-  const clientMsg = L10N.getFormatStr("remoteIncomingPromptClientEndpoint", clientEndpoint);
+  const clientMsg =
+    L10N.getFormatStr("remoteIncomingPromptClientEndpoint", clientEndpoint);
   const serverEndpoint = `${server.host}:${server.port}`;
-  const serverMsg = L10N.getFormatStr("remoteIncomingPromptServerEndpoint", serverEndpoint);
+  const serverMsg =
+    L10N.getFormatStr("remoteIncomingPromptServerEndpoint", serverEndpoint);
   const footer = L10N.getStr("remoteIncomingPromptFooter");
   const msg = `${header}\n\n${clientMsg}\n${serverMsg}\n\n${footer}`;
   const disableButton = L10N.getStr("remoteIncomingPromptDisable");

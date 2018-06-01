@@ -236,7 +236,8 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
 
     const boundsEl = this.getElement("bounds");
     const { left, right, top, bottom } = bounds;
-    const path = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
+    const path =
+      `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
     boundsEl.setAttribute("d", path);
 
     // Un-zoom the root wrapper if the page was zoomed.
