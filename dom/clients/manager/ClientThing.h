@@ -17,19 +17,25 @@ namespace dom {
 template <typename ActorType>
 class ClientThing
 {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   static const uint32_t kMagic1 = 0xC9FE2C9C;
   static const uint32_t kMagic2 = 0x832072D4;
+#endif
 
   ActorType* mActor;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   uint32_t mMagic1;
   uint32_t mMagic2;
+#endif
   bool mShutdown;
 
 protected:
   ClientThing()
     : mActor(nullptr)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     , mMagic1(kMagic1)
     , mMagic2(kMagic2)
+#endif
     , mShutdown(false)
   {
   }
@@ -38,15 +44,17 @@ protected:
   {
     AssertIsValid();
     ShutdownThing();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mMagic1 = 0;
     mMagic2 = 0;
+#endif
   }
 
   void
   AssertIsValid() const
   {
-    MOZ_RELEASE_ASSERT(mMagic1 == kMagic1);
-    MOZ_RELEASE_ASSERT(mMagic2 == kMagic2);
+    MOZ_DIAGNOSTIC_ASSERT(mMagic1 == kMagic1);
+    MOZ_DIAGNOSTIC_ASSERT(mMagic2 == kMagic2);
   }
 
   // Return the current actor.

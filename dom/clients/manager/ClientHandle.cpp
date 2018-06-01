@@ -50,7 +50,7 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
 
   MaybeExecute([aArgs, kungFuGrip, aRejectCallback,
                 resolve = std::move(aResolveCallback)] (ClientHandleChild* aActor) {
-    MOZ_RELEASE_ASSERT(aActor);
+    MOZ_DIAGNOSTIC_ASSERT(aActor);
     ClientHandleOpChild* actor =
       new ClientHandleOpChild(kungFuGrip, aArgs, std::move(resolve),
                               std::move(aRejectCallback));
@@ -59,7 +59,7 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
       return;
     }
   }, [aRejectCallback] {
-    MOZ_RELEASE_ASSERT(aRejectCallback);
+    MOZ_DIAGNOSTIC_ASSERT(aRejectCallback);
     aRejectCallback(NS_ERROR_DOM_INVALID_STATE_ERR);
   });
 }
