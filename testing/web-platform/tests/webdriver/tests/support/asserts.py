@@ -139,6 +139,17 @@ def assert_same_element(session, a, b):
     raise AssertionError(message)
 
 
+def assert_in_events(session, expected_events):
+    actual_events = session.execute_script("return window.events")
+    for expected_event in expected_events:
+        assert expected_event in actual_events
+
+
+def assert_events_equal(session, expected_events):
+    actual_events = session.execute_script("return window.events")
+    assert actual_events == expected_events
+
+
 def assert_element_has_focus(target_element):
     session = target_element.session
 
