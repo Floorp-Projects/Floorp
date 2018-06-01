@@ -474,6 +474,15 @@ const AuthTokensCleaner = {
   },
 };
 
+const AuthCacheCleaner = {
+  deleteAll() {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "net:clear-active-logins");
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -517,6 +526,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_AUTH_TOKENS,
    cleaner: AuthTokensCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
+   cleaner: AuthCacheCleaner, },
 ];
 
 this.ClearDataService = function() {};
