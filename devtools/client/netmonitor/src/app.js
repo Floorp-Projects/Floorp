@@ -33,9 +33,9 @@ NetMonitorApp.prototype = {
     this.mount = document.querySelector("#mount");
 
     const openLink = (link) => {
-      let parentDoc = toolbox.doc;
-      let iframe = parentDoc.getElementById("toolbox-panel-iframe-netmonitor");
-      let top = iframe.ownerDocument.defaultView.top;
+      const parentDoc = toolbox.doc;
+      const iframe = parentDoc.getElementById("toolbox-panel-iframe-netmonitor");
+      const top = iframe.ownerDocument.defaultView.top;
       top.openUILinkIn(link, "tab");
     };
 
@@ -45,7 +45,7 @@ NetMonitorApp.prototype = {
       });
     };
 
-    let {
+    const {
       actions,
       connector,
       store,
@@ -86,7 +86,7 @@ NetMonitorApp.prototype = {
    * @return {object} A promise resolved once the task finishes.
    */
   async inspectRequest(requestId) {
-    let {
+    const {
       actions,
       store,
     } = this.api;
@@ -95,7 +95,7 @@ NetMonitorApp.prototype = {
     // if the network monitor is still loading.
     return new Promise((resolve) => {
       let request = null;
-      let inspector = () => {
+      const inspector = () => {
         request = getDisplayedRequestById(store.getState(), requestId);
         if (!request) {
           // Reset filters so that the request is visible.

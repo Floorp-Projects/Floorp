@@ -28,7 +28,7 @@ function run_test() {
 
 function test_source_maps() {
   gThreadClient.addOneTimeListener("newSource", function(event, packet) {
-    let sourceClient = gThreadClient.source(packet.source);
+    const sourceClient = gThreadClient.source(packet.source);
     sourceClient.source(function({error, source}) {
       Assert.ok(!error, "should be able to grab the source");
       Assert.equal(source, "foo",

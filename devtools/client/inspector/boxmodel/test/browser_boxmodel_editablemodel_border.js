@@ -16,7 +16,7 @@ const TEST_URI = "<style>" +
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   is((await getStyle(testActor, "#div1", "border-top-width")), "",
      "Should have the right border");
@@ -24,11 +24,11 @@ add_task(async function() {
      "Should have the right border");
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-top > span");
   is(span.textContent, 0, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "0", "Should have the right value in the editor.");
 

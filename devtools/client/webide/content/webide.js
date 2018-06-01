@@ -80,9 +80,9 @@ var UI = {
 
     // Auto install the ADB Addon Helper. Only once.
     // If the user decides to uninstall any of this addon, we won't install it again.
-    let autoinstallADBHelper = Services.prefs.getBoolPref("devtools.webide.autoinstallADBHelper");
+    const autoinstallADBHelper = Services.prefs.getBoolPref("devtools.webide.autoinstallADBHelper");
     if (autoinstallADBHelper) {
-      let addons = GetAvailableAddons();
+      const addons = GetAvailableAddons();
       addons.adb.install();
     }
 
@@ -178,7 +178,7 @@ var UI = {
 
   openInBrowser: function(url) {
     // Open a URL in a Firefox window
-    let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+    const mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (mainWindow) {
       mainWindow.openWebLinkIn(url, "tab");
       mainWindow.focus();
@@ -188,7 +188,7 @@ var UI = {
   },
 
   updateTitle: function() {
-    let project = AppManager.selectedProject;
+    const project = AppManager.selectedProject;
     if (project) {
       window.document.title = Strings.formatStringFromName("title_app", [project.name], 1);
     } else {
@@ -203,7 +203,7 @@ var UI = {
   _busyPromise: null,
 
   busy: function() {
-    let win = document.querySelector("window");
+    const win = document.querySelector("window");
     win.classList.add("busy");
     win.classList.add("busy-undetermined");
     this.updateCommands();
@@ -211,7 +211,7 @@ var UI = {
   },
 
   unbusy: function() {
-    let win = document.querySelector("window");
+    const win = document.querySelector("window");
     win.classList.remove("busy");
     win.classList.remove("busy-determined");
     win.classList.remove("busy-undetermined");
@@ -233,9 +233,9 @@ var UI = {
   },
 
   busyWithProgressUntil: function(promise, operationDescription) {
-    let busy = this.busyUntil(promise, operationDescription);
-    let win = document.querySelector("window");
-    let progress = document.querySelector("#action-busy-determined");
+    const busy = this.busyUntil(promise, operationDescription);
+    const win = document.querySelector("window");
+    const progress = document.querySelector("#action-busy-determined");
     progress.mode = "undetermined";
     win.classList.add("busy-determined");
     win.classList.remove("busy-undetermined");
@@ -262,7 +262,7 @@ var UI = {
         message = operationDescription + (e ? (": " + e) : "");
       }
       this.cancelBusyTimeout();
-      let operationCanceled = e && e.canceled;
+      const operationCanceled = e && e.canceled;
       if (!operationCanceled) {
         UI.reportError("error_operationFail", message);
         if (e) {
@@ -285,7 +285,7 @@ var UI = {
 
     console.error(text);
 
-    let buttons = [{
+    const buttons = [{
       label: Strings.GetStringFromName("notification_showTroubleShooting_label"),
       accessKey: Strings.GetStringFromName("notification_showTroubleShooting_accesskey"),
       callback: function() {
@@ -293,14 +293,14 @@ var UI = {
       }
     }];
 
-    let nbox = document.querySelector("#notificationbox");
+    const nbox = document.querySelector("#notificationbox");
     nbox.removeAllNotifications(true);
     nbox.appendNotification(text, "webide:errornotification", null,
                             nbox.PRIORITY_WARNING_LOW, buttons);
   },
 
   dismissErrorNotification: function() {
-    let nbox = document.querySelector("#notificationbox");
+    const nbox = document.querySelector("#notificationbox");
     nbox.removeAllNotifications(true);
   },
 
@@ -321,11 +321,11 @@ var UI = {
 
   updateCommands: function() {
     // Action commands
-    let playCmd = document.querySelector("#cmd_play");
-    let stopCmd = document.querySelector("#cmd_stop");
-    let debugCmd = document.querySelector("#cmd_toggleToolbox");
-    let playButton = document.querySelector("#action-button-play");
-    let projectPanelCmd = document.querySelector("#cmd_showProjectPanel");
+    const playCmd = document.querySelector("#cmd_play");
+    const stopCmd = document.querySelector("#cmd_stop");
+    const debugCmd = document.querySelector("#cmd_toggleToolbox");
+    const playButton = document.querySelector("#action-button-play");
+    const projectPanelCmd = document.querySelector("#cmd_showProjectPanel");
 
     if (document.querySelector("window").classList.contains("busy")) {
       playCmd.setAttribute("disabled", "true");
@@ -340,7 +340,7 @@ var UI = {
       stopCmd.setAttribute("disabled", "true");
       debugCmd.setAttribute("disabled", "true");
     } else {
-      let isProjectRunning = AppManager.isProjectRunning();
+      const isProjectRunning = AppManager.isProjectRunning();
       if (isProjectRunning) {
         playButton.classList.add("reload");
         stopCmd.removeAttribute("disabled");
@@ -369,11 +369,11 @@ var UI = {
     }
 
     // Runtime commands
-    let screenshotCmd = document.querySelector("#cmd_takeScreenshot");
-    let detailsCmd = document.querySelector("#cmd_showRuntimeDetails");
-    let disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
-    let devicePrefsCmd = document.querySelector("#cmd_showDevicePrefs");
-    let settingsCmd = document.querySelector("#cmd_showSettings");
+    const screenshotCmd = document.querySelector("#cmd_takeScreenshot");
+    const detailsCmd = document.querySelector("#cmd_showRuntimeDetails");
+    const disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
+    const devicePrefsCmd = document.querySelector("#cmd_showDevicePrefs");
+    const settingsCmd = document.querySelector("#cmd_showSettings");
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
@@ -392,7 +392,7 @@ var UI = {
       settingsCmd.setAttribute("disabled", "true");
     }
 
-    let runtimePanelButton = document.querySelector("#runtime-panel-button");
+    const runtimePanelButton = document.querySelector("#runtime-panel-button");
 
     if (AppManager.connected) {
       runtimePanelButton.setAttribute("active", "true");
@@ -407,7 +407,7 @@ var UI = {
 
   updateRemoveProjectButton: function() {
     // Remove command
-    let removeCmdNode = document.querySelector("#cmd_removeProject");
+    const removeCmdNode = document.querySelector("#cmd_removeProject");
     if (AppManager.selectedProject) {
       removeCmdNode.removeAttribute("disabled");
     } else {
@@ -445,7 +445,7 @@ var UI = {
     // We support most runtimes except simulator, that needs to be manually
     // launched
     if (type == "usb" || type == "wifi" || type == "other") {
-      for (let runtime of AppManager.runtimeList[type]) {
+      for (const runtime of AppManager.runtimeList[type]) {
         // Some runtimes do not expose an id and don't support autoconnect (like
         // remote connection)
         if (runtime.id == id) {
@@ -458,7 +458,7 @@ var UI = {
   },
 
   connectToRuntime: function(runtime) {
-    let name = runtime.name;
+    const name = runtime.name;
     let promise = AppManager.connectToRuntime(runtime);
     promise.then(() => this.initConnectionTelemetry())
            .catch(() => {
@@ -476,11 +476,11 @@ var UI = {
   },
 
   updateRuntimeButton: function() {
-    let labelNode = document.querySelector("#runtime-panel-button > .panel-button-label");
+    const labelNode = document.querySelector("#runtime-panel-button > .panel-button-label");
     if (!AppManager.selectedRuntime) {
       labelNode.setAttribute("value", Strings.GetStringFromName("runtimeButton_label"));
     } else {
-      let name = AppManager.selectedRuntime.name;
+      const name = AppManager.selectedRuntime.name;
       labelNode.setAttribute("value", name);
     }
   },
@@ -526,14 +526,14 @@ var UI = {
    * actions as having not occurred.
    */
   updateConnectionTelemetry: function() {
-    for (let action of this._actionsToLog.values()) {
+    for (const action of this._actionsToLog.values()) {
       this.logActionState(action, false);
     }
     this._actionsToLog.clear();
   },
 
   logActionState: function(action, state) {
-    let histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
+    const histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
                       action.toUpperCase() + "_USED";
     this._telemetry.getHistogramById(histogramId).add(state);
   },
@@ -541,7 +541,7 @@ var UI = {
   /** ******** PROJECTS **********/
 
   openProject: function() {
-    let project = AppManager.selectedProject;
+    const project = AppManager.selectedProject;
 
     if (!project) {
       this.resetDeck();
@@ -552,7 +552,7 @@ var UI = {
   },
 
   async autoStartProject() {
-    let project = AppManager.selectedProject;
+    const project = AppManager.selectedProject;
 
     if (!project) {
       return;
@@ -571,7 +571,7 @@ var UI = {
   },
 
   async autoOpenToolbox() {
-    let project = AppManager.selectedProject;
+    const project = AppManager.selectedProject;
 
     if (!project) {
       return;
@@ -586,7 +586,7 @@ var UI = {
   },
 
   async importAndSelectApp(source) {
-    let isPackaged = !!source.path;
+    const isPackaged = !!source.path;
     let project;
     try {
       project = await AppProjects[isPackaged ? "addPackaged" : "addHosted"](source);
@@ -608,7 +608,7 @@ var UI = {
 
   // Remember the last selected project on the runtime
   saveLastSelectedProject: function() {
-    let shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
+    const shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
     if (!shouldRestore) {
       return;
     }
@@ -619,7 +619,7 @@ var UI = {
     }
 
     let project = "", type = "";
-    let selected = AppManager.selectedProject;
+    const selected = AppManager.selectedProject;
     if (selected) {
       if (selected.type == "runtimeApp") {
         type = "runtimeApp";
@@ -644,22 +644,22 @@ var UI = {
     if (AppManager.selectedProject) {
       return;
     }
-    let shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
+    const shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
     if (!shouldRestore) {
       return;
     }
-    let pref = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
+    const pref = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
     if (!pref) {
       return;
     }
-    let m = pref.match(/^(\w+):(.*)$/);
+    const m = pref.match(/^(\w+):(.*)$/);
     if (!m) {
       return;
     }
-    let [ , type, project] = m;
+    const [ , type, project] = m;
 
     if (type == "local") {
-      let lastProject = AppProjects.get(project);
+      const lastProject = AppProjects.get(project);
       if (lastProject) {
         AppManager.selectedProject = lastProject;
       }
@@ -677,7 +677,7 @@ var UI = {
         icon: AppManager.DEFAULT_PROJECT_ICON
       };
     } else if (type == "runtimeApp") {
-      let app = AppManager.apps.get(project);
+      const app = AppManager.apps.get(project);
       if (app) {
         AppManager.selectedProject = {
           type: "runtimeApp",
@@ -692,8 +692,8 @@ var UI = {
   /** ******** DECK **********/
 
   setupDeck: function() {
-    let iframes = document.querySelectorAll("#deck > iframe");
-    for (let iframe of iframes) {
+    const iframes = document.querySelectorAll("#deck > iframe");
+    for (const iframe of iframes) {
       iframe.tooltip = "aHTMLTooltip";
     }
   },
@@ -703,14 +703,14 @@ var UI = {
   },
 
   selectDeckPanel: function(id) {
-    let deck = document.querySelector("#deck");
+    const deck = document.querySelector("#deck");
     if (deck.selectedPanel && deck.selectedPanel.id === "deck-panel-" + id) {
       // This panel is already displayed.
       return;
     }
     this.resetFocus();
-    let panel = deck.querySelector("#deck-panel-" + id);
-    let lazysrc = panel.getAttribute("lazysrc");
+    const panel = deck.querySelector("#deck-panel-" + id);
+    const lazysrc = panel.getAttribute("lazysrc");
     if (lazysrc) {
       panel.removeAttribute("lazysrc");
       panel.setAttribute("src", lazysrc);
@@ -720,14 +720,14 @@ var UI = {
 
   resetDeck: function() {
     this.resetFocus();
-    let deck = document.querySelector("#deck");
+    const deck = document.querySelector("#deck");
     deck.selectedPanel = null;
   },
 
   async checkRuntimeVersion() {
     if (AppManager.connected) {
-      let { client } = AppManager.connection;
-      let report = await client.checkRuntimeVersion(AppManager.listTabsForm);
+      const { client } = AppManager.connection;
+      const report = await client.checkRuntimeVersion(AppManager.listTabsForm);
       if (report.incompatible == "too-recent") {
         this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
           report.localID);
@@ -764,7 +764,7 @@ var UI = {
       this.resetFocus();
       Services.prefs.setIntPref("devtools.toolbox.footer.height", iframe.height);
 
-      let splitter = document.querySelector(".devtools-horizontal-splitter");
+      const splitter = document.querySelector(".devtools-horizontal-splitter");
       splitter.setAttribute("hidden", "true");
       document.querySelector("#action-button-debug").removeAttribute("active");
     }
@@ -776,7 +776,7 @@ var UI = {
   destroyToolbox: function() {
     // Only have a live toolbox if |this.toolboxPromise| exists
     if (this.toolboxPromise) {
-      let toolboxPromise = this.toolboxPromise;
+      const toolboxPromise = this.toolboxPromise;
       this.toolboxPromise = null;
       return toolboxPromise.then(toolbox => toolbox.destroy());
     }
@@ -789,17 +789,17 @@ var UI = {
       return this.toolboxPromise;
     }
 
-    let iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
     iframe.id = "toolbox";
 
     // Compute a uid on the iframe in order to identify toolbox iframe
     // when receiving toolbox-close event
     iframe.uid = new Date().getTime();
 
-    let height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
+    const height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
     iframe.height = height;
 
-    let promise = this.toolboxPromise = AppManager.getTarget().then(target => {
+    const promise = this.toolboxPromise = AppManager.getTarget().then(target => {
       return this._showToolbox(target, iframe);
     }).then(toolbox => {
       // Destroy the toolbox on WebIDE side before
@@ -812,12 +812,12 @@ var UI = {
   },
 
   _showToolbox: function(target, iframe) {
-    let splitter = document.querySelector(".devtools-horizontal-splitter");
+    const splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.removeAttribute("hidden");
 
     document.querySelector("notificationbox").insertBefore(iframe, splitter.nextSibling);
-    let host = Toolbox.HostType.CUSTOM;
-    let options = { customIframe: iframe, zoom: false, uid: iframe.uid };
+    const host = Toolbox.HostType.CUSTOM;
+    const options = { customIframe: iframe, zoom: false, uid: iframe.uid };
 
     document.querySelector("#action-button-debug").setAttribute("active", "true");
 
@@ -843,7 +843,7 @@ var Cmds = {
   },
 
   disconnectRuntime: function() {
-    let disconnecting = (async function() {
+    const disconnecting = (async function() {
       await UI.destroyToolbox();
       await AppManager.disconnectRuntime();
     })();
@@ -851,7 +851,7 @@ var Cmds = {
   },
 
   takeScreenshot: function() {
-    let url = AppManager.deviceFront.screenshotToDataURL();
+    const url = AppManager.deviceFront.screenshotToDataURL();
     return UI.busyUntil(url.then(longstr => {
       return longstr.string().then(dataURL => {
         longstr.release().catch(console.error);

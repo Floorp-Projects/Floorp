@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  const { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
   const EXPECTED_RESULT = '{ "greeting": "Hello JSON!" }';
 
-  let { document } = monitor.panelWin;
+  const { document } = monitor.panelWin;
 
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);

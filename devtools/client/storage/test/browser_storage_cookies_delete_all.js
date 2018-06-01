@@ -9,21 +9,21 @@
 // Test deleting all cookies
 
 async function performDelete(store, rowName, action) {
-  let contextMenu = gPanelWindow.document.getElementById(
+  const contextMenu = gPanelWindow.document.getElementById(
     "storage-table-popup");
-  let menuDeleteAllItem = contextMenu.querySelector(
+  const menuDeleteAllItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all");
-  let menuDeleteAllSessionCookiesItem = contextMenu.querySelector(
+  const menuDeleteAllSessionCookiesItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all-session-cookies");
-  let menuDeleteAllFromItem = contextMenu.querySelector(
+  const menuDeleteAllFromItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all-from");
 
-  let storeName = store.join(" > ");
+  const storeName = store.join(" > ");
 
   await selectTreeItem(store);
 
-  let eventWait = gUI.once("store-objects-edit");
-  let cells = getRowCells(rowName, true);
+  const eventWait = gUI.once("store-objects-edit");
+  const cells = getRowCells(rowName, true);
 
   await waitForContextMenu(contextMenu, cells.name, () => {
     info(`Opened context menu in ${storeName}, row '${rowName}'`);
@@ -36,7 +36,7 @@ async function performDelete(store, rowName, action) {
         break;
       case "deleteAllFrom":
         menuDeleteAllFromItem.click();
-        let hostName = cells.host.value;
+        const hostName = cells.host.value;
         ok(menuDeleteAllFromItem.getAttribute("label").includes(hostName),
         `Context menu item label contains '${hostName}'`);
         break;

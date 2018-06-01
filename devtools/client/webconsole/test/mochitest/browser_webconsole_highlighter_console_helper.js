@@ -25,15 +25,15 @@ add_task(async function() {
   const inspector = toolbox.getPanel("inspector");
 
   await registerTestActor(toolbox.target.client);
-  let testActor = await getTestActor(toolbox);
+  const testActor = await getTestActor(toolbox);
 
-  let onPickerStarted = inspector.toolbox.once("picker-started");
+  const onPickerStarted = inspector.toolbox.once("picker-started");
   inspector.toolbox.highlighterUtils.startPicker();
   await onPickerStarted;
 
   info("Picker mode started, now clicking on <h1> to select that node");
-  let onPickerStopped = toolbox.once("picker-stopped");
-  let onInspectorUpdated = inspector.once("inspector-updated");
+  const onPickerStopped = toolbox.once("picker-stopped");
+  const onInspectorUpdated = inspector.once("inspector-updated");
 
   testActor.synthesizeMouse({
     selector: "h1",
@@ -50,7 +50,7 @@ add_task(async function() {
 
   jsterm.clearOutput();
 
-  let onEvaluationResult = waitForMessage(hud, "<h1>");
+  const onEvaluationResult = waitForMessage(hud, "<h1>");
   jsterm.execute("$0");
   await onEvaluationResult;
   ok(true, "correct output for $0");
@@ -58,7 +58,7 @@ add_task(async function() {
   jsterm.clearOutput();
 
   const newH1Content = "newH1Content";
-  let onAssignmentResult = waitForMessage(hud, "<h1>");
+  const onAssignmentResult = waitForMessage(hud, "<h1>");
   jsterm.execute(`$0.textContent = "${newH1Content}";$0`);
   await onAssignmentResult;
 

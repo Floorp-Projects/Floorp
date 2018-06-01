@@ -19,13 +19,13 @@ class RecordingButton extends Component {
   }
 
   render() {
-    let {
+    const {
       onRecordButtonClick,
       isRecording,
       isLocked
     } = this.props;
 
-    let classList = ["devtools-button", "record-button"];
+    const classList = ["devtools-button", "record-button"];
 
     if (isRecording) {
       classList.push("checked");

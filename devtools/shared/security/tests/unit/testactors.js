@@ -32,8 +32,8 @@ function TestTabList(connection) {
   // A pool mapping those actors' names to the actors.
   this._tabActorPool = new ActorPool(connection);
 
-  for (let global of gTestGlobals) {
-    let actor = new TestTabActor(connection, global);
+  for (const global of gTestGlobals) {
+    const actor = new TestTabActor(connection, global);
     actor.selected = false;
     this._tabActors.push(actor);
     this._tabActorPool.addActor(actor);
@@ -53,7 +53,7 @@ TestTabList.prototype = {
 };
 
 function createRootActor(connection) {
-  let root = new RootActor(connection, {
+  const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
     globalActorFactories: DebuggerServer.globalActorFactories
   });
@@ -83,10 +83,10 @@ TestTabActor.prototype = {
   },
 
   form: function() {
-    let response = { actor: this.actorID, title: this._global.__name };
+    const response = { actor: this.actorID, title: this._global.__name };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
-    let actorPool = new ActorPool(this.conn);
+    const actorPool = new ActorPool(this.conn);
     this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
     if (!actorPool.isEmpty()) {
       this._tabActorPool = actorPool;
@@ -101,7 +101,7 @@ TestTabActor.prototype = {
   onAttach: function(request) {
     this._attached = true;
 
-    let response = { type: "tabAttached", threadActor: this._threadActor.actorID };
+    const response = { type: "tabAttached", threadActor: this._threadActor.actorID };
     this._appendExtraActors(response);
 
     return response;

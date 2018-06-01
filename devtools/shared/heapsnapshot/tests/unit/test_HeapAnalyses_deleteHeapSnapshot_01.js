@@ -19,7 +19,7 @@ add_task(async function() {
   await client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  let dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
+  const dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
   ok(true, "Should have computed the dominator tree");
 
   await client.deleteHeapSnapshot(snapshotFilePath);

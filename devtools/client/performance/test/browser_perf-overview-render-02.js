@@ -15,21 +15,21 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, OverviewView } = panel.panelWin;
+  const { EVENTS, OverviewView } = panel.panelWin;
 
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
   await startRecording(panel);
 
-  let framerate = OverviewView.graphs.get("framerate");
-  let markers = OverviewView.graphs.get("timeline");
-  let memory = OverviewView.graphs.get("memory");
+  const framerate = OverviewView.graphs.get("framerate");
+  const markers = OverviewView.graphs.get("timeline");
+  const memory = OverviewView.graphs.get("memory");
 
   ok("selectionEnabled" in framerate,
     "The selection should not be enabled for the framerate overview (1).");

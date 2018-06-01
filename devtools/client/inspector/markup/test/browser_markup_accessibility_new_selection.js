@@ -9,11 +9,11 @@
 // keyboard focus so that further interactions continue within the markup tree.
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(
+  const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
-  let markup = inspector.markup;
-  let doc = markup.doc;
-  let rootContainer = markup.getContainer(markup._rootNode);
+  const markup = inspector.markup;
+  const doc = markup.doc;
+  const rootContainer = markup.getContainer(markup._rootNode);
 
   is(doc.activeElement, doc.body, "Keyboard focus by default is on document body");
 

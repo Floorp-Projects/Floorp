@@ -55,9 +55,9 @@ const TEST_DATA = [{
 }];
 
 function run_test() {
-  for (let {value, splitChar, expected} of TEST_DATA) {
+  for (const {value, splitChar, expected} of TEST_DATA) {
     info("Splitting string: " + value);
-    let tokens = splitBy(value, splitChar);
+    const tokens = splitBy(value, splitChar);
 
     info("Checking that the number of parsed tokens is correct");
     Assert.equal(tokens.length, expected.length);

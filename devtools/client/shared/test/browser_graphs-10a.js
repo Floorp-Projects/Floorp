@@ -36,11 +36,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost("window");
+  const [host,, doc] = await createHost("window");
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
 
   let refreshCount = 0;
@@ -56,11 +56,11 @@ async function performTest() {
 
 async function testGraph(host, graph) {
   graph.setData(TEST_DATA);
-  let initialBounds = host.frame.getBoundingClientRect();
+  const initialBounds = host.frame.getBoundingClientRect();
 
   host._window.resizeBy(-100, -100);
   await graph.once("refresh");
-  let newBounds = host.frame.getBoundingClientRect();
+  const newBounds = host.frame.getBoundingClientRect();
 
   is(initialBounds.width - newBounds.width, 100,
     "The window was properly resized (1).");
@@ -100,7 +100,7 @@ async function testGraph(host, graph) {
 
   host._window.resizeBy(100, 100);
   await graph.once("refresh");
-  let newerBounds = host.frame.getBoundingClientRect();
+  const newerBounds = host.frame.getBoundingClientRect();
 
   is(initialBounds.width - newerBounds.width, 0,
     "The window was properly resized (3).");

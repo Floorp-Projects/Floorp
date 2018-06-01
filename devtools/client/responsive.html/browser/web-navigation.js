@@ -149,7 +149,7 @@ BrowserElementWebNavigation.prototype = {
       "canGoForward",
       "_currentURI",
     ];
-    for (let property of state) {
+    for (const property of state) {
       this[property] = otherWebNavigation[property];
     }
   },
@@ -178,7 +178,7 @@ const FLAGS = [
   "STOP_ALL",
 ];
 
-for (let flag of FLAGS) {
+for (const flag of FLAGS) {
   BrowserElementWebNavigation.prototype[flag] = Ci.nsIWebNavigation[flag];
 }
 

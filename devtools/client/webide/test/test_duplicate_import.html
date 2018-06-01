@@ -18,11 +18,11 @@
         SimpleTest.waitForExplicitFinish();
 
         (async function() {
-          let win = await openWebIDE();
-          let docProject = getProjectDocument(win);
-          let winProject = getProjectWindow(win);
-          let packagedAppLocation = getTestFilePath("app");
-          let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
+          const win = await openWebIDE();
+          const docProject = getProjectDocument(win);
+          const winProject = getProjectWindow(win);
+          const packagedAppLocation = getTestFilePath("app");
+          const hostedAppManifest = TEST_BASE + "hosted_app.manifest";
 
           await win.AppProjects.load();
           is(win.AppProjects.projects.length, 0, "IDB is empty");
@@ -54,8 +54,8 @@
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");
           await nextTick();
 
-          let panelNode = docProject.querySelector("#project-panel");
-          let items = panelNode.querySelectorAll(".panel-item");
+          const panelNode = docProject.querySelector("#project-panel");
+          const items = panelNode.querySelectorAll(".panel-item");
           // 3 controls, + 2 projects
           is(items.length, 5, "5 projects in panel");
           is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");

@@ -12,7 +12,7 @@ function run_test() {
   gDebuggee = testGlobal("test-1");
   DebuggerServer.addTestGlobal(gDebuggee);
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(function([type, traits]) {
     attachTestTab(gClient, "test-1", function(reply, tabClient) {
@@ -43,7 +43,7 @@ function test_debugger_statement(threadClient) {
     Assert.ok(gDebuggee.a);
     Assert.ok(!gDebuggee.b);
 
-    let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+    const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     Assert.equal(xpcInspector.eventLoopNestLevel, 1);
 
     threadClient.resume(cleanup);
@@ -61,7 +61,7 @@ function cleanup() {
   });
 
   try {
-    let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+    const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     Assert.equal(xpcInspector.eventLoopNestLevel, 0);
   } catch (e) {
     dump(e);

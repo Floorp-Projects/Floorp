@@ -379,13 +379,13 @@ LayoutChangesObserver.prototype = {
  */
 var observedWindows = new Map();
 function getLayoutChangesObserver(tabActor) {
-  let observerData = observedWindows.get(tabActor);
+  const observerData = observedWindows.get(tabActor);
   if (observerData) {
     observerData.refCounting++;
     return observerData.observer;
   }
 
-  let obs = new LayoutChangesObserver(tabActor);
+  const obs = new LayoutChangesObserver(tabActor);
   observedWindows.set(tabActor, {
     observer: obs,
     // counting references allows to stop the observer when no tabActor owns an
@@ -404,7 +404,7 @@ exports.getLayoutChangesObserver = getLayoutChangesObserver;
  * @param {TabActor} tabActor
  */
 function releaseLayoutChangesObserver(tabActor) {
-  let observerData = observedWindows.get(tabActor);
+  const observerData = observedWindows.get(tabActor);
   if (!observerData) {
     return;
   }
@@ -429,8 +429,8 @@ class ReflowObserver extends Observable {
   }
 
   _startListeners(windows) {
-    for (let window of windows) {
-      let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    for (const window of windows) {
+      const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIWebNavigation)
                      .QueryInterface(Ci.nsIDocShell);
       docshell.addWeakReflowObserver(this);
@@ -438,9 +438,9 @@ class ReflowObserver extends Observable {
   }
 
   _stopListeners(windows) {
-    for (let window of windows) {
+    for (const window of windows) {
       try {
-        let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIWebNavigation)
                        .QueryInterface(Ci.nsIDocShell);
         docshell.removeWeakReflowObserver(this);

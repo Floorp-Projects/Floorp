@@ -23,8 +23,8 @@ class RequestListColumnRemoteIP extends Component {
   }
 
   render() {
-    let { remoteAddress, remotePort } = this.props.item;
-    let remoteIP = remoteAddress ?
+    const { remoteAddress, remotePort } = this.props.item;
+    const remoteIP = remoteAddress ?
       getFormattedIPAndPort(remoteAddress, remotePort) : "unknown";
 
     return (

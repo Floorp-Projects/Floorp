@@ -43,12 +43,12 @@ var MemoryCallTreeView = extend(DetailsSubview, {
    *        The { startTime, endTime }, in milliseconds.
    */
   render: function(interval = {}) {
-    let options = {
+    const options = {
       invertTree: PerformanceController.getOption("invert-call-tree")
     };
-    let recording = PerformanceController.getCurrentRecording();
-    let allocations = recording.getAllocations();
-    let threadNode = this._prepareCallTree(allocations, interval, options);
+    const recording = PerformanceController.getCurrentRecording();
+    const allocations = recording.getAllocations();
+    const threadNode = this._prepareCallTree(allocations, interval, options);
     this._populateCallTree(threadNode, options);
     this.emit(EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   },
@@ -57,7 +57,7 @@ var MemoryCallTreeView = extend(DetailsSubview, {
    * Fired on the "link" event for the call tree in this container.
    */
   _onLink: function(treeItem) {
-    let { url, line } = treeItem.frame.getInfo();
+    const { url, line } = treeItem.frame.getInfo();
     gToolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {
         this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
@@ -72,8 +72,8 @@ var MemoryCallTreeView = extend(DetailsSubview, {
    * populate the call tree.
    */
   _prepareCallTree: function(allocations, { startTime, endTime }, options) {
-    let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
-    let { invertTree } = options;
+    const thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
+    const { invertTree } = options;
 
     return new ThreadNode(thread, { startTime, endTime, invertTree });
   },
@@ -85,9 +85,9 @@ var MemoryCallTreeView = extend(DetailsSubview, {
     // If we have an empty profile (no samples), then don't invert the tree, as
     // it would hide the root node and a completely blank call tree space can be
     // mis-interpreted as an error.
-    let inverted = options.invertTree && frameNode.samples > 0;
+    const inverted = options.invertTree && frameNode.samples > 0;
 
-    let root = new CallView({
+    const root = new CallView({
       frame: frameNode,
       inverted: inverted,
       // Root nodes are hidden in inverted call trees.

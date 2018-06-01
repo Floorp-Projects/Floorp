@@ -8,11 +8,11 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -24,7 +24,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  let requestItem = getSortedRequests(store.getState()).get(0);
+  const requestItem = getSortedRequests(store.getState()).get(0);
 
   await waitForClipboardPromise(function setup() {
     monitor.panelWin.parent.document

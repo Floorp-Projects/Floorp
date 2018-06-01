@@ -6,11 +6,11 @@
 const TEST_URI = "<h1 id=\"h1\">header</h1><p id=\"p\">paragraph</p>";
 
 add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
-  let tab = await addTab(buildURL(TEST_URI));
-  let { linkedBrowser: browser } = tab;
+  const tab = await addTab(buildURL(TEST_URI));
+  const { linkedBrowser: browser } = tab;
 
-  let contextMenu = document.getElementById("contentAreaContextMenu");
-  let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  const contextMenu = document.getElementById("contentAreaContextMenu");
+  const awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   await BrowserTestUtils.synthesizeMouse("#h1", 0, 0, {
     type: "contextmenu",
     button: 2,
@@ -18,7 +18,7 @@ add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
   }, browser);
   await awaitPopupShown;
 
-  let inspectA11YPropsItem = contextMenu.querySelector("#context-inspect-a11y");
+  const inspectA11YPropsItem = contextMenu.querySelector("#context-inspect-a11y");
   ok(inspectA11YPropsItem.hidden, "Accessibility tools are not enabled.");
   contextMenu.hidePopup();
   gBrowser.removeCurrentTab();
@@ -27,10 +27,10 @@ add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
 addA11YPanelTask("Test show accessibility properties context menu in browser.",
   TEST_URI,
   async function({ panel, toolbox, browser }) {
-    let headerSelector = "#h1";
+    const headerSelector = "#h1";
 
-    let contextMenu = document.getElementById("contentAreaContextMenu");
-    let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+    const contextMenu = document.getElementById("contentAreaContextMenu");
+    const awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
     await BrowserTestUtils.synthesizeMouse(headerSelector, 0, 0, {
       type: "contextmenu",
       button: 2,
@@ -38,17 +38,17 @@ addA11YPanelTask("Test show accessibility properties context menu in browser.",
     }, browser);
     await awaitPopupShown;
 
-    let inspectA11YPropsItem = contextMenu.querySelector("#context-inspect-a11y");
+    const inspectA11YPropsItem = contextMenu.querySelector("#context-inspect-a11y");
 
     info("Triggering 'Inspect Accessibility Properties' and waiting for " +
          "accessibility panel to open");
     inspectA11YPropsItem.click();
     contextMenu.hidePopup();
 
-    let selected = await panel.once("new-accessible-front-selected");
-    let expectedSelectedNode = await getNodeFront(headerSelector,
+    const selected = await panel.once("new-accessible-front-selected");
+    const expectedSelectedNode = await getNodeFront(headerSelector,
                                                   toolbox.getPanel("inspector"));
-    let expectedSelected = await panel.walker.getAccessibleFor(expectedSelectedNode);
+    const expectedSelected = await panel.walker.getAccessibleFor(expectedSelectedNode);
     is(toolbox.getCurrentPanel(), panel, "Accessibility panel is currently selected");
     is(selected, expectedSelected, "Accessible front selected correctly");
   });

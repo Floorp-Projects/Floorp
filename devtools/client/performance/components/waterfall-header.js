@@ -18,21 +18,21 @@ const WATERFALL_HEADER_TICKS_SPACING_MIN = 50; // px
 const WATERFALL_HEADER_TEXT_PADDING = 3; // px
 
 function WaterfallHeader(props) {
-  let { startTime, dataScale, sidebarWidth, waterfallWidth } = props;
+  const { startTime, dataScale, sidebarWidth, waterfallWidth } = props;
 
-  let tickInterval = TickUtils.findOptimalTickInterval({
+  const tickInterval = TickUtils.findOptimalTickInterval({
     ticksMultiple: WATERFALL_HEADER_TICKS_MULTIPLE,
     ticksSpacingMin: WATERFALL_HEADER_TICKS_SPACING_MIN,
     dataScale: dataScale
   });
 
-  let ticks = [];
+  const ticks = [];
   for (let x = 0; x < waterfallWidth; x += tickInterval) {
-    let left = x + WATERFALL_HEADER_TEXT_PADDING;
-    let time = Math.round(x / dataScale + startTime);
-    let label = L10N.getFormatStr("timeline.tick", time);
+    const left = x + WATERFALL_HEADER_TEXT_PADDING;
+    const time = Math.round(x / dataScale + startTime);
+    const label = L10N.getFormatStr("timeline.tick", time);
 
-    let node = dom.div({
+    const node = dom.div({
       key: x,
       className: "plain waterfall-header-tick",
       style: { transform: `translateX(${left}px)` }

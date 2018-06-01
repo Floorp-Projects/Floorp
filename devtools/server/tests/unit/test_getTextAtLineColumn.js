@@ -25,11 +25,11 @@ const TEST_DATA = [
 ];
 
 function run_test() {
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     info("Starting test: " + test.desc);
     info("Input string " + test.input);
 
-    let output = getTextAtLineColumn(test.input, test.line, test.column);
+    const output = getTextAtLineColumn(test.input, test.line, test.column);
     deepEqual(output, test.expected);
   }
 }

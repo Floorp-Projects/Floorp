@@ -28,7 +28,7 @@ function run_test() {
   ok(shortestPaths instanceof Map);
   ok(shortestPaths.size === targetSet.size);
 
-  for (let [target, paths] of shortestPaths) {
+  for (const [target, paths] of shortestPaths) {
     ok(targetSet.has(target),
        "We should only get paths for our targets");
     targetSet.delete(target);
@@ -40,21 +40,21 @@ function run_test() {
 
     dumpn("---------------------");
     dumpn("Shortest paths for 0x" + target.toString(16) + ":");
-    for (let pth of paths) {
+    for (const pth of paths) {
       dumpn("    path =");
-      for (let part of pth) {
+      for (const part of pth) {
         dumpn("        predecessor: 0x" + part.predecessor.toString(16) +
               "; edge: " + part.edge);
       }
     }
     dumpn("---------------------");
 
-    for (let path2 of paths) {
+    for (const path2 of paths) {
       ok(path2.length > 0, "Cannot have zero length paths");
       ok(path2[0].predecessor === dominatorTree.root,
          "The first predecessor is always our start node");
 
-      for (let part of path2) {
+      for (const part of path2) {
         ok(part.predecessor, "Each part of a path has a predecessor");
         ok(!!snapshot.describeNode({ by: "count", count: true, bytes: true},
                                    part.predecessor),

@@ -8,18 +8,18 @@
  */
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document } = monitor.panelWin;
+  const { document } = monitor.panelWin;
 
-  let markersDone = waitForTimelineMarkers(monitor);
+  const markersDone = waitForTimelineMarkers(monitor);
 
-  let button = document.querySelector(".requests-list-reload-notice-button");
+  const button = document.querySelector(".requests-list-reload-notice-button");
   button.click();
 
   await waitForNetworkEvents(monitor, 1);
-  let markers = await markersDone;
+  const markers = await markersDone;
 
   ok(true, "Reloading finished");
 

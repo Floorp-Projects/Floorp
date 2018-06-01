@@ -18,17 +18,17 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
 
-  let swatch = getRuleViewProperty(view, "body", "border").valueSpan
+  const swatch = getRuleViewProperty(view, "body", "border").valueSpan
     .querySelector(".ruleview-colorswatch");
   await testPressingEnterCommitsChanges(swatch, view);
 });
 
 async function testPressingEnterCommitsChanges(swatch, ruleView) {
-  let cPicker = ruleView.tooltips.getTooltip("colorPicker");
+  const cPicker = ruleView.tooltips.getTooltip("colorPicker");
 
-  let onColorPickerReady = cPicker.once("ready");
+  const onColorPickerReady = cPicker.once("ready");
   swatch.click();
   await onColorPickerReady;
 
@@ -44,9 +44,9 @@ async function testPressingEnterCommitsChanges(swatch, ruleView) {
     "2em solid rgba(0, 255, 0, 0.5)",
     "The text of the border css property was updated");
 
-  let onModified = ruleView.once("ruleview-changed");
-  let spectrum = cPicker.spectrum;
-  let onHidden = cPicker.tooltip.once("hidden");
+  const onModified = ruleView.once("ruleview-changed");
+  const spectrum = cPicker.spectrum;
+  const onHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   await onHidden;
   await onModified;

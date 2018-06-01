@@ -14,7 +14,7 @@ const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 function getFrameNodePath(root, path) {
   let calls = root.calls;
   let foundNode;
-  for (let key of path.split(" > ")) {
+  for (const key of path.split(" > ")) {
     foundNode = calls.find((node) => node.key == key);
     if (!foundNode) {
       break;
@@ -35,7 +35,7 @@ function synthesizeProfileForTest(samples) {
     ]
   });
 
-  let uniqueStacks = new RecordingUtils.UniqueStacks();
+  const uniqueStacks = new RecordingUtils.UniqueStacks();
   return RecordingUtils.deflateThread({
     samples: samples,
     markers: []

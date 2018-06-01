@@ -22,7 +22,7 @@
       let swRegistration;
 
       function registerServiceWorker() {
-        let sw = navigator.serviceWorker;
+        const sw = navigator.serviceWorker;
         return sw.register("status-codes-service-worker.js")
           .then(registration => {
             swRegistration = registration;
@@ -50,7 +50,7 @@
 
       function performRequests() {
         return new Promise(function doXHR(done) {
-          let xhr = new XMLHttpRequest();
+          const xhr = new XMLHttpRequest();
           xhr.open("GET", "test/200", true);
           xhr.onreadystatechange = done;
           xhr.send(null);

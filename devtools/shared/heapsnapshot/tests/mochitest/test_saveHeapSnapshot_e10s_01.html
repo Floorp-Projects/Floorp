@@ -46,7 +46,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
              ["browser.pagethumbnails.capturing_disabled", true]
          ]
       }, function() {
-        let iframe = document.createElement("iframe");
+        const iframe = document.createElement("iframe");
         SpecialPowers.wrap(iframe).mozbrowser = true;
         iframe.id = "iframe";
         iframe.src = childFrameURL;
@@ -54,7 +54,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
         iframe.addEventListener("mozbrowserloadend", function() {
           info("iframe done loading");
 
-          let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+          const mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
 
           function onError(e) {
             ok(false, e.data.error);

@@ -58,14 +58,14 @@ function getDocShellChromeEventHandler(docShell) {
 }
 
 function getChildDocShells(parentDocShell) {
-  let docShellsEnum = parentDocShell.getDocShellEnumerator(
+  const docShellsEnum = parentDocShell.getDocShellEnumerator(
     Ci.nsIDocShellTreeItem.typeAll,
     Ci.nsIDocShell.ENUMERATE_FORWARDS
   );
 
-  let docShells = [];
+  const docShells = [];
   while (docShellsEnum.hasMoreElements()) {
-    let docShell = docShellsEnum.getNext();
+    const docShell = docShellsEnum.getNext();
     docShell.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIWebProgress);
     docShells.push(docShell);
@@ -267,7 +267,7 @@ TabActor.prototype = {
     if (this.exited) {
       return null;
     }
-    let form = this.form();
+    const form = this.form();
     return this.conn._getOrCreateActor(form.consoleActor);
   },
 
@@ -458,7 +458,7 @@ TabActor.prototype = {
     assert(this.actorID,
                "tab should have an actorID.");
 
-    let response = {
+    const response = {
       actor: this.actorID
     };
 
@@ -533,7 +533,7 @@ TabActor.prototype = {
     }
 
     // Otherwise, check if it is a WebExtension content script sandbox
-    let global = unwrapDebuggerObjectGlobal(wrappedGlobal);
+    const global = unwrapDebuggerObjectGlobal(wrappedGlobal);
     if (!global) {
       return false;
     }
@@ -612,7 +612,7 @@ TabActor.prototype = {
   },
 
   switchToFrame(request) {
-    let windowId = request.windowId;
+    const windowId = request.windowId;
     let win;
 
     try {
@@ -634,7 +634,7 @@ TabActor.prototype = {
   },
 
   listFrames(request) {
-    let windows = this._docShellsToWindows(this.docShells);
+    const windows = this._docShellsToWindows(this.docShells);
     return { frames: windows };
   },
 
@@ -651,8 +651,8 @@ TabActor.prototype = {
     }
 
     return this._workerActorList.getList().then((actors) => {
-      let pool = new ActorPool(this.conn);
-      for (let actor of actors) {
+      const pool = new ActorPool(this.conn);
+      for (const actor of actors) {
         pool.addActor(actor);
       }
 
@@ -670,9 +670,9 @@ TabActor.prototype = {
   },
 
   logInPage(request) {
-    let {text, category, flags} = request;
-    let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
-    let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+    const {text, category, flags} = request;
+    const scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+    const scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
     scriptError.initWithWindowID(text, null, null, 0, 0, flags,
                                  category, getInnerId(this.window));
     Services.console.logMessage(scriptError);
@@ -730,20 +730,20 @@ TabActor.prototype = {
     // started watching it before).
     this._unwatchDocShell(docShell);
 
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     this._notifyDocShellDestroy(webProgress);
 
     if (webProgress.DOMWindow == this._originalWindow) {
       // If the original top level document we connected to is removed,
       // we try to switch to any other top level document
-      let rootDocShells = this.docShells
+      const rootDocShells = this.docShells
                               .filter(d => {
                                 return d != this.docShell &&
                                        this._isRootDocShell(d);
                               });
       if (rootDocShells.length > 0) {
-        let newRoot = rootDocShells[0];
+        const newRoot = rootDocShells[0];
         this._originalWindow = newRoot.DOMWindow;
         this._changeTopLevelDocument(this._originalWindow);
       } else {
@@ -776,10 +776,10 @@ TabActor.prototype = {
   },
 
   _docShellToWindow(docShell) {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
-    let window = webProgress.DOMWindow;
-    let id = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const window = webProgress.DOMWindow;
+    const id = window.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .outerWindowID;
     let parentID = undefined;
@@ -806,7 +806,7 @@ TabActor.prototype = {
   },
 
   _notifyDocShellsUpdate(docshells) {
-    let windows = this._docShellsToWindows(docshells);
+    const windows = this._docShellsToWindows(docshells);
 
     // Do not send the `frameUpdate` event if the windows array is empty.
     if (windows.length == 0) {
@@ -826,7 +826,7 @@ TabActor.prototype = {
 
   _notifyDocShellDestroy(webProgress) {
     webProgress = webProgress.QueryInterface(Ci.nsIWebProgress);
-    let id = webProgress.DOMWindow
+    const id = webProgress.DOMWindow
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils)
                         .outerWindowID;
@@ -907,7 +907,7 @@ TabActor.prototype = {
     this._popContext();
 
     // Shut down actors that belong to this tab's pool.
-    for (let sheetActor of this._styleSheetActors.values()) {
+    for (const sheetActor of this._styleSheetActors.values()) {
       this._tabPool.removeActor(sheetActor);
     }
     this._styleSheetActors.clear();
@@ -977,7 +977,7 @@ TabActor.prototype = {
    * Reload the page in this tab.
    */
   reload(request) {
-    let force = request && request.options && request.options.force;
+    const force = request && request.options && request.options.force;
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
@@ -1009,7 +1009,7 @@ TabActor.prototype = {
    * Reconfigure options.
    */
   reconfigure(request) {
-    let options = request.options || {};
+    const options = request.options || {};
 
     if (!this.docShell) {
       // The tab is already closed.
@@ -1024,7 +1024,7 @@ TabActor.prototype = {
    * Ensure that CSS error reporting is enabled.
    */
   ensureCSSErrorReportingEnabled(request) {
-    for (let docShell of this.docShells) {
+    for (const docShell of this.docShells) {
       if (docShell.cssErrorReportingEnabled) {
         continue;
       }
@@ -1035,9 +1035,9 @@ TabActor.prototype = {
       }
       // We don't really want to reparse UA sheets and such, but want to do
       // Shadow DOM / XBL.
-      let sheets =
+      const sheets =
         InspectorUtils.getAllStyleSheets(docShell.document, /* documentOnly = */ true);
-      for (let sheet of sheets) {
+      for (const sheet of sheets) {
         getSheetText(sheet, this._consoleActor).then(text => {
           InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
         });
@@ -1075,7 +1075,7 @@ TabActor.prototype = {
     // Reload if:
     //  - there's an explicit `performReload` flag and it's true
     //  - there's no `performReload` flag, but it makes sense to do so
-    let hasExplicitReloadFlag = "performReload" in options;
+    const hasExplicitReloadFlag = "performReload" in options;
     if ((hasExplicitReloadFlag && options.performReload) ||
        (!hasExplicitReloadFlag && reload)) {
       this.reload();
@@ -1096,8 +1096,8 @@ TabActor.prototype = {
    * Disable or enable the cache via docShell.
    */
   _setCacheDisabled(disabled) {
-    let enable = Ci.nsIRequest.LOAD_NORMAL;
-    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+    const enable = Ci.nsIRequest.LOAD_NORMAL;
+    const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
 
     this.docShell.defaultLoadFlags = disabled ? disable : enable;
@@ -1140,7 +1140,7 @@ TabActor.prototype = {
    * Disable or enable the service workers testing features.
    */
   _setServiceWorkersTestingEnabled(enabled) {
-    let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.serviceWorkersTestingEnabled = enabled;
   },
@@ -1154,7 +1154,7 @@ TabActor.prototype = {
       return null;
     }
 
-    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+    const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
     return this.docShell.defaultLoadFlags === disable;
   },
@@ -1168,7 +1168,7 @@ TabActor.prototype = {
       return null;
     }
 
-    let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
     return windowUtils.serviceWorkersTestingEnabled;
   },
@@ -1181,7 +1181,7 @@ TabActor.prototype = {
       // The tab is already closed.
       return;
     }
-    let windowUtils = this.window
+    const windowUtils = this.window
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.suppressEventHandling(true);
@@ -1196,7 +1196,7 @@ TabActor.prototype = {
       // The tab is already closed.
       return;
     }
-    let windowUtils = this.window
+    const windowUtils = this.window
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.resumeTimeouts();
@@ -1230,7 +1230,7 @@ TabActor.prototype = {
   },
 
   _setWindow(window) {
-    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell);
     // Here is the very important call where we switch the currently
@@ -1255,7 +1255,7 @@ TabActor.prototype = {
    * DebuggerProgressListener.
    */
   _windowReady(window, isFrameSwitching = false) {
-    let isTopLevel = window == this.window;
+    const isTopLevel = window == this.window;
 
     // We just reset iframe list on WillNavigate, so we now list all existing
     // frames when we load a new document in the original window
@@ -1271,7 +1271,7 @@ TabActor.prototype = {
 
     // TODO bug 997119: move that code to ThreadActor by listening to
     // window-ready
-    let threadActor = this.threadActor;
+    const threadActor = this.threadActor;
     if (isTopLevel && threadActor.state != "detached") {
       this.sources.reset({ sourceMaps: true });
       threadActor.clearDebuggees();
@@ -1343,7 +1343,7 @@ TabActor.prototype = {
     // Proceed normally only if the debuggee is not paused.
     // TODO bug 997119: move that code to ThreadActor by listening to
     // will-navigate
-    let threadActor = this.threadActor;
+    const threadActor = this.threadActor;
     if (threadActor.state == "paused") {
       this.conn.send(
         threadActor.unsafeSynchronize(Promise.resolve(threadActor.onResume())));
@@ -1370,7 +1370,7 @@ TabActor.prototype = {
    * targeted context.
    */
   _navigate(window, isFrameSwitching = false) {
-    let isTopLevel = window == this.window;
+    const isTopLevel = window == this.window;
 
     // navigate event needs to be dispatched synchronously,
     // by calling the listeners in the order or registration.
@@ -1388,7 +1388,7 @@ TabActor.prototype = {
     }
 
     // TODO bug 997119: move that code to ThreadActor by listening to navigate
-    let threadActor = this.threadActor;
+    const threadActor = this.threadActor;
     if (threadActor.state == "running") {
       threadActor.dbg.enabled = true;
     }
@@ -1418,7 +1418,7 @@ TabActor.prototype = {
     try {
       // We are very explicitly examining the "console" property of
       // the non-Xrayed object here.
-      let console = window.wrappedJSObject.console;
+      const console = window.wrappedJSObject.console;
       isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
     } catch (ex) {
       // ignore
@@ -1440,7 +1440,7 @@ TabActor.prototype = {
     if (this._styleSheetActors.has(styleSheet)) {
       return this._styleSheetActors.get(styleSheet);
     }
-    let actor = new StyleSheetActor(styleSheet, this);
+    const actor = new StyleSheetActor(styleSheet, this);
     this._styleSheetActors.set(styleSheet, actor);
 
     this._tabPool.addActor(actor);
@@ -1520,36 +1520,36 @@ DebuggerProgressListener.prototype = {
     // Add the docshell to the watched set. We're actually adding the window,
     // because docShell objects are not wrappercached and would be rejected
     // by the WeakSet.
-    let docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindow);
     this._watchedDocShells.add(docShellWindow);
 
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this,
                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
-    let handler = getDocShellChromeEventHandler(docShell);
+    const handler = getDocShellChromeEventHandler(docShell);
     handler.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
     handler.addEventListener("pageshow", this._onWindowCreated, true);
     handler.addEventListener("pagehide", this._onWindowHidden, true);
 
     // Dispatch the _windowReady event on the tabActor for pre-existing windows
-    for (let win of this._getWindowsInDocShell(docShell)) {
+    for (const win of this._getWindowsInDocShell(docShell)) {
       this._tabActor._windowReady(win);
       this._knownWindowIDs.set(getWindowID(win), win);
     }
   },
 
   unwatch(docShell) {
-    let docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindow);
     if (!this._watchedDocShells.has(docShellWindow)) {
       return;
     }
 
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     // During process shutdown, the docshell may already be cleaned up and throw
     try {
@@ -1558,13 +1558,13 @@ DebuggerProgressListener.prototype = {
       // ignore
     }
 
-    let handler = getDocShellChromeEventHandler(docShell);
+    const handler = getDocShellChromeEventHandler(docShell);
     handler.removeEventListener("DOMWindowCreated",
       this._onWindowCreated, true);
     handler.removeEventListener("pageshow", this._onWindowCreated, true);
     handler.removeEventListener("pagehide", this._onWindowHidden, true);
 
-    for (let win of this._getWindowsInDocShell(docShell)) {
+    for (const win of this._getWindowsInDocShell(docShell)) {
       this._knownWindowIDs.delete(getWindowID(win));
     }
   },
@@ -1587,8 +1587,8 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    let window = evt.target.defaultView;
-    let innerID = getWindowID(window);
+    const window = evt.target.defaultView;
+    const innerID = getWindowID(window);
 
     // This method is alled on DOMWindowCreated and pageshow
     // The common scenario is DOMWindowCreated, which is fired when the document
@@ -1625,7 +1625,7 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    let window = evt.target.defaultView;
+    const window = evt.target.defaultView;
     this._tabActor._windowDestroyed(window, null, true);
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
@@ -1638,8 +1638,8 @@ DebuggerProgressListener.prototype = {
     // Because this observer will be called for all inner-window-destroyed in
     // the application, we need to filter out events for windows we are not
     // watching
-    let innerID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    let window = this._knownWindowIDs.get(innerID);
+    const innerID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    const window = this._knownWindowIDs.get(innerID);
     if (window) {
       this._knownWindowIDs.delete(innerID);
       this._tabActor._windowDestroyed(window, innerID);
@@ -1652,10 +1652,10 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    let isStart = flag & Ci.nsIWebProgressListener.STATE_START;
-    let isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
-    let isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-    let isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
+    const isStart = flag & Ci.nsIWebProgressListener.STATE_START;
+    const isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
+    const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    const isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
 
     // Catch any iframe location change
     if (isDocument && isStop) {
@@ -1664,11 +1664,11 @@ DebuggerProgressListener.prototype = {
       this._tabActor._notifyDocShellsUpdate([progress]);
     }
 
-    let window = progress.DOMWindow;
+    const window = progress.DOMWindow;
     if (isDocument && isStart) {
       // One of the earliest events that tells us a new URI
       // is being loaded in this window.
-      let newURI = request instanceof Ci.nsIChannel ? request.URI.spec : null;
+      const newURI = request instanceof Ci.nsIChannel ? request.URI.spec : null;
       this._tabActor._willNavigate(window, newURI, request);
     }
     if (isWindow && isStop) {
@@ -1683,8 +1683,8 @@ DebuggerProgressListener.prototype = {
         // with LOAD_BACKGROUND flags and never dispatches load event.
         // That may be the same reason why there is no onStateChange event
         // for about:neterror loads.
-        let handler = getDocShellChromeEventHandler(progress);
-        let onLoad = evt => {
+        const handler = getDocShellChromeEventHandler(progress);
+        const onLoad = evt => {
           // Ignore events from iframes
           if (evt.target === window.document) {
             handler.removeEventListener("DOMContentLoaded", onLoad, true);

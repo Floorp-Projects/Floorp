@@ -6,28 +6,28 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
+  const { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 
-  let [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
+  const [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
 
   isnot(firstProgramActor, secondProgramActor,
     "Two distinct program actors were recevide from two separate contexts.");
 
-  let firstVertexShader = await firstProgramActor.getVertexShader();
-  let firstFragmentShader = await firstProgramActor.getFragmentShader();
-  let secondVertexShader = await secondProgramActor.getVertexShader();
-  let secondFragmentShader = await secondProgramActor.getFragmentShader();
+  const firstVertexShader = await firstProgramActor.getVertexShader();
+  const firstFragmentShader = await firstProgramActor.getFragmentShader();
+  const secondVertexShader = await secondProgramActor.getVertexShader();
+  const secondFragmentShader = await secondProgramActor.getFragmentShader();
 
   isnot(firstVertexShader, secondVertexShader,
     "The two programs should have distinct vertex shaders.");
   isnot(firstFragmentShader, secondFragmentShader,
     "The two programs should have distinct fragment shaders.");
 
-  let firstVertSource = await firstVertexShader.getText();
-  let firstFragSource = await firstFragmentShader.getText();
-  let secondVertSource = await secondVertexShader.getText();
-  let secondFragSource = await secondFragmentShader.getText();
+  const firstVertSource = await firstVertexShader.getText();
+  const firstFragSource = await firstFragmentShader.getText();
+  const secondVertSource = await secondVertexShader.getText();
+  const secondFragSource = await secondFragmentShader.getText();
 
   is(firstVertSource, secondVertSource,
     "The vertex shaders should have identical sources.");

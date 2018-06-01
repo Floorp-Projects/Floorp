@@ -15,10 +15,10 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
-  let {win, timeHeaderEl, scrubberEl, scrubberHandleEl} = timeline;
-  let playTimelineButtonEl = panel.playTimelineButtonEl;
+  const {panel} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
+  const {win, timeHeaderEl, scrubberEl, scrubberHandleEl} = timeline;
+  const playTimelineButtonEl = panel.playTimelineButtonEl;
 
   ok(!playTimelineButtonEl.classList.contains("paused"),
      "The timeline play button is in its playing state by default");
@@ -43,7 +43,7 @@ add_task(async function() {
   checkScrubberIsAt(scrubberEl, timeHeaderEl, 100);
 
   info("Try to drag the scrubber handle and check that the scrubber moves");
-  let onDataChanged = timeline.once("timeline-data-changed");
+  const onDataChanged = timeline.once("timeline-data-changed");
   EventUtils.synthesizeMouse(scrubberHandleEl, 1, 20, {type: "mousedown"}, win);
   EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mousemove"}, win);
   EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mouseup"}, win);
@@ -58,7 +58,7 @@ add_task(async function() {
 });
 
 async function synthesizeInHeaderAndWaitForChange(timeline, x, y, type) {
-  let onDataChanged = timeline.once("timeline-data-changed");
+  const onDataChanged = timeline.once("timeline-data-changed");
   EventUtils.synthesizeMouse(timeline.timeHeaderEl, x, y, {type}, timeline.win);
   await onDataChanged;
 }
@@ -68,8 +68,8 @@ function getPositionPercentage(pos, headerEl) {
 }
 
 function checkScrubberIsAt(scrubberEl, timeHeaderEl, pos) {
-  let newPos = Math.round(parseFloat(scrubberEl.style.left));
-  let expectedPos = Math.round(getPositionPercentage(pos, timeHeaderEl));
+  const newPos = Math.round(parseFloat(scrubberEl.style.left));
+  const expectedPos = Math.round(getPositionPercentage(pos, timeHeaderEl));
   is(newPos, expectedPos,
      `The scrubber is at position ${pos} (${expectedPos}%)`);
 }

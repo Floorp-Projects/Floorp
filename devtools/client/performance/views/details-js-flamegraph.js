@@ -58,12 +58,12 @@ var JsFlameGraphView = extend(DetailsSubview, {
    *        The { startTime, endTime }, in milliseconds.
    */
   render: function(interval = {}) {
-    let recording = PerformanceController.getCurrentRecording();
-    let duration = recording.getDuration();
-    let profile = recording.getProfile();
-    let thread = profile.threads[0];
+    const recording = PerformanceController.getCurrentRecording();
+    const duration = recording.getDuration();
+    const profile = recording.getProfile();
+    const thread = profile.threads[0];
 
-    let data = FlameGraphUtils.createFlameGraphDataFromThread(thread, {
+    const data = FlameGraphUtils.createFlameGraphDataFromThread(thread, {
       invertTree: PerformanceController.getOption("invert-flame-graph"),
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       contentOnly: !PerformanceController.getOption("show-platform-data"),
@@ -91,7 +91,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
    * Fired when a range is selected or cleared in the FlameGraph.
    */
   _onRangeChangeInGraph: function() {
-    let interval = this.graph.getViewRange();
+    const interval = this.graph.getViewRange();
 
     // Squelch rerendering this view when we update the range here
     // to avoid recursion, as our FlameGraph handles rerendering itself
@@ -105,9 +105,9 @@ var JsFlameGraphView = extend(DetailsSubview, {
    * Called whenever a pref is changed and this view needs to be rerendered.
    */
   _onRerenderPrefChanged: function() {
-    let recording = PerformanceController.getCurrentRecording();
-    let profile = recording.getProfile();
-    let thread = profile.threads[0];
+    const recording = PerformanceController.getCurrentRecording();
+    const profile = recording.getProfile();
+    const thread = profile.threads[0];
     FlameGraphUtils.removeFromCache(thread);
   },
 

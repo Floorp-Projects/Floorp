@@ -21,10 +21,10 @@
       includeExperimentals: true,
     });
 
-    let unseen_longhands = new Set(all_longhands);
-    let seen_longhands = new Set();
-    for (let [, names] of ANIMATION_TYPE_FOR_LONGHANDS) {
-      for (let name of names) {
+    const unseen_longhands = new Set(all_longhands);
+    const seen_longhands = new Set();
+    for (const [, names] of ANIMATION_TYPE_FOR_LONGHANDS) {
+      for (const name of names) {
         ok(!seen_longhands.has(name),
            `${name} should have only one animation type`);
         ok(unseen_longhands.has(name),

@@ -24,10 +24,10 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = [
 ];
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(FILTERING_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -40,7 +40,7 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  let wait = waitForNetworkEvents(monitor, 9);
+  const wait = waitForNetworkEvents(monitor, 9);
   loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
@@ -86,7 +86,7 @@ add_task(async function() {
     // Trigger the details panel toggle action
     store.dispatch(Actions.toggleNetworkDetails());
 
-    let toggleButton = document.querySelector(".sidebar-toggle");
+    const toggleButton = document.querySelector(".sidebar-toggle");
 
     if (shouldPanelOpen) {
       is(toggleButton.classList.contains("pane-collapsed"), false,

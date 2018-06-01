@@ -171,7 +171,7 @@ const TEST_DATA = [
 ];
 
 function run_test() {
-  for (let test of TEST_DATA) {
+  for (const test of TEST_DATA) {
     dump("Test input string " + test.input + "\n");
     let output;
 
@@ -203,7 +203,7 @@ function assertOutput(actual, expected) {
       equal(expected[i].type, actual[i].type);
     }
   } else {
-    for (let prop of actual) {
+    for (const prop of actual) {
       dump("Actual output contained: {value: " + prop.value + ", type: " +
         prop.type + "}\n");
     }

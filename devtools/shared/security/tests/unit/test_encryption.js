@@ -24,13 +24,13 @@ add_task(async function() {
 add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
-  let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
-  let authenticator = new AuthenticatorType.Server();
+  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
 
-  let listener = DebuggerServer.createListener();
+  const listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
   listener.portOrPath = -1;
   listener.authenticator = authenticator;
@@ -38,23 +38,23 @@ add_task(async function() {
   await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
-  let transport = await DebuggerClient.socketConnect({
+  const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
     encryption: true
   });
   ok(transport, "Client transport created");
 
-  let client = new DebuggerClient(transport);
-  let onUnexpectedClose = () => {
+  const client = new DebuggerClient(transport);
+  const onUnexpectedClose = () => {
     do_throw("Closed unexpectedly");
   };
   client.addListener("closed", onUnexpectedClose);
   await connectClient(client);
 
   // Send a message the server will echo back
-  let message = "secrets";
-  let reply = await client.request({
+  const message = "secrets";
+  const reply = await client.request({
     to: "root",
     type: "echo",
     message
@@ -71,13 +71,13 @@ add_task(async function() {
 add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
-  let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
-  let authenticator = new AuthenticatorType.Server();
+  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
 
-  let listener = DebuggerServer.createListener();
+  const listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
   listener.portOrPath = -1;
   listener.authenticator = authenticator;

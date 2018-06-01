@@ -7,9 +7,9 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(WEBGL_ENUM_URL);
+  const { target, front } = await initCanvasDebuggerBackend(WEBGL_ENUM_URL);
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -17,9 +17,9 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
-  let functionCalls = animationOverview.calls;
+  const snapshotActor = await front.recordAnimationFrame();
+  const animationOverview = await snapshotActor.getOverview();
+  const functionCalls = animationOverview.calls;
 
   is(functionCalls[0].name, "clear",
     "The function's name is correct.");

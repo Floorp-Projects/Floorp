@@ -7,12 +7,12 @@
  * Tests if the pause/resume button works.
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(PAUSE_URL);
+  const { tab, monitor } = await initNetMonitor(PAUSE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let pauseButton = document.querySelector(".requests-list-pause-button");
+  const { document, store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const pauseButton = document.querySelector(".requests-list-pause-button");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -66,7 +66,7 @@ function assertRequestCount(store, count) {
  * Execute simple GET request and wait till it's done.
  */
 async function performRequestAndWait(tab, monitor) {
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     await content.wrappedJSObject.performRequests(url);
   });
@@ -77,7 +77,7 @@ async function performRequestAndWait(tab, monitor) {
  * Execute simple GET request
  */
 async function performPausedRequest(connector, tab, monitor) {
-  let wait = connector.connector.webConsoleClient.once("networkEvent");
+  const wait = connector.connector.webConsoleClient.once("networkEvent");
   await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     await content.wrappedJSObject.performRequests(url);
   });

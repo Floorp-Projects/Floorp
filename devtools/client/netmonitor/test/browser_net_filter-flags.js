@@ -137,10 +137,10 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(FILTERING_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -148,7 +148,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   function type(string) {
-    for (let ch of string) {
+    for (const ch of string) {
       EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
     }
   }
@@ -157,7 +157,7 @@ add_task(async function() {
   // (fetching requestHeaders & responseHeaders for filtering WS & XHR)
   // Lazy fetching will be executed when user focuses on filter box.
   function setFreetextFilter(value) {
-    let filterBox = document.querySelector(".devtools-filterinput");
+    const filterBox = document.querySelector(".devtools-filterinput");
     filterBox.focus();
     filterBox.value = "";
     type(value);
@@ -165,7 +165,7 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  let waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
+  const waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
   loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS);
   await waitNetwork;
@@ -368,7 +368,7 @@ add_task(async function() {
   await teardown(monitor);
 
   async function testContents(visibility) {
-    let items = getSortedRequests(store.getState());
+    const items = getSortedRequests(store.getState());
     let visibleItems = getDisplayedRequests(store.getState());
 
     // Filter results will be updated asynchronously, so we should wait until
@@ -384,8 +384,8 @@ add_task(async function() {
       "There should be a specific amount of visible items in the requests menu.");
 
     for (let i = 0; i < visibility.length; i++) {
-      let itemId = items.get(i).id;
-      let shouldBeVisible = !!visibility[i];
+      const itemId = items.get(i).id;
+      const shouldBeVisible = !!visibility[i];
       let isThere = visibleItems.some(r => r.id == itemId);
 
       // Filter results will be updated asynchronously, so we should wait until
@@ -401,19 +401,19 @@ add_task(async function() {
     }
 
     // Fake mouse over the status column only after the list is fully updated
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
+    const requestItems = document.querySelectorAll(".request-list-item");
+    for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".status-code");
+      const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
 
     for (let i = 0; i < visibility.length; i++) {
-      let shouldBeVisible = !!visibility[i];
+      const shouldBeVisible = !!visibility[i];
 
       if (shouldBeVisible) {
-        let { method, url, data } = EXPECTED_REQUESTS[i];
+        const { method, url, data } = EXPECTED_REQUESTS[i];
         verifyRequestItemTarget(
           document,
           getDisplayedRequests(store.getState()),

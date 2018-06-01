@@ -35,8 +35,8 @@ const dispatchAndWaitForFocus = (target) => new Promise((resolve) => {
 });
 
 function openSearchBox(ed) {
-  let edDoc = ed.container.contentDocument;
-  let edWin = edDoc.defaultView;
+  const edDoc = ed.container.contentDocument;
+  const edWin = edDoc.defaultView;
 
   let input = edDoc.querySelector("input[type=search]");
   ok(!input, "search box closed");
@@ -50,10 +50,10 @@ function openSearchBox(ed) {
 }
 
 function testFindAgain(ed, inputLine, expectCursor, isFindPrev = false) {
-  let edDoc = ed.container.contentDocument;
-  let edWin = edDoc.defaultView;
+  const edDoc = ed.container.contentDocument;
+  const edWin = edDoc.defaultView;
 
-  let input = edDoc.querySelector("input[type=search]");
+  const input = edDoc.querySelector("input[type=search]");
   input.value = inputLine;
 
   // Ensure the input has the focus before send the key – necessary on Linux,
@@ -71,8 +71,8 @@ function testFindAgain(ed, inputLine, expectCursor, isFindPrev = false) {
 }
 
 const testSearchBoxTextIsSelected = async function(ed) {
-  let edDoc = ed.container.contentDocument;
-  let edWin = edDoc.defaultView;
+  const edDoc = ed.container.contentDocument;
+  const edWin = edDoc.defaultView;
 
   let input = edDoc.querySelector("input[type=search]");
   ok(input, "search box is opened");
@@ -115,8 +115,8 @@ const testSearchBoxTextIsSelected = async function(ed) {
 };
 
 const testReplaceBoxTextIsSelected = async function(ed) {
-  let edDoc = ed.container.contentDocument;
-  let edWin = edDoc.defaultView;
+  const edDoc = ed.container.contentDocument;
+  const edWin = edDoc.defaultView;
 
   let input = edDoc.querySelector(".CodeMirror-dialog > input");
   ok(!input, "dialog box with replace is closed");
@@ -154,7 +154,7 @@ const testReplaceBoxTextIsSelected = async function(ed) {
 };
 
 add_task(async function() {
-  let { ed, win } = await setup();
+  const { ed, win } = await setup();
 
   ed.setText([
     "// line 1",
@@ -168,7 +168,7 @@ add_task(async function() {
 
   openSearchBox(ed);
 
-  let testVectors = [
+  const testVectors = [
     // Starting here expect data needs to get updated for length changes to
     // "textLines" above.
     ["line",
@@ -203,7 +203,7 @@ add_task(async function() {
      true]
   ];
 
-  for (let v of testVectors) {
+  for (const v of testVectors) {
     await testFindAgain(ed, ...v);
   }
 

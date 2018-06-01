@@ -100,7 +100,7 @@ describe("EvaluationResult component:", () => {
     expect(learnMore.prop("title")).toBe(url);
 
     learnMore.simulate("click");
-    let call = serviceContainer.openLink.getCall(0);
+    const call = serviceContainer.openLink.getCall(0);
     expect(call.args[0]).toEqual(message.exceptionDocURL);
   });
 

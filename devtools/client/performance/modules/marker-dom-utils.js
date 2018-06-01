@@ -25,7 +25,7 @@ exports.MarkerDOMUtils = {
    * @return array<Node>
    */
   buildFields: function(doc, marker) {
-    let fields = MarkerBlueprintUtils.getMarkerFields(marker);
+    const fields = MarkerBlueprintUtils.getMarkerFields(marker);
     return fields.map(({ label, value }) => this.buildNameValueLabel(doc, label, value));
   },
 
@@ -37,16 +37,16 @@ exports.MarkerDOMUtils = {
    * @return Node
    */
   buildTitle: function(doc, marker) {
-    let blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
+    const blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
 
-    let hbox = doc.createElement("hbox");
+    const hbox = doc.createElement("hbox");
     hbox.setAttribute("align", "center");
 
-    let bullet = doc.createElement("hbox");
+    const bullet = doc.createElement("hbox");
     bullet.className = `marker-details-bullet marker-color-${blueprint.colorName}`;
 
-    let title = MarkerBlueprintUtils.getMarkerLabel(marker);
-    let label = doc.createElement("label");
+    const title = MarkerBlueprintUtils.getMarkerLabel(marker);
+    const label = doc.createElement("label");
     label.className = "marker-details-type";
     label.setAttribute("value", title);
 
@@ -64,13 +64,13 @@ exports.MarkerDOMUtils = {
    * @return Node
    */
   buildDuration: function(doc, marker) {
-    let label = L10N.getStr("marker.field.duration");
-    let start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
-    let end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
-    let duration = L10N.getFormatStrWithNumbers("timeline.tick",
+    const label = L10N.getStr("marker.field.duration");
+    const start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
+    const end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
+    const duration = L10N.getFormatStrWithNumbers("timeline.tick",
                                                 marker.end - marker.start);
 
-    let el = this.buildNameValueLabel(doc, label, duration);
+    const el = this.buildNameValueLabel(doc, label, duration);
     el.classList.add("marker-details-duration");
     el.setAttribute("tooltiptext", `${start} → ${end}`);
 
@@ -87,15 +87,15 @@ exports.MarkerDOMUtils = {
    * @return Node
    */
   buildNameValueLabel: function(doc, field, value) {
-    let hbox = doc.createElement("hbox");
+    const hbox = doc.createElement("hbox");
     hbox.className = "marker-details-labelcontainer";
 
-    let nameLabel = doc.createElement("label");
+    const nameLabel = doc.createElement("label");
     nameLabel.className = "plain marker-details-name-label";
     nameLabel.setAttribute("value", field);
     hbox.appendChild(nameLabel);
 
-    let valueLabel = doc.createElement("label");
+    const valueLabel = doc.createElement("label");
     valueLabel.className = "plain marker-details-value-label";
     valueLabel.setAttribute("value", value);
     hbox.appendChild(valueLabel);
@@ -115,11 +115,11 @@ exports.MarkerDOMUtils = {
    *          - array frames: array of stack frames
    */
   buildStackTrace: function(doc, { type, frameIndex, frames }) {
-    let container = doc.createElement("vbox");
+    const container = doc.createElement("vbox");
     container.className = "marker-details-stack";
     container.setAttribute("type", type);
 
-    let nameLabel = doc.createElement("label");
+    const nameLabel = doc.createElement("label");
     nameLabel.className = "plain marker-details-name-label";
     nameLabel.setAttribute("value", L10N.getStr(`marker.field.${type}`));
     container.appendChild(nameLabel);
@@ -127,7 +127,7 @@ exports.MarkerDOMUtils = {
     // Workaround for profiles that have looping stack traces.  See
     // bug 1246555.
     let wasAsyncParent = false;
-    let seen = new Set();
+    const seen = new Set();
 
     while (frameIndex > 0) {
       if (seen.has(frameIndex)) {
@@ -135,17 +135,17 @@ exports.MarkerDOMUtils = {
       }
       seen.add(frameIndex);
 
-      let frame = frames[frameIndex];
-      let url = frame.source;
-      let displayName = frame.functionDisplayName;
-      let line = frame.line;
+      const frame = frames[frameIndex];
+      const url = frame.source;
+      const displayName = frame.functionDisplayName;
+      const line = frame.line;
 
       // If the previous frame had an async parent, then the async
       // cause is in this frame and should be displayed.
       if (wasAsyncParent) {
-        let asyncStr = L10N.getFormatStr("marker.field.asyncStack", frame.asyncCause);
-        let asyncBox = doc.createElement("hbox");
-        let asyncLabel = doc.createElement("label");
+        const asyncStr = L10N.getFormatStr("marker.field.asyncStack", frame.asyncCause);
+        const asyncBox = doc.createElement("hbox");
+        const asyncLabel = doc.createElement("label");
         asyncLabel.className = "devtools-monospace";
         asyncLabel.setAttribute("value", asyncStr);
         asyncBox.appendChild(asyncLabel);
@@ -153,28 +153,28 @@ exports.MarkerDOMUtils = {
         wasAsyncParent = false;
       }
 
-      let hbox = doc.createElement("hbox");
+      const hbox = doc.createElement("hbox");
 
       if (displayName) {
-        let functionLabel = doc.createElement("label");
+        const functionLabel = doc.createElement("label");
         functionLabel.className = "devtools-monospace";
         functionLabel.setAttribute("value", displayName);
         hbox.appendChild(functionLabel);
       }
 
       if (url) {
-        let linkNode = doc.createElement("a");
+        const linkNode = doc.createElement("a");
         linkNode.className = "waterfall-marker-location devtools-source-link";
         linkNode.href = url;
         linkNode.draggable = false;
         linkNode.setAttribute("title", url);
 
-        let urlLabel = doc.createElement("label");
+        const urlLabel = doc.createElement("label");
         urlLabel.className = "filename";
         urlLabel.setAttribute("value", getSourceNames(url).short);
         linkNode.appendChild(urlLabel);
 
-        let lineLabel = doc.createElement("label");
+        const lineLabel = doc.createElement("label");
         lineLabel.className = "line-number";
         lineLabel.setAttribute("value", `:${line}`);
         linkNode.appendChild(lineLabel);
@@ -191,7 +191,7 @@ exports.MarkerDOMUtils = {
       }
 
       if (!displayName && !url) {
-        let unknownLabel = doc.createElement("label");
+        const unknownLabel = doc.createElement("label");
         unknownLabel.setAttribute("value", L10N.getStr("marker.value.unknownFrame"));
         hbox.appendChild(unknownLabel);
       }
@@ -218,13 +218,13 @@ exports.MarkerDOMUtils = {
    * @return array<Node>
    */
   buildCustom: function(doc, marker, options) {
-    let elements = [];
+    const elements = [];
 
     if (options.allocations && shouldShowAllocationsTrigger(marker)) {
-      let hbox = doc.createElement("hbox");
+      const hbox = doc.createElement("hbox");
       hbox.className = "marker-details-customcontainer";
 
-      let label = doc.createElement("label");
+      const label = doc.createElement("label");
       label.className = "custom-button";
       label.setAttribute("value", "Show allocation triggers");
       label.setAttribute("type", "show-allocations");
@@ -250,7 +250,7 @@ exports.MarkerDOMUtils = {
  */
 function shouldShowAllocationsTrigger(marker) {
   if (marker.name == "GarbageCollection") {
-    let showTriggers = PREFS["show-triggers-for-gc-types"];
+    const showTriggers = PREFS["show-triggers-for-gc-types"];
     return showTriggers.split(" ").includes(marker.causeName);
   }
   return false;

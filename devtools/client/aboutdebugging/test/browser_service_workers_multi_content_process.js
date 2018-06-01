@@ -15,19 +15,19 @@ add_task(async function() {
   info("Force two content processes");
   await pushPref("dom.ipc.processCount", 2);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
-  let warningSection = document.querySelector(".service-worker-multi-process");
-  let img = warningSection.querySelector(".warning");
+  const warningSection = document.querySelector(".service-worker-multi-process");
+  const img = warningSection.querySelector(".warning");
   ok(img, "warning message is rendered");
 
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = await addTab(TAB_URL, { background: true });
+  const swTab = await addTab(TAB_URL, { background: true });
 
   info("Wait for service worker to appear in the list");
   // Check that the service worker appears in the UI
-  let serviceWorkerContainer =
+  const serviceWorkerContainer =
     await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Wait until the service worker is running and the Debug button appears");
@@ -40,8 +40,8 @@ add_task(async function() {
   ok(debugButton.disabled, "Start/Debug button is disabled");
 
   info("Update the preference to 1");
-  let onWarningCleared = waitUntil(() => {
-    let hasWarning = document.querySelector(".service-worker-multi-process");
+  const onWarningCleared = waitUntil(() => {
+    const hasWarning = document.querySelector(".service-worker-multi-process");
     return !hasWarning && !debugButton.disabled;
   }, 100);
   await pushPref("dom.ipc.processCount", 1);
@@ -49,8 +49,8 @@ add_task(async function() {
   ok(!debugButton.disabled, "Debug button is enabled.");
 
   info("Update the preference back to 2");
-  let onWarningRestored = waitUntil(() => {
-    let hasWarning = document.querySelector(".service-worker-multi-process");
+  const onWarningRestored = waitUntil(() => {
+    const hasWarning = document.querySelector(".service-worker-multi-process");
     return hasWarning && getDebugButton(serviceWorkerContainer).disabled;
   }, 100);
   await pushPref("dom.ipc.processCount", 2);

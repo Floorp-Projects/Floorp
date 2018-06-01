@@ -8,10 +8,10 @@ const TAB_URL = URL_ROOT + "service-workers/dynamic-registration.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  let { panel, tab } = await openNewTabAndApplicationPanel(TAB_URL);
-  let doc = panel.panelWin.document;
+  const { panel, tab } = await openNewTabAndApplicationPanel(TAB_URL);
+  const doc = panel.panelWin.document;
 
-  let isWorkerListEmpty = !!doc.querySelector(".worker-list-empty");
+  const isWorkerListEmpty = !!doc.querySelector(".worker-list-empty");
   ok(isWorkerListEmpty, "No Service Worker displayed");
 
   info("Register a service worker in the page.");
@@ -22,24 +22,24 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length > 0);
 
-  let workerContainer = getWorkerContainers(doc)[0];
+  const workerContainer = getWorkerContainers(doc)[0];
 
   info("Wait until the unregister button is displayed for the service worker");
   await waitUntil(() => workerContainer.querySelector(".js-unregister-button"));
 
-  let scopeEl = workerContainer.querySelector(".js-sw-scope");
-  let expectedScope = "example.com/browser/devtools/client/application/test/" +
+  const scopeEl = workerContainer.querySelector(".js-sw-scope");
+  const expectedScope = "example.com/browser/devtools/client/application/test/" +
                       "service-workers/";
   ok(scopeEl.textContent.startsWith(expectedScope),
     "Service worker has the expected scope");
 
-  let updatedEl = workerContainer.querySelector(".js-sw-updated");
+  const updatedEl = workerContainer.querySelector(".js-sw-updated");
   ok(updatedEl.textContent.includes(`${new Date().getFullYear()}`),
     "Service worker has a last updated time");
 
   info("Unregister the service worker");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    let registration = await content.wrappedJSObject.sw;
+    const registration = await content.wrappedJSObject.sw;
     registration.unregister();
   });
 

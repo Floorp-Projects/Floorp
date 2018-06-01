@@ -17,7 +17,7 @@ function run_test() {
 
 function test_prototype_attributes() {
   // Check that the prototype has a getter property with expected attributes.
-  let descriptor = Object.getOwnPropertyDescriptor(Class.prototype, "foo");
+  const descriptor = Object.getOwnPropertyDescriptor(Class.prototype, "foo");
   Assert.equal(typeof descriptor.get, "function");
   Assert.equal(descriptor.set, undefined);
   Assert.equal(descriptor.enumerable, false);
@@ -27,14 +27,14 @@ function test_prototype_attributes() {
 function test_instance_attributes() {
   // Instances should not have an own property until the lazy getter has been
   // activated.
-  let instance = new Class();
+  const instance = new Class();
   Assert.ok(!instance.hasOwnProperty("foo"));
   instance.foo;
   Assert.ok(instance.hasOwnProperty("foo"));
 
   // Check that the instance has an own property with the expecred value and
   // attributes after the lazy getter is activated.
-  let descriptor = Object.getOwnPropertyDescriptor(instance, "foo");
+  const descriptor = Object.getOwnPropertyDescriptor(instance, "foo");
   Assert.ok(descriptor.value instanceof Array);
   Assert.equal(descriptor.writable, true);
   Assert.equal(descriptor.enumerable, false);
@@ -42,10 +42,10 @@ function test_instance_attributes() {
 }
 
 function test_multiple_instances() {
-  let instance1 = new Class();
-  let instance2 = new Class();
-  let foo1 = instance1.foo;
-  let foo2 = instance2.foo;
+  const instance1 = new Class();
+  const instance2 = new Class();
+  const foo1 = instance1.foo;
+  const foo2 = instance2.foo;
   // Check that the lazy getter returns the expected type of value.
   Assert.ok(foo1 instanceof Array);
   Assert.ok(foo2 instanceof Array);
@@ -63,6 +63,6 @@ function test_callback_receiver() {
   });
 
   // Check that the |this| value in the callback is the instance itself.
-  let instance = new Foo();
+  const instance = new Foo();
   Assert.equal(instance.foo, instance);
 }

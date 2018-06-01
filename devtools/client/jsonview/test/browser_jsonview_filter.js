@@ -12,7 +12,7 @@ add_task(async function() {
 
   await addJsonViewTab(TEST_JSON_URL);
 
-  let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  const count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 6, "There must be expected number of rows");
 
   // XXX use proper shortcut to focus the filter box
@@ -22,7 +22,7 @@ add_task(async function() {
   // The filtering is done asynchronously so, we need to wait.
   await waitForFilter();
 
-  let hiddenCount = await getElementCount(
+  const hiddenCount = await getElementCount(
     ".jsonPanelBox .treeTable .treeRow.hidden");
   is(hiddenCount, 4, "There must be expected number of hidden rows");
 });

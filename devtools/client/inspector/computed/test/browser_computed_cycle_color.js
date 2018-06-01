@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#matches", inspector);
 
   info("Checking the property itself");
@@ -30,14 +30,14 @@ add_task(async function() {
 });
 
 async function checkColorCycling(container, view) {
-  let valueNode = container.querySelector(".computed-color");
-  let win = view.styleWindow;
+  const valueNode = container.querySelector(".computed-color");
+  const win = view.styleWindow;
 
   // "Authored" (default; currently the computed value)
   is(valueNode.textContent, "rgb(255, 0, 0)",
                             "Color displayed as an RGB value.");
 
-  let tests = [{
+  const tests = [{
     value: "red",
     comment: "Color displayed as a color name."
   }, {
@@ -51,17 +51,17 @@ async function checkColorCycling(container, view) {
     comment: "Color displayed as an RGB value again."
   }];
 
-  for (let test of tests) {
+  for (const test of tests) {
     await checkSwatchShiftClick(container, win, test.value, test.comment);
   }
 }
 
 async function checkSwatchShiftClick(container, win, expectedValue, comment) {
-  let swatch = container.querySelector(".computed-colorswatch");
-  let valueNode = container.querySelector(".computed-color");
+  const swatch = container.querySelector(".computed-colorswatch");
+  const valueNode = container.querySelector(".computed-color");
   swatch.scrollIntoView();
 
-  let onUnitChange = swatch.once("unit-change");
+  const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {
     type: "mousedown",
     shiftKey: true

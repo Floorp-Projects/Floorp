@@ -12,14 +12,14 @@ const TEST_URL = `data:text/html;charset=utf8,
                   <div class='test-class'></div>Text node`;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {walker} = inspector;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {walker} = inspector;
 
   info("Select the test node to have the 2 test containers visible");
   await selectNode("div", inspector);
 
-  let divFront = await walker.querySelector(walker.rootNode, "div");
-  let textFront = await walker.nextSibling(divFront);
+  const divFront = await walker.querySelector(walker.rootNode, "div");
+  const textFront = await walker.nextSibling(divFront);
 
   info("Click on the MarkupContainer element for the text node");
   await clickContainer(textFront, inspector);
@@ -34,11 +34,11 @@ add_task(async function() {
      "The currently focused element is the div's tagname");
 
   info("Click on the test-class attribute, to make sure it gets focused");
-  let editor = getContainerForNodeFront(divFront, inspector).editor;
-  let attributeEditor = editor.attrElements.get("class")
+  const editor = getContainerForNodeFront(divFront, inspector).editor;
+  const attributeEditor = editor.attrElements.get("class")
                                            .querySelector(".editable");
 
-  let onFocus = once(attributeEditor, "focus");
+  const onFocus = once(attributeEditor, "focus");
   EventUtils.synthesizeMouseAtCenter(attributeEditor, {type: "mousedown"},
     inspector.markup.doc.defaultView);
   EventUtils.synthesizeMouseAtCenter(attributeEditor, {type: "mouseup"},

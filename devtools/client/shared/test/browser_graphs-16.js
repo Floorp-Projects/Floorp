@@ -28,8 +28,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new MountainGraphWidget(doc.body);
+  const [host,, doc] = await createHost();
+  const graph = new MountainGraphWidget(doc.body);
   await graph.once("ready");
 
   testGraph(graph);

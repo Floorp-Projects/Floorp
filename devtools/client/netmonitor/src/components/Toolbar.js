@@ -156,7 +156,7 @@ class Toolbar extends Component {
   }
 
   onSearchBoxFocus() {
-    let { connector, filteredRequests } = this.props;
+    const { connector, filteredRequests } = this.props;
 
     // Fetch responseCookies & responseHeaders for building autocomplete list
     filteredRequests.forEach((request) => {
@@ -193,7 +193,7 @@ class Toolbar extends Component {
   renderToggleRecordingButton(recording, toggleRecording) {
     // Calculate class-list for toggle recording button.
     // The button has two states: pause/play.
-    let toggleRecordingButtonClass = [
+    const toggleRecordingButtonClass = [
       "devtools-button",
       "requests-list-pause-button",
       recording ? "devtools-pause-icon" : "devtools-play-icon",
@@ -213,8 +213,8 @@ class Toolbar extends Component {
    */
   renderFilterButtons(requestFilterTypes) {
     // Render list of filter-buttons.
-    let buttons = Object.entries(requestFilterTypes).map(([type, checked]) => {
-      let classList = ["devtools-button", `requests-list-filter-${type}-button`];
+    const buttons = Object.entries(requestFilterTypes).map(([type, checked]) => {
+      const classList = ["devtools-button", `requests-list-filter-${type}-button`];
       checked && classList.push("checked");
 
       return (
@@ -282,7 +282,7 @@ class Toolbar extends Component {
    * Render network throttling selector button.
    */
   renderThrottlingSelector() {
-    let {
+    const {
       networkThrottling,
       onChangeNetworkThrottling,
     } = this.props;
@@ -316,7 +316,7 @@ class Toolbar extends Component {
       openSplitConsole,
     } = this.props;
 
-    let menuItems = [];
+    const menuItems = [];
 
     menuItems.push({
       id: "request-list-context-import-har",
@@ -368,7 +368,7 @@ class Toolbar extends Component {
   }
 
   render() {
-    let {
+    const {
       toggleRecording,
       clearRequests,
       requestFilterTypes,

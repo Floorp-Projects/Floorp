@@ -8,12 +8,12 @@
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 function test() {
-  let originalJson = Services.prefs.getCharPref(
+  const originalJson = Services.prefs.getCharPref(
     "devtools.performance.timeline.hidden-markers");
-  let originalFloat = Services.prefs.getCharPref(
+  const originalFloat = Services.prefs.getCharPref(
     "devtools.performance.memory.sample-probability");
 
-  let Prefs = new PrefsHelper("devtools.performance", {
+  const Prefs = new PrefsHelper("devtools.performance", {
     "float": ["Float", "memory.sample-probability"],
     "json": ["Json", "timeline.hidden-markers"]
   });

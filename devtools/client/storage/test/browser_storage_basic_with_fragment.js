@@ -95,8 +95,8 @@ const testCases = [
  * Test that the desired number of tree items are present
  */
 function testTree() {
-  let doc = gPanelWindow.document;
-  for (let [item] of testCases) {
+  const doc = gPanelWindow.document;
+  for (const [item] of testCases) {
     ok(doc.querySelector("[data-id='" + JSON.stringify(item) + "']"),
       `Tree item ${item.toSource()} should be present in the storage tree`);
   }
@@ -106,18 +106,18 @@ function testTree() {
  * Test that correct table entries are shown for each of the tree item
  */
 async function testTables() {
-  let doc = gPanelWindow.document;
+  const doc = gPanelWindow.document;
   // Expand all nodes so that the synthesized click event actually works
   gUI.tree.expandAll();
 
   // First tree item is already selected so no clicking and waiting for update
-  for (let id of testCases[0][1]) {
+  for (const id of testCases[0][1]) {
     ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
        "Table item " + id + " should be present");
   }
 
   // Click rest of the tree items and wait for the table to be updated
-  for (let [treeItem, items] of testCases.slice(1)) {
+  for (const [treeItem, items] of testCases.slice(1)) {
     await selectTreeItem(treeItem);
 
     // Check whether correct number of items are present in the table
@@ -126,7 +126,7 @@ async function testTables() {
        ).length, items.length, "Number of items in table is correct");
 
     // Check if all the desired items are present in the table
-    for (let id of items) {
+    for (const id of items) {
       ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
          "Table item " + id + " should be present");
     }

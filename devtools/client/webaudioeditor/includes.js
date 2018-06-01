@@ -98,8 +98,8 @@ function $$(selector, target = document) {
  * http://backbonejs.org/#Collection-findWhere
  */
 function findWhere(collection, attrs) {
-  let keys = Object.keys(attrs);
-  for (let model of collection) {
+  const keys = Object.keys(attrs);
+  for (const model of collection) {
     if (keys.every(key => model[key] === attrs[key])) {
       return model;
     }

@@ -15,26 +15,26 @@ Bug 943251 - Allow accessing about:config from WebIDE
 "use strict";
 
 function runTests() {
-  let {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  let {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  let {DebuggerServer} = require("devtools/server/main");
-  let Services = require("Services");
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+  const {DebuggerServer} = require("devtools/server/main");
+  const Services = require("Services");
 
   SimpleTest.waitForExplicitFinish();
 
-  let {getPreferenceFront} = require("devtools/shared/fronts/preference");
+  const {getPreferenceFront} = require("devtools/shared/fronts/preference");
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      let p = getPreferenceFront(client, response);
+      const p = getPreferenceFront(client, response);
 
-      let prefs = {};
+      const prefs = {};
 
-      let localPref = {
+      const localPref = {
         boolPref: true,
         intPref: 0x1234,
         charPref: "Hello World",

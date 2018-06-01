@@ -15,8 +15,8 @@ add_task(async function() {
   // This test assume that zoom value will be default value. i.e. x1.0.
   Services.prefs.setCharPref("devtools.toolbox.zoomValue", "1.0");
   await addTab("about:blank");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target,
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target,
                                             "styleeditor",
                                             Toolbox.HostType.BOTTOM);
 
@@ -33,10 +33,10 @@ add_task(async function() {
 function testZoomLevel(type, times, expected, toolbox) {
   sendZoomKey("toolbox.zoom" + type + ".key", times);
 
-  let zoom = getCurrentZoom(toolbox);
+  const zoom = getCurrentZoom(toolbox);
   is(zoom.toFixed(1), expected, "zoom level correct after zoom " + type);
 
-  let savedZoom = parseFloat(Services.prefs.getCharPref(
+  const savedZoom = parseFloat(Services.prefs.getCharPref(
     "devtools.toolbox.zoomValue"));
   is(savedZoom.toFixed(1), expected,
      "saved zoom level is correct after zoom " + type);
@@ -49,7 +49,7 @@ function sendZoomKey(shortcut, times) {
 }
 
 function getCurrentZoom(toolbox) {
-  let windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
+  const windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
   return windowUtils.fullZoom;
 }

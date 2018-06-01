@@ -36,8 +36,8 @@ add_task(async function() {
   await addTab(TEST_URI);
   startTelemetry();
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the responsivedesign button");
@@ -50,7 +50,7 @@ add_task(async function() {
 async function testButton(toolbox) {
   info("Testing command-button-responsive");
 
-  let button = toolbox.doc.querySelector("#command-button-responsive");
+  const button = toolbox.doc.querySelector("#command-button-responsive");
   ok(button, "Captain, we have the button");
 
   await delayedClicks(button, 4);
@@ -60,7 +60,7 @@ async function testButton(toolbox) {
 
 function waitForToggle() {
   return new Promise(resolve => {
-    let handler = () => {
+    const handler = () => {
       ResponsiveUIManager.off("on", handler);
       ResponsiveUIManager.off("off", handler);
       resolve();
@@ -73,7 +73,7 @@ function waitForToggle() {
 var delayedClicks = async function(node, clicks) {
   for (let i = 0; i < clicks; i++) {
     info("Clicking button " + node.id);
-    let toggled = waitForToggle();
+    const toggled = waitForToggle();
     node.click();
     await toggled;
     // See TOOL_DELAY for why we need setTimeout here

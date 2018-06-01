@@ -12,6 +12,6 @@ add_task(async function() {
 
   await addJsonViewTab(TEST_JSON_URL);
 
-  let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  const count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 37, "There must be expected number of rows");
 });

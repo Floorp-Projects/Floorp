@@ -8,7 +8,7 @@
 // those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector, testActor} = await openInspectorForURL(
+  const {toolbox, inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
 
   let isVisible = await testActor.isHighlighting(toolbox);
@@ -16,9 +16,9 @@ add_task(async function() {
 
   info("Selecting the test node");
   await selectNode("span", inspector);
-  let container = await getContainerForSelector("h1", inspector);
+  const container = await getContainerForSelector("h1", inspector);
 
-  let onHighlighterReady = toolbox.once("highlighter-ready");
+  const onHighlighterReady = toolbox.once("highlighter-ready");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
                                      inspector.markup.doc.defaultView);
   await onHighlighterReady;

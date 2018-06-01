@@ -38,16 +38,16 @@ const test = async function() {
   // is added through `onNewScript`
   await getSources(gThreadClient);
 
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  let source = gThreadClient.source(packet.frame.where.source);
-  let location = {
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  const source = gThreadClient.source(packet.frame.where.source);
+  const location = {
     line: gDebuggee.line0 + 2
   };
 
-  let [res, ] = await setBreakpoint(source, location);
+  const [res, ] = await setBreakpoint(source, location);
   ok(!res.error);
 
-  let location2 = {
+  const location2 = {
     line: gDebuggee.line0 + 7
   };
 

@@ -14,9 +14,9 @@ const TEST_URI =
   </script>`;
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let inputNode = hud.jsterm.inputNode;
+  const inputNode = hud.jsterm.inputNode;
   info("Focus after console is opened");
   ok(hasFocus(inputNode), "input node is focused after console is opened");
 
@@ -27,7 +27,7 @@ add_task(async function() {
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("console message 2");
   });
-  let msg = await waitFor(() => findMessage(hud, "console message 2"));
+  const msg = await waitFor(() => findMessage(hud, "console message 2"));
   ok(hasFocus(inputNode, "input node is focused, first time"));
 
   info("Focus after clicking in the output area");
@@ -37,16 +37,16 @@ add_task(async function() {
 
   info("Setting a text selection and making sure a click does not re-focus");
   await waitForBlurredInput(hud);
-  let selection = hud.iframeWindow.getSelection();
+  const selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(msg.querySelector(".message-body"));
   EventUtils.sendMouseEvent({type: "click"}, msg);
   ok(!hasFocus(inputNode), "input node not focused after text is selected");
 });
 
 function waitForBlurredInput(hud) {
-  let inputNode = hud.jsterm.inputNode;
+  const inputNode = hud.jsterm.inputNode;
   return new Promise(resolve => {
-    let lostFocus = () => {
+    const lostFocus = () => {
       ok(!hasFocus(inputNode), "input node is not focused");
       resolve();
     };

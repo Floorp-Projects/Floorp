@@ -21,20 +21,20 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testMarkOverridden(inspector, view);
 });
 
 function testMarkOverridden(inspector, view) {
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let classRule = elementStyle.rules[2];
-  let classProp = classRule.textProps[0];
+  const classRule = elementStyle.rules[2];
+  const classProp = classRule.textProps[0];
   ok(!classProp.overridden,
     "Class prop shouldn't be overridden, some props are still being used.");
 
-  for (let computed of classProp.computed) {
+  for (const computed of classProp.computed) {
     if (computed.name.indexOf("margin-left") == 0) {
       ok(computed.overridden, "margin-left props should be overridden.");
     } else {

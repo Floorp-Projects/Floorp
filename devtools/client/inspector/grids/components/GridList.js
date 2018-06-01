@@ -27,7 +27,7 @@ class GridList extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       getSwatchColorPickerTooltip,
       grids,
       setSelectedNode,

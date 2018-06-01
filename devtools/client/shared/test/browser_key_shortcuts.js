@@ -6,7 +6,7 @@
 var isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function() {
-  let shortcuts = new KeyShortcuts({
+  const shortcuts = new KeyShortcuts({
     window
   });
 
@@ -34,7 +34,7 @@ add_task(async function() {
 function once(shortcuts, key, listener) {
   let called = false;
   return new Promise(done => {
-    let onShortcut = event => {
+    const onShortcut = event => {
       shortcuts.off(key, onShortcut);
       ok(!called, "once listener called only once (i.e. off() works)");
       called = true;
@@ -48,7 +48,7 @@ function once(shortcuts, key, listener) {
 async function testSimple(shortcuts) {
   info("Test simple key shortcuts");
 
-  let onKey = once(shortcuts, "0", event => {
+  const onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
 
     // Display another key press to ensure that once() correctly stop listening
@@ -62,7 +62,7 @@ async function testSimple(shortcuts) {
 async function testNonLetterCharacter(shortcuts) {
   info("Test non-naive character key shortcuts");
 
-  let onKey = once(shortcuts, "[", event => {
+  const onKey = once(shortcuts, "[", event => {
     is(event.key, "[");
   });
 
@@ -73,7 +73,7 @@ async function testNonLetterCharacter(shortcuts) {
 async function testFunctionKey(shortcuts) {
   info("Test function key shortcuts");
 
-  let onKey = once(shortcuts, "F12", event => {
+  const onKey = once(shortcuts, "F12", event => {
     is(event.key, "F12");
   });
 
@@ -87,7 +87,7 @@ async function testFunctionKey(shortcuts) {
 async function testPlusCharacter(shortcuts) {
   info("Test 'Plus' key shortcuts");
 
-  let onKey = once(shortcuts, "Plus", event => {
+  const onKey = once(shortcuts, "Plus", event => {
     is(event.key, "+");
   });
 
@@ -100,11 +100,11 @@ async function testMixup(shortcuts) {
   info("Test possible listener mixup");
 
   let hitFirst = false, hitSecond = false;
-  let onFirstKey = once(shortcuts, "0", event => {
+  const onFirstKey = once(shortcuts, "0", event => {
     is(event.key, "0");
     hitFirst = true;
   });
-  let onSecondKey = once(shortcuts, "Alt+A", event => {
+  const onSecondKey = once(shortcuts, "Alt+A", event => {
     is(event.key, "a");
     ok(event.altKey);
     hitSecond = true;
@@ -168,7 +168,7 @@ async function testExactModifiers(shortcuts) {
   info("Test exact modifiers match");
 
   let hit = false;
-  let onKey = once(shortcuts, "Alt+A", event => {
+  const onKey = once(shortcuts, "Alt+A", event => {
     is(event.key, "a");
     ok(event.altKey);
     ok(!event.ctrlKey);
@@ -245,7 +245,7 @@ async function testLooseShiftModifier(shortcuts) {
 async function testStrictLetterShiftModifier(shortcuts) {
   info("Test strict shift modifier on letters");
   let hitFirst = false;
-  let onKey = once(shortcuts, "a", event => {
+  const onKey = once(shortcuts, "a", event => {
     is(event.key, "a");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -253,7 +253,7 @@ async function testStrictLetterShiftModifier(shortcuts) {
     ok(!event.shiftKey);
     hitFirst = true;
   });
-  let onShiftKey = once(shortcuts, "Shift+a", event => {
+  const onShiftKey = once(shortcuts, "Shift+a", event => {
     is(event.key, "a");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -276,7 +276,7 @@ async function testStrictLetterShiftModifier(shortcuts) {
 
 async function testAltModifier(shortcuts) {
   info("Test Alt modifier");
-  let onKey = once(shortcuts, "Alt+F1", event => {
+  const onKey = once(shortcuts, "Alt+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(event.altKey);
     ok(!event.ctrlKey);
@@ -292,7 +292,7 @@ async function testAltModifier(shortcuts) {
 
 async function testCommandOrControlModifier(shortcuts) {
   info("Test CommandOrControl modifier");
-  let onKey = once(shortcuts, "CommandOrControl+F1", event => {
+  const onKey = once(shortcuts, "CommandOrControl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     if (isOSX) {
@@ -304,7 +304,7 @@ async function testCommandOrControlModifier(shortcuts) {
     }
     ok(!event.shiftKey);
   });
-  let onKeyAlias = once(shortcuts, "CmdOrCtrl+F1", event => {
+  const onKeyAlias = once(shortcuts, "CmdOrCtrl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     if (isOSX) {
@@ -333,14 +333,14 @@ async function testCommandOrControlModifier(shortcuts) {
 
 async function testCtrlModifier(shortcuts) {
   info("Test Ctrl modifier");
-  let onKey = once(shortcuts, "Ctrl+F1", event => {
+  const onKey = once(shortcuts, "Ctrl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     ok(event.ctrlKey);
     ok(!event.metaKey);
     ok(!event.shiftKey);
   });
-  let onKeyAlias = once(shortcuts, "Control+F1", event => {
+  const onKeyAlias = once(shortcuts, "Control+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     ok(event.ctrlKey);
@@ -361,14 +361,14 @@ async function testCmdShiftShortcut(shortcuts) {
     return;
   }
 
-  let onCmdKey = once(shortcuts, "CmdOrCtrl+[", event => {
+  const onCmdKey = once(shortcuts, "CmdOrCtrl+[", event => {
     is(event.key, "[");
     ok(!event.altKey);
     ok(!event.ctrlKey);
     ok(event.metaKey);
     ok(!event.shiftKey);
   });
-  let onCmdShiftKey = once(shortcuts, "CmdOrCtrl+Shift+[", event => {
+  const onCmdShiftKey = once(shortcuts, "CmdOrCtrl+Shift+[", event => {
     is(event.key, "[");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -392,16 +392,16 @@ async function testCmdShiftShortcut(shortcuts) {
 async function testTarget() {
   info("Test KeyShortcuts with target argument");
 
-  let target = document.createElementNS("http://www.w3.org/1999/xhtml",
+  const target = document.createElementNS("http://www.w3.org/1999/xhtml",
     "input");
   document.documentElement.appendChild(target);
   target.focus();
 
-  let shortcuts = new KeyShortcuts({
+  const shortcuts = new KeyShortcuts({
     window,
     target
   });
-  let onKey = once(shortcuts, "0", event => {
+  const onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
     is(event.target, target);
   });
@@ -416,7 +416,7 @@ async function testTarget() {
 function testInvalidShortcutString(shortcuts) {
   info("Test wrong shortcut string");
 
-  let shortcut = KeyShortcuts.parseElectronKey(window, "Cmmd+F");
+  const shortcut = KeyShortcuts.parseElectronKey(window, "Cmmd+F");
   ok(!shortcut, "Passing a invalid shortcut string should return a null object");
 
   shortcuts.on("Cmmd+F", function() {});

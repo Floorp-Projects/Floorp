@@ -9,23 +9,23 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_edit_imported_selector.html");
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Select the node styled by an @import'd rule");
   await selectNode("#target", inspector);
 
   info("Focus the selector in the rule-view");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   info("Change the selector to something else");
   editor.input.value = "div";
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
   info("Escape the new property editor after editing the selector");
-  let onBlur = once(view.styleDocument.activeElement, "blur");
+  const onBlur = once(view.styleDocument.activeElement, "blur");
   EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   await onBlur;
 

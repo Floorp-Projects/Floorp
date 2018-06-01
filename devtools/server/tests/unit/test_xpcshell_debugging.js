@@ -8,20 +8,20 @@
 // next to the xpcshell support code, but that's tricky...
 
 function run_test() {
-  let testFile = do_get_file("xpcshell_debugging_script.js");
+  const testFile = do_get_file("xpcshell_debugging_script.js");
 
   // _setupDebuggerServer is from xpcshell-test's head.js
   /* global _setupDebuggerServer */
   let testResumed = false;
-  let DebuggerServer = _setupDebuggerServer([testFile.path], () => {
+  const DebuggerServer = _setupDebuggerServer([testFile.path], () => {
     testResumed = true;
   });
-  let transport = DebuggerServer.connectPipe();
-  let client = new DebuggerClient(transport);
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
   client.connect().then(() => {
     // Even though we have no tabs, listTabs gives us the chromeDebugger.
     client.getProcess().then(response => {
-      let actor = response.form.actor;
+      const actor = response.form.actor;
       client.attachTab(actor, (response, tabClient) => {
         tabClient.attachThread(null, (response, threadClient) => {
           threadClient.addOneTimeListener("paused", (event, packet) => {

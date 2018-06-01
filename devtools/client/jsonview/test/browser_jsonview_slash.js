@@ -11,6 +11,6 @@ add_task(async function() {
   const TEST_JSON_URL = "data:application/json,{\"a/b\":[1,2],\"a\":{\"b\":[3,4]}}";
   await addJsonViewTab(TEST_JSON_URL);
 
-  let countBefore = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  const countBefore = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(countBefore, 7, "There must be seven rows");
 });

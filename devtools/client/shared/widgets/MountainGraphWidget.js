@@ -97,9 +97,9 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * @see AbstractCanvasGraph.prototype.buildBackgroundImage
    */
   buildBackgroundImage: function() {
-    let { canvas, ctx } = this._getNamedCanvas("mountain-graph-background");
-    let width = this._width;
-    let height = this._height;
+    const { canvas, ctx } = this._getNamedCanvas("mountain-graph-background");
+    const width = this._width;
+    const height = this._height;
 
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, width, height);
@@ -116,22 +116,22 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
       throw new Error("The graph format traits are mandatory to style " +
                       "the data source.");
     }
-    let { canvas, ctx } = this._getNamedCanvas("mountain-graph-data");
-    let width = this._width;
-    let height = this._height;
+    const { canvas, ctx } = this._getNamedCanvas("mountain-graph-data");
+    const width = this._width;
+    const height = this._height;
 
-    let totalSections = this.format.length;
-    let totalTicks = this._data.length;
-    let firstTick = totalTicks ? this._data[0].delta : 0;
-    let lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
+    const totalSections = this.format.length;
+    const totalTicks = this._data.length;
+    const firstTick = totalTicks ? this._data[0].delta : 0;
+    const lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
 
-    let duration = this.dataDuration || lastTick;
-    let dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
-    let dataScaleY = this.dataScaleY = height * this.dampenValuesFactor;
+    const duration = this.dataDuration || lastTick;
+    const dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
+    const dataScaleY = this.dataScaleY = height * this.dampenValuesFactor;
 
     // Draw the graph.
 
-    let prevHeights = Array.from({ length: totalTicks }).fill(0);
+    const prevHeights = Array.from({ length: totalTicks }).fill(0);
 
     ctx.globalCompositeOperation = "destination-over";
     ctx.strokeStyle = this.strokeColor;
@@ -142,10 +142,10 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
       ctx.beginPath();
 
       for (let tick = 0; tick < totalTicks; tick++) {
-        let { delta, values } = this._data[tick];
-        let currX = (delta - this.dataOffsetX) * dataScaleX;
-        let currY = values[section] * dataScaleY;
-        let prevY = prevHeights[tick];
+        const { delta, values } = this._data[tick];
+        const currX = (delta - this.dataOffsetX) * dataScaleX;
+        const currY = values[section] * dataScaleY;
+        const prevY = prevHeights[tick];
 
         if (delta == firstTick) {
           ctx.moveTo(-GRAPH_STROKE_WIDTH, height);
@@ -173,7 +173,7 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     // Draw the maximum value horizontal line.
 
     ctx.beginPath();
-    let maximumY = height * this.dampenValuesFactor;
+    const maximumY = height * this.dampenValuesFactor;
     ctx.moveTo(0, maximumY);
     ctx.lineTo(width, maximumY);
     ctx.stroke();
@@ -181,7 +181,7 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     // Draw the average value horizontal line.
 
     ctx.beginPath();
-    let averageY = height / 2 * this.dampenValuesFactor;
+    const averageY = height / 2 * this.dampenValuesFactor;
     ctx.moveTo(0, averageY);
     ctx.lineTo(width, averageY);
     ctx.stroke();

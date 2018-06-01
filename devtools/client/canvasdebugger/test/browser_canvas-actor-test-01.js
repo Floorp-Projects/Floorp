@@ -7,7 +7,7 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCallWatcherBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initCallWatcherBackend(SIMPLE_CANVAS_URL);
 
   ok(target, "Should have a target available.");
   ok(front, "Should have a protocol front available.");

@@ -8,18 +8,18 @@
 const PAGE_URL = "data:text/html;charset=utf-8,<body><div></div></body>";
 
 add_task(async function() {
-  let tab = await addTab(PAGE_URL);
-  let toolbox = await openToolboxForTab(tab, "inspector", "bottom");
-  let inspector = toolbox.getCurrentPanel();
+  const tab = await addTab(PAGE_URL);
+  const toolbox = await openToolboxForTab(tab, "inspector", "bottom");
+  const inspector = toolbox.getCurrentPanel();
 
-  let root = await inspector.walker.getRootNode();
-  let body = await inspector.walker.querySelector(root, "body");
-  let node = await inspector.walker.querySelector(root, "div");
+  const root = await inspector.walker.getRootNode();
+  const body = await inspector.walker.querySelector(root, "body");
+  const node = await inspector.walker.querySelector(root, "div");
 
   is(inspector.selection.nodeFront, body, "Body is selected by default");
 
   // Listen to selection changed
-  let onSelectionChanged = toolbox.once("selection-changed");
+  const onSelectionChanged = toolbox.once("selection-changed");
 
   info("Select the div and wait for the selection-changed event to be fired.");
   inspector.selection.setNodeFront(node, { reason: "browser-context-menu" });
@@ -29,7 +29,7 @@ add_task(async function() {
   is(inspector.selection.nodeFront, node, "Div is now selected");
 
   // Listen to cleared selection changed
-  let onClearSelectionChanged = toolbox.once("selection-changed");
+  const onClearSelectionChanged = toolbox.once("selection-changed");
 
   info("Clear the selection and wait for the selection-changed event to be fired.");
   inspector.selection.setNodeFront(undefined, { reason: "browser-context-menu" });

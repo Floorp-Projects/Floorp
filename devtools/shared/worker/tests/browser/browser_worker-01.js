@@ -11,7 +11,7 @@ const WORKER_URL =
 
 const count = 100000;
 const WORKER_DATA = (function() {
-  let timestamps = [];
+  const timestamps = [];
   for (let i = 0; i < count; i++) {
     timestamps.push(i);
   }
@@ -28,9 +28,9 @@ add_task(async function() {
 });
 
 async function testWorker(context, workerFactory) {
-  let { DevToolsWorker, workerify } = workerFactory();
-  let worker = new DevToolsWorker(WORKER_URL);
-  let results = await worker.performTask("plotTimestampsGraph", {
+  const { DevToolsWorker, workerify } = workerFactory();
+  const worker = new DevToolsWorker(WORKER_URL);
+  const results = await worker.performTask("plotTimestampsGraph", {
     timestamps: WORKER_DATA,
     interval: INTERVAL,
     duration: DURATION
@@ -39,7 +39,7 @@ async function testWorker(context, workerFactory) {
   ok(results.plottedData.length,
     `worker should have returned an object with array properties in ${context}`);
 
-  let fn = workerify(x => x * x);
+  const fn = workerify(x => x * x);
   is((await fn(5)), 25, `workerify works in ${context}`);
   fn.destroy();
 

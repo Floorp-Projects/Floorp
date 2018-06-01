@@ -18,21 +18,21 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("div", inspector);
 
   // Add a property to the element's style declaration, add some text,
   // then press escape.
 
-  let elementRuleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusNewRuleViewProperty(elementRuleEditor);
+  const elementRuleEditor = getRuleViewRuleEditor(view, 1);
+  const editor = await focusNewRuleViewProperty(elementRuleEditor);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "Next focused editor should be the new property editor.");
 
   EventUtils.sendString("background", view.styleWindow);
 
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey("KEY_Escape");
   await onBlur;
 

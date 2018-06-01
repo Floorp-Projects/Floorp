@@ -9,7 +9,7 @@
 
 add_task(async function() {
   let { monitor } = await initNetMonitor(SIMPLE_URL);
-  let Actions = monitor.panelWin
+  const Actions = monitor.panelWin
     .windowRequire("devtools/client/netmonitor/src/actions/index");
   info("Starting test... ");
 
@@ -20,13 +20,13 @@ add_task(async function() {
   // Use these getters instead of caching instances inside the panel win,
   // since the tool is reopened a bunch of times during this test
   // and the instances will differ.
-  let getDoc = () => monitor.panelWin.document;
-  let getPrefs = () => monitor.panelWin
+  const getDoc = () => monitor.panelWin.document;
+  const getPrefs = () => monitor.panelWin
     .windowRequire("devtools/client/netmonitor/src/utils/prefs").Prefs;
-  let getStore = () => monitor.panelWin.store;
-  let getState = () => getStore().getState();
+  const getStore = () => monitor.panelWin.store;
+  const getState = () => getStore().getState();
 
-  let prefsToCheck = {
+  const prefsToCheck = {
     filters: {
       // A custom new value to be used for the verified preference.
       newValue: ["html", "css"],
@@ -72,8 +72,8 @@ add_task(async function() {
   function storeFirstPrefValues() {
     info("Caching initial pref values.");
 
-    for (let name in prefsToCheck) {
-      let currentValue = getPrefs()[name];
+    for (const name in prefsToCheck) {
+      const currentValue = getPrefs()[name];
       prefsToCheck[name].firstValue = currentValue;
     }
   }
@@ -81,15 +81,15 @@ add_task(async function() {
   function validateFirstPrefValues(isVerticalSplitter) {
     info("Validating current pref values to the UI elements.");
 
-    for (let name in prefsToCheck) {
+    for (const name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
         continue;
       }
 
-      let currentValue = getPrefs()[name];
-      let firstValue = prefsToCheck[name].firstValue;
-      let validateValue = prefsToCheck[name].validateValue;
+      const currentValue = getPrefs()[name];
+      const firstValue = prefsToCheck[name].firstValue;
+      const validateValue = prefsToCheck[name].validateValue;
 
       is(firstValue.toSource(), currentValue.toSource(),
         "Pref " + name + " should be equal to first value: " + currentValue);
@@ -101,17 +101,17 @@ add_task(async function() {
   function modifyFrontend(isVerticalSplitter) {
     info("Modifying UI elements to the specified new values.");
 
-    for (let name in prefsToCheck) {
+    for (const name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
         continue;
       }
 
-      let currentValue = getPrefs()[name];
-      let firstValue = prefsToCheck[name].firstValue;
-      let newValue = prefsToCheck[name].newValue;
-      let validateValue = prefsToCheck[name].validateValue;
-      let modFrontend = prefsToCheck[name].modifyFrontend;
+      const currentValue = getPrefs()[name];
+      const firstValue = prefsToCheck[name].firstValue;
+      const newValue = prefsToCheck[name].newValue;
+      const validateValue = prefsToCheck[name].validateValue;
+      const modFrontend = prefsToCheck[name].modifyFrontend;
 
       modFrontend(newValue);
       info("Modified UI element affecting " + name + " to: " + newValue);
@@ -128,16 +128,16 @@ add_task(async function() {
   function validateNewPrefValues(isVerticalSplitter) {
     info("Invalidating old pref values to the modified UI elements.");
 
-    for (let name in prefsToCheck) {
+    for (const name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
         continue;
       }
 
-      let currentValue = getPrefs()[name];
-      let firstValue = prefsToCheck[name].firstValue;
-      let newValue = prefsToCheck[name].newValue;
-      let validateValue = prefsToCheck[name].validateValue;
+      const currentValue = getPrefs()[name];
+      const firstValue = prefsToCheck[name].firstValue;
+      const newValue = prefsToCheck[name].newValue;
+      const validateValue = prefsToCheck[name].validateValue;
 
       isnot(firstValue.toSource(), currentValue.toSource(),
         "Pref " + name + " should't be equal to first value: " + currentValue);
@@ -151,17 +151,17 @@ add_task(async function() {
   function resetFrontend(isVerticalSplitter) {
     info("Resetting UI elements to the cached initial pref values.");
 
-    for (let name in prefsToCheck) {
+    for (const name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
         continue;
       }
 
-      let currentValue = getPrefs()[name];
-      let firstValue = prefsToCheck[name].firstValue;
-      let newValue = prefsToCheck[name].newValue;
-      let validateValue = prefsToCheck[name].validateValue;
-      let modFrontend = prefsToCheck[name].modifyFrontend;
+      const currentValue = getPrefs()[name];
+      const firstValue = prefsToCheck[name].firstValue;
+      const newValue = prefsToCheck[name].newValue;
+      const validateValue = prefsToCheck[name].validateValue;
+      const modFrontend = prefsToCheck[name].modifyFrontend;
 
       modFrontend(firstValue);
       info("Modified UI element affecting " + name + " to: " + firstValue);
@@ -176,14 +176,14 @@ add_task(async function() {
   }
 
   async function restartNetMonitorAndSetupEnv() {
-    let newMonitor = await restartNetMonitor(monitor);
+    const newMonitor = await restartNetMonitor(monitor);
     monitor = newMonitor.monitor;
 
-    let networkEvent = waitForNetworkEvents(monitor, 1);
+    const networkEvent = waitForNetworkEvents(monitor, 1);
     newMonitor.tab.linkedBrowser.reload();
     await networkEvent;
 
-    let wait = waitForDOM(getDoc(), ".network-details-panel");
+    const wait = waitForDOM(getDoc(), ".network-details-panel");
     getStore().dispatch(Actions.toggleNetworkDetails());
     await wait;
   }

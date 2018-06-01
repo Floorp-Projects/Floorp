@@ -11,18 +11,18 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let targets = getAnimationTargetNodes(panel);
+  const targets = getAnimationTargetNodes(panel);
 
   info("Click on the highlighter icon for the first animated node");
-  let domNodePreview1 = targets[0].previewer;
+  const domNodePreview1 = targets[0].previewer;
   await lockHighlighterOn(domNodePreview1);
   ok(domNodePreview1.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon is selected");
 
   info("Click on the highlighter icon for the second animated node");
-  let domNodePreview2 = targets[1].previewer;
+  const domNodePreview2 = targets[1].previewer;
   await lockHighlighterOn(domNodePreview2);
   ok(domNodePreview2.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon is selected");
@@ -36,19 +36,19 @@ add_task(async function() {
 });
 
 async function lockHighlighterOn(domNodePreview) {
-  let onLocked = domNodePreview.once("target-highlighter-locked");
+  const onLocked = domNodePreview.once("target-highlighter-locked");
   clickOnHighlighterIcon(domNodePreview);
   await onLocked;
 }
 
 async function unlockHighlighterOn(domNodePreview) {
-  let onUnlocked = domNodePreview.once("target-highlighter-unlocked");
+  const onUnlocked = domNodePreview.once("target-highlighter-unlocked");
   clickOnHighlighterIcon(domNodePreview);
   await onUnlocked;
 }
 
 function clickOnHighlighterIcon(domNodePreview) {
-  let lockEl = domNodePreview.highlightNodeEl;
+  const lockEl = domNodePreview.highlightNodeEl;
   EventUtils.sendMouseEvent({type: "click"}, lockEl,
                             lockEl.ownerDocument.defaultView);
 }

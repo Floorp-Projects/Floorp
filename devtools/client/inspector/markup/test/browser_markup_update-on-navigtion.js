@@ -9,12 +9,12 @@ const URL_1 = URL_ROOT + "doc_markup_update-on-navigtion_1.html";
 const URL_2 = URL_ROOT + "doc_markup_update-on-navigtion_2.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(URL_1);
+  const {inspector, testActor} = await openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   await selectNode("#one", inspector);
 
-  let willNavigate = inspector.target.once("will-navigate");
+  const willNavigate = inspector.target.once("will-navigate");
   await testActor.eval(`window.location = "${URL_2}"`);
 
   info("Waiting for will-navigate");
@@ -32,12 +32,12 @@ add_task(async function() {
   await selectNode("#two", inspector);
 
   function assertMarkupViewIsLoaded() {
-    let markupViewBox = inspector.panelDoc.getElementById("markup-box");
+    const markupViewBox = inspector.panelDoc.getElementById("markup-box");
     is(markupViewBox.childNodes.length, 1, "The markup-view is loaded");
   }
 
   function assertMarkupViewIsEmpty() {
-    let markupViewBox = inspector.panelDoc.getElementById("markup-box");
+    const markupViewBox = inspector.panelDoc.getElementById("markup-box");
     is(markupViewBox.childNodes.length, 0, "The markup-view is unloaded");
   }
 });

@@ -31,7 +31,7 @@ window.onload = function() {
 
 function pushPref(preferenceName, value) {
   return new Promise(resolve => {
-    let options = {"set": [[preferenceName, value]]};
+    const options = {"set": [[preferenceName, value]]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 }
@@ -39,9 +39,9 @@ function pushPref(preferenceName, value) {
 let gInspector = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
     gInspector = InspectorFront(client, tab);
     runNextTest();
   });

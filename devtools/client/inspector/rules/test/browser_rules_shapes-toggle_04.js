@@ -20,22 +20,22 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Select a node with a shape value");
   await selectNode("#shape", inspector);
-  let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
+  const container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shape highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
+  const onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapeToggle.click();
   await onHighlighterShown;
 
   info("Edit the clip-path property to ellipse.");
-  let editor = await focusEditableField(view, container, 30);
-  let onDone = view.once("ruleview-changed");
+  const editor = await focusEditableField(view, container, 30);
+  const onDone = view.once("ruleview-changed");
   editor.input.value = "ellipse(30% 20%);";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onDone;

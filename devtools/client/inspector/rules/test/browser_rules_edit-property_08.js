@@ -17,12 +17,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Get the color property editor");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const propEditor = ruleEditor.rule.textProps[0].editor;
   is(ruleEditor.rule.textProps[0].name, "color");
 
   info("Focus the property name field");
@@ -33,9 +33,9 @@ add_task(async function() {
   // which signals that the new value has been previewed (fires once when the
   // value gets focused), and the markupmutation event since we're modifying an
   // inline style.
-  let onValueFocus = once(ruleEditor.element, "focus", true);
+  const onValueFocus = once(ruleEditor.element, "focus", true);
   let onRuleViewChanged = ruleEditor.ruleView.once("ruleview-changed");
-  let onMutation = inspector.once("markupmutation");
+  const onMutation = inspector.once("markupmutation");
   EventUtils.sendString("background-color:", ruleEditor.doc.defaultView);
   await onValueFocus;
   await onRuleViewChanged;

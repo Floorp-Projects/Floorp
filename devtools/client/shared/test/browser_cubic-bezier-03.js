@@ -13,10 +13,10 @@ const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets"
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(async function() {
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
-  let container = doc.querySelector("#cubic-bezier-container");
-  let w = new CubicBezierWidget(container, PREDEFINED.linear);
+  const container = doc.querySelector("#cubic-bezier-container");
+  const w = new CubicBezierWidget(container, PREDEFINED.linear);
 
   await coordinatesCanBeChangedByProvidingAnArray(w);
   await coordinatesCanBeChangedByProvidingAValue(w);
@@ -27,12 +27,12 @@ add_task(async function() {
 
 async function coordinatesCanBeChangedByProvidingAnArray(widget) {
   info("Listening for the update event");
-  let onUpdated = widget.once("updated");
+  const onUpdated = widget.once("updated");
 
   info("Setting new coordinates");
   widget.coordinates = [0, 1, 1, 0];
 
-  let bezier = await onUpdated;
+  const bezier = await onUpdated;
   ok(true, "The updated event was fired as a result of setting coordinates");
 
   is(bezier.P1[0], 0, "The new P1 time coordinate is correct");

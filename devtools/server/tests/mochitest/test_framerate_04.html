@@ -20,17 +20,17 @@ window.onload = function() {
   const {FramerateFront} = require("devtools/shared/fronts/framerate");
   const {TargetFactory} = require("devtools/client/framework/target");
 
-  let url = document.getElementById("testContent").href;
+  const url = document.getElementById("testContent").href;
   attachURL(url, onTab);
 
   async function onTab(_, client, form, contentDoc) {
-    let contentWin = contentDoc.defaultView;
-    let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let selectedTab = chromeWin.gBrowser.selectedTab;
+    const contentWin = contentDoc.defaultView;
+    const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    const selectedTab = chromeWin.gBrowser.selectedTab;
 
-    let target = TargetFactory.forTab(selectedTab);
+    const target = TargetFactory.forTab(selectedTab);
     await target.makeRemote();
-    let front = FramerateFront(client, form);
+    const front = FramerateFront(client, form);
 
     front.startRecording().then(() => {
       window.setTimeout(() => {
@@ -54,7 +54,7 @@ window.onload = function() {
     ok(firstBatch, "There should be a first batch recording available.");
     ok(secondBatch, "There should be a second batch recording available.");
 
-    let diff = secondBatch.length - firstBatch.length;
+    const diff = secondBatch.length - firstBatch.length;
     info("Difference in ticks: " + diff);
     ok(diff > 0, "More ticks should be recorded in the second batch.");
 

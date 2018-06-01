@@ -16,15 +16,15 @@ const TIME_PER_SAMPLE = 5;
 const TIME_OFFSET = 5;
 
 add_task(function test() {
-  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
 
   // Select the second half of the set of samples
-  let startTime = (SAMPLE_COUNT / 2 * TIME_PER_SAMPLE) - TIME_OFFSET;
-  let endTime = (SAMPLE_COUNT * TIME_PER_SAMPLE) - TIME_OFFSET;
-  let invertTree = true;
+  const startTime = (SAMPLE_COUNT / 2 * TIME_PER_SAMPLE) - TIME_OFFSET;
+  const endTime = (SAMPLE_COUNT * TIME_PER_SAMPLE) - TIME_OFFSET;
+  const invertTree = true;
 
-  let root = new ThreadNode(gThread, { invertTree, startTime, endTime });
+  const root = new ThreadNode(gThread, { invertTree, startTime, endTime });
 
   equal(root.samples, SAMPLE_COUNT / 2,
     "root has correct amount of samples");
@@ -36,15 +36,15 @@ add_task(function test() {
   equal(root.sampleTimes[root.sampleTimes.length - 1], endTime,
     "root recorded last sample time in scope");
 
-  let frame = getFrameNodePath(root, "X");
+  const frame = getFrameNodePath(root, "X");
   let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes,
     (endTime - startTime) / RESOLUTION);
 
-  let TIME_PER_WINDOW = SAMPLE_COUNT / 2 / RESOLUTION * TIME_PER_SAMPLE;
+  const TIME_PER_WINDOW = SAMPLE_COUNT / 2 / RESOLUTION * TIME_PER_SAMPLE;
 
   // Filter out the dupes created with the same delta so the graph
   // can render correctly.
-  let filteredData = [];
+  const filteredData = [];
   for (let i = 0; i < data.length; i++) {
     if (!i || data[i].delta !== data[i - 1].delta) {
       filteredData.push(data[i]);
@@ -116,7 +116,7 @@ const TIER_PATTERNS = [
 ];
 
 function createSample(i, frames) {
-  let sample = {};
+  const sample = {};
   sample.time = i * TIME_PER_SAMPLE;
   sample.frames = [{ location: "(root)" }];
   if (i === 0) {
@@ -129,10 +129,10 @@ function createSample(i, frames) {
 }
 
 var SAMPLES = (function() {
-  let samples = [];
+  const samples = [];
 
   for (let i = 0; i < SAMPLE_COUNT;) {
-    let pattern = TIER_PATTERNS[Math.floor(i / 100)];
+    const pattern = TIER_PATTERNS[Math.floor(i / 100)];
     for (let j = 0; j < pattern.length; j++) {
       samples.push(createSample(i + j, pattern[j]));
     }
@@ -182,7 +182,7 @@ gThread.frameTable.data.forEach((frame) => {
   const OPTIMIZATIONS_SLOT = gThread.frameTable.schema.optimizations;
   const IMPLEMENTATION_SLOT = gThread.frameTable.schema.implementation;
 
-  let l = gThread.stringTable[frame[LOCATION_SLOT]];
+  const l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
   // Rename some of the location sites so we can register different
   // frames with different opt sites

@@ -32,7 +32,7 @@ class DeviceAdder extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    let {
+    const {
       width,
       height,
     } = nextProps.viewportTemplate;
@@ -57,7 +57,7 @@ class DeviceAdder extends PureComponent {
   }
 
   onDeviceAdderSave() {
-    let {
+    const {
       devices,
       onAddCustomDevice,
     } = this.props;
@@ -84,12 +84,12 @@ class DeviceAdder extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       devices,
       viewportTemplate,
     } = this.props;
 
-    let {
+    const {
       deviceAdderDisplayed,
       height,
       width,
@@ -114,9 +114,9 @@ class DeviceAdder extends PureComponent {
     // as the starting values of the form.  If no device is selected, use the values for
     // the current window.
     let deviceName;
-    let normalizedViewport = Object.assign({}, viewportTemplate);
+    const normalizedViewport = Object.assign({}, viewportTemplate);
     if (viewportTemplate.device) {
-      let device = devices[viewportTemplate.deviceType].find(d => {
+      const device = devices[viewportTemplate.deviceType].find(d => {
         return d.name == viewportTemplate.device;
       });
       deviceName = getFormatStr("responsive.customDeviceNameFromBase", device.name);

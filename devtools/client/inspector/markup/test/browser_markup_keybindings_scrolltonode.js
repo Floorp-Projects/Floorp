@@ -18,7 +18,7 @@ const HTML =
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Make sure the markup frame has the focus");
   inspector.markup._frame.focus();
@@ -75,7 +75,7 @@ add_task(async function() {
  * @return {Promise} promise
  */
 async function checkElementIsInViewport(selector, expected, testActor) {
-  let isInViewport = await testActor.eval(`
+  const isInViewport = await testActor.eval(`
     let node = document.querySelector("${selector}");
     let rect = node.getBoundingClientRect();
     rect.bottom >= 0 && rect.right >= 0 &&

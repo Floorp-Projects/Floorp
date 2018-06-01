@@ -119,7 +119,7 @@ class Tooltip {
     this.stopTogglingOnHover = this._toggle.stop.bind(this._toggle);
 
   // Emit show/hide events when the panel does.
-    for (let eventName of POPUP_EVENTS) {
+    for (const eventName of POPUP_EVENTS) {
       this["_onPopup" + eventName] = (name => {
         return e => {
           if (e.target === this.panel) {
@@ -132,7 +132,7 @@ class Tooltip {
     }
 
   // Listen to keydown events to close the tooltip if configured to do so
-    let win = this.doc.querySelector("window");
+    const win = this.doc.querySelector("window");
     this._onKeyDown = event => {
       if (this.panel.hidden) {
         return;
@@ -149,8 +149,8 @@ class Tooltip {
 
   // Listen to custom emitters' events to close the tooltip
     this.hide = this.hide.bind(this);
-    for (let {emitter, event, useCapture} of this.closeOnEvents) {
-      for (let add of ["addEventListener", "on"]) {
+    for (const {emitter, event, useCapture} of this.closeOnEvents) {
+      for (const add of ["addEventListener", "on"]) {
         if (add in emitter) {
           emitter[add](event, this.hide, useCapture);
           break;
@@ -228,16 +228,16 @@ class Tooltip {
   destroy() {
     this.hide();
 
-    for (let eventName of POPUP_EVENTS) {
+    for (const eventName of POPUP_EVENTS) {
       this.panel.removeEventListener("popup" + eventName,
         this["_onPopup" + eventName]);
     }
 
-    let win = this.doc.querySelector("window");
+    const win = this.doc.querySelector("window");
     win.removeEventListener("keydown", this._onKeyDown);
 
-    for (let {emitter, event, useCapture} of this.closeOnEvents) {
-      for (let remove of ["removeEventListener", "off"]) {
+    for (const {emitter, event, useCapture} of this.closeOnEvents) {
+      for (const remove of ["removeEventListener", "off"]) {
         if (remove in emitter) {
           emitter[remove](event, this.hide, useCapture);
           break;
@@ -311,20 +311,20 @@ class Tooltip {
     messagesClass = messagesClass || "default-tooltip-simple-text-colors";
     containerClass = containerClass || "default-tooltip-simple-text-colors";
 
-    let vbox = this.doc.createElement("vbox");
+    const vbox = this.doc.createElement("vbox");
     vbox.className = "devtools-tooltip-simple-text-container " + containerClass;
     vbox.setAttribute("flex", "1");
 
-    for (let text of messages) {
-      let description = this.doc.createElement("description");
+    for (const text of messages) {
+      const description = this.doc.createElement("description");
       description.setAttribute("flex", "1");
       description.className = "devtools-tooltip-simple-text " + messagesClass;
       description.textContent = text;
       vbox.appendChild(description);
     }
 
-    for (let { label, className, command } of extraButtons) {
-      let button = this.doc.createElement("button");
+    for (const { label, className, command } of extraButtons) {
+      const button = this.doc.createElement("button");
       button.className = className;
       button.setAttribute("label", label);
       button.addEventListener("command", command);
@@ -359,10 +359,10 @@ class Tooltip {
    * and resolves the promise with the content window.
    */
   setIFrameContent({width, height}, url) {
-    let def = defer();
+    const def = defer();
 
     // Create an iframe
-    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
+    const iframe = this.doc.createElementNS(XHTML_NS, "iframe");
     iframe.setAttribute("transparent", true);
     iframe.setAttribute("width", width);
     iframe.setAttribute("height", height);
@@ -390,7 +390,7 @@ class Tooltip {
    * Create the tooltip panel
    */
   _createPanel() {
-    let panel = this.doc.createElement("panel");
+    const panel = this.doc.createElement("panel");
     panel.setAttribute("hidden", true);
     panel.setAttribute("ignorekeys", true);
     panel.setAttribute("animate", false);

@@ -235,7 +235,7 @@ class AnimationInspector {
   getComputedStyle(property, styles) {
     this.simulatedElement.style.cssText = "";
 
-    for (let propertyName in styles) {
+    for (const propertyName in styles) {
       this.simulatedElement.style.setProperty(propertyName, styles[propertyName]);
     }
 

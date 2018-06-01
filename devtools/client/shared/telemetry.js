@@ -370,7 +370,7 @@ class Telemetry {
 
     const props = PENDING_EVENT_PROPERTIES.get(sig);
     if (props) {
-      for (let [name, val] of Object.entries(props)) {
+      for (const [name, val] of Object.entries(props)) {
         this.addEventProperty(category, method, object, value, name, val);
       }
       PENDING_EVENT_PROPERTIES.delete(sig);
@@ -405,7 +405,7 @@ class Telemetry {
     // If the pending event has not been created add the property to the pending
     // list.
     if (!PENDING_EVENTS.has(sig)) {
-      let props = PENDING_EVENT_PROPERTIES.get(sig);
+      const props = PENDING_EVENT_PROPERTIES.get(sig);
 
       if (props) {
         props[pendingPropName] = pendingPropValue;
@@ -456,7 +456,7 @@ class Telemetry {
    *        event as properties.
    */
   addEventProperties(category, method, object, value, pendingObject) {
-    for (let [key, val] of Object.entries(pendingObject)) {
+    for (const [key, val] of Object.entries(pendingObject)) {
       this.addEventProperty(category, method, object, value, key, val);
     }
   }

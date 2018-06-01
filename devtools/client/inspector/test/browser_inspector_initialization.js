@@ -26,8 +26,8 @@ const HTML = `
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
 add_task(async function() {
-  let tab = await addTab(TEST_URI);
-  let testActor = await getTestActorWithoutToolbox(tab);
+  const tab = await addTab(TEST_URI);
+  const testActor = await getTestActorWithoutToolbox(tab);
 
   await testToolboxInitialization(testActor, tab);
   await testContextMenuInitialization(testActor);
@@ -35,11 +35,11 @@ add_task(async function() {
 });
 
 async function testToolboxInitialization(testActor, tab) {
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
 
   info("Opening inspector with gDevTools.");
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
-  let inspector = toolbox.getCurrentPanel();
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const inspector = toolbox.getCurrentPanel();
 
   ok(true, "Inspector started, and notification received.");
   ok(inspector, "Inspector instance is accessible.");
@@ -75,7 +75,7 @@ async function testContextMenuInitialization(testActor) {
 async function testContextMenuInspectorAlreadyOpen(testActor) {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
-  let inspector = getActiveInspector();
+  const inspector = getActiveInspector();
   ok(inspector, "Inspector is active");
 
   await clickOnInspectMenuItem(testActor, "#closing");
@@ -87,7 +87,7 @@ async function testContextMenuInspectorAlreadyOpen(testActor) {
 
 async function testMarkupView(selector, inspector) {
   inspector = inspector || getActiveInspector();
-  let nodeFront = await getNodeFront(selector, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
   try {
     is(inspector.selection.nodeFront, nodeFront,
        "Right node is selected in the markup view");
@@ -99,11 +99,11 @@ async function testMarkupView(selector, inspector) {
 
 async function testBreadcrumbs(selector, inspector) {
   inspector = inspector || getActiveInspector();
-  let nodeFront = await getNodeFront(selector, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
 
-  let b = inspector.breadcrumbs;
-  let expectedText = b.prettyPrintNodeAsText(nodeFront);
-  let button = b.container.querySelector("button[checked=true]");
+  const b = inspector.breadcrumbs;
+  const expectedText = b.prettyPrintNodeAsText(nodeFront);
+  const button = b.container.querySelector("button[checked=true]");
   ok(button, "A crumbs is checked=true");
   is(button.getAttribute("title"), expectedText,
      "Crumb refers to the right node");

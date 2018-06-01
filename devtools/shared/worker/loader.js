@@ -62,9 +62,9 @@ function normalizeId(id) {
   // An id consists of an optional root and a path. A root consists of either
   // a scheme name followed by 2 or 3 slashes, or a single slash. Slashes in the
   // root are not used as separators, so only normalize the path.
-  let [, root, path] = id.match(/^(\w+:\/\/\/?|\/)?(.*)/);
+  const [, root, path] = id.match(/^(\w+:\/\/\/?|\/)?(.*)/);
 
-  let stack = [];
+  const stack = [];
   path.split("/").forEach(function(component) {
     switch (component) {
       case "":
@@ -124,7 +124,7 @@ function createModule(id) {
 }
 
 function defineLazyGetter(object, prop, getter) {
-  let redefine = (obj, value) => {
+  const redefine = (obj, value) => {
     Object.defineProperty(obj, prop, {
       configurable: true,
       writable: true,
@@ -163,7 +163,7 @@ function defineLazyGetter(object, prop, getter) {
  */
 function lazyRequire(obj, moduleId, ...args) {
   let module;
-  let getModule = () => {
+  const getModule = () => {
     if (!module) {
       module = this.require(moduleId);
     }
@@ -175,7 +175,7 @@ function lazyRequire(obj, moduleId, ...args) {
       props = {[props]: props};
     }
 
-    for (let [fromName, toName] of Object.entries(props)) {
+    for (const [fromName, toName] of Object.entries(props)) {
       defineLazyGetter(obj, toName, () => getModule()[fromName]);
     }
   }
@@ -234,7 +234,7 @@ function WorkerDebuggerLoader(options) {
    */
   function resolveURL(url) {
     let found = false;
-    for (let [path, baseURL] of paths) {
+    for (const [path, baseURL] of paths) {
       if (url.startsWith(path)) {
         found = true;
         url = url.replace(path, baseURL);
@@ -262,13 +262,13 @@ function WorkerDebuggerLoader(options) {
     // must be exposed to every module, so define these as properties on the
     // sandbox prototype. Additional built-in globals are exposed by making
     // the map of built-in globals the prototype of the sandbox prototype.
-    let prototype = Object.create(globals);
+    const prototype = Object.create(globals);
     prototype.Components = {};
     prototype.require = createRequire(module);
     prototype.exports = module.exports;
     prototype.module = module;
 
-    let sandbox = createSandbox(url, prototype);
+    const sandbox = createSandbox(url, prototype);
     try {
       loadSubScript(url, sandbox);
     } catch (error) {
@@ -360,16 +360,16 @@ function WorkerDebuggerLoader(options) {
     };
   }
 
-  let createSandbox = options.createSandbox;
-  let globals = options.globals || Object.create(null);
-  let loadSubScript = options.loadSubScript;
+  const createSandbox = options.createSandbox;
+  const globals = options.globals || Object.create(null);
+  const loadSubScript = options.loadSubScript;
 
   // Create the module cache, by converting each entry in the map from
   // normalized ids to built-in modules to a module object, with the exports
   // property of each module set to a frozen version of the original entry.
-  let modules = options.modules || {};
-  for (let id in modules) {
-    let module = createModule(id);
+  const modules = options.modules || {};
+  for (const id in modules) {
+    const module = createModule(id);
     module.exports = Object.freeze(modules[id]);
     modules[id] = module;
   }
@@ -382,7 +382,7 @@ function WorkerDebuggerLoader(options) {
                 .sort((a, b) => b.length - a.length)
                 .map(path => [path, paths[path]]);
 
-  let resolve = options.resolve || resolveId;
+  const resolve = options.resolve || resolveId;
 
   this.require = createRequire();
 }
@@ -449,26 +449,26 @@ var {
 } = (function() {
   // Main thread
   if (typeof Components === "object") {
-    let {
+    const {
       Constructor: CC,
       classes: Cc,
       interfaces: Ci,
       utils: Cu
     } = Components;
 
-    let principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
+    const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
 
     // To ensure that the this passed to addDebuggerToGlobal is a global, the
     // Debugger object needs to be defined in a sandbox.
-    let sandbox = Cu.Sandbox(principal, {});
+    const sandbox = Cu.Sandbox(principal, {});
     Cu.evalInSandbox(
       "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
       "addDebuggerToGlobal(this);",
       sandbox
     );
-    let Debugger = sandbox.Debugger;
+    const Debugger = sandbox.Debugger;
 
-    let createSandbox = function(name, prototype) {
+    const createSandbox = function(name, prototype) {
       return Cu.Sandbox(principal, {
         invisibleToDebugger: true,
         sandboxName: name,
@@ -478,25 +478,25 @@ var {
       });
     };
 
-    let rpc = undefined;
+    const rpc = undefined;
 
     // eslint-disable-next-line mozilla/use-services
-    let subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+    const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                  .getService(Ci.mozIJSSubScriptLoader);
 
-    let loadSubScript = function(url, sandbox) {
+    const loadSubScript = function(url, sandbox) {
       subScriptLoader.loadSubScript(url, sandbox, "UTF-8");
     };
 
-    let reportError = Cu.reportError;
+    const reportError = Cu.reportError;
 
-    let Timer = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+    const Timer = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 
-    let setImmediate = function(callback) {
+    const setImmediate = function(callback) {
       Timer.setTimeout(callback, 0);
     };
 
-    let xpcInspector = Cc["@mozilla.org/jsinspector;1"]
+    const xpcInspector = Cc["@mozilla.org/jsinspector;1"]
                        .getService(Ci.nsIJSInspector);
 
     return {
@@ -512,11 +512,11 @@ var {
     };
   }
   // Worker thread
-  let requestors = [];
+  const requestors = [];
 
-  let scope = this;
+  const scope = this;
 
-  let xpcInspector = {
+  const xpcInspector = {
     get eventLoopNestLevel() {
       return requestors.length;
     },

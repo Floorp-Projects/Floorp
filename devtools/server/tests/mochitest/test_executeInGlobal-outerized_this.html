@@ -24,17 +24,17 @@ addDebuggerToGlobal(this);
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "data:text/html,<script>var me = 'page 1';<\/script>";
   iframe.onload = firstOnLoadHandler;
   document.body.appendChild(iframe);
 
   function firstOnLoadHandler() {
-    let dbg = new Debugger();
-    let page1DO = dbg.addDebuggee(iframe.contentWindow);
+    const dbg = new Debugger();
+    const page1DO = dbg.addDebuggee(iframe.contentWindow);
     iframe.src = "data:text/html,<script>var me = 'page 2';<\/script>";
     iframe.onload = function() {
-      let page2DO = dbg.addDebuggee(iframe.contentWindow);
+      const page2DO = dbg.addDebuggee(iframe.contentWindow);
       ok(page1DO !== page2DO, "the two pages' globals get distinct D.O's");
       ok(page1DO.unsafeDereference() === page2DO.unsafeDereference(),
          "unwrapping page1DO and page2DO outerizes both, yielding the same outer window");
@@ -55,7 +55,7 @@ window.onload = function() {
          "page 2: Debugger.Object.prototype.executeInGlobal should outerize 'this'");
 
       // Debugger doesn't let one use outer windows as globals. You have to innerize.
-      let outerDO = page1DO.makeDebuggeeValue(page1DO.unsafeDereference());
+      const outerDO = page1DO.makeDebuggeeValue(page1DO.unsafeDereference());
       ok(outerDO !== page1DO,
          "outer window gets its own D.O, distinct from page 1's global");
       ok(outerDO !== page2DO,

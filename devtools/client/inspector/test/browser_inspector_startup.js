@@ -32,20 +32,20 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  let {inspector, tab} = await openInspectorForURL("about:blank");
+  const {inspector, tab} = await openInspectorForURL("about:blank");
 
-  let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
-  let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
+  const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
+  const pageLoaded = waitForLinkedBrowserEvent(tab, "load");
 
-  let markupLoaded = inspector.once("markuploaded");
-  let onRequest = onPageResourceRequest();
+  const markupLoaded = inspector.once("markuploaded");
+  const onRequest = onPageResourceRequest();
 
   info("Navigate to the slow loading page");
-  let activeTab = inspector.toolbox.target.activeTab;
+  const activeTab = inspector.toolbox.target.activeTab;
   await activeTab.navigateTo(TEST_URL);
 
   info("Wait for request made to the image");
-  let response = await onRequest;
+  const response = await onRequest;
 
   // The request made to the image shouldn't block the DOMContentLoaded event
   info("Wait for DOMContentLoaded");

@@ -24,8 +24,8 @@ const {initCssProperties} = require("devtools/shared/fronts/css-properties");
 // ]
 
 function getTestCases(cssProperties) {
-  let keywords = getCSSKeywords(cssProperties);
-  let getSuggestionNumberFor = suggestionNumberGetter(keywords);
+  const keywords = getCSSKeywords(cssProperties);
+  const getSuggestionNumberFor = suggestionNumberGetter(keywords);
 
   return [
     ["VK_RIGHT"],
@@ -106,19 +106,19 @@ function getTestCases(cssProperties) {
 }
 
 add_task(async function() {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
-  let { cssProperties } = await initCssProperties(panel._toolbox);
-  let testCases = getTestCases(cssProperties);
+  const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { cssProperties } = await initCssProperties(panel._toolbox);
+  const testCases = getTestCases(cssProperties);
 
   await ui.selectStyleSheet(ui.editors[1].styleSheet);
-  let editor = await ui.editors[1].getSourceEditor();
+  const editor = await ui.editors[1].getSourceEditor();
 
-  let sourceEditor = editor.sourceEditor;
-  let popup = sourceEditor.getAutocompletionPopup();
+  const sourceEditor = editor.sourceEditor;
+  const popup = sourceEditor.getAutocompletionPopup();
 
   await SimpleTest.promiseFocus(panel.panelWindow);
 
-  for (let index in testCases) {
+  for (const index in testCases) {
     await testState(testCases, index, sourceEditor, popup, panel.panelWindow);
     await checkState(testCases, index, sourceEditor, popup);
   }
@@ -130,7 +130,7 @@ function testState(testCases, index, sourceEditor, popup, panelWindow) {
   if (details) {
     entered = details.entered;
   }
-  let mods = {};
+  const mods = {};
 
   info("pressing key " + key + " to get result: " +
                 JSON.stringify(testCases[index]) + " for index " + index);
@@ -149,7 +149,7 @@ function testState(testCases, index, sourceEditor, popup, panelWindow) {
     evt = "suggestion-entered";
   }
 
-  let ready = sourceEditor.once(evt);
+  const ready = sourceEditor.once(evt);
   EventUtils.synthesizeKey(key, mods, panelWindow);
 
   return ready;
@@ -160,7 +160,7 @@ function checkState(testCases, index, sourceEditor, popup) {
     executeSoon(() => {
       let [, details] = testCases[index];
       details = details || {};
-      let {total, current, inserted} = details;
+      const {total, current, inserted} = details;
 
       if (total != undefined) {
         ok(popup.isOpen, "Popup is open for index " + index);
@@ -169,18 +169,18 @@ function checkState(testCases, index, sourceEditor, popup) {
         is(current, popup.selectedIndex,
            "Correct index is selected for index " + index);
         if (inserted) {
-          let { text } = popup.getItemAtIndex(current);
-          let { line, ch } = sourceEditor.getCursor();
-          let lineText = sourceEditor.getText(line);
+          const { text } = popup.getItemAtIndex(current);
+          const { line, ch } = sourceEditor.getCursor();
+          const lineText = sourceEditor.getText(line);
           is(lineText.substring(ch - text.length, ch), text,
              "Current suggestion from the popup is inserted into the editor.");
         }
       } else {
         ok(!popup.isOpen, "Popup is closed for index " + index);
         if (inserted) {
-          let { text } = popup.getItemAtIndex(current);
-          let { line, ch } = sourceEditor.getCursor();
-          let lineText = sourceEditor.getText(line);
+          const { text } = popup.getItemAtIndex(current);
+          const { line, ch } = sourceEditor.getCursor();
+          const lineText = sourceEditor.getText(line);
           is(lineText.substring(ch - text.length, ch), text,
              "Current suggestion from the popup is inserted into the editor.");
         }
@@ -202,8 +202,8 @@ function checkState(testCases, index, sourceEditor, popup) {
  *                     CSS values the property can have.
  */
 function getCSSKeywords(cssProperties) {
-  let props = {};
-  let propNames = cssProperties.getNames();
+  const props = {};
+  const propNames = cssProperties.getNames();
   propNames.forEach(prop => {
     props[prop] = cssProperties.getValues(prop).sort();
   });

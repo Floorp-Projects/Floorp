@@ -19,7 +19,7 @@
       "use strict";
 
       function performRequest(url, method, payload = null) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open(method, url, true);
         xhr.setRequestHeader("Accept-Language", window.navigator.language);
         xhr.setRequestHeader("X-Custom-Header-1", "Custom value");

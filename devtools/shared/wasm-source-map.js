@@ -51,7 +51,7 @@ class WasmRemap {
   }
 
   originalPositionFor(generatedPosition) {
-    let result = this._map.originalPositionFor({
+    const result = this._map.originalPositionFor({
       line: 1,
       column: generatedPosition.line,
       bias: generatedPosition.bias
@@ -60,7 +60,7 @@ class WasmRemap {
   }
 
   _remapGeneratedPosition(position) {
-    let generatedPosition = {
+    const generatedPosition = {
       line: position.column,
       column: 0,
     };
@@ -71,12 +71,12 @@ class WasmRemap {
   }
 
   generatedPositionFor(originalPosition) {
-    let position = this._map.generatedPositionFor(originalPosition);
+    const position = this._map.generatedPositionFor(originalPosition);
     return this._remapGeneratedPosition(position);
   }
 
   allGeneratedPositionsFor(originalPosition) {
-    let positions = this._map.allGeneratedPositionsFor(originalPosition);
+    const positions = this._map.allGeneratedPositionsFor(originalPosition);
     return positions.map((position) => {
       return this._remapGeneratedPosition(position);
     });
@@ -92,7 +92,7 @@ class WasmRemap {
 
   eachMapping(callback, context, order) {
     this._map.eachMapping((entry) => {
-      let {
+      const {
         source,
         generatedColumn,
         originalLine,

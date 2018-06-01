@@ -61,17 +61,17 @@ const TESTS = {
 };
 
 add_task(async function() {
-  let inspector = await openInspectorForURL(TEST_URL);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
+  const inspector = await openInspectorForURL(TEST_URL);
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
 
   helper.prefix = ID;
 
-  let { show, hide, finalize } = helper;
+  const { show, hide, finalize } = helper;
 
   info("Showing the highlighter");
   await show("#node2");
 
-  for (let desc in TESTS) {
+  for (const desc in TESTS) {
     await executeTest(helper, desc, TESTS[desc]);
   }
 
@@ -88,14 +88,14 @@ async function executeTest(helper, desc, data) {
 }
 
 async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
-  let { mouse, reflow, highlightedNode } = helper;
+  const { mouse, reflow, highlightedNode } = helper;
 
-  let {x, y} = await getHandlerCoords(helper, side);
+  const {x, y} = await getHandlerCoords(helper, side);
 
-  let dx = x + by.x;
-  let dy = y + by.y;
+  const dx = x + by.x;
+  const dy = y + by.y;
 
-  let beforeDragStyle = await highlightedNode.getComputedStyle();
+  const beforeDragStyle = await highlightedNode.getComputedStyle();
 
   // simulate drag & drop
   await mouse.down(x, y);
@@ -116,7 +116,7 @@ async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
 }
 
 async function isHandlerPositionUpdated(helper, name, x, y, by) {
-  let {x: afterDragX, y: afterDragY} = await getHandlerCoords(helper, name);
+  const {x: afterDragX, y: afterDragY} = await getHandlerCoords(helper, name);
 
   if (name === "left" || name === "right") {
     is(afterDragX, x + by.x,
@@ -132,12 +132,12 @@ async function isHandlerPositionUpdated(helper, name, x, y, by) {
 }
 
 async function areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
-  let afterDragStyle = await node.getComputedStyle();
+  const afterDragStyle = await node.getComputedStyle();
   let isSideCorrect = true;
 
-  for (let side of SIDES) {
-    let afterValue = Math.round(parseFloat(afterDragStyle[side].value));
-    let beforeValue = Math.round(parseFloat(beforeDragStyle[side].value));
+  for (const side of SIDES) {
+    const afterValue = Math.round(parseFloat(afterDragStyle[side].value));
+    const beforeValue = Math.round(parseFloat(beforeDragStyle[side].value));
 
     if (side === name) {
       // `isSideCorrect` is used only as test's return value, not to perform

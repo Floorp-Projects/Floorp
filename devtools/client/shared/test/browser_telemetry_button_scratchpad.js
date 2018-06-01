@@ -17,11 +17,11 @@ add_task(async function() {
 
   await pushPref("devtools.command-button-scratchpad.enabled", true);
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
-  let onAllWindowsOpened = trackScratchpadWindows();
+  const onAllWindowsOpened = trackScratchpadWindows();
 
   info("testing the scratchpad button");
   await testButton(toolbox);
@@ -41,7 +41,7 @@ function trackScratchpadWindows() {
   return new Promise(resolve => {
     Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowopened") {
-        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        const win = subject.QueryInterface(Ci.nsIDOMWindow);
         win.addEventListener("load", function() {
           if (win.Scratchpad) {
             win.Scratchpad.addObserver({
@@ -69,7 +69,7 @@ function trackScratchpadWindows() {
 
 async function testButton(toolbox) {
   info("Testing command-button-scratchpad");
-  let button = toolbox.doc.querySelector("#command-button-scratchpad");
+  const button = toolbox.doc.querySelector("#command-button-scratchpad");
   ok(button, "Captain, we have the button");
 
   await delayedClicks(button, 4);

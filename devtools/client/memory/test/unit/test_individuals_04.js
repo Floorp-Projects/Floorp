@@ -28,10 +28,10 @@ const EXPECTED_INDIVIDUAL_STATES = [
 ];
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
@@ -59,7 +59,7 @@ add_task(async function() {
   dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,
                             reportLeafIndex));
 
-  for (let state of EXPECTED_INDIVIDUAL_STATES) {
+  for (const state of EXPECTED_INDIVIDUAL_STATES) {
     await waitUntilState(store, s => {
       return s.view.state === viewState.INDIVIDUALS &&
              s.individuals &&
@@ -75,7 +75,7 @@ add_task(async function() {
 
   // Assert that all the individuals are `Array`s.
 
-  for (let node of getState().individuals.nodes) {
+  for (const node of getState().individuals.nodes) {
     dumpn("Checking node: " + node.label.join(" > "));
     ok(node.label.find(part => part === "Array"),
        "The node should be an Array node");

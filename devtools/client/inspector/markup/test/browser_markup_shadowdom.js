@@ -59,7 +59,7 @@ add_task(async function() {
         no-slot-text
         inner`;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });
 
@@ -88,7 +88,7 @@ add_task(async function() {
         slot
           fallback-content`;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });
 
@@ -148,7 +148,7 @@ add_task(async function() {
         #shadow-root
           div`;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });
 
@@ -199,7 +199,7 @@ add_task(async function() {
       class="light-dom"
       ::after`;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });
 
@@ -226,6 +226,6 @@ add_task(async function() {
     test-component
       #shadow-root`;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });

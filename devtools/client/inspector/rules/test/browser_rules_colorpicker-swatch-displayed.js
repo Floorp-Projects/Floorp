@@ -58,14 +58,14 @@ const TESTS = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
 
-  for (let {selector, propertyName, nb} of TESTS) {
+  for (const {selector, propertyName, nb} of TESTS) {
     info("Looking for color swatches in property " + propertyName +
       " in selector " + selector);
 
-    let prop = getRuleViewProperty(view, selector, propertyName).valueSpan;
-    let swatches = prop.querySelectorAll(".ruleview-colorswatch");
+    const prop = getRuleViewProperty(view, selector, propertyName).valueSpan;
+    const swatches = prop.querySelectorAll(".ruleview-colorswatch");
 
     ok(swatches.length, "Swatches found in the property");
     is(swatches.length, nb, "Correct number of swatches found in the property");

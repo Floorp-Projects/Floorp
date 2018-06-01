@@ -39,7 +39,7 @@ class CookiesPanel extends Component {
   }
 
   componentDidMount() {
-    let { connector, request } = this.props;
+    const { connector, request } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "requestCookies",
       "responseCookies",
@@ -47,7 +47,7 @@ class CookiesPanel extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { connector, request } = nextProps;
+    const { connector, request } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "requestCookies",
       "responseCookies",
@@ -95,7 +95,7 @@ class CookiesPanel extends Component {
       );
     }
 
-    let object = {};
+    const object = {};
 
     if (responseCookies.length) {
       object[RESPONSE_COOKIES] = sortObjectKeys(this.getProperties(responseCookies));

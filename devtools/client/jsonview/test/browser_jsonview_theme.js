@@ -10,7 +10,7 @@ const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 add_task(async function() {
   info("Test JSON theme started.");
 
-  let oldPref = SpecialPowers.getCharPref("devtools.theme");
+  const oldPref = SpecialPowers.getCharPref("devtools.theme");
   SpecialPowers.setCharPref("devtools.theme", "light");
 
   await addJsonViewTab(TEST_JSON_URL);

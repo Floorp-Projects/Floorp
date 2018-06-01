@@ -18,7 +18,7 @@ const serviceContainer = require("devtools/client/webconsole/test/fixtures/servi
 describe("ConsoleAPICall component:", () => {
   describe("Services.console.logStringMessage", () => {
     it("renders cached logMessage grips", () => {
-      let message = prepareMessage(cachedLogMessageStubPacket, {getNextId: () => "1"});
+      const message = prepareMessage(cachedLogMessageStubPacket, {getNextId: () => "1"});
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
@@ -28,7 +28,7 @@ describe("ConsoleAPICall component:", () => {
     });
 
     it("renders logMessage grips", () => {
-      let message = prepareMessage(logMessageStubPacket, {getNextId: () => "1"});
+      const message = prepareMessage(logMessageStubPacket, {getNextId: () => "1"});
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body").text()).toBe("foobar test");

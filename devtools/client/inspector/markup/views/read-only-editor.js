@@ -32,7 +32,7 @@ function ReadOnlyEditor(container, node) {
 
 ReadOnlyEditor.prototype = {
   buildMarkup: function() {
-    let doc = this.markup.doc;
+    const doc = this.markup.doc;
 
     this.elt = doc.createElement("span");
     this.elt.classList.add("editor");

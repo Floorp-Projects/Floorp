@@ -7,8 +7,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
+  const { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
 
@@ -19,8 +19,8 @@ async function ifWebGLSupported() {
 
   await once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   is(ShadersListView.selectedIndex, 0,
     "The first program is currently selected.");

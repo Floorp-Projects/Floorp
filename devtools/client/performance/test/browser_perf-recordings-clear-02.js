@@ -14,13 +14,13 @@ const { times, once } = require("devtools/client/performance/test/helpers/event-
 const { getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPanelInNewTab({
+  const { panel } = await initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
+  const { EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -41,8 +41,8 @@ add_task(async function() {
   isnot(PerformanceController.getCurrentRecording(), null,
     "There should be a current recording.");
 
-  let recordingDeleted = times(PerformanceController, EVENTS.RECORDING_DELETED, 2);
-  let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+  const recordingDeleted = times(PerformanceController, EVENTS.RECORDING_DELETED, 2);
+  const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: ["recording-stopped"]
   });
 

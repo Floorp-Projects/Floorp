@@ -122,7 +122,7 @@ CssLogic.prototype = {
 
     this.viewedElement = viewedElement;
 
-    let doc = this.viewedElement.ownerDocument;
+    const doc = this.viewedElement.ownerDocument;
     if (doc != this.viewedDocument) {
       // New document: clear/rebuild the cache.
       this.viewedDocument = doc;
@@ -163,7 +163,7 @@ CssLogic.prototype = {
    * @see FILTER.*
    */
   set sourceFilter(value) {
-    let oldValue = this._sourceFilter;
+    const oldValue = this._sourceFilter;
     this._sourceFilter = value;
 
     let ruleCount = 0;
@@ -180,7 +180,7 @@ CssLogic.prototype = {
 
     // Full update is needed because the this.processMatchedSelectors() method
     // skips UA stylesheets if the filter does not allow such sheets.
-    let needFullUpdate = (oldValue == FILTER.UA || value == FILTER.UA);
+    const needFullUpdate = (oldValue == FILTER.UA || value == FILTER.UA);
 
     if (needFullUpdate) {
       this._matchedRules = null;
@@ -188,7 +188,7 @@ CssLogic.prototype = {
       this._propertyInfos = {};
     } else {
       // Update the CssPropertyInfo objects.
-      for (let property in this._propertyInfos) {
+      for (const property in this._propertyInfos) {
         this._propertyInfos[property].needRefilter = true;
       }
     }
@@ -252,12 +252,12 @@ CssLogic.prototype = {
     }
 
     // Cache the sheet.
-    let cssSheet = this.getSheet(domSheet, this._sheetIndex++);
+    const cssSheet = this.getSheet(domSheet, this._sheetIndex++);
     if (cssSheet._passId != this._passId) {
       cssSheet._passId = this._passId;
 
       // Find import and keyframes rules.
-      for (let aDomRule of cssSheet.getCssRules()) {
+      for (const aDomRule of cssSheet.getCssRules()) {
         if (aDomRule.type == CSSRule.IMPORT_RULE &&
             aDomRule.styleSheet &&
             this.mediaMatches(aDomRule)) {
@@ -279,7 +279,7 @@ CssLogic.prototype = {
       this._cacheSheets();
     }
 
-    let sheets = [];
+    const sheets = [];
     this.forEachSheet(function(sheet) {
       if (sheet.contentSheet) {
         sheets.push(sheet);
@@ -363,12 +363,12 @@ CssLogic.prototype = {
    * will be the this object when callback executes.
    */
   forEachSheet: function(callback, scope) {
-    for (let cacheId in this._sheets) {
-      let sheets = this._sheets[cacheId];
+    for (const cacheId in this._sheets) {
+      const sheets = this._sheets[cacheId];
       for (let i = 0; i < sheets.length; i++) {
         // We take this as an opportunity to clean dead sheets
         try {
-          let sheet = sheets[i];
+          const sheet = sheets[i];
           // If accessing domSheet raises an exception, then the style
           // sheet is a dead object.
           sheet.domSheet;
@@ -438,8 +438,8 @@ CssLogic.prototype = {
     this._passId++;
 
     for (let i = 0; i < this._matchedRules.length; i++) {
-      let rule = this._matchedRules[i][0];
-      let status = this._matchedRules[i][1];
+      const rule = this._matchedRules[i][0];
+      const status = this._matchedRules[i][1];
 
       rule.selectors.forEach(function(selector) {
         if (selector._matchId !== this._matchId &&
@@ -496,11 +496,11 @@ CssLogic.prototype = {
       this._buildMatchedRules();
     }
 
-    let result = {};
+    const result = {};
 
     this._matchedRules.some(function(value) {
-      let rule = value[0];
-      let status = value[1];
+      const rule = value[0];
+      const status = value[1];
       properties = properties.filter((property) => {
         // We just need to find if a rule has this property while it matches
         // the viewedElement (or its parents).
@@ -529,7 +529,7 @@ CssLogic.prototype = {
   _buildMatchedRules: function() {
     let domRules;
     let element = this.viewedElement;
-    let filter = this.sourceFilter;
+    const filter = this.sourceFilter;
     let sheetIndex = 0;
 
     this._matchId++;
@@ -541,7 +541,7 @@ CssLogic.prototype = {
     }
 
     do {
-      let status = this.viewedElement === element ?
+      const status = this.viewedElement === element ?
                    STATUS.MATCHED : STATUS.PARENT_MATCH;
 
       try {
@@ -552,14 +552,14 @@ CssLogic.prototype = {
       }
 
       // getCSSStyleRules can return null with a shadow DOM element.
-      let numDomRules = domRules ? domRules.length : 0;
+      const numDomRules = domRules ? domRules.length : 0;
       for (let i = 0; i < numDomRules; i++) {
-        let domRule = domRules[i];
+        const domRule = domRules[i];
         if (domRule.type !== CSSRule.STYLE_RULE) {
           continue;
         }
 
-        let sheet = this.getSheet(domRule.parentStyleSheet, -1);
+        const sheet = this.getSheet(domRule.parentStyleSheet, -1);
         if (sheet._passId !== this._passId) {
           sheet.index = sheetIndex++;
           sheet._passId = this._passId;
@@ -569,7 +569,7 @@ CssLogic.prototype = {
           continue;
         }
 
-        let rule = sheet.getRule(domRule);
+        const rule = sheet.getRule(domRule);
         if (rule._passId === this._passId) {
           continue;
         }
@@ -581,7 +581,7 @@ CssLogic.prototype = {
 
       // Add element.style information.
       if (element.style && element.style.length > 0) {
-        let rule = new CssRule(null, { style: element.style }, element);
+        const rule = new CssRule(null, { style: element.style }, element);
         rule._matchId = this._matchId;
         rule._passId = this._passId;
         this._matchedRules.push([rule, status]);
@@ -598,7 +598,7 @@ CssLogic.prototype = {
    * media, or false otherwise.
    */
   mediaMatches: function(domObject) {
-    let mediaText = domObject.media.mediaText;
+    const mediaText = domObject.media.mediaText;
     return !mediaText ||
       this.viewedDocument.defaultView.matchMedia(mediaText).matches;
   },
@@ -638,11 +638,11 @@ CssLogic.getShortName = function(element) {
  *         An array of string selectors.
  */
 CssLogic.getSelectors = function(domRule) {
-  let selectors = [];
+  const selectors = [];
 
-  let len = InspectorUtils.getSelectorCount(domRule);
+  const len = InspectorUtils.getSelectorCount(domRule);
   for (let i = 0; i < len; i++) {
-    let text = InspectorUtils.getSelectorText(domRule, i);
+    const text = InspectorUtils.getSelectorText(domRule, i);
     selectors.push(text);
   }
   return selectors;
@@ -676,7 +676,7 @@ CssLogic.getComputedStyle = function(node) {
     return null;
   }
 
-  let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
+  const {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
   return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
 };
 
@@ -792,7 +792,7 @@ CssSheet.prototype = {
 
     this._sheetAllowed = true;
 
-    let filter = this._cssLogic.sourceFilter;
+    const filter = this._cssLogic.sourceFilter;
     if (filter === FILTER.USER && !this.contentSheet) {
       this._sheetAllowed = false;
     }
@@ -845,7 +845,7 @@ CssSheet.prototype = {
    * object.
    */
   getRule: function(domRule) {
-    let cacheId = domRule.type + domRule.selectorText;
+    const cacheId = domRule.type + domRule.selectorText;
 
     let rule = null;
     let ruleFound = false;
@@ -896,7 +896,7 @@ function CssRule(cssSheet, domRule, element) {
   this._cssSheet = cssSheet;
   this.domRule = domRule;
 
-  let parentRule = domRule.parentRule;
+  const parentRule = domRule.parentRule;
   if (parentRule && parentRule.type == CSSRule.MEDIA_RULE) {
     this.mediaText = parentRule.media.mediaText;
   }
@@ -991,7 +991,7 @@ CssRule.prototype = {
       return this._selectors;
     }
 
-    let selectors = CssLogic.getSelectors(this.domRule);
+    const selectors = CssLogic.getSelectors(this.domRule);
 
     for (let i = 0, len = selectors.length; i < len; i++) {
       this._selectors.push(new CssSelector(this, selectors[i], i));
@@ -1245,13 +1245,13 @@ CssPropertyInfo.prototype = {
    * @param {STATUS} status the CssSelector match status.
    */
   _processMatchedSelector: function(selector, status) {
-    let cssRule = selector.cssRule;
-    let value = cssRule.getPropertyValue(this.property);
+    const cssRule = selector.cssRule;
+    const value = cssRule.getPropertyValue(this.property);
     if (value &&
         (status == STATUS.MATCHED ||
          (status == STATUS.PARENT_MATCH &&
           this._isInherited(this.property)))) {
-      let selectorInfo = new CssSelectorInfo(selector, this.property, value,
+      const selectorInfo = new CssSelectorInfo(selector, this.property, value,
           status);
       this._matchedSelectors.push(selectorInfo);
     }
@@ -1263,10 +1263,10 @@ CssPropertyInfo.prototype = {
    * @private
    */
   _refilterSelectors: function() {
-    let passId = ++this._cssLogic._passId;
+    const passId = ++this._cssLogic._passId;
 
-    let iterator = function(selectorInfo) {
-      let cssRule = selectorInfo.selector.cssRule;
+    const iterator = function(selectorInfo) {
+      const cssRule = selectorInfo.selector.cssRule;
       if (cssRule._passId != passId) {
         cssRule._passId = passId;
       }
@@ -1306,7 +1306,7 @@ function CssSelectorInfo(selector, property, value, status) {
   this.property = property;
   this.status = status;
   this.value = value;
-  let priority = this.selector.cssRule.getPropertyPriority(this.property);
+  const priority = this.selector.cssRule.getPropertyPriority(this.property);
   this.important = (priority === "important");
 }
 

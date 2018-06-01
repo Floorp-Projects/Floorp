@@ -7,9 +7,9 @@
  */
 
 add_task(function() {
-  let { CATEGORIES, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
-  let { L10N } = require("devtools/client/performance/modules/global");
-  let count = CATEGORIES.length;
+  const { CATEGORIES, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
+  const { L10N } = require("devtools/client/performance/modules/global");
+  const count = CATEGORIES.length;
 
   ok(count,
     "Should have a non-empty list of categories available.");

@@ -12,11 +12,11 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, controller} = await openAnimationInspector();
+  const {inspector, panel, controller} = await openAnimationInspector();
 
   info("Listen for the players-updated, ui-updated and " +
        "inspector-updated events");
-  let receivedEvents = [];
+  const receivedEvents = [];
   controller.once(controller.PLAYERS_UPDATED_EVENT, () => {
     receivedEvents.push(controller.PLAYERS_UPDATED_EVENT);
   });
@@ -28,7 +28,7 @@ add_task(async function() {
   });
 
   info("Selecting an animated node");
-  let node = await getNodeFront(".animated", inspector);
+  const node = await getNodeFront(".animated", inspector);
   await selectNodeAndWaitForAnimations(node, inspector);
 
   info("Check that all events were received");

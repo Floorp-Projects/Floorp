@@ -31,9 +31,9 @@ function onLearnMoreClick(e, url) {
   e.stopPropagation();
   e.preventDefault();
 
-  let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  let { button, ctrlKey, metaKey } = e;
-  let isOSX = Services.appinfo.OS == "Darwin";
+  const win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+  const { button, ctrlKey, metaKey } = e;
+  const isOSX = Services.appinfo.OS == "Darwin";
   let where = "tab";
   if (button === 1 || (button === 0 && (isOSX ? metaKey : ctrlKey))) {
     where = "tabshifted";

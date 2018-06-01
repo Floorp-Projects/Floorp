@@ -21,23 +21,23 @@ const IDB = {
 
   open: function() {
     return new Promise((resolve, reject) => {
-      let request = indexedDB.open(IDB.databaseName, 5);
+      const request = indexedDB.open(IDB.databaseName, 5);
       request.onerror = function(event) {
         reject("Unable to open AppProjects indexedDB: " +
                         this.error.name + " - " + this.error.message);
       };
       request.onupgradeneeded = function(event) {
-        let db = event.target.result;
+        const db = event.target.result;
         db.createObjectStore("projects", { keyPath: "location" });
       };
 
       request.onsuccess = function() {
-        let db = IDB._db = request.result;
-        let objectStore = db.transaction("projects").objectStore("projects");
-        let projects = [];
-        let toRemove = [];
+        const db = IDB._db = request.result;
+        const objectStore = db.transaction("projects").objectStore("projects");
+        const projects = [];
+        const toRemove = [];
         objectStore.openCursor().onsuccess = function(event) {
-          let cursor = event.target.result;
+          const cursor = event.target.result;
           if (cursor) {
             if (cursor.value.location) {
               // We need to make sure this object has a `.location` property.
@@ -50,7 +50,7 @@ const IDB = {
               // If the location doesn't exist, we remove the project.
 
               try {
-                let file = FileUtils.File(cursor.value.location);
+                const file = FileUtils.File(cursor.value.location);
                 if (file.exists()) {
                   projects.push(cursor.value);
                 } else {
@@ -65,8 +65,8 @@ const IDB = {
             }
             cursor.continue();
           } else {
-            let removePromises = [];
-            for (let location of toRemove) {
+            const removePromises = [];
+            for (const location of toRemove) {
               removePromises.push(IDB.remove(location));
             }
             Promise.all(removePromises).then(() => {
@@ -84,9 +84,9 @@ const IDB = {
         // We need to make sure this object has a `.location` property.
         reject("Missing location property on project object.");
       } else {
-        let transaction = IDB._db.transaction(["projects"], "readwrite");
-        let objectStore = transaction.objectStore("projects");
-        let request = objectStore.add(project);
+        const transaction = IDB._db.transaction(["projects"], "readwrite");
+        const objectStore = transaction.objectStore("projects");
+        const request = objectStore.add(project);
         request.onerror = function(event) {
           reject("Unable to add project to the AppProjects indexedDB: " +
                  this.error.name + " - " + this.error.message);
@@ -100,9 +100,9 @@ const IDB = {
 
   update: function(project) {
     return new Promise((resolve, reject) => {
-      let transaction = IDB._db.transaction(["projects"], "readwrite");
-      let objectStore = transaction.objectStore("projects");
-      let request = objectStore.put(project);
+      const transaction = IDB._db.transaction(["projects"], "readwrite");
+      const objectStore = transaction.objectStore("projects");
+      const request = objectStore.put(project);
       request.onerror = function(event) {
         reject("Unable to update project to the AppProjects indexedDB: " +
                this.error.name + " - " + this.error.message);
@@ -115,7 +115,7 @@ const IDB = {
 
   remove: function(location) {
     return new Promise((resolve, reject) => {
-      let request = IDB._db.transaction(["projects"], "readwrite")
+      const request = IDB._db.transaction(["projects"], "readwrite")
                     .objectStore("projects")
                     .delete(location);
       request.onsuccess = function(event) {
@@ -140,15 +140,15 @@ const AppProjects = {
   },
 
   addPackaged: function(folder) {
-    let file = FileUtils.File(folder.path);
+    const file = FileUtils.File(folder.path);
     if (!file.exists()) {
       return Promise.reject("path doesn't exist");
     }
-    let existingProject = this.get(folder.path);
+    const existingProject = this.get(folder.path);
     if (existingProject) {
       return Promise.reject("Already added");
     }
-    let project = {
+    const project = {
       type: "packaged",
       location: folder.path,
       // We need a unique id, that is the app origin,
@@ -167,11 +167,11 @@ const AppProjects = {
   },
 
   addHosted: function(manifestURL) {
-    let existingProject = this.get(manifestURL);
+    const existingProject = this.get(manifestURL);
     if (existingProject) {
       return Promise.reject("Already added");
     }
-    let project = {
+    const project = {
       type: "hosted",
       location: manifestURL
     };

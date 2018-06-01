@@ -10,15 +10,15 @@ const ID = "eye-dropper-";
 const TEST_URI = URL_ROOT + "doc_inspector_csp.html";
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URI)
+  const helper = await openInspectorForURL(TEST_URI)
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
-  let {show, hide, finalize, isElementHidden, waitForElementAttributeSet} = helper;
+  const {show, hide, finalize, isElementHidden, waitForElementAttributeSet} = helper;
 
   info("Try to display the eyedropper");
   await show("html");
 
-  let hidden = await isElementHidden("root");
+  const hidden = await isElementHidden("root");
   ok(!hidden, "The eyedropper is now shown");
 
   info("Wait until the eyedropper is done taking a screenshot of the page");

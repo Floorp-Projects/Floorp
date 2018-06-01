@@ -12,16 +12,16 @@ var URL = `${URL_ROOT}doc_viewsource.html`;
 var CSS_URL = `${URL_ROOT}doc_theme.css`;
 
 async function viewSource() {
-  let toolbox = await openNewTabAndToolbox(URL);
+  const toolbox = await openNewTabAndToolbox(URL);
 
-  let fileFound = await toolbox.viewSourceInStyleEditor(CSS_URL, 2);
+  const fileFound = await toolbox.viewSourceInStyleEditor(CSS_URL, 2);
   ok(fileFound, "viewSourceInStyleEditor should resolve to true if source found.");
 
-  let stylePanel = toolbox.getPanel("styleeditor");
+  const stylePanel = toolbox.getPanel("styleeditor");
   ok(stylePanel, "The style editor panel was opened.");
   is(toolbox.currentToolId, "styleeditor", "The style editor panel was selected.");
 
-  let { UI } = stylePanel;
+  const { UI } = stylePanel;
 
   is(UI.selectedEditor.styleSheet.href, CSS_URL,
     "The correct source is shown in the style editor.");

@@ -23,7 +23,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testAddTextInFilter(inspector, view);
   await testRemoveTextInFilter(inspector, view);
@@ -37,9 +37,9 @@ async function testAddTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let ruleEditor = rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const ruleEditor = rule.textProps[0].editor;
+  const computed = ruleEditor.computed;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
@@ -60,8 +60,8 @@ async function testAddTextInFilter(inspector, view) {
 async function testRemoveTextInFilter(inspector, view) {
   info("Press backspace and set filter text to \"margin\"");
 
-  let win = view.styleWindow;
-  let searchField = view.searchField;
+  const win = view.styleWindow;
+  const searchField = view.searchField;
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
@@ -72,9 +72,9 @@ async function testRemoveTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let ruleEditor = rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const ruleEditor = rule.textProps[0].editor;
+  const computed = ruleEditor.computed;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");

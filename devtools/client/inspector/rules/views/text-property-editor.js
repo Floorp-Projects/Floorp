@@ -179,9 +179,9 @@ TextPropertyEditor.prototype = {
     // so that colors can be coerced into the default color type. This prevents
     // us from thinking that when colors are coerced they have been changed by
     // the user.
-    let outputParser = this.ruleView._outputParser;
-    let frag = outputParser.parseCssProperty(this.prop.name, this.prop.value);
-    let parsedValue = frag.textContent;
+    const outputParser = this.ruleView._outputParser;
+    const frag = outputParser.parseCssProperty(this.prop.name, this.prop.value);
+    const parsedValue = frag.textContent;
 
     // Save the initial value as the last committed value,
     // for restoring after pressing escape.
@@ -270,16 +270,16 @@ TextPropertyEditor.prototype = {
       // valueSpan's child elements, because direct click on valueSpan will always
       // trigger a click event.
       this.valueSpan.addEventListener("mousedown", (event) => {
-        let clickedEl = event.target;
+        const clickedEl = event.target;
         if (clickedEl === this.valueSpan) {
           return;
         }
         this._hasPendingClick = true;
 
-        let matchedSelector = ACTIONABLE_ELEMENTS_SELECTORS.find(
+        const matchedSelector = ACTIONABLE_ELEMENTS_SELECTORS.find(
           (selector) => clickedEl.matches(selector));
         if (matchedSelector) {
-          let similarElements = [...this.valueSpan.querySelectorAll(matchedSelector)];
+          const similarElements = [...this.valueSpan.querySelectorAll(matchedSelector)];
           this._clickedElementOptions = {
             selector: matchedSelector,
             index: similarElements.indexOf(clickedEl)
@@ -293,12 +293,12 @@ TextPropertyEditor.prototype = {
       });
 
       this.valueSpan.addEventListener("click", (event) => {
-        let target = event.target;
+        const target = event.target;
 
         if (target.nodeName === "a") {
           event.stopPropagation();
           event.preventDefault();
-          let browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
+          const browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
           browserWin.openWebLinkIn(target.href, "tab");
         }
       });
@@ -331,19 +331,19 @@ TextPropertyEditor.prototype = {
    * {cols: [], rows: []}.
    */
   getGridlineNames: async function() {
-    let gridLineNames = {cols: [], rows: []};
-    let layoutInspector = await this.ruleView.inspector.walker.getLayoutInspector();
-    let gridFront = await layoutInspector.getCurrentGrid(
+    const gridLineNames = {cols: [], rows: []};
+    const layoutInspector = await this.ruleView.inspector.walker.getLayoutInspector();
+    const gridFront = await layoutInspector.getCurrentGrid(
       this.ruleView.inspector.selection.nodeFront);
 
     if (gridFront) {
-      let gridFragments = gridFront.gridFragments;
+      const gridFragments = gridFront.gridFragments;
 
-      for (let gridFragment of gridFragments) {
-        for (let rowLine of gridFragment.rows.lines) {
+      for (const gridFragment of gridFragments) {
+        for (const rowLine of gridFragment.rows.lines) {
           gridLineNames.rows = gridLineNames.rows.concat(rowLine.names);
         }
-        for (let colLine of gridFragment.cols.lines) {
+        for (const colLine of gridFragment.cols.lines) {
           gridLineNames.cols = gridLineNames.cols.concat(colLine.names);
         }
       }
@@ -361,7 +361,7 @@ TextPropertyEditor.prototype = {
    * @return {String} the stylesheet's href.
    */
   get sheetHref() {
-    let domRule = this.rule.domRule;
+    const domRule = this.rule.domRule;
     if (domRule) {
       return domRule.href || domRule.nodeHref;
     }
@@ -378,19 +378,19 @@ TextPropertyEditor.prototype = {
 
     this.updatePropertyState();
 
-    let name = this.prop.name;
+    const name = this.prop.name;
     this.nameSpan.textContent = name;
 
     // Combine the property's value and priority into one string for
     // the value.
-    let store = this.rule.elementStyle.store;
+    const store = this.rule.elementStyle.store;
     let val = store.userProperties.getProperty(this.rule.style, name,
                                                this.prop.value);
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
 
-    let propDirty = store.userProperties.contains(this.rule.style, name);
+    const propDirty = store.userProperties.contains(this.rule.style, name);
 
     if (propDirty) {
       this.element.setAttribute("dirty", "");
@@ -398,8 +398,8 @@ TextPropertyEditor.prototype = {
       this.element.removeAttribute("dirty");
     }
 
-    let outputParser = this.ruleView._outputParser;
-    let parserOptions = {
+    const outputParser = this.ruleView._outputParser;
+    const parserOptions = {
       angleClass: "ruleview-angle",
       angleSwatchClass: SHARED_SWATCH_CLASS + " " + ANGLE_SWATCH_CLASS,
       bezierClass: "ruleview-bezier",
@@ -420,7 +420,7 @@ TextPropertyEditor.prototype = {
       matchedVariableClass: "ruleview-variable",
       isVariableInUse: varName => this.rule.elementStyle.getVariable(varName),
     };
-    let frag = outputParser.parseCssProperty(name, val, parserOptions);
+    const frag = outputParser.parseCssProperty(name, val, parserOptions);
     this.valueSpan.innerHTML = "";
     this.valueSpan.appendChild(frag);
 
@@ -428,14 +428,14 @@ TextPropertyEditor.prototype = {
 
     // Highlight the currently used font in font-family properties.
     // If we cannot find a match, highlight the first generic family instead.
-    let fontFamilySpans = this.valueSpan.querySelectorAll("." + FONT_FAMILY_CLASS);
+    const fontFamilySpans = this.valueSpan.querySelectorAll("." + FONT_FAMILY_CLASS);
     if (fontFamilySpans.length && this.prop.enabled && !this.prop.overridden) {
       this.rule.elementStyle.getUsedFontFamilies().then(families => {
         const usedFontFamilies = families.map(font => font.toLowerCase());
         let foundMatchingFamily = false;
         let firstGenericSpan = null;
 
-        for (let span of fontFamilySpans) {
+        for (const span of fontFamilySpans) {
           const authoredFont = span.textContent.toLowerCase();
 
           if (!firstGenericSpan && GENERIC_FONT_FAMILIES.includes(authoredFont)) {
@@ -460,7 +460,7 @@ TextPropertyEditor.prototype = {
     this._colorSwatchSpans =
       this.valueSpan.querySelectorAll("." + COLOR_SWATCH_CLASS);
     if (this.ruleEditor.isEditable) {
-      for (let span of this._colorSwatchSpans) {
+      for (const span of this._colorSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
         this.ruleView.tooltips.getTooltip("colorPicker").addSwatch(span, {
@@ -470,7 +470,7 @@ TextPropertyEditor.prototype = {
           onRevert: this._onSwatchRevert
         });
         span.on("unit-change", this._onSwatchCommit);
-        let title = l10n("rule.colorSwatch.tooltip");
+        const title = l10n("rule.colorSwatch.tooltip");
         span.setAttribute("title", title);
         span.dataset.propertyName = this.nameSpan.textContent;
       }
@@ -480,7 +480,7 @@ TextPropertyEditor.prototype = {
     this._bezierSwatchSpans =
       this.valueSpan.querySelectorAll("." + BEZIER_SWATCH_CLASS);
     if (this.ruleEditor.isEditable) {
-      for (let span of this._bezierSwatchSpans) {
+      for (const span of this._bezierSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
         this.ruleView.tooltips.getTooltip("cubicBezier").addSwatch(span, {
@@ -489,13 +489,13 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         });
-        let title = l10n("rule.bezierSwatch.tooltip");
+        const title = l10n("rule.bezierSwatch.tooltip");
         span.setAttribute("title", title);
       }
     }
 
     // Attach the filter editor tooltip to the filter swatch
-    let span = this.valueSpan.querySelector("." + FILTER_SWATCH_CLASS);
+    const span = this.valueSpan.querySelector("." + FILTER_SWATCH_CLASS);
     if (this.ruleEditor.isEditable) {
       if (span) {
         parserOptions.filterSwatch = true;
@@ -506,7 +506,7 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         }, outputParser, parserOptions);
-        let title = l10n("rule.filterSwatch.tooltip");
+        const title = l10n("rule.filterSwatch.tooltip");
         span.setAttribute("title", title);
       }
     }
@@ -514,14 +514,14 @@ TextPropertyEditor.prototype = {
     this.angleSwatchSpans =
       this.valueSpan.querySelectorAll("." + ANGLE_SWATCH_CLASS);
     if (this.ruleEditor.isEditable) {
-      for (let angleSpan of this.angleSwatchSpans) {
+      for (const angleSpan of this.angleSwatchSpans) {
         angleSpan.on("unit-change", this._onSwatchCommit);
-        let title = l10n("rule.angleSwatch.tooltip");
+        const title = l10n("rule.angleSwatch.tooltip");
         angleSpan.setAttribute("title", title);
       }
     }
 
-    let flexToggle = this.valueSpan.querySelector(".ruleview-flex");
+    const flexToggle = this.valueSpan.querySelector(".ruleview-flex");
     if (flexToggle) {
       flexToggle.setAttribute("title", l10n("rule.flexToggle.tooltip"));
       if (this.ruleView.highlighters.flexboxHighlighterShown ===
@@ -530,7 +530,7 @@ TextPropertyEditor.prototype = {
       }
     }
 
-    let gridToggle = this.valueSpan.querySelector(".ruleview-grid");
+    const gridToggle = this.valueSpan.querySelector(".ruleview-grid");
     if (gridToggle) {
       gridToggle.setAttribute("title", l10n("rule.gridToggle.tooltip"));
       if (this.ruleView.highlighters.gridHighlighterShown ===
@@ -539,9 +539,9 @@ TextPropertyEditor.prototype = {
       }
     }
 
-    let shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch");
+    const shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch");
     if (shapeToggle) {
-      let mode = "css" + name.split("-").map(s => {
+      const mode = "css" + name.split("-").map(s => {
         return s[0].toUpperCase() + s.slice(1);
       }).join("");
       shapeToggle.setAttribute("data-mode", mode);
@@ -555,7 +555,7 @@ TextPropertyEditor.prototype = {
       let elToClick;
 
       if (this._clickedElementOptions !== null) {
-        let {selector, index} = this._clickedElementOptions;
+        const {selector, index} = this._clickedElementOptions;
         elToClick = this.valueSpan.querySelectorAll(selector)[index];
 
         this._clickedElementOptions = null;
@@ -605,7 +605,7 @@ TextPropertyEditor.prototype = {
                                  !this.prop.overridden ||
                                  this.ruleEditor.rule.isUnmatched;
 
-    let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
+    const showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
     this.expander.style.display = showExpander ? "inline-block" : "none";
 
     if (!this.editing &&
@@ -624,7 +624,7 @@ TextPropertyEditor.prototype = {
   _updateComputed: function() {
     this.computed.innerHTML = "";
 
-    let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
+    const showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
     this.expander.style.display = !this.editing && showExpander ? "inline-block" : "none";
 
     this._populatedComputed = false;
@@ -642,7 +642,7 @@ TextPropertyEditor.prototype = {
     }
     this._populatedComputed = true;
 
-    for (let computed of this.prop.computed) {
+    for (const computed of this.prop.computed) {
       // Don't bother to duplicate information already
       // shown in the text property.
       if (computed.name === this.prop.name) {
@@ -677,7 +677,7 @@ TextPropertyEditor.prototype = {
     }
     this._populatedShorthandOverridden = true;
 
-    for (let computed of this.prop.computed) {
+    for (const computed of this.prop.computed) {
       // Don't display duplicate information or show properties
       // that are completely overridden.
       if (computed.name === this.prop.name || !computed.overridden) {
@@ -693,7 +693,7 @@ TextPropertyEditor.prototype = {
    * Creates and populates a list item with the computed CSS property.
    */
   _createComputedListItem: function(parentEl, computed, className) {
-    let li = createChild(parentEl, "li", {
+    const li = createChild(parentEl, "li", {
       class: className
     });
 
@@ -707,8 +707,8 @@ TextPropertyEditor.prototype = {
     });
     appendText(li, ": ");
 
-    let outputParser = this.ruleView._outputParser;
-    let frag = outputParser.parseCssProperty(
+    const outputParser = this.ruleView._outputParser;
+    const frag = outputParser.parseCssProperty(
       computed.name, computed.value, {
         colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
         urlClass: "theme-link",
@@ -734,7 +734,7 @@ TextPropertyEditor.prototype = {
    * Handles clicks on the disabled property.
    */
   _onEnableClicked: function(event) {
-    let checked = this.enable.hasAttribute("checked");
+    const checked = this.enable.hasAttribute("checked");
     if (checked) {
       this.enable.removeAttribute("checked");
     } else {
@@ -807,7 +807,7 @@ TextPropertyEditor.prototype = {
    *        The move focus direction number.
    */
   _onNameDone: function(value, commit, direction) {
-    let isNameUnchanged = (!commit && !this.ruleEditor.isEditing) ||
+    const isNameUnchanged = (!commit && !this.ruleEditor.isEditing) ||
                           this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
       return;
@@ -831,7 +831,7 @@ TextPropertyEditor.prototype = {
 
     // Adding multiple rules inside of name field overwrites the current
     // property with the first, then adds any more onto the property list.
-    let properties = parseDeclarations(this.cssProperties.isKnown, value);
+    const properties = parseDeclarations(this.cssProperties.isKnown, value);
 
     if (properties.length) {
       this.prop.setName(properties[0].name);
@@ -858,14 +858,14 @@ TextPropertyEditor.prototype = {
    */
   remove: function(direction) {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
-      for (let span of this._colorSwatchSpans) {
+      for (const span of this._colorSwatchSpans) {
         this.ruleView.tooltips.getTooltip("colorPicker").removeSwatch(span);
         span.off("unit-change", this._onSwatchCommit);
       }
     }
 
     if (this.angleSwatchSpans && this.angleSwatchSpans.length) {
-      for (let span of this.angleSwatchSpans) {
+      for (const span of this.angleSwatchSpans) {
         span.off("unit-change", this._onSwatchCommit);
       }
     }
@@ -889,10 +889,10 @@ TextPropertyEditor.prototype = {
    *        The move focus direction number.
    */
   _onValueDone: function(value = "", commit, direction) {
-    let parsedProperties = this._getValueAndExtraProperties(value);
-    let val = parseSingleValue(this.cssProperties.isKnown,
+    const parsedProperties = this._getValueAndExtraProperties(value);
+    const val = parseSingleValue(this.cssProperties.isKnown,
                                parsedProperties.firstValue);
-    let isValueUnchanged = (!commit && !this.ruleEditor.isEditing) ||
+    const isValueUnchanged = (!commit && !this.ruleEditor.isEditing) ||
                            !parsedProperties.propertiesToAdd.length &&
                            this.committed.value === val.value &&
                            this.committed.priority === val.priority;
@@ -992,7 +992,7 @@ TextPropertyEditor.prototype = {
     let firstValue = value;
     let propertiesToAdd = [];
 
-    let properties = parseDeclarations(this.cssProperties.isKnown, value);
+    const properties = parseDeclarations(this.cssProperties.isKnown, value);
 
     // Check to see if the input string can be parsed as multiple properties
     if (properties.length) {
@@ -1031,7 +1031,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    let val = parseSingleValue(this.cssProperties.isKnown, value);
+    const val = parseSingleValue(this.cssProperties.isKnown, value);
     this.ruleEditor.rule.previewPropertyValue(this.prop, val.value,
                                               val.priority);
   },

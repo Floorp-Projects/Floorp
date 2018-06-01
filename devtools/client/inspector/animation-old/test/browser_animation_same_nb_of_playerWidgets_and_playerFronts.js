@@ -11,8 +11,8 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, controller} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
+  const {inspector, panel, controller} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
 
   info("Selecting the test animated node again");
   await selectNodeAndWaitForAnimations(".multi", inspector);

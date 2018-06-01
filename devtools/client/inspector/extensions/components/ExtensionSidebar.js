@@ -41,7 +41,7 @@ class ExtensionSidebar extends PureComponent {
       serviceContainer,
     } = this.props;
 
-    let {
+    const {
       viewMode = "empty-sidebar",
       object,
       objectValueGrip,

@@ -11,12 +11,12 @@ add_task(async function() {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
 
-  let { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, true);
+  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, true);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -95,10 +95,10 @@ add_task(async function() {
   await performRequestsAndWait();
 
   let index = 0;
-  for (let request of REQUEST_DATA) {
-    let requestItem = document.querySelectorAll(".request-list-item")[index];
+  for (const request of REQUEST_DATA) {
+    const requestItem = document.querySelectorAll(".request-list-item")[index];
     requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".status-code");
+    const requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
 
@@ -118,7 +118,7 @@ add_task(async function() {
   await teardown(monitor);
 
   async function performRequestsAndWait() {
-    let wait = waitForNetworkEvents(monitor, 3);
+    const wait = waitForNetworkEvents(monitor, 3);
     await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
       content.wrappedJSObject.performCachedRequests();
     });

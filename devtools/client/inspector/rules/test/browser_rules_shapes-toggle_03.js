@@ -22,8 +22,8 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Selecting the first shape container.");
   await selectNode("#shape1", inspector);
@@ -55,7 +55,7 @@ add_task(async function() {
 
   info("Selecting the second shapes container.");
   await selectNode("#shape2", inspector);
-  let firstShapesHighlighterShown = highlighters.shapesHighlighterShown;
+  const firstShapesHighlighterShown = highlighters.shapesHighlighterShown;
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   shapeToggle = container.querySelector(".ruleview-shapeswatch");
 

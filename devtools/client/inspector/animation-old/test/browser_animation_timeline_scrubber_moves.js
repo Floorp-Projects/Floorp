@@ -14,16 +14,16 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let timeline = panel.animationsTimelineComponent;
-  let scrubberEl = timeline.scrubberEl;
-  let startPos = scrubberEl.getBoundingClientRect().left;
+  const timeline = panel.animationsTimelineComponent;
+  const scrubberEl = timeline.scrubberEl;
+  const startPos = scrubberEl.getBoundingClientRect().left;
 
   info("Wait for some time to check that the scrubber moves");
   await new Promise(r => setTimeout(r, 2000));
 
-  let endPos = scrubberEl.getBoundingClientRect().left;
+  const endPos = scrubberEl.getBoundingClientRect().left;
 
   ok(endPos > startPos, "The scrubber has moved");
 });

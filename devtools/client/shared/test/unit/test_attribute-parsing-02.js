@@ -108,15 +108,15 @@ const TEST_DATA = [{
 }];
 
 function run_test() {
-  for (let {tagName, namespaceURI, attributeName,
+  for (const {tagName, namespaceURI, attributeName,
             otherAttributes, attributeValue, expected} of TEST_DATA) {
     info("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
 
-    let attributes = [
+    const attributes = [
       ...otherAttributes || [],
       { name: attributeName, value: attributeValue }
     ];
-    let tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
+    const tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
     if (!expected) {
       Assert.ok(!tokens);
       continue;

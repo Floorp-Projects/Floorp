@@ -13,10 +13,10 @@ const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets"
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(async function() {
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
-  let container = doc.querySelector("#cubic-bezier-container");
-  let w = new CubicBezierWidget(container, PREDEFINED.linear);
+  const container = doc.querySelector("#cubic-bezier-container");
+  const w = new CubicBezierWidget(container, PREDEFINED.linear);
 
   await previewDotReactsToChanges(w, [0.6, -0.28, 0.74, 0.05]);
   await previewDotReactsToChanges(w, [0.9, 0.03, 0.69, 0.22]);
@@ -29,12 +29,12 @@ add_task(async function() {
 });
 
 async function previewDotReactsToChanges(widget, coords, expectedEasing) {
-  let onUpdated = widget.once("updated");
+  const onUpdated = widget.once("updated");
   widget.coordinates = coords;
   await onUpdated;
 
-  let animatedDot = widget.timingPreview.dot;
-  let animations = animatedDot.getAnimations();
+  const animatedDot = widget.timingPreview.dot;
+  const animations = animatedDot.getAnimations();
 
   if (!expectedEasing) {
     expectedEasing =
@@ -43,11 +43,11 @@ async function previewDotReactsToChanges(widget, coords, expectedEasing) {
 
   is(animations.length, 1, "The dot is animated");
 
-  let goingToRight = animations[0].effect.getKeyframes()[2];
+  const goingToRight = animations[0].effect.getKeyframes()[2];
   is(goingToRight.easing, expectedEasing,
      `The easing when going to the right was set correctly to ${coords}`);
 
-  let goingToLeft = animations[0].effect.getKeyframes()[6];
+  const goingToLeft = animations[0].effect.getKeyframes()[6];
   is(goingToLeft.easing, expectedEasing,
      `The easing when going to the left was set correctly to ${coords}`);
 }

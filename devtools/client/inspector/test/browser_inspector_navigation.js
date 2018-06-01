@@ -21,7 +21,7 @@ const TEST_URL_4 = "data:text/html;charset=utf-8," +
   encodeURIComponent("<h1>bar</h1>");
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
 
   await selectNode("#i1", inspector);
 
@@ -31,8 +31,8 @@ add_task(async function() {
   ok(true, "New page loaded");
   await selectNode("#i1", inspector);
 
-  let markuploaded = inspector.once("markuploaded");
-  let onUpdated = inspector.once("inspector-updated");
+  const markuploaded = inspector.once("markuploaded");
+  const onUpdated = inspector.once("inspector-updated");
 
   info("Going back in history");
   await testActor.eval("history.go(-1)");
@@ -50,7 +50,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL_3);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL_3);
 
   await selectNode("img", inspector);
 
@@ -60,8 +60,8 @@ add_task(async function() {
   ok(true, "New page loaded");
   await selectNode("#h1", inspector);
 
-  let markuploaded = inspector.once("markuploaded");
-  let onUpdated = inspector.once("inspector-updated");
+  const markuploaded = inspector.once("markuploaded");
+  const onUpdated = inspector.once("inspector-updated");
 
   info("Going back in history");
   await testActor.eval("history.go(-1)");

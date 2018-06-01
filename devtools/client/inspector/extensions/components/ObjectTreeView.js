@@ -26,12 +26,12 @@ class ObjectTreeView extends PureComponent {
   render() {
     const { object } = this.props;
 
-    let columns = [{
+    const columns = [{
       "id": "value",
     }];
 
     // Render the node value (omitted on the root element if it has children).
-    let renderValue = props => {
+    const renderValue = props => {
       if (props.member.level === 0 && props.member.hasChildren) {
         return undefined;
       }

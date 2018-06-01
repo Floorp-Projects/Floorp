@@ -90,7 +90,7 @@ exports.items = [
 ];
 
 async function resize(args, context) {
-  let browserWindow = context.environment.chromeWindow;
+  const browserWindow = context.environment.chromeWindow;
   await ResponsiveUIManager.handleGcliCommand(browserWindow,
                                               browserWindow.gBrowser.selectedTab,
                                               this.name,

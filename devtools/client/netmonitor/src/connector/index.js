@@ -37,7 +37,7 @@ class Connector {
       return;
     }
 
-    let { clientType } = connection.tab;
+    const { clientType } = connection.tab;
     switch (clientType) {
       case "chrome":
         await this.connectChrome(connection, actions, getState);
@@ -55,13 +55,13 @@ class Connector {
   }
 
   connectChrome(connection, actions, getState) {
-    let ChromeConnector = require("./chrome-connector");
+    const ChromeConnector = require("./chrome-connector");
     this.connector = new ChromeConnector();
     return this.connector.connect(connection, actions, getState);
   }
 
   connectFirefox(connection, actions, getState) {
-    let FirefoxConnector = require("./firefox-connector");
+    const FirefoxConnector = require("./firefox-connector");
     this.connector = new FirefoxConnector();
     return this.connector.connect(connection, actions, getState);
   }

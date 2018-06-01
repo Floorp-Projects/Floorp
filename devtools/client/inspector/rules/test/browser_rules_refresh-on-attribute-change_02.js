@@ -116,15 +116,15 @@ const TEST_DATA = [{
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view, testActor } = await openRuleView();
+  const { inspector, view, testActor } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  for (let { desc, setup, properties } of TEST_DATA) {
+  for (const { desc, setup, properties } of TEST_DATA) {
     info(desc);
 
     await setup({ inspector, view, testActor });
 
-    let rule = view._elementStyle.rules[0];
+    const rule = view._elementStyle.rules[0];
     is(rule.editor.element.querySelectorAll(".ruleview-property").length,
        properties.length, "The correct number of properties was found");
 
@@ -136,7 +136,7 @@ add_task(async function() {
 
 async function changeElementStyle(selector, style, inspector, testActor) {
   info(`Setting ${selector}'s element style to ${style}`);
-  let onRefreshed = inspector.once("rule-view-refreshed");
+  const onRefreshed = inspector.once("rule-view-refreshed");
   await testActor.setAttribute(selector, "style", style);
   await onRefreshed;
 }

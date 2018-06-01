@@ -15,17 +15,17 @@ add_task(async function() {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = findMessage(hud, "Object");
-  let object = message.querySelector(".object-inspector .objectBox-object");
+  const message = findMessage(hud, "Object");
+  const object = message.querySelector(".object-inspector .objectBox-object");
 
   await showSidebarWithContextMenu(hud, object, true);
 
-  let sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
-  let objectInspectors = [...sidebarContents.querySelectorAll(".tree")];
+  const sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
+  const objectInspectors = [...sidebarContents.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
-  let [objectInspector] = objectInspectors;
+  const [objectInspector] = objectInspectors;
   let oiNodes = objectInspector.querySelectorAll(".node");
   if (oiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
@@ -37,18 +37,18 @@ add_task(async function() {
 
   // There are 5 nodes: the root, a, b, c, and proto.
   is(oiNodes.length, 5, "There is the expected number of nodes in the tree");
-  let propertiesNodes = [...objectInspector.querySelectorAll(".object-label")]
+  const propertiesNodes = [...objectInspector.querySelectorAll(".object-label")]
     .map(el => el.textContent);
   const arrayPropertiesNames = ["a", "b", "c", "<prototype>"];
   is(JSON.stringify(propertiesNodes), JSON.stringify(arrayPropertiesNames));
 });
 
 async function showSidebarWithContextMenu(hud, node, expectMutation) {
-  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  const onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
 
-  let contextMenu = await openContextMenu(hud, node);
-  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  const contextMenu = await openContextMenu(hud, node);
+  const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
   openInSidebar.click();
   if (expectMutation) {
     await onSidebarShown;

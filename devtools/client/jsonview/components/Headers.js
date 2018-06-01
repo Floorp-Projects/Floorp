@@ -31,7 +31,7 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let data = this.props.data;
+      const data = this.props.data;
 
       return (
         div({className: "netInfoHeadersTable"},
@@ -79,13 +79,13 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let headers = this.props.headers;
+      const headers = this.props.headers;
 
       headers.sort(function(a, b) {
         return a.name > b.name ? 1 : -1;
       });
 
-      let rows = [];
+      const rows = [];
       headers.forEach(header => {
         rows.push(
           tr({key: header.name},
@@ -105,7 +105,7 @@ define(function(require, exports, module) {
     }
   }
 
-  let HeaderListFactory = createFactory(HeaderList);
+  const HeaderListFactory = createFactory(HeaderList);
 
   // Exports from this module
   exports.Headers = Headers;

@@ -233,7 +233,7 @@ RootActor.prototype = {
    * and didn't actually care about tabs.
    */
   onGetRoot: function() {
-    let reply = {
+    const reply = {
       from: this.actorID,
     };
 
@@ -263,7 +263,7 @@ RootActor.prototype = {
    * this method whenever possible.
    */
   onListTabs: async function(request) {
-    let tabList = this._parameters.tabList;
+    const tabList = this._parameters.tabList;
     if (!tabList) {
       return { from: this.actorID, error: "noTabs",
                message: "This root actor has no browser tabs." };
@@ -277,13 +277,13 @@ RootActor.prototype = {
     // all the actors to a new ActorPool. We'll replace the old tab actor pool with the
     // one we build here, thus retiring any actors that didn't get listed again, and
     // preparing any new actors to receive packets.
-    let newActorPool = new ActorPool(this.conn);
-    let tabActorList = [];
+    const newActorPool = new ActorPool(this.conn);
+    const tabActorList = [];
     let selected;
 
-    let options = request.options || {};
-    let tabActors = await tabList.getList(options);
-    for (let tabActor of tabActors) {
+    const options = request.options || {};
+    const tabActors = await tabList.getList(options);
+    for (const tabActor of tabActors) {
       if (tabActor.exited) {
         // Tab actor may have exited while we were gathering the list.
         continue;
@@ -297,7 +297,7 @@ RootActor.prototype = {
     }
 
     // Start with the root reply, which includes the global actors for the whole browser.
-    let reply = this.onGetRoot();
+    const reply = this.onGetRoot();
 
     // Drop the old actorID -> actor map. Actors that still mattered were added to the
     // new map; others will go away.
@@ -317,7 +317,7 @@ RootActor.prototype = {
   },
 
   onGetTab: async function(options) {
-    let tabList = this._parameters.tabList;
+    const tabList = this._parameters.tabList;
     if (!tabList) {
       return { error: "noTabs",
                message: "This root actor has no browser tabs." };
@@ -355,7 +355,7 @@ RootActor.prototype = {
         message: "You are not allowed to debug windows."
       };
     }
-    let window = Services.wm.getOuterWindowWithId(outerWindowID);
+    const window = Services.wm.getOuterWindowWithId(outerWindowID);
     if (!window) {
       return {
         from: this.actorID,
@@ -369,7 +369,7 @@ RootActor.prototype = {
       this.conn.addActorPool(this._windowActorPool);
     }
 
-    let actor = new WindowActor(this.conn, window);
+    const actor = new WindowActor(this.conn, window);
     actor.parentID = this.actorID;
     this._windowActorPool.addActor(actor);
 
@@ -386,7 +386,7 @@ RootActor.prototype = {
   },
 
   onListAddons: function() {
-    let addonList = this._parameters.addonList;
+    const addonList = this._parameters.addonList;
     if (!addonList) {
       return { from: this.actorID, error: "noAddons",
                message: "This root actor has no browser addons." };
@@ -396,8 +396,8 @@ RootActor.prototype = {
     addonList.onListChanged = this._onAddonListChanged;
 
     return addonList.getList().then((addonActors) => {
-      let addonActorPool = new ActorPool(this.conn);
-      for (let addonActor of addonActors) {
+      const addonActorPool = new ActorPool(this.conn);
+      for (const addonActor of addonActors) {
         addonActorPool.addActor(addonActor);
       }
 
@@ -420,7 +420,7 @@ RootActor.prototype = {
   },
 
   onListWorkers: function() {
-    let workerList = this._parameters.workerList;
+    const workerList = this._parameters.workerList;
     if (!workerList) {
       return { from: this.actorID, error: "noWorkers",
                message: "This root actor has no workers." };
@@ -430,8 +430,8 @@ RootActor.prototype = {
     workerList.onListChanged = this._onWorkerListChanged;
 
     return workerList.getList().then(actors => {
-      let pool = new ActorPool(this.conn);
-      for (let actor of actors) {
+      const pool = new ActorPool(this.conn);
+      for (const actor of actors) {
         pool.addActor(actor);
       }
 
@@ -452,7 +452,7 @@ RootActor.prototype = {
   },
 
   onListServiceWorkerRegistrations: function() {
-    let registrationList = this._parameters.serviceWorkerRegistrationList;
+    const registrationList = this._parameters.serviceWorkerRegistrationList;
     if (!registrationList) {
       return { from: this.actorID, error: "noServiceWorkerRegistrations",
                message: "This root actor has no service worker registrations." };
@@ -462,8 +462,8 @@ RootActor.prototype = {
     registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
 
     return registrationList.getList().then(actors => {
-      let pool = new ActorPool(this.conn);
-      for (let actor of actors) {
+      const pool = new ActorPool(this.conn);
+      for (const actor of actors) {
         pool.addActor(actor);
       }
 
@@ -484,7 +484,7 @@ RootActor.prototype = {
   },
 
   onListProcesses: function() {
-    let { processList } = this._parameters;
+    const { processList } = this._parameters;
     if (!processList) {
       return { from: this.actorID, error: "noProcesses",
                message: "This root actor has no processes." };
@@ -519,7 +519,7 @@ RootActor.prototype = {
       }
       if (!this._chromeActor) {
         // Create a ChromeActor for the parent process
-        let { ChromeActor } = require("devtools/server/actors/chrome");
+        const { ChromeActor } = require("devtools/server/actors/chrome");
         this._chromeActor = new ChromeActor(this.conn);
         this._globalActorPool.addActor(this._chromeActor);
       }
@@ -527,8 +527,8 @@ RootActor.prototype = {
       return { form: this._chromeActor.form() };
     }
 
-    let { id } = request;
-    let mm = Services.ppmm.getChildAt(id);
+    const { id } = request;
+    const mm = Services.ppmm.getChildAt(id);
     if (!mm) {
       return { error: "noProcess",
                message: "There is no process with id '" + id + "'." };
@@ -537,7 +537,7 @@ RootActor.prototype = {
     if (form) {
       return { form };
     }
-    let onDestroy = () => {
+    const onDestroy = () => {
       this._processActors.delete(id);
     };
     form = await DebuggerServer.connectToContentProcess(this.conn, mm, onDestroy);

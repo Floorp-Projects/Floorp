@@ -76,7 +76,7 @@ module.exports = function makeDebugger({ findDebuggees, shouldAddNewGlobalAsDebu
   };
 
   dbg.addDebuggees = function() {
-    for (let global of findDebuggees(this)) {
+    for (const global of findDebuggees(this)) {
       safeAddDebuggee(this, global);
     }
   };
@@ -91,7 +91,7 @@ const reportDebuggerHookException = e => reportException("Debugger Hook", e);
  */
 function safeAddDebuggee(dbg, global) {
   try {
-    let wrappedGlobal = dbg.addDebuggee(global);
+    const wrappedGlobal = dbg.addDebuggee(global);
     if (wrappedGlobal) {
       dbg.emit("newGlobal", wrappedGlobal);
     }

@@ -12,16 +12,16 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 const SECRET = "MyLittleSecret";
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("promises-actor-test");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("promises-actor-test");
+  const chromeActors = await getChromeActors(client);
 
   // We have to attach the chrome TabActor before playing with the PromiseActor
   await attachTab(client, chromeActors);
   await testListPromises(client, chromeActors, v =>
     new Promise(resolve => resolve(v)));
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "promises-actor-test");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
   await testListPromises(client, targetTab, v => {
@@ -33,16 +33,16 @@ add_task(async function() {
 });
 
 async function testListPromises(client, form, makePromise) {
-  let resolution = SECRET + Math.random();
-  let promise = makePromise(resolution);
-  let front = PromisesFront(client, form);
+  const resolution = SECRET + Math.random();
+  const promise = makePromise(resolution);
+  const front = PromisesFront(client, form);
 
   await front.attach();
 
-  let promises = await front.listPromises();
+  const promises = await front.listPromises();
 
   let found = false;
-  for (let p of promises) {
+  for (const p of promises) {
     equal(p.type, "object", "Expect type to be Object");
     equal(p.class, "Promise", "Expect class to be Promise");
     equal(typeof p.promiseState.creationTimestamp, "number",

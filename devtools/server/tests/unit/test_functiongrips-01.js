@@ -27,13 +27,13 @@ function run_test() {
 
 function test_named_function() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
     Assert.equal(args[0].name, "stopMe");
     Assert.equal(args[0].displayName, "stopMe");
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 1);
       Assert.equal(response.parameterNames[0], "arg1");
@@ -47,14 +47,14 @@ function test_named_function() {
 
 function test_inferred_name_function() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
     // No name for an anonymous function, but it should have an inferred name.
     Assert.equal(args[0].name, undefined);
     Assert.equal(args[0].displayName, "m");
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 3);
       Assert.equal(response.parameterNames[0], "foo");
@@ -70,14 +70,14 @@ function test_inferred_name_function() {
 
 function test_anonymous_function() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
     // No name for an anonymous function, and no inferred name, either.
     Assert.equal(args[0].name, undefined);
     Assert.equal(args[0].displayName, undefined);
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 3);
       Assert.equal(response.parameterNames[0], "foo");

@@ -49,46 +49,46 @@ var CallsListView = extend(WidgetMethods, {
     this.empty();
 
     for (let i = 0, len = functionCalls.length; i < len; i++) {
-      let call = functionCalls[i];
+      const call = functionCalls[i];
 
-      let view = document.createElement("vbox");
+      const view = document.createElement("vbox");
       view.className = "call-item-view devtools-monospace";
       view.setAttribute("flex", "1");
 
-      let contents = document.createElement("hbox");
+      const contents = document.createElement("hbox");
       contents.className = "call-item-contents";
       contents.setAttribute("align", "center");
       contents.addEventListener("dblclick", this._onExpand);
       view.appendChild(contents);
 
-      let index = document.createElement("label");
+      const index = document.createElement("label");
       index.className = "plain call-item-index";
       index.setAttribute("flex", "1");
       index.setAttribute("value", i + 1);
 
-      let gutter = document.createElement("hbox");
+      const gutter = document.createElement("hbox");
       gutter.className = "call-item-gutter";
       gutter.appendChild(index);
       contents.appendChild(gutter);
 
       if (call.callerPreview) {
-        let context = document.createElement("label");
+        const context = document.createElement("label");
         context.className = "plain call-item-context";
         context.setAttribute("value", call.callerPreview);
         contents.appendChild(context);
 
-        let separator = document.createElement("label");
+        const separator = document.createElement("label");
         separator.className = "plain call-item-separator";
         separator.setAttribute("value", ".");
         contents.appendChild(separator);
       }
 
-      let name = document.createElement("label");
+      const name = document.createElement("label");
       name.className = "plain call-item-name";
       name.setAttribute("value", call.name);
       contents.appendChild(name);
 
-      let argsPreview = document.createElement("label");
+      const argsPreview = document.createElement("label");
       argsPreview.className = "plain call-item-args";
       argsPreview.setAttribute("crop", "end");
       argsPreview.setAttribute("flex", "100");
@@ -100,7 +100,7 @@ var CallsListView = extend(WidgetMethods, {
       }
       contents.appendChild(argsPreview);
 
-      let location = document.createElement("label");
+      const location = document.createElement("label");
       location.className = "plain call-item-location";
       location.setAttribute("value", getFileName(call.file) + ":" + call.line);
       location.setAttribute("crop", "start");
@@ -139,15 +139,15 @@ var CallsListView = extend(WidgetMethods, {
    *        A single "snapshot-image" instance received from the backend.
    */
   showScreenshot: function(screenshot) {
-    let { index, width, height, scaling, flipped, pixels } = screenshot;
+    const { index, width, height, scaling, flipped, pixels } = screenshot;
 
-    let screenshotNode = $("#screenshot-image");
+    const screenshotNode = $("#screenshot-image");
     screenshotNode.setAttribute("flipped", flipped);
     drawBackground("screenshot-rendering", width, height, pixels);
 
-    let dimensionsNode = $("#screenshot-dimensions");
-    let actualWidth = (width / scaling) | 0;
-    let actualHeight = (height / scaling) | 0;
+    const dimensionsNode = $("#screenshot-dimensions");
+    const actualWidth = (width / scaling) | 0;
+    const actualHeight = (height / scaling) | 0;
     dimensionsNode.setAttribute("value",
       SHARED_L10N.getFormatStr("dimensions", actualWidth, actualHeight));
 
@@ -165,7 +165,7 @@ var CallsListView = extend(WidgetMethods, {
     while (this._filmstrip.hasChildNodes()) {
       this._filmstrip.firstChild.remove();
     }
-    for (let thumbnail of thumbnails) {
+    for (const thumbnail of thumbnails) {
       this.appendThumbnail(thumbnail);
     }
 
@@ -180,9 +180,9 @@ var CallsListView = extend(WidgetMethods, {
    *        A single "snapshot-image" instance received from the backend.
    */
   appendThumbnail: function(thumbnail) {
-    let { index, width, height, flipped, pixels } = thumbnail;
+    const { index, width, height, flipped, pixels } = thumbnail;
 
-    let thumbnailNode = document.createElementNS(HTML_NS, "canvas");
+    const thumbnailNode = document.createElementNS(HTML_NS, "canvas");
     thumbnailNode.setAttribute("flipped", flipped);
     thumbnailNode.width = Math.max(CanvasFront.THUMBNAIL_SIZE, width);
     thumbnailNode.height = Math.max(CanvasFront.THUMBNAIL_SIZE, height);
@@ -203,13 +203,13 @@ var CallsListView = extend(WidgetMethods, {
    *        The context function call's index.
    */
   set highlightedThumbnail(index) {
-    let currHighlightedThumbnail = $(".filmstrip-thumbnail[index='" + index + "']");
+    const currHighlightedThumbnail = $(".filmstrip-thumbnail[index='" + index + "']");
     if (currHighlightedThumbnail == null) {
       return;
     }
 
-    let prevIndex = this._highlightedThumbnailIndex;
-    let prevHighlightedThumbnail = $(".filmstrip-thumbnail[index='" + prevIndex + "']");
+    const prevIndex = this._highlightedThumbnailIndex;
+    const prevHighlightedThumbnail = $(".filmstrip-thumbnail[index='" + prevIndex + "']");
     if (prevHighlightedThumbnail) {
       prevHighlightedThumbnail.removeAttribute("highlighted");
     }
@@ -259,8 +259,8 @@ var CallsListView = extend(WidgetMethods, {
     setConditionalTimeout("screenshot-display", SCREENSHOT_DISPLAY_DELAY, () => {
       return !this._isSliding;
     }, () => {
-      let frameSnapshot = SnapshotsListView.selectedItem.attachment.actor;
-      let functionCall = callItem.attachment.actor;
+      const frameSnapshot = SnapshotsListView.selectedItem.attachment.actor;
+      const functionCall = callItem.attachment.actor;
       frameSnapshot.generateScreenshotFor(functionCall).then(screenshot => {
         this.showScreenshot(screenshot);
         this.highlightedThumbnail = screenshot.index;
@@ -272,14 +272,14 @@ var CallsListView = extend(WidgetMethods, {
    * The input listener for the calls searchbox.
    */
   _onSearch: function(e) {
-    let lowerCaseSearchToken = this._searchbox.value.toLowerCase();
+    const lowerCaseSearchToken = this._searchbox.value.toLowerCase();
 
     this.filterContents(e => {
-      let call = e.attachment.actor;
-      let name = call.name.toLowerCase();
-      let file = call.file.toLowerCase();
-      let line = call.line.toString().toLowerCase();
-      let args = call.argsPreview.toLowerCase();
+      const call = e.attachment.actor;
+      const name = call.name.toLowerCase();
+      const file = call.file.toLowerCase();
+      const line = call.line.toString().toLowerCase();
+      const args = call.argsPreview.toLowerCase();
 
       return name.includes(lowerCaseSearchToken) ||
              file.includes(lowerCaseSearchToken) ||
@@ -300,18 +300,18 @@ var CallsListView = extend(WidgetMethods, {
    * When expanding an item, it's corresponding call stack will be displayed.
    */
   _onExpand: function(e) {
-    let callItem = this.getItemForElement(e.target);
-    let view = $(".call-item-view", callItem.target);
+    const callItem = this.getItemForElement(e.target);
+    const view = $(".call-item-view", callItem.target);
 
     // If the call stack nodes were already created, simply re-show them
     // or jump to the corresponding file and line in the Debugger if a
     // location link was clicked.
     if (view.hasAttribute("call-stack-populated")) {
-      let isExpanded = view.getAttribute("call-stack-expanded") == "true";
+      const isExpanded = view.getAttribute("call-stack-expanded") == "true";
 
       // If clicking on the location, jump to the Debugger.
       if (e.target.classList.contains("call-item-location")) {
-        let { file, line } = callItem.attachment.actor;
+        const { file, line } = callItem.attachment.actor;
         this._viewSourceInDebugger(file, line);
         return;
       }
@@ -322,7 +322,7 @@ var CallsListView = extend(WidgetMethods, {
       return;
     }
 
-    let list = document.createElement("vbox");
+    const list = document.createElement("vbox");
     list.className = "call-item-stack";
     view.setAttribute("call-stack-populated", "");
     view.setAttribute("call-stack-expanded", "true");
@@ -331,24 +331,24 @@ var CallsListView = extend(WidgetMethods, {
     /**
      * Creates a function call nodes in this container for a stack.
      */
-    let display = stack => {
+    const display = stack => {
       for (let i = 1; i < stack.length; i++) {
-        let call = stack[i];
+        const call = stack[i];
 
-        let contents = document.createElement("hbox");
+        const contents = document.createElement("hbox");
         contents.className = "call-item-stack-fn";
         contents.style.paddingInlineStart = (i * STACK_FUNC_INDENTATION) + "px";
 
-        let name = document.createElement("label");
+        const name = document.createElement("label");
         name.className = "plain call-item-stack-fn-name";
         name.setAttribute("value", "↳ " + call.name + "()");
         contents.appendChild(name);
 
-        let spacer = document.createElement("spacer");
+        const spacer = document.createElement("spacer");
         spacer.setAttribute("flex", "100");
         contents.appendChild(spacer);
 
-        let location = document.createElement("label");
+        const location = document.createElement("label");
         location.className = "plain call-item-stack-fn-location";
         location.setAttribute("value", getFileName(call.file) + ":" + call.line);
         location.setAttribute("crop", "start");
@@ -364,7 +364,7 @@ var CallsListView = extend(WidgetMethods, {
 
     // If this animation snapshot is loaded from disk, there are no corresponding
     // backend actors available and the data is immediately available.
-    let functionCall = callItem.attachment.actor;
+    const functionCall = callItem.attachment.actor;
     if (functionCall.isLoadedFromDisk) {
       display(functionCall.stack);
     } else {
@@ -400,7 +400,7 @@ var CallsListView = extend(WidgetMethods, {
    */
   _onResume: function() {
     // Jump to the next draw call in the recorded animation frame snapshot.
-    let drawCall = getNextDrawCall(this.items, this.selectedItem);
+    const drawCall = getNextDrawCall(this.items, this.selectedItem);
     if (drawCall) {
       this.selectedItem = drawCall;
       return;
@@ -425,8 +425,8 @@ var CallsListView = extend(WidgetMethods, {
       this._onResume();
       return;
     }
-    let callItem = this.selectedItem;
-    let { file, line } = callItem.attachment.actor;
+    const callItem = this.selectedItem;
+    const { file, line } = callItem.attachment.actor;
     this._viewSourceInDebugger(file, line);
   },
 

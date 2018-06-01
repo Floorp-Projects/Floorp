@@ -10,7 +10,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
                   <div id='retag-me'><div id='retag-me-2'></div></div>`;
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();
 
@@ -30,8 +30,8 @@ add_task(async function() {
      "#retag-me's only child is #retag-me-2");
 
   info("Changing #retag-me's tagname in the markup-view");
-  let mutated = inspector.once("markupmutation");
-  let tagEditor = container.editor.tag;
+  const mutated = inspector.once("markupmutation");
+  const tagEditor = container.editor.tag;
   setEditableFieldValue(tagEditor, "p", inspector);
   await mutated;
 

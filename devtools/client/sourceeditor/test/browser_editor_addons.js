@@ -7,7 +7,7 @@ function test() {
   waitForExplicitFinish();
 
   setup((ed, win) => {
-    let doc = win.document.querySelector("iframe").contentWindow.document;
+    const doc = win.document.querySelector("iframe").contentWindow.document;
 
     // trailingspace.js
     ed.setText("Hello   ");

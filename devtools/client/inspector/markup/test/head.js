@@ -45,7 +45,7 @@ registerCleanupFunction(() => {
  *                 - "../../../commandline/test/helpers.js"
  */
 function loadHelperScript(filePath) {
-  let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+  const testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
   Services.scriptloader.loadSubScript(testDir + "/" + filePath, this);
 }
 
@@ -56,7 +56,7 @@ function loadHelperScript(filePath) {
  */
 function reloadPage(inspector, testActor) {
   info("Reloading the page");
-  let newRoot = inspector.once("new-root");
+  const newRoot = inspector.once("new-root");
   testActor.reload();
   return newRoot;
 }
@@ -85,8 +85,8 @@ function getContainerForNodeFront(nodeFront, {markup}) {
 var getContainerForSelector =
 async function(selector, inspector, expectFailure = false) {
   info("Getting the markup-container for node " + selector);
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
   if (expectFailure) {
     ok(!container, "Shouldn't find markup-container for selector: " + selector);
@@ -105,7 +105,7 @@ async function(selector, inspector, expectFailure = false) {
  * @return {String} the nodeValue of the first
  */
 async function getFirstChildNodeValue(selector, testActor) {
-  let nodeValue = await testActor.eval(`
+  const nodeValue = await testActor.eval(`
     document.querySelector("${selector}").firstChild.nodeValue;
   `);
   return nodeValue;
@@ -139,10 +139,10 @@ function waitForChildrenUpdated({markup}) {
 var clickContainer = async function(selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
 
-  let updated = container.selected
+  const updated = container.selected
                 ? promise.resolve()
                 : inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
@@ -163,7 +163,7 @@ var clickContainer = async function(selector, inspector) {
 function setEditableFieldValue(field, value, inspector) {
   field.focus();
   EventUtils.sendKey("return", inspector.panelWin);
-  let input = inplaceEditor(field).input;
+  const input = inplaceEditor(field).input;
   ok(input, "Found editable field for setting value: " + value);
   input.value = value;
   EventUtils.sendKey("return", inspector.panelWin);
@@ -182,11 +182,11 @@ function setEditableFieldValue(field, value, inspector) {
 var addNewAttributes = async function(selector, text, inspector) {
   info(`Entering text "${text}" in new attribute field for node ${selector}`);
 
-  let container = await focusNode(selector, inspector);
+  const container = await focusNode(selector, inspector);
   ok(container, "The container for '" + selector + "' was found");
 
   info("Listening for the markupmutation event");
-  let nodeMutated = inspector.once("markupmutation");
+  const nodeMutated = inspector.once("markupmutation");
   setEditableFieldValue(container.editor.newAttr, text, inspector);
   await nodeMutated;
 };
@@ -203,13 +203,13 @@ var addNewAttributes = async function(selector, text, inspector) {
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
 var assertAttributes = async function(selector, expected, testActor) {
-  let {attributes: actual} = await testActor.getNodeInfo(selector);
+  const {attributes: actual} = await testActor.getNodeInfo(selector);
 
   is(actual.length, Object.keys(expected).length,
     "The node " + selector + " has the expected number of attributes.");
-  for (let attr in expected) {
-    let foundAttr = actual.find(({name}) => name === attr);
-    let foundValue = foundAttr ? foundAttr.value : undefined;
+  for (const attr in expected) {
+    const foundAttr = actual.find(({name}) => name === attr);
+    const foundValue = foundAttr ? foundAttr.value : undefined;
     ok(foundAttr, "The node " + selector + " has the attribute " + attr);
     is(foundValue, expected[attr],
       "The node " + selector + " has the correct " + attr + " attribute value");
@@ -225,13 +225,13 @@ var assertAttributes = async function(selector, expected, testActor) {
  * rejects if no undo action is possible
  */
 function undoChange(inspector) {
-  let canUndo = inspector.markup.undo.canUndo();
+  const canUndo = inspector.markup.undo.canUndo();
   ok(canUndo, "The last change in the markup-view can be undone");
   if (!canUndo) {
     return promise.reject();
   }
 
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   inspector.markup.undo.undo();
   return mutated;
 }
@@ -245,13 +245,13 @@ function undoChange(inspector) {
  * rejects if no redo action is possible
  */
 function redoChange(inspector) {
-  let canRedo = inspector.markup.undo.canRedo();
+  const canRedo = inspector.markup.undo.canRedo();
   ok(canRedo, "The last change in the markup-view can be redone");
   if (!canRedo) {
     return promise.reject();
   }
 
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   inspector.markup.undo.redo();
   return mutated;
 }
@@ -273,7 +273,7 @@ function getSelectorSearchBox(inspector) {
  */
 function searchUsingSelectorSearch(selector, inspector) {
   info("Entering \"" + selector + "\" into the selector-search input field");
-  let field = getSelectorSearchBox(inspector);
+  const field = getSelectorSearchBox(inspector);
   field.focus();
   field.value = selector;
   EventUtils.sendKey("return", inspector.panelWin);
@@ -293,11 +293,11 @@ var isEditingMenuDisabled = async function(nodeFront, inspector, assert = true) 
   clipboard.copyString("<p>test</p>");
 
   await selectNode(nodeFront, inspector);
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
-  let editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
-  let pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
+  const deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
+  const editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
+  const pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
 
   if (assert) {
     ok(deleteMenuItem.disabled, "Delete menu item is disabled");
@@ -324,11 +324,11 @@ var isEditingMenuEnabled = async function(nodeFront, inspector, assert = true) {
   clipboard.copyString("<p>test</p>");
 
   await selectNode(nodeFront, inspector);
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
-  let editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
-  let pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
+  const deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
+  const editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
+  const pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
 
   if (assert) {
     ok(!deleteMenuItem.disabled, "Delete menu item is enabled");
@@ -382,10 +382,10 @@ function collapseSelectionAndShiftTab(inspector) {
  * @param {Boolean} editMode Whether or not the attribute should be in edit mode
  */
 function checkFocusedAttribute(attrName, editMode) {
-  let focusedAttr = Services.focus.focusedElement;
+  const focusedAttr = Services.focus.focusedElement;
   ok(focusedAttr, "Has a focused element");
 
-  let dataAttr = focusedAttr.parentNode.dataset.attr;
+  const dataAttr = focusedAttr.parentNode.dataset.attr;
   is(dataAttr, attrName, attrName + " attribute editor is currently focused.");
   if (editMode) {
     // Using a multiline editor for attributes, the focused element should be a textarea.
@@ -405,7 +405,7 @@ function checkFocusedAttribute(attrName, editMode) {
  *         (e.g. ["id", "class", "href"])
  */
 var getAttributesFromEditor = async function(selector, inspector) {
-  let nodeList = (await getContainerForSelector(selector, inspector))
+  const nodeList = (await getContainerForSelector(selector, inspector))
     .tagLine.querySelectorAll("[data-attr]");
 
   return [...nodeList].map(node => node.getAttribute("data-attr"));
@@ -431,17 +431,17 @@ var getAttributesFromEditor = async function(selector, inspector) {
  * - form {Object}: The JSON actor form provided by the server.
  */
 function registerTabActor(client, options) {
-  let moduleUrl = options.moduleUrl;
+  const moduleUrl = options.moduleUrl;
 
   return client.listTabs().then(response => {
-    let config = {
+    const config = {
       prefix: options.prefix,
       constructor: options.actorClass,
       type: { tab: true },
     };
 
     // Register the custom actor on the backend.
-    let registry = ActorRegistryFront(client, response);
+    const registry = ActorRegistryFront(client, response);
     return registry.registerActor(moduleUrl, config).then(registrar => {
       return client.getTab().then(tabResponse => ({
         registrar: registrar,
@@ -477,12 +477,12 @@ function unregisterActor(registrar, front) {
  * @param {Number} yOffset Optional y offset to drag by.
  */
 async function simulateNodeDrag(inspector, selector, xOffset = 10, yOffset = 10) {
-  let container = typeof selector === "string"
+  const container = typeof selector === "string"
                   ? await getContainerForSelector(selector, inspector)
                   : selector;
-  let rect = container.tagLine.getBoundingClientRect();
-  let scrollX = inspector.markup.doc.documentElement.scrollLeft;
-  let scrollY = inspector.markup.doc.documentElement.scrollTop;
+  const rect = container.tagLine.getBoundingClientRect();
+  const scrollX = inspector.markup.doc.documentElement.scrollLeft;
+  const scrollY = inspector.markup.doc.documentElement.scrollTop;
 
   info("Simulate mouseDown on element " + selector);
   container._onMouseDown({
@@ -516,7 +516,7 @@ async function simulateNodeDrag(inspector, selector, xOffset = 10, yOffset = 10)
  */
 async function simulateNodeDrop(inspector, selector) {
   info("Simulate mouseUp on element " + selector);
-  let container = typeof selector === "string"
+  const container = typeof selector === "string"
                   ? await getContainerForSelector(selector, inspector)
                   : selector;
   container.onMouseUp();
@@ -541,8 +541,8 @@ async function simulateNodeDragAndDrop(inspector, selector, xOffset, yOffset) {
  * Waits until the element has not scrolled for 30 consecutive frames.
  */
 async function waitForScrollStop(doc) {
-  let el = doc.documentElement;
-  let win = doc.defaultView;
+  const el = doc.documentElement;
+  const win = doc.defaultView;
   let lastScrollTop = el.scrollTop;
   let stopFrameCount = 0;
   while (stopFrameCount < 30) {
@@ -588,7 +588,7 @@ async function checkDeleteAndSelection(inspector, key,
   await clickContainer(selector, inspector);
 
   info("Delete the node with: " + key);
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   EventUtils.sendKey(key, inspector.panelWin);
   await Promise.all([mutated, inspector.once("inspector-updated")]);
 
@@ -597,7 +597,7 @@ async function checkDeleteAndSelection(inspector, key,
     // Update the selector for logging in case of failure.
     focusedSelector = focusedSelector + "::" + pseudo;
     // Retrieve the :before or :after pseudo element of the nodeFront.
-    let {nodes} = await inspector.walker.children(nodeFront);
+    const {nodes} = await inspector.walker.children(nodeFront);
     nodeFront = pseudo === "before" ? nodes[0] : nodes[nodes.length - 1];
   }
 

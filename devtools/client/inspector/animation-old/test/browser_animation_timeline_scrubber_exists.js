@@ -10,10 +10,10 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let timeline = panel.animationsTimelineComponent;
-  let scrubberEl = timeline.scrubberEl;
+  const timeline = panel.animationsTimelineComponent;
+  const scrubberEl = timeline.scrubberEl;
 
   ok(scrubberEl, "The scrubber element exists");
   ok(scrubberEl.classList.contains("scrubber"), "It has the right classname");

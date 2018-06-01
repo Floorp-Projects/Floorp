@@ -12,9 +12,9 @@ const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 
 add_task(async function() {
   await addTab("about:blank");
-  let [host, , doc] = await createHost("bottom", TEST_URI);
+  const [host, , doc] = await createHost("bottom", TEST_URI);
 
-  let table = new TableWidget(doc.querySelector("box"), {
+  const table = new TableWidget(doc.querySelector("box"), {
     initialColumns: {
       col1: "Column 1",
       col2: "Column 2",
@@ -100,7 +100,7 @@ function populateTable(doc, table) {
     col4: "value34"
   });
 
-  let span = doc.createElement("span");
+  const span = doc.createElement("span");
   span.textContent = "domnode";
 
   table.push({
@@ -170,12 +170,12 @@ function testAPI(doc, table) {
   // Nothing should be selected beforehand
   ok(!doc.querySelector(".theme-selected"), "Nothing is selected");
   table.selectRow("id4");
-  let node = doc.querySelector(".theme-selected");
+  const node = doc.querySelector(".theme-selected");
   ok(!!node, "Somthing got selected");
   is(node.getAttribute("data-id"), "id4", "Correct node selected");
 
   table.selectRow("id7");
-  let node2 = doc.querySelector(".theme-selected");
+  const node2 = doc.querySelector(".theme-selected");
   ok(!!node2, "Somthing is still selected");
   isnot(node, node2, "Newly selected node is different from previous");
   is(node2.getAttribute("data-id"), "id7", "Correct node selected");
@@ -194,7 +194,7 @@ function testAPI(doc, table) {
   }), "isSelected with json works");
 
   table.selectedRow = "id4";
-  let node3 = doc.querySelector(".theme-selected");
+  const node3 = doc.querySelector(".theme-selected");
   ok(!!node3, "Somthing is still selected");
   isnot(node2, node3, "Newly selected node is different from previous");
   is(node3, node, "First and third selected nodes should be same");
@@ -364,8 +364,8 @@ function testAPI(doc, table) {
 
 function checkAscendingOrder(cell) {
   while (cell) {
-    let currentCell = cell.value || cell.textContent;
-    let prevCell = cell.previousSibling.value ||
+    const currentCell = cell.value || cell.textContent;
+    const prevCell = cell.previousSibling.value ||
                    cell.previousSibling.textContent;
     ok(currentCell >= prevCell, "Sorting is in ascending order");
     cell = cell.nextSibling;
@@ -374,8 +374,8 @@ function checkAscendingOrder(cell) {
 
 function checkDescendingOrder(cell) {
   while (cell != cell.parentNode.firstChild) {
-    let currentCell = cell.value || cell.textContent;
-    let nextCell = cell.nextSibling.value || cell.nextSibling.textContent;
+    const currentCell = cell.value || cell.textContent;
+    const nextCell = cell.nextSibling.value || cell.nextSibling.textContent;
     ok(currentCell >= nextCell, "Sorting is in descending order");
     cell = cell.previousSibling;
   }

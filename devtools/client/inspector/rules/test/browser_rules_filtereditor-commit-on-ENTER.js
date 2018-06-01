@@ -9,10 +9,10 @@ const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
 
   info("Get the filter swatch element");
-  let swatch = getRuleViewProperty(view, "body", "filter").valueSpan
+  const swatch = getRuleViewProperty(view, "body", "filter").valueSpan
     .querySelector(".ruleview-filterswatch");
 
   info("Click on the filter swatch element");
@@ -24,8 +24,8 @@ add_task(async function() {
   await onRuleViewChanged;
 
   info("Get the cssfilter widget instance");
-  let filterTooltip = view.tooltips.getTooltip("filterEditor");
-  let widget = filterTooltip.widget;
+  const filterTooltip = view.tooltips.getTooltip("filterEditor");
+  const widget = filterTooltip.widget;
 
   info("Set a new value in the cssfilter widget");
   onRuleViewChanged = view.once("ruleview-changed");

@@ -7,7 +7,7 @@
 
 add_task(async function() {
   const TEST_URL = "https://test1.example.com/browser/devtools/client/styleeditor/test/bug_1405342_serviceworker_iframes.html";
-  let { ui } = await openStyleEditorForURL(TEST_URL);
+  const { ui } = await openStyleEditorForURL(TEST_URL);
 
   if (ui.editors.length != 1) {
     info("Stylesheet isn't available immediately, waiting for it");
@@ -16,8 +16,8 @@ add_task(async function() {
   is(ui.editors.length, 1, "Got the iframe stylesheet");
 
   await ui.selectStyleSheet(ui.editors[0].styleSheet);
-  let editor = await ui.editors[0].getSourceEditor();
-  let text = editor.sourceEditor.getText();
+  const editor = await ui.editors[0].getSourceEditor();
+  const text = editor.sourceEditor.getText();
   is(text, "* { color: green; }",
     "stylesheet content is the one served by the service worker");
 });

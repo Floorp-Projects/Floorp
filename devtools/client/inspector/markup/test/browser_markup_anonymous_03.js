@@ -12,33 +12,33 @@ const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 add_task(async function() {
   Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
-  let shadowHostFront = await getNodeFront("#shadow", inspector.markup);
+  const shadowHostFront = await getNodeFront("#shadow", inspector.markup);
   is(shadowHostFront.numChildren, 3, "Children of the shadow host are correct");
 
   await inspector.markup.expandNode(shadowHostFront);
   await waitForMultipleChildrenUpdates(inspector);
 
-  let shadowContainer = inspector.markup.getContainer(shadowHostFront);
-  let containers = shadowContainer.getChildContainers();
+  const shadowContainer = inspector.markup.getContainer(shadowHostFront);
+  const containers = shadowContainer.getChildContainers();
 
   info("Checking the ::before pseudo element");
-  let before = containers[1].node;
+  const before = containers[1].node;
   await isEditingMenuDisabled(before, inspector);
 
   info("Checking shadow dom children");
-  let shadowRootFront = containers[0].node;
-  let children = await inspector.walker.children(shadowRootFront);
+  const shadowRootFront = containers[0].node;
+  const children = await inspector.walker.children(shadowRootFront);
 
   is(shadowRootFront.numChildren, 2, "Children of the shadow root are counted");
   is(children.nodes.length, 2, "Children returned from walker");
 
   info("Checking the <h3> shadow element");
-  let shadowChild1 = children.nodes[0];
+  const shadowChild1 = children.nodes[0];
   await isEditingMenuDisabled(shadowChild1, inspector);
 
   info("Checking the <select> shadow element");
-  let shadowChild2 = children.nodes[1];
+  const shadowChild2 = children.nodes[1];
   await isEditingMenuDisabled(shadowChild2, inspector);
 });

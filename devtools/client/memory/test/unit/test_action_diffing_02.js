@@ -11,10 +11,10 @@ const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapsh
 const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
@@ -33,7 +33,7 @@ add_task(async function() {
   dispatch(toggleDiffing());
   ok(getState().diffing, "now diffing after toggling");
 
-  for (let s of getState().snapshots) {
+  for (const s of getState().snapshots) {
     ok(!s.selected,
        "No snapshot should be selected after entering diffing mode");
   }

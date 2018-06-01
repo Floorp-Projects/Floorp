@@ -16,13 +16,13 @@ add_task(async function() {
   await selectJsonViewContentTab("headers");
 
   // Check displayed headers
-  let count = await getElementCount(".headersPanelBox .netHeadersGroup");
+  const count = await getElementCount(".headersPanelBox .netHeadersGroup");
   is(count, 2, "There must be two header groups");
 
-  let text = await getElementText(".headersPanelBox .netInfoHeadersTable");
+  const text = await getElementText(".headersPanelBox .netInfoHeadersTable");
   isnot(text, "", "Headers text must not be empty");
 
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
   await waitForClipboardPromise(function setup() {

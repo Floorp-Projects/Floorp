@@ -115,7 +115,7 @@ StyleEditorUI.prototype = {
 
     this.createUI();
 
-    let styleSheets = await this._debuggee.getStyleSheets();
+    const styleSheets = await this._debuggee.getStyleSheets();
     await this._resetStyleSheetList(styleSheets);
 
     this._target.on("will-navigate", this._clear);
@@ -123,11 +123,11 @@ StyleEditorUI.prototype = {
   },
 
   async initializeHighlighter() {
-    let toolbox = gDevTools.getToolbox(this._target);
+    const toolbox = gDevTools.getToolbox(this._target);
     await toolbox.initInspector();
     this._walker = toolbox.walker;
 
-    let hUtils = toolbox.highlighterUtils;
+    const hUtils = toolbox.highlighterUtils;
 
     try {
       this._highlighter =
@@ -145,7 +145,7 @@ StyleEditorUI.prototype = {
    * Build the initial UI and wire buttons with event handlers.
    */
   createUI: function() {
-    let viewRoot = this._root.parentNode.querySelector(".splitview-root");
+    const viewRoot = this._root.parentNode.querySelector(".splitview-root");
 
     this._view = new SplitView(viewRoot);
 
@@ -186,7 +186,7 @@ StyleEditorUI.prototype = {
     this._openLinkNewTabItem.addEventListener("command",
                                               this._openLinkNewTab);
 
-    let nav = this._panelDoc.querySelector(".splitview-controller");
+    const nav = this._panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
   },
 
@@ -234,7 +234,7 @@ StyleEditorUI.prototype = {
     this._clear();
     this._suppressAdd = false;
 
-    for (let sheet of styleSheets) {
+    for (const sheet of styleSheets) {
       try {
         await this._addStyleSheet(sheet);
       } catch (e) {
@@ -254,8 +254,8 @@ StyleEditorUI.prototype = {
   _clear: function() {
     // remember selected sheet and line number for next load
     if (this.selectedEditor && this.selectedEditor.sourceEditor) {
-      let href = this.selectedEditor.styleSheet.href;
-      let {line, ch} = this.selectedEditor.sourceEditor.getCursor();
+      const href = this.selectedEditor.styleSheet.href;
+      const {line, ch} = this.selectedEditor.sourceEditor.getCursor();
 
       this._styleSheetToSelect = {
         stylesheet: href,
@@ -265,9 +265,9 @@ StyleEditorUI.prototype = {
     }
 
     // remember saved file locations
-    for (let editor of this.editors) {
+    for (const editor of this.editors) {
       if (editor.savedFile) {
-        let identifier = this.getStyleSheetIdentifier(editor.styleSheet);
+        const identifier = this.getStyleSheetIdentifier(editor.styleSheet);
         this.savedLocations[identifier] = editor.savedFile;
       }
     }
@@ -304,18 +304,18 @@ StyleEditorUI.prototype = {
     }
 
     if (!this._seenSheets.has(styleSheet)) {
-      let promise = (async () => {
+      const promise = (async () => {
         let editor = await this._addStyleSheetEditor(styleSheet, isNew);
 
-        let toolbox = gDevTools.getToolbox(this._target);
-        let sourceMapService = toolbox.sourceMapService;
+        const toolbox = gDevTools.getToolbox(this._target);
+        const sourceMapService = toolbox.sourceMapService;
         if (!sourceMapService) {
           return editor;
         }
 
-        let {href, nodeHref, actorID: id, sourceMapURL} = styleSheet;
-        let url = href || nodeHref;
-        let sources = await sourceMapService.getOriginalURLs({
+        const {href, nodeHref, actorID: id, sourceMapURL} = styleSheet;
+        const url = href || nodeHref;
+        const sources = await sourceMapService.getOriginalURLs({
           id,
           url,
           sourceMapURL,
@@ -323,13 +323,13 @@ StyleEditorUI.prototype = {
         // A single generated sheet might map to multiple original
         // sheets, so make editors for each of them.
         if (sources && sources.length) {
-          let parentEditorName = editor.friendlyName;
+          const parentEditorName = editor.friendlyName;
           this._removeStyleSheetEditor(editor);
           editor = null;
 
-          for (let source of sources) {
-            let generatedId = sourceMapService.generatedToOriginalId(id, source);
-            let original = new OriginalSource(source, generatedId, sourceMapService);
+          for (const source of sources) {
+            const generatedId = sourceMapService.generatedToOriginalId(id, source);
+            const original = new OriginalSource(source, generatedId, sourceMapService);
 
             // set so the first sheet will be selected, even if it's a source
             original.styleSheetIndex = styleSheet.styleSheetIndex;
@@ -359,13 +359,13 @@ StyleEditorUI.prototype = {
   async _addStyleSheetEditor(styleSheet, isNew) {
     // recall location of saved file for this sheet after page reload
     let file = null;
-    let identifier = this.getStyleSheetIdentifier(styleSheet);
-    let savedFile = this.savedLocations[identifier];
+    const identifier = this.getStyleSheetIdentifier(styleSheet);
+    const savedFile = this.savedLocations[identifier];
     if (savedFile) {
       file = savedFile;
     }
 
-    let editor = new StyleSheetEditor(styleSheet, this._window, file, isNew,
+    const editor = new StyleSheetEditor(styleSheet, this._window, file, isNew,
                                       this._walker, this._highlighter);
 
     editor.on("property-change", this._summaryChange.bind(this, editor));
@@ -393,7 +393,7 @@ StyleEditorUI.prototype = {
    *        Optional parent window for the file picker.
    */
   _importFromFile: function(file, parentWindow) {
-    let onFileSelected = (selectedFile) => {
+    const onFileSelected = (selectedFile) => {
       if (!selectedFile) {
         // nothing selected
         return;
@@ -408,7 +408,7 @@ StyleEditorUI.prototype = {
           this.emit("error", { key: LOAD_ERROR, level: "warning" });
           return;
         }
-        let source =
+        const source =
             NetUtil.readInputStreamToString(stream, stream.available());
         stream.close();
 
@@ -443,7 +443,7 @@ StyleEditorUI.prototype = {
    * Toggle the original sources pref.
    */
   _toggleOrigSources: function() {
-    let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    const isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
@@ -451,7 +451,7 @@ StyleEditorUI.prototype = {
    * Toggle the pref for showing a @media rules sidebar in each editor.
    */
   _toggleMediaSidebar: function() {
-    let isEnabled = Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR);
+    const isEnabled = Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR);
     Services.prefs.setBoolPref(PREF_MEDIA_SIDEBAR, !isEnabled);
   },
 
@@ -501,7 +501,7 @@ StyleEditorUI.prototype = {
     if (editor.summary) {
       this._view.removeItem(editor.summary);
     } else {
-      let self = this;
+      const self = this;
       this.on("editor-added", function onAdd(added) {
         if (editor == added) {
           self.off("editor-added", onAdd);
@@ -518,7 +518,7 @@ StyleEditorUI.prototype = {
    * Clear all the editors from the UI.
    */
   _clearStyleSheetEditors: function() {
-    for (let editor of this.editors) {
+    for (const editor of this.editors) {
       editor.destroy();
     }
     this.editors = [];
@@ -542,7 +542,7 @@ StyleEditorUI.prototype = {
       disableAnimations: this._alwaysDisableAnimations,
       ordinal: ordinal,
       onCreate: (summary, details, data) => {
-        let createdEditor = data.editor;
+        const createdEditor = data.editor;
         createdEditor.summary = summary;
         createdEditor.details = details;
 
@@ -583,19 +583,19 @@ StyleEditorUI.prototype = {
           }
         });
 
-        let sidebar = details.querySelector(".stylesheet-sidebar");
+        const sidebar = details.querySelector(".stylesheet-sidebar");
         sidebar.setAttribute("width",
             Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH));
 
-        let splitter = details.querySelector(".devtools-side-splitter");
+        const splitter = details.querySelector(".devtools-side-splitter");
         splitter.addEventListener("mousemove", () => {
-          let sidebarWidth = sidebar.getAttribute("width");
+          const sidebarWidth = sidebar.getAttribute("width");
           Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
 
           // update all @media sidebars for consistency
-          let sidebars =
+          const sidebars =
               [...this._panelDoc.querySelectorAll(".stylesheet-sidebar")];
-          for (let mediaSidebar of sidebars) {
+          for (const mediaSidebar of sidebars) {
             mediaSidebar.setAttribute("width", sidebarWidth);
           }
         });
@@ -619,13 +619,13 @@ StyleEditorUI.prototype = {
       },
 
       onShow: (summary, details, data) => {
-        let showEditor = data.editor;
+        const showEditor = data.editor;
         this.selectedEditor = showEditor;
 
         (async function() {
           if (!showEditor.sourceEditor) {
             // only initialize source editor when we switch to this view
-            let inputElement =
+            const inputElement =
                 details.querySelector(".stylesheet-editor-input");
             await showEditor.load(inputElement, this._cssProperties);
           }
@@ -635,22 +635,22 @@ StyleEditorUI.prototype = {
           this.emit("editor-selected", showEditor);
 
           // Is there any CSS coverage markup to include?
-          let usage = await csscoverage.getUsage(this._target);
+          const usage = await csscoverage.getUsage(this._target);
           if (usage == null) {
             return;
           }
 
-          let sheet = showEditor.styleSheet;
-          let {reports} = await usage.createEditorReportForSheet(sheet);
+          const sheet = showEditor.styleSheet;
+          const {reports} = await usage.createEditorReportForSheet(sheet);
 
           showEditor.removeAllUnusedRegions();
 
           if (reports.length > 0) {
             // Only apply if this file isn't compressed. We detect a
             // compressed file if there are more rules than lines.
-            let editorText = showEditor.sourceEditor.getText();
-            let lineCount = editorText.split("\n").length;
-            let ruleCount = showEditor.styleSheet.ruleCount;
+            const editorText = showEditor.sourceEditor.getText();
+            const lineCount = editorText.split("\n").length;
+            const ruleCount = showEditor.styleSheet.ruleCount;
             if (lineCount >= ruleCount) {
               showEditor.addUnusedRegions(reports);
             } else {
@@ -669,9 +669,9 @@ StyleEditorUI.prototype = {
    *         Promise that will resolve when the editor is selected.
    */
   switchToSelectedSheet: function() {
-    let toSelect = this._styleSheetToSelect;
+    const toSelect = this._styleSheetToSelect;
 
-    for (let editor of this.editors) {
+    for (const editor of this.editors) {
       if (this._isEditorToSelect(editor)) {
         // The _styleSheetBoundToSelect will always hold the latest pending
         // requested style sheet (with line and column) which is not yet
@@ -694,11 +694,11 @@ StyleEditorUI.prototype = {
    *        The editor to test.
    */
   _isEditorToSelect: function(editor) {
-    let toSelect = this._styleSheetToSelect;
+    const toSelect = this._styleSheetToSelect;
     if (!toSelect) {
       return false;
     }
-    let isHref = toSelect.stylesheet === null ||
+    const isHref = toSelect.stylesheet === null ||
                  typeof toSelect.stylesheet == "string";
 
     return (isHref && editor.styleSheet.href == toSelect.stylesheet) ||
@@ -722,12 +722,12 @@ StyleEditorUI.prototype = {
     line = line || 0;
     col = col || 0;
 
-    let editorPromise = editor.getSourceEditor().then(() => {
+    const editorPromise = editor.getSourceEditor().then(() => {
       editor.sourceEditor.setCursor({line: line, ch: col});
       this._styleSheetBoundToSelect = null;
     });
 
-    let summaryPromise = this.getEditorSummary(editor).then((summary) => {
+    const summaryPromise = this.getEditorSummary(editor).then((summary) => {
       this._view.activeSummary = summary;
     });
 
@@ -735,7 +735,7 @@ StyleEditorUI.prototype = {
   },
 
   getEditorSummary: function(editor) {
-    let self = this;
+    const self = this;
 
     if (editor.summary) {
       return Promise.resolve(editor.summary);
@@ -752,7 +752,7 @@ StyleEditorUI.prototype = {
   },
 
   getEditorDetails: function(editor) {
-    let self = this;
+    const self = this;
 
     if (editor.details) {
       return Promise.resolve(editor.details);
@@ -839,7 +839,7 @@ StyleEditorUI.prototype = {
       ruleCount = "-";
     }
 
-    let flags = [];
+    const flags = [];
     if (editor.styleSheet.disabled) {
       flags.push("disabled");
     }
@@ -851,7 +851,7 @@ StyleEditorUI.prototype = {
     }
     this._view.setItemClassName(summary, flags.join(" "));
 
-    let label = summary.querySelector(".stylesheet-name > label");
+    const label = summary.querySelector(".stylesheet-name > label");
     label.setAttribute("value", editor.friendlyName);
     if (editor.styleSheet.href) {
       label.setAttribute("tooltiptext", editor.styleSheet.href);
@@ -880,21 +880,21 @@ StyleEditorUI.prototype = {
    */
   _updateMediaList: function(editor) {
     (async function() {
-      let details = await this.getEditorDetails(editor);
-      let list = details.querySelector(".stylesheet-media-list");
+      const details = await this.getEditorDetails(editor);
+      const list = details.querySelector(".stylesheet-media-list");
 
       while (list.firstChild) {
         list.firstChild.remove();
       }
 
-      let rules = editor.mediaRules;
-      let showSidebar = Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR);
-      let sidebar = details.querySelector(".stylesheet-sidebar");
+      const rules = editor.mediaRules;
+      const showSidebar = Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR);
+      const sidebar = details.querySelector(".stylesheet-sidebar");
 
       let inSource = false;
 
-      for (let rule of rules) {
-        let {line, column, parentStyleSheet} = rule;
+      for (const rule of rules) {
+        const {line, column, parentStyleSheet} = rule;
 
         let location = {
           line: line,
@@ -903,7 +903,7 @@ StyleEditorUI.prototype = {
           styleSheet: parentStyleSheet
         };
         if (editor.styleSheet.isOriginalSource) {
-          let styleSheet = editor.cssSheet;
+          const styleSheet = editor.cssSheet;
           location = await editor.styleSheet.getOriginalLocation(styleSheet, line,
                                                                  column);
         }
@@ -914,12 +914,12 @@ StyleEditorUI.prototype = {
         }
         inSource = true;
 
-        let div = this._panelDoc.createElement("div");
+        const div = this._panelDoc.createElement("div");
         div.className = "media-rule-label";
         div.addEventListener("click",
                              this._jumpToLocation.bind(this, location));
 
-        let cond = this._panelDoc.createElement("div");
+        const cond = this._panelDoc.createElement("div");
         cond.className = "media-rule-condition";
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
@@ -931,7 +931,7 @@ StyleEditorUI.prototype = {
         }
         div.appendChild(cond);
 
-        let link = this._panelDoc.createElement("div");
+        const link = this._panelDoc.createElement("div");
         link.className = "media-rule-line theme-link";
         if (location.line != -1) {
           link.textContent = ":" + location.line;
@@ -961,13 +961,13 @@ StyleEditorUI.prototype = {
     let match = minMaxPattern.exec(rawText);
     let lastParsed = 0;
     while (match && match.index != minMaxPattern.lastIndex) {
-      let matchEnd = match.index + match[0].length;
-      let node = this._panelDoc.createTextNode(
+      const matchEnd = match.index + match[0].length;
+      const node = this._panelDoc.createTextNode(
         rawText.substring(lastParsed, match.index)
       );
       element.appendChild(node);
 
-      let link = this._panelDoc.createElement("a");
+      const link = this._panelDoc.createElement("a");
       link.href = "#";
       link.className = "media-responsive-mode-toggle";
       link.textContent = rawText.substring(match.index, matchEnd);
@@ -978,7 +978,7 @@ StyleEditorUI.prototype = {
       lastParsed = matchEnd;
     }
 
-    let node = this._panelDoc.createTextNode(
+    const node = this._panelDoc.createTextNode(
       rawText.substring(lastParsed, rawText.length)
     );
     element.appendChild(node);
@@ -992,11 +992,11 @@ StyleEditorUI.prototype = {
    *        Event object
    */
   _onMediaConditionClick: function(e) {
-    let conditionText = e.target.textContent;
-    let isWidthCond = conditionText.toLowerCase().indexOf("width") > -1;
-    let mediaVal = parseInt(/\d+/.exec(conditionText), 10);
+    const conditionText = e.target.textContent;
+    const isWidthCond = conditionText.toLowerCase().indexOf("width") > -1;
+    const mediaVal = parseInt(/\d+/.exec(conditionText), 10);
 
-    let options = isWidthCond ? {width: mediaVal} : {height: mediaVal};
+    const options = isWidthCond ? {width: mediaVal} : {height: mediaVal};
     this._launchResponsiveMode(options);
     e.preventDefault();
     e.stopPropagation();
@@ -1009,8 +1009,8 @@ StyleEditorUI.prototype = {
    *         Object with width or/and height properties.
    */
   async _launchResponsiveMode(options = {}) {
-    let tab = this._target.tab;
-    let win = this._target.tab.ownerDocument.defaultView;
+    const tab = this._target.tab;
+    const win = this._target.tab.ownerDocument.defaultView;
 
     await ResponsiveUIManager.openIfNeeded(win, tab, { trigger: "style_editor" });
     ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(options);
@@ -1023,7 +1023,7 @@ StyleEditorUI.prototype = {
    *         Location object with 'line', 'column', and 'source' properties.
    */
   _jumpToLocation: function(location) {
-    let source = location.styleSheet || location.source;
+    const source = location.styleSheet || location.source;
     this.selectStyleSheet(source, location.line - 1, location.column - 1);
   },
 
@@ -1038,8 +1038,8 @@ StyleEditorUI.prototype = {
     this._seenSheets = null;
     this._suppressAdd = false;
 
-    let sidebar = this._panelDoc.querySelector(".splitview-controller");
-    let sidebarWidth = sidebar.getAttribute("width");
+    const sidebar = this._panelDoc.querySelector(".splitview-controller");
+    const sidebarWidth = sidebar.getAttribute("width");
     Services.prefs.setIntPref(PREF_NAV_WIDTH, sidebarWidth);
 
     this._optionsMenu.removeEventListener("popupshowing",

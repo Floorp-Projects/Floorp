@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(STATISTICS_URL);
+  const { monitor } = await initNetMonitor(STATISTICS_URL);
   info("Starting test... ");
 
-  let panel = monitor.panelWin;
-  let { document, store, windowRequire, connector } = panel;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const panel = monitor.panelWin;
+  const { document, store, windowRequire, connector } = panel;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   ok(document.querySelector(".monitor-panel"),
     "The current main panel is correct.");

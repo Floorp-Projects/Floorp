@@ -28,9 +28,9 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let parentEnv = packet.frame.environment.parent;
-    let bindings = parentEnv.bindings;
-    let args = bindings.arguments;
-    let vars = bindings.variables;
+    const bindings = parentEnv.bindings;
+    const args = bindings.arguments;
+    const vars = bindings.variables;
     Assert.notEqual(parentEnv, undefined);
     Assert.equal(args.length, 0);
     Assert.equal(vars.stopMe.value.type, "object");
@@ -40,7 +40,7 @@ function test_pause_frame() {
     // Skip the global lexical scope.
     parentEnv = parentEnv.parent.parent;
     Assert.notEqual(parentEnv, undefined);
-    let objClient = gThreadClient.pauseGrip(parentEnv.object);
+    const objClient = gThreadClient.pauseGrip(parentEnv.object);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.Object.value.type, "object");
       Assert.equal(response.ownProperties.Object.value.class, "Function");

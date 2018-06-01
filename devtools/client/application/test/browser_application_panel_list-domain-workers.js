@@ -16,8 +16,8 @@ const EMPTY_URL = (URL_ROOT + "service-workers/empty.html")
 add_task(async function() {
   await enableApplicationPanel();
 
-  let { panel, target } = await openNewTabAndApplicationPanel(SIMPLE_URL);
-  let doc = panel.panelWin.document;
+  const { panel, target } = await openNewTabAndApplicationPanel(SIMPLE_URL);
+  const doc = panel.panelWin.document;
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);

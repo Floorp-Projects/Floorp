@@ -190,7 +190,7 @@ var $all = (selector, target = document) => target.querySelectorAll(selector);
  */
 function getFileName(url) {
   try {
-    let { fileName } = NetworkHelper.nsIURL(url);
+    const { fileName } = NetworkHelper.nsIURL(url);
     return fileName || "/";
   } catch (e) {
     // This doesn't look like a url, or nsIURL can't handle it.
@@ -213,7 +213,7 @@ function getFileName(url) {
  *         The requested image data buffer.
  */
 function getImageDataStorage(ctx, w, h) {
-  let storage = getImageDataStorage.cache;
+  const storage = getImageDataStorage.cache;
   if (storage && storage.width == w && storage.height == h) {
     return storage;
   }
@@ -244,7 +244,7 @@ getImageDataStorage.cache = null;
  *                      supplied pixels don't completely cover the canvas.
  */
 function drawImage(canvas, width, height, pixels, options = {}) {
-  let ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
   // FrameSnapshot actors return "snapshot-image" type instances with just an
   // empty pixel array if the source image is completely transparent.
@@ -253,12 +253,12 @@ function drawImage(canvas, width, height, pixels, options = {}) {
     return;
   }
 
-  let imageData = getImageDataStorage(ctx, width, height);
+  const imageData = getImageDataStorage(ctx, width, height);
   imageData.data.set(pixels);
 
   if (options.centered) {
-    let left = (canvas.width - width) / 2;
-    let top = (canvas.height - height) / 2;
+    const left = (canvas.width - width) / 2;
+    const top = (canvas.height - height) / 2;
     ctx.putImageData(imageData, left, top);
   } else {
     ctx.putImageData(imageData, 0, 0);
@@ -279,7 +279,7 @@ function drawImage(canvas, width, height, pixels, options = {}) {
  *        An array buffer view of the image data.
  */
 function drawBackground(id, width, height, pixels) {
-  let canvas = document.createElementNS(HTML_NS, "canvas");
+  const canvas = document.createElementNS(HTML_NS, "canvas");
   canvas.width = width;
   canvas.height = height;
 
@@ -297,8 +297,8 @@ function drawBackground(id, width, height, pixels) {
  */
 function getNextDrawCall(calls, call) {
   for (let i = calls.indexOf(call) + 1, len = calls.length; i < len; i++) {
-    let nextCall = calls[i];
-    let name = nextCall.attachment.actor.name;
+    const nextCall = calls[i];
+    const name = nextCall.attachment.actor.name;
     if (CanvasFront.DRAW_CALLS.has(name)) {
       return nextCall;
     }
@@ -312,8 +312,8 @@ function getNextDrawCall(calls, call) {
  */
 function getScreenshotFromCallLoadedFromDisk(calls, call) {
   for (let i = calls.indexOf(call); i >= 0; i--) {
-    let prevCall = calls[i];
-    let screenshot = prevCall.screenshot;
+    const prevCall = calls[i];
+    const screenshot = prevCall.screenshot;
     if (screenshot) {
       return screenshot;
     }
@@ -326,7 +326,7 @@ function getScreenshotFromCallLoadedFromDisk(calls, call) {
  */
 function getThumbnailForCall(thumbnails, index) {
   for (let i = thumbnails.length - 1; i >= 0; i--) {
-    let thumbnail = thumbnails[i];
+    const thumbnail = thumbnails[i];
     if (thumbnail.index <= index) {
       return thumbnail;
     }

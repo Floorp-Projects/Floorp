@@ -19,22 +19,22 @@ function test() {
 }
 
 function runTests() {
-  let sp = gScratchpadWindow.Scratchpad;
+  const sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
-  let environmentMenu = gScratchpadWindow.document
+  const environmentMenu = gScratchpadWindow.document
                           .getElementById("sp-environment-menu");
   ok(environmentMenu, "Environment menu element exists");
   ok(!environmentMenu.hasAttribute("hidden"),
      "Environment menu is visible");
 
-  let errorConsoleCommand = gScratchpadWindow.document
+  const errorConsoleCommand = gScratchpadWindow.document
                             .getElementById("sp-cmd-errorConsole");
   ok(errorConsoleCommand, "Error console command element exists");
   ok(!errorConsoleCommand.hasAttribute("disabled"),
      "Error console command is enabled");
 
-  let chromeContextCommand = gScratchpadWindow.document
+  const chromeContextCommand = gScratchpadWindow.document
                             .getElementById("sp-cmd-browserContext");
   ok(chromeContextCommand, "Chrome context command element exists");
   ok(!chromeContextCommand.hasAttribute("disabled"),

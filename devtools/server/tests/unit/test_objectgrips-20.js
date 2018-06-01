@@ -190,9 +190,9 @@ async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}
 
   return new Promise((resolve, reject) => {
     threadClient.addOneTimeListener("paused", async function(event, packet) {
-      let [grip] = packet.frame.arguments;
+      const [grip] = packet.frame.arguments;
 
-      let objClient = threadClient.pauseGrip(grip);
+      const objClient = threadClient.pauseGrip(grip);
 
       info(`
         Check enumProperties response for
@@ -232,12 +232,12 @@ async function check_enum_properties(response, expected = []) {
   equal(iterator.count, expected.length, "iterator.count has the expected value");
 
   info("Check iterator.slice response for all properties");
-  let sliceResponse = await iterator.slice(0, iterator.count);
+  const sliceResponse = await iterator.slice(0, iterator.count);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownProperties"),
     "The response object has an ownProperties property");
 
-  let {ownProperties} = sliceResponse;
-  let names = Object.getOwnPropertyNames(ownProperties);
+  const {ownProperties} = sliceResponse;
+  const names = Object.getOwnPropertyNames(ownProperties);
   equal(names.length, expected.length,
     "The response has the expected number of properties");
   for (let i = 0; i < names.length; i++) {

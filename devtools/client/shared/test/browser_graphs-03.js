@@ -15,8 +15,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
 
   await testSelection(graph);
@@ -34,7 +34,7 @@ async function testSelection(graph) {
   ok(!graph.hasSelection(),
     "There shouldn't initially be any selection.");
 
-  let selected = graph.once("selecting");
+  const selected = graph.once("selecting");
   graph.setSelection({ start: 100, end: 200 });
 
   await selected;
@@ -58,7 +58,7 @@ async function testSelection(graph) {
   ok(graph.hasSelection(),
     "There should still be a selection.");
 
-  let deselected = graph.once("deselecting");
+  const deselected = graph.once("deselecting");
   graph.dropSelection();
 
   await deselected;

@@ -64,23 +64,23 @@ var PropertiesView = {
    * with the `this._currentNode` as it's source.
    */
   async _buildPropertiesView() {
-    let propsView = this._propsView;
-    let node = this._currentNode;
+    const propsView = this._propsView;
+    const node = this._currentNode;
     propsView.empty();
 
-    let audioParamsScope = propsView.addScope("AudioParams");
-    let props = await node.getParams();
+    const audioParamsScope = propsView.addScope("AudioParams");
+    const props = await node.getParams();
 
     // Disable AudioParams VariableView expansion
     // when there are no props i.e. AudioDestinationNode
     this._togglePropertiesView(!!props.length);
 
     props.forEach(({ param, value, flags }) => {
-      let descriptor = {
+      const descriptor = {
         value: value,
         writable: !flags || !flags.readonly,
       };
-      let item = audioParamsScope.addItem(param, descriptor);
+      const item = audioParamsScope.addItem(param, descriptor);
 
       // No items should currently display a dropdown
       item.twisty = false;
@@ -96,8 +96,8 @@ var PropertiesView = {
    * node has no properties to display.
    */
   _togglePropertiesView: function(show) {
-    let propsView = $("#properties-content");
-    let emptyView = $("#properties-empty");
+    const propsView = $("#properties-content");
+    const emptyView = $("#properties-empty");
     (show ? propsView : emptyView).removeAttribute("hidden");
     (show ? emptyView : propsView).setAttribute("hidden", "true");
   },
@@ -127,9 +127,9 @@ var PropertiesView = {
    * Executed when an audio prop is changed in the UI.
    */
   async _onEval(variable, value) {
-    let ownerScope = variable.ownerView;
-    let node = this._currentNode;
-    let propName = variable.name;
+    const ownerScope = variable.ownerView;
+    const node = this._currentNode;
+    const propName = variable.name;
     let error;
 
     if (!variable._initialDescriptor.writable) {
@@ -137,7 +137,7 @@ var PropertiesView = {
     } else {
       // Cast value to proper type
       try {
-        let number = parseFloat(value);
+        const number = parseFloat(value);
         if (!isNaN(number)) {
           value = number;
         } else {

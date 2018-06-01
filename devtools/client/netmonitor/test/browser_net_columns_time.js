@@ -7,14 +7,14 @@
  * Tests for timings columns.
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  let visibleColumns = store.getState().ui.columns;
+  const visibleColumns = store.getState().ui.columns;
 
   // Hide the waterfall column to make sure timing data are fetched
   // by the other timing columns ("endTime", "responseTime", "duration",
@@ -31,27 +31,27 @@ add_task(async function() {
     }
   });
 
-  let onNetworkEvents = waitForNetworkEvents(monitor, 1);
-  let onEventTimings = waitFor(monitor.panelWin.api, EVENTS.RECEIVED_EVENT_TIMINGS);
+  const onNetworkEvents = waitForNetworkEvents(monitor, 1);
+  const onEventTimings = waitFor(monitor.panelWin.api, EVENTS.RECEIVED_EVENT_TIMINGS);
   tab.linkedBrowser.reload();
   await Promise.all([onNetworkEvents, onEventTimings]);
 
   // There should be one request in the list.
-  let requestItems = document.querySelectorAll(".request-list-item");
+  const requestItems = document.querySelectorAll(".request-list-item");
   is(requestItems.length, 1, "There must be one visible item");
 
-  let item = requestItems[0];
-  let types = [
+  const item = requestItems[0];
+  const types = [
     "end",
     "response",
     "duration",
     "latency"
   ];
 
-  for (let t of types) {
+  for (const t of types) {
     await waitUntil(() => {
-      let node = item.querySelector(".requests-list-" + t + "-time");
-      let value = parseInt(node.textContent, 10);
+      const node = item.querySelector(".requests-list-" + t + "-time");
+      const value = parseInt(node.textContent, 10);
       return value > 0;
     });
   }

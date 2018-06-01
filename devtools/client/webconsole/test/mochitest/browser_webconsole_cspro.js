@@ -28,10 +28,10 @@ const CSP_REPORT_MSG =
   "(\u201cscript-src\u201d). A CSP report is being sent.";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let onCspViolationMessage = waitForMessage(hud, CSP_VIOLATION_MSG, ".message.error");
-  let onCspReportMessage = waitForMessage(hud, CSP_REPORT_MSG, ".message.error");
+  const onCspViolationMessage = waitForMessage(hud, CSP_VIOLATION_MSG, ".message.error");
+  const onCspReportMessage = waitForMessage(hud, CSP_REPORT_MSG, ".message.error");
 
   info("Load a page with CSP warnings.");
   loadDocument(TEST_VIOLATION);

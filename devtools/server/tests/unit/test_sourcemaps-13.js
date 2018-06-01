@@ -39,7 +39,7 @@ const TEMP_FILE_2 = "temporary2.js";
 const TEMP_GENERATED_SOURCE = "temporary-generated.js";
 
 function setup_code() {
-  let node = new SourceNode(1, 0,
+  const node = new SourceNode(1, 0,
                             getFileUrl(TEMP_FILE_1, true),
                             "function temporary1() {}\n");
   let { code, map } = node.toStringWithSourceMap({
@@ -69,7 +69,7 @@ function test_initial_sources() {
 }
 
 function setup_new_code() {
-  let node = new SourceNode(1, 0,
+  const node = new SourceNode(1, 0,
                             getFileUrl(TEMP_FILE_2, true),
                             "function temporary2() {}\n");
   let { code, map } = node.toStringWithSourceMap({
@@ -94,7 +94,7 @@ function test_new_sources() {
 
     // Should now have TEMP_FILE_2 as a source.
     Assert.equal(sources.length, 1);
-    let s = sources.filter(source => source.url === getFileUrl(TEMP_FILE_2, true))[0];
+    const s = sources.filter(source => source.url === getFileUrl(TEMP_FILE_2, true))[0];
     Assert.ok(!!s);
 
     finish_test();

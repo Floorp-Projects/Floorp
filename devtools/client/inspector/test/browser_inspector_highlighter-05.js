@@ -48,16 +48,16 @@ const TEST_URL = "data:text/html," + encodeURIComponent(`
 
 add_task(async function() {
   info("Open the inspector to a blank page.");
-  let { inspector, tab, testActor } = await openInspectorForURL("about:blank");
+  const { inspector, tab, testActor } = await openInspectorForURL("about:blank");
 
-  let pageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const pageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("Navigate to the test url and waiting for the page to be loaded.");
   await navigateTo(inspector, TEST_URL);
   await pageLoaded;
 
   info("Shows the box model highligher for the <p> node.");
-  let divFront = await getNodeFront("p", inspector);
+  const divFront = await getNodeFront("p", inspector);
   await inspector.highlighter.showBoxModel(divFront);
 
   info("Check the node is highlighted.");

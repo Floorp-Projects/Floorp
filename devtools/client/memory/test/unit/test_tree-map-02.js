@@ -7,14 +7,14 @@ const { drawText } = require("devtools/client/memory/components/tree-map/draw");
 
 add_task(async function() {
   // Mock out the Canvas2dContext
-  let ctx = {
+  const ctx = {
     fillText: (...args) => fillTextValues.push(args),
     measureText: (text) => {
-      let width = text ? text.length * 10 : 0;
+      const width = text ? text.length * 10 : 0;
       return { width };
     }
   };
-  let node = {
+  const node = {
     x: 20,
     y: 30,
     dx: 500,
@@ -23,15 +23,15 @@ add_task(async function() {
     totalBytes: 1200,
     totalCount: 100
   };
-  let ratio = 0;
-  let borderWidth = () => 1;
-  let dragZoom = {
+  const ratio = 0;
+  const borderWidth = () => 1;
+  const dragZoom = {
     offsetX: 0,
     offsetY: 0,
     zoom: 0
   };
   let fillTextValues = [];
-  let padding = [10, 10];
+  const padding = [10, 10];
 
   drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
   deepEqual(fillTextValues[0], ["Example Node", 11.5, 21.5],

@@ -13,7 +13,7 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel, toolbox } = await initPerformanceInNewTab({
+  const { panel, toolbox } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -22,7 +22,7 @@ add_task(async function() {
   Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 2);
 
   await startRecording(panel);
-  let { entries, interval } = await toolbox.performance.getConfiguration();
+  const { entries, interval } = await toolbox.performance.getConfiguration();
   await stopRecording(panel);
 
   is(entries, 1000, "profiler entries option is set on profiler");

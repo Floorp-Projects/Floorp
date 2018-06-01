@@ -124,9 +124,9 @@ var RuntimeScanners = {
       return this._scanPromise;
     }
 
-    let promises = [];
+    const promises = [];
 
-    for (let scanner of this._scanners) {
+    for (const scanner of this._scanners) {
       promises.push(scanner.scan());
     }
 
@@ -143,8 +143,8 @@ var RuntimeScanners = {
   },
 
   listRuntimes: function* () {
-    for (let scanner of this._scanners) {
-      for (let runtime of scanner.listRuntimes()) {
+    for (const scanner of this._scanners) {
+      for (const runtime of scanner.listRuntimes()) {
         yield runtime;
       }
     }
@@ -160,7 +160,7 @@ var RuntimeScanners = {
       return;
     }
     this._emitUpdated = this._emitUpdated.bind(this);
-    for (let scanner of this._scanners) {
+    for (const scanner of this._scanners) {
       this._enableScanner(scanner);
     }
   },
@@ -175,7 +175,7 @@ var RuntimeScanners = {
       // Already disabled scanners during a previous call
       return;
     }
-    for (let scanner of this._scanners) {
+    for (const scanner of this._scanners) {
       this._disableScanner(scanner);
     }
   },
@@ -251,7 +251,7 @@ var WiFiScanner = {
 
   _updateRuntimes() {
     this._runtimes = [];
-    for (let device of discovery.getRemoteDevicesWithService("devtools")) {
+    for (const device of discovery.getRemoteDevicesWithService("devtools")) {
       this._runtimes.push(new WiFiRuntime(device));
     }
     this._emitUpdated();
@@ -302,7 +302,7 @@ var StaticScanner = {
     return promise.resolve();
   },
   listRuntimes() {
-    let runtimes = [gRemoteRuntime];
+    const runtimes = [gRemoteRuntime];
     if (Services.prefs.getBoolPref("devtools.webide.enableLocalRuntime")) {
       runtimes.push(gLocalRuntime);
     }
@@ -334,7 +334,7 @@ WiFiRuntime.prototype = {
   // Mark runtime as taking a long time to connect
   prolongedConnection: true,
   connect: function(connection) {
-    let service = discovery.getRemoteService("devtools", this.deviceName);
+    const service = discovery.getRemoteService("devtools", this.deviceName);
     if (!service) {
       return promise.reject(new Error("Can't find device: " + this.name));
     }
@@ -381,7 +381,7 @@ WiFiRuntime.prototype = {
    */
   sendOOB(session) {
     const WINDOW_ID = "devtools:wifi-auth";
-    let { authResult } = session;
+    const { authResult } = session;
     // Only show in the PENDING state
     if (authResult != AuthenticationResult.PENDING) {
       throw new Error("Expected PENDING result, got " + authResult);
@@ -389,9 +389,9 @@ WiFiRuntime.prototype = {
 
     // Listen for the window our prompt opens, so we can close it programatically
     let promptWindow;
-    let windowListener = {
+    const windowListener = {
       onOpenWindow(xulWindow) {
-        let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+        const win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindow);
         win.addEventListener("load", function() {
           if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
@@ -411,9 +411,9 @@ WiFiRuntime.prototype = {
       // Height determines the size of the QR code.  Force a minimum size to
       // improve scanability.
       const MIN_HEIGHT = 600;
-      let win = Services.wm.getMostRecentWindow("devtools:webide");
-      let width = win.outerWidth * 0.8;
-      let height = Math.max(win.outerHeight * 0.5, MIN_HEIGHT);
+      const win = Services.wm.getMostRecentWindow("devtools:webide");
+      const width = win.outerWidth * 0.8;
+      const height = Math.max(win.outerHeight * 0.5, MIN_HEIGHT);
       win.openDialog("chrome://webide/content/wifi-auth.xhtml",
                      WINDOW_ID,
                      "modal=yes,width=" + width + ",height=" + height, session);
@@ -459,15 +459,15 @@ exports._gLocalRuntime = gLocalRuntime;
 var gRemoteRuntime = {
   type: RuntimeTypes.REMOTE,
   connect: function(connection) {
-    let win = Services.wm.getMostRecentWindow("devtools:webide");
+    const win = Services.wm.getMostRecentWindow("devtools:webide");
     if (!win) {
       return promise.reject(new Error("No WebIDE window found"));
     }
-    let ret = {value: connection.host + ":" + connection.port};
-    let title = Strings.GetStringFromName("remote_runtime_promptTitle");
-    let message = Strings.GetStringFromName("remote_runtime_promptMessage");
-    let ok = Services.prompt.prompt(win, title, message, ret, null, {});
-    let [host, port] = ret.value.split(":");
+    const ret = {value: connection.host + ":" + connection.port};
+    const title = Strings.GetStringFromName("remote_runtime_promptTitle");
+    const message = Strings.GetStringFromName("remote_runtime_promptMessage");
+    const ok = Services.prompt.prompt(win, title, message, ret, null, {});
+    const [host, port] = ret.value.split(":");
     if (!ok) {
       return promise.reject({canceled: true});
     }

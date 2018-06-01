@@ -45,10 +45,10 @@ function run_test() {
     }
   })();`;
 
-  let sandbox = Cu.Sandbox("http://example.com");
-  let dbg = new Debugger();
-  let dbgObject = dbg.addDebuggee(sandbox);
-  let dbgEnv = dbgObject.asEnvironment();
+  const sandbox = Cu.Sandbox("http://example.com");
+  const dbg = new Debugger();
+  const dbgObject = dbg.addDebuggee(sandbox);
+  const dbgEnv = dbgObject.asEnvironment();
   Cu.evalInSandbox(testArray, sandbox);
   Cu.evalInSandbox(testObject, sandbox);
   Cu.evalInSandbox(testHyphenated, sandbox);
@@ -165,18 +165,18 @@ function runChecks(dbgObject, dbgEnv, sandbox) {
   Assert.equal(null, results);
 
   info("Test that we have suggestions for generators.");
-  let gen1Result = Cu.evalInSandbox("gen1.next().value", sandbox);
+  const gen1Result = Cu.evalInSandbox("gen1.next().value", sandbox);
   results = JSPropertyProvider(dbgObject, dbgEnv, "gen1.");
   test_has_result(results, "next");
   info("Test that the generator next() was not executed");
-  let gen1NextResult = Cu.evalInSandbox("gen1.next().value", sandbox);
+  const gen1NextResult = Cu.evalInSandbox("gen1.next().value", sandbox);
   Assert.equal(gen1Result + 1, gen1NextResult);
 
   info("Test with an anonymous generator.");
-  let gen2Result = Cu.evalInSandbox("gen2.next().value", sandbox);
+  const gen2Result = Cu.evalInSandbox("gen2.next().value", sandbox);
   results = JSPropertyProvider(dbgObject, dbgEnv, "gen2.");
   test_has_result(results, "next");
-  let gen2NextResult = Cu.evalInSandbox("gen2.next().value", sandbox);
+  const gen2NextResult = Cu.evalInSandbox("gen2.next().value", sandbox);
   Assert.equal(gen2Result + 1, gen2NextResult);
 }
 

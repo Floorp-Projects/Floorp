@@ -8,15 +8,15 @@
  * next to headers.
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(POST_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  let { getHeadersURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+  const { getHeadersURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -35,12 +35,12 @@ add_task(async function() {
    * and only if a header is documented in MDN.
    */
   function testShowLearnMore(data) {
-    let selector = ".properties-view .treeRow.stringRow";
+    const selector = ".properties-view .treeRow.stringRow";
     document.querySelectorAll(selector).forEach((rowEl, index) => {
-      let headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0]
+      const headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0]
                             .textContent;
-      let headerDocURL = getHeadersURL(headerName);
-      let learnMoreEl = rowEl.querySelectorAll(".treeValueCell .learn-more-link");
+      const headerDocURL = getHeadersURL(headerName);
+      const learnMoreEl = rowEl.querySelectorAll(".treeValueCell .learn-more-link");
 
       if (headerDocURL === null) {
         ok(learnMoreEl.length === 0,

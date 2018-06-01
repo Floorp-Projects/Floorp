@@ -15,22 +15,22 @@ const { times } = require("devtools/client/performance/test/helpers/event-utils"
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
-  let started = waitForRecordingStartedEvents(panel, {
+  const started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
   await console.profile("rust");
   await started;
 
-  let recordings = PerformanceController.getRecordings();
+  const recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "One recording found in the performance panel.");
   is(recordings[0].isConsole(), true, "Recording came from console.profile.");
   is(recordings[0].getLabel(), "rust", "Correct label in the recording model.");
@@ -47,7 +47,7 @@ add_task(async function() {
     expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
   });
 
-  let stopped = waitForRecordingStoppedEvents(panel, {
+  const stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });

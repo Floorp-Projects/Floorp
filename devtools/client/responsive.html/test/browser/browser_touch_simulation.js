@@ -26,7 +26,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
 async function testWithNoTouch(ui) {
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    let div = content.document.querySelector("div");
+    const div = content.document.querySelector("div");
     let x = 0, y = 0;
 
     info("testWithNoTouch: Initial test parameter and mouse mouse outside div");
@@ -66,7 +66,7 @@ async function testWithNoTouch(ui) {
 
 async function testWithTouch(ui) {
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    let div = content.document.querySelector("div");
+    const div = content.document.querySelector("div");
     let x = 0, y = 0;
 
     info("testWithTouch: Initial test parameter and mouse mouse outside div");
@@ -105,10 +105,10 @@ async function testWithMetaViewportEnabled(ui) {
   await SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, true]]});
 
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    let { synthesizeClick } = EventUtils;
+    const { synthesizeClick } = EventUtils;
 
-    let meta = content.document.querySelector("meta[name=viewport]");
-    let div = content.document.querySelector("div");
+    const meta = content.document.querySelector("meta[name=viewport]");
+    const div = content.document.querySelector("div");
     div.dataset.isDelay = "false";
 
     info("testWithMetaViewportEnabled: " +
@@ -148,10 +148,10 @@ async function testWithMetaViewportDisabled(ui) {
   await SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, false]]});
 
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    let { synthesizeClick } = EventUtils;
+    const { synthesizeClick } = EventUtils;
 
-    let meta = content.document.querySelector("meta[name=viewport]");
-    let div = content.document.querySelector("div");
+    const meta = content.document.querySelector("meta[name=viewport]");
+    const div = content.document.querySelector("div");
     div.dataset.isDelay = "false";
 
     info("testWithMetaViewportDisabled: click the div with <meta name='viewport'>");
@@ -163,8 +163,8 @@ async function testWithMetaViewportDisabled(ui) {
 }
 
 function testTouchButton(ui) {
-  let { document } = ui.toolWindow;
-  let touchButton = document.querySelector("#global-touch-simulation-button");
+  const { document } = ui.toolWindow;
+  const touchButton = document.querySelector("#global-touch-simulation-button");
 
   ok(touchButton.classList.contains("checked"),
     "Touch simulation is active at end of test.");
@@ -181,7 +181,7 @@ function testTouchButton(ui) {
 }
 
 async function waitBootstrap(ui) {
-  let { store } = ui.toolWindow;
+  const { store } = ui.toolWindow;
 
   await waitUntilState(store, state => state.viewports.length == 1);
   await waitForFrameLoad(ui, TEST_URL);

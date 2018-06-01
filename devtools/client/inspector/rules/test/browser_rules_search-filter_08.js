@@ -21,16 +21,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Enter the test value in the search filter");
   await setSearchFilter(view, SEARCH);
 
   info("Focus the height property value");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let rule = ruleEditor.rule;
-  let propEditor = rule.textProps[1].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const rule = ruleEditor.rule;
+  const propEditor = rule.textProps[1].editor;
   await focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
@@ -43,7 +43,7 @@ add_task(async function() {
     "height text property is not highlighted.");
 
   info("Change the height property value to 100%");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString("100%", view.styleWindow);
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;

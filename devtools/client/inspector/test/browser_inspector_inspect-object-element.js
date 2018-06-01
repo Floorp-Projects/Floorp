@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<object><p>browser_inspector_inspect-object-element.js</p></object>";
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
   await selectNode("object", inspector);
 

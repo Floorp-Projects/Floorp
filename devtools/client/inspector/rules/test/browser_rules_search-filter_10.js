@@ -37,13 +37,13 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testAddTextInFilter(inspector, view);
 });
 
 async function testAddTextInFilter(inspector, view) {
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     info(data.desc);
     await setSearchFilter(view, data.search);
     await checkRules(view, data);
@@ -57,7 +57,7 @@ function checkRules(view, data) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   is(ruleEditor.rule.selectorText, data.selectorText,
     "Second rule is " + data.selectorText + ".");
@@ -67,10 +67,10 @@ function checkRules(view, data) {
 }
 
 async function clearSearchAndCheckRules(view) {
-  let doc = view.styleDocument;
-  let win = view.styleWindow;
-  let searchField = view.searchField;
-  let searchClearButton = view.searchClearButton;
+  const doc = view.styleDocument;
+  const win = view.styleWindow;
+  const searchField = view.searchField;
+  const searchClearButton = view.searchClearButton;
 
   info("Clearing the search filter");
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);

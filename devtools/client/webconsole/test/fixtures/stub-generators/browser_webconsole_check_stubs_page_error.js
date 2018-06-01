@@ -8,10 +8,10 @@
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(async function() {
-  let generatedStubs = await generatePageErrorStubs();
+  const generatedStubs = await generatePageErrorStubs();
 
-  let repoStubFilePath = getTestFilePath("../stubs/pageError.js");
-  let repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFilePath = getTestFilePath("../stubs/pageError.js");
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
 
   if (generatedStubs != repoStubFileContent) {
     ok(false, "The pageError stubs file needs to be updated by running " +

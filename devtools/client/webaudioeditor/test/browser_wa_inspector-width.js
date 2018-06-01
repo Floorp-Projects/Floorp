@@ -7,12 +7,12 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, InspectorView } = panelWin;
+  const gVars = InspectorView._propsView;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
   let events = Promise.all([
     get3(gFront, "create-node"),
@@ -28,7 +28,7 @@ add_task(async function() {
   $("#inspector-pane-toggle").click();
   await once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
 
-  let newInspectorWidth = 500;
+  const newInspectorWidth = 500;
 
   // Setting width to new_inspector_width
   $("#web-audio-inspector").setAttribute("width", newInspectorWidth);
@@ -49,7 +49,7 @@ add_task(async function() {
   await clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]));
 
   // Getting the width of the audio inspector
-  let width = $("#web-audio-inspector").getAttribute("width");
+  const width = $("#web-audio-inspector").getAttribute("width");
 
   is(width, newInspectorWidth, "WebAudioEditor's Inspector width should be saved as a preference");
 

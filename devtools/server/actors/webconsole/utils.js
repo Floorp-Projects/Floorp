@@ -28,7 +28,7 @@ var WebConsoleUtils = {
    * @return string
    */
   getWorkerType: function(message) {
-    let id = message ? message.innerID : null;
+    const id = message ? message.innerID : null;
     return CONSOLE_WORKER_IDS[CONSOLE_WORKER_IDS.indexOf(id)] || null;
   },
 
@@ -64,8 +64,8 @@ var WebConsoleUtils = {
       });
     } else {
       temp = {};
-      for (let key in object) {
-        let value = object[key];
+      for (const key in object) {
+        const value = object[key];
         if (object.hasOwnProperty(key) &&
             (!filter || filter(key, value, object))) {
           temp[key] = recursive ? WebConsoleUtils.cloneObject(value) : value;
@@ -97,12 +97,12 @@ var WebConsoleUtils = {
    *         list of inner window ids.
    */
   getInnerWindowIDsForFrames: function(window) {
-    let innerWindowID = this.getInnerWindowId(window);
+    const innerWindowID = this.getInnerWindowId(window);
     let ids = [innerWindowID];
 
     if (window.frames) {
       for (let i = 0; i < window.frames.length; i++) {
-        let frame = window.frames[i];
+        const frame = window.frames[i];
         ids = ids.concat(this.getInnerWindowIDsForFrames(frame));
       }
     }
@@ -335,7 +335,7 @@ WebConsoleCommands._registerOriginal("$$", function(owner, selector) {
 
   // Calling owner.window.Array.from() doesn't work without accessing the
   // wrappedJSObject, so just loop through the results instead.
-  let result = new owner.window.Array();
+  const result = new owner.window.Array();
   for (let i = 0; i < nodes.length; i++) {
     result.push(nodes[i]);
   }
@@ -364,14 +364,14 @@ WebConsoleCommands._registerOriginal("$_", {
  * @return array of Node
  */
 WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
-  let nodes = new owner.window.Array();
+  const nodes = new owner.window.Array();
 
   // Not waiving Xrays, since we want the original Document.evaluate function,
   // instead of anything that's been redefined.
-  let doc = owner.window.document;
+  const doc = owner.window.document;
   context = context || doc;
 
-  let results = doc.evaluate(xPath, context, null,
+  const results = doc.evaluate(xPath, context, null,
                              owner.window.XPathResult.ANY_TYPE, null);
   let node;
   while ((node = results.iterateNext())) {
@@ -431,12 +431,12 @@ WebConsoleCommands._registerOriginal("keys", function(owner, object) {
  * @return array of string
  */
 WebConsoleCommands._registerOriginal("values", function(owner, object) {
-  let values = [];
+  const values = [];
   // Need to waive Xrays so we can iterate functions and accessor properties
-  let waived = Cu.waiveXrays(object);
-  let names = Object.getOwnPropertyNames(waived);
+  const waived = Cu.waiveXrays(object);
+  const names = Object.getOwnPropertyNames(waived);
 
-  for (let name of names) {
+  for (const name of names) {
     values.push(waived[name]);
   }
 
@@ -493,8 +493,8 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
  *        Object to inspect.
  */
 WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
-  let dbgObj = owner.makeDebuggeeValue(object);
-  let grip = owner.createValueGrip(dbgObj);
+  const dbgObj = owner.makeDebuggeeValue(object);
+  const grip = owner.createValueGrip(dbgObj);
   owner.helperResult = {
     type: "inspectObject",
     input: owner.evalInput,
@@ -525,21 +525,21 @@ WebConsoleCommands._registerOriginal("pprint", function(owner, object) {
     return object + "\n";
   }
 
-  let output = [];
+  const output = [];
 
-  let obj = object;
-  for (let name in obj) {
-    let desc = WebConsoleUtils.getPropertyDescriptor(obj, name) || {};
+  const obj = object;
+  for (const name in obj) {
+    const desc = WebConsoleUtils.getPropertyDescriptor(obj, name) || {};
     if (desc.get || desc.set) {
       // TODO: Bug 842672 - toolkit/ imports modules from browser/.
-      let getGrip = VariablesView.getGrip(desc.get);
-      let setGrip = VariablesView.getGrip(desc.set);
-      let getString = VariablesView.getString(getGrip);
-      let setString = VariablesView.getString(setGrip);
+      const getGrip = VariablesView.getGrip(desc.get);
+      const setGrip = VariablesView.getGrip(desc.set);
+      const getString = VariablesView.getString(getGrip);
+      const setString = VariablesView.getString(setGrip);
       output.push(name + ":", "  get: " + getString, "  set: " + setString);
     } else {
-      let valueGrip = VariablesView.getGrip(obj[name]);
-      let valueString = VariablesView.getString(valueGrip);
+      const valueGrip = VariablesView.getGrip(obj[name]);
+      const valueString = VariablesView.getString(valueGrip);
       output.push(name + ": " + valueString);
     }
   }
@@ -602,15 +602,15 @@ WebConsoleCommands._registerOriginal("copy", function(owner, value) {
 function addWebConsoleCommands(owner) {
   // Not supporting extra commands in workers yet.  This should be possible to
   // add one by one as long as they don't require jsm, Cu, etc.
-  let commands = isWorker ? [] : WebConsoleCommands._registeredCommands;
+  const commands = isWorker ? [] : WebConsoleCommands._registeredCommands;
   if (!owner) {
     throw new Error("The owner is required");
   }
-  for (let [name, command] of commands) {
+  for (const [name, command] of commands) {
     if (typeof command === "function") {
       owner.sandbox[name] = command.bind(undefined, owner);
     } else if (typeof command === "object") {
-      let clone = Object.assign({}, command, {
+      const clone = Object.assign({}, command, {
         // We force the enumerability and the configurability (so the
         // WebConsoleActor can reconfigure the property).
         enumerable: true,

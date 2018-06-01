@@ -14,12 +14,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { isVisible } = require("devtools/client/performance/test/helpers/dom-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $, PerformanceController } = panel.panelWin;
+  const { $, PerformanceController } = panel.panelWin;
 
   // Disable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);

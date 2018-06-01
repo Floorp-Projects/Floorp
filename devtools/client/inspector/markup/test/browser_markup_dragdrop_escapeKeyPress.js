@@ -9,12 +9,12 @@
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {markup} = inspector;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {markup} = inspector;
 
   info("Get a test container");
   await selectNode("#test", inspector);
-  let container = await getContainerForSelector("#test", inspector);
+  const container = await getContainerForSelector("#test", inspector);
 
   info("Simulate a drag/drop on this container");
   await simulateNodeDrag(inspector, "#test");

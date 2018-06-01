@@ -7,18 +7,18 @@
 // Checks for the AccessibleActor events
 
 add_task(async function() {
-  let {client, walker, accessibility} =
+  const {client, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = await accessibility.getWalker();
+  const a11yWalker = await accessibility.getWalker();
   await accessibility.enable();
-  let rootNode = await walker.getRootNode();
-  let a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
-  let buttonNode = await walker.querySelector(walker.rootNode, "#button");
-  let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
-  let sliderNode = await walker.querySelector(walker.rootNode, "#slider");
-  let accessibleSliderFront = await a11yWalker.getAccessibleFor(sliderNode);
-  let browser = gBrowser.selectedBrowser;
+  const rootNode = await walker.getRootNode();
+  const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
+  const buttonNode = await walker.querySelector(walker.rootNode, "#button");
+  const accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
+  const sliderNode = await walker.querySelector(walker.rootNode, "#slider");
+  const accessibleSliderFront = await a11yWalker.getAccessibleFor(sliderNode);
+  const browser = gBrowser.selectedBrowser;
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
@@ -61,7 +61,7 @@ add_task(async function() {
       content.document.getElementById("button").removeAttribute("aria-describedby")));
 
   info("State change event");
-  let expectedStates = ["unavailable", "selectable text", "opaque"];
+  const expectedStates = ["unavailable", "selectable text", "opaque"];
   await emitA11yEvent(accessibleFront, "states-change",
     newStates => {
       checkA11yFront(accessibleFront, { states: expectedStates });
@@ -100,7 +100,7 @@ add_task(async function() {
 
   info("Reorder event");
   is(accessibleSliderFront.childCount, 1, "Slider has only 1 child");
-  let [firstChild, ] = await accessibleSliderFront.children();
+  const [firstChild, ] = await accessibleSliderFront.children();
   is(firstChild.indexInParent, 0, "Slider's first child has correct index in parent");
   await emitA11yEvent(accessibleSliderFront, "reorder",
     childCount => {
@@ -109,9 +109,9 @@ add_task(async function() {
       is(firstChild.indexInParent, 1,
         "Slider's first child has an updated index in parent");
     }, () => ContentTask.spawn(browser, null, () => {
-      let doc = content.document;
-      let slider = doc.getElementById("slider");
-      let button = doc.createElement("button");
+      const doc = content.document;
+      const slider = doc.getElementById("slider");
+      const button = doc.createElement("button");
       button.innerText = "Slider button";
       content.document.getElementById("slider").insertBefore(button, slider.firstChild);
     }));

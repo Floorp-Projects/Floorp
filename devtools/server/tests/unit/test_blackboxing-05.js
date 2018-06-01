@@ -71,7 +71,7 @@ function test_black_box() {
 function test_black_box_exception() {
   gThreadClient.getSources(function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    let sourceClient = gThreadClient.source(
+    const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 

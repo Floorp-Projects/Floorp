@@ -14,12 +14,12 @@ add_task(async function run_test() {
 
 async function run_test_with_server(server) {
   initTestDebuggerServer(server);
-  let title = "test_enum_symbols";
+  const title = "test_enum_symbols";
   gDebuggee = addTestGlobal(title, server);
   gDebuggee.eval(function stopMe(arg) {
     debugger;
   }.toString());
-  let client = new DebuggerClient(server.connectPipe());
+  const client = new DebuggerClient(server.connectPipe());
   await client.connect();
   [,, gThreadClient] = await attachTestTabAndResume(client, title);
   await test_enum_symbols();
@@ -29,13 +29,13 @@ async function run_test_with_server(server) {
 async function test_enum_symbols() {
   await new Promise(function(resolve) {
     gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-      let [grip] = packet.frame.arguments;
-      let objClient = gThreadClient.pauseGrip(grip);
-      let {iterator} = await objClient.enumSymbols();
-      let {ownSymbols} = await iterator.slice(0, iterator.count);
+      const [grip] = packet.frame.arguments;
+      const objClient = gThreadClient.pauseGrip(grip);
+      const {iterator} = await objClient.enumSymbols();
+      const {ownSymbols} = await iterator.slice(0, iterator.count);
 
       strictEqual(ownSymbols.length, 1, "There is 1 symbol property.");
-      let {name, descriptor} = ownSymbols[0];
+      const {name, descriptor} = ownSymbols[0];
       strictEqual(name, "Symbol(sym)", "Got right symbol name.");
       deepEqual(descriptor, {
         configurable: false,

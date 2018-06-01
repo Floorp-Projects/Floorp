@@ -12,7 +12,7 @@ const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".relative1", inspector);
   await testAddTextInFilter(inspector, view);
 });

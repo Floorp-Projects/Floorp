@@ -12,11 +12,11 @@ add_task(async function() {
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
-  let c1id = getCookieId("c1", "test1.example.org", "/browser");
+  const c1id = getCookieId("c1", "test1.example.org", "/browser");
   await selectTableItem(c1id);
 
   // test that value is something initially
-  let initialValue = [[
+  const initialValue = [[
     {name: "c1", value: "1.2.3.4.5.6.7"},
     {name: "c1.Path", value: "/browser"}
   ], [
@@ -26,7 +26,7 @@ add_task(async function() {
   ]];
 
   // test that value is something initially
-  let finalValue = [[
+  const finalValue = [[
     {name: "c1", value: '{"foo": 4,"bar":6}'},
     {name: "c1.Path", value: "/browser"}
   ], [
@@ -85,7 +85,7 @@ add_task(async function() {
       ]
     ],
   ]);
-  let c3id = getCookieId("c3", "test1.example.org",
+  const c3id = getCookieId("c3", "test1.example.org",
                          "/browser/devtools/client/storage/test/");
   checkCell(c3id, "value", "booyeah");
 
@@ -107,7 +107,7 @@ add_task(async function() {
       ]
     ],
   ]);
-  let c4id = getCookieId("c4", "test1.example.org",
+  const c4id = getCookieId("c4", "test1.example.org",
                          "/browser/devtools/client/storage/test/");
   checkCell(c4id, "value", "booyeah");
 

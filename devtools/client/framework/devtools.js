@@ -71,10 +71,10 @@ DevTools.prototype = {
   },
 
   unregisterDefaults() {
-    for (let definition of this.getToolDefinitionArray()) {
+    for (const definition of this.getToolDefinitionArray()) {
       this.unregisterTool(definition.id);
     }
-    for (let definition of this.getThemeDefinitionArray()) {
+    for (const definition of this.getThemeDefinitionArray()) {
       this.unregisterTheme(definition.id);
     }
   },
@@ -107,7 +107,7 @@ DevTools.prototype = {
    *          And returns an instance of ToolPanel (function|required)
    */
   registerTool(toolDefinition) {
-    let toolId = toolDefinition.id;
+    const toolId = toolDefinition.id;
 
     if (!toolId || FORBIDDEN_IDS.has(toolId)) {
       throw new Error("Invalid definition.id");
@@ -142,7 +142,7 @@ DevTools.prototype = {
       toolId = tool;
       tool = this._tools.get(tool);
     } else {
-      let {Deprecated} = require("resource://gre/modules/Deprecated.jsm");
+      const {Deprecated} = require("resource://gre/modules/Deprecated.jsm");
       Deprecated.warning("Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
         "deprecated. You should unregister a tool using its toolId: " +
         "gDevTools.unregisterTool(toolId).");
@@ -159,8 +159,8 @@ DevTools.prototype = {
    * Sorting function used for sorting tools based on their ordinals.
    */
   ordinalSort(d1, d2) {
-    let o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
-    let o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
+    const o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
+    const o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
     return o1 - o2;
   },
 
@@ -169,8 +169,8 @@ DevTools.prototype = {
   },
 
   getAdditionalTools() {
-    let tools = [];
-    for (let [, value] of this._tools) {
+    const tools = [];
+    for (const [, value] of this._tools) {
       if (!DefaultTools.includes(value)) {
         tools.push(value);
       }
@@ -192,14 +192,14 @@ DevTools.prototype = {
    *         The ToolDefinition for the id or null.
    */
   getToolDefinition(toolId) {
-    let tool = this._tools.get(toolId);
+    const tool = this._tools.get(toolId);
     if (!tool) {
       return null;
     } else if (!tool.visibilityswitch) {
       return tool;
     }
 
-    let enabled = Services.prefs.getBoolPref(tool.visibilityswitch, true);
+    const enabled = Services.prefs.getBoolPref(tool.visibilityswitch, true);
 
     return enabled ? tool : null;
   },
@@ -212,9 +212,9 @@ DevTools.prototype = {
    *         A map of the the tool definitions registered in this instance
    */
   getToolDefinitionMap() {
-    let tools = new Map();
+    const tools = new Map();
 
-    for (let [id, definition] of this._tools) {
+    for (const [id, definition] of this._tools) {
       if (this.getToolDefinition(id)) {
         tools.set(id, definition);
       }
@@ -232,9 +232,9 @@ DevTools.prototype = {
    *         A sorted array of the tool definitions registered in this instance
    */
   getToolDefinitionArray() {
-    let definitions = [];
+    const definitions = [];
 
-    for (let [id, definition] of this._tools) {
+    for (const [id, definition] of this._tools) {
       if (this.getToolDefinition(id)) {
         definitions.push(definition);
       }
@@ -283,7 +283,7 @@ DevTools.prototype = {
    *            and the new theme id as arguments (function)
    */
   registerTheme(themeDefinition) {
-    let themeId = themeDefinition.id;
+    const themeId = themeDefinition.id;
 
     if (!themeId) {
       throw new Error("Invalid theme id");
@@ -314,12 +314,12 @@ DevTools.prototype = {
       themeId = theme.id;
     }
 
-    let currTheme = getTheme();
+    const currTheme = getTheme();
 
     // Note that we can't check if `theme` is an item
     // of `DefaultThemes` as we end up reloading definitions
     // module and end up with different theme objects
-    let isCoreTheme = DefaultThemes.some(t => t.id === themeId);
+    const isCoreTheme = DefaultThemes.some(t => t.id === themeId);
 
     // Reset the theme if an extension theme that's currently applied
     // is being removed.
@@ -345,7 +345,7 @@ DevTools.prototype = {
    *         The ThemeDefinition for the id or null.
    */
   getThemeDefinition(themeId) {
-    let theme = this._themes.get(themeId);
+    const theme = this._themes.get(themeId);
     if (!theme) {
       return null;
     }
@@ -359,9 +359,9 @@ DevTools.prototype = {
    *         A map of the the theme definitions registered in this instance
    */
   getThemeDefinitionMap() {
-    let themes = new Map();
+    const themes = new Map();
 
-    for (let [id, definition] of this._themes) {
+    for (const [id, definition] of this._themes) {
       if (this.getThemeDefinition(id)) {
         themes.set(id, definition);
       }
@@ -377,9 +377,9 @@ DevTools.prototype = {
    *         A sorted array of the theme definitions registered in this instance
    */
   getThemeDefinitionArray() {
-    let definitions = [];
+    const definitions = [];
 
-    for (let [id, definition] of this._themes) {
+    for (const [id, definition] of this._themes) {
       if (this.getThemeDefinition(id)) {
         definitions.push(definition);
       }
@@ -467,11 +467,11 @@ DevTools.prototype = {
       // As toolbox object creation is async, we have to be careful about races
       // Check for possible already in process of loading toolboxes before
       // actually trying to create a new one.
-      let promise = this._creatingToolboxes.get(target);
+      const promise = this._creatingToolboxes.get(target);
       if (promise) {
         return promise;
       }
-      let toolboxPromise = this.createToolbox(target, toolId, hostType, hostOptions);
+      const toolboxPromise = this.createToolbox(target, toolId, hostType, hostOptions);
       this._creatingToolboxes.set(target, toolboxPromise);
       toolbox = await toolboxPromise;
       this._creatingToolboxes.delete(target);
@@ -482,7 +482,7 @@ DevTools.prototype = {
       this._firstShowToolbox = false;
     }
 
-    let width = Math.ceil(toolbox.win.outerWidth / 50) * 50;
+    const width = Math.ceil(toolbox.win.outerWidth / 50) * 50;
     this._telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "width", width);
 
@@ -503,9 +503,9 @@ DevTools.prototype = {
    *        opening started. This is a `Cu.now()` timing.
    */
   logToolboxOpenTime(toolId, startTime) {
-    let delay = Cu.now() - startTime;
+    const delay = Cu.now() - startTime;
 
-    let telemetryKey = this._firstShowToolbox ?
+    const telemetryKey = this._firstShowToolbox ?
       "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
     this._telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
 
@@ -535,9 +535,9 @@ DevTools.prototype = {
   },
 
   async createToolbox(target, toolId, hostType, hostOptions) {
-    let manager = new ToolboxHostManager(target, hostType, hostOptions);
+    const manager = new ToolboxHostManager(target, hostType, hostOptions);
 
-    let toolbox = await manager.create(toolId);
+    const toolbox = await manager.create(toolId);
 
     this._toolboxes.set(target, toolbox);
 
@@ -627,7 +627,7 @@ DevTools.prototype = {
    * toolkit/components/extensions/ext-c-toolkit.js
    */
   openBrowserConsole: function() {
-    let {HUDService} = require("devtools/client/webconsole/hudservice");
+    const {HUDService} = require("devtools/client/webconsole/hudservice");
     HUDService.openBrowserConsoleOrFocus();
   },
 
@@ -643,19 +643,19 @@ DevTools.prototype = {
    */
   async findNodeFront(walker, nodeSelectors) {
     async function querySelectors(nodeFront) {
-      let selector = nodeSelectors.shift();
+      const selector = nodeSelectors.shift();
       if (!selector) {
         return nodeFront;
       }
       nodeFront = await walker.querySelector(nodeFront, selector);
       if (nodeSelectors.length > 0) {
-        let { nodes } = await walker.children(nodeFront);
+        const { nodes } = await walker.children(nodeFront);
         // This is the NodeFront for the document node inside the iframe
         nodeFront = nodes[0];
       }
       return querySelectors(nodeFront);
     }
-    let nodeFront = await walker.getRootNode();
+    const nodeFront = await walker.getRootNode();
     return querySelectors(nodeFront);
   },
 
@@ -676,10 +676,10 @@ DevTools.prototype = {
    *         markup view.
    */
   async inspectNode(tab, nodeSelectors, startTime) {
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    let toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
-    let inspector = toolbox.getCurrentPanel();
+    const toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
+    const inspector = toolbox.getCurrentPanel();
 
     // If the toolbox has been switched into a nested frame, we should first remove
     // selectors according to the frame depth.
@@ -687,9 +687,9 @@ DevTools.prototype = {
 
     // new-node-front tells us when the node has been selected, whether the
     // browser is remote or not.
-    let onNewNode = inspector.selection.once("new-node-front");
+    const onNewNode = inspector.selection.once("new-node-front");
 
-    let nodeFront = await this.findNodeFront(inspector.walker, nodeSelectors);
+    const nodeFront = await this.findNodeFront(inspector.walker, nodeSelectors);
     // Select the final node
     inspector.selection.setNodeFront(nodeFront, { reason: "browser-context-menu" });
 
@@ -715,15 +715,15 @@ DevTools.prototype = {
    *         selected in the accessibility inspector.
    */
   async inspectA11Y(tab, nodeSelectors, startTime) {
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    let toolbox = await gDevTools.showToolbox(
+    const toolbox = await gDevTools.showToolbox(
       target, "accessibility", null, null, startTime);
-    let nodeFront = await this.findNodeFront(toolbox.walker, nodeSelectors);
+    const nodeFront = await this.findNodeFront(toolbox.walker, nodeSelectors);
     // Select the accessible object in the panel and wait for the event that
     // tells us it has been done.
-    let a11yPanel = toolbox.getCurrentPanel();
-    let onSelected = a11yPanel.once("new-accessible-front-selected");
+    const a11yPanel = toolbox.getCurrentPanel();
+    const onSelected = a11yPanel.once("new-accessible-front-selected");
     a11yPanel.selectAccessibleForNode(nodeFront, "browser-context-menu");
     await onSelected;
   },
@@ -738,12 +738,12 @@ DevTools.prototype = {
   destroy({ shuttingDown }) {
     // Do not cleanup everything during firefox shutdown.
     if (!shuttingDown) {
-      for (let [, toolbox] of this._toolboxes) {
+      for (const [, toolbox] of this._toolboxes) {
         toolbox.destroy();
       }
     }
 
-    for (let [key, ] of this.getToolDefinitionMap()) {
+    for (const [key, ] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
 

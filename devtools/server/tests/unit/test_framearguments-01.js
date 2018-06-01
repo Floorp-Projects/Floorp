@@ -27,7 +27,7 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
     Assert.equal(args.length, 6);
     Assert.equal(args[0], 42);
     Assert.equal(args[1], true);

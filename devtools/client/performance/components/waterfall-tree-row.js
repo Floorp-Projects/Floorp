@@ -19,15 +19,15 @@ const WATERFALL_MARKER_TIMEBAR_WIDTH_MIN = 5; // px
 function buildMarkerSidebar(blueprint, props) {
   const { marker, level, sidebarWidth } = props;
 
-  let bullet = dom.div({
+  const bullet = dom.div({
     className: `waterfall-marker-bullet marker-color-${blueprint.colorName}`,
     style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
     "data-type": marker.name
   });
 
-  let label = MarkerBlueprintUtils.getMarkerLabel(marker);
+  const label = MarkerBlueprintUtils.getMarkerLabel(marker);
 
-  let name = dom.div({
+  const name = dom.div({
     className: "plain waterfall-marker-name",
     style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
     title: label
@@ -45,7 +45,7 @@ function buildMarkerTimebar(blueprint, props) {
   const width = Math.max((marker.end - marker.start) * dataScale,
                          WATERFALL_MARKER_TIMEBAR_WIDTH_MIN);
 
-  let bar = dom.div(
+  const bar = dom.div(
     {
       className: "waterfall-marker-wrap",
       style: { transform: `translateX(${offset}px)` }
@@ -68,14 +68,14 @@ function WaterfallTreeRow(props) {
   const { marker, focused } = props;
   const blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
 
-  let attrs = {
+  const attrs = {
     className: "waterfall-tree-item" + (focused ? " focused" : ""),
     "data-otmt": marker.isOffMainThread
   };
 
   // Don't render an expando-arrow for leaf nodes.
-  let submarkers = marker.submarkers;
-  let hasDescendants = submarkers && submarkers.length > 0;
+  const submarkers = marker.submarkers;
+  const hasDescendants = submarkers && submarkers.length > 0;
   if (hasDescendants) {
     attrs["data-expandable"] = "";
   } else {

@@ -29,7 +29,7 @@ function getPromiseState(obj) {
       "refer to Promise objects.");
   }
 
-  let state = { state: obj.promiseState };
+  const state = { state: obj.promiseState };
   if (state.state === "fulfilled") {
     state.value = obj.promiseValue;
   } else if (state.state === "rejected") {
@@ -171,8 +171,8 @@ function getArrayLength(object) {
   // For typed arrays, `DevToolsUtils.getProperty` is not reliable because the `length`
   // getter could be shadowed by an own property, and `getOwnPropertyNames` is
   // unnecessarily slow. Obtain the `length` getter safely and call it manually.
-  let typedProto = Object.getPrototypeOf(Uint8Array.prototype);
-  let getter = Object.getOwnPropertyDescriptor(typedProto, "length").get;
+  const typedProto = Object.getPrototypeOf(Uint8Array.prototype);
+  const getter = Object.getOwnPropertyDescriptor(typedProto, "length").get;
   return getter.call(object.unsafeDereference());
 }
 
@@ -184,7 +184,7 @@ function getArrayLength(object) {
  */
 function isArrayIndex(str) {
   // Transform the parameter to a 32-bit unsigned integer.
-  let num = str >>> 0;
+  const num = str >>> 0;
   // Check that the parameter is a canonical Uint32 index.
   return num + "" === str &&
     // Array indices cannot attain the maximum Uint32 value.

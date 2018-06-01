@@ -10,16 +10,16 @@
 add_task(async function() {
   requestLongerTimeout(4);
 
-  let { tab, monitor } = await initNetMonitor(INFINITE_GET_URL, true);
-  let { document, windowRequire, store } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(INFINITE_GET_URL, true);
+  const { document, windowRequire, store } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   // Wait until the first request makes the empty notice disappear
   await waitForRequestListToAppear();
 
-  let requestsContainer = document.querySelector(".requests-list-contents");
+  const requestsContainer = document.querySelector(".requests-list-contents");
   ok(requestsContainer, "Container element exists as expected.");
 
   // (1) Check that the scroll position is maintained at the bottom
@@ -34,7 +34,7 @@ add_task(async function() {
   await waitSomeTime();
   ok(!scrolledToBottom(requestsContainer), "Not scrolled to bottom.");
   // save for comparison later
-  let scrollTop = requestsContainer.scrollTop;
+  const scrollTop = requestsContainer.scrollTop;
   await waitForNetworkEvents(monitor, 8);
   await waitSomeTime();
   is(requestsContainer.scrollTop, scrollTop, "Did not scroll.");
@@ -53,8 +53,8 @@ add_task(async function() {
   store.dispatch(Actions.selectRequestByIndex(0));
   await waitForNetworkEvents(monitor, 8);
   await waitSomeTime();
-  let requestsContainerHeaders = requestsContainer.firstChild;
-  let headersHeight = requestsContainerHeaders.offsetHeight;
+  const requestsContainerHeaders = requestsContainer.firstChild;
+  const headersHeight = requestsContainerHeaders.offsetHeight;
   is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
 
   // Stop doing requests.

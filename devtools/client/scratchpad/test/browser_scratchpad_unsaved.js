@@ -54,12 +54,12 @@ function testListeners() {
 }
 
 function testRestoreNotFromFile() {
-  let session = [{
+  const session = [{
     text: "test1",
     executionContext: 1
   }];
 
-  let [win] = ScratchpadManager.restoreSession(session);
+  const [win] = ScratchpadManager.restoreSession(session);
   openScratchpad(function(aWin, aScratchpad) {
     aScratchpad.setText("new text");
     ok(isStar(win), "show star if restored scratchpad isn't from a file");
@@ -70,14 +70,14 @@ function testRestoreNotFromFile() {
 }
 
 function testRestoreFromFileSaved() {
-  let session = [{
+  const session = [{
     filename: "test.js",
     text: "test1",
     executionContext: 1,
     saved: true
   }];
 
-  let [win] = ScratchpadManager.restoreSession(session);
+  const [win] = ScratchpadManager.restoreSession(session);
   openScratchpad(function(aWin, aScratchpad) {
     ok(!isStar(win), "no star before changing text in scratchpad restored from file");
 
@@ -90,14 +90,14 @@ function testRestoreFromFileSaved() {
 }
 
 function testRestoreFromFileUnsaved() {
-  let session = [{
+  const session = [{
     filename: "test.js",
     text: "test1",
     executionContext: 1,
     saved: false
   }];
 
-  let [win] = ScratchpadManager.restoreSession(session);
+  const [win] = ScratchpadManager.restoreSession(session);
   openScratchpad(function() {
     ok(isStar(win), "star with scratchpad restored with unsaved text");
 

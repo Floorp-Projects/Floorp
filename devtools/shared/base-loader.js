@@ -62,16 +62,16 @@ function parseURI(uri) {
 }
 
 function parseStack(stack) {
-  let lines = String(stack).split("\n");
+  const lines = String(stack).split("\n");
   return lines.reduce(function(frames, line) {
     if (line) {
-      let atIndex = line.indexOf("@");
-      let columnIndex = line.lastIndexOf(":");
-      let lineIndex = line.lastIndexOf(":", columnIndex - 1);
-      let fileName = parseURI(line.slice(atIndex + 1, lineIndex));
-      let lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex), 10);
-      let columnNumber = parseInt(line.slice(columnIndex + 1), 10);
-      let name = line.slice(0, atIndex).split("(").shift();
+      const atIndex = line.indexOf("@");
+      const columnIndex = line.lastIndexOf(":");
+      const lineIndex = line.lastIndexOf(":", columnIndex - 1);
+      const fileName = parseURI(line.slice(atIndex + 1, lineIndex));
+      const lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex), 10);
+      const columnNumber = parseInt(line.slice(columnIndex + 1), 10);
+      const name = line.slice(0, atIndex).split("(").shift();
       frames.unshift({
         fileName: fileName,
         name: name,
@@ -94,19 +94,19 @@ function serializeStack(frames) {
 }
 
 function readURI(uri) {
-  let nsURI = NetUtil.newURI(uri);
+  const nsURI = NetUtil.newURI(uri);
   if (nsURI.scheme == "resource") {
     // Resolve to a real URI, this will catch any obvious bad paths without
     // logging assertions in debug builds, see bug 1135219
     uri = resProto.resolveURI(nsURI);
   }
 
-  let stream = NetUtil.newChannel({
+  const stream = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true}
   ).open2();
-  let count = stream.available();
-  let data = NetUtil.readInputStreamToString(stream, count, {
+  const count = stream.available();
+  const data = NetUtil.readInputStreamToString(stream, count, {
     charset: "UTF-8"
   });
 
@@ -119,7 +119,7 @@ function readURI(uri) {
 function join(base, ...paths) {
   // If this is an absolute URL, we need to normalize only the path portion,
   // or we wind up stripping too many slashes and producing invalid URLs.
-  let match = /^((?:resource|file|chrome)\:\/\/[^\/]*|jar:[^!]+!)(.*)/.exec(base);
+  const match = /^((?:resource|file|chrome)\:\/\/[^\/]*|jar:[^!]+!)(.*)/.exec(base);
   if (match) {
     return match[1] + normalize([match[2], ...paths].join("/"));
   }
@@ -149,7 +149,7 @@ function Sandbox(options) {
                          options.invisibleToDebugger : false,
   };
 
-  let sandbox = Cu.Sandbox(systemPrincipal, options);
+  const sandbox = Cu.Sandbox(systemPrincipal, options);
 
   delete sandbox.Components;
 
@@ -159,13 +159,13 @@ function Sandbox(options) {
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 function load(loader, module) {
-  let { sandboxes, globals } = loader;
-  let require = Require(loader, module);
+  const { sandboxes, globals } = loader;
+  const require = Require(loader, module);
 
   // We expose set of properties defined by `CommonJS` specification via
   // prototype of the sandbox. Also globals are deeper in the prototype
   // chain so that each module has access to them as well.
-  let descriptors = {
+  const descriptors = {
     require: {
       configurable: true,
       enumerable: true,
@@ -208,7 +208,7 @@ function load(loader, module) {
         },
       };
     }
-    let define = Object.getOwnPropertyDescriptor(globals, "define");
+    const define = Object.getOwnPropertyDescriptor(globals, "define");
     if (define && define.value) {
       descriptors.define = define;
     }
@@ -225,22 +225,22 @@ function load(loader, module) {
   }
   sandboxes[module.uri] = sandbox;
 
-  let originalExports = module.exports;
+  const originalExports = module.exports;
   try {
     Services.scriptloader.loadSubScript(module.uri, sandbox, "UTF-8");
   } catch (error) {
     let { message, fileName, lineNumber } = error;
-    let stack = error.stack || Error().stack;
-    let frames = parseStack(stack).filter(isntLoaderFrame);
+    const stack = error.stack || Error().stack;
+    const frames = parseStack(stack).filter(isntLoaderFrame);
     let toString = String(error);
-    let file = sourceURI(fileName);
+    const file = sourceURI(fileName);
 
     // Note that `String(error)` where error is from subscript loader does
     // not puts `:` after `"Error"` unlike regular errors thrown by JS code.
     // If there is a JS stack then this error has already been handled by an
     // inner module load.
     if (/^Error opening input stream/.test(String(error))) {
-      let caller = frames.slice(0).pop();
+      const caller = frames.slice(0).pop();
       fileName = caller.fileName;
       lineNumber = caller.lineNumber;
       message = "Module `" + module.id + "` is not found at " + module.uri;
@@ -253,7 +253,7 @@ function load(loader, module) {
       frames.push({ fileName: file, lineNumber: lineNumber, name: "" });
     }
 
-    let prototype = typeof (error) === "object" ? error.constructor.prototype :
+    const prototype = typeof (error) === "object" ? error.constructor.prototype :
                     Error.prototype;
 
     throw Object.create(prototype, {
@@ -291,7 +291,7 @@ function resolve(id, base) {
     return id;
   }
 
-  let baseDir = dirname(base);
+  const baseDir = dirname(base);
 
   let resolved;
   if (baseDir.includes(":")) {
@@ -311,14 +311,14 @@ function resolve(id, base) {
 
 function compileMapping(paths) {
   // Make mapping array that is sorted from longest path to shortest path.
-  let mapping = Object.keys(paths)
+  const mapping = Object.keys(paths)
                       .sort((a, b) => b.length - a.length)
                       .map(path => [path, paths[path]]);
 
   const PATTERN = /([.\\?+*(){}[\]^$])/g;
   const escapeMeta = str => str.replace(PATTERN, "\\$1");
 
-  let patterns = [];
+  const patterns = [];
   paths = {};
 
   for (let [path, uri] of mapping) {
@@ -346,7 +346,7 @@ function compileMapping(paths) {
     }
   }
 
-  let pattern = new RegExp(`^(${patterns.join("|")})`);
+  const pattern = new RegExp(`^(${patterns.join("|")})`);
 
   // This will replace the longest matching path mapping at the start of
   // the ID string with its mapped value.
@@ -383,7 +383,7 @@ function resolveURI(id, mapping) {
  */
 function lazyRequire(obj, moduleId, ...args) {
   let module;
-  let getModule = () => {
+  const getModule = () => {
     if (!module) {
       module = this.require(moduleId);
     }
@@ -395,7 +395,7 @@ function lazyRequire(obj, moduleId, ...args) {
       props = {[props]: props};
     }
 
-    for (let [fromName, toName] of Object.entries(props)) {
+    for (const [fromName, toName] of Object.entries(props)) {
       defineLazyGetter(obj, toName, () => getModule()[fromName]);
     }
   }
@@ -421,7 +421,7 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
 function Require(loader, requirer) {
-  let {
+  const {
     modules, mapping, mappingCache, requireHook
   } = loader;
 
@@ -534,7 +534,7 @@ function Require(loader, requirer) {
 
   // Expose the `resolve` function for this `Require` instance
   require.resolve = _require.resolve = function(id) {
-    let { uri } = getRequirements(id);
+    const { uri } = getRequirements(id);
     return uri;
   };
 
@@ -570,7 +570,7 @@ function unload(loader, reason) {
   // Note: We don not destroy loader's module cache or sandboxes map as
   // some modules may do cleanup in subsequent turns of event loop. Destroying
   // cache may cause module identity problems in such cases.
-  let subject = { wrappedJSObject: loader.destructor };
+  const subject = { wrappedJSObject: loader.destructor };
   Services.obs.notifyObservers(subject, "devtools:loader:destroy", reason);
 }
 
@@ -603,9 +603,9 @@ function Loader(options) {
   // which loader is unloaded. Please note that we intentionally don"t
   // use `loader` as subject to prevent a loader access leakage through
   // observer notifications.
-  let destructor = Object.create(null);
+  const destructor = Object.create(null);
 
-  let mapping = compileMapping(paths);
+  const mapping = compileMapping(paths);
 
   // Define pseudo modules.
   let modules = {
@@ -619,10 +619,10 @@ function Loader(options) {
 
   const builtinModuleExports = modules;
   modules = {};
-  for (let id of Object.keys(builtinModuleExports)) {
+  for (const id of Object.keys(builtinModuleExports)) {
     // We resolve `uri` from `id` since modules are cached by `uri`.
-    let uri = resolveURI(id, mapping);
-    let module = Module(id, uri);
+    const uri = resolveURI(id, mapping);
+    const module = Module(id, uri);
 
     // Lazily expose built-in modules in order to
     // allow them to be loaded lazily.
@@ -640,7 +640,7 @@ function Loader(options) {
   // so that we prevent creating a new compartment per module.
   // The side effect is that all modules will share the same
   // global objects.
-  let sharedGlobalSandbox = Sandbox({
+  const sharedGlobalSandbox = Sandbox({
     name: options.sandboxName || "DevTools",
     invisibleToDebugger: options.invisibleToDebugger || false,
     prototype: options.sandboxPrototype || globals,
@@ -650,7 +650,7 @@ function Loader(options) {
     // If we were given a sandboxPrototype, we have to define the globals on
     // the sandbox directly. Note that this will not work for callers who
     // depend on being able to add globals after the loader was created.
-    for (let name of getOwnIdentifiers(globals)) {
+    for (const name of getOwnIdentifiers(globals)) {
       Object.defineProperty(sharedGlobalSandbox, name,
                             Object.getOwnPropertyDescriptor(globals, name));
     }
@@ -659,7 +659,7 @@ function Loader(options) {
   // Loader object is just a representation of a environment
   // state. We mark its properties non-enumerable
   // as they are pure implementation detail that no one should rely upon.
-  let returnObj = {
+  const returnObj = {
     destructor: { enumerable: false, value: destructor },
     globals: { enumerable: false, value: globals },
     mapping: { enumerable: false, value: mapping },

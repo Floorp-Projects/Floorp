@@ -15,20 +15,20 @@ add_task(async function() {
   // Hide the button by default.
   await pushPref(FRAME_BUTTON_PREF, false);
 
-  let tab = await addTab(TEST_URL);
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab(TEST_URL);
+  const target = TargetFactory.forTab(tab);
 
   info("Open the toolbox on the Options panel");
-  let toolbox = await gDevTools.showToolbox(target, "options");
-  let doc = toolbox.doc;
+  const toolbox = await gDevTools.showToolbox(target, "options");
+  const doc = toolbox.doc;
 
-  let optionsPanel = toolbox.getCurrentPanel();
+  const optionsPanel = toolbox.getCurrentPanel();
 
   let framesButton = doc.getElementById("command-button-frames");
   ok(!framesButton, "Frames button is not rendered.");
 
-  let optionsDoc = optionsPanel.panelWin.document;
-  let framesButtonCheckbox = optionsDoc.getElementById("command-button-frames");
+  const optionsDoc = optionsPanel.panelWin.document;
+  const framesButtonCheckbox = optionsDoc.getElementById("command-button-frames");
   framesButtonCheckbox.click();
 
   framesButton = doc.getElementById("command-button-frames");

@@ -19,7 +19,7 @@
       "use strict";
 
       function performRequests() {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("GET", "test-image.png?v=" + Math.random(), true);
         xhr.send(null);
       }

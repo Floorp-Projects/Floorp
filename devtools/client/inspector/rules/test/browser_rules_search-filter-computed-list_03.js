@@ -22,7 +22,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".testclass", inspector);
   await testAddTextInFilter(inspector, view);
 });
@@ -35,9 +35,9 @@ async function testAddTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let ruleEditor = rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const ruleEditor = rule.textProps[0].editor;
+  const computed = ruleEditor.computed;
 
   is(rule.selectorText, ".testclass", "Second rule is .testclass.");
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");

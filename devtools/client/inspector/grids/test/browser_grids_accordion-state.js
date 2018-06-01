@@ -22,8 +22,8 @@ const GRID_OPENED_PREF = "devtools.layout.grid.opened";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector, toolbox } = await openLayoutView();
-  let { document: doc } = gridInspector;
+  const { inspector, gridInspector, toolbox } = await openLayoutView();
+  const { document: doc } = gridInspector;
 
   await testAccordionStateAfterClickingHeader(doc);
   await testAccordionStateAfterSwitchingSidebars(inspector, doc);
@@ -33,8 +33,8 @@ add_task(async function() {
 });
 
 function testAccordionStateAfterClickingHeader(doc) {
-  let header = doc.querySelector(".grid-pane ._header");
-  let gContent = doc.querySelector(".grid-pane ._content");
+  const header = doc.querySelector(".grid-pane ._header");
+  const gContent = doc.querySelector(".grid-pane ._content");
 
   info("Checking initial state of the grid panel.");
   is(gContent.style.display, "block", "The grid panel content is 'display: block'.");
@@ -52,7 +52,7 @@ function testAccordionStateAfterClickingHeader(doc) {
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   info("Checking the grid accordion state is persistent after switching sidebars.");
 
-  let gContent = doc.querySelector(".grid-pane ._content");
+  const gContent = doc.querySelector(".grid-pane ._content");
 
   info("Selecting the computed view.");
   inspector.sidebar.select("computedview");
@@ -73,9 +73,9 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   await toolbox.destroy();
 
   info("Re-opening the layout view.");
-  let { gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let gContent = doc.querySelector(".grid-pane ._content");
+  const { gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const gContent = doc.querySelector(".grid-pane ._content");
 
   info("Checking the state of the grid panel.");
   ok(!gContent, "The grid panel content is not rendered.");

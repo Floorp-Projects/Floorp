@@ -37,7 +37,7 @@ this.Census = (function() {
   function walk(subject, name, walker, count) {
     if (typeof subject === "object") {
       dumpn(name);
-      for (let prop in subject) {
+      for (const prop in subject) {
         count = walk(subject[prop],
                      name + "[" + uneval(prop) + "]",
                      walker.enter(prop),
@@ -95,7 +95,7 @@ this.Census = (function() {
   function makeBasisChecker({compare, missing, extra}) {
     return function makeWalker(basis) {
       if (typeof basis === "object") {
-        let unvisited = new Set(Object.getOwnPropertyNames(basis));
+        const unvisited = new Set(Object.getOwnPropertyNames(basis));
         return {
           enter: prop => {
             unvisited.delete(prop);

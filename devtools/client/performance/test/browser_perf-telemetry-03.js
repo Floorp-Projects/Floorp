@@ -15,12 +15,12 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   startTelemetry();
 
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     DetailsView,
     JsCallTreeView,
@@ -30,8 +30,8 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  let calltreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  let flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  const calltreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
 
   // Go through some views to check later.
   await DetailsView.selectView("js-calltree");

@@ -20,7 +20,7 @@ class AsyncFrameClass extends Component {
   }
 
   render() {
-    let { asyncCause } = this.props;
+    const { asyncCause } = this.props;
 
     return dom.span(
       { className: "frame-link-async-cause" },
@@ -41,14 +41,14 @@ class StackTrace extends Component {
   }
 
   render() {
-    let {
+    const {
       stacktrace,
       onViewSourceInDebugger,
       onViewSourceInScratchpad,
       sourceMapService,
     } = this.props;
 
-    let frames = [];
+    const frames = [];
     stacktrace.forEach((s, i) => {
       if (s.asyncCause) {
         frames.push("\t", AsyncFrame({
@@ -57,7 +57,7 @@ class StackTrace extends Component {
         }), "\n");
       }
 
-      let source = s.filename.split(" -> ").pop();
+      const source = s.filename.split(" -> ").pop();
       frames.push("\t", Frame({
         key: `${i}-frame`,
         frame: {

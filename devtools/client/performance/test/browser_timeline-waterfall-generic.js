@@ -12,12 +12,12 @@ const { startRecording, stopRecording, waitForOverviewRenderedWithMarkers } = re
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $, $$, EVENTS, WaterfallView } = panel.panelWin;
+  const { $, $$, EVENTS, WaterfallView } = panel.panelWin;
 
   await startRecording(panel);
   ok(true, "Recording has started.");
@@ -63,13 +63,13 @@ add_task(async function() {
 
   // Test the sidebar.
 
-  let detailsView = WaterfallView.details;
+  const detailsView = WaterfallView.details;
   // Make sure the bounds are up to date.
   WaterfallView._recalculateBounds();
 
-  let parentWidthBefore = $("#waterfall-view").getBoundingClientRect().width;
-  let sidebarWidthBefore = $(".waterfall-sidebar").getBoundingClientRect().width;
-  let detailsWidthBefore = $("#waterfall-details").getBoundingClientRect().width;
+  const parentWidthBefore = $("#waterfall-view").getBoundingClientRect().width;
+  const sidebarWidthBefore = $(".waterfall-sidebar").getBoundingClientRect().width;
+  const detailsWidthBefore = $("#waterfall-details").getBoundingClientRect().width;
 
   ok(detailsView.hidden,
     "The details view in the waterfall view is hidden by default.");
@@ -80,13 +80,13 @@ add_task(async function() {
                        - WaterfallView.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
      "The waterfall width is correct (1).");
 
-  let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
+  const waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   $$(".waterfall-tree-item")[0].click();
   await waterfallRerendered;
 
-  let parentWidthAfter = $("#waterfall-view").getBoundingClientRect().width;
-  let sidebarWidthAfter = $(".waterfall-sidebar").getBoundingClientRect().width;
-  let detailsWidthAfter = $("#waterfall-details").getBoundingClientRect().width;
+  const parentWidthAfter = $("#waterfall-view").getBoundingClientRect().width;
+  const sidebarWidthAfter = $(".waterfall-sidebar").getBoundingClientRect().width;
+  const detailsWidthAfter = $("#waterfall-details").getBoundingClientRect().width;
 
   ok(!detailsView.hidden,
     "The details view in the waterfall view is now visible.");

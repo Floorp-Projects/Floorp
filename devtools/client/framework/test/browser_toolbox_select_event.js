@@ -10,7 +10,7 @@ const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 requestLongerTimeout(2);
 
 add_task(async function() {
-  let tab = await addTab(PAGE_URL);
+  const tab = await addTab(PAGE_URL);
 
   let toolbox = await openToolboxForTab(tab, "webconsole", "bottom");
   await testSelectEvent("inspector");
@@ -50,9 +50,9 @@ add_task(async function() {
    * @param {toolId} Id of the tool to test
    */
   async function testSelectEvent(toolId) {
-    let onSelect = toolbox.once("select");
+    const onSelect = toolbox.once("select");
     toolbox.selectTool(toolId);
-    let id = await onSelect;
+    const id = await onSelect;
     is(id, toolId, toolId + " selected");
   }
 
@@ -62,7 +62,7 @@ add_task(async function() {
    * @param {toolId} Id of the tool to test
    */
   async function testToolSelectEvent(toolId) {
-    let onSelected = toolbox.once(toolId + "-selected");
+    const onSelected = toolbox.once(toolId + "-selected");
     toolbox.selectTool(toolId);
     await onSelected;
     is(toolbox.currentToolId, toolId, toolId + " tool selected");
@@ -72,9 +72,9 @@ add_task(async function() {
    * Assert that two calls to selectTool won't race
    */
   async function testSelectToolRace() {
-    let toolbox = await openToolboxForTab(tab, "webconsole");
+    const toolbox = await openToolboxForTab(tab, "webconsole");
     let selected = false;
-    let onSelect = (event, id) => {
+    const onSelect = (event, id) => {
       if (selected) {
         ok(false, "Got more than one 'select' event");
       } else {
@@ -82,12 +82,12 @@ add_task(async function() {
       }
     };
     toolbox.once("select", onSelect);
-    let p1 = toolbox.selectTool("inspector");
-    let p2 = toolbox.selectTool("inspector");
+    const p1 = toolbox.selectTool("inspector");
+    const p2 = toolbox.selectTool("inspector");
     // Check that both promises don't resolve too early
-    let checkSelectToolResolution = panel => {
+    const checkSelectToolResolution = panel => {
       ok(selected, "selectTool resolves only after 'select' event is fired");
-      let inspector = toolbox.getPanel("inspector");
+      const inspector = toolbox.getPanel("inspector");
       is(panel, inspector, "selecTool resolves to the panel instance");
     };
     p1.then(checkSelectToolResolution);

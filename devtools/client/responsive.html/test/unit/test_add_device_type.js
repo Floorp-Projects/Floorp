@@ -9,7 +9,7 @@ const { addDeviceType } =
   require("devtools/client/responsive.html/actions/devices");
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   dispatch(addDeviceType("phones"));

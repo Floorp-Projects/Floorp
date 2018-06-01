@@ -56,7 +56,7 @@ add_task(async function() {
 
   info("Test disabling mixed content protection");
 
-  let {gIdentityHandler} = gBrowser.ownerGlobal;
+  const {gIdentityHandler} = gBrowser.ownerGlobal;
   ok(gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
     "Mixed Active Content state appeared on identity box");
   // Disabe mixed content protection.

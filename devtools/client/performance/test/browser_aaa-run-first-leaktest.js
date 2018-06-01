@@ -11,7 +11,7 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 
 add_task(async function() {
-  let { target, toolbox, panel } = await initPerformanceInNewTab({
+  const { target, toolbox, panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });

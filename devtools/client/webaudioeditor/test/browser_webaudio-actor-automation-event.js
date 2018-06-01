@@ -7,10 +7,10 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(AUTOMATION_URL);
-  let events = [];
+  const { target, front } = await initBackend(AUTOMATION_URL);
+  const events = [];
 
-  let expected = [
+  const expected = [
     ["setValueAtTime", 0.2, 0],
     ["linearRampToValueAtTime", 1, 0.3],
     ["exponentialRampToValueAtTime", 0.75, 0.6],
@@ -19,7 +19,7 @@ add_task(async function() {
 
   front.on("automation-event", onAutomationEvent);
 
-  let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
+  const [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
     get3(front, "create-node"),
@@ -29,8 +29,8 @@ add_task(async function() {
   is(events.length, 4, "correct number of events fired");
 
   function onAutomationEvent(e) {
-    let { eventName, paramName, args } = e;
-    let exp = expected[events.length];
+    const { eventName, paramName, args } = e;
+    const exp = expected[events.length];
 
     is(eventName, exp[0], "correct eventName in event");
     is(paramName, "frequency", "correct paramName in event");

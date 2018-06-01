@@ -31,36 +31,36 @@ const TestData = [
 ];
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  for (let data of TestData) {
+  for (const data of TestData) {
     await testScriptError(hud, data);
   }
 });
 
 async function testScriptError(hud, testData) {
-  let isE10s = Services.appinfo.browserTabsRemoteAutostart;
+  const isE10s = Services.appinfo.browserTabsRemoteAutostart;
   if (testData.isException && !isE10s) {
     expectUncaughtException();
   }
 
   await loadDocument(makeURIData(testData.script));
 
-  let msg = "the expected error message was displayed";
+  const msg = "the expected error message was displayed";
   info(`waiting for ${msg} to be displayed`);
   await waitFor(() => findMessage(hud, testData.expected));
   ok(true, msg);
 
   // grab the most current error doc URL.
-  let urlObj = new URL(ErrorDocs.GetURL({ errorMessageName: testData.jsmsg }));
+  const urlObj = new URL(ErrorDocs.GetURL({ errorMessageName: testData.jsmsg }));
 
   // strip all params from the URL.
-  let url = `${urlObj.origin}${urlObj.pathname}`;
+  const url = `${urlObj.origin}${urlObj.pathname}`;
 
   // Gather all URLs displayed in the console. [Learn More] links have no href
   // but have the URL in the title attribute.
-  let hrefs = new Set();
-  for (let link of hud.ui.outputNode.querySelectorAll("a")) {
+  const hrefs = new Set();
+  for (const link of hud.ui.outputNode.querySelectorAll("a")) {
     hrefs.add(link.title);
   }
 

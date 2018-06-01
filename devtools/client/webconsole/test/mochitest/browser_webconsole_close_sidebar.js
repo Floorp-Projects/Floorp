@@ -15,11 +15,11 @@ add_task(async function() {
     ["devtools.webconsole.sidebarToggle", true]
   ]});
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   await showSidebar(hud);
 
   info("Click the clear console button");
-  let clearButton = hud.ui.document.querySelector(".devtools-button");
+  const clearButton = hud.ui.document.querySelector(".devtools-button");
   clearButton.click();
   await waitFor(() => findMessages(hud, "").length == 0);
   let sidebar = hud.ui.document.querySelector(".sidebar");
@@ -28,7 +28,7 @@ add_task(async function() {
   await showSidebar(hud);
 
   info("Send a console.clear()");
-  let onMessagesCleared = waitForMessage(hud, "Console was cleared");
+  const onMessagesCleared = waitForMessage(hud, "Console was cleared");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.clear();
   });
@@ -53,8 +53,8 @@ add_task(async function() {
   await showSidebar(hud);
 
   info("Click the close button");
-  let closeButton = hud.ui.document.querySelector(".sidebar-close-button");
-  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  const closeButton = hud.ui.document.querySelector(".sidebar-close-button");
+  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
   let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
   closeButton.click();
   await onSidebarShown;
@@ -69,23 +69,23 @@ add_task(async function() {
   await onSidebarShown;
   sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after sending esc");
-  let inputNode = hud.jsterm.inputNode;
+  const inputNode = hud.jsterm.inputNode;
   ok(hasFocus(inputNode), "console input is focused after closing the sidebar");
 });
 
 async function showSidebar(hud) {
-  let onMessage = waitForMessage(hud, "Object");
+  const onMessage = waitForMessage(hud, "Object");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log({a: 1});
   });
   await onMessage;
 
-  let objectNode = hud.ui.outputNode.querySelector(".object-inspector .objectBox");
-  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  const objectNode = hud.ui.outputNode.querySelector(".object-inspector .objectBox");
+  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  const onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
 
-  let contextMenu = await openContextMenu(hud, objectNode);
-  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  const contextMenu = await openContextMenu(hud, objectNode);
+  const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
   openInSidebar.click();
   await onSidebarShown;
   await hideContextMenu(hud);

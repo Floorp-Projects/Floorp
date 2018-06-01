@@ -18,18 +18,18 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = rule.textProps[0];
 
   info("Disabling red background color property");
   await togglePropStatus(view, prop);
   ok(!prop.enabled, "red background-color property is disabled.");
 
-  let editor = await focusEditableField(view, prop.editor.valueSpan);
-  let onDone = view.once("ruleview-changed");
+  const editor = await focusEditableField(view, prop.editor.valueSpan);
+  const onDone = view.once("ruleview-changed");
   editor.input.value = "red; color: red;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onDone;
@@ -40,7 +40,7 @@ add_task(async function() {
   is((await getComputedStyleProperty("#testid", null, "background-color")),
     "rgb(255, 0, 0)", "red background color is set.");
 
-  let propEditor = rule.textProps[1].editor;
+  const propEditor = rule.textProps[1].editor;
   is(propEditor.nameSpan.textContent, "color",
     "new 'color' property name is correctly set.");
   is(propEditor.valueSpan.textContent, "red",

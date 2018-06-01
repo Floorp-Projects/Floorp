@@ -19,7 +19,7 @@ class CDPConnector {
   }
 
   setup(connection, actions) {
-    let {Network, Page} = connection;
+    const {Network, Page} = connection;
     this.Network = Network;
     this.Page = Page;
     this.actions = actions;
@@ -53,11 +53,11 @@ class CDPConnector {
   }
 
   onNetworkUpdate(params) {
-    let {requestId} = params;
-    let payload = this.payloads.add(requestId);
+    const {requestId} = params;
+    const payload = this.payloads.add(requestId);
     return payload.update(params).then(
       ([request, header, postData]) => {
-        let bulkloader = getBulkLoader();
+        const bulkloader = getBulkLoader();
         bulkloader.add(
           requestId,
           (resolve, reject) =>
@@ -71,11 +71,11 @@ class CDPConnector {
   }
 
   onResponseReceived(params) {
-    let {requestId} = params;
-    let payload = this.payloads.get(requestId);
+    const {requestId} = params;
+    const payload = this.payloads.get(requestId);
     return payload.update(params).then(
       ([request, header, postData, state, timings]) => {
-        let loader = getBulkLoader();
+        const loader = getBulkLoader();
         loader.add(
           requestId,
           (resolve) => {
@@ -90,14 +90,14 @@ class CDPConnector {
   }
 
   onDataReceived(params) {
-    let {requestId} = params;
-    let payload = this.payloads.get(requestId);
+    const {requestId} = params;
+    const payload = this.payloads.get(requestId);
     payload.update(params);
   }
 
   onLoadingFinished(params) {
-    let {requestId} = params;
-    let payload = this.payloads.get(requestId);
+    const {requestId} = params;
+    const payload = this.payloads.get(requestId);
     if (payload) {
       payload.log("LoadingFinished", params);
     }
@@ -145,8 +145,8 @@ class CDPConnector {
   }
 
   onLoadingFailed(params) {
-    let {requestId} = params;
-    let payload = this.payloads.get(requestId);
+    const {requestId} = params;
+    const payload = this.payloads.get(requestId);
     if (payload) {
       payload.log("LoadingFailed", params);
     }
@@ -154,14 +154,14 @@ class CDPConnector {
   }
 
   async getResponseContent(params) {
-    let {requestId, response} = params;
+    const {requestId, response} = params;
 
     return this.Network.getResponseBody({requestId}).then(
       (content) => {
-        let payload = this.payloads.get(requestId);
+        const payload = this.payloads.get(requestId);
         return payload.update({requestId, response, content}).then(
           ([request, header, postData, state, timings, responseContent]) => {
-            let loader = getBulkLoader();
+            const loader = getBulkLoader();
             loader.add(
               requestId,
               (resolve) => {
@@ -203,7 +203,7 @@ class CDPConnector {
   }
 
   async addRequest(id, data) {
-    let {
+    const {
       method,
       url,
       isXHR,

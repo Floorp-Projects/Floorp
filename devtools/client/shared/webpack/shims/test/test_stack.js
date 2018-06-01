@@ -36,9 +36,9 @@ function run_test() {
   callFunctionWithAsyncStack(changeValue, getStack(), "test_stack");
   equal(value, 9, "callFunctionWithAsyncStack worked");
 
-  let stack = getStack();
+  const stack = getStack();
   equal(JSON.parse(JSON.stringify(stack)), stack, "stack is serializable");
 
-  let desc = f1();
+  const desc = f1();
   ok(desc.includes("f1"), "stack description includes f1");
 }

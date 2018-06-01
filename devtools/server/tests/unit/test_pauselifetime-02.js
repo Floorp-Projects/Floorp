@@ -28,8 +28,8 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
-    let objActor = args[0].actor;
+    const args = packet.frame.arguments;
+    const objActor = args[0].actor;
     Assert.equal(args[0].class, "Object");
     Assert.ok(!!objActor);
 

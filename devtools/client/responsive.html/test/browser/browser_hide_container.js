@@ -14,8 +14,8 @@ const { OUTER_FRAME_LOADER_SYMBOL } =
   require("devtools/client/responsive.html/browser/tunnel");
 
 function flushContainerTabState(tab) {
-  let browser = tab.linkedBrowser;
-  let outerBrowser = {
+  const browser = tab.linkedBrowser;
+  const outerBrowser = {
     permanentKey: browser.permanentKey,
     messageManager: browser[OUTER_FRAME_LOADER_SYMBOL].messageManager,
   };
@@ -30,8 +30,8 @@ function flushContainerTabState(tab) {
 
 add_task(async function() {
   // Load test URL
-  let tab = await addTab(TEST_URL);
-  let browser = tab.linkedBrowser;
+  const tab = await addTab(TEST_URL);
+  const browser = tab.linkedBrowser;
 
   // Check session history state
   let history = await getSessionHistory(browser);
@@ -52,7 +52,7 @@ add_task(async function() {
   // However, checking the recorded tab state for the outer browser shows the
   // container URL has been ignored correctly.
   await flushContainerTabState(tab);
-  let tabState = JSON.parse(SessionStore.getTabState(tab));
+  const tabState = JSON.parse(SessionStore.getTabState(tab));
   is(tabState.index - 1, 0, "At page 0 in history");
   is(tabState.entries.length, 1, "1 page in history");
   is(tabState.entries[0].url, TEST_URL, "Page 0 URL matches");

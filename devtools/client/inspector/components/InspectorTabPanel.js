@@ -39,8 +39,8 @@ class InspectorTabPanel extends Component {
   }
 
   componentDidMount() {
-    let doc = this.refs.content.ownerDocument;
-    let panel = doc.getElementById(this.props.idPrefix + this.props.id);
+    const doc = this.refs.content.ownerDocument;
+    const panel = doc.getElementById(this.props.idPrefix + this.props.id);
 
     // Append existing DOM node into panel's content.
     this.refs.content.appendChild(panel);
@@ -51,8 +51,8 @@ class InspectorTabPanel extends Component {
   }
 
   componentWillUnmount() {
-    let doc = this.refs.content.ownerDocument;
-    let panels = doc.getElementById("tabpanels");
+    const doc = this.refs.content.ownerDocument;
+    const panels = doc.getElementById("tabpanels");
 
     if (this.props.onUnmount) {
       this.props.onUnmount(this.refs.content, this.props);

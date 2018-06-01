@@ -8,14 +8,14 @@
 // node after getAnimationPlayersForNode was called on that node.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
-  let node = await walker.querySelector(walker.rootNode, ".not-animated");
+  const node = await walker.querySelector(walker.rootNode, ".not-animated");
 
   info("Retrieve the animation player for the node");
-  let players = await animations.getAnimationPlayersForNode(node);
+  const players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 0, "The node has no animation players");
 
   info("Listen for new animations");
@@ -31,13 +31,13 @@ add_task(async function() {
   is(changes.length, 2, "There are 2 changes in the mutation event");
   ok(changes.every(({type}) => type === "added"), "Both changes are additions");
 
-  let names = changes.map(c => c.player.initialState.name).sort();
+  const names = changes.map(c => c.player.initialState.name).sort();
   is(names[0], "glow", "The animation 'glow' was added");
   is(names[1], "move", "The animation 'move' was added");
 
   info("Store the 2 new players for comparing later");
-  let p1 = changes[0].player;
-  let p2 = changes[1].player;
+  const p1 = changes[0].player;
+  const p2 = changes[1].player;
 
   info("Listen for removed animations");
   onMutations = once(animations, "mutations");

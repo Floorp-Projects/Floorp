@@ -11,7 +11,7 @@ const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html";
 const SAVE_PATH = "test.css";
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(FIRST_TEST_PAGE);
+  const { ui } = await openStyleEditorForURL(FIRST_TEST_PAGE);
 
   testIndentifierGeneration(ui);
 
@@ -24,13 +24,13 @@ add_task(async function() {
 });
 
 function testIndentifierGeneration(ui) {
-  let fakeStyleSheetFile = {
+  const fakeStyleSheetFile = {
     "href": "http://example.com/test.css",
     "nodeHref": "http://example.com/",
     "styleSheetIndex": 1
   };
 
-  let fakeInlineStyleSheet = {
+  const fakeInlineStyleSheet = {
     "href": null,
     "nodeHref": "http://example.com/",
     "styleSheetIndex": 2
@@ -47,8 +47,8 @@ function testIndentifierGeneration(ui) {
 
 function saveFirstInlineStyleSheet(ui) {
   return new Promise(resolve => {
-    let editor = ui.editors[0];
-    let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
+    const editor = ui.editors[0];
+    const destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
 
     editor.saveToFile(destFile, function(file) {
       ok(file, "File was correctly saved.");
@@ -58,8 +58,8 @@ function saveFirstInlineStyleSheet(ui) {
 }
 
 function testFriendlyNamesAfterSave(ui) {
-  let firstEditor = ui.editors[0];
-  let secondEditor = ui.editors[1];
+  const firstEditor = ui.editors[0];
+  const secondEditor = ui.editors[1];
 
   // The friendly name of first sheet should've been remembered, the second
   // should not be the same (bug 969900).
@@ -72,8 +72,8 @@ function testFriendlyNamesAfterSave(ui) {
 }
 
 function testFriendlyNamesAfterNavigation(ui) {
-  let firstEditor = ui.editors[0];
-  let secondEditor = ui.editors[1];
+  const firstEditor = ui.editors[0];
+  const secondEditor = ui.editors[1];
 
   // Inline style sheets shouldn't have the name of previously saved file as the
   // page is different.

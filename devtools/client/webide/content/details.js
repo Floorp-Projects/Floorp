@@ -44,7 +44,7 @@ function resetUI() {
 function updateUI() {
   resetUI();
 
-  let project = AppManager.selectedProject;
+  const project = AppManager.selectedProject;
   if (!project) {
     return;
   }
@@ -75,7 +75,7 @@ function updateUI() {
     document.querySelector("#type").classList.remove("hidden");
 
     if (project.type == "runtimeApp") {
-      let manifestURL = AppManager.getProjectManifestURL(project);
+      const manifestURL = AppManager.getProjectManifestURL(project);
       document.querySelector("#type").textContent = manifest.type || "web";
       document.querySelector("#manifestURLHeader").classList.remove("hidden");
       document.querySelector("#manifestURL").textContent = manifestURL;
@@ -86,7 +86,7 @@ function updateUI() {
     }
 
     if (project.type == "packaged") {
-      let manifestURL = AppManager.getProjectManifestURL(project);
+      const manifestURL = AppManager.getProjectManifestURL(project);
       if (manifestURL) {
         document.querySelector("#manifestURLHeader").classList.remove("hidden");
         document.querySelector("#manifestURL").textContent = manifestURL;
@@ -94,20 +94,20 @@ function updateUI() {
     }
   }
 
-  let errorsNode = document.querySelector("#errorslist");
-  let warningsNode = document.querySelector("#warningslist");
+  const errorsNode = document.querySelector("#errorslist");
+  const warningsNode = document.querySelector("#warningslist");
 
   if (project.errors) {
-    for (let e of project.errors) {
-      let li = document.createElement("li");
+    for (const e of project.errors) {
+      const li = document.createElement("li");
       li.textContent = e;
       errorsNode.appendChild(li);
     }
   }
 
   if (project.warnings) {
-    for (let w of project.warnings) {
-      let li = document.createElement("li");
+    for (const w of project.warnings) {
+      const li = document.createElement("li");
       li.textContent = w;
       warningsNode.appendChild(li);
     }

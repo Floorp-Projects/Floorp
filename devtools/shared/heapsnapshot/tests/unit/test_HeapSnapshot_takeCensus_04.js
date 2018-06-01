@@ -8,8 +8,8 @@
 // Ported from js/src/jit-test/tests/debug/Memory-takeCensus-04.js
 
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
   g.eval(`
 function withAllocationMarkerOnStack(f) {

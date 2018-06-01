@@ -9,10 +9,10 @@
  */
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("promises-actor-test");
+  const client = await startTestDebuggerServer("promises-actor-test");
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "promises-actor-test");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "promises-actor-test");
   Assert.ok(targetTab, "Found our target tab.");
 
   // Attach to the TabActor and check the response
@@ -29,7 +29,7 @@ add_task(async function() {
     });
   });
 
-  let chromeActors = await getChromeActors(client);
+  const chromeActors = await getChromeActors(client);
   Assert.ok(typeof chromeActors.promisesActor === "string",
     "Should have a chrome context PromisesActor.");
 });

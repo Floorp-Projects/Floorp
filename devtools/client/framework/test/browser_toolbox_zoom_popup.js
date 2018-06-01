@@ -19,15 +19,15 @@ add_task(async function() {
 
   info("Load iframe page for checking the frame menu with x1.5 zoom.");
   await addTab(TEST_URL);
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target,
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target,
                                             "inspector",
                                             Toolbox.HostType.WINDOW);
-  let inspector = toolbox.getCurrentPanel();
-  let hostWindow = toolbox.win.parent;
-  let originWidth = hostWindow.outerWidth;
-  let originHeight = hostWindow.outerHeight;
-  let windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
+  const inspector = toolbox.getCurrentPanel();
+  const hostWindow = toolbox.win.parent;
+  const originWidth = hostWindow.outerWidth;
+  const originHeight = hostWindow.outerHeight;
+  const windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
   info("Waiting for the toolbox window will to be rendered with zoom x1.5");
@@ -40,7 +40,7 @@ add_task(async function() {
   hostWindow.moveTo(0, 0);
 
   // This size will display inspector's tabs menu button and chevron menu button of toolbox.
-  let prevTabs = toolbox.doc.querySelectorAll(".devtools-tab").length;
+  const prevTabs = toolbox.doc.querySelectorAll(".devtools-tab").length;
   hostWindow.resizeTo(400, hostWindow.outerHeight);
   await waitUntil(() => {
     return hostWindow.screen.top === 0 &&
@@ -51,25 +51,25 @@ add_task(async function() {
       prevTabs != toolbox.doc.querySelectorAll(".devtools-tab").length;
   });
 
-  let menuList =
+  const menuList =
     [toolbox.win.document.getElementById("toolbox-meatball-menu-button"),
      toolbox.win.document.getElementById("command-button-frames"),
      toolbox.win.document.getElementById("tools-chevron-menu-button"),
      inspector.panelDoc.querySelector(".all-tabs-menu")];
 
   for (const menu of menuList) {
-    let [btnRect, menuRect] = await getButtonAndMenuRects(toolbox, menu);
+    const [btnRect, menuRect] = await getButtonAndMenuRects(toolbox, menu);
 
     // Allow rounded error and platform offset value.
     // horizontal : eIntID_ContextMenuOffsetHorizontal of GTK and Windows uses 2.
     // vertical: eIntID_ContextMenuOffsetVertical of macOS uses -6.
-    let xDelta = Math.abs(menuRect.left - btnRect.left);
-    let yDelta = Math.abs(menuRect.top - btnRect.bottom);
+    const xDelta = Math.abs(menuRect.left - btnRect.left);
+    const yDelta = Math.abs(menuRect.top - btnRect.bottom);
     ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ". #" + menu.id);
     ok(yDelta < 6, "yDelta is lower than 6: " + yDelta + ". #" + menu.id);
   }
 
-  let onResize = once(hostWindow, "resize");
+  const onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(originWidth, originHeight);
   await onResize;
 
@@ -87,7 +87,7 @@ async function getButtonAndMenuRects(toolbox, menuButton) {
   info("Show popup menu with click event.");
   menuButton.click();
 
-  let popupset = toolbox.doc.querySelector("popupset");
+  const popupset = toolbox.doc.querySelector("popupset");
   let menuPopup;
   await waitUntil(() => {
     menuPopup = popupset.querySelector("menupopup[menu-api=\"true\"]");
@@ -95,11 +95,11 @@ async function getButtonAndMenuRects(toolbox, menuButton) {
   });
   ok(menuPopup, "Menu popup is displayed.");
 
-  let btnRect = menuButton.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
-  let menuRect = menuPopup.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
+  const btnRect = menuButton.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
+  const menuRect = menuPopup.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
 
   info("Hide popup menu.");
-  let onPopupHidden = once(menuPopup, "popuphidden");
+  const onPopupHidden = once(menuPopup, "popuphidden");
   menuPopup.hidePopup();
   await onPopupHidden;
 

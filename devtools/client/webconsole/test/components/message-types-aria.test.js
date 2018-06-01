@@ -37,7 +37,7 @@ describe("message types component ARIA:", () => {
 
   describe("ConsoleCommand", () => {
     it("sets aria-live to off", () => {
-      let message = new ConsoleCommand({
+      const message = new ConsoleCommand({
         messageText: `"simple"`,
       });
       const wrapper = render(ConsoleCmd({message, serviceContainer}));

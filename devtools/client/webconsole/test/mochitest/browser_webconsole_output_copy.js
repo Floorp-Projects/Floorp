@@ -9,17 +9,17 @@
 const TEST_URI = "data:text/html,Test copy to clipboard on the console output";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   const smokeMessage = "Hello world!";
-  let onMessage = waitForMessage(hud, smokeMessage);
+  const onMessage = waitForMessage(hud, smokeMessage);
   ContentTask.spawn(gBrowser.selectedBrowser, smokeMessage, function(msg) {
     content.wrappedJSObject.console.log(msg);
   });
   const {node} = await onMessage;
   ok(true, "Message was logged");
 
-  let selection = selectNode(hud, node);
+  const selection = selectNode(hud, node);
 
   const selectionString = selection.toString().trim();
   is(selectionString, smokeMessage, `selection has expected "${smokeMessage}" value`);

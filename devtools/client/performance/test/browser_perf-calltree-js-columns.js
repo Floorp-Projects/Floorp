@@ -14,12 +14,12 @@ const { busyWait } = require("devtools/client/performance/test/helpers/wait-util
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, $, $$, DetailsView, JsCallTreeView } = panel.panelWin;
+  const { EVENTS, $, $$, DetailsView, JsCallTreeView } = panel.panelWin;
 
   // Enable platform data to show the platform functions in the tree.
   Services.prefs.setBoolPref(UI_SHOW_PLATFORM_DATA_PREF, true);
@@ -29,7 +29,7 @@ add_task(async function() {
   await busyWait(100);
   await stopRecording(panel);
 
-  let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
   await rendered;
 
@@ -50,7 +50,7 @@ add_task(async function() {
 });
 
 function testCells($, $$, visibleCells) {
-  for (let cell in visibleCells) {
+  for (const cell in visibleCells) {
     if (visibleCells[cell]) {
       ok($(`.call-tree-cell[type=${cell}]`),
         `At least one ${cell} column was visible in the tree.`);

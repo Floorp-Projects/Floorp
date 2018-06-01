@@ -35,7 +35,7 @@ class FontPreview extends PureComponent {
 
   componentDidUpdate() {
     if (this.state.isFocused) {
-      let input = this.fontPreviewInput;
+      const input = this.fontPreviewInput;
       input.focus();
       input.selectionStart = input.selectionEnd = input.value.length;
     }
@@ -55,12 +55,12 @@ class FontPreview extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       previewText,
       previewUrl,
     } = this.props;
 
-    let { isFocused } = this.state;
+    const { isFocused } = this.state;
 
     return dom.div(
       {

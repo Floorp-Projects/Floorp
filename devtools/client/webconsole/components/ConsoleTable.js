@@ -42,14 +42,14 @@ class ConsoleTable extends Component {
     }
 
     const client = new ObjectClient(serviceContainer.hudProxy.client, parameters[0]);
-    let dataType = getParametersDataType(parameters);
+    const dataType = getParametersDataType(parameters);
 
     // Get all the object properties.
     dispatch(actions.messageTableDataGet(id, client, dataType));
   }
 
   getHeaders(columns) {
-    let headerItems = [];
+    const headerItems = [];
     columns.forEach((value, key) => headerItems.push(dom.div({
       className: "new-consoletable-header",
       role: "columnheader"
@@ -65,7 +65,7 @@ class ConsoleTable extends Component {
     } = this.props;
 
     return items.map((item, index) => {
-      let cells = [];
+      const cells = [];
       columns.forEach((value, key) => {
         cells.push(
           dom.div(
@@ -138,17 +138,17 @@ function getTableItems(data = {}, type, headers = null) {
   };
 
   let columns = new Map();
-  let items = [];
+  const items = [];
 
-  let addItem = function(item) {
+  const addItem = function(item) {
     items.push(item);
     Object.keys(item).forEach(key => addColumn(key));
   };
 
-  let addColumn = function(columnIndex) {
-    let columnExists = columns.has(columnIndex);
-    let hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
-    let hasCustomHeaders = Array.isArray(headers);
+  const addColumn = function(columnIndex) {
+    const columnExists = columns.has(columnIndex);
+    const hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
+    const hasCustomHeaders = Array.isArray(headers);
 
     if (
       !columnExists &&
@@ -167,18 +167,18 @@ function getTableItems(data = {}, type, headers = null) {
       index = parseInt(index, 10);
     }
 
-    let item = {
+    const item = {
       [INDEX_NAME]: index
     };
 
-    let property = data[index].value;
+    const property = data[index].value;
 
     if (property.preview) {
-      let {preview} = property;
-      let entries = preview.ownProperties || preview.items;
+      const {preview} = property;
+      const entries = preview.ownProperties || preview.items;
       if (entries) {
-        for (let key of Object.keys(entries)) {
-          let entry = entries[key];
+        for (const key of Object.keys(entries)) {
+          const entry = entries[key];
           item[key] = Object.prototype.hasOwnProperty.call(entry, "value")
             ? entry.value
             : entry;
@@ -211,14 +211,14 @@ function getTableItems(data = {}, type, headers = null) {
 
   // We want to always have the index column first
   if (columns.has(INDEX_NAME)) {
-    let index = columns.get(INDEX_NAME);
+    const index = columns.get(INDEX_NAME);
     columns.delete(INDEX_NAME);
     columns = new Map([[INDEX_NAME, index], ...columns.entries()]);
   }
 
   // We want to always have the values column last
   if (columns.has(VALUE_NAME)) {
-    let index = columns.get(VALUE_NAME);
+    const index = columns.get(VALUE_NAME);
     columns.delete(VALUE_NAME);
     columns.set(VALUE_NAME, index);
   }

@@ -9,12 +9,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(API_CALLS_URL);
+  const { tab, monitor } = await initNetMonitor(API_CALLS_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");

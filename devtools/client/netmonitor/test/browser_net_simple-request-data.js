@@ -13,15 +13,15 @@ function test() {
   // number of response headers will vary depending on the platform.
   Services.prefs.setBoolPref("network.tcp.tcp_fastopen_enable", false);
 
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   initNetMonitor(SIMPLE_SJS).then(async ({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { document, store, windowRequire, connector } = monitor.panelWin;
-    let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-    let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
-    let {
+    const { document, store, windowRequire, connector } = monitor.panelWin;
+    const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+    const { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
+    const {
       getDisplayedRequests,
       getSelectedRequest,
       getSortedRequests,
@@ -29,7 +29,7 @@ function test() {
 
     store.dispatch(Actions.batchEnable(false));
 
-    let promiseList = [];
+    const promiseList = [];
     promiseList.push(waitForNetworkEvents(monitor, 1));
 
     function expectEvent(evt, cb) {
@@ -48,7 +48,7 @@ function test() {
       is(!!document.querySelector(".network-details-panel"), false,
         "The network details panel should still be hidden after first request.");
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       is(typeof requestItem.id, "string",
         "The attached request id is incorrect.");
@@ -106,7 +106,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
       await waitForRequestData(store, ["requestHeaders"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.requestHeaders,
         "There should be a requestHeaders data available.");
@@ -129,7 +129,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
       await waitForRequestData(store, ["requestCookies"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.requestCookies,
         "There should be a requestCookies data available.");
@@ -152,7 +152,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
       await waitForRequestData(store, ["responseHeaders"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.responseHeaders,
         "There should be a responseHeaders data available.");
@@ -173,7 +173,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
       await waitForRequestData(store, ["responseCookies"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.responseCookies,
         "There should be a responseCookies data available.");
@@ -197,7 +197,7 @@ function test() {
         "headersSize"
       ]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       is(requestItem.httpVersion, "HTTP/1.1",
         "The httpVersion data has an incorrect value.");
@@ -208,9 +208,9 @@ function test() {
       is(requestItem.headersSize, 335,
         "The headersSize data has an incorrect value.");
 
-      let requestListItem = document.querySelector(".request-list-item");
+      const requestListItem = document.querySelector(".request-list-item");
       requestListItem.scrollIntoView();
-      let requestsListStatus = requestListItem.querySelector(".status-code");
+      const requestsListStatus = requestListItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
 
@@ -234,7 +234,7 @@ function test() {
         "mimeType"
       ]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       is(requestItem.transferredSize, "347",
         "The transferredSize data has an incorrect value.");
@@ -261,7 +261,7 @@ function test() {
     expectEvent(EVENTS.UPDATING_EVENT_TIMINGS, async () => {
       await waitForRequestData(store, ["eventTimings"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       is(typeof requestItem.totalTime, "number",
         "The attached totalTime is incorrect.");
@@ -283,7 +283,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_EVENT_TIMINGS, async () => {
       await waitForRequestData(store, ["eventTimings"]);
 
-      let requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.eventTimings,
         "There should be a eventTimings data available.");
@@ -316,11 +316,11 @@ function test() {
       );
     });
 
-    let wait = waitForNetworkEvents(monitor, 1);
+    const wait = waitForNetworkEvents(monitor, 1);
     tab.linkedBrowser.reload();
     await wait;
 
-    let requestItem = getSortedRequests(store.getState()).get(0);
+    const requestItem = getSortedRequests(store.getState()).get(0);
 
     if (!requestItem.requestHeaders) {
       connector.requestData(requestItem.id, "requestHeaders");

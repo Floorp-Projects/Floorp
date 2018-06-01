@@ -68,8 +68,8 @@ BreadcrumbsWidget.prototype = {
    *         The element associated with the displayed item.
    */
   insertItemAt: function(aIndex, aContents) {
-    let list = this._list;
-    let breadcrumb = new Breadcrumb(this, aContents);
+    const list = this._list;
+    const breadcrumb = new Breadcrumb(this, aContents);
     return list.insertBefore(breadcrumb._target, list.childNodes[aIndex]);
   },
 
@@ -103,7 +103,7 @@ BreadcrumbsWidget.prototype = {
    * Removes all of the child nodes from this container.
    */
   removeAllItems: function() {
-    let list = this._list;
+    const list = this._list;
 
     while (list.hasChildNodes()) {
       list.firstChild.remove();
@@ -125,12 +125,12 @@ BreadcrumbsWidget.prototype = {
    * @param Node aChild
    */
   set selectedItem(aChild) {
-    let childNodes = this._list.childNodes;
+    const childNodes = this._list.childNodes;
 
     if (!aChild) {
       this._selectedItem = null;
     }
-    for (let node of childNodes) {
+    for (const node of childNodes) {
       if (node == aChild) {
         node.setAttribute("checked", "");
         this._selectedItem = node;

@@ -35,9 +35,9 @@ const waitUntil = function(predicate, interval = 100) {
 const addTab = async function(url) {
   info("Adding a new tab with URL: " + url);
 
-  let { gBrowser } = window;
+  const { gBrowser } = window;
 
-  let tab = BrowserTestUtils.addTab(gBrowser, url);
+  const tab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = tab;
 
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -55,7 +55,7 @@ const addTab = async function(url) {
 const removeTab = async function(tab) {
   info("Removing tab.");
 
-  let { gBrowser } = tab.ownerGlobal;
+  const { gBrowser } = tab.ownerGlobal;
 
   await new Promise(resolve => {
     gBrowser.tabContainer.addEventListener("TabClose", resolve, {once: true});
@@ -70,11 +70,11 @@ const removeTab = async function(tab) {
  */
 const openAboutDevTools = async function() {
   info("Open about:devtools programmatically in a new tab");
-  let tab = await addTab("about:devtools");
+  const tab = await addTab("about:devtools");
 
-  let browser = tab.linkedBrowser;
-  let doc = browser.contentDocument;
-  let win = browser.contentWindow;
+  const browser = tab.linkedBrowser;
+  const doc = browser.contentDocument;
+  const win = browser.contentWindow;
 
   return {tab, doc, win};
 };
@@ -85,7 +85,7 @@ const openAboutDevTools = async function() {
  */
 const pushPref = function(preferenceName, value) {
   return new Promise(resolve => {
-    let options = {"set": [[preferenceName, value]]};
+    const options = {"set": [[preferenceName, value]]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 };
@@ -106,7 +106,7 @@ function synthesizeToggleToolboxKey() {
  * Helper to check if a given tab is about:devtools.
  */
 function isAboutDevtoolsTab(tab) {
-  let browser = tab.linkedBrowser;
-  let location = browser.documentURI.spec;
+  const browser = tab.linkedBrowser;
+  const location = browser.documentURI.spec;
   return location.startsWith("about:devtools");
 }

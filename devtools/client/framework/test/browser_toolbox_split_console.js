@@ -21,8 +21,8 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  let tab = await addTab(URL);
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab(URL);
+  const target = TargetFactory.forTab(tab);
   gToolbox = await gDevTools.showToolbox(target, "jsdebugger");
   panelWin = gToolbox.getPanel("jsdebugger").panelWin;
 
@@ -52,7 +52,7 @@ function testUseKeyWithSplitConsole() {
   }, "jsdebugger");
 
   info("synthesizeKey with the console focused");
-  let consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
+  const consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
   consoleInput.focus();
   synthesizeKeyShortcut("F3", panelWin);
 
@@ -69,7 +69,7 @@ function testUseKeyWithSplitConsoleWrongTool() {
   }, "inspector");
 
   info("synthesizeKey with the console focused");
-  let consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
+  const consoleInput = gToolbox.getPanel("webconsole").hud.jsterm.inputNode;
   consoleInput.focus();
   synthesizeKeyShortcut("F4", panelWin);
 

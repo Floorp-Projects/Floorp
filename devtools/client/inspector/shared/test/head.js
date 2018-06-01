@@ -82,7 +82,7 @@ var _addTab = addTab;
 addTab = function(url) {
   return _addTab(url).then(tab => {
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-    let browser = tab.linkedBrowser;
+    const browser = tab.linkedBrowser;
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     return tab;
   });
@@ -125,10 +125,10 @@ function waitForSuccess(validatorFn, name = "untitled") {
  *        font family tooltip contents.
  */
 var getFontFamilyDataURL = async function(font, nodeFront) {
-  let fillStyle = getThemeColor("body-color");
+  const fillStyle = getThemeColor("body-color");
 
-  let {data} = await nodeFront.getFontFamilyDataURL(font, fillStyle);
-  let dataURL = await data.string();
+  const {data} = await nodeFront.getFontFamilyDataURL(font, fillStyle);
+  const dataURL = await data.string();
   return dataURL;
 };
 
@@ -158,9 +158,9 @@ var getFontFamilyDataURL = async function(font, nodeFront) {
  */
 var simulateColorPickerChange = async function(ruleView, colorPicker,
     newRgba, expectedChange) {
-  let onRuleViewChanged = ruleView.once("ruleview-changed");
+  const onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
-  let spectrum = await colorPicker.spectrum;
+  const spectrum = await colorPicker.spectrum;
   info("Setting the new color");
   spectrum.rgb = newRgba;
   info("Applying the change");
@@ -172,7 +172,7 @@ var simulateColorPickerChange = async function(ruleView, colorPicker,
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
     await waitForSuccess(() => {
-      let {element, name, value} = expectedChange;
+      const {element, name, value} = expectedChange;
       return content.getComputedStyle(element)[name] === value;
     }, "Color picker change applied on the page");
   }
@@ -197,9 +197,9 @@ var simulateColorPickerChange = async function(ruleView, colorPicker,
  */
 function getComputedViewProperty(view, name) {
   let prop;
-  for (let property of view.styleDocument.querySelectorAll(".computed-property-view")) {
-    let nameSpan = property.querySelector(".computed-property-name");
-    let valueSpan = property.querySelector(".computed-property-value");
+  for (const property of view.styleDocument.querySelectorAll(".computed-property-view")) {
+    const nameSpan = property.querySelector(".computed-property-name");
+    const valueSpan = property.querySelector(".computed-property-value");
 
     if (nameSpan.firstChild.textContent === name) {
       prop = {nameSpan, valueSpan};

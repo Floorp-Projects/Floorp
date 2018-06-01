@@ -11,12 +11,12 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { DetailsView, WaterfallView } = panel.panelWin;
+  const { DetailsView, WaterfallView } = panel.panelWin;
 
   await startRecording(panel);
   // Already waits for EVENTS.UI_WATERFALL_RENDERED.

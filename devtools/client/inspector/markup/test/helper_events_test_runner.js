@@ -13,11 +13,11 @@ loadHelperScript("helper_diff.js");
  * TEST_DATA array.
  */
 async function runEventPopupTests(url, tests) {
-  let {inspector, testActor} = await openInspectorForURL(url);
+  const {inspector, testActor} = await openInspectorForURL(url);
 
   await inspector.markup.expandAll();
 
-  for (let test of tests) {
+  for (const test of tests) {
     await checkEventsForNode(test, inspector, testActor);
   }
 
@@ -48,14 +48,14 @@ async function runEventPopupTests(url, tests) {
  * @param {TestActorFront} testActor
  */
 async function checkEventsForNode(test, inspector, testActor) {
-  let {selector, expected, beforeTest, isSourceMapped} = test;
-  let container = await getContainerForSelector(selector, inspector);
+  const {selector, expected, beforeTest, isSourceMapped} = test;
+  const container = await getContainerForSelector(selector, inspector);
 
   if (typeof beforeTest === "function") {
     await beforeTest(inspector, testActor);
   }
 
-  let evHolder = container.elt.querySelector(".markupview-event-badge");
+  const evHolder = container.elt.querySelector(".markupview-event-badge");
 
   if (expected.length === 0) {
     // if no event is expected, simply check that the event bubble is hidden
@@ -63,7 +63,7 @@ async function checkEventsForNode(test, inspector, testActor) {
     return;
   }
 
-  let tooltip = inspector.markup.eventDetailsTooltip;
+  const tooltip = inspector.markup.eventDetailsTooltip;
 
   await selectNode(selector, inspector);
 
@@ -86,18 +86,18 @@ async function checkEventsForNode(test, inspector, testActor) {
   }
 
   // Check values
-  let headers = tooltip.panel.querySelectorAll(".event-header");
-  let nodeFront = container.node;
-  let cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
+  const headers = tooltip.panel.querySelectorAll(".event-header");
+  const nodeFront = container.node;
+  const cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
 
   for (let i = 0; i < headers.length; i++) {
     info("Processing header[" + i + "] for " + cssSelector);
 
-    let header = headers[i];
-    let type = header.querySelector(".event-tooltip-event-type");
-    let filename = header.querySelector(".event-tooltip-filename");
-    let attributes = header.querySelectorAll(".event-tooltip-attributes");
-    let contentBox = header.nextElementSibling;
+    const header = headers[i];
+    const type = header.querySelector(".event-tooltip-event-type");
+    const filename = header.querySelector(".event-tooltip-filename");
+    const attributes = header.querySelectorAll(".event-tooltip-attributes");
+    const contentBox = header.nextElementSibling;
 
     info("Looking for " + type.textContent);
 
@@ -126,7 +126,7 @@ async function checkEventsForNode(test, inspector, testActor) {
     is(header.classList.contains("content-expanded"), true,
         "We are in expanded state and icon changed");
 
-    let editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
+    const editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
     testDiff(editor.getText(), expected[i].handler,
        "handler matches for " + cssSelector, ok);
   }
@@ -153,9 +153,9 @@ function testDiff(text1, text2, msg) {
     return;
   }
 
-  let result = textDiff(text1, text2);
+  const result = textDiff(text1, text2);
 
-  for (let {atom, operation} of result) {
+  for (const {atom, operation} of result) {
     switch (operation) {
       case "add":
         out += "+ " + atom + "\n";

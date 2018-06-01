@@ -11,13 +11,13 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   testCompletion(hud);
 });
 
 function testCompletion(hud) {
-  let jsterm = hud.jsterm;
-  let input = jsterm.inputNode;
+  const jsterm = hud.jsterm;
+  const input = jsterm.inputNode;
 
   // Test typing 'var d = 5;' and press RETURN
   jsterm.setInputValue("var d = ");

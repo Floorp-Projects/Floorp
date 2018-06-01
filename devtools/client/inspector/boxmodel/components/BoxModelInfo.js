@@ -35,9 +35,9 @@ class BoxModelInfo extends PureComponent {
   }
 
   render() {
-    let { boxModel } = this.props;
-    let { geometryEditorEnabled, layout } = boxModel;
-    let {
+    const { boxModel } = this.props;
+    const { geometryEditorEnabled, layout } = boxModel;
+    const {
       height = "-",
       isPositionEditable,
       position,

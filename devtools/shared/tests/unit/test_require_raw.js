@@ -6,16 +6,16 @@
 // Test require using "raw!".
 
 function run_test() {
-  let loader = new DevToolsLoader();
-  let require = loader.require;
+  const loader = new DevToolsLoader();
+  const require = loader.require;
 
-  let variableFileContents = require("raw!devtools/client/themes/variables.css");
+  const variableFileContents = require("raw!devtools/client/themes/variables.css");
   ok(variableFileContents.length > 0, "raw browserRequire worked");
 
-  let propertiesFileContents = require("raw!devtools/client/locales/shared.properties");
+  const propertiesFileContents = require("raw!devtools/client/locales/shared.properties");
   ok(propertiesFileContents.length > 0, "unprefixed properties raw require worked");
 
-  let chromePropertiesFileContents =
+  const chromePropertiesFileContents =
     require("raw!chrome://devtools/locale/shared.properties");
   ok(chromePropertiesFileContents.length > 0, "prefixed properties raw require worked");
 }

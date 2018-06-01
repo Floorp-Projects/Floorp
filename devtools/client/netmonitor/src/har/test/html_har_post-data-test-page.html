@@ -20,14 +20,14 @@
       "use strict";
 
       function post(address, data) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(data);
       }
 
       function get(address) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("GET", address);
         xhr.send();
       }

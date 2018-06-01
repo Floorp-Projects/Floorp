@@ -30,7 +30,7 @@ class DeviceSelector extends PureComponent {
   }
 
   onSelectChange({ target }) {
-    let {
+    const {
       devices,
       viewportId,
       onChangeDevice,
@@ -42,8 +42,8 @@ class DeviceSelector extends PureComponent {
       onUpdateDeviceModal(true, viewportId);
       return;
     }
-    for (let type of devices.types) {
-      for (let device of devices[type]) {
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
         if (device.name === target.value) {
           onResizeViewport(device.width, device.height);
           onChangeDevice(device, type);
@@ -54,14 +54,14 @@ class DeviceSelector extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       devices,
       selectedDevice,
     } = this.props;
 
-    let options = [];
-    for (let type of devices.types) {
-      for (let device of devices[type]) {
+    const options = [];
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
         if (device.displayed) {
           options.push(device);
         }
@@ -77,7 +77,7 @@ class DeviceSelector extends PureComponent {
       selectClass += " selected";
     }
 
-    let state = devices.listState;
+    const state = devices.listState;
     let listContent;
 
     if (state == Types.loadableState.LOADED) {

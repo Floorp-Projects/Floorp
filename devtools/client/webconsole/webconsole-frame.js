@@ -84,7 +84,7 @@ WebConsoleFrame.prototype = {
     await this._initConnection();
     await this.consoleOutput.init();
 
-    let id = WebConsoleUtils.supportsString(this.hudId);
+    const id = WebConsoleUtils.supportsString(this.hudId);
     if (Services.obs) {
       Services.obs.notifyObservers(id, "web-console-created");
     }
@@ -101,7 +101,7 @@ WebConsoleFrame.prototype = {
       this.jsterm = null;
     }
 
-    let toolbox = gDevTools.getToolbox(this.owner.target);
+    const toolbox = gDevTools.getToolbox(this.owner.target);
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
@@ -110,7 +110,7 @@ WebConsoleFrame.prototype = {
 
     this.window = this.owner = this.consoleOutput = null;
 
-    let onDestroy = () => {
+    const onDestroy = () => {
       this._destroyer.resolve(null);
     };
     if (this.proxy) {
@@ -148,9 +148,9 @@ WebConsoleFrame.prototype = {
       return promise.resolve(null);
     }
 
-    let deferred = defer();
-    let newValue = !!value;
-    let toSet = {
+    const deferred = defer();
+    const newValue = !!value;
+    const toSet = {
       "NetworkMonitor.saveRequestAndResponseBodies": newValue,
     };
 
@@ -201,10 +201,10 @@ WebConsoleFrame.prototype = {
 
     this.outputNode = this.document.getElementById("output-container");
 
-    let toolbox = gDevTools.getToolbox(this.owner.target);
+    const toolbox = gDevTools.getToolbox(this.owner.target);
 
     // Handle both launchpad and toolbox loading
-    let Wrapper = this.owner.WebConsoleOutputWrapper || this.window.WebConsoleOutput;
+    const Wrapper = this.owner.WebConsoleOutputWrapper || this.window.WebConsoleOutput;
     this.consoleOutput =
       new Wrapper(this.outputNode, this, toolbox, this.owner, this.document);
     // Toggle the timestamp on preference change
@@ -221,7 +221,7 @@ WebConsoleFrame.prototype = {
   },
 
   _initShortcuts: function() {
-    let shortcuts = new KeyShortcuts({
+    const shortcuts = new KeyShortcuts({
       window: this.window
     });
 
@@ -292,7 +292,7 @@ WebConsoleFrame.prototype = {
    * Called when the message timestamp pref changes.
    */
   _onToolboxPrefChanged: function() {
-    let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+    const newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
     this.consoleOutput.dispatchTimestampsToggle(newValue);
   },
 
@@ -354,7 +354,7 @@ WebConsoleFrame.prototype = {
 function quickRestart() {
   const { Cc, Ci } = require("chrome");
   Services.obs.notifyObservers(null, "startupcache-invalidate");
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
             .getService(Ci.nsIEnvironment);
   env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
   Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);

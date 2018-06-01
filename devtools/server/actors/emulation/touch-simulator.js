@@ -78,34 +78,34 @@ TouchSimulator.prototype = {
     // The gaia system window use an hybrid system even on the device which is
     // a mix of mouse/touch events. So let's not cancel *all* mouse events
     // if it is the current target.
-    let content = this.getContent(evt.target);
+    const content = this.getContent(evt.target);
     if (!content) {
       return;
     }
-    let isSystemWindow = content.location.toString()
+    const isSystemWindow = content.location.toString()
                                 .startsWith(systemAppOrigin);
 
     // App touchstart & touchend should also be dispatched on the system app
     // to match on-device behavior.
     if (evt.type.startsWith("touch") && !isSystemWindow) {
-      let sysFrame = content.realFrameElement;
+      const sysFrame = content.realFrameElement;
       if (!sysFrame) {
         return;
       }
-      let sysDocument = sysFrame.ownerDocument;
-      let sysWindow = sysDocument.defaultView;
+      const sysDocument = sysFrame.ownerDocument;
+      const sysWindow = sysDocument.defaultView;
 
-      let touchEvent = sysDocument.createEvent("touchevent");
-      let touch = evt.touches[0] || evt.changedTouches[0];
-      let point = sysDocument.createTouch(sysWindow, sysFrame, 0,
+      const touchEvent = sysDocument.createEvent("touchevent");
+      const touch = evt.touches[0] || evt.changedTouches[0];
+      const point = sysDocument.createTouch(sysWindow, sysFrame, 0,
                                           touch.pageX, touch.pageY,
                                           touch.screenX, touch.screenY,
                                           touch.clientX, touch.clientY,
                                           1, 1, 0, 0);
 
-      let touches = sysDocument.createTouchList(point);
-      let targetTouches = touches;
-      let changedTouches = touches;
+      const touches = sysDocument.createTouchList(point);
+      const targetTouches = touches;
+      const changedTouches = touches;
       touchEvent.initTouchEvent(evt.type, true, true, sysWindow, 0,
                                 false, false, false, false,
                                 touches, targetTouches, changedTouches);
@@ -121,7 +121,7 @@ TouchSimulator.prototype = {
       return;
     }
 
-    let eventTarget = this.target;
+    const eventTarget = this.target;
     let type = "";
     switch (evt.type) {
       case "mouseenter":
@@ -207,7 +207,7 @@ TouchSimulator.prototype = {
         return;
     }
 
-    let target = eventTarget || this.target;
+    const target = eventTarget || this.target;
     if (target && type) {
       this.sendTouchEvent(evt, target, type);
     }
@@ -219,17 +219,17 @@ TouchSimulator.prototype = {
   },
 
   fireMouseEvent(type, evt) {
-    let content = this.getContent(evt.target);
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    const content = this.getContent(evt.target);
+    const utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
     utils.sendMouseEvent(type, evt.clientX, evt.clientY, 0, 1, 0, true, 0,
                          evt.MOZ_SOURCE_TOUCH);
   },
 
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
-    let view = target.ownerGlobal;
-    let { MouseEvent } = view;
-    let evt = new MouseEvent("contextmenu", {
+    const view = target.ownerGlobal;
+    const { MouseEvent } = view;
+    const evt = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,
       view,
@@ -238,8 +238,8 @@ TouchSimulator.prototype = {
       clientX,
       clientY,
     });
-    let content = this.getContent(target);
-    let timeout = content.setTimeout(() => {
+    const content = this.getContent(target);
+    const timeout = content.setTimeout(() => {
       target.dispatchEvent(evt);
       this.cancelClick = true;
     }, delay);
@@ -263,7 +263,7 @@ TouchSimulator.prototype = {
           this.cancelClick = true;
         }
       }
-      let unwrapped = XPCNativeWrapper.unwrap(target);
+      const unwrapped = XPCNativeWrapper.unwrap(target);
       /* eslint-disable no-multi-spaces */
       unwrapped.sendTouchEvent(name, clone([0]),       // event type, id
                                clone([evt.clientX]),   // x
@@ -274,14 +274,14 @@ TouchSimulator.prototype = {
       /* eslint-enable no-multi-spaces */
       return;
     }
-    let document = target.ownerDocument;
-    let content = this.getContent(target);
+    const document = target.ownerDocument;
+    const content = this.getContent(target);
     if (!content) {
       return;
     }
 
-    let touchEvent = document.createEvent("touchevent");
-    let point = document.createTouch(content, target, 0,
+    const touchEvent = document.createEvent("touchevent");
+    const point = document.createTouch(content, target, 0,
                                      evt.pageX, evt.pageY,
                                      evt.screenX, evt.screenY,
                                      evt.clientX, evt.clientY,
@@ -289,7 +289,7 @@ TouchSimulator.prototype = {
 
     let touches = document.createTouchList(point);
     let targetTouches = touches;
-    let changedTouches = touches;
+    const changedTouches = touches;
     if (name === "touchend" || name === "touchcancel") {
       // "touchend" and "touchcancel" events should not have the removed touch
       // neither in touches nor in targetTouches
@@ -303,7 +303,7 @@ TouchSimulator.prototype = {
   },
 
   getContent(target) {
-    let win = (target && target.ownerDocument)
+    const win = (target && target.ownerDocument)
       ? target.ownerGlobal
       : null;
     return win;
@@ -319,24 +319,24 @@ TouchSimulator.prototype = {
     // we couldn't read viewport's information from getViewportInfo().
     // So we always simulate 300ms delay when the
     // dom.meta-viewport.enabled is false.
-    let savedMetaViewportEnabled =
+    const savedMetaViewportEnabled =
       Services.prefs.getBoolPref("dom.meta-viewport.enabled");
     if (!savedMetaViewportEnabled) {
       return 300;
     }
 
-    let content = this.getContent(evt.target);
+    const content = this.getContent(evt.target);
     if (!content) {
       return 0;
     }
 
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    const utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
 
-    let allowZoom = {};
-    let minZoom = {};
-    let maxZoom = {};
-    let autoSize = {};
+    const allowZoom = {};
+    const minZoom = {};
+    const maxZoom = {};
+    const autoSize = {};
 
     utils.getViewportInfo(content.innerWidth, content.innerHeight, {},
                           allowZoom, minZoom, maxZoom, {}, {}, autoSize);

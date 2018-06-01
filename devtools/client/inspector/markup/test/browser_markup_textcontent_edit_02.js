@@ -11,7 +11,7 @@ const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const SELECTOR = ".node6";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
   await inspector.markup.expandAll();
@@ -22,11 +22,11 @@ add_task(async function() {
   is(nodeValue, expectedValue, "The test node's text content is correct");
 
   info("Open editable field for .node6");
-  let container = await focusNode(SELECTOR, inspector);
-  let field = container.elt.querySelector("pre");
+  const container = await focusNode(SELECTOR, inspector);
+  const field = container.elt.querySelector("pre");
   field.focus();
   EventUtils.sendKey("return", inspector.panelWin);
-  let editor = inplaceEditor(field);
+  const editor = inplaceEditor(field);
 
   info("Initially, all the input content should be selected");
   checkSelectionPositions(editor, 0, expectedValue.length);
@@ -80,7 +80,7 @@ add_task(async function() {
   checkSelectionPositions(editor, 1, 1);
 
   info("Commit the new value with RETURN, wait for the markupmutation event");
-  let onMutated = inspector.once("markupmutation");
+  const onMutated = inspector.once("markupmutation");
   await sendKey("VK_RETURN", {}, editor, inspector.panelWin);
   await onMutated;
 

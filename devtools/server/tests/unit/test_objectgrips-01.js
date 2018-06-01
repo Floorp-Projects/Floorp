@@ -35,11 +35,11 @@ function run_test_with_server(server, callback) {
 
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Object");
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getOwnPropertyNames(function(response) {
       Assert.equal(response.ownPropertyNames.length, 3);
       Assert.equal(response.ownPropertyNames[0], "a");

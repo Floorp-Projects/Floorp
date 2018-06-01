@@ -7,7 +7,7 @@
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { actions } = require("../constants");
 
-let handlers = Object.create(null);
+const handlers = Object.create(null);
 
 handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function(state, action) {
   assert(!state.togglingInProgress,
@@ -36,7 +36,7 @@ const DEFAULT_ALLOCATIONS_STATE = {
 };
 
 module.exports = function(state = DEFAULT_ALLOCATIONS_STATE, action) {
-  let handle = handlers[action.type];
+  const handle = handlers[action.type];
   if (handle) {
     return handle(state, action);
   }

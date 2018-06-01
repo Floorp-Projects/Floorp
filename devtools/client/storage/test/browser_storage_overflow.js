@@ -30,29 +30,29 @@ add_task(async function() {
 });
 
 function checkCellLength(len) {
-  let cells = gPanelWindow.document
+  const cells = gPanelWindow.document
                           .querySelectorAll("#name .table-widget-cell");
-  let msg = `Table should initially display ${len} items`;
+  const msg = `Table should initially display ${len} items`;
 
   is(cells.length, len, msg);
 }
 
 function checkCellValues(order) {
-  let cells = [...gPanelWindow.document
+  const cells = [...gPanelWindow.document
                               .querySelectorAll("#name .table-widget-cell")];
   cells.forEach(function(cell, index, arr) {
-    let i = order === "ASC" ? index + 1 : arr.length - index;
+    const i = order === "ASC" ? index + 1 : arr.length - index;
     is(cell.value, `item-${i}`, `Cell value is correct (${order}).`);
   });
 }
 
 async function scroll() {
-  let $ = id => gPanelWindow.document.querySelector(id);
-  let table = $("#storage-table .table-widget-body");
-  let cell = $("#name .table-widget-cell");
-  let cellHeight = cell.getBoundingClientRect().height;
+  const $ = id => gPanelWindow.document.querySelector(id);
+  const table = $("#storage-table .table-widget-body");
+  const cell = $("#name .table-widget-cell");
+  const cellHeight = cell.getBoundingClientRect().height;
 
-  let onStoresUpdate = gUI.once("store-objects-updated");
+  const onStoresUpdate = gUI.once("store-objects-updated");
   table.scrollTop += cellHeight * 50;
   await onStoresUpdate;
 }

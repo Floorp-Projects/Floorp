@@ -41,7 +41,7 @@ var HarMenuUtils = {
    * Import HAR file and preview its content in the Network panel.
    */
   openHarFile(actions, openSplitConsole) {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("netmonitor.har.importHarDialogTitle"),
       Ci.nsIFilePicker.modeOpen);
 
@@ -51,7 +51,7 @@ var HarMenuUtils = {
 
     fp.open(rv => {
       if (rv == Ci.nsIFilePicker.returnOK) {
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(fp.file.path);
         readFile(file).then(har => {
           if (har) {
@@ -64,7 +64,7 @@ var HarMenuUtils = {
 
   appendPreview(har, actions, openSplitConsole) {
     try {
-      let importer = new HarImporter(actions);
+      const importer = new HarImporter(actions);
       importer.import(har);
     } catch (err) {
       if (openSplitConsole) {
@@ -87,7 +87,7 @@ function readFile(file) {
   return new Promise(resolve => {
     const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
     OS.File.read(file.path).then(data => {
-      let decoder = new TextDecoder();
+      const decoder = new TextDecoder();
       resolve(decoder.decode(data));
     });
   });

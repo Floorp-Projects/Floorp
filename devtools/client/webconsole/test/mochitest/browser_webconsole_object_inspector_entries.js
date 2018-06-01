@@ -28,7 +28,7 @@ add_task(async function() {
     );
   });
 
-  let node = await waitFor(() => findMessage(hud, "oi-entries-test"));
+  const node = await waitFor(() => findMessage(hud, "oi-entries-test"));
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(objectInspectors.length, 4, "There is the expected number of object inspectors");
 
@@ -62,7 +62,7 @@ async function testMap(oi) {
   is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
 
   info("Expanding the <entries> leaf of the map");
-  let entriesNode = oiNodes[2];
+  const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
     childList: true
@@ -93,7 +93,7 @@ async function testLargeMap(oi) {
   is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
 
   info("Expanding the <entries> leaf of the map");
-  let entriesNode = oiNodes[2];
+  const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
     childList: true
@@ -128,7 +128,7 @@ async function testSet(oi) {
   is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
 
   info("Expanding the <entries> leaf of the Set");
-  let entriesNode = oiNodes[2];
+  const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onSetOiMutation = waitForNodeMutation(oi, {
     childList: true
@@ -159,7 +159,7 @@ async function testLargeSet(oi) {
   is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
 
   info("Expanding the <entries> leaf of the Set");
-  let entriesNode = oiNodes[2];
+  const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onSetOiMutation = waitForNodeMutation(oi, {
     childList: true

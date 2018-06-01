@@ -10,14 +10,14 @@ const TEST_URI = "<style>#testid {}</style><div id='testid'>Styled Node</div>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let elementStyle = view._elementStyle;
-  let elementRule = elementStyle.rules[1];
+  const elementStyle = view._elementStyle;
+  const elementRule = elementStyle.rules[1];
 
   info("Checking rules insertion order and checking the applied style");
-  let firstProp = await addProperty(view, 1, "background-color", "green");
+  const firstProp = await addProperty(view, 1, "background-color", "green");
   let secondProp = await addProperty(view, 1, "background-color", "blue");
 
   is(elementRule.textProps[0], firstProp,
@@ -84,6 +84,6 @@ add_task(async function() {
 });
 
 async function getValue(selector, propName) {
-  let value = await getComputedStyleProperty(selector, null, propName);
+  const value = await getComputedStyleProperty(selector, null, propName);
   return value;
 }

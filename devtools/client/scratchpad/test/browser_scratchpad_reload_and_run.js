@@ -13,7 +13,7 @@ var EDITOR_TEXT = [
 add_task(async function test() {
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  let url = "data:text/html,Scratchpad test for bug 740948";
+  const url = "data:text/html,Scratchpad test for bug 740948";
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
@@ -24,13 +24,13 @@ add_task(async function test() {
 });
 
 async function runTests() {
-  let sp = gScratchpadWindow.Scratchpad;
+  const sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
   // Test that Reload And Run command is enabled in the content
   // context and disabled in the browser context.
 
-  let reloadAndRun = gScratchpadWindow.document
+  const reloadAndRun = gScratchpadWindow.document
     .getElementById("sp-cmd-reloadAndRun");
   ok(reloadAndRun, "Reload And Run command exists");
   ok(!reloadAndRun.hasAttribute("disabled"),
@@ -49,13 +49,13 @@ async function runTests() {
   sp.setContentContext();
   sp.setText(EDITOR_TEXT);
 
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, null, function() {
     ok(content.document.body.innerHTML !== "Modified text",
       "Before reloading, HTML is intact.");
   });
 
-  let reloaded = BrowserTestUtils.browserLoaded(browser);
+  const reloaded = BrowserTestUtils.browserLoaded(browser);
   sp.reloadAndRun();
   await reloaded;
 

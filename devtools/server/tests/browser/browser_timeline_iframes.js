@@ -14,9 +14,9 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "timeline-iframe-parent.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = TimelineFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = TimelineFront(client, form);
 
   info("Start timeline marker recording");
   await front.start({ withMarkers: true });
@@ -26,7 +26,7 @@ add_task(async function() {
   for (let i = 0; i < 3; i++) {
     // That's the time the child frame waits before changing styles.
     await wait(300);
-    let markers = await once(front, "markers");
+    const markers = await once(front, "markers");
     ok(markers.length, "Markers were received for operations in the child frame");
   }
 

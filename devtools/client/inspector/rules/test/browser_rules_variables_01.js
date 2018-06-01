@@ -10,15 +10,15 @@ const TEST_URI = URL_ROOT + "doc_variables_1.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#target", inspector);
 
   info("Tests basic support for CSS Variables for both single variable " +
   "and double variable. Formats tested: var(x, constant), var(x, var(y))");
 
-  let unsetColor = getRuleViewProperty(view, "div", "color").valueSpan
+  const unsetColor = getRuleViewProperty(view, "div", "color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
-  let setColor = unsetColor.previousElementSibling;
+  const setColor = unsetColor.previousElementSibling;
   is(unsetColor.textContent, " red", "red is unmatched in color");
   is(setColor.textContent, "--color", "--color is not set correctly");
   is(setColor.dataset.variable, "--color = chartreuse",
@@ -26,10 +26,10 @@ add_task(async function() {
   let previewTooltip = await assertShowPreviewTooltip(view, setColor);
   await assertTooltipHiddenOnMouseOut(previewTooltip, setColor);
 
-  let unsetVar = getRuleViewProperty(view, "div", "background-color").valueSpan
+  const unsetVar = getRuleViewProperty(view, "div", "background-color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
-  let setVar = unsetVar.nextElementSibling;
-  let setVarName = setVar.firstElementChild.firstElementChild;
+  const setVar = unsetVar.nextElementSibling;
+  const setVarName = setVar.firstElementChild.firstElementChild;
   is(unsetVar.textContent, "--not-set",
      "--not-set is unmatched in background-color");
   is(setVar.textContent, " var(--bg)", "var(--bg) parsed incorrectly");

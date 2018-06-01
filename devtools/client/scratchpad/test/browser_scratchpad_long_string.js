@@ -14,7 +14,7 @@ function test() {
 }
 
 function runTests() {
-  let sp = gScratchpadWindow.Scratchpad;
+  const sp = gScratchpadWindow.Scratchpad;
 
   sp.setText("'0'.repeat(10000)");
 

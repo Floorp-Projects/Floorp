@@ -8,20 +8,20 @@
  */
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(SIMPLE_SJS);
+  const { monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
-  let { store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { requestData, sendHTTPRequest } = connector;
-  let {
+  const { store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { requestData, sendHTTPRequest } = connector;
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let requestUrl = SIMPLE_SJS;
-  let requestHeaders = [
+  const requestUrl = SIMPLE_SJS;
+  const requestHeaders = [
     { name: "Host", value: "fakehost.example.com" },
     { name: "User-Agent", value: "Testzilla" },
     { name: "Referer", value: "http://example.com/referrer" },
@@ -30,7 +30,7 @@ add_task(async function() {
     { name: "Accept-Language", value: "cs-CZ" }
   ];
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   sendHTTPRequest({
     url: requestUrl,
     method: "POST",
@@ -54,27 +54,27 @@ add_task(async function() {
   is(item.method, "POST", "The request has the right method");
   is(item.url, requestUrl, "The request has the right URL");
 
-  for (let { name, value } of item.requestHeaders.headers) {
+  for (const { name, value } of item.requestHeaders.headers) {
     info(`Request header: ${name}: ${value}`);
   }
 
   function hasRequestHeader(name, value) {
-    let { headers } = item.requestHeaders;
+    const { headers } = item.requestHeaders;
     return headers.some(h => h.name === name && h.value === value);
   }
 
   function hasNotRequestHeader(name) {
-    let { headers } = item.requestHeaders;
+    const { headers } = item.requestHeaders;
     return headers.every(h => h.name !== name);
   }
 
-  for (let { name, value } of requestHeaders) {
+  for (const { name, value } of requestHeaders) {
     ok(hasRequestHeader(name, value), `The ${name} header has the right value`);
   }
 
   // Check that the Cookie header was not added silently (i.e., that the request is
   // anonymous.
-  for (let name of ["Cookie"]) {
+  for (const name of ["Cookie"]) {
     ok(hasNotRequestHeader(name), `The ${name} header is not present`);
   }
 

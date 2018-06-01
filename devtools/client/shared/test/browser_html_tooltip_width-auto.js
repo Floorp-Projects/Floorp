@@ -18,7 +18,7 @@ let useXulWrapper;
 
 add_task(async function() {
   await addTab("about:blank");
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -30,9 +30,9 @@ add_task(async function() {
 });
 
 async function runTests(doc) {
-  let tooltip = new HTMLTooltip(doc, {useXulWrapper});
+  const tooltip = new HTMLTooltip(doc, {useXulWrapper});
   info("Create tooltip content width to 150px");
-  let tooltipContent = doc.createElementNS(HTML_NS, "div");
+  const tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: 100%; width: 150px; background: red;";
 
   info("Set tooltip content using width:auto");
@@ -41,7 +41,7 @@ async function runTests(doc) {
   info("Show the tooltip and check the tooltip panel width.");
   await showTooltip(tooltip, doc.getElementById("box1"));
 
-  let panelRect = tooltip.panel.getBoundingClientRect();
+  const panelRect = tooltip.panel.getBoundingClientRect();
   is(panelRect.width, 150, "Tooltip panel has the expected width.");
 
   await hideTooltip(tooltip);

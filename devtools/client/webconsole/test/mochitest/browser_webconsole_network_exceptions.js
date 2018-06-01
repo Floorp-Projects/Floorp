@@ -13,7 +13,7 @@ const TEST_URI2 = "http://example.com/browser/devtools/client/webconsole/" +
                   "test/mochitest/test-network-exceptions.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
@@ -21,9 +21,9 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  let onMessage = waitForMessage(hud, "bug618078exception");
+  const onMessage = waitForMessage(hud, "bug618078exception");
   await loadDocument(TEST_URI2);
-  let { node } = await onMessage;
+  const { node } = await onMessage;
   ok(true, "Network exception logged as expected.");
   ok(node.classList.contains("error"), "Network exception is logged as error.");
 });

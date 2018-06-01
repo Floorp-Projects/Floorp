@@ -17,29 +17,29 @@ const UNMANGLED_FN = "void Foo<int>()";
 
 add_task(function() {
   // Create a profile and mangle a function inside the string table.
-  let profile = synthesizeProfile();
+  const profile = synthesizeProfile();
 
   profile.threads[0].stringTable[1] =
     profile.threads[0].stringTable[1].replace("A (", `${MANGLED_FN} (`);
 
-  let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode });
+  const container = document.createElement("vbox");
   treeRoot.autoExpandDepth = 0;
   treeRoot.attachTo(container);
 
-  let $$ = node => container.querySelectorAll(node);
-  let $fun = (node, ancestor) => (ancestor || container).querySelector(
+  const $$ = node => container.querySelectorAll(node);
+  const $fun = (node, ancestor) => (ancestor || container).querySelector(
     ".call-tree-cell[type=function] > " + node);
-  let $$fun = (node, ancestor) => (ancestor || container).querySelectorAll(
+  const $$fun = (node, ancestor) => (ancestor || container).querySelectorAll(
     ".call-tree-cell[type=function] > " + node);
-  let $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
-  let $$per = i => container.querySelectorAll(".call-tree-cell[type=percentage]")[i];
-  let $$sam = i => container.querySelectorAll(".call-tree-cell[type=samples]")[i];
+  const $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
+  const $$per = i => container.querySelectorAll(".call-tree-cell[type=percentage]")[i];
+  const $$sam = i => container.querySelectorAll(".call-tree-cell[type=samples]")[i];
 
   is(container.childNodes.length, 1,
     "The container node should have one child available.");
@@ -94,7 +94,7 @@ add_task(function() {
   ok($$(".call-tree-item")[1].getAttribute("tooltiptext").includes(MANGLED_FN),
     "The .A node's row's tooltip contains the original mangled name.");
 
-  let A = treeRoot.getChild();
+  const A = treeRoot.getChild();
   A.expand();
 
   is(container.childNodes.length, 4,

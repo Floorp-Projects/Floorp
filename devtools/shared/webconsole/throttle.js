@@ -159,9 +159,9 @@ NetworkThrottleListener.prototype = {
   addActivityCallback: function(callback, httpActivity, channel, activityType,
                                  activitySubtype, timestamp, extraSizeData,
                                  extraStringData) {
-    let datum = {callback, httpActivity, channel, activityType,
-                 activitySubtype, extraSizeData,
-                 extraStringData};
+    const datum = {callback, httpActivity, channel, activityType,
+                   activitySubtype, extraSizeData,
+                   extraStringData};
     this.activities[activitySubtype] = datum;
 
     if (activitySubtype ===
@@ -207,10 +207,10 @@ NetworkThrottleListener.prototype = {
    */
   maybeEmit: function(code) {
     if (this.activities[code] !== undefined) {
-      let {callback, httpActivity, channel, activityType,
+      const {callback, httpActivity, channel, activityType,
            activitySubtype, extraSizeData,
            extraStringData} = this.activities[code];
-      let now = Date.now() * 1000;
+      const now = Date.now() * 1000;
       callback(httpActivity, channel, activityType, activitySubtype,
                now, extraSizeData, extraStringData);
       this.activities[code] = undefined;
@@ -274,7 +274,7 @@ NetworkThrottleQueue.prototype = {
    */
   start: function(throttleListener) {
     this.pendingRequests.add(throttleListener);
-    let delay = this.random(this.latencyMean, this.latencyMax);
+    const delay = this.random(this.latencyMean, this.latencyMax);
     if (delay > 0) {
       setTimeout(() => this.allowDataFrom(throttleListener), delay);
     } else {
@@ -326,7 +326,7 @@ NetworkThrottleQueue.prototype = {
       thisSliceBytes -= totalBytes;
       let readThisTime = 0;
       while (thisSliceBytes > 0 && this.downloadQueue.length) {
-        let {length, done} = this.downloadQueue[0].sendSomeData(thisSliceBytes);
+        const {length, done} = this.downloadQueue[0].sendSomeData(thisSliceBytes);
         thisSliceBytes -= length;
         readThisTime += length;
         if (done) {
@@ -394,8 +394,8 @@ NetworkThrottleManager.prototype = {
    */
   manage: function(channel) {
     if (this.downloadQueue) {
-      let listener = new NetworkThrottleListener(this.downloadQueue);
-      let originalListener = channel.setNewListener(listener);
+      const listener = new NetworkThrottleListener(this.downloadQueue);
+      const originalListener = channel.setNewListener(listener);
       listener.setOriginalListener(originalListener);
       return listener;
     }

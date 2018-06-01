@@ -25,9 +25,9 @@ window.onload = function() {
   addTest(function setup() {
     info("Setting up inspector and animation actors.");
 
-    let url = document.getElementById("animationContent").href;
+    const url = document.getElementById("animationContent").href;
     attachURL(url, function(err, client, tab, doc) {
-      let inspector = InspectorFront(client, tab);
+      const inspector = InspectorFront(client, tab);
 
       animationsFront = new AnimationsFront(client, tab);
 
@@ -40,25 +40,25 @@ window.onload = function() {
 
   addAsyncTest(async function testActorLifetime() {
     info("Testing animated node actor");
-    let animatedNodeActor = await gWalker.querySelector(gWalker.rootNode,
+    const animatedNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".animated");
     await animationsFront.getAnimationPlayersForNode(animatedNodeActor);
 
-    let animationsActor = DebuggerServer
+    const animationsActor = DebuggerServer
                           .searchAllConnectionsForActor(animationsFront.actorID);
 
     is(animationsActor.actors.length, 1,
       "AnimationActor have 1 AnimationPlayerActors");
 
     info("Testing AnimationPlayerActors release");
-    let stillNodeActor = await gWalker.querySelector(gWalker.rootNode,
+    const stillNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".still");
     await animationsFront.getAnimationPlayersForNode(stillNodeActor);
     is(animationsActor.actors.length, 0,
       "AnimationActor does not have any AnimationPlayerActors anymore");
 
     info("Testing multi animated node actor");
-    let multiNodeActor = await gWalker.querySelector(gWalker.rootNode,
+    const multiNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".multi");
     await animationsFront.getAnimationPlayersForNode(multiNodeActor);
     is(animationsActor.actors.length, 2,

@@ -15,7 +15,7 @@ var doc, table;
 
 function test() {
   waitForExplicitFinish();
-  let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
+  const win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
   win.addEventListener("load", function() {
     waitForFocus(function() {
@@ -132,7 +132,7 @@ var testMouseInteraction = async function() {
   ok(!table.selectedRow, "Nothing should be selected beforehand");
 
   let event = table.once(TableWidget.EVENTS.ROW_SELECTED);
-  let firstColumnFirstRowCell = table.tbody.firstChild.firstChild.children[1];
+  const firstColumnFirstRowCell = table.tbody.firstChild.firstChild.children[1];
   info("clicking on the first row");
   ok(!firstColumnFirstRowCell.classList.contains("theme-selected"),
      "Node should not have selected class before clicking");
@@ -144,7 +144,7 @@ var testMouseInteraction = async function() {
 
   info("clicking on second row to select it");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
-  let firstColumnSecondRowCell = table.tbody.firstChild.firstChild.children[2];
+  const firstColumnSecondRowCell = table.tbody.firstChild.firstChild.children[2];
   // node should not have selected class
   ok(!firstColumnSecondRowCell.classList.contains("theme-selected"),
      "New node should not have selected class before clicking");
@@ -160,8 +160,8 @@ var testMouseInteraction = async function() {
 
   info("clicking on the third row cell content to select third row");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
-  let firstColumnThirdRowCell = table.tbody.firstChild.firstChild.children[3];
-  let firstColumnThirdRowCellInnerNode = firstColumnThirdRowCell.querySelector("span");
+  const firstColumnThirdRowCell = table.tbody.firstChild.firstChild.children[3];
+  const firstColumnThirdRowCellInnerNode = firstColumnThirdRowCell.querySelector("span");
   // node should not have selected class
   ok(!firstColumnThirdRowCell.classList.contains("theme-selected"),
      "New node should not have selected class before clicking");

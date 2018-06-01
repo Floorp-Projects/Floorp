@@ -25,15 +25,15 @@ const {
  *   has a working webconsole with the background page as default target;
  */
 add_task(async function testWebExtensionsToolboxWebConsole() {
-  let {
+  const {
     tab, document, debugBtn,
   } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-  let testScript = function() {
+  const testScript = function() {
     /* eslint-disable no-undef */
     function findMessages(hud, text, selector = ".message") {
       const messages = hud.ui.outputNode.querySelectorAll(selector);
@@ -52,9 +52,9 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
     toolbox.selectTool("webconsole")
       .then(async console => {
-        let { hud } = console;
-        let { jsterm } = hud;
-        let onMessage = waitFor(() => {
+        const { hud } = console;
+        const { jsterm } = hud;
+        const onMessage = waitFor(() => {
           return findMessages(hud, "Background page function called").length > 0;
         });
         await jsterm.execute("myWebExtensionAddonFunction()");
@@ -69,7 +69,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });
 
-  let onToolboxClose = BrowserToolboxProcess.once("close");
+  const onToolboxClose = BrowserToolboxProcess.once("close");
 
   debugBtn.click();
 

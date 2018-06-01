@@ -7,19 +7,19 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
-  let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
+  const { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([recordingFinished, callListPopulated]);
 
-  let callItem = CallsListView.getItemAtIndex(2);
-  let view = $(".call-item-view", callItem.target);
-  let contents = $(".call-item-contents", callItem.target);
+  const callItem = CallsListView.getItemAtIndex(2);
+  const view = $(".call-item-view", callItem.target);
+  const contents = $(".call-item-contents", callItem.target);
 
   is(view.hasAttribute("call-stack-populated"), false,
     "The call item's view should not have the stack populated yet.");
@@ -28,7 +28,7 @@ async function ifTestingSupported() {
   is($(".call-item-stack", callItem.target), null,
     "There should be no stack container available yet for the draw call.");
 
-  let callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
+  const callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "dblclick" }, contents, window);
   await callStackDisplayed;
 

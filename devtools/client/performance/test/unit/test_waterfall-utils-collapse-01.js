@@ -9,7 +9,7 @@
 add_task(function test() {
   const WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
 
-  let rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
+  const rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
 
   WaterfallUtils.collapseMarkersIntoNode({
     rootNode: rootMarkerNode,
@@ -17,7 +17,7 @@ add_task(function test() {
   });
 
   function compare(marker, expected) {
-    for (let prop in expected) {
+    for (const prop in expected) {
       if (prop === "submarkers") {
         for (let i = 0; i < expected.submarkers.length; i++) {
           compare(marker.submarkers[i], expected.submarkers[i]);

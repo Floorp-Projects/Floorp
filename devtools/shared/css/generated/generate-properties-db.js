@@ -37,7 +37,7 @@ dump("DEVTOOLS_CSS_DB_DELIMITER");
  */
 function cssProperties() {
   const properties = generateCssProperties();
-  for (let key in properties) {
+  for (const key in properties) {
     // Ignore OS-specific properties
     if (key.includes("-moz-osx-")) {
       properties[key] = undefined;

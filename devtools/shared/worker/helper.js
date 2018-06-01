@@ -73,8 +73,8 @@
    */
   function createHandler(self) {
     return function(e) {
-      let { id, task, data } = e.data;
-      let taskFn = self._tasks[task];
+      const { id, task, data } = e.data;
+      const taskFn = self._tasks[task];
 
       if (!taskFn) {
         self.postMessage({ id, error: `Task "${task}" not found in worker.` });

@@ -16,14 +16,14 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   await front.setProfilerStatusInterval(10);
-  let model = await front.startRecording(config);
-  let stats = await once(front, "profiler-status");
+  const model = await front.startRecording(config);
+  const stats = await once(front, "profiler-status");
   is(stats.totalSize, BUFFER_SIZE,
     `profiler-status event has totalSize: ${stats.totalSize}`);
   ok(stats.position < BUFFER_SIZE,
@@ -38,7 +38,7 @@ add_task(async function() {
   let lastBufferStatus = 0;
   let checkCount = 0;
   while (lastBufferStatus < 1) {
-    let currentBufferStatus = front.getBufferUsageForRecording(model);
+    const currentBufferStatus = front.getBufferUsageForRecording(model);
     ok(currentBufferStatus > lastBufferStatus,
       `buffer is more filled than before: ${currentBufferStatus} > ${lastBufferStatus}`);
     lastBufferStatus = currentBufferStatus;

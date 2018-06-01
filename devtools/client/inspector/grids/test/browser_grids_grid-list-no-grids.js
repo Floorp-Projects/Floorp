@@ -17,13 +17,13 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters } = inspector;
 
   await selectNode("#grid", inspector);
-  let noGridList = doc.querySelector(".grid-pane .devtools-sidepanel-no-result");
-  let gridList = doc.getElementById("grid-list");
+  const noGridList = doc.querySelector(".grid-pane .devtools-sidepanel-no-result");
+  const gridList = doc.getElementById("grid-list");
 
   info("Checking the initial state of the Grid Inspector.");
   ok(noGridList, "The message no grid containers is displayed.");

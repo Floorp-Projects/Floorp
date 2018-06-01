@@ -13,11 +13,11 @@
     <script type="text/javascript">
       "use strict";
 
-      let ctx = new AudioContext();
-      let carrier = ctx.createOscillator();
-      let gain = ctx.createGain();
-      let modulator = ctx.createOscillator();
-      let modulator2 = ctx.createOscillator();
+      const ctx = new AudioContext();
+      const carrier = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const modulator = ctx.createOscillator();
+      const modulator2 = ctx.createOscillator();
       carrier.connect(gain);
       gain.connect(ctx.destination);
       modulator.connect(gain.gain);

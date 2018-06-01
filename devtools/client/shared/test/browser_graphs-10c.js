@@ -34,11 +34,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost("window");
+  const [host,, doc] = await createHost("window");
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
 
   let refreshCount = 0;
@@ -57,7 +57,7 @@ async function testGraph(host, graph) {
 
   host._window.resizeTo(500, 500);
   await graph.once("refresh");
-  let oldBounds = host.frame.getBoundingClientRect();
+  const oldBounds = host.frame.getBoundingClientRect();
 
   is(graph._width, oldBounds.width * window.devicePixelRatio,
     "The window was properly resized (1).");
@@ -76,14 +76,14 @@ async function testGraph(host, graph) {
 
   host._window.resizeTo(250, 250);
   await graph.once("refresh");
-  let newBounds = host.frame.getBoundingClientRect();
+  const newBounds = host.frame.getBoundingClientRect();
 
   is(graph._width, newBounds.width * window.devicePixelRatio,
     "The window was properly resized (2).");
   is(graph._height, newBounds.height * window.devicePixelRatio,
     "The window was properly resized (2).");
 
-  let ratio = oldBounds.width / newBounds.width;
+  const ratio = oldBounds.width / newBounds.width;
   info("The window resize ratio is: " + ratio);
 
   is(graph.getSelection().start, Math.round(100 / ratio),

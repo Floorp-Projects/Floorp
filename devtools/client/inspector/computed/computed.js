@@ -112,9 +112,9 @@ UpdateProcess.prototype = {
   },
 
   _runBatch: function() {
-    let time = Date.now();
+    const time = Date.now();
     while (!this.canceled) {
-      let next = this._next();
+      const next = this._next();
       this.onItem(next);
       if ((Date.now() - time) > this.threshold) {
         this.onBatch();
@@ -156,7 +156,7 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.propertyViews = [];
 
-  let cssProperties = getCssProperties(inspector.toolbox);
+  const cssProperties = getCssProperties(inspector.toolbox);
   this._outputParser = new OutputParser(document, cssProperties);
 
   // Create bound methods.
@@ -168,7 +168,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
 
-  let doc = this.styleDocument;
+  const doc = this.styleDocument;
   this.element = doc.getElementById("computed-property-container");
   this.searchField = doc.getElementById("computed-searchbox");
   this.searchClearButton = doc.getElementById("computed-searchinput-clear");
@@ -291,7 +291,7 @@ CssComputedView.prototype = {
         this._refreshProcess.cancel();
       }
       // Hiding all properties
-      for (let propView of this.propertyViews) {
+      for (const propView of this.propertyViews) {
         propView.refresh();
       }
       return promise.resolve(undefined);
@@ -324,7 +324,7 @@ CssComputedView.prototype = {
       return null;
     }
 
-    let classes = node.classList;
+    const classes = node.classList;
 
     // Check if the node isn't a selector first since this doesn't require
     // walking the DOM
@@ -333,7 +333,7 @@ CssComputedView.prototype = {
         classes.contains("parentmatch")) {
       let selectorText = "";
 
-      for (let child of node.childNodes[0].childNodes) {
+      for (const child of node.childNodes[0].childNodes) {
         if (child.nodeType === node.TEXT_NODE) {
           selectorText += child.textContent;
         }
@@ -366,7 +366,7 @@ CssComputedView.prototype = {
     let value, type;
 
     // Get the property and value for a node that's a property name or value
-    let isHref = classes.contains("theme-link") && !classes.contains("computed-link");
+    const isHref = classes.contains("theme-link") && !classes.contains("computed-link");
     if (propertyView && (classes.contains("computed-property-name") ||
                          classes.contains("computed-property-value") ||
                          isHref)) {
@@ -377,7 +377,7 @@ CssComputedView.prototype = {
     }
     if (propertyContent && (classes.contains("computed-other-property-value") ||
                             isHref)) {
-      let view = propertyContent.previousSibling;
+      const view = propertyContent.previousSibling;
       value = {
         property: view.querySelector(".computed-property-name").firstChild.textContent,
         value: node.textContent
@@ -391,7 +391,7 @@ CssComputedView.prototype = {
           value: node.parentNode.textContent
         };
       } else if (propertyContent) {
-        let view = propertyContent.previousSibling;
+        const view = propertyContent.previousSibling;
         value = {
           property: view.querySelector(".computed-property-name").firstChild.textContent,
           value: node.parentNode.textContent
@@ -430,14 +430,14 @@ CssComputedView.prototype = {
 
     this.refreshSourceFilter();
     this.numVisibleProperties = 0;
-    let fragment = this.styleDocument.createDocumentFragment();
+    const fragment = this.styleDocument.createDocumentFragment();
 
     this._createViewsPromise = new Promise((resolve, reject) => {
       this._createViewsProcess = new UpdateProcess(
         this.styleWindow, CssComputedView.propertyNames, {
           onItem: (propertyName) => {
             // Per-item callback.
-            let propView = new PropertyView(this, propertyName);
+            const propView = new PropertyView(this, propertyName);
             fragment.appendChild(propView.buildMain());
             fragment.appendChild(propView.buildSelectorContainer());
 
@@ -474,7 +474,7 @@ CssComputedView.prototype = {
 
     // Capture the current viewed element to return from the promise handler
     // early if it changed
-    let viewedElement = this._viewedElement;
+    const viewedElement = this._viewedElement;
 
     return promise.all([
       this._createPropertyViews(),
@@ -489,7 +489,7 @@ CssComputedView.prototype = {
       }
 
       this._matchedProperties = new Set();
-      for (let name in computed) {
+      for (const name in computed) {
         if (computed[name].matched) {
           this._matchedProperties.add(name);
         }
@@ -578,7 +578,7 @@ CssComputedView.prototype = {
       clearTimeout(this._filterChangedTimeout);
     }
 
-    let filterTimeout = (this.searchField.value.length > 0)
+    const filterTimeout = (this.searchField.value.length > 0)
       ? FILTER_CHANGED_TIMEOUT : 0;
     this.searchClearButton.hidden = this.searchField.value.length === 0;
 
@@ -640,11 +640,11 @@ CssComputedView.prototype = {
 
     // Here we build and cache a list of css properties supported by the browser
     // We could use any element but let's use the main document's root element
-    let styles = this.styleWindow
+    const styles = this.styleWindow
       .getComputedStyle(this.styleDocument.documentElement);
-    let mozProps = [];
+    const mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
-      let prop = styles.item(i);
+      const prop = styles.item(i);
       if (prop.startsWith("--")) {
         // Skip any CSS variables used inside of browser CSS files
         continue;
@@ -693,12 +693,12 @@ CssComputedView.prototype = {
   },
 
   _onClick: function(event) {
-    let target = event.target;
+    const target = event.target;
 
     if (target.nodeName === "a") {
       event.stopPropagation();
       event.preventDefault();
-      let browserWin = this.inspector.target.tab.ownerDocument.defaultView;
+      const browserWin = this.inspector.target.tab.ownerDocument.defaultView;
       browserWin.openWebLinkIn(target.href, "tab");
     }
   },
@@ -710,8 +710,8 @@ CssComputedView.prototype = {
    *        copy event object.
    */
   _onCopy: function(event) {
-    let win = this.styleWindow;
-    let text = win.getSelection().toString().trim();
+    const win = this.styleWindow;
+    const text = win.getSelection().toString().trim();
     if (text !== "") {
       this.copySelection();
       event.preventDefault();
@@ -723,8 +723,8 @@ CssComputedView.prototype = {
    */
   copySelection: function() {
     try {
-      let win = this.styleWindow;
-      let text = win.getSelection().toString().trim();
+      const win = this.styleWindow;
+      const text = win.getSelection().toString().trim();
 
       clipboardHelper.copyString(text);
     } catch (e) {
@@ -787,7 +787,7 @@ CssComputedView.prototype = {
     this.includeBrowserStylesCheckbox = null;
 
     // Property views
-    for (let propView of this.propertyViews) {
+    for (const propView of this.propertyViews) {
       propView.destroy();
     }
     this.propertyViews = null;
@@ -808,7 +808,7 @@ function PropertyInfo(tree, name) {
 PropertyInfo.prototype = {
   get value() {
     if (this.tree._computed) {
-      let value = this.tree._computed[this.name].value;
+      const value = this.tree._computed[this.name].value;
       return value;
     }
     return null;
@@ -897,8 +897,8 @@ PropertyView.prototype = {
       return false;
     }
 
-    let searchTerm = this.tree.searchField.value.toLowerCase();
-    let isValidSearchTerm = searchTerm.trim().length > 0;
+    const searchTerm = this.tree.searchField.value.toLowerCase();
+    const isValidSearchTerm = searchTerm.trim().length > 0;
     if (isValidSearchTerm &&
         !this.name.toLowerCase().includes(searchTerm) &&
         !this.value.toLowerCase().includes(searchTerm)) {
@@ -915,7 +915,7 @@ PropertyView.prototype = {
    */
   get propertyHeaderClassName() {
     if (this.visible) {
-      let isDark = this.tree._darkStripe = !this.tree._darkStripe;
+      const isDark = this.tree._darkStripe = !this.tree._darkStripe;
       return isDark ? "computed-property-view row-striped" : "computed-property-view";
     }
     return "computed-property-hidden";
@@ -929,7 +929,7 @@ PropertyView.prototype = {
    */
   get propertyContentClassName() {
     if (this.visible) {
-      let isDark = this.tree._darkStripe;
+      const isDark = this.tree._darkStripe;
       return isDark
         ? "computed-property-content row-striped"
         : "computed-property-content";
@@ -943,7 +943,7 @@ PropertyView.prototype = {
    * @return {Element}
    */
   buildMain: function() {
-    let doc = this.tree.styleDocument;
+    const doc = this.tree.styleDocument;
 
     // Build the container element
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
@@ -966,7 +966,7 @@ PropertyView.prototype = {
     this.shortcuts.on("Return", this.onMatchedToggle);
     this.shortcuts.on("Space", this.onMatchedToggle);
 
-    let nameContainer = doc.createElementNS(HTML_NS, "span");
+    const nameContainer = doc.createElementNS(HTML_NS, "span");
     nameContainer.className = "computed-property-name-container";
     this.element.appendChild(nameContainer);
 
@@ -991,14 +991,14 @@ PropertyView.prototype = {
     this.nameNode.addEventListener("click", this.onFocus);
 
     // Build the style name ":" separator
-    let nameSeparator = doc.createElementNS(HTML_NS, "span");
+    const nameSeparator = doc.createElementNS(HTML_NS, "span");
     nameSeparator.classList.add("visually-hidden");
     nameSeparator.textContent = ": ";
     this.nameNode.appendChild(nameSeparator);
 
     nameContainer.appendChild(this.nameNode);
 
-    let valueContainer = doc.createElementNS(HTML_NS, "span");
+    const valueContainer = doc.createElementNS(HTML_NS, "span");
     valueContainer.className = "computed-property-value-container";
     this.element.appendChild(valueContainer);
 
@@ -1013,7 +1013,7 @@ PropertyView.prototype = {
     this.valueNode.addEventListener("click", this.onFocus);
 
     // Build the style value ";" separator
-    let valueSeparator = doc.createElementNS(HTML_NS, "span");
+    const valueSeparator = doc.createElementNS(HTML_NS, "span");
     valueSeparator.classList.add("visually-hidden");
     valueSeparator.textContent = ";";
 
@@ -1024,8 +1024,8 @@ PropertyView.prototype = {
   },
 
   buildSelectorContainer: function() {
-    let doc = this.tree.styleDocument;
-    let element = doc.createElementNS(HTML_NS, "div");
+    const doc = this.tree.styleDocument;
+    const element = doc.createElementNS(HTML_NS, "div");
     element.setAttribute("class", this.propertyContentClassName);
     this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
     this.matchedSelectorsContainer.classList.add("matchedselectors");
@@ -1056,8 +1056,8 @@ PropertyView.prototype = {
 
     this.tree.numVisibleProperties++;
 
-    let outputParser = this.tree._outputParser;
-    let frag = outputParser.parseCssProperty(this.propertyInfo.name,
+    const outputParser = this.tree._outputParser;
+    const frag = outputParser.parseCssProperty(this.propertyInfo.name,
       this.propertyInfo.value,
       {
         colorSwatchClass: "computed-colorswatch",
@@ -1076,7 +1076,7 @@ PropertyView.prototype = {
    * Refresh the panel matched rules.
    */
   refreshMatchedSelectors: function() {
-    let hasMatchedSelectors = this.hasMatchedSelectors;
+    const hasMatchedSelectors = this.hasMatchedSelectors;
     this.matchedSelectorsContainer.parentNode.hidden = !hasMatchedSelectors;
 
     if (hasMatchedSelectors) {
@@ -1112,14 +1112,14 @@ PropertyView.prototype = {
   },
 
   _buildMatchedSelectors: function() {
-    let frag = this.element.ownerDocument.createDocumentFragment();
+    const frag = this.element.ownerDocument.createDocumentFragment();
 
-    for (let selector of this.matchedSelectorViews) {
-      let p = createChild(frag, "p");
-      let span = createChild(p, "span", {
+    for (const selector of this.matchedSelectorViews) {
+      const p = createChild(frag, "p");
+      const span = createChild(p, "span", {
         class: "rule-link"
       });
-      let link = createChild(span, "a", {
+      const link = createChild(span, "a", {
         target: "_blank",
         class: "computed-link theme-link",
         title: selector.href,
@@ -1128,13 +1128,13 @@ PropertyView.prototype = {
         textContent: selector.source
       });
       link.addEventListener("click", selector.openStyleEditor);
-      let shortcuts = new KeyShortcuts({
+      const shortcuts = new KeyShortcuts({
         window: this.tree.styleWindow,
         target: link
       });
       shortcuts.on("Return", () => selector.openStyleEditor());
 
-      let status = createChild(p, "span", {
+      const status = createChild(p, "span", {
         dir: "ltr",
         class: "rule-text theme-fg-color3 " + selector.statusClass,
         title: selector.statusText
@@ -1145,7 +1145,7 @@ PropertyView.prototype = {
         textContent: selector.sourceText
       });
 
-      let valueDiv = createChild(status, "div", {
+      const valueDiv = createChild(status, "div", {
         class: "fix-get-selection computed-other-property-value theme-fg-color1"
       });
       valueDiv.appendChild(selector.outputFragment);
@@ -1163,7 +1163,7 @@ PropertyView.prototype = {
     if (!this._matchedSelectorViews) {
       this._matchedSelectorViews = [];
       this._matchedSelectorResponse.forEach(selectorInfo => {
-        let selectorView = new SelectorView(this.tree, selectorInfo);
+        const selectorView = new SelectorView(this.tree, selectorInfo);
         this._matchedSelectorViews.push(selectorView);
       }, this);
     }
@@ -1190,10 +1190,10 @@ PropertyView.prototype = {
    * The action when a user clicks on the MDN help link for a property.
    */
   mdnLinkClick: function(event) {
-    let inspector = this.tree.inspector;
+    const inspector = this.tree.inspector;
 
     if (inspector.target.tab) {
-      let browserWin = inspector.target.tab.ownerDocument.defaultView;
+      const browserWin = inspector.target.tab.ownerDocument.defaultView;
       browserWin.openWebLinkIn(this.link, "tab");
     }
   },
@@ -1203,7 +1203,7 @@ PropertyView.prototype = {
    */
   destroy: function() {
     if (this._matchedSelectorViews) {
-      for (let view of this._matchedSelectorViews) {
+      for (const view of this._matchedSelectorViews) {
         view.destroy();
       }
     }
@@ -1284,10 +1284,10 @@ SelectorView.prototype = {
       return;
     }
 
-    for (let status in CssLogic.STATUS) {
-      let i = CssLogic.STATUS[status];
+    for (const status in CssLogic.STATUS) {
+      const i = CssLogic.STATUS[status];
       if (i > CssLogic.STATUS.UNMATCHED) {
-        let value = CssComputedView.l10n("rule.status." + status);
+        const value = CssComputedView.l10n("rule.status." + status);
         // Replace normal spaces with non-breaking spaces
         SelectorView.STATUS_NAMES[i] = value.replace(/ /g, "\u00A0");
       }
@@ -1312,7 +1312,7 @@ SelectorView.prototype = {
     if (this._href) {
       return this._href;
     }
-    let sheet = this.selectorInfo.rule.parentStyleSheet;
+    const sheet = this.selectorInfo.rule.parentStyleSheet;
     this._href = sheet ? sheet.href : "#";
     return this._href;
   },
@@ -1330,8 +1330,8 @@ SelectorView.prototype = {
     // we lose any events that are attached. This means that URLs will open in a
     // new window. At some point we should fix this by stopping using the
     // templater.
-    let outputParser = this.tree._outputParser;
-    let frag = outputParser.parseCssProperty(
+    const outputParser = this.tree._outputParser;
+    const frag = outputParser.parseCssProperty(
       this.selectorInfo.name,
       this.selectorInfo.value, {
         colorSwatchClass: "computed-colorswatch",
@@ -1374,10 +1374,10 @@ SelectorView.prototype = {
       this.currentLocation = this.generatedLocation;
     }
 
-    let selector = '[sourcelocation="' + this.source + '"]';
-    let link = this.tree.element.querySelector(selector);
+    const selector = '[sourcelocation="' + this.source + '"]';
+    const link = this.tree.element.querySelector(selector);
     if (link) {
-      let text = CssLogic.shortSource(this.currentLocation) +
+      const text = CssLogic.shortSource(this.currentLocation) +
           ":" + this.currentLocation.line;
       link.textContent = text;
     }
@@ -1394,23 +1394,23 @@ SelectorView.prototype = {
    *   style editor.
    */
   openStyleEditor: function() {
-    let inspector = this.tree.inspector;
-    let rule = this.selectorInfo.rule;
+    const inspector = this.tree.inspector;
+    const rule = this.selectorInfo.rule;
 
     // The style editor can only display stylesheets coming from content because
     // chrome stylesheets are not listed in the editor's stylesheet selector.
     //
     // If the stylesheet is a content stylesheet we send it to the style
     // editor else we display it in the view source window.
-    let parentStyleSheet = rule.parentStyleSheet;
+    const parentStyleSheet = rule.parentStyleSheet;
     if (!parentStyleSheet || parentStyleSheet.isSystem) {
-      let toolbox = gDevTools.getToolbox(inspector.target);
+      const toolbox = gDevTools.getToolbox(inspector.target);
       toolbox.viewSource(rule.href, rule.line);
       return;
     }
 
-    let {href, line, column} = this.currentLocation;
-    let target = inspector.target;
+    const {href, line, column} = this.currentLocation;
+    const target = inspector.target;
     if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
       gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
         toolbox.getCurrentPanel().selectStyleSheet(href, line, column);
@@ -1422,7 +1422,7 @@ SelectorView.prototype = {
    * Destroy this selector view, removing event listeners
    */
   destroy: function() {
-    let rule = this.selectorInfo.rule;
+    const rule = this.selectorInfo.rule;
     if (rule && rule.parentStyleSheet && rule.type != ELEMENT_STYLE) {
       const url = rule.parentStyleSheet.href || rule.parentStyleSheet.nodeHref;
       this.sourceMapURLService.unsubscribe(url, rule.line,
@@ -1475,7 +1475,7 @@ ComputedViewTool.prototype = {
       return;
     }
 
-    let isInactive = !this.isSidebarActive() &&
+    const isInactive = !this.isSidebarActive() &&
                      this.inspector.selection.nodeFront;
     if (isInactive) {
       return;
@@ -1490,7 +1490,7 @@ ComputedViewTool.prototype = {
     }
 
     if (selectElement) {
-      let done = this.inspector.updating("computed-view");
+      const done = this.inspector.updating("computed-view");
       this.computedView.selectElement(this.inspector.selection.nodeFront).then(() => {
         done();
       });

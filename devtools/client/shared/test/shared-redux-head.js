@@ -23,8 +23,8 @@
  *         Resolved once the store reaches the expected state.
  */
 function waitUntilState(store, predicate) {
-  let deferred = defer();
-  let unsubscribe = store.subscribe(check);
+  const deferred = defer();
+  const unsubscribe = store.subscribe(check);
 
   info(`Waiting for state predicate "${predicate}"`);
   function check() {
@@ -51,14 +51,14 @@ function waitUntilState(store, predicate) {
  *         Resolved once the expected action is emitted by the store.
  */
 function waitUntilAction(store, actionType) {
-  let deferred = defer();
-  let unsubscribe = store.subscribe(check);
-  let history = store.history;
+  const deferred = defer();
+  const unsubscribe = store.subscribe(check);
+  const history = store.history;
   let index = history.length;
 
   info(`Waiting for action "${actionType}"`);
   function check() {
-    let action = history[index++];
+    const action = history[index++];
     if (action && action.type === actionType) {
       info(`Found action "${actionType}"`);
       unsubscribe();

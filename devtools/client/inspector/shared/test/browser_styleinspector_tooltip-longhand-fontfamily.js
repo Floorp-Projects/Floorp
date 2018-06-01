@@ -24,7 +24,7 @@ add_task(async function() {
   await testRuleView(view, inspector.selection.nodeFront);
 
   info("Opening the computed view");
-  let onComputedViewReady = inspector.once("computed-view-refreshed");
+  const onComputedViewReady = inspector.once("computed-view-refreshed");
   view = selectComputedView(inspector);
   await onComputedViewReady;
 
@@ -36,8 +36,8 @@ add_task(async function() {
 async function testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
-  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
-  let panel = tooltip.panel;
+  const tooltip = ruleView.tooltips.getTooltip("previewTooltip");
+  const panel = tooltip.panel;
 
   // Check that the rule view has a tooltip and that a XUL panel has
   // been created
@@ -45,7 +45,7 @@ async function testRuleView(ruleView, nodeFront) {
   ok(panel, "XUL panel exists");
 
   // Get the font family property inside the rule view
-  let {valueSpan} = getRuleViewProperty(ruleView, "#testElement",
+  const {valueSpan} = getRuleViewProperty(ruleView, "#testElement",
     "font-family");
 
   // And verify that the tooltip gets shown on this property
@@ -85,19 +85,19 @@ async function testRuleView(ruleView, nodeFront) {
 async function testComputedView(computedView, nodeFront) {
   info("Testing font-family tooltips in the computed view");
 
-  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
-  let panel = tooltip.panel;
-  let {valueSpan} = getComputedViewProperty(computedView, "font-family");
+  const tooltip = computedView.tooltips.getTooltip("previewTooltip");
+  const panel = tooltip.panel;
+  const {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
   valueSpan.scrollIntoView(true);
-  let previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  const previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
 
-  let images = panel.getElementsByTagName("img");
+  const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
@@ -109,25 +109,25 @@ async function testExpandedComputedViewProperty(computedView, nodeFront) {
     "computed view");
 
   info("Expanding the font-family property to reveal matched selectors");
-  let propertyView = getPropertyView(computedView, "font-family");
+  const propertyView = getPropertyView(computedView, "font-family");
   propertyView.matchedExpanded = true;
   await propertyView.refreshMatchedSelectors();
 
-  let valueSpan = propertyView.matchedSelectorsContainer
+  const valueSpan = propertyView.matchedSelectorsContainer
     .querySelector(".bestmatch .computed-other-property-value");
 
-  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
-  let panel = tooltip.panel;
+  const tooltip = computedView.tooltips.getTooltip("previewTooltip");
+  const panel = tooltip.panel;
 
   valueSpan.scrollIntoView(true);
-  let previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  const previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
 
-  let images = panel.getElementsByTagName("img");
+  const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 

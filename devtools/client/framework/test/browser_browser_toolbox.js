@@ -12,7 +12,7 @@ requestLongerTimeout(4);
 
 add_task(async function() {
   await new Promise(done => {
-    let options = {"set": [
+    const options = {"set": [
       ["devtools.debugger.prompt-connection", false],
       ["devtools.debugger.remote-enabled", true],
       ["devtools.chrome.enabled", true],
@@ -28,7 +28,7 @@ add_task(async function() {
 
   // Wait for a notification sent by a script evaluated in the webconsole
   // of the browser toolbox.
-  let onCustomMessage = new Promise(done => {
+  const onCustomMessage = new Promise(done => {
     Services.obs.addObserver(function listener(target, aTop, data) {
       Services.obs.removeObserver(listener, "browser-toolbox-console-works");
       done(data === "true");
@@ -37,15 +37,15 @@ add_task(async function() {
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
   /* global toolbox */
-  let testScript = function() {
+  const testScript = function() {
     toolbox.selectTool("webconsole")
       .then(console => {
         // This is for checking Browser Toolbox doesn't have a close button.
-        let hasCloseButton = !!toolbox.doc.getElementById("toolbox-close");
-        let { jsterm } = console.hud;
-        let js = "Services.obs.notifyObservers(null, 'browser-toolbox-console-works', " +
+        const hasCloseButton = !!toolbox.doc.getElementById("toolbox-close");
+        const { jsterm } = console.hud;
+        const js = "Services.obs.notifyObservers(null, 'browser-toolbox-console-works', " +
             hasCloseButton + ");";
         return jsterm.execute(js);
       })
@@ -56,7 +56,7 @@ add_task(async function() {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });
 
-  let { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+  const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
   is(BrowserToolboxProcess.getBrowserToolboxSessionState(), false, "No session state initially");
 
   let closePromise;
@@ -69,7 +69,7 @@ add_task(async function() {
   ok(true, "Browser toolbox started\n");
   is(BrowserToolboxProcess.getBrowserToolboxSessionState(), true, "Has session state");
 
-  let hasCloseButton = await onCustomMessage;
+  const hasCloseButton = await onCustomMessage;
   ok(true, "Received the custom message");
   ok(!hasCloseButton, "Browser toolbox doesn't have a close button");
 

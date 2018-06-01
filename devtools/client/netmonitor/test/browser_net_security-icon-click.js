@@ -8,9 +8,9 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -37,7 +37,7 @@ add_task(async function() {
   return teardown(monitor);
 
   async function performRequestAndWait(url) {
-    let wait = waitForNetworkEvents(monitor, 1);
+    const wait = waitForNetworkEvents(monitor, 1);
     await ContentTask.spawn(tab.linkedBrowser, { url }, async function(args) {
       content.wrappedJSObject.performRequests(1, args.url);
     });
@@ -45,7 +45,7 @@ add_task(async function() {
   }
 
   async function clickAndTestSecurityIcon() {
-    let icon = document.querySelector(".requests-security-state-icon");
+    const icon = document.querySelector(".requests-security-state-icon");
     info("Clicking security icon of the first request and waiting for panel update.");
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
     await waitUntil(() => document.querySelector("#security-panel .security-info-value"));

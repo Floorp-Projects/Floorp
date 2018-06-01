@@ -29,7 +29,7 @@ const tests = [
 ];
 
 function run_test() {
-  for (let { id, expected } of tests) {
+  for (const { id, expected } of tests) {
     const actual = DominatorTreeNode.getNodeByIdAlongPath(id, tree, path);
     equal(actual, expected, `We should have got the node with id = ${id}`);
   }

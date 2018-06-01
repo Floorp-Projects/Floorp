@@ -7,7 +7,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: false });
 
   // Attach frame scripts if in e10s to perform
@@ -17,7 +17,7 @@ async function ifWebGLSupported() {
   // 0. Perform the initial reload.
 
   reload(target);
-  let firstProgram = await once(front, "program-linked");
+  const firstProgram = await once(front, "program-linked");
   let programs = await front.getPrograms();
   is(programs.length, 1,
     "The first program should be returned by a call to getPrograms().");
@@ -31,7 +31,7 @@ async function ifWebGLSupported() {
   // 1. Perform a simple navigation.
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
-  let [secondProgram, thirdProgram] = await getPrograms(front, 2);
+  const [secondProgram, thirdProgram] = await getPrograms(front, 2);
   programs = await front.getPrograms();
   is(programs.length, 2,
     "The second and third programs should be returned by a call to getPrograms().");

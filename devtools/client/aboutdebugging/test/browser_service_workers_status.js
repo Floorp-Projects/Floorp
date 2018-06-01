@@ -16,21 +16,21 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = await addTab(TAB_URL);
+  const swTab = await addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
-  let container = await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  const container = await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   // We should ideally check that the service worker registration goes through the
   // "registering" and "running" steps, but it is difficult to workaround race conditions
   // for a test running on a wide variety of platforms. Due to intermittent failures, we
   // simply check that the registration transitions to "stopped".
-  let status = container.querySelector(".target-status");
+  const status = container.querySelector(".target-status");
   await waitUntil(() => status.textContent == "Stopped", 100);
   is(status.textContent, "Stopped", "Service worker is currently stopped");
 

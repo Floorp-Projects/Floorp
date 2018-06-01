@@ -8,7 +8,7 @@
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-    let edWin = ed.container.contentWindow.wrappedJSObject;
+    const edWin = ed.container.contentWindow.wrappedJSObject;
     testJS(ed, edWin).then(() => {
       teardown(ed, win);
     });
@@ -36,7 +36,7 @@ function testJS(ed, win) {
       resolve();
     });
 
-    let autocompleteKey =
+    const autocompleteKey =
       Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
     EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
   });

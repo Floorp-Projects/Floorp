@@ -13,18 +13,18 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, PerformanceController, DetailsView, JsCallTreeView } = panel.panelWin;
+  const { EVENTS, PerformanceController, DetailsView, JsCallTreeView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  let selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
-  let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
+  const rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
   await selected;
   await rendered;
@@ -32,7 +32,7 @@ add_task(async function() {
   ok(DetailsView.isViewSelected(JsCallTreeView),
     "The js calltree view is now selected in the details view.");
 
-  let cleared = once(PerformanceController, EVENTS.RECORDING_SELECTED, {
+  const cleared = once(PerformanceController, EVENTS.RECORDING_SELECTED, {
     expectedArgs: [null]
   });
   await PerformanceController.clearRecordings();

@@ -53,8 +53,8 @@
       };
 
       function initProgram() {
-        let vertexShader = getShader(gl, "shader-vs");
-        let fragmentShader = getShader(gl, "shader-fs");
+        const vertexShader = getShader(gl, "shader-vs");
+        const fragmentShader = getShader(gl, "shader-fs");
 
         program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -69,8 +69,8 @@
       }
 
       function getShader(gl, id) {
-        let script = document.getElementById(id);
-        let source = script.textContent;
+        const script = document.getElementById(id);
+        const source = script.textContent;
         let shader;
 
         if (script.type == "x-shader/x-fragment") {

@@ -24,11 +24,11 @@ let gWalker = null;
 let gInspectee = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspectorFront = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspectorFront = InspectorFront(client, tab);
     promiseDone(inspectorFront.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -37,9 +37,9 @@ addTest(function setup() {
 });
 
 addAsyncTest(async function testRearrange() {
-  let longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
+  const longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
   let children = await gWalker.children(longlist);
-  let nodeA = children.nodes[0];
+  const nodeA = children.nodes[0];
   is(nodeA.id, "a", "Got the expected node.");
 
   // Move nodeA to the end of the list.
@@ -51,9 +51,9 @@ addAsyncTest(async function testRearrange() {
      "a should now be the last returned child.");
 
   // Now move it to the middle of the list.
-  let nextNode = children.nodes[13];
+  const nextNode = children.nodes[13];
   await gWalker.insertBefore(nodeA, longlist, nextNode);
-  let sibling =
+  const sibling =
     new DocumentWalker(gInspectee.querySelector("#a"), window).nextSibling();
   is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
   children = await gWalker.children(longlist);
@@ -64,14 +64,14 @@ addAsyncTest(async function testRearrange() {
 });
 
 addAsyncTest(async function testInsertInvalidInput() {
-  let longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
-  let children = await gWalker.children(longlist);
-  let nodeA = children.nodes[0];
-  let nextSibling = children.nodes[1];
+  const longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
+  const children = await gWalker.children(longlist);
+  const nodeA = children.nodes[0];
+  const nextSibling = children.nodes[1];
 
   // Now move it to the original location and make sure no mutation happens.
   let hasMutated = false;
-  let observer = new gInspectee.defaultView.MutationObserver(() => {
+  const observer = new gInspectee.defaultView.MutationObserver(() => {
     hasMutated = true;
   });
   observer.observe(longlist.rawNode(), {

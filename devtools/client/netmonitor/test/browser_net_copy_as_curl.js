@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CURL_URL);
+  const { tab, monitor } = await initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX
@@ -81,7 +81,7 @@ add_task(async function() {
   ]);
 
   // Unfinished request (bug#1378464, bug#1420513)
-  let waitSlow = waitForNetworkEvents(monitor, 0);
+  const waitSlow = waitForNetworkEvents(monitor, 0);
   await ContentTask.spawn(tab.linkedBrowser, SLOW_SJS, async function(url) {
     content.wrappedJSObject.performRequest(url, "GET", null);
   });
@@ -113,7 +113,7 @@ add_task(async function() {
   await teardown(monitor);
 
   async function performRequest(method, payload) {
-    let waitRequest = waitForNetworkEvents(monitor, 1);
+    const waitRequest = waitForNetworkEvents(monitor, 1);
     await ContentTask.spawn(tab.linkedBrowser, {
       url: SIMPLE_SJS,
       method_: method,
@@ -125,7 +125,7 @@ add_task(async function() {
   }
 
   async function testClipboardContent(expectedResult) {
-    let { document } = monitor.panelWin;
+    const { document } = monitor.panelWin;
 
     const items = document.querySelectorAll(".request-list-item");
     EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
@@ -133,7 +133,7 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[0]);
 
     /* Ensure that the copy as cURL option is always visible */
-    let copyUrlParamsNode = monitor.panelWin.parent.document
+    const copyUrlParamsNode = monitor.panelWin.parent.document
       .querySelector("#request-list-context-copy-as-curl");
     is(!!copyUrlParamsNode, true,
       "The \"Copy as cURL\" context menu item should not be hidden.");
@@ -152,9 +152,9 @@ add_task(async function() {
       // This monster regexp parses the command line into an array of arguments,
       // recognizing quoted args with matching quotes and escaped quotes inside:
       // [ "curl 'url'", "--standalone-arg", "-arg-with-quoted-string 'value\'s'" ]
-      let matchRe = /[-A-Za-z1-9]+(?: ([\"'])(?:\\\1|.)*?\1)?/g;
+      const matchRe = /[-A-Za-z1-9]+(?: ([\"'])(?:\\\1|.)*?\1)?/g;
 
-      let actual = result.match(matchRe);
+      const actual = result.match(matchRe);
       // Must begin with the same "curl 'URL'" segment
       if (!actual || expectedResult[0] != actual[0]) {
         return false;

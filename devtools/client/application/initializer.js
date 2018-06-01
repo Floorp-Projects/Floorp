@@ -66,12 +66,12 @@ window.Application = {
    */
   async createMessageContexts() {
     const locales = Services.locale.getAppLocalesAsBCP47();
-    let generator = L10nRegistry.generateContexts(locales, ["devtools/application.ftl"]);
+    const generator = L10nRegistry.generateContexts(locales, ["devtools/application.ftl"]);
 
     // Return value of generateContexts is a generator and should be converted to
     // a sync iterable before using it with React.
-    let contexts = [];
-    for await (let message of generator) {
+    const contexts = [];
+    for await (const message of generator) {
       contexts.push(message);
     }
 
@@ -79,7 +79,7 @@ window.Application = {
   },
 
   async updateWorkers() {
-    let { service } = await this.client.mainRoot.listAllWorkers();
+    const { service } = await this.client.mainRoot.listAllWorkers();
     this.actions.updateWorkers(service);
   },
 

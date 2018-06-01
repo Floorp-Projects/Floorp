@@ -13,7 +13,7 @@ requestLongerTimeout(2);
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");
   await clickOnInspectMenuItem(testActor, "div");
@@ -40,8 +40,8 @@ function assertNodeSelected(inspector, tagName) {
 }
 
 function selectPreviousNodeWithArrowUp(inspector) {
-  let onNodeHighlighted = inspector.toolbox.once("node-highlight");
-  let onUpdated = inspector.once("inspector-updated");
+  const onNodeHighlighted = inspector.toolbox.once("node-highlight");
+  const onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("KEY_ArrowUp");
   return Promise.all([onUpdated, onNodeHighlighted]);
 }

@@ -33,13 +33,13 @@ async function run_test_with_server(server, callback) {
 
 async function test_symbol_grip() {
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-    let [grip] = packet.frame.arguments;
+    const [grip] = packet.frame.arguments;
 
     // Checks grip.preview properties.
     check_preview(grip);
 
-    let objClient = gThreadClient.pauseGrip(grip);
-    let response = await objClient.getPrototypeAndProperties();
+    const objClient = gThreadClient.pauseGrip(grip);
+    const response = await objClient.getPrototypeAndProperties();
     // Checks the result of getPrototypeAndProperties.
     check_prototype_and_properties(response);
 

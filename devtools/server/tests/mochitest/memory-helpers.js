@@ -21,13 +21,13 @@ SimpleTest.registerCleanupFunction(function() {
 function startServerAndGetSelectedTabMemory() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
 
   return client.connect()
     .then(() => client.listTabs())
     .then(response => {
-      let form = response.tabs[response.selected];
-      let memory = MemoryFront(client, form, response);
+      const form = response.tabs[response.selected];
+      const memory = MemoryFront(client, form, response);
 
       return { memory, client };
     });

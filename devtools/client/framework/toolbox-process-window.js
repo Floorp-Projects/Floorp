@@ -33,7 +33,7 @@ var Prefs = new PrefsHelper("devtools.debugger", {
 var gToolbox, gClient;
 
 function appendStatusMessage(msg) {
-  let statusMessage = document.getElementById("status-message");
+  const statusMessage = document.getElementById("status-message");
   statusMessage.value += msg + "\n";
   if (msg.stack) {
     statusMessage.value += msg.stack + "\n";
@@ -41,7 +41,7 @@ function appendStatusMessage(msg) {
 }
 
 function toggleStatusMessage(visible = true) {
-  let statusMessageContainer = document.getElementById("status-message-container");
+  const statusMessageContainer = document.getElementById("status-message-container");
   statusMessageContainer.hidden = !visible;
 }
 
@@ -55,10 +55,10 @@ function hideStatusMessage() {
 
 var connect = async function() {
   // Initiate the connection
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment);
-  let port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
-  let addonID = env.get("MOZ_BROWSER_TOOLBOX_ADDONID");
+  const port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
+  const addonID = env.get("MOZ_BROWSER_TOOLBOX_ADDONID");
 
   // A port needs to be passed in from the environment, for instance:
   //    MOZ_BROWSER_TOOLBOX_PORT=6080 ./mach run -chrome \
@@ -67,10 +67,10 @@ var connect = async function() {
     throw new Error("Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT");
   }
 
-  let host = Prefs.chromeDebuggingHost;
-  let webSocket = Prefs.chromeDebuggingWebSocket;
+  const host = Prefs.chromeDebuggingHost;
+  const webSocket = Prefs.chromeDebuggingWebSocket;
   appendStatusMessage(`Connecting to ${host}:${port}, ws: ${webSocket}`);
-  let transport = await DebuggerClient.socketConnect({
+  const transport = await DebuggerClient.socketConnect({
     host,
     port,
     webSocket,
@@ -81,12 +81,12 @@ var connect = async function() {
 
   appendStatusMessage("Get root form for toolbox");
   if (addonID) {
-    let { addons } = await gClient.listAddons();
-    let addonActor = addons.filter(addon => addon.id === addonID).pop();
-    let isTabActor = addonActor.isWebExtension;
+    const { addons } = await gClient.listAddons();
+    const addonActor = addons.filter(addon => addon.id === addonID).pop();
+    const isTabActor = addonActor.isWebExtension;
     await openToolbox({form: addonActor, chrome: true, isTabActor});
   } else {
-    let response = await gClient.getProcess();
+    const response = await gClient.getProcess();
     await openToolbox({form: response.form, chrome: true});
   }
 };
@@ -109,11 +109,11 @@ function setPrefDefaults() {
 }
 
 window.addEventListener("load", async function() {
-  let cmdClose = document.getElementById("toolbox-cmd-close");
+  const cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();
   // Reveal status message if connecting is slow or if an error occurs.
-  let delayedStatusReveal = setTimeout(revealStatusMessage, STATUS_REVEAL_TIME);
+  const delayedStatusReveal = setTimeout(revealStatusMessage, STATUS_REVEAL_TIME);
   try {
     await connect();
     clearTimeout(delayedStatusReveal);
@@ -138,19 +138,19 @@ async function openToolbox({ form, chrome, isTabActor }) {
     isTabActor: isTabActor
   };
   appendStatusMessage(`Create toolbox target: ${JSON.stringify(arguments, null, 2)}`);
-  let target = await TargetFactory.forRemoteTab(options);
-  let frame = document.getElementById("toolbox-iframe");
+  const target = await TargetFactory.forRemoteTab(options);
+  const frame = document.getElementById("toolbox-iframe");
 
   // Remember the last panel that was used inside of this profile.
   // But if we are testing, then it should always open the debugger panel.
-  let selectedTool =
+  const selectedTool =
     Services.prefs.getCharPref("devtools.browsertoolbox.panel",
       Services.prefs.getCharPref("devtools.toolbox.selectedTool",
                                   "jsdebugger"));
 
   options = { customIframe: frame };
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
-  let toolbox = await gDevTools.showToolbox(
+  const toolbox = await gDevTools.showToolbox(
     target,
     selectedTool,
     Toolbox.HostType.CUSTOM,
@@ -163,13 +163,13 @@ function onNewToolbox(toolbox) {
   gToolbox = toolbox;
   bindToolboxHandlers();
   raise();
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment);
-  let testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
+  const testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
   if (testScript) {
     // Only allow executing random chrome scripts when a special
     // test-only pref is set
-    let prefName = "devtools.browser-toolbox.allow-unsafe-script";
+    const prefName = "devtools.browser-toolbox.allow-unsafe-script";
     if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
         Services.prefs.getBoolPref(prefName) === true) {
       evaluateTestScript(testScript, toolbox);
@@ -178,7 +178,7 @@ function onNewToolbox(toolbox) {
 }
 
 function evaluateTestScript(script, toolbox) {
-  let sandbox = Cu.Sandbox(window);
+  const sandbox = Cu.Sandbox(window);
   sandbox.window = window;
   sandbox.toolbox = toolbox;
   sandbox.ChromeUtils = ChromeUtils;
@@ -195,7 +195,7 @@ async function bindToolboxHandlers() {
     updateBadgeText(false);
 
     // Once the debugger panel opens listen for thread pause / resume.
-    let panel = await gToolbox.getPanelWhenReady("jsdebugger");
+    const panel = await gToolbox.getPanelWhenReady("jsdebugger");
     setupThreadListeners(panel);
   }
 }
@@ -203,8 +203,8 @@ async function bindToolboxHandlers() {
 function setupThreadListeners(panel) {
   updateBadgeText(panel.isPaused());
 
-  let onPaused = updateBadgeText.bind(null, true);
-  let onResumed = updateBadgeText.bind(null, false);
+  const onPaused = updateBadgeText.bind(null, true);
+  const onResumed = updateBadgeText.bind(null, false);
   gToolbox.target.on("thread-paused", onPaused);
   gToolbox.target.on("thread-resumed", onResumed);
 
@@ -215,7 +215,7 @@ function setupThreadListeners(panel) {
 }
 
 function updateBadgeText(paused) {
-  let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+  const dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
     .getService(Ci.nsIMacDockSupport);
   dockSupport.badgeText = paused ? "▐▐ " : " ▶";
 }
@@ -223,14 +223,14 @@ function updateBadgeText(paused) {
 function onUnload() {
   window.removeEventListener("unload", onUnload);
   window.removeEventListener("message", onMessage);
-  let cmdClose = document.getElementById("toolbox-cmd-close");
+  const cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.removeEventListener("command", onCloseCommand);
   gToolbox.destroy();
 }
 
 function onMessage(event) {
   try {
-    let json = JSON.parse(event.data);
+    const json = JSON.parse(event.data);
     switch (json.name) {
       case "toolbox-raise":
         raise();
@@ -255,11 +255,11 @@ function setTitle(title) {
 }
 
 function quitApp() {
-  let quit = Cc["@mozilla.org/supports-PRBool;1"]
+  const quit = Cc["@mozilla.org/supports-PRBool;1"]
              .createInstance(Ci.nsISupportsPRBool);
   Services.obs.notifyObservers(quit, "quit-application-requested");
 
-  let shouldProceed = !quit.data;
+  const shouldProceed = !quit.data;
   if (shouldProceed) {
     Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   }

@@ -10,24 +10,24 @@
 const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(async function() {
-  let browser = await addTab(TEST_URL);
+  const browser = await addTab(TEST_URL);
   await ContentTask.spawn(browser, null, async function() {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
     const {
       CanvasFrameAnonymousContentHelper
     } = require("devtools/server/actors/highlighters/utils/markup");
-    let doc = content.document;
+    const doc = content.document;
 
-    let nodeBuilder = () => {
-      let root = doc.createElement("div");
+    const nodeBuilder = () => {
+      const root = doc.createElement("div");
 
-      let parent = doc.createElement("div");
+      const parent = doc.createElement("div");
       parent.style = "pointer-events:auto;width:300px;height:300px;background:yellow;";
       parent.id = "parent-element";
       root.appendChild(parent);
 
-      let child = doc.createElement("div");
+      const child = doc.createElement("div");
       child.style = "pointer-events:auto;width:200px;height:200px;background:red;";
       child.id = "child-element";
       parent.appendChild(child);
@@ -36,13 +36,13 @@ add_task(async function() {
     };
 
     info("Building the helper");
-    let env = new HighlighterEnvironment();
+    const env = new HighlighterEnvironment();
     env.initFromWindow(doc.defaultView);
-    let helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
+    const helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
 
     info("Getting the parent and child elements");
-    let parentEl = helper.getElement("parent-element");
-    let childEl = helper.getElement("child-element");
+    const parentEl = helper.getElement("parent-element");
+    const childEl = helper.getElement("child-element");
 
     info("Adding an event listener on both elements");
     let mouseDownHandled = [];
@@ -108,7 +108,7 @@ add_task(async function() {
       // reflow.
       win.document.documentElement.offsetWidth;
       // Minimal environment for EventUtils to work.
-      let EventUtils = {
+      const EventUtils = {
         window: content,
         parent: content,
         _EU_Ci: Ci,

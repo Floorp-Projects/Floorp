@@ -13,33 +13,33 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("test-promises-timetosettle");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("test-promises-timetosettle");
+  const chromeActors = await getChromeActors(client);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   // We have to attach the chrome TabActor before playing with the PromiseActor
   await attachTab(client, chromeActors);
   await testGetTimeToSettle(client, chromeActors, () => {
-    let p = new Promise(() => {});
+    const p = new Promise(() => {});
     p.name = "p";
-    let q = p.then();
+    const q = p.then();
     q.name = "q";
 
     return p;
   });
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "test-promises-timetosettle");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "test-promises-timetosettle");
   ok(targetTab, "Found our target tab.");
 
   await testGetTimeToSettle(client, targetTab, () => {
     const debuggee =
       DebuggerServer.getTestGlobal("test-promises-timetosettle");
 
-    let p = new debuggee.Promise(() => {});
+    const p = new debuggee.Promise(() => {});
     p.name = "p";
-    let q = p.then();
+    const q = p.then();
     q.name = "q";
 
     return p;
@@ -49,14 +49,14 @@ add_task(async function() {
 });
 
 async function testGetTimeToSettle(client, form, makePromises) {
-  let front = PromisesFront(client, form);
+  const front = PromisesFront(client, form);
 
   await front.attach();
   await front.listPromises();
 
-  let onNewPromise = new Promise(resolve => {
+  const onNewPromise = new Promise(resolve => {
     EventEmitter.on(front, "new-promises", promises => {
-      for (let p of promises) {
+      for (const p of promises) {
         if (p.promiseState.state === "pending") {
           ok(!p.promiseState.timeToSettle,
             "Expect no time to settle for unsettled promise.");
@@ -71,7 +71,7 @@ async function testGetTimeToSettle(client, form, makePromises) {
     });
   });
 
-  let promise = makePromises();
+  const promise = makePromises();
 
   await onNewPromise;
   await front.detach();

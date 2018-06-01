@@ -17,7 +17,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 812618 - test completion inside text</body>`;
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const {
@@ -42,8 +42,8 @@ add_task(async function() {
   is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
   ok(!completeNode.value, "completeNode.value is empty");
 
-  let items = popup.getItems().map(e => e.label);
-  let expectedItems = ["testBugB", "testBugA"];
+  const items = popup.getItems().map(e => e.label);
+  const expectedItems = ["testBugB", "testBugA"];
   is(items.join("-"), expectedItems.join("-"), "getItems returns the items we expect");
 
   info("press Tab and wait for popup to hide");

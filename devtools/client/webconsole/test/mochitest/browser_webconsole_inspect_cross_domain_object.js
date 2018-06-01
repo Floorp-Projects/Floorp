@@ -15,12 +15,12 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 add_task(async function() {
   requestLongerTimeout(2);
 
-  let hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");
+  const hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");
 
   info("Wait for the 'foobar' message to be logged by the frame");
-  let onMessage = waitForMessage(hud, "foobar");
+  const onMessage = waitForMessage(hud, "foobar");
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
-  let {node} = await onMessage;
+  const {node} = await onMessage;
 
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(objectInspectors.length, 2, "There is the expected number of object inspectors");
@@ -36,7 +36,7 @@ add_task(async function() {
   // |  hello: "world!"
   // |  ▶︎ <prototype>: Object { … }
 
-  let oi1Nodes = oi1.querySelectorAll(".node");
+  const oi1Nodes = oi1.querySelectorAll(".node");
   is(oi1Nodes.length, 4, "There is the expected number of nodes in the tree");
   ok(oi1.textContent.includes("bug: 869003"), "Expected content");
   ok(oi1.textContent.includes('hello: "world!"'), "Expected content");
@@ -55,7 +55,7 @@ add_task(async function() {
   // |  ▶︎ prototype: Object { … }
   // |  ▶︎ <prototype>: function ()
 
-  let oi2Nodes = oi2.querySelectorAll(".node");
+  const oi2Nodes = oi2.querySelectorAll(".node");
   is(oi2Nodes.length, 9, "There is the expected number of nodes in the tree");
   ok(oi2.textContent.includes("arguments: null"), "Expected content");
   ok(oi2.textContent.includes("bug: 869003"), "Expected content");
@@ -66,7 +66,7 @@ add_task(async function() {
 });
 
 function expandObjectInspector(oi) {
-  let onMutation = waitForNodeMutation(oi, {
+  const onMutation = waitForNodeMutation(oi, {
     childList: true
   });
 

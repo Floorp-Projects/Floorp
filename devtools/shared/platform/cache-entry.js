@@ -30,7 +30,7 @@
    */
    initializeCacheSession: function(request) {
      try {
-       let cacheService = Services.cache2;
+       const cacheService = Services.cache2;
        if (cacheService) {
          let loadContext = NetworkHelper.getRequestLoadContext(request);
          if (!loadContext) { // Get default load context if we can't fetch.
@@ -52,7 +52,7 @@
    * @param Object descriptor The descriptor from the backend.
    */
    parseCacheDescriptor: function(descriptor) {
-     let descriptorObj = {};
+     const descriptorObj = {};
      try {
        if (descriptor.storageDataSize) {
          descriptorObj.dataSize = descriptor.storageDataSize;
@@ -91,7 +91,7 @@
        this.initializeCacheSession(request);
      }
      if (this.cacheSession) {
-       let uri = NetworkHelper.nsIURL(request.URI.spec);
+       const uri = NetworkHelper.nsIURL(request.URI.spec);
        this.cacheSession.asyncOpenURI(
          uri,
         "",
@@ -102,7 +102,7 @@
            },
            onCacheEntryAvailable: (descriptor, isnew, appcache, status) => {
              if (descriptor) {
-               let descriptorObj = this.parseCacheDescriptor(descriptor);
+               const descriptorObj = this.parseCacheDescriptor(descriptor);
                onCacheDescriptorAvailable(descriptorObj);
              } else {
                onCacheDescriptorAvailable(null);

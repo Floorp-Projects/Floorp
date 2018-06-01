@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-  let { tab, monitor } = await initNetMonitor(JSON_B64_URL);
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { tab, monitor } = await initNetMonitor(JSON_B64_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -26,11 +26,11 @@ add_task(async function() {
     document.querySelector("#response-tab"));
   await wait;
 
-  let tabpanel = document.querySelector("#response-panel");
+  const tabpanel = document.querySelector("#response-panel");
 
   is(tabpanel.querySelector(".response-error-header") === null, true,
     "The response error header doesn't have the intended visibility.");
-  let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
+  const jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
   is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
     "The response json view has the intended visibility.");
   is(tabpanel.querySelector(".CodeMirror-code") === null, false,
@@ -45,9 +45,9 @@ add_task(async function() {
   is(tabpanel.querySelectorAll(".empty-notice").length, 0,
     "The empty notice should not be displayed in this tabpanel.");
 
-  let labels = tabpanel
+  const labels = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-  let values = tabpanel
+  const values = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
   is(labels[0].textContent, "greeting",

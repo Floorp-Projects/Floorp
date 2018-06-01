@@ -40,7 +40,7 @@ add_task(async function() {
 });
 
 function waitForTick() {
-  let deferred = defer();
+  const deferred = defer();
   executeSoon(deferred.resolve);
   return deferred.promise;
 }

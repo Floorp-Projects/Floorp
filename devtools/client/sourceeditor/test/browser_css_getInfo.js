@@ -124,14 +124,14 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
   ].join("\n"));
 
 add_task(async function test() {
-  let tab = await addTab(TEST_URI);
-  let browser = tab.linkedBrowser;
+  const tab = await addTab(TEST_URI);
+  const browser = tab.linkedBrowser;
 
-  let completer = new CSSCompleter({
+  const completer = new CSSCompleter({
     cssProperties: getClientCssProperties()
   });
-  let matches = (arr, toCheck) => !arr.some((x, i) => x != toCheck[i]);
-  let checkState = (expected, actual) => {
+  const matches = (arr, toCheck) => !arr.some((x, i) => x != toCheck[i]);
+  const checkState = (expected, actual) => {
     if (expected[0] == "null" && actual == null) {
       return true;
     } else if (expected[0] == actual.state && expected[0] == "selector" &&
@@ -151,16 +151,16 @@ add_task(async function test() {
   };
 
   let i = 0;
-  for (let expected of tests) {
+  for (const expected of tests) {
     ++i;
-    let caret = expected.splice(0, 1)[0];
+    const caret = expected.splice(0, 1)[0];
     await ContentTask.spawn(browser, [i, tests.length], function([idx, len]) {
-      let progress = content.document.getElementById("progress");
-      let progressDiv = content.document.querySelector("#progress > div");
+      const progress = content.document.getElementById("progress");
+      const progressDiv = content.document.querySelector("#progress > div");
       progress.dataset.progress = idx;
       progressDiv.style.width = 100 * idx / len + "%";
     });
-    let actual = completer.getInfoAt(source, caret);
+    const actual = completer.getInfoAt(source, caret);
     if (checkState(expected, actual)) {
       ok(true, "Test " + i + " passed. ");
     } else {
@@ -169,7 +169,7 @@ add_task(async function test() {
          (actual.selector || actual.selectors) + ", " +
          actual.propertyName + ", " + actual.value + "].");
       await ContentTask.spawn(browser, null, function() {
-        let progress = content.document.getElementById("progress");
+        const progress = content.document.getElementById("progress");
         progress.classList.add("failed");
       });
     }

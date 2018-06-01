@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("p", inspector);
 
   ok(!view.selectorHighlighter,
@@ -33,11 +33,11 @@ async function testSelectorHighlight(view, name) {
   info("Test creating selector highlighter");
 
   info("Clicking on a selector icon");
-  let icon = await getRuleViewSelectorHighlighterIcon(view, name);
+  const icon = await getRuleViewSelectorHighlighterIcon(view, name);
 
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  let isVisible = await onToggled;
+  const isVisible = await onToggled;
 
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
   ok(isVisible, "The toggle event says the highlighter is visible");
@@ -46,22 +46,22 @@ async function testSelectorHighlight(view, name) {
 async function testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
 
   info("Waiting for rule view to update");
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
   EventUtils.synthesizeKey("KEY_Enter");
 
-  let isVisible = await onToggled;
+  const isVisible = await onToggled;
 
   ok(!view.highlighters.selectorHighlighterShown,
     "The selectorHighlighterShown instance was removed");

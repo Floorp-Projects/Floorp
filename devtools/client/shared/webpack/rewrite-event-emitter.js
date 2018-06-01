@@ -10,10 +10,10 @@
 module.exports = function(content) {
   this.cacheable && this.cacheable();
 
-  let lines = content.split("\n");
+  const lines = content.split("\n");
   let ignoring = false;
-  let newLines = [];
-  for (let line of lines) {
+  const newLines = [];
+  for (const line of lines) {
     if (/function \(factory\)/.test(line)) {
       ignoring = true;
     } else if (/call\(this, function /.test(line)) {

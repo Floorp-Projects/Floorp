@@ -39,7 +39,7 @@ function test_split_coords() {
     expected: ["calc(50px\u00a0+\u00a020%)", "30%"]
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     deepEqual(splitCoords(expr), expected, desc);
   }
 }
@@ -60,7 +60,7 @@ function test_coord_to_percent() {
     expected: 0
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     equal(coordToPercent(expr, size), expected, desc);
   }
 }
@@ -85,7 +85,7 @@ function test_eval_calc_expression() {
     expected: 30
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     equal(evalCalcExpression(expr, size), expected, desc);
   }
 }
@@ -101,7 +101,7 @@ function test_shape_mode_to_css_property_name() {
     expected: "shapeOutside"
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     equal(shapeModeToCssPropertyName(expr), expected, desc);
   }
 }
@@ -125,7 +125,7 @@ function test_get_circle_path() {
     expected: "M-2.5,0a2.5,1.25 0 1,0 5,0a2.5,1.25 0 1,0 -5,0"
   }];
 
-  for (let { desc, size, cx, cy, width, height, zoom, expected } of tests) {
+  for (const { desc, size, cx, cy, width, height, zoom, expected } of tests) {
     equal(getCirclePath(size, cx, cy, width, height, zoom), expected, desc);
   }
 }
@@ -148,7 +148,7 @@ function test_get_decimal_precision() {
     expr: "", expected: 0
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     equal(getDecimalPrecision(expr), expected, desc);
   }
 }
@@ -192,7 +192,7 @@ function test_get_unit() {
     expr: "farthest-side", expected: "px"
   }];
 
-  for (let { desc, expr, expected } of tests) {
+  for (const { desc, expr, expected } of tests) {
     equal(getUnit(expr), expected, desc);
   }
 }

@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#matches", inspector);
 
   info("Checking the default styles");
@@ -27,9 +27,9 @@ add_task(async function() {
     "span #matches background-color property is hidden");
 
   info("Toggling the browser styles");
-  let doc = view.styleDocument;
-  let checkbox = doc.querySelector(".includebrowserstyles");
-  let onRefreshed = inspector.once("computed-view-refreshed");
+  const doc = view.styleDocument;
+  const checkbox = doc.querySelector(".includebrowserstyles");
+  const onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
   await onRefreshed;
 
@@ -42,8 +42,8 @@ add_task(async function() {
 
 function isPropertyVisible(name, view) {
   info("Checking property visibility for " + name);
-  let propertyViews = view.propertyViews;
-  for (let propView of propertyViews) {
+  const propertyViews = view.propertyViews;
+  for (const propView of propertyViews) {
     if (propView.name == name) {
       return propView.visible;
     }

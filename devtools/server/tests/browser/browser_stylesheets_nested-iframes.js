@@ -14,16 +14,16 @@ add_task(async function() {
 
   info("Initialising the debugger server and client.");
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
 
   info("Attaching to the active tab.");
   await client.attachTab(form.actor);
 
-  let front = StyleSheetsFront(client, form);
+  const front = StyleSheetsFront(client, form);
   ok(front, "The StyleSheetsFront was created.");
 
-  let sheets = await front.getStyleSheets();
+  const sheets = await front.getStyleSheets();
   ok(sheets, "getStyleSheets() succeeded even with documentless iframes.");
 
   // Bug 285395 limits the number of nested iframes to 10. There's one sheet per

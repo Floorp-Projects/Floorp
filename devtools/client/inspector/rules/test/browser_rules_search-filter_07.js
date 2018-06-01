@@ -21,16 +21,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Enter the test value in the search filter");
   await setSearchFilter(view, SEARCH);
 
   info("Focus the width property name");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let rule = ruleEditor.rule;
-  let propEditor = rule.textProps[0].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const rule = ruleEditor.rule;
+  const propEditor = rule.textProps[0].editor;
   await focusEditableField(view, propEditor.nameSpan);
 
   info("Check that the correct rules are visible");

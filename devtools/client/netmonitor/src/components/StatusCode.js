@@ -36,8 +36,8 @@ class StatusCode extends Component {
   }
 
   render() {
-    let { item } = this.props;
-    let { fromCache, fromServiceWorker, status, statusText } = item;
+    const { item } = this.props;
+    const { fromCache, fromServiceWorker, status, statusText } = item;
     let code;
 
     if (status) {
@@ -71,7 +71,7 @@ class StatusCode extends Component {
 }
 
 function getStatusTooltip(item) {
-  let { fromCache, fromServiceWorker, status, statusText } = item;
+  const { fromCache, fromServiceWorker, status, statusText } = item;
   let title;
   if (fromCache && fromServiceWorker) {
     title = L10N.getFormatStr("netmonitor.status.tooltip.cachedworker",

@@ -12,7 +12,7 @@ const TEST_URI = URL_ROOT + "doc_matched_selectors.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
 
   await selectNode("#test", inspector);
   await testMatchedSelectors(view, inspector);
@@ -21,18 +21,18 @@ add_task(async function() {
 async function testMatchedSelectors(view, inspector) {
   info("checking selector counts, matched rules and titles");
 
-  let nodeFront = await getNodeFront("#test", inspector);
+  const nodeFront = await getNodeFront("#test", inspector);
   is(nodeFront, view._viewedElement,
     "style inspector node matches the selected node");
 
-  let propertyView = new PropertyView(view, "color");
+  const propertyView = new PropertyView(view, "color");
   propertyView.buildMain();
   propertyView.buildSelectorContainer();
   propertyView.matchedExpanded = true;
 
   await propertyView.refreshMatchedSelectors();
 
-  let numMatchedSelectors = propertyView.matchedSelectors.length;
+  const numMatchedSelectors = propertyView.matchedSelectors.length;
   is(numMatchedSelectors, 6,
     "CssLogic returns the correct number of matched selectors for div");
   is(propertyView.hasMatchedSelectors, true,

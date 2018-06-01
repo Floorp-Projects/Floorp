@@ -32,7 +32,7 @@ window.onload = function() {
 
 addTest(function setup() {
   // Create an iframe to debug.
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.srcdoc = "<div id='Tootles' onclick='debugger;'>I'm a DIV!</div>" +
                   "<script id='Auddie'>function auddie() { debugger; }<\/script>";
   iframe.onload = onLoadHandler;
@@ -98,8 +98,8 @@ addTest(function DragTootles() {
 
 // Check the introduction type of an in-markup script element.
 addTest(function checkAuddie() {
-  let fnDO = iframeDO.getOwnPropertyDescriptor("auddie").value;
-  let AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
+  const fnDO = iframeDO.getOwnPropertyDescriptor("auddie").value;
+  const AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
 
   is(fnDO.class, "Function",
      "Script element 'Auddie' defined function 'auddie'.");
@@ -116,8 +116,8 @@ addTest(function checkAuddie() {
 // Check the introduction type of a dynamically inserted script element.
 addTest(function InsertRover() {
   dbg.onDebuggerStatement = RoverDebugger;
-  let rover = doc.createElement("script");
-  let roverDO = iframeDO.makeDebuggeeValue(rover);
+  const rover = doc.createElement("script");
+  const roverDO = iframeDO.makeDebuggeeValue(rover);
   rover.text = "debugger;";
   doc.body.appendChild(rover);
 
@@ -138,7 +138,7 @@ addTest(function InsertRover() {
 
 // Create a XUL document with a script element, and check its introduction type.
 addTest(function XULDocumentScript() {
-  let xulFrame = document.createElement("iframe");
+  const xulFrame = document.createElement("iframe");
   xulFrame.src = "doc_Debugger.Source.prototype.introductionType.xul";
   xulFrame.onload = xulLoaded;
   info("Appending iframe containing XUL document");
@@ -146,8 +146,8 @@ addTest(function XULDocumentScript() {
 
   function xulLoaded() {
     info("Loaded XUL document");
-    let xulFrameDO = dbg.addDebuggee(xulFrame.contentWindow);
-    let xulFnDO = xulFrameDO.getOwnPropertyDescriptor("xulScriptFunc").value;
+    const xulFrameDO = dbg.addDebuggee(xulFrame.contentWindow);
+    const xulFnDO = xulFrameDO.getOwnPropertyDescriptor("xulScriptFunc").value;
     is(typeof xulFnDO, "object", "XUL script element defined 'xulScriptFunc'");
     is(xulFnDO.class, "Function",
        "XUL global 'xulScriptFunc' is indeed a function");

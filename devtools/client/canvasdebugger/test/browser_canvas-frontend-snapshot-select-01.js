@@ -7,8 +7,8 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   await reload(target);
 
@@ -28,7 +28,7 @@ async function ifTestingSupported() {
   is(CallsListView.selectedIndex, -1,
     "There should still be no call item automatically selected in the snapshot.");
 
-  let secondSnapshotTarget = SnapshotsListView.getItemAtIndex(1).target;
+  const secondSnapshotTarget = SnapshotsListView.getItemAtIndex(1).target;
   let snapshotSelected = waitForSnapshotSelection();
   EventUtils.sendMouseEvent({ type: "mousedown" }, secondSnapshotTarget, window);
 
@@ -40,8 +40,8 @@ async function ifTestingSupported() {
   is(CallsListView.selectedIndex, -1,
     "There should still be no call item automatically selected in the snapshot.");
 
-  let firstDrawCallContents = $(".call-item-contents", CallsListView.getItemAtIndex(2).target);
-  let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  const firstDrawCallContents = $(".call-item-contents", CallsListView.getItemAtIndex(2).target);
+  const screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstDrawCallContents, window);
 
   await screenshotDisplayed;
@@ -52,7 +52,7 @@ async function ifTestingSupported() {
   is(CallsListView.selectedIndex, 2,
     "The first draw call should now be selected in the snapshot.");
 
-  let firstSnapshotTarget = SnapshotsListView.getItemAtIndex(0).target;
+  const firstSnapshotTarget = SnapshotsListView.getItemAtIndex(0).target;
   snapshotSelected = waitForSnapshotSelection();
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstSnapshotTarget, window);
 
@@ -65,22 +65,22 @@ async function ifTestingSupported() {
     "There should still be no call item automatically selected in the snapshot.");
 
   function recordAndWaitForFirstSnapshot() {
-    let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-    let snapshotSelected = waitForSnapshotSelection();
+    const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+    const snapshotSelected = waitForSnapshotSelection();
     SnapshotsListView._onRecordButtonClick();
     return Promise.all([recordingFinished, snapshotSelected]);
   }
 
   function recordAndWaitForAnotherSnapshot() {
-    let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+    const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
     SnapshotsListView._onRecordButtonClick();
     return recordingFinished;
   }
 
   function waitForSnapshotSelection() {
-    let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
-    let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
-    let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+    const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+    const thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
+    const screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
     return Promise.all([
       callListPopulated,
       thumbnailsDisplayed,

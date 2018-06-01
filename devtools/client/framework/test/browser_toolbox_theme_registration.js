@@ -13,11 +13,11 @@ const LIGHT_THEME_NAME = "light";
 var toolbox;
 
 add_task(async function themeRegistration() {
-  let tab = await addTab("data:text/html,test");
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab("data:text/html,test");
+  const target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target, "options");
 
-  let themeId = await new Promise(resolve => {
+  const themeId = await new Promise(resolve => {
     gDevTools.once("theme-registered", registeredThemeId => {
       resolve(registeredThemeId);
     });
@@ -36,12 +36,12 @@ add_task(async function themeRegistration() {
 });
 
 add_task(async function themeInOptionsPanel() {
-  let panelWin = toolbox.getCurrentPanel().panelWin;
-  let doc = panelWin.frameElement.contentDocument;
-  let themeBox = doc.getElementById("devtools-theme-box");
-  let testThemeOption = themeBox.querySelector(
+  const panelWin = toolbox.getCurrentPanel().panelWin;
+  const doc = panelWin.frameElement.contentDocument;
+  const themeBox = doc.getElementById("devtools-theme-box");
+  const testThemeOption = themeBox.querySelector(
     `input[type=radio][value=${TEST_THEME_NAME}]`);
-  let eventsRecorded = [];
+  const eventsRecorded = [];
 
   function onThemeChanged(theme) {
     eventsRecorded.push(theme);
@@ -50,7 +50,7 @@ add_task(async function themeInOptionsPanel() {
 
   ok(testThemeOption, "new theme exists in the Options panel");
 
-  let lightThemeOption = themeBox.querySelector(
+  const lightThemeOption = themeBox.querySelector(
     `input[type=radio][value=${LIGHT_THEME_NAME}]`);
 
   let color = panelWin.getComputedStyle(themeBox).color;
@@ -95,10 +95,10 @@ add_task(async function themeInOptionsPanel() {
 });
 
 add_task(async function themeUnregistration() {
-  let panelWin = toolbox.getCurrentPanel().panelWin;
-  let onUnRegisteredTheme = once(gDevTools, "theme-unregistered");
-  let onThemeSwitchComplete = once(panelWin, "theme-switch-complete");
-  let eventsRecorded = [];
+  const panelWin = toolbox.getCurrentPanel().panelWin;
+  const onUnRegisteredTheme = once(gDevTools, "theme-unregistered");
+  const onThemeSwitchComplete = once(panelWin, "theme-switch-complete");
+  const eventsRecorded = [];
 
   function onThemeChanged(theme) {
     eventsRecorded.push(theme);
@@ -114,8 +114,8 @@ add_task(async function themeUnregistration() {
   ok(!gDevTools.getThemeDefinitionMap().has(TEST_THEME_NAME),
     "theme removed from map");
 
-  let doc = panelWin.frameElement.contentDocument;
-  let themeBox = doc.getElementById("devtools-theme-box");
+  const doc = panelWin.frameElement.contentDocument;
+  const themeBox = doc.getElementById("devtools-theme-box");
 
   // The default light theme must be selected now.
   is(themeBox.querySelector(`#devtools-theme-box [value=${LIGHT_THEME_NAME}]`).checked, true,

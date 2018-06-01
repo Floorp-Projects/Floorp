@@ -25,7 +25,7 @@ exports.getPreferenceFront = function(client, form) {
     return _knownPreferenceFronts.get(client);
   }
 
-  let front = new PreferenceFront(client, form);
+  const front = new PreferenceFront(client, form);
   _knownPreferenceFronts.set(client, front);
   return front;
 };

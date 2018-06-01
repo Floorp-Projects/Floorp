@@ -9,7 +9,7 @@ const throttlingProfiles = require("devtools/client/shared/components/throttling
 const TEST_URL = "data:text/html;charset=utf-8,Network throttling test";
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  let { store } = ui.toolWindow;
+  const { store } = ui.toolWindow;
 
   // Wait until the viewport has been added
   await waitUntilState(store, state => state.viewports.length == 1);
@@ -31,14 +31,14 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 function testNetworkThrottlingSelectorLabel(ui, expected) {
-  let selector = "#global-network-throttling-selector";
-  let select = ui.toolWindow.document.querySelector(selector);
+  const selector = "#global-network-throttling-selector";
+  const select = ui.toolWindow.document.querySelector(selector);
   is(select.selectedOptions[0].textContent, expected,
     `Select label should be changed to ${expected}`);
 }
 
 var testNetworkThrottlingState = async function(ui, expected) {
-  let state = await ui.emulationFront.getNetworkThrottling();
+  const state = await ui.emulationFront.getNetworkThrottling();
   Assert.deepEqual(state, expected, "Network throttling state should be " +
                                     JSON.stringify(expected, null, 2));
 };
@@ -46,8 +46,8 @@ var testNetworkThrottlingState = async function(ui, expected) {
 var testThrottlingProfile = async function(ui, profile) {
   await selectNetworkThrottling(ui, profile);
   testNetworkThrottlingSelectorLabel(ui, profile);
-  let data = throttlingProfiles.find(({ id }) => id == profile);
-  let { download, upload, latency } = data;
+  const data = throttlingProfiles.find(({ id }) => id == profile);
+  const { download, upload, latency } = data;
   await testNetworkThrottlingState(ui, {
     downloadThroughput: download,
     uploadThroughput: upload,

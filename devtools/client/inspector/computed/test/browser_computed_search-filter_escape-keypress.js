@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("#matches", inspector);
   await testAddTextInFilter(inspector, view);
   await testEscapeKeypress(inspector, view);
@@ -30,10 +30,10 @@ add_task(async function() {
 async function testAddTextInFilter(inspector, computedView) {
   info("Setting filter text to \"background-color\"");
 
-  let win = computedView.styleWindow;
-  let propertyViews = computedView.propertyViews;
-  let searchField = computedView.searchField;
-  let checkbox = computedView.includeBrowserStylesCheckbox;
+  const win = computedView.styleWindow;
+  const propertyViews = computedView.propertyViews;
+  const searchField = computedView.searchField;
+  const checkbox = computedView.includeBrowserStylesCheckbox;
 
   info("Include browser styles");
   checkbox.click();
@@ -46,7 +46,7 @@ async function testAddTextInFilter(inspector, computedView) {
   info("Check that the correct properties are visible");
 
   propertyViews.forEach((propView) => {
-    let name = propView.name;
+    const name = propView.name;
     is(propView.visible, name.indexOf("background-color") > -1,
       "span " + name + " property visibility check");
   });
@@ -55,10 +55,10 @@ async function testAddTextInFilter(inspector, computedView) {
 async function testEscapeKeypress(inspector, computedView) {
   info("Pressing the escape key on search filter");
 
-  let win = computedView.styleWindow;
-  let propertyViews = computedView.propertyViews;
-  let searchField = computedView.searchField;
-  let onRefreshed = inspector.once("computed-view-refreshed");
+  const win = computedView.styleWindow;
+  const propertyViews = computedView.propertyViews;
+  const searchField = computedView.searchField;
+  const onRefreshed = inspector.once("computed-view-refreshed");
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
@@ -68,7 +68,7 @@ async function testEscapeKeypress(inspector, computedView) {
 
   ok(!searchField.value, "Search filter is cleared");
   propertyViews.forEach((propView) => {
-    let name = propView.name;
+    const name = propView.name;
     is(propView.visible, true,
       "span " + name + " property is visible");
   });

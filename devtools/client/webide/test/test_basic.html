@@ -19,7 +19,7 @@
         SimpleTest.waitForExplicitFinish();
 
         (async function() {
-          let win = await openWebIDE();
+          const win = await openWebIDE();
 
           const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
           await gDevToolsBrowser.isWebIDEInitialized.promise;
@@ -27,15 +27,15 @@
 
           ok(win, "Found a window");
           ok(win.AppManager, "App Manager accessible");
-          let appmgr = win.AppManager;
+          const appmgr = win.AppManager;
           ok(appmgr.connection, "App Manager connection ready");
           ok(appmgr.runtimeList, "Runtime list ready");
 
             // test error reporting
-          let nbox = win.document.querySelector("#notificationbox");
+          const nbox = win.document.querySelector("#notificationbox");
           let notification =  nbox.getNotificationWithValue("webide:errornotification");
           ok(!notification, "No notification yet");
-          let deferred = new Promise((resolve, reject) => {
+          const deferred = new Promise((resolve, reject) => {
             nextTick().then(() => {
               reject("BOOM!");
             });

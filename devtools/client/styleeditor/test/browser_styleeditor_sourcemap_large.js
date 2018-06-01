@@ -12,10 +12,10 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps-large.html";
 
 add_task(async function() {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   await openEditor(ui.editors[0]);
-  let iframes = ui.selectedEditor.details.querySelectorAll("iframe");
+  const iframes = ui.selectedEditor.details.querySelectorAll("iframe");
 
   is(iframes.length, 1, "There is only one editor iframe");
   ok(ui.selectedEditor.summary.classList.contains("splitview-active"),

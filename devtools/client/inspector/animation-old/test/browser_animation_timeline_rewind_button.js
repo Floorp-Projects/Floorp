@@ -16,9 +16,9 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, controller} = await openAnimationInspector();
-  let players = controller.animationPlayers;
-  let btn = panel.rewindTimelineButtonEl;
+  const {panel, controller} = await openAnimationInspector();
+  const players = controller.animationPlayers;
+  const btn = panel.rewindTimelineButtonEl;
 
   ok(btn, "The rewind button exists");
 

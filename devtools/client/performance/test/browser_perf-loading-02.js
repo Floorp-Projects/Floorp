@@ -16,16 +16,16 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { getSelectedRecordingIndex, setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, $, PerformanceController } = panel.panelWin;
-  let detailsContainer = $("#details-pane-container");
-  let recordingNotice = $("#recording-notice");
-  let loadingNotice = $("#loading-notice");
-  let detailsPane = $("#details-pane");
+  const { EVENTS, $, PerformanceController } = panel.panelWin;
+  const detailsContainer = $("#details-pane-container");
+  const recordingNotice = $("#recording-notice");
+  const loadingNotice = $("#loading-notice");
+  const detailsPane = $("#details-pane");
 
   await startRecording(panel);
 
@@ -52,7 +52,7 @@ add_task(async function() {
   await startRecording(panel);
 
   info("While the 2nd record is still going, switch to the first one.");
-  let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  const recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
   await recordingSelected;
 

@@ -11,7 +11,7 @@
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
 
   info("Selecting the simple, non-transformed DIV");
   await selectAndHighlightNode("#simple-div", inspector);

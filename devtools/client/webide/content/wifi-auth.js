@@ -16,19 +16,19 @@ window.addEventListener("load", function() {
 }, {once: true});
 
 function buildUI() {
-  let { oob } = window.arguments[0];
+  const { oob } = window.arguments[0];
   createQR(oob);
   createToken(oob);
 }
 
 function createQR(oob) {
-  let oobData = JSON.stringify(oob);
-  let imgData = QR.encodeToDataURI(oobData, "L" /* low quality */);
+  const oobData = JSON.stringify(oob);
+  const imgData = QR.encodeToDataURI(oobData, "L" /* low quality */);
   document.querySelector("#qr-code img").src = imgData.src;
 }
 
 function createToken(oob) {
-  let token = oob.sha256.replace(/:/g, "").toLowerCase() + oob.k;
+  const token = oob.sha256.replace(/:/g, "").toLowerCase() + oob.k;
   document.querySelector("#token pre").textContent = token;
 }
 

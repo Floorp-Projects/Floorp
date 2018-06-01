@@ -7,8 +7,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
   await promise.all([
@@ -16,8 +16,8 @@ async function ifWebGLSupported() {
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
   let error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);

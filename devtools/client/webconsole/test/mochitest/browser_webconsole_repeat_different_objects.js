@@ -30,6 +30,6 @@ add_task(async function() {
   });
 
   info("waiting for 3 console.log objects, with the exact same text content");
-  let messages = await onMessages;
+  const messages = await onMessages;
   is(messages.length, 3, "There are 3 messages, as expected.");
 });

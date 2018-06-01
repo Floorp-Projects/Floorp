@@ -22,10 +22,10 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { store, document } = ui.toolWindow;
-  let modal = document.querySelector("#device-modal-wrapper");
-  let select = document.querySelector(".viewport-device-selector");
-  let submitButton = document.querySelector("#device-submit-button");
+  const { store, document } = ui.toolWindow;
+  const modal = document.querySelector("#device-modal-wrapper");
+  const select = document.querySelector(".viewport-device-selector");
+  const submitButton = document.querySelector("#device-submit-button");
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
@@ -34,12 +34,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   openDeviceModal(ui);
 
   info("Checking displayed device checkboxes are checked in the device modal.");
-  let checkedCbs = [...document.querySelectorAll(".device-input-checkbox")]
+  const checkedCbs = [...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => cb.checked);
 
-  let remoteList = await getDevices();
+  const remoteList = await getDevices();
 
-  let featuredCount = remoteList.TYPES.reduce((total, type) => {
+  const featuredCount = remoteList.TYPES.reduce((total, type) => {
     return total + remoteList[type].reduce((subtotal, device) => {
       return subtotal + ((device.os != "fxos" && device.featured) ? 1 : 0);
     }, 0);
@@ -48,16 +48,16 @@ addRDMTask(TEST_URL, async function({ ui }) {
   is(featuredCount, checkedCbs.length,
     "Got expected number of displayed devices.");
 
-  for (let cb of checkedCbs) {
+  for (const cb of checkedCbs) {
     ok(Object.keys(remoteList).filter(type => remoteList[type][cb.value]),
       cb.value + " is correctly checked.");
   }
 
   // Tests where the user adds a non-featured device
   info("Check the first unchecked device and submit new device list.");
-  let uncheckedCb = [...document.querySelectorAll(".device-input-checkbox")]
+  const uncheckedCb = [...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => !cb.checked)[0];
-  let value = uncheckedCb.value;
+  const value = uncheckedCb.value;
   uncheckedCb.click();
   submitButton.click();
 
@@ -83,9 +83,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   // Tests where the user removes a featured device
   info("Uncheck the first checked device different than the previous one");
-  let checkedCb = [...document.querySelectorAll(".device-input-checkbox")]
+  const checkedCb = [...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => cb.checked && cb.value != value)[0];
-  let checkedVal = checkedCb.value;
+  const checkedVal = checkedCb.value;
   checkedCb.click();
   submitButton.click();
 
@@ -111,8 +111,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { store, document } = ui.toolWindow;
-  let select = document.querySelector(".viewport-device-selector");
+  const { store, document } = ui.toolWindow;
+  const select = document.querySelector(".viewport-device-selector");
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
@@ -120,17 +120,17 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   openDeviceModal(ui);
 
-  let remoteList = await getDevices();
-  let featuredCount = remoteList.TYPES.reduce((total, type) => {
+  const remoteList = await getDevices();
+  const featuredCount = remoteList.TYPES.reduce((total, type) => {
     return total + remoteList[type].reduce((subtotal, device) => {
       return subtotal + ((device.os != "fxos" && device.featured) ? 1 : 0);
     }, 0);
   }, 0);
-  let preferredDevices = _loadPreferredDevices();
+  const preferredDevices = _loadPreferredDevices();
 
   // Tests to prove that reloading the RDM didn't break our device list
   info("Checking new featured device appears in the device selector.");
-  let options = [...select.options];
+  const options = [...select.options];
   is(options.length - 2, featuredCount
     - preferredDevices.removed.size + preferredDevices.added.size,
     "Got expected number of devices in device selector.");

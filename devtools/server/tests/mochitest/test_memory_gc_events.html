@@ -18,13 +18,13 @@ Bug 1137527 - Test receiving GC events from the memory actor.
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("devtools/shared/event-emitter");
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
-    let gotGcEvent = new Promise(resolve => {
+    const gotGcEvent = new Promise(resolve => {
       EventEmitter.on(memory, "garbage-collection", gcData => {
         ok(gcData, "Got GC data");
         resolve();

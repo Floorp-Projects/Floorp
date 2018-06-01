@@ -65,7 +65,7 @@ async function navigateAndCheckWarningMessage({url, name, text}, hud) {
   const {node} = await onMessage;
   ok(node, name);
 
-  let learnMoreNode = node.querySelector(".learn-more-link");
+  const learnMoreNode = node.querySelector(".learn-more-link");
   ok(learnMoreNode, `There is a "Learn more" link`);
   const navigationResponse = await simulateLinkClick(learnMoreNode);
   is(navigationResponse.link, LEARN_MORE_URI,

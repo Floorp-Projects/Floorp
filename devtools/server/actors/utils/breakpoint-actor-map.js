@@ -54,7 +54,7 @@ BreakpointActorMap.prototype = {
       }
     }
 
-    let query = {
+    const query = {
       sourceActorID: location.originalSourceActor
                      ? location.originalSourceActor.actorID
                      : undefined,
@@ -72,11 +72,11 @@ BreakpointActorMap.prototype = {
       query.endColumn = location.originalColumn ? query.originalColumn + 1 : undefined;
     }
 
-    for (let sourceActorID of findKeys(this._actors, query.sourceActorID)) {
-      let actor = this._actors[sourceActorID];
-      for (let line of findKeys(actor, query.line)) {
-        for (let beginColumn of findKeys(actor[line], query.beginColumn)) {
-          for (let endColumn of findKeys(actor[line][beginColumn],
+    for (const sourceActorID of findKeys(this._actors, query.sourceActorID)) {
+      const actor = this._actors[sourceActorID];
+      for (const line of findKeys(actor, query.line)) {
+        for (const beginColumn of findKeys(actor[line], query.beginColumn)) {
+          for (const endColumn of findKeys(actor[line][beginColumn],
                query.endColumn)) {
             yield actor[line][beginColumn][endColumn];
           }
@@ -96,7 +96,7 @@ BreakpointActorMap.prototype = {
    *          The BreakpointActor at the given location.
    */
   getActor: function(originalLocation) {
-    for (let actor of this.findActors(originalLocation)) {
+    for (const actor of this.findActors(originalLocation)) {
       return actor;
     }
 
@@ -114,12 +114,12 @@ BreakpointActorMap.prototype = {
    *        The BreakpointActor to be set to the given location.
    */
   setActor: function(location, actor) {
-    let { originalSourceActor, originalLine, originalColumn } = location;
+    const { originalSourceActor, originalLine, originalColumn } = location;
 
-    let sourceActorID = originalSourceActor.actorID;
-    let line = originalLine;
-    let beginColumn = originalColumn ? originalColumn : 0;
-    let endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    const sourceActorID = originalSourceActor.actorID;
+    const line = originalLine;
+    const beginColumn = originalColumn ? originalColumn : 0;
+    const endColumn = originalColumn ? originalColumn + 1 : Infinity;
 
     if (!this._actors[sourceActorID]) {
       this._actors[sourceActorID] = [];
@@ -144,12 +144,12 @@ BreakpointActorMap.prototype = {
    *        The location from which the BreakpointActor should be deleted.
    */
   deleteActor: function(location) {
-    let { originalSourceActor, originalLine, originalColumn } = location;
+    const { originalSourceActor, originalLine, originalColumn } = location;
 
-    let sourceActorID = originalSourceActor.actorID;
-    let line = originalLine;
-    let beginColumn = originalColumn ? originalColumn : 0;
-    let endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    const sourceActorID = originalSourceActor.actorID;
+    const line = originalLine;
+    const beginColumn = originalColumn ? originalColumn : 0;
+    const endColumn = originalColumn ? originalColumn + 1 : Infinity;
 
     if (this._actors[sourceActorID]) {
       if (this._actors[sourceActorID][line]) {

@@ -10,7 +10,7 @@ startupAddonsManager();
 
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
-    let listener = {
+    const listener = {
       [event]: function(...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
@@ -25,7 +25,7 @@ function promiseWebExtensionStartup() {
   const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
   return new Promise(resolve => {
-    let listener = (evt, extension) => {
+    const listener = (evt, extension) => {
       Management.off("ready", listener);
       resolve(extension);
     };
@@ -72,7 +72,7 @@ add_task(async function testReloadExitedAddon() {
     promiseWebExtensionStartup(),
   ]);
 
-  let addonActor = await findAddonInRootList(client, installedAddon.id);
+  const addonActor = await findAddonInRootList(client, installedAddon.id);
 
   await Promise.all([
     reloadAddon(client, addonActor),

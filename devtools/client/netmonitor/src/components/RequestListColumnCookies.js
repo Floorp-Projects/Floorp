@@ -20,12 +20,12 @@ class RequestListColumnCookies extends Component {
   }
 
   componentDidMount() {
-    let { item, connector } = this.props;
+    const { item, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, item, ["requestCookies"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { item, connector } = nextProps;
+    const { item, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, item, ["requestCookies"]);
   }
 
@@ -40,7 +40,7 @@ class RequestListColumnCookies extends Component {
   render() {
     let { requestCookies = { cookies: [] } } = this.props.item;
     requestCookies = requestCookies.cookies || requestCookies;
-    let requestCookiesLength = requestCookies.length > 0 ? requestCookies.length : "";
+    const requestCookiesLength = requestCookies.length > 0 ? requestCookies.length : "";
     return (
       div({
         className: "requests-list-column requests-list-cookies",

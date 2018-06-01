@@ -8,21 +8,21 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
-  let { store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let beaconTab = await addTab(SEND_BEACON_URL);
+  const beaconTab = await addTab(SEND_BEACON_URL);
   info("Beacon tab added successfully.");
 
   is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(beaconTab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
@@ -30,7 +30,7 @@ add_task(async function() {
   await wait;
 
   is(store.getState().requests.requests.size, 1, "Only the reload should be recorded.");
-  let request = getSortedRequests(store.getState()).get(0);
+  const request = getSortedRequests(store.getState()).get(0);
   is(request.method, "GET", "The method is correct.");
   is(request.status, "200", "The status is correct.");
 

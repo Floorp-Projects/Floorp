@@ -15,11 +15,11 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("div", inspector);
 
-  let ruleEl = getRuleViewRule(view, "div");
+  const ruleEl = getRuleViewRule(view, "div");
   ok(ruleEl, "The 'div' rule exists in the rule-view");
 
   Services.prefs.clearUserPref(PREF);

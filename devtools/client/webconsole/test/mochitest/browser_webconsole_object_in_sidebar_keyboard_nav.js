@@ -19,10 +19,10 @@ add_task(async function() {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = await waitFor(() => findMessage(hud, "Object"));
-  let object = message.querySelector(".object-inspector .objectBox-object");
+  const message = await waitFor(() => findMessage(hud, "Object"));
+  const object = message.querySelector(".object-inspector .objectBox-object");
 
   const onSideBarVisible = waitFor(() =>
     hud.ui.document.querySelector(".sidebar-contents"));
@@ -30,7 +30,7 @@ add_task(async function() {
   await openObjectInSidebar(hud, object);
   const sidebarContents = await onSideBarVisible;
 
-  let objectInspector = sidebarContents.querySelector(".object-inspector");
+  const objectInspector = sidebarContents.querySelector(".object-inspector");
   ok(objectInspector, "The ObjectInspector is displayed");
 
   // There are 5 nodes: the root, a, b, c, and proto.
@@ -75,7 +75,7 @@ add_task(async function() {
   });
 
   const arrayMessage = await onArrayMessage;
-  let array = arrayMessage.node.querySelector(".object-inspector .objectBox-array");
+  const array = arrayMessage.node.querySelector(".object-inspector .objectBox-array");
   await openObjectInSidebar(hud, array);
 
   await waitFor(() => sidebarContents.querySelector(".tree-node")
@@ -85,14 +85,14 @@ add_task(async function() {
 });
 
 async function openObjectInSidebar(hud, objectNode) {
-  let contextMenu = await openContextMenu(hud, objectNode);
-  let openInSidebarEntry = contextMenu.querySelector("#console-menu-open-sidebar");
+  const contextMenu = await openContextMenu(hud, objectNode);
+  const openInSidebarEntry = contextMenu.querySelector("#console-menu-open-sidebar");
   openInSidebarEntry.click();
   await hideContextMenu(hud);
 }
 
 function synthesizeKeyAndWaitForFocus(keyStr, elementToBeFocused) {
-  let onFocusChanged = waitFor(() => elementToBeFocused.classList.contains("focused"));
+  const onFocusChanged = waitFor(() => elementToBeFocused.classList.contains("focused"));
   EventUtils.synthesizeKey(keyStr);
   return onFocusChanged;
 }

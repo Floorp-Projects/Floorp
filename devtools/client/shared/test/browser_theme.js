@@ -17,7 +17,7 @@ add_task(async function() {
 });
 
 function testGetTheme() {
-  let originalTheme = getTheme();
+  const originalTheme = getTheme();
   ok(originalTheme, "has some theme to start with.");
   Services.prefs.setCharPref("devtools.theme", "light");
   is(getTheme(), "light", "getTheme() correctly returns light theme");
@@ -29,14 +29,14 @@ function testGetTheme() {
 }
 
 function testSetTheme() {
-  let originalTheme = getTheme();
+  const originalTheme = getTheme();
   // Put this in a variable rather than hardcoding it because the default
   // changes between aurora and nightly
-  let otherTheme = originalTheme == "dark" ? "light" : "dark";
+  const otherTheme = originalTheme == "dark" ? "light" : "dark";
 
-  let prefObserver = new PrefObserver("devtools.");
+  const prefObserver = new PrefObserver("devtools.");
   prefObserver.once("devtools.theme", () => {
-    let newValue = Services.prefs.getCharPref("devtools.theme");
+    const newValue = Services.prefs.getCharPref("devtools.theme");
     is(newValue, otherTheme,
       "A preference event triggered by setTheme comes after the value is set.");
   });
@@ -55,9 +55,9 @@ function testSetTheme() {
 }
 
 function testGetColor() {
-  let BLUE_DARK = "#75BFFF";
-  let BLUE_LIGHT = "#0074e8";
-  let originalTheme = getTheme();
+  const BLUE_DARK = "#75BFFF";
+  const BLUE_LIGHT = "#0074e8";
+  const originalTheme = getTheme();
 
   setTheme("dark");
   is(getColor("highlight-blue"), BLUE_DARK, "correctly gets color for enabled theme.");
@@ -87,7 +87,7 @@ function testColorExistence() {
     "highlight-pink"
   ];
 
-  for (let type of vars) {
+  for (const type of vars) {
     ok(getColor(type, "light"), `${type} is a valid color in light theme`);
     ok(getColor(type, "dark"), `${type} is a valid color in dark theme`);
   }

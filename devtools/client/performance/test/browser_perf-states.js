@@ -12,12 +12,12 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { PerformanceView, OverviewView, DetailsView } = panel.panelWin;
+  const { PerformanceView, OverviewView, DetailsView } = panel.panelWin;
 
   is(PerformanceView.getState(), "empty",
     "The intial state of the performance panel view is correct.");

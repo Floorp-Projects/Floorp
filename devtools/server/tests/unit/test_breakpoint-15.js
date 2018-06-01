@@ -28,11 +28,11 @@ function run_test() {
 const SOURCE_URL = "http://example.com/source.js";
 
 const testSameBreakpoint = async function() {
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  let source = gThreadClient.source(packet.frame.where.source);
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  const source = gThreadClient.source(packet.frame.where.source);
 
   // Whole line
-  let wholeLineLocation = {
+  const wholeLineLocation = {
     line: 2
   };
 
@@ -44,7 +44,7 @@ const testSameBreakpoint = async function() {
 
   // Specific column
 
-  let columnLocation = {
+  const columnLocation = {
     line: 2,
     column: 6
   };

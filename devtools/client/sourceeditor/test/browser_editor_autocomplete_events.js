@@ -14,11 +14,11 @@ add_task(async function() {
 });
 
 async function runTests() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await target.makeRemote();
-  let inspector = InspectorFront(target.client, target.form);
-  let walker = await inspector.getWalker();
-  let {ed, win, edWin} = await setup(null, {
+  const inspector = InspectorFront(target.client, target.form);
+  const walker = await inspector.getWalker();
+  const {ed, win, edWin} = await setup(null, {
     autocomplete: true,
     mode: Editor.modes.css,
     autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()}
@@ -36,9 +36,9 @@ async function testKeyboard(ed, win) {
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
 
-  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+  const popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey =
+  const autocompleteKey =
     Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
@@ -54,9 +54,9 @@ async function testKeyboardCycle(ed, win) {
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
 
-  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+  const popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey =
+  const autocompleteKey =
     Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
@@ -78,9 +78,9 @@ async function testKeyboardCycleForPrefixedString(ed, win) {
   ed.setText("#b");
   ed.setCursor({line: 1, ch: 2});
 
-  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+  const popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey =
+  const autocompleteKey =
     Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
@@ -97,7 +97,7 @@ async function testKeyboardCSSComma(ed, win) {
   ed.setCursor({line: 1, ch: 1});
 
   let isPopupOpened = false;
-  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+  const popupOpened = ed.getAutocompletionPopup().once("popup-opened");
   popupOpened.then(() => {
     isPopupOpened = true;
   });
@@ -114,9 +114,9 @@ async function testMouse(ed, win) {
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
 
-  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+  const popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey =
+  const autocompleteKey =
     Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 

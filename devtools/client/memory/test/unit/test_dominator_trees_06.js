@@ -19,11 +19,11 @@ const DominatorTreeLazyChildren
 const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.DOMINATOR_TREE));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
@@ -44,7 +44,7 @@ add_task(async function() {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         const found = findNode(child);
         if (found) {
           return found;
@@ -103,7 +103,7 @@ add_task(async function() {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         const found = findNewNode(child);
         if (found) {
           return found;

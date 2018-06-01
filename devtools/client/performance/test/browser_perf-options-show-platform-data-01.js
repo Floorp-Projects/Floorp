@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
+  const { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
   Services.prefs.setBoolPref(UI_SHOW_PLATFORM_DATA_PREF, true);
 

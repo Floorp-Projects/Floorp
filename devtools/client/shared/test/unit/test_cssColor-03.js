@@ -34,17 +34,17 @@ const CSS_COLOR_4_TESTS = [
 ];
 
 function run_test() {
-  for (let test of OLD_STYLE_TESTS) {
-    let ours = colorUtils.colorToRGBA(test, false);
-    let platform = InspectorUtils.colorToRGBA(test);
+  for (const test of OLD_STYLE_TESTS) {
+    const ours = colorUtils.colorToRGBA(test, false);
+    const platform = InspectorUtils.colorToRGBA(test);
     deepEqual(ours, platform, "color " + test + " matches InspectorUtils");
     ok(ours !== null, "'" + test + "' is a color");
   }
 
-  for (let test of CSS_COLOR_4_TESTS) {
-    let oursOld = colorUtils.colorToRGBA(test, false);
-    let oursNew = colorUtils.colorToRGBA(test, true);
-    let platform = InspectorUtils.colorToRGBA(test);
+  for (const test of CSS_COLOR_4_TESTS) {
+    const oursOld = colorUtils.colorToRGBA(test, false);
+    const oursNew = colorUtils.colorToRGBA(test, true);
+    const platform = InspectorUtils.colorToRGBA(test);
     notEqual(oursOld, platform, "old style parser for color " + test +
              " should not match InspectorUtils");
     ok(oursOld === null, "'" + test + "' is not a color with old parser");

@@ -48,18 +48,18 @@ class SideBar extends Component {
       return null;
     }
 
-    let {
+    const {
       grip,
       serviceContainer,
     } = this.props;
 
-    let objectInspector = getObjectInspector(grip, serviceContainer, {
+    const objectInspector = getObjectInspector(grip, serviceContainer, {
       autoExpandDepth: 1,
       mode: MODE.SHORT,
       autoFocusRoot: true,
     });
 
-    let endPanel = dom.aside({
+    const endPanel = dom.aside({
       className: "sidebar-wrapper"
     },
       dom.header({

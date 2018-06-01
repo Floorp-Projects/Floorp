@@ -36,8 +36,8 @@ const storeItems = [
  * Test that the desired number of tree items are present
  */
 function testTree() {
-  let doc = gPanelWindow.document;
-  for (let [item] of storeItems) {
+  const doc = gPanelWindow.document;
+  for (const [item] of storeItems) {
     ok(doc.querySelector(`[data-id='${JSON.stringify(item)}']`),
       `Tree item ${item} should be present in the storage tree`);
   }
@@ -46,13 +46,13 @@ function testTree() {
 /**
  * Test that correct table entries are shown for each of the tree item
  */
-let testTables = async function() {
-  let doc = gPanelWindow.document;
+const testTables = async function() {
+  const doc = gPanelWindow.document;
   // Expand all nodes so that the synthesized click event actually works
   gUI.tree.expandAll();
 
   // Click the tree items and wait for the table to be updated
-  for (let [item, ids] of storeItems) {
+  for (const [item, ids] of storeItems) {
     await selectTreeItem(item);
 
     // Check whether correct number of items are present in the table
@@ -61,7 +61,7 @@ let testTables = async function() {
        ).length, ids.length, "Number of items in table is correct");
 
     // Check if all the desired items are present in the table
-    for (let id of ids) {
+    for (const id of ids) {
       ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
         `Table item ${id} should be present`);
     }

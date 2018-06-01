@@ -68,15 +68,15 @@ async function testCopyUrlToClipboard({view, inspector}, type, selector, expecte
 
   info("Retrieve background-image link for selected node in current " +
        "styleinspector view");
-  let property = getBackgroundImageProperty(view, selector);
-  let imageLink = property.valueSpan.querySelector(".theme-link");
+  const property = getBackgroundImageProperty(view, selector);
+  const imageLink = property.valueSpan.querySelector(".theme-link");
   ok(imageLink, "Background-image link element found");
 
   info("Simulate right click on the background-image URL");
-  let allMenuItems = openStyleContextMenuAndGetAllItems(view, imageLink);
-  let menuitemCopyUrl = allMenuItems.find(item => item.label ===
+  const allMenuItems = openStyleContextMenuAndGetAllItems(view, imageLink);
+  const menuitemCopyUrl = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyUrl"));
-  let menuitemCopyImageDataUrl = allMenuItems.find(item => item.label ===
+  const menuitemCopyImageDataUrl = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyImageDataUrl"));
 
   info("Context menu is displayed");
@@ -101,7 +101,7 @@ async function testCopyUrlToClipboard({view, inspector}, type, selector, expecte
 }
 
 function getBackgroundImageProperty(view, selector) {
-  let isRuleView = view instanceof CssRuleView;
+  const isRuleView = view instanceof CssRuleView;
   if (isRuleView) {
     return getRuleViewProperty(view, selector, "background-image");
   }

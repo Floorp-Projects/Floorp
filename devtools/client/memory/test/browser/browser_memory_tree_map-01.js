@@ -26,7 +26,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
   info("Create the canvases");
 
-  let canvases = new CanvasUtils(div, 0);
+  const canvases = new CanvasUtils(div, 0);
 
   info("Test the shape of the returned object");
 
@@ -50,9 +50,9 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     timesResizeCalled++;
   });
 
-  let main = canvases.main.canvas;
-  let zoom = canvases.zoom.canvas;
-  let ratio = window.devicePixelRatio;
+  const main = canvases.main.canvas;
+  const zoom = canvases.zoom.canvas;
+  const ratio = window.devicePixelRatio;
 
   is(main.width, 100 * ratio,
     "Main canvas width is the same as the parent div");

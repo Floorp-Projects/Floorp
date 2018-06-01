@@ -16,20 +16,20 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 add_task(async function() {
   info("Enable command-button-frames preference setting");
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
 
   info("Switch to the iframe context.");
   await switchToFrameContext(1, toolbox, inspector);
 
   info("Check navigation was successful.");
-  let hasOuterNode = await testActor.hasNode("#outer");
+  const hasOuterNode = await testActor.hasNode("#outer");
   ok(!hasOuterNode, "Check testActor has no access to outer element");
-  let hasTestNode = await testActor.hasNode("#inner");
+  const hasTestNode = await testActor.hasNode("#inner");
   ok(hasTestNode, "Check testActor has access to inner element");
 
   info("Check highlighting is correct after switching iframe context");
   await selectAndHighlightNode("#inner", inspector);
-  let isHighlightCorrect = await testActor.assertHighlightedNode("#inner");
+  const isHighlightCorrect = await testActor.assertHighlightedNode("#inner");
   ok(isHighlightCorrect, "The selected node is properly highlighted.");
 
   info("Cleanup command-button-frames preferences.");
@@ -43,12 +43,12 @@ add_task(async function() {
  */
 async function switchToFrameContext(frameIndex, toolbox, inspector) {
   // Open frame menu and wait till it's available on the screen.
-  let btn = toolbox.doc.getElementById("command-button-frames");
-  let menu = await toolbox.showFramesMenu({target: btn});
+  const btn = toolbox.doc.getElementById("command-button-frames");
+  const menu = await toolbox.showFramesMenu({target: btn});
   await once(menu, "open");
 
   info("Select the iframe in the frame list.");
-  let newRoot = inspector.once("new-root");
+  const newRoot = inspector.once("new-root");
 
   menu.items[frameIndex].click();
 

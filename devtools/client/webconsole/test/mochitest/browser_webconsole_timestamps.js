@@ -20,7 +20,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
@@ -29,9 +29,9 @@ add_task(async function() {
 
   await testPrefDefaults(hud);
 
-  let observer = new PrefObserver("");
-  let toolbox = gDevTools.getToolbox(hud.target);
-  let optionsPanel = await toolbox.selectTool("options");
+  const observer = new PrefObserver("");
+  const toolbox = gDevTools.getToolbox(hud.target);
+  const optionsPanel = await toolbox.selectTool("options");
   await togglePref(optionsPanel, observer);
   observer.destroy();
 
@@ -44,9 +44,9 @@ add_task(async function() {
 });
 
 async function testPrefDefaults(hud) {
-  let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+  const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
   ok(!prefValue, "Messages should have no timestamp by default (pref check)");
-  let message = await waitFor(() => findMessage(hud, "simple text message"));
+  const message = await waitFor(() => findMessage(hud, "simple text message"));
   is(message.querySelectorAll(".timestamp").length, 0,
      "Messages should have no timestamp by default (element check)");
 }
@@ -55,17 +55,17 @@ async function togglePref(panel, observer) {
   info("Options panel opened");
 
   info("Changing pref");
-  let prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
-  let checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
+  const prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
+  const checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
   checkbox.click();
 
   await prefChanged;
 }
 
 async function testChangedPref(hud) {
-  let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+  const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
   ok(prefValue, "Messages should have timestamps (pref check)");
-  let message = await waitFor(() => findMessage(hud, "simple text message"));
+  const message = await waitFor(() => findMessage(hud, "simple text message"));
   is(message.querySelectorAll(".timestamp").length, 1,
      "Messages should have timestamp (element check)");
 }

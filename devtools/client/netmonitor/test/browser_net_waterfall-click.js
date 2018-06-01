@@ -8,14 +8,14 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
-  let { document } = monitor.panelWin;
+  const { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  const { document } = monitor.panelWin;
 
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
   info("Clicking waterfall and waiting for panel update.");
-  let wait = waitForDOM(document, "#timings-panel");
+  const wait = waitForDOM(document, "#timings-panel");
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".requests-list-timings")[0]);

@@ -18,13 +18,13 @@ var TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testExpandersShown(inspector, view);
 });
 
 function testExpandersShown(inspector, view) {
-  let rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
 
   info("Check that the correct rules are visible");
   is(rule.selectorText, "#testid", "Second rule is #testid.");

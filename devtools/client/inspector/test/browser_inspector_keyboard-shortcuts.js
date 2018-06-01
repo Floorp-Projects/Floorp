@@ -21,27 +21,27 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
   info("Selecting the deepest element to start with");
   await selectNode("strong", inspector);
 
-  let nodeFront = await getNodeFront("strong", inspector);
+  const nodeFront = await getNodeFront("strong", inspector);
   is(inspector.selection.nodeFront, nodeFront,
      "<strong> should be selected initially");
 
   info("Focusing the currently active breadcrumb button");
-  let bc = inspector.breadcrumbs;
+  const bc = inspector.breadcrumbs;
   bc.nodeHierarchy[bc.currentIndex].button.focus();
 
-  for (let { key, selectedNode } of TEST_DATA) {
+  for (const { key, selectedNode } of TEST_DATA) {
     info("Pressing " + key + " to select " + selectedNode);
 
-    let updated = inspector.once("inspector-updated");
+    const updated = inspector.once("inspector-updated");
     EventUtils.synthesizeKey(key);
     await updated;
 
-    let selectedNodeFront = await getNodeFront(selectedNode, inspector);
+    const selectedNodeFront = await getNodeFront(selectedNode, inspector);
     is(inspector.selection.nodeFront, selectedNodeFront,
       selectedNode + " is selected.");
   }

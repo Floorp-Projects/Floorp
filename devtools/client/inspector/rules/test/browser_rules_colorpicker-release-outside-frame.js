@@ -11,23 +11,23 @@ const TEST_URI = "<body style='color: red'>Test page for bug 1160720";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
 
-  let cSwatch = getRuleViewProperty(view, "element", "color").valueSpan
+  const cSwatch = getRuleViewProperty(view, "element", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
 
-  let picker = await openColorPickerForSwatch(cSwatch, view);
-  let spectrum = picker.spectrum;
-  let change = spectrum.once("changed");
+  const picker = await openColorPickerForSwatch(cSwatch, view);
+  const spectrum = picker.spectrum;
+  const change = spectrum.once("changed");
 
   info("Pressing mouse down over color picker.");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeMouseAtCenter(spectrum.dragger, {
     type: "mousedown",
   }, spectrum.dragger.ownerDocument.defaultView);
   await onRuleViewChanged;
 
-  let value = await change;
+  const value = await change;
   info(`Color changed to ${value} on mousedown.`);
 
   // If the mousemove below fails to detect that the button is no longer pressed
@@ -51,13 +51,13 @@ add_task(async function() {
 });
 
 async function openColorPickerForSwatch(swatch, view) {
-  let cPicker = view.tooltips.getTooltip("colorPicker");
+  const cPicker = view.tooltips.getTooltip("colorPicker");
   ok(cPicker, "The rule-view has the expected colorPicker property");
 
-  let cPickerPanel = cPicker.tooltip.panel;
+  const cPickerPanel = cPicker.tooltip.panel;
   ok(cPickerPanel, "The XUL panel for the color picker exists");
 
-  let onColorPickerReady = cPicker.once("ready");
+  const onColorPickerReady = cPicker.once("ready");
   swatch.click();
   await onColorPickerReady;
 

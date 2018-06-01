@@ -33,13 +33,13 @@ function test_black_box() {
   gClient.addOneTimeListener("paused", function(event, packet) {
     gThreadClient.eval(packet.frame.actor, "doStuff", function(response) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {
-        let obj = gThreadClient.pauseGrip(packet.why.frameFinished.return);
+        const obj = gThreadClient.pauseGrip(packet.why.frameFinished.return);
         obj.getDefinitionSite(runWithSource);
       });
     });
 
     function runWithSource(packet) {
-      let source = gThreadClient.source(packet.source);
+      const source = gThreadClient.source(packet.source);
       source.setBreakpoint({
         line: 2
       }, function(response) {
@@ -81,7 +81,7 @@ function test_black_box() {
 function test_black_box_paused() {
   gThreadClient.getSources(function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    let sourceClient = gThreadClient.source(
+    const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 

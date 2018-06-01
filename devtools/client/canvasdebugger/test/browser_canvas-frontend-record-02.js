@@ -6,20 +6,20 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, EVENTS, L10N, $, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, EVENTS, L10N, $, SnapshotsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let recordingSelected = once(window, EVENTS.SNAPSHOT_RECORDING_SELECTED);
+  const recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const recordingSelected = once(window, EVENTS.SNAPSHOT_RECORDING_SELECTED);
   SnapshotsListView._onRecordButtonClick();
 
   await recordingStarted;
   ok(true, "Started recording a snapshot of the animation loop.");
 
-  let item = SnapshotsListView.getItemAtIndex(0);
+  const item = SnapshotsListView.getItemAtIndex(0);
 
   is($(".snapshot-item-title", item.target).getAttribute("value"),
     L10N.getFormatStr("snapshotsList.itemLabel", 1),

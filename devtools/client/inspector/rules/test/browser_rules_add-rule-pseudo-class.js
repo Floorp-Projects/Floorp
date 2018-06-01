@@ -21,10 +21,10 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#element", inspector);
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await runTestData(inspector, view, data);
   }
 });
@@ -32,7 +32,7 @@ add_task(async function() {
 async function runTestData(inspector, view, pseudoClasses) {
   await setPseudoLocks(inspector, view, pseudoClasses);
 
-  let expected = EXPECTED_SELECTOR + pseudoClasses.join("");
+  const expected = EXPECTED_SELECTOR + pseudoClasses.join("");
   await addNewRuleAndDismissEditor(inspector, view, expected, 1);
 
   await resetPseudoLocks(inspector, view);
@@ -43,7 +43,7 @@ async function setPseudoLocks(inspector, view, pseudoClasses) {
     return;
   }
 
-  for (let pseudoClass of pseudoClasses) {
+  for (const pseudoClass of pseudoClasses) {
     switch (pseudoClass) {
       case ":hover":
         view.hoverCheckbox.click();

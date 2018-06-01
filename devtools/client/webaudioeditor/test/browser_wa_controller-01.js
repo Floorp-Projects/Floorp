@@ -10,11 +10,11 @@
 const BUG_1125817_URL = EXAMPLE_URL + "doc_bug_1125817.html";
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(BUG_1125817_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(BUG_1125817_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  let events = Promise.all([
+  const events = Promise.all([
     once(gAudioNodes, "add", 2),
     once(gAudioNodes, "disconnect"),
     waitForGraphRendered(panelWin, 2, 0)

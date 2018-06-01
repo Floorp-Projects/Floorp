@@ -20,21 +20,21 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let container = getRuleViewProperty(
+  const {inspector, view} = await openRuleView();
+  const container = getRuleViewProperty(
     view, "body", "image-orientation").valueSpan;
   await checkAngleCycling(container, view);
   await checkAngleCyclingPersist(inspector, view);
 });
 
 async function checkAngleCycling(container, view) {
-  let valueNode = container.querySelector(".ruleview-angle");
-  let win = view.styleWindow;
+  const valueNode = container.querySelector(".ruleview-angle");
+  const win = view.styleWindow;
 
   // turn
   is(valueNode.textContent, "1turn", "Angle displayed as a turn value.");
 
-  let tests = [{
+  const tests = [{
     value: "360deg",
     comment: "Angle displayed as a degree value."
   }, {
@@ -48,7 +48,7 @@ async function checkAngleCycling(container, view) {
     comment: "Angle displayed as a turn value again."
   }];
 
-  for (let test of tests) {
+  for (const test of tests) {
     await checkSwatchShiftClick(container, win, test.value, test.comment);
   }
 }
@@ -58,7 +58,7 @@ async function checkAngleCyclingPersist(inspector, view) {
   let container = getRuleViewProperty(
     view, "div", "image-orientation").valueSpan;
   let valueNode = container.querySelector(".ruleview-angle");
-  let win = view.styleWindow;
+  const win = view.styleWindow;
 
   is(valueNode.textContent, "180deg", "Angle displayed as a degree value.");
 
@@ -80,10 +80,10 @@ async function checkAngleCyclingPersist(inspector, view) {
 }
 
 async function checkSwatchShiftClick(container, win, expectedValue, comment) {
-  let swatch = container.querySelector(".ruleview-angleswatch");
-  let valueNode = container.querySelector(".ruleview-angle");
+  const swatch = container.querySelector(".ruleview-angleswatch");
+  const valueNode = container.querySelector(".ruleview-angle");
 
-  let onUnitChange = swatch.once("unit-change");
+  const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {
     type: "mousedown",
     shiftKey: true

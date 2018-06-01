@@ -33,9 +33,9 @@ const EXPECTED_PROPERTIES = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_keyframes.html");
-  let {panel} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
-  let propertiesList = timeline.rootWrapperEl
+  const {panel} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
+  const propertiesList = timeline.rootWrapperEl
                                .querySelector(".animated-properties");
 
   // doc_keyframes.html has only one animation,
@@ -57,7 +57,7 @@ add_task(async function() {
 });
 
 function hasExpectedProperties(containerEl) {
-  let names = [...containerEl.querySelectorAll(".property .name")]
+  const names = [...containerEl.querySelectorAll(".property .name")]
               .map(n => n.textContent)
               .sort();
 
@@ -75,9 +75,9 @@ function hasExpectedProperties(containerEl) {
 }
 
 function hasExpectedWarnings(containerEl) {
-  let warnings = [...containerEl.querySelectorAll(".warning")];
-  for (let warning of warnings) {
-    let warningID =
+  const warnings = [...containerEl.querySelectorAll(".warning")];
+  for (const warning of warnings) {
+    const warningID =
       "CompositorAnimationWarningTransformWithSyncGeometricAnimations";
     if (warning.getAttribute("title") == LAYOUT_ERRORS_L10N.getStr(warningID)) {
       return true;

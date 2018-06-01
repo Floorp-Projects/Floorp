@@ -11,9 +11,9 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 add_task(async function() {
   await pushPref("devtools.webconsole.filter.css", true);
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   await testViewSource(hud, toolbox, "\u2018font-weight\u2019");
 
@@ -24,32 +24,32 @@ add_task(async function() {
 
 async function testViewSource(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
-  let messageNode = await waitFor(() => findMessage(hud, text));
-  let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
+  const messageNode = await waitFor(() => findMessage(hud, text));
+  const frameLinkNode = messageNode.querySelector(".message-location .frame-link");
   ok(frameLinkNode, "The message does have a location link");
 
-  let onStyleEditorSelected = toolbox.once("styleeditor-selected");
+  const onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
   EventUtils.sendMouseEvent({ type: "click" },
     messageNode.querySelector(".frame-link-filename"));
 
-  let panel = await onStyleEditorSelected;
+  const panel = await onStyleEditorSelected;
   ok(true, "The style editor is selected when clicking on the location element");
 
   await onStyleEditorReady(panel);
 
   info("style editor window focused");
-  let href = frameLinkNode.getAttribute("data-url");
-  let line = frameLinkNode.getAttribute("data-line");
+  const href = frameLinkNode.getAttribute("data-url");
+  const line = frameLinkNode.getAttribute("data-line");
   ok(line, "found source line");
 
-  let editor = getEditorForHref(panel.UI, href);
+  const editor = getEditorForHref(panel.UI, href);
   ok(editor, "found style editor for " + href);
   await performLineCheck(panel.UI, editor, line - 1);
 }
 
 async function onStyleEditorReady(panel) {
-  let win = panel.panelWindow;
+  const win = panel.panelWindow;
   ok(win, "Style Editor Window is defined");
   ok(panel.UI, "Style Editor UI is defined");
 
@@ -63,7 +63,7 @@ async function onStyleEditorReady(panel) {
 
 function getEditorForHref(styleEditorUI, href) {
   let foundEditor = null;
-  for (let editor of styleEditorUI.editors) {
+  for (const editor of styleEditorUI.editors) {
     if (editor.styleSheet.href == href) {
       foundEditor = editor;
       break;
