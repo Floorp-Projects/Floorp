@@ -7,17 +7,17 @@ const URL_2 = "data:text/html;charset=UTF-8," +
 
 add_task(async function() {
   info("Open a tab on a URL supporting only running in parent process");
-  let tab = await addTab(URL_1);
+  const tab = await addTab(URL_1);
   is(tab.linkedBrowser.currentURI.spec, URL_1, "We really are on the expected document");
   is(tab.linkedBrowser.getAttribute("remote"), "", "And running in parent process");
 
   let toolbox = await openToolboxForTab(tab);
 
-  let onToolboxDestroyed = toolbox.once("destroyed");
-  let onToolboxCreated = gDevTools.once("toolbox-created");
+  const onToolboxDestroyed = toolbox.once("destroyed");
+  const onToolboxCreated = gDevTools.once("toolbox-created");
 
   info("Navigate to a URL supporting remote process");
-  let onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   gBrowser.loadURI(URL_2);
   await onLoaded;
 
@@ -33,9 +33,9 @@ add_task(async function() {
   await toolbox.once("ready");
 
   info("Veryify we are inspecting the new document");
-  let console = await toolbox.selectTool("webconsole");
-  let { jsterm } = console.hud;
-  let url = await jsterm.execute("document.location.href");
+  const console = await toolbox.selectTool("webconsole");
+  const { jsterm } = console.hud;
+  const url = await jsterm.execute("document.location.href");
   // Uses includes as the old console frontend prints a timestamp
   ok(url.textContent.includes(URL_2), "The console inspects the second document");
 });

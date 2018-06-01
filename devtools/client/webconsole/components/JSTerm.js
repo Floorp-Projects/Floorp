@@ -23,7 +23,6 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
-const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
 
 function gSequenceId() {
   return gSequenceId.n++;
@@ -164,7 +163,7 @@ class JSTerm extends Component {
   }
 
   componentDidMount() {
-    let autocompleteOptions = {
+    const autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
@@ -173,9 +172,9 @@ class JSTerm extends Component {
       autoSelect: true
     };
 
-    let doc = this.hud.document;
-    let toolbox = gDevTools.getToolbox(this.hud.owner.target);
-    let tooltipDoc = toolbox ? toolbox.doc : doc;
+    const doc = this.hud.document;
+    const toolbox = gDevTools.getToolbox(this.hud.owner.target);
+    const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.
     this.autocompletePopup = new AutocompletePopup(tooltipDoc, autocompleteOptions);
@@ -201,16 +200,13 @@ class JSTerm extends Component {
           viewportMargin: Infinity,
           extraKeys: {
             "Enter": (e, cm) => {
-              let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
-              if (e.shiftKey
-                || (
-                  !Debugger.isCompilableUnit(this.getInputValue())
-                  && autoMultiline
-                )
-              ) {
+              if (!this.autocompletePopup.isOpen && (
+                e.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
+              )) {
                 // shift return or incomplete statement
                 return "CodeMirror.Pass";
               }
+
               this.execute();
               return null;
             },
@@ -285,9 +281,9 @@ class JSTerm extends Component {
     if (typeof response.exception === "string") {
       errorMessage = new Error(errorMessage).toString();
     }
-    let result = response.result;
-    let helperResult = response.helperResult;
-    let helperHasRawOutput = !!(helperResult || {}).rawOutput;
+    const result = response.result;
+    const helperResult = response.helperResult;
+    const helperHasRawOutput = !!(helperResult || {}).rawOutput;
 
     if (helperResult && helperResult.type) {
       switch (helperResult.type) {
@@ -352,8 +348,8 @@ class JSTerm extends Component {
    *          Resolves with the message once the result is displayed.
    */
   async execute(executeString, callback) {
-    let deferred = defer();
-    let resultCallback = msg => deferred.resolve(msg);
+    const deferred = defer();
+    const resultCallback = msg => deferred.resolve(msg);
 
     // attempt to execute the content of the inputNode
     executeString = executeString || this.getInputValue();
@@ -369,20 +365,20 @@ class JSTerm extends Component {
     this.clearCompletion();
 
     let selectedNodeActor = null;
-    let inspectorSelection = this.hud.owner.getInspectorSelection();
+    const inspectorSelection = this.hud.owner.getInspectorSelection();
     if (inspectorSelection && inspectorSelection.nodeFront) {
       selectedNodeActor = inspectorSelection.nodeFront.actorID;
     }
 
     const { ConsoleCommand } = require("devtools/client/webconsole/types");
-    let message = new ConsoleCommand({
+    const message = new ConsoleCommand({
       messageText: executeString,
     });
     this.hud.proxy.dispatchMessageAdd(message);
 
-    let onResult = this._executeResultCallback.bind(this, resultCallback);
+    const onResult = this._executeResultCallback.bind(this, resultCallback);
 
-    let options = {
+    const options = {
       frame: this.SELECTED_FRAME,
       selectedNodeActor: selectedNodeActor,
     };
@@ -418,7 +414,7 @@ class JSTerm extends Component {
    *         received.
    */
   requestEvaluation(str, options = {}) {
-    let deferred = defer();
+    const deferred = defer();
 
     function onResult(response) {
       if (!response.error) {
@@ -433,7 +429,7 @@ class JSTerm extends Component {
       frameActor = this.getFrameActor(options.frame);
     }
 
-    let evalOptions = {
+    const evalOptions = {
       bindObjectActor: options.bindObjectActor,
       frameActor: frameActor,
       selectedNodeActor: options.selectedNodeActor,
@@ -473,7 +469,7 @@ class JSTerm extends Component {
    *         The FrameActor ID for the given frame depth.
    */
   getFrameActor(frame) {
-    let state = this.hud.owner.getDebuggerFrames();
+    const state = this.hud.owner.getDebuggerFrames();
     if (!state) {
       return null;
     }
@@ -536,14 +532,14 @@ class JSTerm extends Component {
       return;
     }
 
-    let inputNode = this.inputNode;
+    const inputNode = this.inputNode;
 
     // Reset the height so that scrollHeight will reflect the natural height of
     // the contents of the input field.
     inputNode.style.height = "auto";
 
     // Now resize the input field to fit its contents.
-    let scrollHeight = inputNode.scrollHeight;
+    const scrollHeight = inputNode.scrollHeight;
 
     if (scrollHeight > 0) {
       inputNode.style.height = (scrollHeight + this.inputBorderSize) + "px";
@@ -622,8 +618,8 @@ class JSTerm extends Component {
    * @param Event event
    */
   _keyPress(event) {
-    let inputNode = this.inputNode;
-    let inputValue = this.getInputValue();
+    const inputNode = this.inputNode;
+    const inputValue = this.getInputValue();
     let inputUpdated = false;
 
     if (event.ctrlKey) {
@@ -685,9 +681,9 @@ class JSTerm extends Component {
       }
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-      let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
-      if (event.shiftKey ||
-          (!Debugger.isCompilableUnit(inputNode.value) && autoMultiline)) {
+      if (!this.autocompletePopup.isOpen && (
+        event.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
+      )) {
         // shift return or incomplete statement
         return;
       }
@@ -803,13 +799,13 @@ class JSTerm extends Component {
         break;
 
       case KeyCodes.DOM_VK_RIGHT:
-        let cursorAtTheEnd = this.inputNode.selectionStart ==
+        const cursorAtTheEnd = this.inputNode.selectionStart ==
                              this.inputNode.selectionEnd &&
                              this.inputNode.selectionStart ==
                              inputValue.length;
-        let haveSuggestion = this.autocompletePopup.isOpen ||
+        const haveSuggestion = this.autocompletePopup.isOpen ||
                              this.lastCompletion.value;
-        let useCompletion = cursorAtTheEnd || this._autocompletePopupNavigated;
+        const useCompletion = cursorAtTheEnd || this._autocompletePopupNavigated;
         if (haveSuggestion && useCompletion &&
             this.complete(this.COMPLETE_HINT_ONLY) &&
             this.lastCompletion.value &&
@@ -856,7 +852,7 @@ class JSTerm extends Component {
    *          True if the input value changed, false otherwise.
    */
   historyPeruse(direction) {
-    let {
+    const {
       history,
       updatePlaceHolder,
       getValueFromHistory,
@@ -866,8 +862,8 @@ class JSTerm extends Component {
       return false;
     }
 
-    let newInputValue = getValueFromHistory(direction);
-    let expression = this.getInputValue();
+    const newInputValue = getValueFromHistory(direction);
+    const expression = this.getInputValue();
     updatePlaceHolder(direction, expression);
 
     if (newInputValue != null) {
@@ -898,12 +894,12 @@ class JSTerm extends Component {
    *         otherwise false.
    */
   canCaretGoPrevious() {
-    let node = this.inputNode;
+    const node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
     }
 
-    let multiline = /[\r\n]/.test(node.value);
+    const multiline = /[\r\n]/.test(node.value);
     return node.selectionStart == 0 ? true :
            node.selectionStart == node.value.length && !multiline;
   }
@@ -918,12 +914,12 @@ class JSTerm extends Component {
    *         false.
    */
   canCaretGoNext() {
-    let node = this.inputNode;
+    const node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
     }
 
-    let multiline = /[\r\n]/.test(node.value);
+    const multiline = /[\r\n]/.test(node.value);
     return node.selectionStart == node.value.length ? true :
            node.selectionStart == 0 && !multiline;
   }
@@ -963,9 +959,9 @@ class JSTerm extends Component {
    *          or false otherwise.
    */
   complete(type, callback) {
-    let inputNode = this.inputNode;
-    let inputValue = this.getInputValue();
-    let frameActor = this.getFrameActor(this.SELECTED_FRAME);
+    const inputNode = this.inputNode;
+    const inputValue = this.getInputValue();
+    const frameActor = this.getFrameActor(this.SELECTED_FRAME);
 
     // If the inputNode has no value, then don't try to complete on it.
     if (!inputValue) {
@@ -990,7 +986,7 @@ class JSTerm extends Component {
       return false;
     }
 
-    let popup = this.autocompletePopup;
+    const popup = this.autocompletePopup;
     let accepted = false;
 
     if (type != this.COMPLETE_HINT_ONLY && popup.itemCount == 1) {
@@ -1022,16 +1018,16 @@ class JSTerm extends Component {
    *        Optional, function to invoke when completion results are received.
    */
   _updateCompletionResult(type, callback) {
-    let frameActor = this.getFrameActor(this.SELECTED_FRAME);
+    const frameActor = this.getFrameActor(this.SELECTED_FRAME);
     if (this.lastCompletion.value == this.getInputValue() &&
         frameActor == this._lastFrameActorId) {
       return;
     }
 
-    let requestId = gSequenceId();
-    let cursor = this.inputNode.selectionStart;
-    let input = this.getInputValue().substring(0, cursor);
-    let cache = this._autocompleteCache;
+    const requestId = gSequenceId();
+    const cursor = this.inputNode.selectionStart;
+    const input = this.getInputValue().substring(0, cursor);
+    const cache = this._autocompleteCache;
 
     // If the current input starts with the previous input, then we already
     // have a list of suggestions and we just need to filter the cached
@@ -1047,14 +1043,14 @@ class JSTerm extends Component {
     if (this._autocompleteQuery && input.startsWith(this._autocompleteQuery)) {
       let filterBy = input;
       // Find the last non-alphanumeric other than _ or $ if it exists.
-      let lastNonAlpha = input.match(/[^a-zA-Z0-9_$][a-zA-Z0-9_$]*$/);
+      const lastNonAlpha = input.match(/[^a-zA-Z0-9_$][a-zA-Z0-9_$]*$/);
       // If input contains non-alphanumerics, use the part after the last one
       // to filter the cache
       if (lastNonAlpha) {
         filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
       }
 
-      let newList = cache.sort().filter(function(l) {
+      const newList = cache.sort().filter(function(l) {
         return l.startsWith(filterBy);
       });
 
@@ -1064,7 +1060,7 @@ class JSTerm extends Component {
         value: null,
       };
 
-      let response = { matches: newList, matchProp: filterBy };
+      const response = { matches: newList, matchProp: filterBy };
       this._receiveAutocompleteProperties(null, callback, response);
       return;
     }
@@ -1077,7 +1073,7 @@ class JSTerm extends Component {
       value: null,
     };
 
-    let autocompleteCallback =
+    const autocompleteCallback =
       this._receiveAutocompleteProperties.bind(this, requestId, callback);
 
     this.webConsoleClient.autocomplete(
@@ -1098,24 +1094,24 @@ class JSTerm extends Component {
    *        the content process.
    */
   _receiveAutocompleteProperties(requestId, callback, message) {
-    let inputNode = this.inputNode;
-    let inputValue = this.getInputValue();
+    const inputNode = this.inputNode;
+    const inputValue = this.getInputValue();
     if (this.lastCompletion.value == inputValue ||
         requestId != this.lastCompletion.requestId) {
       return;
     }
     // Cache whatever came from the server if the last char is
     // alphanumeric or '.'
-    let cursor = inputNode.selectionStart;
-    let inputUntilCursor = inputValue.substring(0, cursor);
+    const cursor = inputNode.selectionStart;
+    const inputUntilCursor = inputValue.substring(0, cursor);
 
     if (requestId != null && /[a-zA-Z0-9.]$/.test(inputUntilCursor)) {
       this._autocompleteCache = message.matches;
       this._autocompleteQuery = inputUntilCursor;
     }
 
-    let matches = message.matches;
-    let lastPart = message.matchProp;
+    const matches = message.matches;
+    const lastPart = message.matchProp;
     if (!matches.length) {
       this.clearCompletion();
       callback && callback(this);
@@ -1123,22 +1119,22 @@ class JSTerm extends Component {
       return;
     }
 
-    let items = matches.reverse().map(function(match) {
+    const items = matches.reverse().map(function(match) {
       return { preLabel: lastPart, label: match };
     });
 
-    let popup = this.autocompletePopup;
+    const popup = this.autocompletePopup;
     popup.setItems(items);
 
-    let completionType = this.lastCompletion.completionType;
+    const completionType = this.lastCompletion.completionType;
     this.lastCompletion = {
       value: inputValue,
       matchProp: lastPart,
     };
     if (items.length > 1 && !popup.isOpen) {
-      let str = this.getInputValue().substr(0, this.inputNode.selectionStart);
-      let offset = str.length - (str.lastIndexOf("\n") + 1) - lastPart.length;
-      let x = offset * this._inputCharWidth;
+      const str = this.getInputValue().substr(0, this.inputNode.selectionStart);
+      const offset = str.length - (str.lastIndexOf("\n") + 1) - lastPart.length;
+      const x = offset * this._inputCharWidth;
       popup.openPopup(inputNode, x + this._chevronWidth);
       this._autocompletePopupNavigated = false;
     } else if (items.length < 2 && popup.isOpen) {
@@ -1169,9 +1165,9 @@ class JSTerm extends Component {
       return;
     }
 
-    let currentItem = this.autocompletePopup.selectedItem;
+    const currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
-      let suffix =
+      const suffix =
         currentItem.label.substring(this.lastCompletion.matchProp.length);
       this.updateCompleteNode(suffix);
     } else {
@@ -1212,15 +1208,15 @@ class JSTerm extends Component {
   acceptProposedCompletion() {
     let updated = false;
 
-    let currentItem = this.autocompletePopup.selectedItem;
+    const currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
-      let suffix =
+      const suffix =
         currentItem.label.substring(this.lastCompletion.matchProp.length);
-      let cursor = this.inputNode.selectionStart;
-      let value = this.getInputValue();
+      const cursor = this.inputNode.selectionStart;
+      const value = this.getInputValue();
       this.setInputValue(value.substr(0, cursor) +
         suffix + value.substr(cursor));
-      let newCursor = cursor + suffix.length;
+      const newCursor = cursor + suffix.length;
       this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
       updated = true;
     }
@@ -1242,7 +1238,7 @@ class JSTerm extends Component {
     }
 
     // completion prefix = input, with non-control chars replaced by spaces
-    let prefix = suffix ? this.getInputValue().replace(/[\S]/g, " ") : "";
+    const prefix = suffix ? this.getInputValue().replace(/[\S]/g, " ") : "";
     this.completeNode.value = prefix + suffix;
   }
   /**
@@ -1256,9 +1252,9 @@ class JSTerm extends Component {
       return;
     }
 
-    let doc = this.hud.document;
-    let tempLabel = doc.createElement("span");
-    let style = tempLabel.style;
+    const doc = this.hud.document;
+    const tempLabel = doc.createElement("span");
+    const style = tempLabel.style;
     style.position = "fixed";
     style.padding = "0";
     style.margin = "0";
@@ -1319,7 +1315,7 @@ class JSTerm extends Component {
       });
     }
 
-    let {
+    const {
       onPaste
     } = this.props;
 

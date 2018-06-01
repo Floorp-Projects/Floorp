@@ -1,0 +1,17 @@
+Follow these steps when adding/upgrading the fluent-react.js module:
+
+1. git clone https://github.com/projectfluent/fluent.js - clone the repo
+2. checkout the tag for the version to update
+3. build bundles:
+  3.1. npm install
+  3.2. make deps
+  3.3. make
+4. cp fluent-react/fluent-react.js $DEST_DIR - copy fluent-react to Firefox source tree
+5. in fluent-react.js, prepend "devtools/client/shared/vendor/" to the require calls
+  require('fluent') should be require('devtools/client/shared/vendor/fluent')
+  require('react') should be require('devtools/client/shared/vendor/react')
+  require('react-prop-types') should be require('devtools/client/shared/vendor/react-prop-types')
+6. cp fluent-react/node_modules/fluent/fluent.js $DEST_DIR - copy fluent to Firefox source tree
+7. update the version below
+
+The current version is 0.7.0

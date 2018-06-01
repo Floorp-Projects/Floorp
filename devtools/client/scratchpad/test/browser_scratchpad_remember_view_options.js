@@ -21,9 +21,9 @@ function test() {
 }
 
 function runTests() {
-  let doc = gScratchpadWindow.document;
+  const doc = gScratchpadWindow.document;
 
-  let testData = [
+  const testData = [
     {itemMenuId: "sp-menu-line-numbers", prefId: "devtools.scratchpad.lineNumbers", expectedVal: false},
     {itemMenuId: "sp-menu-word-wrap", prefId: "devtools.scratchpad.wrapText", expectedVal: true},
     {itemMenuId: "sp-menu-highlight-trailing-space", prefId: "devtools.scratchpad.showTrailingSpace", expectedVal: true},
@@ -33,12 +33,12 @@ function runTests() {
   ];
 
   testData.forEach(function(data) {
-    let getPref = getPrefFunction(data.prefId);
+    const getPref = getPrefFunction(data.prefId);
 
     try {
-      let menu = doc.getElementById(data.itemMenuId);
+      const menu = doc.getElementById(data.itemMenuId);
       menu.doCommand();
-      let newPreferenceValue = getPref(data.prefId);
+      const newPreferenceValue = getPref(data.prefId);
       ok(newPreferenceValue === data.expectedVal, newPreferenceValue + " !== " + data.expectedVal);
       Services.prefs.clearUserPref(data.prefId);
     } catch (exception) {
@@ -50,7 +50,7 @@ function runTests() {
 }
 
 function getPrefFunction(preferenceId) {
-  let preferenceType = Services.prefs.getPrefType(preferenceId);
+  const preferenceType = Services.prefs.getPrefType(preferenceId);
   if (preferenceType === Services.prefs.PREF_INT) {
     return Services.prefs.getIntPref;
   } else if (preferenceType === Services.prefs.PREF_BOOL) {

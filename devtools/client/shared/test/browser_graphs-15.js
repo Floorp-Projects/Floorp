@@ -14,10 +14,10 @@ const TEST_DATA = [];
 const INTERVAL = 100;
 const DURATION = 5000;
 var t = 0;
-for (let frameRate of FRAMES) {
+for (const frameRate of FRAMES) {
   for (let i = 0; i < frameRate; i++) {
     // Duration between frames at this rate
-    let delta = Math.floor(1000 / frameRate);
+    const delta = Math.floor(1000 / frameRate);
     t += delta;
     TEST_DATA.push(t);
   }
@@ -32,8 +32,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
 
   await testGraph(graph);
 

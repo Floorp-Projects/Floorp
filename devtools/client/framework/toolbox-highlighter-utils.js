@@ -33,7 +33,7 @@ exports.getHighlighterUtils = function(toolbox) {
   }
 
   // Exported API properties will go here
-  let exported = {};
+  const exported = {};
 
   // The current toolbox target
   let target = toolbox.target;
@@ -58,7 +58,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * which doesn't have the highlighter actor. This can be removed as soon as
    * the minimal supported version becomes 1.4 (29)
    */
-  let isRemoteHighlightable = exported.isRemoteHighlightable = function() {
+  const isRemoteHighlightable = exported.isRemoteHighlightable = function() {
     return target.client.traits.highlightable;
   };
 
@@ -70,7 +70,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return {Function} A function
    */
   let isInspectorInitialized = false;
-  let requireInspector = generator => {
+  const requireInspector = generator => {
     return async function(...args) {
       if (!isInspectorInitialized) {
         await toolbox.initInspector();
@@ -104,7 +104,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return A promise that resolves when the picker has started or immediately
    * if it is already started
    */
-  let startPicker = exported.startPicker =
+  const startPicker = exported.startPicker =
     requireInspector(async function(doFocus = false) {
       if (isPicking) {
         return;
@@ -128,7 +128,7 @@ exports.getHighlighterUtils = function(toolbox) {
         // walker's pick method instead, knowing that it only responds when a node
         // is picked (instead of emitting events)
         toolbox.emit("picker-started");
-        let node = await toolbox.walker.pick();
+        const node = await toolbox.walker.pick();
         onPickerNodePicked({node: node});
       }
     });
@@ -139,7 +139,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return A promise that resolves when the picker has stopped or immediately
    * if it is already stopped
    */
-  let stopPicker = exported.stopPicker = requireInspector(async function() {
+  const stopPicker = exported.stopPicker = requireInspector(async function() {
     if (!isPicking) {
       return;
     }
@@ -166,7 +166,7 @@ exports.getHighlighterUtils = function(toolbox) {
   /**
    * Stop the picker, but also emit an event that the picker was canceled.
    */
-  let cancelPicker = exported.cancelPicker = async function() {
+  const cancelPicker = exported.cancelPicker = async function() {
     await stopPicker();
     toolbox.emit("picker-canceled");
   };
@@ -214,7 +214,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @param {Object} options
    * @return A promise that resolves when the node has been highlighted
    */
-  let highlightNodeFront = exported.highlightNodeFront = requireInspector(
+  const highlightNodeFront = exported.highlightNodeFront = requireInspector(
   async function(nodeFront, options = {}) {
     if (!nodeFront) {
       return;
@@ -241,7 +241,7 @@ exports.getHighlighterUtils = function(toolbox) {
    */
   exported.highlightDomValueGrip =
     requireInspector(async function(valueGrip, options = {}) {
-      let nodeFront = await gripToNodeFront(valueGrip);
+      const nodeFront = await gripToNodeFront(valueGrip);
       if (nodeFront) {
         await highlightNodeFront(nodeFront, options);
       } else {
@@ -254,7 +254,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @param {ValueGrip}
    * @return a promise that resolves to the node front when done
    */
-  let gripToNodeFront = exported.gripToNodeFront = requireInspector(
+  const gripToNodeFront = exported.gripToNodeFront = requireInspector(
   async function(grip) {
     return toolbox.walker.getNodeActorFromObjectActor(grip.actor);
   });
@@ -296,7 +296,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return a promise that resolves to the highlighter
    */
   exported.getHighlighterByType = requireInspector(async function(typeName) {
-    let highlighter = await toolbox.inspector.getHighlighterByType(typeName);
+    const highlighter = await toolbox.inspector.getHighlighterByType(typeName);
 
     return highlighter || promise.reject("The target doesn't support " +
         `creating highlighters by types or ${typeName} is unknown`);

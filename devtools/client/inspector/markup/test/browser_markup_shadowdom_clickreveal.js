@@ -31,23 +31,23 @@ const TEST_URL = `data:text/html;charset=utf-8,
 add_task(async function() {
   await enableWebComponents();
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {markup} = inspector;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {markup} = inspector;
 
   info("Find and expand the test-component shadow DOM host.");
-  let hostFront = await getNodeFront("test-component", inspector);
-  let hostContainer = markup.getContainer(hostFront);
+  const hostFront = await getNodeFront("test-component", inspector);
+  const hostContainer = markup.getContainer(hostFront);
   await expandContainer(inspector, hostContainer);
 
   info("Expand the shadow root");
-  let shadowRootContainer = hostContainer.getChildContainers()[0];
+  const shadowRootContainer = hostContainer.getChildContainers()[0];
   await expandContainer(inspector, shadowRootContainer);
 
   info("Expand the slot");
-  let slotContainer = shadowRootContainer.getChildContainers()[0];
+  const slotContainer = shadowRootContainer.getChildContainers()[0];
   await expandContainer(inspector, slotContainer);
 
-  let slotChildContainers = slotContainer.getChildContainers();
+  const slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 2, "Expecting 2 slotted children");
 
   await checkRevealLink(inspector, slotChildContainers[0].node);
@@ -60,7 +60,7 @@ add_task(async function() {
 });
 
 async function checkRevealLink(inspector, node) {
-  let slottedContainer = inspector.markup.getContainer(node, true);
+  const slottedContainer = inspector.markup.getContainer(node, true);
   info("Select the slotted container for the element");
   await selectNode(node, inspector, "no-reason", true);
   ok(inspector.selection.isSlotted(), "The selection is the slotted version");
@@ -69,7 +69,7 @@ async function checkRevealLink(inspector, node) {
 
   info("Click on the reveal link and wait for the new node to be selected");
   await clickOnRevealLink(inspector, slottedContainer);
-  let selectedFront = inspector.selection.nodeFront;
+  const selectedFront = inspector.selection.nodeFront;
   is(selectedFront, node, "The same node front is still selected");
   ok(!inspector.selection.isSlotted(), "The selection is not the slotted version");
   ok(!inspector.markup.getSelectedContainer().isSlotted(),
@@ -77,10 +77,10 @@ async function checkRevealLink(inspector, node) {
 }
 
 async function clickOnRevealLink(inspector, container) {
-  let onSelection = inspector.selection.once("new-node-front");
-  let revealLink = container.elt.querySelector(".reveal-link");
-  let tagline = revealLink.closest(".tag-line");
-  let win = inspector.markup.doc.defaultView;
+  const onSelection = inspector.selection.once("new-node-front");
+  const revealLink = container.elt.querySelector(".reveal-link");
+  const tagline = revealLink.closest(".tag-line");
+  const win = inspector.markup.doc.defaultView;
 
   // First send a mouseover on the tagline to force the link to be displayed.
   EventUtils.synthesizeMouseAtCenter(tagline, {type: "mouseover"}, win);

@@ -242,7 +242,7 @@ let containerID = 0;
 let elms = {};
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(`data:text/html;charset=utf-8,
+  const { inspector } = await openInspectorForURL(`data:text/html;charset=utf-8,
     <h1 id="some-id" class="some-class">foo<span>Child span<span></h1>`);
 
   // Record containers that are created after inspector is initialized to be
@@ -264,7 +264,7 @@ add_task(async function() {
   // Focus on the tree element.
   elms.root.elt.focus();
 
-  for (let testData of TESTS) {
+  for (const testData of TESTS) {
     await runAccessibilityNavigationTest(inspector, elms, testData);
   }
 

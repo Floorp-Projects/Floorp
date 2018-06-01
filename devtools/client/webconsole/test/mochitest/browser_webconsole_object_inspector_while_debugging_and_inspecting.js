@@ -14,13 +14,13 @@ const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
 add_task(async function() {
   // Force the old debugger UI since it's directly used (see Bug 1301705)
   await pushPref("devtools.debugger.new-debugger-frontend", false);
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Switch to the debugger");
   await openDebugger();
 
   info("Switch to the inspector");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.showToolbox(target, "inspector");
 
   info("Call firstCall() and wait for the debugger statement to be reached.");
@@ -30,18 +30,18 @@ add_task(async function() {
   await gDevTools.showToolbox(target, "webconsole");
 
   info("Test logging and inspecting objects while on a breakpoint.");
-  let jsterm = hud.jsterm;
+  const jsterm = hud.jsterm;
 
-  let onMessage = waitForMessage(hud, '{ testProp2: "testValue2" }');
+  const onMessage = waitForMessage(hud, '{ testProp2: "testValue2" }');
   jsterm.execute("fooObj");
-  let message = await onMessage;
+  const message = await onMessage;
 
   const objectInspectors = [...message.node.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There should be one object inspector");
 
   info("Expanding the array object inspector");
   const [oi] = objectInspectors;
-  let onOiExpanded = waitFor(() => {
+  const onOiExpanded = waitFor(() => {
     return oi.querySelectorAll(".node").length === 3;
   });
   oi.querySelector(".arrow").click();
@@ -55,7 +55,7 @@ add_task(async function() {
   // |  testProp2: "testValue2"
   // |  <prototype>: Object { ... }
 
-  let oiNodes = oi.querySelectorAll(".node");
+  const oiNodes = oi.querySelectorAll(".node");
   is(oiNodes.length, 3, "There is the expected number of nodes in the tree");
 
   ok(oiNodes[0].textContent.includes(`{\u2026}`));
@@ -64,9 +64,9 @@ add_task(async function() {
 });
 
 async function waitForFrameAdded() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
-  let thread = toolbox.threadClient;
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
+  const thread = toolbox.threadClient;
 
   info("Waiting for framesadded");
   await new Promise(resolve => {

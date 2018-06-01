@@ -8,14 +8,14 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_pseudo_elements.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
   info("With <body> selected by default check the content of the timeline");
   is(getAnimationTimeBlocks(panel).length, 3, "There are 3 animations in the timeline");
 
-  let targetNodes = getAnimationTargetNodes(panel);
-  let getTargetNodeText = index => {
-    let el = targetNodes[index].previewer.previewEl;
+  const targetNodes = getAnimationTargetNodes(panel);
+  const getTargetNodeText = index => {
+    const el = targetNodes[index].previewer.previewEl;
     return [...el.childNodes]
            .map(n => n.style.display === "none" ? "" : n.textContent)
            .join("");
@@ -26,12 +26,12 @@ add_task(async function() {
   is(getTargetNodeText(2), "::after", "The third animated node is ::after");
 
   info("Getting the before and after nodeFronts");
-  let bodyContainer = await getContainerForSelector("body", inspector);
-  let getBodyChildNodeFront = index => {
+  const bodyContainer = await getContainerForSelector("body", inspector);
+  const getBodyChildNodeFront = index => {
     return bodyContainer.elt.children[1].childNodes[index].container.node;
   };
-  let beforeNode = getBodyChildNodeFront(0);
-  let afterNode = getBodyChildNodeFront(1);
+  const beforeNode = getBodyChildNodeFront(0);
+  const afterNode = getBodyChildNodeFront(1);
 
   info("Select the ::before pseudo-element in the inspector");
   await selectNodeAndWaitForAnimations(beforeNode, inspector);

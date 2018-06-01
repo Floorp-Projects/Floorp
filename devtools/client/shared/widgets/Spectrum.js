@@ -89,11 +89,11 @@ module.exports.Spectrum = Spectrum;
 Spectrum.hsvToRgb = function(h, s, v, a) {
   let r, g, b;
 
-  let i = Math.floor(h * 6);
-  let f = h * 6 - i;
-  let p = v * (1 - s);
-  let q = v * (1 - f * s);
-  let t = v * (1 - (1 - f) * s);
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
 
   switch (i % 6) {
     case 0: r = v; g = t; b = p; break;
@@ -112,12 +112,14 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
   g = g / 255;
   b = b / 255;
 
-  let max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, v = max;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
 
-  let d = max - min;
-  s = max == 0 ? 0 : d / max;
+  const v = max;
+  const d = max - min;
+  const s = max == 0 ? 0 : d / max;
 
+  let h;
   if (max == min) {
     // achromatic
     h = 0;
@@ -137,7 +139,7 @@ Spectrum.draggable = function(element, onmove, onstart, onstop) {
   onstart = onstart || function() {};
   onstop = onstop || function() {};
 
-  let doc = element.ownerDocument;
+  const doc = element.ownerDocument;
   let dragging = false;
   let offset = {};
   let maxHeight = 0;
@@ -155,18 +157,18 @@ Spectrum.draggable = function(element, onmove, onstart, onstop) {
         stop();
         return;
       }
-      let pageX = e.pageX;
-      let pageY = e.pageY;
+      const pageX = e.pageX;
+      const pageY = e.pageY;
 
-      let dragX = Math.max(0, Math.min(pageX - offset.left, maxWidth));
-      let dragY = Math.max(0, Math.min(pageY - offset.top, maxHeight));
+      const dragX = Math.max(0, Math.min(pageX - offset.left, maxWidth));
+      const dragY = Math.max(0, Math.min(pageY - offset.top, maxHeight));
 
       onmove.apply(element, [dragX, dragY]);
     }
   }
 
   function start(e) {
-    let rightclick = e.which === 3;
+    const rightclick = e.which === 3;
 
     if (!rightclick && !dragging) {
       if (onstart.apply(element, arguments) !== false) {
@@ -208,19 +210,19 @@ Spectrum.prototype = {
   },
 
   get rgb() {
-    let rgb = Spectrum.hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2],
+    const rgb = Spectrum.hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2],
       this.hsv[3]);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]),
             Math.round(rgb[3] * 100) / 100];
   },
 
   get rgbNoSatVal() {
-    let rgb = Spectrum.hsvToRgb(this.hsv[0], 1, 1);
+    const rgb = Spectrum.hsvToRgb(this.hsv[0], 1, 1);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
   },
 
   get rgbCssString() {
-    let rgb = this.rgb;
+    const rgb = this.rgb;
     return "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " +
       rgb[3] + ")";
   },
@@ -273,14 +275,14 @@ Spectrum.prototype = {
       return;
     }
 
-    let h = this.hsv[0];
-    let s = this.hsv[1];
-    let v = this.hsv[2];
+    const h = this.hsv[0];
+    const s = this.hsv[1];
+    const v = this.hsv[2];
 
     // Placing the color dragger
     let dragX = s * this.dragWidth;
     let dragY = this.dragHeight - (v * this.dragHeight);
-    let helperDim = this.dragHelperHeight / 2;
+    const helperDim = this.dragHelperHeight / 2;
 
     dragX = Math.max(
       -helperDim,
@@ -295,11 +297,11 @@ Spectrum.prototype = {
     this.dragHelper.style.left = dragX + "px";
 
     // Placing the hue slider
-    let slideY = (h * this.slideHeight) - this.slideHelperHeight / 2;
+    const slideY = (h * this.slideHeight) - this.slideHelperHeight / 2;
     this.slideHelper.style.top = slideY + "px";
 
     // Placing the alpha slider
-    let alphaSliderX = (this.hsv[3] * this.alphaSliderWidth) -
+    const alphaSliderX = (this.hsv[3] * this.alphaSliderWidth) -
       (this.alphaSliderHelperWidth / 2);
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
   },
@@ -307,17 +309,17 @@ Spectrum.prototype = {
   updateUI: function() {
     this.updateHelperLocations();
 
-    let rgb = this.rgb;
-    let rgbNoSatVal = this.rgbNoSatVal;
+    const rgb = this.rgb;
+    const rgbNoSatVal = this.rgbNoSatVal;
 
-    let flatColor = "rgb(" + rgbNoSatVal[0] + ", " + rgbNoSatVal[1] + ", " +
+    const flatColor = "rgb(" + rgbNoSatVal[0] + ", " + rgbNoSatVal[1] + ", " +
       rgbNoSatVal[2] + ")";
 
     this.dragger.style.backgroundColor = flatColor;
 
-    let rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
-    let rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
-    let alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
+    const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+    const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
+    const alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
       rgbNoAlpha + ")";
     this.alphaSliderInner.style.background = alphaGradient;
   },

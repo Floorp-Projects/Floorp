@@ -9,14 +9,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
-  let {ui} = hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
+  const {ui} = hud;
 
   ok(ui.jsterm, "jsterm exists");
   ok(ui.consoleOutput, "consoleOutput exists");
 
-  let receievedMessages = waitForMessages({
+  const receievedMessages = waitForMessages({
     hud,
     messages: [
       { text: "19" },

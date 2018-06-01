@@ -21,12 +21,12 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   },
 
   getWallpaper: function() {
-    let deferred = defer();
+    const deferred = defer();
     getSetting("wallpaper.image").then((blob) => {
-      let reader = new FileReader();
-      let conn = this.conn;
+      const reader = new FileReader();
+      const conn = this.conn;
       reader.addEventListener("load", function() {
-        let str = new LongStringActor(conn, reader.result);
+        const str = new LongStringActor(conn, reader.result);
         deferred.resolve(str);
       });
       reader.addEventListener("error", function() {
@@ -38,21 +38,21 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   },
 
   screenshotToDataURL: function() {
-    let window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
-    let { devicePixelRatio } = window;
-    let canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
+    const { devicePixelRatio } = window;
+    const canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     canvas.setAttribute("width", Math.round(width * devicePixelRatio));
     canvas.setAttribute("height", Math.round(height * devicePixelRatio));
-    let context = canvas.getContext("2d");
-    let flags =
+    const context = canvas.getContext("2d");
+    const flags =
           context.DRAWWINDOW_DRAW_CARET |
           context.DRAWWINDOW_DRAW_VIEW |
           context.DRAWWINDOW_USE_WIDGET_LAYERS;
     context.scale(devicePixelRatio, devicePixelRatio);
     context.drawWindow(window, 0, 0, width, height, "rgb(255,255,255)", flags);
-    let dataURL = canvas.toDataURL("image/png");
+    const dataURL = canvas.toDataURL("image/png");
     return new LongStringActor(this.conn, dataURL);
   }
 });

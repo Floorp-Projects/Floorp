@@ -17,28 +17,28 @@ add_task(async function() {
     </body>`);
 
   info("Open the class panel");
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   view.showClassPanel();
 
   info("Selecting the DOCTYPE node");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
+  const {nodes} = await inspector.walker.children(inspector.walker.rootNode);
   await selectNode(nodes[0], inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the comment node");
-  let styleNode = await getNodeFront("style", inspector);
-  let commentNode = await inspector.walker.nextSibling(styleNode);
+  const styleNode = await getNodeFront("style", inspector);
+  const commentNode = await inspector.walker.nextSibling(styleNode);
   await selectNode(commentNode, inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the text node");
-  let textNode = await inspector.walker.nextSibling(commentNode);
+  const textNode = await inspector.walker.nextSibling(commentNode);
   await selectNode(textNode, inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the ::after pseudo-element");
-  let divNode = await getNodeFront("div", inspector);
-  let pseudoElement = (await inspector.walker.children(divNode)).nodes[0];
+  const divNode = await getNodeFront("div", inspector);
+  const pseudoElement = (await inspector.walker.children(divNode)).nodes[0];
   await selectNode(pseudoElement, inspector);
   checkMessageIsDisplayed(view);
 });

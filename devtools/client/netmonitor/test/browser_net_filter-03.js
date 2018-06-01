@@ -21,15 +21,15 @@ const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
 ]);
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(FILTERING_URL);
+  const { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSelectedRequest,
     getSortedRequests,
@@ -39,8 +39,8 @@ add_task(async function() {
 
   // The test assumes that the first HTML request here has a longer response
   // body than the other HTML requests performed later during the test.
-  let requests = Cu.cloneInto(REQUESTS_WITH_MEDIA, {});
-  let newres = "res=<p>" + new Array(10).join(Math.random(10)) + "</p>";
+  const requests = Cu.cloneInto(REQUESTS_WITH_MEDIA, {});
+  const newres = "res=<p>" + new Array(10).join(Math.random(10)) + "</p>";
   requests[0].url = requests[0].url.replace("res=undefined", newres);
 
   loadFrameScriptUtils();

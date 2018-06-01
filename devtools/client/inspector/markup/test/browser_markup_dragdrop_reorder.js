@@ -11,16 +11,16 @@ requestLongerTimeout(2);
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
   let ids;
 
   info("Expand #test node");
-  let parentFront = await getNodeFront("#test", inspector);
+  const parentFront = await getNodeFront("#test", inspector);
   await inspector.markup.expandNode(parentFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Scroll #test into view");
-  let parentContainer = await getContainerForNodeFront(parentFront, inspector);
+  const parentContainer = await getContainerForNodeFront(parentFront, inspector);
   parentContainer.elt.scrollIntoView(true);
 
   info("Test putting an element back at its original place");
@@ -60,7 +60,7 @@ add_task(async function() {
   ids = await getChildrenIDsOf(parentFront, inspector);
   is(ids.length, 3,
      "#firstChild is no longer #test's child");
-  let siblingFront = await inspector.walker.nextSibling(parentFront);
+  const siblingFront = await inspector.walker.nextSibling(parentFront);
   is(siblingFront.id, "firstChild",
      "#firstChild is now #test's nextElementSibling");
 });
@@ -84,22 +84,22 @@ async function dragElementToOriginalLocation(selector, inspector) {
 async function moveElementDown(selector, next, inspector) {
   info("Switching " + selector + " with " + next);
 
-  let container = await getContainerForSelector(next, inspector);
-  let height = container.tagLine.getBoundingClientRect().height;
+  const container = await getContainerForSelector(next, inspector);
+  const height = container.tagLine.getBoundingClientRect().height;
 
-  let onMutated = inspector.once("markupmutation");
-  let uiUpdate = inspector.once("inspector-updated");
+  const onMutated = inspector.once("markupmutation");
+  const uiUpdate = inspector.once("inspector-updated");
 
   await simulateNodeDragAndDrop(inspector, selector, 0, Math.round(height) + 2);
 
-  let mutations = await onMutated;
+  const mutations = await onMutated;
   await uiUpdate;
 
   is(mutations.length, 2, "2 mutations were received");
 }
 
 async function getChildrenIDsOf(parentFront, {walker}) {
-  let {nodes} = await walker.children(parentFront);
+  const {nodes} = await walker.children(parentFront);
   // Filter out non-element nodes since children also returns pseudo-elements.
   return nodes.filter(node => {
     return !node.isPseudoElement;

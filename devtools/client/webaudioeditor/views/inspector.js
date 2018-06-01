@@ -46,7 +46,7 @@ var InspectorView = {
     this._onCommandClick = this._onCommandClick.bind(this);
 
     this.splitter.addEventListener("mouseup", this._onResize);
-    for (let $el of $$("#audio-node-toolbar toolbarbutton")) {
+    for (const $el of $$("#audio-node-toolbar toolbarbutton")) {
       $el.addEventListener("command", this._onCommandClick);
     }
     window.on(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
@@ -61,7 +61,7 @@ var InspectorView = {
     this.splitter.removeEventListener("mouseup", this._onResize);
 
     $("#audio-node-toolbar toolbarbutton").removeEventListener("command", this._onCommandClick);
-    for (let $el of $$("#audio-node-toolbar toolbarbutton")) {
+    for (const $el of $$("#audio-node-toolbar toolbarbutton")) {
       $el.removeEventListener("command", this._onCommandClick);
     }
     window.off(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
@@ -113,11 +113,11 @@ var InspectorView = {
   },
 
   _buildToolbar: function() {
-    let node = this.getCurrentAudioNode();
+    const node = this.getCurrentAudioNode();
 
-    let bypassable = node.bypassable;
-    let bypassed = node.isBypassed();
-    let button = $("#audio-node-toolbar .bypass");
+    const bypassable = node.bypassable;
+    const bypassed = node.isBypassed();
+    const button = $("#audio-node-toolbar .bypass");
 
     if (!bypassable) {
       button.setAttribute("disabled", true);
@@ -166,10 +166,10 @@ var InspectorView = {
   },
 
   _onCommandClick: function(e) {
-    let node = this.getCurrentAudioNode();
-    let button = e.target;
-    let command = button.getAttribute("data-command");
-    let checked = button.getAttribute("checked");
+    const node = this.getCurrentAudioNode();
+    const button = e.target;
+    const command = button.getAttribute("data-command");
+    const checked = button.getAttribute("checked");
 
     if (button.getAttribute("disabled")) {
       return;

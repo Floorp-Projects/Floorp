@@ -31,7 +31,7 @@ window.onload = function() {
   // We can't use a data: URL here, because we want to test script elements
   // that refer to the JavaScript via 'src' attributes, and data: documents
   // can't refer to those. So we use a separate HTML document.
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "Debugger.Source.prototype.element.html";
   iframe.onload = onLoadHandler;
   document.body.appendChild(iframe);

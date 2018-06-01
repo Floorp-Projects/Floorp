@@ -56,24 +56,24 @@ const Curl = {
    *         A cURL command.
    */
   generateCommand: function(data) {
-    let utils = CurlUtils;
+    const utils = CurlUtils;
 
     let command = ["curl"];
-    let ignoredHeaders = new Set();
+    const ignoredHeaders = new Set();
 
     // The cURL command is expected to run on the same platform that Firefox runs
     // (it may be different from the inspected page platform).
-    let escapeString = Services.appinfo.OS == "WINNT" ?
+    const escapeString = Services.appinfo.OS == "WINNT" ?
                        utils.escapeStringWin : utils.escapeStringPosix;
 
     // Add URL.
     command.push(escapeString(data.url));
 
     let postDataText = null;
-    let multipartRequest = utils.isMultipartRequest(data);
+    const multipartRequest = utils.isMultipartRequest(data);
 
     // Create post data.
-    let postData = [];
+    const postData = [];
     if (utils.isUrlEncodedRequest(data) ||
           ["PUT", "POST", "PATCH"].includes(data.method)) {
       postDataText = data.postDataText;
@@ -83,8 +83,8 @@ const Curl = {
     } else if (multipartRequest) {
       postDataText = data.postDataText;
       postData.push("--data-binary");
-      let boundary = utils.getMultipartBoundary(data);
-      let text = utils.removeBinaryDataFromMultipartText(postDataText, boundary);
+      const boundary = utils.getMultipartBoundary(data);
+      const text = utils.removeBinaryDataFromMultipartText(postDataText, boundary);
       postData.push(escapeString(text));
       ignoredHeaders.add("content-length");
     }
@@ -107,11 +107,11 @@ const Curl = {
     // Add request headers.
     let headers = data.headers;
     if (multipartRequest) {
-      let multipartHeaders = utils.getHeadersFromMultipartText(postDataText);
+      const multipartHeaders = utils.getHeadersFromMultipartText(postDataText);
       headers = headers.concat(multipartHeaders);
     }
     for (let i = 0; i < headers.length; i++) {
-      let header = headers[i];
+      const header = headers[i];
       if (header.name.toLowerCase() === "accept-encoding") {
         command.push("--compressed");
         continue;
@@ -155,7 +155,7 @@ const CurlUtils = {
       return true;
     }
 
-    let contentType = this.findHeader(data.headers, "content-type");
+    const contentType = this.findHeader(data.headers, "content-type");
 
     return (contentType &&
       contentType.toLowerCase().includes("application/x-www-form-urlencoded"));
@@ -180,7 +180,7 @@ const CurlUtils = {
       return true;
     }
 
-    let contentType = this.findHeader(data.headers, "content-type");
+    const contentType = this.findHeader(data.headers, "content-type");
 
     return (contentType &&
       contentType.toLowerCase().includes("multipart/form-data;"));
@@ -198,7 +198,7 @@ const CurlUtils = {
     if (!postDataText) {
       return "";
     }
-    let lines = postDataText.split("\r\n");
+    const lines = postDataText.split("\r\n");
     return lines[lines.length - 1];
   },
 
@@ -218,7 +218,7 @@ const CurlUtils = {
     }
 
     name = name.toLowerCase();
-    for (let header of headers) {
+    for (const header of headers) {
       if (name == header.name.toLowerCase()) {
         return header.value;
       }
@@ -236,17 +236,17 @@ const CurlUtils = {
    *         The boundary string for the request.
    */
   getMultipartBoundary: function(data) {
-    let boundaryRe = /\bboundary=(-{3,}\w+)/i;
+    const boundaryRe = /\bboundary=(-{3,}\w+)/i;
 
     // Get the boundary string from the Content-Type request header.
-    let contentType = this.findHeader(data.headers, "Content-Type");
+    const contentType = this.findHeader(data.headers, "Content-Type");
     if (boundaryRe.test(contentType)) {
       return contentType.match(boundaryRe)[1];
     }
     // Temporary workaround. As of 2014-03-11 the requestHeaders array does not
     // always contain the Content-Type header for mulitpart requests. See bug 978144.
     // Find the header from the request payload.
-    let boundaryString = data.postDataText.match(boundaryRe)[1];
+    const boundaryString = data.postDataText.match(boundaryRe)[1];
     if (boundaryString) {
       return boundaryString;
     }
@@ -267,8 +267,8 @@ const CurlUtils = {
   removeBinaryDataFromMultipartText: function(multipartText, boundary) {
     let result = "";
     boundary = "--" + boundary;
-    let parts = multipartText.split(boundary);
-    for (let part of parts) {
+    const parts = multipartText.split(boundary);
+    for (const part of parts) {
       // Each part is expected to have a content disposition line.
       let contentDispositionLine = part.trimLeft().split("\r\n")[0];
       if (!contentDispositionLine) {
@@ -279,7 +279,7 @@ const CurlUtils = {
         if (contentDispositionLine.includes("filename=")) {
           // The header lines and the binary blob is separated by 2 CRLF's.
           // Add only the headers to the result.
-          let headers = part.split("\r\n\r\n")[0];
+          const headers = part.split("\r\n\r\n")[0];
           result += boundary + "\r\n" + headers + "\r\n\r\n";
         } else {
           result += boundary + "\r\n" + part;
@@ -300,23 +300,23 @@ const CurlUtils = {
    *         An array of header objects {name:x, value:x}
    */
   getHeadersFromMultipartText: function(multipartText) {
-    let headers = [];
+    const headers = [];
     if (!multipartText || multipartText.startsWith("---")) {
       return headers;
     }
 
     // Get the header section.
-    let index = multipartText.indexOf("\r\n\r\n");
+    const index = multipartText.indexOf("\r\n\r\n");
     if (index == -1) {
       return headers;
     }
 
     // Parse the header lines.
-    let headersText = multipartText.substring(0, index);
-    let headerLines = headersText.split("\r\n");
+    const headersText = multipartText.substring(0, index);
+    const headerLines = headersText.split("\r\n");
     let lastHeaderName = null;
 
-    for (let line of headerLines) {
+    for (const line of headerLines) {
       // Create a header for each line in fields that spans across multiple lines.
       // Subsquent lines always begins with at least one space or tab character.
       // (rfc2616)
@@ -325,12 +325,12 @@ const CurlUtils = {
         continue;
       }
 
-      let indexOfColon = line.indexOf(":");
+      const indexOfColon = line.indexOf(":");
       if (indexOfColon == -1) {
         continue;
       }
 
-      let header = [line.slice(0, indexOfColon), line.slice(indexOfColon + 1)];
+      const header = [line.slice(0, indexOfColon), line.slice(indexOfColon + 1)];
       if (header.length != 2) {
         continue;
       }

@@ -52,7 +52,7 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(`
 
 add_task(async function() {
   await addTab(DOCUMENT_URL);
-  let {toolbox, inspector, view, testActor} = await openRuleView();
+  const {toolbox, inspector, view, testActor} = await openRuleView();
   await selectNode("div", inspector);
 
   await testInlineStyle(view);
@@ -65,13 +65,13 @@ add_task(async function() {
 async function testInlineStyle(view) {
   info("Testing inline style");
 
-  let onTab = waitForTab();
+  const onTab = waitForTab();
   info("Clicking on the first link in the rule-view");
   clickLinkByIndex(view, 0);
 
-  let tab = await onTab;
+  const tab = await onTab;
 
-  let tabURI = tab.linkedBrowser.documentURI.spec;
+  const tabURI = tab.linkedBrowser.documentURI.spec;
   ok(tabURI.startsWith("view-source:"), "View source tab is open");
   info("Closing tab");
   gBrowser.removeTab(tab);
@@ -81,11 +81,11 @@ async function testFirstInlineStyleSheet(view, toolbox, testActor) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
-  let onSwitch = waitForStyleEditor(toolbox);
+  const onSwitch = waitForStyleEditor(toolbox);
 
   info("Clicking an inline stylesheet");
   clickLinkByIndex(view, 4);
-  let editor = await onSwitch;
+  const editor = await onSwitch;
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
@@ -96,8 +96,8 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
-  let panel = toolbox.getCurrentPanel();
-  let onSelected = panel.UI.once("editor-selected");
+  const panel = toolbox.getCurrentPanel();
+  const onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
   await toolbox.selectTool("inspector");
@@ -105,7 +105,7 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   info("Clicking on second inline stylesheet link");
   testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 3);
-  let editor = await onSelected;
+  const editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
@@ -116,8 +116,8 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
-  let panel = toolbox.getCurrentPanel();
-  let onSelected = panel.UI.once("editor-selected");
+  const panel = toolbox.getCurrentPanel();
+  const onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
   await toolbox.selectTool("inspector");
@@ -125,7 +125,7 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
   info("Clicking on an external stylesheet link");
   testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 1);
-  let editor = await onSelected;
+  const editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
@@ -137,9 +137,9 @@ async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   is(editor.styleSheet.styleSheetIndex, expectedSheetIndex,
      "loaded stylesheet index matches document stylesheet");
 
-  let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
+  const href = editor.styleSheet.href || editor.styleSheet.nodeHref;
 
-  let expectedHref = await testActor.eval(
+  const expectedHref = await testActor.eval(
     `content.document.styleSheets[${expectedSheetIndex}].href ||
      content.document.location.href`);
 
@@ -167,7 +167,7 @@ async function testDisabledStyleEditor(view, toolbox) {
   gDevTools.emit("tool-registered", "styleeditor");
 
   info("Clicking on a link");
-  let onStyleEditorSelected = toolbox.once("styleeditor-selected");
+  const onStyleEditorSelected = toolbox.once("styleeditor-selected");
   clickLinkByIndex(view, 1);
   await onStyleEditorSelected;
   is(toolbox.currentToolId, "styleeditor", "Style Editor should be selected");
@@ -201,14 +201,14 @@ function testRuleViewLinkLabel(view) {
 }
 
 function testUnselectableRuleViewLink(view, index) {
-  let link = getRuleViewLinkByIndex(view, index);
-  let unselectable = link.hasAttribute("unselectable");
+  const link = getRuleViewLinkByIndex(view, index);
+  const unselectable = link.hasAttribute("unselectable");
 
   ok(unselectable, "Rule view is unselectable");
 }
 
 function clickLinkByIndex(view, index) {
-  let link = getRuleViewLinkByIndex(view, index);
+  const link = getRuleViewLinkByIndex(view, index);
   link.scrollIntoView();
   link.click();
 }

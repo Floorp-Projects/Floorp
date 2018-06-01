@@ -37,13 +37,13 @@ function DomView(localStore) {
 
 DomView.prototype = {
   initialize: function(rootGrip) {
-    let content = document.querySelector("#content");
-    let mainFrame = MainFrame({
+    const content = document.querySelector("#content");
+    const mainFrame = MainFrame({
       object: rootGrip,
     });
 
     // Render top level component
-    let provider = React.createElement(Provider, {
+    const provider = React.createElement(Provider, {
       store: this.store
     }, mainFrame);
 
@@ -51,8 +51,8 @@ DomView.prototype = {
   },
 
   onMessage: function(event) {
-    let data = event.data;
-    let method = data.type;
+    const data = event.data;
+    const method = data.type;
 
     if (typeof this[method] == "function") {
       this[method](data.args);

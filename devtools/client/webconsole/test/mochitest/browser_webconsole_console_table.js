@@ -12,8 +12,8 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console-table.html";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
 
   function Person(firstName, lastName) {
     this.firstName = firstName;
@@ -136,14 +136,14 @@ add_task(async function() {
       content.wrappedJSObject.doConsoleTable(test.input, test.headers);
     });
   });
-  let nodes = [];
-  for (let testCase of testCases) {
-    let node = await waitFor(
+  const nodes = [];
+  for (const testCase of testCases) {
+    const node = await waitFor(
       () => findConsoleTable(hud.ui.outputNode, testCases.indexOf(testCase))
     );
     nodes.push(node);
   }
-  let consoleTableNodes = hud.ui.outputNode.querySelectorAll(
+  const consoleTableNodes = hud.ui.outputNode.querySelectorAll(
     ".message .new-consoletable");
   is(consoleTableNodes.length, testCases.length,
     "console has the expected number of consoleTable items");
@@ -177,7 +177,7 @@ function testItem(testCase, node) {
 }
 
 function findConsoleTable(node, index) {
-  let condition = node.querySelector(
+  const condition = node.querySelector(
     `.message:nth-of-type(${index + 1}) .new-consoletable`);
   return condition;
 }

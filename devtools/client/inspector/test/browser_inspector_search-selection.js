@@ -9,13 +9,13 @@ const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Focus the search box");
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   info("Enter body > p to search");
-  let processingDone = once(inspector.searchSuggestions, "processing-done");
+  const processingDone = once(inspector.searchSuggestions, "processing-done");
   EventUtils.sendString("body > p", inspector.panelWin);
   await processingDone;
 
@@ -48,15 +48,15 @@ add_task(async function() {
   }
 });
 
-let sendKeyAndCheck = async function(inspector, description, key,
+const sendKeyAndCheck = async function(inspector, description, key,
                                             modifiers, expectedId) {
   info(description);
-  let onSelect = inspector.once("inspector-updated");
+  const onSelect = inspector.once("inspector-updated");
   EventUtils.synthesizeKey(key, modifiers, inspector.panelWin);
   await onSelect;
 
-  let selectedNode = inspector.selection.nodeFront;
+  const selectedNode = inspector.selection.nodeFront;
   info(selectedNode.id + " is selected with text " + inspector.searchBox.value);
-  let targetNode = await getNodeFront(expectedId, inspector);
+  const targetNode = await getNodeFront(expectedId, inspector);
   is(selectedNode, targetNode, "Correct node " + expectedId + " is selected");
 };

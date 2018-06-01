@@ -14,11 +14,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const graph = new LineGraphWidget(doc.body, "fps");
   graph.fixedWidth = 200;
   graph.fixedHeight = 100;
 
@@ -30,7 +30,7 @@ async function performTest() {
 }
 
 function testGraph(host, graph) {
-  let bounds = host.frame.getBoundingClientRect();
+  const bounds = host.frame.getBoundingClientRect();
 
   isnot(graph.width, bounds.width * window.devicePixelRatio,
     "The graph should not span all the parent node's width.");

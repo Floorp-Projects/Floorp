@@ -16,20 +16,20 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let first = document.createElement("div");
+  const first = document.createElement("div");
   first.setAttribute("style", "display: inline-block; width: 100%; height: 50%;");
   doc.body.appendChild(first);
 
-  let second = document.createElement("div");
+  const second = document.createElement("div");
   second.setAttribute("style", "display: inline-block; width: 100%; height: 50%;");
   doc.body.appendChild(second);
 
-  let graph1 = new LineGraphWidget(first, "js");
-  let graph2 = new BarGraphWidget(second);
+  const graph1 = new LineGraphWidget(first, "js");
+  const graph2 = new BarGraphWidget(second);
 
   CanvasGraphUtils.linkAnimation(graph1, graph2);
   CanvasGraphUtils.linkSelection(graph1, graph2);

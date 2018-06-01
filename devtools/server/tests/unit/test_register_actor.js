@@ -71,7 +71,7 @@ function test_lazy_api() {
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstanciated);
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(onListTabs);
   });
@@ -82,8 +82,8 @@ function test_lazy_api() {
     Assert.ok(!isActorInstanciated);
     Assert.ok("lazyActor" in response);
 
-    let {LazyFront} = require("xpcshell-test/registertestactors-03");
-    let front = LazyFront(client, response);
+    const {LazyFront} = require("xpcshell-test/registertestactors-03");
+    const front = LazyFront(client, response);
     front.hello().then(onRequest);
   }
   function onRequest(response) {

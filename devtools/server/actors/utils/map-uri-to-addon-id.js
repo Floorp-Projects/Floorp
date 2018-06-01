@@ -33,7 +33,7 @@ if (!Services.appinfo
 } else {
   module.exports = function mapURIToAddonId(uri) {
     try {
-      let policy = WebExtensionPolicy.getByURI(uri);
+      const policy = WebExtensionPolicy.getByURI(uri);
       return policy && policy.id;
     } catch (e) {
       DevToolsUtils.reportException("mapURIToAddonId", e);

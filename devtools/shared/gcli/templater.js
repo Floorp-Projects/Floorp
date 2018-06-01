@@ -41,7 +41,7 @@
  *   conversion is handled by DOMTemplate
  */
 var template = function(node, data, options) {
-  let state = {
+  const state = {
     options: options || {},
     // We keep a track of the nodes that we've passed through so we can keep
     // data.__element pointing to the correct node
@@ -123,7 +123,7 @@ function processNode(state, node, data) {
       pushedNode = true;
       // It's good to clean up the attributes when we've processed them,
       // but if we do it straight away, we mess up the array index
-      let attrs = Array.prototype.slice.call(node.attributes);
+      const attrs = Array.prototype.slice.call(node.attributes);
       for (let i = 0; i < attrs.length; i++) {
         let value = attrs[i].value;
         let name = attrs[i].name;
@@ -140,10 +140,10 @@ function processNode(state, node, data) {
             if (value.substring(0, 2) === "${" && value.slice(-1) === "}" &&
                     !value.includes("${", 2)) {
               value = stripBraces(state, value);
-              let func = property(state, value, data);
+              const func = property(state, value, data);
               if (typeof func === "function") {
                 node.removeAttribute(name);
-                let capture = node.hasAttribute("capture" + name.substring(2));
+                const capture = node.hasAttribute("capture" + name.substring(2));
                 node.addEventListener(name.substring(2), func, capture);
                 if (capture) {
                   node.removeAttribute("capture" + name.substring(2));
@@ -193,7 +193,7 @@ function processNode(state, node, data) {
 
     // Loop through our children calling processNode. First clone them, so the
     // set of nodes that we visit will be unaffected by additions or removals.
-    let childNodes = Array.prototype.slice.call(node.childNodes);
+    const childNodes = Array.prototype.slice.call(node.childNodes);
     for (let j = 0; j < childNodes.length; j++) {
       processNode(state, childNodes[j], data);
     }
@@ -215,7 +215,7 @@ function processNode(state, node, data) {
  */
 function processString(state, value, data) {
   return value.replace(TEMPLATE_REGION, function(path) {
-    let insert = envEval(state, path.slice(2, -1), data, value);
+    const insert = envEval(state, path.slice(2, -1), data, value);
     return state.options.blankNullUndefined && insert == null ? "" : insert;
   });
 }
@@ -229,11 +229,11 @@ function processString(state, value, data) {
 function processIf(state, node, data) {
   state.stack.push("if");
   try {
-    let originalValue = node.getAttribute("if");
-    let value = stripBraces(state, originalValue);
+    const originalValue = node.getAttribute("if");
+    const value = stripBraces(state, originalValue);
     let recurse = true;
     try {
-      let reply = envEval(state, value, data, originalValue);
+      const reply = envEval(state, value, data, originalValue);
       recurse = !!reply;
     } catch (ex) {
       handleError(state, "Error with '" + value + "'", ex);
@@ -262,7 +262,7 @@ function processIf(state, node, data) {
 function processForEach(state, node, data) {
   state.stack.push("foreach");
   try {
-    let originalValue = node.getAttribute("foreach");
+    const originalValue = node.getAttribute("foreach");
     let value = originalValue;
 
     let paramName = "param";
@@ -271,14 +271,14 @@ function processForEach(state, node, data) {
       value = stripBraces(state, value);
     } else {
       // Extract the loop variable name from 'NAME in ${ARRAY}'
-      let nameArr = value.split(" in ");
+      const nameArr = value.split(" in ");
       paramName = nameArr[0].trim();
       value = stripBraces(state, nameArr[1].trim());
     }
     node.removeAttribute("foreach");
     try {
-      let evaled = envEval(state, value, data, originalValue);
-      let cState = cloneState(state);
+      const evaled = envEval(state, value, data, originalValue);
+      const cState = cloneState(state);
       handleAsync(evaled, node, function(reply, siblingNode) {
         processForEachLoop(cState, reply, node, siblingNode, data, paramName);
       });
@@ -309,7 +309,7 @@ function processForEachLoop(state, set, templNode, sibling, data, paramName) {
                            data, paramName, "" + i);
     });
   } else {
-    for (let member in set) {
+    for (const member in set) {
       if (set.hasOwnProperty(member)) {
         processForEachMember(state, member, templNode, sibling,
                              data, paramName, member);
@@ -334,10 +334,10 @@ function processForEachMember(state, member, templNode, siblingNode, data,
                               paramName, frame) {
   state.stack.push(frame);
   try {
-    let cState = cloneState(state);
+    const cState = cloneState(state);
     handleAsync(member, siblingNode, function(reply, node) {
       // Clone data because we can't be sure that we can safely mutate it
-      let newData = Object.create(null);
+      const newData = Object.create(null);
       Object.keys(data).forEach(function(key) {
         newData[key] = data[key];
       });
@@ -384,7 +384,7 @@ function processTextNode(state, node, data) {
   // \uF001 and \uF002 are just unicode chars reserved for private use.
   value = value.replace(TEMPLATE_REGION, "\uF001$$$1\uF002");
   // Split a string using the unicode chars F001 and F002.
-  let parts = value.split(/\uF001|\uF002/);
+  const parts = value.split(/\uF001|\uF002/);
   if (parts.length > 1) {
     parts.forEach(function(part) {
       if (part === null || part === undefined || part === "") {
@@ -393,9 +393,9 @@ function processTextNode(state, node, data) {
       if (part.charAt(0) === "$") {
         part = envEval(state, part.slice(1), data, node.data);
       }
-      let cState = cloneState(state);
+      const cState = cloneState(state);
       handleAsync(part, node, function(reply, siblingNode) {
-        let doc = siblingNode.ownerDocument;
+        const doc = siblingNode.ownerDocument;
         if (reply == null) {
           reply = cState.options.blankNullUndefined ? "" : "" + reply;
         }
@@ -407,9 +407,9 @@ function processTextNode(state, node, data) {
           // NodeLists can be live, in which case maybeImportNode can
           // remove them from the document, and thus the NodeList, which in
           // turn breaks iteration. So first we clone the list
-          let list = Array.prototype.slice.call(reply, 0);
+          const list = Array.prototype.slice.call(reply, 0);
           list.forEach(function(child) {
-            let imported = maybeImportNode(cState, child, doc);
+            const imported = maybeImportNode(cState, child, doc);
             siblingNode.parentNode.insertBefore(imported, siblingNode);
           });
         } else {
@@ -446,7 +446,7 @@ function maybeImportNode(state, node, doc) {
 function handleAsync(thing, siblingNode, inserter) {
   if (thing != null && typeof thing.then === "function") {
     // Placeholder element to be replaced once we have the real data
-    let tempNode = siblingNode.ownerDocument.createElement("span");
+    const tempNode = siblingNode.ownerDocument.createElement("span");
     siblingNode.parentNode.insertBefore(tempNode, siblingNode);
     thing.then(function(delayed) {
       inserter(delayed, tempNode);
@@ -496,7 +496,7 @@ function property(state, path, data, newValue) {
     if (typeof path === "string") {
       path = path.split(".");
     }
-    let value = data[path[0]];
+    const value = data[path[0]];
     if (path.length === 1) {
       if (newValue !== undefined) {
         data[path[0]] = newValue;
@@ -545,10 +545,10 @@ function envEval(state, script, data, frame) {
     // So we create a function which has a parameter list the same as the
     // keys in 'data' and with 'script' as its function body.
     // We then call this function with the values in 'data'
-    let keys = allKeys(data);
-    let func = Function.apply(null, keys.concat("return " + script));
+    const keys = allKeys(data);
+    const func = Function.apply(null, keys.concat("return " + script));
 
-    let values = keys.map((key) => data[key]);
+    const values = keys.map((key) => data[key]);
     return func.apply(null, values);
 
     // TODO: The 'with' method is different from the code above in the value
@@ -570,8 +570,8 @@ function envEval(state, script, data, frame) {
  * Object.keys() that respects the prototype chain
  */
 function allKeys(data) {
-  let keys = [];
-  for (let key in data) {
+  const keys = [];
+  for (const key in data) {
     keys.push(key);
   }
   return keys;

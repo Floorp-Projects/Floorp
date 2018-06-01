@@ -91,14 +91,14 @@ var WaterfallView = extend(DetailsSubview, {
    *        The { startTime, endTime }, in milliseconds.
    */
   render: function(interval = {}) {
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     if (recording.isRecording()) {
       return;
     }
-    let startTime = interval.startTime || 0;
-    let endTime = interval.endTime || recording.getDuration();
-    let markers = recording.getMarkers();
-    let rootMarkerNode = this._prepareWaterfallTree(markers);
+    const startTime = interval.startTime || 0;
+    const endTime = interval.endTime || recording.getDuration();
+    const markers = recording.getMarkers();
+    const rootMarkerNode = this._prepareWaterfallTree(markers);
 
     this._populateWaterfallTree(rootMarkerNode, { startTime, endTime });
     this.emit(EVENTS.UI_WATERFALL_RENDERED);
@@ -109,9 +109,9 @@ var WaterfallView = extend(DetailsSubview, {
    * updating the markers detail view.
    */
   _onMarkerSelected: function(event, marker) {
-    let recording = PerformanceController.getCurrentRecording();
-    let frames = recording.getFrames();
-    let allocations = recording.getConfiguration().withAllocations;
+    const recording = PerformanceController.getCurrentRecording();
+    const frames = recording.getFrames();
+    const allocations = recording.getConfiguration().withAllocations;
 
     if (event === "selected") {
       this.details.render({ marker, frames, allocations });
@@ -155,14 +155,14 @@ var WaterfallView = extend(DetailsSubview, {
   _onShowAllocations: function(data) {
     let { endTime } = data;
     let startTime = 0;
-    let recording = PerformanceController.getCurrentRecording();
-    let markers = recording.getMarkers();
+    const recording = PerformanceController.getCurrentRecording();
+    const markers = recording.getMarkers();
 
     let lastGCMarkerFromPreviousCycle = null;
     let lastGCMarker = null;
     // Iterate over markers looking for the most recent GC marker
     // from the cycle before the marker's whose allocations we're interested in.
-    for (let marker of markers) {
+    for (const marker of markers) {
       // We found the marker whose allocations we're tracking; abort
       if (marker.start === endTime) {
         break;
@@ -193,12 +193,12 @@ var WaterfallView = extend(DetailsSubview, {
    * populate the waterfall tree.
    */
   _prepareWaterfallTree: function(markers) {
-    let cached = this._cache.get(markers);
+    const cached = this._cache.get(markers);
     if (cached) {
       return cached;
     }
 
-    let rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
+    const rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
 
     WaterfallUtils.collapseMarkersIntoNode({
       rootNode: rootMarkerNode,
@@ -226,14 +226,14 @@ var WaterfallView = extend(DetailsSubview, {
   _populateWaterfallTree: function(rootMarkerNode, interval) {
     this._recalculateBounds();
 
-    let doc = this.treeContainer.ownerDocument;
-    let startTime = interval.startTime | 0;
-    let endTime = interval.endTime | 0;
-    let dataScale = this.waterfallWidth / (endTime - startTime);
+    const doc = this.treeContainer.ownerDocument;
+    const startTime = interval.startTime | 0;
+    const endTime = interval.endTime | 0;
+    const dataScale = this.waterfallWidth / (endTime - startTime);
 
     this.canvas = TickUtils.drawWaterfallBackground(doc, dataScale, this.waterfallWidth);
 
-    let treeView = Waterfall({
+    const treeView = Waterfall({
       marker: rootMarkerNode,
       startTime,
       endTime,

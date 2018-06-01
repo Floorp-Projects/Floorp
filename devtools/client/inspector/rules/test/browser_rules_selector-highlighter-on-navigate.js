@@ -19,15 +19,15 @@ const TEST_URI_2 = "data:text/html,<html><body>test</body></html>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Clicking on a selector icon");
-  let icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");
+  const icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");
 
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  let isVisible = await onToggled;
+  const isVisible = await onToggled;
 
   ok(highlighters.selectorHighlighterShown, "The selectorHighlighterShown is set.");
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");

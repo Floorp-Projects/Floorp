@@ -33,11 +33,11 @@
     <script type="text/javascript">
       "use strict";
 
-      let canvas = [], gl = [];
-      let program = [];
-      let squareVerticesPositionBuffer = [];
-      let vertexPositionAttribute = [];
-      let colorUniform = [];
+      const canvas = [], gl = [];
+      const program = [];
+      const squareVerticesPositionBuffer = [];
+      const vertexPositionAttribute = [];
+      const colorUniform = [];
 
       window.onload = function() {
         for (let i = 0; i < 2; i++) {
@@ -52,8 +52,8 @@
       };
 
       function initProgram(i) {
-        let vertexShader = getShader(gl[i], "shader-vs");
-        let fragmentShader = getShader(gl[i], "shader-fs");
+        const vertexShader = getShader(gl[i], "shader-vs");
+        const fragmentShader = getShader(gl[i], "shader-fs");
 
         program[i] = gl[i].createProgram();
         gl[i].attachShader(program[i], vertexShader);
@@ -67,8 +67,8 @@
       }
 
       function getShader(gl, id) {
-        let script = document.getElementById(id);
-        let source = script.textContent;
+        const script = document.getElementById(id);
+        const source = script.textContent;
         let shader;
 
         if (script.type == "x-shader/x-fragment") {

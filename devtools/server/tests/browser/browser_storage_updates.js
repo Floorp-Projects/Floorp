@@ -185,14 +185,14 @@ add_task(async function() {
 
   initDebuggerServer();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = StorageFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = StorageFront(client, form);
 
   await front.listStores();
 
   for (let i = 0; i < TESTS.length; i++) {
-    let test = TESTS[i];
+    const test = TESTS[i];
     await runTest(test, front, i);
   }
 
@@ -207,16 +207,16 @@ function markOutMatched(toBeEmptied, data) {
   }
   ok(Object.keys(data).length, "At least one storage type should be present");
 
-  for (let storageType in toBeEmptied) {
+  for (const storageType in toBeEmptied) {
     if (!data[storageType]) {
       continue;
     }
     info("Testing for " + storageType);
-    for (let host in data[storageType]) {
+    for (const host in data[storageType]) {
       ok(toBeEmptied[storageType][host], "Host " + host + " found");
 
-      for (let item of data[storageType][host]) {
-        let index = toBeEmptied[storageType][host].indexOf(item);
+      for (const item of data[storageType][host]) {
+        const index = toBeEmptied[storageType][host].indexOf(item);
         ok(index > -1, "Item found - " + item);
         if (index > -1) {
           toBeEmptied[storageType][host].splice(index, 1);
@@ -261,12 +261,12 @@ function onStoresUpdate(expected, {added, changed, deleted}, index) {
 }
 
 async function runTest({action, expected}, front, index) {
-  let update = front.once("stores-update");
+  const update = front.once("stores-update");
 
   info("Running test at index " + index);
   await action();
 
-  let addedChangedDeleted = await update;
+  const addedChangedDeleted = await update;
 
   onStoresUpdate(expected, addedChangedDeleted, index);
 }
@@ -299,7 +299,7 @@ async function testClearLocalAndSessionStores(front) {
 
 function storesCleared(data) {
   if (data.sessionStorage || data.localStorage) {
-    let hosts = data.sessionStorage || data.localStorage;
+    const hosts = data.sessionStorage || data.localStorage;
     info("Stores cleared required for session storage");
     is(hosts.length, 1, "number of hosts is 1");
     is(hosts[0], "http://test1.example.org",

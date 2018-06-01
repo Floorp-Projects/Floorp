@@ -6,8 +6,8 @@
 const TEST_URL = "data:text/html,test for toolbox being ready";
 
 add_task(async function() {
-  let tab = await addTab(TEST_URL);
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab(TEST_URL);
+  const target = TargetFactory.forTab(tab);
 
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   ok(toolbox.isReady, "toolbox isReady is set");

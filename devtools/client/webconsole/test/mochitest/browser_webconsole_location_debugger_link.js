@@ -31,9 +31,9 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   await testOpenInDebugger(hud, toolbox, "document.bar");
 

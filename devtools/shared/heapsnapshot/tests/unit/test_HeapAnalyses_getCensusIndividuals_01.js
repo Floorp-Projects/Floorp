@@ -59,7 +59,7 @@ add_task(async function() {
          "response.nodes.length === Math.min(MAX_INDIVIDUALS, censusNode.count)");
 
       let lastRetainedSize = Infinity;
-      for (let individual of response.nodes) {
+      for (const individual of response.nodes) {
         equal(typeof individual.nodeId, "number",
               "individual.nodeId should be a number");
         ok(individual.retainedSize <= lastRetainedSize,
@@ -74,7 +74,7 @@ add_task(async function() {
     }
 
     if (censusNode.children) {
-      for (let child of censusNode.children) {
+      for (const child of censusNode.children) {
         await assertCanGetIndividuals(child);
       }
     }

@@ -62,9 +62,9 @@ add_task(async function() {
                     ["1", "4", "10", "abc", "hello"]);
 
   // Typed arrays.
-  for (let type of typedArrayTypes) {
+  for (const type of typedArrayTypes) {
     // size of 80 is enough to get 11 items on all ArrayTypes except for Float64Array.
-    let size = type === "Float64Array" ? 120 : 80;
+    const size = type === "Float64Array" ? 120 : 80;
     await testKeyOrder(hud, `new ${type}(new ArrayBuffer(${size}))`,
                       ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
   }
@@ -74,10 +74,10 @@ async function testKeyOrder(hud, command, expectedKeys) {
   info(`Testing command: [${command}]`);
 
   info("Wait for a new .result message with an object inspector to be displayed");
-  let resultsCount = findMessages(hud, "", ".result").length;
+  const resultsCount = findMessages(hud, "", ".result").length;
   hud.jsterm.execute(command);
-  let oi = await waitFor(() => {
-    let results = findMessages(hud, "", ".result");
+  const oi = await waitFor(() => {
+    const results = findMessages(hud, "", ".result");
     if (results.length == resultsCount + 1) {
       return results.pop().querySelector(".tree");
     }
@@ -85,16 +85,16 @@ async function testKeyOrder(hud, command, expectedKeys) {
   });
 
   info("Expand object inspector");
-  let onOiExpanded = waitFor(() => {
+  const onOiExpanded = waitFor(() => {
     return oi.querySelectorAll(".node").length >= expectedKeys.length;
   });
   oi.querySelector(".arrow").click();
   await onOiExpanded;
 
-  let labelNodes = oi.querySelectorAll(".object-label");
+  const labelNodes = oi.querySelectorAll(".object-label");
   for (let i = 0; i < expectedKeys.length; i++) {
-    let key = expectedKeys[i];
-    let labelNode = labelNodes[i];
+    const key = expectedKeys[i];
+    const labelNode = labelNodes[i];
     is(labelNode.textContent, key, `Object inspector key is sorted as expected (${key})`);
   }
 }

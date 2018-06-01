@@ -79,7 +79,7 @@ function matchRequest(channel, filters) {
   }
 
   if (filters.outerWindowID) {
-    let topFrame = NetworkHelper.getTopFrameForRequest(channel);
+    const topFrame = NetworkHelper.getTopFrameForRequest(channel);
     // topFrame is typically null for some chrome requests like favicons
     if (topFrame) {
       try {
@@ -94,7 +94,7 @@ function matchRequest(channel, filters) {
   }
 
   if (filters.appId) {
-    let appId = NetworkHelper.getAppIdForRequest(channel);
+    const appId = NetworkHelper.getAppIdForRequest(channel);
     if (appId && appId == filters.appId) {
       return true;
     }
@@ -134,7 +134,7 @@ ChannelEventSink.prototype = {
 
   // eslint-disable-next-line no-shadow
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
-    for (let collector of this.collectors) {
+    for (const collector of this.collectors) {
       try {
         collector.onChannelRedirect(oldChannel, newChannel, flags);
       } catch (ex) {
@@ -198,7 +198,7 @@ StackTraceCollector.prototype = {
   },
 
   observe(subject) {
-    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     if (!matchRequest(channel, this.filters)) {
       return;
@@ -207,7 +207,7 @@ StackTraceCollector.prototype = {
     // Convert the nsIStackFrame XPCOM objects to a nice JSON that can be
     // passed around through message managers etc.
     let frame = components.stack;
-    let stacktrace = [];
+    const stacktrace = [];
     if (frame && frame.caller) {
       frame = frame.caller;
       while (frame) {
@@ -235,8 +235,8 @@ StackTraceCollector.prototype = {
       return;
     }
 
-    let oldId = oldChannel.channelId;
-    let stacktrace = this.stacktracesById.get(oldId);
+    const oldId = oldChannel.channelId;
+    const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
       this.stacktracesById.delete(oldId);
       this._saveStackTrace(newChannel, stacktrace);
@@ -244,7 +244,7 @@ StackTraceCollector.prototype = {
   },
 
   getStackTrace(channelId) {
-    let trace = this.stacktracesById.get(channelId);
+    const trace = this.stacktracesById.get(channelId);
     this.stacktracesById.delete(channelId);
     return trace;
   }
@@ -279,7 +279,7 @@ function NetworkResponseListener(owner, httpActivity) {
   this.truncated = false;
   // Note that this is really only needed for the non-e10s case.
   // See bug 1309523.
-  let channel = this.httpActivity.channel;
+  const channel = this.httpActivity.channel;
   this._wrappedNotificationCallbacks = channel.notificationCallbacks;
   channel.notificationCallbacks = this;
 }
@@ -314,7 +314,7 @@ NetworkResponseListener.prototype = {
       return;
     }
     try {
-      let impl = this._wrappedNotificationCallbacks.getInterface(iid);
+      const impl = this._wrappedNotificationCallbacks.getInterface(iid);
       impl[method].apply(impl, args);
     } catch (e) {
       if (e.result != Cr.NS_ERROR_NO_INTERFACE) {
@@ -405,12 +405,12 @@ NetworkResponseListener.prototype = {
    */
   onDataAvailable: function(request, context, inputStream, offset, count) {
     this._findOpenResponse();
-    let data = NetUtil.readInputStreamToString(inputStream, count);
+    const data = NetUtil.readInputStreamToString(inputStream, count);
 
     this.bodySize += count;
 
     if (!this.httpActivity.discardResponseBody) {
-      let limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
+      const limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
       if (this.receivedData.length <= limit || limit == 0) {
         this.receivedData +=
           NetworkHelper.convertToUnicode(data, request.contentCharset);
@@ -442,7 +442,7 @@ NetworkResponseListener.prototype = {
     // we pass the data from our pipe to the converter.
     this.offset = 0;
 
-    let channel = this.request;
+    const channel = this.request;
 
     // Bug 1372115 - We should load bytecode cached requests from cache as the actual
     // channel content is going to be optimized data that reflects platform internals
@@ -458,7 +458,7 @@ NetworkResponseListener.prototype = {
       // Accessing `alternativeDataType` for some SW requests throws.
     }
     if (isOptimizedContent) {
-      let charset = this.request.contentCharset || this.httpActivity.charset;
+      const charset = this.request.contentCharset || this.httpActivity.charset;
       NetworkHelper.loadFromCache(this.httpActivity.url, charset,
                                   this._onComplete.bind(this));
       return;
@@ -474,15 +474,15 @@ NetworkResponseListener.prototype = {
         channel instanceof Ci.nsIEncodedChannel &&
         channel.contentEncodings &&
         !channel.applyConversion) {
-      let encodingHeader = channel.getResponseHeader("Content-Encoding");
-      let scs = Cc["@mozilla.org/streamConverters;1"]
+      const encodingHeader = channel.getResponseHeader("Content-Encoding");
+      const scs = Cc["@mozilla.org/streamConverters;1"]
         .getService(Ci.nsIStreamConverterService);
-      let encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
+      const encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
       let nextListener = this;
-      let acceptedEncodings = ["gzip", "deflate", "br", "x-gzip", "x-deflate"];
-      for (let i in encodings) {
+      const acceptedEncodings = ["gzip", "deflate", "br", "x-gzip", "x-deflate"];
+      for (const i in encodings) {
         // There can be multiple conversions applied
-        let enc = encodings[i].toLowerCase();
+        const enc = encodings[i].toLowerCase();
         if (acceptedEncodings.indexOf(enc) > -1) {
           this.converter = scs.asyncConvertData(enc, "uncompressed",
                                                 nextListener, null);
@@ -513,8 +513,8 @@ NetworkResponseListener.prototype = {
     // the nsIRequest received in onStartRequest. If response to this request
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
-    let secinfo = this.httpActivity.channel.securityInfo;
-    let info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
+    const secinfo = this.httpActivity.channel.securityInfo;
+    const info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
 
     this.httpActivity.owner.addSecurityInfo(info);
   }),
@@ -524,7 +524,7 @@ NetworkResponseListener.prototype = {
    * @private
    */
   _fetchCacheInformation: function() {
-    let httpActivity = this.httpActivity;
+    const httpActivity = this.httpActivity;
     CacheEntry.getCacheEntry(this.request, (descriptor) => {
       httpActivity.owner.addResponseCache({
         responseCache: descriptor
@@ -579,8 +579,8 @@ NetworkResponseListener.prototype = {
       return;
     }
 
-    let channel = this.httpActivity.channel;
-    let openResponse = this.owner.openResponses.get(channel);
+    const channel = this.httpActivity.channel;
+    const openResponse = this.owner.openResponses.get(channel);
     if (!openResponse) {
       return;
     }
@@ -614,7 +614,7 @@ NetworkResponseListener.prototype = {
     } else if (!this.httpActivity.discardResponseBody &&
                this.httpActivity.responseStatus == 304) {
       // Response is cached, so we load it from cache.
-      let charset = this.request.contentCharset || this.httpActivity.charset;
+      const charset = this.request.contentCharset || this.httpActivity.charset;
       NetworkHelper.loadFromCache(this.httpActivity.url, charset,
                                   this._onComplete.bind(this));
     } else {
@@ -631,7 +631,7 @@ NetworkResponseListener.prototype = {
    *        from the cache.
    */
   _onComplete: function(data) {
-    let response = {
+    const response = {
       mimeType: "",
       text: data || "",
     };
@@ -853,7 +853,7 @@ NetworkMonitor.prototype = {
   },
 
   _serviceWorkerRequest: function(subject, topic, data) {
-    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     if (!matchRequest(channel, this.filters)) {
       return;
@@ -887,24 +887,24 @@ NetworkMonitor.prototype = {
       return;
     }
 
-    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     if (!matchRequest(channel, this.filters)) {
       return;
     }
 
-    let response = {
+    const response = {
       id: gSequenceId(),
       channel: channel,
       headers: [],
       cookies: [],
     };
 
-    let setCookieHeaders = [];
+    const setCookieHeaders = [];
 
     channel.visitOriginalResponseHeaders({
       visitHeader: function(name, value) {
-        let lowerName = name.toLowerCase();
+        const lowerName = name.toLowerCase();
         if (lowerName == "set-cookie") {
           setCookieHeaders.push(value);
         }
@@ -919,14 +919,14 @@ NetworkMonitor.prototype = {
 
     if (setCookieHeaders.length) {
       response.cookies = setCookieHeaders.reduce((result, header) => {
-        let cookies = NetworkHelper.parseSetCookieHeader(header);
+        const cookies = NetworkHelper.parseSetCookieHeader(header);
         return result.concat(cookies);
       }, []);
     }
 
     // Determine the HTTP version.
-    let httpVersionMaj = {};
-    let httpVersionMin = {};
+    const httpVersionMaj = {};
+    const httpVersionMin = {};
 
     channel.QueryInterface(Ci.nsIHttpChannelInternal);
     channel.getResponseVersion(httpVersionMaj, httpVersionMin);
@@ -941,13 +941,13 @@ NetworkMonitor.prototype = {
     if (topic === "http-on-examine-cached-response") {
       // Service worker requests emits cached-reponse notification on non-e10s,
       // and we fake one on e10s.
-      let fromServiceWorker = this.interceptedChannels.has(channel);
+      const fromServiceWorker = this.interceptedChannels.has(channel);
       this.interceptedChannels.delete(channel);
 
       // If this is a cached response, there never was a request event
       // so we need to construct one here so the frontend gets all the
       // expected events.
-      let httpActivity = this._createNetworkEvent(channel, {
+      const httpActivity = this._createNetworkEvent(channel, {
         fromCache: !fromServiceWorker,
         fromServiceWorker: fromServiceWorker
       });
@@ -962,7 +962,7 @@ NetworkMonitor.prototype = {
 
       // There also is never any timing events, so we can fire this
       // event with zeroed out values.
-      let timings = this._setupHarTimings(httpActivity, true);
+      const timings = this._setupHarTimings(httpActivity, true);
       httpActivity.owner.addEventTimings(timings.total, timings.timings,
                                          timings.offsets);
     }
@@ -977,12 +977,12 @@ NetworkMonitor.prototype = {
    * @returns void
    */
   _httpModifyExaminer: function(subject) {
-    let throttler = this._getThrottler();
+    const throttler = this._getThrottler();
     if (throttler) {
-      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      const channel = subject.QueryInterface(Ci.nsIHttpChannel);
       if (matchRequest(channel, this.filters)) {
         // Read any request body here, before it is throttled.
-        let httpActivity = this.createOrGetActivityObject(channel);
+        const httpActivity = this.createOrGetActivityObject(channel);
         this._onRequestBodySent(httpActivity);
         throttler.manageUpload(channel);
       }
@@ -997,11 +997,11 @@ NetworkMonitor.prototype = {
   _dispatchActivity: function(httpActivity, channel, activityType,
                                activitySubtype, timestamp, extraSizeData,
                                extraStringData) {
-    let transCodes = this.httpTransactionCodes;
+    const transCodes = this.httpTransactionCodes;
 
     // Store the time information for this activity subtype.
     if (activitySubtype in transCodes) {
-      let stage = transCodes[activitySubtype];
+      const stage = transCodes[activitySubtype];
       if (stage in httpActivity.timings) {
         httpActivity.timings[stage].last = timestamp;
       } else {
@@ -1067,7 +1067,7 @@ NetworkMonitor.prototype = {
 
     // Iterate over all currently ongoing requests. If channel can't
     // be found within them, then exit this function.
-    let httpActivity = this._findActivityObject(channel);
+    const httpActivity = this._findActivityObject(channel);
     if (!httpActivity) {
       return;
     }
@@ -1077,7 +1077,7 @@ NetworkMonitor.prototype = {
     // after some time has elapsed.
     if (httpActivity.downloadThrottle &&
         this.httpDownloadActivities.includes(activitySubtype)) {
-      let callback = this._dispatchActivity.bind(this);
+      const callback = this._dispatchActivity.bind(this);
       httpActivity.downloadThrottle
         .addActivityCallback(callback, httpActivity, channel, activityType,
                              activitySubtype, timestamp, extraSizeData,
@@ -1094,7 +1094,7 @@ NetworkMonitor.prototype = {
    */
   _createNetworkEvent: function(channel, { timestamp, extraStringData,
                                            fromCache, fromServiceWorker }) {
-    let httpActivity = this.createOrGetActivityObject(channel);
+    const httpActivity = this.createOrGetActivityObject(channel);
 
     channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
     httpActivity.private = channel.isChannelPrivate;
@@ -1106,7 +1106,7 @@ NetworkMonitor.prototype = {
       };
     }
 
-    let event = {};
+    const event = {};
     event.method = channel.requestMethod;
     event.channelId = channel.channelId;
     event.url = channel.URI.spec;
@@ -1153,8 +1153,8 @@ NetworkMonitor.prototype = {
          causeType === Ci.nsIContentPolicy.TYPE_FETCH);
 
     // Determine the HTTP version.
-    let httpVersionMaj = {};
-    let httpVersionMin = {};
+    const httpVersionMaj = {};
+    const httpVersionMin = {};
     channel.QueryInterface(Ci.nsIHttpChannelInternal);
     channel.getRequestVersion(httpVersionMaj, httpVersionMin);
 
@@ -1164,7 +1164,7 @@ NetworkMonitor.prototype = {
     event.discardRequestBody = !this.saveRequestAndResponseBodies;
     event.discardResponseBody = !this.saveRequestAndResponseBodies;
 
-    let headers = [];
+    const headers = [];
     let cookies = [];
     let cookieHeader = null;
 
@@ -1241,8 +1241,8 @@ NetworkMonitor.prototype = {
   createOrGetActivityObject: function(channel) {
     let httpActivity = this._findActivityObject(channel);
     if (!httpActivity) {
-      let win = NetworkHelper.getWindowForRequest(channel);
-      let charset = win ? win.document.characterSet : null;
+      const win = NetworkHelper.getWindowForRequest(channel);
+      const charset = win ? win.document.characterSet : null;
 
       httpActivity = {
         id: gSequenceId(),
@@ -1278,11 +1278,11 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object we are tracking.
    */
   _setupResponseListener: function(httpActivity, fromCache) {
-    let channel = httpActivity.channel;
+    const channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
 
     if (!fromCache) {
-      let throttler = this._getThrottler();
+      const throttler = this._getThrottler();
       if (throttler) {
         httpActivity.downloadThrottle = throttler.manage(channel);
       }
@@ -1292,23 +1292,23 @@ NetworkMonitor.prototype = {
     // This allows us to buffer the data we are receiving and read it
     // asynchronously.
     // Both ends of the pipe must be blocking.
-    let sink = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+    const sink = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
 
     // The streams need to be blocking because this is required by the
     // stream tee.
     sink.init(false, false, this.responsePipeSegmentSize, PR_UINT32_MAX, null);
 
     // Add listener for the response body.
-    let newListener = new NetworkResponseListener(this, httpActivity);
+    const newListener = new NetworkResponseListener(this, httpActivity);
 
     // Remember the input stream, so it isn't released by GC.
     newListener.inputStream = sink.inputStream;
     newListener.sink = sink;
 
-    let tee = Cc["@mozilla.org/network/stream-listener-tee;1"]
+    const tee = Cc["@mozilla.org/network/stream-listener-tee;1"]
               .createInstance(Ci.nsIStreamListenerTee);
 
-    let originalListener = channel.setNewListener(tee);
+    const originalListener = channel.setNewListener(tee);
 
     tee.init(originalListener, sink.outputStream, newListener);
   },
@@ -1340,7 +1340,7 @@ NetworkMonitor.prototype = {
       // function is called for image requests as well but these
       // are not web pages and as such don't store the posted text
       // in the cache of the webpage.
-      let webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+      const webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIWebNavigation);
       sentBody = NetworkHelper
                  .readPostTextFromPageViaWebNav(webNav, httpActivity.charset);
@@ -1373,11 +1373,11 @@ NetworkMonitor.prototype = {
     // that is not trivial to do in an accurate manner. Hence, we save the
     // response headers in this._httpResponseExaminer().
 
-    let headers = extraStringData.split(/\r\n|\n|\r/);
-    let statusLine = headers.shift();
-    let statusLineArray = statusLine.split(" ");
+    const headers = extraStringData.split(/\r\n|\n|\r/);
+    const statusLine = headers.shift();
+    const statusLineArray = statusLine.split(" ");
 
-    let response = {};
+    const response = {};
     response.httpVersion = statusLineArray.shift();
     response.remoteAddress = httpActivity.channel.remoteAddress;
     response.remotePort = httpActivity.channel.remotePort;
@@ -1413,7 +1413,7 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object we work with.
    */
   _onTransactionClose: function(httpActivity) {
-    let result = this._setupHarTimings(httpActivity);
+    const result = this._setupHarTimings(httpActivity);
     httpActivity.owner.addEventTimings(result.total, result.timings,
                                        result.offsets);
     this.openRequests.delete(httpActivity.channel);
@@ -1462,8 +1462,8 @@ NetworkMonitor.prototype = {
       };
     }
 
-    let timings = httpActivity.timings;
-    let harTimings = {};
+    const timings = httpActivity.timings;
+    const harTimings = {};
     // If the TCP Fast Open option or tls1.3 0RTT is used tls and data can
     // be dispatched in SYN packet and not after tcp socket is connected.
     // To demostrate this properly we will calculated TLS and send start time
@@ -1516,7 +1516,7 @@ NetworkMonitor.prototype = {
     // sometimes the connection information events are attached to a speculative
     // channel instead of this one, but necko might glue them back together in the
     // nsITimedChannel interface used by Resource and Navigation Timing
-    let timedChannel = httpActivity.channel.QueryInterface(Ci.nsITimedChannel);
+    const timedChannel = httpActivity.channel.QueryInterface(Ci.nsITimedChannel);
 
     let tcTcpConnectEndTime = 0;
     let tcConnectStartTime = 0;
@@ -1627,15 +1627,15 @@ NetworkMonitor.prototype = {
     }
 
     if (secureConnectionStartTimeRelative) {
-      let time = Math.max(Math.round(secureConnectionStartTime / 1000), -1);
+      const time = Math.max(Math.round(secureConnectionStartTime / 1000), -1);
       secureConnectionStartTime = time;
     }
     if (startSendingTimeRelative) {
-      let time = Math.max(Math.round(startSendingTime / 1000), -1);
+      const time = Math.max(Math.round(startSendingTime / 1000), -1);
       startSendingTime = time;
     }
 
-    let ot = this._calculateOffsetAndTotalTime(harTimings,
+    const ot = this._calculateOffsetAndTotalTime(harTimings,
                                                secureConnectionStartTime,
                                                startSendingTimeRelative,
                                                secureConnectionStartTimeRelative,
@@ -1653,8 +1653,8 @@ NetworkMonitor.prototype = {
                                           secureConnectionStartTimeRelative,
                                           startSendingTime) {
     let totalTime = 0;
-    for (let timing in harTimings) {
-      let time = Math.max(Math.round(harTimings[timing] / 1000), -1);
+    for (const timing in harTimings) {
+      const time = Math.max(Math.round(harTimings[timing] / 1000), -1);
       harTimings[timing] = time;
       if ((time > -1) && (timing != "connect") && (timing != "ssl")) {
         totalTime += time;
@@ -1669,7 +1669,7 @@ NetworkMonitor.prototype = {
       totalTime += harTimings.ssl;
     }
 
-    let offsets = {};
+    const offsets = {};
     offsets.blocked = 0;
     offsets.dns = harTimings.blocked;
     offsets.connect = offsets.dns + harTimings.dns;
@@ -1800,7 +1800,7 @@ NetworkMonitorChild.prototype = {
       setupParent: "setupParentProcess"
     });
 
-    let mm = this._messageManager;
+    const mm = this._messageManager;
     mm.addMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
     mm.addMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
     mm.sendAsyncMessage(this._msgName, {
@@ -1810,7 +1810,7 @@ NetworkMonitorChild.prototype = {
   },
 
   _onNewEvent: DevToolsUtils.makeInfallible(function _onNewEvent(msg) {
-    let {id, event} = msg.data;
+    const {id, event} = msg.data;
 
     // Try to add stack trace to the event data received from parent
     if (this.owner.stackTraceCollector) {
@@ -1818,14 +1818,14 @@ NetworkMonitorChild.prototype = {
         this.owner.stackTraceCollector.getStackTrace(event.channelId);
     }
 
-    let actor = this.owner.onNetworkEvent(event);
+    const actor = this.owner.onNetworkEvent(event);
     this._netEvents.set(id, Cu.getWeakReference(actor));
   }),
 
   _onUpdateEvent: DevToolsUtils.makeInfallible(function _onUpdateEvent(msg) {
-    let {id, method, args} = msg.data;
-    let weakActor = this._netEvents.get(id);
-    let actor = weakActor ? weakActor.get() : null;
+    const {id, method, args} = msg.data;
+    const weakActor = this._netEvents.get(id);
+    const actor = weakActor ? weakActor.get() : null;
     if (!actor) {
       console.error(`Received ${this._msgName}:updateEvent for unknown event ID: ${id}`);
       return;
@@ -1839,7 +1839,7 @@ NetworkMonitorChild.prototype = {
   }),
 
   destroy: function() {
-    let mm = this._messageManager;
+    const mm = this._messageManager;
     try {
       mm.removeMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
       mm.removeMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
@@ -1883,8 +1883,8 @@ exports.NetworkEventActorProxy = NetworkEventActorProxy;
 
 NetworkEventActorProxy.methodFactory = function(method) {
   return DevToolsUtils.makeInfallible(function() {
-    let args = Array.slice(arguments);
-    let mm = this.messageManager;
+    const args = Array.slice(arguments);
+    const mm = this.messageManager;
     mm.sendAsyncMessage(`${this._msgName}:updateEvent`, {
       id: this.id,
       method: method,
@@ -1904,7 +1904,7 @@ NetworkEventActorProxy.prototype = {
    *         This object.
    */
   init: DevToolsUtils.makeInfallible(function(event) {
-    let mm = this.messageManager;
+    const mm = this.messageManager;
     mm.sendAsyncMessage(`${this._msgName}:newEvent`, {
       id: this.id,
       event: event,
@@ -1915,12 +1915,12 @@ NetworkEventActorProxy.prototype = {
 
 (function() {
   // Listeners for new network event data coming from the NetworkMonitor.
-  let methods = ["addRequestHeaders", "addRequestCookies", "addRequestPostData",
-                 "addResponseStart", "addSecurityInfo", "addResponseHeaders",
-                 "addResponseCookies", "addResponseContent", "addResponseCache",
-                 "addEventTimings"];
-  let factory = NetworkEventActorProxy.methodFactory;
-  for (let method of methods) {
+  const methods = ["addRequestHeaders", "addRequestCookies", "addRequestPostData",
+                   "addResponseStart", "addSecurityInfo", "addResponseHeaders",
+                   "addResponseCookies", "addResponseContent", "addResponseCache",
+                   "addEventTimings"];
+  const factory = NetworkEventActorProxy.methodFactory;
+  for (const method of methods) {
     NetworkEventActorProxy.prototype[method] = factory(method);
   }
 })();
@@ -1966,7 +1966,7 @@ NetworkMonitorParent.prototype = {
 
   setMessageManager(mm) {
     if (this.messageManager) {
-      let oldMM = this.messageManager;
+      const oldMM = this.messageManager;
       oldMM.removeMessageListener(this._msgName, this.onNetMonitorMessage);
     }
     this.messageManager = mm;
@@ -1983,12 +1983,12 @@ NetworkMonitorParent.prototype = {
    *        Message from the content.
    */
   onNetMonitorMessage: DevToolsUtils.makeInfallible(function(msg) {
-    let {action} = msg.json;
+    const {action} = msg.json;
     // Pipe network monitor data from parent to child via the message manager.
     switch (action) {
       case "start":
         if (!this.netMonitor) {
-          let {appId, outerWindowID} = msg.json;
+          const {appId, outerWindowID} = msg.json;
           this.netMonitor = new NetworkMonitor({
             outerWindowID,
             appId,
@@ -1997,8 +1997,8 @@ NetworkMonitorParent.prototype = {
         }
         break;
       case "setPreferences": {
-        let {preferences} = msg.json;
-        for (let key of Object.keys(preferences)) {
+        const {preferences} = msg.json;
+        for (const key of Object.keys(preferences)) {
           if ((key == "saveRequestAndResponseBodies" ||
                key == "throttleData") && this.netMonitor) {
             this.netMonitor[key] = preferences[key];
@@ -2199,10 +2199,10 @@ ConsoleProgressListener.prototype = {
 
     let uri = null;
     if (request instanceof Ci.imgIRequest) {
-      let imgIRequest = request.QueryInterface(Ci.imgIRequest);
+      const imgIRequest = request.QueryInterface(Ci.imgIRequest);
       uri = imgIRequest.URI;
     } else if (request instanceof Ci.nsIChannel) {
-      let nsIChannel = request.QueryInterface(Ci.nsIChannel);
+      const nsIChannel = request.QueryInterface(Ci.nsIChannel);
       uri = nsIChannel.URI;
     }
 
@@ -2220,10 +2220,10 @@ ConsoleProgressListener.prototype = {
    * @private
    */
   _checkLocationChange: function(progress, request, state) {
-    let isStart = state & Ci.nsIWebProgressListener.STATE_START;
-    let isStop = state & Ci.nsIWebProgressListener.STATE_STOP;
-    let isNetwork = state & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-    let isWindow = state & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
+    const isStart = state & Ci.nsIWebProgressListener.STATE_START;
+    const isStop = state & Ci.nsIWebProgressListener.STATE_STOP;
+    const isNetwork = state & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+    const isWindow = state & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
 
     // Skip non-interesting states.
     if (!isNetwork || !isWindow || progress.DOMWindow != this.window) {

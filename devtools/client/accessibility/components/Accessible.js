@@ -37,7 +37,7 @@ class AccessiblePropertyClass extends Component {
   }
 
   componentDidUpdate({ object: prevObject, accessible: prevAccessible }) {
-    let { accessible, object, focused } = this.props;
+    const { accessible, object, focused } = this.props;
     // Fast check if row is focused or if the value did not update.
     if (focused || accessible !== prevAccessible || prevObject === object ||
         (object && prevObject && typeof object === "object")) {
@@ -48,7 +48,7 @@ class AccessiblePropertyClass extends Component {
   }
 
   flashRow() {
-    let row = findDOMNode(this);
+    const row = findDOMNode(this);
     flashElementOn(row);
     if (this._flashMutationTimer) {
       clearTimeout(this._flashMutationTimer);
@@ -96,7 +96,7 @@ class Accessible extends Component {
   }
 
   componentWillReceiveProps({ accessible }) {
-    let oldAccessible = this.props.accessible;
+    const oldAccessible = this.props.accessible;
 
     if (oldAccessible) {
       if (accessible && accessible.actorID === oldAccessible.actorID) {
@@ -113,21 +113,21 @@ class Accessible extends Component {
   componentWillUnmount() {
     window.off(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED, this.onAccessibleInspected);
 
-    let { accessible } = this.props;
+    const { accessible } = this.props;
     if (accessible) {
       ACCESSIBLE_EVENTS.forEach(event => accessible.off(event, this.update));
     }
   }
 
   onAccessibleInspected() {
-    let { props } = this.refs;
+    const { props } = this.refs;
     if (props) {
       props.refs.tree.focus();
     }
   }
 
   update() {
-    let { dispatch, accessible } = this.props;
+    const { dispatch, accessible } = this.props;
     if (gToolbox) {
       dispatch(updateDetails(gToolbox.walker, accessible));
     }
@@ -196,7 +196,7 @@ class Accessible extends Component {
 
   renderItem(item, depth, focused, arrow, expanded) {
     const object = item.contents;
-    let valueProps = {
+    const valueProps = {
       object,
       mode: MODE.TINY,
       title: "Object",
@@ -210,7 +210,7 @@ class Accessible extends Component {
       valueProps.onInspectIconClick = () => this.selectNode(this.props.DOMNode);
     }
 
-    let classList = [ "node", "object-node" ];
+    const classList = [ "node", "object-node" ];
     if (focused) {
       classList.push("focused");
     }
@@ -278,11 +278,11 @@ class Accessible extends Component {
  * @return {Object?}        Possibly found focused item.
  */
 const findFocused = (focused, items) => {
-  for (let item of items) {
+  for (const item of items) {
     if (item.path === focused) {
       return item;
     }
-    let found = findFocused(focused, item.children);
+    const found = findFocused(focused, item.children);
     if (found) {
       return found;
     }
@@ -306,12 +306,12 @@ const isNode = value => value && value.typeName === "domnode";
  * @returns {Object} a grip-like object that can be used with Reps.
  */
 const translateNodeFrontToGrip = nodeFront => {
-  let { attributes, actorID, typeName, nodeName, nodeType } = nodeFront;
+  const { attributes, actorID, typeName, nodeName, nodeType } = nodeFront;
 
   // The main difference between NodeFront and grips is that attributes are treated as
   // a map in grips and as an array in NodeFronts.
-  let attributesMap = {};
-  for (let { name, value } of attributes) {
+  const attributesMap = {};
+  for (const { name, value } of attributes) {
     attributesMap[name] = value;
   }
 
@@ -339,7 +339,7 @@ const translateNodeFrontToGrip = nodeFront => {
 const makeItemsForDetails = (props, parentPath) =>
   Object.getOwnPropertyNames(props).map(name => {
     let children = [];
-    let path = `${parentPath}/${name}`;
+    const path = `${parentPath}/${name}`;
     let contents = props[name];
 
     if (contents) {
@@ -370,16 +370,16 @@ const makeParentMap = (items) => {
 };
 
 const mapStateToProps = ({ details }) => {
-  let { accessible, DOMNode } = details;
+  const { accessible, DOMNode } = details;
   if (!accessible || !DOMNode) {
     return {};
   }
 
-  let items = makeItemsForDetails(ORDERED_PROPS.reduce((props, key) => {
+  const items = makeItemsForDetails(ORDERED_PROPS.reduce((props, key) => {
     props[key] = key === "DOMNode" ? DOMNode : accessible[key];
     return props;
   }, {}), "");
-  let parents = makeParentMap(items);
+  const parents = makeParentMap(items);
 
   return { accessible, DOMNode, items, parents };
 };

@@ -21,15 +21,15 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Enter the test value in the search filter");
   await setSearchFilter(view, SEARCH);
 
   info("Start entering a new property in the rule");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let rule = ruleEditor.rule;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const rule = ruleEditor.rule;
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Check that the correct rules are visible");
@@ -56,7 +56,7 @@ add_task(async function() {
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.styleDocument.activeElement);
-  let propEditor = ruleEditor.rule.textProps[2].editor;
+  const propEditor = ruleEditor.rule.textProps[2].editor;
 
   info("Entering a value and bluring the field to expect a rule change");
   onRuleViewChanged = view.once("ruleview-changed");

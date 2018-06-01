@@ -30,7 +30,7 @@ class Provider {
       return [];
     }
 
-    let obj = this.accessibles.get(accessible.actorID);
+    const obj = this.accessibles.get(accessible.actorID);
     if (!obj || !obj.children) {
       return this.dispatch(fetchChildren(accessible));
     }

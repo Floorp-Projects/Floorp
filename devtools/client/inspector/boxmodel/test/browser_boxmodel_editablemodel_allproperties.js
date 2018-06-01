@@ -16,7 +16,7 @@ const TEST_URI = "<style>" +
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await testEditing(inspector, boxmodel, testActor);
   await testEditingAndCanceling(inspector, boxmodel, testActor);
@@ -32,11 +32,12 @@ async function testEditing(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  const span =
+    boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
@@ -63,11 +64,11 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
@@ -91,11 +92,11 @@ async function testDeleting(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
@@ -122,11 +123,11 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 

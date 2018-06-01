@@ -8,13 +8,13 @@
  */
 
 add_task(async function() {
-  let { tab, monitor, toolbox} = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  const { tab, monitor, toolbox} = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let contextMenuDoc = monitor.panelWin.parent.document;
+  const { document, store, windowRequire } = monitor.panelWin;
+  const contextMenuDoc = monitor.panelWin.parent.document;
   // Avoid async processing
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
@@ -27,7 +27,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[1]);
   await wait;
 
-  let onStyleEditorReady = toolbox.once("styleeditor-ready");
+  const onStyleEditorReady = toolbox.once("styleeditor-ready");
   monitor.panelWin.parent.document
     .querySelector("#request-list-context-open-in-style-editor").click();
   await onStyleEditorReady;

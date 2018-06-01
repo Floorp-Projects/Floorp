@@ -166,7 +166,7 @@ function run_test() {
   DebuggerServer.init();
 
   Assert.throws(() => {
-    let badActor = protocol.ActorClassWithSpec({}, {
+    const badActor = protocol.ActorClassWithSpec({}, {
       missing: protocol.preEvent("missing-event", function() {
       })
     });
@@ -182,8 +182,8 @@ function run_test() {
     /Unknown type:/, "Should throw for unknown type");
   Assert.throws(() => protocol.types.getType("unknown:number"),
     /Unknown collection type:/, "Should throw for unknown collection type");
-  let trace = connectPipeTracing();
-  let client = new DebuggerClient(trace);
+  const trace = connectPipeTracing();
+  const client = new DebuggerClient(trace);
   let rootClient;
 
   client.connect().then(([applicationType, traits]) => {
@@ -275,7 +275,7 @@ function run_test() {
 
       Assert.equal(str, "hello");
 
-      let deferred = defer();
+      const deferred = defer();
       rootClient.on("oneway", (response) => {
         trace.expectSend({"type": "testOneWay", "a": "hello", "to": "<actorid>"});
         trace.expectReceive({"type": "oneway", "a": "hello", "from": "<actorid>"});
@@ -286,7 +286,7 @@ function run_test() {
       Assert.ok(typeof (rootClient.testOneWay("hello")) === "undefined");
       return deferred.promise;
     }).then(() => {
-      let deferred = defer();
+      const deferred = defer();
       rootClient.on("falsyOptions", res => {
         trace.expectSend({"type": "emitFalsyOptions", "to": "<actorid>"});
         trace.expectReceive({"type": "falsyOptions",

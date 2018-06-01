@@ -10,13 +10,13 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
-  let container = await getContainerForSelector("ul", inspector);
+  const container = await getContainerForSelector("ul", inspector);
 
   info("Alt-clicking on collapsed expander should expand all children");
-  let onUpdated = inspector.once("inspector-updated");
+  const onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.expander, {altKey: true},
     inspector.markup.doc.defaultView);
   await onUpdated;
@@ -24,8 +24,8 @@ add_task(async function() {
 
   info("Checking that all nodes exist and are expanded");
   let nodeFronts = await getNodeFronts(inspector);
-  for (let nodeFront of nodeFronts) {
-    let nodeContainer = getContainerForNodeFront(nodeFront, inspector);
+  for (const nodeFront of nodeFronts) {
+    const nodeContainer = getContainerForNodeFront(nodeFront, inspector);
     ok(nodeContainer, "Container for node " + nodeFront.tagName + " exists");
     ok(nodeContainer.expanded,
       "Container for node " + nodeFront.tagName + " is expanded");
@@ -39,15 +39,15 @@ add_task(async function() {
 
   info("Checking that all nodes are collapsed");
   nodeFronts = await getNodeFronts(inspector);
-  for (let nodeFront of nodeFronts) {
-    let nodeContainer = getContainerForNodeFront(nodeFront, inspector);
+  for (const nodeFront of nodeFronts) {
+    const nodeContainer = getContainerForNodeFront(nodeFront, inspector);
     ok(!nodeContainer.expanded,
       "Container for node " + nodeFront.tagName + " is collapsed");
   }
 });
 
 async function getNodeFronts(inspector) {
-  let nodeList = await inspector.walker.querySelectorAll(
+  const nodeList = await inspector.walker.querySelectorAll(
     inspector.walker.rootNode, "ul, li, span, em");
   return nodeList.items();
 }

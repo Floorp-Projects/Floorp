@@ -8,11 +8,11 @@
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 function test() {
-  let Prefs = new PrefsHelper("devtools.debugger", {
+  const Prefs = new PrefsHelper("devtools.debugger", {
     "foo": ["Bool", "enabled"]
   });
 
-  let originalPrefValue = Services.prefs.getBoolPref("devtools.debugger.enabled");
+  const originalPrefValue = Services.prefs.getBoolPref("devtools.debugger.enabled");
   is(Prefs.foo, originalPrefValue, "The pref value was correctly fetched.");
 
   Prefs.foo = !originalPrefValue;

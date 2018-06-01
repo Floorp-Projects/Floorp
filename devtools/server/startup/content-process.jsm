@@ -25,7 +25,7 @@ function setupServer(mm) {
   }
 
   // Lazy load Loader.jsm to prevent loading any devtools dependency too early.
-  let { DevToolsLoader } =
+  const { DevToolsLoader } =
     ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
   // Init a custom, invisible DebuggerServer, in order to not pollute the
@@ -33,7 +33,7 @@ function setupServer(mm) {
   // using it in the same process.
   gLoader = new DevToolsLoader();
   gLoader.invisibleToDebugger = true;
-  let { DebuggerServer } = gLoader.require("devtools/server/main");
+  const { DebuggerServer } = gLoader.require("devtools/server/main");
 
   DebuggerServer.init();
   // For browser content toolbox, we do need a regular root actor and all tab
@@ -56,8 +56,8 @@ function setupServer(mm) {
 }
 
 function init(msg) {
-  let mm = msg.target;
-  let prefix = msg.data.prefix;
+  const mm = msg.target;
+  const prefix = msg.data.prefix;
 
   // Using the JS debugger causes problems when we're trying to
   // schedule those zone groups across different threads. Calling
@@ -68,23 +68,23 @@ function init(msg) {
   // single-threaded.
   Cu.blockThreadedExecution(() => {
     // Setup a server if none started yet
-    let loader = setupServer(mm);
+    const loader = setupServer(mm);
 
     // Connect both parent/child processes debugger servers RDP via message
     // managers
-    let { DebuggerServer } = loader.require("devtools/server/main");
-    let conn = DebuggerServer.connectToParent(prefix, mm);
+    const { DebuggerServer } = loader.require("devtools/server/main");
+    const conn = DebuggerServer.connectToParent(prefix, mm);
     conn.parentMessageManager = mm;
 
-    let { ChildProcessActor } =
+    const { ChildProcessActor } =
         loader.require("devtools/server/actors/child-process");
-    let { ActorPool } = loader.require("devtools/server/main");
-    let actor = new ChildProcessActor(conn);
-    let actorPool = new ActorPool(conn);
+    const { ActorPool } = loader.require("devtools/server/main");
+    const actor = new ChildProcessActor(conn);
+    const actorPool = new ActorPool(conn);
     actorPool.addActor(actor);
     conn.addActorPool(actorPool);
 
-    let response = { actor: actor.form() };
+    const response = { actor: actor.form() };
     mm.sendAsyncMessage("debug:content-process-actor", response);
   });
 }

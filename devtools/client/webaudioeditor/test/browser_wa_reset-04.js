@@ -8,8 +8,8 @@
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
-  let { target, panel, toolbox } = await initWebAudioEditor(IFRAME_CONTEXT_URL);
-  let { gFront, $ } = panel.panelWin;
+  const { target, panel, toolbox } = await initWebAudioEditor(IFRAME_CONTEXT_URL);
+  const { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,
     "The 'reload this page' notice should initially be visible.");
@@ -18,14 +18,14 @@ add_task(async function() {
   is($("#content").hidden, true,
     "The tool's content should initially be hidden.");
 
-  let btn = toolbox.doc.getElementById("command-button-frames");
+  const btn = toolbox.doc.getElementById("command-button-frames");
   ok(!btn.firstChild, "The frame list button has no children");
 
   // Open frame menu and wait till it's available on the screen.
-  let menu = await toolbox.showFramesMenu({target: btn});
+  const menu = await toolbox.showFramesMenu({target: btn});
   await once(menu, "open");
 
-  let frames = menu.items;
+  const frames = menu.items;
   is(frames.length, 2, "We have both frames in the list");
 
   // Select the iframe
@@ -43,7 +43,7 @@ add_task(async function() {
     "The tool's content should still be hidden.");
 
   navigating = once(target, "will-navigate");
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
   reload(target);
 

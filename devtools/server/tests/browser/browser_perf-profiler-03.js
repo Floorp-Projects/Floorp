@@ -16,9 +16,9 @@ const { pmmIsProfilerActive, pmmStartProfiler, pmmLoadFrameScripts, pmmClearFram
 add_task(async function() {
   // Ensure the profiler is already running when the test starts.
   pmmLoadFrameScripts(gBrowser);
-  let entries = 1000000;
-  let interval = 1;
-  let features = ["js"];
+  const entries = 1000000;
+  const interval = 1;
+  const features = ["js"];
   await pmmStartProfiler({ entries, interval, features });
 
   ok((await pmmIsProfilerActive()),
@@ -26,17 +26,17 @@ add_task(async function() {
 
   await addTab(MAIN_DOMAIN + "doc_perf.html");
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let firstFront = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const firstFront = PerformanceFront(client, form);
   await firstFront.connect();
 
   await firstFront.startRecording();
 
   await addTab(MAIN_DOMAIN + "doc_perf.html");
-  let client2 = new DebuggerClient(DebuggerServer.connectPipe());
-  let form2 = await connectDebuggerClient(client2);
-  let secondFront = PerformanceFront(client2, form2);
+  const client2 = new DebuggerClient(DebuggerServer.connectPipe());
+  const form2 = await connectDebuggerClient(client2);
+  const secondFront = PerformanceFront(client2, form2);
   await secondFront.connect();
 
   await secondFront.destroy();

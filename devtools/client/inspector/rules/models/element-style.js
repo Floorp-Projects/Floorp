@@ -63,7 +63,7 @@ ElementStyle.prototype = {
     }
     this.destroyed = true;
 
-    for (let rule of this.rules) {
+    for (const rule of this.rules) {
       if (rule.editor) {
         rule.editor.destroy();
       }
@@ -88,7 +88,7 @@ ElementStyle.prototype = {
    * ready.
    */
   populate: function() {
-    let populated = this.pageStyle.getApplied(this.element, {
+    const populated = this.pageStyle.getApplied(this.element, {
       inherited: true,
       matchedSelectors: true,
       filter: this.showUserAgentStyles ? "ua" : undefined,
@@ -104,11 +104,11 @@ ElementStyle.prototype = {
 
       // Store the current list of rules (if any) during the population
       // process.  They will be reused if possible.
-      let existingRules = this.rules;
+      const existingRules = this.rules;
 
       this.rules = [];
 
-      for (let entry of entries) {
+      for (const entry of entries) {
         this._maybeAddRule(entry, existingRules);
       }
 
@@ -118,7 +118,7 @@ ElementStyle.prototype = {
       this._sortRulesForPseudoElement();
 
       // We're done with the previous list of rules.
-      for (let r of existingRules) {
+      for (const r of existingRules) {
         if (r && r.editor) {
           r.editor.destroy();
         }
@@ -147,7 +147,7 @@ ElementStyle.prototype = {
     return new Promise((resolve, reject) => {
       this.ruleView.styleWindow.requestIdleCallback(async () => {
         try {
-          let fonts = await this.pageStyle.getUsedFontFaces(
+          const fonts = await this.pageStyle.getUsedFontFaces(
             this.element, { includePreviews: false });
           resolve(fonts.map(font => font.CSSFamilyName));
         } catch (e) {
@@ -194,7 +194,7 @@ ElementStyle.prototype = {
     // If we're refreshing and the rule previously existed, reuse the
     // Rule object.
     if (existingRules) {
-      let ruleIndex = existingRules.findIndex((r) => r.matches(options));
+      const ruleIndex = existingRules.findIndex((r) => r.matches(options));
       if (ruleIndex >= 0) {
         rule = existingRules[ruleIndex];
         rule.refresh(options);
@@ -223,7 +223,7 @@ ElementStyle.prototype = {
     this.variables.clear();
     this.markOverridden();
 
-    for (let pseudo of this.cssProperties.pseudoElements) {
+    for (const pseudo of this.cssProperties.pseudoElements) {
       this.markOverridden(pseudo);
     }
   },
@@ -242,12 +242,12 @@ ElementStyle.prototype = {
     // excluded from being marked as overridden since a number of criteria such
     // as time, and animation overlay are required to be check in order to
     // determine if the property is overridden.
-    let textProps = [];
-    for (let rule of this.rules) {
+    const textProps = [];
+    for (const rule of this.rules) {
       if ((rule.matchedSelectors.length > 0 ||
            rule.domRule.type === ELEMENT_STYLE) &&
           rule.pseudoElement === pseudo && !rule.keyframes) {
-        for (let textProp of rule.textProps.slice(0).reverse()) {
+        for (const textProp of rule.textProps.slice(0).reverse()) {
           if (textProp.enabled) {
             textProps.push(textProp);
           }
@@ -258,7 +258,7 @@ ElementStyle.prototype = {
     // Gather all the computed properties applied by those text
     // properties.
     let computedProps = [];
-    for (let textProp of textProps) {
+    for (const textProp of textProps) {
       computedProps = computedProps.concat(textProp.computed);
     }
 
@@ -278,9 +278,9 @@ ElementStyle.prototype = {
     //
     // _overriddenDirty will be set on each prop, indicating whether its
     // dirty status changed during this pass.
-    let taken = {};
-    for (let computedProp of computedProps) {
-      let earlier = taken[computedProp.name];
+    const taken = {};
+    for (const computedProp of computedProps) {
+      const earlier = taken[computedProp.name];
 
       // Prevent -webkit-gradient from being selected after unchecking
       // linear-gradient in this case:
@@ -322,7 +322,7 @@ ElementStyle.prototype = {
     // computed properties are marked overridden.  Update the text
     // property's associated editor, if any.  This will clear the
     // _overriddenDirty state on all computed properties.
-    for (let textProp of textProps) {
+    for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
       if (this._updatePropertyOverridden(textProp)) {
@@ -344,7 +344,7 @@ ElementStyle.prototype = {
   _updatePropertyOverridden: function(prop) {
     let overridden = true;
     let dirty = false;
-    for (let computedProp of prop.computed) {
+    for (const computedProp of prop.computed) {
       if (!computedProp.overridden) {
         overridden = false;
       }
@@ -394,8 +394,8 @@ UserProperties.prototype = {
    *        otherwise.
    */
   getProperty: function(style, name, value) {
-    let key = this.getKey(style);
-    let entry = this.map.get(key, null);
+    const key = this.getKey(style);
+    const entry = this.map.get(key, null);
 
     if (entry && name in entry) {
       return entry[name];
@@ -414,13 +414,13 @@ UserProperties.prototype = {
    *        The value of the property to set.
    */
   setProperty: function(style, name, userValue) {
-    let key = this.getKey(style, name);
-    let entry = this.map.get(key, null);
+    const key = this.getKey(style, name);
+    const entry = this.map.get(key, null);
 
     if (entry) {
       entry[name] = userValue;
     } else {
-      let props = {};
+      const props = {};
       props[name] = userValue;
       this.map.set(key, props);
     }
@@ -435,8 +435,8 @@ UserProperties.prototype = {
    *        The name of the property to check.
    */
   contains: function(style, name) {
-    let key = this.getKey(style, name);
-    let entry = this.map.get(key, null);
+    const key = this.getKey(style, name);
+    const entry = this.map.get(key, null);
     return !!entry && name in entry;
   },
 

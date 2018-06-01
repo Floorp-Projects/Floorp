@@ -29,10 +29,10 @@ const TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".test", inspector);
 
-  let hs = view.highlighters;
+  const hs = view.highlighters;
 
   info("Faking a mousemove on the overriden property");
   let {valueSpan} = getRuleViewProperty(view, "div", "transform");
@@ -41,8 +41,8 @@ add_task(async function() {
     "No highlighter was created for the overriden property");
 
   info("Disabling the applied property");
-  let classRuleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = classRuleEditor.rule.textProps[0].editor;
+  const classRuleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = classRuleEditor.rule.textProps[0].editor;
   propEditor.enable.click();
   await classRuleEditor.rule._applyingModifications;
 
@@ -54,7 +54,7 @@ add_task(async function() {
 
   info("Faking a mousemove on the now unoverriden property");
   ({valueSpan} = getRuleViewProperty(view, "div", "transform"));
-  let onHighlighterShown = hs.once("highlighter-shown");
+  const onHighlighterShown = hs.once("highlighter-shown");
   hs.onMouseMove({target: valueSpan});
   await onHighlighterShown;
 });

@@ -12,7 +12,7 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   await selectJsonViewContentTab("rawdata");
-  let rawData = await getElementText(".textPanelBox .data");
+  const rawData = await getElementText(".textPanelBox .data");
   is(rawData, "\"foo_\u0000_bar\"",
      "The NUL character has been preserved.");
 });

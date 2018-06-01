@@ -13,14 +13,14 @@
 const TEST_URI = "http://example.com/";
 
 add_task(async function testSelectAll() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   await testSelectionWhenMovingBetweenBoxes(hud);
   testBrowserMenuSelectAll(hud);
   await testContextMenuSelectAll(hud);
 });
 
 async function testSelectionWhenMovingBetweenBoxes(hud) {
-  let jsterm = hud.jsterm;
+  const jsterm = hud.jsterm;
 
   // Fill the console with some output.
   jsterm.clearOutput();
@@ -33,8 +33,8 @@ async function testSelectionWhenMovingBetweenBoxes(hud) {
 }
 
 function testBrowserMenuSelectAll(hud) {
-  let { ui } = hud;
-  let outputContainer = ui.outputNode.querySelector(".webconsole-output");
+  const { ui } = hud;
+  const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   is(outputContainer.childNodes.length, 6,
     "the output node contains the expected number of children");
@@ -54,11 +54,11 @@ function testBrowserMenuSelectAll(hud) {
 // Test the context menu "Select All" (which has a different code path) works
 // properly as well.
 async function testContextMenuSelectAll(hud) {
-  let { ui } = hud;
-  let outputContainer = ui.outputNode.querySelector(".webconsole-output");
-  let contextMenu = await openContextMenu(hud, outputContainer);
+  const { ui } = hud;
+  const outputContainer = ui.outputNode.querySelector(".webconsole-output");
+  const contextMenu = await openContextMenu(hud, outputContainer);
 
-  let selectAllItem = contextMenu.querySelector("#console-menu-select");
+  const selectAllItem = contextMenu.querySelector("#console-menu-select");
   ok(selectAllItem,
      `the context menu on the output node has a "Select All" item`);
 
@@ -70,11 +70,11 @@ async function testContextMenuSelectAll(hud) {
 }
 
 function checkMessagesSelected(outputContainer) {
-  let selection = outputContainer.ownerDocument.getSelection();
-  let messages = outputContainer.querySelectorAll(".message");
+  const selection = outputContainer.ownerDocument.getSelection();
+  const messages = outputContainer.querySelectorAll(".message");
 
-  for (let message of messages) {
-    let selected = selection.containsNode(message);
+  for (const message of messages) {
+    const selected = selection.containsNode(message);
     ok(selected, `Node containing text "${message.textContent}" was selected`);
   }
 }

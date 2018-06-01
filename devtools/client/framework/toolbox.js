@@ -197,9 +197,9 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
    */
   loader.lazyGetter(this, "direction", () => {
     // Get the direction from browser.xul document
-    let top = this.win.top;
-    let topDocEl = top.document.documentElement;
-    let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
+    const top = this.win.top;
+    const topDocEl = top.document.documentElement;
+    const isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
     return isRtl ? "rtl" : "ltr";
   });
 }
@@ -300,8 +300,8 @@ Toolbox.prototype = {
    *          A promise that resolves once the panel is ready.
    */
   getPanelWhenReady: function(id) {
-    let deferred = defer();
-    let panel = this.getPanel(id);
+    const deferred = defer();
+    const panel = this.getPanel(id);
     if (panel) {
       deferred.resolve(panel);
     } else {
@@ -413,7 +413,7 @@ Toolbox.prototype = {
     if (!this._splitConsole) {
       return false;
     }
-    let focusedWin = Services.focus.focusedWindow;
+    const focusedWin = Services.focus.focusedWindow;
     return focusedWin && focusedWin ===
       this.doc.querySelector("#toolbox-panel-iframe-webconsole").contentWindow;
   },
@@ -433,8 +433,8 @@ Toolbox.prototype = {
         this._URL = this.win.location.href;
       }
 
-      let domReady = defer();
-      let domHelper = new DOMHelpers(this.win);
+      const domReady = defer();
+      const domHelper = new DOMHelpers(this.win);
       domHelper.onceDOMReady(() => {
         domReady.resolve();
       }, this._URL);
@@ -459,7 +459,7 @@ Toolbox.prototype = {
 
       this.isReady = true;
 
-      let framesPromise = this._listFrames();
+      const framesPromise = this._listFrames();
 
       Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings);
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
@@ -514,7 +514,7 @@ Toolbox.prototype = {
       // The isTargetSupported check needs to happen after the target is
       // remoted, otherwise we could have done it in the toolbox constructor
       // (bug 1072764).
-      let toolDef = gDevTools.getToolDefinition(this._defaultToolId);
+      const toolDef = gDevTools.getToolDefinition(this._defaultToolId);
       if (!toolDef || !toolDef.isTargetSupported(this._target)) {
         this._defaultToolId = "webconsole";
       }
@@ -553,7 +553,7 @@ Toolbox.prototype = {
 
       // Lazily connect to the profiler here and don't wait for it to complete,
       // used to intercept console.profile calls before the performance tools are open.
-      let performanceFrontConnection = this.initPerformance();
+      const performanceFrontConnection = this.initPerformance();
 
       // If in testing environment, wait for performance connection to finish,
       // so we don't have to explicitly wait for this in tests; ideally, all tests
@@ -595,7 +595,7 @@ Toolbox.prototype = {
       return this._sourceMapService;
     }
     // Uses browser loader to access the `Worker` global.
-    let service = this.browserRequire("devtools/client/shared/source-map/index");
+    const service = this.browserRequire("devtools/client/shared/source-map/index");
 
     // Provide a wrapper for the service that reports errors more nicely.
     this._sourceMapService = new Proxy(service, {
@@ -605,7 +605,7 @@ Toolbox.prototype = {
             return (urlInfo) => {
               return target.getOriginalURLs(urlInfo)
                 .catch(text => {
-                  let message = L10N.getFormatStr("toolbox.sourceMapFailure",
+                  const message = L10N.getFormatStr("toolbox.sourceMapFailure",
                                                   text, urlInfo.url,
                                                   urlInfo.sourceMapURL);
                   this.target.logWarningInPage(message, "source map");
@@ -619,7 +619,7 @@ Toolbox.prototype = {
             return (originalSource) => {
               return target.getOriginalSourceText(originalSource)
                 .catch(text => {
-                  let message = L10N.getFormatStr("toolbox.sourceMapSourceFailure",
+                  const message = L10N.getFormatStr("toolbox.sourceMapSourceFailure",
                                                   text, originalSource.url);
                   this.target.logWarningInPage(message, "source map");
                   // Also replace the result with the error text.
@@ -682,7 +682,7 @@ Toolbox.prototype = {
     if (this._sourceMapURLService) {
       return this._sourceMapURLService;
     }
-    let sourceMaps = this._createSourceMapService();
+    const sourceMaps = this._createSourceMapService();
     this._sourceMapURLService = new SourceMapURLService(this, sourceMaps);
     return this._sourceMapURLService;
   },
@@ -814,7 +814,7 @@ Toolbox.prototype = {
       isInStartContainer: !!isInStartContainer
     };
     if (typeof setup == "function") {
-      let onChange = () => {
+      const onChange = () => {
         button.emit("updatechecked");
       };
       setup(this, onChange);
@@ -873,7 +873,7 @@ Toolbox.prototype = {
       ["forceReload", true],
       ["forceReload2", true]
     ].forEach(([id, force]) => {
-      let key = L10N.getStr("toolbox." + id + ".key");
+      const key = L10N.getStr("toolbox." + id + ".key");
       this.shortcuts.on(key, event => {
         this.reloadTarget(force);
 
@@ -945,10 +945,10 @@ Toolbox.prototype = {
    *      at full height.
    */
   _refreshConsoleDisplay: function() {
-    let deck = this.doc.getElementById("toolbox-deck");
-    let webconsolePanel = this.webconsolePanel;
-    let splitter = this.doc.getElementById("toolbox-console-splitter");
-    let openedConsolePanel = this.currentToolId === "webconsole";
+    const deck = this.doc.getElementById("toolbox-deck");
+    const webconsolePanel = this.webconsolePanel;
+    const splitter = this.doc.getElementById("toolbox-console-splitter");
+    const openedConsolePanel = this.currentToolId === "webconsole";
 
     if (openedConsolePanel) {
       deck.setAttribute("collapsed", "true");
@@ -974,17 +974,17 @@ Toolbox.prototype = {
       return;
     }
 
-    let doc = this.win.parent.document;
+    const doc = this.win.parent.document;
 
-    for (let item of Startup.KeyShortcuts) {
+    for (const item of Startup.KeyShortcuts) {
       // KeyShortcuts contain tool-specific and global key shortcuts,
       // here we only need to copy shortcut specific to each tool.
       if (!item.toolId) {
         continue;
       }
-      let { toolId, shortcut, modifiers } = item;
+      const { toolId, shortcut, modifiers } = item;
 
-      let key = doc.createElement("key");
+      const key = doc.createElement("key");
 
       key.id = "key_" + toolId;
 
@@ -1005,7 +1005,7 @@ Toolbox.prototype = {
 
     // Add key for toggling the browser console from the detached window
     if (!doc.getElementById("key_browserconsole")) {
-      let key = doc.createElement("key");
+      const key = doc.createElement("key");
       key.id = "key_browserconsole";
 
       key.setAttribute("key", L10N.getStr("browserConsoleCmd.commandkey"));
@@ -1026,7 +1026,7 @@ Toolbox.prototype = {
    * current)
    */
   fireCustomKey: function(toolId) {
-    let toolDefinition = gDevTools.getToolDefinition(toolId);
+    const toolDefinition = gDevTools.getToolDefinition(toolId);
 
     if (toolDefinition.onkey &&
         ((this.currentToolId === toolId) ||
@@ -1046,7 +1046,7 @@ Toolbox.prototype = {
       NotificationBox = this.React.createFactory(NotificationBox);
 
       // Render NotificationBox and assign priority levels to it.
-      let box = this.doc.getElementById("toolbox-notificationbox");
+      const box = this.doc.getElementById("toolbox-notificationbox");
       this._notificationBox = Object.assign(
         this.ReactDOM.render(NotificationBox({}), box),
         PriorityLevels);
@@ -1068,11 +1068,11 @@ Toolbox.prototype = {
     this.component.setDockOptionsEnabled(true);
     this.component.setCanCloseToolbox(this.hostType !== Toolbox.HostType.WINDOW);
 
-    let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
+    const sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
 
-    let hostTypes = [];
-    for (let type in Toolbox.HostType) {
-      let position = Toolbox.HostType[type];
+    const hostTypes = [];
+    for (const type in Toolbox.HostType) {
+      const position = Toolbox.HostType[type];
       if (position == Toolbox.HostType.CUSTOM ||
           (!sideEnabled && position == Toolbox.HostType.SIDE)) {
         continue;
@@ -1114,7 +1114,7 @@ Toolbox.prototype = {
 
     // Do async lookup of disable pop-up auto-hide state.
     if (this.disableAutohideAvailable) {
-      let disable = await this._isDisableAutohideEnabled();
+      const disable = await this._isDisableAutohideEnabled();
       this.component.setDisableAutohide(disable);
     }
   },
@@ -1156,7 +1156,7 @@ Toolbox.prototype = {
    * @param  {KeyboardEvent} event
    */
   _onToolbarArrowKeypress: function(event) {
-    let { key, target, ctrlKey, shiftKey, altKey, metaKey } = event;
+    const { key, target, ctrlKey, shiftKey, altKey, metaKey } = event;
 
     // If any of the modifier keys are pressed do not attempt navigation as it
     // might conflict with global shortcuts (Bug 1327972).
@@ -1164,8 +1164,8 @@ Toolbox.prototype = {
       return;
     }
 
-    let buttons = [...this._componentMount.querySelectorAll("button")];
-    let curIndex = buttons.indexOf(target);
+    const buttons = [...this._componentMount.querySelectorAll("button")];
+    const curIndex = buttons.indexOf(target);
 
     if (curIndex === -1) {
       console.warn(target + " is not found among Developer Tools tab bar " +
@@ -1208,7 +1208,7 @@ Toolbox.prototype = {
     ];
 
     ToolboxButtons.forEach(definition => {
-      let button = this._createButtonState(definition);
+      const button = this._createButtonState(definition);
       this.toolbarButtons.push(button);
     });
 
@@ -1247,9 +1247,9 @@ Toolbox.prototype = {
    * allow for custom picker behaviour.
    */
   _onPickerClick: function() {
-    let focus = this.hostType === Toolbox.HostType.BOTTOM ||
+    const focus = this.hostType === Toolbox.HostType.BOTTOM ||
                 this.hostType === Toolbox.HostType.SIDE;
-    let currentPanel = this.getCurrentPanel();
+    const currentPanel = this.getCurrentPanel();
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
@@ -1263,7 +1263,7 @@ Toolbox.prototype = {
    */
   _onPickerKeypress: function(event) {
     if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
-      let currentPanel = this.getCurrentPanel();
+      const currentPanel = this.getCurrentPanel();
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
@@ -1305,8 +1305,8 @@ Toolbox.prototype = {
    * toolbox's tab.
    */
   _applyCacheSettings: function() {
-    let pref = "devtools.cache.disabled";
-    let cacheDisabled = Services.prefs.getBoolPref(pref);
+    const pref = "devtools.cache.disabled";
+    const cacheDisabled = Services.prefs.getBoolPref(pref);
 
     if (this.target.activeTab) {
       this.target.activeTab.reconfigure({"cacheDisabled": cacheDisabled});
@@ -1318,8 +1318,8 @@ Toolbox.prototype = {
    * devtools.serviceWorkers.testing.enabled to this toolbox's tab.
    */
   _applyServiceWorkersTestingSettings: function() {
-    let pref = "devtools.serviceWorkers.testing.enabled";
-    let serviceWorkersTestingEnabled =
+    const pref = "devtools.serviceWorkers.testing.enabled";
+    const serviceWorkersTestingEnabled =
       Services.prefs.getBoolPref(pref) || false;
 
     if (this.target.activeTab) {
@@ -1347,7 +1347,7 @@ Toolbox.prototype = {
    */
   updatePickerButton() {
     const button = this.pickerButton;
-    let currentPanel = this.getCurrentPanel();
+    const currentPanel = this.getCurrentPanel();
 
     if (currentPanel && currentPanel.updatePickerButton) {
       currentPanel.updatePickerButton();
@@ -1413,8 +1413,8 @@ Toolbox.prototype = {
       return;
     }
 
-    let deck = this.doc.getElementById("toolbox-deck");
-    let id = toolDefinition.id;
+    const deck = this.doc.getElementById("toolbox-deck");
+    const id = toolDefinition.id;
 
     if (toolDefinition.ordinal == undefined || toolDefinition.ordinal < 0) {
       toolDefinition.ordinal = MAX_ORDINAL;
@@ -1423,7 +1423,7 @@ Toolbox.prototype = {
     if (!toolDefinition.bgTheme) {
       toolDefinition.bgTheme = "theme-toolbar";
     }
-    let panel = this.doc.createElement("vbox");
+    const panel = this.doc.createElement("vbox");
     panel.className = "toolbox-panel " + toolDefinition.bgTheme;
 
     // There is already a container for the webconsole frame.
@@ -1606,11 +1606,11 @@ Toolbox.prototype = {
       return this.initInspector().then(() => this.loadTool(id));
     }
 
-    let deferred = defer();
+    const deferred = defer();
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
 
     if (iframe) {
-      let panel = this._toolPanels.get(id);
+      const panel = this._toolPanels.get(id);
       if (panel) {
         deferred.resolve(panel);
       } else {
@@ -1622,7 +1622,7 @@ Toolbox.prototype = {
     }
 
     // Retrieve the tool definition (from the global or the per-toolbox tool maps)
-    let definition = this.getToolDefinition(id);
+    const definition = this.getToolDefinition(id);
 
     if (!definition) {
       deferred.reject(new Error("no such tool id " + id));
@@ -1642,12 +1642,12 @@ Toolbox.prototype = {
 
     // If no parent yet, append the frame into default location.
     if (!iframe.parentNode) {
-      let vbox = this.doc.getElementById("toolbox-panel-" + id);
+      const vbox = this.doc.getElementById("toolbox-panel-" + id);
       vbox.appendChild(iframe);
       vbox.visibility = "visible";
     }
 
-    let onLoad = () => {
+    const onLoad = () => {
       // Prevent flicker while loading by waiting to make visible until now.
       iframe.style.visibility = "visible";
 
@@ -1661,7 +1661,7 @@ Toolbox.prototype = {
       let built = definition.build(iframe.contentWindow, this);
 
       if (!(typeof built.then == "function")) {
-        let panel = built;
+        const panel = built;
         iframe.panel = panel;
 
         // The panel instance is expected to fire (and listen to) various
@@ -1681,7 +1681,7 @@ Toolbox.prototype = {
         if (typeof panel.open == "function") {
           built = panel.open();
         } else {
-          let buildDeferred = defer();
+          const buildDeferred = defer();
           buildDeferred.resolve(panel);
           built = buildDeferred.promise;
         }
@@ -1718,10 +1718,10 @@ Toolbox.prototype = {
     // on the DOM node every time because this won't work
     // if the (xul chrome) iframe is loaded in a content docshell.
     if (iframe.contentWindow) {
-      let domHelper = new DOMHelpers(iframe.contentWindow);
+      const domHelper = new DOMHelpers(iframe.contentWindow);
       domHelper.onceDOMReady(onLoad);
     } else {
-      let callback = () => {
+      const callback = () => {
         iframe.removeEventListener("DOMContentLoaded", callback);
         onLoad();
       };
@@ -1738,7 +1738,7 @@ Toolbox.prototype = {
    * @param {IFrameElement} iframe
    */
   setIframeDocumentDir: function(iframe) {
-    let docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
+    const docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
     if (!docEl || docEl.namespaceURI !== HTML_NS) {
       // Bail out if the content window or document is not ready or if the document is not
       // HTML.
@@ -1772,7 +1772,7 @@ Toolbox.prototype = {
         node = this.webconsolePanel;
       }
 
-      let iframe = node.querySelector(".toolbox-panel-iframe");
+      const iframe = node.querySelector(".toolbox-panel-iframe");
       if (iframe) {
         let visible = node.id == id;
         // Prevents hiding the split-console if it is currently enabled
@@ -1795,9 +1795,9 @@ Toolbox.prototype = {
    * background.
    */
   setIframeVisible: function(iframe, visible) {
-    let state = visible ? "visible" : "hidden";
-    let win = iframe.contentWindow;
-    let doc = win.document;
+    const state = visible ? "visible" : "hidden";
+    const win = iframe.contentWindow;
+    const doc = win.document;
     if (doc.visibilityState != state) {
       // 1) Overload document's `visibilityState` attribute
       // Use defineProperty, as by default `document.visbilityState` is read only.
@@ -1818,7 +1818,7 @@ Toolbox.prototype = {
    */
   selectTool: function(id, reason = "unknown") {
     if (this.currentToolId == id) {
-      let panel = this._toolPanels.get(id);
+      const panel = this._toolPanels.get(id);
       if (panel) {
         // We have a panel instance, so the tool is already fully loaded.
 
@@ -1851,7 +1851,7 @@ Toolbox.prototype = {
     }
 
     // and select the right iframe
-    let toolboxPanels = this.doc.querySelectorAll(".toolbox-panel");
+    const toolboxPanels = this.doc.querySelectorAll(".toolbox-panel");
     this.selectSingleNode(toolboxPanels, "toolbox-panel-" + id);
 
     this.lastUsedToolId = this.currentToolId;
@@ -1919,7 +1919,7 @@ Toolbox.prototype = {
    *         The id of tool to focus
    */
   focusTool: function(id, state = true) {
-    let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
+    const iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
 
     if (state) {
       iframe.focus();
@@ -1932,7 +1932,7 @@ Toolbox.prototype = {
    * Focus split console's input line
    */
   focusConsoleInput: function() {
-    let consolePanel = this.getPanel("webconsole");
+    const consolePanel = this.getPanel("webconsole");
     if (consolePanel) {
       consolePanel.focusInput();
     }
@@ -1946,7 +1946,7 @@ Toolbox.prototype = {
   _onFocus: function({originalTarget}) {
     // Ignore any non element nodes, or any elements contained
     // within the webconsole frame.
-    let webconsoleURL = gDevTools.getToolDefinition("webconsole").url;
+    const webconsoleURL = gDevTools.getToolDefinition("webconsole").url;
     if (originalTarget.nodeType !== 1 ||
         originalTarget.baseURI === webconsoleURL) {
       return;
@@ -1971,7 +1971,7 @@ Toolbox.prototype = {
     this._refreshConsoleDisplay();
 
     // Ensure split console is visible if console was already loaded in background
-    let iframe = this.webconsolePanel.querySelector(".toolbox-panel-iframe");
+    const iframe = this.webconsolePanel.querySelector(".toolbox-panel-iframe");
     if (iframe) {
       this.setIframeVisible(iframe, true);
     }
@@ -2055,9 +2055,9 @@ Toolbox.prototype = {
    * Loads the tool next to the currently selected tool.
    */
   selectNextTool: function() {
-    let definitions = this.component.panelDefinitions;
+    const definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = index === -1 || index >= definitions.length - 1
+    const definition = index === -1 || index >= definitions.length - 1
                      ? definitions[0]
                      : definitions[index + 1];
     return this.selectTool(definition.id, "select_next_key");
@@ -2067,9 +2067,9 @@ Toolbox.prototype = {
    * Loads the tool just left to the currently selected tool.
    */
   selectPreviousTool: function() {
-    let definitions = this.component.panelDefinitions;
+    const definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = index === -1 || index < 1
+    const definition = index === -1 || index < 1
                      ? definitions[definitions.length - 1]
                      : definitions[index - 1];
     return this.selectTool(definition.id, "select_prev_key");
@@ -2114,22 +2114,22 @@ Toolbox.prototype = {
    * Fired when user just started navigating away to another web page.
    */
   async _onWillNavigate() {
-    let toolId = this.currentToolId;
+    const toolId = this.currentToolId;
     // For now, only inspector, webconsole and netmonitor fire "reloaded" event
     if (toolId != "inspector" && toolId != "webconsole" && toolId != "netmonitor") {
       return;
     }
 
-    let start = this.win.performance.now();
-    let panel = this.getPanel(toolId);
+    const start = this.win.performance.now();
+    const panel = this.getPanel(toolId);
     // Ignore the timing if the panel is still loading
     if (!panel) {
       return;
     }
     await panel.once("reloaded");
-    let delay = this.win.performance.now() - start;
+    const delay = this.win.performance.now() - start;
 
-    let telemetryKey = "DEVTOOLS_TOOLBOX_PAGE_RELOAD_DELAY_MS";
+    const telemetryKey = "DEVTOOLS_TOOLBOX_PAGE_RELOAD_DELAY_MS";
     this.telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
   },
 
@@ -2165,7 +2165,7 @@ Toolbox.prototype = {
     }
     return this.isOpen.then(() => {
       return this.target.root.then(rootForm => {
-        let front = getPreferenceFront(this.target.client, rootForm);
+        const front = getPreferenceFront(this.target.client, rootForm);
         this._preferenceFront = front;
         return front;
       });
@@ -2178,8 +2178,8 @@ Toolbox.prototype = {
   },
 
   async toggleNoAutohide() {
-    let front = await this.preferenceFront;
-    let toggledValue = !(await this._isDisableAutohideEnabled());
+    const front = await this.preferenceFront;
+    const toggledValue = !(await this._isDisableAutohideEnabled());
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
@@ -2197,7 +2197,7 @@ Toolbox.prototype = {
       return false;
     }
 
-    let prefFront = await this.preferenceFront;
+    const prefFront = await this.preferenceFront;
     return prefFront.getBoolPref(DISABLE_AUTOHIDE_PREF);
   },
 
@@ -2207,7 +2207,7 @@ Toolbox.prototype = {
       // it can be either an addon or browser toolbox actor
       return promise.resolve();
     }
-    let packet = {
+    const packet = {
       to: this._target.form.actor,
       type: "listFrames"
     };
@@ -2220,8 +2220,8 @@ Toolbox.prototype = {
    * Show a drop down menu that allows the user to switch frames.
    */
   showFramesMenu: async function(event) {
-    let menu = new Menu();
-    let target = event.target;
+    const menu = new Menu();
+    const target = event.target;
 
     // Need to initInspector to check presence of getNodeActorFromWindowID
     // and use the highlighter later
@@ -2235,7 +2235,7 @@ Toolbox.prototype = {
     // Generate list of menu items from the list of frames.
     this.frameMap.forEach(frame => {
       // A frame is checked if it's the selected one.
-      let checked = frame.id == this.selectedFrameId;
+      const checked = frame.id == this.selectedFrameId;
 
       let label;
       if (this.target.isWebExtension) {
@@ -2273,9 +2273,9 @@ Toolbox.prototype = {
     // and relative position to it. See also:
     // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Method/openPopup
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1274551
-    let rect = target.getBoundingClientRect();
-    let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
-    let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
+    const rect = target.getBoundingClientRect();
+    const screenX = target.ownerDocument.defaultView.mozInnerScreenX;
+    const screenY = target.ownerDocument.defaultView.mozInnerScreenY;
     menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, this);
 
     return menu;
@@ -2304,7 +2304,7 @@ Toolbox.prototype = {
   onSelectFrame: function(frameId) {
     // Send packet to the backend to select specified frame and
     // wait for 'frameUpdate' event packet to update the UI.
-    let packet = {
+    const packet = {
       to: this._target.form.actor,
       type: "switchToFrame",
       windowId: frameId
@@ -2318,7 +2318,7 @@ Toolbox.prototype = {
   onHightlightFrame: async function(frameId) {
     // Only enable frame highlighting when the top level document is targeted
     if (this._supportsFrameHighlight && this.rootFrameSelected) {
-      let frameActor = await this.walker.getNodeActorFromWindowID(frameId);
+      const frameActor = await this.walker.getNodeActorFromWindowID(frameId);
       this.highlighterUtils.highlightNodeFront(frameActor);
     }
   },
@@ -2368,15 +2368,15 @@ Toolbox.prototype = {
     // frame by default. Note that there might be more top level
     // frames in case of the BrowserToolbox.
     if (!this.selectedFrameId) {
-      let frames = [...this.frameMap.values()];
-      let topFrames = frames.filter(frame => !frame.parentID);
+      const frames = [...this.frameMap.values()];
+      const topFrames = frames.filter(frame => !frame.parentID);
       this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
     }
 
     // Check out whether top frame is currently selected.
     // Note that only child frame has parentID.
-    let frame = this.frameMap.get(this.selectedFrameId);
-    let topFrameSelected = frame ? !frame.parentID : false;
+    const frame = this.frameMap.get(this.selectedFrameId);
+    const topFrameSelected = frame ? !frame.parentID : false;
     this._framesButtonChecked = false;
 
     // If non-top level frame is selected the toolbar button is
@@ -2540,18 +2540,18 @@ Toolbox.prototype = {
     }
 
     if (this._toolPanels.has(toolId)) {
-      let instance = this._toolPanels.get(toolId);
+      const instance = this._toolPanels.get(toolId);
       instance.destroy();
       this._toolPanels.delete(toolId);
     }
 
-    let panel = this.doc.getElementById("toolbox-panel-" + toolId);
+    const panel = this.doc.getElementById("toolbox-panel-" + toolId);
 
     // Select another tool.
     if (this.currentToolId == toolId) {
-      let index = this.panelDefinitions.findIndex(({id}) => id === toolId);
-      let nextTool = this.panelDefinitions[index + 1];
-      let previousTool = this.panelDefinitions[index - 1];
+      const index = this.panelDefinitions.findIndex(({id}) => id === toolId);
+      const nextTool = this.panelDefinitions[index + 1];
+      const previousTool = this.panelDefinitions[index - 1];
       let toolNameToSelect;
 
       if (nextTool) {
@@ -2576,8 +2576,8 @@ Toolbox.prototype = {
     }
 
     if (this.hostType == Toolbox.HostType.WINDOW) {
-      let doc = this.win.parent.document;
-      let key = doc.getElementById("key_" + toolId);
+      const doc = this.win.parent.document;
+      const key = doc.getElementById("key_" + toolId);
       if (key) {
         key.remove();
       }
@@ -2634,8 +2634,8 @@ Toolbox.prototype = {
     if (!this._initInspector) {
       this._initInspector = (async function() {
         this._inspector = InspectorFront(this._target.client, this._target.form);
-        let pref = "devtools.inspector.showAllAnonymousContent";
-        let showAllAnonymousContent = Services.prefs.getBoolPref(pref);
+        const pref = "devtools.inspector.showAllAnonymousContent";
+        const showAllAnonymousContent = Services.prefs.getBoolPref(pref);
         this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
         this._selection = new Selection(this._walker);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
@@ -2644,7 +2644,7 @@ Toolbox.prototype = {
           this.walker.on("highlighter-ready", this._highlighterReady);
           this.walker.on("highlighter-hide", this._highlighterHidden);
 
-          let autohide = !flags.testing;
+          const autohide = !flags.testing;
           this._highlighter = await this._inspector.getHighlighter(autohide);
         }
       }.bind(this))();
@@ -2714,7 +2714,7 @@ Toolbox.prototype = {
       // in the initialization process can throw errors.
       await this._initInspector;
 
-      let currentPanel = this.getCurrentPanel();
+      const currentPanel = this.getCurrentPanel();
       if (currentPanel.stopPicker) {
         await currentPanel.stopPicker();
       } else {
@@ -2769,7 +2769,7 @@ Toolbox.prototype = {
     if (this._destroyer) {
       return this._destroyer;
     }
-    let deferred = defer();
+    const deferred = defer();
     this._destroyer = deferred.promise;
 
     this.emit("destroy");
@@ -2820,8 +2820,8 @@ Toolbox.prototype = {
       this._componentMount = null;
     }
 
-    let outstanding = [];
-    for (let [id, panel] of this._toolPanels) {
+    const outstanding = [];
+    for (const [id, panel] of this._toolPanels) {
       try {
         gDevTools.emit(id + "-destroy", this, panel);
         this.emit(id + "-destroy", panel);
@@ -2863,7 +2863,7 @@ Toolbox.prototype = {
     // Destroy the device front for the current client if any.
     // A given DeviceFront instance can cached and shared between different panels, so
     // destroying it is the responsibility of the toolbox.
-    let deviceFront = getKnownDeviceFront(this.target.client);
+    const deviceFront = getKnownDeviceFront(this.target.client);
     if (deviceFront) {
       deviceFront.destroy();
     }
@@ -2905,7 +2905,7 @@ Toolbox.prototype = {
     deferred.resolve(settleAll(outstanding)
         .catch(console.error)
         .then(() => {
-          let api = this._netMonitorAPI;
+          const api = this._netMonitorAPI;
           this._netMonitorAPI = null;
           return api ? api.destroy() : null;
         }, console.error)
@@ -2932,7 +2932,7 @@ Toolbox.prototype = {
           if (!this._target) {
             return null;
           }
-          let target = this._target;
+          const target = this._target;
           this._target = null;
           this.highlighterUtils.release();
           target.off("close", this.destroy);
@@ -2955,13 +2955,13 @@ Toolbox.prototype = {
           }
         }).catch(console.error));
 
-    let leakCheckObserver = ({wrappedJSObject: barrier}) => {
+    const leakCheckObserver = ({wrappedJSObject: barrier}) => {
       // Make the leak detector wait until this toolbox is properly destroyed.
       barrier.client.addBlocker("DevTools: Wait until toolbox is destroyed",
                                 this._destroyer);
     };
 
-    let topic = "shutdown-leaks-before-check";
+    const topic = "shutdown-leaks-before-check";
     Services.obs.addObserver(leakCheckObserver, topic);
     this._destroyer.then(() => {
       Services.obs.removeObserver(leakCheckObserver, topic);
@@ -2982,7 +2982,7 @@ Toolbox.prototype = {
    * Enable / disable necessary textbox menu items using globalOverlay.js.
    */
   _updateTextBoxMenuItems: function() {
-    let window = this.win;
+    const window = this.win;
     ["cmd_undo", "cmd_delete", "cmd_cut",
      "cmd_copy", "cmd_paste", "cmd_selectAll"].forEach(window.goUpdateCommand);
   },
@@ -3087,7 +3087,7 @@ Toolbox.prototype = {
     }
 
     this._performanceQueuedRecordings = this._performanceQueuedRecordings || [];
-    let recordings = this._performanceQueuedRecordings;
+    const recordings = this._performanceQueuedRecordings;
 
     // Before any console recordings, we'll get a `console-profile-start` event
     // warning us that a recording will come later (via `recording-started`), so
@@ -3095,7 +3095,7 @@ Toolbox.prototype = {
     // observed during that time.
     if (eventName === "console-profile-start" && !this._performanceToolOpenedViaConsole) {
       this._performanceToolOpenedViaConsole = this.loadTool("performance");
-      let panel = await this._performanceToolOpenedViaConsole;
+      const panel = await this._performanceToolOpenedViaConsole;
       await panel.open();
 
       panel.panelWin.PerformanceController.populateWithRecordings(recordings);
@@ -3161,7 +3161,7 @@ Toolbox.prototype = {
    * public API that can be consumed by other panels or WE API.
    */
   getNetMonitorAPI: async function() {
-    let netPanel = this.getPanel("netmonitor");
+    const netPanel = this.getPanel("netmonitor");
 
     // Return Net panel if it exists.
     if (netPanel) {
@@ -3184,7 +3184,7 @@ Toolbox.prototype = {
    * Returns data (HAR) collected by the Network panel.
    */
   getHARFromNetMonitor: async function() {
-    let netMonitor = await this.getNetMonitorAPI();
+    const netMonitor = await this.getNetMonitorAPI();
     let har = await netMonitor.getHar();
 
     // Return default empty HAR file if needed.
@@ -3204,12 +3204,12 @@ Toolbox.prototype = {
    *        as first argument.
    */
   addRequestFinishedListener: async function(listener) {
-    let netMonitor = await this.getNetMonitorAPI();
+    const netMonitor = await this.getNetMonitorAPI();
     netMonitor.addRequestFinishedListener(listener);
   },
 
   removeRequestFinishedListener: async function(listener) {
-    let netMonitor = await this.getNetMonitorAPI();
+    const netMonitor = await this.getNetMonitorAPI();
     netMonitor.removeRequestFinishedListener(listener);
 
     // Destroy Network monitor API object if the following is true:
@@ -3217,8 +3217,8 @@ Toolbox.prototype = {
     // 2) the Net panel doesn't exist/use the API object (if the panel
     //    exists it's also responsible for destroying it,
     //    see `NetMonitorPanel.open` for more details)
-    let netPanel = this.getPanel("netmonitor");
-    let hasListeners = netMonitor.hasRequestFinishedListeners();
+    const netPanel = this.getPanel("netmonitor");
+    const hasListeners = netMonitor.hasRequestFinishedListeners();
     if (this._netMonitorAPI && !hasListeners && !netPanel) {
       this._netMonitorAPI.destroy();
       this._netMonitorAPI = null;
@@ -3234,7 +3234,7 @@ Toolbox.prototype = {
    *        should be fetched.
    */
   fetchResponseContent: async function(requestId) {
-    let netMonitor = await this.getNetMonitorAPI();
+    const netMonitor = await this.getNetMonitorAPI();
     return netMonitor.fetchResponseContent(requestId);
   },
 
@@ -3291,7 +3291,7 @@ Toolbox.prototype = {
    * @see browser/components/extensions/ext-devtools.js
    */
   isWebExtensionEnabled: function(extensionUUID) {
-    let extInfo = this._webExtensions.get(extensionUUID);
+    const extInfo = this._webExtensions.get(extensionUUID);
     return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
   },
 

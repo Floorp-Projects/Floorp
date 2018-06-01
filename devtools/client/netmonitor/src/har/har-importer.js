@@ -22,7 +22,7 @@ HarImporter.prototype = {
    * This is the main method used to import HAR data.
    */
   import: function(har) {
-    let json = JSON.parse(har);
+    const json = JSON.parse(har);
     this.doImport(json);
   },
 
@@ -30,15 +30,15 @@ HarImporter.prototype = {
     this.actions.clearRequests();
 
     // Helper map for pages.
-    let pages = new Map();
+    const pages = new Map();
     har.log.pages.forEach(page => {
       pages.set(page.id, page);
     });
 
     // Iterate all entries/requests and generate state.
     har.log.entries.forEach(entry => {
-      let requestId = String(++guid);
-      let startedMillis = Date.parse(entry.startedDateTime);
+      const requestId = String(++guid);
+      const startedMillis = Date.parse(entry.startedDateTime);
 
       // Add request
       this.actions.addRequest(requestId, {
@@ -81,7 +81,7 @@ HarImporter.prototype = {
           timings: entry.timings,
         },
         totalTime: TIMING_KEYS.reduce((sum, type) => {
-          let time = entry.timings[type];
+          const time = entry.timings[type];
           return (time != -1) ? (sum + time) : sum;
         }, 0),
 
@@ -108,7 +108,7 @@ HarImporter.prototype = {
       }, false);
 
       // Page timing markers
-      let pageTimings = pages.get(entry.pageref).pageTimings;
+      const pageTimings = pages.get(entry.pageref).pageTimings;
       let onContentLoad = pageTimings.onContentLoad || 0;
       let onLoad = pageTimings.onLoad || 0;
 

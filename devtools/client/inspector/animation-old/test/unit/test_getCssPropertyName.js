@@ -20,7 +20,7 @@ const TEST_DATA = [{
 }];
 
 function run_test() {
-  for (let {jsName, cssName} of TEST_DATA) {
+  for (const {jsName, cssName} of TEST_DATA) {
     equal(getCssPropertyName(jsName), cssName);
   }
 }

@@ -33,7 +33,7 @@ class RequestListColumnTransferredSize extends Component {
   }
 
   render() {
-    let { fromCache, fromServiceWorker, status, transferredSize } = this.props.item;
+    const { fromCache, fromServiceWorker, status, transferredSize } = this.props.item;
     let text;
 
     if (fromCache || status === "304") {

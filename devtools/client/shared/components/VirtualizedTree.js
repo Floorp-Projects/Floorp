@@ -279,7 +279,7 @@ class Tree extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    let { scroll, height, seen, mouseDown } = this.state;
+    const { scroll, height, seen, mouseDown } = this.state;
 
     return scroll !== nextState.scroll ||
            height !== nextState.height ||
@@ -811,7 +811,7 @@ class TreeNodeClass extends Component {
       onCollapse: this.props.onCollapse,
     });
 
-    let classList = [ "tree-node", "div" ];
+    const classList = [ "tree-node", "div" ];
     if (this.props.index % 2) {
       classList.push("tree-node-odd");
     }

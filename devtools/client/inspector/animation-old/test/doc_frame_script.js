@@ -17,13 +17,13 @@
  * - {Boolean} pause True to pause the animation, false to play.
  */
 addMessageListener("Test:ToggleAnimationPlayer", function(msg) {
-  let {selector, animationIndex, pause} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, animationIndex, pause} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
 
-  let animation = node.getAnimations()[animationIndex];
+  const animation = node.getAnimations()[animationIndex];
   if (pause) {
     animation.pause();
   } else {
@@ -42,13 +42,13 @@ addMessageListener("Test:ToggleAnimationPlayer", function(msg) {
  * - {Number} currentTime The current time to set.
  */
 addMessageListener("Test:SetAnimationPlayerCurrentTime", function(msg) {
-  let {selector, animationIndex, currentTime} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, animationIndex, currentTime} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
 
-  let animation = node.getAnimations()[animationIndex];
+  const animation = node.getAnimations()[animationIndex];
   animation.currentTime = currentTime;
 
   sendAsyncMessage("Test:SetAnimationPlayerCurrentTime");
@@ -63,13 +63,13 @@ addMessageListener("Test:SetAnimationPlayerCurrentTime", function(msg) {
  * - {Number} playbackRate The rate to set.
  */
 addMessageListener("Test:SetAnimationPlayerPlaybackRate", function(msg) {
-  let {selector, animationIndex, playbackRate} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, animationIndex, playbackRate} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
 
-  let player = node.getAnimations()[animationIndex];
+  const player = node.getAnimations()[animationIndex];
   player.playbackRate = playbackRate;
 
   sendAsyncMessage("Test:SetAnimationPlayerPlaybackRate");
@@ -83,13 +83,13 @@ addMessageListener("Test:SetAnimationPlayerPlaybackRate", function(msg) {
  * - {Number} animationIndex The index of the node's animationPlayers to check
  */
 addMessageListener("Test:GetAnimationPlayerState", function(msg) {
-  let {selector, animationIndex} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, animationIndex} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
 
-  let animation = node.getAnimations()[animationIndex];
+  const animation = node.getAnimations()[animationIndex];
   animation.ready.then(() => {
     sendAsyncMessage("Test:GetAnimationPlayerState", animation.playState);
   });
@@ -106,13 +106,13 @@ addMessageListener("Test:GetAnimationPlayerState", function(msg) {
  * @return {DOMNode} The node, or null if not found.
  */
 function superQuerySelector(superSelector, root = content.document) {
-  let frameIndex = superSelector.indexOf("||");
+  const frameIndex = superSelector.indexOf("||");
   if (frameIndex === -1) {
     return root.querySelector(superSelector);
   }
 
-  let rootSelector = superSelector.substring(0, frameIndex).trim();
-  let childSelector = superSelector.substring(frameIndex + 2).trim();
+  const rootSelector = superSelector.substring(0, frameIndex).trim();
+  const childSelector = superSelector.substring(frameIndex + 2).trim();
   root = root.querySelector(rootSelector);
   if (!root || !root.contentWindow) {
     return null;

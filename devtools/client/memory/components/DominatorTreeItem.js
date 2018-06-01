@@ -41,7 +41,7 @@ class DominatorTreeItem extends Component {
   }
 
   render() {
-    let {
+    const {
       item,
       depth,
       arrow,

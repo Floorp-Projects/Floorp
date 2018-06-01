@@ -8,13 +8,13 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { $, $all, NetMonitorView, NetMonitorController } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  const { $, $all, NetMonitorView, NetMonitorController } = monitor.panelWin;
+  const { RequestsMenu } = NetMonitorView;
 
   // Disable transferred size column support for this test.
   // Without this, the waterfall only has enough room for one division, which
@@ -32,7 +32,7 @@ add_task(async function() {
   ok(!RequestsMenu._canvas, "No canvas should be created when the frontend is opened.");
   ok(!RequestsMenu._ctx, "No 2d context should be created when the frontend is opened.");
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
@@ -46,7 +46,7 @@ add_task(async function() {
   ok($all(".requests-list-timings-division").length >= 3,
     "There should be at least 3 tick labels in the network requests header.");
 
-  let timingDivisionEls = $all(".requests-list-timings-division");
+  const timingDivisionEls = $all(".requests-list-timings-division");
   is(timingDivisionEls[0].textContent, L10N.getFormatStr("networkMenu.millisecond", 0),
     "The first tick label has correct value");
   is(timingDivisionEls[1].textContent, L10N.getFormatStr("networkMenu.millisecond", 80),
@@ -61,10 +61,10 @@ add_task(async function() {
   ok(RequestsMenu._canvas, "A canvas should be created after the first request.");
   ok(RequestsMenu._ctx, "A 2d context should be created after the first request.");
 
-  let imageData = RequestsMenu._ctx.getImageData(0, 0, 161, 1);
+  const imageData = RequestsMenu._ctx.getImageData(0, 0, 161, 1);
   ok(imageData, "The image data should have been created.");
 
-  let data = imageData.data;
+  const data = imageData.data;
   ok(data, "The image data should contain a pixel array.");
 
   ok(hasPixelAt(0), "The tick at 0 is should not be empty.");
@@ -117,19 +117,19 @@ add_task(async function() {
     "The tick at 80 should be equally bright to the one at 160");
 
   function hasPixelAt(x) {
-    let i = (x | 0) * 4;
+    const i = (x | 0) * 4;
     return data[i] && data[i + 1] && data[i + 2] && data[i + 3];
   }
 
   function isPixelBrighterAtThan(x1, x2) {
-    let i = (x1 | 0) * 4;
-    let j = (x2 | 0) * 4;
+    const i = (x1 | 0) * 4;
+    const j = (x2 | 0) * 4;
     return data[i + 3] > data[j + 3];
   }
 
   function isPixelEquallyBright(x1, x2) {
-    let i = (x1 | 0) * 4;
-    let j = (x2 | 0) * 4;
+    const i = (x1 | 0) * 4;
+    const j = (x2 | 0) * 4;
     return data[i + 3] == data[j + 3];
   }
 

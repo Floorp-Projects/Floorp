@@ -16,14 +16,14 @@ function test() {
 
 // Test scenario 1: the tool definition build method returns a promise.
 function runTests1(tab) {
-  let toolDefinition = {
+  const toolDefinition = {
     id: toolId1,
     isTargetSupported: () => true,
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
     build: function(iframeWindow, toolbox) {
-      let panel = createTestPanel(iframeWindow, toolbox);
+      const panel = createTestPanel(iframeWindow, toolbox);
       return panel.open();
     },
   };
@@ -36,9 +36,9 @@ function runTests1(tab) {
   ok(gDevTools.getToolDefinitionMap().has(toolId1),
     "The tool is registered");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  let events = {};
+  const events = {};
 
   // Check events on the gDevTools and toolbox objects.
   gDevTools.once(toolId1 + "-init", (toolbox, iframe) => {
@@ -77,7 +77,7 @@ function runTests1(tab) {
 
 // Test scenario 2: the tool definition build method returns panel instance.
 function runTests2() {
-  let toolDefinition = {
+  const toolDefinition = {
     id: toolId2,
     isTargetSupported: () => true,
     visibilityswitch: "devtools.test-tool.enabled",
@@ -95,9 +95,9 @@ function runTests2() {
   ok(gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is registered");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  let events = {};
+  const events = {};
 
   // Check events on the gDevTools and toolbox objects.
   gDevTools.once(toolId2 + "-init", (toolbox, iframe) => {
@@ -143,15 +143,15 @@ var continueTests = async function(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
-  let toolDefinitions = gDevTools.getToolDefinitionMap();
+  const toolDefinitions = gDevTools.getToolDefinitionMap();
   ok(toolDefinitions.has(toolId2), "The tool is in gDevTools");
 
-  let toolDefinition = toolDefinitions.get(toolId2);
+  const toolDefinition = toolDefinitions.get(toolId2);
   is(toolDefinition.id, toolId2, "toolDefinition id is correct");
 
   info("Testing toolbox tool-unregistered event");
-  let toolSelected = toolbox.once("select");
-  let unregisteredTool = await new Promise(resolve => {
+  const toolSelected = toolbox.once("select");
+  const unregisteredTool = await new Promise(resolve => {
     toolbox.once("tool-unregistered", id => resolve(id));
     gDevTools.unregisterTool(toolId2);
   });
@@ -164,7 +164,7 @@ var continueTests = async function(toolbox, panel) {
     "The tool is no longer registered");
 
   info("Testing toolbox tool-registered event");
-  let registeredTool = await new Promise(resolve => {
+  const registeredTool = await new Promise(resolve => {
     toolbox.once("tool-registered", id => resolve(id));
     gDevTools.registerTool(toolDefinition);
   });
@@ -184,7 +184,7 @@ var continueTests = async function(toolbox, panel) {
 
 function destroyToolbox(toolbox) {
   toolbox.destroy().then(function() {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = TargetFactory.forTab(gBrowser.selectedTab);
     ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
     ok(toolbox.target == null, "toolbox doesn't know about target.");
     finishUp();

@@ -8,8 +8,8 @@
 // Ported from js/src/jit-test/tests/debug/Memory-takeCensus-07.js
 
 function run_test() {
-  let g = newGlobal();
-  let dbg = new Debugger(g);
+  const g = newGlobal();
+  const dbg = new Debugger(g);
 
   assertThrows(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {

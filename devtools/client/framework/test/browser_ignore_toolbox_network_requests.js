@@ -21,8 +21,8 @@ add_task(async function() {
 
   is(panel.UI.editors.length, 1, "correct number of editors opened");
 
-  let monitor = await toolbox.selectTool("netmonitor");
-  let { store } = monitor.panelWin;
+  const monitor = await toolbox.selectTool("netmonitor");
+  const { store } = monitor.panelWin;
 
   is(store.getState().requests.requests.size, 0, "No network requests appear in the network panel");
 

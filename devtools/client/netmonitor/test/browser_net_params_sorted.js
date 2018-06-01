@@ -7,11 +7,11 @@
  * Tests whether keys in Params panel are sorted.
  */
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(POST_ARRAY_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_ARRAY_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -42,8 +42,8 @@ add_task(async function() {
   //           1: "c"
   //           2: "b"
   //         c: 15
-  let actualKeys = document.querySelectorAll(".treeTable .treeRow");
-  let expectedKeys = [
+  const actualKeys = document.querySelectorAll(".treeTable .treeRow");
+  const expectedKeys = [
     "JSON",
     "watches: [...]",
     "0: hello",

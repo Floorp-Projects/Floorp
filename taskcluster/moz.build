@@ -5,23 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Taskcluster', 'General')
-
-with Files('ci/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
-
-with Files('docker/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Docker Images')
-
-with Files('docs/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Documentation')
-
-#NOTE: scripts/* files included in docker images
-with Files('scripts/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Docker Images')
-
-with Files('taskgraph/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
+    BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
 
 PYTHON_UNITTEST_MANIFESTS += [
     'taskgraph/test/python.ini',

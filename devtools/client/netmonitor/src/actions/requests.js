@@ -55,7 +55,7 @@ function sendCustomRequest(connector) {
     }
 
     // Send a new HTTP request using the data in the custom request form
-    let data = {
+    const data = {
       url: selected.url,
       method: selected.method,
       httpVersion: selected.httpVersion,

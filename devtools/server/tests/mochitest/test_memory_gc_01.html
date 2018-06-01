@@ -19,14 +19,14 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
 
     let beforeGC, afterGC;
 
     do {
       let objects = [];
       for (let i = 0; i < 1000; i++) {
-        let o = {};
+        const o = {};
         o[Math.random()] = 1;
         objects.push(o);
       }

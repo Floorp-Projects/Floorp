@@ -42,7 +42,7 @@ class Framerate {
     if (!this._recording) {
       return [];
     }
-    let ticks = this.getPendingTicks(beginAt, endAt);
+    const ticks = this.getPendingTicks(beginAt, endAt);
     this.cancelRecording();
     return ticks;
   }

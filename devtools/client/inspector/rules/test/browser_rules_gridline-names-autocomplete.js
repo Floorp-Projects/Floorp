@@ -65,7 +65,7 @@ const TEST_URL = URL_ROOT + "doc_grid_names.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  let {toolbox, inspector, view} = await openRuleView();
+  const {toolbox, inspector, view} = await openRuleView();
 
   info("Test autocompletion changing a preexisting property");
   await runChangePropertyAutocompletionTest(toolbox, inspector, view, changeTestData);
@@ -82,12 +82,12 @@ async function runNewPropertyAutocompletionTest(toolbox, inspector, view, testDa
   await selectNode("#cell2", inspector);
 
   info("Focusing the css property editable field");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
-  let gridLineNamesUpdated = inspector.once("grid-line-names-updated");
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const editor = await focusNewRuleViewProperty(ruleEditor);
+  const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
 
   info("Starting to test for css property completion");
-  for (let data of testData) {
+  for (const data of testData) {
     if (data == "grid-line-names-updated") {
       await gridLineNamesUpdated;
       continue;
@@ -100,16 +100,16 @@ async function runChangePropertyAutocompletionTest(toolbox, inspector, view, tes
   info("Selecting the test node");
   await selectNode("#cell3", inspector);
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1).rule;
-  let prop = ruleEditor.textProps[0];
+  const ruleEditor = getRuleViewRuleEditor(view, 1).rule;
+  const prop = ruleEditor.textProps[0];
 
   info("Focusing the css property editable value");
-  let gridLineNamesUpdated = inspector.once("grid-line-names-updated");
+  const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
   let editor = await focusEditableField(view, prop.editor.valueSpan);
   await gridLineNamesUpdated;
 
   info("Starting to test for css property completion");
-  for (let data of testData) {
+  for (const data of testData) {
     // Re-define the editor at each iteration, because the focus may have moved
     // from property to value and back
     editor = inplaceEditor(view.styleDocument.activeElement);
@@ -139,8 +139,10 @@ async function testCompletion([key, modifiers, completion, open, selected, chang
   }
 
   // Also listening for popup opened/closed events if needed.
-  let popupEvent = open ? "popup-opened" : "popup-closed";
-  let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+  const popupEvent = open ? "popup-opened" : "popup-closed";
+  const onPopupEvent = editor.popup.isOpen !== open
+    ? once(editor.popup, popupEvent)
+    : null;
 
   info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
 

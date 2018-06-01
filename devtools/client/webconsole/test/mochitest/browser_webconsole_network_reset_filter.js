@@ -15,10 +15,10 @@ const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
 
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
 
-  let onMessages = waitForMessages({
+  const onMessages = waitForMessages({
     hud,
     messages: [
       { text: "running network console logging tests" },
@@ -33,17 +33,17 @@ add_task(async function() {
   info("Wait for expected messages to appear");
   await onMessages;
 
-  let url = TEST_PATH + "testscript.js?foo";
+  const url = TEST_PATH + "testscript.js?foo";
   // The url as it appears in the webconsole, without the GET parameters
-  let shortUrl = TEST_PATH + "testscript.js";
+  const shortUrl = TEST_PATH + "testscript.js";
 
   info("Open the testscript.js request in the network monitor");
   await openMessageInNetmonitor(toolbox, hud, url, shortUrl);
 
   info("Filter out the current request");
-  let panel = toolbox.getCurrentPanel();
-  let { store, windowRequire } = panel.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const panel = toolbox.getCurrentPanel();
+  const { store, windowRequire } = panel.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.toggleRequestFilterType("js"));
 
   info("Select back the webconsole");

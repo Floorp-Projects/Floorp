@@ -8,8 +8,8 @@
 "use strict";
 
 // URL constructor doesn't support about: scheme
-let href = window.location.href.replace("about:", "http://");
-let url = new window.URL(href);
+const href = window.location.href.replace("about:", "http://");
+const url = new window.URL(href);
 
 // Only use this method to attach the toolbox if some query parameters are given
 if (url.search.length > 1) {
@@ -44,7 +44,7 @@ if (url.search.length > 1) {
   }
 
   // Specify the default tool to open
-  let tool = url.searchParams.get("tool");
+  const tool = url.searchParams.get("tool");
 
   (async function() {
     let target;
@@ -65,21 +65,21 @@ if (url.search.length > 1) {
 
       // Fake a xul:tab object as we don't have one.
       // linkedBrowser is the only one attribute being queried by client.getTab
-      let tab = { linkedBrowser: iframe };
+      const tab = { linkedBrowser: iframe };
 
       DebuggerServer.init();
       DebuggerServer.registerAllActors();
-      let client = new DebuggerClient(DebuggerServer.connectPipe());
+      const client = new DebuggerClient(DebuggerServer.connectPipe());
 
       await client.connect();
       // Creates a target for a given browser iframe.
-      let response = await client.getTab({ tab });
-      let form = response.tab;
+      const response = await client.getTab({ tab });
+      const form = response.tab;
       target = await TargetFactory.forRemoteTab({client, form, chrome: false});
     } else {
       target = await targetFromURL(url);
     }
-    let options = { customIframe: host };
+    const options = { customIframe: host };
     await gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
   })().catch(error => {
     console.error("Exception while loading the toolbox", error);

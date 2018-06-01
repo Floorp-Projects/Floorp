@@ -14,10 +14,10 @@ function test() {
 }
 
 function testThrowOutput() {
-  let scratchpad = gScratchpadWindow.Scratchpad, tests = [];
+  const scratchpad = gScratchpadWindow.Scratchpad, tests = [];
 
-  let falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
-                     "-Infinity", "NaN"];
+  const falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
+                       "-Infinity", "NaN"];
   falsyValues.forEach(function(value) {
     tests.push({
       method: "display",
@@ -27,11 +27,11 @@ function testThrowOutput() {
     });
   });
 
-  let { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerServer } = require("devtools/server/main");
 
-  let longLength = DebuggerServer.LONG_STRING_LENGTH + 1;
-  let longString = new Array(longLength).join("a");
-  let shortedString = longString.substring(0,
+  const longLength = DebuggerServer.LONG_STRING_LENGTH + 1;
+  const longString = new Array(longLength).join("a");
+  const shortedString = longString.substring(0,
     DebuggerServer.LONG_STRING_INITIAL_LENGTH) + "\u2026";
 
   tests.push({

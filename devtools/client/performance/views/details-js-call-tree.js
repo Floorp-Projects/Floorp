@@ -53,17 +53,18 @@ var JsCallTreeView = extend(DetailsSubview, {
    *        The { startTime, endTime }, in milliseconds.
    */
   render: function(interval = {}) {
-    let recording = PerformanceController.getCurrentRecording();
-    let profile = recording.getProfile();
-    let showOptimizations = PerformanceController.getOption("show-jit-optimizations");
+    const recording = PerformanceController.getCurrentRecording();
+    const profile = recording.getProfile();
+    const showOptimizations = PerformanceController.getOption("show-jit-optimizations");
 
-    let options = {
+    const options = {
       contentOnly: !PerformanceController.getOption("show-platform-data"),
       invertTree: PerformanceController.getOption("invert-call-tree"),
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       showOptimizationHint: showOptimizations
     };
-    let threadNode = this.threadNode = this._prepareCallTree(profile, interval, options);
+    const threadNode =
+      this.threadNode = this._prepareCallTree(profile, interval, options);
     this._populateCallTree(threadNode, options);
 
     // For better or worse, re-rendering loses frame selection,
@@ -82,9 +83,9 @@ var JsCallTreeView = extend(DetailsSubview, {
   },
 
   _onFocus: function(treeItem) {
-    let showOptimizations = PerformanceController.getOption("show-jit-optimizations");
-    let frameNode = treeItem.frame;
-    let optimizationSites = frameNode && frameNode.hasOptimizations()
+    const showOptimizations = PerformanceController.getOption("show-jit-optimizations");
+    const frameNode = treeItem.frame;
+    const optimizationSites = frameNode && frameNode.hasOptimizations()
                             ? frameNode.getOptimizations().optimizationSites
                             : [];
 
@@ -96,8 +97,8 @@ var JsCallTreeView = extend(DetailsSubview, {
 
     this.showOptimizations();
 
-    let frameData = frameNode.getInfo();
-    let optimizations = JITOptimizationsView({
+    const frameData = frameNode.getInfo();
+    const optimizations = JITOptimizationsView({
       frameData,
       optimizationSites,
       onViewSourceInDebugger: (url, line) => {
@@ -120,7 +121,7 @@ var JsCallTreeView = extend(DetailsSubview, {
    * Fired on the "link" event for the call tree in this container.
    */
   _onLink: function(treeItem) {
-    let { url, line } = treeItem.frame.getInfo();
+    const { url, line } = treeItem.frame.getInfo();
     gToolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {
         this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
@@ -135,10 +136,10 @@ var JsCallTreeView = extend(DetailsSubview, {
    * populate the call tree.
    */
   _prepareCallTree: function(profile, { startTime, endTime }, options) {
-    let thread = profile.threads[0];
-    let { contentOnly, invertTree, flattenRecursion } = options;
-    let threadNode = new ThreadNode(thread, { startTime, endTime, contentOnly, invertTree,
-                                              flattenRecursion });
+    const thread = profile.threads[0];
+    const { contentOnly, invertTree, flattenRecursion } = options;
+    const threadNode = new ThreadNode(thread,
+      { startTime, endTime, contentOnly, invertTree, flattenRecursion });
 
     // Real profiles from nsProfiler (i.e. not synthesized from allocation
     // logs) always have a (root) node. Go down one level in the uninverted
@@ -158,9 +159,9 @@ var JsCallTreeView = extend(DetailsSubview, {
     // If we have an empty profile (no samples), then don't invert the tree, as
     // it would hide the root node and a completely blank call tree space can be
     // mis-interpreted as an error.
-    let inverted = options.invertTree && frameNode.samples > 0;
+    const inverted = options.invertTree && frameNode.samples > 0;
 
-    let root = new CallView({
+    const root = new CallView({
       frame: frameNode,
       inverted: inverted,
       // The synthesized root node is hidden in inverted call trees.

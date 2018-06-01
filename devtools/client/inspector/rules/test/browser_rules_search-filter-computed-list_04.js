@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testModifyPropertyValueFilter(inspector, view);
 });
@@ -29,10 +29,10 @@ add_task(async function() {
 async function testModifyPropertyValueFilter(inspector, view) {
   await setSearchFilter(view, SEARCH);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let propEditor = rule.textProps[0].editor;
-  let computed = propEditor.computed;
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const propEditor = rule.textProps[0].editor;
+  const computed = propEditor.computed;
+  const editor = await focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
@@ -42,8 +42,8 @@ async function testModifyPropertyValueFilter(inspector, view) {
     .contains("ruleview-highlight"),
     "top text property is correctly highlighted.");
 
-  let onBlur = once(editor.input, "blur");
-  let onModification = view.once("ruleview-changed");
+  const onBlur = once(editor.input, "blur");
+  const onModification = view.once("ruleview-changed");
   EventUtils.sendString("4px 0px", view.styleWindow);
   EventUtils.synthesizeKey("KEY_Enter");
   await onBlur;

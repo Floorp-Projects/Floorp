@@ -171,7 +171,7 @@ var RecordingsView = {
    * The click listener for the "save" button of each item in this container.
    */
   _onSaveButtonClick: function(recording) {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"),
             Ci.nsIFilePicker.modeSave);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");

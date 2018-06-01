@@ -22,12 +22,12 @@ const TOOLTIP_HEIGHT = 30;
 add_task(async function() {
   await pushPref("devtools.toolbox.sidebar.width", TOOLBOX_WIDTH);
 
-  let [,, doc] = await createHost("side", TEST_URI);
+  const [,, doc] = await createHost("side", TEST_URI);
 
   info("Test a tooltip is not closed when clicking inside itself");
 
-  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
-  let div = doc.createElementNS(HTML_NS, "div");
+  const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
+  const div = doc.createElementNS(HTML_NS, "div");
   div.textContent = "tooltip";
   div.style.cssText = "box-sizing: border-box; border: 1px solid black";
   tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
@@ -55,8 +55,8 @@ async function testRtlAnchors(doc, tooltip) {
    * - total toolbox width is 500px so each box is 125px wide
   */
 
-  let box1 = doc.getElementById("box1");
-  let box2 = doc.getElementById("box2");
+  const box1 = doc.getElementById("box1");
+  const box2 = doc.getElementById("box2");
 
   info("Display the tooltip on box1.");
   await showTooltip(tooltip, box1, {position: "bottom"});
@@ -98,8 +98,8 @@ async function testLtrAnchors(doc, tooltip) {
    * - total toolbox width is 500px so each box is 125px wide
   */
 
-  let box3 = doc.getElementById("box3");
-  let box4 = doc.getElementById("box4");
+  const box3 = doc.getElementById("box3");
+  const box4 = doc.getElementById("box4");
 
   info("Display the tooltip on box3.");
   await showTooltip(tooltip, box3, {position: "bottom"});

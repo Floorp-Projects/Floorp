@@ -47,7 +47,7 @@ function CubicBezier(coordinates) {
   this.coordinates = coordinates.map(n => +n);
 
   for (let i = 4; i--;) {
-    let xy = this.coordinates[i];
+    const xy = this.coordinates[i];
     if (isNaN(xy) || (!(i % 2) && (xy < 0 || xy > 1))) {
       throw new Error(`Wrong coordinate at ${i}(${xy})`);
     }
@@ -73,7 +73,7 @@ CubicBezier.prototype = {
 
   toString: function() {
     // Check first if current coords are one of css predefined functions
-    let predefName = Object.keys(PREDEFINED)
+    const predefName = Object.keys(PREDEFINED)
                            .find(key => coordsAreEqual(PREDEFINED[key],
                                                        this.coordinates));
 
@@ -94,7 +94,7 @@ function BezierCanvas(canvas, bezier, padding) {
 
   // Convert to a cartesian coordinate system with axes from 0 to 1
   this.ctx = this.canvas.getContext("2d");
-  let p = this.padding;
+  const p = this.padding;
 
   this.ctx.scale(canvas.width * (1 - p[1] - p[3]),
                  -canvas.height * (1 - p[0] - p[2]));
@@ -110,7 +110,7 @@ BezierCanvas.prototype = {
    * @return {Array} Returns an array of 2 {top:String,left:String} objects
    */
   get offsets() {
-    let p = this.padding, w = this.canvas.width, h = this.canvas.height;
+    const p = this.padding, w = this.canvas.width, h = this.canvas.height;
 
     return [{
       left: w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + "px",
@@ -127,10 +127,10 @@ BezierCanvas.prototype = {
    * Convert an element's left/top offsets into coordinates
    */
   offsetsToCoordinates: function(element) {
-    let p = this.padding, w = this.canvas.width, h = this.canvas.height;
+    const w = this.canvas.width, h = this.canvas.height;
 
     // Convert padding percentage to actual padding
-    p = p.map((a, i) => a * (i % 2 ? w : h));
+    const p = this.padding.map((a, i) => a * (i % 2 ? w : h));
 
     return [
       (parseFloat(element.style.left) - p[3]) / (w + p[1] + p[3]),
@@ -142,9 +142,9 @@ BezierCanvas.prototype = {
    * Draw the cubic bezier curve for the current coordinates
    */
   plot: function(settings = {}) {
-    let xy = this.bezier.coordinates;
+    const xy = this.bezier.coordinates;
 
-    let defaultSettings = {
+    const defaultSettings = {
       handleColor: "#666",
       handleThickness: .008,
       bezierColor: "#4C9ED9",
@@ -152,7 +152,7 @@ BezierCanvas.prototype = {
       drawHandles: true
     };
 
-    for (let setting in settings) {
+    for (const setting in settings) {
       defaultSettings[setting] = settings[setting];
     }
 
@@ -178,7 +178,7 @@ BezierCanvas.prototype = {
       this.ctx.stroke();
       this.ctx.closePath();
 
-      let circle = (ctx, cx, cy, r) => {
+      const circle = (ctx, cx, cy, r) => {
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, 2 * Math.PI, !1);
         ctx.closePath();
@@ -215,7 +215,7 @@ function CubicBezierWidget(parent,
   EventEmitter.decorate(this);
 
   this.parent = parent;
-  let {curve, p1, p2} = this._initMarkup();
+  const {curve, p1, p2} = this._initMarkup();
 
   this.curveBoundingBox = curve.getBoundingClientRect();
   this.curve = curve;
@@ -228,7 +228,7 @@ function CubicBezierWidget(parent,
   this.bezierCanvas.plot();
 
   // Place the control points
-  let offsets = this.bezierCanvas.offsets;
+  const offsets = this.bezierCanvas.offsets;
   this.p1.style.left = offsets[0].left;
   this.p1.style.top = offsets[0].top;
   this.p2.style.left = offsets[1].left;
@@ -252,23 +252,23 @@ exports.CubicBezierWidget = CubicBezierWidget;
 
 CubicBezierWidget.prototype = {
   _initMarkup: function() {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let wrap = doc.createElementNS(XHTML_NS, "div");
+    const wrap = doc.createElementNS(XHTML_NS, "div");
     wrap.className = "display-wrap";
 
-    let plane = doc.createElementNS(XHTML_NS, "div");
+    const plane = doc.createElementNS(XHTML_NS, "div");
     plane.className = "coordinate-plane";
 
-    let p1 = doc.createElementNS(XHTML_NS, "button");
+    const p1 = doc.createElementNS(XHTML_NS, "button");
     p1.className = "control-point";
     plane.appendChild(p1);
 
-    let p2 = doc.createElementNS(XHTML_NS, "button");
+    const p2 = doc.createElementNS(XHTML_NS, "button");
     p2.className = "control-point";
     plane.appendChild(p2);
 
-    let curve = doc.createElementNS(XHTML_NS, "canvas");
+    const curve = doc.createElementNS(XHTML_NS, "canvas");
     curve.setAttribute("width", 150);
     curve.setAttribute("height", 370);
     curve.className = "curve";
@@ -317,15 +317,15 @@ CubicBezierWidget.prototype = {
     // Updating the boundingbox in case it has changed
     this.curveBoundingBox = this.curve.getBoundingClientRect();
 
-    let point = event.target;
-    let doc = point.ownerDocument;
-    let self = this;
+    const point = event.target;
+    const doc = point.ownerDocument;
+    const self = this;
 
     doc.onmousemove = function drag(e) {
       let x = e.pageX;
-      let y = e.pageY;
-      let left = self.curveBoundingBox.left;
-      let top = self.curveBoundingBox.top;
+      const y = e.pageY;
+      const left = self.curveBoundingBox.left;
+      const top = self.curveBoundingBox.top;
 
       if (x === 0 && y == 0) {
         return;
@@ -347,16 +347,16 @@ CubicBezierWidget.prototype = {
   },
 
   _onPointKeyDown: function(event) {
-    let point = event.target;
-    let code = event.keyCode;
+    const point = event.target;
+    const code = event.keyCode;
 
     if (code >= 37 && code <= 40) {
       event.preventDefault();
 
       // Arrow keys pressed
-      let left = parseInt(point.style.left, 10);
-      let top = parseInt(point.style.top, 10);
-      let offset = 3 * (event.shiftKey ? 10 : 1);
+      const left = parseInt(point.style.left, 10);
+      const top = parseInt(point.style.top, 10);
+      const offset = 3 * (event.shiftKey ? 10 : 1);
 
       switch (code) {
         case 37: point.style.left = left - offset + "px"; break;
@@ -372,18 +372,18 @@ CubicBezierWidget.prototype = {
   _onCurveClick: function(event) {
     this.curveBoundingBox = this.curve.getBoundingClientRect();
 
-    let left = this.curveBoundingBox.left;
-    let top = this.curveBoundingBox.top;
-    let x = event.pageX - left;
-    let y = event.pageY - top;
+    const left = this.curveBoundingBox.left;
+    const top = this.curveBoundingBox.top;
+    const x = event.pageX - left;
+    const y = event.pageY - top;
 
     // Find which point is closer
-    let distP1 = distance(x, y,
+    const distP1 = distance(x, y,
       parseInt(this.p1.style.left, 10), parseInt(this.p1.style.top, 10));
-    let distP2 = distance(x, y,
+    const distP2 = distance(x, y,
       parseInt(this.p2.style.left, 10), parseInt(this.p2.style.top, 10));
 
-    let point = distP1 < distP2 ? this.p1 : this.p2;
+    const point = distP1 < distP2 ? this.p1 : this.p2;
     point.style.left = x + "px";
     point.style.top = y + "px";
 
@@ -429,7 +429,7 @@ CubicBezierWidget.prototype = {
     this._redraw(coordinates);
 
     // Move the points
-    let offsets = this.bezierCanvas.offsets;
+    const offsets = this.bezierCanvas.offsets;
     this.p1.style.left = offsets[0].left;
     this.p1.style.top = offsets[0].top;
     this.p2.style.left = offsets[1].left;
@@ -449,7 +449,7 @@ CubicBezierWidget.prototype = {
     value = value.trim();
 
     // Try with one of the predefined values
-    let coordinates = parseTimingFunction(value);
+    const coordinates = parseTimingFunction(value);
 
     this.presets.refreshMenu(coordinates);
     this.coordinates = coordinates;
@@ -478,7 +478,7 @@ CubicBezierWidget.prototype = {
 function CubicBezierPresetWidget(parent) {
   this.parent = parent;
 
-  let {presetPane, presets, categories} = this._initMarkup();
+  const {presetPane, presets, categories} = this._initMarkup();
   this.presetPane = presetPane;
   this.presets = presets;
   this.categories = categories;
@@ -516,22 +516,22 @@ CubicBezierPresetWidget.prototype = {
    *        ...
    */
   _initMarkup: function() {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let presetPane = doc.createElementNS(XHTML_NS, "div");
+    const presetPane = doc.createElementNS(XHTML_NS, "div");
     presetPane.className = "preset-pane";
 
-    let categoryList = doc.createElementNS(XHTML_NS, "div");
+    const categoryList = doc.createElementNS(XHTML_NS, "div");
     categoryList.id = "preset-categories";
 
-    let presetContainer = doc.createElementNS(XHTML_NS, "div");
+    const presetContainer = doc.createElementNS(XHTML_NS, "div");
     presetContainer.id = "preset-container";
 
     Object.keys(PRESETS).forEach(categoryLabel => {
-      let category = this._createCategory(categoryLabel);
+      const category = this._createCategory(categoryLabel);
       categoryList.appendChild(category);
 
-      let presetList = this._createPresetList(categoryLabel);
+      const presetList = this._createPresetList(categoryLabel);
       presetContainer.appendChild(presetList);
     });
 
@@ -540,8 +540,8 @@ CubicBezierPresetWidget.prototype = {
 
     this.parent.appendChild(presetPane);
 
-    let allCategories = presetPane.querySelectorAll(".category");
-    let allPresets = presetPane.querySelectorAll(".preset");
+    const allCategories = presetPane.querySelectorAll(".category");
+    const allPresets = presetPane.querySelectorAll(".preset");
 
     return {
       presetPane: presetPane,
@@ -551,13 +551,13 @@ CubicBezierPresetWidget.prototype = {
   },
 
   _createCategory: function(categoryLabel) {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let category = doc.createElementNS(XHTML_NS, "div");
+    const category = doc.createElementNS(XHTML_NS, "div");
     category.id = categoryLabel;
     category.classList.add("category");
 
-    let categoryDisplayLabel = this._normalizeCategoryLabel(categoryLabel);
+    const categoryDisplayLabel = this._normalizeCategoryLabel(categoryLabel);
     category.textContent = categoryDisplayLabel;
     category.setAttribute("title", categoryDisplayLabel);
 
@@ -569,14 +569,14 @@ CubicBezierPresetWidget.prototype = {
   },
 
   _createPresetList: function(categoryLabel) {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let presetList = doc.createElementNS(XHTML_NS, "div");
+    const presetList = doc.createElementNS(XHTML_NS, "div");
     presetList.id = "preset-category-" + categoryLabel;
     presetList.classList.add("preset-list");
 
     Object.keys(PRESETS[categoryLabel]).forEach(presetLabel => {
-      let preset = this._createPreset(categoryLabel, presetLabel);
+      const preset = this._createPreset(categoryLabel, presetLabel);
       presetList.appendChild(preset);
     });
 
@@ -584,15 +584,15 @@ CubicBezierPresetWidget.prototype = {
   },
 
   _createPreset: function(categoryLabel, presetLabel) {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let preset = doc.createElementNS(XHTML_NS, "div");
+    const preset = doc.createElementNS(XHTML_NS, "div");
     preset.classList.add("preset");
     preset.id = presetLabel;
     preset.coordinates = PRESETS[categoryLabel][presetLabel];
     // Create preset preview
-    let curve = doc.createElementNS(XHTML_NS, "canvas");
-    let bezier = new CubicBezier(preset.coordinates);
+    const curve = doc.createElementNS(XHTML_NS, "canvas");
+    const bezier = new CubicBezier(preset.coordinates);
     curve.setAttribute("height", 50);
     curve.setAttribute("width", 50);
     preset.bezierCanvas = new BezierCanvas(curve, bezier, [0.15, 0]);
@@ -603,8 +603,8 @@ CubicBezierPresetWidget.prototype = {
     preset.appendChild(curve);
 
     // Create preset label
-    let presetLabelElem = doc.createElementNS(XHTML_NS, "p");
-    let presetDisplayLabel = this._normalizePresetLabel(categoryLabel,
+    const presetLabelElem = doc.createElementNS(XHTML_NS, "p");
+    const presetDisplayLabel = this._normalizePresetLabel(categoryLabel,
                                                         presetLabel);
     presetLabelElem.textContent = presetDisplayLabel;
     preset.appendChild(presetLabelElem);
@@ -618,21 +618,21 @@ CubicBezierPresetWidget.prototype = {
   },
 
   _initEvents: function() {
-    for (let category of this.categories) {
+    for (const category of this.categories) {
       category.addEventListener("click", this._onCategoryClick);
     }
 
-    for (let preset of this.presets) {
+    for (const preset of this.presets) {
       preset.addEventListener("click", this._onPresetClick);
     }
   },
 
   _removeEvents: function() {
-    for (let category of this.categories) {
+    for (const category of this.categories) {
       category.removeEventListener("click", this._onCategoryClick);
     }
 
-    for (let preset of this.presets) {
+    for (const preset of this.presets) {
       preset.removeEventListener("click", this._onPresetClick);
     }
   },
@@ -647,7 +647,7 @@ CubicBezierPresetWidget.prototype = {
   },
 
   _setActivePresetList: function(presetListId) {
-    let presetList = this.presetPane.querySelector("#" + presetListId);
+    const presetList = this.presetPane.querySelector("#" + presetListId);
     swapClassName("active-preset-list", this._activePresetList, presetList);
     this._activePresetList = presetList;
   },
@@ -730,16 +730,16 @@ TimingFunctionPreviewWidget.prototype = {
   PREVIEW_DURATION: 1000,
 
   _initMarkup: function() {
-    let doc = this.parent.ownerDocument;
+    const doc = this.parent.ownerDocument;
 
-    let container = doc.createElementNS(XHTML_NS, "div");
+    const container = doc.createElementNS(XHTML_NS, "div");
     container.className = "timing-function-preview";
 
     this.dot = doc.createElementNS(XHTML_NS, "div");
     this.dot.className = "dot";
     container.appendChild(this.dot);
 
-    let scale = doc.createElementNS(XHTML_NS, "div");
+    const scale = doc.createElementNS(XHTML_NS, "div");
     scale.className = "scale";
     container.appendChild(scale);
 
@@ -806,7 +806,7 @@ TimingFunctionPreviewWidget.prototype = {
 // Helpers
 
 function getPadding(padding) {
-  let p = typeof padding === "number" ? [padding] : padding;
+  const p = typeof padding === "number" ? [padding] : padding;
 
   if (p.length === 1) {
     p[1] = p[0];
@@ -839,10 +839,10 @@ function parseTimingFunction(value) {
     return PREDEFINED[value];
   }
 
-  let tokenStream = getCSSLexer(value);
-  let getNextToken = () => {
+  const tokenStream = getCSSLexer(value);
+  const getNextToken = () => {
     while (true) {
-      let token = tokenStream.nextToken();
+      const token = tokenStream.nextToken();
       if (!token || (token.tokenType !== "whitespace" &&
                      token.tokenType !== "comment")) {
         return token;
@@ -855,7 +855,7 @@ function parseTimingFunction(value) {
     return undefined;
   }
 
-  let result = [];
+  const result = [];
   for (let i = 0; i < 4; ++i) {
     token = getNextToken();
     if (!token || token.tokenType !== "number") {

@@ -24,28 +24,28 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Test click on color swatch while editing property name");
 
   await selectNode("#testid", inspector);
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[1].editor;
-  let swatchSpan = propEditor.valueSpan.querySelectorAll(
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[1].editor;
+  const swatchSpan = propEditor.valueSpan.querySelectorAll(
     ".ruleview-colorswatch")[3];
-  let colorPicker = view.tooltips.getTooltip("colorPicker");
+  const colorPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);
-  let editor = inplaceEditor(propEditor.doc.activeElement);
+  const editor = inplaceEditor(propEditor.doc.activeElement);
 
   info("Modify the background property to background-image to trigger the " +
     "property-value-updated event");
   editor.input.value = "background-image";
 
-  let onRuleViewChanged = view.once("ruleview-changed");
-  let onPropertyValueUpdate = view.once("property-value-updated");
-  let onReady = colorPicker.once("ready");
+  const onRuleViewChanged = view.once("ruleview-changed");
+  const onPropertyValueUpdate = view.once("property-value-updated");
+  const onReady = colorPicker.once("ready");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
   EventUtils.synthesizeMouseAtCenter(swatchSpan, {},
@@ -64,6 +64,6 @@ add_task(async function() {
   ok(!inplaceEditor(propEditor.valueSpan),
     "The inplace editor wasn't shown as a result of the color swatch click");
 
-  let spectrum = colorPicker.spectrum;
+  const spectrum = colorPicker.spectrum;
   is(spectrum.rgb, "200,170,140,0.5", "The correct color picker was shown");
 });

@@ -33,7 +33,7 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
       expect(wrapper.find(".objectBox-string").length).toBe(2);
-      let selector = "div.message.cm-s-mozilla span span.message-flex-body " +
+      const selector = "div.message.cm-s-mozilla span span.message-flex-body " +
         "span.message-body.devtools-monospace";
       expect(wrapper.find(selector).length).toBe(1);
 
@@ -130,7 +130,7 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".message-repeats").text()).toBe("107");
       expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");
 
-      let selector = "span > span.message-flex-body > " +
+      const selector = "span > span.message-flex-body > " +
         "span.message-body.devtools-monospace + span.message-repeats";
       expect(wrapper.find(selector).length).toBe(1);
     });
@@ -426,7 +426,7 @@ describe("ConsoleAPICall component:", () => {
       store.dispatch = sinon.spy();
       const message = stubPreparedMessages.get("console.group('bar')");
 
-      let wrapper = mount(Provider({store},
+      const wrapper = mount(Provider({store},
         ConsoleApiCall({
           message,
           open: true,
@@ -435,7 +435,7 @@ describe("ConsoleAPICall component:", () => {
         })
       ));
       wrapper.find(".frame-link-source").simulate("click");
-      let call = store.dispatch.getCall(0);
+      const call = store.dispatch.getCall(0);
       expect(call).toNotExist();
     });
   });

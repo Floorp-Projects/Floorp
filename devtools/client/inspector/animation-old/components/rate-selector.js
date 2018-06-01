@@ -55,7 +55,7 @@ RateSelector.prototype = {
   },
 
   getAllRates: function(animations) {
-    let animationsRates = this.getAnimationsRates(animations);
+    const animationsRates = this.getAnimationsRates(animations);
     if (animationsRates.length > 1) {
       return PLAYBACK_RATES;
     }
@@ -64,8 +64,8 @@ RateSelector.prototype = {
   },
 
   render: function(animations) {
-    let allRates = this.getAnimationsRates(animations);
-    let hasOneRate = allRates.length === 1;
+    const allRates = this.getAnimationsRates(animations);
+    const hasOneRate = allRates.length === 1;
 
     this.selectEl.innerHTML = "";
 
@@ -79,8 +79,8 @@ RateSelector.prototype = {
         textContent: "-"
       });
     }
-    for (let rate of this.getAllRates(animations)) {
-      let option = createNode({
+    for (const rate of this.getAllRates(animations)) {
+      const option = createNode({
         parent: this.selectEl,
         nodeType: "option",
         attributes: {value: rate},
@@ -95,11 +95,11 @@ RateSelector.prototype = {
   },
 
   onRateChanged: function() {
-    let rate = parseFloat(this.selectEl.value);
+    const rate = parseFloat(this.selectEl.value);
     if (!isNaN(rate)) {
       this.emit("rate-changed", rate);
     }
   }
 };
 
-let sortedUnique = arr => [...new Set(arr)].sort((a, b) => a > b);
+const sortedUnique = arr => [...new Set(arr)].sort((a, b) => a > b);

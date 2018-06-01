@@ -18,11 +18,11 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = rule.textProps[0];
 
   info("Disabling background-color property");
   await togglePropStatus(view, prop);
@@ -34,12 +34,12 @@ add_task(async function() {
        "focus the value");
 
   await focusEditableField(view, prop.editor.nameSpan);
-  let onNameDone = view.once("ruleview-changed");
+  const onNameDone = view.once("ruleview-changed");
   EventUtils.sendString("border-color:", view.styleWindow);
   await onNameDone;
 
   info("Escape editing the property value");
-  let onValueDone = view.once("ruleview-changed");
+  const onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   await onValueDone;
 
@@ -68,7 +68,7 @@ add_task(async function() {
 });
 
 async function getRulePropertyValue(name) {
-  let propValue = await executeInContent("Test:GetRulePropertyValue", {
+  const propValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: name

@@ -10,13 +10,13 @@ const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
 add_task(async function() {
-  let browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
+  const browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = TimelineFront(client, form);
-  let rec = await front.start({ withMarkers: true, withDocLoadingEvents: true });
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = TimelineFront(client, form);
+  const rec = await front.start({ withMarkers: true, withDocLoadingEvents: true });
 
   await new Promise(resolve => {
     front.once("doc-loading", resolve);

@@ -10,7 +10,7 @@ const { changeDisplayPixelRatio } =
 const NEW_PIXEL_RATIO = 5.5;
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   equal(getState().displayPixelRatio, 0,

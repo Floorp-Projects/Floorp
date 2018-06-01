@@ -143,8 +143,8 @@ function reconfigureTab(target, options) {
 }
 
 function toggleCache(target, disabled) {
-  let options = { cacheDisabled: disabled, performReload: true };
-  let navigationFinished = waitForNavigation(target);
+  const options = { cacheDisabled: disabled, performReload: true };
+  const navigationFinished = waitForNavigation(target);
 
   // Disable the cache for any toolbox that it is opened from this point on.
   Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
@@ -157,7 +157,7 @@ function toggleCache(target, disabled) {
  */
 function waitForTimelineMarkers(monitor) {
   return new Promise(resolve => {
-    let markers = [];
+    const markers = [];
 
     function handleTimelineEvent(marker) {
       info(`Got marker: ${marker.name}`);
@@ -190,24 +190,24 @@ function waitForTimelineMarkers(monitor) {
  * @returns a promise that resolves when the wait is done.
  */
 function waitForAllRequestsFinished(monitor) {
-  let window = monitor.panelWin;
-  let { connector } = window;
-  let { getNetworkRequest } = connector;
+  const window = monitor.panelWin;
+  const { connector } = window;
+  const { getNetworkRequest } = connector;
 
   return new Promise(resolve => {
     // Key is the request id, value is a boolean - is request finished or not?
-    let requests = new Map();
+    const requests = new Map();
 
     function onRequest(id) {
-      let networkInfo = getNetworkRequest(id);
-      let { url } = networkInfo.request;
+      const networkInfo = getNetworkRequest(id);
+      const { url } = networkInfo.request;
       info(`Request ${id} for ${url} not yet done, keep waiting...`);
       requests.set(id, false);
     }
 
     function onTimings(id) {
-      let networkInfo = getNetworkRequest(id);
-      let { url } = networkInfo.request;
+      const networkInfo = getNetworkRequest(id);
+      const { url } = networkInfo.request;
       info(`Request ${id} for ${url} done`);
       requests.set(id, true);
       maybeResolve();
@@ -232,7 +232,7 @@ function waitForAllRequestsFinished(monitor) {
 }
 
 let finishedQueue = {};
-let updatingTypes = [
+const updatingTypes = [
   "NetMonitor:NetworkEventUpdating:RequestCookies",
   "NetMonitor:NetworkEventUpdating:ResponseCookies",
   "NetMonitor:NetworkEventUpdating:RequestHeaders",
@@ -242,7 +242,7 @@ let updatingTypes = [
   "NetMonitor:NetworkEventUpdating:SecurityInfo",
   "NetMonitor:NetworkEventUpdating:EventTimings",
 ];
-let updatedTypes = [
+const updatedTypes = [
   "NetMonitor:NetworkEventUpdated:RequestCookies",
   "NetMonitor:NetworkEventUpdated:ResponseCookies",
   "NetMonitor:NetworkEventUpdated:RequestHeaders",
@@ -257,19 +257,19 @@ let updatedTypes = [
 // removeTab() should be called once all corresponded RECEIVED_* events finished.
 function startNetworkEventUpdateObserver(panelWin) {
   updatingTypes.forEach((type) => panelWin.api.on(type, actor => {
-    let key = actor + "-" + updatedTypes[updatingTypes.indexOf(type)];
+    const key = actor + "-" + updatedTypes[updatingTypes.indexOf(type)];
     finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
   }));
 
   updatedTypes.forEach((type) => panelWin.api.on(type, actor => {
-    let key = actor + "-" + type;
+    const key = actor + "-" + type;
     finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
   }));
 }
 
 async function waitForAllNetworkUpdateEvents() {
   function checkNetworkEventUpdateState() {
-    for (let key in finishedQueue) {
+    for (const key in finishedQueue) {
       if (finishedQueue[key] > 0) {
         return false;
       }
@@ -286,29 +286,29 @@ function initNetMonitor(url, enableCache) {
   info("Initializing a network monitor pane.");
 
   return (async function() {
-    let tab = await addTab(url);
+    const tab = await addTab(url);
     info("Net tab added successfully: " + url);
 
-    let target = TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
     await target.makeRemote();
     info("Target remoted.");
 
-    let toolbox = await gDevTools.showToolbox(target, "netmonitor");
+    const toolbox = await gDevTools.showToolbox(target, "netmonitor");
     info("Network monitor pane shown successfully.");
 
-    let monitor = toolbox.getCurrentPanel();
+    const monitor = toolbox.getCurrentPanel();
 
     startNetworkEventUpdateObserver(monitor.panelWin);
 
     if (!enableCache) {
-      let panel = monitor.panelWin;
-      let { store, windowRequire } = panel;
-      let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+      const panel = monitor.panelWin;
+      const { store, windowRequire } = panel;
+      const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
       info("Disabling cache and reloading page.");
-      let requestsDone = waitForAllRequestsFinished(monitor);
-      let markersDone = waitForTimelineMarkers(monitor);
+      const requestsDone = waitForAllRequestsFinished(monitor);
+      const markersDone = waitForTimelineMarkers(monitor);
       await toggleCache(target, true);
       await Promise.all([requestsDone, markersDone]);
       info("Cache disabled when the current and all future toolboxes are open.");
@@ -331,13 +331,13 @@ function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
   return (async function() {
-    let tab = monitor.toolbox.target.tab;
-    let url = newUrl || tab.linkedBrowser.currentURI.spec;
+    const tab = monitor.toolbox.target.tab;
+    const url = newUrl || tab.linkedBrowser.currentURI.spec;
 
     await waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
 
-    let onDestroyed = monitor.once("destroyed");
+    const onDestroyed = monitor.once("destroyed");
     await removeTab(tab);
     await onDestroyed;
 
@@ -349,12 +349,12 @@ function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
   return (async function() {
-    let tab = monitor.toolbox.target.tab;
+    const tab = monitor.toolbox.target.tab;
 
     await waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
 
-    let onDestroyed = monitor.once("destroyed");
+    const onDestroyed = monitor.once("destroyed");
     await removeTab(tab);
     await onDestroyed;
   })();
@@ -362,13 +362,13 @@ function teardown(monitor) {
 
 function waitForNetworkEvents(monitor, getRequests) {
   return new Promise((resolve) => {
-    let panel = monitor.panelWin;
-    let { getNetworkRequest } = panel.connector;
+    const panel = monitor.panelWin;
+    const { getNetworkRequest } = panel.connector;
     let networkEvent = 0;
     let payloadReady = 0;
 
     function onNetworkEvent(actor) {
-      let networkInfo = getNetworkRequest(actor);
+      const networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
         // Must have been related to reloading document to disable cache.
         // Ignore the event.
@@ -379,7 +379,7 @@ function waitForNetworkEvents(monitor, getRequests) {
     }
 
     function onPayloadReady(actor) {
-      let networkInfo = getNetworkRequest(actor);
+      const networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
         // Must have been related to reloading document to disable cache.
         // Ignore the event.
@@ -412,31 +412,31 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
                                  url, data = {}) {
   info("> Verifying: " + method + " " + url + " " + data.toSource());
 
-  let visibleIndex = requestList.indexOf(requestItem);
+  const visibleIndex = requestList.indexOf(requestItem);
 
   info("Visible index of item: " + visibleIndex);
 
-  let { fuzzyUrl, status, statusText, cause, type, fullMimeType,
+  const { fuzzyUrl, status, statusText, cause, type, fullMimeType,
         transferred, size, time, displayedStatus } = data;
 
-  let target = document.querySelectorAll(".request-list-item")[visibleIndex];
+  const target = document.querySelectorAll(".request-list-item")[visibleIndex];
   // Bug 1414981 - Request URL should not show #hash
-  let unicodeUrl = getUnicodeUrl(url.split("#")[0]);
-  let name = getUrlBaseName(url);
-  let query = getUrlQuery(url);
-  let host = getUnicodeHostname(getUrlHost(url));
-  let scheme = getUrlScheme(url);
-  let {
+  const unicodeUrl = getUnicodeUrl(url.split("#")[0]);
+  const name = getUrlBaseName(url);
+  const query = getUrlQuery(url);
+  const host = getUnicodeHostname(getUrlHost(url));
+  const scheme = getUrlScheme(url);
+  const {
     remoteAddress,
     remotePort,
     totalTime,
     eventTimings = { timings: {} },
   } = requestItem;
-  let formattedIPPort = getFormattedIPAndPort(remoteAddress, remotePort);
-  let remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
-  let duration = getFormattedTime(totalTime);
-  let latency = getFormattedTime(eventTimings.timings.wait);
-  let protocol = getFormattedProtocol(requestItem);
+  const formattedIPPort = getFormattedIPAndPort(remoteAddress, remotePort);
+  const remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
+  const duration = getFormattedTime(totalTime);
+  const latency = getFormattedTime(eventTimings.timings.wait);
+  const protocol = getFormattedProtocol(requestItem);
 
   if (fuzzyUrl) {
     ok(requestItem.method.startsWith(method), "The attached method is correct.");
@@ -472,7 +472,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   is(target.querySelector(".requests-list-domain").textContent,
     host, "The displayed domain is correct.");
 
-  let domainTooltip = host + (remoteAddress ? " (" + formattedIPPort + ")" : "");
+  const domainTooltip = host + (remoteAddress ? " (" + formattedIPPort + ")" : "");
   is(target.querySelector(".requests-list-domain").getAttribute("title"),
     domainTooltip, "The tooltip domain is correct.");
 
@@ -501,10 +501,10 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     latency, "The tooltip latency is correct.");
 
   if (status !== undefined) {
-    let value = target.querySelector(".requests-list-status-code")
+    const value = target.querySelector(".requests-list-status-code")
                       .getAttribute("data-status-code");
-    let codeValue = target.querySelector(".requests-list-status-code").textContent;
-    let tooltip = target.querySelector(".requests-list-status-code")
+    const codeValue = target.querySelector(".requests-list-status-code").textContent;
+    const tooltip = target.querySelector(".requests-list-status-code")
                         .getAttribute("title");
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
@@ -515,25 +515,25 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (cause !== undefined) {
-    let value = Array.from(target.querySelector(".requests-list-cause").childNodes)
+    const value = Array.from(target.querySelector(".requests-list-cause").childNodes)
       .filter((node) => node.nodeType === Node.TEXT_NODE)[0].textContent;
-    let tooltip = target.querySelector(".requests-list-cause").getAttribute("title");
+    const tooltip = target.querySelector(".requests-list-cause").getAttribute("title");
     info("Displayed cause: " + value);
     info("Tooltip cause: " + tooltip);
     is(value, cause.type, "The displayed cause is correct.");
     is(tooltip, cause.type, "The tooltip cause is correct.");
   }
   if (type !== undefined) {
-    let value = target.querySelector(".requests-list-type").textContent;
-    let tooltip = target.querySelector(".requests-list-type").getAttribute("title");
+    const value = target.querySelector(".requests-list-type").textContent;
+    const tooltip = target.querySelector(".requests-list-type").getAttribute("title");
     info("Displayed type: " + value);
     info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is correct.");
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
-    let value = target.querySelector(".requests-list-transferred").textContent;
-    let tooltip = target.querySelector(".requests-list-transferred")
+    const value = target.querySelector(".requests-list-transferred").textContent;
+    const tooltip = target.querySelector(".requests-list-transferred")
                         .getAttribute("title");
     info("Displayed transferred size: " + value);
     info("Tooltip transferred size: " + tooltip);
@@ -541,16 +541,16 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     is(tooltip, transferred, "The tooltip transferred size is correct.");
   }
   if (size !== undefined) {
-    let value = target.querySelector(".requests-list-size").textContent;
-    let tooltip = target.querySelector(".requests-list-size").getAttribute("title");
+    const value = target.querySelector(".requests-list-size").textContent;
+    const tooltip = target.querySelector(".requests-list-size").getAttribute("title");
     info("Displayed size: " + value);
     info("Tooltip size: " + tooltip);
     is(value, size, "The displayed size is correct.");
     is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
-    let value = target.querySelector(".requests-list-timings-total").textContent;
-    let tooltip = target.querySelector(".requests-list-timings-total")
+    const value = target.querySelector(".requests-list-timings-total").textContent;
+    const tooltip = target.querySelector(".requests-list-timings-total")
                         .getAttribute("title");
     info("Displayed time: " + value);
     info("Tooltip time: " + tooltip);
@@ -593,14 +593,14 @@ function waitFor(subject, eventName) {
  *        The type of the filter that should be the only one checked.
  */
 function testFilterButtons(monitor, filterType) {
-  let doc = monitor.panelWin.document;
-  let target = doc.querySelector(".requests-list-filter-" + filterType + "-button");
+  const doc = monitor.panelWin.document;
+  const target = doc.querySelector(".requests-list-filter-" + filterType + "-button");
   ok(target, `Filter button '${filterType}' was found`);
-  let buttons = [...doc.querySelectorAll(".requests-list-filter-buttons button")];
+  const buttons = [...doc.querySelectorAll(".requests-list-filter-buttons button")];
   ok(buttons.length > 0, "More than zero filter buttons were found");
 
   // Only target should be checked.
-  let checkStatus = buttons.map(button => button == target ? 1 : 0);
+  const checkStatus = buttons.map(button => button == target ? 1 : 0);
   testFilterButtonsCustom(monitor, checkStatus);
 }
 
@@ -613,10 +613,10 @@ function testFilterButtons(monitor, filterType) {
  *        evaluates to true, the third button should be checked.
  */
 function testFilterButtonsCustom(monitor, isChecked) {
-  let doc = monitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".requests-list-filter-buttons button");
+  const doc = monitor.panelWin.document;
+  const buttons = doc.querySelectorAll(".requests-list-filter-buttons button");
   for (let i = 0; i < isChecked.length; i++) {
-    let button = buttons[i];
+    const button = buttons[i];
     if (isChecked[i]) {
       is(button.classList.contains("checked"), true,
         "The " + button.id + " button should have a 'checked' class.");
@@ -665,7 +665,7 @@ function performRequestsInContent(requests) {
  *         resolves otherwise
  */
 function executeInContent(name, data = {}, objects = {}, expectResponse = true) {
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
@@ -682,7 +682,7 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
  * message has been received
  */
 function waitForContentMessage(name) {
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   return new Promise((resolve) => {
     mm.addMessageListener(name, function onMessage(msg) {
@@ -694,13 +694,13 @@ function waitForContentMessage(name) {
 
 function testColumnsAlignment(headers, requestList) {
   // Get first request line, not child 0 as this is the headers
-  let firstRequestLine = requestList.childNodes[1];
+  const firstRequestLine = requestList.childNodes[1];
 
   // Find number of columns
-  let numberOfColumns = headers.childElementCount;
+  const numberOfColumns = headers.childElementCount;
   for (let i = 0; i < numberOfColumns; i++) {
-    let headerColumn = headers.childNodes[i];
-    let requestColumn = firstRequestLine.childNodes[i];
+    const headerColumn = headers.childNodes[i];
+    const requestColumn = firstRequestLine.childNodes[i];
     is(headerColumn.getBoundingClientRect().left,
        requestColumn.getBoundingClientRect().left,
        "Headers for columns number " + i + " are aligned."
@@ -709,13 +709,13 @@ function testColumnsAlignment(headers, requestList) {
 }
 
 async function hideColumn(monitor, column) {
-  let { document, parent } = monitor.panelWin;
+  const { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector(".devtools-toolbar.requests-list-headers"));
 
-  let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
+  const onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
   parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
   await onHeaderRemoved;
 
@@ -724,13 +724,13 @@ async function hideColumn(monitor, column) {
 }
 
 async function showColumn(monitor, column) {
-  let { document, parent } = monitor.panelWin;
+  const { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector(".devtools-toolbar.requests-list-headers"));
 
-  let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
+  const onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
   parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
   await onHeaderAdded;
 
@@ -744,16 +744,16 @@ async function showColumn(monitor, column) {
  * @param {Number} index The request index to be selected
  */
 async function selectIndexAndWaitForSourceEditor(monitor, index) {
-  let document = monitor.panelWin.document;
-  let onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
+  const document = monitor.panelWin.document;
+  const onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
   // Select the request first, as it may try to fetch whatever is the current request's
   // responseContent if we select the ResponseTab first.
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[index]);
   // We may already be on the ResponseTab, so only select it if needed.
-  let editor = document.querySelector("#response-panel .CodeMirror-code");
+  const editor = document.querySelector("#response-panel .CodeMirror-code");
   if (!editor) {
-    let waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
+    const waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
     document.querySelector("#response-tab").click();
     await waitDOM;
   }
@@ -766,7 +766,7 @@ async function selectIndexAndWaitForSourceEditor(monitor, index) {
  * @param {Number} count Number of requests to be executed.
  */
 async function performRequests(monitor, tab, count) {
-  let wait = waitForNetworkEvents(monitor, count);
+  const wait = waitForNetworkEvents(monitor, count);
   await ContentTask.spawn(tab.linkedBrowser, count, requestCount => {
     content.wrappedJSObject.performRequests(requestCount);
   });

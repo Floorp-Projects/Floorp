@@ -27,16 +27,16 @@ add_task(async function() {
   const service = toolbox.sourceMapURLService;
 
   // Inject JS script
-  let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
+  const sourceSeen = waitForSourceLoad(toolbox, JS_URL);
   await createScript(JS_URL);
   await sourceSeen;
 
-  let loc1 = { url: JS_URL, line: 6 };
-  let newLoc1 = await service.originalPositionFor(loc1.url, loc1.line, 4);
+  const loc1 = { url: JS_URL, line: 6 };
+  const newLoc1 = await service.originalPositionFor(loc1.url, loc1.line, 4);
   checkLoc1(loc1, newLoc1);
 
-  let loc2 = { url: JS_URL, line: 8, column: 3 };
-  let newLoc2 = await service.originalPositionFor(loc2.url, loc2.line, loc2.column);
+  const loc2 = { url: JS_URL, line: 8, column: 3 };
+  const newLoc2 = await service.originalPositionFor(loc2.url, loc2.line, loc2.column);
   checkLoc2(loc2, newLoc2);
 
   await toolbox.destroy();

@@ -19,10 +19,10 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
-    let allocs = [];
+    const allocs = [];
     function allocator() {
       allocs.push(new Object());
     }
@@ -35,7 +35,7 @@ window.onload = function() {
     allocator();
     allocator();
 
-    let response = await memory.getAllocations();
+    const response = await memory.getAllocations();
     await memory.stopRecordingAllocations();
 
     is(response.allocations.length, 1,

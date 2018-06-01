@@ -9,7 +9,7 @@ const TEST_URL = URL_ROOT + "doc_blob_stylesheet.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("h1", inspector);
   is(view.element.querySelectorAll("#noResults").length, 0,

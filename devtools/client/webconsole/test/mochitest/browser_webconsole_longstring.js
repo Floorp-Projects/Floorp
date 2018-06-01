@@ -11,10 +11,10 @@ const LONGSTRING =
   `foobar${"a".repeat(9000)}foobaz${"abbababazomglolztest".repeat(100)}boom!`;
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a longString");
-  let onMessage = waitForMessage(hud, LONGSTRING.slice(0, 50));
+  const onMessage = waitForMessage(hud, LONGSTRING.slice(0, 50));
   ContentTask.spawn(gBrowser.selectedBrowser, LONGSTRING, str => {
     content.console.log(str);
   });

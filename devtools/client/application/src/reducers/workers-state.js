@@ -18,7 +18,7 @@ function WorkersState() {
 function workersReducer(state = WorkersState(), action) {
   switch (action.type) {
     case UPDATE_WORKERS: {
-      let { workers } = action;
+      const { workers } = action;
       return { list: workers };
     }
 

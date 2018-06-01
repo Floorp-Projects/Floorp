@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
   await selectNode("video", inspector);
@@ -59,7 +59,7 @@ add_task(async function() {
 });
 
 function performMouseDown(linkEl, metactrl) {
-  let evt = linkEl.ownerDocument.createEvent("MouseEvents");
+  const evt = linkEl.ownerDocument.createEvent("MouseEvents");
 
   let button = -1;
 
@@ -79,9 +79,9 @@ function performMouseDown(linkEl, metactrl) {
 }
 
 async function followLinkWaitForTab(linkEl, isMetaClick, expectedTabURI) {
-  let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
+  const onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   performMouseDown(linkEl, isMetaClick);
-  let {target} = await onTabOpened;
+  const {target} = await onTabOpened;
   await BrowserTestUtils.browserLoaded(target.linkedBrowser);
   ok(true, "A new tab opened");
   is(target.linkedBrowser.currentURI.spec, expectedTabURI,
@@ -90,7 +90,7 @@ async function followLinkWaitForTab(linkEl, isMetaClick, expectedTabURI) {
 }
 
 async function followLinkWaitForNewNode(linkEl, isMetaClick, inspector) {
-  let onSelection = inspector.selection.once("new-node-front");
+  const onSelection = inspector.selection.once("new-node-front");
   performMouseDown(linkEl, isMetaClick);
   await onSelection;
 
@@ -99,7 +99,7 @@ async function followLinkWaitForNewNode(linkEl, isMetaClick, inspector) {
 }
 
 async function followLinkNoNewNode(linkEl, isMetaClick, inspector) {
-  let onFailed = inspector.once("idref-attribute-link-failed");
+  const onFailed = inspector.once("idref-attribute-link-failed");
   performMouseDown(linkEl, isMetaClick);
   await onFailed;
 

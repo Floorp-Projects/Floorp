@@ -9,20 +9,20 @@ const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers.html";
 
 add_task(async function() {
-  let [host, win] = await createHost("bottom", TEST_URI);
+  const [host, win] = await createHost("bottom", TEST_URI);
   runTest(win);
   host.destroy();
 });
 
 function runTest(win) {
-  let some = win.document.getElementById("some");
+  const some = win.document.getElementById("some");
 
   some.style.top = win.innerHeight + "px";
   some.style.left = win.innerWidth + "px";
   // The tests start with a black 2x2 pixels square below bottom right.
   // Do not resize the window during the tests.
 
-  let xPos = Math.floor(win.innerWidth / 2);
+  const xPos = Math.floor(win.innerWidth / 2);
   // Above the viewport.
   win.scroll(xPos, win.innerHeight + 2);
   scrollIntoViewIfNeeded(some);

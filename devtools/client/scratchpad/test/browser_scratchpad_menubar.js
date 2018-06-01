@@ -14,9 +14,9 @@ add_task(async function() {
   };
 
   info("Open scratchpad.");
-  let [win] = await openTabAndScratchpad(options);
+  const [win] = await openTabAndScratchpad(options);
 
-  let menuToolbar = win.document.getElementById("sp-menu-toolbar");
+  const menuToolbar = win.document.getElementById("sp-menu-toolbar");
   ok(menuToolbar, "The scratchpad should have a menu bar.");
 });
 
@@ -28,9 +28,9 @@ add_task(async function() {
   });
 
   info("Open devtools on the Scratchpad.");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "scratchpad");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "scratchpad");
 
-  let menuToolbar = toolbox.doc.getElementById("sp-menu-toolbar");
+  const menuToolbar = toolbox.doc.getElementById("sp-menu-toolbar");
   ok(!menuToolbar, "The scratchpad panel should not have a menu bar.");
 });

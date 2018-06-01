@@ -82,7 +82,7 @@ add_task(async function reloadButtonReloadsAddon() {
     }, ADDON_NAME);
   });
 
-  let reloaded = once(AboutDebugging, "addon-reload");
+  const reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
   await reloaded;
 
@@ -129,7 +129,7 @@ add_task(async function reloadButtonRefreshesMetadata() {
   // Wait for the add-on list to be updated with the reloaded name.
   const onReInstall = promiseAddonEvent("onInstalled");
   const reloadButton = getReloadButton(document, manifestBase.name);
-  let reloaded = once(AboutDebugging, "addon-reload");
+  const reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
   await reloaded;
 

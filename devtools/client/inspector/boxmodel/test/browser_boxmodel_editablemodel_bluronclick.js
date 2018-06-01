@@ -21,7 +21,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 500);
 
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
+  const {inspector, boxmodel} = await openLayoutView();
 
   await selectNode("#div1", inspector);
   await testClickingOutsideEditor(boxmodel);
@@ -30,16 +30,16 @@ add_task(async function() {
 
 async function testClickingOutsideEditor(boxmodel) {
   info("Test that clicking outside the editor blurs it");
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   info("Click next to the opened editor input.");
-  let onBlur = once(editor, "blur");
-  let rect = editor.getBoundingClientRect();
+  const onBlur = once(editor, "blur");
+  const rect = editor.getBoundingClientRect();
   EventUtils.synthesizeMouse(editor, rect.width + 10, rect.height / 2, {},
     boxmodel.document.defaultView);
   await onBlur;
@@ -50,19 +50,19 @@ async function testClickingOutsideEditor(boxmodel) {
 
 async function testClickingBelowContainer(boxmodel) {
   info("Test that clicking below the box-model container blurs it");
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   info("Test that clicking below the boxmodel-container blurs the opened editor");
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
-  let onBlur = once(editor, "blur");
-  let container = boxmodel.document.querySelector(".boxmodel-container");
+  const onBlur = once(editor, "blur");
+  const container = boxmodel.document.querySelector(".boxmodel-container");
   // Using getBoxQuads here because getBoundingClientRect (and therefore synthesizeMouse)
   // use an erroneous height of ~50px for the boxmodel-container.
-  let bounds = container.getBoxQuads({relativeTo: boxmodel.document})[0].bounds;
+  const bounds = container.getBoxQuads({relativeTo: boxmodel.document})[0].bounds;
   EventUtils.synthesizeMouseAtPoint(
     bounds.left + 10,
     bounds.top + bounds.height + 10,

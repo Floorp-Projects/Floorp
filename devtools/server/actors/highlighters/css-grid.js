@@ -208,7 +208,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 
-    let { pageListenerTarget } = highlighterEnv;
+    const { pageListenerTarget } = highlighterEnv;
     pageListenerTarget.addEventListener("pagehide", this.onPageHide);
 
     // Initialize the <canvas> position to the top left corner of the page.
@@ -224,13 +224,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    let container = createNode(this.win, {
+    const container = createNode(this.win, {
       attributes: {
         "class": "highlighter-container"
       }
     });
 
-    let root = createNode(this.win, {
+    const root = createNode(this.win, {
       parent: container,
       attributes: {
         "id": "root",
@@ -256,7 +256,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the SVG element.
-    let svg = createSVGNode(this.win, {
+    const svg = createSVGNode(this.win, {
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -268,7 +268,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let regions = createSVGNode(this.win, {
+    const regions = createSVGNode(this.win, {
       nodeType: "g",
       parent: svg,
       attributes: {
@@ -298,7 +298,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid area infobar markup.
-    let areaInfobarContainer = createNode(this.win, {
+    const areaInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
         "class": "area-infobar-container",
@@ -309,7 +309,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let areaInfobar = createNode(this.win, {
+    const areaInfobar = createNode(this.win, {
       parent: areaInfobarContainer,
       attributes: {
         "class": "infobar"
@@ -317,7 +317,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let areaTextbox = createNode(this.win, {
+    const areaTextbox = createNode(this.win, {
       parent: areaInfobar,
       attributes: {
         "class": "infobar-text"
@@ -344,7 +344,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid cell infobar markup.
-    let cellInfobarContainer = createNode(this.win, {
+    const cellInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
         "class": "cell-infobar-container",
@@ -355,7 +355,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let cellInfobar = createNode(this.win, {
+    const cellInfobar = createNode(this.win, {
       parent: cellInfobarContainer,
       attributes: {
         "class": "infobar"
@@ -363,7 +363,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let cellTextbox = createNode(this.win, {
+    const cellTextbox = createNode(this.win, {
       parent: cellInfobar,
       attributes: {
         "class": "infobar-text"
@@ -390,7 +390,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid line infobar markup.
-    let lineInfobarContainer = createNode(this.win, {
+    const lineInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
         "class": "line-infobar-container",
@@ -401,7 +401,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let lineInfobar = createNode(this.win, {
+    const lineInfobar = createNode(this.win, {
       parent: lineInfobarContainer,
       attributes: {
         "class": "infobar"
@@ -409,7 +409,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    let lineTextbox = createNode(this.win, {
+    const lineTextbox = createNode(this.win, {
       parent: lineInfobar,
       attributes: {
         "class": "infobar-text"
@@ -446,7 +446,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * Clear the grid area highlights.
    */
   clearGridAreas() {
-    let areas = this.getElement("areas");
+    const areas = this.getElement("areas");
     areas.setAttribute("d", "");
   }
 
@@ -454,15 +454,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * Clear the grid cell highlights.
    */
   clearGridCell() {
-    let cells = this.getElement("cells");
+    const cells = this.getElement("cells");
     cells.setAttribute("d", "");
   }
 
   destroy() {
-    let { highlighterEnv } = this;
+    const { highlighterEnv } = this;
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
-    let { pageListenerTarget } = highlighterEnv;
+    const { pageListenerTarget } = highlighterEnv;
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
     }
@@ -523,11 +523,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Create the diagonal lines pattern for the rendering the grid gaps.
-    let canvas = createNode(this.win, { nodeType: "canvas" });
-    let width = canvas.width = GRID_GAP_PATTERN_WIDTH * devicePixelRatio;
-    let height = canvas.height = GRID_GAP_PATTERN_HEIGHT * devicePixelRatio;
+    const canvas = createNode(this.win, { nodeType: "canvas" });
+    const width = canvas.width = GRID_GAP_PATTERN_WIDTH * devicePixelRatio;
+    const height = canvas.height = GRID_GAP_PATTERN_HEIGHT * devicePixelRatio;
 
-    let ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.setLineDash(GRID_GAP_PATTERN_LINE_DASH);
     ctx.beginPath();
@@ -546,7 +546,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     ctx.stroke();
     ctx.restore();
 
-    let pattern = ctx.createPattern(canvas, "repeat");
+    const pattern = ctx.createPattern(canvas, "repeat");
 
     gridPatternMap.set(dimension, pattern);
     gCachedGridPattern.set(devicePixelRatio, gridPatternMap);
@@ -588,11 +588,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * grid-template-* CSS properties with the highlighter displayed).
    */
   _hasMoved() {
-    let hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
+    const hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
 
-    let oldGridData = stringifyGridFragments(this.gridData);
+    const oldGridData = stringifyGridFragments(this.gridData);
     this.gridData = this.currentNode.getGridFragments();
-    let newGridData = stringifyGridFragments(this.gridData);
+    const newGridData = stringifyGridFragments(this.gridData);
 
     return hasMoved || oldGridData !== newGridData;
   }
@@ -656,7 +656,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * to give the illusion that it always covers the viewport.
    */
   _scrollUpdate() {
-    let hasUpdated = updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
+    const hasUpdated = updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
       this._winDimensions);
 
     if (hasUpdated) {
@@ -800,40 +800,40 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         the grid areas should be highlighted.
    */
   renderGridArea(areaName) {
-    let { devicePixelRatio } = this.win;
-    let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let paths = [];
+    const { devicePixelRatio } = this.win;
+    const displayPixelRatio = getDisplayPixelRatio(this.win);
+    const paths = [];
 
     for (let i = 0; i < this.gridData.length; i++) {
-      let fragment = this.gridData[i];
+      const fragment = this.gridData[i];
 
-      for (let area of fragment.areas) {
+      for (const area of fragment.areas) {
         if (areaName && areaName != area.name) {
           continue;
         }
 
-        let rowStart = fragment.rows.lines[area.rowStart - 1];
-        let rowEnd = fragment.rows.lines[area.rowEnd - 1];
-        let columnStart = fragment.cols.lines[area.columnStart - 1];
-        let columnEnd = fragment.cols.lines[area.columnEnd - 1];
+        const rowStart = fragment.rows.lines[area.rowStart - 1];
+        const rowEnd = fragment.rows.lines[area.rowEnd - 1];
+        const columnStart = fragment.cols.lines[area.columnStart - 1];
+        const columnEnd = fragment.cols.lines[area.columnEnd - 1];
 
-        let x1 = columnStart.start + columnStart.breadth;
-        let y1 = rowStart.start + rowStart.breadth;
-        let x2 = columnEnd.start;
-        let y2 = rowEnd.start;
+        const x1 = columnStart.start + columnStart.breadth;
+        const y1 = rowStart.start + rowStart.breadth;
+        const x2 = columnEnd.start;
+        const y2 = rowEnd.start;
 
-        let points = getPointsFromDiagonal(x1, y1, x2, y2, this.currentMatrix);
+        const points = getPointsFromDiagonal(x1, y1, x2, y2, this.currentMatrix);
 
         // Scale down by `devicePixelRatio` since SVG element already take them into
         // account.
-        let svgPoints = points.map(point => ({
+        const svgPoints = points.map(point => ({
           x: Math.round(point.x / devicePixelRatio),
           y: Math.round(point.y / devicePixelRatio)
         }));
 
         // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
         // into account; and the zoom scaling is handled by `moveInfobar`.
-        let bounds = getBoundsFromPoints(points.map(point => ({
+        const bounds = getBoundsFromPoints(points.map(point => ({
           x: Math.round(point.x / displayPixelRatio),
           y: Math.round(point.y / displayPixelRatio)
         })));
@@ -848,7 +848,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       }
     }
 
-    let areas = this.getElement("areas");
+    const areas = this.getElement("areas");
     areas.setAttribute("d", paths.join(" "));
   }
 
@@ -861,13 +861,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The area overlay to render on the CSS highlighter canvas.
    */
   renderGridAreaName(fragment, area) {
-    let { rowStart, rowEnd, columnStart, columnEnd } = area;
-    let { devicePixelRatio } = this.win;
-    let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let offset = (displayPixelRatio / 2) % 1;
+    const { rowStart, rowEnd, columnStart, columnEnd } = area;
+    const { devicePixelRatio } = this.win;
+    const displayPixelRatio = getDisplayPixelRatio(this.win);
+    const offset = (displayPixelRatio / 2) % 1;
     let fontSize = GRID_AREA_NAME_FONT_SIZE * displayPixelRatio;
-    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -879,8 +879,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Draw the text for the grid area name.
     for (let rowNumber = rowStart; rowNumber < rowEnd; rowNumber++) {
       for (let columnNumber = columnStart; columnNumber < columnEnd; columnNumber++) {
-        let row = fragment.rows.tracks[rowNumber - 1];
-        let column = fragment.cols.tracks[columnNumber - 1];
+        const row = fragment.rows.tracks[rowNumber - 1];
+        const column = fragment.cols.tracks[columnNumber - 1];
 
         // If the font size exceeds the bounds of the containing grid cell, size it its
         // row or column dimension, whichever is smallest.
@@ -890,29 +890,29 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
           this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
         }
 
-        let textWidth = this.ctx.measureText(area.name).width;
+        const textWidth = this.ctx.measureText(area.name).width;
         // The width of the character 'm' approximates the height of the text.
-        let textHeight = this.ctx.measureText("m").width;
+        const textHeight = this.ctx.measureText("m").width;
         // Padding in pixels for the line number text inside of the line number container.
-        let padding = 3 * displayPixelRatio;
+        const padding = 3 * displayPixelRatio;
 
-        let boxWidth = textWidth + 2 * padding;
-        let boxHeight = textHeight + 2 * padding;
+        const boxWidth = textWidth + 2 * padding;
+        const boxHeight = textHeight + 2 * padding;
 
         let x = column.start + column.breadth / 2;
         let y = row.start + row.breadth / 2;
 
         [x, y] = apply(this.currentMatrix, [x, y]);
 
-        let rectXPos = x - boxWidth / 2;
-        let rectYPos = y - boxHeight / 2;
+        const rectXPos = x - boxWidth / 2;
+        const rectYPos = y - boxHeight / 2;
 
         // Draw a rounded rectangle with a border width of 1 pixel,
         // a border color matching the grid color, and a white background.
         this.ctx.lineWidth = 1 * displayPixelRatio;
         this.ctx.strokeStyle = this.color;
         this.ctx.fillStyle = "white";
-        let radius = 2 * displayPixelRatio;
+        const radius = 2 * displayPixelRatio;
         drawRoundedRect(this.ctx, rectXPos, rectYPos, boxWidth, boxHeight, radius);
 
         this.ctx.fillStyle = this.color;
@@ -927,13 +927,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * Renders the grid area overlay on the css grid highlighter canvas.
    */
   renderGridAreaOverlay() {
-    let padding = 1;
+    const padding = 1;
 
     for (let i = 0; i < this.gridData.length; i++) {
-      let fragment = this.gridData[i];
+      const fragment = this.gridData[i];
 
-      for (let area of fragment.areas) {
-        let { rowStart, rowEnd, columnStart, columnEnd, type } = area;
+      for (const area of fragment.areas) {
+        const { rowStart, rowEnd, columnStart, columnEnd, type } = area;
 
         if (type === "implicit") {
           continue;
@@ -976,42 +976,42 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         Column number of the grid cell to highlight.
    */
   renderGridCell(gridFragmentIndex, rowNumber, columnNumber) {
-    let fragment = this.gridData[gridFragmentIndex];
+    const fragment = this.gridData[gridFragmentIndex];
 
     if (!fragment) {
       return;
     }
 
-    let row = fragment.rows.tracks[rowNumber - 1];
-    let column = fragment.cols.tracks[columnNumber - 1];
+    const row = fragment.rows.tracks[rowNumber - 1];
+    const column = fragment.cols.tracks[columnNumber - 1];
 
     if (!row || !column) {
       return;
     }
 
-    let x1 = column.start;
-    let y1 = row.start;
-    let x2 = column.start + column.breadth;
-    let y2 = row.start + row.breadth;
+    const x1 = column.start;
+    const y1 = row.start;
+    const x2 = column.start + column.breadth;
+    const y2 = row.start + row.breadth;
 
-    let { devicePixelRatio } = this.win;
-    let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let points = getPointsFromDiagonal(x1, y1, x2, y2, this.currentMatrix);
+    const { devicePixelRatio } = this.win;
+    const displayPixelRatio = getDisplayPixelRatio(this.win);
+    const points = getPointsFromDiagonal(x1, y1, x2, y2, this.currentMatrix);
 
     // Scale down by `devicePixelRatio` since SVG element already take them into account.
-    let svgPoints = points.map(point => ({
+    const svgPoints = points.map(point => ({
       x: Math.round(point.x / devicePixelRatio),
       y: Math.round(point.y / devicePixelRatio)
     }));
 
     // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
     // into account, and the zoom scaling is handled by `moveInfobar`.
-    let bounds = getBoundsFromPoints(points.map(point => ({
+    const bounds = getBoundsFromPoints(points.map(point => ({
       x: Math.round(point.x / displayPixelRatio),
       y: Math.round(point.y / displayPixelRatio)
     })));
 
-    let cells = this.getElement("cells");
+    const cells = this.getElement("cells");
     cells.setAttribute("d", getPathDescriptionFromPoints(svgPoints));
 
     this._showGridCellInfoBar();
@@ -1034,11 +1034,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
    */
   renderGridGap(linePos, startPos, endPos, breadth, dimensionType) {
-    let { devicePixelRatio } = this.win;
-    let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let offset = (displayPixelRatio / 2) % 1;
-    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const { devicePixelRatio } = this.win;
+    const displayPixelRatio = getDisplayPixelRatio(this.win);
+    const offset = (displayPixelRatio / 2) % 1;
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos);
     startPos = Math.round(startPos);
@@ -1070,9 +1070,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Find current angle of grid by measuring the angle of two arbitrary points,
     // then rotate canvas, so the hash pattern stays 45deg to the gridlines.
-    let p1 = apply(this.currentMatrix, [0, 0]);
-    let p2 = apply(this.currentMatrix, [1, 0]);
-    let angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+    const p1 = apply(this.currentMatrix, [0, 0]);
+    const p2 = apply(this.currentMatrix, [1, 0]);
+    const angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
     this.ctx.rotate(angleRad);
 
     this.ctx.fill();
@@ -1091,7 +1091,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The dimension type of the grid line.
    */
   renderGridLineNames(gridFragmentIndex, lineNumber, dimensionType) {
-    let fragment = this.gridData[gridFragmentIndex];
+    const fragment = this.gridData[gridFragmentIndex];
 
     if (!fragment || !lineNumber || !dimensionType) {
       return;
@@ -1110,17 +1110,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    let currentZoom = getCurrentZoom(this.win);
-    let { bounds } = this.currentQuads.content[gridFragmentIndex];
+    const currentZoom = getCurrentZoom(this.win);
+    const { bounds } = this.currentQuads.content[gridFragmentIndex];
 
     const rowYPosition = fragment.rows.lines[0];
     const colXPosition = fragment.rows.lines[0];
 
-    let x = dimensionType === COLUMNS
+    const x = dimensionType === COLUMNS
       ? linePos.start + (bounds.left / currentZoom)
       : colXPosition.start + (bounds.left / currentZoom);
 
-    let y = dimensionType === ROWS
+    const y = dimensionType === ROWS
       ? linePos.start + (bounds.top / currentZoom)
       : rowYPosition.start + (bounds.top / currentZoom);
 
@@ -1147,12 +1147,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
     isStackedLine) {
-    let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let { devicePixelRatio } = this.win;
-    let offset = (displayPixelRatio / 2) % 1;
-    let fontSize = GRID_FONT_SIZE * devicePixelRatio;
-    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const displayPixelRatio = getDisplayPixelRatio(this.win);
+    const { devicePixelRatio } = this.win;
+    const offset = (displayPixelRatio / 2) % 1;
+    const fontSize = GRID_FONT_SIZE * devicePixelRatio;
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos);
     startPos = Math.round(startPos);
@@ -1170,12 +1170,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // For a general grid box, the height of the character "m" will be its minimum width
     // and height. If line number's text width is greater, then use the grid box's text
     // width instead.
-    let textHeight = this.ctx.measureText("m").width;
-    let textWidth = Math.max(textHeight, this.ctx.measureText(lineNumber).width);
+    const textHeight = this.ctx.measureText("m").width;
+    const textWidth = Math.max(textHeight, this.ctx.measureText(lineNumber).width);
 
     // Padding in pixels for the line number text inside of the line number container.
-    let padding = 3 * devicePixelRatio;
-    let offsetFromEdge = 2 * devicePixelRatio;
+    const padding = 3 * devicePixelRatio;
+    const offsetFromEdge = 2 * devicePixelRatio;
 
     let boxWidth = textWidth + 2 * padding;
     let boxHeight = textHeight + 2 * padding;
@@ -1229,11 +1229,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.fillStyle = "white";
 
     // See param definitions of drawBubbleRect.
-    let radius = 2 * displayPixelRatio;
-    let margin = 2 * displayPixelRatio;
-    let arrowSize = 8 * displayPixelRatio;
+    const radius = 2 * displayPixelRatio;
+    const margin = 2 * displayPixelRatio;
+    const arrowSize = 8 * displayPixelRatio;
 
-    let minBoxSize = arrowSize * 2 + padding;
+    const minBoxSize = arrowSize * 2 + padding;
     boxWidth = Math.max(boxWidth, minBoxSize);
     boxHeight = Math.max(boxHeight, minBoxSize);
 
@@ -1255,7 +1255,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Rotate box edge as needed for writing mode and text direction.
-    let { direction, writingMode } = getComputedStyle(this.currentNode);
+    const { direction, writingMode } = getComputedStyle(this.currentNode);
 
     switch (writingMode) {
       case "horizontal-tb":
@@ -1295,7 +1295,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Default to drawing outside the edge, but move inside when close to viewport.
-    let minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
+    const minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
     let { width, height } = this._winDimensions;
     width *= displayPixelRatio;
     height *= displayPixelRatio;
@@ -1371,11 +1371,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The grid line type - "edge", "explicit", or "implicit".
    */
   renderLine(linePos, startPos, endPos, dimensionType, lineType) {
-    let { devicePixelRatio } = this.win;
-    let lineWidth = getDisplayPixelRatio(this.win);
-    let offset = (lineWidth / 2) % 1;
-    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const { devicePixelRatio } = this.win;
+    const lineWidth = getDisplayPixelRatio(this.win);
+    const offset = (lineWidth / 2) % 1;
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos);
     startPos = Math.round(startPos);
@@ -1385,7 +1385,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.setLineDash(GRID_LINES_PROPERTIES[lineType].lineDash);
     this.ctx.translate(offset - canvasX, offset - canvasY);
 
-    let lineOptions = {
+    const lineOptions = {
       matrix: this.currentMatrix
     };
 
@@ -1435,8 +1435,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const lastEdgeLineIndex = this.getLastEdgeLineIndex(tracks);
 
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      let linePos = line.start;
+      const line = lines[i];
+      const linePos = line.start;
 
       if (i == 0 || i == lastEdgeLineIndex) {
         this.renderLine(linePos, startPos, endPos, dimensionType, "edge");
@@ -1518,8 +1518,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const { lines, tracks } = gridDimension;
 
     for (let i = 0, line; (line = lines[i++]);) {
-      let linePos = line.start;
-      let negativeLineNumber = line.negativeNumber;
+      const linePos = line.start;
+      const negativeLineNumber = line.negativeNumber;
 
       // Don't render any negative line number greater than -1.
       if (negativeLineNumber == 0) {
@@ -1554,9 +1554,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   _update() {
     setIgnoreLayoutChanges(true);
 
-    let root = this.getElement("root");
-    let cells = this.getElement("cells");
-    let areas = this.getElement("areas");
+    const root = this.getElement("root");
+    const cells = this.getElement("cells");
+    const areas = this.getElement("areas");
 
     // Set the grid cells and areas fill to the current grid colour.
     cells.setAttribute("style", `fill: ${this.color}`);
@@ -1578,7 +1578,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.clearGridCell();
 
     // Update the current matrix used in our canvas' rendering.
-    let { currentMatrix, hasNodeTransformations } =
+    const { currentMatrix, hasNodeTransformations } =
       getCurrentMatrix(this.currentNode, this.win);
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
@@ -1624,15 +1624,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         A DOMRect-like object represent the grid area rectangle.
    */
   _updateGridAreaInfobar(area, bounds) {
-    let { width, height } = bounds;
-    let dim = parseFloat(width.toPrecision(6)) +
+    const { width, height } = bounds;
+    const dim = parseFloat(width.toPrecision(6)) +
               " \u00D7 " +
               parseFloat(height.toPrecision(6));
 
     this.getElement("area-infobar-name").setTextContent(area.name);
     this.getElement("area-infobar-dimensions").setTextContent(dim);
 
-    let container = this.getElement("area-infobar-container");
+    const container = this.getElement("area-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "bottom",
       hideIfOffscreen: true
@@ -1650,17 +1650,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         A DOMRect-like object represent the grid cell rectangle.
    */
   _updateGridCellInfobar(rowNumber, columnNumber, bounds) {
-    let { width, height } = bounds;
-    let dim = parseFloat(width.toPrecision(6)) +
+    const { width, height } = bounds;
+    const dim = parseFloat(width.toPrecision(6)) +
               " \u00D7 " +
               parseFloat(height.toPrecision(6));
-    let position = LAYOUT_L10N.getFormatStr("layout.rowColumnPositions", rowNumber,
+    const position = LAYOUT_L10N.getFormatStr("layout.rowColumnPositions", rowNumber,
       columnNumber);
 
     this.getElement("cell-infobar-position").setTextContent(position);
     this.getElement("cell-infobar-dimensions").setTextContent(dim);
 
-    let container = this.getElement("cell-infobar-container");
+    const container = this.getElement("cell-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "top",
       hideIfOffscreen: true
@@ -1683,7 +1683,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.getElement("line-infobar-number").setTextContent(gridLineNumber);
     this.getElement("line-infobar-names").setTextContent(gridLineNames);
 
-    let container = this.getElement("line-infobar-container");
+    const container = this.getElement("line-infobar-container");
     moveInfobar(container, getBoundsFromPoints([{x, y}, {x, y}, {x, y}, {x, y}]),
       this.win);
   }

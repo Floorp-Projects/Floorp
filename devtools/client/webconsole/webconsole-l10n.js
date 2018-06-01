@@ -21,11 +21,12 @@ const l10n = {
    *         The timestamp formatted for display.
    */
   timestampString: function(milliseconds) {
-    let d = new Date(milliseconds ? milliseconds : null);
-    let hours = d.getHours(), minutes = d.getMinutes();
-    let seconds = d.getSeconds();
+    const d = new Date(milliseconds ? milliseconds : null);
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const seconds = d.getSeconds();
     milliseconds = d.getMilliseconds();
-    let parameters = [hours, minutes, seconds, milliseconds];
+    const parameters = [hours, minutes, seconds, milliseconds];
     return l10n.getFormatStr("timestampFormat", parameters);
   },
 

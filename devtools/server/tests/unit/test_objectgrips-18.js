@@ -33,9 +33,9 @@ async function run_test_with_server(server, callback) {
 
 async function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-    let [grip] = packet.frame.arguments;
+    const [grip] = packet.frame.arguments;
 
-    let objClient = gThreadClient.pauseGrip(grip);
+    const objClient = gThreadClient.pauseGrip(grip);
 
     // Checks the result of enumProperties.
     let response = await objClient.enumProperties({});
@@ -93,7 +93,7 @@ async function check_enum_properties(response) {
   }
 
   info("Check iterator.all response");
-  let allResponse = await iterator.all();
+  const allResponse = await iterator.all();
   deepEqual(allResponse, sliceResponse, "iterator.all response has the expected data");
 
   info("Check iterator response for 2 properties only");
@@ -144,7 +144,7 @@ async function check_enum_symbols(response) {
   equal(iteratorSymbol.descriptor.value.class, "Function");
 
   info("Check iterator.all response");
-  let allResponse = await iterator.all();
+  const allResponse = await iterator.all();
   deepEqual(allResponse, sliceResponse, "iterator.all response has the expected data");
 
   info("Check iterator response for 2 symbols only");

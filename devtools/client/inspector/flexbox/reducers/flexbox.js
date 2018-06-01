@@ -19,7 +19,7 @@ const INITIAL_FLEXBOX = {
   nodeFront: null,
 };
 
-let reducers = {
+const reducers = {
 
   [CLEAR_FLEXBOX](flexbox, _) {
     return INITIAL_FLEXBOX;
@@ -38,7 +38,7 @@ let reducers = {
 };
 
 module.exports = function(flexbox = INITIAL_FLEXBOX, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return flexbox;
   }

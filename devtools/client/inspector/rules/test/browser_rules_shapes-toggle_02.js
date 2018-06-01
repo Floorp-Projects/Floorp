@@ -23,15 +23,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("#shape", inspector);
-  let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
-  let shapeToggle = container.querySelector(".ruleview-shapeswatch");
-  let shapeToggleStyle = getComputedStyle(shapeToggle);
-  let overriddenContainer = getRuleViewProperty(view, "div", "clip-path").valueSpan;
-  let overriddenShapeToggle = overriddenContainer.querySelector(".ruleview-shapeswatch");
-  let overriddenShapeToggleStyle = getComputedStyle(overriddenShapeToggle);
+  const container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
+  const shapeToggle = container.querySelector(".ruleview-shapeswatch");
+  const shapeToggleStyle = getComputedStyle(shapeToggle);
+  const overriddenContainer = getRuleViewProperty(view, "div", "clip-path").valueSpan;
+  const overriddenShapeToggle =
+    overriddenContainer.querySelector(".ruleview-shapeswatch");
+  const overriddenShapeToggleStyle = getComputedStyle(overriddenShapeToggle);
 
   ok(shapeToggle && overriddenShapeToggle,
     "Shapes highlighter toggles exist in the DOM.");

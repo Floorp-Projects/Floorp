@@ -11,19 +11,19 @@ const TESTCASE_URI = URL_ROOT + "doc_ruleLineNumbers.html";
 
 add_task(async function() {
   await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let bodyRuleEditor = getRuleViewRuleEditor(view, 3);
-  let value = getRuleViewLinkTextByIndex(view, 2);
+  const bodyRuleEditor = getRuleViewRuleEditor(view, 3);
+  const value = getRuleViewLinkTextByIndex(view, 2);
   // Note that this is relative to the <style>.
   is(value.slice(-2), ":6", "initial rule line number is 6");
 
-  let onLocationChanged = once(bodyRuleEditor.rule.domRule, "location-changed");
+  const onLocationChanged = once(bodyRuleEditor.rule.domRule, "location-changed");
   await addProperty(view, 1, "font-size", "23px");
   await onLocationChanged;
 
-  let newBodyTitle = getRuleViewLinkTextByIndex(view, 2);
+  const newBodyTitle = getRuleViewLinkTextByIndex(view, 2);
   // Note that this is relative to the <style>.
   is(newBodyTitle.slice(-2), ":7", "updated rule line number is 7");
 });

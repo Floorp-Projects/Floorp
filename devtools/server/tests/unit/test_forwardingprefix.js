@@ -42,7 +42,7 @@ function newConnection(prefix) {
     return new RootActor(connection, {});
   };
 
-  let transport = DebuggerServer.connectPipe(prefix);
+  const transport = DebuggerServer.connectPipe(prefix);
 
   return { conn: conn, transport: transport };
 }
@@ -79,7 +79,7 @@ function tryActors(reachables, completed) {
      * Let each callback capture its own iteration's value; outerActor is
      * local to the whole loop, not to a single iteration.
      */
-    let actor = outerActor;
+    const actor = outerActor;
 
     count++;
 
@@ -119,7 +119,7 @@ function TestNoForwardingYet() {
  * Return an object { conn, transport }, as for newConnection.
  */
 function newSubconnection(prefix) {
-  let { conn, transport } = newConnection(prefix);
+  const { conn, transport } = newConnection(prefix);
   transport.hooks = {
     onPacket: (packet) => gMainConnection.send(packet),
     onClosed: () => {}
@@ -131,7 +131,7 @@ function newSubconnection(prefix) {
 
 /* Create a second root actor, to which we can forward things. */
 function createSubconnection1() {
-  let { conn, transport } = newSubconnection("prefix1");
+  const { conn, transport } = newSubconnection("prefix1");
   gSubconnection1 = conn;
   transport.ready();
   gClient.expectReply("prefix1/root", (reply) => run_next_test());
@@ -144,7 +144,7 @@ function TestForwardPrefix1OnlyRoot() {
 
 /* Create a third root actor, to which we can forward things. */
 function createSubconnection2() {
-  let { conn, transport } = newSubconnection("prefix2");
+  const { conn, transport } = newSubconnection("prefix2");
   gSubconnection2 = conn;
   transport.ready();
   gClient.expectReply("prefix2/root", (reply) => run_next_test());
@@ -176,7 +176,7 @@ EchoActor.prototype.requestTypes = {
 };
 
 function TestForwardPrefix12WithActor1() {
-  let actor = new EchoActor(gSubconnection1);
+  const actor = new EchoActor(gSubconnection1);
   actor.actorID = "prefix1/actor";
   gSubconnection1.addActor(actor);
 
@@ -187,7 +187,7 @@ function TestForwardPrefix12WithActor1() {
 }
 
 function TestForwardPrefix12WithActor12() {
-  let actor = new EchoActor(gSubconnection2);
+  const actor = new EchoActor(gSubconnection2);
   actor.actorID = "prefix2/actor";
   gSubconnection2.addActor(actor);
 

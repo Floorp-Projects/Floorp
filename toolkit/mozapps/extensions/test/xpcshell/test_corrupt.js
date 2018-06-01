@@ -271,7 +271,7 @@ add_task(async function test_after_corruption() {
                Object.assign({}, addon.desiredState, addon.afterCorruption));
   }
 
-  await Assert.rejects(promiseShutdownManager());
+  await Assert.rejects(promiseShutdownManager(), OS.File.Error);
 });
 
 add_task(async function test_after_second_restart() {
@@ -284,5 +284,5 @@ add_task(async function test_after_second_restart() {
                Object.assign({}, addon.desiredState, addon.afterSecondRestart));
   }
 
-  await Assert.rejects(promiseShutdownManager());
+  await Assert.rejects(promiseShutdownManager(), OS.File.Error);
 });

@@ -21,16 +21,16 @@ add_task(async function() {
   await addTab(URL);
 
   let created = 0, ready = 0, destroy = 0, destroyed = 0;
-  let onCreated = () => {
+  const onCreated = () => {
     created++;
   };
-  let onReady = () => {
+  const onReady = () => {
     ready++;
   };
-  let onDestroy = () => {
+  const onDestroy = () => {
     destroy++;
   };
-  let onDestroyed = () => {
+  const onDestroyed = () => {
     destroyed++;
   };
   gDevTools.on("toolbox-created", onCreated);

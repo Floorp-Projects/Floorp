@@ -20,8 +20,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new BarGraphWidget(doc.body);
+  const [host,, doc] = await createHost();
+  const graph = new BarGraphWidget(doc.body);
   await graph.once("ready");
 
   testGraph(graph);
@@ -34,13 +34,13 @@ function testGraph(graph) {
   graph.format = CATEGORIES;
   graph.setData([{ delta: 0, values: [] }]);
 
-  let legendContainer = graph._document.querySelector(".bar-graph-widget-legend");
+  const legendContainer = graph._document.querySelector(".bar-graph-widget-legend");
   ok(legendContainer,
     "A legend container should be available.");
   is(legendContainer.childNodes.length, 3,
     "Three legend items should have been created.");
 
-  let legendItems = graph._document.querySelectorAll(".bar-graph-widget-legend-item");
+  const legendItems = graph._document.querySelectorAll(".bar-graph-widget-legend-item");
   is(legendItems.length, 3,
     "Three legend items should exist in the entire graph.");
 

@@ -151,7 +151,7 @@ const TEST_DATA = [
            "#F06 75%, red 100%)",
     test: fragment => {
       is(countAll(fragment), 10);
-      let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
+      const allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
       is(allSwatches.length, 5);
       is(allSwatches[0].textContent, "rgba(183,222,237,1)");
       is(allSwatches[1].textContent, "rgba(33,180,226,1)");
@@ -165,7 +165,7 @@ const TEST_DATA = [
     value: "radial-gradient(circle closest-side at center, orange 0%, red 100%)",
     test: fragment => {
       is(countAll(fragment), 4);
-      let colorSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
+      const colorSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
       is(colorSwatches.length, 2);
       is(colorSwatches[0].textContent, "orange");
       is(colorSwatches[1].textContent, "red");
@@ -294,13 +294,13 @@ const TEST_DATA = [
 
 add_task(async function() {
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
-  let toolbox = {target: {client: {}, hasActor: () => false}};
+  const toolbox = {target: {client: {}, hasActor: () => false}};
   await initCssProperties(toolbox);
-  let cssProperties = getCssProperties(toolbox);
+  const cssProperties = getCssProperties(toolbox);
 
-  let parser = new OutputParser(document, cssProperties);
+  const parser = new OutputParser(document, cssProperties);
   for (let i = 0; i < TEST_DATA.length; i++) {
-    let data = TEST_DATA[i];
+    const data = TEST_DATA[i];
     info("Output-parser test data " + i + ". {" + data.name + " : " +
       data.value + ";}");
     data.test(parser.parseCssProperty(data.name, data.value, {

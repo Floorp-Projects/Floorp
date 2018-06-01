@@ -9,7 +9,7 @@ const { AnimationPlayerActor } = require("devtools/server/actors/animation");
 
 function run_test() {
   // Mock a window with just the properties the AnimationPlayerActor uses.
-  let window = {
+  const window = {
     MutationObserver: function() {
       this.observe = () => {};
     },
@@ -76,12 +76,12 @@ function run_test() {
     expectedName: "move"
   }];
 
-  for (let { desc, animation, props, expectedName } of TEST_DATA) {
+  for (const { desc, animation, props, expectedName } of TEST_DATA) {
     info(desc);
-    for (let key in props) {
+    for (const key in props) {
       animation[key] = props[key];
     }
-    let actor = AnimationPlayerActor({}, animation);
+    const actor = AnimationPlayerActor({}, animation);
     Assert.equal(actor.getName(), expectedName);
   }
 }

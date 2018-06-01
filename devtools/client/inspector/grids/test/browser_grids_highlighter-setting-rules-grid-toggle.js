@@ -22,35 +22,35 @@ const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
 
-  let checkbox = doc.getElementById("grid-setting-extend-grid-lines");
+  const checkbox = doc.getElementById("grid-setting-extend-grid-lines");
 
   ok(!Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
     "'Extend grid lines infinitely' is pref off by default.");
 
   info("Toggling ON the 'Extend grid lines infinitely' setting.");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onCheckboxChange = waitUntilState(store, state =>
     state.highlighterSettings.showInfiniteLines);
   checkbox.click();
   await onCheckboxChange;
 
   info("Selecting the rule view.");
-  let ruleView = selectRuleView(inspector);
-  let highlighters = ruleView.highlighters;
+  const ruleView = selectRuleView(inspector);
+  const highlighters = ruleView.highlighters;
 
   await selectNode("#grid", inspector);
 
-  let container = getRuleViewProperty(ruleView, "#grid", "display").valueSpan;
-  let gridToggle = container.querySelector(".ruleview-grid");
+  const container = getRuleViewProperty(ruleView, "#grid", "display").valueSpan;
+  const gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown",
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown",
     (nodeFront, options) => {
       info("Checking the grid highlighter display settings.");
-      let {
+      const {
         color,
         showGridAreasOverlay,
         showGridLineNumbers,

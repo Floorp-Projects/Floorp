@@ -129,7 +129,7 @@ class ResizableViewport extends Component {
   }
 
   render() {
-    let {
+    const {
       devices,
       screenshot,
       swapAfterMount,

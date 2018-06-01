@@ -25,7 +25,7 @@ AppValidator.prototype.warning = function(message) {
 };
 
 AppValidator.prototype._getPackagedManifestFile = function() {
-  let manifestFile = FileUtils.File(this.location);
+  const manifestFile = FileUtils.File(this.location);
   if (!manifestFile.exists()) {
     this.error(strings.GetStringFromName("validator.nonExistingFolder"));
     return null;
@@ -35,14 +35,14 @@ AppValidator.prototype._getPackagedManifestFile = function() {
     return null;
   }
 
-  let appManifestFile = manifestFile.clone();
+  const appManifestFile = manifestFile.clone();
   appManifestFile.append("manifest.webapp");
 
-  let jsonManifestFile = manifestFile.clone();
+  const jsonManifestFile = manifestFile.clone();
   jsonManifestFile.append("manifest.json");
 
-  let hasAppManifest = appManifestFile.exists() && appManifestFile.isFile();
-  let hasJsonManifest = jsonManifestFile.exists() && jsonManifestFile.isFile();
+  const hasAppManifest = appManifestFile.exists() && appManifestFile.isFile();
+  const hasJsonManifest = jsonManifestFile.exists() && jsonManifestFile.isFile();
 
   if (!hasAppManifest && !hasJsonManifest) {
     this.error(strings.GetStringFromName("validator.noManifestFile"));
@@ -53,7 +53,7 @@ AppValidator.prototype._getPackagedManifestFile = function() {
 };
 
 AppValidator.prototype._getPackagedManifestURL = function() {
-  let manifestFile = this._getPackagedManifestFile();
+  const manifestFile = this._getPackagedManifestFile();
   if (!manifestFile) {
     return null;
   }
@@ -64,7 +64,7 @@ AppValidator.checkManifest = function(manifestURL) {
   return new Promise((resolve, reject) => {
     let error;
 
-    let req = new XMLHttpRequest();
+    const req = new XMLHttpRequest();
     req.overrideMimeType("text/plain");
 
     try {
@@ -102,7 +102,7 @@ AppValidator.checkManifest = function(manifestURL) {
 };
 
 AppValidator.findManifestAtOrigin = function(manifestURL) {
-  let fixedManifest = Services.io.newURI(manifestURL).prePath + "/manifest.webapp";
+  const fixedManifest = Services.io.newURI(manifestURL).prePath + "/manifest.webapp";
   return AppValidator.checkManifest(fixedManifest);
 };
 
@@ -111,7 +111,7 @@ AppValidator.findManifestPath = function(manifestURL) {
     if (manifestURL.endsWith("manifest.webapp")) {
       reject();
     } else {
-      let fixedManifest = manifestURL + "/manifest.webapp";
+      const fixedManifest = manifestURL + "/manifest.webapp";
       resolve(AppValidator.checkManifest(fixedManifest));
     }
   });
@@ -186,7 +186,7 @@ AppValidator.prototype.validateManifest = function(manifest) {
 
 AppValidator.prototype._getOriginURL = function() {
   if (this.type == "packaged") {
-    let manifestURL = Services.io.newURI(this.manifestURL);
+    const manifestURL = Services.io.newURI(this.manifestURL);
     return Services.io.newURI(".", null, manifestURL).spec;
   } else if (this.type == "hosted") {
     return Services.io.newURI(this.location).prePath;
@@ -200,7 +200,7 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
       this.error(strings.formatStringFromName("validator.nonAbsoluteLaunchPath", [manifest.launch_path], 1));
       resolve();
     }
-    let origin = this._getOriginURL();
+    const origin = this._getOriginURL();
     let path;
     if (this.type == "packaged") {
       path = "." + (manifest.launch_path || "/index.html");
@@ -215,7 +215,7 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
       return resolve();
     }
 
-    let req = new XMLHttpRequest();
+    const req = new XMLHttpRequest();
     req.overrideMimeType("text/plain");
     try {
       req.open("HEAD", indexURL, true);
@@ -245,7 +245,7 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
 };
 
 AppValidator.prototype.validateType = function(manifest) {
-  let appType = manifest.type || "web";
+  const appType = manifest.type || "web";
   if (!["web", "privileged", "certified"].includes(appType)) {
     this.error(strings.formatStringFromName("validator.invalidAppType", [appType], 1));
   } else if (this.type == "hosted" &&

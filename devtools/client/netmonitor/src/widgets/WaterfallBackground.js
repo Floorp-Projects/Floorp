@@ -55,18 +55,18 @@ class WaterfallBackground {
     }
 
     // Nuke the context.
-    let canvasWidth = this.canvas.width =
+    const canvasWidth = this.canvas.width =
       state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH;
     // Awww yeah, 1px, repeats on Y axis.
-    let canvasHeight = this.canvas.height = 1;
+    const canvasHeight = this.canvas.height = 1;
 
     // Start over.
-    let imageData = this.ctx.createImageData(canvasWidth, canvasHeight);
-    let pixelArray = imageData.data;
+    const imageData = this.ctx.createImageData(canvasWidth, canvasHeight);
+    const pixelArray = imageData.data;
 
-    let buf = new ArrayBuffer(pixelArray.length);
-    let view8bit = new Uint8ClampedArray(buf);
-    let view32bit = new Uint32Array(buf);
+    const buf = new ArrayBuffer(pixelArray.length);
+    const view8bit = new Uint8ClampedArray(buf);
+    const view32bit = new Uint32Array(buf);
 
     // Build new millisecond tick lines...
     let timingStep = REQUESTS_WATERFALL.BACKGROUND_TICKS_MULTIPLE;
@@ -88,14 +88,14 @@ class WaterfallBackground {
     let alphaComponent = REQUESTS_WATERFALL.BACKGROUND_TICKS_OPACITY_MIN;
 
     function drawPixelAt(offset, color) {
-      let position = (isRTL ? canvasWidth - offset : offset - 1) | 0;
-      let [rc, gc, bc, ac] = color;
+      const position = (isRTL ? canvasWidth - offset : offset - 1) | 0;
+      const [rc, gc, bc, ac] = color;
       view32bit[position] = (ac << 24) | (bc << 16) | (gc << 8) | rc;
     }
 
     // Insert one pixel for each division on each scale.
     for (let i = 1; i <= REQUESTS_WATERFALL.BACKGROUND_TICKS_SCALES; i++) {
-      let increment = scaledStep * Math.pow(2, i);
+      const increment = scaledStep * Math.pow(2, i);
       for (let x = 0; x < canvasWidth; x += increment) {
         drawPixelAt(x, [r, g, b, alphaComponent]);
       }
@@ -107,11 +107,12 @@ class WaterfallBackground {
         return;
       }
 
-      let delta = Math.floor((timestamp - state.firstRequestStartedMillis) * state.scale);
+      const delta =
+        Math.floor((timestamp - state.firstRequestStartedMillis) * state.scale);
       drawPixelAt(delta, color);
     }
 
-    let { DOMCONTENTLOADED_TICKS_COLOR, LOAD_TICKS_COLOR } = REQUESTS_WATERFALL;
+    const { DOMCONTENTLOADED_TICKS_COLOR, LOAD_TICKS_COLOR } = REQUESTS_WATERFALL;
     drawTimestamp(state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
       this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme));
 
@@ -136,9 +137,9 @@ class WaterfallBackground {
    * @return {Array} RGBA array for the color.
    */
   getThemeColorAsRgba(colorName, theme) {
-    let colorStr = getColor(colorName, theme);
-    let color = new colorUtils.CssColor(colorStr);
-    let { r, g, b } = color.getRGBATuple();
+    const colorStr = getColor(colorName, theme);
+    const color = new colorUtils.CssColor(colorStr);
+    const { r, g, b } = color.getRGBATuple();
     return [r, g, b, REQUESTS_WATERFALL.TICKS_COLOR_OPACITY];
   }
 

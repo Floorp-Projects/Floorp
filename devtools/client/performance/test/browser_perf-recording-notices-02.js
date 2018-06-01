@@ -14,23 +14,23 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     $,
     PerformanceController,
     PerformanceView,
   } = panel.panelWin;
 
-  let MAIN_CONTAINER = $("#performance-view");
-  let CONTENT = $("#performance-view-content");
-  let DETAILS_CONTAINER = $("#details-pane-container");
-  let RECORDING = $("#recording-notice");
-  let DETAILS = $("#details-pane");
+  const MAIN_CONTAINER = $("#performance-view");
+  const CONTENT = $("#performance-view-content");
+  const DETAILS_CONTAINER = $("#details-pane-container");
+  const RECORDING = $("#recording-notice");
+  const DETAILS = $("#details-pane");
 
   await startRecording(panel);
   await stopRecording(panel);

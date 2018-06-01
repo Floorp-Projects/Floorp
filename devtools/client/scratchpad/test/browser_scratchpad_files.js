@@ -60,13 +60,13 @@ function fileExported(aStatus) {
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was exported successfully with Scratchpad");
 
-  let oldContent = gFileContent;
+  const oldContent = gFileContent;
 
   // Attempt another file save, with confirmation which returns false.
   gFileContent += "// omg, saved twice!";
   gScratchpad.editor.setText(gFileContent);
 
-  let oldConfirm = gScratchpadWindow.confirm;
+  const oldConfirm = gScratchpadWindow.confirm;
   let askedConfirmation = false;
   gScratchpadWindow.confirm = function() {
     askedConfirmation = true;
@@ -82,7 +82,7 @@ function fileExported(aStatus) {
 
   gFileContent = oldContent;
 
-  let channel = NetUtil.newChannel({
+  const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(gFile),
     loadUsingSystemPrincipal: true});
   channel.contentType = "application/javascript";
@@ -99,7 +99,7 @@ function fileRead(aInputStream, aStatus) {
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was read back successfully");
 
-  let updatedContent =
+  const updatedContent =
     NetUtil.readInputStreamToString(aInputStream, aInputStream.available());
 
   is(updatedContent, gFileContent, "file properly updated");

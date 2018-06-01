@@ -63,9 +63,9 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters, store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters, store } = inspector;
 
   info("Checking the initial state of the Grid Inspector.");
   ok(!doc.getElementById("grid-outline-container"),
@@ -112,12 +112,12 @@ add_task(async function() {
 
 async function enableGrid(doc, highlighters, store, index) {
   info(`Enabling the CSS grid highlighter for grid ${index}.`);
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 6 &&
     state.grids[index].highlighted);
-  let onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group");
-  let gridList = doc.getElementById("grid-list");
+  const onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group");
+  const gridList = doc.getElementById("grid-list");
   gridList.children[index].querySelector("input").click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -126,12 +126,12 @@ async function enableGrid(doc, highlighters, store, index) {
 
 async function disableGrid(doc, highlighters, store, index) {
   info(`Disabling the CSS grid highlighter for grid ${index}.`);
-  let onHighlighterShown = highlighters.once("grid-highlighter-hidden");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onHighlighterShown = highlighters.once("grid-highlighter-hidden");
+  const onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 6 &&
     !state.grids[index].highlighted);
-  let onGridOutlineRemoved = waitForDOM(doc, "#grid-cell-group", 0);
-  let gridList = doc.getElementById("grid-list");
+  const onGridOutlineRemoved = waitForDOM(doc, "#grid-cell-group", 0);
+  const gridList = doc.getElementById("grid-list");
   gridList.children[index].querySelector("input").click();
   await onHighlighterShown;
   await onCheckboxChange;

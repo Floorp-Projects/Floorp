@@ -84,7 +84,7 @@ function injectedScript() {
 // Script evaluated in the target tab, to collect the results of injectedScript
 // evaluation in the inspectedWindow.reload tests.
 function collectEvalResults() {
-  let results = [];
+  const results = [];
   let iframeDoc = document;
 
   while (iframeDoc) {

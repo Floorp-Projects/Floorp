@@ -12,10 +12,10 @@ const {
 } = require("devtools/client/responsive.html/actions/devices");
 
 add_task(async function() {
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
-  let device = {
+  const device = {
     "name": "Firefox OS Flame",
     "width": 320,
     "height": 570,

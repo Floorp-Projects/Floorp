@@ -35,12 +35,12 @@
           DebuggerServer.registerAllActors();
 
           win = await openWebIDE();
-          let docRuntime = getRuntimeDocument(win);
-          let docProject = getProjectDocument(win);
+          const docRuntime = getRuntimeDocument(win);
+          const docProject = getProjectDocument(win);
 
           win.AppManager.update("runtime-list");
 
-          let deferred = new Promise(resolve => {
+          const deferred = new Promise(resolve => {
             win.AppManager.connection.once(
                  win.Connection.Events.CONNECTED,
                  resolve);
@@ -68,7 +68,7 @@
 
           // Toolbox opens automatically for main process / runtime apps
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
-          let toolbox = await win.UI.toolboxPromise;
+          const toolbox = await win.UI.toolboxPromise;
 
           await toolbox.destroy();
 

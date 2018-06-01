@@ -23,7 +23,7 @@ add_task(async function() {
   });
 
   // Initialise tabs: 1 and 2 with a toolbox, 3 and 4 without.
-  for (let tab of tabs) {
+  for (const tab of tabs) {
     await initTab(tab, tab.startToolbox);
   }
 

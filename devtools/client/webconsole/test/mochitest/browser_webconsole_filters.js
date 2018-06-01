@@ -14,16 +14,16 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await setFilterBarVisible(hud, true);
 
-  let filterState = await getFilterState(hud);
+  const filterState = await getFilterState(hud);
 
   // Check defaults.
 
-  for (let category of ["error", "warn", "log", "info", "debug"]) {
-    let state = filterState[category];
+  for (const category of ["error", "warn", "log", "info", "debug"]) {
+    const state = filterState[category];
     ok(state, `Filter button for ${category} is on by default`);
   }
-  for (let category of ["css", "net", "netxhr"]) {
-    let state = filterState[category];
+  for (const category of ["css", "net", "netxhr"]) {
+    const state = filterState[category];
     ok(!state, `Filter button for ${category} is off by default`);
   }
 
@@ -49,7 +49,7 @@ function filterIsEnabled(button) {
 }
 
 async function testFilterPersistence() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   const outputNode = hud.ui.outputNode;
   const filterBar = await waitFor(() => {
     return outputNode.querySelector(".webconsole-filterbar-secondary");

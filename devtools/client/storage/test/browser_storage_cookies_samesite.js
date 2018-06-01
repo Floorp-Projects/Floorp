@@ -11,11 +11,11 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-samesite.html");
 
-  let id1 = getCookieId("test1", "test1.example.org",
+  const id1 = getCookieId("test1", "test1.example.org",
                         "/browser/devtools/client/storage/test/");
-  let id2 = getCookieId("test2", "test1.example.org",
+  const id2 = getCookieId("test2", "test1.example.org",
                         "/browser/devtools/client/storage/test/");
-  let id3 = getCookieId("test3", "test1.example.org",
+  const id3 = getCookieId("test3", "test1.example.org",
                         "/browser/devtools/client/storage/test/");
 
   await checkState([
@@ -25,9 +25,9 @@ add_task(async function() {
     ]
   ]);
 
-  let sameSite1 = getRowValues(id1).sameSite;
-  let sameSite2 = getRowValues(id2).sameSite;
-  let sameSite3 = getRowValues(id3).sameSite;
+  const sameSite1 = getRowValues(id1).sameSite;
+  const sameSite2 = getRowValues(id2).sameSite;
+  const sameSite3 = getRowValues(id3).sameSite;
 
   is(sameSite1, "Unset", `sameSite1 is "Unset"`);
   is(sameSite2, "Lax", `sameSite2 is "Lax"`);

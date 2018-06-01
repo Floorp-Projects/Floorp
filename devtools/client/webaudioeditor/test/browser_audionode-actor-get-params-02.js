@@ -7,23 +7,23 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_NODES_URL);
+  const [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
   await loadFrameScriptUtils();
 
-  let allParams = await Promise.all(nodes.map(node => node.getParams()));
-  let types = [
+  const allParams = await Promise.all(nodes.map(node => node.getParams()));
+  const types = [
     "AudioDestinationNode", "AudioBufferSourceNode", "ScriptProcessorNode",
     "AnalyserNode", "GainNode", "DelayNode", "BiquadFilterNode", "WaveShaperNode",
     "PannerNode", "ConvolverNode", "ChannelSplitterNode", "ChannelMergerNode",
     "DynamicsCompressorNode", "OscillatorNode", "StereoPannerNode"
   ];
 
-  let defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
+  const defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
 
   info(JSON.stringify(defaults));
 

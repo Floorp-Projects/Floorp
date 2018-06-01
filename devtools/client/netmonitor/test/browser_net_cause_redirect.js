@@ -18,10 +18,10 @@ add_task(async function() {
     { status: 200, hasStack: true },
   ];
 
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -33,19 +33,19 @@ add_task(async function() {
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.
-  let requests = getSortedRequests(store.getState())
+  const requests = getSortedRequests(store.getState())
     .filter((req) => !req.stacktrace)
     .map((req) => connector.requestData(req.id, "stackTrace"));
 
   await Promise.all(requests);
 
   EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
-    let item = getSortedRequests(store.getState()).get(i);
+    const item = getSortedRequests(store.getState()).get(i);
 
     is(item.status, status, `Request #${i} has the expected status`);
 
-    let { stacktrace } = item;
-    let stackLen = stacktrace ? stacktrace.length : 0;
+    const { stacktrace } = item;
+    const stackLen = stacktrace ? stacktrace.length : 0;
 
     if (hasStack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);

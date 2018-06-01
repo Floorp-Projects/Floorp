@@ -69,7 +69,7 @@ add_task(async function() {
  */
 async function toggleVisibleClass(tab) {
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    let win = content.wrappedJSObject;
+    const win = content.wrappedJSObject;
     win.document.querySelector("div").classList.toggle("visible");
   });
 }

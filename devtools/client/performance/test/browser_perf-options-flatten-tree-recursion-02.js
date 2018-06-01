@@ -14,12 +14,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     PerformanceController,
     DetailsView,
@@ -39,9 +39,9 @@ add_task(async function() {
   await DetailsView.selectView("memory-flamegraph");
   await rendered;
 
-  let allocations1 = PerformanceController.getCurrentRecording().getAllocations();
-  let thread1 = RecordingUtils.getProfileThreadFromAllocations(allocations1);
-  let rendering1 = FlameGraphUtils._cache.get(thread1);
+  const allocations1 = PerformanceController.getCurrentRecording().getAllocations();
+  const thread1 = RecordingUtils.getProfileThreadFromAllocations(allocations1);
+  const rendering1 = FlameGraphUtils._cache.get(thread1);
 
   ok(allocations1,
     "The allocations were retrieved from the controller.");
@@ -55,9 +55,9 @@ add_task(async function() {
   await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
-  let allocations2 = PerformanceController.getCurrentRecording().getAllocations();
-  let thread2 = RecordingUtils.getProfileThreadFromAllocations(allocations2);
-  let rendering2 = FlameGraphUtils._cache.get(thread2);
+  const allocations2 = PerformanceController.getCurrentRecording().getAllocations();
+  const thread2 = RecordingUtils.getProfileThreadFromAllocations(allocations2);
+  const rendering2 = FlameGraphUtils._cache.get(thread2);
 
   is(allocations1, allocations2,
     "The same allocations data should be retrieved from the controller (1).");
@@ -71,9 +71,9 @@ add_task(async function() {
   await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
-  let allocations3 = PerformanceController.getCurrentRecording().getAllocations();
-  let thread3 = RecordingUtils.getProfileThreadFromAllocations(allocations3);
-  let rendering3 = FlameGraphUtils._cache.get(thread3);
+  const allocations3 = PerformanceController.getCurrentRecording().getAllocations();
+  const thread3 = RecordingUtils.getProfileThreadFromAllocations(allocations3);
+  const rendering3 = FlameGraphUtils._cache.get(thread3);
 
   is(allocations2, allocations3,
     "The same allocations data should be retrieved from the controller (2).");

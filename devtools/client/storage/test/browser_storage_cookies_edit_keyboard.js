@@ -11,7 +11,7 @@ add_task(async function() {
   showAllColumns(true);
   showColumn("uniqueKey", false);
 
-  let id = getCookieId("test4", "test1.example.org", "/browser");
+  const id = getCookieId("test4", "test1.example.org", "/browser");
   await startCellEdit(id, "name");
   await typeWithTerminator("test6", "KEY_Tab");
   await typeWithTerminator(".example.org", "KEY_Tab");

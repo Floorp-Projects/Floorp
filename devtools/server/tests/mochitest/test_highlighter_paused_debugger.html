@@ -31,7 +31,7 @@ window.onload = function() {
   const id = elementID => `${highlighter.ID_CLASS_PREFIX}${elementID}`;
 
   function isHidden(elementID) {
-    let attr = anonymousContent.getAttributeForElement(id(elementID), "hidden");
+    const attr = anonymousContent.getAttributeForElement(id(elementID), "hidden");
     return typeof attr === "string" && attr == "true";
   }
 
@@ -40,7 +40,7 @@ window.onload = function() {
   }
 
   function isOverlayShown() {
-    let attr = anonymousContent.getAttributeForElement(id("root"), "overlay");
+    const attr = anonymousContent.getAttributeForElement(id("root"), "overlay");
     return typeof attr === "string" && attr == "true";
   }
 

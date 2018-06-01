@@ -79,7 +79,7 @@ const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
     if (!this._form.traits || !this._form.traits.getAppliedCreatesStyleCache) {
       await this.getLayout(node);
     }
-    let ret = await this._getApplied(node, options);
+    const ret = await this._getApplied(node, options);
     return ret.entries;
   }, {
     impl: "_getApplied"
@@ -209,12 +209,12 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     if (this._form.href) {
       return this._form.href;
     }
-    let sheet = this.parentStyleSheet;
+    const sheet = this.parentStyleSheet;
     return sheet ? sheet.href : "";
   },
 
   get nodeHref() {
-    let sheet = this.parentStyleSheet;
+    const sheet = this.parentStyleSheet;
     return sheet ? sheet.nodeHref : "";
   },
 
@@ -243,7 +243,7 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     if (this._originalLocation) {
       return promise.resolve(this._originalLocation);
     }
-    let parentSheet = this.parentStyleSheet;
+    const parentSheet = this.parentStyleSheet;
     if (!parentSheet) {
       // This rule doesn't belong to a stylesheet so it is an inline style.
       // Inline styles do not have any mediaText so we can return early.
@@ -251,7 +251,7 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     }
     return parentSheet.getOriginalLocation(this.line, this.column)
       .then(({ fromSourceMap, source, line, column }) => {
-        let location = {
+        const location = {
           href: source,
           line: line,
           column: column,

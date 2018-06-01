@@ -9,21 +9,20 @@
  * Test that clients can catch errors in old style actors.
  */
 
-const ACTORS_URL = "chrome://mochitests/content/browser/devtools/server/tests/browser/error-actor.js";
+const ACTORS_URL =
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/error-actor.js";
 
 async function test() {
-  let gClient;
-
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   DebuggerServer.addActors(ACTORS_URL);
 
-  let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
+  const transport = DebuggerServer.connectPipe();
+  const gClient = new DebuggerClient(transport);
   await gClient.connect();
 
-  let { errorActor } = await gClient.listTabs();
+  const { errorActor } = await gClient.listTabs();
   ok(errorActor, "Found the error actor.");
 
   await Assert.rejects(gClient.request({ to: errorActor, type: "error" }),

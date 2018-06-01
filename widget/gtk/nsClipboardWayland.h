@@ -47,7 +47,8 @@ public:
     GdkDragAction GetSelectedDragAction();
     void SetSelectedDragAction(uint32_t aWaylandAction);
 
-    void SetSourceDragActions(uint32_t aWaylandActions);
+    void SetAvailableDragActions(uint32_t aWaylandActions);
+    GdkDragAction GetAvailableDragActions();
 
     virtual ~WaylandDataOffer();
 private:
@@ -55,6 +56,7 @@ private:
 
     wl_data_offer* mWaylandDataOffer;
     uint32_t       mSelectedDragAction;
+    uint32_t       mAvailableDragAction;
 };
 
 class PrimaryDataOffer : public DataOffer

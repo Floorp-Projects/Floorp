@@ -13,9 +13,9 @@
     <script type="text/javascript">
       "use strict";
 
-      let ctx = new AudioContext();
-      let osc = ctx.createOscillator();
-      let gain = ctx.createGain();
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       gain.gain.value = 0;
 
       // Connect multiple times to test that it's disregarded.

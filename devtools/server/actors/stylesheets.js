@@ -52,7 +52,7 @@ exports.UPDATE_GENERAL = UPDATE_GENERAL;
 // and then reopened, the edited text will be available.  A weak map
 // is used so that navigation by the user will eventually cause the
 // edited text to be collected.
-let modifiedStyleSheets = new WeakMap();
+const modifiedStyleSheets = new WeakMap();
 
 /**
  * A MediaRuleActor lives on the server and provides access to properties
@@ -107,7 +107,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
       return this.actorID;
     }
 
-    let form = {
+    const form = {
       actor: this.actorID,  // actorID is set when this is added to a pool
       mediaText: this.rawRule.media.mediaText,
       conditionText: this.rawRule.conditionText,
@@ -126,14 +126,14 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 });
 
 function getSheetText(sheet, consoleActor) {
-  let cssText = modifiedStyleSheets.get(sheet);
+  const cssText = modifiedStyleSheets.get(sheet);
   if (cssText !== undefined) {
     return Promise.resolve(cssText);
   }
 
   if (!sheet.href) {
     // this is an inline <style> sheet
-    let content = sheet.ownerNode.textContent;
+    const content = sheet.ownerNode.textContent;
     return Promise.resolve(content);
   }
 
@@ -153,11 +153,11 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
   if (!consoleActor) {
     return null;
   }
-  let request = consoleActor.getNetworkEventActorForURL(href);
+  const request = consoleActor.getNetworkEventActorForURL(href);
   if (!request) {
     return null;
   }
-  let content = request._response.content;
+  const content = request._response.content;
   if (request._discardResponseBody || request._truncated || !content) {
     return null;
   }
@@ -170,7 +170,7 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
     };
   }
   // For long strings, look up the actor that holds the full text.
-  let longStringActor = consoleActor.conn._getOrCreateActor(content.text.actor);
+  const longStringActor = consoleActor.conn._getOrCreateActor(content.text.actor);
   if (!longStringActor) {
     return null;
   }
@@ -187,7 +187,7 @@ function getCSSCharset(sheet) {
   if (sheet) {
     // charset attribute of <link> or <style> element, if it exists
     if (sheet.ownerNode && sheet.ownerNode.getAttribute) {
-      let linkCharset = sheet.ownerNode.getAttribute("charset");
+      const linkCharset = sheet.ownerNode.getAttribute("charset");
       if (linkCharset != null) {
         return linkCharset;
       }
@@ -213,14 +213,14 @@ function getCSSCharset(sheet) {
  *         If an error occurs, the promise is rejected with that error.
  */
 async function fetchStylesheet(sheet, consoleActor) {
-  let href = sheet.href;
+  const href = sheet.href;
 
   let result = fetchStylesheetFromNetworkMonitor(href, consoleActor);
   if (result) {
     return result;
   }
 
-  let options = {
+  const options = {
     loadFromCache: true,
     policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
     charset: getCSSCharset(sheet)
@@ -232,7 +232,7 @@ async function fetchStylesheet(sheet, consoleActor) {
   // for preventing the assertion of the userContextId mismatching.
 
   // chrome|file|resource|moz-extension protocols rely on the system principal.
-  let excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
+  const excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
   if (!excludedProtocolsRe.test(href)) {
     // Stylesheets using other protocols should use the content principal.
     if (sheet.ownerNode) {
@@ -400,9 +400,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return this._cssRules;
     }
 
-    let deferred = defer();
+    const deferred = defer();
 
-    let onSheetLoaded = (event) => {
+    const onSheetLoaded = (event) => {
       this.ownerNode.removeEventListener("load", onSheetLoaded);
 
       deferred.resolve(this.rawSheet.cssRules);
@@ -437,7 +437,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       }
     }
 
-    let form = {
+    const form = {
       actor: this.actorID,  // actorID is set when this actor is added to a pool
       href: this.href,
       nodeHref: docHref,
@@ -519,7 +519,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (this.parentActor.exited) {
       return null;
     }
-    let form = this.parentActor.form();
+    const form = this.parentActor.form();
     return this.conn._getOrCreateActor(form.consoleActor);
   },
 
@@ -538,13 +538,13 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   _getMediaRules: function() {
     return this.getCSSRules().then((rules) => {
-      let mediaRules = [];
+      const mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
-        let rule = rules[i];
+        const rule = rules[i];
         if (rule.type != CSSRule.MEDIA_RULE) {
           continue;
         }
-        let actor = new MediaRuleActor(rule, this);
+        const actor = new MediaRuleActor(rule, this);
         this.manage(actor);
 
         mediaRules.push(actor);
@@ -670,7 +670,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   destroy: function() {
-    for (let win of this.parentActor.windows) {
+    for (const win of this.parentActor.windows) {
       // This flag only exists for devtools, so we are free to clear
       // it when we're done.
       win.document.styleSheetChangeEventsEnabled = false;
@@ -714,8 +714,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   async getStyleSheets() {
     let actors = [];
 
-    for (let win of this.parentActor.windows) {
-      let sheets = await this._addStyleSheets(win);
+    for (const win of this.parentActor.windows) {
+      const sheets = await this._addStyleSheets(win);
       actors = actors.concat(sheets);
     }
     return actors;
@@ -751,7 +751,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *        The triggering event.
    */
   _onSheetAdded: function(evt) {
-    let sheet = evt.stylesheet;
+    const sheet = evt.stylesheet;
     if (this._shouldListSheet(sheet) && !this._haveAncestorWithSameURL(sheet)) {
       this.parentActor.createStyleSheetActor(sheet);
     }
@@ -769,26 +769,27 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    */
   _addStyleSheets: function(win) {
     return (async function() {
-      let doc = win.document;
+      const doc = win.document;
       // We have to set this flag in order to get the
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
       doc.styleSheetChangeEventsEnabled = true;
 
-      let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      let styleSheets =
+      const isChrome =
+        Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
+      const styleSheets =
         isChrome ? InspectorUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
-        let sheet = styleSheets[i];
+        const sheet = styleSheets[i];
         if (!this._shouldListSheet(sheet)) {
           continue;
         }
 
-        let actor = this.parentActor.createStyleSheetActor(sheet);
+        const actor = this.parentActor.createStyleSheetActor(sheet);
         actors.push(actor);
 
         // Get all sheets, including imported ones
-        let imports = await this._getImported(doc, actor);
+        const imports = await this._getImported(doc, actor);
         actors = actors.concat(imports);
       }
       return actors;
@@ -807,27 +808,27 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    */
   _getImported: function(doc, styleSheet) {
     return (async function() {
-      let rules = await styleSheet.getCSSRules();
+      const rules = await styleSheet.getCSSRules();
       let imported = [];
 
       for (let i = 0; i < rules.length; i++) {
-        let rule = rules[i];
+        const rule = rules[i];
         if (rule.type == CSSRule.IMPORT_RULE) {
           // With the Gecko style system, the associated styleSheet may be null
           // if it has already been seen because an import cycle for the same
           // URL.  With Stylo, the styleSheet will exist (which is correct per
           // the latest CSSOM spec), so we also need to check ancestors for the
           // same URL to avoid cycles.
-          let sheet = rule.styleSheet;
+          const sheet = rule.styleSheet;
           if (!sheet || this._haveAncestorWithSameURL(sheet) ||
               !this._shouldListSheet(sheet)) {
             continue;
           }
-          let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
+          const actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
           imported.push(actor);
 
           // recurse imports in this stylesheet as well
-          let children = await this._getImported(doc, actor);
+          const children = await this._getImported(doc, actor);
           imported = imported.concat(children);
         } else if (rule.type != CSSRule.CHARSET_RULE) {
           // @import rules must precede all others except @charset
@@ -846,7 +847,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @param {DOMStyleSheet} sheet
    */
   _haveAncestorWithSameURL(sheet) {
-    let sheetHref = sheet.href;
+    const sheetHref = sheet.href;
     while (sheet.parentStyleSheet) {
       if (sheet.parentStyleSheet.href == sheetHref) {
         return true;
@@ -873,8 +874,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     // client.  See |_onNewStyleSheetActor|.
     this._nextStyleSheetIsNew = true;
 
-    let parent = this.document.documentElement;
-    let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    const parent = this.document.documentElement;
+    const style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");
 
     if (text) {
@@ -882,7 +883,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     }
     parent.appendChild(style);
 
-    let actor = this.parentActor.createStyleSheetActor(style.sheet);
+    const actor = this.parentActor.createStyleSheetActor(style.sheet);
     return actor;
   }
 });

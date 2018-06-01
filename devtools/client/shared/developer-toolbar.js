@@ -30,7 +30,7 @@ var CommandUtils = {
       // Store the promise to avoid races by storing the promise immediately
       this._requisitions.set(target, requisitionPromise);
     }
-    let requisition = await requisitionPromise;
+    const requisition = await requisitionPromise;
     requisition.updateExec(command);
   },
 
@@ -42,7 +42,7 @@ var CommandUtils = {
       return promise.reject("Unable to load gcli");
     }
     return gcliInit.getSystem(target).then(system => {
-      let Requisition = require("gcli/cli").Requisition;
+      const Requisition = require("gcli/cli").Requisition;
       return new Requisition(system, options);
     });
   },

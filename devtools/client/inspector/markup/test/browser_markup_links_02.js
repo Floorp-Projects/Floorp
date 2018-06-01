@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node");
   await addNewAttributes("body", "contextmenu=\"menu1\"", inspector);
@@ -24,8 +24,8 @@ add_task(async function() {
   is(linkEls[0].textContent, "menu1", "The link has the right value");
 
   info("Editing the contextmenu attribute on the body node");
-  let nodeMutated = inspector.once("markupmutation");
-  let attr = editor.attrElements.get("contextmenu").querySelector(".editable");
+  const nodeMutated = inspector.once("markupmutation");
+  const attr = editor.attrElements.get("contextmenu").querySelector(".editable");
   setEditableFieldValue(attr, "contextmenu=\"menu2\"", inspector);
   await nodeMutated;
 

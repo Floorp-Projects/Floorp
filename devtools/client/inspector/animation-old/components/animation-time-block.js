@@ -203,7 +203,7 @@ AnimationTimeBlock.prototype = {
   },
 
   getTooltipText: function(state) {
-    let getTime = time => L10N.getFormatStr("player.timeLabel",
+    const getTime = time => L10N.getFormatStr("player.timeLabel",
                                             L10N.numberWithDecimals(time / 1000, 2));
 
     let text = "";
@@ -241,7 +241,7 @@ AnimationTimeBlock.prototype = {
 
     // Adding the iteration start.
     if (state.iterationStart !== 0) {
-      let iterationStartTime = state.iterationStart * state.duration / 1000;
+      const iterationStartTime = state.iterationStart * state.duration / 1000;
       text += L10N.getFormatStr("player.animationIterationStartLabel",
                                 state.iterationStart,
                                 L10N.numberWithDecimals(iterationStartTime, 2));
@@ -325,7 +325,7 @@ function renderKeyframesEasingGraph(parentEl, state, totalDisplayedDuration,
   const keyframesList = getOffsetAndEasingOnlyKeyframesList(tracks);
   const keyframeEasingOpacity = Math.max(1 / keyframesList.length,
                                          MIN_KEYFRAMES_EASING_OPACITY);
-  for (let keyframes of keyframesList) {
+  for (const keyframes of keyframesList) {
     const minProgressTreshold =
       Math.min(minEffectProgressThreshold,
                getPreferredKeyframesProgressThreshold(keyframes));

@@ -17,17 +17,17 @@ const TEST_URI = TEST_URI_ROOT + "doc_templater_basic.html";
 
 var test = async function() {
   await addTab("about:blank");
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
   info("Starting DOM Templater Tests");
   runTest(0, host, doc);
 };
 
 function runTest(index, host, doc) {
-  let options = tests[index] = tests[index]();
-  let holder = doc.createElement("div");
+  const options = tests[index] = tests[index]();
+  const holder = doc.createElement("div");
   holder.id = options.name;
-  let body = doc.body;
+  const body = doc.body;
   body.appendChild(holder);
   // eslint-disable-next-line no-unsanitized/property
   holder.innerHTML = options.template;
@@ -56,7 +56,7 @@ function runTest(index, host, doc) {
   }
 
   if (options.later) {
-    let ais = is.bind(this);
+    const ais = is.bind(this);
 
     function createTester(testHolder, testOptions) {
       return () => {

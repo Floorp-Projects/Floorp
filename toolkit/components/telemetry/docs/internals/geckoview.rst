@@ -41,6 +41,34 @@ measurements file after the update interval expires. This interval is defined by
 ``toolkit.telemetry.geckoPersistenceTimeout`` preference (defaults to 1 minute), see the
 :doc:`preferences docs <preferences>`.
 
+Scalar Semantics
+~~~~~~~~~~~~~~~~
+
+Data collection can start very early during the application life cycle and might overlap with the persistence deserialization.
+The Telemetry Core therefore takes additional steps to preserve the semantics of scalar operations.
+
+During deserialization of persisted measurements operations on scalar probes are not applied immediately, but recorded into a pending operations list.
+Once deserialization is finished, the pending operations are applied in the order they were recorded.
+This avoids any data race between operations and scalar values are always in a consistent state.
+Snapshots requests will only be fulfilled after the deserialization finished and all pending operations are applied.
+Consumers of the recorded data should therefore never see inconsistent data.
+
+An example:
+
+1. Scalar deserialization is started
+2. "test" scalar is incremented by "10" by the application -> The operation ``[test, add, 10]`` is recorded into the list.
+3. The state of the "test" scalar is loaded off the persistence file, and the value "14" is set.
+4. Deserialization is finished and the pending operations are applied.
+
+   * The "test" scalar is incremented by "10", the value is now "24"
+5. "test" scalar is incremented via "scalarAdd" by 1. Its value is "25"
+
+To stop growing unbounded in memory while waiting for scalar deserialization to finish, pending operations are applied
+immediately if the array reaches a high water mark of 10000 elements.
+At that point the deserialization is considered done and following scalar operatins will be applied immediately.
+In the case of the deserialization still being in progress, it might overwrite recorded values,
+leading to inconsistent data.
+
 The persistence file format
 ---------------------------
 All the supported measurements are serialized to the persistence file using the JSON format.
@@ -146,3 +174,4 @@ Version history
 
   - Initial GeckoView support and scalar persistence (`bug 1453591 <https://bugzilla.mozilla.org/show_bug.cgi?id=1453591>`_).
   - Persistence support for histograms (`bug 1457127 <https://bugzilla.mozilla.org/show_bug.cgi?id=1457127>`_).
+  - Preserve the semantics of scalar operations when restoring the persisted state (`bug 1454606 <https://bugzilla.mozilla.org/show_bug.cgi?id=1454606>`_)

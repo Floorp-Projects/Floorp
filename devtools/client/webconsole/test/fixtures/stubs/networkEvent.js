@@ -11,8 +11,8 @@
 const { NetworkEventMessage } =
   require("devtools/client/webconsole/types");
 
-let stubPreparedMessages = new Map();
-let stubPackets = new Map();
+const stubPreparedMessages = new Map();
+const stubPackets = new Map();
 stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "id": "1",
   "actor": "server1.conn0.child1/netEvent30",

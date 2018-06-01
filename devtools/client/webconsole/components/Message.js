@@ -94,12 +94,12 @@ class Message extends Component {
   }
 
   onLearnMoreClick(e) {
-    let {exceptionDocURL} = this.props;
+    const {exceptionDocURL} = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL, e);
   }
 
   toggleMessage(e) {
-    let { open, dispatch, messageId } = this.props;
+    const { open, dispatch, messageId } = this.props;
     if (open) {
       dispatch(actions.messageClose(messageId));
     } else {
@@ -108,8 +108,8 @@ class Message extends Component {
   }
 
   onContextMenu(e) {
-    let { serviceContainer, source, request, messageId } = this.props;
-    let messageInfo = {
+    const { serviceContainer, source, request, messageId } = this.props;
+    const messageInfo = {
       source,
       request,
       messageId,

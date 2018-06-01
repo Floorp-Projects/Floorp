@@ -408,9 +408,9 @@ Scanner.prototype = {
       result = result.slice(0, -1);
     }
 
-    let extra = [];
+    const extra = [];
     this.AppendImpliedEOFCharacters(eofChars, extra);
-    let asString = String.fromCharCode.apply(null, extra);
+    const asString = String.fromCharCode.apply(null, extra);
 
     return result + asString;
   },
@@ -419,17 +419,17 @@ Scanner.prototype = {
    * @see CSSLexer.nextToken
    */
   nextToken: function() {
-    let token = {};
+    const token = {};
     if (!this.Next(token)) {
       return null;
     }
 
-    let resultToken = {};
+    const resultToken = {};
     resultToken.tokenType = token.mType;
     resultToken.startOffset = this.mTokenOffset;
     resultToken.endOffset = this.mOffset;
 
-    let constructText = () => {
+    const constructText = () => {
       return String.fromCharCode.apply(null, token.mIdent);
     };
 
@@ -537,7 +537,7 @@ Scanner.prototype = {
    */
   SkipWhitespace: function() {
     for (;;) {
-      let ch = this.Peek();
+      const ch = this.Peek();
       if (!IsWhitespace(ch)) { // EOF counts as non-whitespace
         break;
       }
@@ -676,8 +676,8 @@ Scanner.prototype = {
    * false otherwise.
    */
   GatherText: function(aClass, aText) {
-    let start = this.mOffset;
-    let inString = aClass == IS_STRING;
+    const start = this.mOffset;
+    const inString = aClass == IS_STRING;
 
     for (;;) {
       // Consume runs of unescaped characters in one go.
@@ -687,7 +687,7 @@ Scanner.prototype = {
         n++;
       }
       if (n > this.mOffset) {
-        let substr = this.mBuffer.slice(this.mOffset, n);
+        const substr = this.mBuffer.slice(this.mOffset, n);
         Array.prototype.push.apply(aText, stringToCodes(substr));
         this.mOffset = n;
       }
@@ -695,7 +695,7 @@ Scanner.prototype = {
         break;
       }
 
-      let ch = this.Peek();
+      const ch = this.Peek();
       if (ch == 0) {
         this.Advance();
         aText.push(UCS2_REPLACEMENT_CHAR);
@@ -734,7 +734,7 @@ Scanner.prototype = {
     this.Advance();
     aToken.mType = eCSSToken_Function;
 
-    let asString = String.fromCharCode.apply(null, aToken.mIdent);
+    const asString = String.fromCharCode.apply(null, aToken.mIdent);
     if (asString.toLowerCase() === "url") {
       this.NextURL(aToken);
     }
@@ -750,7 +750,7 @@ Scanner.prototype = {
     aToken.mSymbol = COMMERCIAL_AT;
     this.Advance();
 
-    let ch = this.Peek();
+    const ch = this.Peek();
     if (StartsIdent(ch, this.Peek(1))) {
       if (this.GatherText(IS_IDCHAR, aToken.mIdent)) {
         aToken.mType = eCSSToken_AtKeyword;
@@ -769,9 +769,9 @@ Scanner.prototype = {
     aToken.mSymbol = NUMBER_SIGN;
     this.Advance();
 
-    let ch = this.Peek();
+    const ch = this.Peek();
     if (IsIdentChar(ch) || ch == REVERSE_SOLIDUS) {
-      let type =
+      const type =
           StartsIdent(ch, this.Peek(1)) ? eCSSToken_ID : eCSSToken_Hash;
       aToken.mIdent.length = 0;
       if (this.GatherText(IS_IDCHAR, aToken.mIdent)) {
@@ -793,7 +793,7 @@ Scanner.prototype = {
     let c = this.Peek();
 
     // Sign of the mantissa (-1 or 1).
-    let sign = c == HYPHEN_MINUS ? -1 : 1;
+    const sign = c == HYPHEN_MINUS ? -1 : 1;
     // Absolute value of the integer part of the mantissa.  This is a double so
     // we don't run into overflow issues for consumers that only care about our
     // floating-point value while still being able to express the full int32_t
@@ -848,8 +848,8 @@ Scanner.prototype = {
 
     let gotE = false;
     if (c == LATIN_SMALL_LETTER_E || c == LATIN_CAPITAL_LETTER_E) {
-      let expSignChar = this.Peek(1);
-      let nextChar = this.Peek(2);
+      const expSignChar = this.Peek(1);
+      const nextChar = this.Peek(2);
       if (IsDigit(expSignChar) ||
           ((expSignChar == HYPHEN_MINUS || expSignChar == PLUS_SIGN) &&
            IsDigit(nextChar))) {
@@ -895,7 +895,7 @@ Scanner.prototype = {
       aToken.mIntegerValid = true;
     }
 
-    let ident = aToken.mIdent;
+    const ident = aToken.mIdent;
 
     // Check for Dimension and Percentage tokens.
     if (c >= 0) {
@@ -921,7 +921,7 @@ Scanner.prototype = {
    * close quote is missing.  Always returns true (for convenience in Next()).
    */
   ScanString: function(aToken) {
-    let aStop = this.Peek();
+    const aStop = this.Peek();
     aToken.mType = eCSSToken_String;
     aToken.mSymbol = aStop; // Remember how it's quoted.
     this.Advance();
@@ -929,7 +929,7 @@ Scanner.prototype = {
     for (;;) {
       this.GatherText(IS_STRING, aToken.mIdent);
 
-      let ch = this.Peek();
+      const ch = this.Peek();
       if (ch == -1) {
         this.AddEOFCharacters(aStop == QUOTATION_MARK ?
                               eEOFCharacters_DoubleQuote :
@@ -970,8 +970,8 @@ Scanner.prototype = {
    * form.
    */
   ScanURange: function(aResult) {
-    let intro1 = this.Peek();
-    let intro2 = this.Peek(1);
+    const intro1 = this.Peek();
+    const intro2 = this.Peek(1);
     let ch = this.Peek(2);
 
     aResult.mIdent.push(intro1);
@@ -1044,7 +1044,7 @@ Scanner.prototype = {
 
     // All of the remaining EOFCharacters bits represent appended characters,
     // and the bits are in the order that they need appending.
-    for (let p of kImpliedEOFCharacters) {
+    for (const p of kImpliedEOFCharacters) {
       if (c & 1) {
         aResult.push(p);
       }
@@ -1127,8 +1127,6 @@ Scanner.prototype = {
    * least one character unless called when already at EOF.
    */
   Next: function(aToken, aSkip) {
-    let ch;
-
     // do this here so we don't have to do it in dozens of other places
     aToken.mIdent = [];
     aToken.mType = eCSSToken_Symbol;
@@ -1137,7 +1135,7 @@ Scanner.prototype = {
     this.mTokenLineOffset = this.mLineOffset;
     this.mTokenLineNumber = this.mLineNumber;
 
-    ch = this.Peek();
+    const ch = this.Peek();
     if (IsWhitespace(ch)) {
       this.SkipWhitespace();
       aToken.mType = eCSSToken_Whitespace;
@@ -1157,8 +1155,8 @@ Scanner.prototype = {
 
     // 'u' could be UNICODE-RANGE or an identifier-family token
     if (ch == LATIN_SMALL_LETTER_U || ch == LATIN_CAPITAL_LETTER_U) {
-      let c2 = this.Peek(1);
-      let c3 = this.Peek(2);
+      const c2 = this.Peek(1);
+      const c3 = this.Peek(2);
       if (c2 == PLUS_SIGN && (IsHexDigit(c3) || c3 == QUESTION_MARK)) {
         return this.ScanURange(aToken);
       }
@@ -1180,7 +1178,7 @@ Scanner.prototype = {
     }
 
     if (ch == PLUS_SIGN) {
-      let c2 = this.Peek(1);
+      const c2 = this.Peek(1);
       if (IsDigit(c2) || (c2 == FULL_STOP && IsDigit(this.Peek(2)))) {
         return this.ScanNumber(aToken);
       }
@@ -1189,8 +1187,8 @@ Scanner.prototype = {
     // HYPHEN_MINUS can start an identifier-family token, a number-family token,
     // or an HTML-comment
     if (ch == HYPHEN_MINUS) {
-      let c2 = this.Peek(1);
-      let c3 = this.Peek(2);
+      const c2 = this.Peek(1);
+      const c3 = this.Peek(2);
       if (IsIdentStart(c2) || (c2 == HYPHEN_MINUS && c3 != GREATER_THAN_SIGN)) {
         return this.ScanIdent(aToken);
       }
@@ -1232,7 +1230,7 @@ Scanner.prototype = {
     }
 
     // Match operators: ~= |= ^= $= *=
-    let opType = MatchOperatorType(ch);
+    const opType = MatchOperatorType(ch);
     if (opType != eCSSToken_Symbol && this.Peek(1) == EQUALS_SIGN) {
       aToken.mType = opType;
       this.Advance(2);

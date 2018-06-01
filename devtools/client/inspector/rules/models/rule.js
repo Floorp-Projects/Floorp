@@ -151,7 +151,7 @@ Rule.prototype = {
    *        Optional, property next to which the new property will be added.
    */
   createProperty: function(name, value, priority, enabled, siblingProp) {
-    let prop = new TextProperty(this, name, value, priority, enabled);
+    const prop = new TextProperty(this, name, value, priority, enabled);
 
     let ind;
     if (siblingProp) {
@@ -180,9 +180,9 @@ Rule.prototype = {
   _applyPropertiesNoAuthored: function(modifications) {
     this.elementStyle.markOverriddenAll();
 
-    let disabledProps = [];
+    const disabledProps = [];
 
-    for (let prop of this.textProps) {
+    for (const prop of this.textProps) {
       if (prop.invisible) {
         continue;
       }
@@ -204,7 +204,7 @@ Rule.prototype = {
     }
 
     // Store disabled properties in the disabled store.
-    let disabled = this.elementStyle.store.disabled;
+    const disabled = this.elementStyle.store.disabled;
     if (disabledProps.length > 0) {
       disabled.set(this.style, disabledProps);
     } else {
@@ -212,16 +212,16 @@ Rule.prototype = {
     }
 
     return modifications.apply().then(() => {
-      let cssProps = {};
+      const cssProps = {};
       // Note that even though StyleRuleActors normally provide parsed
       // declarations already, _applyPropertiesNoAuthored is only used when
       // connected to older backend that do not provide them. So parse here.
-      for (let cssProp of parseNamedDeclarations(this.cssProperties.isKnown,
+      for (const cssProp of parseNamedDeclarations(this.cssProperties.isKnown,
                                                  this.style.authoredText)) {
         cssProps[cssProp.name] = cssProp;
       }
 
-      for (let textProp of this.textProps) {
+      for (const textProp of this.textProps) {
         if (!textProp.enabled) {
           continue;
         }
@@ -250,12 +250,12 @@ Rule.prototype = {
       // The rewriting may have required some other property values to
       // change, e.g., to insert some needed terminators.  Update the
       // relevant properties here.
-      for (let index in modifications.changedDeclarations) {
-        let newValue = modifications.changedDeclarations[index];
+      for (const index in modifications.changedDeclarations) {
+        const newValue = modifications.changedDeclarations[index];
         this.textProps[index].updateValue(newValue);
       }
       // Recompute and redisplay the computed properties.
-      for (let prop of this.textProps) {
+      for (const prop of this.textProps) {
         if (!prop.invisible && prop.enabled) {
           prop.updateComputed();
           prop.updateEditor();
@@ -279,9 +279,9 @@ Rule.prototype = {
   applyProperties: function(modifier) {
     // If there is already a pending modification, we have to wait
     // until it settles before applying the next modification.
-    let resultPromise =
+    const resultPromise =
         promise.resolve(this._applyingModifications).then(() => {
-          let modifications = this.style.startModifyingProperties(
+          const modifications = this.style.startModifyingProperties(
             this.cssProperties);
           modifier(modifications);
           if (this.style.canSetRuleText) {
@@ -314,9 +314,9 @@ Rule.prototype = {
       return;
     }
 
-    let oldName = property.name;
+    const oldName = property.name;
     property.name = name;
-    let index = this.textProps.indexOf(property);
+    const index = this.textProps.indexOf(property);
     this.applyProperties((modifications) => {
       modifications.renameProperty(index, oldName, name);
     });
@@ -340,7 +340,7 @@ Rule.prototype = {
     property.value = value;
     property.priority = priority;
 
-    let index = this.textProps.indexOf(property);
+    const index = this.textProps.indexOf(property);
     this.applyProperties((modifications) => {
       modifications.setProperty(index, property.name, value, priority);
     });
@@ -358,7 +358,7 @@ Rule.prototype = {
    *        The property's priority (either "important" or an empty string).
    */
   previewPropertyValue: function(property, value, priority) {
-    let modifications = this.style.startModifyingProperties(this.cssProperties);
+    const modifications = this.style.startModifyingProperties(this.cssProperties);
     modifications.setProperty(this.textProps.indexOf(property),
                               property.name, value, priority);
     modifications.apply().then(() => {
@@ -380,7 +380,7 @@ Rule.prototype = {
       return;
     }
     property.enabled = !!value;
-    let index = this.textProps.indexOf(property);
+    const index = this.textProps.indexOf(property);
     this.applyProperties((modifications) => {
       modifications.setPropertyEnabled(index, property.name, property.enabled);
     });
@@ -394,7 +394,7 @@ Rule.prototype = {
    *        The property to be removed
    */
   removeProperty: function(property) {
-    let index = this.textProps.indexOf(property);
+    const index = this.textProps.indexOf(property);
     this.textProps.splice(index, 1);
     // Need to re-apply properties in case removing this TextProperty
     // exposes another one.
@@ -408,8 +408,8 @@ Rule.prototype = {
    * to parse the style's authoredText.
    */
   _getTextProperties: function() {
-    let textProps = [];
-    let store = this.elementStyle.store;
+    const textProps = [];
+    const store = this.elementStyle.store;
 
     // Starting with FF49, StyleRuleActors provide parsed declarations.
     let props = this.style.declarations;
@@ -421,16 +421,16 @@ Rule.prototype = {
                                      this.style.authoredText, true);
     }
 
-    for (let prop of props) {
-      let name = prop.name;
+    for (const prop of props) {
+      const name = prop.name;
       // In an inherited rule, we only show inherited properties.
       // However, we must keep all properties in order for rule
       // rewriting to work properly.  So, compute the "invisible"
       // property here.
-      let invisible = this.inherited && !this.cssProperties.isInherited(name);
-      let value = store.userProperties.getProperty(this.style, name,
+      const invisible = this.inherited && !this.cssProperties.isInherited(name);
+      const value = store.userProperties.getProperty(this.style, name,
                                                    prop.value);
-      let textProp = new TextProperty(this, name, value, prop.priority,
+      const textProp = new TextProperty(this, name, value, prop.priority,
                                       !("commentOffsets" in prop),
                                       invisible);
       textProps.push(textProp);
@@ -443,20 +443,20 @@ Rule.prototype = {
    * Return the list of disabled properties from the store for this rule.
    */
   _getDisabledProperties: function() {
-    let store = this.elementStyle.store;
+    const store = this.elementStyle.store;
 
     // Include properties from the disabled property store, if any.
-    let disabledProps = store.disabled.get(this.style);
+    const disabledProps = store.disabled.get(this.style);
     if (!disabledProps) {
       return [];
     }
 
-    let textProps = [];
+    const textProps = [];
 
-    for (let prop of disabledProps) {
-      let value = store.userProperties.getProperty(this.style, prop.name,
+    for (const prop of disabledProps) {
+      const value = store.userProperties.getProperty(this.style, prop.name,
                                                    prop.value);
-      let textProp = new TextProperty(this, prop.name, value, prop.priority);
+      const textProp = new TextProperty(this, prop.name, value, prop.priority);
       textProp.enabled = false;
       textProps.push(textProp);
     }
@@ -470,7 +470,7 @@ Rule.prototype = {
    */
   refresh: function(options) {
     this.matchedSelectors = options.matchedSelectors || [];
-    let newTextProps = this._getTextProperties();
+    const newTextProps = this._getTextProperties();
 
     // Update current properties for each property present on the style.
     // This will mark any touched properties with _visited so we
@@ -478,8 +478,8 @@ Rule.prototype = {
     // removed from the style).
     // Also keep track of properties that didn't exist in the current set
     // of properties.
-    let brandNewProps = [];
-    for (let newProp of newTextProps) {
+    const brandNewProps = [];
+    for (const newProp of newTextProps) {
       if (!this._updateTextProperty(newProp)) {
         brandNewProps.push(newProp);
       }
@@ -487,7 +487,7 @@ Rule.prototype = {
 
     // Refresh editors and disabled state for all the properties that
     // were updated.
-    for (let prop of this.textProps) {
+    for (const prop of this.textProps) {
       // Properties that weren't touched during the update
       // process must no longer exist on the node.  Mark them disabled.
       if (!prop._visited) {
@@ -530,9 +530,9 @@ Rule.prototype = {
    *         were updated.
    */
   _updateTextProperty: function(newProp) {
-    let match = { rank: 0, prop: null };
+    const match = { rank: 0, prop: null };
 
-    for (let prop of this.textProps) {
+    for (const prop of this.textProps) {
       if (prop.name !== newProp.name) {
         continue;
       }
@@ -626,11 +626,11 @@ Rule.prototype = {
    * Return a string representation of the rule.
    */
   stringifyRule: function() {
-    let selectorText = this.selectorText;
+    const selectorText = this.selectorText;
     let cssText = "";
-    let terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
+    const terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
 
-    for (let textProp of this.textProps) {
+    for (const textProp of this.textProps) {
       if (!textProp.invisible) {
         cssText += "\t" + textProp.stringifyProperty() + terminator;
       }
@@ -645,7 +645,7 @@ Rule.prototype = {
    *         if all properties are invisible
    */
   hasAnyVisibleProperties: function() {
-    for (let prop of this.textProps) {
+    for (const prop of this.textProps) {
       if (!prop.invisible) {
         return true;
       }

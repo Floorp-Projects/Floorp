@@ -15,10 +15,10 @@ function test() {
 }
 
 function runTests() {
-  let sp = gScratchpadWindow.Scratchpad;
-  let doc = gScratchpadWindow.document;
+  const sp = gScratchpadWindow.Scratchpad;
+  const doc = gScratchpadWindow.document;
 
-  let methodsAndItems = {
+  const methodsAndItems = {
     "sp-menu-newscratchpad": "openScratchpad",
     "sp-menu-open": "openFile",
     "sp-menu-save": "saveFile",
@@ -40,18 +40,18 @@ function runTests() {
 
   let lastMethodCalled = null;
 
-  for (let id in methodsAndItems) {
+  for (const id in methodsAndItems) {
     lastMethodCalled = null;
 
-    let methodName = methodsAndItems[id];
-    let oldMethod = sp[methodName];
+    const methodName = methodsAndItems[id];
+    const oldMethod = sp[methodName];
     ok(oldMethod, "found method " + methodName + " in Scratchpad object");
 
     sp[methodName] = () => {
       lastMethodCalled = methodName;
     };
 
-    let menu = doc.getElementById(id);
+    const menu = doc.getElementById(id);
     ok(menu, "found menuitem #" + id);
 
     try {

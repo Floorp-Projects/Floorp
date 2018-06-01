@@ -7,17 +7,17 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let [dest, osc, gain] = actors;
+  const [actors] = await events;
+  const [dest, osc, gain] = actors;
 
   await osc.disconnect();
 

@@ -15,7 +15,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
  * rendering if the owner panel runs in the background.
  */
 function visibilityHandlerConnect() {
-  let args = [].slice.call(arguments);
+  const args = [].slice.call(arguments);
   return component => {
     return connect(...args)(props => {
       return VisibilityHandler(null, createElement(component, props));

@@ -21,16 +21,16 @@ window.onload = function() {
 };
 
 addTest(function getComputedStyle() {
-  let node = document.querySelector("#computed-style");
+  const node = document.querySelector("#computed-style");
   is(CssLogic.getComputedStyle(node).getPropertyValue("width"),
       "50px", "Computed style on a normal node works (width)");
   is(CssLogic.getComputedStyle(node).getPropertyValue("height"),
       "10px", "Computed style on a normal node works (height)");
 
-  let firstChild = new _documentWalker(node, window).firstChild();
+  const firstChild = new _documentWalker(node, window).firstChild();
   is(CssLogic.getComputedStyle(firstChild).getPropertyValue("content"),
      "\"before\"", "Computed style on a ::before node works (content)");
-  let lastChild = new _documentWalker(node, window).lastChild();
+  const lastChild = new _documentWalker(node, window).lastChild();
   is(CssLogic.getComputedStyle(lastChild).getPropertyValue("content"),
      "\"after\"", "Computed style on a ::after node works (content)");
 
@@ -38,20 +38,20 @@ addTest(function getComputedStyle() {
 });
 
 addTest(function getBindingElementAndPseudo() {
-  let node = document.querySelector("#computed-style");
+  const node = document.querySelector("#computed-style");
   let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
 
   is(bindingElement, node,
      "Binding element is the node itself for a normal node");
   ok(!pseudo, "Pseudo is null for a normal node");
 
-  let firstChild = new _documentWalker(node, window).firstChild();
+  const firstChild = new _documentWalker(node, window).firstChild();
   ({ bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(firstChild));
   is(bindingElement, node,
      "Binding element is the parent for a pseudo node");
   is(pseudo, ":before", "Pseudo is correct for a ::before node");
 
-  let lastChild = new _documentWalker(node, window).lastChild();
+  const lastChild = new _documentWalker(node, window).lastChild();
   ({ bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(lastChild));
   is(bindingElement, node,
      "Binding element is the parent for a pseudo node");

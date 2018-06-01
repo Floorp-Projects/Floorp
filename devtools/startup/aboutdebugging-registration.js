@@ -24,7 +24,7 @@ AboutDebugging.prototype = {
   QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(uri, loadInfo) {
-    let chan = Services.io.newChannelFromURIWithLoadInfo(
+    const chan = Services.io.newChannelFromURIWithLoadInfo(
       this.uri,
       loadInfo
     );

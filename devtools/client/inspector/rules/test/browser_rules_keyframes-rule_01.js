@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await testPacman(inspector, view);
   await testBoxy(inspector, view);
   await testMoxy(inspector, view);
@@ -67,9 +67,9 @@ async function testMoxy(inspector, view) {
 
 async function assertKeyframeRules(selector, inspector, view, expected) {
   await selectNode(selector, inspector);
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let rules = {
+  const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
     keyframeRules: elementStyle.rules.filter(rule => rule.keyframes)
   };
@@ -80,7 +80,7 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
     " has the correct number of keyframe rules");
 
   let i = 0;
-  for (let keyframeRule of rules.keyframeRules) {
+  for (const keyframeRule of rules.keyframeRules) {
     ok(keyframeRule.keyframes.name == expected.keyframesRules[i],
       keyframeRule.keyframes.name + " has the correct keyframes name");
     ok(keyframeRule.domRule.keyText == expected.keyframeRules[i],
@@ -90,13 +90,13 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
 }
 
 function assertGutters(view, expected) {
-  let gutters = view.element.querySelectorAll(".ruleview-header");
+  const gutters = view.element.querySelectorAll(".ruleview-header");
 
   is(gutters.length, expected.guttersNbs,
     "There are " + gutters.length + " gutter headings");
 
   let i = 0;
-  for (let gutter of gutters) {
+  for (const gutter of gutters) {
     is(gutter.textContent, expected.gutterHeading[i],
       "Correct " + gutter.textContent + " gutter headings");
     i++;

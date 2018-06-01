@@ -13,12 +13,12 @@ const TEST_PAGE_URL = URL_ROOT + "page_basic.html";
 add_task(async function() {
   info("Test DOM panel basic started");
 
-  let { panel } = await addTestTab(TEST_PAGE_URL);
+  const { panel } = await addTestTab(TEST_PAGE_URL);
 
   // Expand specified row and wait till children are displayed.
   await expandRow(panel, "_a");
 
   // Verify that child is displayed now.
-  let childRow = getRowByLabel(panel, "_data");
+  const childRow = getRowByLabel(panel, "_data");
   ok(childRow, "Child row must exist");
 });

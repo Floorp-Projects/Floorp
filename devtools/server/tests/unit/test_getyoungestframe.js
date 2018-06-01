@@ -2,10 +2,10 @@
 function run_test() {
   ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(this);
-  let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
-  let g = testGlobal("test1");
+  const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+  const g = testGlobal("test1");
 
-  let dbg = new Debugger();
+  const dbg = new Debugger();
   dbg.uncaughtExceptionHook = testExceptionHook;
 
   dbg.addDebuggee(g);

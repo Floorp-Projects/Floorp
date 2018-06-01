@@ -240,7 +240,7 @@ describe("FilterBar component:", () => {
       }, props)
     );
 
-    let buttons = [
+    const buttons = [
       filterBtn({ label: "Errors", filterKey: FILTERS.ERROR }),
       filterBtn({ label: "Warnings", filterKey: FILTERS.WARN }),
       filterBtn({ label: "Logs", filterKey: FILTERS.LOG }),

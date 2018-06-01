@@ -80,7 +80,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
    * update the local knowledge of the state.
    */
   onChanged: preEvent("changed", function(partialState) {
-    let {state} = this.reconstructState(partialState);
+    const {state} = this.reconstructState(partialState);
     this.state = state;
   }),
 
@@ -89,7 +89,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
    * found on the server. Doesn't return anything, just stores the new state.
    */
   async refreshState() {
-    let data = await this.getCurrentState();
+    const data = await this.getCurrentState();
     if (this.currentStateHasChanged) {
       this.state = data;
     }
@@ -102,7 +102,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
   getCurrentState: custom(function() {
     this.currentStateHasChanged = false;
     return this._getCurrentState().then(partialData => {
-      let {state, hasChanged} = this.reconstructState(partialData);
+      const {state, hasChanged} = this.reconstructState(partialData);
       this.currentStateHasChanged = hasChanged;
       return state;
     });
@@ -113,7 +113,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
   reconstructState: function(data) {
     let hasChanged = false;
 
-    for (let key in this.state) {
+    for (const key in this.state) {
       if (typeof data[key] === "undefined") {
         data[key] = this.state[key];
       } else if (data[key] !== this.state[key]) {

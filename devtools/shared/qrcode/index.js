@@ -45,10 +45,10 @@ Object.defineProperty(this, "decoder", {
  * @return integer
  */
 exports.findMinimumVersion = function(message, quality) {
-  let msgLength = message.length;
-  let qualityLevel = QRErrorCorrectLevel[quality];
+  const msgLength = message.length;
+  const qualityLevel = QRErrorCorrectLevel[quality];
   for (let version = 1; version <= 10; version++) {
-    let rsBlocks = QRRSBlock.getRSBlocks(version, qualityLevel);
+    const rsBlocks = QRRSBlock.getRSBlocks(version, qualityLevel);
     let maxLength = rsBlocks.reduce((prev, block) => {
       return prev + block.dataCount;
     }, 0);
@@ -77,7 +77,7 @@ exports.findMinimumVersion = function(message, quality) {
 exports.encodeToDataURI = function(message, quality, version) {
   quality = quality || "H";
   version = version || exports.findMinimumVersion(message, quality);
-  let encoder = new Encoder(version, quality);
+  const encoder = new Encoder(version, quality);
   encoder.addData(message);
   encoder.make();
   return encoder.createImgData();
@@ -95,7 +95,7 @@ exports.decodeFromURI = function(URI) {
   if (!decoder) {
     return promise.reject();
   }
-  let deferred = defer();
+  const deferred = defer();
   decoder.decodeFromURI(URI, deferred.resolve, deferred.reject);
   return deferred.promise;
 };

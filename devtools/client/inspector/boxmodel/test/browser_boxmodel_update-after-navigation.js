@@ -12,7 +12,7 @@ const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 
 add_task(async function() {
   await addTab(IFRAME1);
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await testFirstPage(inspector, boxmodel, testActor);
 
@@ -37,12 +37,12 @@ async function testFirstPage(inspector, boxmodel, testActor) {
   await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = boxmodel.document.querySelector(
+  const paddingElt = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyle(testActor, "p", "padding", "20px");
   await onUpdated;
   ok(true, "Box model view got updated");
@@ -57,11 +57,11 @@ async function testSecondPage(inspector, boxmodel, testActor) {
   await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  const sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for box model view changes and modifying the size");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyle(testActor, "p", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
@@ -77,12 +77,12 @@ async function testBackToFirstPage(inspector, boxmodel, testActor) {
 
   info("Checking that the box model view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
-  let paddingElt = boxmodel.document.querySelector(
+  const paddingElt = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "20");
 
   info("Listening for box model view changes and modifying the padding");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyle(testActor, "p", "padding", "100px");
   await onUpdated;
   ok(true, "Box model view got updated");

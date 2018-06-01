@@ -27,14 +27,14 @@ const ELEMENTS = ["box-model-root",
                   "box-model-infobar-dimensions"];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Show the box-model highlighter");
-  let divFront = await getNodeFront("div", inspector);
+  const divFront = await getNodeFront("div", inspector);
   await inspector.highlighter.showBoxModel(divFront);
 
-  for (let id of ELEMENTS) {
-    let foundId = await testActor.getHighlighterNodeAttribute(id, "id");
+  for (const id of ELEMENTS) {
+    const foundId = await testActor.getHighlighterNodeAttribute(id, "id");
     is(foundId, id, "Element " + id + " found");
   }
 

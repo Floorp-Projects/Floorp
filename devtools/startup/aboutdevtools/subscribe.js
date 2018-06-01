@@ -18,11 +18,11 @@ window.addEventListener("load", function() {
   const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-startup/locale/aboutdevtools.properties";
   const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
 
-  let emailInput = document.getElementById("email");
-  let newsletterErrors = document.getElementById("newsletter-errors");
-  let newsletterForm = document.getElementById("newsletter-form");
-  let newsletterPrivacySection = document.getElementById("newsletter-privacy");
-  let newsletterThanks = document.getElementById("newsletter-thanks");
+  const emailInput = document.getElementById("email");
+  const newsletterErrors = document.getElementById("newsletter-errors");
+  const newsletterForm = document.getElementById("newsletter-form");
+  const newsletterPrivacySection = document.getElementById("newsletter-privacy");
+  const newsletterThanks = document.getElementById("newsletter-thanks");
 
   /**
    * Update the error panel to display the provided errors. If the argument is null or
@@ -39,9 +39,9 @@ window.addEventListener("load", function() {
     }
 
     // Create errors markup.
-    let fragment = document.createDocumentFragment();
-    for (let error of errors) {
-      let item = document.createElement("p");
+    const fragment = document.createDocumentFragment();
+    for (const error of errors) {
+      const item = document.createElement("p");
       item.classList.add("error");
       item.appendChild(document.createTextNode(error));
       fragment.appendChild(item);
@@ -62,17 +62,17 @@ window.addEventListener("load", function() {
   // Show the additional form fields on focus of the email input.
   function onEmailInputFocus() {
     // Create a hidden measuring container, append it to the parent of the privacy section
-    let container = document.createElement("div");
+    const container = document.createElement("div");
     container.style.cssText = "visibility: hidden; overflow: hidden; position: absolute";
     newsletterPrivacySection.parentNode.appendChild(container);
 
     // Clone the privacy section, append the clone to the measuring container.
-    let clone = newsletterPrivacySection.cloneNode(true);
+    const clone = newsletterPrivacySection.cloneNode(true);
     container.appendChild(clone);
 
     // Measure the target height of the privacy section.
     clone.style.height = "auto";
-    let height = clone.offsetHeight;
+    const height = clone.offsetHeight;
 
     // Cleanup the measuring container.
     container.remove();
@@ -90,11 +90,11 @@ window.addEventListener("load", function() {
     // New submission, clear old errors
     clearErrorPanel();
 
-    let xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
 
     xhr.onload = function(r) {
       if (r.target.status >= 200 && r.target.status < 300) {
-        let {response} = r.target;
+        const {response} = r.target;
 
         if (response.success === true) {
           // Hide form and show success message.
@@ -105,9 +105,9 @@ window.addEventListener("load", function() {
           updateErrorPanel(response.errors);
         }
       } else {
-        let {status, statusText} = r.target;
-        let statusInfo = `${status} - ${statusText}`;
-        let error = aboutDevtoolsBundle
+        const {status, statusText} = r.target;
+        const statusInfo = `${status} - ${statusText}`;
+        const error = aboutDevtoolsBundle
           .formatStringFromName("newsletter.error.common", [statusInfo], 1);
         updateErrorPanel([error]);
       }
@@ -118,11 +118,11 @@ window.addEventListener("load", function() {
     };
 
     xhr.ontimeout = () => {
-      let error = aboutDevtoolsBundle.GetStringFromName("newsletter.error.timeout");
+      const error = aboutDevtoolsBundle.GetStringFromName("newsletter.error.timeout");
       updateErrorPanel([error]);
     };
 
-    let url = newsletterForm.getAttribute("action");
+    const url = newsletterForm.getAttribute("action");
 
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -131,10 +131,10 @@ window.addEventListener("load", function() {
     xhr.responseType = "json";
 
     // Create form data.
-    let formData = new FormData(newsletterForm);
+    const formData = new FormData(newsletterForm);
     formData.append("source_url", document.location.href);
 
-    let params = new URLSearchParams(formData);
+    const params = new URLSearchParams(formData);
 
     // Send the request.
     xhr.send(params.toString());

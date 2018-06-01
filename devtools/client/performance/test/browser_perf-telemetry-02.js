@@ -15,25 +15,25 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   startTelemetry();
 
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, PerformanceController } = panel.panelWin;
+  const { EVENTS, PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
+  const file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-  let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
+  const exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
   await PerformanceController.exportRecording(PerformanceController.getCurrentRecording(),
     file);
   await exported;
 
-  let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
+  const imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   await PerformanceController.importRecording(file);
   await imported;
 

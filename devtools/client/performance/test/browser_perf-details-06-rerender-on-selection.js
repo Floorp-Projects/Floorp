@@ -14,12 +14,12 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { scrollCanvasGraph, HORIZONTAL_AXIS } = require("devtools/client/performance/test/helpers/input-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     OverviewView,
     DetailsView,
@@ -31,25 +31,25 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  let waterfallRendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
+  const waterfallRendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   OverviewView.setTimeInterval({ startTime: 10, endTime: 20 });
   await waterfallRendered;
 
   // Select the call tree to make sure it's initialized and ready to receive
   // redrawing requests once reselected.
-  let callTreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const callTreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
   await callTreeRendered;
 
   // Switch to the flamegraph and perform a scroll over the visualization.
   // The waterfall and call tree should get rerendered when reselected.
-  let flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  const flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   await DetailsView.selectView("js-flamegraph");
   await flamegraphRendered;
 
-  let overviewRangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
-  let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
-  let callTreeRerendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const overviewRangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
+  const waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
+  const callTreeRerendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
 
   once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED).then(() => {
     ok(false, "FlameGraphView should not publicly rerender, the internal state " +

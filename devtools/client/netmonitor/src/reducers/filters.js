@@ -12,7 +12,7 @@ const {
 } = require("../constants");
 
 function FilterTypes(overrideParams = {}) {
-  let allFilterTypes = ["all"].concat(FILTER_TAGS);
+  const allFilterTypes = ["all"].concat(FILTER_TAGS);
   // filter only those keys which are valid filter tags
   overrideParams = Object.keys(overrideParams)
     .filter(key => allFilterTypes.includes(key))
@@ -20,7 +20,7 @@ function FilterTypes(overrideParams = {}) {
       obj[key] = overrideParams[key];
       return obj;
     }, {});
-  let filterTypes = allFilterTypes
+  const filterTypes = allFilterTypes
     .reduce((o, tag) => Object.assign(o, { [tag]: false }), {});
   return Object.assign({}, filterTypes, overrideParams);
 }
@@ -33,7 +33,7 @@ function Filters(overrideParams = {}) {
 }
 
 function toggleRequestFilterType(state, action) {
-  let { filter } = action;
+  const { filter } = action;
   let newState;
 
   // Ignore unknown filter type
@@ -56,7 +56,7 @@ function toggleRequestFilterType(state, action) {
 }
 
 function enableRequestFilterTypeOnly(state, action) {
-  let { filter } = action;
+  const { filter } = action;
 
   // Ignore unknown filter type
   if (!state.hasOwnProperty(filter)) {

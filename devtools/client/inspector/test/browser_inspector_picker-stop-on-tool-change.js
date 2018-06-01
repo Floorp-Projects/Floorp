@@ -11,8 +11,8 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
   "testing the highlighter goes away on tool selection";
 
 add_task(async function() {
-  let { toolbox } = await openInspectorForURL(TEST_URI);
-  let pickerStopped = toolbox.once("picker-stopped");
+  const { toolbox } = await openInspectorForURL(TEST_URI);
+  const pickerStopped = toolbox.once("picker-stopped");
 
   info("Starting the inspector picker");
   await startPicker(toolbox);

@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL("about:blank");
+  const {inspector, testActor} = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
 
   // We do not want to wait for the inspector to be fully ready before testing
@@ -26,9 +26,9 @@ add_task(async function() {
 
   // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
-  let onMarkupLoaded = inspector.once("markuploaded");
+  const onMarkupLoaded = inspector.once("markuploaded");
   testActor.eval("new " + function() {
-    let iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
     document.body.appendChild(iframe);
     iframe.remove();
   });

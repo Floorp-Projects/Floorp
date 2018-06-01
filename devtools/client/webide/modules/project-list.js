@@ -67,18 +67,18 @@ ProjectList.prototype = {
    * }
    */
   newApp: function(testOptions) {
-    let parentWindow = this._parentWindow;
-    let self = this;
+    const parentWindow = this._parentWindow;
+    const self = this;
     return this._UI.busyUntil((async function() {
       // Open newapp.xul, which will feed ret.location
-      let ret = {location: null, testOptions: testOptions};
+      const ret = {location: null, testOptions: testOptions};
       parentWindow.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
       if (!ret.location) {
         return;
       }
 
       // Retrieve added project
-      let project = AppProjects.get(ret.location);
+      const project = AppProjects.get(ret.location);
 
       // Select project
       AppManager.selectedProject = project;
@@ -88,10 +88,10 @@ ProjectList.prototype = {
   },
 
   importPackagedApp: function(location) {
-    let parentWindow = this._parentWindow;
-    let UI = this._UI;
+    const parentWindow = this._parentWindow;
+    const UI = this._UI;
     return UI.busyUntil((async function() {
-      let directory = await utils.getPackagedDirectory(parentWindow, location);
+      const directory = await utils.getPackagedDirectory(parentWindow, location);
 
       if (!directory) {
         // User cancelled directory selection
@@ -103,10 +103,10 @@ ProjectList.prototype = {
   },
 
   importHostedApp: function(location) {
-    let parentWindow = this._parentWindow;
-    let UI = this._UI;
+    const parentWindow = this._parentWindow;
+    const UI = this._UI;
     return UI.busyUntil((async function() {
-      let url = utils.getHostedURL(parentWindow, location);
+      const url = utils.getHostedURL(parentWindow, location);
 
       if (!url) {
         return;
@@ -124,9 +124,9 @@ ProjectList.prototype = {
    * }
    */
   _renderProjectItem: function(opts) {
-    let span = opts.panel.querySelector("span") || this._doc.createElement("span");
+    const span = opts.panel.querySelector("span") || this._doc.createElement("span");
     span.textContent = opts.name;
-    let icon = opts.panel.querySelector("img") || this._doc.createElement("img");
+    const icon = opts.panel.querySelector("img") || this._doc.createElement("img");
     icon.className = "project-image";
     icon.setAttribute("src", opts.icon);
     opts.panel.appendChild(icon);
@@ -143,8 +143,8 @@ ProjectList.prototype = {
   },
 
   updateTabs: function() {
-    let tabsHeaderNode = this._doc.querySelector("#panel-header-tabs");
-    let tabsNode = this._doc.querySelector("#project-panel-tabs");
+    const tabsHeaderNode = this._doc.querySelector("#panel-header-tabs");
+    const tabsNode = this._doc.querySelector("#project-panel-tabs");
 
     while (tabsNode.hasChildNodes()) {
       tabsNode.firstChild.remove();
@@ -155,13 +155,13 @@ ProjectList.prototype = {
       return;
     }
 
-    let tabs = AppManager.tabStore.tabs;
+    const tabs = AppManager.tabStore.tabs;
 
     tabsHeaderNode.removeAttribute("hidden");
 
     for (let i = 0; i < tabs.length; i++) {
-      let tab = tabs[i];
-      let URL = this._parentWindow.URL;
+      const tab = tabs[i];
+      const URL = this._parentWindow.URL;
       let url;
       try {
         url = new URL(tab.url);
@@ -180,7 +180,7 @@ ProjectList.prototype = {
       if (url.protocol.startsWith("http")) {
         tab.name = url.hostname + ": " + tab.name;
       }
-      let panelItemNode = this._doc.createElement(this._panelNodeEl);
+      const panelItemNode = this._doc.createElement(this._panelNodeEl);
       panelItemNode.className = "panel-item";
       tabsNode.appendChild(panelItemNode);
       this._renderProjectItem({
@@ -203,29 +203,29 @@ ProjectList.prototype = {
   },
 
   updateApps: function() {
-    let doc = this._doc;
-    let runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
+    const doc = this._doc;
+    const runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
     let sortedApps = [];
-    for (let [/* manifestURL */, app] of AppManager.apps) {
+    for (const [/* manifestURL */, app] of AppManager.apps) {
       sortedApps.push(app);
     }
     sortedApps = sortedApps.sort((a, b) => {
       return a.manifest.name > b.manifest.name;
     });
-    let mainProcess = AppManager.isMainProcessDebuggable();
+    const mainProcess = AppManager.isMainProcessDebuggable();
     if (AppManager.connected && (sortedApps.length > 0 || mainProcess)) {
       runtimeappsHeaderNode.removeAttribute("hidden");
     } else {
       runtimeappsHeaderNode.setAttribute("hidden", "true");
     }
 
-    let runtimeAppsNode = doc.querySelector("#project-panel-runtimeapps");
+    const runtimeAppsNode = doc.querySelector("#project-panel-runtimeapps");
     while (runtimeAppsNode.hasChildNodes()) {
       runtimeAppsNode.firstChild.remove();
     }
 
     if (mainProcess) {
-      let panelItemNode = doc.createElement(this._panelNodeEl);
+      const panelItemNode = doc.createElement(this._panelNodeEl);
       panelItemNode.className = "panel-item";
       this._renderProjectItem({
         panel: panelItemNode,
@@ -243,8 +243,8 @@ ProjectList.prototype = {
     }
 
     for (let i = 0; i < sortedApps.length; i++) {
-      let app = sortedApps[i];
-      let panelItemNode = doc.createElement(this._panelNodeEl);
+      const app = sortedApps[i];
+      const panelItemNode = doc.createElement(this._panelNodeEl);
       panelItemNode.className = "panel-item";
       this._renderProjectItem({
         panel: panelItemNode,
@@ -266,14 +266,11 @@ ProjectList.prototype = {
   },
 
   updateCommands: function() {
-    let doc = this._doc;
-    let newAppCmd;
-    let packagedAppCmd;
-    let hostedAppCmd;
+    const doc = this._doc;
 
-    newAppCmd = doc.querySelector("#new-app");
-    packagedAppCmd = doc.querySelector("#packaged-app");
-    hostedAppCmd = doc.querySelector("#hosted-app");
+    const newAppCmd = doc.querySelector("#new-app");
+    const packagedAppCmd = doc.querySelector("#packaged-app");
+    const hostedAppCmd = doc.querySelector("#hosted-app");
 
     if (!newAppCmd || !packagedAppCmd || !hostedAppCmd) {
       return;
@@ -305,18 +302,18 @@ ProjectList.prototype = {
     }
 
     return new Promise((resolve, reject) => {
-      let doc = this._doc;
-      let projectsNode = doc.querySelector("#project-panel-projects");
+      const doc = this._doc;
+      const projectsNode = doc.querySelector("#project-panel-projects");
 
       while (projectsNode.hasChildNodes()) {
         projectsNode.firstChild.remove();
       }
 
       AppProjects.load().then(() => {
-        let projects = AppProjects.projects;
+        const projects = AppProjects.projects;
         for (let i = 0; i < projects.length; i++) {
-          let project = projects[i];
-          let panelItemNode = doc.createElement(this._panelNodeEl);
+          const project = projects[i];
+          const panelItemNode = doc.createElement(this._panelNodeEl);
           panelItemNode.className = "panel-item";
           projectsNode.appendChild(panelItemNode);
           if (!project.validationStatus) {

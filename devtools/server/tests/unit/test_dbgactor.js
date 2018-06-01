@@ -13,12 +13,12 @@ function run_test() {
   gDebuggee = testGlobal("test-1");
   DebuggerServer.addTestGlobal(gDebuggee);
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.addListener("connected", function(event, type, traits) {
     gClient.listTabs().then((response) => {
       Assert.ok("tabs" in response);
-      for (let tab of response.tabs) {
+      for (const tab of response.tabs) {
         if (tab.title == "test-1") {
           test_attach_tab(tab.actor);
           return false;
@@ -104,7 +104,7 @@ function cleanup() {
   });
 
   try {
-    let inspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+    const inspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     Assert.equal(inspector.eventLoopNestLevel, 0);
   } catch (e) {
     dump(e);

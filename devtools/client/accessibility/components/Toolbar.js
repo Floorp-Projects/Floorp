@@ -48,7 +48,7 @@ class Toolbar extends Component {
   }
 
   onDisable() {
-    let { accessibility, dispatch } = this.props;
+    const { accessibility, dispatch } = this.props;
     this.setState({ disabling: true });
 
     dispatch(disable(accessibility))
@@ -57,9 +57,9 @@ class Toolbar extends Component {
   }
 
   render() {
-    let { canBeDisabled } = this.props;
-    let { disabling } = this.state;
-    let disableButtonStr = disabling ?
+    const { canBeDisabled } = this.props;
+    const { disabling } = this.state;
+    const disableButtonStr = disabling ?
       "accessibility.disabling" : "accessibility.disable";
     let title;
     let isDisabled = false;

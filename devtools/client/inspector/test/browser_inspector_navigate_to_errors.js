@@ -12,21 +12,21 @@ const TEST_URL_4 = "data:text/html,<html><body>test-doc-4</body></html>";
 
 add_task(async function() {
   // Open the inspector on a valid URL
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
 
   info("Navigate to closed port");
   await navigateTo(inspector, TEST_URL_2);
 
-  let documentURI = await testActor.eval("document.documentURI;");
+  const documentURI = await testActor.eval("document.documentURI;");
   ok(documentURI.startsWith("about:neterror"), "content is correct.");
 
-  let hasPage = await getNodeFront("#test-doc-1", inspector);
+  const hasPage = await getNodeFront("#test-doc-1", inspector);
   ok(!hasPage, "Inspector actor is no longer able to reach previous page DOM node");
 
-  let hasNetErrorNode = await getNodeFront("#errorShortDesc", inspector);
+  const hasNetErrorNode = await getNodeFront("#errorShortDesc", inspector);
   ok(hasNetErrorNode, "Inspector actor is able to reach error page DOM node");
 
-  let bundle = Services.strings.createBundle("chrome://global/locale/appstrings.properties");
+  const bundle = Services.strings.createBundle("chrome://global/locale/appstrings.properties");
   let domain = TEST_URL_2.match(/^http:\/\/(.*)\/$/)[1];
   let errorMsg = bundle.formatStringFromName("connectionFailure",
                                              [domain], 1);

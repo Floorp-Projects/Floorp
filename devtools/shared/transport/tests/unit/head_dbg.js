@@ -113,13 +113,13 @@ function getTestTempFile(fileName, allowMissing) {
 }
 
 function writeTestTempFile(fileName, content) {
-  let file = getTestTempFile(fileName, true);
-  let stream = Cc["@mozilla.org/network/file-output-stream;1"]
+  const file = getTestTempFile(fileName, true);
+  const stream = Cc["@mozilla.org/network/file-output-stream;1"]
     .createInstance(Ci.nsIFileOutputStream);
   stream.init(file, -1, -1, 0);
   try {
     do {
-      let numWritten = stream.write(content, content.length);
+      const numWritten = stream.write(content, content.length);
       content = content.slice(numWritten);
     } while (content.length > 0);
   } finally {
@@ -131,17 +131,17 @@ function writeTestTempFile(fileName, content) {
 
 var socket_transport = async function() {
   if (!DebuggerServer.listeningSockets) {
-    let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
-    let authenticator = new AuthenticatorType.Server();
+    const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+    const authenticator = new AuthenticatorType.Server();
     authenticator.allowConnection = () => {
       return DebuggerServer.AuthenticationResult.ALLOW;
     };
-    let debuggerListener = DebuggerServer.createListener();
+    const debuggerListener = DebuggerServer.createListener();
     debuggerListener.portOrPath = -1;
     debuggerListener.authenticator = authenticator;
     await debuggerListener.open();
   }
-  let port = DebuggerServer._listeners[0].port;
+  const port = DebuggerServer._listeners[0].port;
   info("Debugger server port is " + port);
   return DebuggerClient.socketConnect({ host: "127.0.0.1", port });
 };

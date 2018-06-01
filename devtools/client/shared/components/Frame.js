@@ -76,7 +76,7 @@ class Frame extends Component {
   }
 
   _locationChanged(isSourceMapped, url, line, column) {
-    let newState = {
+    const newState = {
       isSourceMapped,
     };
     if (isSourceMapped) {
@@ -109,7 +109,7 @@ class Frame extends Component {
 
   render() {
     let frame, isSourceMapped;
-    let {
+    const {
       onClick,
       showFunctionName,
       showAnonymousFunctionName,
@@ -128,11 +128,11 @@ class Frame extends Component {
     // If the resource was loaded by browser-loader.js, `frame.source` looks like:
     // resource://devtools/shared/base-loader.js -> resource://devtools/path/to/file.js .
     // What's needed is only the last part after " -> ".
-    let source = frame.source
+    const source = frame.source
       ? String(frame.source).split(" -> ").pop()
       : "";
-    let line = frame.line != void 0 ? Number(frame.line) : null;
-    let column = frame.column != void 0 ? Number(frame.column) : null;
+    const line = frame.line != void 0 ? Number(frame.line) : null;
+    const column = frame.column != void 0 ? Number(frame.column) : null;
 
     const { short, long, host } = getSourceNames(source);
     const unicodeShort = getUnicodeUrlPath(short);
@@ -161,7 +161,7 @@ class Frame extends Component {
       }
     }
 
-    let attributes = {
+    const attributes = {
       "data-url": long,
       className: "frame-link",
     };
@@ -216,7 +216,7 @@ class Frame extends Component {
 
     // Inner el is useful for achieving ellipsis on the left and correct LTR/RTL
     // ordering. See CSS styles for frame-link-source-[inner] and bug 1290056.
-    let sourceInnerEl = dom.span({
+    const sourceInnerEl = dom.span({
       key: "source-inner",
       className: "frame-link-source-inner",
       title: isLinkable ?

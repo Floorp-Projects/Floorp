@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = "data:text/html;charset=utf-8,";
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  let store = ui.toolWindow.store;
+  const store = ui.toolWindow.store;
 
   // Wait until the viewport has been added
   await waitUntilState(store, state => state.viewports.length == 1);

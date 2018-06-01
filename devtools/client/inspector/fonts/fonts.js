@@ -91,14 +91,14 @@ class FontInspector {
       return;
     }
 
-    let fontsApp = FontsApp({
+    const fontsApp = FontsApp({
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
       onPreviewFonts: this.onPreviewFonts,
       onPropertyChange: this.onPropertyChange,
     });
 
-    let provider = createElement(Provider, {
+    const provider = createElement(Provider, {
       id: "fontinspector",
       key: "fontinspector",
       store: this.store,
@@ -163,9 +163,9 @@ class FontInspector {
    * @return {Object}
    */
   getFontProperties() {
-    let properties = {};
+    const properties = {};
 
-    for (let prop of FONT_PROPERTIES) {
+    for (const prop of FONT_PROPERTIES) {
       properties[prop] = this.nodeComputedStyle[prop].value;
     }
 
@@ -178,7 +178,8 @@ class FontInspector {
       return [];
     }
 
-    let fonts = await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
+    const fonts =
+      await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
     if (!fonts) {
       return [];
     }
@@ -497,7 +498,7 @@ class FontInspector {
 
     try {
       if (show) {
-        let node = isForCurrentElement
+        const node = isForCurrentElement
                    ? this.inspector.selection.nodeFront
                    : this.inspector.walker.rootNode;
 
@@ -577,7 +578,7 @@ class FontInspector {
 
     // Mark available fonts as used if their names appears in the font-family declaration.
     // TODO: sort used fonts in order of font-family declaration.
-    for (let font of fonts) {
+    for (const font of fonts) {
       font.used = declaredFontNames.includes(font.CSSFamilyName);
     }
 
@@ -617,10 +618,10 @@ class FontInspector {
       return;
     }
 
-    let { fontOptions } = this.store.getState();
-    let { previewText } = fontOptions;
+    const { fontOptions } = this.store.getState();
+    const { previewText } = fontOptions;
 
-    let options = {
+    const options = {
       includePreviews: true,
       previewText,
       previewFillStyle: getColor("body-color")
@@ -631,7 +632,7 @@ class FontInspector {
       options.includeVariations = true;
     }
 
-    let node = this.inspector.selection.nodeFront;
+    const node = this.inspector.selection.nodeFront;
     fonts = await this.getFontsForNode(node, options);
     otherFonts = await this.getFontsNotInNode(fonts, options);
 
@@ -643,7 +644,7 @@ class FontInspector {
       return;
     }
 
-    for (let font of [...fonts, ...otherFonts]) {
+    for (const font of [...fonts, ...otherFonts]) {
       font.previewUrl = await font.preview.data.string();
     }
 

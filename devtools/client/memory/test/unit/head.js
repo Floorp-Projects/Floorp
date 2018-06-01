@@ -44,7 +44,7 @@ function dumpn(msg) {
 }
 
 function initDebugger() {
-  let global = new Cu.Sandbox(SYSTEM_PRINCIPAL, { freshZone: true });
+  const global = new Cu.Sandbox(SYSTEM_PRINCIPAL, { freshZone: true });
   addDebuggerToGlobal(global);
   return new global.Debugger();
 }
@@ -79,8 +79,8 @@ StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached",
   });
 
 function waitUntilSnapshotState(store, expected) {
-  let predicate = () => {
-    let snapshots = store.getState().snapshots;
+  const predicate = () => {
+    const snapshots = store.getState().snapshots;
     info(snapshots.map(x => x.state));
     return snapshots.length === expected.length &&
            expected.every((state, i) => state === "*" || snapshots[i].state === state);
@@ -95,7 +95,7 @@ function findReportLeafIndex(node, name = null) {
   }
 
   if (node.children) {
-    for (let child of node.children) {
+    for (const child of node.children) {
       const found = findReportLeafIndex(child);
       if (found) {
         return found;
@@ -107,15 +107,15 @@ function findReportLeafIndex(node, name = null) {
 }
 
 function waitUntilCensusState(store, getCensus, expected) {
-  let predicate = () => {
-    let snapshots = store.getState().snapshots;
+  const predicate = () => {
+    const snapshots = store.getState().snapshots;
 
     info("Current census state:" +
          snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
 
     return snapshots.length === expected.length &&
            expected.every((state, i) => {
-             let census = getCensus(snapshots[i]);
+             const census = getCensus(snapshots[i]);
              return (state === "*") ||
                     (!census && !state) ||
                     (census && census.state === state);
@@ -126,10 +126,10 @@ function waitUntilCensusState(store, getCensus, expected) {
 }
 
 async function createTempFile() {
-  let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
+  const file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  let destPath = file.path;
-  let stat = await OS.File.stat(destPath);
+  const destPath = file.path;
+  const stat = await OS.File.stat(destPath);
   ok(stat.size === 0, "new file is 0 bytes at start");
   return destPath;
 }

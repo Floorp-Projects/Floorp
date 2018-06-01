@@ -41,7 +41,7 @@ function HTMLEditor(htmlDocument) {
   this.doc.defaultView.addEventListener("resize",
     this.refresh, true);
 
-  let config = {
+  const config = {
     mode: Editor.modes.html,
     lineWrapping: true,
     styleActiveLine: false,
@@ -68,7 +68,7 @@ HTMLEditor.prototype = {
    * need to be called on resizes and other sizing changes.
    */
   refresh: function() {
-    let element = this._attachedElement;
+    const element = this._attachedElement;
 
     if (element) {
       this.container.style.top = element.offsetTop + "px";
@@ -147,9 +147,9 @@ HTMLEditor.prototype = {
     this.container.style.display = "none";
     this._detach();
 
-    let newValue = this.editor.getText();
-    let valueHasChanged = this._originalValue !== newValue;
-    let preventCommit = shouldCommit === false || !valueHasChanged;
+    const newValue = this.editor.getText();
+    const valueHasChanged = this._originalValue !== newValue;
+    const preventCommit = shouldCommit === false || !valueHasChanged;
     this._originalValue = undefined;
     this._visible = undefined;
     this.emit("popuphidden", !preventCommit, newValue);

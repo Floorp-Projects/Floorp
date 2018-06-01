@@ -8,17 +8,17 @@
 const TEST_URL = "data:text/html;charset=utf-8,";
 
 const isMenuCheckedFor = ({document}) => {
-  let menu = document.getElementById("menu_responsiveUI");
+  const menu = document.getElementById("menu_responsiveUI");
   return menu.getAttribute("checked") === "true";
 };
 
 add_task(async function() {
   const window1 = await BrowserTestUtils.openNewBrowserWindow();
-  let { gBrowser } = window1;
+  const { gBrowser } = window1;
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL },
     async function(browser) {
-      let tab = gBrowser.getTabForBrowser(browser);
+      const tab = gBrowser.getTabForBrowser(browser);
 
       is(window1, Services.wm.getMostRecentWindow("navigator:browser"),
         "The new window is the active one");

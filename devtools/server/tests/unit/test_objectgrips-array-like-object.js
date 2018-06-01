@@ -55,7 +55,7 @@ async function run_test_with_server(server) {
 async function test_object_grip_is_array_like(debuggee, dbgClient, threadClient, object) {
   return new Promise((resolve, reject) => {
     threadClient.addOneTimeListener("paused", async function(event, packet) {
-      let [grip] = packet.frame.arguments;
+      const [grip] = packet.frame.arguments;
       await threadClient.resume();
       resolve(grip.preview.kind === "ArrayLike");
     });

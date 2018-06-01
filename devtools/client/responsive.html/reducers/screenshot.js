@@ -11,7 +11,7 @@ const {
 
 const INITIAL_SCREENSHOT = { isCapturing: false };
 
-let reducers = {
+const reducers = {
 
   [TAKE_SCREENSHOT_END](screenshot, action) {
     return Object.assign({}, screenshot, { isCapturing: false });
@@ -23,7 +23,7 @@ let reducers = {
 };
 
 module.exports = function(screenshot = INITIAL_SCREENSHOT, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return screenshot;
   }

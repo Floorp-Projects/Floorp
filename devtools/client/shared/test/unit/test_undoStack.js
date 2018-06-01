@@ -22,7 +22,7 @@ const MAX_SIZE = 5;
 
 function run_test() {
   let str = "";
-  let stack = new UndoStack(MAX_SIZE);
+  const stack = new UndoStack(MAX_SIZE);
 
   function add(ch) {
     stack.do(function() {

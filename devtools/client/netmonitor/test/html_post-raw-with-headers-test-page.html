@@ -19,7 +19,7 @@
       "use strict";
 
       function post(address, message, callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
 
         xhr.onreadystatechange = function() {
@@ -31,7 +31,7 @@
       }
 
       function performRequests() {
-        let rawData = [
+        const rawData = [
           "content-type: application/x-www-form-urlencoded\r",
           "custom-header: hello world!\r",
           "\r",

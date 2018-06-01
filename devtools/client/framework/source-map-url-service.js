@@ -66,10 +66,10 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
     }
 
     // Start fetching the sources now.
-    let loadingPromise = this._toolbox.threadClient.getSources().then(({sources}) => {
+    const loadingPromise = this._toolbox.threadClient.getSources().then(({sources}) => {
       // Ignore errors.  Register the sources we got; we can't rely on
       // an event to arrive if the source actor already existed.
-      for (let source of sources) {
+      for (const source of sources) {
         this._onSourceUpdated({source});
       }
     }, e => {
@@ -116,12 +116,12 @@ SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
     return;
   }
 
-  let { source } = sourceEvent;
-  let { generatedUrl, url, actor: id, sourceMapURL } = source;
+  const { source } = sourceEvent;
+  const { generatedUrl, url, actor: id, sourceMapURL } = source;
 
   // |generatedUrl| comes from the actor and is extracted from the
   // source code by SpiderMonkey.
-  let seenUrl = generatedUrl || url;
+  const seenUrl = generatedUrl || url;
   this._urls.set(seenUrl, { id, url: seenUrl, sourceMapURL });
   this._idMap.set(id, seenUrl);
 };
@@ -138,8 +138,8 @@ SourceMapURLService.prototype._onNewStyleSheet = function(sheet) {
     return;
   }
 
-  let {href, nodeHref, sourceMapURL, actorID: id} = sheet;
-  let url = href || nodeHref;
+  const {href, nodeHref, sourceMapURL, actorID: id} = sheet;
+  const url = href || nodeHref;
   this._urls.set(url, { id, url, sourceMapURL});
   this._idMap.set(id, url);
 };
@@ -159,7 +159,7 @@ SourceMapURLService.prototype.sourceMapChanged = function(id, newUrl) {
     return;
   }
 
-  let urlKey = this._idMap.get(id);
+  const urlKey = this._idMap.get(id);
   if (urlKey) {
     // The source map URL here doesn't actually matter.
     this._urls.set(urlKey, { id, url: newUrl, sourceMapURL: "" });
@@ -168,11 +168,11 @@ SourceMapURLService.prototype.sourceMapChanged = function(id, newUrl) {
     // are subscribed to a location coming from |urlKey|.  Then,
     // re-notify any such subscriber by clearing the stored promise
     // and forcing a re-evaluation.
-    for (let [, subscriptionEntry] of this._subscriptions) {
+    for (const [, subscriptionEntry] of this._subscriptions) {
       if (subscriptionEntry.url === urlKey) {
         // Force an update.
         subscriptionEntry.promise = null;
-        for (let callback of subscriptionEntry.callbacks) {
+        for (const callback of subscriptionEntry.callbacks) {
           this._callOneCallback(subscriptionEntry, callback);
         }
       }
@@ -212,7 +212,7 @@ SourceMapURLService.prototype.originalPositionFor = async function(url, line, co
   // fetched.  We don't actually need the result of this though.
   await this._sourceMapService.getOriginalURLs(urlInfo);
   const location = { sourceId: urlInfo.id, line, column, sourceUrl: url };
-  let resolvedLocation = await this._sourceMapService.getOriginalLocation(location);
+  const resolvedLocation = await this._sourceMapService.getOriginalLocation(location);
   if (!resolvedLocation ||
       (resolvedLocation.line === location.line &&
        resolvedLocation.column === location.column &&
@@ -243,7 +243,7 @@ SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntr
     subscriptionEntry.promise = this.originalPositionFor(url, line, column);
   }
 
-  let resolvedLocation = await subscriptionEntry.promise;
+  const resolvedLocation = await subscriptionEntry.promise;
   if (resolvedLocation) {
     const {line, column, sourceUrl} = resolvedLocation;
     // In case we're racing a pref change, pass the current value
@@ -280,7 +280,7 @@ SourceMapURLService.prototype.subscribe = function(url, line, column, callback) 
     return;
   }
 
-  let key = JSON.stringify([url, line, column]);
+  const key = JSON.stringify([url, line, column]);
   let subscriptionEntry = this._subscriptions.get(key);
   if (!subscriptionEntry) {
     subscriptionEntry = {
@@ -316,10 +316,10 @@ SourceMapURLService.prototype.unsubscribe = function(url, line, column, callback
   if (!this._subscriptions) {
     return;
   }
-  let key = JSON.stringify([url, line, column]);
-  let subscriptionEntry = this._subscriptions.get(key);
+  const key = JSON.stringify([url, line, column]);
+  const subscriptionEntry = this._subscriptions.get(key);
   if (subscriptionEntry) {
-    let index = subscriptionEntry.callbacks.indexOf(callback);
+    const index = subscriptionEntry.callbacks.indexOf(callback);
     if (index !== -1) {
       subscriptionEntry.callbacks.splice(index, 1);
       // Remove the whole entry when the last subscriber is removed.
@@ -340,8 +340,8 @@ SourceMapURLService.prototype._onPrefChanged = function() {
   }
 
   this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
-  for (let [, subscriptionEntry] of this._subscriptions) {
-    for (let callback of subscriptionEntry.callbacks) {
+  for (const [, subscriptionEntry] of this._subscriptions) {
+    for (const callback of subscriptionEntry.callbacks) {
       this._callOneCallback(subscriptionEntry, callback);
     }
   }

@@ -10,8 +10,8 @@ const {ELLIPSIS} = require("devtools/shared/l10n");
 add_task(async function() {
   info("Test short URL linkification JSON started");
 
-  let url = "http://example.com/";
-  let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
+  const url = "http://example.com/";
+  const tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
   await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
   info("Switch back to the JSONViewer");
@@ -23,8 +23,8 @@ add_task(async function() {
 add_task(async function() {
   info("Test long URL linkification JSON started");
 
-  let url = "http://example.com/" + "a".repeat(100);
-  let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
+  const url = "http://example.com/" + "a".repeat(100);
+  const tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
 
   await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
@@ -56,22 +56,22 @@ async function testLinkNavigation({
   urlText,
   clickLabel = false
 }) {
-  let onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
+  const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
 
   ContentTask.spawn(browser, [urlText || url, clickLabel], (args) => {
     const [expectedURL, shouldClickLabel] = args;
-    let {document} = content;
+    const {document} = content;
 
     if (shouldClickLabel === true) {
       document.querySelector(".jsonPanelBox .treeTable .treeLabel").click();
     }
 
-    let link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
+    const link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
     is(link.textContent, expectedURL, "The expected URL is displayed.");
     link.click();
   });
 
-  let newTab = await onTabLoaded;
+  const newTab = await onTabLoaded;
   // We only need to check that newTab is truthy since
   // BrowserTestUtils.waitForNewTab checks the URL.
   ok(newTab, "The expected tab was opened.");

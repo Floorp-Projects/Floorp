@@ -17,10 +17,10 @@
       "use strict";
 
       function performRequests() {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", "sjs_simple-test-server.sjs", true);
 
-        let postData = JSON.stringify({
+        const postData = JSON.stringify({
           watches: ["hello", "how", "are", "you", {
             a: 10,
             c: 15,

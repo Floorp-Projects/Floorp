@@ -8,7 +8,7 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,welcome to the animation panel");
-  let {panel, controller} = await openAnimationInspector();
+  const {panel, controller} = await openAnimationInspector();
 
   ok(controller,
      "The animation controller exists");

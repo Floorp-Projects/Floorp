@@ -21,11 +21,11 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
 </script>`;
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let messages = await waitFor(() => findMessages(hud, "foo"));
+  const messages = await waitFor(() => findMessages(hud, "foo"));
   is(messages.length, 5, "Five messages should have appeared");
-  let [msgWithText, msgWithObj, msgNested, msgLongStr, msgSymbol] = messages;
+  const [msgWithText, msgWithObj, msgNested, msgLongStr, msgSymbol] = messages;
   let varIdx = 0;
 
   info("Check store as global variable is disabled for text only messages");
@@ -50,21 +50,21 @@ add_task(async function() {
   await storeAsVariable(hud, msgSymbol, "symbol", varIdx++, "window.symbol");
 
   info("Check store as global variable is enabled for invisible-to-debugger objects");
-  let onMessageInvisible = waitForMessage(hud, "foo");
+  const onMessageInvisible = waitForMessage(hud, "foo");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    let obj = Cu.Sandbox(Cu.getObjectPrincipal(content), {invisibleToDebugger: true});
+    const obj = Cu.Sandbox(Cu.getObjectPrincipal(content), {invisibleToDebugger: true});
     content.wrappedJSObject.invisibleToDebugger = obj;
     content.console.log("foo", obj);
   });
-  let msgInvisible = (await onMessageInvisible).node;
+  const msgInvisible = (await onMessageInvisible).node;
   await storeAsVariable(hud, msgInvisible, "object", varIdx++,
                         "window.invisibleToDebugger");
 });
 
 async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
-  let element = msg.querySelector(".objectBox-" + type);
-  let menuPopup = await openContextMenu(hud, element);
-  let storeMenuItem = menuPopup.querySelector("#console-menu-store");
+  const element = msg.querySelector(".objectBox-" + type);
+  const menuPopup = await openContextMenu(hud, element);
+  const storeMenuItem = menuPopup.querySelector("#console-menu-store");
 
   if (varIdx == null) {
     ok(storeMenuItem.disabled, "store as global variable is disabled");
@@ -75,7 +75,7 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
   ok(!storeMenuItem.disabled, "store as global variable is enabled");
 
   info("Click on store as global variable");
-  let onceInputSet = hud.jsterm.once("set-input-value");
+  const onceInputSet = hud.jsterm.once("set-input-value");
   storeMenuItem.click();
 
   info("Wait for console input to be updated with the temp variable");
@@ -86,6 +86,6 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
 
   is(hud.jsterm.getInputValue(), "temp" + varIdx, "Input was set");
 
-  let equal = await hud.jsterm.requestEvaluation("temp" + varIdx + " === " + equalTo);
+  const equal = await hud.jsterm.requestEvaluation("temp" + varIdx + " === " + equalTo);
   is(equal.result, true, "Correct variable assigned into console.");
 }

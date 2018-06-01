@@ -38,7 +38,7 @@ function run_test_with_server(server, callback) {
 }
 
 var test_no_skip_breakpoint = async function(source, location) {
-  let [response, bpClient] = await source.setBreakpoint(
+  const [response, bpClient] = await source.setBreakpoint(
     Object.assign({}, location, { noSliding: true })
   );
 
@@ -49,8 +49,8 @@ var test_no_skip_breakpoint = async function(source, location) {
 
 var test_skip_breakpoint = function() {
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-    let location = { line: gDebuggee.line0 + 3 };
-    let source = gThreadClient.source(packet.frame.where.source);
+    const location = { line: gDebuggee.line0 + 3 };
+    const source = gThreadClient.source(packet.frame.where.source);
 
     // First, make sure that we can disable sliding with the
     // `noSliding` option.

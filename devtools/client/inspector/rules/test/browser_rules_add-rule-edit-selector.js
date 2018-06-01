@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   await addNewRule(inspector, view);
@@ -32,14 +32,14 @@ add_task(async function() {
 
 async function testEditSelector(view, name) {
   info("Test editing existing selector field");
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const editor = idRuleEditor.selectorText.ownerDocument.activeElement;
 
   info("Entering a new selector name and committing");
   editor.value = name;
 
   info("Waiting for rule view to update");
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");

@@ -11,7 +11,7 @@ const TEST_SURL = TEST_URL.replace("http://example.com", "https://example.com");
 function waitForGeolocationPrompt(win, browser) {
   return new Promise(resolve => {
     win.PopupNotifications.panel.addEventListener("popupshown", function popupShown() {
-      let notification = win.PopupNotifications.getNotification("geolocation", browser);
+      const notification = win.PopupNotifications.getNotification("geolocation", browser);
       if (notification) {
         win.PopupNotifications.panel.removeEventListener("popupshown", popupShown);
         resolve();
@@ -21,9 +21,9 @@ function waitForGeolocationPrompt(win, browser) {
 }
 
 add_task(async function() {
-  let tab = await addTab(DUMMY_URL);
-  let browser = tab.linkedBrowser;
-  let win = browser.ownerGlobal;
+  const tab = await addTab(DUMMY_URL);
+  const browser = tab.linkedBrowser;
+  const win = browser.ownerGlobal;
 
   let waitPromptPromise = waitForGeolocationPrompt(win, browser);
 
@@ -36,8 +36,8 @@ add_task(async function() {
 
   // Lets switch back to the dummy website and enable RDM
   await load(browser, DUMMY_URL);
-  let { ui } = await openRDM(tab);
-  let newBrowser = ui.getViewportBrowser();
+  const { ui } = await openRDM(tab);
+  const newBrowser = ui.getViewportBrowser();
 
   waitPromptPromise = waitForGeolocationPrompt(win, newBrowser);
 

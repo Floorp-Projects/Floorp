@@ -12,20 +12,20 @@ const { CallView } = require("devtools/client/performance/modules/widgets/tree-v
 const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(function() {
-  let profile = synthesizeProfile();
-  let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const profile = synthesizeProfile();
+  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode });
+  const container = document.createElement("vbox");
   treeRoot.attachTo(container);
 
-  let $$fun = i => container.querySelectorAll(".call-tree-cell[type=function]")[i];
-  let $$nam = i => container.querySelectorAll(
+  const $$fun = i => container.querySelectorAll(".call-tree-cell[type=function]")[i];
+  const $$nam = i => container.querySelectorAll(
     ".call-tree-cell[type=function] > .call-tree-name")[i];
-  let $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
+  const $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
 
   is(container.childNodes.length, 7,
     "The container node should have all children available.");

@@ -5,7 +5,7 @@
 "use strict";
 
 function ResponseInfo(id, response, content) {
-  let {
+  const {
     mimeType
   } = response;
   const {body, base64Encoded} = content;
@@ -22,9 +22,9 @@ function ResponseInfo(id, response, content) {
 
 function ResponseContent(id, response, content) {
   const {body} = content;
-  let {mimeType, encodedDataLength} = response;
-  let responseContent = ResponseInfo(id, response, content);
-  let payload = Object.assign(
+  const {mimeType, encodedDataLength} = response;
+  const responseContent = ResponseInfo(id, response, content);
+  const payload = Object.assign(
     {
       responseContent,
       contentSize: !body ? 0 : body.length,
@@ -47,7 +47,7 @@ function SecurityDetails(id, security) {
 
 function Timings(id, timing) {
   // TODO : implement
-  let {
+  const {
     dnsStart,
     dnsEnd,
     connectStart,
@@ -56,10 +56,10 @@ function Timings(id, timing) {
     sendEnd,
     receiveHeadersEnd
   } = timing;
-  let dns = parseInt(dnsEnd - dnsStart, 10);
-  let connect = parseInt(connectEnd - connectStart, 10);
-  let send = parseInt(sendEnd - sendStart, 10);
-  let total = parseInt(receiveHeadersEnd, 10);
+  const dns = parseInt(dnsEnd - dnsStart, 10);
+  const connect = parseInt(connectEnd - connectStart, 10);
+  const send = parseInt(sendEnd - sendStart, 10);
+  const total = parseInt(receiveHeadersEnd, 10);
   return {
     from: id,
     timings: {
@@ -74,8 +74,8 @@ function Timings(id, timing) {
   };
 }
 function State(response, headers) {
-  let { headersSize } = headers;
-  let {
+  const { headersSize } = headers;
+  const {
     status,
     statusText,
     remoteIPAddress,

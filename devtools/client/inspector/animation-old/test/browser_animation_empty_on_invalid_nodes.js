@@ -9,11 +9,11 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, window} = await openAnimationInspector();
-  let {document} = window;
+  const {inspector, panel, window} = await openAnimationInspector();
+  const {document} = window;
 
   info("Select node .still and check that the panel is empty");
-  let stillNode = await getNodeFront(".still", inspector);
+  const stillNode = await getNodeFront(".still", inspector);
   await selectNodeAndWaitForAnimations(stillNode, inspector);
 
   is(panel.animationsTimelineComponent.animations.length, 0,
@@ -25,7 +25,7 @@ add_task(async function() {
      "The correct error message is displayed");
 
   info("Select the comment text node and check that the panel is empty");
-  let commentNode = await inspector.walker.previousSibling(stillNode);
+  const commentNode = await inspector.walker.previousSibling(stillNode);
   await selectNodeAndWaitForAnimations(commentNode, inspector);
 
   is(panel.animationsTimelineComponent.animations.length, 0,

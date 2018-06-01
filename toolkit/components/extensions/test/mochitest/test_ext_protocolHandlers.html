@@ -172,7 +172,9 @@ add_task(async function test_protocolHandler_restricted_protocol() {
   consoleMonitor.start([{message: /processing protocol_handlers\.0\.protocol/}]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await Assert.rejects(extension.startup(), "unable to register restricted handler protocol");
+  await Assert.rejects(extension.startup(),
+                       /startup failed/,
+                       "unable to register restricted handler protocol");
 
   await consoleMonitor.finished();
 });
@@ -193,7 +195,9 @@ add_task(async function test_protocolHandler_restricted_uriTemplate() {
   consoleMonitor.start([{message: /processing protocol_handlers\.0\.uriTemplate/}]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await Assert.rejects(extension.startup(), "unable to register restricted handler uriTemplate");
+  await Assert.rejects(extension.startup(),
+                       /startup failed/,
+                       "unable to register restricted handler uriTemplate");
 
   await consoleMonitor.finished();
 });

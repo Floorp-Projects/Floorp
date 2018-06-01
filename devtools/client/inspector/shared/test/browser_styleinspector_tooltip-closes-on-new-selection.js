@@ -25,8 +25,8 @@ add_task(async function() {
 async function testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
 
-  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
-  let tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
+  const tooltip = ruleView.tooltips.getTooltip("previewTooltip");
+  const tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
   await tooltip.setContent(tooltipContent, {width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
@@ -35,12 +35,12 @@ async function testRuleView(ruleView, inspector) {
   // tooltip to hide in the middle of being shown, which causes timeouts later.
   tooltip.stopTogglingOnHover();
 
-  let onShown = tooltip.once("shown");
+  const onShown = tooltip.once("shown");
   tooltip.show(ruleView.styleDocument.firstElementChild);
   await onShown;
 
   info("Selecting a new node");
-  let onHidden = tooltip.once("hidden");
+  const onHidden = tooltip.once("hidden");
   await selectNode(".two", inspector);
   await onHidden;
 
@@ -50,8 +50,8 @@ async function testRuleView(ruleView, inspector) {
 async function testComputedView(computedView, inspector) {
   info("Showing the tooltip");
 
-  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
-  let tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
+  const tooltip = computedView.tooltips.getTooltip("previewTooltip");
+  const tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
   await tooltip.setContent(tooltipContent, {width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
@@ -60,12 +60,12 @@ async function testComputedView(computedView, inspector) {
   // tooltip to hide in the middle of being shown, which causes timeouts later.
   tooltip.stopTogglingOnHover();
 
-  let onShown = tooltip.once("shown");
+  const onShown = tooltip.once("shown");
   tooltip.show(computedView.styleDocument.firstElementChild);
   await onShown;
 
   info("Selecting a new node");
-  let onHidden = tooltip.once("hidden");
+  const onHidden = tooltip.once("hidden");
   await selectNode(".one", inspector);
   await onHidden;
 

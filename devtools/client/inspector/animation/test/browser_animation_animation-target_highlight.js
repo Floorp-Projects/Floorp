@@ -25,7 +25,7 @@ add_task(async function() {
   assertNodeFront(nodeFront, "DIV", "ball animated");
 
   info("Check unhighlighting when mouse out on a target node");
-  let onUnhighlight = toolbox.once("node-unhighlight");
+  const onUnhighlight = toolbox.once("node-unhighlight");
   mouseOutOnTargetNode(animationInspector, panel, 0);
   await onUnhighlight;
   ok(true, "Unhighlighted the targe node");

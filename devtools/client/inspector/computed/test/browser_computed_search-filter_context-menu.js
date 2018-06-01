@@ -12,31 +12,31 @@ const TEST_URI = "<h1>test filter context menu</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = await openComputedView();
+  const {toolbox, inspector, view} = await openComputedView();
   await selectNode("h1", inspector);
 
-  let win = view.styleWindow;
-  let searchField = view.searchField;
-  let searchContextMenu = toolbox.textBoxContextMenuPopup;
+  const win = view.styleWindow;
+  const searchField = view.searchField;
+  const searchContextMenu = toolbox.textBoxContextMenuPopup;
   ok(searchContextMenu,
     "The search filter context menu is loaded in the computed view");
 
-  let cmdUndo = searchContextMenu.querySelector("[command=cmd_undo]");
-  let cmdDelete = searchContextMenu.querySelector("[command=cmd_delete]");
-  let cmdSelectAll = searchContextMenu.querySelector("[command=cmd_selectAll]");
-  let cmdCut = searchContextMenu.querySelector("[command=cmd_cut]");
-  let cmdCopy = searchContextMenu.querySelector("[command=cmd_copy]");
-  let cmdPaste = searchContextMenu.querySelector("[command=cmd_paste]");
+  const cmdUndo = searchContextMenu.querySelector("[command=cmd_undo]");
+  const cmdDelete = searchContextMenu.querySelector("[command=cmd_delete]");
+  const cmdSelectAll = searchContextMenu.querySelector("[command=cmd_selectAll]");
+  const cmdCut = searchContextMenu.querySelector("[command=cmd_cut]");
+  const cmdCopy = searchContextMenu.querySelector("[command=cmd_copy]");
+  const cmdPaste = searchContextMenu.querySelector("[command=cmd_paste]");
 
   info("Opening context menu");
 
   emptyClipboard();
 
-  let onFocus = once(searchField, "focus");
+  const onFocus = once(searchField, "focus");
   searchField.focus();
   await onFocus;
 
-  let onContextMenuPopup = once(searchContextMenu, "popupshowing");
+  const onContextMenuPopup = once(searchContextMenu, "popupshowing");
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
   await onContextMenuPopup;
@@ -52,7 +52,7 @@ add_task(async function() {
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
 
   info("Closing context menu");
-  let onContextMenuHidden = once(searchContextMenu, "popuphidden");
+  const onContextMenuHidden = once(searchContextMenu, "popuphidden");
   searchContextMenu.hidePopup();
   await onContextMenuHidden;
 

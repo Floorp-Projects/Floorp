@@ -213,7 +213,7 @@ class FilterBar extends Component {
     label = PluralForm.get(global, label).replace("#1", global);
 
     // Include all default filters that are hiding messages.
-    let title = DEFAULT_FILTERS.reduce((res, filter) => {
+    const title = DEFAULT_FILTERS.reduce((res, filter) => {
       if (filteredMessagesCount[filter] > 0) {
         return res.concat(`${filter}: ${filteredMessagesCount[filter]}`);
       }
@@ -245,7 +245,7 @@ class FilterBar extends Component {
       closeSplitConsole,
     } = this.props;
 
-    let children = [
+    const children = [
       dom.div({
         className: "devtools-toolbar webconsole-filterbar-primary",
         key: "primary-bar",
@@ -316,7 +316,7 @@ class FilterBar extends Component {
 }
 
 function mapStateToProps(state) {
-  let uiState = getAllUi(state);
+  const uiState = getAllUi(state);
   return {
     filter: getAllFilters(state),
     filterBarVisible: uiState.filterBarVisible,

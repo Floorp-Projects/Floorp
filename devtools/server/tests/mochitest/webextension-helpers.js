@@ -68,7 +68,7 @@ function waitForFramesUpdated({client}, matchFn) {
 }
 
 function collectFrameUpdates({client}, matchFn) {
-  let collected = [];
+  const collected = [];
 
   const listener = (evt, data) => {
     if (matchFn(data)) {
@@ -190,7 +190,7 @@ function promiseInstallFile(file) {
 
 function promiseWebExtensionStartup() {
   return new Promise(resolve => {
-    let listener = (evt, extension) => {
+    const listener = (evt, extension) => {
       Management.off("ready", listener);
       resolve(extension);
     };
@@ -201,7 +201,7 @@ function promiseWebExtensionStartup() {
 
 function promiseWebExtensionShutdown() {
   return new Promise(resolve => {
-    let listener = (event, extension) => {
+    const listener = (event, extension) => {
       Management.off("shutdown", listener);
       resolve(extension);
     };

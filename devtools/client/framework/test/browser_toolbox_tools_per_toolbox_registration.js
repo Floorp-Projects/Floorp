@@ -72,20 +72,20 @@ function testToolRegistered() {
      "per-toolbox tool registered to the specific toolbox");
 
   // Test that the tool appeared in the UI.
-  let doc = toolbox.doc;
-  let tab = doc.getElementById("toolbox-tab-" + TOOL_ID);
+  const doc = toolbox.doc;
+  const tab = doc.getElementById("toolbox-tab-" + TOOL_ID);
   ok(tab, "new tool's tab exists in toolbox UI");
 
-  let panel = doc.getElementById("toolbox-panel-" + TOOL_ID);
+  const panel = doc.getElementById("toolbox-panel-" + TOOL_ID);
   ok(panel, "new tool's panel exists in toolbox UI");
 
-  for (let win of getAllBrowserWindows()) {
-    let key = win.document.getElementById("key_" + TOOL_ID);
+  for (const win of getAllBrowserWindows()) {
+    const key = win.document.getElementById("key_" + TOOL_ID);
     if (win.document == doc) {
       continue;
     }
     ok(!key, "key for new tool should not exists in the other browser windows");
-    let menuitem = win.document.getElementById("menuitem_" + TOOL_ID);
+    const menuitem = win.document.getElementById("menuitem_" + TOOL_ID);
     ok(!menuitem, "menu item should not exists in the other browser window");
   }
 
@@ -97,8 +97,8 @@ function testToolRegistered() {
 }
 
 function getAllBrowserWindows() {
-  let wins = [];
-  let enumerator = Services.wm.getEnumerator("navigator:browser");
+  const wins = [];
+  const enumerator = Services.wm.getEnumerator("navigator:browser");
   while (enumerator.hasMoreElements()) {
     wins.push(enumerator.getNext());
   }
@@ -119,11 +119,11 @@ function toolboxToolUnregistered() {
      "per-toolbox tool unregistered from the specific toolbox");
 
   // test that it disappeared from the UI
-  let doc = toolbox.doc;
-  let tab = doc.getElementById("toolbox-tab-" + TOOL_ID);
+  const doc = toolbox.doc;
+  const tab = doc.getElementById("toolbox-tab-" + TOOL_ID);
   ok(!tab, "tool's tab was removed from the toolbox UI");
 
-  let panel = doc.getElementById("toolbox-panel-" + TOOL_ID);
+  const panel = doc.getElementById("toolbox-panel-" + TOOL_ID);
   ok(!panel, "tool's panel was removed from toolbox UI");
 
   cleanup();

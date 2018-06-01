@@ -39,9 +39,9 @@ function OnAppManagerUpdate(what) {
 }
 
 function generateFields(json) {
-  let table = document.querySelector("table");
-  for (let name in json) {
-    let tr = document.createElement("tr");
+  const table = document.querySelector("table");
+  for (const name in json) {
+    const tr = document.createElement("tr");
     let td = document.createElement("td");
     td.textContent = name;
     tr.appendChild(td);
@@ -56,7 +56,7 @@ function generateFields(json) {
 /* exported getDescriptionPromise */
 var getDescriptionPromise;
 function BuildUI() {
-  let table = document.querySelector("table");
+  const table = document.querySelector("table");
   table.innerHTML = "";
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
@@ -69,16 +69,16 @@ function BuildUI() {
 }
 
 function CheckLockState() {
-  let adbCheckResult = document.querySelector("#adb-check > .yesno");
-  let devtoolsCheckResult = document.querySelector("#devtools-check > .yesno");
-  let flipCertPerfButton = document.querySelector("#devtools-check button");
-  let flipCertPerfAction = document.querySelector("#devtools-check > .action");
-  let adbRootAction = document.querySelector("#adb-check > .action");
+  const adbCheckResult = document.querySelector("#adb-check > .yesno");
+  const devtoolsCheckResult = document.querySelector("#devtools-check > .yesno");
+  const flipCertPerfButton = document.querySelector("#devtools-check button");
+  const flipCertPerfAction = document.querySelector("#devtools-check > .action");
+  const adbRootAction = document.querySelector("#adb-check > .action");
 
-  let sYes = Strings.GetStringFromName("runtimedetails_checkyes");
-  let sNo = Strings.GetStringFromName("runtimedetails_checkno");
-  let sUnknown = Strings.GetStringFromName("runtimedetails_checkunknown");
-  let sNotUSB = Strings.GetStringFromName("runtimedetails_notUSBDevice");
+  const sYes = Strings.GetStringFromName("runtimedetails_checkyes");
+  const sNo = Strings.GetStringFromName("runtimedetails_checkno");
+  const sUnknown = Strings.GetStringFromName("runtimedetails_checkunknown");
+  const sNotUSB = Strings.GetStringFromName("runtimedetails_notUSBDevice");
 
   flipCertPerfButton.setAttribute("disabled", "true");
   flipCertPerfAction.setAttribute("hidden", "true");
@@ -91,7 +91,7 @@ function CheckLockState() {
       AppManager.connection.status == Connection.Status.CONNECTED) {
     // ADB check
     if (AppManager.selectedRuntime.type === RuntimeTypes.USB) {
-      let device = AppManager.selectedRuntime.device;
+      const device = AppManager.selectedRuntime.device;
       if (device && device.summonRoot) {
         device.isRoot().then(isRoot => {
           if (isRoot) {
@@ -111,7 +111,7 @@ function CheckLockState() {
 
     // forbid-certified-apps check
     try {
-      let prefFront = AppManager.preferenceFront;
+      const prefFront = AppManager.preferenceFront;
       prefFront.getBoolPref("devtools.debugger.forbid-certified-apps").then(isForbidden => {
         if (isForbidden) {
           devtoolsCheckResult.textContent = sNo;
@@ -129,7 +129,7 @@ function CheckLockState() {
 }
 
 function EnableCertApps() {
-  let device = AppManager.selectedRuntime.device;
+  const device = AppManager.selectedRuntime.device;
   // TODO: Remove `network.disable.ipc.security` once bug 1125916 is fixed.
   device.shell(
     "stop b2g && " +
@@ -143,6 +143,6 @@ function EnableCertApps() {
 }
 
 function RootADB() {
-  let device = AppManager.selectedRuntime.device;
+  const device = AppManager.selectedRuntime.device;
   device.summonRoot().then(CheckLockState, console.error);
 }

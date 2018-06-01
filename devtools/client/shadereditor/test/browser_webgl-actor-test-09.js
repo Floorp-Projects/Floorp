@@ -7,15 +7,15 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  const programActor = await once(front, "program-linked");
+  const vertexShader = await programActor.getVertexShader();
+  const fragmentShader = await programActor.getFragmentShader();
 
-  let oldVertSource = await vertexShader.getText();
-  let newVertSource = oldVertSource.replace("vec4", "vec3");
+  const oldVertSource = await vertexShader.getText();
+  const newVertSource = oldVertSource.replace("vec4", "vec3");
 
   try {
     await vertexShader.compile(newVertSource);
@@ -25,7 +25,7 @@ async function ifWebGLSupported() {
       "The new vertex shader source was compiled with errors.");
 
     // The implementation has the choice to defer all compile-time errors to link time.
-    let infoLog = (error.compile != "") ? error.compile : error.link;
+    const infoLog = (error.compile != "") ? error.compile : error.link;
 
     isnot(infoLog, "",
       "The one of the compile or link info logs should not be empty.");
@@ -43,12 +43,12 @@ async function ifWebGLSupported() {
   await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "The shader was reverted to the old source.");
 
-  let vertSource = await vertexShader.getText();
+  const vertSource = await vertexShader.getText();
   ok(vertSource.includes("vec4(aVertexPosition, 1.0);"),
     "The previous correct vertex shader source was preserved.");
 
-  let oldFragSource = await fragmentShader.getText();
-  let newFragSource = oldFragSource.replace("vec3", "vec4");
+  const oldFragSource = await fragmentShader.getText();
+  const newFragSource = oldFragSource.replace("vec3", "vec4");
 
   try {
     await fragmentShader.compile(newFragSource);
@@ -58,7 +58,7 @@ async function ifWebGLSupported() {
       "The new fragment shader source was compiled with errors.");
 
     // The implementation has the choice to defer all compile-time errors to link time.
-    let infoLog = (error.compile != "") ? error.compile : error.link;
+    const infoLog = (error.compile != "") ? error.compile : error.link;
 
     isnot(infoLog, "",
       "The one of the compile or link info logs should not be empty.");
@@ -72,7 +72,7 @@ async function ifWebGLSupported() {
   await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "The shader was reverted to the old source.");
 
-  let fragSource = await fragmentShader.getText();
+  const fragSource = await fragmentShader.getText();
   ok(fragSource.includes("vec3 vFragmentColor;"),
     "The previous correct fragment shader source was preserved.");
 

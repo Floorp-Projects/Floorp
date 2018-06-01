@@ -13,15 +13,15 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_end_delay.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
-  let selectors = ["#target1", "#target2", "#target3", "#target4"];
+  const selectors = ["#target1", "#target2", "#target3", "#target4"];
   for (let i = 0; i < selectors.length; i++) {
-    let selector = selectors[i];
+    const selector = selectors[i];
     await selectNode(selector, inspector);
     await waitForAnimationSelecting(panel);
-    let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
-    let animationEl = timelineEl.querySelector(".animation");
+    const timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
+    const animationEl = timelineEl.querySelector(".animation");
     checkEndDelayAndName(animationEl);
     const state = getAnimationTimeBlocks(panel)[0].animation.state;
     checkPath(animationEl, state);
@@ -29,19 +29,19 @@ add_task(async function() {
 });
 
 function checkEndDelayAndName(animationEl) {
-  let endDelay = animationEl.querySelector(".end-delay");
-  let name = animationEl.querySelector(".name");
-  let targetNode = animationEl.querySelector(".target");
+  const endDelay = animationEl.querySelector(".end-delay");
+  const name = animationEl.querySelector(".name");
+  const targetNode = animationEl.querySelector(".target");
 
   // Check that the endDelay element does not cause the timeline to overflow.
-  let endDelayLeft = Math.round(endDelay.getBoundingClientRect().x);
-  let sidebarWidth = Math.round(targetNode.getBoundingClientRect().width);
+  const endDelayLeft = Math.round(endDelay.getBoundingClientRect().x);
+  const sidebarWidth = Math.round(targetNode.getBoundingClientRect().width);
   ok(endDelayLeft >= sidebarWidth,
      "The endDelay element isn't displayed over the sidebar");
 
   // Check that the endDelay is not displayed on top of the name.
-  let endDelayRight = Math.round(endDelay.getBoundingClientRect().right);
-  let nameLeft = Math.round(name.getBoundingClientRect().left);
+  const endDelayRight = Math.round(endDelay.getBoundingClientRect().right);
+  const nameLeft = Math.round(name.getBoundingClientRect().left);
   ok(endDelayRight >= nameLeft,
      "The endDelay element does not span over the name element");
 }

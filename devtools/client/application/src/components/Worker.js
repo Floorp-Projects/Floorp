@@ -4,20 +4,19 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { a, br, button, dd, dl, dt, header, li, section, span, time } =
   require("devtools/client/shared/vendor/react-dom-factories");
-const Services = require("Services");
 const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser",
   "devtools/client/framework/devtools-browser", true);
-
-const Strings = Services.strings.createBundle(
-  "chrome://devtools/locale/aboutdebugging.properties");
 
 /**
  * This component is dedicated to display a worker, more accurately a service worker, in
@@ -55,7 +54,7 @@ class Worker extends Component {
       return;
     }
 
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     gDevToolsBrowser.openWorkerToolbox(client, worker.workerActor);
   }
 
@@ -65,7 +64,7 @@ class Worker extends Component {
       return;
     }
 
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
       type: "start"
@@ -73,7 +72,7 @@ class Worker extends Component {
   }
 
   unregister() {
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
       type: "unregister"
@@ -102,48 +101,63 @@ class Worker extends Component {
   }
 
   formatScope(scope) {
-    let [, remainder] = getUnicodeUrl(scope).split("://");
+    const [, remainder] = getUnicodeUrl(scope).split("://");
     return remainder || scope;
   }
 
   formatSource(source) {
-    let parts = source.split("/");
+    const parts = source.split("/");
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
   render() {
-    let { worker } = this.props;
-    let status = this.getServiceWorkerStatus();
+    const { worker } = this.props;
+    const status = this.getServiceWorkerStatus();
 
     const unregisterButton = this.isActive() ?
-      button({
-        onClick: this.unregister,
-        className: "devtools-button worker__unregister-button js-unregister-button",
-        "data-standalone": true
-      },
-        Strings.GetStringFromName("unregister"))
-      : null;
+      Localized(
+        { id: "serviceworker-worker-unregister" },
+        button({
+          onClick: this.unregister,
+          className: "devtools-button worker__unregister-button js-unregister-button",
+          "data-standalone": true
+        })
+      ) : null;
 
     const debugLinkDisabled = this.isRunning() ? "" : "disabled";
 
-    const debugLink = a({
-      onClick: this.isRunning() ? this.debug : null,
-      title: this.isRunning() ? null : "Only running service workers can be debugged",
-      className: `${debugLinkDisabled} worker__debug-link js-debug-link`
+    const debugLink = Localized({
+      id: "serviceworker-worker-debug",
+      // The localized title is only displayed if the debug link is disabled.
+      attrs: { title: !this.isRunning() }
     },
-      Strings.GetStringFromName("debug"));
+      a({
+        onClick: this.isRunning() ? this.debug : null,
+        className: `${debugLinkDisabled} worker__debug-link js-debug-link`
+      })
+    );
 
     const startLink = !this.isRunning() ?
-      a({ onClick: this.start, className: "worker__start-link" },
-        Strings.GetStringFromName("start"))
-      : null;
+      Localized(
+        { id: "serviceworker-worker-start" },
+        a({
+          onClick: this.start,
+          className: "worker__start-link"
+        })
+      ) : null;
 
-    const lastUpdated = worker.lastUpdateTime
-      ? span({ className: "worker__data__updated" },
-          "Updated ",
-          time({ className: "js-sw-updated"},
-            new Date(worker.lastUpdateTime / 1000).toLocaleString()))
-      : null;
+    const lastUpdated = worker.lastUpdateTime ?
+      Localized(
+        {
+          id: "serviceworker-worker-updated",
+          // XXX: $date should normally be a Date object, but we pass the timestamp as a
+          // workaround. See Bug 1465718. worker.lastUpdateTime is in microseconds,
+          // convert to a valid timestamp in milliseconds by dividing by 1000.
+          "$date": worker.lastUpdateTime / 1000,
+          time: time({ className: "js-sw-updated" })
+        },
+        span({ className: "worker__data__updated" })
+      ) : null;
 
     return li({ className: "worker js-sw-container" },
       header(
@@ -156,17 +170,25 @@ class Worker extends Component {
       ),
       dl(
         { className: "worker__data" },
-        dt({ className: "worker__meta-name" }, "Source"),
+        Localized({ id: "serviceworker-worker-source" },
+          dt({ className: "worker__meta-name" })
+        ),
         dd({},
             span({ title: worker.scope, className: "worker__source-url js-source-url" },
               this.formatSource(worker.url)),
             debugLink,
             lastUpdated ? br({}) : null,
             lastUpdated ? lastUpdated : null),
-        dt({ className: "worker__meta-name" }, "Status"),
+        Localized({ id: "serviceworker-worker-status" },
+          dt({ className: "worker__meta-name" })
+        ),
         dd({},
-          Strings.GetStringFromName(status).toLowerCase(),
-          startLink)
+          Localized(
+            { id: "serviceworker-worker-status-" + status },
+            span({}),
+          ),
+          startLink
+        )
       )
     );
   }

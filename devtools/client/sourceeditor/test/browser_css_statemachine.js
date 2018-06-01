@@ -55,13 +55,13 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
   ].join("\n"));
 
 add_task(async function test() {
-  let tab = await addTab(TEST_URI);
-  let browser = tab.linkedBrowser;
+  const tab = await addTab(TEST_URI);
+  const browser = tab.linkedBrowser;
 
-  let completer = new CSSCompleter({
+  const completer = new CSSCompleter({
     cssProperties: getClientCssProperties()
   });
-  let checkState = state => {
+  const checkState = state => {
     if (state[0] == "null" && (!completer.state || completer.state == "null")) {
       return true;
     } else if (state[0] == completer.state && state[0] == "selector" &&
@@ -82,11 +82,11 @@ add_task(async function test() {
   };
 
   let i = 0;
-  for (let testcase of tests) {
+  for (const testcase of tests) {
     ++i;
     await ContentTask.spawn(browser, [i, tests.length], function([idx, len]) {
-      let progress = content.document.getElementById("progress");
-      let progressDiv = content.document.querySelector("#progress > div");
+      const progress = content.document.getElementById("progress");
+      const progressDiv = content.document.querySelector("#progress > div");
       progress.dataset.progress = idx;
       progressDiv.style.width = 100 * idx / len + "%";
     });
@@ -100,7 +100,7 @@ add_task(async function test() {
          ", " + completer.completing + ", " +
          (completer.propertyName || completer.selector) + "].");
       await ContentTask.spawn(browser, null, function() {
-        let progress = content.document.getElementById("progress");
+        const progress = content.document.getElementById("progress");
         progress.classList.add("failed");
       });
     }

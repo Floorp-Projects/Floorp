@@ -31,22 +31,22 @@ window.onload = function() {
 
     is(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
-    let listener = DebuggerServer.createListener();
+    const listener = DebuggerServer.createListener();
     ok(listener, "Socket listener created");
     listener.portOrPath = -1;
     listener.webSocket = true;
     await listener.open();
     is(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
-    let transport = await DebuggerClient.socketConnect({
+    const transport = await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       webSocket: true
     });
     ok(transport, "Client transport created");
 
-    let client = new DebuggerClient(transport);
-    let onUnexpectedClose = () => {
+    const client = new DebuggerClient(transport);
+    const onUnexpectedClose = () => {
       ok(false, "Closed unexpectedly");
     };
     client.addListener("closed", onUnexpectedClose);
@@ -55,8 +55,8 @@ window.onload = function() {
     await client.listTabs();
 
     // Send a message the server that will echo back
-    let message = "message";
-    let reply = await client.request({
+    const message = "message";
+    const reply = await client.request({
       to: "root",
       type: "echo",
       message

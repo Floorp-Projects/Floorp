@@ -51,7 +51,7 @@ function throwsWhenIncorrectCoordinates() {
 
 function convertsStringCoordinates() {
   info("Converts string coordinates to numbers");
-  let c = new CubicBezier(["0", "1", ".5", "-2"]);
+  const c = new CubicBezier(["0", "1", ".5", "-2"]);
 
   Assert.equal(c.coordinates[0], 0);
   Assert.equal(c.coordinates[1], 1);
@@ -74,7 +74,7 @@ function coordinatesToStringOutputsAString() {
 function pointGettersReturnPointCoordinatesArrays() {
   info("Points getters return arrays of coordinates");
 
-  let c = new CubicBezier([0, .2, .5, 1]);
+  const c = new CubicBezier([0, .2, .5, 1]);
   Assert.equal(c.P1[0], 0);
   Assert.equal(c.P1[1], .2);
   Assert.equal(c.P2[0], .5);
@@ -84,7 +84,7 @@ function pointGettersReturnPointCoordinatesArrays() {
 function toStringOutputsCubicBezierValue() {
   info("toString() outputs the cubic-bezier() value");
 
-  let c = new CubicBezier([0, 1, 1, 0]);
+  const c = new CubicBezier([0, 1, 1, 0]);
   Assert.equal(c.toString(), "cubic-bezier(0,1,1,0)");
 }
 
@@ -110,7 +110,7 @@ function toStringOutputsCssPresetValues() {
 function testParseTimingFunction() {
   info("test parseTimingFunction");
 
-  for (let test of ["ease", "linear", "ease-in", "ease-out", "ease-in-out"]) {
+  for (const test of ["ease", "linear", "ease-in", "ease-out", "ease-in-out"]) {
     ok(parseTimingFunction(test), test);
   }
 

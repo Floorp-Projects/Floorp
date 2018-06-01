@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 add_task(async function() {
   let isEditTagNameCalled = false;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   // Overriding the editTagName walkerActor method here to check that it isn't
   // called when blurring the tagname field.
@@ -20,8 +20,8 @@ add_task(async function() {
     isEditTagNameCalled = true;
   };
 
-  let container = await focusNode("div", inspector);
-  let tagEditor = container.editor.tag;
+  const container = await focusNode("div", inspector);
+  const tagEditor = container.editor.tag;
 
   info("Blurring the tagname field");
   tagEditor.blur();

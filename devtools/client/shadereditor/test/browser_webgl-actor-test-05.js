@@ -7,18 +7,18 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  const programActor = await once(front, "program-linked");
+  const vertexShader = await programActor.getVertexShader();
+  const fragmentShader = await programActor.getFragmentShader();
 
-  let vertSource = await vertexShader.getText();
+  const vertSource = await vertexShader.getText();
   ok(vertSource.includes("gl_Position"),
     "The correct vertex shader source was retrieved.");
 
-  let fragSource = await fragmentShader.getText();
+  const fragSource = await fragmentShader.getText();
   ok(fragSource.includes("gl_FragColor"),
     "The correct fragment shader source was retrieved.");
 

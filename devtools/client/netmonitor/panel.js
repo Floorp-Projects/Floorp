@@ -17,8 +17,8 @@ NetMonitorPanel.prototype = {
 
     // Reuse an existing Network monitor API object if available.
     // It could have been created for WE API before Net panel opens.
-    let api = await this.toolbox.getNetMonitorAPI();
-    let app = this.panelWin.initialize(api);
+    const api = await this.toolbox.getNetMonitorAPI();
+    const app = this.panelWin.initialize(api);
 
     // Connect the application object to the UI.
     await app.bootstrap({

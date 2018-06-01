@@ -8,14 +8,14 @@
 "use strict";
 
 add_task(async function testCategoryLogs() {
-  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
-  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
+  const consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
-  let {console} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const {console} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   console.log("bug861338-log-cached");
 
-  let hud = await HUDService.toggleBrowserConsole();
+  const hud = await HUDService.toggleBrowserConsole();
 
   await checkMessageExists(hud, "bug861338-log-cached");
 
@@ -26,7 +26,7 @@ add_task(async function testCategoryLogs() {
   }
 
   console.time("foobarTimer");
-  let foobar = { bug851231prop: "bug851231value" };
+  const foobar = { bug851231prop: "bug851231value" };
 
   console.log("bug851231-log");
   console.info("bug851231-info");
@@ -53,13 +53,13 @@ add_task(async function testCategoryLogs() {
 });
 
 add_task(async function testFilter() {
-  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
-  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
+  const consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
-  let console2 = new ConsoleAPI();
-  let hud = await HUDService.toggleBrowserConsole();
+  const {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const console2 = new ConsoleAPI();
+  const hud = await HUDService.toggleBrowserConsole();
 
   // Enable the error category and disable the log category.
   await setFilterState(hud, {
@@ -67,8 +67,8 @@ add_task(async function testFilter() {
     log: false
   });
 
-  let shouldBeVisible = "Should be visible";
-  let shouldBeHidden = "Should be hidden";
+  const shouldBeVisible = "Should be visible";
+  const shouldBeHidden = "Should be hidden";
 
   console2.log(shouldBeHidden);
   console2.error(shouldBeVisible);
@@ -85,13 +85,13 @@ add_task(async function testFilter() {
 
 // Test that console.profile / profileEnd trigger the right events
 add_task(async function testProfile() {
-  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
-  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
-  let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
+  const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
 
   storage.clearEvents();
 
-  let profilerEvents = [];
+  const profilerEvents = [];
 
   function observer(subject, topic) {
     is(topic, "console-api-profiler", "The topic is 'console-api-profiler'");
@@ -109,7 +109,7 @@ add_task(async function testProfile() {
   Services.obs.removeObserver(observer, "console-api-profiler");
 
   // Test that no messages were logged to the storage
-  let consoleEvents = storage.getEvents();
+  const consoleEvents = storage.getEvents();
   is(consoleEvents.length, 0, "There are zero logged messages");
 
   // Test that two profiler events were fired
@@ -122,7 +122,7 @@ add_task(async function testProfile() {
 
 async function checkMessageExists(hud, msg) {
   info(`Checking "${msg}" was logged`);
-  let message = await waitFor(() => findMessage(hud, msg));
+  const message = await waitFor(() => findMessage(hud, msg));
   ok(message, `"${msg}" was logged`);
 }
 

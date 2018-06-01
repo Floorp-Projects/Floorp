@@ -17,14 +17,14 @@ add_task(async function() {
 
   is(devices.TYPES.length, 1, "Found 1 device type.");
 
-  let type1 = devices.TYPES[0];
+  const type1 = devices.TYPES[0];
 
   is(devices[type1].length, 2, "Found 2 devices of type #1.");
 
-  let string = getDeviceString(type1);
+  const string = getDeviceString(type1);
   ok(typeof string === "string" && string.length > 0, "Able to localize type #1.");
 
-  let device1 = {
+  const device1 = {
     name: "SquarePhone",
     width: 320,
     height: 320,
@@ -39,8 +39,8 @@ add_task(async function() {
   is(devices[type1].length, 3, "Added new device of type #1.");
   ok(devices[type1].filter(d => d.name === device1.name), "Found the new device.");
 
-  let type2 = "appliances";
-  let device2 = {
+  const type2 = "appliances";
+  const device2 = {
     name: "Mr Freezer",
     width: 800,
     height: 600,

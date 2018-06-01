@@ -43,7 +43,7 @@ define(function(require, exports, module) {
     }
 
     getHeaderClass(colId) {
-      let decorator = this.props.decorator;
+      const decorator = this.props.decorator;
       if (!decorator || !decorator.getHeaderClass) {
         return [];
       }
@@ -62,12 +62,12 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let cells = [];
-      let visible = this.props.header;
+      const cells = [];
+      const visible = this.props.header;
 
       // Render the rest of the columns (if any)
       this.props.columns.forEach(col => {
-        let cellStyle = {
+        const cellStyle = {
           "width": col.width ? col.width : "",
         };
 

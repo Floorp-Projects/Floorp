@@ -27,7 +27,7 @@ class RequestListColumnFile extends Component {
   }
 
   render() {
-    let {
+    const {
       item: { urlDetails },
     } = this.props;
 

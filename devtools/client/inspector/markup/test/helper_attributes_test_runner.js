@@ -27,7 +27,7 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector, testActor) {
     info("Selecting the test node");
     await selectNode("div", inspector);
 
-    for (let test of tests) {
+    for (const test of tests) {
       await runAddAttributesTest(test, "div", inspector, testActor);
     }
   })();
@@ -66,7 +66,7 @@ async function runAddAttributesTest(test, selector, inspector, testActor) {
   await assertAttributes(selector, test.expectedAttributes, testActor);
 
   if (test.validate) {
-    let container = await getContainerForSelector(selector, inspector);
+    const container = await getContainerForSelector(selector, inspector);
     test.validate(container, inspector);
   }
 
@@ -100,7 +100,7 @@ function runEditAttributesTests(tests, inspector, testActor) {
     info("Expanding all nodes in the markup-view");
     await inspector.markup.expandAll();
 
-    for (let test of tests) {
+    for (const test of tests) {
       await runEditAttributesTest(test, inspector, testActor);
     }
   })();
@@ -135,13 +135,13 @@ async function runEditAttributesTest(test, inspector, testActor) {
 
   info("Editing attribute " + test.name + " with value " + test.value);
 
-  let container = await focusNode(test.node, inspector);
+  const container = await focusNode(test.node, inspector);
   ok(container && container.editor, "The markup-container for " + test.node +
     " was found");
 
   info("Listening for the markupmutation event");
-  let nodeMutated = inspector.once("markupmutation");
-  let attr = container.editor.attrElements.get(test.name)
+  const nodeMutated = inspector.once("markupmutation");
+  const attr = container.editor.attrElements.get(test.name)
                                           .querySelector(".editable");
   setEditableFieldValue(attr, test.value, inspector);
   await nodeMutated;

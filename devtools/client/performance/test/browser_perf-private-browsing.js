@@ -27,12 +27,12 @@ add_task(async function() {
 });
 
 async function createPanelInNewWindow(options) {
-  let win = await addWindow(options);
+  const win = await addWindow(options);
   return createPanelInWindow(options, win);
 }
 
 async function createPanelInWindow(options, win = window) {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: win
   }, options);
@@ -42,41 +42,41 @@ async function createPanelInWindow(options, win = window) {
 }
 
 async function testNormalWindow() {
-  let { panel } = await createPanelInWindow({
+  const { panel } = await createPanelInWindow({
     private: false
   });
 
-  let { PerformanceView } = panel.panelWin;
+  const { PerformanceView } = panel.panelWin;
 
   is(PerformanceView.getState(), "empty",
     "The initial state of the performance panel view is correct (1).");
 }
 
 async function testPrivateWindow() {
-  let { panel } = await createPanelInNewWindow({
+  const { panel } = await createPanelInNewWindow({
     private: true,
     // The add-on SDK can't seem to be able to listen to "ready" or "close"
     // events for private tabs. Don't really absolutely need to though.
     dontWaitForTabReady: true
   });
 
-  let { PerformanceView } = panel.panelWin;
+  const { PerformanceView } = panel.panelWin;
 
   is(PerformanceView.getState(), "unavailable",
     "The initial state of the performance panel view is correct (2).");
 }
 
 async function testRecordingFailingInWindow(index) {
-  let { panel } = gPanelWinTuples[index];
-  let { EVENTS, PerformanceController } = panel.panelWin;
+  const { panel } = gPanelWinTuples[index];
+  const { EVENTS, PerformanceController } = panel.panelWin;
 
-  let onRecordingStarted = () => {
+  const onRecordingStarted = () => {
     ok(false, "Recording should not start while a private window is present.");
   };
 
   PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, onRecordingStarted);
 
-  let whenFailed = once(PerformanceController,
+  const whenFailed = once(PerformanceController,
                         EVENTS.BACKEND_FAILED_AFTER_RECORDING_START);
   PerformanceController.startRecording();
   await whenFailed;
@@ -86,10 +86,10 @@ async function testRecordingFailingInWindow(index) {
 }
 
 async function testRecordingSucceedingInWindow(index) {
-  let { panel } = gPanelWinTuples[index];
-  let { EVENTS, PerformanceController } = panel.panelWin;
+  const { panel } = gPanelWinTuples[index];
+  const { EVENTS, PerformanceController } = panel.panelWin;
 
-  let onRecordingFailed = () => {
+  const onRecordingFailed = () => {
     ok(false, "Recording should start while now private windows are present.");
   };
 
@@ -105,7 +105,7 @@ async function testRecordingSucceedingInWindow(index) {
 }
 
 async function teardownPerfInWindow(index, options) {
-  let { panel, win } = gPanelWinTuples[index];
+  const { panel, win } = gPanelWinTuples[index];
   await teardownToolboxAndRemoveTab(panel);
 
   if (options.shouldCloseWindow) {

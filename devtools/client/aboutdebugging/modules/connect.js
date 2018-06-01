@@ -33,10 +33,10 @@ const TYPE = {
  *            - if type === "REMOTE", {host: {String}, port: {String}}
  */
 function createDescriptorFromURL(url) {
-  let params = url.searchParams;
+  const params = url.searchParams;
 
-  let host = params.get("host");
-  let port = params.get("port");
+  const host = params.get("host");
+  const port = params.get("port");
 
   let descriptor;
   if (host && port) {
@@ -63,11 +63,11 @@ function createDescriptorFromURL(url) {
  *          - connect: a connection descriptor, see doc for createDescriptorFromURL(url).
  */
 exports.createClient = async function() {
-  let href = window.location.href;
-  let url = new window.URL(href.replace("about:", "http://"));
+  const href = window.location.href;
+  const url = new window.URL(href.replace("about:", "http://"));
 
-  let connect = createDescriptorFromURL(url);
-  let client = await clientFromURL(url);
+  const connect = createDescriptorFromURL(url);
+  const client = await clientFromURL(url);
 
   DebuggerServer.allowChromeProcess = true;
 

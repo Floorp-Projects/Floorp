@@ -64,7 +64,7 @@ add_task(async function() {
   await setUserAgentStylesPref(true);
 
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Making sure that UA styles are visible on initial load");
   await userAgentStylesVisible(inspector, view);
@@ -86,8 +86,8 @@ async function setUserAgentStylesPref(val) {
 
   // Reset the pref and wait for PrefObserver to callback so UI
   // has a chance to get updated.
-  let prefObserver = new PrefObserver("devtools.");
-  let oncePrefChanged = new Promise(resolve => {
+  const prefObserver = new PrefObserver("devtools.");
+  const oncePrefChanged = new Promise(resolve => {
     prefObserver.on(PREF_UA_STYLES, onPrefChanged);
 
     function onPrefChanged() {
@@ -105,7 +105,7 @@ async function userAgentStylesVisible(inspector, view) {
   let userRules;
   let uaRules;
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await selectNode(data.selector, inspector);
     await compareAppliedStylesWithUI(inspector, view, "ua");
 
@@ -137,7 +137,7 @@ async function userAgentStylesNotVisible(inspector, view) {
   let userRules;
   let uaRules;
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await selectNode(data.selector, inspector);
     await compareAppliedStylesWithUI(inspector, view);
 
@@ -162,13 +162,13 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
 
   // We may see multiple entries that map to a given rule; filter the
   // duplicates here to match what the UI does.
-  let entryMap = new Map();
-  for (let entry of entries) {
+  const entryMap = new Map();
+  for (const entry of entries) {
     entryMap.set(entry.rule, entry);
   }
   entries = [...entryMap.values()];
 
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
   is(elementStyle.rules.length, entries.length,
     "Should have correct number of rules (" + entries.length + ")");
 
@@ -177,7 +177,7 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
   });
 
   entries.forEach((entry, i) => {
-    let elementStyleRule = elementStyle.rules[i];
+    const elementStyleRule = elementStyle.rules[i];
     is(elementStyleRule.inherited, entry.inherited,
       "Same inherited (" + entry.inherited + ")");
     is(elementStyleRule.isSystem, entry.isSystem,

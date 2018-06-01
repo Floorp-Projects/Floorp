@@ -19,8 +19,8 @@ function DomDecorator() {
 DomDecorator.prototype = {
   getRowClass: function(object) {
     if (object instanceof Property) {
-      let value = object.value;
-      let names = [];
+      const value = object.value;
+      const names = [];
 
       if (value.enumerable) {
         names.push("enumerable");

@@ -17,7 +17,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  let {toolbox, inspector, view} = await openRuleView();
+  const {toolbox, inspector, view} = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("div", inspector);
@@ -40,17 +40,17 @@ add_task(async function() {
 
 async function testClickingLink(toolbox, view) {
   info("Listening for switch to the style editor");
-  let onStyleEditorReady = toolbox.once("styleeditor-ready");
+  const onStyleEditorReady = toolbox.once("styleeditor-ready");
 
   info("Finding the stylesheet link and clicking it");
-  let link = getRuleViewLinkByIndex(view, 1);
+  const link = getRuleViewLinkByIndex(view, 1);
   link.scrollIntoView();
   link.click();
   await onStyleEditorReady;
 }
 
 function checkDisplayedStylesheet(toolbox) {
-  let panel = toolbox.getCurrentPanel();
+  const panel = toolbox.getCurrentPanel();
   return new Promise((resolve, reject) => {
     panel.UI.on("editor-selected", editor => {
       // The style editor selects the first sheet at first load before
@@ -65,17 +65,17 @@ function checkDisplayedStylesheet(toolbox) {
 }
 
 function editorSelected(editor) {
-  let href = editor.styleSheet.href;
+  const href = editor.styleSheet.href;
   ok(href.endsWith("doc_sourcemaps.scss"),
     "selected stylesheet is correct one");
 
-  let {line} = editor.sourceEditor.getCursor();
+  const {line} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
 }
 
 function verifyLinkText(text, view) {
   info("Verifying that the rule-view stylesheet link is " + text);
-  let label = getRuleViewLinkByIndex(view, 1)
+  const label = getRuleViewLinkByIndex(view, 1)
     .querySelector(".ruleview-rule-source-label");
   return waitForSuccess(function() {
     return label.textContent == text;

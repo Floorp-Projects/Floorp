@@ -6,7 +6,7 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
+  const { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 
   await getPrograms(front, 2);

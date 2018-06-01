@@ -109,9 +109,9 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
     await runTestData(inspector, testActor, data);
   }
@@ -120,25 +120,25 @@ add_task(async function() {
 async function runTestData(inspector, testActor,
                       {selector, before, changeStyle, after}) {
   info("Getting the " + selector + " test node");
-  let nodeFront = await getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  const container = getContainerForNodeFront(nodeFront, inspector);
   is(!container.elt.classList.contains("not-displayed"), before,
     "The container is marked as " + (before ? "shown" : "hidden"));
 
   info("Listening for the display-change event");
-  let onDisplayChanged = new Promise(resolve => {
+  const onDisplayChanged = new Promise(resolve => {
     inspector.markup.walker.once("display-change", resolve);
   });
 
   info("Making style changes");
   await changeStyle(testActor);
-  let nodes = await onDisplayChanged;
+  const nodes = await onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");
 
   ok(nodes.length, "The display-change event was received with a nodes");
   let foundContainer = false;
-  for (let node of nodes) {
+  for (const node of nodes) {
     if (getContainerForNodeFront(node, inspector) === container) {
       foundContainer = true;
       break;

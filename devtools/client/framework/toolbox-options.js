@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConsta
 exports.OptionsPanel = OptionsPanel;
 
 function GetPref(name) {
-  let type = Services.prefs.getPrefType(name);
+  const type = Services.prefs.getPrefType(name);
   switch (type) {
     case Services.prefs.PREF_STRING:
       return Services.prefs.getCharPref(name);
@@ -30,7 +30,7 @@ function GetPref(name) {
 }
 
 function SetPref(name, value) {
-  let type = Services.prefs.getPrefType(name);
+  const type = Services.prefs.getPrefType(name);
   switch (type) {
     case Services.prefs.PREF_STRING:
       return Services.prefs.setCharPref(name, value);
@@ -133,8 +133,8 @@ OptionsPanel.prototype = {
 
   _prefChanged: function(subject, topic, prefName) {
     if (prefName === "devtools.cache.disabled") {
-      let cacheDisabled = GetPref(prefName);
-      let cbx = this.panelDoc.getElementById("devtools-disable-cache");
+      const cacheDisabled = GetPref(prefName);
+      const cbx = this.panelDoc.getElementById("devtools-disable-cache");
       cbx.checked = cacheDisabled;
     } else if (prefName === "devtools.theme") {
       this.updateCurrentTheme();
@@ -148,8 +148,8 @@ OptionsPanel.prototype = {
   },
 
   _themeUnregistered: function(theme) {
-    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
-    let themeInput = themeBox.querySelector(`[value=${theme.id}]`);
+    const themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    const themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 
     if (themeInput) {
       themeInput.parentNode.remove();
@@ -160,29 +160,29 @@ OptionsPanel.prototype = {
     // Ensure the toolbox is open, and the buttons are all set up.
     await this.toolbox.isOpen;
 
-    let enabledToolbarButtonsBox = this.panelDoc.getElementById(
+    const enabledToolbarButtonsBox = this.panelDoc.getElementById(
       "enabled-toolbox-buttons-box");
 
-    let toolbarButtons = this.toolbox.toolbarButtons;
+    const toolbarButtons = this.toolbox.toolbarButtons;
 
     if (!toolbarButtons) {
       console.warn("The command buttons weren't initiated yet.");
       return;
     }
 
-    let onCheckboxClick = (checkbox) => {
-      let commandButton = toolbarButtons.filter(
+    const onCheckboxClick = (checkbox) => {
+      const commandButton = toolbarButtons.filter(
         toggleableButton => toggleableButton.id === checkbox.id)[0];
       Services.prefs.setBoolPref(
         commandButton.visibilityswitch, checkbox.checked);
       this.toolbox.updateToolboxButtonsVisibility();
     };
 
-    let createCommandCheckbox = button => {
-      let checkboxLabel = this.panelDoc.createElement("label");
-      let checkboxSpanLabel = this.panelDoc.createElement("span");
+    const createCommandCheckbox = button => {
+      const checkboxLabel = this.panelDoc.createElement("label");
+      const checkboxSpanLabel = this.panelDoc.createElement("span");
       checkboxSpanLabel.textContent = button.description;
-      let checkboxInput = this.panelDoc.createElement("input");
+      const checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
       checkboxInput.setAttribute("id", button.id);
       if (Services.prefs.getBoolPref(button.visibilityswitch, true)) {
@@ -196,7 +196,7 @@ OptionsPanel.prototype = {
       return checkboxLabel;
     };
 
-    for (let button of toolbarButtons) {
+    for (const button of toolbarButtons) {
       if (!button.isTargetSupported(this.toolbox.target)) {
         continue;
       }
@@ -206,17 +206,17 @@ OptionsPanel.prototype = {
   },
 
   setupToolsList: function() {
-    let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
-    let additionalToolsBox = this.panelDoc.getElementById(
+    const defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
+    const additionalToolsBox = this.panelDoc.getElementById(
       "additional-tools-box");
-    let toolsNotSupportedLabel = this.panelDoc.getElementById(
+    const toolsNotSupportedLabel = this.panelDoc.getElementById(
       "tools-not-supported-label");
     let atleastOneToolNotSupported = false;
 
     // Signal tool registering/unregistering globally (for the tools registered
     // globally) and per toolbox (for the tools registered to a single toolbox).
     // This event handler expect this to be binded to the related checkbox element.
-    let onCheckboxClick = function(telemetry, tool) {
+    const onCheckboxClick = function(telemetry, tool) {
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(tool.visibilityswitch, this.checked);
 
@@ -227,14 +227,14 @@ OptionsPanel.prototype = {
       }
     };
 
-    let createToolCheckbox = (tool) => {
-      let checkboxLabel = this.panelDoc.createElement("label");
-      let checkboxInput = this.panelDoc.createElement("input");
+    const createToolCheckbox = (tool) => {
+      const checkboxLabel = this.panelDoc.createElement("label");
+      const checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
       checkboxInput.setAttribute("id", tool.id);
       checkboxInput.setAttribute("title", tool.tooltip || "");
 
-      let checkboxSpanLabel = this.panelDoc.createElement("span");
+      const checkboxSpanLabel = this.panelDoc.createElement("span");
       if (tool.isTargetSupported(this.target)) {
         checkboxSpanLabel.textContent = tool.label;
       } else {
@@ -258,33 +258,33 @@ OptionsPanel.prototype = {
     };
 
     // Clean up any existent default tools content.
-    for (let label of defaultToolsBox.querySelectorAll("label")) {
+    for (const label of defaultToolsBox.querySelectorAll("label")) {
       label.remove();
     }
 
     // Populating the default tools lists
-    let toggleableTools = gDevTools.getDefaultTools().filter(tool => {
+    const toggleableTools = gDevTools.getDefaultTools().filter(tool => {
       return tool.visibilityswitch && !tool.hiddenInOptions;
     });
 
-    for (let tool of toggleableTools) {
+    for (const tool of toggleableTools) {
       defaultToolsBox.appendChild(createToolCheckbox(tool));
     }
 
     // Clean up any existent additional tools content.
-    for (let label of additionalToolsBox.querySelectorAll("label")) {
+    for (const label of additionalToolsBox.querySelectorAll("label")) {
       label.remove();
     }
 
     // Populating the additional tools list.
     let atleastOneAddon = false;
-    for (let tool of gDevTools.getAdditionalTools()) {
+    for (const tool of gDevTools.getAdditionalTools()) {
       atleastOneAddon = true;
       additionalToolsBox.appendChild(createToolCheckbox(tool));
     }
 
     // Populating the additional tools that came from the installed WebExtension add-ons.
-    for (let {uuid, name, pref} of this.toolbox.listWebExtensions()) {
+    for (const {uuid, name, pref} of this.toolbox.listWebExtensions()) {
       atleastOneAddon = true;
 
       additionalToolsBox.appendChild(createToolCheckbox({
@@ -323,15 +323,15 @@ OptionsPanel.prototype = {
   },
 
   setupThemeList: function() {
-    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
-    let themeLabels = themeBox.querySelectorAll("label");
-    for (let label of themeLabels) {
+    const themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    const themeLabels = themeBox.querySelectorAll("label");
+    for (const label of themeLabels) {
       label.remove();
     }
 
-    let createThemeOption = theme => {
-      let inputLabel = this.panelDoc.createElement("label");
-      let inputRadio = this.panelDoc.createElement("input");
+    const createThemeOption = theme => {
+      const inputLabel = this.panelDoc.createElement("label");
+      const inputRadio = this.panelDoc.createElement("input");
       inputRadio.setAttribute("type", "radio");
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
@@ -340,7 +340,7 @@ OptionsPanel.prototype = {
           e.target.value);
       });
 
-      let inputSpanLabel = this.panelDoc.createElement("span");
+      const inputSpanLabel = this.panelDoc.createElement("span");
       inputSpanLabel.textContent = theme.label;
       inputLabel.appendChild(inputRadio);
       inputLabel.appendChild(inputSpanLabel);
@@ -349,8 +349,8 @@ OptionsPanel.prototype = {
     };
 
     // Populating the default theme list
-    let themes = gDevTools.getThemeDefinitionArray();
-    for (let theme of themes) {
+    const themes = gDevTools.getThemeDefinitionArray();
+    for (const theme of themes) {
       themeBox.appendChild(createThemeOption(theme));
     }
 
@@ -361,14 +361,14 @@ OptionsPanel.prototype = {
    * Add common preferences enabled only on Nightly.
    */
   setupNightlyOptions: function() {
-    let isNightly = AppConstants.NIGHTLY_BUILD;
+    const isNightly = AppConstants.NIGHTLY_BUILD;
     if (!isNightly) {
       return;
     }
 
     // Labels for these new buttons are nightly only and mostly intended for working on
     // devtools.
-    let prefDefinitions = [{
+    const prefDefinitions = [{
       pref: "devtools.debugger.new-debugger-frontend",
       label: L10N.getStr("toolbox.options.enableNewDebugger.label"),
       id: "devtools-new-debugger",
@@ -380,9 +380,9 @@ OptionsPanel.prototype = {
       parentId: "context-options"
     }];
 
-    let createPreferenceOption = ({pref, label, id}) => {
-      let inputLabel = this.panelDoc.createElement("label");
-      let checkbox = this.panelDoc.createElement("input");
+    const createPreferenceOption = ({pref, label, id}) => {
+      const inputLabel = this.panelDoc.createElement("label");
+      const checkbox = this.panelDoc.createElement("input");
       checkbox.setAttribute("type", "checkbox");
       if (GetPref(pref)) {
         checkbox.setAttribute("checked", "checked");
@@ -392,7 +392,7 @@ OptionsPanel.prototype = {
         SetPref(pref, e.target.checked);
       });
 
-      let inputSpanLabel = this.panelDoc.createElement("span");
+      const inputSpanLabel = this.panelDoc.createElement("span");
       inputSpanLabel.textContent = label;
       inputLabel.appendChild(checkbox);
       inputLabel.appendChild(inputSpanLabel);
@@ -400,32 +400,32 @@ OptionsPanel.prototype = {
       return inputLabel;
     };
 
-    for (let prefDefinition of prefDefinitions) {
-      let parent = this.panelDoc.getElementById(prefDefinition.parentId);
+    for (const prefDefinition of prefDefinitions) {
+      const parent = this.panelDoc.getElementById(prefDefinition.parentId);
       parent.appendChild(createPreferenceOption(prefDefinition));
       parent.removeAttribute("hidden");
     }
   },
 
   async populatePreferences() {
-    let prefCheckboxes = this.panelDoc.querySelectorAll(
+    const prefCheckboxes = this.panelDoc.querySelectorAll(
       "input[type=checkbox][data-pref]");
-    for (let prefCheckbox of prefCheckboxes) {
+    for (const prefCheckbox of prefCheckboxes) {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
       }
       prefCheckbox.addEventListener("change", function(e) {
-        let checkbox = e.target;
+        const checkbox = e.target;
         SetPref(checkbox.getAttribute("data-pref"), checkbox.checked);
       });
     }
     // Themes radio inputs are handled in setupThemeList
-    let prefRadiogroups = this.panelDoc.querySelectorAll(
+    const prefRadiogroups = this.panelDoc.querySelectorAll(
       ".radiogroup[data-pref]:not(#devtools-theme-box)");
-    for (let radioGroup of prefRadiogroups) {
-      let selectedValue = GetPref(radioGroup.getAttribute("data-pref"));
+    for (const radioGroup of prefRadiogroups) {
+      const selectedValue = GetPref(radioGroup.getAttribute("data-pref"));
 
-      for (let radioInput of radioGroup.querySelectorAll("input[type=radio]")) {
+      for (const radioInput of radioGroup.querySelectorAll("input[type=radio]")) {
         if (radioInput.getAttribute("value") == selectedValue) {
           radioInput.setAttribute("checked", true);
         }
@@ -436,12 +436,12 @@ OptionsPanel.prototype = {
         });
       }
     }
-    let prefSelects = this.panelDoc.querySelectorAll("select[data-pref]");
-    for (let prefSelect of prefSelects) {
-      let pref = GetPref(prefSelect.getAttribute("data-pref"));
-      let options = [...prefSelect.options];
+    const prefSelects = this.panelDoc.querySelectorAll("select[data-pref]");
+    for (const prefSelect of prefSelects) {
+      const pref = GetPref(prefSelect.getAttribute("data-pref"));
+      const options = [...prefSelect.options];
       options.some(function(option) {
-        let value = option.value;
+        const value = option.value;
         // non strict check to allow int values.
         if (value == pref) {
           prefSelect.selectedIndex = options.indexOf(option);
@@ -451,14 +451,14 @@ OptionsPanel.prototype = {
       });
 
       prefSelect.addEventListener("change", function(e) {
-        let select = e.target;
+        const select = e.target;
         SetPref(select.getAttribute("data-pref"),
           select.options[select.selectedIndex].value);
       });
     }
 
     if (this.target.activeTab) {
-      let [ response ] = await this.target.client.attachTab(this.target.activeTab._actor);
+      const [ response ] = await this.target.client.attachTab(this.target.activeTab._actor);
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
@@ -469,23 +469,23 @@ OptionsPanel.prototype = {
   },
 
   updateCurrentTheme: function() {
-    let currentTheme = GetPref("devtools.theme");
-    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
-    let themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
+    const currentTheme = GetPref("devtools.theme");
+    const themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    const themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
 
     if (themeRadioInput) {
       themeRadioInput.checked = true;
     } else {
       // If the current theme does not exist anymore, switch to light theme
-      let lightThemeInputRadio = themeBox.querySelector("[value=light]");
+      const lightThemeInputRadio = themeBox.querySelector("[value=light]");
       lightThemeInputRadio.checked = true;
     }
   },
 
   updateSourceMapPref: function() {
     const prefName = "devtools.source-map.client-service.enabled";
-    let enabled = GetPref(prefName);
-    let box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
+    const enabled = GetPref(prefName);
+    const box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
     box.checked = enabled;
   },
 
@@ -500,9 +500,9 @@ OptionsPanel.prototype = {
    *        The event sent by checking / unchecking the disable JS checkbox.
    */
   _disableJSClicked: function(event) {
-    let checked = event.target.checked;
+    const checked = event.target.checked;
 
-    let options = {
+    const options = {
       "javascriptEnabled": !checked
     };
 
@@ -514,7 +514,7 @@ OptionsPanel.prototype = {
       return this.destroyPromise;
     }
 
-    let deferred = defer();
+    const deferred = defer();
     this.destroyPromise = deferred.promise;
 
     this._removeListeners();
@@ -523,7 +523,7 @@ OptionsPanel.prototype = {
       this.disableJSNode.removeEventListener("click", this._disableJSClicked);
       // FF41+ automatically cleans up state in actor on disconnect
       if (!this.target.activeTab.traits.noTabReconfigureOnClose) {
-        let options = {
+        const options = {
           "javascriptEnabled": this._origJavascriptEnabled,
           "performReload": false
         };

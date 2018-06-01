@@ -56,16 +56,16 @@ exports.debugRemoteAddon = async function(addonForm, client) {
   // Close previous addon debugging toolbox.
   closeToolbox();
 
-  let options = {
+  const options = {
     form: addonForm,
     chrome: true,
     client,
     isTabActor: addonForm.isWebExtension
   };
 
-  let target = await TargetFactory.forRemoteTab(options);
+  const target = await TargetFactory.forRemoteTab(options);
 
-  let hostType = Toolbox.HostType.WINDOW;
+  const hostType = Toolbox.HostType.WINDOW;
   remoteAddonToolbox = await gDevTools.showToolbox(target, null, hostType);
   remoteAddonToolbox.once("destroy", () => {
     remoteAddonToolbox = null;
@@ -73,7 +73,7 @@ exports.debugRemoteAddon = async function(addonForm, client) {
 };
 
 exports.uninstallAddon = async function(addonID) {
-  let addon = await AddonManager.getAddonByID(addonID);
+  const addon = await AddonManager.getAddonByID(addonID);
   return addon && addon.uninstall();
 };
 

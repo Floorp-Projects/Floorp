@@ -23,11 +23,11 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  let propertyViews = view.propertyViews;
+  const {inspector, view} = await openComputedView();
+  const propertyViews = view.propertyViews;
 
   info("Select the #matches node");
-  let matchesNode = await getNodeFront("#matches", inspector);
+  const matchesNode = await getNodeFront("#matches", inspector);
   let onRefresh = inspector.once("computed-view-refreshed");
   await selectNode(matchesNode, inspector);
   await onRefresh;
@@ -36,7 +36,7 @@ add_task(async function() {
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");
 
   info("Select a comment node");
-  let commentNode = await inspector.walker.previousSibling(matchesNode);
+  const commentNode = await inspector.walker.previousSibling(matchesNode);
   await selectNode(commentNode, inspector);
 
   is(propertyViews.filter(p => p.visible).length, 0, "No properties displayed");
@@ -51,7 +51,7 @@ add_task(async function() {
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");
 
   info("Filter by 'will-not-match' and check the no-results message is displayed");
-  let searchField = view.searchField;
+  const searchField = view.searchField;
   searchField.focus();
   synthesizeKeys("will-not-match", view.styleWindow);
   await inspector.once("computed-view-refreshed");

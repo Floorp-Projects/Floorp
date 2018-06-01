@@ -12,21 +12,21 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { OverviewView } = panel.panelWin;
+  const { OverviewView } = panel.panelWin;
 
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
   await startRecording(panel);
 
-  let markersOverview = OverviewView.graphs.get("timeline");
-  let memoryGraph = OverviewView.graphs.get("memory");
-  let framerateGraph = OverviewView.graphs.get("framerate");
+  const markersOverview = OverviewView.graphs.get("timeline");
+  const memoryGraph = OverviewView.graphs.get("memory");
+  const framerateGraph = OverviewView.graphs.get("framerate");
 
   ok(markersOverview,
     "The markers graph should have been created now.");

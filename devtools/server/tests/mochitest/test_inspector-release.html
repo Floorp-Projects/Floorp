@@ -26,10 +26,10 @@ function assertOwnership() {
 }
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gClient = client;
@@ -72,7 +72,7 @@ addTest(function testReleaseSubtree() {
   }).then(() => {
     // Our ownership size should now be 53 fewer
     // (we forgot about #longlist + 26 children + 26 singleTextChild nodes)
-    let newOwnershipSize = assertOwnership();
+    const newOwnershipSize = assertOwnership();
     is(newOwnershipSize, originalOwnershipSize - 53,
       "Ownership tree should be lower");
     // Now verify that some nodes have gone away

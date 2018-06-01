@@ -11,11 +11,11 @@
 // AnimationPlayerActor.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
-  let node = await walker.querySelector(walker.rootNode, ".not-animated");
+  const node = await walker.querySelector(walker.rootNode, ".not-animated");
 
   info("Retrieve the animation player for the node");
   let players = await animations.getAnimationPlayersForNode(node);

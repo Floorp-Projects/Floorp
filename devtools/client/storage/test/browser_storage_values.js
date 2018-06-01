@@ -152,7 +152,7 @@ add_task(async function() {
 
   gUI.tree.expandAll();
 
-  for (let item of testCases) {
+  for (const item of testCases) {
     info("clicking for item " + item);
 
     if (Array.isArray(item[0])) {

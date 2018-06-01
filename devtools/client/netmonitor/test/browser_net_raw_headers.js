@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(POST_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -50,7 +50,7 @@ add_task(async function() {
    *        flag indicating whether button is pressed or not
    */
   function testRawHeaderButtonStyle(checked) {
-    let rawHeadersButton = getRawHeadersButton();
+    const rawHeadersButton = getRawHeadersButton();
 
     if (checked) {
       is(rawHeadersButton.classList.contains("checked"), true,
@@ -69,15 +69,15 @@ add_task(async function() {
    * Tests that raw headers were displayed correctly
    */
   function testShowRawHeaders(data) {
-    let requestHeaders = document
+    const requestHeaders = document
       .querySelectorAll(".raw-headers-container textarea")[0].value;
-    for (let header of data.requestHeaders.headers) {
+    for (const header of data.requestHeaders.headers) {
       ok(requestHeaders.includes(header.name + ": " + header.value),
         "textarea contains request headers");
     }
-    let responseHeaders = document
+    const responseHeaders = document
       .querySelectorAll(".raw-headers-container textarea")[1].value;
-    for (let header of data.responseHeaders.headers) {
+    for (const header of data.responseHeaders.headers) {
       ok(responseHeaders.includes(header.name + ": " + header.value),
         "textarea contains response headers");
     }

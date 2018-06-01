@@ -19,13 +19,13 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   const {FramerateFront} = require("devtools/shared/fronts/framerate");
 
-  let url = document.getElementById("testContent").href;
+  const url = document.getElementById("testContent").href;
   attachURL(url, onTab);
 
   function onTab(_, client, form, contentDoc) {
-    let contentWin = contentDoc.defaultView;
+    const contentWin = contentDoc.defaultView;
 
-    let front = FramerateFront(client, form);
+    const front = FramerateFront(client, form);
 
     front.startRecording().then(() => {
       window.setTimeout(() => {
@@ -48,13 +48,13 @@ window.onload = function() {
   }
 
   function onRecordingStopped(client, ticks) {
-    let diffs = [];
+    const diffs = [];
 
     info(`Got ${ticks.length} ticks.`);
 
     for (let i = 1; i < ticks.length; i++) {
-      let prev = ticks[i - 1];
-      let curr = ticks[i];
+      const prev = ticks[i - 1];
+      const curr = ticks[i];
       diffs.push(curr - prev);
       info(curr + " - " + (curr - prev));
     }
@@ -63,10 +63,10 @@ window.onload = function() {
     // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
     // ticks can still be less than 16ms even on one frame (usually following a very slow
     // frame), so use a low number (2) to be our threshold
-    let THRESHOLD = 2;
+    const THRESHOLD = 2;
     ok(ticks.length >= 20,
        "we should have atleast 20 ticks over the course of two seconds.");
-    let belowThreshold = diffs.filter(v => v <= THRESHOLD);
+    const belowThreshold = diffs.filter(v => v <= THRESHOLD);
     ok(belowThreshold.length <= 10,
        "we should have very few frames less than the threshold");
 

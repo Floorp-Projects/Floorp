@@ -27,14 +27,14 @@ var DetailsSubview = {
     OverviewView.on(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
     DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
 
-    let self = this;
-    let originalRenderFn = this.render;
-    let afterRenderFn = () => {
+    const self = this;
+    const originalRenderFn = this.render;
+    const afterRenderFn = () => {
       this._wasRendered = true;
     };
 
     this.render = async function(...args) {
-      let maybeRetval = await originalRenderFn.apply(self, args);
+      const maybeRetval = await originalRenderFn.apply(self, args);
       afterRenderFn();
       return maybeRetval;
     };
@@ -137,7 +137,7 @@ var DetailsSubview = {
       return;
     }
     if (DetailsView.isViewSelected(this)) {
-      let debounced = () => {
+      const debounced = () => {
         if (!this.shouldUpdateWhileMouseIsActive && OverviewView.isMouseActive) {
           // Don't render yet, while the selection is still being dragged.
           setNamedTimeout("range-change-debounce", this.rangeChangeDebounceTime,
@@ -172,7 +172,7 @@ var DetailsSubview = {
 
     // All detail views require a recording to be complete, so do not
     // attempt to render if recording is in progress or does not exist.
-    let recording = PerformanceController.getCurrentRecording();
+    const recording = PerformanceController.getCurrentRecording();
     if (!recording || !recording.isCompleted()) {
       return;
     }

@@ -9,8 +9,8 @@
 const TEST_URI = "data:text/html;charset=utf8,<h1>test console.dir</h1>";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
 
   logAllStoreChanges(hud);
 

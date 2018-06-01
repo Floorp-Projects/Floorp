@@ -9,7 +9,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await testResizingInIframe(inspector, boxmodel, testActor);
   await testReflowsAfterIframeDeletion(inspector, boxmodel, testActor);
@@ -22,11 +22,11 @@ async function testResizingInIframe(inspector, boxmodel, testActor) {
   await selectNodeInIframe2("div", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  const sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "400\u00D7200");
 
   info("Listening for box model view changes and modifying its size");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyleInIframe2(testActor, "div", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
@@ -40,7 +40,7 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
        "iframe");
 
   info("Deleting the iframe2");
-  let onInspectorUpdated = inspector.once("inspector-updated");
+  const onInspectorUpdated = inspector.once("inspector-updated");
   await removeIframe2(testActor);
   await onInspectorUpdated;
 
@@ -48,11 +48,11 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
   await selectNodeInIframe1("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  const sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100\u00D7100");
 
   info("Listening for box model view changes and modifying its size");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyleInIframe1(testActor, "p", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
@@ -62,15 +62,15 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
 }
 
 async function selectNodeInIframe1(selector, inspector) {
-  let iframe1 = await getNodeFront("iframe", inspector);
-  let node = await getNodeFrontInFrame(selector, iframe1, inspector);
+  const iframe1 = await getNodeFront("iframe", inspector);
+  const node = await getNodeFrontInFrame(selector, iframe1, inspector);
   await selectNode(node, inspector);
 }
 
 async function selectNodeInIframe2(selector, inspector) {
-  let iframe1 = await getNodeFront("iframe", inspector);
-  let iframe2 = await getNodeFrontInFrame("iframe", iframe1, inspector);
-  let node = await getNodeFrontInFrame(selector, iframe2, inspector);
+  const iframe1 = await getNodeFront("iframe", inspector);
+  const iframe2 = await getNodeFrontInFrame("iframe", iframe1, inspector);
+  const node = await getNodeFrontInFrame(selector, iframe2, inspector);
   await selectNode(node, inspector);
 }
 

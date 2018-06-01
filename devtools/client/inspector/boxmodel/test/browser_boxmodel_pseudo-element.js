@@ -99,10 +99,10 @@ const res1 = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
-  let node = await getNodeFront("div", inspector);
-  let children = await inspector.markup.walker.children(node);
-  let beforeElement = children.nodes[0];
+  const {inspector, boxmodel} = await openLayoutView();
+  const node = await getNodeFront("div", inspector);
+  const children = await inspector.markup.walker.children(node);
+  const beforeElement = children.nodes[0];
 
   await selectNode(beforeElement, inspector);
   await testInitialValues(inspector, boxmodel);
@@ -110,10 +110,10 @@ add_task(async function() {
 
 function testInitialValues(inspector, boxmodel) {
   info("Test that the initial values of the box model are correct");
-  let doc = boxmodel.document;
+  const doc = boxmodel.document;
 
   for (let i = 0; i < res1.length; i++) {
-    let elt = doc.querySelector(res1[i].selector);
+    const elt = doc.querySelector(res1[i].selector);
     is(elt.textContent, res1[i].value,
        res1[i].selector + " has the right value.");
   }

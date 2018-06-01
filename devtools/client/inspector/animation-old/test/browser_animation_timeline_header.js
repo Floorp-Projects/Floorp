@@ -23,36 +23,36 @@ add_task(async function() {
   // unexpected results. So, we set it wider to avoid this kind of edge case.
   await pushPref("devtools.toolsidebar-width.inspector", 350);
 
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let timeline = panel.animationsTimelineComponent;
-  let headerEl = timeline.timeHeaderEl;
+  const timeline = panel.animationsTimelineComponent;
+  const headerEl = timeline.timeHeaderEl;
 
   info("Find out how many time graduations should there be");
-  let width = headerEl.offsetWidth;
+  const width = headerEl.offsetWidth;
 
-  let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
-  let minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+  const animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
+  const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
 
   // Note that findOptimalTimeInterval is tested separately in xpcshell test
   // test_findOptimalTimeInterval.js, so we assume that it works here.
-  let interval = findOptimalTimeInterval(minTimeInterval);
-  let nb = Math.ceil(animationDuration / interval);
+  const interval = findOptimalTimeInterval(minTimeInterval);
+  const nb = Math.ceil(animationDuration / interval);
 
   is(headerEl.querySelectorAll(".header-item").length, nb,
      "The expected number of time ticks were found");
 
   info("Make sure graduations are evenly distributed and show the right times");
   [...headerEl.querySelectorAll(".time-tick")].forEach((tick, i) => {
-    let left = parseFloat(tick.style.left);
-    let expectedPos = i * interval * 100 / animationDuration;
+    const left = parseFloat(tick.style.left);
+    const expectedPos = i * interval * 100 / animationDuration;
     is(Math.round(left), Math.round(expectedPos),
       `Graduation ${i} is positioned correctly`);
 
     // Note that the distancetoRelativeTime and formatTime functions are tested
     // separately in xpcshell test test_timeScale.js, so we assume that they
     // work here.
-    let formattedTime = TimeScale.formatTime(
+    const formattedTime = TimeScale.formatTime(
       TimeScale.distanceToRelativeTime(expectedPos, width));
     is(tick.textContent, formattedTime,
       `Graduation ${i} has the right text content`);

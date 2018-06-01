@@ -22,10 +22,10 @@ let gInspector;
 let gDoc;
 
 addTest(function() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gDoc = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
     gInspector = InspectorFront(client, tab);
     runNextTest();
   });
@@ -51,7 +51,7 @@ addTest(function() {
 
 addTest(function() {
   info("Resolve a relative URL providing a context node");
-  let node = gDoc.querySelector(".big-horizontal");
+  const node = gDoc.querySelector(".big-horizontal");
   gInspector.resolveRelativeURL("test.png?id=4#wow", node).then(url => {
     is(url, "chrome://mochitests/content/chrome/devtools/server/tests/" +
             "mochitest/test.png?id=4#wow");
@@ -61,7 +61,7 @@ addTest(function() {
 
 addTest(function() {
   info("Resolve an absolute URL providing a context node");
-  let node = gDoc.querySelector(".big-horizontal");
+  const node = gDoc.querySelector(".big-horizontal");
   gInspector.resolveRelativeURL("chrome://mochitests/content/chrome/" +
     "devtools/server/", node).then(url => {
       is(url, "chrome://mochitests/content/chrome/devtools/server/");

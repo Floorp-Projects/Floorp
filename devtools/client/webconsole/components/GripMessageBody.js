@@ -56,7 +56,7 @@ function GripMessageBody(props) {
     styleObject = cleanupStyle(userProvidedStyle, serviceContainer.createElement);
   }
 
-  let objectInspectorProps = {
+  const objectInspectorProps = {
     autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
     mode,
     // TODO: we disable focus since the tabbing trail is a bit weird in the output (e.g.
@@ -94,7 +94,7 @@ const forbiddenValuesRegexs = [
 
 function cleanupStyle(userProvidedStyle, createElement) {
   // Use a dummy element to parse the style string.
-  let dummy = createElement("div");
+  const dummy = createElement("div");
   dummy.style = userProvidedStyle;
 
   // Return a style object as expected by React DOM components, e.g.

@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await testPacman(inspector, view);
   await testBoxy(inspector, view);
 });
@@ -19,7 +19,7 @@ add_task(async function() {
 async function testPacman(inspector, view) {
   info("Test content in the keyframes rule of #pacman");
 
-  let rules = await getKeyframeRules("#pacman", inspector, view);
+  const rules = await getKeyframeRules("#pacman", inspector, view);
 
   info("Test text properties for Keyframes #pacman");
 
@@ -55,7 +55,7 @@ async function testPacman(inspector, view) {
 async function testBoxy(inspector, view) {
   info("Test content in the keyframes rule of #boxy");
 
-  let rules = await getKeyframeRules("#boxy", inspector, view);
+  const rules = await getKeyframeRules("#boxy", inspector, view);
 
   info("Test text properties for Keyframes #boxy");
 
@@ -81,9 +81,9 @@ function convertTextPropsToString(textProps) {
 
 async function getKeyframeRules(selector, inspector, view) {
   await selectNode(selector, inspector);
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
 
-  let rules = {
+  const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
     keyframeRules: elementStyle.rules.filter(rule => rule.keyframes)
   };

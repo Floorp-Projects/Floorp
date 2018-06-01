@@ -10,14 +10,14 @@ const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  let {view} = await openRuleView();
+  const {view} = await openRuleView();
   await testPressingEscapeRevertsChanges(view);
 });
 
 async function testPressingEscapeRevertsChanges(view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
 
   await clickOnFilterSwatch(swatch, view);
   await setValueInFilterWidget("blur(2px)", view);
@@ -40,7 +40,7 @@ async function clickOnFilterSwatch(swatch, view) {
   // Clicking on a cssfilter swatch sets the current filter value in the tooltip
   // which, in turn, makes the FilterWidget emit an "updated" event that causes
   // the rule-view to refresh. So we must wait for the ruleview-changed event.
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   swatch.click();
   await onRuleViewChanged;
 }
@@ -48,8 +48,8 @@ async function clickOnFilterSwatch(swatch, view) {
 async function setValueInFilterWidget(value, view) {
   info("Setting the CSS filter value in the tooltip");
 
-  let filterTooltip = view.tooltips.getTooltip("filterEditor");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const filterTooltip = view.tooltips.getTooltip("filterEditor");
+  const onRuleViewChanged = view.once("ruleview-changed");
   filterTooltip.widget.setCssValue(value);
   await onRuleViewChanged;
 }
@@ -57,8 +57,8 @@ async function setValueInFilterWidget(value, view) {
 async function pressEscapeToCloseTooltip(view) {
   info("Pressing ESCAPE to close the tooltip");
 
-  let filterTooltip = view.tooltips.getTooltip("filterEditor");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const filterTooltip = view.tooltips.getTooltip("filterEditor");
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendKey("ESCAPE", filterTooltip.widget.styleWindow);
   await onRuleViewChanged;
 }

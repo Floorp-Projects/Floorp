@@ -74,7 +74,7 @@ function destroy() {
  * @return {Object} An object with boolean properties.
  */
 var getServerTraits = async function(target) {
-  let config = [
+  const config = [
     { name: "hasToggleAll", actor: "animations",
       method: "toggleAll" },
     { name: "hasToggleSeveral", actor: "animations",
@@ -101,8 +101,8 @@ var getServerTraits = async function(target) {
       method: "getAnimationTypes" },
   ];
 
-  let traits = {};
-  for (let {name, actor, method} of config) {
+  const traits = {};
+  for (const {name, actor, method} of config) {
     traits[name] = await target.actorHasMethod(actor, method);
   }
 
@@ -146,7 +146,7 @@ var AnimationsController = {
     this.onNewNodeFront = this.onNewNodeFront.bind(this);
     this.onAnimationMutations = this.onAnimationMutations.bind(this);
 
-    let target = gInspector.target;
+    const target = gInspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
 
     // Expose actor capabilities.
@@ -236,7 +236,7 @@ var AnimationsController = {
     this.mutationsDetectedWhileHidden = false;
 
     this.nodeFront = gInspector.selection.nodeFront;
-    let done = gInspector.updating("animationscontroller");
+    const done = gInspector.updating("animationscontroller");
 
     if (!gInspector.selection.isConnected() ||
         !gInspector.selection.isElementNode()) {
@@ -279,7 +279,7 @@ var AnimationsController = {
     } else {
       // Fall back to pausing/playing the players one by one, which is bound to
       // introduce some de-synchronization.
-      for (let player of this.animationPlayers) {
+      for (const player of this.animationPlayers) {
         if (shouldPause) {
           await player.pause();
         } else {
@@ -302,7 +302,7 @@ var AnimationsController = {
     } else {
       // Fall back to pausing and setting the current time on each player, one
       // by one, which is bound to introduce some de-synchronization.
-      for (let animation of this.animationPlayers) {
+      for (const animation of this.animationPlayers) {
         if (shouldPause) {
           await animation.pause();
         }
@@ -322,7 +322,7 @@ var AnimationsController = {
       await this.animationsFront.setPlaybackRates(this.animationPlayers, rate);
     } else if (this.traits.hasSetPlaybackRate) {
       // Otherwise, fall back to setting each rate individually.
-      for (let animation of this.animationPlayers) {
+      for (const animation of this.animationPlayers) {
         await animation.setPlaybackRate(rate);
       }
     }
@@ -351,13 +351,13 @@ var AnimationsController = {
   onAnimationMutations: function(changes) {
     // Insert new players into this.animationPlayers when new animations are
     // added.
-    for (let {type, player} of changes) {
+    for (const {type, player} of changes) {
       if (type === "added") {
         this.animationPlayers.push(player);
       }
 
       if (type === "removed") {
-        let index = this.animationPlayers.indexOf(player);
+        const index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
       }
     }
@@ -382,7 +382,7 @@ var AnimationsController = {
    */
   get documentCurrentTime() {
     let time = 0;
-    for (let {state} of this.animationPlayers) {
+    for (const {state} of this.animationPlayers) {
       if (!state.documentCurrentTime) {
         return false;
       }

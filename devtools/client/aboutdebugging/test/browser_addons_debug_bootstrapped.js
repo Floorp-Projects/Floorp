@@ -17,7 +17,7 @@ const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client
 
 add_task(async function() {
   await new Promise(resolve => {
-    let options = {"set": [
+    const options = {"set": [
       // Force enabling of addons debugging
       ["devtools.chrome.enabled", true],
       ["devtools.debugger.remote-enabled", true],
@@ -29,7 +29,7 @@ add_task(async function() {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = await openAboutDebugging("addons");
+  const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
   await installAddon({
     document,
@@ -38,16 +38,16 @@ add_task(async function() {
   });
 
   // Retrieve the DEBUG button for the addon
-  let names = getInstalledAddonNames(document);
-  let name = names.filter(element => element.textContent === ADDON_NAME)[0];
+  const names = getInstalledAddonNames(document);
+  const name = names.filter(element => element.textContent === ADDON_NAME)[0];
   ok(name, "Found the addon in the list");
-  let targetElement = name.parentNode.parentNode;
-  let debugBtn = targetElement.querySelector(".debug-button");
+  const targetElement = name.parentNode.parentNode;
+  const debugBtn = targetElement.querySelector(".debug-button");
   ok(debugBtn, "Found its debug button");
 
   // Wait for a notification sent by a script evaluated the test addon via
   // the web console.
-  let onCustomMessage = new Promise(done => {
+  const onCustomMessage = new Promise(done => {
     Services.obs.addObserver(function listener() {
       Services.obs.removeObserver(listener, "addon-console-works");
       done();
@@ -56,13 +56,13 @@ add_task(async function() {
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-  let testScript = function() {
+  const testScript = function() {
     /* eslint-disable no-undef */
     toolbox.selectTool("webconsole")
       .then(console => {
-        let { jsterm } = console.hud;
+        const { jsterm } = console.hud;
         return jsterm.execute("myBootstrapAddonFunction()");
       })
       .then(() => toolbox.destroy());
@@ -73,7 +73,7 @@ add_task(async function() {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });
 
-  let onToolboxClose = BrowserToolboxProcess.once("close");
+  const onToolboxClose = BrowserToolboxProcess.once("close");
 
   debugBtn.click();
 

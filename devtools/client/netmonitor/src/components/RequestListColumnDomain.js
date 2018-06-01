@@ -32,12 +32,12 @@ class RequestListColumnDomain extends Component {
   }
 
   render() {
-    let { item, onSecurityIconMouseDown } = this.props;
-    let { remoteAddress, remotePort, securityState,
+    const { item, onSecurityIconMouseDown } = this.props;
+    const { remoteAddress, remotePort, securityState,
       urlDetails: { host, isLocal } } = item;
-    let iconClassList = ["requests-security-state-icon"];
+    const iconClassList = ["requests-security-state-icon"];
     let iconTitle;
-    let title = host + (remoteAddress ?
+    const title = host + (remoteAddress ?
       ` (${getFormattedIPAndPort(remoteAddress, remotePort)})` : "");
 
     if (isLocal) {

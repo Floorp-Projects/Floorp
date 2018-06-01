@@ -20,17 +20,17 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector, toolbox } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { store } = inspector;
-  let cPicker = gridInspector.getSwatchColorPickerTooltip();
-  let swatch = doc.querySelector(".grid-color-swatch");
+  const { inspector, gridInspector, toolbox } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store } = inspector;
+  const cPicker = gridInspector.getSwatchColorPickerTooltip();
+  const swatch = doc.querySelector(".grid-color-swatch");
 
   info("Scrolling into view of the #grid color swatch.");
   swatch.scrollIntoView();
 
   info("Opening the color picker by clicking on the #grid color swatch.");
-  let onColorPickerReady = cPicker.once("ready");
+  const onColorPickerReady = cPicker.once("ready");
   swatch.click();
   await onColorPickerReady;
 

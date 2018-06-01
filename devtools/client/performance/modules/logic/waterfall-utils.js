@@ -28,14 +28,14 @@ function createParentNode(marker) {
  * @param array filter
  */
 function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
-  let {
+  const {
     getCurrentParentNode,
     pushNode,
     popParentNode
   } = createParentNodeFactory(rootNode);
 
   for (let i = 0, len = markersList.length; i < len; i++) {
-    let curr = markersList[i];
+    const curr = markersList[i];
 
     // If this marker type should not be displayed, just skip
     if (!MarkerBlueprintUtils.shouldDisplayMarker(curr, filter)) {
@@ -43,15 +43,15 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
     }
 
     let parentNode = getCurrentParentNode();
-    let blueprint = MarkerBlueprintUtils.getBlueprintFor(curr);
+    const blueprint = MarkerBlueprintUtils.getBlueprintFor(curr);
 
-    let nestable = "nestable" in blueprint ? blueprint.nestable : true;
-    let collapsible = "collapsible" in blueprint ? blueprint.collapsible : true;
+    const nestable = "nestable" in blueprint ? blueprint.nestable : true;
+    const collapsible = "collapsible" in blueprint ? blueprint.collapsible : true;
 
     let finalized = false;
 
     // Extend the marker with extra properties needed in the marker tree
-    let extendedProps = { index: i };
+    const extendedProps = { index: i };
     if (collapsible) {
       extendedProps.submarkers = [];
     }
@@ -109,8 +109,8 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
  * @return {object}
  */
 function createParentNodeFactory(root) {
-  let parentMarkers = [];
-  let factory = {
+  const parentMarkers = [];
+  const factory = {
     /**
      * Pops the most recent parent node off the stack, finalizing it.
      * Sets the `end` time based on the most recent child if not defined.
@@ -120,7 +120,7 @@ function createParentNodeFactory(root) {
         throw new Error("Cannot pop parent markers when none exist.");
       }
 
-      let lastParent = parentMarkers.pop();
+      const lastParent = parentMarkers.pop();
 
       // If this finished parent marker doesn't have an end time,
       // so probably a synthesized marker, use the last marker's end time.

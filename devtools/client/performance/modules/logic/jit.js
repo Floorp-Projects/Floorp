@@ -134,10 +134,10 @@ const OptimizationSite = function(id, opts) {
 
 const JITOptimizations = function(rawSites, stringTable) {
   // Build a histogram of optimization sites.
-  let sites = [];
+  const sites = [];
 
-  for (let rawSite of rawSites) {
-    let existingSite = sites.find((site) => site.data === rawSite);
+  for (const rawSite of rawSites) {
+    const existingSite = sites.find((site) => site.data === rawSite);
     if (existingSite) {
       existingSite.samples++;
     } else {
@@ -146,19 +146,19 @@ const JITOptimizations = function(rawSites, stringTable) {
   }
 
   // Inflate the optimization information.
-  for (let site of sites) {
-    let data = site.data;
-    let STRATEGY_SLOT = data.attempts.schema.strategy;
-    let OUTCOME_SLOT = data.attempts.schema.outcome;
-    let attempts = data.attempts.data.map((a) => {
+  for (const site of sites) {
+    const data = site.data;
+    const STRATEGY_SLOT = data.attempts.schema.strategy;
+    const OUTCOME_SLOT = data.attempts.schema.outcome;
+    const attempts = data.attempts.data.map((a) => {
       return {
         id: site.id,
         strategy: stringTable[a[STRATEGY_SLOT]],
         outcome: stringTable[a[OUTCOME_SLOT]]
       };
     });
-    let types = data.types.map((t) => {
-      let typeset = maybeTypeset(t.typeset, stringTable);
+    const types = data.types.map((t) => {
+      const typeset = maybeTypeset(t.typeset, stringTable);
       if (typeset) {
         typeset.forEach(ts => {
           ts.id = site.id;
@@ -221,8 +221,8 @@ function isSuccessfulOutcome(outcome) {
  */
 
 function hasSuccessfulOutcome(optimizationSite) {
-  let attempts = optimizationSite.data.attempts;
-  let lastOutcome = attempts[attempts.length - 1].outcome;
+  const attempts = optimizationSite.data.attempts;
+  const lastOutcome = attempts[attempts.length - 1].outcome;
   return isSuccessfulOutcome(lastOutcome);
 }
 
@@ -267,9 +267,9 @@ const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
  * @return {?Array<object>}
  */
 function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
-  let tierData = frameNode.getTierData();
-  let stringTable = frameNode._stringTable;
-  let output = [];
+  const tierData = frameNode.getTierData();
+  const stringTable = frameNode._stringTable;
+  const output = [];
   let implEnum;
 
   let tierDataIndex = 0;
@@ -285,13 +285,13 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
 
   // Iterate one after the samples, so we can finalize the last bucket
   for (let i = 0; i <= sampleTimes.length; i++) {
-    let sampleTime = sampleTimes[i];
+    const sampleTime = sampleTimes[i];
 
     // If this sample is in the next bucket, or we're done
     // checking sampleTimes and on the last iteration, finalize previous bucket
     if (sampleTime >= (currentBucketStartTime + bucketSize) ||
         i >= sampleTimes.length) {
-      let dataPoint = {};
+      const dataPoint = {};
       dataPoint.values = [];
       dataPoint.delta = currentBucketStartTime;
 
@@ -304,7 +304,7 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
       // Push the values from the previous bucket to the same time
       // as the current bucket so we get a straight vertical line.
       if (previousValues) {
-        let data = Object.create(null);
+        const data = Object.create(null);
         data.values = previousValues;
         data.delta = currentBucketStartTime;
         output.push(data);

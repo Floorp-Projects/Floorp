@@ -64,7 +64,7 @@ this.Match = (function() {
     }
   };
 
-  let quote = uneval;
+  const quote = uneval;
 
   function MatchError(msg) {
     this.message = msg;
@@ -140,7 +140,7 @@ this.Match = (function() {
       throw new MatchError("expected object, got " + quote(act));
     }
 
-    for (let key in exp) {
+    for (const key in exp) {
       if (!(key in act)) {
         throw new MatchError("expected property " + quote(key)
           + " not found in " + quote(act));
@@ -167,7 +167,7 @@ this.Match = (function() {
       throw new MatchError("expected array-like object, got " + quote(act));
     }
 
-    let length = exp.length;
+    const length = exp.length;
     if (act.length !== exp.length) {
       throw new MatchError("expected array-like object of length "
         + length + ", got " + quote(act));

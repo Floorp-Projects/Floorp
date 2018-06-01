@@ -36,8 +36,9 @@ ArrayBufferActor.prototype = {
   },
 
   onSlice({start, count}) {
-    let slice = new Uint8Array(this.buffer, start, count);
-    let parts = [], offset = 0;
+    const slice = new Uint8Array(this.buffer, start, count);
+    const parts = [];
+    let offset = 0;
     const PortionSize = 0x6000; // keep it divisible by 3 for btoa() and join()
     while (offset + PortionSize < count) {
       parts.push(btoa(
@@ -73,7 +74,7 @@ function arrayBufferGrip(buffer, pool) {
     return pool.arrayBufferActors.get(buffer).grip();
   }
 
-  let actor = new ArrayBufferActor(buffer);
+  const actor = new ArrayBufferActor(buffer);
   pool.addActor(actor);
   pool.arrayBufferActors.set(buffer, actor);
   return actor.grip();

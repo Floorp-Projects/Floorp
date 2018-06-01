@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
   info("Select a non animated node");
   await selectNodeAndWaitForAnimations(".still", inspector);
@@ -18,7 +18,7 @@ add_task(async function() {
   assertAnimationsDisplayed(panel, 0);
 
   info("Start an animation on the node");
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onRendered = waitForAnimationTimelineRendering(panel);
   await changeElementAndWait({
     selector: ".still",
     attributeName: "class",
@@ -41,8 +41,8 @@ add_task(async function() {
 });
 
 async function changeElementAndWait(options, panel, inspector) {
-  let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  let onInspectorUpdated = inspector.once("inspector-updated");
+  const onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  const onInspectorUpdated = inspector.once("inspector-updated");
 
   await executeInContent("devtools:test:setAttribute", options);
 

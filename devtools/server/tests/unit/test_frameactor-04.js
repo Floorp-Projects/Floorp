@@ -52,20 +52,20 @@ function test_frame_slice() {
     return;
   }
 
-  let test = gSliceTests.shift();
+  const test = gSliceTests.shift();
   gThreadClient.getFrames(test.start, test.count, function(response) {
-    let testFrames = gFrames.slice(test.start,
+    const testFrames = gFrames.slice(test.start,
                                    test.count ? test.start + test.count : undefined);
     Assert.equal(testFrames.length, response.frames.length);
     for (let i = 0; i < testFrames.length; i++) {
-      let expected = testFrames[i];
-      let actual = response.frames[i];
+      const expected = testFrames[i];
+      const actual = response.frames[i];
 
       if (test.resetActors) {
         expected.actor = actual.actor;
       }
 
-      for (let key of ["type", "callee-name"]) {
+      for (const key of ["type", "callee-name"]) {
         Assert.equal(expected[key] || undefined, actual[key]);
       }
     }

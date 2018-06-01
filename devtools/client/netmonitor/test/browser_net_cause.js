@@ -87,22 +87,22 @@ add_task(async function() {
   // all the requests the page is making, not only the XHRs.
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
 
-  let { document, store, windowRequire, connector } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire, connector } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
+  const wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
   tab.linkedBrowser.loadURI(CAUSE_URL);
   await wait;
 
-  let requests = getSortedRequests(store.getState());
+  const requests = getSortedRequests(store.getState());
   await Promise.all(requests.map(requestItem =>
     connector.requestData(requestItem.id, "stackTrace")));
 
@@ -110,9 +110,9 @@ add_task(async function() {
     "All the page events should be recorded.");
 
   EXPECTED_REQUESTS.forEach(async (spec, i) => {
-    let { method, url, causeType, causeUri, stack } = spec;
+    const { method, url, causeType, causeUri, stack } = spec;
 
-    let requestItem = getSortedRequests(store.getState()).get(i);
+    const requestItem = getSortedRequests(store.getState()).get(i);
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
@@ -122,8 +122,8 @@ add_task(async function() {
       { cause: { type: causeType, loadingDocumentUri: causeUri } }
     );
 
-    let stacktrace = requestItem.stacktrace;
-    let stackLen = stacktrace ? stacktrace.length : 0;
+    const stacktrace = requestItem.stacktrace;
+    const stackLen = stacktrace ? stacktrace.length : 0;
 
     await waitUntil(() => !!requestItem.stacktrace);
 
@@ -153,7 +153,7 @@ add_task(async function() {
   // Sort the requests by cause and check the order
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-cause-button"));
-  let expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
+  const expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
   expectedOrder.forEach((expectedCause, i) => {
     const cause = getSortedRequests(store.getState()).get(i).cause.type;
     is(cause, expectedCause, `The request #${i} has the expected cause after sorting`);

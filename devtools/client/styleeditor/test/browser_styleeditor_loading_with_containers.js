@@ -24,9 +24,9 @@ const EXPECTED_SHEETS = [
 
 add_task(async function() {
   // Using the personal container.
-  let userContextId = 1;
-  let { tab } = await openTabInUserContext(TESTCASE_URI, userContextId);
-  let { ui } = await openStyleEditor(tab);
+  const userContextId = 1;
+  const { tab } = await openTabInUserContext(TESTCASE_URI, userContextId);
+  const { ui } = await openStyleEditor(tab);
 
   is(ui.editors.length, 2, "The UI contains two style sheets.");
   checkSheet(ui.editors[0], EXPECTED_SHEETS[0]);
@@ -35,13 +35,13 @@ add_task(async function() {
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  const tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
   tab.ownerDocument.defaultView.focus();
 
-  let browser = gBrowser.getBrowserForTab(tab);
+  const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
   return {tab, browser};
 }
@@ -50,12 +50,12 @@ function checkSheet(editor, expected) {
   is(editor.styleSheet.styleSheetIndex, expected.sheetIndex,
     "Style sheet has correct index.");
 
-  let summary = editor.summary;
-  let name = summary.querySelector(".stylesheet-name > label")
+  const summary = editor.summary;
+  const name = summary.querySelector(".stylesheet-name > label")
                     .getAttribute("value");
   ok(expected.name.test(name), "The name '" + name + "' is correct.");
 
-  let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
+  const ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), expected.rules, "the rule count is correct");
 
   is(summary.classList.contains("splitview-active"), expected.active,

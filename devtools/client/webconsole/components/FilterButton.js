@@ -18,7 +18,7 @@ FilterButton.propTypes = {
 
 function FilterButton(props) {
   const {active, label, filterKey, dispatch} = props;
-  let classList = [
+  const classList = [
     "devtools-button",
     filterKey,
   ];

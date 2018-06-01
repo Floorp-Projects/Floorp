@@ -31,7 +31,7 @@ class GridDisplaySettings extends PureComponent {
   }
 
   onShowGridAreasCheckboxClick() {
-    let {
+    const {
       highlighterSettings,
       onToggleShowGridAreas,
     } = this.props;
@@ -40,7 +40,7 @@ class GridDisplaySettings extends PureComponent {
   }
 
   onShowGridLineNumbersCheckboxClick() {
-    let {
+    const {
       highlighterSettings,
       onToggleShowGridLineNumbers,
     } = this.props;
@@ -49,7 +49,7 @@ class GridDisplaySettings extends PureComponent {
   }
 
   onShowInfiniteLinesCheckboxClick() {
-    let {
+    const {
       highlighterSettings,
       onToggleShowInfiniteLines,
     } = this.props;
@@ -58,7 +58,7 @@ class GridDisplaySettings extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       highlighterSettings,
     } = this.props;
 

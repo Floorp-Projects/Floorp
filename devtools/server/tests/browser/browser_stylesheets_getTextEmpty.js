@@ -16,24 +16,24 @@ add_task(async function() {
 
   info("Initialising the debugger server and client.");
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
 
   info("Attaching to the active tab.");
   await client.attachTab(form.actor);
 
-  let front = StyleSheetsFront(client, form);
+  const front = StyleSheetsFront(client, form);
   ok(front, "The StyleSheetsFront was created.");
 
-  let sheets = await front.getStyleSheets();
+  const sheets = await front.getStyleSheets();
   ok(sheets, "getStyleSheets() succeeded");
   is(sheets.length, 1,
      "getStyleSheets() returned the correct number of sheets");
 
-  let sheet = sheets[0];
+  const sheet = sheets[0];
   await sheet.update("", false);
-  let longStr = await sheet.getText();
-  let source = await longStr.string();
+  const longStr = await sheet.getText();
+  const source = await longStr.string();
   is(source, "", "text is empty");
 
   await client.close();

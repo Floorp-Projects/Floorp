@@ -31,7 +31,7 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#test", inspector);
 
   await testMarginIncrements(view);
@@ -48,8 +48,8 @@ add_task(async function() {
 async function testMarginIncrements(view) {
   info("Testing keyboard increments on the margin property");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let marginPropEditor = idRuleEditor.rule.textProps[0].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const marginPropEditor = idRuleEditor.rule.textProps[0].editor;
 
   await runIncrementTest(marginPropEditor, view, {
     1: { ...getSmallIncrementKey(), start: "0px", end: "0.1px", selectAll: true},
@@ -70,8 +70,8 @@ async function testMarginIncrements(view) {
 async function testVariousUnitIncrements(view) {
   info("Testing keyboard increments on values with various units");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
 
   await runIncrementTest(paddingPropEditor, view, {
     1: {start: "0px", end: "1px", selectAll: true},
@@ -91,8 +91,8 @@ async function testVariousUnitIncrements(view) {
 async function testHexIncrements(view) {
   info("Testing keyboard increments with hex colors");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
 
   await runIncrementTest(hexColorPropEditor, view, {
     1: {start: "#CCCCCC", end: "#CDCDCD", selectAll: true},
@@ -108,8 +108,8 @@ async function testHexIncrements(view) {
 async function testAlphaHexIncrements(view) {
   info("Testing keyboard increments with alpha hex colors");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
 
   await runIncrementTest(hexColorPropEditor, view, {
     1: {start: "#CCCCCCAA", end: "#CDCDCDAB", selectAll: true},
@@ -125,8 +125,8 @@ async function testAlphaHexIncrements(view) {
 async function testRgbIncrements(view) {
   info("Testing keyboard increments with rgb colors");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let rgbColorPropEditor = idRuleEditor.rule.textProps[3].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const rgbColorPropEditor = idRuleEditor.rule.textProps[3].editor;
 
   await runIncrementTest(rgbColorPropEditor, view, {
     1: {start: "rgb(0,0,0)", end: "rgb(0,1,0)", selection: [6, 7]},
@@ -144,8 +144,8 @@ async function testRgbIncrements(view) {
 async function testShorthandIncrements(view) {
   info("Testing keyboard increments within shorthand values");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
 
   await runIncrementTest(paddingPropEditor, view, {
     1: {start: "0px 0px 0px 0px", end: "0px 1px 0px 0px", selection: [4, 7]},
@@ -170,8 +170,8 @@ async function testShorthandIncrements(view) {
 async function testOddCases(view) {
   info("Testing some more odd cases");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let marginPropEditor = idRuleEditor.rule.textProps[0].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const marginPropEditor = idRuleEditor.rule.textProps[0].editor;
 
   await runIncrementTest(marginPropEditor, view, {
     1: {start: "98.7%", end: "99.7%", selection: [3, 3]},
@@ -200,8 +200,8 @@ async function testOddCases(view) {
 async function testZeroValueIncrements(view) {
   info("Testing a valid unit is added when incrementing from 0");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let backgroundPropEditor = idRuleEditor.rule.textProps[4].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const backgroundPropEditor = idRuleEditor.rule.textProps[4].editor;
   await runIncrementTest(backgroundPropEditor, view, {
     1: { start: "url(test-0.png) no-repeat 0 0",
          end: "url(test-0.png) no-repeat 1px 0", selection: [26, 26] },
@@ -219,14 +219,14 @@ async function testZeroValueIncrements(view) {
          end: "linear-gradient(1deg, red 0, blue 1px)", selection: [35, 35] },
   });
 
-  let transitionPropEditor = idRuleEditor.rule.textProps[5].editor;
+  const transitionPropEditor = idRuleEditor.rule.textProps[5].editor;
   await runIncrementTest(transitionPropEditor, view, {
     1: { start: "all 0 ease-out", end: "all 1s ease-out", selection: [5, 5] },
     2: { start: "margin 4s, color 0",
          end: "margin 4s, color 1s", selection: [18, 18] },
   });
 
-  let zIndexPropEditor = idRuleEditor.rule.textProps[6].editor;
+  const zIndexPropEditor = idRuleEditor.rule.textProps[6].editor;
   await runIncrementTest(zIndexPropEditor, view, {
     1: {start: "0", end: "1", selection: [1, 1]},
   });
@@ -235,8 +235,8 @@ async function testZeroValueIncrements(view) {
 async function testOpacityIncrements(view) {
   info("Testing keyboard increments on the opacity property");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let opacityPropEditor = idRuleEditor.rule.textProps[7].editor;
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const opacityPropEditor = idRuleEditor.rule.textProps[7].editor;
 
   await runIncrementTest(opacityPropEditor, view, {
     1: {...getSmallIncrementKey(), start: "0.5", end: "0.51", selectAll: true},
@@ -256,15 +256,15 @@ async function testOpacityIncrements(view) {
 
 async function runIncrementTest(propertyEditor, view, tests) {
   propertyEditor.valueSpan.scrollIntoView();
-  let editor = await focusEditableField(view, propertyEditor.valueSpan);
+  const editor = await focusEditableField(view, propertyEditor.valueSpan);
 
-  for (let test in tests) {
+  for (const test in tests) {
     await testIncrement(editor, tests[test], view, propertyEditor);
   }
 
   // Blur the field to put back the UI in its initial state (and avoid pending
   // requests when the test ends).
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   view.debounce.flush();
   await onRuleViewChanged;
@@ -272,7 +272,7 @@ async function runIncrementTest(propertyEditor, view, tests) {
 
 async function testIncrement(editor, options, view) {
   editor.input.value = options.start;
-  let input = editor.input;
+  const input = editor.input;
 
   if (options.selectAll) {
     input.select();
@@ -282,8 +282,8 @@ async function testIncrement(editor, options, view) {
 
   is(input.value, options.start, "Value initialized at " + options.start);
 
-  let onRuleViewChanged = view.once("ruleview-changed");
-  let onKeyUp = once(input, "keyup");
+  const onRuleViewChanged = view.once("ruleview-changed");
+  const onKeyUp = once(input, "keyup");
 
   let key;
   key = options.down ? "VK_DOWN" : "VK_UP";

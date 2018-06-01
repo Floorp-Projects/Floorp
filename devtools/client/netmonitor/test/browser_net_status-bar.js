@@ -7,26 +7,26 @@
  * Test whether the StatusBar properly renders expected labels.
  */
 add_task(async () => {
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   await SpecialPowers.pushPrefEnv({ "set": [["privacy.reduceTimerPrecision", false]]});
 
-  let requestsDone = waitForAllRequestsFinished(monitor);
-  let markersDone = waitForTimelineMarkers(monitor);
+  const requestsDone = waitForAllRequestsFinished(monitor);
+  const markersDone = waitForTimelineMarkers(monitor);
   tab.linkedBrowser.reload();
   await Promise.all([requestsDone, markersDone]);
 
-  let statusBar = document.querySelector(".devtools-toolbar-bottom");
-  let requestCount = statusBar.querySelector(".requests-list-network-summary-count");
-  let size = statusBar.querySelector(".requests-list-network-summary-transfer");
-  let onContentLoad = statusBar.querySelector(".dom-content-loaded");
-  let onLoad = statusBar.querySelector(".load");
+  const statusBar = document.querySelector(".devtools-toolbar-bottom");
+  const requestCount = statusBar.querySelector(".requests-list-network-summary-count");
+  const size = statusBar.querySelector(".requests-list-network-summary-transfer");
+  const onContentLoad = statusBar.querySelector(".dom-content-loaded");
+  const onLoad = statusBar.querySelector(".load");
 
   // All expected labels should be there
   ok(requestCount, "There must be request count label");

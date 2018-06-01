@@ -24,14 +24,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testEditableFieldFocus(inspector, view, "VK_TAB", { shiftKey: true });
 });
 
 async function testEditableFieldFocus(inspector, view, commitKey, options = {}) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "Focus should be in the 'div' rule selector");
 
@@ -41,8 +41,8 @@ async function testEditableFieldFocus(inspector, view, commitKey, options = {}) 
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 
-  for (let textProp of ruleEditor.rule.textProps.slice(0).reverse()) {
-    let propEditor = textProp.editor;
+  for (const textProp of ruleEditor.rule.textProps.slice(0).reverse()) {
+    const propEditor = textProp.editor;
 
     await focusNextField(view, ruleEditor, commitKey, options);
     await assertEditor(view, propEditor.valueSpan,
@@ -67,18 +67,18 @@ async function testEditableFieldFocus(inspector, view, commitKey, options = {}) 
 }
 
 async function focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options) {
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   await focusNextField(view, ruleEditor, commitKey, options);
   await onRuleViewChanged;
 }
 
 async function focusNextField(view, ruleEditor, commitKey, options) {
-  let onFocus = once(ruleEditor.element, "focus", true);
+  const onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey(commitKey, options, view.styleWindow);
   await onFocus;
 }
 
 function assertEditor(view, element, message) {
-  let editor = inplaceEditor(view.styleDocument.activeElement);
+  const editor = inplaceEditor(view.styleDocument.activeElement);
   is(inplaceEditor(element), editor, message);
 }

@@ -16,14 +16,14 @@ add_task(async function() {
   // Set the loglimit to 1 so message gets pruned as soon as another message is displayed.
   await pushPref("devtools.hud.loglimit", 1);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = await waitFor(() => findMessage(hud, "Object"));
-  let object = message.querySelector(".object-inspector .objectBox-object");
+  const message = await waitFor(() => findMessage(hud, "Object"));
+  const object = message.querySelector(".object-inspector .objectBox-object");
 
   const sidebar = await showSidebarWithContextMenu(hud, object, true);
 
-  let oi = sidebar.querySelector(".object-inspector");
+  const oi = sidebar.querySelector(".object-inspector");
   let oiNodes = oi.querySelectorAll(".node");
   if (oiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
@@ -68,11 +68,11 @@ add_task(async function() {
 });
 
 async function showSidebarWithContextMenu(hud, node) {
-  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  let onSidebarShown = waitFor(() => wrapper.querySelector(".sidebar"));
+  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  const onSidebarShown = waitFor(() => wrapper.querySelector(".sidebar"));
 
-  let contextMenu = await openContextMenu(hud, node);
-  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  const contextMenu = await openContextMenu(hud, node);
+  const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
   openInSidebar.click();
   await onSidebarShown;
   await hideContextMenu(hud);

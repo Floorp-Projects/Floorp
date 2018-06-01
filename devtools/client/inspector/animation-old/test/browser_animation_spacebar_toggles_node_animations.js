@@ -17,8 +17,8 @@ add_task(async function() {
   requestLongerTimeout(2);
 
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, window} = await openAnimationInspector();
-  let {playTimelineButtonEl} = panel;
+  const {panel, window} = await openAnimationInspector();
+  const {playTimelineButtonEl} = panel;
 
   // ensure the focus is on the animation panel
   window.focus();

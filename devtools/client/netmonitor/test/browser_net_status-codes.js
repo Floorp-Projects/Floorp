@@ -8,22 +8,22 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = await initNetMonitor(STATUS_CODES_URL);
+  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL);
 
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let requestItems = [];
+  const requestItems = [];
 
   const REQUEST_DATA = [
     {
@@ -113,18 +113,18 @@ add_task(async function() {
    * request list items to requestItems array.
    */
   async function verifyRequests() {
-    let requestListItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestListItems) {
+    const requestListItems = document.querySelectorAll(".request-list-item");
+    for (const requestItem of requestListItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".status-code");
+      const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
 
     info("Verifying requests contain correct information.");
     let index = 0;
-    for (let request of REQUEST_DATA) {
-      let item = getSortedRequests(store.getState()).get(index);
+    for (const request of REQUEST_DATA) {
+      const item = getSortedRequests(store.getState()).get(index);
       requestItems[index] = item;
 
       info("Verifying request #" + index);
@@ -154,7 +154,7 @@ add_task(async function() {
    */
   async function testTab(tabIdx, testFn) {
     let counter = 0;
-    for (let item of REQUEST_DATA) {
+    for (const item of REQUEST_DATA) {
       info("Testing tab #" + tabIdx + " to update with request #" + counter);
       await testFn(item, counter);
 
@@ -172,10 +172,10 @@ add_task(async function() {
     await waitUntil(() => document.querySelector(
       "#headers-panel .tabpanel-summary-value.textbox-input"));
 
-    let panel = document.querySelector("#headers-panel");
-    let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
-    let { method, correctUri, details: { status, statusText } } = data;
-    let statusCode = panel.querySelector(".status-code");
+    const panel = document.querySelector("#headers-panel");
+    const summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
+    const { method, correctUri, details: { status, statusText } } = data;
+    const statusCode = panel.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
@@ -197,10 +197,10 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "click" },
       document.querySelector("#params-tab"));
 
-    let panel = document.querySelector("#params-panel");
+    const panel = document.querySelector("#params-panel");
     // Bug 1414981 - Request URL should not show #hash
-    let statusParamValue = data.uri.split("=").pop().split("#")[0];
-    let treeSections = panel.querySelectorAll(".tree-section");
+    const statusParamValue = data.uri.split("=").pop().split("#")[0];
+    const treeSections = panel.querySelectorAll(".tree-section");
 
     is(treeSections.length, 1,
       "There should be 1 param section displayed in this panel.");
@@ -209,9 +209,9 @@ add_task(async function() {
     is(panel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this panel.");
 
-    let labels = panel
+    const labels = panel
       .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = panel
+    const values = panel
       .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
     is(treeSections[0].querySelector(".treeLabel").textContent,

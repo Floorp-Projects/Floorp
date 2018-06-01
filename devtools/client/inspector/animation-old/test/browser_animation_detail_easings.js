@@ -66,7 +66,7 @@ add_task(async function() {
       continue;
     }
 
-    for (let testProperty in testcase) {
+    for (const testProperty in testcase) {
       const testIdentity = `"${ testProperty }" of "${ state.name }"`;
       info(`Test for ${ testIdentity }`);
 

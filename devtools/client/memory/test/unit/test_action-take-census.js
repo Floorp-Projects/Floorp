@@ -16,16 +16,16 @@ var { changeView } = require("devtools/client/memory/actions/view");
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 1;
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
 
   store.dispatch(changeView(viewState.CENSUS));
 
   store.dispatch(actions.takeSnapshot(front));
   await waitUntilState(store, () => {
-    let snapshots = store.getState().snapshots;
+    const snapshots = store.getState().snapshots;
     return snapshots.length === 1 && snapshots[0].state === states.SAVED;
   });
 

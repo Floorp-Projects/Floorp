@@ -30,12 +30,12 @@ class LayoutView {
       return;
     }
 
-    let {
+    const {
       setSelectedNode,
       onShowBoxModelHighlighterForNode,
     } = this.inspector.getCommonComponentProps();
 
-    let {
+    const {
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -44,12 +44,12 @@ class LayoutView {
 
     this.flexboxInspector = new FlexboxInspector(this.inspector,
       this.inspector.panelWin);
-    let {
+    const {
       onToggleFlexboxHighlighter,
     } = this.flexboxInspector.getComponentProps();
 
     this.gridInspector = new GridInspector(this.inspector, this.inspector.panelWin);
-    let {
+    const {
       getSwatchColorPickerTooltip,
       onSetGridOverlayColor,
       onShowGridOutlineHighlight,
@@ -59,7 +59,7 @@ class LayoutView {
       onToggleShowInfiniteLines,
     } = this.gridInspector.getComponentProps();
 
-    let layoutApp = LayoutApp({
+    const layoutApp = LayoutApp({
       getSwatchColorPickerTooltip,
       setSelectedNode,
       /**
@@ -81,7 +81,7 @@ class LayoutView {
       onToggleShowInfiniteLines,
     });
 
-    let provider = createElement(Provider, {
+    const provider = createElement(Provider, {
       id: "layoutview",
       key: "layoutview",
       store: this.store,

@@ -11,18 +11,18 @@
 add_task(async function() {
   const TEST_URI = "data:text/html;charset=utf8,<title>bug871156</title>\n" +
                    "<p>hello world";
-  let firstTab = gBrowser.selectedTab;
+  const firstTab = gBrowser.selectedTab;
 
   await pushPref("toolkit.cosmeticAnimations.enabled", false);
 
   let hud = await openNewTabAndConsole(TEST_URI);
 
-  let tabClosed = defer();
-  let toolboxDestroyed = defer();
-  let tabSelected = defer();
+  const tabClosed = defer();
+  const toolboxDestroyed = defer();
+  const tabSelected = defer();
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   gBrowser.tabContainer.addEventListener("TabClose", function() {
     info("tab closed");
@@ -53,7 +53,7 @@ add_task(async function() {
   hud = await HUDService.toggleBrowserConsole();
   ok(hud, "Browser Console opened");
 
-  let deferred = defer();
+  const deferred = defer();
 
   Services.obs.addObserver(function onDestroy() {
     Services.obs.removeObserver(onDestroy, "web-console-destroyed");

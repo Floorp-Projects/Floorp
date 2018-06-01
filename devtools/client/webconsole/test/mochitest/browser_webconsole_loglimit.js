@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
 
 add_task(async function() {
   await pushPref("devtools.hud.loglimit", 140);
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   let onMessage = waitForMessage(hud, "test message [149]");

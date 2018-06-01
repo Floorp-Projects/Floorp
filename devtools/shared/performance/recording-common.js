@@ -112,17 +112,17 @@ exports.PerformanceRecordingCommon = {
   },
 
   getAllData: function() {
-    let label = this.getLabel();
-    let duration = this.getDuration();
-    let markers = this.getMarkers();
-    let frames = this.getFrames();
-    let memory = this.getMemory();
-    let ticks = this.getTicks();
-    let allocations = this.getAllocations();
-    let profile = this.getProfile();
-    let configuration = this.getConfiguration();
-    let systemHost = this.getHostSystemInfo();
-    let systemClient = this.getClientSystemInfo();
+    const label = this.getLabel();
+    const duration = this.getDuration();
+    const markers = this.getMarkers();
+    const frames = this.getFrames();
+    const memory = this.getMemory();
+    const ticks = this.getTicks();
+    const allocations = this.getAllocations();
+    const profile = this.getProfile();
+    const configuration = this.getConfiguration();
+    const systemHost = this.getHostSystemInfo();
+    const systemClient = this.getClientSystemInfo();
 
     return {
       label,

@@ -67,7 +67,7 @@ class Description extends Component {
   }
 
   onEnable() {
-    let { accessibility, dispatch } = this.props;
+    const { accessibility, dispatch } = this.props;
     this.setState({ enabling: true });
 
     if (gTelemetry) {
@@ -84,9 +84,9 @@ class Description extends Component {
   }
 
   render() {
-    let { canBeEnabled } = this.props;
-    let { enabling } = this.state;
-    let enableButtonStr = enabling ? "accessibility.enabling" : "accessibility.enable";
+    const { canBeEnabled } = this.props;
+    const { enabling } = this.state;
+    const enableButtonStr = enabling ? "accessibility.enabling" : "accessibility.enable";
 
     let title;
     let disableButton = false;

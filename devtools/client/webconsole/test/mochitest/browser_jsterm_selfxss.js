@@ -19,7 +19,7 @@ const stringToCopy = "foobazbarBug642615";
 add_task(async function() {
   await pushPref("devtools.selfxss.count", 0);
 
-  let {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
   jsterm.clearOutput();
   ok(!jsterm.completeNode.value, "no completeNode.value");
 
@@ -80,18 +80,19 @@ async function testSelfXss(jsterm) {
   WebConsoleUtils.usageCount = 0;
   updateEditUIVisibility();
 
-  let oldVal = jsterm.getInputValue();
+  const oldVal = jsterm.getInputValue();
   goDoCommand("cmd_paste");
 
-  let notificationbox = jsterm.hud.document.getElementById("webconsole-notificationbox");
-  let notification = notificationbox.querySelector(".notification");
+  const notificationbox =
+    jsterm.hud.document.getElementById("webconsole-notificationbox");
+  const notification = notificationbox.querySelector(".notification");
   is(notification.getAttribute("data-key"), "selfxss-notification",
     "Self-xss notification shown");
   is(oldVal, jsterm.getInputValue(), "Paste blocked by self-xss prevention");
 
   // Allow pasting
   jsterm.setInputValue("allow pasting");
-  let evt = document.createEvent("KeyboardEvent");
+  const evt = document.createEvent("KeyboardEvent");
   evt.initKeyEvent("keyup", true, true, window,
                     0, 0, 0, 0,
                     0, " ".charCodeAt(0));

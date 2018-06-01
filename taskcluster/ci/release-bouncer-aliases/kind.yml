@@ -38,6 +38,10 @@ job-defaults:
             - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: ship
+   treeherder:
+      symbol: Rel(BncAlias)
+      kind: test
+      tier: 1
 
 jobs:
    devedition:
@@ -46,6 +50,8 @@ jobs:
          firefox-devedition-latest: installer
          firefox-devedition-stub: stub-installer
       shipping-product: devedition
+      treeherder:
+         platform: devedition-release/opt
 
    fennec:
       bouncer-products-per-alias:
@@ -60,6 +66,8 @@ jobs:
                fennec-beta-latest: apk
             default: {}
       shipping-product: fennec
+      treeherder:
+         platform: fennec-release/opt
 
    firefox:
       bouncer-products-per-alias:
@@ -89,3 +97,5 @@ jobs:
                firefox-beta-stub: stub-installer
             default: {}
       shipping-product: firefox
+      treeherder:
+         platform: firefox-release/opt

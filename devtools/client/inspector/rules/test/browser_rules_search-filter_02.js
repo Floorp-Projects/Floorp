@@ -12,7 +12,7 @@ const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#boxy", inspector);
   await testAddTextInFilter(inspector, view);
 });
@@ -24,7 +24,7 @@ async function testAddTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 2, 0);
+  const ruleEditor = getRuleViewRuleEditor(view, 2, 0);
 
   is(ruleEditor.rule.domRule.keyText, "20%", "Second rule is 20%.");
   ok(ruleEditor.selectorText.classList.contains("ruleview-highlight"),

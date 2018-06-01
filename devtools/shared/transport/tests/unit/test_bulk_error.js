@@ -45,9 +45,9 @@ function add_test_bulk_actor() {
 /** * Tests ***/
 
 var test_string_error = async function(transportFactory, onReady) {
-  let transport = await transportFactory();
+  const transport = await transportFactory();
 
-  let client = new DebuggerClient(transport);
+  const client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
     Assert.equal(traits.bulk, true);
     return client.listTabs();
@@ -62,18 +62,18 @@ var test_string_error = async function(transportFactory, onReady) {
 /** * Reply Types ***/
 
 function json_reply(client, response) {
-  let reallyLong = really_long();
+  const reallyLong = really_long();
 
-  let request = client.startBulkRequest({
+  const request = client.startBulkRequest({
     actor: response.testBulk,
     type: "jsonReply",
     length: reallyLong.length
   });
 
   // Send bulk data to server
-  let copyDeferred = defer();
+  const copyDeferred = defer();
   request.on("bulk-send-ready", ({writer, done}) => {
-    let input = Cc["@mozilla.org/io/string-input-stream;1"]
+    const input = Cc["@mozilla.org/io/string-input-stream;1"]
                   .createInstance(Ci.nsIStringInputStream);
     input.setData(reallyLong, reallyLong.length);
     try {

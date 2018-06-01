@@ -42,10 +42,10 @@ registerCleanupFunction(() => {
 add_task(async function() {
   info("Add the test tab, open the rule-view and select the test node");
 
-  let url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
+  const url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
   await addTab(url);
 
-  let {testActor, inspector, view, toolbox} = await openRuleView();
+  const {testActor, inspector, view, toolbox} = await openRuleView();
 
   await runTest(testActor, inspector, view);
 
@@ -62,14 +62,14 @@ async function runTest(testActor, inspector, view) {
   await selectNode("#div2", inspector);
 
   info("Get the background-color property from the rule-view");
-  let property = getRuleViewProperty(view, "#div2", "background-color");
-  let swatch = property.valueSpan.querySelector(".ruleview-colorswatch");
+  const property = getRuleViewProperty(view, "#div2", "background-color");
+  const swatch = property.valueSpan.querySelector(".ruleview-colorswatch");
   ok(swatch, "Color swatch is displayed for the bg-color property");
 
   info("Open the eyedropper from the colorpicker tooltip");
   await openEyedropper(view, swatch);
 
-  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
+  const tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
   ok(!tooltip.isVisible(), "color picker tooltip is closed after opening eyedropper");
 
   info("Test that pressing escape dismisses the eyedropper");
@@ -81,7 +81,7 @@ async function runTest(testActor, inspector, view) {
   info("Test that a color can be selected with the eyedropper");
   await testSelect(view, swatch, inspector, testActor);
 
-  let onHidden = tooltip.once("hidden");
+  const onHidden = tooltip.once("hidden");
   tooltip.hide();
   await onHidden;
   ok(!tooltip.isVisible(), "color picker tooltip is closed");
@@ -91,23 +91,23 @@ async function runTest(testActor, inspector, view) {
 
 async function testESC(swatch, inspector, testActor) {
   info("Press escape");
-  let onCanceled = new Promise(resolve => {
+  const onCanceled = new Promise(resolve => {
     inspector.inspector.once("color-pick-canceled", resolve);
   });
   await testActor.synthesizeKey({key: "VK_ESCAPE", options: {}});
   await onCanceled;
 
-  let color = swatch.style.backgroundColor;
+  const color = swatch.style.backgroundColor;
   is(color, ORIGINAL_COLOR, "swatch didn't change after pressing ESC");
 }
 
 async function testSelect(view, swatch, inspector, testActor) {
   info("Click at x:10px y:10px");
-  let onPicked = new Promise(resolve => {
+  const onPicked = new Promise(resolve => {
     inspector.inspector.once("color-picked", resolve);
   });
   // The change to the content is done async after rule view change
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
 
   await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
                                    options: {type: "mousemove"}});
@@ -119,7 +119,7 @@ async function testSelect(view, swatch, inspector, testActor) {
   await onPicked;
   await onRuleViewChanged;
 
-  let color = swatch.style.backgroundColor;
+  const color = swatch.style.backgroundColor;
   is(color, EXPECTED_COLOR, "swatch changed colors");
 
   ok(!swatch.eyedropperOpen, "swatch eye dropper is closed");

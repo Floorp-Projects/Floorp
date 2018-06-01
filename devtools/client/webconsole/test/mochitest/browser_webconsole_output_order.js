@@ -12,11 +12,11 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
-  let messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
-  let onMessages = waitForMessages({
+  const messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
+  const onMessages = waitForMessages({
     hud,
     messages: messages.map(text => ({text}))
   });

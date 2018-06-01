@@ -83,14 +83,14 @@ class RequestListHeader extends Component {
 
   drawBackground() {
     // The background component is theme dependent, so add the current theme to the props.
-    let props = Object.assign({}, this.props, {
+    const props = Object.assign({}, this.props, {
       theme: getTheme()
     });
     this.background.draw(props);
   }
 
   resizeWaterfall() {
-    let waterfallHeader = this.refs.waterfallHeader;
+    const waterfallHeader = this.refs.waterfallHeader;
     if (waterfallHeader) {
       // Measure its width and update the 'waterfallWidth' property in the store.
       // The 'waterfallWidth' will be further updated on every window resize.
@@ -104,10 +104,10 @@ class RequestListHeader extends Component {
    * Build the waterfall header - timing tick marks with the right spacing
    */
   waterfallDivisionLabels(waterfallWidth, scale) {
-    let labels = [];
+    const labels = [];
 
     // Build new millisecond tick labels...
-    let timingStep = REQUESTS_WATERFALL.HEADER_TICKS_MULTIPLE;
+    const timingStep = REQUESTS_WATERFALL.HEADER_TICKS_MULTIPLE;
     let scaledStep = scale * timingStep;
 
     // Ignore any divisions that would end up being too close to each other.
@@ -117,7 +117,7 @@ class RequestListHeader extends Component {
 
     // Insert one label for each division on the current scale.
     for (let x = 0; x < waterfallWidth; x += scaledStep) {
-      let millisecondTime = x / scale;
+      const millisecondTime = x / scale;
       let divisionScale = "millisecond";
 
       // If the division is greater than 1 minute.
@@ -164,7 +164,7 @@ class RequestListHeader extends Component {
   }
 
   render() {
-    let { columns, scale, sort, sortBy, waterfallWidth } = this.props;
+    const { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
     return (
       div({ className: "devtools-toolbar requests-list-headers-wrapper" },
@@ -173,12 +173,12 @@ class RequestListHeader extends Component {
           onContextMenu: this.onContextMenu
         },
           HEADERS.filter((header) => columns[header.name]).map((header) => {
-            let name = header.name;
-            let boxName = header.boxName || name;
-            let label = header.noLocalization
+            const name = header.name;
+            const boxName = header.boxName || name;
+            const label = header.noLocalization
               ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
             let sorted, sortedTitle;
-            let active = sort.type == name ? true : undefined;
+            const active = sort.type == name ? true : undefined;
 
             if (active) {
               sorted = sort.ascending ? "ascending" : "descending";

@@ -8,18 +8,18 @@
  */
 
 add_task(async function() {
-  let { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, parent } = monitor.panelWin;
+  const { document, store, parent } = monitor.panelWin;
 
-  let initialColumns = store.getState().ui.columns;
-  for (let column in initialColumns) {
-    let shown = initialColumns[column];
+  const initialColumns = store.getState().ui.columns;
+  for (const column in initialColumns) {
+    const shown = initialColumns[column];
 
-    let columns = store.getState().ui.columns;
-    let visibleColumns = [];
-    for (let c in columns) {
+    const columns = store.getState().ui.columns;
+    const visibleColumns = [];
+    for (const c in columns) {
       if (columns[c]) {
         visibleColumns.push(c);
       }
@@ -44,7 +44,8 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelector(`#requests-list-${column}-button`));
 
-    let menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+    const menuItem =
+      parent.document.querySelector(`#request-list-header-${column}-toggle`);
     ok(menuItem.disabled, "Last visible column menu item should be disabled.");
   }
 });

@@ -11,7 +11,7 @@ add_task(async function() {
   // Tell initNetMonitor to enable cache. Otherwise it will assert that there were more
   // than zero network requests during the page load. But when loading about:config,
   // there are none.
-  let { monitor } = await initNetMonitor("about:config", true);
+  const { monitor } = await initNetMonitor("about:config", true);
   ok(monitor, "The network monitor was opened");
   await teardown(monitor);
 });

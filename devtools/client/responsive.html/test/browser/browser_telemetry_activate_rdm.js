@@ -66,8 +66,8 @@ add_task(async function() {
 });
 
 async function openCloseRDM(tab) {
-  let { ui } = await openRDM(tab);
-  let clientClosed = waitForClientClose(ui);
+  const { ui } = await openRDM(tab);
+  const clientClosed = waitForClientClose(ui);
 
   closeRDM(tab, {
     reason: "TabClose",
@@ -88,7 +88,7 @@ async function checkResults() {
                                                  event[2] === "deactivate")
   );
 
-  for (let i in events) {
+  for (const i in events) {
     const [ timestamp, category, method, object, value, extra ] = events[i];
 
     const expected = DATA[i];

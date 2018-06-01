@@ -30,18 +30,18 @@ var checkResults = async function(sp, value, isString = false) {
   if (isString) {
     sourceValue = '"' + value + '"';
   }
-  let source = "var foobar = " + sourceValue + "; foobar";
+  const source = "var foobar = " + sourceValue + "; foobar";
   sp.setText(source);
   await sp.inspect();
 
-  let sidebar = sp.sidebar;
+  const sidebar = sp.sidebar;
   ok(sidebar.visible, "sidebar is open");
 
   let found = false;
 
-  outer: for (let scope of sidebar.variablesView) {
-    for (let [, obj] of scope) {
-      for (let [, prop] of obj) {
+  outer: for (const scope of sidebar.variablesView) {
+    for (const [, obj] of scope) {
+      for (const [, prop] of obj) {
         if (prop.name == "value" && prop.value == value) {
           found = true;
           break outer;
@@ -52,7 +52,7 @@ var checkResults = async function(sp, value, isString = false) {
 
   ok(found, "found the value of " + value);
 
-  let tabbox = sidebar._sidebar._tabbox;
+  const tabbox = sidebar._sidebar._tabbox;
   ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible");
   sidebar.hide();
   ok(tabbox.hasAttribute("hidden"), "Scratchpad sidebar hidden");

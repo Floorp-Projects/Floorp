@@ -16,7 +16,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
 
   await testGraph(doc.body, { avg: false });
   await testGraph(doc.body, { min: false });
@@ -29,9 +29,9 @@ async function performTest() {
 
 async function testGraph(parent, options) {
   options.metric = "fps";
-  let graph = new LineGraphWidget(parent, options);
+  const graph = new LineGraphWidget(parent, options);
   await graph.setDataWhenReady(TEST_DATA);
-  let shouldGutterShow = options.min === false && options.max === false;
+  const shouldGutterShow = options.min === false && options.max === false;
 
   is(graph._gutter.hidden, shouldGutterShow,
     `The gutter should ${shouldGutterShow ? "" : "not "}be shown`);
