@@ -1,13 +1,19 @@
 import pytest
 
-from tests.support.asserts import (
-    assert_element_has_focus,
-    assert_error,
-    assert_same_element,
-    assert_success,
-)
+from tests.support.asserts import assert_element_has_focus, assert_events_equal
 from tests.support.inline import inline
 
+@pytest.fixture
+def tracked_events():
+    return [
+            "blur",
+            "change",
+            "focus",
+            "input",
+            "keydown",
+            "keypress",
+            "keyup",
+            ]
 
 def element_send_keys(session, element, text):
     return session.transport.send(
@@ -15,20 +21,6 @@ def element_send_keys(session, element, text):
             session_id=session.session_id,
             element_id=element.id),
         {"text": text})
-
-
-def add_event_listeners(element):
-    element.session.execute_script("""
-        window.events = [];
-        var trackedEvents = ["focus", "change", "keypress", "keydown", "keyup", "input"];
-        for (var i = 0; i < trackedEvents.length; i++) {
-          arguments[0].addEventListener(trackedEvents[i], function(eventObject) { window.events.push(eventObject.type) });
-        }
-        """, args=(element,))
-
-
-def get_events(session):
-    return session.execute_script("return window.events")
 
 
 def test_input(session):
@@ -76,26 +68,30 @@ def test_textarea_append(session):
 
 
 @pytest.mark.parametrize("tag", ["input", "textarea"])
-def test_events(session, tag):
+def test_events(session, add_event_listeners, tracked_events, tag):
+    expected_events = [
+        "focus",
+        "keydown",
+        "keypress",
+        "input",
+        "keyup",
+        "keydown",
+        "keypress",
+        "input",
+        "keyup",
+        "keydown",
+        "keypress",
+        "input",
+        "keyup",
+    ]
+
     session.url = inline("<%s>" % tag)
     element = session.find.css(tag, all=False)
-    add_event_listeners(element)
+    add_event_listeners(element, tracked_events)
 
     element_send_keys(session, element, "foo")
     assert element.property("value") == "foo"
-    assert get_events(session) == ["focus",
-                                   "keydown",
-                                   "keypress",
-                                   "input",
-                                   "keyup",
-                                   "keydown",
-                                   "keypress",
-                                   "input",
-                                   "keyup",
-                                   "keydown",
-                                   "keypress",
-                                   "input",
-                                   "keyup"]
+    assert_events_equal(session, expected_events)
 
 
 @pytest.mark.parametrize("tag", ["input", "textarea"])
