@@ -73,7 +73,6 @@ DevToolsModules(
     'webextension.js',
     'webgl.js',
     'window.js',
-    'worker.js',
 )
 
 with Files('animation.js'):

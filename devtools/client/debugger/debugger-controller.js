@@ -501,17 +501,17 @@ Workers.prototype = {
         workerForms[worker.actor] = worker;
       }
 
-      for (let workerActor in this._workerForms) {
-        if (!(workerActor in workerForms)) {
-          DebuggerView.Workers.removeWorker(this._workerForms[workerActor]);
-          delete this._workerForms[workerActor];
+      for (let workerTargetActor in this._workerForms) {
+        if (!(workerTargetActor in workerForms)) {
+          DebuggerView.Workers.removeWorker(this._workerForms[workerTargetActor]);
+          delete this._workerForms[workerTargetActor];
         }
       }
 
-      for (let workerActor in workerForms) {
-        if (!(workerActor in this._workerForms)) {
-          let workerForm = workerForms[workerActor];
-          this._workerForms[workerActor] = workerForm;
+      for (let workerTargetActor in workerForms) {
+        if (!(workerTargetActor in this._workerForms)) {
+          let workerForm = workerForms[workerTargetActor];
+          this._workerForms[workerTargetActor] = workerForm;
           DebuggerView.Workers.addWorker(workerForm);
         }
       }

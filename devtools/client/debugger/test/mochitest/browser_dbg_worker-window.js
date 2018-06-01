@@ -8,8 +8,8 @@
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.expectUncaughtRejection(/[object Object]/);
 
-var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
-var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
+var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
+var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function() {
   await pushPrefs(["devtools.scratchpad.enabled", true]);

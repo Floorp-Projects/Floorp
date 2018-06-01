@@ -33,7 +33,7 @@ class ServiceWorkerTarget extends Component {
         scope: PropTypes.string.isRequired,
         // registrationActor can be missing in e10s.
         registrationActor: PropTypes.string,
-        workerActor: PropTypes.string
+        workerTargetActor: PropTypes.string
       }).isRequired
     };
   }
@@ -86,7 +86,7 @@ class ServiceWorkerTarget extends Component {
     }
 
     const { client, target } = this.props;
-    gDevToolsBrowser.openWorkerToolbox(client, target.workerActor);
+    gDevToolsBrowser.openWorkerToolbox(client, target.workerTargetActor);
   }
 
   push() {
@@ -99,7 +99,7 @@ class ServiceWorkerTarget extends Component {
 
     const { client, target } = this.props;
     client.request({
-      to: target.workerActor,
+      to: target.workerTargetActor,
       type: "push"
     });
   }
@@ -149,7 +149,7 @@ class ServiceWorkerTarget extends Component {
 
   isRunning() {
     // We know the target is running if it has a worker actor.
-    return !!this.props.target.workerActor;
+    return !!this.props.target.workerTargetActor;
   }
 
   isActive() {

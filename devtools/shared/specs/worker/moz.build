@@ -6,5 +6,4 @@
 
 DevToolsModules(
     'service-worker.js',
-    'worker.js',
 )
