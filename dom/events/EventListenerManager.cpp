@@ -1273,7 +1273,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               nsAutoString typeStr;
               (*aDOMEvent)->GetType(typeStr);
               AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-                "EventListenerManager::HandleEventInternal", OTHER, typeStr);
+                "EventListenerManager::HandleEventInternal", EVENTS, typeStr);
 
               uint16_t phase = (*aDOMEvent)->EventPhase();
               profiler_add_marker(

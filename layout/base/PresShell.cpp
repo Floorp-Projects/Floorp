@@ -4188,7 +4188,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "Display"
   };
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR("PresShell::DoFlushPendingNotifications",
-                                   LAYOUT, flushTypeNames[flushType]);
+                                   GRAPHICS, flushTypeNames[flushType]);
 #endif
 
 
@@ -8849,7 +8849,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-    "PresShell::DoReflow", LAYOUT,
+    "PresShell::DoReflow", GRAPHICS,
     uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
 #endif
 
