@@ -220,6 +220,11 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["chromeWindowTarget"],
+    spec: "devtools/shared/specs/targets/chrome-window",
+    front: null,
+  },
+  {
     types: ["frameTarget"],
     spec: "devtools/shared/specs/targets/frame",
     front: null,

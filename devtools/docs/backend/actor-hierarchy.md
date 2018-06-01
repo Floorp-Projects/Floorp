@@ -76,7 +76,7 @@ RootActor (root.js)
    |   Returned by "listWorkers" request to a ChildProcessActor to get workers
    |   for the chrome of the child process.
    |
-   |-- WindowActor (window.js)
+   |-- ChromeWindowTargetActor (chrome-window.js)
    |   Targets a single window, such as a browser window in Firefox, but it can
    |   be used to reach any window in the parent process.
    |   Extends the abstract class BrowsingContextTargetActor.

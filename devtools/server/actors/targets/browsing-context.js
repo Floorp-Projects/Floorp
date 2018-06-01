@@ -10,7 +10,7 @@
  * BrowsingContextTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
  *
- * This class is extended by FrameTargetActor, ChromeActor, and WindowActor.
+ * This class is extended by FrameTargetActor, ChromeActor, and ChromeWindowTargetActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  *

@@ -4,6 +4,14 @@
 
 "use strict";
 
+/*
+ * Target actor for a single chrome window, like a browser window.
+ *
+ * This actor extends BrowsingContextTargetActor.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const { Ci } = require("chrome");
 const Services = require("Services");
 const {
@@ -13,32 +21,37 @@ const {
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
+const { chromeWindowTargetSpec } = require("devtools/shared/specs/targets/chrome-window");
 
 /**
- * Creates a WindowActor for debugging a single window, like a browser window in Firefox,
- * but it can be used to reach any window in the process.  (Currently this is parent
- * process only because the root actor's `onGetWindow` doesn't try to cross process
- * boundaries.)  Both chrome and content windows are supported.
- *
- * Most of the implementation is inherited from BrowsingContextTargetActor. WindowActor
- * exposes all tab actors via its form() request, like BrowsingContextTargetActor.
- *
- * You can request a specific window's actor via RootActor.getWindow().
- *
- * Caveat: Protocol.js expects only the prototype object, and does not maintain the
+ * Protocol.js expects only the prototype object, and does not maintain the
  * prototype chain when it constructs the ActorClass. For this reason we are using
  * `extend` to maintain the properties of BrowsingContextTargetActor.prototype
+ */
+const chromeWindowTargetPrototype = extend({}, browsingContextTargetPrototype);
+
+/**
+ * Creates a ChromeWindowTargetActor for debugging a single window, like a browser window
+ * in Firefox, but it can be used to reach any window in the process.
+ *
+ * Currently this is parent process only because the root actor's `onGetWindow` doesn't
+ * try to cross process boundaries.  This actor technically would work for both chrome and
+ * content windows, but it can't reach (most) content windows since it's parent process
+ * only.  Since these restrictions mean that chrome windows are the main use case for
+ * this at the moment, it's named to match.
+ *
+ * Most of the implementation is inherited from BrowsingContextTargetActor.
+ * ChromeWindowTargetActor exposes all tab actors via its form() request, like
+ * BrowsingContextTargetActor.
+ *
+ * You can request a specific window's actor via RootActor.getWindow().
  *
  * @param connection DebuggerServerConnection
  *        The connection to the client.
  * @param window DOMWindow
  *        The window.
  */
-
-const windowPrototype = extend({}, browsingContextTargetPrototype);
-
-windowPrototype.initialize = function(connection, window) {
+chromeWindowTargetPrototype.initialize = function(connection, window) {
   BrowsingContextTargetActor.prototype.initialize.call(this, connection);
 
   const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -51,9 +64,9 @@ windowPrototype.initialize = function(connection, window) {
 
 // Bug 1266561: This setting is mysteriously named, we should split up the
 // functionality that is triggered by it.
-windowPrototype.isRootActor = true;
+chromeWindowTargetPrototype.isRootActor = true;
 
-windowPrototype.observe = function(subject, topic, data) {
+chromeWindowTargetPrototype.observe = function(subject, topic, data) {
   BrowsingContextTargetActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
@@ -63,7 +76,7 @@ windowPrototype.observe = function(subject, topic, data) {
   }
 };
 
-windowPrototype._attach = function() {
+chromeWindowTargetPrototype._attach = function() {
   if (this.attached) {
     return false;
   }
@@ -78,7 +91,7 @@ windowPrototype._attach = function() {
   return true;
 };
 
-windowPrototype._detach = function() {
+chromeWindowTargetPrototype._detach = function() {
   if (!this.attached) {
     return false;
   }
@@ -92,4 +105,5 @@ windowPrototype._detach = function() {
   return true;
 };
 
-exports.WindowActor = ActorClassWithSpec(browsingContextTargetSpec, windowPrototype);
+exports.ChromeWindowTargetActor =
+  ActorClassWithSpec(chromeWindowTargetSpec, chromeWindowTargetPrototype);
