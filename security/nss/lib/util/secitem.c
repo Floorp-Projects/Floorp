@@ -76,6 +76,15 @@ loser:
 }
 
 SECStatus
+SECITEM_MakeItem(PLArenaPool *arena, SECItem *dest, unsigned char *data,
+                 unsigned int len)
+{
+    SECItem it = { siBuffer, data, len };
+
+    return SECITEM_CopyItem(arena, dest, &it);
+}
+
+SECStatus
 SECITEM_ReallocItem(PLArenaPool *arena, SECItem *item, unsigned int oldlen,
                     unsigned int newlen)
 {

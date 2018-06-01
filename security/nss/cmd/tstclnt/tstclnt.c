@@ -1157,7 +1157,7 @@ run()
     PRInt32 filesReady;
     PRFileDesc *s = NULL;
     PRFileDesc *std_out;
-    PRPollDesc pollset[2];
+    PRPollDesc pollset[2] = { { 0 }, { 0 } };
     PRBool wrStarted = PR_FALSE;
 
     handshakeComplete = PR_FALSE;
@@ -1583,7 +1583,7 @@ done:
     if (s) {
         PR_Close(s);
     }
-    if (requestFile) {
+    if (requestFile && pollset[STDIN_FD].fd) {
         PR_Close(pollset[STDIN_FD].fd);
     }
     return error;
