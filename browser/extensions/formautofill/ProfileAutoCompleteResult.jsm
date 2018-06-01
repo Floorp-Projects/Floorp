@@ -11,8 +11,6 @@ var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-  "resource://gre/modules/CreditCard.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "insecureWarningEnabled", "security.insecure_field_warning.contextual.enabled");
 
@@ -341,7 +339,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
 
       if (matching) {
         if (currentFieldName == "cc-number") {
-          let {affix, label} = CreditCard.formatMaskedNumber(profile[currentFieldName]);
+          let {affix, label} = FormAutofillUtils.fmtMaskedCreditCardLabel(profile[currentFieldName]);
           return affix + label;
         }
         return profile[currentFieldName];
@@ -376,7 +374,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
       let primary = profile[focusedFieldName];
 
       if (focusedFieldName == "cc-number") {
-        let {affix, label} = CreditCard.formatMaskedNumber(primary);
+        let {affix, label} = FormAutofillUtils.fmtMaskedCreditCardLabel(primary);
         primaryAffix = affix;
         primary = label;
       }
