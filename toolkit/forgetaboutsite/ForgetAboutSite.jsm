@@ -7,8 +7,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
 
 var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
@@ -38,8 +36,6 @@ function hasRootDomain(str, aDomain) {
 
 var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
-    await PlacesUtils.history.removeByFilter({ host: "." + aDomain });
-
     let promises = [];
 
     ["http://", "https://"].forEach(scheme => {

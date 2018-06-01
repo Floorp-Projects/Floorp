@@ -335,35 +335,13 @@ var Sanitizer = {
 
     history: {
       async clear(range) {
-        let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
-        try {
-          if (range) {
-            await PlacesUtils.history.removeVisitsByFilter({
-              beginDate: new Date(range[0] / 1000),
-              endDate: new Date(range[1] / 1000)
-            });
-          } else {
-            // Remove everything.
-            await PlacesUtils.history.clear();
-          }
-        } catch (ex) {
-          seenException = ex;
-        } finally {
-          TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
-        }
+        await clearData(range, Ci.nsIClearDataService.CLEAR_HISTORY);
+        TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
 
-        try {
-          let clearStartingTime = range ? String(range[0]) : "";
-          Services.obs.notifyObservers(null, "browser:purge-session-history", clearStartingTime);
-        } catch (ex) {
-          seenException = ex;
-        }
-
-        if (seenException) {
-          throw seenException;
-        }
+        let clearStartingTime = range ? String(range[0]) : "";
+        Services.obs.notifyObservers(null, "browser:purge-session-history", clearStartingTime);
       }
     },
 
