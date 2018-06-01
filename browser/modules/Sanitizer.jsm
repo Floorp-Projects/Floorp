@@ -337,11 +337,9 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_HISTORY);
+        await clearData(range, Ci.nsIClearDataService.CLEAR_HISTORY |
+                               Ci.nsIClearDataService.CLEAR_SESSION_HISTORY);
         TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
-
-        let clearStartingTime = range ? String(range[0]) : "";
-        Services.obs.notifyObservers(null, "browser:purge-session-history", clearStartingTime);
       }
     },
 
