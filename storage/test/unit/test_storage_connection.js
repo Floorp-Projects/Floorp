@@ -825,7 +825,7 @@ add_task(async function test_async_clone_with_temp_trigger_and_table() {
 
   info("Read-only clone shouldn't have temp entities");
   let badStmt = readOnlyClone.createAsyncStatement(`SELECT 1 FROM test_temp`);
-  await Assert.rejects(executeAsync(badStmt));
+  await Assert.rejects(executeAsync(badStmt), Ci.mozIStorageError);
   badStmt.finalize();
 
   info("Clean up");

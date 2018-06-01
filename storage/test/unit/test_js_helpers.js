@@ -83,6 +83,7 @@ function test_row_enumerate() {
   stmt = null;
   Cu.forceGC();
   Assert.throws(() => { return savedOffRow.string; },
+                /NS_ERROR_NOT_INITIALIZED/,
                 "GC'ed statement should throw");
 }
 

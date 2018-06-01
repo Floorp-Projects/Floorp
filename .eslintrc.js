@@ -52,15 +52,6 @@ module.exports = {
     // XXX Bug 1452706. These directories are still being fixed, so turn off
     //  mozilla/require-expected-throws-or-rejects for now.
     "files": [
-      "storage/test/unit/**",
-    ],
-    "rules": {
-      "mozilla/require-expected-throws-or-rejects": "off",
-    }
-  }, {
-    // XXX Bug 1452706. These directories are still being fixed, so turn off
-    //  mozilla/require-expected-throws-or-rejects for now.
-    "files": [
       "services/fxaccounts/**",
       "toolkit/components/**",
     ],
