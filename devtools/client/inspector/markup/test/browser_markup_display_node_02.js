@@ -84,8 +84,8 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL("data:text/html;charset=utf-8," +
-    encodeURIComponent(TEST_URI));
+  const {inspector, testActor} = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);

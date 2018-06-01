@@ -17,7 +17,8 @@ add_task(async function() {
   await selectNode("p", inspector);
 
   info("Modify padding-bottom in box model view");
-  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  const span =
+    boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
 

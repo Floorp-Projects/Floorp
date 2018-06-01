@@ -69,7 +69,8 @@ add_task(async function() {
   async function checkTabResponse(checkedTab, method) {
     await ContentTask.spawn(checkedTab.linkedBrowser, method, async function(met) {
       const { body } = content.wrappedJSObject.document;
-      const responseRE = RegExp(met + (met == "POST" ? "\n*\s*foo\=bar\&amp;baz\=42" : ""));
+      const responseRE =
+        RegExp(met + (met == "POST" ? "\n*\s*foo\=bar\&amp;baz\=42" : ""));
       ok(body.innerHTML.match(responseRE), "Tab method and data match original request");
     });
   }

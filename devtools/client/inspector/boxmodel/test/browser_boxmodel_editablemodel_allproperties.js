@@ -32,7 +32,8 @@ async function testEditing(inspector, boxmodel, testActor) {
 
   await selectNode("#div1", inspector);
 
-  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  const span =
+    boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);

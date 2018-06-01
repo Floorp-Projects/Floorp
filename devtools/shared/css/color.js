@@ -604,17 +604,16 @@ function _hslValue(m1, m2, h) {
 // Translated from nsColor.cpp.  All three values are expected to be
 // in the range 0-1.
 function hslToRGB([h, s, l]) {
-  let r, g, b;
-  let m1, m2;
+  let m2;
   if (l <= 0.5) {
     m2 = l * (s + 1);
   } else {
     m2 = l + s - l * s;
   }
-  m1 = l * 2 - m2;
-  r = Math.round(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
-  g = Math.round(255 * _hslValue(m1, m2, h));
-  b = Math.round(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
+  const m1 = l * 2 - m2;
+  const r = Math.round(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
+  const g = Math.round(255 * _hslValue(m1, m2, h));
+  const b = Math.round(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
   return [r, g, b];
 }
 

@@ -22,7 +22,7 @@ function getWasmText(subject, data) {
     result = { lines: ["No luck with wast conversion"], offsets: [0], done, };
   }
 
-  let offsets = result.offsets, lines = [];
+  const offsets = result.offsets, lines = [];
   for (let i = 0; i < offsets.length; i++) {
     lines[offsets[i]] = i;
   }

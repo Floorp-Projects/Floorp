@@ -264,7 +264,9 @@ function hasAttribute(attributes, attributeName) {
  * @return {Array}
  */
 function splitBy(value, splitChar) {
-  let data = [], i = 0, buffer = "";
+  const data = [];
+
+  let i = 0, buffer = "";
   while (i <= value.length) {
     if (i === value.length && buffer) {
       data.push({value: buffer});

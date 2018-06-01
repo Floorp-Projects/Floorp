@@ -1127,8 +1127,6 @@ Scanner.prototype = {
    * least one character unless called when already at EOF.
    */
   Next: function(aToken, aSkip) {
-    let ch;
-
     // do this here so we don't have to do it in dozens of other places
     aToken.mIdent = [];
     aToken.mType = eCSSToken_Symbol;
@@ -1137,7 +1135,7 @@ Scanner.prototype = {
     this.mTokenLineOffset = this.mLineOffset;
     this.mTokenLineNumber = this.mLineNumber;
 
-    ch = this.Peek();
+    const ch = this.Peek();
     if (IsWhitespace(ch)) {
       this.SkipWhitespace();
       aToken.mType = eCSSToken_Whitespace;

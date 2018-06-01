@@ -648,7 +648,7 @@ MarkupView.prototype = {
     }
 
     const done = this.inspector.updating("markup-view");
-    let onShowBoxModel, onShow;
+    let onShowBoxModel;
 
     // Highlight the element briefly if needed.
     if (this._shouldNewSelectionBeHighlighted()) {
@@ -656,7 +656,7 @@ MarkupView.prototype = {
     }
 
     const slotted = selection.isSlotted();
-    onShow = this.showNode(selection.nodeFront, { slotted }).then(() => {
+    const onShow = this.showNode(selection.nodeFront, { slotted }).then(() => {
       // We could be destroyed by now.
       if (this._destroyer) {
         return promise.reject("markupview destroyed");

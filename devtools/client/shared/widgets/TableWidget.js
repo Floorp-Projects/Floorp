@@ -314,8 +314,6 @@ TableWidget.prototype = {
       // within the table can change. Because of this we need to wait for
       // EVENTS.ROW_EDIT and then move the textbox.
       this.once(EVENTS.ROW_EDIT, uniqueId => {
-        let cell;
-        let cells;
         let columnObj;
         const cols = this.editableColumns;
         let rowIndex = this.visibleSelectedIndex;
@@ -366,8 +364,8 @@ TableWidget.prototype = {
         rowIndex = this.visibleSelectedIndex;
 
         // Edit the appropriate cell.
-        cells = columnObj.visibleCellNodes;
-        cell = cells[rowIndex];
+        const cells = columnObj.visibleCellNodes;
+        const cell = cells[rowIndex];
         editor.edit(cell);
 
         // Remove flash-out class... it won't have been auto-removed because the

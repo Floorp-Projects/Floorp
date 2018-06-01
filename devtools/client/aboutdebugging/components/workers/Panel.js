@@ -133,7 +133,8 @@ class WorkersPanel extends Component {
     const isServiceWorkerDisabled = !Services.prefs
                                     .getBoolPref("dom.serviceWorkers.enabled");
 
-    const isDisabled = isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
+    const isDisabled =
+      isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
     if (!isDisabled) {
       return "";
     }

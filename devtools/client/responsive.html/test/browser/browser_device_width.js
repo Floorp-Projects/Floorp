@@ -34,7 +34,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 async function setViewportSizeWithInputKeys(ui) {
-  let width = 320, height = 500;
+  const width = 320, height = 500;
   let resized = waitForViewportResizeTo(ui, width, height);
   ui.setViewportSize({ width, height });
   await resized;

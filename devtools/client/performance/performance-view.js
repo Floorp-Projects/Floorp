@@ -225,7 +225,8 @@ var PerformanceView = {
       // Wrap the label in quotes if it exists for the commands.
       label = label ? `"${label}"` : "";
 
-      const startCommand = $(".console-profile-recording-notice .console-profile-command");
+      const startCommand =
+        $(".console-profile-recording-notice .console-profile-command");
       const stopCommand = $(".console-profile-stop-notice .console-profile-command");
 
       startCommand.value = `console.profile(${label})`;

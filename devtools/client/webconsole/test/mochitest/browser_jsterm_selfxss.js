@@ -83,7 +83,8 @@ async function testSelfXss(jsterm) {
   const oldVal = jsterm.getInputValue();
   goDoCommand("cmd_paste");
 
-  const notificationbox = jsterm.hud.document.getElementById("webconsole-notificationbox");
+  const notificationbox =
+    jsterm.hud.document.getElementById("webconsole-notificationbox");
   const notification = notificationbox.querySelector(".notification");
   is(notification.getAttribute("data-key"), "selfxss-notification",
     "Self-xss notification shown");

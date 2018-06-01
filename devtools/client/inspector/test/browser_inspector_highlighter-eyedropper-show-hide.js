@@ -9,8 +9,9 @@ const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
 
 add_task(async function() {
-  const helper = await openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
-               .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper =
+    await openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
+      .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
   await isInitiallyHidden(helper);

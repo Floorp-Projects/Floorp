@@ -30,7 +30,8 @@ add_task(async function() {
   const shapeToggle = container.querySelector(".ruleview-shapeswatch");
   const shapeToggleStyle = getComputedStyle(shapeToggle);
   const overriddenContainer = getRuleViewProperty(view, "div", "clip-path").valueSpan;
-  const overriddenShapeToggle = overriddenContainer.querySelector(".ruleview-shapeswatch");
+  const overriddenShapeToggle =
+    overriddenContainer.querySelector(".ruleview-shapeswatch");
   const overriddenShapeToggleStyle = getComputedStyle(overriddenShapeToggle);
 
   ok(shapeToggle && overriddenShapeToggle,

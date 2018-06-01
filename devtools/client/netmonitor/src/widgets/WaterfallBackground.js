@@ -107,7 +107,8 @@ class WaterfallBackground {
         return;
       }
 
-      const delta = Math.floor((timestamp - state.firstRequestStartedMillis) * state.scale);
+      const delta =
+        Math.floor((timestamp - state.firstRequestStartedMillis) * state.scale);
       drawPixelAt(delta, color);
     }
 

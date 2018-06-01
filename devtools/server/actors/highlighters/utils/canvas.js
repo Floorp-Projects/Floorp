@@ -294,7 +294,8 @@ function getCurrentMatrix(element, window) {
   const borderBottom = parseFloat(computedStyle.borderBottomWidth);
   const borderLeft = parseFloat(computedStyle.borderLeftWidth);
 
-  const nodeMatrix = getNodeTransformationMatrix(element, window.document.documentElement);
+  const nodeMatrix =
+    getNodeTransformationMatrix(element, window.document.documentElement);
 
   let currentMatrix = identity();
   let hasNodeTransformations = false;

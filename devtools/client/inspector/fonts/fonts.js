@@ -178,7 +178,8 @@ class FontInspector {
       return [];
     }
 
-    const fonts = await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
+    const fonts =
+      await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
     if (!fonts) {
       return [];
     }

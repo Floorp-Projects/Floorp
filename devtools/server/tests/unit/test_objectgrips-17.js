@@ -120,7 +120,8 @@ function test() {
       // The prototype chain was not iterated if the object was inaccessible, so now check
       // another object which inherits from the proxy, but was created in the debuggee.
       const inheritsProxy2Client = gThreadClient.pauseGrip(inheritsProxy2Grip);
-      const inheritsProxy2Response = await inheritsProxy2Client.getPrototypeAndProperties();
+      const inheritsProxy2Response =
+        await inheritsProxy2Client.getPrototypeAndProperties();
       check_properties(inheritsProxy2Response.ownProperties, false, true);
       check_prototype(inheritsProxy2Response.prototype, false, true);
 

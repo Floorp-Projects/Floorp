@@ -112,12 +112,14 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
   g = g / 255;
   b = b / 255;
 
-  let max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, v = max;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
 
+  const v = max;
   const d = max - min;
-  s = max == 0 ? 0 : d / max;
+  const s = max == 0 ? 0 : d / max;
 
+  let h;
   if (max == min) {
     // achromatic
     h = 0;

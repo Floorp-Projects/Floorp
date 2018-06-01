@@ -11,8 +11,8 @@
 const { ConsoleMessage } =
   require("devtools/client/webconsole/types");
 
-const stubPreparedMessages = new Map();
-const stubPackets = new Map();
+let stubPreparedMessages = new Map();
+let stubPackets = new Map();
 stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
