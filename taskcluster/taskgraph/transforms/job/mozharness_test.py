@@ -33,6 +33,7 @@ BUILDER_NAME_PREFIX = {
     'linux64-devedition-nightly': 'Ubuntu VM 12.04 x64',
     'macosx64': 'Rev7 MacOSX Yosemite 10.10.5',
     'macosx64-devedition': 'Rev7 MacOSX Yosemite 10.10.5 DevEdition',
+    'macosx64-ccov': 'Rev7 MacOSX Yosemite 10.10.5 Code Coverage',
     'android-4.3-arm7-api-16': 'Android 4.3 armv7 api-16+',
     'android-4.2-x86': 'Android 4.2 x86 Emulator',
     'android-4.3-arm7-api-16-gradle': 'Android 4.3 armv7 api-16+',

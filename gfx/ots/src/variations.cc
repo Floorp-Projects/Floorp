@@ -246,3 +246,5 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
 }
 
 } // namespace ots
+
+#undef TABLE_NAME
