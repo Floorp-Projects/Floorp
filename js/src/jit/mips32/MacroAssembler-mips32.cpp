@@ -132,11 +132,16 @@ MacroAssemblerMIPSCompat::convertDoubleToInt32(FloatRegister src, Register dest,
         ma_b(dest, Imm32(0), fail, Assembler::Equal);
     }
 
-    // Truncate double to int ; if result is inexact fail
+    // Truncate double to int ; if result is inexact or invalid fail.
     as_truncwd(ScratchFloat32Reg, src);
     as_cfc1(ScratchRegister, Assembler::FCSR);
     moveFromFloat32(ScratchFloat32Reg, dest);
-    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 1);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 6);
+    // Here adding the masking andi instruction just for a precaution.
+    // For the instruction of trunc.*.*, the Floating Point Exceptions can be
+    // only Inexact, Invalid Operation, Unimplemented Operation.
+    // Leaving it maybe is also ok.
+    as_andi(ScratchRegister, ScratchRegister, 0x11);
     ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
