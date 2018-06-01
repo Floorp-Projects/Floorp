@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Downloads.jsm");
 
 // A Cleaner is an object with 3 methods. These methods must return a Promise
 // object. Here a description of these methods:
@@ -171,6 +172,32 @@ const PluginDataCleaner = {
   },
 };
 
+const DownloadsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return Downloads.getList(Downloads.ALL).then(aList => {
+      aList.removeFinished(aDownload => hasRootDomain(
+        Services.io.newURI(aDownload.source.url).host, aHost));
+    });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    // Convert microseconds back to milliseconds for date comparisons.
+    let rangeBeginMs = aFrom / 1000;
+    let rangeEndMs = aTo / 1000;
+
+    return Downloads.getList(Downloads.ALL).then(aList => {
+      aList.removeFinished(aDownload => aDownload.startTime >= rangeBeginMs &&
+                                        aDownload.startTime <= rangeEndMs);
+    });
+  },
+
+  deleteAll() {
+    return Downloads.getList(Downloads.ALL).then(aList => {
+      aList.removeFinished(null);
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -184,6 +211,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
    cleaner: PluginDataCleaner, },
+
+ { flag: Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+   cleaner: DownloadsCleaner, },
 ];
 
 this.ClearDataService = function() {};
@@ -281,3 +311,27 @@ ClearDataService.prototype = Object.freeze({
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ClearDataService]);
+
+/**
+ * Returns true if the string passed in is part of the root domain of the
+ * current string.  For example, if this is "www.mozilla.org", and we pass in
+ * "mozilla.org", this will return true.  It would return false the other way
+ * around.
+ */
+function hasRootDomain(str, aDomain) {
+  let index = str.indexOf(aDomain);
+  // If aDomain is not found, we know we do not have it as a root domain.
+  if (index == -1)
+    return false;
+
+  // If the strings are the same, we obviously have a match.
+  if (str == aDomain)
+    return true;
+
+  // Otherwise, we have aDomain as our root domain iff the index of aDomain is
+  // aDomain.length subtracted from our length and (since we do not have an
+  // exact match) the character before the index is a dot or slash.
+  let prevChar = str[index - 1];
+  return (index == (str.length - aDomain.length)) &&
+         (prevChar == "." || prevChar == "/");
+}
