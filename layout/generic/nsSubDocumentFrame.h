@@ -152,6 +152,8 @@ protected:
   // being reframed.
   void ShowViewer();
 
+  void ClearDisplayItems();
+
   /* Obtains the frame we should use for intrinsic size information if we are
    * an HTML <object> or <embed>  (a replaced element - not <iframe>)
    * and our sub-document has an intrinsic size. The frame returned is the
