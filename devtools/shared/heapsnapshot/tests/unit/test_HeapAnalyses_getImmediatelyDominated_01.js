@@ -41,7 +41,7 @@ add_task(async function() {
   equal(response.path.length, 1);
   equal(response.path[0], partialTree.nodeId);
 
-  for (let node of response.nodes) {
+  for (const node of response.nodes) {
     equal(typeof node.shortestPaths, "object",
           "Should have shortest paths");
     equal(typeof node.shortestPaths.nodes, "object",
@@ -65,7 +65,7 @@ add_task(async function() {
   equal(secondResponse.path.length, 1);
   equal(secondResponse.path[0], partialTree.nodeId);
 
-  for (let node of secondResponse.nodes) {
+  for (const node of secondResponse.nodes) {
     equal(typeof node.shortestPaths, "object",
           "Should have shortest paths");
     equal(typeof node.shortestPaths.nodes, "object",

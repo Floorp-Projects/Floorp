@@ -29,16 +29,16 @@ function runTests(sw) {
   sp.run().then(() => {
     // CodeMirror lines and columns are 0-based, Scratchpad UI and error
     // stack are 1-based.
-    let errorLine = 3;
-    let editorDoc = sp.editor.container.contentDocument;
+    const errorLine = 3;
+    const editorDoc = sp.editor.container.contentDocument;
     sp.editor.jumpToLine();
-    let lineInput = editorDoc.querySelector("input");
-    let inputLine = lineInput.value;
+    const lineInput = editorDoc.querySelector("input");
+    const inputLine = lineInput.value;
     is(inputLine, errorLine, "jumpToLine input field is set from editor selection");
     EventUtils.synthesizeKey("VK_RETURN", { }, editorDoc.defaultView);
     // CodeMirror lines and columns are 0-based, Scratchpad UI and error
     // stack are 1-based.
-    let cursor = sp.editor.getCursor();
+    const cursor = sp.editor.getCursor();
     is(cursor.line + 1, inputLine, "jumpToLine goto error location (line)");
     is(cursor.ch + 1, 1, "jumpToLine goto error location (column)");
   }, error => {
@@ -46,7 +46,7 @@ function runTests(sw) {
     finish();
   }).then(() => {
     var statusBarField = sp.editor.container.ownerDocument.querySelector("#statusbar-line-col");
-    let { line, ch } = sp.editor.getCursor();
+    const { line, ch } = sp.editor.getCursor();
     is(statusBarField.textContent, sp.strings.formatStringFromName(
       "scratchpad.statusBarLineCol", [ line + 1, ch + 1], 2), "statusbar text is correct (" + statusBarField.textContent + ")");
     finish();

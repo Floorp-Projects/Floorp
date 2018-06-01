@@ -8,14 +8,14 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = await initNetMonitor(JSONP_URL);
+  const { tab, monitor } = await initNetMonitor(JSONP_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -25,10 +25,10 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  let requestItems = document.querySelectorAll(".request-list-item");
-  for (let requestItem of requestItems) {
+  const requestItems = document.querySelectorAll(".request-list-item");
+  for (const requestItem of requestItems) {
     requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".status-code");
+    const requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
   }
@@ -83,7 +83,7 @@ add_task(async function() {
   await teardown(monitor);
 
   function testResponseTab(func, greeting) {
-    let tabpanel = document.querySelector("#response-panel");
+    const tabpanel = document.querySelector("#response-panel");
 
     is(tabpanel.querySelector(".response-error-header") === null, true,
       "The response error header doesn't have the intended visibility.");
@@ -102,9 +102,9 @@ add_task(async function() {
     is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
-    let labels = tabpanel
+    const labels = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = tabpanel
+    const values = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
     is(labels[0].textContent, "greeting",

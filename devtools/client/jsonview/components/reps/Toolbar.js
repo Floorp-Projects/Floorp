@@ -46,7 +46,7 @@ define(function(require, exports, module) {
     }
 
     render() {
-      let props = Object.assign({className: "btn"}, this.props);
+      const props = Object.assign({className: "btn"}, this.props);
       return (
         dom.button(props, this.props.children)
       );

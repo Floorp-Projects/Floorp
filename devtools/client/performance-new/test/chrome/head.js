@@ -16,7 +16,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { perfDescription } = require("devtools/shared/specs/perf");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-let EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
+const EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 SimpleTest.registerCleanupFunction(function() {
   if (DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
     ok(false, "Should have had the expected number of DevToolsUtils.assert() failures." +

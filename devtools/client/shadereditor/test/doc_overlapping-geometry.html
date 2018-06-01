@@ -41,10 +41,10 @@
       "use strict";
 
       let canvas, gl;
-      let program = [];
+      const program = [];
       let squareVerticesPositionBuffer;
-      let vertexPositionAttribute = [];
-      let depthUniform = [];
+      const vertexPositionAttribute = [];
+      const depthUniform = [];
 
       window.onload = function() {
         canvas = document.querySelector("canvas");
@@ -58,8 +58,8 @@
       };
 
       function initProgram(i) {
-        let vertexShader = getShader("shader-vs");
-        let fragmentShader = getShader("shader-fs-" + i);
+        const vertexShader = getShader("shader-vs");
+        const fragmentShader = getShader("shader-fs-" + i);
 
         program[i] = gl.createProgram();
         gl.attachShader(program[i], vertexShader);
@@ -73,8 +73,8 @@
       }
 
       function getShader(id) {
-        let script = document.getElementById(id);
-        let source = script.textContent;
+        const script = document.getElementById(id);
+        const source = script.textContent;
         let shader;
 
         if (script.type == "x-shader/x-fragment") {

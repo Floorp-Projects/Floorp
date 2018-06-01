@@ -56,7 +56,7 @@ function enableAnimationFeatures() {
 var _addTab = addTab;
 addTab = function(url) {
   return enableAnimationFeatures().then(() => _addTab(url)).then(tab => {
-    let browser = tab.linkedBrowser;
+    const browser = tab.linkedBrowser;
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     loadFrameScriptUtils(browser);
@@ -70,7 +70,7 @@ addTab = function(url) {
  * loaded in the toolbox
  */
 async function reloadTab(inspector) {
-  let onNewRoot = inspector.once("new-root");
+  const onNewRoot = inspector.once("new-root");
   await executeInContent("devtools:test:reload", {}, {}, false);
   await onNewRoot;
   await inspector.once("inspector-updated");
@@ -93,9 +93,9 @@ async function reloadTab(inspector) {
 var selectNodeAndWaitForAnimations = async function(data, inspector, reason = "test") {
   // We want to make sure the rest of the test waits for the animations to
   // be properly displayed (wait for all target DOM nodes to be previewed).
-  let {AnimationsController, AnimationsPanel} =
+  const {AnimationsController, AnimationsPanel} =
     inspector.sidebar.getWindowForTab(TAB_NAME);
-  let onUiUpdated = AnimationsPanel.once(AnimationsPanel.UI_UPDATED_EVENT);
+  const onUiUpdated = AnimationsPanel.once(AnimationsPanel.UI_UPDATED_EVENT);
 
   await selectNode(data, inspector, reason);
 
@@ -129,14 +129,14 @@ function assertAnimationsDisplayed(panel, nbAnimations, msg = "") {
  * @return {Promise}
  */
 var waitForAnimationInspectorReady = async function(inspector) {
-  let win = inspector.sidebar.getWindowForTab(TAB_NAME);
-  let updated = inspector.once("inspector-updated");
+  const win = inspector.sidebar.getWindowForTab(TAB_NAME);
+  const updated = inspector.once("inspector-updated");
 
   // In e10s, if we wait for underlying toolbox actors to
   // load (by setting DevToolsUtils.testing to true), we miss the
   // "animationinspector-ready" event on the sidebar, so check to see if the
   // iframe is already loaded.
-  let tabReady = win.document.readyState === "complete" ?
+  const tabReady = win.document.readyState === "complete" ?
                  promise.resolve() :
                  inspector.sidebar.once("animationinspector-ready");
 
@@ -149,13 +149,13 @@ var waitForAnimationInspectorReady = async function(inspector) {
  * @return a promise that resolves when the inspector is ready.
  */
 var openAnimationInspector = async function() {
-  let {inspector, toolbox} = await openInspectorSidebarTab(TAB_NAME);
+  const {inspector, toolbox} = await openInspectorSidebarTab(TAB_NAME);
 
   info("Waiting for the inspector and sidebar to be ready");
   await waitForAnimationInspectorReady(inspector);
 
-  let win = inspector.sidebar.getWindowForTab(TAB_NAME);
-  let {AnimationsController, AnimationsPanel} = win;
+  const win = inspector.sidebar.getWindowForTab(TAB_NAME);
+  const {AnimationsController, AnimationsPanel} = win;
 
   info("Waiting for the animation controller and panel to be ready");
   if (AnimationsPanel.initialized) {
@@ -183,7 +183,7 @@ var openAnimationInspector = async function() {
  * @return a promise that resolves when the toolbox has closed.
  */
 var closeAnimationInspector = async function() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
 };
 
@@ -197,7 +197,7 @@ var closeAnimationInspector = async function() {
 function waitForContentMessage(name) {
   info("Expecting message " + name + " from content");
 
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   return new Promise(resolve => {
     mm.addMessageListener(name, function onMessage(msg) {
@@ -222,7 +222,7 @@ function waitForContentMessage(name) {
 function executeInContent(name, data = {}, objects = {},
                           expectResponse = true) {
   info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedBrowser.messageManager;
+  const mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
@@ -237,7 +237,7 @@ function executeInContent(name, data = {}, objects = {},
  */
 var getAnimationPlayerState = async function(selector,
                                                     animationIndex = 0) {
-  let playState = await executeInContent("Test:GetAnimationPlayerState",
+  const playState = await executeInContent("Test:GetAnimationPlayerState",
                                          {selector, animationIndex});
   return playState;
 };
@@ -260,7 +260,7 @@ function isNodeVisible(node) {
  * @return {Array} all AnimationTargetNode instances
  */
 var waitForAllAnimationTargets = async function(panel) {
-  let targets = getAnimationTargetNodes(panel);
+  const targets = getAnimationTargetNodes(panel);
   await promise.all(targets.map(t => {
     if (!t.previewer.nodeFront) {
       return t.once("target-retrieved");
@@ -276,13 +276,13 @@ var waitForAllAnimationTargets = async function(panel) {
  * @param {Boolean} isMoving
  */
 async function assertScrubberMoving(panel, isMoving) {
-  let timeline = panel.animationsTimelineComponent;
+  const timeline = panel.animationsTimelineComponent;
 
   if (isMoving) {
     // If we expect the scrubber to move, just wait for a couple of
     // timeline-data-changed events and compare times.
-    let {time: time1} = await timeline.once("timeline-data-changed");
-    let {time: time2} = await timeline.once("timeline-data-changed");
+    const {time: time1} = await timeline.once("timeline-data-changed");
+    const {time: time2} = await timeline.once("timeline-data-changed");
     ok(time2 > time1, "The scrubber is moving");
   } else {
     // If instead we expect the scrubber to remain at its position, just wait
@@ -302,11 +302,11 @@ async function assertScrubberMoving(panel, isMoving) {
  * @param {AnimationsPanel} panel
  */
 async function clickTimelinePlayPauseButton(panel) {
-  let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  const onRendered = waitForAnimationTimelineRendering(panel);
 
-  let btn = panel.playTimelineButtonEl;
-  let win = btn.ownerDocument.defaultView;
+  const btn = panel.playTimelineButtonEl;
+  const win = btn.ownerDocument.defaultView;
   EventUtils.sendMouseEvent({type: "click"}, btn, win);
 
   await onUiUpdated;
@@ -320,11 +320,11 @@ async function clickTimelinePlayPauseButton(panel) {
  * @param {AnimationsPanel} panel
  */
 async function clickTimelineRewindButton(panel) {
-  let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  let onRendered = waitForAnimationTimelineRendering(panel);
+  const onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  const onRendered = waitForAnimationTimelineRendering(panel);
 
-  let btn = panel.rewindTimelineButtonEl;
-  let win = btn.ownerDocument.defaultView;
+  const btn = panel.rewindTimelineButtonEl;
+  const win = btn.ownerDocument.defaultView;
   EventUtils.sendMouseEvent({type: "click"}, btn, win);
 
   await onUiUpdated;
@@ -339,13 +339,13 @@ async function clickTimelineRewindButton(panel) {
  * @param {Number} rate The new rate value to be selected
  */
 async function changeTimelinePlaybackRate(panel, rate) {
-  let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  const onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
 
-  let select = panel.rateSelectorEl.firstChild;
-  let win = select.ownerDocument.defaultView;
+  const select = panel.rateSelectorEl.firstChild;
+  const win = select.ownerDocument.defaultView;
 
   // Get the right option.
-  let option = [...select.options].filter(o => o.value === rate + "")[0];
+  const option = [...select.options].filter(o => o.value === rate + "")[0];
   if (!option) {
     ok(false,
        "Could not find an option for rate " + rate + " in the rate selector. " +
@@ -430,20 +430,20 @@ function disableHighlighter(toolbox) {
  * @return {Promise} resolves to the animation whose state has changed.
  */
 async function clickOnAnimation(panel, index, shouldAlreadySelected) {
-  let timeline = panel.animationsTimelineComponent;
+  const timeline = panel.animationsTimelineComponent;
 
   // Expect a selection event.
-  let onSelectionChanged = timeline.once(shouldAlreadySelected
+  const onSelectionChanged = timeline.once(shouldAlreadySelected
                                          ? "animation-already-selected"
                                          : "animation-selected");
 
   info("Click on animation " + index + " in the timeline");
-  let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
+  const timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
   // Scroll to show the timeBlock since the element may be out of displayed area.
   timeBlock.scrollIntoView(false);
-  let timeBlockBounds = timeBlock.getBoundingClientRect();
+  const timeBlockBounds = timeBlock.getBoundingClientRect();
   let x = timeBlockBounds.width / 2;
-  let y = timeBlockBounds.height / 2;
+  const y = timeBlockBounds.height / 2;
   if (timeBlock != timeBlock.ownerDocument.elementFromPoint(x, y)) {
     // Move the mouse pointer a little since scrubber element may be at the point.
     x += timeBlockBounds.width / 4;
@@ -460,8 +460,8 @@ async function clickOnAnimation(panel, index, shouldAlreadySelected) {
  * @return {Keyframes} The Keyframes component instance.
  */
 function getKeyframeComponent(panel, propertyName) {
-  let timeline = panel.animationsTimelineComponent;
-  let detailsComponent = timeline.details;
+  const timeline = panel.animationsTimelineComponent;
+  const detailsComponent = timeline.details;
   return detailsComponent.keyframeComponents
                          .find(c => c.propertyName === propertyName);
 }
@@ -474,7 +474,7 @@ function getKeyframeComponent(panel, propertyName) {
  * @return {DOMNode} The keyframe element.
  */
 function getKeyframeEl(panel, propertyName, keyframeIndex) {
-  let keyframeComponent = getKeyframeComponent(panel, propertyName);
+  const keyframeComponent = getKeyframeComponent(panel, propertyName);
   return keyframeComponent.keyframesEl
                           .querySelectorAll(".frame")[keyframeIndex];
 }

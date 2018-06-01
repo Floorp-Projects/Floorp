@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>Bug 1296870";
 
 add_task(async function() {
   await loadTab(TEST_URI);
-  let hud = await HUDService.toggleBrowserConsole();
+  const hud = await HUDService.toggleBrowserConsole();
 
   info("Log a new message from the content page");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {

@@ -24,14 +24,14 @@ add_task(async function() {
   // Force the toolbox to be 200px high;
   await pushPref("devtools.toolbox.footer.height", 200);
 
-  let [, win, doc] = await createHost("bottom", TEST_URI);
+  const [, win, doc] = await createHost("bottom", TEST_URI);
 
   info("Resize and move the window to have space below.");
-  let originalWidth = win.top.outerWidth;
-  let originalHeight = win.top.outerHeight;
+  const originalWidth = win.top.outerWidth;
+  const originalHeight = win.top.outerHeight;
   win.top.resizeBy(-100, -200);
-  let originalTop = win.top.screenTop;
-  let originalLeft = win.top.screenLeft;
+  const originalTop = win.top.screenTop;
+  const originalLeft = win.top.screenLeft;
   win.top.moveTo(100, 100);
 
   registerCleanupFunction(() => {
@@ -41,13 +41,13 @@ add_task(async function() {
   });
 
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip(doc, {useXulWrapper: true});
-  let div = doc.createElementNS(HTML_NS, "div");
+  const tooltip = new HTMLTooltip(doc, {useXulWrapper: true});
+  const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "200px";
   div.style.background = "red";
   tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
-  let box1 = doc.getElementById("box1");
+  const box1 = doc.getElementById("box1");
 
   // Above box1: check that the tooltip can overflow onto the content page.
   info("Display the tooltip above box1.");
@@ -68,7 +68,7 @@ add_task(async function() {
 
 function checkTooltip(tooltip, position, height) {
   is(tooltip.position, position, "Actual tooltip position is " + position);
-  let rect = tooltip.container.getBoundingClientRect();
+  const rect = tooltip.container.getBoundingClientRect();
   is(rect.height, height, "Actual tooltip height is " + height);
   // Testing the actual left/top offsets is not relevant here as it is handled by the XUL
   // panel.

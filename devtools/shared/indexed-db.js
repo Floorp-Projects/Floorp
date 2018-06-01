@@ -31,7 +31,7 @@ exports.createDevToolsIndexedDB = function(indexedDB) {
      * Only the standard version of indexedDB.open is supported.
      */
     open(name, version) {
-      let options = {};
+      const options = {};
       if (typeof version === "number") {
         options.version = version;
       }

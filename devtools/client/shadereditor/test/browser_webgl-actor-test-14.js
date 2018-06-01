@@ -7,13 +7,13 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
+  const { target, front } = await initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 
-  let [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
+  const [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
 
-  let firstFragmentShader = await firstProgramActor.getFragmentShader();
-  let secondFragmentShader = await secondProgramActor.getFragmentShader();
+  const firstFragmentShader = await firstProgramActor.getFragmentShader();
+  const secondFragmentShader = await secondProgramActor.getFragmentShader();
 
   let oldFragSource = await firstFragmentShader.getText();
   let newFragSource = oldFragSource.replace("vec4(uColor", "vec4(0.25, 0.25, 0.25");

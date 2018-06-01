@@ -24,22 +24,22 @@ add_task(async function() {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "authored");
 
   let html = "";
-  for (let {color, id} of colors) {
+  for (const {color, id} of colors) {
     html += `<div id="${id}" style="color: ${color}">Styled Node</div>`;
   }
 
-  let tab = await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  const tab = await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
-  for (let color of colors) {
-    let selector = "#" + color.id;
+  for (const color of colors) {
+    const selector = "#" + color.id;
     await selectNode(selector, inspector);
 
-    let swatch = getRuleViewProperty(view, "element", "color").valueSpan
+    const swatch = getRuleViewProperty(view, "element", "color").valueSpan
         .querySelector(".ruleview-colorswatch");
-    let cPicker = view.tooltips.getTooltip("colorPicker");
-    let onColorPickerReady = cPicker.once("ready");
+    const cPicker = view.tooltips.getTooltip("colorPicker");
+    const onColorPickerReady = cPicker.once("ready");
     swatch.click();
     await onColorPickerReady;
 
@@ -49,10 +49,10 @@ add_task(async function() {
       value: "rgb(0, 255, 0)"
     });
 
-    let spectrum = cPicker.spectrum;
-    let onHidden = cPicker.tooltip.once("hidden");
+    const spectrum = cPicker.spectrum;
+    const onHidden = cPicker.tooltip.once("hidden");
     // Validating the color change ends up updating the rule view twice
-    let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
+    const onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
     focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
     await onHidden;
     await onRuleViewChanged;
@@ -61,7 +61,7 @@ add_task(async function() {
        "changing the color preserved the unit for " + color.name);
   }
 
-  let target = TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });

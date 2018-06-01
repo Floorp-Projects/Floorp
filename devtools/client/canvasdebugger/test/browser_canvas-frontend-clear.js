@@ -6,12 +6,12 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, EVENTS, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, EVENTS, SnapshotsListView } = panel.panelWin;
 
   await reload(target);
 
-  let firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
   await firstRecordingFinished;
@@ -20,7 +20,7 @@ async function ifTestingSupported() {
   is(SnapshotsListView.itemCount, 1,
     "There should be one item available in the snapshots list.");
 
-  let secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
   await secondRecordingFinished;
@@ -29,7 +29,7 @@ async function ifTestingSupported() {
   is(SnapshotsListView.itemCount, 2,
     "There should be two items available in the snapshots list.");
 
-  let clearingFinished = once(window, EVENTS.SNAPSHOTS_LIST_CLEARED);
+  const clearingFinished = once(window, EVENTS.SNAPSHOTS_LIST_CLEARED);
   SnapshotsListView._onClearButtonClick();
 
   await clearingFinished;

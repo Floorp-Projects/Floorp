@@ -35,7 +35,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   await testPasteOuterHTMLMenu();
   await testPasteInnerHTMLMenu();
@@ -49,22 +49,22 @@ add_task(async function() {
         clipboard.copyString("this was pasted (outerHTML)");
       });
 
-    let outerHTMLSelector = "#paste-area h1";
+    const outerHTMLSelector = "#paste-area h1";
 
-    let nodeFront = await getNodeFront(outerHTMLSelector, inspector);
+    const nodeFront = await getNodeFront(outerHTMLSelector, inspector);
     await selectNode(nodeFront, inspector);
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: getContainerForNodeFront(nodeFront, inspector).tagLine,
     });
 
-    let onNodeReselected = inspector.markup.once("reselectedonremoved");
+    const onNodeReselected = inspector.markup.once("reselectedonremoved");
     allMenuItems.find(item => item.id === "node-menu-pasteouterhtml").click();
 
     info("Waiting for inspector selection to update");
     await onNodeReselected;
 
-    let outerHTML = await testActor.getProperty("body", "outerHTML");
+    const outerHTML = await testActor.getProperty("body", "outerHTML");
     ok(outerHTML.includes(clipboard.getText()),
        "Clipboard content was pasted into the node's outer HTML.");
     ok(!(await testActor.hasNode(outerHTMLSelector)),
@@ -78,19 +78,19 @@ add_task(async function() {
       () => {
         clipboard.copyString("this was pasted (innerHTML)");
       });
-    let innerHTMLSelector = "#paste-area .inner";
-    let getInnerHTML = () => testActor.getProperty(innerHTMLSelector,
+    const innerHTMLSelector = "#paste-area .inner";
+    const getInnerHTML = () => testActor.getProperty(innerHTMLSelector,
                                                    "innerHTML");
-    let origInnerHTML = await getInnerHTML();
+    const origInnerHTML = await getInnerHTML();
 
-    let nodeFront = await getNodeFront(innerHTMLSelector, inspector);
+    const nodeFront = await getNodeFront(innerHTMLSelector, inspector);
     await selectNode(nodeFront, inspector);
 
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: getContainerForNodeFront(nodeFront, inspector).tagLine,
     });
 
-    let onMutation = inspector.once("markupmutation");
+    const onMutation = inspector.once("markupmutation");
     allMenuItems.find(item => item.id === "node-menu-pasteinnerhtml").click();
     info("Waiting for mutation to occur");
     await onMutation;
@@ -105,14 +105,14 @@ add_task(async function() {
   }
 
   async function testPasteAdjacentHTMLMenu() {
-    let refSelector = "#paste-area .adjacent .ref";
-    let adjacentNodeSelector = "#paste-area .adjacent";
-    let nodeFront = await getNodeFront(refSelector, inspector);
+    const refSelector = "#paste-area .adjacent .ref";
+    const adjacentNodeSelector = "#paste-area .adjacent";
+    const nodeFront = await getNodeFront(refSelector, inspector);
     await selectNode(nodeFront, inspector);
-    let markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
+    const markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
 
-    for (let { clipboardData, menuId } of PASTE_ADJACENT_HTML_DATA) {
-      let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    for (const { clipboardData, menuId } of PASTE_ADJACENT_HTML_DATA) {
+      const allMenuItems = openContextMenuAndGetAllItems(inspector, {
         target: markupTagLine,
       });
       info(`Testing ${menuId} for ${clipboardData}`);
@@ -122,7 +122,7 @@ add_task(async function() {
           clipboard.copyString(clipboardData);
         });
 
-      let onMutation = inspector.once("markupmutation");
+      const onMutation = inspector.once("markupmutation");
       allMenuItems.find(item => item.id === menuId).click();
       info("Waiting for mutation to occur");
       await onMutation;

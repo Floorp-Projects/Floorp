@@ -29,15 +29,15 @@ window.onload = function() {
     Connection
   } = require("devtools/shared/client/connection-manager");
 
-  let orgCount = ConnectionManager.connections.length;
+  const orgCount = ConnectionManager.connections.length;
 
   ConnectionManager.once("new", c => {
     is(ConnectionManager.connections[orgCount], c,
        "new event fired, with correct connection");
   });
 
-  let c1 = ConnectionManager.createConnection();
-  let c2 = ConnectionManager.createConnection();
+  const c1 = ConnectionManager.createConnection();
+  const c2 = ConnectionManager.createConnection();
 
   is(ConnectionManager.connections[orgCount], c1, "Connection 1 registered");
   is(ConnectionManager.connections[orgCount + 1], c2, "Connection 2 registered");
@@ -45,13 +45,13 @@ window.onload = function() {
   c1.once(Connection.Events.DESTROYED, function() {
     is(ConnectionManager.connections.length, orgCount + 1, "Connection 1 destroyed");
 
-    let c = c2;
+    const c = c2;
 
-    let eventsRef = "connecting connected disconnecting disconnected host-changed"
+    const eventsRef = "connecting connected disconnecting disconnected host-changed"
                     + " disconnected timeout destroyed";
-    let events = [];
+    const events = [];
 
-    let s = Connection.Status;
+    const s = Connection.Status;
 
     is(c.status, s.DISCONNECTED, "disconnected");
 
@@ -101,8 +101,8 @@ window.onload = function() {
     function testKeepConnecting() {
       // ensure that keepConnecting keep trying connecting
       // until the connection attempts timeout
-      let prefRemoteTimeout = "devtools.debugger.remote-timeout";
-      let originalTimeout = Services.prefs.getIntPref(prefRemoteTimeout);
+      const prefRemoteTimeout = "devtools.debugger.remote-timeout";
+      const originalTimeout = Services.prefs.getIntPref(prefRemoteTimeout);
       Services.prefs.setIntPref("devtools.debugger.remote-timeout", 1000);
       c.once(Connection.Events.TIMEOUT, function() {
         events.push(Connection.Events.TIMEOUT);
@@ -110,7 +110,7 @@ window.onload = function() {
         ConnectionManager.destroyConnection(c);
       });
       c.keepConnecting = true;
-      let port = ConnectionManager.getFreeTCPPort();
+      const port = ConnectionManager.getFreeTCPPort();
       ok(parseInt(port, 10), "Free TCP port looks like a port number");
       c.port = port;
       c.host = "locahost";

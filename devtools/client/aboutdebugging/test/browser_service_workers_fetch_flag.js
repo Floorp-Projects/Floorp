@@ -10,11 +10,11 @@ const FETCH_SW_TAB_URL = URL_ROOT + "service-workers/fetch-sw.html";
 
 async function testBody(url, expecting) {
   await enableServiceWorkerDebugging();
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
 
-  let swTab = await addTab(url);
+  const swTab = await addTab(url);
 
-  let serviceWorkersElement = getServiceWorkerList(document);
+  const serviceWorkersElement = getServiceWorkerList(document);
 
   info("Wait for fetch flag.");
   await waitUntil(() => {

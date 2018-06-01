@@ -14,17 +14,17 @@
 add_task(async function() {
   await addTab(URL_ROOT + "doc_modify_playbackRate.html");
 
-  let {panel} = await openAnimationInspector();
+  const {panel} = await openAnimationInspector();
 
-  let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
+  const timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
 
-  let timeBlocks = timelineEl.querySelectorAll(".time-block");
+  const timeBlocks = timelineEl.querySelectorAll(".time-block");
   is(timeBlocks.length, 2, "2 animations are displayed");
 
   info("The first animation has its rate set to 1, let's measure it");
 
-  let el = timeBlocks[0];
-  let delay = parseInt(el.querySelector(".delay").style.width, 10);
+  const el = timeBlocks[0];
+  const delay = parseInt(el.querySelector(".delay").style.width, 10);
   let duration = null;
   el.querySelectorAll("svg g").forEach(groupEl => {
     const dur = getDuration(groupEl.querySelector("path"));
@@ -37,8 +37,8 @@ add_task(async function() {
 
   info("The second animation has its rate set to 2, so should be shorter");
 
-  let el2 = timeBlocks[1];
-  let delay2 = parseInt(el2.querySelector(".delay").style.width, 10);
+  const el2 = timeBlocks[1];
+  const delay2 = parseInt(el2.querySelector(".delay").style.width, 10);
   let duration2 = null;
   el2.querySelectorAll("svg g").forEach(groupEl => {
     const dur = getDuration(groupEl.querySelector("path"));
@@ -52,9 +52,9 @@ add_task(async function() {
   // The width are calculated by the animation-inspector dynamically depending
   // on the size of the panel, and therefore depends on the test machine/OS.
   // Let's not try to be too precise here and compare numbers.
-  let durationDelta = (2 * duration2) - duration;
+  const durationDelta = (2 * duration2) - duration;
   ok(durationDelta <= 1, "The duration width is correct");
-  let delayDelta = (2 * delay2) - delay;
+  const delayDelta = (2 * delay2) - delay;
   ok(delayDelta <= 1, "The delay width is correct");
 });
 

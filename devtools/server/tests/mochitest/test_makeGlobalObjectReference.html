@@ -23,22 +23,22 @@ addDebuggerToGlobal(this);
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "iframe1_makeGlobalObjectReference.html";
   iframe.onload = iframeOnLoad;
   document.body.appendChild(iframe);
 
   function iframeOnLoad() {
-    let dbg = new Debugger();
+    const dbg = new Debugger();
 
     // 'o' for 'outer window'
-    let g1o = iframe.contentWindow;
+    const g1o = iframe.contentWindow;
     ok(!dbg.hasDebuggee(g1o), "iframe is not initially a debuggee");
 
     // Like addDebuggee, makeGlobalObjectReference innerizes.
     // 'i' stands for 'inner window'.
     // 'DO' stands for 'Debugger.Object'.
-    let g1iDO = dbg.makeGlobalObjectReference(g1o);
+    const g1iDO = dbg.makeGlobalObjectReference(g1o);
     ok(!dbg.hasDebuggee(g1o),
        "makeGlobalObjectReference does not add g1 as debuggee, designated via outer");
     ok(!dbg.hasDebuggee(g1iDO),
@@ -51,7 +51,7 @@ window.onload = function() {
     ok(g1iDO.unsafeDereference() === g1o, "g1iDO has the right referent");
 
     // However, Debugger.Objects do distinguish inner and outer windows.
-    let g1oDO = g1iDO.makeDebuggeeValue(g1o);
+    const g1oDO = g1iDO.makeDebuggeeValue(g1o);
     ok(g1iDO !== g1oDO, "makeDebuggeeValue doesn't innerize");
     ok(g1iDO.unsafeDereference() === g1oDO.unsafeDereference(),
        "unsafeDereference() outerizes," +
@@ -64,18 +64,18 @@ window.onload = function() {
     ok(dbg.hasDebuggee(g1oDO),
        "hasDebuggee can take a D.O referring to the outer window");
 
-    let iframe2 = document.createElement("iframe");
+    const iframe2 = document.createElement("iframe");
     iframe2.src = "iframe2_makeGlobalObjectReference.html";
     iframe2.onload = iframe2OnLoad;
     document.body.appendChild(iframe2);
 
     function iframe2OnLoad() {
       // makeGlobalObjectReference dereferences CCWs.
-      let g2o = iframe2.contentWindow;
+      const g2o = iframe2.contentWindow;
       g2o.g1o = g1o;
 
-      let g2iDO = dbg.addDebuggee(g2o);
-      let g2g1oDO = g2iDO.getOwnPropertyDescriptor("g1o").value;
+      const g2iDO = dbg.addDebuggee(g2o);
+      const g2g1oDO = g2iDO.getOwnPropertyDescriptor("g1o").value;
       ok(g2g1oDO !== g1oDO, "g2's cross-compartment wrapper for g1o gets its own D.O");
       ok(g2g1oDO.unwrap() === g1oDO,
          "unwrapping g2's cross-compartment wrapper for g1o gets the right D.O");

@@ -13,7 +13,7 @@ add_task(async function() {
   await pushPref(PSEUDO_PREF, true);
 
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await testTopLeft(inspector, view);
   await testTopRight(inspector, view);
@@ -24,8 +24,8 @@ add_task(async function() {
 });
 
 async function testTopLeft(inspector, view) {
-  let id = "#topleft";
-  let rules = await assertPseudoElementRulesNumbers(id,
+  const id = "#topleft";
+  const rules = await assertPseudoElementRulesNumbers(id,
     inspector, view, {
       elementRulesNb: 4,
       firstLineRulesNb: 2,
@@ -36,10 +36,10 @@ async function testTopLeft(inspector, view) {
     }
   );
 
-  let gutters = assertGutters(view);
+  const gutters = assertGutters(view);
 
   info("Make sure that clicking on the twisty hides pseudo elements");
-  let expander = gutters[0].querySelector(".ruleview-expander");
+  const expander = gutters[0].querySelector(".ruleview-expander");
   ok(!view.element.children[1].hidden, "Pseudo Elements are expanded");
 
   expander.click();
@@ -56,10 +56,10 @@ async function testTopLeft(inspector, view) {
   ok(view.element.children[1].hidden,
     "Pseudo Elements are collapsed by dblclicking");
 
-  let elementRuleView = getRuleViewRuleEditor(view, 3);
+  const elementRuleView = getRuleViewRuleEditor(view, 3);
 
-  let elementFirstLineRule = rules.firstLineRules[0];
-  let elementFirstLineRuleView =
+  const elementFirstLineRule = rules.firstLineRules[0];
+  const elementFirstLineRuleView =
     [...view.element.children[1].children].filter(e => {
       return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
     })[0]._ruleEditor;
@@ -74,7 +74,7 @@ async function testTopLeft(inspector, view) {
   await onAdded;
 
   onAdded = view.once("ruleview-changed");
-  let secondProp = elementFirstLineRuleView.addProperty("font-style",
+  const secondProp = elementFirstLineRuleView.addProperty("font-style",
     "italic", "", true);
   await onAdded;
 
@@ -127,9 +127,9 @@ async function testTopRight(inspector, view) {
     afterRulesNb: 1
   });
 
-  let gutters = assertGutters(view);
+  const gutters = assertGutters(view);
 
-  let expander = gutters[0].querySelector(".ruleview-expander");
+  const expander = gutters[0].querySelector(".ruleview-expander");
   ok(!view.element.firstChild.classList.contains("show-expandable-container"),
      "Pseudo Elements remain collapsed after switching element");
 
@@ -162,7 +162,7 @@ async function testBottomLeft(inspector, view) {
 }
 
 async function testParagraph(inspector, view) {
-  let rules =
+  const rules =
     await assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
       elementRulesNb: 3,
       firstLineRulesNb: 1,
@@ -174,17 +174,17 @@ async function testParagraph(inspector, view) {
 
   assertGutters(view);
 
-  let elementFirstLineRule = rules.firstLineRules[0];
+  const elementFirstLineRule = rules.firstLineRules[0];
   is(convertTextPropsToString(elementFirstLineRule.textProps),
      "background: blue",
      "Paragraph first-line properties are correct");
 
-  let elementFirstLetterRule = rules.firstLetterRules[0];
+  const elementFirstLetterRule = rules.firstLetterRules[0];
   is(convertTextPropsToString(elementFirstLetterRule.textProps),
      "color: red; font-size: 130%",
      "Paragraph first-letter properties are correct");
 
-  let elementSelectionRule = rules.selectionRules[0];
+  const elementSelectionRule = rules.selectionRules[0];
   is(convertTextPropsToString(elementSelectionRule.textProps),
      "color: white; background: black",
      "Paragraph first-letter properties are correct");
@@ -193,7 +193,7 @@ async function testParagraph(inspector, view) {
 async function testBody(inspector, view) {
   await testNode("body", inspector, view);
 
-  let gutters = getGutters(view);
+  const gutters = getGutters(view);
   is(gutters.length, 0, "There are no gutter headings");
 }
 
@@ -203,14 +203,14 @@ function convertTextPropsToString(textProps) {
 
 async function testNode(selector, inspector, view) {
   await selectNode(selector, inspector);
-  let elementStyle = view._elementStyle;
+  const elementStyle = view._elementStyle;
   return elementStyle;
 }
 
 async function assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
-  let elementStyle = await testNode(selector, inspector, view);
+  const elementStyle = await testNode(selector, inspector, view);
 
-  let rules = {
+  const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
     firstLineRules: elementStyle.rules.filter(rule =>
       rule.pseudoElement === ":first-line"),
@@ -245,7 +245,7 @@ function getGutters(view) {
 }
 
 function assertGutters(view) {
-  let gutters = getGutters(view);
+  const gutters = getGutters(view);
 
   is(gutters.length, 3,
      "There are 3 gutter headings");

@@ -25,7 +25,7 @@ add_task(async function test() {
 
   dbg.memory.allocationSamplingProbability = 1;
 
-  for (let [func, n] of [ [g.f, 20],
+  for (const [func, n] of [ [g.f, 20],
                           [g.g, 10],
                           [g.h, 5] ]) {
     for (let i = 0; i < n; i++) {
@@ -81,7 +81,7 @@ add_task(async function test() {
 
   // Gather the stacks we are expecting to appear as keys, and
   // check that there are no unexpected keys.
-  let stacks = {};
+  const stacks = {};
 
   map.forEach((v, k) => {
     if (k === "noStack") {

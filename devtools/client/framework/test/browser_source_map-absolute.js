@@ -22,12 +22,12 @@ add_task(async function() {
   const service = toolbox.sourceMapURLService;
 
   // Inject JS script
-  let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
+  const sourceSeen = waitForSourceLoad(toolbox, JS_URL);
   await createScript(JS_URL);
   await sourceSeen;
 
   info(`checking original location for ${JS_URL}:6`);
-  let newLoc = await service.originalPositionFor(JS_URL, 6, 4);
+  const newLoc = await service.originalPositionFor(JS_URL, 6, 4);
 
   is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, 4, "check mapped line number");

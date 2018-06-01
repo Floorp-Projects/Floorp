@@ -47,10 +47,10 @@ var AutomationView = {
    * that specific node.
    */
   async build() {
-    let node = this._currentNode;
+    const node = this._currentNode;
 
-    let props = await node.getParams();
-    let params = props.filter(({ flags }) => flags && flags.param);
+    const props = await node.getParams();
+    const params = props.filter(({ flags }) => flags && flags.param);
 
     this._createParamButtons(params);
 
@@ -64,8 +64,8 @@ var AutomationView = {
    * are fired for the currently specified param.
    */
   async render() {
-    let node = this._currentNode;
-    let paramName = this._selectedParamName;
+    const node = this._currentNode;
+    const paramName = this._selectedParamName;
     // Escape if either node or parameter name does not exist.
     if (!node || !paramName) {
       this._setState("no-params");
@@ -73,7 +73,7 @@ var AutomationView = {
       return;
     }
 
-    let { values, events } = await node.getAutomationData(paramName);
+    const { values, events } = await node.getAutomationData(paramName);
     this._setState(events.length ? "show" : "no-events");
     await this.graph.setDataWhenReady(values);
     window.emit(EVENTS.UI_AUTOMATION_TAB_RENDERED, node.id);
@@ -86,7 +86,7 @@ var AutomationView = {
   _createParamButtons: function(params) {
     this._buttons.innerHTML = "";
     params.forEach((param, i) => {
-      let button = document.createElement("toolbarbutton");
+      const button = document.createElement("toolbarbutton");
       button.setAttribute("class", "devtools-toolbarbutton automation-param-button");
       button.setAttribute("data-param", param.param);
       // Set label to the parameter name, should not be L10N'd
@@ -118,11 +118,11 @@ var AutomationView = {
    * shows the graph.
    */
   _setState: function(state) {
-    let contentView = $("#automation-content");
-    let emptyView = $("#automation-empty");
+    const contentView = $("#automation-content");
+    const emptyView = $("#automation-empty");
 
-    let graphView = $("#automation-graph-container");
-    let noEventsView = $("#automation-no-events");
+    const graphView = $("#automation-graph-container");
+    const noEventsView = $("#automation-no-events");
 
     contentView.hidden = state === "no-params";
     emptyView.hidden = state !== "no-params";
@@ -137,7 +137,7 @@ var AutomationView = {
 
   _onButtonClick: function(e) {
     Array.forEach($$(".automation-param-button"), $btn => $btn.removeAttribute("selected"));
-    let paramName = e.target.getAttribute("data-param");
+    const paramName = e.target.getAttribute("data-param");
     e.target.setAttribute("selected", true);
     this._selectedParamName = paramName;
     this.render();

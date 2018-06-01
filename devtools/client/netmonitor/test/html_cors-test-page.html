@@ -19,7 +19,7 @@
       "use strict";
 
       function post(url, contentType, postData) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", contentType);
         xhr.send(postData);

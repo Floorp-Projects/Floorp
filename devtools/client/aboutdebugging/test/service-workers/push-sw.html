@@ -15,14 +15,14 @@ var sub = null;
 // The registration promise is expected as a global by head.js's unregisterServiceWorker.
 var sw = (async function() {
   await new Promise(resolve => {
-    let perm = { type: "desktop-notification", allow: true, context: document };
+    const perm = { type: "desktop-notification", allow: true, context: document };
     SpecialPowers.pushPermissions([perm], resolve);
   });
 
-  let registrationPromise = navigator.serviceWorker.register("push-sw.js");
+  const registrationPromise = navigator.serviceWorker.register("push-sw.js");
 
   try {
-    let registration = await registrationPromise;
+    const registration = await registrationPromise;
     dump("SW registered\n");
 
     try {

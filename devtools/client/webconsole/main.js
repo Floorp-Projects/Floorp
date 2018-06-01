@@ -12,7 +12,7 @@ this.WebConsoleOutput = function(parentNode, jsterm, toolbox, owner, serviceCont
   // Initialize module loader and load all modules of the new inline
   // preview feature. The entire code-base doesn't need any extra
   // privileges and runs entirely in content scope.
-  let WebConsoleOutputWrapper = BrowserLoader({
+  const WebConsoleOutputWrapper = BrowserLoader({
     baseURI: "resource://devtools/client/webconsole/",
     window
   }).require("./webconsole-output-wrapper");

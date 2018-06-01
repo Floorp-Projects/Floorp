@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Checking the state of the 3 pane inspector");
   let sidebarWidth = inspector.splitBox.state.width;
-  let sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
+  const sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
   ok(!button.classList.contains("pane-collapsed"), "The button is in expanded state");
   ok(doc.getElementById("ruleview-panel"), "The rule view panel exist");
   is(inspector.sidebar.getCurrentTabID(), "layoutview",

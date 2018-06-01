@@ -23,8 +23,8 @@ function runTests(sw) {
   const sp = sw.Scratchpad;
 
   /* eslint-disable brace-style */
-  let foo = "" + function main() { console.log(1); };
-  let bar = "var bar = " + (() => { console.log(2); });
+  const foo = "" + function main() { console.log(1); };
+  const bar = "var bar = " + (() => { console.log(2); });
   /* eslint-enable brace-style */
 
   const fullText =

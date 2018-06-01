@@ -19,12 +19,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("#testid", inspector);
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[0].editor;
 
   await testColorValueSpanClickWithoutNameChange(propEditor, view);
   await testColorValueSpanClickAfterNameChange(propEditor, view);
@@ -32,7 +32,7 @@ add_task(async function() {
 
 async function testColorValueSpanClickWithoutNameChange(propEditor, view) {
   info("Test click on color span while focusing property name editor");
-  let colorSpan = propEditor.valueSpan.querySelector(".ruleview-color");
+  const colorSpan = propEditor.valueSpan.querySelector(".ruleview-color");
 
   info("Focus the color name span");
   await focusEditableField(view, propEditor.nameSpan);
@@ -40,11 +40,11 @@ async function testColorValueSpanClickWithoutNameChange(propEditor, view) {
 
   // We add a click event to make sure the color span won't be cleared
   // on nameSpan blur (which would lead to the click event not being triggered)
-  let onColorSpanClick = once(colorSpan, "click");
+  const onColorSpanClick = once(colorSpan, "click");
 
   // The property-value-updated is emitted when the valueSpan markup is being
   // re-populated, which should not be the case when not modifying the property name
-  let onPropertyValueUpdated = function() {
+  const onPropertyValueUpdated = function() {
     ok(false, "The \"property-value-updated\" should not be emitted");
   };
   view.on("property-value-updated", onPropertyValueUpdated);
@@ -65,14 +65,14 @@ async function testColorValueSpanClickWithoutNameChange(propEditor, view) {
 
   info("blur valueSpan editor to trigger ruleview-changed event and prevent " +
     "having pending request");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   editor.input.blur();
   await onRuleViewChanged;
 }
 
 async function testColorValueSpanClickAfterNameChange(propEditor, view) {
   info("Test click on color span after property name change");
-  let colorSpan = propEditor.valueSpan.querySelector(".ruleview-color");
+  const colorSpan = propEditor.valueSpan.querySelector(".ruleview-color");
 
   info("Focus the color name span");
   await focusEditableField(view, propEditor.nameSpan);
@@ -83,7 +83,7 @@ async function testColorValueSpanClickAfterNameChange(propEditor, view) {
   editor.input.value = "border-color";
 
   let onRuleViewChanged = view.once("ruleview-changed");
-  let onPropertyValueUpdate = view.once("property-value-updated");
+  const onPropertyValueUpdate = view.once("property-value-updated");
 
   info("blur propEditor.nameSpan by clicking on the color span");
   EventUtils.synthesizeMouse(colorSpan, 1, 1, {}, propEditor.doc.defaultView);

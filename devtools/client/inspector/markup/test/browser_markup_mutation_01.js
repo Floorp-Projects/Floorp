@@ -21,7 +21,7 @@ const TEST_DATA = [
       await testActor.setAttribute("#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\""
           && attr.dataset.value === "newattrval"
@@ -35,7 +35,7 @@ const TEST_DATA = [
       await testActor.removeAttribute("#node1", "newattr");
     },
     check: async function(inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
       ok(![...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\"";
       }), "newattr attribute removed");
@@ -47,7 +47,7 @@ const TEST_DATA = [
       await testActor.setAttribute("#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\""
           && attr.dataset.value === "newattrval"
@@ -61,7 +61,7 @@ const TEST_DATA = [
       await testActor.setAttribute("#node1", "newattr", "newattrchanged");
     },
     check: async function(inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrchanged\""
           && attr.dataset.value === "newattrchanged"
@@ -72,12 +72,12 @@ const TEST_DATA = [
   {
     desc: "Adding another attribute does not rerender unchanged attributes",
     test: async function(testActor, inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
 
       // This test checks the impact on the markup-view nodes after setting attributes on
       // content nodes.
       info("Expect attribute-container for 'new-attr' from the previous test");
-      let attributeContainer = editor.attrList.querySelector("[data-attr=newattr]");
+      const attributeContainer = editor.attrList.querySelector("[data-attr=newattr]");
       ok(attributeContainer, "attribute-container for 'newattr' found");
 
       info("Set a flag on the attribute-container to check after the mutation");
@@ -87,14 +87,14 @@ const TEST_DATA = [
       await testActor.setAttribute("#node1", "otherattr", "othervalue");
     },
     check: async function(inspector) {
-      let {editor} = await getContainerForSelector("#node1", inspector);
+      const {editor} = await getContainerForSelector("#node1", inspector);
 
       info("Check the attribute-container for the new attribute mutation was created");
-      let otherAttrContainer = editor.attrList.querySelector("[data-attr=otherattr]");
+      const otherAttrContainer = editor.attrList.querySelector("[data-attr=otherattr]");
       ok(otherAttrContainer, "attribute-container for 'otherattr' found");
 
       info("Check the attribute-container for 'new-attr' is the same node as earlier.");
-      let newAttrContainer = editor.attrList.querySelector("[data-attr=newattr]");
+      const newAttrContainer = editor.attrList.querySelector("[data-attr=newattr]");
       ok(newAttrContainer, "attribute-container for 'newattr' found");
       ok(newAttrContainer.beforeMutationFlag, "attribute-container same as earlier");
     }
@@ -109,7 +109,7 @@ const TEST_DATA = [
       `);
     },
     check: async function(inspector) {
-      let {children} = await getContainerForSelector("#node1", inspector);
+      const {children} = await getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (text child and ::after");
     }
@@ -124,7 +124,7 @@ const TEST_DATA = [
       `);
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
     }
   },
@@ -134,7 +134,7 @@ const TEST_DATA = [
       await testActor.setProperty("#node1", "textContent", "newtext");
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -152,7 +152,7 @@ const TEST_DATA = [
       `);
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(container.canExpand, "Can expand container with child nodes.");
       ok(container.editor.elt.querySelector(".text") == null,
@@ -165,7 +165,7 @@ const TEST_DATA = [
       await testActor.setProperty("#node1", "textContent", "newtext");
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -179,7 +179,7 @@ const TEST_DATA = [
       await testActor.setProperty("#node1", "innerHTML", "");
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(!container.canExpand, "Can't expand empty container.");
       ok(container.editor.elt.querySelector(".text") == null,
@@ -192,7 +192,7 @@ const TEST_DATA = [
       await testActor.setProperty("#node1", "textContent", "newtext");
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node1", inspector);
+      const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -208,9 +208,9 @@ const TEST_DATA = [
                                   "<div><span>foo</span></div>");
     },
     check: async function(inspector) {
-      let container = await getContainerForSelector("#node2", inspector);
+      const container = await getContainerForSelector("#node2", inspector);
 
-      let openTags = container.children.querySelectorAll(".open .tag");
+      const openTags = container.children.querySelectorAll(".open .tag");
       is(openTags.length, 2, "There are 2 tags in node2");
       is(openTags[0].textContent.trim(), "div", "The first tag is a div");
       is(openTags[1].textContent.trim(), "span", "The second tag is a span");
@@ -230,7 +230,7 @@ const TEST_DATA = [
       `);
     },
     check: async function(inspector) {
-      let {children} = await getContainerForSelector("#node4", inspector);
+      const {children} = await getContainerForSelector("#node4", inspector);
       is(children.innerHTML, "", "Children have been removed");
     }
   },
@@ -244,12 +244,12 @@ const TEST_DATA = [
       `);
     },
     check: async function(inspector) {
-      let {children} = await getContainerForSelector("#node16", inspector);
+      const {children} = await getContainerForSelector("#node16", inspector);
       is(children.innerHTML, "",
          "Node17 has been removed from its node16 parent");
 
-      let container = await getContainerForSelector("#node2", inspector);
-      let openTags = container.children.querySelectorAll(".open .tag");
+      const container = await getContainerForSelector("#node2", inspector);
+      const openTags = container.children.querySelectorAll(".open .tag");
       is(openTags.length, 3, "There are now 3 tags in node2");
       is(openTags[2].textContent.trim(), "p", "The third tag is node17");
     }
@@ -281,20 +281,20 @@ const TEST_DATA = [
     check: async function(inspector) {
       await inspector.markup.expandAll();
 
-      let {children} = await getContainerForSelector("#node1", inspector);
+      const {children} = await getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (textnode and node20)");
 
-      let node20 = children.childNodes[1];
-      let node20Children = node20.container.children;
+      const node20 = children.childNodes[1];
+      const node20Children = node20.container.children;
       is(node20Children.childNodes.length, 2,
           "Node20 has 2 children (21 and 18)");
 
-      let node21 = node20Children.childNodes[0];
+      const node21 = node20Children.childNodes[0];
       is(node21.container.editor.elt.querySelector(".text").textContent.trim(),
          "line21", "Node21 has a single text child");
 
-      let node18 = node20Children.childNodes[1];
+      const node18 = node20Children.childNodes[1];
       is(node18.querySelector(".open .attreditor .attr-value")
                .textContent.trim(),
          "node18", "Node20's second child is indeed node18");
@@ -303,7 +303,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Expanding all markup-view nodes");
   await inspector.markup.expandAll();
@@ -318,7 +318,7 @@ add_task(async function() {
     // If a test expects more than one mutation it may come through in a single
     // event or possibly in multiples.
     let seenMutations = 0;
-    let promise = new Promise(resolve => {
+    const promise = new Promise(resolve => {
       inspector.on("markupmutation", function onmutation(mutations) {
         seenMutations += mutations.length;
         info("Receieved " + seenMutations +

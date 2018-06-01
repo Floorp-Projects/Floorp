@@ -65,7 +65,7 @@ class StatisticsPanel extends Component {
   }
 
   componentDidMount() {
-    let { requests, connector } = this.props;
+    const { requests, connector } = this.props;
     requests.forEach((request) => {
       fetchNetworkUpdatePacket(connector.requestData, request, [
         "eventTimings",
@@ -75,7 +75,7 @@ class StatisticsPanel extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { requests, connector } = nextProps;
+    const { requests, connector } = nextProps;
     requests.forEach((request) => {
       fetchNetworkUpdatePacket(connector.requestData, request, [
         "eventTimings",
@@ -88,7 +88,7 @@ class StatisticsPanel extends Component {
     MediaQueryList.addListener(this.onLayoutChange);
 
     const { requests } = this.props;
-    let ready = requests && requests.length && requests.every((req) =>
+    const ready = requests && requests.length && requests.every((req) =>
       req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
       req.status !== undefined && req.totalTime !== undefined
     );
@@ -122,22 +122,22 @@ class StatisticsPanel extends Component {
     // MDNLink is a React component but Chart isn't.  To get the link
     // into the chart we mount a new ReactDOM at the appropriate
     // location after the chart has been created.
-    let title = this.refs[chartId].querySelector(".table-chart-title");
-    let containerNode = document.createElement("span");
+    const title = this.refs[chartId].querySelector(".table-chart-title");
+    const containerNode = document.createElement("span");
     title.appendChild(containerNode);
     ReactDOM.render(MDNLink({ url }), containerNode);
     this.mdnLinkContainerNodes.set(chartId, containerNode);
   }
 
   unmountMDNLinkContainers() {
-    for (let [, node] of this.mdnLinkContainerNodes) {
+    for (const [, node] of this.mdnLinkContainerNodes) {
       ReactDOM.unmountComponentAtNode(node);
     }
   }
 
   createChart({ id, title, data }) {
     // Create a new chart.
-    let chart = Chart.PieTable(document, {
+    const chart = Chart.PieTable(document, {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title,
       header: {
@@ -170,14 +170,14 @@ class StatisticsPanel extends Component {
           L10N.getFormatStr("charts.totalTransferredSize",
             getSizeWithDecimals(total / 1024)),
         time: (total) => {
-          let seconds = total / 1000;
-          let string = getTimeWithDecimals(seconds);
+          const seconds = total / 1000;
+          const string = getTimeWithDecimals(seconds);
           return PluralForm.get(seconds,
             L10N.getStr("charts.totalSeconds")).replace("#1", string);
         },
         nonBlockingTime: (total) => {
-          let seconds = total / 1000;
-          let string = getTimeWithDecimals(seconds);
+          const seconds = total / 1000;
+          const string = getTimeWithDecimals(seconds);
           return PluralForm.get(seconds,
             L10N.getStr("charts.totalSecondsNonBlocking")).replace("#1", string);
         },
@@ -191,7 +191,7 @@ class StatisticsPanel extends Component {
       this.props.enableRequestFilterTypeOnly(label);
     });
 
-    let container = this.refs[id];
+    const container = this.refs[id];
 
     // Nuke all existing charts of the specified type.
     while (container.hasChildNodes()) {
@@ -212,7 +212,7 @@ class StatisticsPanel extends Component {
       nonBlockingTime: 0,
     }));
 
-    for (let request of requests) {
+    for (const request of requests) {
       let type;
 
       if (Filters.html(request)) {
@@ -249,7 +249,7 @@ class StatisticsPanel extends Component {
         data[type].time += request.totalTime || 0;
         data[type].size += request.contentSize || 0;
         data[type].transferredSize += request.transferredSize || 0;
-        let nonBlockingTime =
+        const nonBlockingTime =
            request.eventTimings.totalTime - request.eventTimings.timings.blocked;
         data[type].nonBlockingTime += nonBlockingTime || 0;
       } else {
@@ -276,13 +276,13 @@ class StatisticsPanel extends Component {
       return false;
     }
 
-    let list = responseHeaders.headers;
-    let cacheControl = list.find(e => e.name.toLowerCase() === "cache-control");
-    let expires = list.find(e => e.name.toLowerCase() === "expires");
+    const list = responseHeaders.headers;
+    const cacheControl = list.find(e => e.name.toLowerCase() === "cache-control");
+    const expires = list.find(e => e.name.toLowerCase() === "expires");
 
     // Check the "Cache-Control" header for a maximum age value.
     if (cacheControl) {
-      let maxAgeMatch =
+      const maxAgeMatch =
         cacheControl.value.match(/s-maxage\s*=\s*(\d+)/) ||
         cacheControl.value.match(/max-age\s*=\s*(\d+)/);
 
@@ -307,7 +307,7 @@ class StatisticsPanel extends Component {
 
   render() {
     const { closeStatistics } = this.props;
-    let splitterClassName = ["splitter"];
+    const splitterClassName = ["splitter"];
 
     if (this.state.isVerticalSpliter) {
       splitterClassName.push("devtools-side-splitter");

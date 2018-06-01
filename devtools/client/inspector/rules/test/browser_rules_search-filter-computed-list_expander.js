@@ -23,16 +23,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testOpenExpanderAndAddTextInFilter(inspector, view);
   await testClearSearchFilter(inspector, view);
 });
 
 async function testOpenExpanderAndAddTextInFilter(inspector, view) {
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let ruleEditor = rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const ruleEditor = rule.textProps[0].editor;
+  const computed = ruleEditor.computed;
 
   info("Opening the computed list of margin property");
   ruleEditor.expander.click();
@@ -66,9 +66,9 @@ async function testOpenExpanderAndAddTextInFilter(inspector, view) {
 async function testClearSearchFilter(inspector, view) {
   info("Clearing the search filter");
 
-  let searchField = view.searchField;
-  let searchClearButton = view.searchClearButton;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
+  const searchField = view.searchField;
+  const searchClearButton = view.searchClearButton;
+  const onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {},
     view.styleWindow);
@@ -81,8 +81,8 @@ async function testClearSearchFilter(inspector, view) {
   ok(!view.styleDocument.querySelectorAll(".ruleview-highlight").length,
     "No rules are higlighted");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1).rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
+  const ruleEditor = getRuleViewRuleEditor(view, 1).rule.textProps[0].editor;
+  const computed = ruleEditor.computed;
 
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
   ok(!computed.hasAttribute("filter-open"),

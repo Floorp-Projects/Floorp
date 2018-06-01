@@ -31,7 +31,7 @@ add_task(async function() {
      "The timeline shows 3 animations too");
 
   // Reduce the known nodeFronts to a set to make them unique.
-  let nodeFronts =
+  const nodeFronts =
     new Set(getAnimationTargetNodes(panel).map(n => n.previewer.nodeFront));
   is(nodeFronts.size, 3, "The animations are applied to 3 different node fronts");
 });

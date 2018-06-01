@@ -9,14 +9,14 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("h1", inspector);
 
   info("Getting the ruleclose brace element");
-  let brace = view.styleDocument.querySelector(".ruleview-ruleclose");
+  const brace = view.styleDocument.querySelector(".ruleview-ruleclose");
 
   info("Focus the new property editable field to create a color property");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
   let editor = await focusNewRuleViewProperty(ruleEditor);
   editor.input.value = "color";
 

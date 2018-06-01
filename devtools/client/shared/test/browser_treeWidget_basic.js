@@ -12,9 +12,9 @@ const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(async function() {
   await addTab("about:blank");
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host,, doc] = await createHost("bottom", TEST_URI);
 
-  let tree = new TreeWidget(doc.querySelector("div"), {
+  const tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"
   });
 
@@ -96,7 +96,7 @@ function testTreeItemInsertedCorrectly(tree, doc) {
      "Text content of second top level element matches");
 
   // Adding a new non text item in the tree.
-  let node = doc.createElement("div");
+  const node = doc.createElement("div");
   node.textContent = "Foo Bar";
   node.className = "foo bar";
   tree.add([{
@@ -163,13 +163,13 @@ function testAPI(tree, doc) {
   // Nothing should be selected beforehand
   ok(!doc.querySelector(".theme-selected"), "Nothing is selected");
   tree.selectItem(["level1"]);
-  let node = doc.querySelector(".theme-selected");
+  const node = doc.querySelector(".theme-selected");
   ok(!!node, "Something got selected");
   is(node.parentNode.dataset.id, JSON.stringify(["level1"]),
      "Correct node selected");
 
   tree.selectItem(["level1", "level2"]);
-  let node2 = doc.querySelector(".theme-selected");
+  const node2 = doc.querySelector(".theme-selected");
   ok(!!node2, "Something is still selected");
   isnot(node, node2, "Newly selected node is different from previous");
   is(node2.parentNode.dataset.id, JSON.stringify(["level1", "level2"]),
@@ -184,7 +184,7 @@ function testAPI(tree, doc) {
   ok(tree.isSelected(["level1", "level2"]), "isSelected works");
 
   tree.selectedItem = ["level1"];
-  let node3 = doc.querySelector(".theme-selected");
+  const node3 = doc.querySelector(".theme-selected");
   ok(!!node3, "Something is still selected");
   isnot(node2, node3, "Newly selected node is different from previous");
   is(node3, node, "First and third selected nodes should be same");
@@ -241,7 +241,7 @@ function testAPI(tree, doc) {
   ok(!doc.querySelector("[data-id='" +
        JSON.stringify(["level1", "level2", "level3"]) + "']"),
      "level1-level2-level3 item does not exist after removing");
-  let level2item = doc.querySelector("[data-id='" +
+  const level2item = doc.querySelector("[data-id='" +
        JSON.stringify(["level1", "level2"]) + "'] > .tree-widget-item");
   ok(level2item.hasAttribute("empty"),
      "level1-level2 item is marked as empty after removing");

@@ -21,7 +21,7 @@
 
       function post(address, data) {
         return new Promise(resolve => {
-          let xhr = new XMLHttpRequest();
+          const xhr = new XMLHttpRequest();
           xhr.open("POST", address, true);
           xhr.setRequestHeader("Content-Type", "application/json");
           xhr.onload = resolve;
@@ -31,7 +31,7 @@
 
       function get(address) {
         return new Promise(resolve => {
-          let xhr = new XMLHttpRequest();
+          const xhr = new XMLHttpRequest();
           xhr.open("GET", address);
           xhr.onload = resolve;
           xhr.send();

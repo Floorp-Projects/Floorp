@@ -37,8 +37,8 @@ function run_test_with_server(server, callback) {
 function test_remove_breakpoint() {
   let done = false;
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let source = gThreadClient.source(packet.frame.where.source);
-    let location = { line: gDebuggee.line0 + 2 };
+    const source = gThreadClient.source(packet.frame.where.source);
+    const location = { line: gDebuggee.line0 + 2 };
 
     source.setBreakpoint(location, function(response, bpClient) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {

@@ -59,16 +59,16 @@ const KEY_STATES = [
 ];
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
-  let { searchBox } = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { searchBox } = inspector;
 
   await selectNode("#b1", inspector);
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   let index = 0;
-  for (let [ key, id, isValid ] of KEY_STATES) {
+  for (const [ key, id, isValid ] of KEY_STATES) {
     info(index + ": Pressing key " + key + " to get id " + id + ".");
-    let done = inspector.searchSuggestions.once("processing-done");
+    const done = inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await done;
     info("Got processing-done event");
@@ -83,7 +83,7 @@ add_task(async function() {
 
     info(inspector.selection.nodeFront.id + " is selected with text " +
          searchBox.value);
-    let nodeFront = await getNodeFront("#" + id, inspector);
+    const nodeFront = await getNodeFront("#" + id, inspector);
     is(inspector.selection.nodeFront, nodeFront,
        "Correct node is selected for state " + index);
 

@@ -7,8 +7,8 @@
 
 // Test that the split console state is persisted.
 
-let {LocalizationHelper} = require("devtools/shared/l10n");
-let L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
@@ -38,8 +38,8 @@ add_task(async function() {
      "Split console menu item initially says hide");
   is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
 
-  let activeElement = getActiveElement(toolbox.doc);
-  let inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
+  const activeElement = getActiveElement(toolbox.doc);
+  const inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
   is(activeElement, inputNode, "Split console input is focused by default");
 
   toolbox.webconsolePanel.height = 1;
@@ -111,8 +111,8 @@ function doesMenuSayHide(toolbox) {
 }
 
 function toggleSplitConsoleWithEscape(toolbox) {
-  let onceSplitConsole = toolbox.once("split-console");
-  let toolboxWindow = toolbox.win;
+  const onceSplitConsole = toolbox.once("split-console");
+  const toolboxWindow = toolbox.win;
   toolboxWindow.focus();
   EventUtils.sendKey("ESCAPE", toolboxWindow);
   return onceSplitConsole;

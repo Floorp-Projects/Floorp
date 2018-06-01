@@ -13,9 +13,9 @@ const MenuItem = require("devtools/client/framework/menu-item");
 
 add_task(async function() {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
-  let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const tab = await addTab(URL);
+  const target = TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await testMenuItems();
   await testMenuPopup(toolbox);
@@ -23,9 +23,9 @@ add_task(async function() {
 });
 
 function testMenuItems() {
-  let menu = new Menu();
-  let menuItem1 = new MenuItem();
-  let menuItem2 = new MenuItem();
+  const menu = new Menu();
+  const menuItem1 = new MenuItem();
+  const menuItem2 = new MenuItem();
 
   menu.append(menuItem1);
   menu.append(menuItem2);
@@ -38,12 +38,12 @@ function testMenuItems() {
 async function testMenuPopup(toolbox) {
   let clickFired = false;
 
-  let menu = new Menu({
+  const menu = new Menu({
     id: "menu-popup",
   });
   menu.append(new MenuItem({ type: "separator" }));
 
-  let MENU_ITEMS = [
+  const MENU_ITEMS = [
     new MenuItem({
       id: "menu-item-1",
       label: "Normal Item",
@@ -67,7 +67,7 @@ async function testMenuPopup(toolbox) {
     }),
   ];
 
-  for (let item of MENU_ITEMS) {
+  for (const item of MENU_ITEMS) {
     menu.append(item);
   }
 
@@ -81,11 +81,11 @@ async function testMenuPopup(toolbox) {
 
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
 
-  let menuSeparators =
+  const menuSeparators =
     toolbox.doc.querySelectorAll("#menu-popup > menuseparator");
   is(menuSeparators.length, 1, "A separator is in the menu");
 
-  let menuItems = toolbox.doc.querySelectorAll("#menu-popup > menuitem");
+  const menuItems = toolbox.doc.querySelectorAll("#menu-popup > menuitem");
   is(menuItems.length, MENU_ITEMS.length, "Correct number of menuitems");
 
   is(menuItems[0].id, MENU_ITEMS[0].id, "Correct id for menuitem");
@@ -103,7 +103,7 @@ async function testMenuPopup(toolbox) {
   is(menuItems[3].getAttribute("disabled"), "true", "disabled attr menuitem");
 
   await once(menu, "open");
-  let closed = once(menu, "close");
+  const closed = once(menu, "close");
   EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.win);
   await closed;
   ok(clickFired, "Click has fired");
@@ -113,10 +113,10 @@ async function testMenuPopup(toolbox) {
 
 async function testSubmenu(toolbox) {
   let clickFired = false;
-  let menu = new Menu({
+  const menu = new Menu({
     id: "menu-popup",
   });
-  let submenu = new Menu({
+  const submenu = new Menu({
     id: "submenu-popup",
   });
   submenu.append(new MenuItem({
@@ -143,7 +143,7 @@ async function testSubmenu(toolbox) {
   is(toolbox.doc.querySelectorAll("#menu-popup > menuitem").length, 0,
     "No menuitem children");
 
-  let menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
+  const menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
   is(menus.length, 2, "Correct number of menus");
   is(menus[0].getAttribute("label"), "Submenu parent", "Correct label");
   ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
@@ -152,12 +152,12 @@ async function testSubmenu(toolbox) {
   ok(menus[1].hasAttribute("disabled"), "Correct disabled state");
   ok(menus[1].id, "submenu-parent-with-attrs", "Correct id");
 
-  let subMenuItems = menus[0].querySelectorAll("menupopup > menuitem");
+  const subMenuItems = menus[0].querySelectorAll("menupopup > menuitem");
   is(subMenuItems.length, 1, "Correct number of submenu items");
   is(subMenuItems[0].getAttribute("label"), "Submenu item", "Correct label");
 
   await once(menu, "open");
-  let closed = once(menu, "close");
+  const closed = once(menu, "close");
 
   info("Using keyboard navigation to open, close, and reopen the submenu");
   let shown = once(menus[0], "popupshown");
@@ -165,7 +165,7 @@ async function testSubmenu(toolbox) {
   EventUtils.synthesizeKey("KEY_ArrowRight");
   await shown;
 
-  let hidden = once(menus[0], "popuphidden");
+  const hidden = once(menus[0], "popuphidden");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   await hidden;
 

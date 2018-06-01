@@ -60,7 +60,7 @@ function test_breakpoints_columns() {
 
 function set_breakpoints(event, packet) {
   let first, second;
-  let source = gThreadClient.source(packet.frame.where.source);
+  const source = gThreadClient.source(packet.frame.where.source);
 
   source.setBreakpoint(firstLocation, function({ error, actualLocation },
                                         breakpointClient) {

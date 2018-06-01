@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
   await selectNode("video", inspector);
@@ -22,9 +22,9 @@ add_task(async function() {
   });
 
   info("Follow the link and wait for the new tab to open");
-  let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
+  const onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   inspector.onFollowLink();
-  let {target: tab} = await onTabOpened;
+  const {target: tab} = await onTabOpened;
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(true, "A new tab opened");
@@ -42,7 +42,7 @@ add_task(async function() {
   });
 
   info("Follow the link and wait for the new node to be selected");
-  let onSelection = inspector.selection.once("new-node-front");
+  const onSelection = inspector.selection.once("new-node-front");
   inspector.onFollowLink();
   await onSelection;
 
@@ -59,7 +59,7 @@ add_task(async function() {
   });
 
   info("Try to follow the link and check that no new node were selected");
-  let onFailed = inspector.once("idref-attribute-link-failed");
+  const onFailed = inspector.once("idref-attribute-link-failed");
   inspector.onFollowLink();
   await onFailed;
 

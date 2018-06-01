@@ -16,12 +16,12 @@
 
 function run_test() {
   // A Debugger with no debuggees had better not find anything.
-  let dbg = new Debugger();
-  let census0 = saveHeapSnapshotAndTakeCensus(dbg);
+  const dbg = new Debugger();
+  const census0 = saveHeapSnapshotAndTakeCensus(dbg);
   Census.walkCensus(census0, "census0", Census.assertAllZeros);
 
   function newGlobalWithDefs() {
-    let g = newGlobal();
+    const g = newGlobal();
     g.eval(`
            function times(n, fn) {
              var a=[];
@@ -35,7 +35,7 @@ function run_test() {
 
   // Allocate a large number of various types of objects, and check that census
   // finds them.
-  let g = newGlobalWithDefs();
+  const g = newGlobalWithDefs();
   dbg.addDebuggee(g);
 
   g.eval("var objs = times(100, () => ({}));");
@@ -43,7 +43,7 @@ function run_test() {
   g.eval("var ars  = times(400, () => []);");
   g.eval("var fns  = times(800, () => () => {});");
 
-  let census1 = dbg.memory.takeCensus(dbg);
+  const census1 = dbg.memory.takeCensus(dbg);
   Census.walkCensus(census1, "census1",
                     Census.assertAllNotLessThan({
                       "objects": {

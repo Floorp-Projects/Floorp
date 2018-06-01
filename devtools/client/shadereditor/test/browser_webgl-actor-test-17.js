@@ -7,10 +7,10 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, front } = await initBackend(OVERLAPPING_GEOMETRY_CANVAS_URL);
+  const { target, front } = await initBackend(OVERLAPPING_GEOMETRY_CANVAS_URL);
   front.setup({ reload: true });
 
-  let [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
+  const [firstProgramActor, secondProgramActor] = await getPrograms(front, 2);
 
   await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true);
   await ensurePixelIs(front, { x: 64, y: 64 }, { r: 0, g: 255, b: 255, a: 255 }, true);

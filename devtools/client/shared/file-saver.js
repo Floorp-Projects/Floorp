@@ -16,8 +16,8 @@
  *                            for triggering a file download.
  */
 function saveAs(blob, filename = "", doc = document) {
-  let url = URL.createObjectURL(blob);
-  let a = doc.createElement("a");
+  const url = URL.createObjectURL(blob);
+  const a = doc.createElement("a");
   doc.body.appendChild(a);
   a.style = "display: none";
   a.href = url;

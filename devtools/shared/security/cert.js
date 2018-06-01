@@ -31,7 +31,7 @@ exports.local = {
    * @return promise
    */
   getOrCreate() {
-    let deferred = defer();
+    const deferred = defer();
     localCertService.getOrCreateCert(localCertName, {
       handleCert: function(cert, rv) {
         if (rv) {
@@ -50,7 +50,7 @@ exports.local = {
    * @return promise
    */
   remove() {
-    let deferred = defer();
+    const deferred = defer();
     localCertService.removeCert(localCertName, {
       handleCert: function(rv) {
         if (rv) {

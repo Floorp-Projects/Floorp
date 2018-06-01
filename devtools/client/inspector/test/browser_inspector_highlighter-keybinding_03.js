@@ -10,7 +10,7 @@ const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
   await moveMouseOver("#another");
@@ -30,7 +30,7 @@ add_task(async function() {
   info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
   await startPicker(toolbox);
   await moveMouseOver("#ahoy");
-  let shortcutOpts = {key: "VK_C", options: {}};
+  const shortcutOpts = {key: "VK_C", options: {}};
   if (IS_OSX) {
     shortcutOpts.options.metaKey = true;
     shortcutOpts.options.altKey = true;
@@ -60,8 +60,8 @@ add_task(async function() {
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
-    let onHighlighterReady = toolbox.once("highlighter-ready");
-    let onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
+    const onHighlighterReady = toolbox.once("highlighter-ready");
+    const onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,

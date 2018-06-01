@@ -25,26 +25,26 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   info("Test shift + click on color swatch while editing property name");
 
   await selectNode("#testid", inspector);
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[1].editor;
-  let swatchSpan = propEditor.valueSpan.querySelectorAll(".ruleview-colorswatch")[2];
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[1].editor;
+  const swatchSpan = propEditor.valueSpan.querySelectorAll(".ruleview-colorswatch")[2];
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);
-  let editor = inplaceEditor(propEditor.doc.activeElement);
+  const editor = inplaceEditor(propEditor.doc.activeElement);
 
   info("Modify the property to background-image to trigger the " +
     "property-value-updated event");
   editor.input.value = "background-image";
 
-  let onPropertyValueUpdate = view.once("property-value-updated");
-  let onSwatchUnitChange = swatchSpan.once("unit-change");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onPropertyValueUpdate = view.once("property-value-updated");
+  const onSwatchUnitChange = swatchSpan.once("unit-change");
+  const onRuleViewChanged = view.once("ruleview-changed");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
   EventUtils.synthesizeMouseAtCenter(swatchSpan, {shiftKey: true},

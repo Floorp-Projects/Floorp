@@ -16,8 +16,8 @@ function run_test() {
 // in order to ease its maintenance and readability.
 function test_index_is_alphabetically_sorted() {
   let lastSpec = "";
-  for (let type of Types) {
-    let spec = type.spec;
+  for (const type of Types) {
+    const spec = type.spec;
     if (lastSpec && spec < lastSpec) {
       ok(false, `Spec definition for "${spec}" should be before "${lastSpec}"`);
     }
@@ -27,8 +27,8 @@ function test_index_is_alphabetically_sorted() {
 }
 
 function test_specs() {
-  for (let type of Types) {
-    for (let typeName of type.types) {
+  for (const type of Types) {
+    for (const typeName of type.types) {
       ok(getType(typeName), `${typeName} spec is defined`);
     }
   }
@@ -36,13 +36,13 @@ function test_specs() {
 }
 
 function test_fronts() {
-  for (let item of Types) {
+  for (const item of Types) {
     if (!item.front) {
       continue;
     }
-    for (let typeName of item.types) {
+    for (const typeName of item.types) {
       lazyLoadFront(typeName);
-      let type = getType(typeName);
+      const type = getType(typeName);
       ok(type, `Front for ${typeName} has a spec`);
       ok(type.frontClass, `${typeName} has a front correctly defined`);
     }

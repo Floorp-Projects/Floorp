@@ -14,34 +14,34 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, $, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
+  const { EVENTS, $, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
   await rendered;
 
   // Mock the profile used so we can get a deterministic tree created.
-  let profile = synthesizeProfile();
-  let threadNode = new ThreadNode(profile.threads[0], OverviewView.getTimeInterval());
+  const profile = synthesizeProfile();
+  const threadNode = new ThreadNode(profile.threads[0], OverviewView.getTimeInterval());
   JsCallTreeView._populateCallTree(threadNode);
   JsCallTreeView.emit(EVENTS.UI_JS_CALL_TREE_RENDERED);
 
-  let firstTreeItem = $("#js-calltree-view .call-tree-item");
+  const firstTreeItem = $("#js-calltree-view .call-tree-item");
 
   // DE-XUL: There are focus issues with XUL. Focus first, then synthesize the clicks
   // so that keyboard events work correctly.
   firstTreeItem.focus();
 
   let count = 0;
-  let onFocus = () => count++;
+  const onFocus = () => count++;
   JsCallTreeView.on("focus", onFocus);
 
   click(firstTreeItem);

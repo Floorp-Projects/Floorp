@@ -6,8 +6,8 @@
  */
 
 add_task(async function() {
-  let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
-  let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
+  const { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
+  const [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
     get3(front, "create-node"),

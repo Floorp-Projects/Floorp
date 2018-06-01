@@ -18,25 +18,25 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await editAndCheck(view);
 });
 
 async function editAndCheck(view) {
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
-  let prop = idRuleEditor.rule.textProps[0];
-  let propEditor = prop.editor;
-  let newPaddingValue = "20px";
+  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const prop = idRuleEditor.rule.textProps[0];
+  const propEditor = prop.editor;
+  const newPaddingValue = "20px";
 
   info("Focusing the inplace editor field");
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  const editor = await focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "Focused editor should be the value span.");
 
-  let onPropertyChange = waitForComputedStyleProperty("#testid", null,
+  const onPropertyChange = waitForComputedStyleProperty("#testid", null,
     "padding-top", newPaddingValue);
-  let onRefreshAfterPreview = once(view, "ruleview-changed");
+  const onRefreshAfterPreview = once(view, "ruleview-changed");
 
   info("Entering a new value");
   EventUtils.sendString(newPaddingValue, view.styleWindow);
@@ -50,7 +50,7 @@ async function editAndCheck(view) {
   info("Waiting for ruleview-refreshed after previewValue was applied.");
   await onRefreshAfterPreview;
 
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
 
   info("Entering the commit key and finishing edit");
   EventUtils.synthesizeKey("KEY_Enter");
@@ -61,8 +61,8 @@ async function editAndCheck(view) {
   info("Waiting for the style changes to be applied");
   await once(view, "ruleview-changed");
 
-  let computed = prop.computed;
-  let propNames = [
+  const computed = prop.computed;
+  const propNames = [
     "padding-top",
     "padding-right",
     "padding-bottom",
@@ -78,7 +78,7 @@ async function editAndCheck(view) {
   });
 
   propEditor.expander.click();
-  let computedDom = propEditor.computed;
+  const computedDom = propEditor.computed;
   is(computedDom.children.length, propNames.length,
     "There should be 4 nodes in the DOM");
   propNames.forEach((propName, i) => {

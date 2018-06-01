@@ -215,24 +215,24 @@ const TEST_URL_PATHS = [
 
 function run_test() {
   // Test URLs
-  for (let url of TEST_URLS) {
-    let result = getUnicodeUrl(url.raw);
+  for (const url of TEST_URLS) {
+    const result = getUnicodeUrl(url.raw);
     equal(result, url.expectedUnicode,
           "Test getUnicodeUrl: " + url.raw +
             " should be unicodized to " + url.expectedUnicode);
   }
 
   // Test hostnames
-  for (let hostname of TEST_HOSTNAMES) {
-    let result = getUnicodeHostname(hostname.raw);
+  for (const hostname of TEST_HOSTNAMES) {
+    const result = getUnicodeHostname(hostname.raw);
     equal(result, hostname.expectedUnicode,
           "Test getUnicodeHostname: " + hostname.raw +
             " should be unicodized to " + hostname.expectedUnicode);
   }
 
   // Test URL paths
-  for (let urlPath of TEST_URL_PATHS) {
-    let result = getUnicodeUrlPath(urlPath.raw);
+  for (const urlPath of TEST_URL_PATHS) {
+    const result = getUnicodeUrlPath(urlPath.raw);
     equal(result, urlPath.expectedUnicode,
           "Test getUnicodeUrlPath: " + urlPath.raw +
             " should be unicodized to " + urlPath.expectedUnicode);

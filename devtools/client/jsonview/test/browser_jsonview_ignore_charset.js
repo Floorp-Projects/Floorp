@@ -15,6 +15,6 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
   await selectJsonViewContentTab("rawdata");
 
-  let text = await getElementText(".textPanelBox .data");
+  const text = await getElementText(".textPanelBox .data");
   is(text, result, "The charset parameter is ignored and UTF-8 is used.");
 });

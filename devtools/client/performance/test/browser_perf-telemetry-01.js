@@ -16,7 +16,7 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 add_task(async function() {
   startTelemetry();
 
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });

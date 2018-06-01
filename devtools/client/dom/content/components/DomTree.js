@@ -57,21 +57,21 @@ class DomTree extends Component {
    * Render DOM panel content
    */
   render() {
-    let {
+    const {
       dispatch,
       grips,
       object,
       openLink,
     } = this.props;
 
-    let columns = [{
+    const columns = [{
       "id": "value"
     }];
 
     // This is the integration point with Reps. The DomTree is using
     // Reps to render all values. The code also specifies default rep
     // used for data types that don't have its own specific template.
-    let renderValue = props => {
+    const renderValue = props => {
       return Rep(Object.assign({}, props, {
         defaultRep: Grip,
         cropLimit: 50,

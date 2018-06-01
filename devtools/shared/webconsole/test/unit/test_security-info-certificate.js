@@ -35,7 +35,7 @@ const DUMMY_CERT = {
 function run_test() {
   info("Testing NetworkHelper.parseCertificateInfo.");
 
-  let result = NetworkHelper.parseCertificateInfo(DUMMY_CERT);
+  const result = NetworkHelper.parseCertificateInfo(DUMMY_CERT);
 
   // Subject
   equal(result.subject.commonName, DUMMY_CERT.commonName,

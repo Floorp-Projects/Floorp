@@ -82,7 +82,7 @@ const takeCensusDiff = exports.takeCensusDiff = function(heapWorker, first, seco
         display,
       });
 
-      let opts = display.inverted
+      const opts = display.inverted
         ? { asInvertedTreeNode: true }
         : { asTreeNode: true };
       opts.filter = filter || null;

@@ -17,7 +17,7 @@ exports.joinURI = (initialPath, ...paths) => {
     return null;
   }
 
-  for (let path of paths) {
+  for (const path of paths) {
     if (path) {
       url = new URL(path, url);
     }

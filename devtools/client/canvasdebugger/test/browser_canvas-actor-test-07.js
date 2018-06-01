@@ -7,9 +7,9 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
+  const { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -17,18 +17,18 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
+  const snapshotActor = await front.recordAnimationFrame();
+  const animationOverview = await snapshotActor.getOverview();
 
-  let functionCalls = animationOverview.calls;
+  const functionCalls = animationOverview.calls;
   ok(functionCalls,
     "An array of function call actors was sent after recording.");
   is(functionCalls.length, 8,
     "The number of function call actors is correct.");
 
-  let firstNonDrawCall = await functionCalls[1].getDetails();
-  let secondNonDrawCall = await functionCalls[3].getDetails();
-  let lastNonDrawCall = await functionCalls[7].getDetails();
+  const firstNonDrawCall = await functionCalls[1].getDetails();
+  const secondNonDrawCall = await functionCalls[3].getDetails();
+  const lastNonDrawCall = await functionCalls[7].getDetails();
 
   is(firstNonDrawCall.name, "fillStyle",
     "The first non-draw function's name is correct.");
@@ -37,9 +37,9 @@ async function ifTestingSupported() {
   is(lastNonDrawCall.name, "requestAnimationFrame",
     "The last non-draw function's name is correct.");
 
-  let firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
-  let secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[3]);
-  let lastScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[7]);
+  const firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
+  const secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[3]);
+  const lastScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[7]);
 
   ok(firstScreenshot,
     "A screenshot was successfully retrieved for the first non-draw function.");
@@ -48,7 +48,7 @@ async function ifTestingSupported() {
   ok(lastScreenshot,
     "A screenshot was successfully retrieved for the last non-draw function.");
 
-  let firstActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
+  const firstActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
   ok(sameArray(firstScreenshot.pixels, firstActualScreenshot.pixels),
     "The screenshot for the first non-draw function is correct.");
   is(firstScreenshot.width, 128,
@@ -56,7 +56,7 @@ async function ifTestingSupported() {
   is(firstScreenshot.height, 128,
     "The screenshot for the first non-draw function has the correct height.");
 
-  let secondActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
+  const secondActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
   ok(sameArray(secondScreenshot.pixels, secondActualScreenshot.pixels),
     "The screenshot for the second non-draw function is correct.");
   is(secondScreenshot.width, 128,
@@ -64,7 +64,7 @@ async function ifTestingSupported() {
   is(secondScreenshot.height, 128,
     "The screenshot for the second non-draw function has the correct height.");
 
-  let lastActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
+  const lastActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
   ok(sameArray(lastScreenshot.pixels, lastActualScreenshot.pixels),
     "The screenshot for the last non-draw function is correct.");
   is(lastScreenshot.width, 128,

@@ -45,9 +45,9 @@ async function getSystemInfo() {
     return CACHED_INFO;
   }
 
-  let appInfo = Services.appinfo;
-  let win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
-  let [processor, compiler] = appInfo.XPCOMABI.split("-");
+  const appInfo = Services.appinfo;
+  const win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
+  const [processor, compiler] = appInfo.XPCOMABI.split("-");
   let dpi,
     useragent,
     width,
@@ -56,16 +56,16 @@ async function getSystemInfo() {
     physicalHeight,
     os,
     brandName;
-  let appid = appInfo.ID;
-  let apptype = APP_MAP[appid];
-  let geckoVersion = appInfo.platformVersion;
-  let hardware = "unknown";
+  const appid = appInfo.ID;
+  const apptype = APP_MAP[appid];
+  const geckoVersion = appInfo.platformVersion;
+  const hardware = "unknown";
   let version = "unknown";
 
   os = appInfo.OS;
   version = appInfo.version;
 
-  let bundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  const bundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
   if (bundle) {
     brandName = bundle.GetStringFromName("brandFullName");
   } else {
@@ -73,7 +73,7 @@ async function getSystemInfo() {
   }
 
   if (win) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+    const utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils);
     dpi = utils.displayDPI;
     useragent = win.navigator.userAgent;
@@ -83,7 +83,7 @@ async function getSystemInfo() {
     physicalHeight = win.screen.height * win.devicePixelRatio;
   }
 
-  let info = {
+  const info = {
 
     /**
      * Information from nsIXULAppInfo, regarding
@@ -174,12 +174,12 @@ async function getSystemInfo() {
 function getProfileLocation() {
   // In child processes, we cannot access the profile location.
   try {
-    let profd = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    let profservice = Cc["@mozilla.org/toolkit/profile-service;1"]
+    const profd = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    const profservice = Cc["@mozilla.org/toolkit/profile-service;1"]
                         .getService(Ci.nsIToolkitProfileService);
-    let profiles = profservice.profiles;
+    const profiles = profservice.profiles;
     while (profiles.hasMoreElements()) {
-      let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
+      const profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
       if (profile.rootDir.path == profd.path) {
         return profile.name;
       }
@@ -196,11 +196,11 @@ function getProfileLocation() {
  * an enum for Telemetry.
  */
 function getScreenDimensions() {
-  let width = {};
-  let height = {};
+  const width = {};
+  const height = {};
 
   screenManager.primaryScreen.GetRect({}, {}, width, height);
-  let dims = width.value + "x" + height.value;
+  const dims = width.value + "x" + height.value;
 
   if (width.value < 800 || height.value < 600) {
     return 0;
@@ -244,7 +244,7 @@ function getScreenDimensions() {
 }
 
 function getSetting(name) {
-  let deferred = defer();
+  const deferred = defer();
 
   if ("@mozilla.org/settingsService;1" in Cc) {
     let settingsService;

@@ -8,9 +8,9 @@
 // highlighting of the corresponding nodes
 
 add_task(async function() {
-  let url = TEST_BASE_HTTP + "selector-highlighter.html";
-  let { ui } = await openStyleEditorForURL(url);
-  let editor = ui.editors[0];
+  const url = TEST_BASE_HTTP + "selector-highlighter.html";
+  const { ui } = await openStyleEditorForURL(url);
+  const editor = ui.editors[0];
 
   // Mock the highlighter so we can locally assert that things happened
   // correctly instead of accessing the highlighter elements
@@ -30,7 +30,7 @@ add_task(async function() {
   };
 
   info("Expecting a node-highlighted event");
-  let onHighlighted = editor.once("node-highlighted");
+  const onHighlighted = editor.once("node-highlighted");
 
   info("Simulate a mousemove event on the div selector");
   editor._onMouseMove({clientX: 56, clientY: 10});

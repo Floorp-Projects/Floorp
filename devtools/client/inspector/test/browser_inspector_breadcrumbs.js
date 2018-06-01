@@ -26,40 +26,40 @@ const NODES = [
 ];
 
 add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URI);
-  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
-  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
+  const { inspector } = await openInspectorForURL(TEST_URI);
+  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
 
-  for (let node of NODES) {
+  for (const node of NODES) {
     info("Testing node " + node.selector);
 
     info("Selecting node and waiting for breadcrumbs to update");
-    let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
+    const breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
     await selectNode(node.selector, inspector);
     await breadcrumbsUpdated;
 
     info("Performing checks for node " + node.selector);
-    let buttonsLabelIds = node.ids.split(" ");
+    const buttonsLabelIds = node.ids.split(" ");
 
     // html > body > …
     is(container.childNodes.length, buttonsLabelIds.length + 2,
       "Node " + node.selector + ": Items count");
 
     for (let i = 2; i < container.childNodes.length; i++) {
-      let expectedId = "#" + buttonsLabelIds[i - 2];
-      let button = container.childNodes[i];
-      let labelId = button.querySelector(".breadcrumbs-widget-item-id");
+      const expectedId = "#" + buttonsLabelIds[i - 2];
+      const button = container.childNodes[i];
+      const labelId = button.querySelector(".breadcrumbs-widget-item-id");
       is(labelId.textContent, expectedId,
         "Node " + node.selector + ": button " + i + " matches");
     }
 
-    let checkedButton = container.querySelector("button[checked]");
-    let labelId = checkedButton.querySelector(".breadcrumbs-widget-item-id");
-    let id = inspector.selection.nodeFront.id;
+    const checkedButton = container.querySelector("button[checked]");
+    const labelId = checkedButton.querySelector(".breadcrumbs-widget-item-id");
+    const id = inspector.selection.nodeFront.id;
     is(labelId.textContent, "#" + id,
       "Node " + node.selector + ": selection matches");
 
-    let labelTag = checkedButton.querySelector(".breadcrumbs-widget-item-tag");
+    const labelTag = checkedButton.querySelector(".breadcrumbs-widget-item-tag");
     is(labelTag.textContent, node.nodeName,
       "Node " + node.selector + " has the expected tag name");
 
@@ -74,18 +74,18 @@ add_task(async function() {
 async function testPseudoElements(inspector, container) {
   info("Checking for pseudo elements");
 
-  let pseudoParent = await getNodeFront("#pseudo-container", inspector);
-  let children = await inspector.walker.children(pseudoParent);
+  const pseudoParent = await getNodeFront("#pseudo-container", inspector);
+  const children = await inspector.walker.children(pseudoParent);
   is(children.nodes.length, 2, "Pseudo children returned from walker");
 
-  let beforeElement = children.nodes[0];
+  const beforeElement = children.nodes[0];
   let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   await selectNode(beforeElement, inspector);
   await breadcrumbsUpdated;
   is(container.childNodes[3].textContent, "::before",
      "::before shows up in breadcrumb");
 
-  let afterElement = children.nodes[1];
+  const afterElement = children.nodes[1];
   breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   await selectNode(afterElement, inspector);
   await breadcrumbsUpdated;
@@ -96,9 +96,9 @@ async function testPseudoElements(inspector, container) {
 async function testComments(inspector, container) {
   info("Checking for comment elements");
 
-  let breadcrumbs = inspector.breadcrumbs;
-  let checkedButtonIndex = 2;
-  let button = container.childNodes[checkedButtonIndex];
+  const breadcrumbs = inspector.breadcrumbs;
+  const checkedButtonIndex = 2;
+  const button = container.childNodes[checkedButtonIndex];
 
   let onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   button.click();
@@ -108,7 +108,7 @@ async function testComments(inspector, container) {
   ok(breadcrumbs.outer.hasAttribute("aria-activedescendant"),
     "Active descendant must be set");
 
-  let comment = [...inspector.markup._containers].find(([node]) =>
+  const comment = [...inspector.markup._containers].find(([node]) =>
     node.nodeType === Node.COMMENT_NODE)[0];
 
   let onInspectorUpdated = inspector.once("inspector-updated");

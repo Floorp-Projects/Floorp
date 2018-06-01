@@ -10,7 +10,7 @@
 
 add_task(function() {
   const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");
-  let output = getProfileThreadFromAllocations(TEST_DATA);
+  const output = getProfileThreadFromAllocations(TEST_DATA);
   equal(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
 });
 

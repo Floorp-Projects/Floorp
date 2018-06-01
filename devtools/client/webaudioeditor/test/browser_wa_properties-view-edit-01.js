@@ -6,20 +6,20 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
-  let gVars = PropertiesView._propsView;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  const gVars = PropertiesView._propsView;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let nodeIds = actors.map(actor => actor.actorID);
+  const [actors] = await events;
+  const nodeIds = actors.map(actor => actor.actorID);
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
   // Wait for the node to be set as well as the inspector to come fully into the view
@@ -28,7 +28,7 @@ add_task(async function() {
     once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
   ]);
 
-  let setAndCheck = setAndCheckVariable(panelWin, gVars);
+  const setAndCheck = setAndCheckVariable(panelWin, gVars);
 
   checkVariableView(gVars, 0, {
     "type": "sine",

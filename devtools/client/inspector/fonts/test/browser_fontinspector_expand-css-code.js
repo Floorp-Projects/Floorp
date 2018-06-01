@@ -9,8 +9,8 @@
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(async function() {
-  let { view } = await openFontInspectorForURL(TEST_URI);
-  let viewDoc = view.document;
+  const { view } = await openFontInspectorForURL(TEST_URI);
+  const viewDoc = view.document;
 
   info("Checking that the css font-face rule is collapsed by default");
   let fontEl = getUsedFontsEls(viewDoc)[0];

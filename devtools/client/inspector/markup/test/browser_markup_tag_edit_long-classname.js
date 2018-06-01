@@ -12,21 +12,21 @@ const classname = "this-long-class-attribute-should-be-displayed " +
 const TEST_URL = `data:text/html;charset=utf8, <div class="${classname}"></div>`;
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   await selectNode("div", inspector);
   await clickContainer("div", inspector);
 
-  let container = await focusNode("div", inspector);
+  const container = await focusNode("div", inspector);
   ok(container && container.editor, "The markup-container was found");
 
   info("Listening for the markupmutation event");
-  let nodeMutated = inspector.once("markupmutation");
-  let attr = container.editor.attrElements.get("class").querySelector(".editable");
+  const nodeMutated = inspector.once("markupmutation");
+  const attr = container.editor.attrElements.get("class").querySelector(".editable");
 
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
-  let input = inplaceEditor(attr).input;
+  const input = inplaceEditor(attr).input;
   ok(input, "Found editable field for class attribute");
 
   is(input.scrollHeight, input.clientHeight, "input should not have vertical scrollbars");

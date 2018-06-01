@@ -6,14 +6,14 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS, SnapshotsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS, SnapshotsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
-  let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  const screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([recordingFinished, callListPopulated, screenshotDisplayed]);
 

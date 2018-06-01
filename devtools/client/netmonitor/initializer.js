@@ -65,8 +65,8 @@ function initialize(api) {
  */
 
 // URL constructor doesn't support chrome: scheme
-let href = window.location.href.replace(/chrome:/, "http://");
-let url = new window.URL(href);
+const href = window.location.href.replace(/chrome:/, "http://");
+const url = new window.URL(href);
 
 // If query parameters are given in a chrome tab, the inspector
 // is running in standalone.
@@ -75,7 +75,7 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
 
   (async function() {
     try {
-      let target = await targetFromURL(url);
+      const target = await targetFromURL(url);
 
       // Start the network event listening as it is done in the toolbox code
       await target.activeConsole.startListeners([
@@ -83,16 +83,16 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
       ]);
 
       // Create a fake toolbox object
-      let toolbox = {
+      const toolbox = {
         target,
         viewSourceInDebugger() {
           throw new Error("toolbox.viewSourceInDebugger is not implement from a tab");
         }
       };
 
-      let api = new NetMonitorAPI();
+      const api = new NetMonitorAPI();
       await api.connect(toolbox);
-      let app = window.initialize(api);
+      const app = window.initialize(api);
       app.bootstrap({
         toolbox,
         document: window.document,

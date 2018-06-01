@@ -21,10 +21,10 @@ window.onload = function() {
 var gWalker;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
 
     promiseDone(inspector.getWalker().then(walker => {
       gWalker = walker;
@@ -34,34 +34,34 @@ addTest(function setup() {
 
 addAsyncTest(async function testInlineBlockDisplayType() {
   info("Test getting the display type of an inline block element.");
-  let node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
-  let displayType = node.displayType;
+  const node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  const displayType = node.displayType;
   is(displayType, "inline-block", "The node has a display type of 'inline-block'.");
   runNextTest();
 });
 
 addAsyncTest(async function testInlineTextChildDisplayType() {
   info("Test getting the display type of an inline text child.");
-  let node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
-  let children = await gWalker.children(node);
-  let inlineTextChild = children.nodes[0];
-  let displayType = inlineTextChild.displayType;
+  const node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  const children = await gWalker.children(node);
+  const inlineTextChild = children.nodes[0];
+  const displayType = inlineTextChild.displayType;
   ok(!displayType, "No display type for inline text child.");
   runNextTest();
 });
 
 addAsyncTest(async function testGridDisplayType() {
   info("Test getting the display type of an grid container.");
-  let node = await gWalker.querySelector(gWalker.rootNode, "#grid");
-  let displayType = node.displayType;
+  const node = await gWalker.querySelector(gWalker.rootNode, "#grid");
+  const displayType = node.displayType;
   is(displayType, "grid", "The node has a display type of 'grid'.");
   runNextTest();
 });
 
 addAsyncTest(async function testBlockDisplayType() {
   info("Test getting the display type of a block element.");
-  let node = await gWalker.querySelector(gWalker.rootNode, "#block");
-  let displayType = await node.displayType;
+  const node = await gWalker.querySelector(gWalker.rootNode, "#block");
+  const displayType = await node.displayType;
   is(displayType, "block", "The node has a display type of 'block'.");
   runNextTest();
 });

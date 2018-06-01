@@ -17,7 +17,7 @@ const labelForOption = value => getFormatStr("responsive.devicePixelRatioOption"
 const PIXEL_RATIO_PRESET = [1, 2, 3];
 
 const createVisibleOption = value => {
-  let label = labelForOption(value);
+  const label = labelForOption(value);
   return dom.option({
     value,
     title: label,
@@ -26,7 +26,7 @@ const createVisibleOption = value => {
 };
 
 const createHiddenOption = value => {
-  let label = labelForOption(value);
+  const label = labelForOption(value);
   return dom.option({
     value,
     title: label,
@@ -68,17 +68,17 @@ class DevicePixelRatioSelector extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       devices,
       displayPixelRatio,
       selectedDevice,
       selectedPixelRatio,
     } = this.props;
 
-    let hiddenOptions = [];
+    const hiddenOptions = [];
 
-    for (let type of devices.types) {
-      for (let device of devices[type]) {
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
         if (device.displayed &&
             !hiddenOptions.includes(device.pixelRatio) &&
             !PIXEL_RATIO_PRESET.includes(device.pixelRatio)) {
@@ -91,8 +91,8 @@ class DevicePixelRatioSelector extends PureComponent {
       hiddenOptions.push(displayPixelRatio);
     }
 
-    let state = devices.listState;
-    let isDisabled = (state !== Types.loadableState.LOADED) || (selectedDevice !== "");
+    const state = devices.listState;
+    const isDisabled = (state !== Types.loadableState.LOADED) || (selectedDevice !== "");
     let selectorClass = "toolbar-dropdown";
     let title;
 

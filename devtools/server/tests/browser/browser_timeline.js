@@ -16,9 +16,9 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8,mop");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = TimelineFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = TimelineFront(client, form);
 
   ok(front, "The TimelineFront was created");
 

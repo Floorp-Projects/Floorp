@@ -28,8 +28,8 @@ const CLASSIFY_TESTS = [
 ];
 
 function compareWithInspectorUtils(input, isColor) {
-  let ours = colorUtils.colorToRGBA(input);
-  let platform = InspectorUtils.colorToRGBA(input);
+  const ours = colorUtils.colorToRGBA(input);
+  const platform = InspectorUtils.colorToRGBA(input);
   deepEqual(ours, platform, "color " + input + " matches InspectorUtils");
   if (isColor) {
     ok(ours !== null, "'" + input + "' is a color");
@@ -39,11 +39,11 @@ function compareWithInspectorUtils(input, isColor) {
 }
 
 function run_test() {
-  for (let test of CLASSIFY_TESTS) {
-    let result = colorUtils.classifyColor(test.input);
+  for (const test of CLASSIFY_TESTS) {
+    const result = colorUtils.classifyColor(test.input);
     equal(result, test.output, "test classifyColor(" + test.input + ")");
 
-    let obj = new colorUtils.CssColor("purple");
+    const obj = new colorUtils.CssColor("purple");
     obj.setAuthoredUnitFromColor(test.input);
     equal(obj.colorUnit, test.output,
           "test setAuthoredUnitFromColor(" + test.input + ")");
@@ -57,11 +57,11 @@ function run_test() {
   }
 
   // Regression test for bug 1303826.
-  let black = new colorUtils.CssColor("#000");
+  const black = new colorUtils.CssColor("#000");
   black.colorUnit = "name";
   equal(black.toString(), "black", "test non-upper-case color cycling");
 
-  let upper = new colorUtils.CssColor("BLACK");
+  const upper = new colorUtils.CssColor("BLACK");
   upper.colorUnit = "hex";
   equal(upper.toString(), "#000", "test upper-case color cycling");
   upper.colorUnit = "name";

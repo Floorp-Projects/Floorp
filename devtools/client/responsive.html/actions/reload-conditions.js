@@ -18,7 +18,7 @@ module.exports = {
 
   changeReloadCondition(id, value) {
     return dispatch => {
-      let pref = PREF_PREFIX + id;
+      const pref = PREF_PREFIX + id;
       Services.prefs.setBoolPref(pref, value);
       dispatch({
         type: CHANGE_RELOAD_CONDITION,
@@ -31,13 +31,13 @@ module.exports = {
   loadReloadConditions() {
     return dispatch => {
       // Loop over the conditions and load their values from prefs.
-      for (let id in Types.reloadConditions) {
+      for (const id in Types.reloadConditions) {
         // Skip over the loading state of the list.
         if (id == "state") {
           return;
         }
-        let pref = PREF_PREFIX + id;
-        let value = Services.prefs.getBoolPref(pref, false);
+        const pref = PREF_PREFIX + id;
+        const value = Services.prefs.getBoolPref(pref, false);
         dispatch({
           type: CHANGE_RELOAD_CONDITION,
           id,

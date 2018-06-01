@@ -22,7 +22,7 @@ add_task(async function() {
   await checkFlexboxHighlighter();
 
   info("Close the toolbox before reloading the tab.");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
 
   await refreshTab();
@@ -32,15 +32,15 @@ add_task(async function() {
 });
 
 async function checkFlexboxHighlighter() {
-  let {inspector, view} = await openRuleView();
-  let {highlighters} = view;
+  const {inspector, view} = await openRuleView();
+  const {highlighters} = view;
 
   await selectNode("#flex", inspector);
-  let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
-  let flexboxToggle = container.querySelector(".ruleview-flex");
+  const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
+  const flexboxToggle = container.querySelector(".ruleview-flex");
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
   await onHighlighterShown;
 

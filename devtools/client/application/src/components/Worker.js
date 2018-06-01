@@ -54,7 +54,7 @@ class Worker extends Component {
       return;
     }
 
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     gDevToolsBrowser.openWorkerToolbox(client, worker.workerActor);
   }
 
@@ -64,7 +64,7 @@ class Worker extends Component {
       return;
     }
 
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
       type: "start"
@@ -72,7 +72,7 @@ class Worker extends Component {
   }
 
   unregister() {
-    let { client, worker } = this.props;
+    const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
       type: "unregister"
@@ -101,18 +101,18 @@ class Worker extends Component {
   }
 
   formatScope(scope) {
-    let [, remainder] = getUnicodeUrl(scope).split("://");
+    const [, remainder] = getUnicodeUrl(scope).split("://");
     return remainder || scope;
   }
 
   formatSource(source) {
-    let parts = source.split("/");
+    const parts = source.split("/");
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
   render() {
-    let { worker } = this.props;
-    let status = this.getServiceWorkerStatus();
+    const { worker } = this.props;
+    const status = this.getServiceWorkerStatus();
 
     const unregisterButton = this.isActive() ?
       Localized(

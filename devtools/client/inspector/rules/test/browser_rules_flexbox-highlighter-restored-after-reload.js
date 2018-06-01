@@ -28,15 +28,15 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the flexbox highlighter can be displayed.");
-  let {inspector, view} = await openRuleView();
-  let {highlighters} = view;
+  const {inspector, view} = await openRuleView();
+  const {highlighters} = view;
 
   await selectNode("#flex", inspector);
-  let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
-  let flexboxToggle = container.querySelector(".ruleview-flex");
+  const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
+  const flexboxToggle = container.querySelector(".ruleview-flex");
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
   await onHighlighterShown;
 
@@ -52,7 +52,7 @@ add_task(async function() {
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 
   info("Navigate to another URL, and check that the highlighter is hidden");
-  let otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
+  const otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
   onStateRestored = highlighters.once("flexbox-state-restored");
   await navigateTo(inspector, otherUri);
   ({ restored } = await onStateRestored);

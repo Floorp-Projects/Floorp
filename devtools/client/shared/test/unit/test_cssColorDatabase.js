@@ -19,20 +19,20 @@ function isValid(colorName) {
 }
 
 function checkOne(colorName, checkName) {
-  let ours = colorUtils.colorToRGBA(colorName);
-  let fromDom = InspectorUtils.colorToRGBA(colorName);
+  const ours = colorUtils.colorToRGBA(colorName);
+  const fromDom = InspectorUtils.colorToRGBA(colorName);
   deepEqual(ours, fromDom, colorName + " agrees with InspectorUtils");
 
   isValid(colorName);
 
   if (checkName) {
-    let {r, g, b} = ours;
+    const {r, g, b} = ours;
 
     // The color we got might not map back to the same name; but our
     // implementation should agree with InspectorUtils about which name is
     // canonical.
-    let ourName = colorUtils.rgbToColorName(r, g, b);
-    let domName = InspectorUtils.rgbToColorName(r, g, b);
+    const ourName = colorUtils.rgbToColorName(r, g, b);
+    const domName = InspectorUtils.rgbToColorName(r, g, b);
 
     equal(ourName, domName,
           colorName + " canonical name agrees with InspectorUtils");
@@ -40,7 +40,7 @@ function checkOne(colorName, checkName) {
 }
 
 function run_test() {
-  for (let name in cssColors) {
+  for (const name in cssColors) {
     checkOne(name, true);
   }
   checkOne("transparent", false);
@@ -50,8 +50,8 @@ function run_test() {
   // XXX Disable this test for now as getCSSValuesForProperty no longer
   //     returns the complete color keyword list.
   if (false) {
-    let names = InspectorUtils.getCSSValuesForProperty("background-color");
-    for (let name of names) {
+    const names = InspectorUtils.getCSSValuesForProperty("background-color");
+    for (const name of names) {
       if (name !== "hsl" && name !== "hsla" &&
           name !== "rgb" && name !== "rgba" &&
           name !== "inherit" && name !== "initial" && name !== "unset") {

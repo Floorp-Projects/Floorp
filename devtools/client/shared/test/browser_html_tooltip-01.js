@@ -17,7 +17,7 @@ loadHelperScript("helper_html_tooltip.js");
 let useXulWrapper;
 
 function getTooltipContent(doc) {
-  let div = doc.createElementNS(HTML_NS, "div");
+  const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "50px";
   div.style.boxSizing = "border-box";
   div.textContent = "tooltip";
@@ -25,7 +25,7 @@ function getTooltipContent(doc) {
 }
 
 add_task(async function() {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -38,7 +38,7 @@ add_task(async function() {
 
 async function runTests(doc) {
   await addTab("about:blank");
-  let tooltip = new HTMLTooltip(doc, {useXulWrapper});
+  const tooltip = new HTMLTooltip(doc, {useXulWrapper});
 
   info("Set tooltip content");
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
@@ -50,7 +50,7 @@ async function runTests(doc) {
   let shown = 0;
   tooltip.on("shown", () => shown++);
 
-  let onShown = tooltip.once("shown");
+  const onShown = tooltip.once("shown");
   tooltip.show(doc.getElementById("box1"));
 
   await onShown;
@@ -64,7 +64,7 @@ async function runTests(doc) {
   let hidden = 0;
   tooltip.on("hidden", () => hidden++);
 
-  let onPopupHidden = tooltip.once("hidden");
+  const onPopupHidden = tooltip.once("hidden");
   tooltip.hide();
 
   await onPopupHidden;

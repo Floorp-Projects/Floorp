@@ -22,11 +22,11 @@ let gInspectee = null;
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
@@ -35,13 +35,13 @@ addTest(function setup() {
 });
 
 addTest(function testChangeAttrs() {
-  let attrNode = gInspectee.querySelector("#a");
+  const attrNode = gInspectee.querySelector("#a");
   let attrFront;
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(front => {
     attrFront = front;
     dump("attrFront is: " + attrFront + "\n");
     // Add a few attributes.
-    let list = attrFront.startModifyingAttributes();
+    const list = attrFront.startModifyingAttributes();
     list.setAttribute("data-newattr", "newvalue");
     list.setAttribute("data-newattr2", "newvalue");
     return list.apply();
@@ -55,7 +55,7 @@ addTest(function testChangeAttrs() {
        "Node should have the second new attribute.");
   }).then(() => {
     // Change an attribute.
-    let list = attrFront.startModifyingAttributes();
+    const list = attrFront.startModifyingAttributes();
     list.setAttribute("data-newattr", "changedvalue");
     return list.apply();
   }).then(() => {
@@ -64,7 +64,7 @@ addTest(function testChangeAttrs() {
     is(attrNode.getAttribute("data-newattr2"), "newvalue",
        "Second value should remain unchanged.");
   }).then(() => {
-    let list = attrFront.startModifyingAttributes();
+    const list = attrFront.startModifyingAttributes();
     list.removeAttribute("data-newattr2");
     return list.apply();
   }).then(() => {

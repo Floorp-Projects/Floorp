@@ -13,12 +13,12 @@ const { startRecording, stopRecording, waitForAllWidgetsRendered } = require("de
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { DetailsView, DetailsSubview } = panel.panelWin;
+  const { DetailsView, DetailsSubview } = panel.panelWin;
 
   // Enable memory to test the memory overview.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);

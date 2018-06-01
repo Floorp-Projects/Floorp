@@ -8,14 +8,14 @@
  */
 
 add_task(async function() {
-  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = await initNetMonitor(JSON_LONG_URL);
+  const { tab, monitor } = await initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -28,12 +28,12 @@ add_task(async function() {
   await verifyRequest(0);
 
   // Switch to the webconsole.
-  let onWebConsole = monitor.toolbox.once("webconsole-selected");
+  const onWebConsole = monitor.toolbox.once("webconsole-selected");
   monitor.toolbox.selectTool("webconsole");
   await onWebConsole;
 
   // Switch back to the netmonitor.
-  let onNetMonitor = monitor.toolbox.once("netmonitor-selected");
+  const onNetMonitor = monitor.toolbox.once("netmonitor-selected");
   monitor.toolbox.selectTool("netmonitor");
   await onNetMonitor;
 
@@ -50,10 +50,10 @@ add_task(async function() {
   return teardown(monitor);
 
   async function verifyRequest(index) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
+    const requestItems = document.querySelectorAll(".request-list-item");
+    for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".status-code");
+      const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }

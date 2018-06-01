@@ -178,10 +178,10 @@ BrowserAddonActor.prototype = {
   },
 
   preNest: function() {
-    let e = Services.wm.getEnumerator(null);
+    const e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      const win = e.getNext();
+      const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.suppressEventHandling(true);
       windowUtils.suspendTimeouts();
@@ -189,10 +189,10 @@ BrowserAddonActor.prototype = {
   },
 
   postNest: function() {
-    let e = Services.wm.getEnumerator(null);
+    const e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      const win = e.getNext();
+      const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
@@ -207,7 +207,7 @@ BrowserAddonActor.prototype = {
     const global = unwrapDebuggerObjectGlobal(givenGlobal);
     try {
       // This will fail for non-Sandbox objects, hence the try-catch block.
-      let metadata = Cu.getSandboxMetadata(global);
+      const metadata = Cu.getSandboxMetadata(global);
       if (metadata) {
         return metadata.addonID === this.id;
       }

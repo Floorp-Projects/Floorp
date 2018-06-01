@@ -4,7 +4,7 @@ var Services = require("Services");
 var ChromeUtils = require("ChromeUtils");
 
 exports.setupParent = function({mm, prefix}) {
-  let args = [
+  const args = [
     ChromeUtils.getClassName(mm) == "ChromeMessageSender",
     prefix
   ];

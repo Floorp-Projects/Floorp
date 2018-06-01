@@ -7,19 +7,19 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(COMPLEX_CONTEXT_URL);
-  let panelWin = panel.panelWin;
-  let { gFront, $, $$, InspectorView } = panelWin;
+  const { target, panel } = await initWebAudioEditor(COMPLEX_CONTEXT_URL);
+  const panelWin = panel.panelWin;
+  const { gFront, $, $$, InspectorView } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     getN(gFront, "create-node", 8),
     waitForGraphRendered(panel.panelWin, 8, 8)
   ]);
   reload(target);
-  let [actors, _] = await events;
-  let nodeIds = actors.map(actor => actor.actorID);
+  const [actors, _] = await events;
+  const nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
 

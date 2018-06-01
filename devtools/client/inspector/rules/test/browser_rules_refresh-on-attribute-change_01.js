@@ -22,7 +22,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = await openRuleView();
+  const {inspector, view, testActor} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Checking that the rule-view has the element, #testid and " +
@@ -48,7 +48,7 @@ add_task(async function() {
 });
 
 function checkRuleViewContent(view, expectedSelectors) {
-  let selectors = view.styleDocument
+  const selectors = view.styleDocument
     .querySelectorAll(".ruleview-selectorcontainer");
 
   is(selectors.length, expectedSelectors.length,

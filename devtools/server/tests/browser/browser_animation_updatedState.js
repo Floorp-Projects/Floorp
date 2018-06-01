@@ -8,7 +8,7 @@
 // Check the animation player's updated state
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await playStateIsUpdatedDynamically(walker, animations);
@@ -20,10 +20,10 @@ add_task(async function() {
 async function playStateIsUpdatedDynamically(walker, animations) {
   info("Getting the test node (which runs a very long animation)");
   // The animation lasts for 100s, to avoid intermittents.
-  let node = await walker.querySelector(walker.rootNode, ".long-animation");
+  const node = await walker.querySelector(walker.rootNode, ".long-animation");
 
   info("Getting the animation player front for this node");
-  let [player] = await animations.getAnimationPlayersForNode(node);
+  const [player] = await animations.getAnimationPlayersForNode(node);
   await player.ready();
 
   let state = await player.getCurrentState();
@@ -32,7 +32,7 @@ async function playStateIsUpdatedDynamically(walker, animations) {
 
   info("Change the animation's currentTime to be near the end and wait for " +
        "it to finish");
-  let onFinished = waitForAnimationPlayState(player, "finished");
+  const onFinished = waitForAnimationPlayState(player, "finished");
   // Set the currentTime to 98s, knowing that the animation lasts for 100s.
   await player.setCurrentTime(98 * 1000);
   state = await onFinished;

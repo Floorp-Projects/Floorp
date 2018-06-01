@@ -30,8 +30,8 @@ function test() {
 
 function init() {
   addTab(TEST_URI).then(tab => {
-    let target = TargetFactory.forTab(tab);
-    let linkedBrowser = tab.linkedBrowser;
+    const target = TargetFactory.forTab(tab);
+    const linkedBrowser = tab.linkedBrowser;
 
     loadFrameScriptUtils(linkedBrowser);
     linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
@@ -64,8 +64,8 @@ function testRegisterFails(data) {
 }
 
 function toggleServiceWorkersTestingCheckbox() {
-  let panel = toolbox.getCurrentPanel();
-  let cbx = panel.panelDoc.getElementById(ELEMENT_ID);
+  const panel = toolbox.getCurrentPanel();
+  const cbx = panel.panelDoc.getElementById(ELEMENT_ID);
 
   cbx.scrollIntoView();
 
@@ -81,7 +81,7 @@ function toggleServiceWorkersTestingCheckbox() {
 }
 
 function reload() {
-  let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   executeInContent("devtools:test:reload", {}, {}, false);
   return promise;

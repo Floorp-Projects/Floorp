@@ -7,7 +7,7 @@
 // Check the output of getAnimationPlayersForNode
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await theRightNumberOfPlayersIsReturned(walker, animations);
@@ -40,8 +40,8 @@ async function theRightNumberOfPlayersIsReturned(walker, animations) {
 }
 
 async function playersCanBePausedAndResumed(walker, animations) {
-  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = await animations.getAnimationPlayersForNode(node);
+  const node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  const [player] = await animations.getAnimationPlayersForNode(node);
   await player.ready();
 
   ok(player.initialState,

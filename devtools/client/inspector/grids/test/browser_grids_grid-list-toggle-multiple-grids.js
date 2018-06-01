@@ -24,14 +24,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters, store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters, store } = inspector;
 
   await selectNode("#grid1", inspector);
-  let gridList = doc.getElementById("grid-list");
-  let checkbox1 = gridList.children[0].querySelector("input");
-  let checkbox2 = gridList.children[1].querySelector("input");
+  const gridList = doc.getElementById("grid-list");
+  const checkbox1 = gridList.children[0].querySelector("input");
+  const checkbox2 = gridList.children[1].querySelector("input");
 
   info("Checking the initial state of the Grid Inspector.");
   is(gridList.childNodes.length, 2, "2 grid containers are listed.");
@@ -70,7 +70,7 @@ add_task(async function() {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Toggling OFF the CSS grid highlighter from the layout panel.");
-  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 2 &&
     !state.grids[0].highlighted &&

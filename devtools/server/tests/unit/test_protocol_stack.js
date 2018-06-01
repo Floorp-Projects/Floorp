@@ -65,8 +65,8 @@ function run_test() {
   DebuggerServer.createRootActor = RootActor;
   DebuggerServer.init();
 
-  let trace = connectPipeTracing();
-  let client = new DebuggerClient(trace);
+  const trace = connectPipeTracing();
+  const client = new DebuggerClient(trace);
   let rootClient;
 
   client.connect().then(function onConnect() {

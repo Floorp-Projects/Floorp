@@ -11,10 +11,10 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  let jsterm = hud.jsterm;
-  let input = jsterm.inputNode;
+  const jsterm = hud.jsterm;
+  const input = jsterm.inputNode;
 
   info("Test that the console input is not treated as a live region");
   ok(!isElementInLiveRegion(input), "Console input is not treated as a live region");
@@ -39,7 +39,7 @@ add_task(async function() {
   });
 
   info("Close the autocomplete popup by simulating a TAB key event");
-  let onPopupClosed = jsterm.autocompletePopup.once("popup-closed");
+  const onPopupClosed = jsterm.autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
 
   info("Wait for the autocomplete popup to be closed");
@@ -49,7 +49,7 @@ add_task(async function() {
 });
 
 async function autocomplete(jsterm, value) {
-  let popup = jsterm.autocompletePopup;
+  const popup = jsterm.autocompletePopup;
 
   await new Promise(resolve => {
     jsterm.setInputValue(value);

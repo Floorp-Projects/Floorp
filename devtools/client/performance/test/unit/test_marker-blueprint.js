@@ -6,7 +6,7 @@
  */
 
 add_task(function() {
-  let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+  const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
 
   ok(TIMELINE_BLUEPRINT,
     "A timeline blueprint should be available.");
@@ -14,7 +14,7 @@ add_task(function() {
   ok(Object.keys(TIMELINE_BLUEPRINT).length,
     "The timeline blueprint has at least one entry.");
 
-  for (let value of Object.values(TIMELINE_BLUEPRINT)) {
+  for (const value of Object.values(TIMELINE_BLUEPRINT)) {
     ok("group" in value,
       "Each entry in the timeline blueprint contains a `group` key.");
     ok("colorName" in value,

@@ -69,8 +69,8 @@ exports.reflectAboutY = reflectAboutY;
  *         The new matrix.
  */
 const rotate = (angle = 0) => {
-  let cos = Math.cos(angle);
-  let sin = Math.sin(angle);
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
 
   return [
     cos,  sin, 0,
@@ -104,17 +104,17 @@ exports.identity = identity;
  *        The resulting matrix.
  */
 const multiply = (M1, M2) => {
-  let c11 = M1[0] * M2[0] + M1[1] * M2[3] + M1[2] * M2[6];
-  let c12 = M1[0] * M2[1] + M1[1] * M2[4] + M1[2] * M2[7];
-  let c13 = M1[0] * M2[2] + M1[1] * M2[5] + M1[2] * M2[8];
+  const c11 = M1[0] * M2[0] + M1[1] * M2[3] + M1[2] * M2[6];
+  const c12 = M1[0] * M2[1] + M1[1] * M2[4] + M1[2] * M2[7];
+  const c13 = M1[0] * M2[2] + M1[1] * M2[5] + M1[2] * M2[8];
 
-  let c21 = M1[3] * M2[0] + M1[4] * M2[3] + M1[5] * M2[6];
-  let c22 = M1[3] * M2[1] + M1[4] * M2[4] + M1[5] * M2[7];
-  let c23 = M1[3] * M2[2] + M1[4] * M2[5] + M1[5] * M2[8];
+  const c21 = M1[3] * M2[0] + M1[4] * M2[3] + M1[5] * M2[6];
+  const c22 = M1[3] * M2[1] + M1[4] * M2[4] + M1[5] * M2[7];
+  const c23 = M1[3] * M2[2] + M1[4] * M2[5] + M1[5] * M2[8];
 
-  let c31 = M1[6] * M2[0] + M1[7] * M2[3] + M1[8] * M2[6];
-  let c32 = M1[6] * M2[1] + M1[7] * M2[4] + M1[8] * M2[7];
-  let c33 = M1[6] * M2[2] + M1[7] * M2[5] + M1[8] * M2[8];
+  const c31 = M1[6] * M2[0] + M1[7] * M2[3] + M1[8] * M2[6];
+  const c32 = M1[6] * M2[1] + M1[7] * M2[4] + M1[8] * M2[7];
+  const c33 = M1[6] * M2[2] + M1[7] * M2[5] + M1[8] * M2[8];
 
   return [
     c11, c12, c13,
@@ -169,14 +169,14 @@ exports.isIdentity = isIdentity;
  *        vLength are the lengths of u and v.
  */
 const getBasis = (u, v) => {
-  let uLength = Math.abs(Math.sqrt(u[0] ** 2 + u[1] ** 2));
-  let vLength = Math.abs(Math.sqrt(v[0] ** 2 + v[1] ** 2));
-  let basis =
+  const uLength = Math.abs(Math.sqrt(u[0] ** 2 + u[1] ** 2));
+  const vLength = Math.abs(Math.sqrt(v[0] ** 2 + v[1] ** 2));
+  const basis =
     [ u[0] / uLength, v[0] / vLength, 0,
       u[1] / uLength, v[1] / vLength, 0,
       0,                0,                1 ];
-  let determinant = 1 / (basis[0] * basis[4] - basis[1] * basis[3]);
-  let invertedBasis =
+  const determinant = 1 / (basis[0] * basis[4] - basis[1] * basis[3]);
+  const invertedBasis =
     [ basis[4] / determinant,  -basis[1] / determinant, 0,
       -basis[3] / determinant,  basis[0] / determinant, 0,
       0,                        0,                      1 ];
@@ -216,7 +216,7 @@ exports.changeMatrixBase = changeMatrixBase;
  *        The transformation matrix.
  */
 function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
-  let { a, b, c, d, e, f } = ancestor.getTransformToParent()
+  const { a, b, c, d, e, f } = ancestor.getTransformToParent()
                                      .multiply(node.getTransformToAncestor(ancestor));
 
   return [
@@ -241,8 +241,8 @@ exports.getNodeTransformationMatrix = getNodeTransformationMatrix;
  */
 function getWritingModeMatrix(size, style) {
   let currentMatrix = identity();
-  let { width, height } = size;
-  let { direction, writingMode } = style;
+  const { width, height } = size;
+  const { direction, writingMode } = style;
 
   switch (writingMode) {
     case "horizontal-tb":
@@ -310,7 +310,7 @@ exports.getWritingModeMatrix = getWritingModeMatrix;
  *         The matching 6 element CSS transform function.
  */
 function getCSSMatrixTransform(M) {
-  let [
+  const [
     a, c, e,
     b, d, f,
   ] = M;

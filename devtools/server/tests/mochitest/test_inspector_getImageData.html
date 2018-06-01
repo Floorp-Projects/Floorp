@@ -21,10 +21,10 @@ window.onload = function() {
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
 
     promiseDone(inspector.getWalker().then(walker => {
       gWalker = walker;
@@ -135,9 +135,9 @@ addTest(function cleanup() {
  * Checks if the server told the truth about resizing the image
  */
 function testResizing(imageData, str) {
-  let img = document.createElement("img");
+  const img = document.createElement("img");
   img.addEventListener("load", () => {
-    let resized = !(img.naturalWidth == imageData.size.naturalWidth &&
+    const resized = !(img.naturalWidth == imageData.size.naturalWidth &&
                     img.naturalHeight == imageData.size.naturalHeight);
     is(imageData.size.resized, resized, "Server told the truth about resizing");
     runNextTest();

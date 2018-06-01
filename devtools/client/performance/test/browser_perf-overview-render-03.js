@@ -13,20 +13,20 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { PerformanceController, OverviewView } = panel.panelWin;
+  const { PerformanceController, OverviewView } = panel.panelWin;
 
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
-  let doChecks = () => {
-    let markers = OverviewView.graphs.get("timeline");
-    let framerate = OverviewView.graphs.get("framerate");
-    let memory = OverviewView.graphs.get("memory");
+  const doChecks = () => {
+    const markers = OverviewView.graphs.get("timeline");
+    const framerate = OverviewView.graphs.get("framerate");
+    const memory = OverviewView.graphs.get("memory");
 
     ok(markers.width > 0,
       "The overview's markers graph has a width.");

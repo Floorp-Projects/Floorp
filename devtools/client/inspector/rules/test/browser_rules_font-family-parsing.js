@@ -45,13 +45,13 @@ const TESTS = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
-  for (let {selector, expectedTextContent} of TESTS) {
+  for (const {selector, expectedTextContent} of TESTS) {
     await selectNode(selector, inspector);
     info("Looking for font-family property value in selector " + selector);
 
-    let prop = getRuleViewProperty(view, selector, "font-family").valueSpan;
+    const prop = getRuleViewProperty(view, selector, "font-family").valueSpan;
     is(prop.textContent, expectedTextContent,
        "The font-family property value is correct");
   }

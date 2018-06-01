@@ -15,9 +15,9 @@ const TEST_DATA = [{
   oldHTML: '<div id="one">First <em>Div</em></div>',
   newHTML: '<div id="one">First Div</div>',
   validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
-    let text = await testActor.getProperty("#one", "textContent");
+    const text = await testActor.getProperty("#one", "textContent");
     is(text, "First Div", "New div has expected text content");
-    let num = await testActor.getNumberOfElementMatches("#one em");
+    const num = await testActor.getNumberOfElementMatches("#one em");
     is(num, 0, "No em remaining");
   }
 }, {
@@ -37,7 +37,7 @@ const TEST_DATA = [{
            "addedAttribute</div>",
   validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
     is(pageNodeFront, selectedNodeFront, "Original element is selected");
-    let html = await testActor.getProperty("#addedAttribute", "outerHTML");
+    const html = await testActor.getProperty("#addedAttribute", "outerHTML");
     is(html, "<div id=\"addedAttribute\" class=\"important\" disabled=\"\" " +
        "checked=\"\">addedAttribute</div>", "Attributes have been added");
   }
@@ -52,18 +52,18 @@ const TEST_DATA = [{
            '<div id="siblings">siblings (updated)</div>' +
            '<div id="siblings-after-sibling">after sibling</div>',
   validate: async function({selectedNodeFront, inspector, testActor}) {
-    let beforeSiblingFront = await getNodeFront("#siblings-before-sibling",
+    const beforeSiblingFront = await getNodeFront("#siblings-before-sibling",
                                                 inspector);
     is(beforeSiblingFront, selectedNodeFront, "Sibling has been selected");
 
-    let text = await testActor.getProperty("#siblings", "textContent");
+    const text = await testActor.getProperty("#siblings", "textContent");
     is(text, "siblings (updated)", "New div has expected text content");
 
-    let beforeText = await testActor.getProperty("#siblings-before-sibling",
+    const beforeText = await testActor.getProperty("#siblings-before-sibling",
                                                  "textContent");
     is(beforeText, "before sibling", "Sibling has been inserted");
 
-    let afterText = await testActor.getProperty("#siblings-after-sibling",
+    const afterText = await testActor.getProperty("#siblings-after-sibling",
                                                 "textContent");
     is(afterText, "after sibling", "Sibling has been inserted");
   }
@@ -78,7 +78,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
   await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

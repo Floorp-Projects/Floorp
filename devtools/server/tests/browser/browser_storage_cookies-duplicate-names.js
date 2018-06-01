@@ -47,10 +47,10 @@ add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-same-name.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = StorageFront(client, form);
-  let data = await front.listStores();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = StorageFront(client, form);
+  const data = await front.listStores();
 
   ok(data.cookies, "Cookies storage actor is present");
 
@@ -66,19 +66,19 @@ add_task(async function() {
 });
 
 function testCookies(cookiesActor) {
-  let numHosts = Object.keys(cookiesActor.hosts).length;
+  const numHosts = Object.keys(cookiesActor.hosts).length;
   is(numHosts, 1, "Correct number of host entries for cookies");
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
 var testCookiesObjects = async function(index, hosts, cookiesActor) {
-  let host = Object.keys(hosts)[index];
-  let matchItems = data => {
+  const host = Object.keys(hosts)[index];
+  const matchItems = data => {
     is(data.total, TESTDATA[host].length,
        "Number of cookies in host " + host + " matches");
-    for (let item of data.data) {
+    for (const item of data.data) {
       let found = false;
-      for (let toMatch of TESTDATA[host]) {
+      for (const toMatch of TESTDATA[host]) {
         if (item.name === toMatch.name &&
             item.host === toMatch.host &&
             item.path === toMatch.path) {

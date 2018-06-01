@@ -51,12 +51,12 @@
       document.querySelector(".css-transition").style.backgroundColor = "yellow";
     }, 0);
 
-    let effect = new KeyframeEffect(
+    const effect = new KeyframeEffect(
       document.querySelector(".script-animation"), [
         {opacity: 1, offset: 0},
         {opacity: .1, offset: 1}
       ], { duration: 10000, fill: "forwards" });
-    let animation = new Animation(effect, document.timeline);
+    const animation = new Animation(effect, document.timeline);
     animation.play();
   </script>
 </body>

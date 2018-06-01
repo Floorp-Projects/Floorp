@@ -9,8 +9,8 @@
 const TEST_URI = "data:text/html;charset=utf8,<h1>test Object Inspector</h1>";
 
 add_task(async function() {
-  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  let hud = toolbox.getCurrentPanel().hud;
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = toolbox.getCurrentPanel().hud;
 
   logAllStoreChanges(hud);
 
@@ -22,7 +22,7 @@ add_task(async function() {
     );
   });
 
-  let node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findMessage(hud, "oi-test"));
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(objectInspectors.length, 2, "There is the expected number of object inspectors");
 
@@ -105,7 +105,7 @@ add_task(async function() {
 
   is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
 
-  let onObjectOiMutation = waitForNodeMutation(objectOi, {
+  const onObjectOiMutation = waitForNodeMutation(objectOi, {
     childList: true
   });
 
@@ -115,7 +115,7 @@ add_task(async function() {
   ok(objectOi.querySelector(".arrow").classList.contains("expanded"),
     "The arrow of the root node of the tree is expanded after clicking on it");
 
-  let objectOiNodes = objectOi.querySelectorAll(".node");
+  const objectOiNodes = objectOi.querySelectorAll(".node");
   // The object inspector now looks like:
   // ▼ {…}
   // |  c: "c"

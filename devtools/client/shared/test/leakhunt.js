@@ -13,11 +13,11 @@
  * });
  */
 function leakHunt(root) {
-  let path = [];
-  let seen = [];
+  const path = [];
+  const seen = [];
 
   try {
-    let output = leakHunt.inner(root, path, seen);
+    const output = leakHunt.inner(root, path, seen);
     output.forEach(function(line) {
       dump(line + "\n");
     });
@@ -27,9 +27,9 @@ function leakHunt(root) {
 }
 
 leakHunt.inner = function(root, path, seen) {
-  let prefix = new Array(path.length).join("  ");
+  const prefix = new Array(path.length).join("  ");
 
-  let reply = [];
+  const reply = [];
   function log(msg) {
     reply.push(msg);
   }
@@ -44,8 +44,8 @@ leakHunt.inner = function(root, path, seen) {
 
   try {
     let index = 0;
-    for (let data of root) {
-      let prop = "" + index;
+    for (const data of root) {
+      const prop = "" + index;
       leakHunt.digProperty(prop, data, path, seen, direct, log);
       index++;
     }
@@ -53,7 +53,7 @@ leakHunt.inner = function(root, path, seen) {
     /* Ignore things that are not enumerable */
   }
 
-  for (let prop in root) {
+  for (const prop in root) {
     let data;
     try {
       data = root[prop];
@@ -78,9 +78,9 @@ leakHunt.noRecurse = [
 ];
 
 leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
-  let newPath = path.slice();
+  const newPath = path.slice();
   newPath.push(prop);
-  let prefix = new Array(newPath.length).join("  ");
+  const prefix = new Array(newPath.length).join("  ");
 
   let recurse = true;
   let message = leakHunt.getType(data);
@@ -94,7 +94,7 @@ leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
   }
 
   if (message === "string") {
-    let extra = data.length > 10 ? data.substring(0, 9) + "_" : data;
+    const extra = data.length > 10 ? data.substring(0, 9) + "_" : data;
     message += ' "' + extra.replace(/\n/g, "|") + '"';
     recurse = false;
   } else if (leakHunt.matchesAnyPattern(message, leakHunt.noRecurse)) {
@@ -107,7 +107,7 @@ leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
 
   if (recurse) {
     seen.push(data);
-    let lines = leakHunt.inner(data, newPath, seen);
+    const lines = leakHunt.inner(data, newPath, seen);
     if (lines.length == 0) {
       if (message !== "function") {
         log(prefix + prop + " = " + message + " { }");

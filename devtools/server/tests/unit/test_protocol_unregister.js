@@ -10,8 +10,8 @@ function run_test() {
 
   // Verify the type registered correctly.
 
-  let type = types.getType("test");
-  let arrayType = types.getType("array:test");
+  const type = types.getType("test");
+  const arrayType = types.getType("array:test");
   Assert.equal(type.read("foo"), "successful read: foo");
   Assert.equal(arrayType.read(["foo"])[0], "successful read: foo");
 

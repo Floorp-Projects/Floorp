@@ -76,7 +76,7 @@ chromePrototype.initialize = function(connection) {
   }
 
   // On XPCShell, there is no window/docshell
-  let docShell = window ? window.QueryInterface(Ci.nsIInterfaceRequestor)
+  const docShell = window ? window.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell)
                         : null;
   Object.defineProperty(this, "docShell", {
@@ -95,10 +95,10 @@ Object.defineProperty(chromePrototype, "docShells", {
   get: function() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
-    let e = Services.ww.getWindowEnumerator();
+    const e = Services.ww.getWindowEnumerator();
     while (e.hasMoreElements()) {
-      let window = e.getNext();
-      let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+      const window = e.getNext();
+      const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
                            .QueryInterface(Ci.nsIDocShell);
       docShells = docShells.concat(getChildDocShells(docShell));
@@ -135,10 +135,10 @@ chromePrototype._attach = function() {
   Services.obs.addObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
-  let e = Services.ww.getWindowEnumerator();
+  const e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
-    let window = e.getNext();
-    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const window = e.getNext();
+    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell);
     if (docShell == this.docShell) {
@@ -158,10 +158,10 @@ chromePrototype._detach = function() {
   Services.obs.removeObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
-  let e = Services.ww.getWindowEnumerator();
+  const e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
-    let window = e.getNext();
-    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    const window = e.getNext();
+    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell);
     if (docShell == this.docShell) {
@@ -181,10 +181,10 @@ chromePrototype._detach = function() {
  */
 chromePrototype.preNest = function() {
   // Disable events in all open windows.
-  let e = Services.wm.getEnumerator(null);
+  const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
-    let win = e.getNext();
-    let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+    const win = e.getNext();
+    const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
@@ -196,10 +196,10 @@ chromePrototype.preNest = function() {
  */
 chromePrototype.postNest = function(nestData) {
   // Enable events in all open windows.
-  let e = Services.wm.getEnumerator(null);
+  const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
-    let win = e.getNext();
-    let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+    const win = e.getNext();
+    const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.resumeTimeouts();
     windowUtils.suppressEventHandling(false);

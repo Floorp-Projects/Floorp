@@ -18,11 +18,11 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[0].editor;
 
   await focusEditableField(view, propEditor.nameSpan);
   await sendKeysAndWaitForFocus(view, ruleEditor.element,
@@ -34,7 +34,7 @@ add_task(async function() {
     "rgb(0, 0, 255)", "#00F background color is set.");
 
   await focusEditableField(view, propEditor.valueSpan);
-  let onValueDeleted = view.once("ruleview-changed");
+  const onValueDeleted = view.once("ruleview-changed");
   await sendKeysAndWaitForFocus(view, ruleEditor.element,
     ["DELETE", "ESCAPE"]);
   await onValueDeleted;

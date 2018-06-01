@@ -50,9 +50,9 @@ const CELLS = {
 const CELL_TYPES = Object.keys(CELLS);
 
 const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
-  let dataA = frameA.getDisplayedData();
-  let dataB = frameB.getDisplayedData();
-  let isAllocations = "totalSize" in dataA;
+  const dataA = frameA.getDisplayedData();
+  const dataB = frameB.getDisplayedData();
+  const isAllocations = "totalSize" in dataA;
 
   if (isAllocations) {
     if (this.inverted && dataA.selfSize !== dataB.selfSize) {
@@ -182,10 +182,10 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
    * @return Node
    */
   _displaySelf: function(document, arrowNode) {
-    let frameInfo = this.getDisplayedData();
-    let cells = [];
+    const frameInfo = this.getDisplayedData();
+    const cells = [];
 
-    for (let type of CELL_TYPES) {
+    for (const type of CELL_TYPES) {
       if (this.visibleCells[type]) {
         // Inline for speed, but pass in the formatted value via
         // cell definition, as well as the element type.
@@ -199,7 +199,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
                                           this.level));
     }
 
-    let targetNode = document.createElement("hbox");
+    const targetNode = document.createElement("hbox");
     targetNode.className = "call-tree-item";
     targetNode.setAttribute("origin", frameInfo.isContent ? "content" : "chrome");
     targetNode.setAttribute("category", frameInfo.categoryData.abbrev || "");
@@ -222,9 +222,9 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
    * @param array:AbstractTreeItem children
    */
   _populateSelf: function(children) {
-    let newLevel = this.level + 1;
+    const newLevel = this.level + 1;
 
-    for (let newFrame of this.frame.calls) {
+    for (const newFrame of this.frame.calls) {
       children.push(new CallView({
         caller: this,
         frame: newFrame,
@@ -243,7 +243,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
    * Invoked by `_displaySelf`.
    */
   _createCell: function(doc, value, type) {
-    let cell = doc.createElement("description");
+    const cell = doc.createElement("description");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", type);
     cell.setAttribute("crop", "end");
@@ -253,7 +253,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
   },
 
   _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
-    let cell = doc.createElement("hbox");
+    const cell = doc.createElement("hbox");
     cell.className = "call-tree-cell";
     cell.style.marginInlineStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
     cell.setAttribute("type", "function");
@@ -262,7 +262,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     // Render optimization hint if this frame has opt data.
     if (this.root.showOptimizationHint && frameInfo.hasOptimizations &&
         !frameInfo.isMetaCategory) {
-      let icon = doc.createElement("description");
+      const icon = doc.createElement("description");
       icon.setAttribute("tooltiptext", VIEW_OPTIMIZATIONS_TOOLTIP);
       icon.className = "opt-icon";
       cell.appendChild(icon);
@@ -271,7 +271,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     // Don't render a name label node if there's no function name. A different
     // location label node will be rendered instead.
     if (frameName) {
-      let nameNode = doc.createElement("description");
+      const nameNode = doc.createElement("description");
       nameNode.className = "plain call-tree-name";
       nameNode.textContent = frameName;
       cell.appendChild(nameNode);
@@ -283,20 +283,20 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     }
 
     // Don't render an expando-arrow for leaf nodes.
-    let hasDescendants = Object.keys(this.frame.calls).length > 0;
+    const hasDescendants = Object.keys(this.frame.calls).length > 0;
     if (!hasDescendants) {
       arrowNode.setAttribute("invisible", "");
     }
 
     // Add a line break to the last description of the row in case it's selected
     // and copied.
-    let lastDescription = cell.querySelector("description:last-of-type");
+    const lastDescription = cell.querySelector("description:last-of-type");
     lastDescription.textContent = lastDescription.textContent + "\n";
 
     // Add spaces as frameLevel indicators in case the row is selected and
     // copied. These spaces won't be displayed in the cell content.
-    let firstDescription = cell.querySelector("description:first-of-type");
-    let levelIndicator = frameLevel > 0 ? " ".repeat(frameLevel) : "";
+    const firstDescription = cell.querySelector("description:first-of-type");
+    const levelIndicator = frameLevel > 0 ? " ".repeat(frameLevel) : "";
     firstDescription.textContent = levelIndicator + firstDescription.textContent;
 
     return cell;
@@ -304,7 +304,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
 
   _appendFunctionDetailsCells: function(doc, cell, frameInfo) {
     if (frameInfo.fileName) {
-      let urlNode = doc.createElement("description");
+      const urlNode = doc.createElement("description");
       urlNode.className = "plain call-tree-url";
       urlNode.textContent = frameInfo.fileName;
       urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
@@ -313,28 +313,28 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     }
 
     if (frameInfo.line) {
-      let lineNode = doc.createElement("description");
+      const lineNode = doc.createElement("description");
       lineNode.className = "plain call-tree-line";
       lineNode.textContent = ":" + frameInfo.line;
       cell.appendChild(lineNode);
     }
 
     if (frameInfo.column) {
-      let columnNode = doc.createElement("description");
+      const columnNode = doc.createElement("description");
       columnNode.className = "plain call-tree-column";
       columnNode.textContent = ":" + frameInfo.column;
       cell.appendChild(columnNode);
     }
 
     if (frameInfo.host) {
-      let hostNode = doc.createElement("description");
+      const hostNode = doc.createElement("description");
       hostNode.className = "plain call-tree-host";
       hostNode.textContent = frameInfo.host;
       cell.appendChild(hostNode);
     }
 
     if (frameInfo.categoryData.label) {
-      let categoryNode = doc.createElement("description");
+      const categoryNode = doc.createElement("description");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
       categoryNode.textContent = frameInfo.categoryData.label;

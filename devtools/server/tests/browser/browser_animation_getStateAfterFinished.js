@@ -12,11 +12,11 @@
 // information.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non animated node");
-  let node = await walker.querySelector(walker.rootNode, ".not-animated");
+  const node = await walker.querySelector(walker.rootNode, ".not-animated");
 
   info("Apply the multiple-animations-2 class to start the animations");
   await node.modifyAttributes([

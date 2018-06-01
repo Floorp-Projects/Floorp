@@ -15,12 +15,12 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { $, EVENTS, PerformanceController } = panel.panelWin;
+  const { $, EVENTS, PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -29,7 +29,7 @@ add_task(async function() {
 
   info("Selecting recording #0 and waiting for it to be displayed.");
 
-  let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  const selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
   await selected;
 

@@ -9,11 +9,11 @@
  * in place between loaders.
  */
 function run_test() {
-  let loader1 = new DevToolsLoader();
-  let loader2 = new DevToolsLoader();
+  const loader1 = new DevToolsLoader();
+  const loader2 = new DevToolsLoader();
 
-  let indent1 = loader1.require("devtools/shared/indentation");
-  let indent2 = loader2.require("devtools/shared/indentation");
+  const indent1 = loader1.require("devtools/shared/indentation");
+  const indent2 = loader2.require("devtools/shared/indentation");
 
   Assert.ok(indent1 !== indent2);
 

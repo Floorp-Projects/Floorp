@@ -15,8 +15,8 @@ requestLongerTimeout(2);
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, inspector} = await openAnimationInspector();
-  let btn = panel.playTimelineButtonEl;
+  const {panel, inspector} = await openAnimationInspector();
+  const btn = panel.playTimelineButtonEl;
 
   // For a finite animation, once the scrubber reaches the end of the timeline, the pause
   // button should go back to paused mode.
@@ -43,8 +43,8 @@ add_task(async function() {
 
 function waitForButtonPaused(btn) {
   return new Promise(resolve => {
-    let observer = new btn.ownerDocument.defaultView.MutationObserver(mutations => {
-      for (let mutation of mutations) {
+    const observer = new btn.ownerDocument.defaultView.MutationObserver(mutations => {
+      for (const mutation of mutations) {
         if (mutation.type === "attributes" &&
             mutation.attributeName === "class" &&
             !mutation.oldValue.includes("paused") &&

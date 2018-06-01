@@ -9,11 +9,11 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
+  const { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -22,8 +22,8 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await wait;
 
-  let requestItem = document.querySelectorAll(".request-list-item")[0];
-  let requestsListStatus = requestItem.querySelector(".status-code");
+  const requestItem = document.querySelectorAll(".request-list-item")[0];
+  const requestsListStatus = requestItem.querySelector(".status-code");
   requestItem.scrollIntoView();
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
@@ -50,7 +50,7 @@ add_task(async function() {
 
   // CodeMirror will only load lines currently in view to the DOM. getValue()
   // retrieves all lines pending render after a user begins scrolling.
-  let text = document.querySelector(".CodeMirror").CodeMirror.getValue();
+  const text = document.querySelector(".CodeMirror").CodeMirror.getValue();
 
   ok(text.includes("\u0411\u0440\u0430\u0442\u0430\u043d"),
     "The text shown in the source editor is correct.");

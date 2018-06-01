@@ -66,9 +66,9 @@ function getProperties(url) {
     // and decide which context require function to use.  Despite the
     // string processing here, in the end a string identical to |url|
     // ends up being passed to "require".
-    let index = url.lastIndexOf("/");
+    const index = url.lastIndexOf("/");
     // Turn "mumble/locales/resource.properties" => "./resource.properties".
-    let baseName = "." + url.substr(index);
+    const baseName = "." + url.substr(index);
     let reqFn;
     if (/^toolkit/.test(url)) {
       reqFn = reqGlobal;
@@ -103,7 +103,7 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getStr: function(name) {
-    let properties = getProperties(this.stringBundleName);
+    const properties = getProperties(this.stringBundleName);
     if (name in properties) {
       return properties[name];
     }
@@ -132,7 +132,7 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getFormatStrWithNumbers: function(name, ...args) {
-    let newArgs = args.map(x => {
+    const newArgs = args.map(x => {
       return typeof x == "number" ? this.numberWithDecimals(x, 2) : x;
     });
 
@@ -162,10 +162,10 @@ LocalizationHelper.prototype = {
     }
 
     // Localize the number using a memoized Intl.NumberFormat formatter.
-    let localized = getNumberFormatter(decimals).format(number);
+    const localized = getNumberFormatter(decimals).format(number);
 
     // Convert the localized number to a number again.
-    let localizedNumber = localized * 1;
+    const localizedNumber = localized * 1;
     // Check if this number is now equal to an integer.
     if (localizedNumber === (localizedNumber|0)) {
     // If it is, remove the fraction part.
@@ -177,12 +177,12 @@ LocalizationHelper.prototype = {
 };
 
 function getPropertiesForNode(node) {
-  let bundleEl = node.closest("[data-localization-bundle]");
+  const bundleEl = node.closest("[data-localization-bundle]");
   if (!bundleEl) {
     return null;
   }
 
-  let propertiesUrl = bundleEl.getAttribute("data-localization-bundle");
+  const propertiesUrl = bundleEl.getAttribute("data-localization-bundle");
   return getProperties(propertiesUrl);
 }
 
@@ -212,16 +212,16 @@ function getPropertiesForNode(node) {
  *        The root node to use for the localization
  */
 function localizeMarkup(root) {
-  let elements = root.querySelectorAll("[data-localization]");
-  for (let element of elements) {
-    let properties = getPropertiesForNode(element);
+  const elements = root.querySelectorAll("[data-localization]");
+  for (const element of elements) {
+    const properties = getPropertiesForNode(element);
     if (!properties) {
       continue;
     }
 
-    let attributes = element.getAttribute("data-localization").split(";");
-    for (let attribute of attributes) {
-      let [name, value] = attribute.trim().split("=");
+    const attributes = element.getAttribute("data-localization").split(";");
+    for (const attribute of attributes) {
+      const [name, value] = attribute.trim().split("=");
       if (name === "content") {
         element.textContent = properties[value];
       } else {
@@ -240,7 +240,7 @@ const sharedL10N = new LocalizationHelper("devtools/shared/locales/shared.proper
  * than one file. Useful for abstracting l10n string locations.
  */
 function MultiLocalizationHelper(...stringBundleNames) {
-  let instances = stringBundleNames.map(bundle => {
+  const instances = stringBundleNames.map(bundle => {
     return new LocalizationHelper(bundle);
   });
 
@@ -256,7 +256,7 @@ function MultiLocalizationHelper(...stringBundleNames) {
     .filter(({ descriptor }) => descriptor.value instanceof Function)
     .forEach(method => {
       this[method.name] = (...args) => {
-        for (let l10n of instances) {
+        for (const l10n of instances) {
           try {
             return method.descriptor.value.apply(l10n, args);
           } catch (e) {

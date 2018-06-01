@@ -74,7 +74,7 @@ class StackFrameCache {
     packet.frames = Array(size).fill(null);
 
     // Populate the "frames" properties.
-    for (let [stack, index] of this._framesToIndices) {
+    for (const [stack, index] of this._framesToIndices) {
       packet.frames[index] = this._framesToForms.get(stack);
     }
 
@@ -117,8 +117,8 @@ class StackFrameCache {
       return null;
     }
 
-    let packet = Array(size - this._lastEventSize).fill(null);
-    for (let [stack, index] of this._framesToIndices) {
+    const packet = Array(size - this._lastEventSize).fill(null);
+    for (const [stack, index] of this._framesToIndices) {
       if (index >= this._lastEventSize) {
         packet[index - this._lastEventSize] = this._framesToForms.get(stack);
       }

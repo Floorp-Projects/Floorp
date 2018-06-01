@@ -24,11 +24,11 @@ let gClient = null;
 let gCleanupConnection = null;
 
 function setup(callback) {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       gClient = client;
       gWalker = walker;
@@ -63,7 +63,7 @@ function loadChildSelector(selector) {
 }
 
 function getUnloadedDoc(mutations) {
-  for (let change of mutations) {
+  for (const change of mutations) {
     if (isUnload(change)) {
       return change.target;
     }
@@ -75,11 +75,11 @@ addTest(function loadNewChild() {
   setup(() => {
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
-      let unloaded = getUnloadedDoc(mutations);
+      const unloaded = getUnloadedDoc(mutations);
       mutations = assertSrcChange(mutations);
       mutations = assertUnload(mutations);
       mutations = assertFrameLoad(mutations);
@@ -100,14 +100,14 @@ addTest(function loadNewChildTwice() {
   setup(() => {
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
       // The first load went through as expected (as tested in loadNewChild)
       // Now change the source again, but this time we *don't* expect
       // an unload, because we haven't seen the new child document yet.
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>second new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
@@ -129,7 +129,7 @@ addTest(function loadNewChildTwiceAndCareAboutIt() {
   setup(() => {
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
@@ -137,11 +137,11 @@ addTest(function loadNewChildTwiceAndCareAboutIt() {
       return loadChildSelector("#longlist div");
     }).then(() => {
       // Now change the source again, and expect the same results as loadNewChild.
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>second new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
-      let unloaded = getUnloadedDoc(mutations);
+      const unloaded = getUnloadedDoc(mutations);
 
       mutations = assertSrcChange(mutations);
       mutations = assertUnload(mutations);
@@ -163,7 +163,7 @@ addTest(function testBack() {
   setup(() => {
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.src = "data:text/html,<html>new child</html>";
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
@@ -172,11 +172,11 @@ addTest(function testBack() {
     }).then(() => {
       // Now use history.back to change the source,
       // and expect the same results as loadNewChild.
-      let childFrame = gInspectee.querySelector("#childFrame");
+      const childFrame = gInspectee.querySelector("#childFrame");
       childFrame.contentWindow.history.back();
       return waitForMutation(gWalker, isChildList);
     }).then(mutations => {
-      let unloaded = getUnloadedDoc(mutations);
+      const unloaded = getUnloadedDoc(mutations);
       mutations = assertSrcChange(mutations);
       mutations = assertUnload(mutations);
       mutations = assertFrameLoad(mutations);

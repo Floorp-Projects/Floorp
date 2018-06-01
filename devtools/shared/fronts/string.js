@@ -28,7 +28,7 @@ const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
 
   string: function() {
     if (!this.strPromise) {
-      let promiseRest = (thusFar) => {
+      const promiseRest = (thusFar) => {
         if (thusFar.length === this.length) {
           return promise.resolve(thusFar);
         }

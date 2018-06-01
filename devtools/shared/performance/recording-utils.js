@@ -68,7 +68,7 @@ function normalizePerformanceFeatures(options, supportedFeatures) {
  *        The earliest acceptable sample time (in milliseconds).
  */
 function filterSamples(profile, profilerStartTime) {
-  let firstThread = profile.threads[0];
+  const firstThread = profile.threads[0];
   const TIME_SLOT = firstThread.samples.schema.time;
   firstThread.samples.data = firstThread.samples.data.filter(e => {
     return e[TIME_SLOT] >= profilerStartTime;
@@ -84,9 +84,9 @@ function filterSamples(profile, profilerStartTime) {
  *        The amount of time to offset by (in milliseconds).
  */
 function offsetSampleTimes(profile, timeOffset) {
-  let firstThread = profile.threads[0];
+  const firstThread = profile.threads[0];
   const TIME_SLOT = firstThread.samples.schema.time;
-  let samplesData = firstThread.samples.data;
+  const samplesData = firstThread.samples.data;
   for (let i = 0; i < samplesData.length; i++) {
     samplesData[i][TIME_SLOT] -= timeOffset;
   }
@@ -101,7 +101,7 @@ function offsetSampleTimes(profile, timeOffset) {
  *        The amount of time to offset by (in milliseconds).
  */
 function offsetMarkerTimes(markers, timeOffset) {
-  for (let marker of markers) {
+  for (const marker of markers) {
     marker.start -= timeOffset;
     marker.end -= timeOffset;
   }
@@ -140,7 +140,7 @@ function offsetAndScaleTimestamps(timestamps, timeOffset, timeScale) {
  * @param {Array} src
  */
 function pushAll(dest, src) {
-  let length = src.length;
+  const length = src.length;
   for (let i = 0; i < length; i++) {
     dest.push(src[i]);
   }
@@ -163,13 +163,13 @@ var gProfileThreadFromAllocationCache = new WeakMap();
  *         The "profile" describing the allocations log.
  */
 function getProfileThreadFromAllocations(allocations) {
-  let cached = gProfileThreadFromAllocationCache.get(allocations);
+  const cached = gProfileThreadFromAllocationCache.get(allocations);
   if (cached) {
     return cached;
   }
 
-  let { sites, timestamps, frames, sizes } = allocations;
-  let uniqueStrings = new UniqueStrings();
+  const { sites, timestamps, frames, sizes } = allocations;
+  const uniqueStrings = new UniqueStrings();
 
   // Convert allocation frames to the the stack and frame tables expected by
   // the profiler format.
@@ -183,20 +183,20 @@ function getProfileThreadFromAllocations(allocations) {
   // table: a trie of all stacks. We could work harder to further deduplicate
   // each individual frame as the profiler does, but it is not necessary for
   // correctness.
-  let stackTable = new Array(frames.length);
-  let frameTable = new Array(frames.length);
+  const stackTable = new Array(frames.length);
+  const frameTable = new Array(frames.length);
 
   // Array used to concat the location.
-  let locationConcatArray = new Array(5);
+  const locationConcatArray = new Array(5);
 
   for (let i = 0; i < frames.length; i++) {
-    let frame = frames[i];
+    const frame = frames[i];
     if (!frame) {
       stackTable[i] = frameTable[i] = null;
       continue;
     }
 
-    let prefix = frame.parent;
+    const prefix = frame.parent;
 
     // Schema:
     //   [prefix, frame]
@@ -221,7 +221,7 @@ function getProfileThreadFromAllocations(allocations) {
     locationConcatArray[5] = "";
 
     let location = locationConcatArray.join("");
-    let funcName = frame.functionDisplayName;
+    const funcName = frame.functionDisplayName;
 
     if (funcName) {
       locationConcatArray[0] = funcName;
@@ -236,7 +236,7 @@ function getProfileThreadFromAllocations(allocations) {
     frameTable[i] = [uniqueStrings.getOrAddStringIndex(location)];
   }
 
-  let samples = new Array(sites.length);
+  const samples = new Array(sites.length);
   let writePos = 0;
   for (let i = 0; i < sites.length; i++) {
     // Schema:
@@ -245,14 +245,14 @@ function getProfileThreadFromAllocations(allocations) {
     // Originally, sites[i] indexes into the frames array. Note that in the
     // loop above, stackTable[sites[i]] and frames[sites[i]] index the same
     // information.
-    let stackIndex = sites[i];
+    const stackIndex = sites[i];
     if (frames[stackIndex]) {
       samples[writePos++] = [stackIndex, timestamps[i], sizes[i]];
     }
   }
   samples.length = writePos;
 
-  let thread = {
+  const thread = {
     name: "allocations",
     samples: allocationsWithSchema(samples),
     stackTable: stackTableWithSchema(stackTable),
@@ -290,7 +290,7 @@ function allocationsWithSchema(data) {
  */
 function deflateProfile(profile) {
   profile.threads = profile.threads.map((thread) => {
-    let uniqueStacks = new UniqueStacks();
+    const uniqueStacks = new UniqueStacks();
     return deflateThread(thread, uniqueStacks);
   });
 
@@ -312,7 +312,7 @@ function deflateStack(frames, uniqueStacks) {
   // prefix hash.
   let prefixIndex = null;
   for (let i = 0; i < frames.length; i++) {
-    let frameIndex = uniqueStacks.getOrAddFrameIndex(frames[i]);
+    const frameIndex = uniqueStacks.getOrAddFrameIndex(frames[i]);
     prefixIndex = uniqueStacks.getOrAddStackIndex(prefixIndex, frameIndex);
   }
   return prefixIndex;
@@ -331,9 +331,9 @@ function deflateSamples(samples, uniqueStacks) {
   // Schema:
   //   [stack, time, responsiveness, rss, uss]
 
-  let deflatedSamples = new Array(samples.length);
+  const deflatedSamples = new Array(samples.length);
   for (let i = 0; i < samples.length; i++) {
-    let sample = samples[i];
+    const sample = samples[i];
     deflatedSamples[i] = [
       deflateStack(sample.frames, uniqueStacks),
       sample.time,
@@ -362,9 +362,9 @@ function deflateMarkers(markers, uniqueStacks) {
   // Schema:
   //   [name, time, data]
 
-  let deflatedMarkers = new Array(markers.length);
+  const deflatedMarkers = new Array(markers.length);
   for (let i = 0; i < markers.length; i++) {
-    let marker = markers[i];
+    const marker = markers[i];
     if (marker.data && marker.data.type === "tracing" && marker.data.stack) {
       marker.data.stack = deflateThread(marker.data.stack, uniqueStacks);
     }
@@ -473,8 +473,8 @@ UniqueStrings.prototype.getOrAddStringIndex = function(s) {
     return null;
   }
 
-  let stringHash = this._stringHash;
-  let stringTable = this.stringTable;
+  const stringHash = this._stringHash;
+  const stringTable = this.stringTable;
   let index = stringHash[s];
   if (index !== undefined) {
     return index;
@@ -554,14 +554,14 @@ UniqueStacks.prototype.getOrAddFrameIndex = function(frame) {
   // Schema:
   //   [location, implementation, optimizations, line, category]
 
-  let frameHash = this._frameHash;
-  let frameTable = this._frameTable;
+  const frameHash = this._frameHash;
+  const frameTable = this._frameTable;
 
-  let locationIndex = this.getOrAddStringIndex(frame.location);
-  let implementationIndex = this.getOrAddStringIndex(frame.implementation);
+  const locationIndex = this.getOrAddStringIndex(frame.location);
+  const implementationIndex = this.getOrAddStringIndex(frame.implementation);
 
   // Super dumb.
-  let hash = `${locationIndex} ${implementationIndex || ""} ` +
+  const hash = `${locationIndex} ${implementationIndex || ""} ` +
              `${frame.line || ""} ${frame.category || ""}`;
 
   let index = frameHash[hash];
@@ -587,11 +587,11 @@ UniqueStacks.prototype.getOrAddStackIndex = function(prefixIndex, frameIndex) {
   // Schema:
   //   [prefix, frame]
 
-  let stackHash = this._stackHash;
-  let stackTable = this._stackTable;
+  const stackHash = this._stackHash;
+  const stackTable = this._stackTable;
 
   // Also super dumb.
-  let hash = prefixIndex + " " + frameIndex;
+  const hash = prefixIndex + " " + frameIndex;
 
   let index = stackHash[hash];
   if (index !== undefined) {

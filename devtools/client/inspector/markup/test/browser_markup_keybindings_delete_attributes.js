@@ -25,19 +25,19 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  let {walker} = inspector;
+  const {inspector} = await openInspectorForURL(TEST_URL);
+  const {walker} = inspector;
 
-  for (let {selector, attribute} of TEST_DATA) {
+  for (const {selector, attribute} of TEST_DATA) {
     info("Get the container for node " + selector);
-    let {editor} = await getContainerForSelector(selector, inspector);
+    const {editor} = await getContainerForSelector(selector, inspector);
 
     info("Focus attribute " + attribute);
-    let attr = editor.attrElements.get(attribute).querySelector(".editable");
+    const attr = editor.attrElements.get(attribute).querySelector(".editable");
     attr.focus();
 
     info("Delete the attribute by pressing delete");
-    let mutated = inspector.once("markupmutation");
+    const mutated = inspector.once("markupmutation");
     EventUtils.sendKey("delete", inspector.panelWin);
     await mutated;
 

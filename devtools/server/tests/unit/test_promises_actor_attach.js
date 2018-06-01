@@ -11,18 +11,18 @@
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 add_task(async function() {
-  let client = await startTestDebuggerServer("promises-actor-test");
-  let chromeActors = await getChromeActors(client);
+  const client = await startTestDebuggerServer("promises-actor-test");
+  const chromeActors = await getChromeActors(client);
 
   // We have to attach the chrome TabActor before playing with the PromiseActor
   await attachTab(client, chromeActors);
   await testAttach(client, chromeActors);
 
-  let response = await listTabs(client);
-  let targetTab = findTab(response.tabs, "promises-actor-test");
+  const response = await listTabs(client);
+  const targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
-  let [ tabResponse ] = await attachTab(client, targetTab);
+  const [ tabResponse ] = await attachTab(client, targetTab);
 
   await testAttach(client, tabResponse);
 
@@ -30,7 +30,7 @@ add_task(async function() {
 });
 
 async function testAttach(client, parent) {
-  let promises = PromisesFront(client, parent);
+  const promises = PromisesFront(client, parent);
 
   try {
     await promises.detach();

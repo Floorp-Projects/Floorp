@@ -18,10 +18,10 @@
         SimpleTest.waitForExplicitFinish();
 
         (async function() {
-          let win = await openWebIDE();
-          let docProject = getProjectDocument(win);
-          let winProject = getProjectWindow(win);
-          let packagedAppLocation = getTestFilePath("app");
+          const win = await openWebIDE();
+          const docProject = getProjectDocument(win);
+          const winProject = getProjectWindow(win);
+          const packagedAppLocation = getTestFilePath("app");
 
           await win.AppProjects.load();
           is(win.AppProjects.projects.length, 0, "IDB is empty");
@@ -29,8 +29,8 @@
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           ok(!win.UI._busyPromise, "UI is not busy");
 
-          let onValidated = waitForUpdate(win, "project-validated");
-          let onDetails = waitForUpdate(win, "details");
+          const onValidated = waitForUpdate(win, "project-validated");
+          const onDetails = waitForUpdate(win, "details");
           await winProject.projectList.importPackagedApp(packagedAppLocation);
           await onValidated;
           await onDetails;
@@ -60,8 +60,8 @@
           project = win.AppManager.selectedProject;
           ok(project.location.endsWith("manifest.webapp"), "The manifest was found and the project was updated");
 
-          let panelNode = docProject.querySelector("#project-panel");
-          let items = panelNode.querySelectorAll(".panel-item");
+          const panelNode = docProject.querySelector("#project-panel");
+          const items = panelNode.querySelectorAll(".panel-item");
           // 4 controls, + 2 projects
           is(items.length, 6, "6 projects in panel");
           is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");

@@ -34,11 +34,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
+  const graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   graph.fixedWidth = TEST_WIDTH;
   graph.fixedHeight = TEST_HEIGHT;
 

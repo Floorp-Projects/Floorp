@@ -23,7 +23,7 @@
     <script type="application/javascript">
       /* exported log */
       function log(msg) {
-        let output = document.getElementById("output");
+        const output = document.getElementById("output");
 
         // eslint-disable-next-line no-unsanitized/property
         output.innerHTML = msg;

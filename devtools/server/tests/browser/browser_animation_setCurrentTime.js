@@ -8,7 +8,7 @@
 // allows changing many players' currentTimes at once.
 
 add_task(async function() {
-  let {client, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await testSetCurrentTime(walker, animations);
@@ -20,10 +20,10 @@ add_task(async function() {
 
 async function testSetCurrentTime(walker, animations) {
   info("Retrieve an animated node");
-  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  const node = await walker.querySelector(walker.rootNode, ".simple-animation");
 
   info("Retrieve the animation player for the node");
-  let [player] = await animations.getAnimationPlayersForNode(node);
+  const [player] = await animations.getAnimationPlayersForNode(node);
 
   ok(player.setCurrentTime, "Player has the setCurrentTime method");
 
@@ -35,18 +35,18 @@ async function testSetCurrentTime(walker, animations) {
 
   info("Pause the animation so we can really test if setCurrentTime works");
   await player.pause();
-  let pausedState = await player.getCurrentState();
+  const pausedState = await player.getCurrentState();
 
   info("Set the current time to currentTime + 5s");
   await player.setCurrentTime(pausedState.currentTime + 5000);
 
-  let updatedState1 = await player.getCurrentState();
+  const updatedState1 = await player.getCurrentState();
   is(Math.round(updatedState1.currentTime - pausedState.currentTime), 5000,
     "The currentTime was updated to +5s");
 
   info("Set the current time to currentTime - 2s");
   await player.setCurrentTime(updatedState1.currentTime - 2000);
-  let updatedState2 = await player.getCurrentState();
+  const updatedState2 = await player.getCurrentState();
   is(Math.round(updatedState2.currentTime - updatedState1.currentTime), -2000,
     "The currentTime was updated to -2s");
 }
@@ -56,9 +56,9 @@ async function testSetCurrentTimes(walker, animations) {
 
   info("Retrieve multiple animated node and its animation players");
 
-  let nodeMulti = await walker.querySelector(walker.rootNode,
+  const nodeMulti = await walker.querySelector(walker.rootNode,
     ".multiple-animations");
-  let players = (await animations.getAnimationPlayersForNode(nodeMulti));
+  const players = (await animations.getAnimationPlayersForNode(nodeMulti));
 
   ok(players.length > 1, "Node has more than 1 animation player");
 
@@ -67,7 +67,7 @@ async function testSetCurrentTimes(walker, animations) {
 
   info("Get the states of players and verify their correctness");
   for (let i = 0; i < players.length; i++) {
-    let state = await players[i].getCurrentState();
+    const state = await players[i].getCurrentState();
     is(state.playState, "paused", `Player ${i + 1} is paused`);
     is(state.currentTime, 500, `Player ${i + 1} has the right currentTime`);
   }

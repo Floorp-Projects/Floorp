@@ -73,12 +73,12 @@ define(function(require, exports, module) {
         return true;
       }
 
-      let json = object.name + JSON.stringify(object.value);
+      const json = object.name + JSON.stringify(object.value);
       return json.toLowerCase().includes(this.props.searchFilter.toLowerCase());
     }
 
     renderValue(props) {
-      let member = props.member;
+      const member = props.member;
 
       // Hide object summary when non-empty object is expanded (bug 1244912).
       if (isObject(member.value) && member.hasChildren && member.open) {
@@ -91,7 +91,7 @@ define(function(require, exports, module) {
         noGrip: true,
         openLink(str) {
           try {
-            let u = new URL(str);
+            const u = new URL(str);
             if (u.protocol == "https:" || u.protocol == "http:") {
               window.open(str, "_blank");
             }
@@ -103,7 +103,7 @@ define(function(require, exports, module) {
     renderTree() {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
-      let columns = [{
+      const columns = [{
         id: "value",
         width: "100%"
       }];
@@ -121,7 +121,7 @@ define(function(require, exports, module) {
 
     render() {
       let content;
-      let data = this.props.data;
+      const data = this.props.data;
 
       if (!isObject(data)) {
         content = div({className: "jsonPrimitiveValue"}, Rep({

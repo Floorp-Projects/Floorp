@@ -24,18 +24,18 @@ addDebuggerToGlobal(this);
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/nonchrome_unsafeDereference.html";
 
   iframe.onload = function() {
-    let dbg = new Debugger();
-    let contentDO = dbg.addDebuggee(iframe.contentWindow);
-    let xhrDesc = contentDO.getOwnPropertyDescriptor("xhr");
+    const dbg = new Debugger();
+    const contentDO = dbg.addDebuggee(iframe.contentWindow);
+    const xhrDesc = contentDO.getOwnPropertyDescriptor("xhr");
 
     isnot(xhrDesc, undefined, "xhr should be visible as property of content global");
     isnot(xhrDesc.value, undefined, "xhr should have a value");
 
-    let xhr = xhrDesc.value.unsafeDereference();
+    const xhr = xhrDesc.value.unsafeDereference();
 
     is(typeof xhr, "object", "we should be able to deference xhr's value's D.O");
     is(xhr.timeout, 1742, "chrome should see the xhr's 'timeout' property");

@@ -12,7 +12,7 @@ const ADDON_NAME = "test-devtools";
 
 function mockFilePicker(window, file) {
   // Mock the file picker to select a test addon
-  let MockFilePicker = SpecialPowers.MockFilePicker;
+  const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
   MockFilePicker.setFiles([file]);
 }
@@ -27,7 +27,7 @@ function mockFilePicker(window, file) {
  * @return {Promise} Promise that resolves to the output folder when done.
  */
 function promiseWriteWebManifestForExtension(manifest, dir) {
-  let files = {
+  const files = {
     "manifest.json": JSON.stringify(manifest),
   };
   return AddonTestUtils.promiseWriteFilesToExtension(
@@ -35,7 +35,7 @@ function promiseWriteWebManifestForExtension(manifest, dir) {
 }
 
 add_task(async function testLegacyInstallSuccess() {
-  let { tab, document } = await openAboutDebugging("addons");
+  const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
   // Install this add-on, and verify that it appears in the about:debugging UI
@@ -52,7 +52,7 @@ add_task(async function testLegacyInstallSuccess() {
 });
 
 add_task(async function testWebextensionInstallError() {
-  let { tab, document, window } = await openAboutDebugging("addons");
+  const { tab, document, window } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
   // Trigger the file picker by clicking on the button
@@ -60,20 +60,20 @@ add_task(async function testWebextensionInstallError() {
   document.getElementById("load-addon-from-file").click();
 
   info("wait for the install error to appear");
-  let top = document.querySelector(".addons-top");
+  const top = document.querySelector(".addons-top");
   await waitUntilElement(".addons-install-error", top);
 
   await closeAboutDebugging(tab);
 });
 
 add_task(async function testWebextensionInstallErrorRetry() {
-  let { tab, document, window } = await openAboutDebugging("addons");
+  const { tab, document, window } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
-  let tempdir = AddonTestUtils.tempDir.clone();
-  let addonId = "invalid-addon-install-retry@mozilla.org";
-  let addonName = "invalid-addon-install-retry";
-  let manifest = {
+  const tempdir = AddonTestUtils.tempDir.clone();
+  const addonId = "invalid-addon-install-retry@mozilla.org";
+  const addonName = "invalid-addon-install-retry";
+  const manifest = {
     name: addonName,
     description: "test invalid-addon-install-retry",
     // eslint-disable-next-line camelcase
@@ -88,7 +88,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
   await promiseWriteWebManifestForExtension(manifest, tempdir);
 
   // Mock the file picker to select a test addon.
-  let manifestFile = tempdir.clone();
+  const manifestFile = tempdir.clone();
   manifestFile.append(addonId, "manifest.json");
   mockFilePicker(window, manifestFile);
 
@@ -96,10 +96,10 @@ add_task(async function testWebextensionInstallErrorRetry() {
   document.getElementById("load-addon-from-file").click();
 
   info("wait for the install error to appear");
-  let top = document.querySelector(".addons-top");
+  const top = document.querySelector(".addons-top");
   await waitUntilElement(".addons-install-error", top);
 
-  let retryButton = document.querySelector("button.addons-install-retry");
+  const retryButton = document.querySelector("button.addons-install-retry");
   is(retryButton.textContent, "Retry", "Retry button has a good label");
 
   // Fix the manifest so the add-on will install.
@@ -110,7 +110,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
   }];
   await promiseWriteWebManifestForExtension(manifest, tempdir);
 
-  let addonEl = document.querySelector(`[data-addon-id="${addonId}"]`);
+  const addonEl = document.querySelector(`[data-addon-id="${addonId}"]`);
   // Verify this add-on isn't installed yet.
   ok(!addonEl, "Addon is not installed yet");
 

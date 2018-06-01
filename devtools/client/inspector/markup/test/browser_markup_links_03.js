@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node via the content");
   let onMutated = inspector.once("markupmutation");

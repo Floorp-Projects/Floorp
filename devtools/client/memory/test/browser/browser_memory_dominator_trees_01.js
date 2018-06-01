@@ -48,7 +48,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         expandAllEagerlyFetched(child);
       }
     }
@@ -63,7 +63,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         const found = findDeepest(child);
         if (found) {
           return found;
@@ -119,7 +119,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     }
 
     if (node.children) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         const found = findNewDeepest(child);
         if (found) {
           return found;

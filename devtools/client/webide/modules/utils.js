@@ -8,7 +8,7 @@ const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 function doesFileExist(location) {
-  let file = new FileUtils.File(location);
+  const file = new FileUtils.File(location);
   return file.exists();
 }
 exports.doesFileExist = doesFileExist;
@@ -17,7 +17,7 @@ function _getFile(location, ...pickerParams) {
   if (location) {
     return Promise.resolve(new FileUtils.File(location));
   }
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   fp.init(...pickerParams);
 
   return new Promise(resolve => {
@@ -47,7 +47,7 @@ function getPackagedDirectory(window, location) {
 exports.getPackagedDirectory = getPackagedDirectory;
 
 function getHostedURL(window, location) {
-  let ret = { value: null };
+  const ret = { value: null };
 
   if (!location) {
     Services.prompt.prompt(window,

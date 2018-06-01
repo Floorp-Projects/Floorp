@@ -14,10 +14,10 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 
 add_task(async function() {
-  let tab = await addTab(TEST_URL);
+  const tab = await addTab(TEST_URL);
   await openRDM(tab);
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
 
@@ -34,13 +34,13 @@ add_task(async function() {
       browser.test.log("Background script init");
 
       let extTab;
-      let contentMessage = new Promise(resolve => {
+      const contentMessage = new Promise(resolve => {
         browser.test.log("Listen to content");
-        let listener = async (msg, sender, respond) => {
+        const listener = async (msg, sender, respond) => {
           browser.test.assertEq(msg, "hello-from-content",
             "Background script got hello-from-content message");
 
-          let tabs = await browser.tabs.query({
+          const tabs = await browser.tabs.query({
             currentWindow: true,
             active: true,
           });
@@ -72,7 +72,7 @@ add_task(async function() {
       await contentMessage;
 
       browser.test.log("Send message from background to content");
-      let contentSender = await browser.tabs.sendMessage(
+      const contentSender = await browser.tabs.sendMessage(
         extTab.id,
         "hello-from-background"
       );
@@ -94,7 +94,7 @@ add_task(async function() {
           browser.test.assertTrue(!!sender, "Message has a sender");
           browser.test.assertTrue(!!sender.id, "Message has a sender.id");
 
-          let { id } = sender;
+          const { id } = sender;
           respond({ id });
         });
 
@@ -110,9 +110,9 @@ add_task(async function() {
     },
   });
 
-  let contentScriptReady = extension.awaitMessage("content-script-ready");
-  let backgroundScriptReady = extension.awaitMessage("background-script-ready");
-  let finish = extension.awaitFinish("rdm-messaging");
+  const contentScriptReady = extension.awaitMessage("content-script-ready");
+  const backgroundScriptReady = extension.awaitMessage("background-script-ready");
+  const finish = extension.awaitFinish("rdm-messaging");
 
   await extension.startup();
 

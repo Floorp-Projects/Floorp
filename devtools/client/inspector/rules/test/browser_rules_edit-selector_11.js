@@ -28,22 +28,22 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".pickme", inspector);
   await testEditSelector(view);
 });
 
 async function testEditSelector(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   editor.input.value = ".pickme";
-  let onRuleViewChanged = once(view, "ruleview-changed");
+  const onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
   // Escape the new property editor after editing the selector
-  let onBlur = once(view.styleDocument.activeElement, "blur");
+  const onBlur = once(view.styleDocument.activeElement, "blur");
   EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   await onBlur;
 

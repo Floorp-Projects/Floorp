@@ -52,31 +52,31 @@ function WorkerActorList(conn, options) {
 WorkerActorList.prototype = {
   getList() {
     // Create a set of debuggers.
-    let dbgs = new Set();
-    let e = wdm.getWorkerDebuggerEnumerator();
+    const dbgs = new Set();
+    const e = wdm.getWorkerDebuggerEnumerator();
     while (e.hasMoreElements()) {
-      let dbg = e.getNext().QueryInterface(Ci.nsIWorkerDebugger);
+      const dbg = e.getNext().QueryInterface(Ci.nsIWorkerDebugger);
       if (matchWorkerDebugger(dbg, this._options)) {
         dbgs.add(dbg);
       }
     }
 
     // Delete each actor for which we don't have a debugger.
-    for (let [dbg, ] of this._actors) {
+    for (const [dbg, ] of this._actors) {
       if (!dbgs.has(dbg)) {
         this._actors.delete(dbg);
       }
     }
 
     // Create an actor for each debugger for which we don't have one.
-    for (let dbg of dbgs) {
+    for (const dbg of dbgs) {
       if (!this._actors.has(dbg)) {
         this._actors.set(dbg, new WorkerActor(this._conn, dbg));
       }
     }
 
-    let actors = [];
-    for (let [, actor] of this._actors) {
+    const actors = [];
+    for (const [, actor] of this._actors) {
       actors.push(actor);
     }
 
@@ -149,22 +149,22 @@ function ServiceWorkerRegistrationActorList(conn) {
 ServiceWorkerRegistrationActorList.prototype = {
   getList() {
     // Create a set of registrations.
-    let registrations = new Set();
-    let array = swm.getAllRegistrations();
+    const registrations = new Set();
+    const array = swm.getAllRegistrations();
     for (let index = 0; index < array.length; ++index) {
       registrations.add(
         array.queryElementAt(index, Ci.nsIServiceWorkerRegistrationInfo));
     }
 
     // Delete each actor for which we don't have a registration.
-    for (let [registration, ] of this._actors) {
+    for (const [registration, ] of this._actors) {
       if (!registrations.has(registration)) {
         this._actors.delete(registration);
       }
     }
 
     // Create an actor for each registration for which we don't have one.
-    for (let registration of registrations) {
+    for (const registration of registrations) {
       if (!this._actors.has(registration)) {
         this._actors.set(registration,
           new ServiceWorkerRegistrationActor(this._conn, registration));
@@ -178,8 +178,8 @@ ServiceWorkerRegistrationActorList.prototype = {
       this._mustNotify = true;
     }
 
-    let actors = [];
-    for (let [, actor] of this._actors) {
+    const actors = [];
+    for (const [, actor] of this._actors) {
       actors.push(actor);
     }
 

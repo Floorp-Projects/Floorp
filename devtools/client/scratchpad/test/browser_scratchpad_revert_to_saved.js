@@ -91,15 +91,15 @@ function createAndLoadTemporaryFile() {
   gFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
-  let fout = Cc["@mozilla.org/network/file-output-stream;1"]
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   fout.init(gFile.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, fout.DEFER_OPEN);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  let fileContentStream = converter.convertToInputStream(gFileContent);
+  const fileContentStream = converter.convertToInputStream(gFileContent);
 
   NetUtil.asyncCopy(fileContentStream, fout, tempFileSaved);
 }

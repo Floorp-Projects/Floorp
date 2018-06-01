@@ -32,7 +32,7 @@ window.onload = function() {
 
 function pushPref(preferenceName, value) {
   return new Promise(resolve => {
-    let options = {"set": [[preferenceName, value]]};
+    const options = {"set": [[preferenceName, value]]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 }
@@ -42,10 +42,10 @@ let gNodeFront = null;
 let gWalker = null;
 
 addTest(function setup() {
-  let url = document.getElementById("inspectorContent").href;
+  const url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
 
     promiseDone(inspector.getWalker().then(walker => {
       gWalker = walker;

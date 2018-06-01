@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 const isMac = AppConstants.platform == "macosx";
 
-let allKeys = [];
+const allKeys = [];
 function buildDevtoolsKeysetMap(keyset) {
   // Fetches all the keyboard shortcuts which were defined by lazyGetter 'KeyShortcuts' in
   // devtools-startup.js and added to the DOM by 'hookKeyShortcuts'
@@ -25,7 +25,7 @@ function buildDevtoolsKeysetMap(keyset) {
       return;
     }
 
-    let modifiers = key.getAttribute("modifiers");
+    const modifiers = key.getAttribute("modifiers");
     allKeys.push({
       toolId: key.id.split("_")[1],
       key: key.getAttribute("key"),
@@ -45,7 +45,7 @@ function buildDevtoolsKeysetMap(keyset) {
 }
 
 function setupKeyBindingsTest() {
-  for (let win of gDevToolsBrowser._trackedBrowserWindows) {
+  for (const win of gDevToolsBrowser._trackedBrowserWindows) {
     buildDevtoolsKeysetMap(win.document.getElementById("devtoolsKeyset"));
   }
 }
@@ -63,7 +63,7 @@ add_task(async function() {
   setupKeyBindingsTest();
 
   info("Test the first inspector key (there are 2 of them on Mac)");
-  let inspectorKeys = allKeys.filter(({ toolId }) => {
+  const inspectorKeys = allKeys.filter(({ toolId }) => {
     return toolId === "inspector" || toolId === "inspectorMac";
   });
 
@@ -74,25 +74,25 @@ add_task(async function() {
   }
 
   info("The first inspector key should open the toolbox.");
-  let onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
   inspectorKeys[0].synthesizeKey();
-  let toolbox = await onToolboxReady;
+  const toolbox = await onToolboxReady;
   await inspectorShouldBeOpenAndHighlighting(inspectorKeys[0]);
 
   let onSelectTool = gDevTools.once("select-tool-command");
-  let webconsole = allKeys.filter(({ toolId }) => toolId === "webconsole")[0];
+  const webconsole = allKeys.filter(({ toolId }) => toolId === "webconsole")[0];
   webconsole.synthesizeKey();
   await onSelectTool;
   await webconsoleShouldBeSelected();
 
   onSelectTool = gDevTools.once("select-tool-command");
-  let jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
+  const jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
   jsdebugger.synthesizeKey();
   await onSelectTool;
   await jsdebuggerShouldBeSelected();
 
   onSelectTool = gDevTools.once("select-tool-command");
-  let netmonitor = allKeys.filter(({ toolId }) => toolId === "netmonitor")[0];
+  const netmonitor = allKeys.filter(({ toolId }) => toolId === "netmonitor")[0];
   netmonitor.synthesizeKey();
   await onSelectTool;
   await netmonitorShouldBeSelected();

@@ -75,7 +75,7 @@ Timeline.prototype = {
    */
   get docShells() {
     let originalDocShell;
-    let docShells = [];
+    const docShells = [];
 
     if (this.tabActor.isRootActor) {
       originalDocShell = this.tabActor.docShell;
@@ -87,13 +87,13 @@ Timeline.prototype = {
       return docShells;
     }
 
-    let docShellsEnum = originalDocShell.getDocShellEnumerator(
+    const docShellsEnum = originalDocShell.getDocShellEnumerator(
       Ci.nsIDocShellTreeItem.typeAll,
       Ci.nsIDocShell.ENUMERATE_FORWARDS
     );
 
     while (docShellsEnum.hasMoreElements()) {
-      let docShell = docShellsEnum.getNext();
+      const docShell = docShellsEnum.getNext();
       docShells.push(docShell.QueryInterface(Ci.nsIDocShell));
     }
 
@@ -105,18 +105,18 @@ Timeline.prototype = {
    * markers, memory, tick and frames events, if any.
    */
   _pullTimelineData: function() {
-    let docShells = this.docShells;
+    const docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
       return;
     }
 
-    let endTime = docShells[0].now();
-    let markers = [];
+    const endTime = docShells[0].now();
+    const markers = [];
 
     // Gather markers if requested.
     if (this._withMarkers || this._withDocLoadingEvents) {
-      for (let docShell of docShells) {
-        for (let marker of docShell.popProfileTimelineMarkers()) {
+      for (const docShell of docShells) {
+        for (const marker of docShell.popProfileTimelineMarkers()) {
           markers.push(marker);
 
           // The docshell may return markers with stack traces attached.
@@ -164,7 +164,7 @@ Timeline.prototype = {
 
     // Emit stack frames data if requested.
     if (this._withFrames && this._withMarkers) {
-      let frames = this._stackFrames.makeEvent();
+      const frames = this._stackFrames.makeEvent();
       if (frames) {
         this.emit("frames", endTime, frames);
       }
@@ -212,11 +212,11 @@ Timeline.prototype = {
     withGCEvents,
     withDocLoadingEvents,
   }) {
-    let docShells = this.docShells;
+    const docShells = this.docShells;
     if (!docShells.length) {
       return -1;
     }
-    let startTime = this._startTime = docShells[0].now();
+    const startTime = this._startTime = docShells[0].now();
     if (this._isRecording) {
       return startTime;
     }
@@ -230,7 +230,7 @@ Timeline.prototype = {
     this._withDocLoadingEvents = !!withDocLoadingEvents;
 
     if (this._withMarkers || this._withDocLoadingEvents) {
-      for (let docShell of docShells) {
+      for (const docShell of docShells) {
         docShell.recordProfileTimelineMarkers = true;
       }
     }
@@ -262,17 +262,17 @@ Timeline.prototype = {
    * Stop recording profile markers.
    */
   async stop() {
-    let docShells = this.docShells;
+    const docShells = this.docShells;
     if (!docShells.length) {
       return -1;
     }
-    let endTime = this._startTime = docShells[0].now();
+    const endTime = this._startTime = docShells[0].now();
     if (!this._isRecording) {
       return endTime;
     }
 
     if (this._withMarkers || this._withDocLoadingEvents) {
-      for (let docShell of docShells) {
+      for (const docShell of docShells) {
         docShell.recordProfileTimelineMarkers = false;
       }
     }
@@ -315,7 +315,7 @@ Timeline.prototype = {
    */
   _onWindowReady: function({ window }) {
     if (this._isRecording) {
-      let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+      const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
                            .QueryInterface(Ci.nsIDocShell);
       docShell.recordProfileTimelineMarkers = true;
@@ -334,12 +334,12 @@ Timeline.prototype = {
   _onGarbageCollection: function({
     collections, gcCycleNumber, reason, nonincrementalReason
   }) {
-    let docShells = this.docShells;
+    const docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
       return;
     }
 
-    let endTime = docShells[0].now();
+    const endTime = docShells[0].now();
 
     this.emit("markers", collections.map(({
       startTimestamp: start, endTimestamp: end

@@ -13,15 +13,15 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, window} = await openAnimationInspector();
-  let doc = window.document;
-  let toolbar = doc.querySelector("#global-toolbar");
+  const {inspector, window} = await openAnimationInspector();
+  const doc = window.document;
+  const toolbar = doc.querySelector("#global-toolbar");
 
   ok(toolbar, "The panel contains the toolbar element with the new UI");
   ok(!isNodeVisible(toolbar),
      "The toolbar is hidden while there are animations");
 
-  let timelineToolbar = doc.querySelector("#timeline-toolbar");
+  const timelineToolbar = doc.querySelector("#timeline-toolbar");
   ok(timelineToolbar, "The panel contains a timeline toolbar element");
   ok(isNodeVisible(timelineToolbar),
      "The timeline toolbar is visible when there are animations");

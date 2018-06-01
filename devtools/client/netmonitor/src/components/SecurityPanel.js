@@ -65,12 +65,12 @@ class SecurityPanel extends Component {
   }
 
   componentDidMount() {
-    let { request, connector } = this.props;
+    const { request, connector } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, ["securityInfo"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { request, connector } = nextProps;
+    const { request, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["securityInfo"]);
   }
 
@@ -108,7 +108,7 @@ class SecurityPanel extends Component {
   }
 
   render() {
-    let { openLink, request } = this.props;
+    const { openLink, request } = this.props;
     const { securityInfo, url } = request;
 
     if (!securityInfo || !url) {

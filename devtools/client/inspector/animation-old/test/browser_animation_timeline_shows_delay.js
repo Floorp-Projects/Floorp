@@ -13,11 +13,11 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = await openAnimationInspector();
+  const {inspector, panel} = await openAnimationInspector();
 
   info("Selecting a delayed animated node");
   await selectNodeAndWaitForAnimations(".delayed", inspector);
-  let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
+  const timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
   checkDelayAndName(timelineEl, true);
   let animationEl = timelineEl.querySelector(".animation");
   let state = getAnimationTimeBlocks(panel)[0].animation.state;
@@ -39,18 +39,18 @@ add_task(async function() {
 });
 
 function checkDelayAndName(timelineEl, hasDelay) {
-  let delay = timelineEl.querySelector(".delay");
+  const delay = timelineEl.querySelector(".delay");
 
   is(!!delay, hasDelay, "The timeline " +
                         (hasDelay ? "contains" : "does not contain") +
                         " a delay element, as expected");
 
   if (hasDelay) {
-    let targetNode = timelineEl.querySelector(".target");
+    const targetNode = timelineEl.querySelector(".target");
 
     // Check that the delay element does not cause the timeline to overflow.
-    let delayLeft = Math.round(delay.getBoundingClientRect().x);
-    let sidebarWidth = Math.round(targetNode.getBoundingClientRect().width);
+    const delayLeft = Math.round(delay.getBoundingClientRect().x);
+    const sidebarWidth = Math.round(targetNode.getBoundingClientRect().width);
     ok(delayLeft >= sidebarWidth,
        "The delay element isn't displayed over the sidebar");
   }

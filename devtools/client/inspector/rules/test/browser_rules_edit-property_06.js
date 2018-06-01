@@ -20,11 +20,11 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("body", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = rule.textProps[0];
 
   is((await getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");

@@ -35,7 +35,7 @@ class GlobalToolbar extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       devices,
       displayPixelRatio,
       networkThrottling,

@@ -40,7 +40,7 @@ class FontEditor extends PureComponent {
    */
   getAxisStep(min, max) {
     let step = 1;
-    let delta = parseInt(max, 10) - parseInt(min, 10);
+    const delta = parseInt(max, 10) - parseInt(min, 10);
 
     if (delta <= 1) {
       step = 0.001;

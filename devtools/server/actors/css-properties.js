@@ -49,8 +49,8 @@ function generateCssProperties() {
 
   propertyNames.forEach(name => {
     // Get the list of CSS types this property supports.
-    let supports = [];
-    for (let type in CSS_TYPES) {
+    const supports = [];
+    for (const type in CSS_TYPES) {
       if (safeCssPropertySupportsType(name, InspectorUtils["TYPE_" + type])) {
         supports.push(CSS_TYPES[type]);
       }
@@ -63,7 +63,7 @@ function generateCssProperties() {
       values.unshift("COLOR");
     }
 
-    let subproperties = InspectorUtils.getSubpropertiesForCSSProperty(name);
+    const subproperties = InspectorUtils.getSubpropertiesForCSSProperty(name);
 
     properties[name] = {
       isInherited: InspectorUtils.isInheritedProperty(name),

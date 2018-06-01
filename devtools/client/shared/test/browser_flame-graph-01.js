@@ -14,11 +14,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
+  const [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
-  let graph = new FlameGraph(doc.body);
+  const graph = new FlameGraph(doc.body);
 
   let readyEventEmitted;
   graph.once("ready", () => {
@@ -40,7 +40,7 @@ function testGraph(host, graph) {
   ok(graph._canvas.classList.contains("flame-graph-widget-canvas"),
     "The correct graph container was created.");
 
-  let bounds = host.frame.getBoundingClientRect();
+  const bounds = host.frame.getBoundingClientRect();
 
   is(graph.width, Math.round(bounds.width * window.devicePixelRatio),
     "The graph has the correct width.");

@@ -23,7 +23,7 @@ class RequestListColumnType extends Component {
   }
 
   render() {
-    let { mimeType } = this.props.item;
+    const { mimeType } = this.props.item;
     let abbrevType;
 
     if (mimeType) {

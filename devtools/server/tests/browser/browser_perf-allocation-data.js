@@ -13,12 +13,12 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_allocations.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
-  let rec = await front.startRecording(
+  const rec = await front.startRecording(
     { withMarkers: true, withAllocations: true, withTicks: true });
 
   await waitUntil(() => rec.getAllocations().frames.length);
@@ -28,7 +28,7 @@ add_task(async function() {
 
   await front.stopRecording(rec);
 
-  let { timestamps, sizes } = rec.getAllocations();
+  const { timestamps, sizes } = rec.getAllocations();
 
   is(timestamps.length, sizes.length, "we have the same amount of timestamps and sizes");
   ok(timestamps.every(time => time > 0 && typeof time === "number"),

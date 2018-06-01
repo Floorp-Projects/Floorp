@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
 
     let e = null;
     try {

@@ -11,8 +11,8 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
+  const {inspector, panel} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
 
   info("Select a test node we know has an animation running on the compositor");
   await selectNodeAndWaitForAnimations(".compositor-all", inspector);
@@ -50,8 +50,8 @@ add_task(async function() {
 });
 
 function hasTooltip(animationEl, expected) {
-  let el = animationEl.querySelector(".name");
-  let tooltip = el.getAttribute("title");
+  const el = animationEl.querySelector(".name");
+  const tooltip = el.getAttribute("title");
 
   return tooltip.includes(expected);
 }

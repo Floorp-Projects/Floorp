@@ -21,9 +21,9 @@ add_task(async function() {
 
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, inspector} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
-  let btn = panel.playTimelineButtonEl;
+  const {panel, inspector} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
+  const btn = panel.playTimelineButtonEl;
 
   info("Select an infinite animation and wait for the scrubber to reach the end");
   await selectNodeAndWaitForAnimations(".multi", inspector);
@@ -44,8 +44,8 @@ add_task(async function() {
 function waitForOutOfBoundScrubber({win, scrubberEl}) {
   return new Promise(resolve => {
     function check() {
-      let pos = scrubberEl.getBoxQuads()[0].bounds.right;
-      let width = win.document.documentElement.offsetWidth;
+      const pos = scrubberEl.getBoxQuads()[0].bounds.right;
+      const width = win.document.documentElement.offsetWidth;
       if (pos >= width) {
         setTimeout(resolve, 50);
       } else {

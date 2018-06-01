@@ -18,13 +18,13 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Focus the new property name field");
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
   let editor = await focusNewRuleViewProperty(ruleEditor);
-  let input = editor.input;
+  const input = editor.input;
 
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
     "Next focused editor should be the new property editor.");
@@ -40,7 +40,7 @@ add_task(async function() {
   editor.input.value = "background-color";
 
   info("Pressing RETURN and waiting for the value field focus");
-  let onNameAdded = view.once("ruleview-changed");
+  const onNameAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
 
   await onNameAdded;
@@ -51,12 +51,12 @@ add_task(async function() {
     "Should have created a new text property.");
   is(ruleEditor.propertyList.children.length, 2,
     "Should have created a property editor.");
-  let textProp = ruleEditor.rule.textProps[1];
+  const textProp = ruleEditor.rule.textProps[1];
   is(editor, inplaceEditor(textProp.editor.valueSpan),
     "Should be editing the value span now.");
 
   info("Entering the property value");
-  let onValueAdded = view.once("ruleview-changed");
+  const onValueAdded = view.once("ruleview-changed");
   editor.input.value = "purple";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onValueAdded;

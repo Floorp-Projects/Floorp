@@ -40,7 +40,7 @@ DomPanel.prototype = {
       return this._opening;
     }
 
-    let deferred = defer();
+    const deferred = defer();
     this._opening = deferred.promise;
 
     // Local monitoring needs to make the target remote.
@@ -67,7 +67,7 @@ DomPanel.prototype = {
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
     // Export provider object with useful API for DOM panel.
-    let provider = {
+    const provider = {
       getPrototypeAndProperties: this.getPrototypeAndProperties.bind(this),
       openLink: this.openLink.bind(this),
     };
@@ -82,7 +82,7 @@ DomPanel.prototype = {
       return this._destroying;
     }
 
-    let deferred = defer();
+    const deferred = defer();
     this._destroying = deferred.promise;
 
     this.target.off("navigate", this.onTabNavigated);
@@ -142,7 +142,7 @@ DomPanel.prototype = {
   },
 
   getPrototypeAndProperties: function(grip) {
-    let deferred = defer();
+    const deferred = defer();
 
     if (!grip.actor) {
       console.error("No actor!", grip);
@@ -157,12 +157,12 @@ DomPanel.prototype = {
 
     // If a request for the grips is already in progress
     // use the same promise.
-    let request = this.pendingRequests.get(grip.actor);
+    const request = this.pendingRequests.get(grip.actor);
     if (request) {
       return request;
     }
 
-    let client = new ObjectClient(this.target.client, grip);
+    const client = new ObjectClient(this.target.client, grip);
     client.getPrototypeAndProperties(response => {
       this.pendingRequests.delete(grip.actor, deferred.promise);
       deferred.resolve(response);
@@ -179,14 +179,14 @@ DomPanel.prototype = {
   },
 
   openLink: function(url) {
-    let parentDoc = this._toolbox.doc;
-    let iframe = parentDoc.getElementById("this._toolbox");
-    let top = iframe.ownerDocument.defaultView.top;
+    const parentDoc = this._toolbox.doc;
+    const iframe = parentDoc.getElementById("this._toolbox");
+    const top = iframe.ownerDocument.defaultView.top;
     top.openWebLinkIn(url, "tab");
   },
 
   getRootGrip: function() {
-    let deferred = defer();
+    const deferred = defer();
 
     // Attach Console. It might involve RDP communication, so wait
     // asynchronously for the result
@@ -198,12 +198,12 @@ DomPanel.prototype = {
   },
 
   postContentMessage: function(type, args) {
-    let data = {
+    const data = {
       type: type,
       args: args,
     };
 
-    let event = new this.panelWin.MessageEvent("devtools/chrome/message", {
+    const event = new this.panelWin.MessageEvent("devtools/chrome/message", {
       bubbles: true,
       cancelable: true,
       data: data,
@@ -213,8 +213,8 @@ DomPanel.prototype = {
   },
 
   onContentMessage: function(event) {
-    let data = event.data;
-    let method = data.type;
+    const data = event.data;
+    const method = data.type;
     if (typeof this[method] == "function") {
       this[method](data.args);
     }
@@ -228,14 +228,14 @@ DomPanel.prototype = {
 // Helpers
 
 function exportIntoContentScope(win, obj, defineAs) {
-  let clone = Cu.createObjectIn(win, {
+  const clone = Cu.createObjectIn(win, {
     defineAs: defineAs
   });
 
-  let props = Object.getOwnPropertyNames(obj);
+  const props = Object.getOwnPropertyNames(obj);
   for (let i = 0; i < props.length; i++) {
-    let propName = props[i];
-    let propValue = obj[propName];
+    const propName = props[i];
+    const propValue = obj[propName];
     if (typeof propValue == "function") {
       Cu.exportFunction(propValue, clone, {
         defineAs: propName

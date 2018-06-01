@@ -29,7 +29,7 @@ window.onload = function() {
   addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
-    let url = document.getElementById("inspectorContent").href;
+    const url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
@@ -47,10 +47,10 @@ window.onload = function() {
 
   addAsyncTest(async function testWalkerFrontDefaults() {
     info("Testing search API using WalkerFront.");
-    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = await nodes.items();
+    const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    const fronts = await nodes.items();
 
-    let frontResult = await walkerFront.search("");
+    const frontResult = await walkerFront.search("");
     ok(!frontResult, "Null result on front when searching for ''");
 
     let results = await walkerFront.search("h2");
@@ -76,8 +76,8 @@ window.onload = function() {
 
   addAsyncTest(async function testMultipleSearches() {
     info("Testing search API using WalkerFront (reverse=false)");
-    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = await nodes.items();
+    const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    const fronts = await nodes.items();
 
     let results = await walkerFront.search("h2");
     isDeeply(results, {
@@ -118,8 +118,8 @@ window.onload = function() {
 
   addAsyncTest(async function testMultipleSearchesReverse() {
     info("Testing search API using WalkerFront (reverse=true)");
-    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = await nodes.items();
+    const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    const fronts = await nodes.items();
 
     let results = await walkerFront.search("h2", {reverse: true});
     isDeeply(results, {

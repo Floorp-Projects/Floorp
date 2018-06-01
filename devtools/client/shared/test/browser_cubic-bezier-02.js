@@ -15,17 +15,17 @@ const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets"
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-02.html";
 
 add_task(async function() {
-  let [host, win, doc] = await createHost("bottom", TEST_URI);
+  const [host, win, doc] = await createHost("bottom", TEST_URI);
 
   // Required or widget will be clipped inside of 'bottom'
   // host by -14. Setting `fixed` zeroes this which is needed for
   // calculating offsets. Occurs in test env only.
   doc.body.setAttribute("style", "position: fixed; margin: 0;");
 
-  let container = doc.querySelector("#cubic-bezier-container");
-  let w = new CubicBezierWidget(container, PREDEFINED.linear);
+  const container = doc.querySelector("#cubic-bezier-container");
+  const w = new CubicBezierWidget(container, PREDEFINED.linear);
 
-  let rect = w.curve.getBoundingClientRect();
+  const rect = w.curve.getBoundingClientRect();
   rect.graphTop = rect.height * w.bezierCanvas.padding[0];
   rect.graphBottom = rect.height - rect.graphTop;
   rect.graphHeight = rect.graphBottom - rect.graphTop;
@@ -104,8 +104,8 @@ async function curveCanBeClicked(widget, win, doc, offsets) {
 async function pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   info("Checking that points respond to keyboard events");
 
-  let singleStep = 3;
-  let shiftStep = 30;
+  const singleStep = 3;
+  const shiftStep = 30;
 
   info("Moving P1 to the left");
   let newOffset = parseInt(widget.p1.style.left, 10) - singleStep;

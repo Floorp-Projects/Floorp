@@ -8,12 +8,12 @@
  * displays.
  */
 
-let { censusState, viewState } = require("devtools/client/memory/constants");
-let { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
-let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-let { changeView } = require("devtools/client/memory/actions/view");
+const { censusState, viewState } = require("devtools/client/memory/constants");
+const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
+const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
-let CUSTOM = {
+const CUSTOM = {
   displayName: "Custom",
   tooltip: "Custom tooltip",
   inverted: false,
@@ -24,11 +24,11 @@ let CUSTOM = {
 };
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
   dispatch(setCensusDisplayAndRefresh(heapWorker, CUSTOM));

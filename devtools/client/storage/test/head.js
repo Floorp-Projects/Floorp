@@ -56,7 +56,7 @@ registerCleanupFunction(() => {
  * @return {Promise} A promise that resolves after the tab is ready
  */
 async function openTab(url, options = {}) {
-  let tab = await addTab(url, options);
+  const tab = await addTab(url, options);
 
   // Setup the async storages in main window and for all its iframes
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -70,9 +70,9 @@ async function openTab(url, options = {}) {
      *         A set of windows.
      */
     function getAllWindows(baseWindow) {
-      let windows = new Set();
+      const windows = new Set();
 
-      let _getAllWindows = function(win) {
+      const _getAllWindows = function(win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -84,13 +84,13 @@ async function openTab(url, options = {}) {
       return windows;
     }
 
-    let windows = getAllWindows(content);
-    for (let win of windows) {
-      let readyState = win.document.readyState;
+    const windows = getAllWindows(content);
+    for (const win of windows) {
+      const readyState = win.document.readyState;
       info(`Found a window: ${readyState}`);
       if (readyState != "complete") {
         await new Promise(resolve => {
-          let onLoad = () => {
+          const onLoad = () => {
             win.removeEventListener("load", onLoad);
             resolve();
           };
@@ -135,7 +135,7 @@ async function openTabAndSetupStorage(url, options = {}) {
  */
 var openStoragePanel = async function(cb) {
   info("Opening the storage inspector");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
   let storage, toolbox;
 
@@ -228,9 +228,9 @@ async function finishTests() {
        *         A set of windows.
        */
       function getAllWindows(baseWindow) {
-        let windows = new Set();
+        const windows = new Set();
 
-        let _getAllWindows = function(win) {
+        const _getAllWindows = function(win) {
           windows.add(win.wrappedJSObject);
 
           for (let i = 0; i < win.length; i++) {
@@ -242,8 +242,8 @@ async function finishTests() {
         return windows;
       }
 
-      let windows = getAllWindows(content);
-      for (let win of windows) {
+      const windows = getAllWindows(content);
+      for (const win of windows) {
         // Some windows (e.g., about: URLs) don't have storage available
         try {
           win.localStorage.clear();
@@ -296,13 +296,13 @@ function click(node) {
  *         always the last property that was found.
  */
 function variablesViewExpandTo(options) {
-  let root = options.rootVariable;
-  let expandTo = options.expandTo.split(".");
+  const root = options.rootVariable;
+  const expandTo = options.expandTo.split(".");
 
   return new Promise((resolve, reject) => {
     function getNext(prop) {
-      let name = expandTo.shift();
-      let newProp = prop.get(name);
+      const name = expandTo.shift();
+      const newProp = prop.get(name);
 
       if (expandTo.length > 0) {
         ok(newProp, "found property " + name);
@@ -360,8 +360,8 @@ function findVariableViewProperties(ruleArray, parsed) {
     }
     // Separate out the rules that require expanding properties throughout the
     // view.
-    let expandRules = [];
-    let rules = ruleArray.filter(rule => {
+    const expandRules = [];
+    const rules = ruleArray.filter(rule => {
       if (typeof rule.name == "string" && rule.name.indexOf(".") > -1) {
         expandRules.push(rule);
         return false;
@@ -372,15 +372,15 @@ function findVariableViewProperties(ruleArray, parsed) {
     // Search through the view those rules that do not require any properties to
     // be expanded. Build the array of matchers, outstanding promises to be
     // resolved.
-    let outstanding = [];
+    const outstanding = [];
 
     finder(rules, gUI.view, outstanding);
 
     // Process the rules that need to expand properties.
-    let lastStep = processExpandRules.bind(null, expandRules);
+    const lastStep = processExpandRules.bind(null, expandRules);
 
     // Return the results - a promise resolved to hold the updated ruleArray.
-    let returnResults = onAllRulesMatched.bind(null, ruleArray);
+    const returnResults = onAllRulesMatched.bind(null, ruleArray);
 
     return promise.all(outstanding).then(lastStep).then(returnResults);
   }
@@ -392,10 +392,10 @@ function findVariableViewProperties(ruleArray, parsed) {
   }
 
   function finder(rules, view, promises) {
-    for (let scope of view) {
-      for (let [, prop] of scope) {
-        for (let rule of rules) {
-          let matcher = matchVariablesViewProperty(prop, rule);
+    for (const scope of view) {
+      for (const [, prop] of scope) {
+        for (const rule of rules) {
+          const matcher = matchVariablesViewProperty(prop, rule);
           promises.push(matcher.then(onMatch.bind(null, prop, rule)));
         }
       }
@@ -404,22 +404,22 @@ function findVariableViewProperties(ruleArray, parsed) {
 
   function processExpandRules(rules) {
     return new Promise(resolve => {
-      let rule = rules.shift();
+      const rule = rules.shift();
       if (!rule) {
         resolve(null);
       }
 
-      let expandOptions = {
+      const expandOptions = {
         rootVariable: gUI.view.getScopeAtIndex(parsed ? 1 : 0),
         expandTo: rule.name
       };
 
       variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
-        let name = rule.name;
-        let lastName = name.split(".").pop();
+        const name = rule.name;
+        const lastName = name.split(".").pop();
         rule.name = lastName;
 
-        let matched = matchVariablesViewProperty(prop, rule);
+        const matched = matchVariablesViewProperty(prop, rule);
         return matched.then(onMatch.bind(null, prop, rule)).then(function() {
           rule.name = name;
         });
@@ -432,8 +432,8 @@ function findVariableViewProperties(ruleArray, parsed) {
   }
 
   function onAllRulesMatched(rules) {
-    for (let rule of rules) {
-      let matched = rule.matchedProp;
+    for (const rule of rules) {
+      const matched = rule.matchedProp;
       if (matched && !rule.dontMatch) {
         ok(true, "rule " + rule.name + " matched for property " + matched.name);
       } else if (matched && rule.dontMatch) {
@@ -473,7 +473,7 @@ function matchVariablesViewProperty(prop, rule) {
   }
 
   if (rule.name) {
-    let match = rule.name instanceof RegExp ?
+    const match = rule.name instanceof RegExp ?
                 rule.name.test(prop.name) :
                 prop.name == rule.name;
     if (!match) {
@@ -487,7 +487,7 @@ function matchVariablesViewProperty(prop, rule) {
       displayValue = displayValue.substring(1, displayValue.length - 1);
     }
 
-    let match = rule.value instanceof RegExp ?
+    const match = rule.value instanceof RegExp ?
                 rule.value.test(displayValue) :
                 displayValue == rule.value;
     if (!match) {
@@ -518,7 +518,7 @@ async function selectTreeItem(ids) {
 
   // The item exists but is not selected... select it.
   info(`Selecting "${ids}".`);
-  let updated = gUI.once("store-objects-updated");
+  const updated = gUI.once("store-objects-updated");
   gUI.tree.selectedItem = ids;
   await updated;
 }
@@ -530,10 +530,10 @@ async function selectTreeItem(ids) {
  *        The id of the row in the table widget
  */
 async function selectTableItem(id) {
-  let table = gUI.table;
-  let selector = ".table-widget-column#" + table.uniqueId +
+  const table = gUI.table;
+  const selector = ".table-widget-column#" + table.uniqueId +
                  " .table-widget-cell[value='" + id + "']";
-  let target = gPanelWindow.document.querySelector(selector);
+  const target = gPanelWindow.document.querySelector(selector);
 
   ok(target, "table item found with ids " + id);
 
@@ -541,7 +541,7 @@ async function selectTableItem(id) {
     showAvailableIds();
   }
 
-  let updated = gUI.once("sidebar-updated");
+  const updated = gUI.once("sidebar-updated");
 
   await click(target);
   await updated;
@@ -559,7 +559,7 @@ function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   return new Promise(resolve => {
-    for (let [add, remove] of [
+    for (const [add, remove] of [
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
       ["on", "off"]
@@ -588,11 +588,11 @@ function once(target, eventName, useCapture = false) {
  *         An object of column names to values for the given row.
  */
 function getRowValues(id, includeHidden = false) {
-  let cells = getRowCells(id, includeHidden);
-  let values = {};
+  const cells = getRowCells(id, includeHidden);
+  const values = {};
 
-  for (let name in cells) {
-    let cell = cells[name];
+  for (const name in cells) {
+    const cell = cells[name];
 
     values[name] = cell.value;
   }
@@ -612,9 +612,9 @@ function getRowValues(id, includeHidden = false) {
  *         An object of column names to cells for the given row.
  */
 function getRowCells(id, includeHidden = false) {
-  let doc = gPanelWindow.document;
-  let table = gUI.table;
-  let item = doc.querySelector(".table-widget-column#" + table.uniqueId +
+  const doc = gPanelWindow.document;
+  const table = gUI.table;
+  const item = doc.querySelector(".table-widget-column#" + table.uniqueId +
                                " .table-widget-cell[value='" + id + "']");
 
   if (!item) {
@@ -622,10 +622,10 @@ function getRowCells(id, includeHidden = false) {
               `exist. ${getAvailableIds()}`);
   }
 
-  let index = table.columns.get(table.uniqueId).cellNodes.indexOf(item);
-  let cells = {};
+  const index = table.columns.get(table.uniqueId).cellNodes.indexOf(item);
+  const cells = {};
 
-  for (let [name, column] of [...table.columns]) {
+  for (const [name, column] of [...table.columns]) {
     if (!includeHidden && column.column.parentNode.hidden) {
       continue;
     }
@@ -639,9 +639,9 @@ function getRowCells(id, includeHidden = false) {
  * Check for an empty table.
  */
 function isTableEmpty() {
-  let doc = gPanelWindow.document;
-  let table = gUI.table;
-  let cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
+  const doc = gPanelWindow.document;
+  const table = gUI.table;
+  const cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
                                    " .table-widget-cell");
   return cells.length === 0;
 }
@@ -650,13 +650,13 @@ function isTableEmpty() {
  * Get available ids... useful for error reporting.
  */
 function getAvailableIds() {
-  let doc = gPanelWindow.document;
-  let table = gUI.table;
+  const doc = gPanelWindow.document;
+  const table = gUI.table;
 
   let out = "Available ids:\n";
-  let cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
+  const cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
                                    " .table-widget-cell");
-  for (let cell of cells) {
+  for (const cell of cells) {
     out += `  - ${cell.getAttribute("value")}\n`;
   }
 
@@ -682,12 +682,12 @@ function showAvailableIds() {
  *        The cell value.
  */
 function getCellValue(id, column) {
-  let row = getRowValues(id, true);
+  const row = getRowValues(id, true);
 
   if (typeof row[column] === "undefined") {
     let out = "";
-    for (let key in row) {
-      let value = row[key];
+    for (const key in row) {
+      const value = row[key];
 
       out += `  - ${key} = ${value}\n`;
     }
@@ -716,8 +716,8 @@ function getCellValue(id, column) {
  *        The uniqueId of the changed row.
  */
 async function editCell(id, column, newValue, validate = true) {
-  let row = getRowCells(id, true);
-  let editableFieldsEngine = gUI.table._editableFieldsEngine;
+  const row = getRowCells(id, true);
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
 
   editableFieldsEngine.edit(row[column]);
 
@@ -735,9 +735,9 @@ async function editCell(id, column, newValue, validate = true) {
  *        Select text? Default true.
  */
 function startCellEdit(id, column, selectText = true) {
-  let row = getRowCells(id, true);
-  let editableFieldsEngine = gUI.table._editableFieldsEngine;
-  let cell = row[column];
+  const row = getRowCells(id, true);
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
+  const cell = row[column];
 
   info("Selecting row " + id);
   gUI.table.selectedRow = id;
@@ -746,7 +746,7 @@ function startCellEdit(id, column, selectText = true) {
   editableFieldsEngine.edit(cell);
 
   if (!selectText) {
-    let textbox = gUI.table._editableFieldsEngine.textbox;
+    const textbox = gUI.table._editableFieldsEngine.textbox;
     textbox.selectionEnd = textbox.selectionStart;
   }
 }
@@ -775,8 +775,8 @@ function checkCell(id, column, expected) {
  *         true = show, false = hide
  */
 function showColumn(id, state) {
-  let columns = gUI.table.columns;
-  let column = columns.get(id);
+  const columns = gUI.table.columns;
+  const column = columns.get(id);
 
   if (state) {
     column.wrapper.removeAttribute("hidden");
@@ -792,9 +792,9 @@ function showColumn(id, state) {
  *         The uniqueId of the given column.
  */
 function clickColumnHeader(id) {
-  let columns = gUI.table.columns;
-  let column = columns.get(id);
-  let header = column.header;
+  const columns = gUI.table.columns;
+  const column = columns.get(id);
+  const header = column.header;
 
   header.click();
 }
@@ -806,9 +806,9 @@ function clickColumnHeader(id) {
  *         true = show, false = hide
  */
 function showAllColumns(state) {
-  let columns = gUI.table.columns;
+  const columns = gUI.table.columns;
 
-  for (let [id] of columns) {
+  for (const [id] of columns) {
     showColumn(id, state);
   }
 }
@@ -825,11 +825,11 @@ function showAllColumns(state) {
  *         Validate result? Default true.
  */
 async function typeWithTerminator(str, terminator, validate = true) {
-  let editableFieldsEngine = gUI.table._editableFieldsEngine;
-  let textbox = editableFieldsEngine.textbox;
-  let colName = textbox.closest(".table-widget-column").id;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
+  const textbox = editableFieldsEngine.textbox;
+  const colName = textbox.closest(".table-widget-column").id;
 
-  let changeExpected = str !== textbox.value;
+  const changeExpected = str !== textbox.value;
 
   if (!changeExpected) {
     return editableFieldsEngine.currentTarget.getAttribute("data-id");
@@ -843,7 +843,7 @@ async function typeWithTerminator(str, terminator, validate = true) {
 
   if (validate) {
     info("Validating results... waiting for ROW_EDIT event.");
-    let uniqueId = await gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
+    const uniqueId = await gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
 
     checkCell(uniqueId, colName, str);
     return uniqueId;
@@ -853,8 +853,8 @@ async function typeWithTerminator(str, terminator, validate = true) {
 }
 
 function getCurrentEditorValue() {
-  let editableFieldsEngine = gUI.table._editableFieldsEngine;
-  let textbox = editableFieldsEngine.textbox;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
+  const textbox = editableFieldsEngine.textbox;
 
   return textbox.value;
 }
@@ -885,12 +885,12 @@ function PressKeyXTimes(key, x, modifiers = {}) {
  *        cookies (and no other ones).
  */
 async function checkState(state) {
-  for (let [store, names] of state) {
-    let storeName = store.join(" > ");
+  for (const [store, names] of state) {
+    const storeName = store.join(" > ");
     info(`Selecting tree item ${storeName}`);
     await selectTreeItem(store);
 
-    let items = gUI.table.items;
+    const items = gUI.table.items;
 
     is(items.size, names.length,
       `There is correct number of rows in ${storeName}`);
@@ -899,7 +899,7 @@ async function checkState(state) {
       showAvailableIds();
     }
 
-    for (let name of names) {
+    for (const name of names) {
       ok(items.has(name),
         `There is item with name '${name}' in ${storeName}`);
 
@@ -929,11 +929,11 @@ function containsFocus(doc, container) {
 
 var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
   info("Focusing search box");
-  let searchBox = panelWin.document.getElementById("storage-searchbox");
-  let focused = once(searchBox, "focus");
+  const searchBox = panelWin.document.getElementById("storage-searchbox");
+  const focused = once(searchBox, "focus");
 
   panelWin.focus();
-  let strings = Services.strings.createBundle(
+  const strings = Services.strings.createBundle(
     "chrome://devtools/locale/storage.properties");
   synthesizeKeyShortcut(strings.GetStringFromName("storage.filter.key"));
 
@@ -951,8 +951,8 @@ function getCookieId(name, domain, path) {
 function setPermission(url, permission) {
   const nsIPermissionManager = Ci.nsIPermissionManager;
 
-  let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  const uri = Services.io.newURI(url);
+  const principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
   Cc["@mozilla.org/permissionmanager;1"]
     .getService(nsIPermissionManager)
@@ -975,13 +975,13 @@ function sidebarToggleVisible() {
  *         item.
  */
 async function performAdd(store) {
-  let storeName = store.join(" > ");
-  let toolbar = gPanelWindow.document.getElementById("storage-toolbar");
-  let type = store[0];
+  const storeName = store.join(" > ");
+  const toolbar = gPanelWindow.document.getElementById("storage-toolbar");
+  const type = store[0];
 
   await selectTreeItem(store);
 
-  let menuAdd = toolbar.querySelector(
+  const menuAdd = toolbar.querySelector(
     "#add-button");
 
   if (menuAdd.hidden) {
@@ -990,16 +990,16 @@ async function performAdd(store) {
     return;
   }
 
-  let eventEdit = gUI.table.once("row-edit");
-  let eventWait = gUI.once("store-objects-edit");
+  const eventEdit = gUI.table.once("row-edit");
+  const eventWait = gUI.once("store-objects-edit");
 
   menuAdd.click();
 
-  let rowId = await eventEdit;
+  const rowId = await eventEdit;
   await eventWait;
 
-  let key = type === "cookies" ? "uniqueKey" : "name";
-  let value = getCellValue(rowId, key);
+  const key = type === "cookies" ? "uniqueKey" : "name";
+  const value = getCellValue(rowId, key);
 
   is(rowId, value, `Row '${rowId}' was successfully added.`);
 }

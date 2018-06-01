@@ -16,20 +16,20 @@ function expectedAttributeValueFromPrefs(prefs) {
 }
 
 function checkItem(el, prefs) {
-  let expectedValue = expectedAttributeValueFromPrefs(prefs);
+  const expectedValue = expectedAttributeValueFromPrefs(prefs);
   is(el.getAttribute("disabled"), expectedValue, "disabled attribute should match current pref state");
   is(el.getAttribute("hidden"), expectedValue, "hidden attribute should match current pref state");
 }
 
 function test() {
-  for (let k in gItemsToTest) {
-    let el = document.getElementById(k);
+  for (const k in gItemsToTest) {
+    const el = document.getElementById(k);
     let prefs = gItemsToTest[k];
     if (typeof prefs == "string") {
       prefs = [prefs];
     }
     checkItem(el, prefs);
-    for (let pref of prefs) {
+    for (const pref of prefs) {
       Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));
       checkItem(el, prefs);
       Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));

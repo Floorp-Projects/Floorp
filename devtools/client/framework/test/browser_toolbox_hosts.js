@@ -13,7 +13,7 @@ const URL = "data:text/html;charset=utf8,test for opening toolbox in different h
 
 add_task(async function runTest() {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
+  const tab = await addTab(URL);
   target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target, "webconsole");
 
@@ -35,8 +35,8 @@ function testBottomHost() {
   checkHostType(toolbox, BOTTOM);
 
   // test UI presence
-  let nbox = gBrowser.getNotificationBox();
-  let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
+  const nbox = gBrowser.getNotificationBox();
+  const iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   ok(iframe, "toolbox bottom iframe exists");
 
   checkToolboxLoaded(iframe);
@@ -47,11 +47,11 @@ async function testSidebarHost() {
   checkHostType(toolbox, SIDE);
 
   // test UI presence
-  let nbox = gBrowser.getNotificationBox();
-  let bottom = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
+  const nbox = gBrowser.getNotificationBox();
+  const bottom = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   ok(!bottom, "toolbox bottom iframe doesn't exist");
 
-  let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
+  const iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   ok(iframe, "toolbox side iframe exists");
 
   checkToolboxLoaded(iframe);
@@ -61,14 +61,14 @@ async function testWindowHost() {
   await toolbox.switchHost(WINDOW);
   checkHostType(toolbox, WINDOW);
 
-  let nbox = gBrowser.getNotificationBox();
-  let sidebar = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
+  const nbox = gBrowser.getNotificationBox();
+  const sidebar = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   ok(!sidebar, "toolbox sidebar iframe doesn't exist");
 
-  let win = Services.wm.getMostRecentWindow("devtools:toolbox");
+  const win = Services.wm.getMostRecentWindow("devtools:toolbox");
   ok(win, "toolbox separate window exists");
 
-  let iframe = win.document.getElementById("toolbox-iframe");
+  const iframe = win.document.getElementById("toolbox-iframe");
   checkToolboxLoaded(iframe);
 }
 
@@ -87,7 +87,7 @@ function testRememberHost() {
   // last host was the window - make sure it's the same when re-opening
   is(toolbox.hostType, WINDOW, "host remembered");
 
-  let win = Services.wm.getMostRecentWindow("devtools:toolbox");
+  const win = Services.wm.getMostRecentWindow("devtools:toolbox");
   ok(win, "toolbox separate window exists");
 }
 
@@ -134,6 +134,6 @@ async function testPreviousHost() {
 }
 
 function checkToolboxLoaded(iframe) {
-  let tabs = iframe.contentDocument.querySelector(".toolbox-tabs");
+  const tabs = iframe.contentDocument.querySelector(".toolbox-tabs");
   ok(tabs, "toolbox UI has been loaded into iframe");
 }

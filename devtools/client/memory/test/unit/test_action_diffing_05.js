@@ -28,10 +28,10 @@ const {
 const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
   dispatch(changeView(viewState.CENSUS));
 
@@ -78,7 +78,7 @@ add_task(async function() {
     }
   ];
 
-  for (let { name, func } of shouldTriggerRecompute) {
+  for (const { name, func } of shouldTriggerRecompute) {
     dumpn(`Testing that "${name}" triggers a diff recompute`);
     func();
 

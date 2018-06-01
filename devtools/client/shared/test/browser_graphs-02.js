@@ -37,8 +37,8 @@ add_task(async function() {
 });
 
 async function performTest() {
-  let [host,, doc] = await createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  const [host,, doc] = await createHost();
+  const graph = new LineGraphWidget(doc.body, "fps");
   await graph.once("ready");
 
   testDataAndRegions(graph);
@@ -82,8 +82,8 @@ function testDataAndRegions(graph) {
     "The data scale on the Y axis is correct.");
 
   for (let i = 0; i < TEST_REGIONS.length; i++) {
-    let original = TEST_REGIONS[i];
-    let normalized = graph._regions[i];
+    const original = TEST_REGIONS[i];
+    const normalized = graph._regions[i];
 
     is(original.start * graph.dataScaleX, normalized.start,
       "The region's start value was properly normalized.");

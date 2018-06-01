@@ -26,8 +26,8 @@ const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Selecting the first grid container.");
   await selectNode("#grid1", inspector);
@@ -59,7 +59,7 @@ add_task(async function() {
 
   info("Selecting the second grid container.");
   await selectNode("#grid2", inspector);
-  let firstGridHighterShown = highlighters.gridHighlighterShown;
+  const firstGridHighterShown = highlighters.gridHighlighterShown;
   container = getRuleViewProperty(view, ".grid", "display").valueSpan;
   gridToggle = container.querySelector(".ruleview-grid");
 

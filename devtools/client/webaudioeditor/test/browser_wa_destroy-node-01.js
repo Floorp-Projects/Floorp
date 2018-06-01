@@ -10,27 +10,27 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(DESTROY_NODES_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, gAudioNodes } = panelWin;
+  const { target, panel } = await initWebAudioEditor(DESTROY_NODES_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, gAudioNodes } = panelWin;
 
-  let started = once(gFront, "start-context");
+  const started = once(gFront, "start-context");
 
-  let events = Promise.all([
+  const events = Promise.all([
     getNSpread(gAudioNodes, "add", 13),
     waitForGraphRendered(panelWin, 13, 2)
   ]);
   reload(target);
-  let [created] = await events;
+  const [created] = await events;
 
   // Flatten arrays of event arguments and take the first (AudioNodeModel)
   // and get its ID.
-  let actorIDs = created.map(ev => ev[0].id);
+  const actorIDs = created.map(ev => ev[0].id);
 
   // Click a soon-to-be dead buffer node
   await clickGraphNode(panelWin, actorIDs[5]);
 
-  let destroyed = getN(gAudioNodes, "remove", 10);
+  const destroyed = getN(gAudioNodes, "remove", 10);
 
   // Force a CC in the child process to collect the orphaned nodes.
   forceNodeCollection();
@@ -46,7 +46,7 @@ add_task(async function() {
   ok(findGraphNode(panelWin, actorIDs[1]), "osc should be in graph");
   ok(findGraphNode(panelWin, actorIDs[2]), "gain should be in graph");
 
-  let { nodes, edges } = countGraphObjects(panelWin);
+  const { nodes, edges } = countGraphObjects(panelWin);
 
   is(nodes, 3, "Only 3 nodes rendered in graph.");
   is(edges, 2, "Only 2 edges rendered in graph.");

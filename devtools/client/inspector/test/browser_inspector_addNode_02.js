@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Select the DOCTYPE element");
   let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
@@ -19,7 +19,7 @@ add_task(async function() {
     "The button and item are disabled on DOCTYPE");
 
   info("Select the ::before pseudo-element");
-  let body = await getNodeFront("body", inspector);
+  const body = await getNodeFront("body", inspector);
   ({nodes} = await inspector.walker.children(body));
   await selectNode(nodes[0], inspector);
   assertState(false, inspector,
@@ -47,15 +47,15 @@ add_task(async function() {
 });
 
 function assertState(isEnabled, inspector, desc) {
-  let doc = inspector.panelDoc;
-  let btn = doc.querySelector("#inspector-element-add-button");
+  const doc = inspector.panelDoc;
+  const btn = doc.querySelector("#inspector-element-add-button");
 
   // Force an update of the context menu to make sure menu items are updated
   // according to the current selection. This normally happens when the menu is
   // opened, but for the sake of this test's simplicity, we directly call the
   // private update function instead.
-  let allMenuItems = openContextMenuAndGetAllItems(inspector);
-  let menuItem = allMenuItems.find(item => item.id === "node-menu-add");
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
+  const menuItem = allMenuItems.find(item => item.id === "node-menu-add");
   ok(menuItem, "The item is in the menu");
   is(!menuItem.disabled, isEnabled, desc);
 

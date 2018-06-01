@@ -13,12 +13,12 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
+  const { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
 
   // Enable allocations to test.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);

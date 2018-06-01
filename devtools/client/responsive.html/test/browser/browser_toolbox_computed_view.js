@@ -23,7 +23,7 @@ addRDMTask(TEST_URI, async function({ ui, manager }) {
   await setViewportSize(ui, manager, 500, 500);
 
   info("Open the inspector, computed-view and select the test node");
-  let { inspector, view } = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("div", inspector);
 
   info("Try shrinking the viewport and checking the applied styles");
@@ -38,7 +38,7 @@ addRDMTask(TEST_URI, async function({ ui, manager }) {
 async function testShrink(computedView, inspector, ui, manager) {
   is(computedWidth(computedView), "500px", "Should show 500px initially.");
 
-  let onRefresh = inspector.once("computed-view-refreshed");
+  const onRefresh = inspector.once("computed-view-refreshed");
   await setViewportSize(ui, manager, 100, 100);
   await onRefresh;
 
@@ -46,7 +46,7 @@ async function testShrink(computedView, inspector, ui, manager) {
 }
 
 async function testGrow(computedView, inspector, ui, manager) {
-  let onRefresh = inspector.once("computed-view-refreshed");
+  const onRefresh = inspector.once("computed-view-refreshed");
   await setViewportSize(ui, manager, 500, 500);
   await onRefresh;
 
@@ -54,7 +54,7 @@ async function testGrow(computedView, inspector, ui, manager) {
 }
 
 function computedWidth(computedView) {
-  for (let prop of computedView.propertyViews) {
+  for (const prop of computedView.propertyViews) {
     if (prop.name === "width") {
       return prop.valueNode.textContent;
     }

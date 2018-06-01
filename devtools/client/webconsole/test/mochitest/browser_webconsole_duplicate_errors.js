@@ -15,7 +15,7 @@ add_task(async function() {
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   await waitFor(() => findMessage(hud, "fooDuplicateError1", ".message.error"));
 

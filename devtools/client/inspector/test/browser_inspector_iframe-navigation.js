@@ -11,13 +11,13 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function() {
-  let { toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   await startPicker(toolbox);
 
   info("Waiting for highlighter to activate.");
-  let highlighterShowing = toolbox.once("highlighter-ready");
+  const highlighterShowing = toolbox.once("highlighter-ready");
   testActor.synthesizeMouse({
     selector: "body",
     options: {type: "mousemove"},

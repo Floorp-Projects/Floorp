@@ -16,12 +16,12 @@ function run_test() {
 }
 
 function visible_loader() {
-  let loader = new DevToolsLoader();
+  const loader = new DevToolsLoader();
   loader.invisibleToDebugger = false;
   loader.require("devtools/shared/indentation");
 
-  let dbg = new Debugger();
-  let sandbox = loader._provider.loader.sharedGlobalSandbox;
+  const dbg = new Debugger();
+  const sandbox = loader._provider.loader.sharedGlobalSandbox;
 
   try {
     dbg.addDebuggee(sandbox);
@@ -37,12 +37,12 @@ function visible_loader() {
 }
 
 function invisible_loader() {
-  let loader = new DevToolsLoader();
+  const loader = new DevToolsLoader();
   loader.invisibleToDebugger = true;
   loader.require("devtools/shared/indentation");
 
-  let dbg = new Debugger();
-  let sandbox = loader._provider.loader.sharedGlobalSandbox;
+  const dbg = new Debugger();
+  const sandbox = loader._provider.loader.sharedGlobalSandbox;
 
   try {
     dbg.addDebuggee(sandbox);

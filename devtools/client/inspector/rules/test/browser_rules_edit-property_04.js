@@ -18,16 +18,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const prop = rule.textProps[0];
 
   info("Disabling a property");
   await togglePropStatus(view, prop);
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
+  const newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "background-color"
@@ -41,10 +41,10 @@ add_task(async function() {
 });
 
 async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
-  let field = fieldType === "name" ? prop.editor.nameSpan
+  const field = fieldType === "name" ? prop.editor.nameSpan
                                    : prop.editor.valueSpan;
 
-  let editor = await focusEditableField(view, field);
+  const editor = await focusEditableField(view, field);
 
   ok(!prop.editor.element.classList.contains("ruleview-overridden"),
     "property is not overridden.");
@@ -63,7 +63,7 @@ async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
     onChangeDone = view.once("ruleview-changed");
   }
 
-  let onBlur = once(editor.input, "blur");
+  const onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
   await onBlur;
   await onChangeDone;

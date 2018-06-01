@@ -41,7 +41,7 @@ class NetworkThrottlingSelector extends PureComponent {
   }
 
   onSelectChange({ target }) {
-    let {
+    const {
       onChangeNetworkThrottling,
     } = this.props;
 
@@ -50,7 +50,7 @@ class NetworkThrottlingSelector extends PureComponent {
       return;
     }
 
-    for (let profile of throttlingProfiles) {
+    for (const profile of throttlingProfiles) {
       if (profile.id === target.value) {
         onChangeNetworkThrottling(true, profile.id);
         return;
@@ -59,7 +59,7 @@ class NetworkThrottlingSelector extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       className,
       networkThrottling,
     } = this.props;
@@ -73,7 +73,7 @@ class NetworkThrottlingSelector extends PureComponent {
       selectedProfile = L10N.getStr("responsive.noThrottling");
     }
 
-    let listContent = [
+    const listContent = [
       dom.option(
         {
           key: "disabled",

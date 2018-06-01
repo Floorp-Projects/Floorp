@@ -8,11 +8,11 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
-  let {inspector, view} = await openComputedView();
+  const {inspector, view} = await openComputedView();
   await selectNode("div", inspector);
 
   info("Checking the color property view");
-  let propertyView = getPropertyView(view, "color");
+  const propertyView = getPropertyView(view, "color");
   ok(propertyView, "found PropertyView for color");
   is(propertyView.hasMatchedSelectors, true, "hasMatchedSelectors is true");
 
@@ -20,11 +20,11 @@ add_task(async function() {
   propertyView.matchedExpanded = true;
   await propertyView.refreshMatchedSelectors();
 
-  let span = propertyView.matchedSelectorsContainer
+  const span = propertyView.matchedSelectorsContainer
     .querySelector("span.rule-text");
   ok(span, "Found the first table row");
 
-  let selector = propertyView.matchedSelectorViews[0];
+  const selector = propertyView.matchedSelectorViews[0];
   ok(selector, "Found the first matched selector view");
 });
 

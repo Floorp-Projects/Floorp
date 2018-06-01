@@ -7,8 +7,8 @@
 
 function testJumpToLine(ed, inputLine, expectCursor) {
   ed.jumpToLine();
-  let editorDoc = ed.container.contentDocument;
-  let lineInput = editorDoc.querySelector("input");
+  const editorDoc = ed.container.contentDocument;
+  const lineInput = editorDoc.querySelector("input");
   lineInput.value = inputLine;
   EventUtils.synthesizeKey("VK_RETURN", { }, editorDoc.defaultView);
   // CodeMirror lines and columns are 0-based, Scratchpad UI is 1-based.
@@ -19,7 +19,7 @@ function testJumpToLine(ed, inputLine, expectCursor) {
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-    let textLines = [
+    const textLines = [
       "// line 1",
       "//  line 2",
       "//   line 3",
@@ -28,7 +28,7 @@ function test() {
       ""];
     ed.setText(textLines.join("\n"));
     waitForFocus(function() {
-      let testVectors = [
+      const testVectors = [
         // Various useless inputs go to line 0, column 0 or do nothing.
         ["",
          {line: 0, ch: 0}],

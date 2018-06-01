@@ -8,12 +8,12 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
+  const { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -23,8 +23,8 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  let requestItem = document.querySelectorAll(".request-list-item")[0];
-  let requestsListStatus = requestItem.querySelector(".status-code");
+  const requestItem = document.querySelectorAll(".request-list-item")[0];
+  const requestsListStatus = requestItem.querySelector(".status-code");
   requestItem.scrollIntoView();
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
@@ -49,7 +49,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
   await wait;
-  let text = document.querySelector(".CodeMirror-line").textContent;
+  const text = document.querySelector(".CodeMirror-line").textContent;
 
   ok(text.includes("\u0411\u0440\u0430\u0442\u0430\u043d"),
     "The text shown in the source editor is correct.");

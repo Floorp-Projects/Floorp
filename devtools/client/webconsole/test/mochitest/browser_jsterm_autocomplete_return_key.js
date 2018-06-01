@@ -25,13 +25,13 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - test pressing return with open popup</body>`;
 
 add_task(async function() {
-  let { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,
     completeNode,
   } = jsterm;
 
-  let onPopUpOpen = popup.once("popup-opened");
+  const onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion suggestions: window.foobar.");
 
@@ -56,7 +56,7 @@ add_task(async function() {
 
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(completeNode.value, prefix + "item3", "completeNode.value holds item3");
 
   info("press Return to accept suggestion. wait for popup to hide");

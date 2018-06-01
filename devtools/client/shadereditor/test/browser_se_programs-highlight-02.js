@@ -7,11 +7,11 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, debuggee, panel } = await initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
-  let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { target, debuggee, panel } = await initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
+  const { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  let [[firstProgramActor, secondProgramActor]] = await promise.all([
+  const [[firstProgramActor, secondProgramActor]] = await promise.all([
     getPrograms(gFront, 2),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);

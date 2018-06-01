@@ -64,7 +64,7 @@ window.store = store;
  * stylesheet.
  */
 window.addEventListener("DOMContentLoaded", () => {
-  for (let link of document.head.querySelectorAll("link")) {
+  for (const link of document.head.querySelectorAll("link")) {
     link.href = link.href.replace(/(resource|chrome)\:\/\//, "/");
   }
 

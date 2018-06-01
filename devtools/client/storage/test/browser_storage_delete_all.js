@@ -11,8 +11,8 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  let contextMenu = gPanelWindow.document.getElementById("storage-table-popup");
-  let menuDeleteAllItem = contextMenu.querySelector(
+  const contextMenu = gPanelWindow.document.getElementById("storage-table-popup");
+  const menuDeleteAllItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all");
 
   info("test state before delete");
@@ -46,14 +46,14 @@ add_task(async function() {
      MAIN_DOMAIN + "404_cached_file.js", "url"],
   ];
 
-  for (let [store, rowName, cellToClick] of deleteHosts) {
-    let storeName = store.join(" > ");
+  for (const [store, rowName, cellToClick] of deleteHosts) {
+    const storeName = store.join(" > ");
 
     await selectTreeItem(store);
 
-    let eventWait = gUI.once("store-objects-cleared");
+    const eventWait = gUI.once("store-objects-cleared");
 
-    let cell = getRowCells(rowName)[cellToClick];
+    const cell = getRowCells(rowName)[cellToClick];
     await waitForContextMenu(contextMenu, cell, () => {
       info(`Opened context menu in ${storeName}, row '${rowName}'`);
       menuDeleteAllItem.click();

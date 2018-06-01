@@ -10,14 +10,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                   "test-console-trace-duplicates.html";
 
 add_task(async function testTraceMessages() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   // NB: Now that stack frames include a column number multiple invocations
   //     on the same line are considered unique. ie:
   //       |foo(); foo();|
   //     will generate two distinct trace entries.
-  let message = await waitFor(() => findMessage(hud, "foo1"));
-  let stackInfo = getStackInfo(message);
+  const message = await waitFor(() => findMessage(hud, "foo1"));
+  const stackInfo = getStackInfo(message);
 
   checkStackInfo(stackInfo, {
     variable: "console.trace()",
@@ -74,9 +74,9 @@ add_task(async function testTraceMessages() {
  *            }
  */
 function getStackInfo(message) {
-  let lineNode = message.querySelector(".frame-link-line");
-  let lc = getLineAndColumn(lineNode);
-  let result = {
+  const lineNode = message.querySelector(".frame-link-line");
+  const lc = getLineAndColumn(lineNode);
+  const result = {
     variable: message.querySelector(".cm-variable").textContent,
     repeats: message.querySelector(".message-repeats").textContent,
     filename: message.querySelector(".frame-link-filename").textContent,
@@ -85,16 +85,16 @@ function getStackInfo(message) {
     stack: []
   };
 
-  let stack = message.querySelector(".stack-trace");
+  const stack = message.querySelector(".stack-trace");
   if (stack) {
-    let filenameNodes = stack.querySelectorAll(".frame-link-filename");
-    let lineNodes = stack.querySelectorAll(".frame-link-line");
-    let funcNodes = stack.querySelectorAll(".frame-link-function-display-name");
+    const filenameNodes = stack.querySelectorAll(".frame-link-filename");
+    const lineNodes = stack.querySelectorAll(".frame-link-line");
+    const funcNodes = stack.querySelectorAll(".frame-link-function-display-name");
 
     for (let i = 0; i < filenameNodes.length; i++) {
-      let filename = filenameNodes[i].textContent;
-      let functionName = funcNodes[i].textContent;
-      let { line, column } = getLineAndColumn(lineNodes[i]);
+      const filename = filenameNodes[i].textContent;
+      const functionName = funcNodes[i].textContent;
+      const { line, column } = getLineAndColumn(lineNodes[i]);
 
       result.stack.push({
         functionName,
@@ -127,8 +127,8 @@ function checkStackInfo(stackInfo, expected) {
   is(stackInfo.stack.length, expected.stack.length, "the stack is the expected length");
 
   for (let i = 0; i < stackInfo.stack.length; i++) {
-    let actual = stackInfo.stack[i];
-    let stackExpected = expected.stack[i];
+    const actual = stackInfo.stack[i];
+    const stackExpected = expected.stack[i];
 
     is(actual.functionName, stackExpected.functionName,
       `expected function name is displayed for index ${i}`);

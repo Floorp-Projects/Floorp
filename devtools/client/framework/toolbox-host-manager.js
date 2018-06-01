@@ -58,12 +58,12 @@ ToolboxHostManager.prototype = {
     // We have to listen on capture as no event fires on bubble
     this.host.frame.addEventListener("unload", this, true);
 
-    let toolbox = new Toolbox(this.target, toolId, this.host.type,
+    const toolbox = new Toolbox(this.target, toolId, this.host.type,
                               this.host.frame.contentWindow, this.frameId);
 
     // Prevent reloading the toolbox when loading the tools in a tab
     // (e.g. from about:debugging)
-    let location = this.host.frame.contentWindow.location;
+    const location = this.host.frame.contentWindow.location;
     if (!location.href.startsWith("about:devtools-toolbox")) {
       this.host.frame.setAttribute("src", "about:devtools-toolbox");
     }
@@ -118,7 +118,7 @@ ToolboxHostManager.prototype = {
   },
 
   postMessage(data) {
-    let window = this.host.frame.contentWindow;
+    const window = this.host.frame.contentWindow;
     window.postMessage(data, "*");
   },
 
@@ -147,7 +147,7 @@ ToolboxHostManager.prototype = {
       throw new Error("Unknown hostType: " + hostType);
     }
 
-    let newHost = new Hosts[hostType](this.target.tab, options);
+    const newHost = new Hosts[hostType](this.target.tab, options);
     return newHost;
   },
 
@@ -167,9 +167,9 @@ ToolboxHostManager.prototype = {
         }
       }
     }
-    let iframe = this.host.frame;
-    let newHost = this.createHost(hostType);
-    let newIframe = await newHost.create();
+    const iframe = this.host.frame;
+    const newHost = this.createHost(hostType);
+    const newIframe = await newHost.create();
     // change toolbox document's parent to the new host
     newIframe.swapFrameLoaders(iframe);
 

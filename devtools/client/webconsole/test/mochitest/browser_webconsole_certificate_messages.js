@@ -20,7 +20,7 @@ add_task(async function() {
 
   info("Test SHA1 warnings");
   let onContentLog = waitForMessage(hud, TRIGGER_MSG);
-  let onSha1Warning = waitForMessage(hud, "SHA-1");
+  const onSha1Warning = waitForMessage(hud, "SHA-1");
   await loadDocument(SHA1_URL);
   await Promise.all([onContentLog, onSha1Warning]);
 

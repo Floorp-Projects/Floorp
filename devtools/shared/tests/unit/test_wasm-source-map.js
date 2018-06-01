@@ -33,8 +33,8 @@ const testMap2 = {
 };
 
 function run_test() {
-  let map1 = new SourceMapConsumer(testMap1);
-  let remap1 = new WasmRemap(map1);
+  const map1 = new SourceMapConsumer(testMap1);
+  const remap1 = new WasmRemap(map1);
 
   equal(remap1.file, "min.js");
   equal(remap1.hasContentsOfAllSources(), false);
@@ -42,9 +42,9 @@ function run_test() {
   equal(remap1.sources[0], "/the/root/one.js");
   equal(remap1.sources[1], "/the/root/two.js");
 
-  let expectedEntries = testMap1Entries.slice(0);
+  const expectedEntries = testMap1Entries.slice(0);
   remap1.eachMapping(function(entry) {
-    let expected = expectedEntries.shift();
+    const expected = expectedEntries.shift();
     equal(entry.generatedLine, expected.offset);
     equal(entry.generatedColumn, 0);
     equal(entry.originalLine, expected.line);
@@ -52,12 +52,12 @@ function run_test() {
     equal(entry.name, null);
   });
 
-  let pos1 = remap1.originalPositionFor({line: 5, column: 0});
+  const pos1 = remap1.originalPositionFor({line: 5, column: 0});
   equal(pos1.line, 1);
   equal(pos1.column, 7);
   equal(pos1.source, "/the/root/one.js");
 
-  let pos2 = remap1.generatedPositionFor({
+  const pos2 = remap1.generatedPositionFor({
     source: "/the/root/one.js",
     line: 2,
     column: 18
@@ -67,7 +67,7 @@ function run_test() {
   equal(pos2.lastColumn, undefined);
 
   remap1.computeColumnSpans();
-  let pos3 = remap1.allGeneratedPositionsFor({
+  const pos3 = remap1.allGeneratedPositionsFor({
     source: "/the/root/one.js",
     line: 2,
     column: 17
@@ -77,8 +77,8 @@ function run_test() {
   equal(pos3[0].column, 0);
   equal(pos3[0].lastColumn, Infinity);
 
-  let map2 = new SourceMapConsumer(testMap2);
-  let remap2 = new WasmRemap(map2);
+  const map2 = new SourceMapConsumer(testMap2);
+  const remap2 = new WasmRemap(map2);
   equal(remap2.file, "none.js");
   equal(remap2.hasContentsOfAllSources(), true);
   equal(remap2.sourceContentFor("zero.js"), "//test");

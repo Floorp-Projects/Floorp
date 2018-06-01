@@ -20,7 +20,7 @@ async function run_test_with_server(server, callback) {
   gDebuggee.eval(function stopMe(arg1) {
     debugger;
   }.toString());
-  let client = new DebuggerClient(server.connectPipe());
+  const client = new DebuggerClient(server.connectPipe());
   await client.connect();
   const [,, threadClient] = await attachTestTabAndResume(client, "test-grips");
   gThreadClient = threadClient;
@@ -30,7 +30,7 @@ async function run_test_with_server(server, callback) {
 }
 
 async function test_wrapped_primitive_grips() {
-  let tests = [{
+  const tests = [{
     value: true,
     class: "Boolean"
   }, {
@@ -44,10 +44,10 @@ async function test_wrapped_primitive_grips() {
     class: "Symbol",
     name: "bar"
   }];
-  for (let data of tests) {
+  for (const data of tests) {
     await new Promise(function(resolve) {
       gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-        let [grip] = packet.frame.arguments;
+        const [grip] = packet.frame.arguments;
         check_wrapped_primitive_grip(grip, data);
 
         await gThreadClient.resume();
@@ -68,7 +68,7 @@ function check_wrapped_primitive_grip(grip, data) {
     return;
   }
 
-  let value = grip.preview.wrappedValue;
+  const value = grip.preview.wrappedValue;
   if (data.class === "Symbol") {
     strictEqual(value.type, "symbol", "The wrapped value grip has symbol type.");
     strictEqual(value.name, data.name, "The wrapped value grip has the proper name.");

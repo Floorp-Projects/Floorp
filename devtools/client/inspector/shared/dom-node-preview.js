@@ -38,7 +38,7 @@ exports.DomNodePreview = DomNodePreview;
 
 DomNodePreview.prototype = {
   init: function(containerEl) {
-    let document = containerEl.ownerDocument;
+    const document = containerEl.ownerDocument;
 
     // Init the markup for displaying the target node.
     this.el = createNode({
@@ -238,8 +238,8 @@ DomNodePreview.prototype = {
   onHighlightElClick: function(e) {
     e.stopPropagation();
 
-    let classList = this.highlightNodeEl.classList;
-    let isHighlighted = classList.contains("selected");
+    const classList = this.highlightNodeEl.classList;
+    const isHighlighted = classList.contains("selected");
 
     if (isHighlighted) {
       classList.remove("selected");
@@ -265,7 +265,7 @@ DomNodePreview.prototype = {
       return;
     }
 
-    for (let {target} of mutations) {
+    for (const {target} of mutations) {
       if (target === this.nodeFront) {
         // Re-render with the same nodeFront to update the output.
         this.render(this.nodeFront);
@@ -276,7 +276,7 @@ DomNodePreview.prototype = {
 
   render: function(nodeFront) {
     this.nodeFront = nodeFront;
-    let {displayName, attributes} = nodeFront;
+    const {displayName, attributes} = nodeFront;
 
     if (nodeFront.isPseudoElement) {
       this.pseudoEl.textContent = nodeFront.isBeforePseudoElement
@@ -290,7 +290,7 @@ DomNodePreview.prototype = {
       this.tagNameEl.style.display = "inline";
     }
 
-    let idIndex = attributes.findIndex(({name}) => name === "id");
+    const idIndex = attributes.findIndex(({name}) => name === "id");
     if (idIndex > -1 && attributes[idIndex].value) {
       this.idEl.querySelector(".attribute-value").textContent =
         attributes[idIndex].value;
@@ -299,7 +299,7 @@ DomNodePreview.prototype = {
       this.idEl.style.display = "none";
     }
 
-    let classIndex = attributes.findIndex(({name}) => name === "class");
+    const classIndex = attributes.findIndex(({name}) => name === "class");
     if (classIndex > -1 && attributes[classIndex].value) {
       let value = attributes[classIndex].value;
       if (this.options.compact) {
@@ -328,7 +328,7 @@ var HighlighterLock = {
 
   async highlight(animationTargetNode) {
     if (!this.highlighter) {
-      let util = animationTargetNode.inspector.toolbox.highlighterUtils;
+      const util = animationTargetNode.inspector.toolbox.highlighterUtils;
       this.highlighter = await util.getHighlighterByType("BoxModelHighlighter");
     }
 

@@ -12,7 +12,7 @@ const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-    let edWin = ed.container.contentWindow.wrappedJSObject;
+    const edWin = ed.container.contentWindow.wrappedJSObject;
     testJS(ed, edWin);
     testCSS(ed, edWin);
     testPref(ed, edWin);

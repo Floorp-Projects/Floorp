@@ -15,8 +15,8 @@ function run_test() {
 const TEST_STRING = "This is a very long string!";
 
 function makeMockLongStringActor() {
-  let string = TEST_STRING;
-  let actor = new LongStringActor(string);
+  const string = TEST_STRING;
+  const actor = new LongStringActor(string);
   actor.actorID = "longString1";
   actor.registeredPool = {
     longStringActors: {
@@ -27,7 +27,7 @@ function makeMockLongStringActor() {
 }
 
 function test_LSA_destroy() {
-  let actor = makeMockLongStringActor();
+  const actor = makeMockLongStringActor();
   Assert.equal(actor.registeredPool.longStringActors[TEST_STRING], actor);
 
   actor.destroy();
@@ -35,9 +35,9 @@ function test_LSA_destroy() {
 }
 
 function test_LSA_grip() {
-  let actor = makeMockLongStringActor();
+  const actor = makeMockLongStringActor();
 
-  let grip = actor.grip();
+  const grip = actor.grip();
   Assert.equal(grip.type, "longString");
   Assert.equal(grip.initial,
                TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
@@ -46,7 +46,7 @@ function test_LSA_grip() {
 }
 
 function test_LSA_onSubstring() {
-  let actor = makeMockLongStringActor();
+  const actor = makeMockLongStringActor();
   let response;
 
   // From the start

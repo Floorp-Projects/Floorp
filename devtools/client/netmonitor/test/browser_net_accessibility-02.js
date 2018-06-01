@@ -8,14 +8,14 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { window, document, windowRequire, store } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { window, document, windowRequire, store } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -23,7 +23,7 @@ add_task(async function() {
   function check(selectedIndex, panelVisibility) {
     info("Performing check " + (count++) + ".");
 
-    let requestItems = Array.from(document.querySelectorAll(".request-list-item"));
+    const requestItems = Array.from(document.querySelectorAll(".request-list-item"));
     is(requestItems.findIndex((item) => item.matches(".selected")), selectedIndex,
       "The selected item in the requests menu was incorrect.");
     is(!!document.querySelector(".network-details-panel"), panelVisibility,

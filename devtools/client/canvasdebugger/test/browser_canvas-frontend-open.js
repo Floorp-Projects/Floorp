@@ -6,8 +6,8 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { $ } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { $ } = panel.panelWin;
 
   is($("#snapshots-pane").hasAttribute("hidden"), false,
     "The snapshots pane should initially be visible.");

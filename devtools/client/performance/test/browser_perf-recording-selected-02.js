@@ -17,12 +17,12 @@ add_task(async function() {
   // This test seems to take a very long time to finish on Linux VMs.
   requestLongerTimeout(4);
 
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, PerformanceController } = panel.panelWin;
+  const { EVENTS, PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);

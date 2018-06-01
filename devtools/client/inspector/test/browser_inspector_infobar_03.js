@@ -9,9 +9,9 @@
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_03.html";
 
 add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
 
-  let testData = {
+  const testData = {
     selector: "body",
     position: "overlap",
     style: "position:fixed",

@@ -18,10 +18,10 @@
  *           or fails to load.
  */
 function appendStyleSheet(xulDocument, url) {
-  let styleSheetAttr = `href="${url}" type="text/css"`;
-  let styleSheet = xulDocument.createProcessingInstruction(
+  const styleSheetAttr = `href="${url}" type="text/css"`;
+  const styleSheet = xulDocument.createProcessingInstruction(
     "xml-stylesheet", styleSheetAttr);
-  let loadPromise = new Promise((resolve, reject) => {
+  const loadPromise = new Promise((resolve, reject) => {
     function onload() {
       styleSheet.removeEventListener("load", onload);
       styleSheet.removeEventListener("error", onerror);

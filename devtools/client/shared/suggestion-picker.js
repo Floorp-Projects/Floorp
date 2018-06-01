@@ -36,7 +36,7 @@ function findMostRelevantIndex(items, sortedItems) {
   let bestIndex = 0;
   let lowestIndex = Infinity;
   items.forEach((item, i) => {
-    let index = sortedItems.indexOf(item);
+    const index = sortedItems.indexOf(item);
     if (index !== -1 && index <= lowestIndex) {
       lowestIndex = index;
       bestIndex = i;

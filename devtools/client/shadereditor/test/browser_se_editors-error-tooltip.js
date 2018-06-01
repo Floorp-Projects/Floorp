@@ -7,8 +7,8 @@
  */
 
 async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
   await promise.all([
@@ -16,29 +16,29 @@ async function ifWebGLSupported() {
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await ShadersEditorsView._getEditor("vs");
+  const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
   await once(panel.panelWin, EVENTS.SHADER_COMPILED);
 
   // Synthesizing 'mouseover' events doesn't work, hack around this by
   // manually calling the event listener with the expected arguments.
-  let editorDocument = vsEditor.container.contentDocument;
-  let marker = editorDocument.querySelector(".error");
-  let parsed = ShadersEditorsView._errors.vs[0].messages;
+  const editorDocument = vsEditor.container.contentDocument;
+  const marker = editorDocument.querySelector(".error");
+  const parsed = ShadersEditorsView._errors.vs[0].messages;
   ShadersEditorsView._onMarkerMouseOver(7, marker, parsed);
 
-  let tooltip = marker._markerErrorsTooltip;
+  const tooltip = marker._markerErrorsTooltip;
   ok(tooltip, "A tooltip was created successfully.");
 
-  let content = tooltip.content;
+  const content = tooltip.content;
   ok(tooltip.content,
     "Some tooltip's content was set.");
   ok(tooltip.content.className.includes("devtools-tooltip-simple-text-container"),
     "The tooltip's content container was created correctly.");
 
-  let messages = content.childNodes;
+  const messages = content.childNodes;
   is(messages.length, 3,
     "There are three messages displayed in the tooltip.");
   ok(messages[0].className.includes("devtools-tooltip-simple-text"),

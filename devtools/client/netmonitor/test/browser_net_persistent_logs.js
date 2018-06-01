@@ -9,11 +9,11 @@
  */
 
 add_task(async function() {
-  let { tab, monitor } = await initNetMonitor(SINGLE_GET_URL);
+  const { tab, monitor } = await initNetMonitor(SINGLE_GET_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -53,7 +53,7 @@ add_task(async function() {
    * Reload the page and wait for 2 GET requests. Race-free.
    */
   function reloadAndWait() {
-    let wait = waitForNetworkEvents(monitor, 2);
+    const wait = waitForNetworkEvents(monitor, 2);
     tab.linkedBrowser.reload();
     return wait;
   }

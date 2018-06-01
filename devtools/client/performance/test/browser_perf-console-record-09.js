@@ -15,19 +15,19 @@ const { waitForRecordingStartedEvents } = require("devtools/client/performance/t
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController } = panel.panelWin;
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
   info("Starting console.profile()...");
-  let started = waitForRecordingStartedEvents(panel, {
+  const started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true,
     // only emitted when an in-progress recording is selected

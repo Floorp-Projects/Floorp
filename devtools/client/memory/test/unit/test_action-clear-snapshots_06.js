@@ -19,10 +19,10 @@ const {
 } = require("devtools/client/memory/actions/diffing");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   ok(true, "create 2 snapshots with a saved census");
@@ -44,7 +44,7 @@ add_task(async function() {
   ok(true, "Received TAKE_CENSUS_DIFF_END action");
 
   ok(true, "Dispatch clearSnapshots action");
-  let deleteEvents = Promise.all([
+  const deleteEvents = Promise.all([
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_START),
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_END)
   ]);

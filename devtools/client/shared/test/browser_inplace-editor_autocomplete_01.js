@@ -45,10 +45,10 @@ const mockGetCSSPropertyList = function() {
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," +
     "inplace editor CSS property autocomplete");
-  let [host, win, doc] = await createHost();
+  const [host, win, doc] = await createHost();
 
-  let xulDocument = win.top.document;
-  let popup = new AutocompletePopup(xulDocument, { autoSelect: true });
+  const xulDocument = win.top.document;
+  const popup = new AutocompletePopup(xulDocument, { autoSelect: true });
   await new Promise(resolve => {
     createInplaceEditorAndClick({
       start: runPropertyAutocompletionTest,
@@ -63,11 +63,11 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-let runPropertyAutocompletionTest = async function(editor) {
+const runPropertyAutocompletionTest = async function(editor) {
   info("Starting to test for css property completion");
   editor._getCSSPropertyList = mockGetCSSPropertyList;
 
-  for (let data of testData) {
+  for (const data of testData) {
     await testCompletion(data, editor);
   }
 

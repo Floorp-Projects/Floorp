@@ -8,13 +8,13 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   info("Test that the box model view works on the first page");
   await assertBoxModelView(inspector, boxmodel, testActor);
 
   info("Reload the page");
-  let onMarkupLoaded = waitForMarkupLoaded(inspector);
+  const onMarkupLoaded = waitForMarkupLoaded(inspector);
   await testActor.reload();
   await onMarkupLoaded;
 
@@ -26,12 +26,12 @@ async function assertBoxModelView(inspector, boxmodel, testActor) {
   await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = boxmodel.document.querySelector(
+  const paddingElt = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
-  let onUpdated = waitForUpdate(inspector);
+  const onUpdated = waitForUpdate(inspector);
   await setStyle(testActor, "p", "padding", "20px");
   await onUpdated;
   ok(true, "Box model view got updated");

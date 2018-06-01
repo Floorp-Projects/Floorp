@@ -45,15 +45,15 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   is(getState().censusDisplay.breakdown.by, "coarseType");
 
   await dispatch(takeSnapshotAndCensus(front, heapWorker));
-  let census = getState().snapshots[0].census;
-  let root1 = census.report.children[0];
-  let root2 = census.report.children[0];
-  let root3 = census.report.children[0];
-  let root4 = census.report.children[0];
-  let child1 = root1.children[0];
+  const census = getState().snapshots[0].census;
+  const root1 = census.report.children[0];
+  const root2 = census.report.children[0];
+  const root3 = census.report.children[0];
+  const root4 = census.report.children[0];
+  const child1 = root1.children[0];
 
   info("Click on first node.");
-  let firstNode = doc.querySelector(".tree .heap-tree-item-name");
+  const firstNode = doc.querySelector(".tree .heap-tree-item-name");
   EventUtils.synthesizeMouseAtCenter(firstNode, {}, panel.panelWin);
   await waitUntilFocused(store, root1);
   ok(true, "First root is selected after click.");

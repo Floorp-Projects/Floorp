@@ -20,7 +20,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(XHR_PREF);
 });
 
-let tabs = [{
+const tabs = [{
   id: "headers",
   testEmpty: testEmptyHeaders,
   testContent: testHeaders,
@@ -52,7 +52,7 @@ let tabs = [{
 add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const currentTab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(currentTab);
+  const target = TargetFactory.forTab(currentTab);
 
   // Execute XHR and expand it after all network
   // update events are received. Consequently,
@@ -66,35 +66,35 @@ add_task(async function task() {
   // 3. Check the default tab empty content
   // 4. Wait till the request finishes
   // 5. Check content of all tabs
-  for (let tab of tabs) {
+  for (const tab of tabs) {
     await openRequestBeforeUpdates(target, hud, tab);
   }
 });
 
 async function openRequestAfterUpdates(target, hud) {
-  let toolbox = gDevTools.getToolbox(target);
+  const toolbox = gDevTools.getToolbox(target);
 
-  let xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
-  let message = waitForMessage(hud, xhrUrl);
+  const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
+  const message = waitForMessage(hud, xhrUrl);
 
   // Fire an XHR POST request.
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrPostSlowResponse();
   });
 
-  let { node: messageNode } = await message;
+  const { node: messageNode } = await message;
 
   info("Network message found.");
 
   await waitForRequestUpdates(toolbox);
 
-  let payload = waitForPayloadReady(toolbox);
+  const payload = waitForPayloadReady(toolbox);
 
   // Expand network log
-  let urlNode = messageNode.querySelector(".url");
+  const urlNode = messageNode.querySelector(".url");
   urlNode.click();
 
-  let toggleButtonNode = messageNode.querySelector(".sidebar-toggle");
+  const toggleButtonNode = messageNode.querySelector(".sidebar-toggle");
   ok(!toggleButtonNode, "Sidebar toggle button shouldn't be shown");
 
   await payload;
@@ -102,35 +102,35 @@ async function openRequestAfterUpdates(target, hud) {
 }
 
 async function openRequestBeforeUpdates(target, hud, tab) {
-  let toolbox = gDevTools.getToolbox(target);
+  const toolbox = gDevTools.getToolbox(target);
 
   hud.jsterm.clearOutput(true);
 
-  let xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
-  let message = waitForMessage(hud, xhrUrl);
+  const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
+  const message = waitForMessage(hud, xhrUrl);
 
   // Fire an XHR POST request.
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrPostSlowResponse();
   });
 
-  let { node: messageNode } = await message;
+  const { node: messageNode } = await message;
 
   info("Network message found.");
 
-  let updates = waitForRequestUpdates(toolbox);
-  let payload = waitForPayloadReady(toolbox);
+  const updates = waitForRequestUpdates(toolbox);
+  const payload = waitForPayloadReady(toolbox);
 
   // Set the default panel.
   const state = hud.ui.consoleOutput.getStore().getState();
   state.ui.networkMessageActiveTabId = tab.id;
 
   // Expand network log
-  let urlNode = messageNode.querySelector(".url");
+  const urlNode = messageNode.querySelector(".url");
   urlNode.click();
 
   // Make sure the current tab is the expected one.
-  let currentTab = messageNode.querySelector(`#${tab.id}-tab`);
+  const currentTab = messageNode.querySelector(`#${tab.id}-tab`);
   is(currentTab.getAttribute("aria-selected"), "true",
     "The correct tab is selected");
 
@@ -164,19 +164,19 @@ async function testNetworkMessage(toolbox, messageNode) {
 // Status Info
 
 function testStatusInfo(messageNode) {
-  let statusInfo = messageNode.querySelector(".status-info");
+  const statusInfo = messageNode.querySelector(".status-info");
   ok(statusInfo, "Status info is not empty");
 }
 
 // Headers
 
 function testEmptyHeaders(messageNode) {
-  let emptyNotice = messageNode.querySelector("#headers-panel .empty-notice");
+  const emptyNotice = messageNode.querySelector("#headers-panel .empty-notice");
   ok(emptyNotice, "Headers tab is empty");
 }
 
 async function testHeaders(messageNode) {
-  let headersTab = messageNode.querySelector("#headers-tab");
+  const headersTab = messageNode.querySelector("#headers-tab");
   ok(headersTab, "Headers tab is available");
 
   // Select Headers tab and check the content.
@@ -189,12 +189,12 @@ async function testHeaders(messageNode) {
 // Cookies
 
 function testEmptyCookies(messageNode) {
-  let emptyNotice = messageNode.querySelector("#cookies-panel .empty-notice");
+  const emptyNotice = messageNode.querySelector("#cookies-panel .empty-notice");
   ok(emptyNotice, "Cookies tab is empty");
 }
 
 async function testCookies(messageNode) {
-  let cookiesTab = messageNode.querySelector("#cookies-tab");
+  const cookiesTab = messageNode.querySelector("#cookies-tab");
   ok(cookiesTab, "Cookies tab is available");
 
   // Select tab and check the content.
@@ -207,20 +207,20 @@ async function testCookies(messageNode) {
 // Params
 
 function testEmptyParams(messageNode) {
-  let emptyNotice = messageNode.querySelector("#params-panel .empty-notice");
+  const emptyNotice = messageNode.querySelector("#params-panel .empty-notice");
   ok(emptyNotice, "Params tab is empty");
 }
 
 async function testParams(messageNode) {
-  let paramsTab = messageNode.querySelector("#params-tab");
+  const paramsTab = messageNode.querySelector("#params-tab");
   ok(paramsTab, "Params tab is available");
 
   // Select Params tab and check the content. CodeMirror initialization
   // is delayed to prevent UI freeze, so wait for a little while.
   paramsTab.click();
-  let paramsPanel = messageNode.querySelector("#params-panel");
+  const paramsPanel = messageNode.querySelector("#params-panel");
   await waitForSourceEditor(paramsPanel);
-  let paramsContent = messageNode.querySelector(
+  const paramsContent = messageNode.querySelector(
     "#params-panel .panel-container .CodeMirror");
   ok(paramsContent, "Params content is available");
   ok(paramsContent.textContent.includes("Hello world!"), "Post body is correct");
@@ -229,20 +229,20 @@ async function testParams(messageNode) {
 // Response
 
 function testEmptyResponse(messageNode) {
-  let panel = messageNode.querySelector("#response-panel .tab-panel");
+  const panel = messageNode.querySelector("#response-panel .tab-panel");
   is(panel.textContent, "", "Cookies tab is empty");
 }
 
 async function testResponse(messageNode) {
-  let responseTab = messageNode.querySelector("#response-tab");
+  const responseTab = messageNode.querySelector("#response-tab");
   ok(responseTab, "Response tab is available");
 
   // Select Response tab and check the content. CodeMirror initialization
   // is delayed, so again wait for a little while.
   responseTab.click();
-  let responsePanel = messageNode.querySelector("#response-panel");
+  const responsePanel = messageNode.querySelector("#response-panel");
   await waitForSourceEditor(responsePanel);
-  let responseContent = messageNode.querySelector(
+  const responseContent = messageNode.querySelector(
     "#response-panel .editor-row-container .CodeMirror");
   ok(responseContent, "Response content is available");
   ok(responseContent.textContent, "Response text is available");
@@ -251,12 +251,12 @@ async function testResponse(messageNode) {
 // Timings
 
 function testEmptyTimings(messageNode) {
-  let panel = messageNode.querySelector("#timings-panel .tab-panel");
+  const panel = messageNode.querySelector("#timings-panel .tab-panel");
   is(panel.textContent, "", "Timings tab is empty");
 }
 
 async function testTimings(messageNode) {
-  let timingsTab = messageNode.querySelector("#timings-tab");
+  const timingsTab = messageNode.querySelector("#timings-tab");
   ok(timingsTab, "Timings tab is available");
 
   // Select Timings tab and check the content.
@@ -265,7 +265,7 @@ async function testTimings(messageNode) {
     return !!messageNode.querySelector(
       "#timings-panel .timings-container .timings-label");
   });
-  let timingsContent = messageNode.querySelector(
+  const timingsContent = messageNode.querySelector(
     "#timings-panel .timings-container .timings-label");
   ok(timingsContent, "Timings content is available");
   ok(timingsContent.textContent, "Timings text is available");
@@ -274,12 +274,12 @@ async function testTimings(messageNode) {
 // Stack Trace
 
 function testEmptyStackTrace(messageNode) {
-  let panel = messageNode.querySelector("#stack-trace-panel .stack-trace");
+  const panel = messageNode.querySelector("#stack-trace-panel .stack-trace");
   is(panel.textContent, "", "StackTrace tab is empty");
 }
 
 async function testStackTrace(messageNode) {
-  let stackTraceTab = messageNode.querySelector("#stack-trace-tab");
+  const stackTraceTab = messageNode.querySelector("#stack-trace-tab");
   ok(stackTraceTab, "StackTrace tab is available");
 
   // Select Timings tab and check the content.
@@ -292,7 +292,7 @@ async function testStackTrace(messageNode) {
 // Waiting helpers
 
 async function waitForPayloadReady(toolbox) {
-  let {ui} = toolbox.getCurrentPanel().hud;
+  const {ui} = toolbox.getCurrentPanel().hud;
   return new Promise(resolve => {
     ui.jsterm.hud.on("network-request-payload-ready", () => {
       info("network-request-payload-ready received");
@@ -308,7 +308,7 @@ async function waitForSourceEditor(panel) {
 }
 
 async function waitForRequestUpdates(toolbox) {
-  let {ui} = toolbox.getCurrentPanel().hud;
+  const {ui} = toolbox.getCurrentPanel().hud;
   return new Promise(resolve => {
     ui.jsterm.hud.on("network-message-updated", () => {
       info("network-message-updated received");
@@ -322,8 +322,8 @@ async function waitForRequestUpdates(toolbox) {
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
-  let {ui} = toolbox.getCurrentPanel().hud;
-  let proxy = ui.jsterm.hud.proxy;
+  const {ui} = toolbox.getCurrentPanel().hud;
+  const proxy = ui.jsterm.hud.proxy;
   return waitUntil(() => {
     return !proxy.networkDataProvider.lazyRequestData.size;
   });

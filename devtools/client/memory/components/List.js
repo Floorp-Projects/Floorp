@@ -23,7 +23,7 @@ class List extends Component {
   }
 
   render() {
-    let { items, onClick, itemComponent: Item } = this.props;
+    const { items, onClick, itemComponent: Item } = this.props;
 
     return (
       dom.ul({ className: "list" }, ...items.map((item, index) => {

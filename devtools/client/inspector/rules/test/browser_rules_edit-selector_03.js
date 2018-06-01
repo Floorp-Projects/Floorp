@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".testclass", inspector);
   await testEditSelector(view, "asd@:::!");
 });
@@ -26,17 +26,17 @@ add_task(async function() {
 async function testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
-  let onRuleViewChanged = once(view, "ruleview-invalid-selector");
+  const onRuleViewChanged = once(view, "ruleview-invalid-selector");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 

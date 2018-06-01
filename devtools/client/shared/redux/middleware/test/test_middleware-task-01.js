@@ -17,7 +17,7 @@ function run_test() {
 }
 
 add_task(async function() {
-  let store = applyMiddleware(task)(createStore)(reducer);
+  const store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(fetch1("generator"));
   await waitUntilState(store, () => store.getState().length === 1);

@@ -67,7 +67,7 @@ module.exports = Canvases;
  * @return {HTMLDivElement}
  */
 function createContainingDiv(parentEl) {
-  let div = parentEl.ownerDocument.createElementNS(HTML_NS, "div");
+  const div = parentEl.ownerDocument.createElementNS(HTML_NS, "div");
   Object.assign(div.style, FULLSCREEN_STYLE);
   parentEl.appendChild(div);
   return div;
@@ -81,8 +81,8 @@ function createContainingDiv(parentEl) {
  * @return {Object} { canvas, ctx }
  */
 function createCanvas(container, className) {
-  let window = container.ownerDocument.defaultView;
-  let canvas = container.ownerDocument.createElementNS(HTML_NS, "canvas");
+  const window = container.ownerDocument.defaultView;
+  const canvas = container.ownerDocument.createElementNS(HTML_NS, "canvas");
   container.appendChild(canvas);
   canvas.width = container.offsetWidth * window.devicePixelRatio;
   canvas.height = container.offsetHeight * window.devicePixelRatio;
@@ -92,7 +92,7 @@ function createCanvas(container, className) {
     pointerEvents: "none"
   });
 
-  let ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
   return { canvas, ctx };
 }
@@ -105,12 +105,12 @@ function createCanvas(container, className) {
  * @param  {Number} debounceRate
  */
 function handleResizes(canvases, debounceRate) {
-  let { container, main, zoom } = canvases;
-  let window = container.ownerDocument.defaultView;
+  const { container, main, zoom } = canvases;
+  const window = container.ownerDocument.defaultView;
 
   function resize() {
-    let width = container.offsetWidth * window.devicePixelRatio;
-    let height = container.offsetHeight * window.devicePixelRatio;
+    const width = container.offsetWidth * window.devicePixelRatio;
+    const height = container.offsetHeight * window.devicePixelRatio;
 
     main.canvas.width = width;
     main.canvas.height = height;
@@ -121,7 +121,7 @@ function handleResizes(canvases, debounceRate) {
   }
 
   // Tests may not need debouncing
-  let debouncedResize = debounceRate > 0
+  const debouncedResize = debounceRate > 0
     ? debounce(resize, debounceRate)
     : resize;
 

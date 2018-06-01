@@ -77,7 +77,7 @@ DocumentWalker.prototype = {
   },
 
   nextNode: function() {
-    let node = this.walker.currentNode;
+    const node = this.walker.currentNode;
     if (!node) {
       return null;
     }
@@ -91,7 +91,7 @@ DocumentWalker.prototype = {
   },
 
   firstChild: function() {
-    let node = this.walker.currentNode;
+    const node = this.walker.currentNode;
     if (!node) {
       return null;
     }
@@ -105,7 +105,7 @@ DocumentWalker.prototype = {
   },
 
   lastChild: function() {
-    let node = this.walker.currentNode;
+    const node = this.walker.currentNode;
     if (!node) {
       return null;
     }
@@ -137,7 +137,7 @@ DocumentWalker.prototype = {
   getStartingNode: function(node, skipTo) {
     // Keep a reference on the starting node in case we can't find a node compatible with
     // the filter.
-    let startingNode = node;
+    const startingNode = node;
 
     if (skipTo === SKIP_TO_PARENT) {
       while (node && this.isSkippedNode(node)) {

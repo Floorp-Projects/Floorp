@@ -64,7 +64,7 @@ function checkResults() {
                                                  event[4] === null
   );
 
-  for (let i in DATA) {
+  for (const i in DATA) {
     const [ timestamp, category, method, object, value, extra ] = events[i];
     const expected = DATA[i];
 

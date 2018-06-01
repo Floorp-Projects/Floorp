@@ -37,7 +37,7 @@ class FontMeta extends PureComponent {
   }
 
   onNameMouseOver() {
-    let {
+    const {
       font,
       onToggleFontHighlight,
     } = this.props;
@@ -46,7 +46,7 @@ class FontMeta extends PureComponent {
   }
 
   onNameMouseOut() {
-    let {
+    const {
       font,
       onToggleFontHighlight,
     } = this.props;

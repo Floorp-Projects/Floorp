@@ -11,7 +11,7 @@ const TEST_URL = `data:text/html,
 
 add_task(async function() {
   info("Opening the inspector on the test page");
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Selecting the test node");
   await focusNode("#test-div", inspector);
@@ -22,9 +22,9 @@ add_task(async function() {
   }, testActor);
 
   info("Focus the ID attribute and change its content");
-  let {editor} = await getContainerForSelector("#test-div", inspector);
-  let attr = editor.attrElements.get("id").querySelector(".editable");
-  let mutated = inspector.once("markupmutation");
+  const {editor} = await getContainerForSelector("#test-div", inspector);
+  const attr = editor.attrElements.get("id").querySelector(".editable");
+  const mutated = inspector.once("markupmutation");
   setEditableFieldValue(attr,
     attr.textContent + ' class="newclass" style="color:green"', inspector);
   await mutated;

@@ -103,8 +103,8 @@ const TESTS = [
 let elms = {};
 
 add_task(async function() {
-  let url = `data:text/html;charset=utf-8,${TEST_URI}`;
-  let { inspector } = await openInspectorForURL(url);
+  const url = `data:text/html;charset=utf-8,${TEST_URI}`;
+  const { inspector } = await openInspectorForURL(url);
 
   elms.docBody = inspector.markup.doc.body;
   elms.root = inspector.markup.getContainer(inspector.markup._rootNode);
@@ -118,7 +118,7 @@ add_task(async function() {
   // Focus on the tree element.
   elms.root.elt.focus();
 
-  for (let testData of TESTS) {
+  for (const testData of TESTS) {
     await runAccessibilityNavigationTest(inspector, elms, testData);
   }
 

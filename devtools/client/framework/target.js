@@ -54,7 +54,7 @@ const TargetFactory = exports.TargetFactory = {
   forRemoteTab: function(options) {
     let targetPromise = promiseTargets.get(options);
     if (targetPromise == null) {
-      let target = new TabTarget(options);
+      const target = new TabTarget(options);
       targetPromise = target.makeRemote().then(() => target);
       promiseTargets.set(options, targetPromise);
     }
@@ -188,7 +188,7 @@ TabTarget.prototype = {
                       "remote tabs.");
     }
 
-    let deferred = defer();
+    const deferred = defer();
 
     if (this._protocolDescription &&
         this._protocolDescription.types[actorName]) {
@@ -425,7 +425,7 @@ TabTarget.prototype = {
       // (e.g. when the addon is disabled or uninstalled ).
       // To retrieve the TabActor instance, we call its "connect" method,
       // (which fetches the TabActor form from a WebExtensionChildActor instance).
-      let {form} = await this._client.request({
+      const {form} = await this._client.request({
         to: this._form.actor, type: "connect",
       });
 
@@ -436,7 +436,7 @@ TabTarget.prototype = {
 
     this._setupRemoteListeners();
 
-    let attachTab = () => {
+    const attachTab = () => {
       this._client.attachTab(this._form.actor, (response, tabClient) => {
         if (!tabClient) {
           this._remote.reject("Unable to attach to the tab");
@@ -449,7 +449,7 @@ TabTarget.prototype = {
       });
     };
 
-    let onConsoleAttached = (response, consoleClient) => {
+    const onConsoleAttached = (response, consoleClient) => {
       if (!consoleClient) {
         this._remote.reject("Unable to attach to the console");
         return;
@@ -462,7 +462,7 @@ TabTarget.prototype = {
       this._remote.resolve(null);
     };
 
-    let attachConsole = () => {
+    const attachConsole = () => {
       this._client.attachConsole(this._form.consoleActor, [], onConsoleAttached);
     };
 
@@ -524,7 +524,7 @@ TabTarget.prototype = {
     this.client.addListener("tabDetached", this._onTabDetached);
 
     this._onTabNavigated = (type, packet) => {
-      let event = Object.create(null);
+      const event = Object.create(null);
       event.url = packet.url;
       event.title = packet.title;
       event.nativeConsoleAPI = packet.nativeConsoleAPI;
@@ -614,15 +614,15 @@ TabTarget.prototype = {
     }
 
     // Save a reference to the tab as it will be nullified on destroy
-    let tab = this._tab;
-    let onToolboxDestroyed = target => {
+    const tab = this._tab;
+    const onToolboxDestroyed = target => {
       if (target != this) {
         return;
       }
       gDevTools.off("toolbox-destroyed", target);
 
       // Recreate a fresh target instance as the current one is now destroyed
-      let newTarget = TargetFactory.forTab(tab);
+      const newTarget = TargetFactory.forTab(tab);
       gDevTools.showToolbox(newTarget);
     };
     gDevTools.on("toolbox-destroyed", onToolboxDestroyed);
@@ -647,7 +647,7 @@ TabTarget.prototype = {
       this._teardownListeners();
     }
 
-    let cleanupAndResolve = () => {
+    const cleanupAndResolve = () => {
       this._cleanup();
       this._destroyer.resolve(null);
     };
@@ -702,7 +702,7 @@ TabTarget.prototype = {
   },
 
   toString: function() {
-    let id = this._tab ? this._tab : (this._form && this._form.actor);
+    const id = this._tab ? this._tab : (this._form && this._form.actor);
     return `TabTarget:${id}`;
   },
 
@@ -717,7 +717,7 @@ TabTarget.prototype = {
   logErrorInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const errorFlag = 0;
-      let packet = {
+      const packet = {
         to: this.form.actor,
         type: "logInPage",
         flags: errorFlag,
@@ -739,7 +739,7 @@ TabTarget.prototype = {
   logWarningInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const warningFlag = 1;
-      let packet = {
+      const packet = {
         to: this.form.actor,
         type: "logInPage",
         flags: warningFlag,

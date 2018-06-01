@@ -48,7 +48,7 @@ add_task(async function() {
 
 async function executeWindowTest(hud, iframeRole) {
   const BASE_TEXT = "Test for the cd() command (bug 609872) - iframe";
-  let onMessages = waitForMessages({
+  const onMessages = waitForMessages({
     hud,
     messages: [{
       text: `${BASE_TEXT} ${iframeRole}`

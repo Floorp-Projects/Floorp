@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>hello world" +
 add_task(async function() {
   await addTab(TEST_URI);
 
-  let hud = await HUDService.toggleBrowserConsole();
+  const hud = await HUDService.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
   // On e10s, the exception is triggered in child process
@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("generate exception and wait for the message");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    let button = content.document.querySelector("button");
+    const button = content.document.querySelector("button");
     button.click();
   });
 
@@ -34,15 +34,15 @@ add_task(async function() {
 });
 
 async function waitForMessageAndViewSource(hud, message) {
-  let msg = await waitFor(() => findMessage(hud, message));
+  const msg = await waitFor(() => findMessage(hud, message));
   ok(msg, `Message found: "${message}"`);
 
-  let locationNode = msg.querySelector(".message-location .frame-link-source");
+  const locationNode = msg.querySelector(".message-location .frame-link-source");
   ok(locationNode, "Message location link element found");
 
-  let onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
   locationNode.click();
-  let newTab = await onTabOpen;
+  const newTab = await onTabOpen;
   ok(true, "The view source tab was opened in response to clicking the link");
   BrowserTestUtils.removeTab(newTab);
 }

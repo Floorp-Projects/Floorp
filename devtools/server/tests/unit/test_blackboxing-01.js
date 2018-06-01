@@ -29,8 +29,8 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 const testBlackBox = async function() {
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  let source = gThreadClient.source(packet.frame.where.source);
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  const source = gThreadClient.source(packet.frame.where.source);
 
   await setBreakpoint(source, {
     line: 2
@@ -38,7 +38,7 @@ const testBlackBox = async function() {
   await resume(gThreadClient);
 
   const { sources } = await getSources(gThreadClient);
-  let sourceClient = gThreadClient.source(
+  const sourceClient = gThreadClient.source(
     sources.filter(s => s.url == BLACK_BOXED_URL)[0]);
   Assert.ok(!sourceClient.isBlackBoxed,
             "By default the source is not black boxed.");
@@ -65,7 +65,7 @@ const testBlackBox = async function() {
       Assert.equal(location.line, 4);
     },
     function onDebuggerStatementFrames(frames) {
-      for (let f of frames) {
+      for (const f of frames) {
         if (f.where.source.url == BLACK_BOXED_URL) {
           Assert.ok(f.where.source.isBlackBoxed);
         } else {
@@ -135,7 +135,7 @@ const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {
   packet = await resumeAndWaitForPause(gClient, gThreadClient);
   Assert.equal(packet.why.type, "debuggerStatement");
 
-  let { frames } = await getFrames(gThreadClient, 0, 100);
+  const { frames } = await getFrames(gThreadClient, 0, 100);
   onDebuggerStatementFrames(frames);
 
   return resume(gThreadClient);

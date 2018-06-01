@@ -21,13 +21,13 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   info("Select a node with a shape value");
   await selectNode("#shape", inspector);
-  let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
+  const container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
+  const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shapes highlighter with transform mode on.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
@@ -42,7 +42,7 @@ add_task(async function() {
   ok(highlighters.state.shapes.options.transformMode, "Transform mode is on.");
 
   info("Toggling OFF the CSS shapes highlighter from the rule-view.");
-  let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
+  const onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
   EventUtils.sendMouseEvent({type: "click"},
     shapesToggle, view.styleWindow);
   await onHighlighterHidden;

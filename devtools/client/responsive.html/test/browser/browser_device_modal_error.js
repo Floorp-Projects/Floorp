@@ -17,8 +17,8 @@ add_task(async function() {
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  let { store, document } = ui.toolWindow;
-  let select = document.querySelector(".viewport-device-selector");
+  const { store, document } = ui.toolWindow;
+  const select = document.querySelector(".viewport-device-selector");
 
   // Wait until the viewport has been added and the device list state indicates
   // an error
@@ -26,7 +26,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
     && state.devices.listState == Types.loadableState.ERROR);
 
   // The device selector placeholder should be set accordingly
-  let placeholder = select.options[select.selectedIndex].innerHTML;
+  const placeholder = select.options[select.selectedIndex].innerHTML;
   ok(placeholder == getStr("responsive.deviceListError"),
     "Device selector indicates an error");
 

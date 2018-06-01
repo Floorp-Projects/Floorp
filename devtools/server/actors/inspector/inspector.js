@@ -104,12 +104,12 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._walkerPromise;
     }
 
-    let deferred = defer();
+    const deferred = defer();
     this._walkerPromise = deferred.promise;
 
-    let window = this.window;
-    let domReady = () => {
-      let tabActor = this.tabActor;
+    const window = this.window;
+    const domReady = () => {
+      const tabActor = this.tabActor;
       window.removeEventListener("DOMContentLoaded", domReady, true);
       this.walker = WalkerActor(this.conn, tabActor, options);
       this.manage(this.walker);
@@ -135,7 +135,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     }
 
     this._pageStylePromise = this.getWalker().then(walker => {
-      let pageStyle = PageStyleActor(this);
+      const pageStyle = PageStyleActor(this);
       this.manage(pageStyle);
       return pageStyle;
     });
@@ -161,7 +161,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     }
 
     this._highlighterPromise = this.getWalker().then(walker => {
-      let highlighter = HighlighterActor(this, autohide);
+      const highlighter = HighlighterActor(this, autohide);
       this.manage(highlighter);
       return highlighter;
     });
@@ -198,7 +198,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * transfered in the longstring back to the client will be that much smaller
    */
   getImageDataFromURL: function(url, maxDim) {
-    let img = new this.window.Image();
+    const img = new this.window.Image();
     img.src = url;
 
     // imageToImageData waits for the image to load.
@@ -219,7 +219,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * @return {String} url.
    */
   resolveRelativeURL: function(url, node) {
-    let document = InspectorActorUtils.isNodeDead(node)
+    const document = InspectorActorUtils.isNodeDead(node)
                    ? this.window.document
                    : InspectorActorUtils.nodeDocument(node.rawNode);
 
@@ -227,7 +227,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return url;
     }
 
-    let baseURI = Services.io.newURI(document.location.href);
+    const baseURI = Services.io.newURI(document.location.href);
     return Services.io.newURI(url, null, baseURI).spec;
   },
 
@@ -290,8 +290,8 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * don't render the canvasFrame without throwing any error.
    */
   supportsHighlighters: function() {
-    let doc = this.tabActor.window.document;
-    let ns = doc.documentElement.namespaceURI;
+    const doc = this.tabActor.window.document;
+    const ns = doc.documentElement.namespaceURI;
 
     // XUL documents do not support insertAnonymousContent().
     if (ns === XUL_NS) {

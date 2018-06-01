@@ -26,7 +26,7 @@ window.onload = function() {
   let dbg, iframeDO, doc, script2DO;
 
   // Create an iframe to debug.
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "data:text/html,<div>Hi!</div>";
   iframe.onload = onLoadHandler;
   document.body.appendChild(iframe);
@@ -38,7 +38,7 @@ window.onload = function() {
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
 
     doc = iframe.contentWindow.document;
-    let script = doc.createElement("script");
+    const script = doc.createElement("script");
     script.text = "setTimeout(eval.bind(null, 'debugger;'), 0);";
     dbg.onDebuggerStatement = timerHandler;
     doc.body.appendChild(script);
@@ -47,7 +47,7 @@ window.onload = function() {
   function timerHandler(frame) {
     // The top stack frame's source should have an undefined
     // introduction script and introduction offset.
-    let source = frame.script.source;
+    const source = frame.script.source;
     ok(source.introductionScript === undefined,
        "setTimeout eval introductionScript is undefined");
     ok(source.introductionOffset === undefined,
@@ -56,7 +56,7 @@ window.onload = function() {
     // Check that the above isn't just some quirk of iframes, or the
     // browser milieu destroying information: an eval script should indeed
     // have proper introduction information.
-    let script2 = doc.createElement("script");
+    const script2 = doc.createElement("script");
     script2.text = "eval('debugger;');";
     script2DO = iframeDO.makeDebuggeeValue(script2);
     dbg.onDebuggerStatement = evalHandler;
@@ -66,8 +66,8 @@ window.onload = function() {
   function evalHandler(frame) {
     // The top stack frame's source should be introduced by the script that
     // called eval.
-    let source = frame.script.source;
-    let frame2 = frame.older;
+    const source = frame.script.source;
+    const frame2 = frame.older;
 
     ok(source.introductionType === "eval",
        "top frame's source was introduced by 'eval'");

@@ -12,14 +12,14 @@ const { CallView } = require("devtools/client/performance/modules/widgets/tree-v
 const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(function() {
-  let profile = synthesizeProfile();
-  let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const profile = synthesizeProfile();
+  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
 
-  let treeRoot = new CallView({ frame: threadNode });
-  let container = document.createElement("vbox");
+  const treeRoot = new CallView({ frame: threadNode });
+  const container = document.createElement("vbox");
   treeRoot.attachTo(container);
 
   is(treeRoot.target.getAttribute("origin"), "chrome",
@@ -31,9 +31,9 @@ add_task(function() {
   is(treeRoot.target.querySelector(".call-tree-category"), null,
     "The root node's category label cell should be hidden.");
 
-  let A = treeRoot.getChild();
-  let B = A.getChild();
-  let D = B.getChild();
+  const A = treeRoot.getChild();
+  const B = A.getChild();
+  const D = B.getChild();
 
   is(D.target.getAttribute("origin"), "chrome",
     "The .A.B.D node's 'origin' attribute is correct.");
@@ -57,7 +57,7 @@ add_task(function() {
   is(D.target.childNodes[5].getAttribute("type"), "function",
     "The sixth column displayed for tree items is correct.");
 
-  let functionCell = D.target.childNodes[5];
+  const functionCell = D.target.childNodes[5];
 
   is(functionCell.childNodes.length, 7,
     "The number of columns displayed for function cells is correct.");

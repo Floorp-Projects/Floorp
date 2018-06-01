@@ -26,10 +26,10 @@ const TEST_STATES = [
 ];
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   equal(getState().individuals, null,
@@ -51,7 +51,7 @@ add_task(async function() {
   const breakdown = getState().snapshots[0].census.display.breakdown;
   ok(breakdown, "Should have a breakdown");
 
-  for (let state of TEST_STATES) {
+  for (const state of TEST_STATES) {
     dumpn(`Testing popping back to the old view from state = ${state}`);
 
     dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,

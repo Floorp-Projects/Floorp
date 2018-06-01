@@ -23,8 +23,8 @@ const EXPECTED_PROPERTIES = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_keyframes.html");
-  let {panel} = await openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
+  const {panel} = await openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
 
   // doc_keyframes.html has only one animation.
   // So we don't need to click the animation since already the animation detail shown.
@@ -32,17 +32,17 @@ add_task(async function() {
   ok(timeline.rootWrapperEl.querySelectorAll(".frames .keyframes").length,
      "There are container elements for displaying keyframes");
 
-  let data = await getExpectedKeyframesData(timeline.animations[0]);
-  for (let propertyName in data) {
+  const data = await getExpectedKeyframesData(timeline.animations[0]);
+  for (const propertyName in data) {
     info("Check the keyframe markers for " + propertyName);
-    let widthMarkerSelector = ".frame[data-property=" + propertyName + "]";
-    let markers = timeline.rootWrapperEl.querySelectorAll(widthMarkerSelector);
+    const widthMarkerSelector = ".frame[data-property=" + propertyName + "]";
+    const markers = timeline.rootWrapperEl.querySelectorAll(widthMarkerSelector);
 
     is(markers.length, data[propertyName].length,
        "The right number of keyframes was found for " + propertyName);
 
-    let offsets = [...markers].map(m => parseFloat(m.dataset.offset));
-    let values = [...markers].map(m => m.dataset.value);
+    const offsets = [...markers].map(m => parseFloat(m.dataset.offset));
+    const values = [...markers].map(m => m.dataset.value);
     for (let i = 0; i < markers.length; i++) {
       is(markers[i].dataset.offset, offsets[i],
          "Marker " + i + " for " + propertyName + " has the right offset");
@@ -55,16 +55,16 @@ add_task(async function() {
 async function getExpectedKeyframesData(animation) {
   // We're testing the UI state here, so it's fine to get the list of expected
   // properties from the animation actor.
-  let properties = await animation.getProperties();
-  let data = {};
+  const properties = await animation.getProperties();
+  const data = {};
 
-  for (let expectedProperty of EXPECTED_PROPERTIES) {
+  for (const expectedProperty of EXPECTED_PROPERTIES) {
     data[expectedProperty] = [];
-    for (let {name, values} of properties) {
+    for (const {name, values} of properties) {
       if (name !== expectedProperty) {
         continue;
       }
-      for (let {offset, value} of values) {
+      for (const {offset, value} of values) {
         data[expectedProperty].push({offset, value});
       }
     }

@@ -19,10 +19,10 @@ add_task(async function() {
   // all the requests the page is making, not only the XHRs.
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
 
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
   let waitPromise = waitForNetworkEvents(monitor, N_EXPECTED_REQUESTS);
@@ -31,25 +31,25 @@ add_task(async function() {
 
   info("Clicking item and waiting for details panel to open");
   waitPromise = waitForDOM(document, ".network-details-panel");
-  let xhrRequestItem = document.querySelectorAll(".request-list-item")[3];
+  const xhrRequestItem = document.querySelectorAll(".request-list-item")[3];
   EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
   await waitPromise;
 
   info("Clicking stack tab and waiting for stack panel to open");
   waitPromise = waitForDOM(document, "#stack-trace-panel");
-  let stackTab = document.querySelector("#stack-trace-tab");
+  const stackTab = document.querySelector("#stack-trace-tab");
   EventUtils.sendMouseEvent({ type: "click" }, stackTab);
   await waitPromise;
 
   info("Waiting for source maps to be applied");
   await waitUntil(() => {
-    let frames = document.querySelectorAll(".frame-link");
+    const frames = document.querySelectorAll(".frame-link");
     return frames && frames.length >= 2 &&
       frames[0].textContent.includes("xhr_original") &&
       frames[1].textContent.includes("xhr_original");
   });
 
-  let frames = document.querySelectorAll(".frame-link");
+  const frames = document.querySelectorAll(".frame-link");
   is(frames.length, 3, "should have 3 stack frames");
   is(frames[0].textContent, `reallydoxhr xhr_original.js:6`);
   is(frames[1].textContent, `doxhr xhr_original.js:10`);

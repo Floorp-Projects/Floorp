@@ -36,7 +36,7 @@ const ActorRegistryActor = protocol.ActorClassWithSpec(actorRegistrySpec, {
 
   registerActor: function(sourceText, fileName, options) {
     return registerActor(sourceText, fileName, options).then(() => {
-      let { constructor, type } = options;
+      const { constructor, type } = options;
 
       return ActorActor(this.conn, {
         name: constructor,

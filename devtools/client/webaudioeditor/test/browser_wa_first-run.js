@@ -6,8 +6,8 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { gFront, $ } = panel.panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,
     "The 'reload this page' notice should initially be visible.");
@@ -16,8 +16,8 @@ add_task(async function() {
   is($("#content").hidden, true,
     "The tool's content should initially be hidden.");
 
-  let navigating = once(target, "will-navigate");
-  let started = once(gFront, "start-context");
+  const navigating = once(target, "will-navigate");
+  const started = once(gFront, "start-context");
 
   reload(target);
 

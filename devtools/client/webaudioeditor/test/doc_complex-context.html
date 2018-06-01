@@ -19,21 +19,21 @@
   osc    →   gain   →  destination
   buffer →↳  filter →
 */
-      let ctx = new AudioContext();
-      let osc1 = ctx.createOscillator();
-      let gain1 = ctx.createGain();
-      let proc = ctx.createScriptProcessor();
+      const ctx = new AudioContext();
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      const proc = ctx.createScriptProcessor();
       osc1.connect(gain1);
       osc1.connect(proc);
       gain1.connect(ctx.destination);
 
-      let osc2 = ctx.createOscillator();
-      let gain2 = ctx.createGain();
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
 
-      let buf = ctx.createBufferSource();
-      let filter = ctx.createBiquadFilter();
+      const buf = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
       buf.connect(filter);
       osc2.connect(filter);
       filter.connect(ctx.destination);

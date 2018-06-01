@@ -31,7 +31,7 @@ function RulersHighlighter(highlighterEnv) {
   this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 
-  let { pageListenerTarget } = highlighterEnv;
+  const { pageListenerTarget } = highlighterEnv;
   pageListenerTarget.addEventListener("scroll", this);
   pageListenerTarget.addEventListener("pagehide", this);
 }
@@ -42,8 +42,8 @@ RulersHighlighter.prototype = {
   ID_CLASS_PREFIX: "rulers-highlighter-",
 
   _buildMarkup: function() {
-    let { window } = this.env;
-    let prefix = this.ID_CLASS_PREFIX;
+    const { window } = this.env;
+    const prefix = this.ID_CLASS_PREFIX;
 
     function createRuler(axis, size) {
       let width, height;
@@ -61,7 +61,7 @@ RulersHighlighter.prototype = {
           `Invalid type of axis given; expected "x" or "y" but got "${axis}"`);
       }
 
-      let g = createSVGNode(window, {
+      const g = createSVGNode(window, {
         nodeType: "g",
         attributes: {
           id: `${axis}-axis`
@@ -80,7 +80,7 @@ RulersHighlighter.prototype = {
         parent: g
       });
 
-      let gRule = createSVGNode(window, {
+      const gRule = createSVGNode(window, {
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-ruler`
@@ -89,7 +89,7 @@ RulersHighlighter.prototype = {
         prefix
       });
 
-      let pathGraduations = createSVGNode(window, {
+      const pathGraduations = createSVGNode(window, {
         nodeType: "path",
         attributes: {
           "class": "ruler-graduations",
@@ -100,7 +100,7 @@ RulersHighlighter.prototype = {
         prefix
       });
 
-      let pathMarkers = createSVGNode(window, {
+      const pathMarkers = createSVGNode(window, {
         nodeType: "path",
         attributes: {
           "class": "ruler-markers",
@@ -111,7 +111,7 @@ RulersHighlighter.prototype = {
         prefix
       });
 
-      let gText = createSVGNode(window, {
+      const gText = createSVGNode(window, {
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-text`,
@@ -163,11 +163,11 @@ RulersHighlighter.prototype = {
       return g;
     }
 
-    let container = createNode(window, {
+    const container = createNode(window, {
       attributes: {"class": "highlighter-container"}
     });
 
-    let root = createNode(window, {
+    const root = createNode(window, {
       parent: container,
       attributes: {
         "id": "root",
@@ -176,7 +176,7 @@ RulersHighlighter.prototype = {
       prefix
     });
 
-    let svg = createSVGNode(window, {
+    const svg = createSVGNode(window, {
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -221,8 +221,8 @@ RulersHighlighter.prototype = {
   },
 
   _onScroll: function(event) {
-    let prefix = this.ID_CLASS_PREFIX;
-    let { scrollX, scrollY } = event.view;
+    const prefix = this.ID_CLASS_PREFIX;
+    const { scrollX, scrollY } = event.view;
 
     this.markup.getElement(`${prefix}x-axis-ruler`)
                         .setAttribute("transform", `translate(${-scrollX})`);
@@ -235,12 +235,12 @@ RulersHighlighter.prototype = {
   },
 
   _update: function() {
-    let { window } = this.env;
+    const { window } = this.env;
 
     setIgnoreLayoutChanges(true);
 
-    let zoom = getCurrentZoom(window);
-    let isZoomChanged = zoom !== this._zoom;
+    const zoom = getCurrentZoom(window);
+    const isZoomChanged = zoom !== this._zoom;
 
     if (isZoomChanged) {
       this._zoom = zoom;
@@ -261,34 +261,34 @@ RulersHighlighter.prototype = {
     }
   },
   updateViewport: function() {
-    let { devicePixelRatio } = this.env.window;
+    const { devicePixelRatio } = this.env.window;
 
     // Because `devicePixelRatio` is affected by zoom (see bug 809788),
     // in order to get the "real" device pixel ratio, we need divide by `zoom`
-    let pixelRatio = devicePixelRatio / this._zoom;
+    const pixelRatio = devicePixelRatio / this._zoom;
 
     // The "real" device pixel ratio is used to calculate the max stroke
     // width we can actually assign: on retina, for instance, it would be 0.5,
     // where on non high dpi monitor would be 1.
-    let minWidth = 1 / pixelRatio;
-    let strokeWidth = Math.min(minWidth, minWidth / this._zoom);
+    const minWidth = 1 / pixelRatio;
+    const strokeWidth = Math.min(minWidth, minWidth / this._zoom);
 
     this.markup.getElement(this.ID_CLASS_PREFIX + "root").setAttribute("style",
       `stroke-width:${strokeWidth};`);
   },
 
   updateViewportInfobar: function() {
-    let { window } = this.env;
-    let { innerHeight, innerWidth } = window;
-    let infobarId = this.ID_CLASS_PREFIX + "viewport-infobar-container";
-    let textContent = innerHeight + "px \u00D7 " + innerWidth + "px";
+    const { window } = this.env;
+    const { innerHeight, innerWidth } = window;
+    const infobarId = this.ID_CLASS_PREFIX + "viewport-infobar-container";
+    const textContent = innerHeight + "px \u00D7 " + innerWidth + "px";
     this.markup.getElement(infobarId).setTextContent(textContent);
   },
 
   destroy: function() {
     this.hide();
 
-    let { pageListenerTarget } = this.env;
+    const { pageListenerTarget } = this.env;
 
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("scroll", this);

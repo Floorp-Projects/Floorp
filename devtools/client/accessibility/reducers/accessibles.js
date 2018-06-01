@@ -37,12 +37,12 @@ function accessibles(state = getInitialState(), action) {
  * @param {Object} accessible Accessible object to remove from cache.
  */
 function cleanupChild(cache, accessible) {
-  let cached = cache.get(accessible.actorID);
+  const cached = cache.get(accessible.actorID);
   if (!cached) {
     return;
   }
 
-  for (let child of cached.children) {
+  for (const child of cached.children) {
     cleanupChild(cache, child);
   }
 
@@ -58,7 +58,7 @@ function cleanupChild(cache, accessible) {
  * @param {Object} accessible Accessible object to test for staleness.
  */
 function staleChildren(cache, accessible) {
-  let cached = cache.get(accessible.actorID);
+  const cached = cache.get(accessible.actorID);
   if (!cached) {
     return false;
   }
@@ -67,11 +67,11 @@ function staleChildren(cache, accessible) {
 }
 
 function updateChildrenCache(cache, accessible, children) {
-  let { actorID } = accessible;
+  const { actorID } = accessible;
 
   if (cache.has(actorID)) {
-    let cached = cache.get(actorID);
-    for (let child of cached.children) {
+    const cached = cache.get(actorID);
+    for (const child of cached.children) {
       // If exhisting children cache includes an accessible that is not present
       // any more or if child accessible is stale remove it and all its children
       // from cache.
@@ -96,7 +96,7 @@ function updateChildrenCache(cache, accessible, children) {
  * @return {Object} updated state
  */
 function onReceiveChildren(cache, action) {
-  let { accessible, response: children, error } = action;
+  const { accessible, response: children, error } = action;
 
   if (error) {
     console.warn("Error fetching children", accessible, error);
@@ -107,14 +107,14 @@ function onReceiveChildren(cache, action) {
 }
 
 function onReceiveAncestry(cache, action) {
-  let { accessible: acc, response: ancestry, error } = action;
+  const { accessible: acc, response: ancestry, error } = action;
 
   if (error) {
     console.warn("Error fetching ancestry", acc, error);
     return cache;
   }
 
-  let newCache = new Map(cache);
+  const newCache = new Map(cache);
   ancestry.forEach(({ accessible, children }) =>
     updateChildrenCache(newCache, accessible, children));
 

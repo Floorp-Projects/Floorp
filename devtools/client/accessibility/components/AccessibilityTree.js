@@ -50,7 +50,7 @@ class AccessibilityTree extends Component {
    * and updates.
    */
   componentWillMount() {
-    let { walker } = this.props;
+    const { walker } = this.props;
     walker.on("reorder", this.onReorder);
     walker.on("name-change", this.onNameChange);
     walker.on("text-change", this.onTextChange);
@@ -65,7 +65,7 @@ class AccessibilityTree extends Component {
    * Remove accessible walker front event listeners.
    */
   componentWillUnmount() {
-    let { walker } = this.props;
+    const { walker } = this.props;
     walker.off("reorder", this.onReorder);
     walker.off("name-change", this.onNameChange);
     walker.off("text-change", this.onTextChange);
@@ -95,7 +95,7 @@ class AccessibilityTree extends Component {
    *                            accessible walker as a parent.
    */
   onNameChange(accessible, parent) {
-    let { accessibles, walker, dispatch } = this.props;
+    const { accessibles, walker, dispatch } = this.props;
     parent = parent || walker;
 
     if (accessibles.has(accessible.actorID) ||
@@ -113,7 +113,7 @@ class AccessibilityTree extends Component {
    *                              changed.
    */
   onTextChange(accessible) {
-    let { accessibles, dispatch } = this.props;
+    const { accessibles, dispatch } = this.props;
     if (accessibles.has(accessible.actorID)) {
       dispatch(fetchChildren(accessible));
     }
@@ -123,7 +123,7 @@ class AccessibilityTree extends Component {
    * Render Accessibility panel content
    */
   render() {
-    let columns = [{
+    const columns = [{
       "id": "default",
       "title": L10N.getStr("accessibility.role")
     }, {
@@ -131,7 +131,7 @@ class AccessibilityTree extends Component {
       "title": L10N.getStr("accessibility.name")
     }];
 
-    let {
+    const {
       accessibles,
       dispatch,
       expanded,
@@ -140,16 +140,16 @@ class AccessibilityTree extends Component {
       walker
     } = this.props;
 
-    let renderValue = props => {
+    const renderValue = props => {
       return Rep(Object.assign({}, props, {
         defaultRep: Grip,
         cropLimit: 50,
       }));
     };
 
-    let renderRow = rowProps => {
-      let { object } = rowProps.member;
-      let highlighted = object === highlightedItem;
+    const renderRow = rowProps => {
+      const { object } = rowProps.member;
+      const highlighted = object === highlightedItem;
       return AccessibilityRow(Object.assign({}, rowProps, {
         walker,
         highlighted,

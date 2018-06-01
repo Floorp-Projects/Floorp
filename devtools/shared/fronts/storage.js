@@ -6,7 +6,7 @@
 const protocol = require("devtools/shared/protocol");
 const specs = require("devtools/shared/specs/storage");
 
-for (let childSpec of Object.values(specs.childSpecs)) {
+for (const childSpec of Object.values(specs.childSpecs)) {
   protocol.FrontClassWithSpec(childSpec, {
     form(form, detail) {
       if (detail === "actorid") {

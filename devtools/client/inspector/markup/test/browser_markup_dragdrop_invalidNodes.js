@@ -13,16 +13,16 @@ add_task(async function() {
   await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Expanding nodes below #test");
-  let parentFront = await getNodeFront("#test", inspector);
+  const parentFront = await getNodeFront("#test", inspector);
   await inspector.markup.expandNode(parentFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Getting the ::before pseudo element and selecting it");
-  let parentContainer = await getContainerForNodeFront(parentFront, inspector);
-  let beforePseudo = parentContainer.elt.children[1].firstChild.container;
+  const parentContainer = await getContainerForNodeFront(parentFront, inspector);
+  const beforePseudo = parentContainer.elt.children[1].firstChild.container;
   parentContainer.elt.scrollIntoView(true);
   await selectNode(beforePseudo.node, inspector);
 
@@ -32,13 +32,13 @@ add_task(async function() {
   ok(!beforePseudo.isDragging, "::before pseudo element isn't dragging");
 
   info("Expanding nodes below #anonymousParent");
-  let inputFront = await getNodeFront("#anonymousParent", inspector);
+  const inputFront = await getNodeFront("#anonymousParent", inspector);
   await inspector.markup.expandNode(inputFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Getting the anonymous node and selecting it");
-  let inputContainer = await getContainerForNodeFront(inputFront, inspector);
-  let anonymousDiv = inputContainer.elt.children[1].firstChild.container;
+  const inputContainer = await getContainerForNodeFront(inputFront, inspector);
+  const anonymousDiv = inputContainer.elt.children[1].firstChild.container;
   inputContainer.elt.scrollIntoView(true);
   await selectNode(anonymousDiv.node, inspector);
 
@@ -48,15 +48,15 @@ add_task(async function() {
   ok(!anonymousDiv.isDragging, "anonymous node isn't dragging");
 
   info("Expanding all nodes below test-component");
-  let testComponentFront = await getNodeFront("test-component", inspector);
+  const testComponentFront = await getNodeFront("test-component", inspector);
   await inspector.markup.expandAll(testComponentFront);
   await waitForMultipleChildrenUpdates(inspector);
 
   info("Getting a slotted node and selecting it");
   // Directly use the markup getContainer API in order to retrieve the slotted container
   // for a given node front.
-  let slotted1Front = await getNodeFront(".slotted1", inspector);
-  let slottedContainer = inspector.markup.getContainer(slotted1Front, true);
+  const slotted1Front = await getNodeFront(".slotted1", inspector);
+  const slottedContainer = inspector.markup.getContainer(slotted1Front, true);
   slottedContainer.elt.scrollIntoView(true);
   await selectNode(slotted1Front, inspector, "no-reason", true);
 

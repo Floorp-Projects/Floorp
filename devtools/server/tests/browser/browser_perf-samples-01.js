@@ -18,15 +18,15 @@ add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let front = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   // Perform the first recording...
 
-  let firstRecording = await front.startRecording();
-  let firstRecordingStartTime = firstRecording._startTime;
+  const firstRecording = await front.startRecording();
+  const firstRecordingStartTime = firstRecording._startTime;
   info("Started profiling at: " + firstRecordingStartTime);
 
   // allow the profiler module to sample some cpu activity
@@ -39,16 +39,16 @@ add_task(async function() {
 
   // Perform the second recording...
 
-  let secondRecording = await front.startRecording();
-  let secondRecordingStartTime = secondRecording._startTime;
+  const secondRecording = await front.startRecording();
+  const secondRecordingStartTime = secondRecording._startTime;
   info("Started profiling at: " + secondRecordingStartTime);
 
   // allow the profiler module to sample more cpu activity
   busyWait(WAIT_TIME);
 
   await front.stopRecording(secondRecording);
-  let secondRecordingProfile = secondRecording.getProfile();
-  let secondRecordingSamples = secondRecordingProfile.threads[0].samples.data;
+  const secondRecordingProfile = secondRecording.getProfile();
+  const secondRecordingSamples = secondRecordingProfile.threads[0].samples.data;
 
   ok(secondRecording.getDuration() >= WAIT_TIME,
     "The second recording duration is correct.");

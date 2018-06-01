@@ -74,7 +74,7 @@ ToolSidebar.prototype = {
   // Rendering
 
   render: function() {
-    let sidebar = this.TabBar({
+    const sidebar = this.TabBar({
       menuDocument: this._toolPanel._toolbox.doc,
       showAllTabsMenu: true,
       sidebarToggleButton: this._options.sidebarToggleButton,
@@ -115,7 +115,7 @@ ToolSidebar.prototype = {
    * @param {Number} index the position where the tab should be inserted
    */
   addExistingTab: function(id, title, selected, index) {
-    let panel = this.InspectorTabPanel({
+    const panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
@@ -137,7 +137,7 @@ ToolSidebar.prototype = {
    * @param {Number} index the position where the tab should be inserted
    */
   addFrameTab: function(id, title, url, selected, index) {
-    let panel = this.InspectorTabPanel({
+    const panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
@@ -174,7 +174,7 @@ ToolSidebar.prototype = {
    * @param {Number} index the position where the tab should be inserted
    */
   queueExistingTab: function(id, title, selected, index) {
-    let panel = this.InspectorTabPanel({
+    const panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
@@ -196,7 +196,7 @@ ToolSidebar.prototype = {
    * @param {Number} index the position where the tab should be inserted
    */
   queueFrameTab: function(id, title, url, selected, index) {
-    let panel = this.InspectorTabPanel({
+    const panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
@@ -210,16 +210,16 @@ ToolSidebar.prototype = {
   },
 
   onSidePanelMounted: function(content, props) {
-    let iframe = content.querySelector("iframe");
+    const iframe = content.querySelector("iframe");
     if (!iframe || iframe.getAttribute("src")) {
       return;
     }
 
-    let onIFrameLoaded = (event) => {
+    const onIFrameLoaded = (event) => {
       iframe.removeEventListener("load", onIFrameLoaded, true);
 
-      let doc = event.target;
-      let win = doc.defaultView;
+      const doc = event.target;
+      const win = doc.defaultView;
       if ("setPanel" in win) {
         win.setPanel(this._toolPanel, iframe);
       }
@@ -231,12 +231,12 @@ ToolSidebar.prototype = {
   },
 
   onSidePanelUnmounted: function(content, props) {
-    let iframe = content.querySelector("iframe");
+    const iframe = content.querySelector("iframe");
     if (!iframe || !iframe.hasAttribute("src")) {
       return;
     }
 
-    let win = iframe.contentWindow;
+    const win = iframe.contentWindow;
     if ("destroy" in win) {
       win.destroy(this._toolPanel, iframe);
     }
@@ -255,7 +255,7 @@ ToolSidebar.prototype = {
   async removeTab(tabId, tabPanelId) {
     this._tabbar.removeTab(tabId);
 
-    let win = this.getWindowForTab(tabId);
+    const win = this.getWindowForTab(tabId);
     if (win && ("destroy" in win)) {
       await win.destroy();
     }
@@ -306,7 +306,7 @@ ToolSidebar.prototype = {
       return;
     }
 
-    let previousTool = this._currentTool;
+    const previousTool = this._currentTool;
     if (previousTool) {
       this.emit(previousTool + "-unselected");
     }
@@ -376,7 +376,7 @@ ToolSidebar.prototype = {
    */
   getWindowForTab: function(id) {
     // Get the tabpanel and make sure it contains an iframe
-    let panel = this.getTabPanel(id);
+    const panel = this.getTabPanel(id);
     if (!panel || !panel.firstElementChild || !panel.firstElementChild.contentWindow) {
       return null;
     }
@@ -398,13 +398,13 @@ ToolSidebar.prototype = {
     // Note that we check for the existence of this._tabbox.tabpanels at each
     // step as the container window may have been closed by the time one of the
     // panel's destroy promise resolves.
-    let tabpanels = [...this._tabbox.querySelectorAll(".tab-panel-box")];
-    for (let panel of tabpanels) {
-      let iframe = panel.querySelector("iframe");
+    const tabpanels = [...this._tabbox.querySelectorAll(".tab-panel-box")];
+    for (const panel of tabpanels) {
+      const iframe = panel.querySelector("iframe");
       if (!iframe) {
         continue;
       }
-      let win = iframe.contentWindow;
+      const win = iframe.contentWindow;
       if (win && ("destroy" in win)) {
         await win.destroy();
       }

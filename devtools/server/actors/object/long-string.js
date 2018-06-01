@@ -103,7 +103,7 @@ function longStringGrip(str, pool) {
     return pool.longStringActors[str].grip();
   }
 
-  let actor = new LongStringActor(str);
+  const actor = new LongStringActor(str);
   pool.addActor(actor);
   pool.longStringActors[str] = actor;
   return actor.grip();

@@ -10,13 +10,13 @@ const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
 add_task(async function() {
   info("Opening netmonitor");
-  let tab = await addTab("about:blank");
-  let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "netmonitor");
-  let monitor = toolbox.getPanel("netmonitor");
-  let { store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
+  const tab = await addTab("about:blank");
+  const target = TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "netmonitor");
+  const monitor = toolbox.getPanel("netmonitor");
+  const { store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
@@ -26,8 +26,8 @@ add_task(async function() {
   await navigateTo(TEST_URL);
 
   info("Opening Style Editor");
-  let styleeditor = await toolbox.selectTool("styleeditor");
-  let ui = styleeditor.UI;
+  const styleeditor = await toolbox.selectTool("styleeditor");
+  const ui = styleeditor.UI;
 
   info("Waiting for the sources to be loaded.");
   await ui.editors[0].getSourceEditor();
@@ -39,10 +39,10 @@ add_task(async function() {
   await waitUntil(() => getSortedRequests(store.getState()).length == 5);
 
   info("Checking Netmonitor contents.");
-  let shortRequests = [];
-  let longRequests = [];
-  let hugeRequests = [];
-  for (let item of getSortedRequests(store.getState())) {
+  const shortRequests = [];
+  const longRequests = [];
+  const hugeRequests = [];
+  for (const item of getSortedRequests(store.getState())) {
     if (item.url.endsWith("doc_short_string.css")) {
       shortRequests.push(item);
     }

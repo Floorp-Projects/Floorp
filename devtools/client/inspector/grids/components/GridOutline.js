@@ -68,12 +68,12 @@ class GridOutline extends PureComponent {
   }
 
   componentWillReceiveProps({ grids }) {
-    let selectedGrid = grids.find(grid => grid.highlighted);
+    const selectedGrid = grids.find(grid => grid.highlighted);
 
     // Store the height of the grid container in the component state to prevent overflow
     // issues. We want to store the width of the grid container as well so that the
     // viewbox is only the calculated width of the grid outline.
-    let { width, height } = selectedGrid && selectedGrid.gridFragments.length
+    const { width, height } = selectedGrid && selectedGrid.gridFragments.length
                             ? this.getTotalWidthAndHeight(selectedGrid)
                             : { width: 0, height: 0 };
     let showOutline;
@@ -218,7 +218,7 @@ class GridOutline extends PureComponent {
   renderGrid(grid) {
     // TODO: We are drawing the first fragment since only one is currently being stored.
     // In the future we will need to iterate over all fragments of a grid.
-    let gridFragmentIndex = 0;
+    const gridFragmentIndex = 0;
     const { id, color, gridFragments } = grid;
     const { rows, cols, areas } = gridFragments[gridFragmentIndex];
 
@@ -251,10 +251,10 @@ class GridOutline extends PureComponent {
     }
 
     // Transform the cells as needed to match the grid container's writing mode.
-    let cellGroupStyle = {};
-    let writingModeMatrix = getWritingModeMatrix(this.state, grid);
+    const cellGroupStyle = {};
+    const writingModeMatrix = getWritingModeMatrix(this.state, grid);
     cellGroupStyle.transform = getCSSMatrixTransform(writingModeMatrix);
-    let cellGroup = dom.g(
+    const cellGroup = dom.g(
       {
         id: "grid-cell-group",
         style: cellGroupStyle,
@@ -317,7 +317,7 @@ class GridOutline extends PureComponent {
   }
 
   renderGridOutline(grid) {
-    let { color } = grid;
+    const { color } = grid;
 
     return dom.g(
       {

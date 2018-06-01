@@ -42,9 +42,9 @@ class SwatchFilterTooltip extends SwatchBasedEditorTooltip {
    */
 
   setFilterContent(filter) {
-    let { doc } = this.tooltip;
+    const { doc } = this.tooltip;
 
-    let container = doc.createElementNS(XHTML_NS, "div");
+    const container = doc.createElementNS(XHTML_NS, "div");
     container.id = "filter-container";
 
     this.tooltip.setContent(container, { width: 510, height: 200 });
@@ -76,7 +76,7 @@ class SwatchFilterTooltip extends SwatchBasedEditorTooltip {
     while (this.currentFilterValue.firstChild) {
       this.currentFilterValue.firstChild.remove();
     }
-    let node = this._parser.parseCssProperty("filter", filters, this._options);
+    const node = this._parser.parseCssProperty("filter", filters, this._options);
     this.currentFilterValue.appendChild(node);
 
     this.preview();

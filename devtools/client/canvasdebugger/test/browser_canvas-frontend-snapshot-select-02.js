@@ -7,13 +7,13 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   await reload(target);
 
   SnapshotsListView._onRecordButtonClick();
-  let snapshotTarget = SnapshotsListView.getItemAtIndex(0).target;
+  const snapshotTarget = SnapshotsListView.getItemAtIndex(0).target;
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, snapshotTarget, window);
   EventUtils.sendMouseEvent({ type: "mousedown" }, snapshotTarget, window);
@@ -21,7 +21,7 @@ async function ifTestingSupported() {
 
   ok(true, "clicking in-progress snapshot does not fail");
 
-  let finished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const finished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
   await finished;
 

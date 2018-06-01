@@ -113,7 +113,7 @@ AnimationsTimeline.prototype = {
   setupAnimationTimeline: function() {
     const animationTimelineEl = this.rootWrapperEl.querySelector(".animation-timeline");
 
-    let scrubberContainer = createNode({
+    const scrubberContainer = createNode({
       parent: animationTimelineEl,
       attributes: {"class": "scrubber-wrapper"}
     });
@@ -268,7 +268,7 @@ AnimationsTimeline.prototype = {
    * Destroy all sub-components that have been created and stored on this instance.
    */
   destroyAllSubComponents: function() {
-    for (let actorID in this.componentsMap) {
+    for (const actorID in this.componentsMap) {
       this.destroySubComponents(actorID);
     }
   },
@@ -288,7 +288,7 @@ AnimationsTimeline.prototype = {
   },
 
   unrender: function() {
-    for (let animation of this.animations) {
+    for (const animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
     }
     this.stopAnimatingScrubber();
@@ -315,7 +315,7 @@ AnimationsTimeline.prototype = {
   },
 
   async onAnimationSelected(animation) {
-    let index = this.animations.indexOf(animation);
+    const index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
     }
@@ -412,7 +412,7 @@ AnimationsTimeline.prototype = {
 
     this.scrubberEl.style.left = offset + "%";
 
-    let time = TimeScale.distanceToRelativeTime(offset);
+    const time = TimeScale.distanceToRelativeTime(offset);
 
     this.emit("timeline-data-changed", {
       isPaused: true,
@@ -441,12 +441,12 @@ AnimationsTimeline.prototype = {
     this.animations = animations;
 
     // Destroy components which are no longer existed in given animations.
-    for (let animation of this.animations) {
+    for (const animation of this.animations) {
       if (this.componentsMap[animation.actorID]) {
         this.componentsMap[animation.actorID].needToLeave = true;
       }
     }
-    for (let actorID in this.componentsMap) {
+    for (const actorID in this.componentsMap) {
       const components = this.componentsMap[actorID];
       if (components.needToLeave) {
         delete components.needToLeave;
@@ -462,13 +462,13 @@ AnimationsTimeline.prototype = {
 
     // Loop to set the time scale for all current animations.
     TimeScale.reset();
-    for (let {state} of animations) {
+    for (const {state} of animations) {
       TimeScale.addAnimation(state);
     }
 
     this.drawHeaderAndBackground();
 
-    for (let animation of this.animations) {
+    for (const animation of this.animations) {
       animation.on("changed", this.onAnimationStateChanged);
 
       const tracks = await this.getTracks(animation);
@@ -551,7 +551,7 @@ AnimationsTimeline.prototype = {
                              this.getCompositorStatusClassName(animation.state));
 
     // Left sidebar for the animated node.
-    let animatedNodeEl = createNode({
+    const animatedNodeEl = createNode({
       parent: animationEl,
       attributes: {
         "class": "target"
@@ -559,12 +559,12 @@ AnimationsTimeline.prototype = {
     });
 
     // Draw the animated node target.
-    let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
+    const targetNode = new AnimationTargetNode(this.inspector, {compact: true});
     targetNode.init(animatedNodeEl);
     targetNode.render(animation);
 
     // Right-hand part contains the timeline itself (called time-block here).
-    let timeBlockEl = createNode({
+    const timeBlockEl = createNode({
       parent: animationEl,
       attributes: {
         "class": "time-block track-container"
@@ -572,7 +572,7 @@ AnimationsTimeline.prototype = {
     });
 
     // Draw the animation time block.
-    let timeBlock = new AnimationTimeBlock();
+    const timeBlock = new AnimationTimeBlock();
     timeBlock.init(timeBlockEl);
     timeBlock.render(animation, tracks);
     timeBlock.on("selected", this.onAnimationSelected);
@@ -596,10 +596,10 @@ AnimationsTimeline.prototype = {
   },
 
   startAnimatingScrubber: function(time) {
-    let isOutOfBounds = time < TimeScale.minStartTime ||
+    const isOutOfBounds = time < TimeScale.minStartTime ||
                         time > TimeScale.maxEndTime;
-    let isAllPaused = !this.isAtLeastOneAnimationPlaying();
-    let hasInfinite = this.hasInfiniteAnimations();
+    const isAllPaused = !this.isAtLeastOneAnimationPlaying();
+    const hasInfinite = this.hasInfiniteAnimations();
 
     let x = TimeScale.startTimeToDistance(time);
     if (x > 100 && !hasInfinite) {
@@ -627,7 +627,7 @@ AnimationsTimeline.prototype = {
       time: TimeScale.distanceToRelativeTime(x)
     });
 
-    let now = this.win.performance.now();
+    const now = this.win.performance.now();
     this.rafID = this.win.requestAnimationFrame(() => {
       if (!this.rafID) {
         // In case the scrubber was stopped in the meantime.
@@ -651,19 +651,19 @@ AnimationsTimeline.prototype = {
   },
 
   drawHeaderAndBackground: function() {
-    let width = this.timeHeaderEl.offsetWidth;
-    let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
-    let minTimeInterval = TIME_GRADUATION_MIN_SPACING *
+    const width = this.timeHeaderEl.offsetWidth;
+    const animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
+    const minTimeInterval = TIME_GRADUATION_MIN_SPACING *
                           animationDuration / width;
-    let intervalLength = findOptimalTimeInterval(minTimeInterval);
-    let intervalWidth = intervalLength * width / animationDuration;
+    const intervalLength = findOptimalTimeInterval(minTimeInterval);
+    const intervalWidth = intervalLength * width / animationDuration;
 
     // And the time graduation header.
     this.timeHeaderEl.innerHTML = "";
     this.timeTickEl.innerHTML = "";
 
     for (let i = 0; i <= width / intervalWidth; i++) {
-      let pos = 100 * i * intervalWidth / width;
+      const pos = 100 * i * intervalWidth / width;
 
       // This element is the header of time tick for displaying animation
       // duration time.
@@ -713,7 +713,7 @@ AnimationsTimeline.prototype = {
    * with a list of keyframes
    */
   async getTracks(animation) {
-    let tracks = {};
+    const tracks = {};
 
     /*
      * getFrames is a AnimationPlayorActor method that returns data about the
@@ -739,7 +739,7 @@ AnimationsTimeline.prototype = {
         }
       }
 
-      for (let {name, values} of properties) {
+      for (const {name, values} of properties) {
         if (!tracks[name]) {
           tracks[name] = [];
         }
@@ -761,8 +761,8 @@ AnimationsTimeline.prototype = {
         }
       }
 
-      for (let frame of frames) {
-        for (let name in frame) {
+      for (const frame of frames) {
+        for (const name in frame) {
           if (this.NON_PROPERTIES.includes(name)) {
             continue;
           }

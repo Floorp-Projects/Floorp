@@ -22,7 +22,7 @@ addMessageListener("devtools:test:reload", function({ data }) {
 });
 
 addMessageListener("devtools:test:console", function({ data }) {
-  let { method, args, id } = data;
+  const { method, args, id } = data;
   content.console[method].apply(content.console, args);
   sendAsyncMessage("devtools:test:console:response", { id });
 });
@@ -46,11 +46,11 @@ addMessageListener("devtools:test:console", function({ data }) {
  */
 function promiseXHR(data) {
   return new Promise((resolve, reject) => {
-    let xhr = new content.XMLHttpRequest();
+    const xhr = new content.XMLHttpRequest();
 
-    let method = data.method || "GET";
+    const method = data.method || "GET";
     let url = data.url || content.location.href;
-    let body = data.body || "";
+    const body = data.body || "";
 
     if (data.nocache) {
       url += "?devtools-cachebust=" + Math.random();
@@ -101,11 +101,11 @@ function promiseXHR(data) {
  * }
  */
 addMessageListener("devtools:test:xhr", async function({ data }) {
-  let requests = Array.isArray(data) ? data : [data];
-  let responses = [];
+  const requests = Array.isArray(data) ? data : [data];
+  const responses = [];
 
-  for (let request of requests) {
-    let response = await promiseXHR(request);
+  for (const request of requests) {
+    const response = await promiseXHR(request);
     responses.push(response);
   }
 
@@ -113,8 +113,8 @@ addMessageListener("devtools:test:xhr", async function({ data }) {
 });
 
 addMessageListener("devtools:test:profiler", function({ data }) {
-  let { method, args, id } = data;
-  let result = Services.profiler[method](...args);
+  const { method, args, id } = data;
+  const result = Services.profiler[method](...args);
   sendAsyncMessage("devtools:test:profiler:response", {
     data: result,
     id: id
@@ -142,8 +142,8 @@ addEventListener("load", function() {
  * - {String} propertyValue The value for the property.
  */
 addMessageListener("devtools:test:setStyle", function(msg) {
-  let {selector, propertyName, propertyValue} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, propertyName, propertyValue} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
@@ -162,8 +162,8 @@ addMessageListener("devtools:test:setStyle", function(msg) {
  * - {String} attributeValue The value for the attribute.
  */
 addMessageListener("devtools:test:setAttribute", function(msg) {
-  let {selector, attributeName, attributeValue} = msg.data;
-  let node = superQuerySelector(selector);
+  const {selector, attributeName, attributeValue} = msg.data;
+  const node = superQuerySelector(selector);
   if (!node) {
     return;
   }
@@ -184,12 +184,12 @@ addMessageListener("devtools:test:setAttribute", function(msg) {
  * @return {DOMNode} The node, or null if not found.
  */
 function superQuerySelector(superSelector, root = content.document) {
-  let frameIndex = superSelector.indexOf("||");
+  const frameIndex = superSelector.indexOf("||");
   if (frameIndex === -1) {
     return root.querySelector(superSelector);
   }
-  let rootSelector = superSelector.substring(0, frameIndex).trim();
-  let childSelector = superSelector.substring(frameIndex + 2).trim();
+  const rootSelector = superSelector.substring(0, frameIndex).trim();
+  const childSelector = superSelector.substring(frameIndex + 2).trim();
   root = root.querySelector(rootSelector);
   if (!root || !root.contentWindow) {
     return null;

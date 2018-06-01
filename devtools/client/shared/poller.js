@@ -94,7 +94,7 @@ Poller.prototype._preparePoll = function pollerPrepare() {
 };
 
 Poller.prototype._poll = function pollerPoll() {
-  let response = this._fn();
+  const response = this._fn();
   if (response && typeof response.then === "function") {
     // Store the most recent in-flight polling
     // call so we can clean it up when disabling

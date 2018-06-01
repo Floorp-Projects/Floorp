@@ -12,17 +12,17 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
+  const { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
   await rendered;
 

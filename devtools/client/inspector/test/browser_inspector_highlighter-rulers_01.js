@@ -21,10 +21,10 @@ const RULERS_MAX_Y_AXIS = 15000;
 const RULERS_TEXT_STEP = 100;
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  let front = inspector.inspector;
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const front = inspector.inspector;
 
-  let highlighter = await front.getHighlighterByType("RulersHighlighter");
+  const highlighter = await front.getHighlighterByType("RulersHighlighter");
 
   await isHiddenByDefault(highlighter, inspector, testActor);
   await hasRightLabelsContent(highlighter, inspector, testActor);
@@ -43,7 +43,7 @@ async function isHiddenByDefault(highlighterFront, inspector, testActor) {
   info("Checking the highlighter is displayed when asked");
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
-  let body = await getNodeFront("body", inspector);
+  const body = await getNodeFront("body", inspector);
   await highlighterFront.show(body);
 
   hidden = await testActor.getHighlighterNodeAttribute(
@@ -55,9 +55,9 @@ async function isHiddenByDefault(highlighterFront, inspector, testActor) {
 async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   info("Checking the rulers have the proper text, based on rulers' size");
 
-  let contentX = await testActor.getHighlighterNodeTextContent(
+  const contentX = await testActor.getHighlighterNodeTextContent(
     `${ID}x-axis-text`, highlighterFront);
-  let contentY = await testActor.getHighlighterNodeTextContent(
+  const contentY = await testActor.getHighlighterNodeTextContent(
     `${ID}y-axis-text`, highlighterFront);
 
   let expectedX = "";

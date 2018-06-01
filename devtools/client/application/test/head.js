@@ -46,12 +46,12 @@ function navigate(target, url, waitForTargetEvent = "navigate") {
 }
 
 async function openNewTabAndApplicationPanel(url) {
-  let tab = await addTab(url);
-  let target = TargetFactory.forTab(tab);
+  const tab = await addTab(url);
+  const target = TargetFactory.forTab(tab);
   await target.makeRemote();
 
-  let toolbox = await gDevTools.showToolbox(target, "application");
-  let panel = toolbox.getCurrentPanel();
+  const toolbox = await gDevTools.showToolbox(target, "application");
+  const panel = toolbox.getCurrentPanel();
   return { panel, tab, target, toolbox };
 }
 
@@ -66,7 +66,7 @@ async function unregisterAllWorkers(client) {
   });
 
   info("Unregister all service workers");
-  for (let worker of workers.service) {
+  for (const worker of workers.service) {
     await client.request({
       to: worker.registrationActor,
       type: "unregister"

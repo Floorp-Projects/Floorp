@@ -36,7 +36,7 @@ function getString(name) {
     if (arguments.length == 1) {
       return gStringBundle.GetStringFromName(name);
     }
-    let rest = Array.prototype.slice.call(arguments, 1);
+    const rest = Array.prototype.slice.call(arguments, 1);
     return gStringBundle.formatStringFromName(name, rest, rest.length);
   } catch (ex) {
     console.error(ex);
@@ -55,7 +55,7 @@ function getString(name) {
  */
 function assert(expression, message) {
   if (!expression) {
-    let msg = message ? "ASSERTION FAILURE:" + message : "ASSERTION FAILURE";
+    const msg = message ? "ASSERTION FAILURE:" + message : "ASSERTION FAILURE";
     log(msg);
     throw new Error(msg);
   }
@@ -76,7 +76,7 @@ function assert(expression, message) {
  *         matching selector.
  */
 function text(root, selector, textContent) {
-  let element = root.querySelector(selector);
+  const element = root.querySelector(selector);
   if (!element) {
     return null;
   }
@@ -96,7 +96,7 @@ function text(root, selector, textContent) {
  * @param function callback(aKey, aValue)
  */
 function forEach(object, callback) {
-  for (let key in object) {
+  for (const key in object) {
     if (object.hasOwnProperty(key)) {
       callback(key, object[key]);
     }
@@ -151,7 +151,7 @@ function wire(root, selectorOrElement, descriptor) {
   }
 
   for (let i = 0; i < matches.length; i++) {
-    let element = matches[i];
+    const element = matches[i];
     forEach(descriptor.events, function(name, handler) {
       element.addEventListener(name, handler);
     });
@@ -180,8 +180,8 @@ function showFilePicker(path, toSave, parentWindow, callback,
   if (typeof path == "string") {
     try {
       if (Services.io.extractScheme(path) == "file") {
-        let uri = Services.io.newURI(path);
-        let file = uri.QueryInterface(Ci.nsIFileURL).file;
+        const uri = Services.io.newURI(path);
+        const file = uri.QueryInterface(Ci.nsIFileURL).file;
         callback(file);
         return;
       }
@@ -190,7 +190,7 @@ function showFilePicker(path, toSave, parentWindow, callback,
       return;
     }
     try {
-      let file =
+      const file =
           Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(path);
       callback(file);
@@ -206,10 +206,10 @@ function showFilePicker(path, toSave, parentWindow, callback,
     return;
   }
 
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let mode = toSave ? fp.modeSave : fp.modeOpen;
-  let key = toSave ? "saveStyleSheet" : "importStyleSheet";
-  let fpCallback = function(result) {
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  const mode = toSave ? fp.modeSave : fp.modeOpen;
+  const key = toSave ? "saveStyleSheet" : "importStyleSheet";
+  const fpCallback = function(result) {
     if (result == Ci.nsIFilePicker.returnCancel) {
       callback(null);
     } else {

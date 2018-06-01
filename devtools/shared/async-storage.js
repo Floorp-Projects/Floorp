@@ -49,11 +49,11 @@ var db = null;
 
 function withStore(type, onsuccess, onerror) {
   if (db) {
-    let transaction = db.transaction(STORENAME, type);
-    let store = transaction.objectStore(STORENAME);
+    const transaction = db.transaction(STORENAME, type);
+    const store = transaction.objectStore(STORENAME);
     onsuccess(store);
   } else {
-    let openreq = indexedDB.open(DBNAME, DBVERSION);
+    const openreq = indexedDB.open(DBNAME, DBVERSION);
     openreq.onerror = function withStoreOnError() {
       onerror();
     };
@@ -63,8 +63,8 @@ function withStore(type, onsuccess, onerror) {
     };
     openreq.onsuccess = function withStoreOnSuccess() {
       db = openreq.result;
-      let transaction = db.transaction(STORENAME, type);
-      let store = transaction.objectStore(STORENAME);
+      const transaction = db.transaction(STORENAME, type);
+      const store = transaction.objectStore(STORENAME);
       onsuccess(store);
     };
   }
@@ -93,7 +93,7 @@ function setItem(itemKey, value) {
   return new Promise((resolve, reject) => {
     withStore("readwrite", (store) => {
       store.transaction.oncomplete = resolve;
-      let req = store.put(value, itemKey);
+      const req = store.put(value, itemKey);
       req.onerror = function setItemOnError() {
         reject("Error in asyncStorage.setItem(): ", req.error.name);
       };
@@ -105,7 +105,7 @@ function removeItem(itemKey) {
   return new Promise((resolve, reject) => {
     withStore("readwrite", (store) => {
       store.transaction.oncomplete = resolve;
-      let req = store.delete(itemKey);
+      const req = store.delete(itemKey);
       req.onerror = function removeItemOnError() {
         reject("Error in asyncStorage.removeItem(): ", req.error.name);
       };
@@ -117,7 +117,7 @@ function clear() {
   return new Promise((resolve, reject) => {
     withStore("readwrite", (store) => {
       store.transaction.oncomplete = resolve;
-      let req = store.clear();
+      const req = store.clear();
       req.onerror = function clearOnError() {
         reject("Error in asyncStorage.clear(): ", req.error.name);
       };
@@ -150,13 +150,13 @@ function key(n) {
     let req;
     withStore("readonly", (store) => {
       store.transaction.oncomplete = function onComplete() {
-        let cursor = req.result;
+        const cursor = req.result;
         resolve(cursor ? cursor.key : null);
       };
       let advanced = false;
       req = store.openCursor();
       req.onsuccess = function keyOnSuccess() {
-        let cursor = req.result;
+        const cursor = req.result;
         if (!cursor) {
           // this means there weren"t enough keys
           return;

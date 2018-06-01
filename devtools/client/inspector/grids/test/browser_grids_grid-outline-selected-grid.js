@@ -21,27 +21,27 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = await openLayoutView();
-  let { document: doc } = gridInspector;
-  let { highlighters, store } = inspector;
+  const { inspector, gridInspector } = await openLayoutView();
+  const { document: doc } = gridInspector;
+  const { highlighters, store } = inspector;
 
-  let gridList = doc.getElementById("grid-list");
-  let checkbox = gridList.children[0].querySelector("input");
+  const gridList = doc.getElementById("grid-list");
+  const checkbox = gridList.children[0].querySelector("input");
 
   info("Checking the initial state of the Grid Inspector.");
   ok(!doc.getElementById("grid-outline-container"),
     "There should be no grid outline shown.");
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onCheckboxChange = waitUntilState(store, state =>
     state.grids.length == 1 &&
     state.grids[0].highlighted);
-  let onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 3);
+  const onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 3);
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
-  let elements = await onGridOutlineRendered;
+  const elements = await onGridOutlineRendered;
 
   info("Checking the grid outline is shown.");
   is(elements.length, 3, "Grid outline is shown.");

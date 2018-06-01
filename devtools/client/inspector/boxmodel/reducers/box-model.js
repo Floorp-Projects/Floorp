@@ -16,7 +16,7 @@ const INITIAL_BOX_MODEL = {
   offsetParent: null
 };
 
-let reducers = {
+const reducers = {
 
   [UPDATE_GEOMETRY_EDITOR_ENABLED](boxModel, { enabled }) {
     return Object.assign({}, boxModel, {
@@ -39,7 +39,7 @@ let reducers = {
 };
 
 module.exports = function(boxModel = INITIAL_BOX_MODEL, action) {
-  let reducer = reducers[action.type];
+  const reducer = reducers[action.type];
   if (!reducer) {
     return boxModel;
   }

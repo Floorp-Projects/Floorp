@@ -12,9 +12,9 @@ add_task(async function() {
 
   await addJsonViewTab(TEST_JSON_URL);
 
-  let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  const count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(count == 0, "There must be no row");
 
-  let text = await getElementText(".jsonPanelBox .jsonParseError");
+  const text = await getElementText(".jsonPanelBox .jsonParseError");
   ok(text, "There must be an error description");
 });

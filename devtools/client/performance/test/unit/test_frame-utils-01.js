@@ -44,17 +44,17 @@ const CHROME_LOCATIONS = [
 
 add_task(function() {
   const { computeIsContentAndCategory, parseLocation } = require("devtools/client/performance/modules/logic/frame-utils");
-  let isContent = (frame) => {
+  const isContent = (frame) => {
     computeIsContentAndCategory(frame);
     return frame.isContent;
   };
 
-  for (let frame of CONTENT_LOCATIONS) {
+  for (const frame of CONTENT_LOCATIONS) {
     ok(isContent.apply(null, frameify(frame)),
        `${frame[0]} should be considered a content frame.`);
   }
 
-  for (let frame of CHROME_LOCATIONS) {
+  for (const frame of CHROME_LOCATIONS) {
     ok(!isContent.apply(null, frameify(frame)),
        `${frame[0]} should not be considered a content frame.`);
   }
@@ -83,7 +83,7 @@ add_task(function() {
   /* eslint-enable max-len */
 
   for (let i = 0; i < PARSED_CONTENT.length; i++) {
-    let parsed = parseLocation.apply(null, CONTENT_LOCATIONS[i]);
+    const parsed = parseLocation.apply(null, CONTENT_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
       equal(parsed[FIELDS[j]], PARSED_CONTENT[i][j],
             `${CONTENT_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
@@ -101,7 +101,7 @@ add_task(function() {
   ];
 
   for (let i = 0; i < PARSED_CHROME.length; i++) {
-    let parsed = parseLocation.apply(null, CHROME_LOCATIONS[i]);
+    const parsed = parseLocation.apply(null, CHROME_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
       equal(parsed[FIELDS[j]], PARSED_CHROME[i][j],
             `${CHROME_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);

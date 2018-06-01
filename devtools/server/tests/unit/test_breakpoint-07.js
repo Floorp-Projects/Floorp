@@ -37,8 +37,8 @@ function run_test_with_server(server, callback) {
 
 function test_second_child_skip_breakpoint() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let source = gThreadClient.source(packet.frame.where.source);
-    let location = { line: gDebuggee.line0 + 6 };
+    const source = gThreadClient.source(packet.frame.where.source);
+    const location = { line: gDebuggee.line0 + 6 };
 
     source.setBreakpoint(location, function(response, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.

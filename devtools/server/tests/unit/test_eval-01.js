@@ -28,7 +28,7 @@ function run_test() {
 
 function test_simple_eval() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let arg1Actor = packet.frame.arguments[0].actor;
+    const arg1Actor = packet.frame.arguments[0].actor;
     gThreadClient.eval(null, "({ obj: true })", function(response) {
       Assert.equal(response.type, "resumed");
       // Expect a pause notification immediately.

@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode(".relative1", inspector);
   await testAddTextInFilter(inspector, view);
 });
@@ -24,8 +24,8 @@ async function testAddTextInFilter(inspector, view) {
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let source = rule.textProps[0].editor.ruleEditor.source;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const source = rule.textProps[0].editor.ruleEditor.source;
 
   is(rule.selectorText, ".relative1", "Second rule is .relative1.");
   ok(source.classList.contains("ruleview-highlight"),

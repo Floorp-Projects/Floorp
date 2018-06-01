@@ -18,7 +18,7 @@ function CollapseButton(props) {
     title = messageToggleDetails,
   } = props;
 
-  let classes = ["arrow", "collapse-button"];
+  const classes = ["arrow", "collapse-button"];
 
   if (open) {
     classes.push("expanded");

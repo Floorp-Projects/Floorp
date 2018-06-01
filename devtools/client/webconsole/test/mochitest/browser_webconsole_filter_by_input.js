@@ -97,7 +97,7 @@ add_task(async function() {
   }
 
   // Every season name in English is outputted once.
-  for (let curSeason of SEASONS) {
+  for (const curSeason of SEASONS) {
     setFilterInput(hud, curSeason.english);
     visibleLogs = getVisibleLogs(hud);
     is(visibleLogs.length, 1,
@@ -116,7 +116,7 @@ add_task(async function() {
   }
 
   // Every season name in Chinese is outputted once.
-  for (let curSeason of SEASONS) {
+  for (const curSeason of SEASONS) {
     setFilterInput(hud, curSeason.chinese);
     visibleLogs = getVisibleLogs(hud);
     is(visibleLogs.length, 1,
@@ -183,7 +183,7 @@ function createServerAndGetTestUrl() {
     function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       let content = "";
-      for (let curSeason of SEASONS) {
+      for (const curSeason of SEASONS) {
         content += `console.log("${curSeason.english}");`;
       }
       response.write(content);
@@ -193,7 +193,7 @@ function createServerAndGetTestUrl() {
     function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       let content = "";
-      for (let curSeason of SEASONS) {
+      for (const curSeason of SEASONS) {
         content += `console.log("${curSeason.escapedChinese}");`;
       }
       response.write(content);
@@ -216,7 +216,7 @@ function clearFilterInput(hud) {
 }
 
 function getVisibleLogs(hud) {
-  let outputNode = hud.outputNode;
+  const outputNode = hud.outputNode;
   return outputNode.querySelectorAll(".message");
 }
 

@@ -38,16 +38,16 @@ class Button extends Component {
   }
 
   render() {
-    let className = [
+    const className = [
       ...this.props.className.split(" "),
       "devtools-button"
     ].join(" ");
-    let props = Object.assign({}, this.props, {
+    const props = Object.assign({}, this.props, {
       className,
       "aria-busy": this.props.busy
     });
 
-    let classList = ["btn-content"];
+    const classList = ["btn-content"];
     if (this.props.busy) {
       classList.push("devtools-throbber");
     }

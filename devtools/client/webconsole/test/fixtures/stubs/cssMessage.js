@@ -11,8 +11,8 @@
 const { ConsoleMessage } =
   require("devtools/client/webconsole/types");
 
-let stubPreparedMessages = new Map();
-let stubPackets = new Map();
+const stubPreparedMessages = new Map();
+const stubPackets = new Map();
 stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,

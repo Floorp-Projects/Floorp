@@ -6,17 +6,17 @@
  */
 
 add_task(async function() {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
-  let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS } = panelWin;
+  const { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+  const { panelWin } = panel;
+  const { gFront, $, $$, EVENTS } = panelWin;
 
-  let events = Promise.all([
+  const events = Promise.all([
     getN(gFront, "create-node", 3),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
-  let [dest, osc, gain] = actors;
+  const [actors] = await events;
+  const [dest, osc, gain] = actors;
 
   await clickGraphNode(panelWin, gain.actorID);
   ok(findGraphNode(panelWin, gain.actorID).classList.contains("selected"),

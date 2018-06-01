@@ -15,11 +15,11 @@ const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/c
 const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
-  let { getState, dispatch } = store;
+  const store = Store();
+  const { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
 
@@ -31,10 +31,10 @@ add_task(async function() {
 
   ok(!getState().snapshots[0].census.display.inverted, "Snapshot is not inverted");
 
-  let census = getState().snapshots[0].census;
+  const census = getState().snapshots[0].census;
   let result = aggregate(census.report);
-  let totalBytes = result.bytes;
-  let totalCount = result.count;
+  const totalBytes = result.bytes;
+  const totalCount = result.count;
 
   ok(totalBytes > 0, "counted up bytes in the census");
   ok(totalCount > 0, "counted up count in the census");
@@ -60,8 +60,8 @@ add_task(async function() {
 function aggregate(report) {
   let totalBytes = report.bytes;
   let totalCount = report.count;
-  for (let child of (report.children || [])) {
-    let { bytes, count } = aggregate(child);
+  for (const child of (report.children || [])) {
+    const { bytes, count } = aggregate(child);
     totalBytes += bytes;
     totalCount += count;
   }

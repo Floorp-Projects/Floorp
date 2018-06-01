@@ -18,7 +18,7 @@ add_task(async function() {
 
   info("do the delete");
   await selectTreeItem(["indexedDB", "http://test1.example.org"]);
-  let front = gUI.getCurrentFront();
+  const front = gUI.getCurrentFront();
   let result = await front.removeDatabase("http://test1.example.org", "idb (default)");
 
   ok(result.blocked, "removeDatabase attempt is blocked");
@@ -28,11 +28,11 @@ add_task(async function() {
     [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
-  let eventWait = gUI.once("store-objects-edit");
+  const eventWait = gUI.once("store-objects-edit");
 
   info("telling content to close the db");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    let win = content.wrappedJSObject;
+    const win = content.wrappedJSObject;
     await win.closeDb();
   });
 

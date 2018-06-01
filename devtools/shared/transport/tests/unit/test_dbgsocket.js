@@ -18,12 +18,12 @@ function run_test() {
 
 async function test_socket_conn() {
   Assert.equal(DebuggerServer.listeningSockets, 0);
-  let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
-  let authenticator = new AuthenticatorType.Server();
+  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
-  let listener = DebuggerServer.createListener();
+  const listener = DebuggerServer.createListener();
   Assert.ok(listener);
   listener.portOrPath = -1;
   listener.authenticator = authenticator;
@@ -39,18 +39,18 @@ async function test_socket_conn() {
   Assert.equal(DebuggerServer.listeningSockets, 2);
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
-  let unicodeString = "(╯°□°）╯︵ ┻━┻";
-  let transport = await DebuggerClient.socketConnect({
+  const unicodeString = "(╯°□°）╯︵ ┻━┻";
+  const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: gPort
   });
 
   // Assert that connection settings are available on transport object
-  let settings = transport.connectionSettings;
+  const settings = transport.connectionSettings;
   Assert.equal(settings.host, "127.0.0.1");
   Assert.equal(settings.port, gPort);
 
-  let closedDeferred = defer();
+  const closedDeferred = defer();
   transport.hooks = {
     onPacket: function(packet) {
       this.onPacket = function({unicode}) {
@@ -105,7 +105,7 @@ async function test_socket_shutdown() {
 }
 
 function test_pipe_conn() {
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   transport.hooks = {
     onPacket: function(packet) {
       Assert.equal(packet.from, "root");

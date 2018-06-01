@@ -7,10 +7,10 @@
  */
 
 async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
+  const { target, front } = await initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
   loadFrameScriptUtils();
 
-  let navigated = once(target, "navigate");
+  const navigated = once(target, "navigate");
 
   await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
@@ -18,11 +18,11 @@ async function ifTestingSupported() {
   await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
-  let functionCalls = animationOverview.calls;
+  const snapshotActor = await front.recordAnimationFrame();
+  const animationOverview = await snapshotActor.getOverview();
+  const functionCalls = animationOverview.calls;
 
-  let firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
+  const firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
   is(firstScreenshot.index, -1,
     "The first screenshot didn't encounter any draw call.");
   is(firstScreenshot.scaling, 0.25,
@@ -58,7 +58,7 @@ async function ifTestingSupported() {
     512,
     "The debuggee's gl context viewport's left coord. wasn't changed.");
 
-  let secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
+  const secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
   is(secondScreenshot.index, 1,
     "The second screenshot has the correct index.");
   is(secondScreenshot.width, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,

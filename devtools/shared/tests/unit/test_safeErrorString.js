@@ -15,7 +15,7 @@ function run_test() {
 }
 
 function test_with_error() {
-  let s = DevToolsUtils.safeErrorString(new Error("foo bar"));
+  const s = DevToolsUtils.safeErrorString(new Error("foo bar"));
   // Got the message.
   Assert.ok(s.includes("foo bar"));
   // Got the stack.
@@ -27,21 +27,21 @@ function test_with_error() {
 }
 
 function test_with_tricky_error() {
-  let e = new Error("batman");
+  const e = new Error("batman");
   e.stack = { toString: Object.create(null) };
-  let s = DevToolsUtils.safeErrorString(e);
+  const s = DevToolsUtils.safeErrorString(e);
   // Still got the message, despite a bad stack property.
   Assert.ok(s.includes("batman"));
 }
 
 function test_with_string() {
-  let s = DevToolsUtils.safeErrorString("not really an error");
+  const s = DevToolsUtils.safeErrorString("not really an error");
   // Still get the message.
   Assert.ok(s.includes("not really an error"));
 }
 
 function test_with_thrower() {
-  let s = DevToolsUtils.safeErrorString({
+  const s = DevToolsUtils.safeErrorString({
     toString: () => {
       throw new Error("Muahahaha");
     }
@@ -51,7 +51,7 @@ function test_with_thrower() {
 }
 
 function test_with_psychotic() {
-  let s = DevToolsUtils.safeErrorString({
+  const s = DevToolsUtils.safeErrorString({
     toString: () => Object.create(null)
   });
   // Still get a string out, and no exceptions thrown

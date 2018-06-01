@@ -37,7 +37,7 @@
         canvas = document.querySelector("canvas");
         gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
 
-        let shaderProgram = gl.createProgram();
+        const shaderProgram = gl.createProgram();
         let vertexShader, fragmentShader;
 
         // Compile and attach the shaders in a random order. The test will
@@ -62,8 +62,8 @@
       };
 
       function getShader(gl, id) {
-        let script = document.getElementById(id);
-        let source = script.textContent;
+        const script = document.getElementById(id);
+        const source = script.textContent;
         let shader;
 
         if (script.type == "x-shader/x-fragment") {

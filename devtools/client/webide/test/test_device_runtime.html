@@ -22,17 +22,17 @@
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = await openWebIDE();
+          const win = await openWebIDE();
 
-          let detailsIframe = win.document.querySelector("#deck-panel-runtimedetails");
+          const detailsIframe = win.document.querySelector("#deck-panel-runtimedetails");
 
           await connectToLocalRuntime(win);
 
-          let details = win.document.querySelector("#cmd_showRuntimeDetails");
+          const details = win.document.querySelector("#cmd_showRuntimeDetails");
 
           ok(!details.hasAttribute("disabled"), "info cmd enabled");
 
-          let deck = win.document.querySelector("#deck");
+          const deck = win.document.querySelector("#deck");
 
           win.Cmds.showRuntimeDetails();
           is(deck.selectedPanel, detailsIframe, "info iframe selected");
@@ -46,12 +46,12 @@
           // device info and permissions content is checked in other tests
           // We just test one value to make sure we get something
 
-          let doc = detailsIframe.contentWindow.document;
-          let trs = doc.querySelectorAll("tr");
+          const doc = detailsIframe.contentWindow.document;
+          const trs = doc.querySelectorAll("tr");
           let found = false;
 
-          for (let tr of trs) {
-            let [name, val] = tr.querySelectorAll("td");
+          for (const tr of trs) {
+            const [name, val] = tr.querySelectorAll("td");
             if (name.textContent == "appid") {
               found = true;
               is(val.textContent, Services.appinfo.ID, "appid has the right value");

@@ -45,7 +45,7 @@ var global = this;
       return;
     }
     addMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
     docShell.deviceSizeIsPageSize = true;
@@ -64,7 +64,7 @@ var global = this;
   }
 
   function onResize() {
-    let { width, height } = content.screen;
+    const { width, height } = content.screen;
     debug(`EMIT RESIZE: ${width} x ${height}`);
     sendAsyncMessage("ResponsiveMode:OnContentResize", {
       width,
@@ -104,7 +104,7 @@ var global = this;
     }
     active = false;
     removeMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(WebProgressListener);
     docShell.deviceSizeIsPageSize = gDeviceSizeWasPageSize;
@@ -118,16 +118,16 @@ var global = this;
       return;
     }
 
-    let allDocShells = [docShell];
+    const allDocShells = [docShell];
 
     for (let i = 0; i < docShell.childCount; i++) {
-      let child = docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell);
+      const child = docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell);
       allDocShells.push(child);
     }
 
-    for (let d of allDocShells) {
-      let win = d.contentViewer.DOMDocument.defaultView;
-      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+    for (const d of allDocShells) {
+      const win = d.contentViewer.DOMDocument.defaultView;
+      const winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.loadSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
@@ -138,13 +138,13 @@ var global = this;
   }
 
   function restoreScrollbars() {
-    let allDocShells = [docShell];
+    const allDocShells = [docShell];
     for (let i = 0; i < docShell.childCount; i++) {
       allDocShells.push(docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell));
     }
-    for (let d of allDocShells) {
-      let win = d.contentViewer.DOMDocument.defaultView;
-      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+    for (const d of allDocShells) {
+      const win = d.contentViewer.DOMDocument.defaultView;
+      const winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.removeSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
@@ -155,7 +155,7 @@ var global = this;
 
   function flushStyle() {
     // Force presContext destruction
-    let isSticky = docShell.contentViewer.sticky;
+    const isSticky = docShell.contentViewer.sticky;
     docShell.contentViewer.sticky = false;
     docShell.contentViewer.hide();
     docShell.contentViewer.show();
@@ -163,20 +163,20 @@ var global = this;
   }
 
   function screenshot() {
-    let canvas = content.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    let ratio = content.devicePixelRatio;
-    let width = content.innerWidth * ratio;
-    let height = content.innerHeight * ratio;
+    const canvas = content.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    const ratio = content.devicePixelRatio;
+    const width = content.innerWidth * ratio;
+    const height = content.innerHeight * ratio;
     canvas.mozOpaque = true;
     canvas.width = width;
     canvas.height = height;
-    let ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
     ctx.scale(ratio, ratio);
     ctx.drawWindow(content, content.scrollX, content.scrollY, width, height, "#fff");
     sendAsyncMessage("ResponsiveMode:RequestScreenshot:Done", canvas.toDataURL());
   }
 
-  let WebProgressListener = {
+  const WebProgressListener = {
     onLocationChange(webProgress, request, URI, flags) {
       if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
         return;

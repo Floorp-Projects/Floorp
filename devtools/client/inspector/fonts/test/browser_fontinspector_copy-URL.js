@@ -10,12 +10,12 @@
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(async function() {
-  let { view } = await openFontInspectorForURL(TEST_URI);
-  let viewDoc = view.document;
+  const { view } = await openFontInspectorForURL(TEST_URI);
+  const viewDoc = view.document;
 
-  let fontEl = getUsedFontsEls(viewDoc)[0];
-  let linkEl = fontEl.querySelector(".font-origin");
-  let iconEl = linkEl.querySelector(".copy-icon");
+  const fontEl = getUsedFontsEls(viewDoc)[0];
+  const linkEl = fontEl.querySelector(".font-origin");
+  const iconEl = linkEl.querySelector(".copy-icon");
 
   ok(iconEl, "The icon is displayed");
   is(iconEl.getAttribute("title"), "Copy URL", "This is the right icon");

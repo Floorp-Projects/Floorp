@@ -17,12 +17,12 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let {
+  const {
     EVENTS,
     $,
     DetailsView,
@@ -31,8 +31,8 @@ add_task(async function() {
     MemoryFlameGraphView
   } = panel.panelWin;
 
-  let flameBtn = $("toolbarbutton[data-view='memory-flamegraph']");
-  let callBtn = $("toolbarbutton[data-view='memory-calltree']");
+  const flameBtn = $("toolbarbutton[data-view='memory-flamegraph']");
+  const callBtn = $("toolbarbutton[data-view='memory-calltree']");
 
   // Disable allocations to prevent recording them.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, false);

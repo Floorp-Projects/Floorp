@@ -10,12 +10,12 @@
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
 add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
   info("Start using the picker by hovering over nodes");
-  let onHover = toolbox.once("picker-node-hovered");
+  const onHover = toolbox.once("picker-node-hovered");
   testActor.synthesizeMouse({
     options: {type: "mousemove"},
     center: true,
@@ -24,7 +24,7 @@ add_task(async function() {
   await onHover;
 
   info("Press escape and wait for the picker to stop");
-  let onPickerStopped = toolbox.once("picker-stopped");
+  const onPickerStopped = toolbox.once("picker-stopped");
   testActor.synthesizeKey({
     key: "VK_ESCAPE",
     options: {}
@@ -32,8 +32,8 @@ add_task(async function() {
   await onPickerStopped;
 
   info("Press escape again and wait for the split console to open");
-  let onSplitConsole = toolbox.once("split-console");
-  let onConsoleReady = toolbox.once("webconsole-ready");
+  const onSplitConsole = toolbox.once("split-console");
+  const onConsoleReady = toolbox.once("webconsole-ready");
   // The escape key is synthesized in the main process, which is where the focus
   // should be after the picker was stopped.
   EventUtils.synthesizeKey("VK_ESCAPE", {}, inspector.panelWin);

@@ -30,7 +30,7 @@ function messagesAdd(packets, idGenerator = null) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
   }
-  let messages = packets.map(packet => prepareMessage(packet, idGenerator));
+  const messages = packets.map(packet => prepareMessage(packet, idGenerator));
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].type === MESSAGE_TYPE.CLEAR) {
       return batchActions([
@@ -91,7 +91,7 @@ function messageTableDataGet(id, client, dataType) {
     fetchObjectActorData(enumResponse => {
       const {iterator} = enumResponse;
       iterator.slice(0, iterator.count, sliceResponse => {
-        let {ownProperties} = sliceResponse;
+        const {ownProperties} = sliceResponse;
         dispatch(messageTableDataReceive(id, ownProperties));
       });
     });
@@ -111,7 +111,7 @@ function networkMessageUpdate(packet, idGenerator = null, response) {
     idGenerator = defaultIdGenerator;
   }
 
-  let message = prepareMessage(packet, idGenerator);
+  const message = prepareMessage(packet, idGenerator);
 
   return {
     type: NETWORK_MESSAGE_UPDATE,

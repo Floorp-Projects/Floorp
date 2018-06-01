@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
 
   await selectNode("#testElement", inspector);
   await testRuleView(view, inspector.selection.nodeFront);
@@ -26,8 +26,8 @@ add_task(async function() {
 async function testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
-  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
-  let panel = tooltip.panel;
+  const tooltip = ruleView.tooltips.getTooltip("previewTooltip");
+  const panel = tooltip.panel;
 
   // Check that the rule view has a tooltip and that a XUL panel has
   // been created
@@ -35,16 +35,16 @@ async function testRuleView(ruleView, nodeFront) {
   ok(panel, "XUL panel exists");
 
   // Get the computed font family property inside the font rule view
-  let propertyList = ruleView.element
+  const propertyList = ruleView.element
     .querySelectorAll(".ruleview-propertylist");
-  let fontExpander = propertyList[1].querySelectorAll(".ruleview-expander")[0];
+  const fontExpander = propertyList[1].querySelectorAll(".ruleview-expander")[0];
   fontExpander.click();
 
-  let rule = getRuleViewRule(ruleView, "#testElement");
-  let computedlist = rule.querySelectorAll(".ruleview-computed");
+  const rule = getRuleViewRule(ruleView, "#testElement");
+  const computedlist = rule.querySelectorAll(".ruleview-computed");
   let valueSpan;
-  for (let computed of computedlist) {
-    let propertyName = computed.querySelector(".ruleview-propertyname");
+  for (const computed of computedlist) {
+    const propertyName = computed.querySelector(".ruleview-propertyname");
     if (propertyName.textContent == "font-family") {
       valueSpan = computed.querySelector(".ruleview-propertyvalue");
       break;
@@ -52,14 +52,14 @@ async function testRuleView(ruleView, nodeFront) {
   }
 
   // And verify that the tooltip gets shown on this property
-  let previewTooltip = await assertShowPreviewTooltip(ruleView, valueSpan);
+  const previewTooltip = await assertShowPreviewTooltip(ruleView, valueSpan);
 
-  let images = panel.getElementsByTagName("img");
+  const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src")
     .startsWith("data:"), "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 

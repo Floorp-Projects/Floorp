@@ -12,14 +12,14 @@ const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
-  let { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
+  const { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
-  let container = document.createElement("vbox");
+  const container = document.createElement("vbox");
   await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 
-  let treeRoot = new MyCustomTreeItem(myDataSrc, { parent: null });
+  const treeRoot = new MyCustomTreeItem(myDataSrc, { parent: null });
   treeRoot.attachTo(container);
 
   ok(!treeRoot.expanded,
@@ -59,8 +59,8 @@ add_task(async function() {
   is(document.commandDispatcher.focusedElement, treeRoot.target,
     "The root node is now focused.");
 
-  let fooItem = treeRoot.getChild(0);
-  let barItem = treeRoot.getChild(1);
+  const fooItem = treeRoot.getChild(0);
+  const barItem = treeRoot.getChild(1);
 
   is(container.childNodes.length, 3,
     "The container node should now have three children available.");
@@ -124,7 +124,7 @@ add_task(async function() {
 
   // A child item got expanded, test the descendants...
 
-  let bazItem = barItem.getChild(0);
+  const bazItem = barItem.getChild(0);
 
   is(container.childNodes.length, 4,
     "The container node should now have four children available.");

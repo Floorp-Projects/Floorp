@@ -10,13 +10,13 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 
 add_task(async function() {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
-  let editor = await createNew(ui, panel.panelWindow);
+  const editor = await createNew(ui, panel.panelWindow);
   await testInitialState(editor);
 
-  let originalHref = editor.styleSheet.href;
-  let waitForPropertyChange = onPropertyChange(editor);
+  const originalHref = editor.styleSheet.href;
+  const waitForPropertyChange = onPropertyChange(editor);
 
   await typeInEditor(editor, panel.panelWindow);
 
@@ -35,7 +35,7 @@ function createNew(ui, panelWindow) {
 
     waitForFocus(function() {
       // create a new style sheet
-      let newButton = panelWindow.document
+      const newButton = panelWindow.document
         .querySelector(".style-editor-newButton");
       ok(newButton, "'new' button exists");
 
@@ -48,7 +48,7 @@ function onPropertyChange(editor) {
   return new Promise(resolve => {
     editor.styleSheet.on("property-change", function onProp(property) {
       // wait for text to be entered fully
-      let text = editor.sourceEditor.getText();
+      const text = editor.sourceEditor.getText();
       if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
         editor.styleSheet.off("property-change", onProp);
         resolve();
@@ -68,10 +68,10 @@ async function testInitialState(editor) {
   ok(editor.sourceEditor.hasFocus(), "new editor has focus");
 
   summary = editor.summary;
-  let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
+  const ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
 
-  let color = await getComputedStyleProperty({
+  const color = await getComputedStyleProperty({
     selector: "body",
     name: "background-color"
   });
@@ -82,7 +82,7 @@ async function testInitialState(editor) {
 function typeInEditor(editor, panelWindow) {
   return new Promise(resolve => {
     waitForFocus(function() {
-      for (let c of TESTCASE_CSS_SOURCE) {
+      for (const c of TESTCASE_CSS_SOURCE) {
         EventUtils.synthesizeKey(c, {}, panelWindow);
       }
       ok(editor.unsaved, "new editor has unsaved flag");
@@ -98,7 +98,7 @@ function testUpdated(editor, originalHref) {
   is(editor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
      "rule bracket has been auto-closed");
 
-  let ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
+  const ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
     .textContent;
   is(parseInt(ruleCount, 10), 1,
      "new editor shows 1 rule after modification");

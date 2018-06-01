@@ -25,10 +25,10 @@ const HEIGHT = 100;
 const HYPOTENUSE = Math.hypot(WIDTH, HEIGHT).toFixed(2);
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+  const helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
-  let { show, finalize } = helper;
+  const { show, finalize } = helper;
 
   helper.prefix = PREFIX;
 
@@ -62,7 +62,7 @@ async function hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
   info("Checking highlighter has no guides when we start to select");
 
   let guidesHidden = true;
-  for (let side of SIDES) {
+  for (const side of SIDES) {
     guidesHidden = guidesHidden && (await isElementHidden("guide-" + side));
   }
 
@@ -88,7 +88,7 @@ async function hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
   info("Checking highlighter has no guides when we select the area");
 
   let guidesHidden = true;
-  for (let side of SIDES) {
+  for (const side of SIDES) {
     guidesHidden = guidesHidden && (await isElementHidden("guide-" + side));
   }
 
@@ -112,7 +112,7 @@ async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}
   ok(hidden, "label's position still hidden");
 
   let guidesVisible = true;
-  for (let side of SIDES) {
+  for (const side of SIDES) {
     guidesVisible = guidesVisible && !(await isElementHidden("guide-" + side));
   }
 
@@ -120,9 +120,9 @@ async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}
 }
 
 async function hasCorrectSizeLabelValue({getElementTextContent}) {
-  let text = await getElementTextContent("label-size");
+  const text = await getElementTextContent("label-size");
 
-  let [width, height, hypot] = text.match(/\d.*px/g);
+  const [width, height, hypot] = text.match(/\d.*px/g);
 
   is(parseFloat(width), WIDTH, "width on label's size is correct");
   is(parseFloat(height), HEIGHT, "height on label's size is correct");

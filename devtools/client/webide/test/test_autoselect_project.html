@@ -24,7 +24,7 @@
 
           let win = await openWebIDE();
           let docRuntime = getRuntimeDocument(win);
-          let docProject = getProjectDocument(win);
+          const docProject = getProjectDocument(win);
 
           let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-other");
@@ -50,7 +50,7 @@
 
           await waitForUpdate(win, "project");
 
-          let lastProject = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
+          const lastProject = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
           is(lastProject, "mainProcess:", "Last project is main process");
 
           connectionsChanged = waitForConnectionChange("closed", 2);
@@ -88,7 +88,7 @@
           // If we happen to pass a project object targeting the same context,
           // here, the main process, the `selectedProject` attribute shouldn't be updated
           // so that no `project` event would fire.
-          let oldProject = win.AppManager.selectedProject;
+          const oldProject = win.AppManager.selectedProject;
           win.AppManager.selectedProject = {
             type: "mainProcess"
           };

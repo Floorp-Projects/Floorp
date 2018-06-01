@@ -29,11 +29,11 @@ function run_test() {
 
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    let args = packet.frame.arguments;
+    const args = packet.frame.arguments;
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getOwnPropertyNames(function(response) {
-      let opn = response.ownPropertyNames;
+      const opn = response.ownPropertyNames;
       Assert.equal(opn.length, 4);
       opn.sort();
       Assert.equal(opn[0], "columnNumber");

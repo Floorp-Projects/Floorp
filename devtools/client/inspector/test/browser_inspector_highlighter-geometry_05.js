@@ -71,14 +71,14 @@ const TEST_DATA = [{
 }];
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+  const helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
-  let { hide, finalize } = helper;
+  const { hide, finalize } = helper;
 
-  for (let data of TEST_DATA) {
+  for (const data of TEST_DATA) {
     await testNode(helper, data);
   }
 
@@ -88,7 +88,7 @@ add_task(async function() {
 });
 
 async function testNode(helper, data) {
-  let { selector } = data;
+  const { selector } = data;
   await helper.show(data.selector);
 
   is((await isOffsetParentVisible(helper)), data.isOffsetParentVisible,
@@ -109,8 +109,8 @@ async function isCurrentNodeVisible({isElementHidden}) {
 }
 
 async function hasVisibleArrowsAndHandlers({isElementHidden}) {
-  for (let side of ["top", "left", "bottom", "right"]) {
-    let hidden = await isElementHidden("arrow-" + side);
+  for (const side of ["top", "left", "bottom", "right"]) {
+    const hidden = await isElementHidden("arrow-" + side);
     if (!hidden) {
       return !(await isElementHidden("handler-" + side));
     }

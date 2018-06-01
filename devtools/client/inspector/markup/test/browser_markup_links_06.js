@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  let {toolbox, inspector} = await openInspectorForURL(TEST_URL);
+  const {toolbox, inspector} = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a cssresource attribute");
   await selectNode("link", inspector);
@@ -22,7 +22,7 @@ add_task(async function() {
   });
 
   info("Follow the link and wait for the style-editor to open");
-  let onStyleEditorReady = toolbox.once("styleeditor-ready");
+  const onStyleEditorReady = toolbox.once("styleeditor-ready");
   inspector.onFollowLink();
   await onStyleEditorReady;
 
@@ -43,7 +43,7 @@ add_task(async function() {
   });
 
   info("Follow the link and wait for the debugger to open");
-  let onDebuggerReady = toolbox.once("jsdebugger-ready");
+  const onDebuggerReady = toolbox.once("jsdebugger-ready");
   inspector.onFollowLink();
   await onDebuggerReady;
 

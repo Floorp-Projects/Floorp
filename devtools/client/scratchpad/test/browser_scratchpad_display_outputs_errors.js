@@ -16,15 +16,15 @@ function test() {
 }
 
 function runTests() {
-  let scratchpad = gScratchpadWindow.Scratchpad;
+  const scratchpad = gScratchpadWindow.Scratchpad;
 
-  let message = "\"Hello World!\"";
-  let openComment = "\n/*\n";
-  let closeComment = "\n*/";
-  let error = "throw new Error(\"Ouch!\")";
-  let syntaxError = "(";
+  const message = "\"Hello World!\"";
+  const openComment = "\n/*\n";
+  const closeComment = "\n*/";
+  const error = "throw new Error(\"Ouch!\")";
+  const syntaxError = "(";
 
-  let tests = [{
+  const tests = [{
     method: "display",
     code: message,
     result: message + openComment + "Hello World!" + closeComment,

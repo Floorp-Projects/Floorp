@@ -28,13 +28,13 @@ function ChildProcessActor(connection) {
     shouldAddNewGlobalAsDebuggee: global => true
   });
 
-  let sandboxPrototype = {
+  const sandboxPrototype = {
     get tabs() {
-      let tabs = [];
-      let windowEnumerator = Services.ww.getWindowEnumerator();
+      const tabs = [];
+      const windowEnumerator = Services.ww.getWindowEnumerator();
       while (windowEnumerator.hasMoreElements()) {
-        let window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
-        let tabChildGlobal = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        const window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
+        const tabChildGlobal = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIDocShell)
                                    .sameTypeRootTreeItem
                                    .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -47,9 +47,9 @@ function ChildProcessActor(connection) {
 
   // Scope into which the webconsole executes:
   // A sandbox with chrome privileges with a `tabs` getter.
-  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
     .createInstance(Ci.nsIPrincipal);
-  let sandbox = Cu.Sandbox(systemPrincipal, {
+  const sandbox = Cu.Sandbox(systemPrincipal, {
     sandboxPrototype,
   });
   this._consoleScope = sandbox;
@@ -117,8 +117,8 @@ ChildProcessActor.prototype = {
       this._workerList = new WorkerActorList(this.conn, {});
     }
     return this._workerList.getList().then(actors => {
-      let pool = new ActorPool(this.conn);
-      for (let actor of actors) {
+      const pool = new ActorPool(this.conn);
+      for (const actor of actors) {
         pool.addActor(actor);
       }
 

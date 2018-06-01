@@ -13,12 +13,12 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { PerformanceController } = panel.panelWin;
+  const { PerformanceController } = panel.panelWin;
 
   // Test starting without memory, and stopping with it.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);

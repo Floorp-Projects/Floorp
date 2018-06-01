@@ -19,8 +19,8 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    let { memory, client } = await startServerAndGetSelectedTabMemory();
-    let measurement = await memory.measure();
+    const { memory, client } = await startServerAndGetSelectedTabMemory();
+    const measurement = await memory.measure();
     ok(measurement.total > 0, "total memory is valid");
     ok(measurement.domSize > 0, "domSize is valid");
     ok(measurement.styleSize > 0, "styleSize is valid");

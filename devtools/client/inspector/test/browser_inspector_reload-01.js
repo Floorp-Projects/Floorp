@@ -13,10 +13,10 @@
 const TEST_URI = "data:text/html,<p id='1'>p</p>";
 
 add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
   await selectNode("p", inspector);
 
-  let markupLoaded = inspector.once("markuploaded");
+  const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
   await testActor.eval("location.reload()");
@@ -24,7 +24,7 @@ add_task(async function() {
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
 
-  let nodeFront = await getNodeFront("p", inspector);
+  const nodeFront = await getNodeFront("p", inspector);
   is(inspector.selection.nodeFront, nodeFront, "<p> selected after reload.");
 
   info("Selecting a node to see that inspector still works.");

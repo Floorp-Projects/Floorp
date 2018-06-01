@@ -13,18 +13,18 @@ add_task(async function() {
 
   info("Opening toolbox with Scratchpad panel");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "scratchpad", "window");
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "scratchpad", "window");
 
-  let scratchpadPanel = toolbox.getPanel("scratchpad");
-  let { scratchpad } = scratchpadPanel;
+  const scratchpadPanel = toolbox.getPanel("scratchpad");
+  const { scratchpad } = scratchpadPanel;
   is(toolbox.getCurrentPanel(), scratchpadPanel,
     "Scratchpad is currently selected panel");
 
   info("Switching to webconsole panel");
 
-  let webconsolePanel = await toolbox.selectTool("webconsole");
-  let { hud } = webconsolePanel;
+  const webconsolePanel = await toolbox.selectTool("webconsole");
+  const { hud } = webconsolePanel;
   is(toolbox.getCurrentPanel(), webconsolePanel,
     "Webconsole is currently selected panel");
 
@@ -42,14 +42,14 @@ add_task(async function() {
     foo();
   `);
   scratchpad.run();
-  let message = await waitFor(() => findMessage(hud, "console.trace()"));
+  const message = await waitFor(() => findMessage(hud, "console.trace()"));
 
   info("Clicking link to switch to and focus Scratchpad");
 
   ok(message, "Found console.trace message from Scratchpad");
-  let anchor = message.querySelector(".stack-trace .frame-link .frame-link-filename");
+  const anchor = message.querySelector(".stack-trace .frame-link .frame-link-filename");
 
-  let onScratchpadSelected = toolbox.once("scratchpad-selected");
+  const onScratchpadSelected = toolbox.once("scratchpad-selected");
 
   EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
   await onScratchpadSelected;

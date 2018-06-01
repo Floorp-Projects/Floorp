@@ -18,7 +18,7 @@ const HTML =
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 add_task(async function deleteNodeAfterWhitespace() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Test deleting a node that will modify the whitespace nodes rendered in the " +
     "markup view.");
@@ -30,8 +30,8 @@ add_task(async function deleteNodeAfterWhitespace() {
   // selection goes to text-node. But since the text-node gets removed from the markup
   // view after losing its impact on the layout, the selection remains on a node which
   // is no longer part of the markup view (but still a valid node in the content DOM).
-  let parentNodeFront = await inspector.selection.nodeFront.parentNode();
-  let nodeFront = await getNodeFront("#container", inspector);
+  const parentNodeFront = await inspector.selection.nodeFront.parentNode();
+  const nodeFront = await getNodeFront("#container", inspector);
   is(parentNodeFront, nodeFront, "Selection is as expected after deletion");
 
   info("Check that the node was really removed");
@@ -54,8 +54,8 @@ add_task(async function deleteNodeAfterWhitespace() {
   node = await getNodeFront("#before-whitespace", inspector);
   ok(node, "The node is back");
 
-  let nextSibling = await getNodeFront("#before-whitespace + *", inspector);
-  let afterWhitespace = await getNodeFront("#after-whitespace", inspector);
+  const nextSibling = await getNodeFront("#before-whitespace + *", inspector);
+  const afterWhitespace = await getNodeFront("#after-whitespace", inspector);
   is(nextSibling, afterWhitespace, "Order has been preserved after restoring the node");
 });
 
@@ -67,7 +67,7 @@ async function selectAndFocusNode(selector, inspector) {
 
 async function deleteCurrentSelection(inspector) {
   info("Delete the node with the delete key");
-  let mutated = inspector.once("markupmutation");
+  const mutated = inspector.once("markupmutation");
   EventUtils.sendKey("delete", inspector.panelWin);
   await Promise.all([mutated, inspector.once("inspector-updated")]);
 }

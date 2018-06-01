@@ -25,13 +25,13 @@ add_task(async function() {
   // Keep the profiler's buffer large, but still get to 1% relatively quick.
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 1000000);
 
-  let { target, console } = await initConsoleInNewTab({
+  const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let {
+  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const {
     gFront,
     EVENTS,
     $,
@@ -42,9 +42,9 @@ add_task(async function() {
   // Set a fast profiler-status update interval.
   await gFront.setProfilerStatusInterval(10);
 
-  let DETAILS_CONTAINER = $("#details-pane-container");
-  let NORMAL_BUFFER_STATUS_MESSAGE = $("#recording-notice .buffer-status-message");
-  let CONSOLE_BUFFER_STATUS_MESSAGE =
+  const DETAILS_CONTAINER = $("#details-pane-container");
+  const NORMAL_BUFFER_STATUS_MESSAGE = $("#recording-notice .buffer-status-message");
+  const CONSOLE_BUFFER_STATUS_MESSAGE =
     $("#console-recording-notice .buffer-status-message");
   let gPercent;
 

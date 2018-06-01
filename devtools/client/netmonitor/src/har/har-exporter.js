@@ -64,9 +64,9 @@ const HarExporter = {
    */
   async save(options) {
     // Set default options related to save operation.
-    let defaultFileName = Services.prefs.getCharPref(
+    const defaultFileName = Services.prefs.getCharPref(
       "devtools.netmonitor.har.defaultFileName");
-    let compress = Services.prefs.getBoolPref(
+    const compress = Services.prefs.getBoolPref(
       "devtools.netmonitor.har.compress");
 
     trace.log("HarExporter.save; " + defaultFileName, options);
@@ -83,18 +83,18 @@ const HarExporter = {
     }
 
     fileName = `${fileName}${compress ? ".zip" : ""}`;
-    let blob = compress ? data : new Blob([data], { type: "application/json" });
+    const blob = compress ? data : new Blob([data], { type: "application/json" });
 
     FileSaver.saveAs(blob, fileName, document);
   },
 
   formatDate(date) {
-    let year = String(date.getFullYear() % 100).padStart(2, "0");
-    let month = String(date.getMonth() + 1).padStart(2, "0");
-    let day = String(date.getDate()).padStart(2, "0");
-    let hour = String(date.getHours()).padStart(2, "0");
-    let minutes = String(date.getMinutes()).padStart(2, "0");
-    let seconds = String(date.getSeconds()).padStart(2, "0");
+    const year = String(date.getFullYear() % 100).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
 
     return `${year}-${month}-${day} ${hour}-${minutes}-${seconds}`;
   },
@@ -172,7 +172,7 @@ const HarExporter = {
       if (options.jsonp) {
         // This callback name is also used in HAR Viewer by default.
         // http://www.softwareishard.com/har/viewer/
-        let callbackName = options.jsonpCallback || "onInputData";
+        const callbackName = options.jsonpCallback || "onInputData";
         jsonString = callbackName + "(" + jsonString + ");";
       }
 
@@ -189,11 +189,11 @@ const HarExporter = {
    * long strings).
    */
   buildHarData: async function(options) {
-    let { connector } = options;
-    let {
+    const { connector } = options;
+    const {
       getTabTarget,
     } = connector;
-    let {
+    const {
       form: { title, url }
     } = getTabTarget();
 
@@ -209,8 +209,8 @@ const HarExporter = {
     };
 
     // Build HAR object from collected data.
-    let builder = new HarBuilder(options);
-    let result = await builder.build();
+    const builder = new HarBuilder(options);
+    const result = await builder.build();
 
     // Connect to redux actions again.
     connector.enableActions(true);

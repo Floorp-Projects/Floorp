@@ -14,15 +14,15 @@ var imgClass = ".service-worker-disabled .warning";
 add_task(async function() {
   await new Promise(done => {
     info("disable service workers");
-    let options = {"set": [
+    const options = {"set": [
       ["dom.serviceWorkers.enabled", false],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
   });
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
   // Check that the warning img appears in the UI
-  let img = document.querySelector(imgClass);
+  const img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
   await closeAboutDebugging(tab);
@@ -31,15 +31,15 @@ add_task(async function() {
 add_task(async function() {
   await new Promise(done => {
     info("set private browsing mode as default");
-    let options = {"set": [
+    const options = {"set": [
       ["browser.privatebrowsing.autostart", true],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
   });
 
-  let { tab, document } = await openAboutDebugging("workers");
+  const { tab, document } = await openAboutDebugging("workers");
   // Check that the warning img appears in the UI
-  let img = document.querySelector(imgClass);
+  const img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
   await closeAboutDebugging(tab);
@@ -47,12 +47,12 @@ add_task(async function() {
 
 add_task(async function() {
   info("Opening a new private window");
-  let win = OpenBrowserWindow({private: true});
+  const win = OpenBrowserWindow({private: true});
   await waitForDelayedStartupFinished(win);
 
-  let { tab, document } = await openAboutDebugging("workers", win);
+  const { tab, document } = await openAboutDebugging("workers", win);
   // Check that the warning img appears in the UI
-  let img = document.querySelector(imgClass);
+  const img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
   await closeAboutDebugging(tab);

@@ -7,13 +7,13 @@
 // Checks for the AccessibleActor
 
 add_task(async function() {
-  let {client, walker, accessibility} =
+  const {client, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = await accessibility.getWalker();
+  const a11yWalker = await accessibility.getWalker();
   await accessibility.enable();
-  let buttonNode = await walker.querySelector(walker.rootNode, "#button");
-  let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
+  const buttonNode = await walker.querySelector(walker.rootNode, "#button");
+  const accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
@@ -41,7 +41,7 @@ add_task(async function() {
   });
 
   info("Children");
-  let children = await accessibleFront.children();
+  const children = await accessibleFront.children();
   is(children.length, 1, "Accessible Front has correct number of children");
   checkA11yFront(children[0], {
     name: "Accessible Button",

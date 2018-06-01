@@ -66,8 +66,8 @@ function flashElementOff(backgroundElt, foregroundElt = backgroundElt) {
  * replacing Editor elements of the the markup-view;
  */
 function getAutocompleteMaxWidth(element, container) {
-  let elementRect = element.getBoundingClientRect();
-  let containerRect = container.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
   return containerRect.right - elementRect.left - 2;
 }
 
@@ -84,20 +84,20 @@ function getAutocompleteMaxWidth(element, container) {
 function parseAttributeValues(attr, doc) {
   attr = attr.trim();
 
-  let parseAndGetNode = str => {
+  const parseAndGetNode = str => {
     return new DOMParser().parseFromString(str, "text/html").body.childNodes[0];
   };
 
   // Handle bad user inputs by appending a " or ' if it fails to parse without
   // them. Also note that a SVG tag is used to make sure the HTML parser
   // preserves mixed-case attributes
-  let el = parseAndGetNode("<svg " + attr + "></svg>") ||
+  const el = parseAndGetNode("<svg " + attr + "></svg>") ||
            parseAndGetNode("<svg " + attr + "\"></svg>") ||
            parseAndGetNode("<svg " + attr + "'></svg>");
 
-  let div = doc.createElement("div");
-  let attributes = [];
-  for (let {name, value} of el.attributes) {
+  const div = doc.createElement("div");
+  const attributes = [];
+  for (const {name, value} of el.attributes) {
     // Try to set on an element in the document, throws exception on bad input.
     // Prevents InvalidCharacterError - "String contains an invalid character".
     try {

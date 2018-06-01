@@ -13,7 +13,7 @@
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
 // it rely on the |window| global.
-let EventUtils = {};
+const EventUtils = {};
 EventUtils.window = content;
 EventUtils.parent = EventUtils.window;
 EventUtils._EU_Ci = Ci; // eslint-disable-line
@@ -48,35 +48,35 @@ new content.MutationObserver(function(mutations, observer) {
 }).observe(content.wrappedJSObject.JSONView.json, {characterData: true});
 
 addMessageListener("Test:JsonView:GetElementCount", function(msg) {
-  let {selector} = msg.data;
-  let nodeList = content.document.querySelectorAll(selector);
+  const {selector} = msg.data;
+  const nodeList = content.document.querySelectorAll(selector);
   sendAsyncMessage(msg.name, {count: nodeList.length});
 });
 
 addMessageListener("Test:JsonView:GetElementText", function(msg) {
-  let {selector} = msg.data;
-  let element = content.document.querySelector(selector);
-  let text = element ? element.textContent : null;
+  const {selector} = msg.data;
+  const element = content.document.querySelector(selector);
+  const text = element ? element.textContent : null;
   sendAsyncMessage(msg.name, {text: text});
 });
 
 addMessageListener("Test:JsonView:GetElementVisibleText", function(msg) {
-  let {selector} = msg.data;
-  let element = content.document.querySelector(selector);
-  let text = element ? element.innerText : null;
+  const {selector} = msg.data;
+  const element = content.document.querySelector(selector);
+  const text = element ? element.innerText : null;
   sendAsyncMessage(msg.name, {text: text});
 });
 
 addMessageListener("Test:JsonView:GetElementAttr", function(msg) {
-  let {selector, attr} = msg.data;
-  let element = content.document.querySelector(selector);
-  let text = element ? element.getAttribute(attr) : null;
+  const {selector, attr} = msg.data;
+  const element = content.document.querySelector(selector);
+  const text = element ? element.getAttribute(attr) : null;
   sendAsyncMessage(msg.name, {text: text});
 });
 
 addMessageListener("Test:JsonView:FocusElement", function(msg) {
-  let {selector} = msg.data;
-  let element = content.document.querySelector(selector);
+  const {selector} = msg.data;
+  const element = content.document.querySelector(selector);
   if (element) {
     element.focus();
   }
@@ -84,9 +84,9 @@ addMessageListener("Test:JsonView:FocusElement", function(msg) {
 });
 
 addMessageListener("Test:JsonView:SendString", function(msg) {
-  let {selector, str} = msg.data;
+  const {selector, str} = msg.data;
   if (selector) {
-    let element = content.document.querySelector(selector);
+    const element = content.document.querySelector(selector);
     if (element) {
       element.focus();
     }
@@ -98,7 +98,7 @@ addMessageListener("Test:JsonView:SendString", function(msg) {
 });
 
 addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
-  let firstRow = content.document.querySelector(
+  const firstRow = content.document.querySelector(
     ".jsonPanelBox .treeTable .treeRow");
 
   // Check if the filter is already set.
@@ -108,9 +108,9 @@ addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   }
 
   // Wait till the first row has 'hidden' class set.
-  let observer = new content.MutationObserver(function(mutations) {
+  const observer = new content.MutationObserver(function(mutations) {
     for (let i = 0; i < mutations.length; i++) {
-      let mutation = mutations[i];
+      const mutation = mutations[i];
       if (mutation.attributeName == "class") {
         if (firstRow.classList.contains("hidden")) {
           observer.disconnect();

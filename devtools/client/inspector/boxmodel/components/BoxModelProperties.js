@@ -49,7 +49,7 @@ class BoxModelProperties extends PureComponent {
    * - referenceElementType {String}
    */
   getReferenceElement(propertyName) {
-    let value = this.props.boxModel.layout[propertyName];
+    const value = this.props.boxModel.layout[propertyName];
 
     if (propertyName === "position" &&
         value !== "static" && value !== "fixed" &&
@@ -71,19 +71,19 @@ class BoxModelProperties extends PureComponent {
   }
 
   render() {
-    let {
+    const {
       boxModel,
       setSelectedNode,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
     } = this.props;
-    let { layout } = boxModel;
+    const { layout } = boxModel;
 
-    let layoutInfo = ["box-sizing", "display", "float",
-                      "line-height", "position", "z-index"];
+    const layoutInfo = ["box-sizing", "display", "float",
+                        "line-height", "position", "z-index"];
 
     const properties = layoutInfo.map(info => {
-      let { referenceElement, referenceElementType } = this.getReferenceElement(info);
+      const { referenceElement, referenceElementType } = this.getReferenceElement(info);
 
       return ComputedProperty({
         name: info,

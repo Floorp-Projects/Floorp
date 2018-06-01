@@ -7,12 +7,12 @@
  * Test toggling the recording of allocation stacks.
  */
 
-let { toggleRecordingAllocationStacks } = require("devtools/client/memory/actions/allocations");
+const { toggleRecordingAllocationStacks } = require("devtools/client/memory/actions/allocations");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
+  const front = new StubbedMemoryFront();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   equal(getState().allocations.recording, false, "not recording by default");

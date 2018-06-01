@@ -30,15 +30,15 @@ function run_test() {
 function test_simple_source_map() {
   // Because we are source mapping, we should be notified of a.js, b.js, and
   // c.js as sources, and shouldn"t receive abc.js or test_sourcemaps-01.js.
-  let expectedSources = new Set(["http://example.com/www/js/a.js",
-                                 "http://example.com/www/js/b.js",
-                                 "http://example.com/www/js/c.js"]);
+  const expectedSources = new Set(["http://example.com/www/js/a.js",
+                                   "http://example.com/www/js/b.js",
+                                   "http://example.com/www/js/c.js"]);
 
   gClient.addOneTimeListener("paused", function(event, packet) {
     gThreadClient.getSources(function(response) {
       Assert.ok(!response.error, "Should not get an error");
 
-      for (let s of response.sources) {
+      for (const s of response.sources) {
         Assert.notEqual(s.url, "http://example.com/www/js/abc.js",
                         "Shouldn't get the generated source's url.");
         expectedSources.delete(s.url);

@@ -48,7 +48,7 @@ class Toolbar extends Component {
   }
 
   render() {
-    let {
+    const {
       onTakeSnapshotClick,
       onImportClick,
       onClearSnapshotsClick,

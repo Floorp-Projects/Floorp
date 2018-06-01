@@ -32,13 +32,13 @@ class FontOverview extends PureComponent {
   }
 
   renderElementFonts() {
-    let {
+    const {
       fontData,
       fontOptions,
       onPreviewFonts,
       onToggleFontHighlight,
     } = this.props;
-    let { fonts } = fontData;
+    const { fonts } = fontData;
 
     return fonts.length ?
       FontList({
@@ -57,12 +57,12 @@ class FontOverview extends PureComponent {
   }
 
   renderOtherFonts() {
-    let {
+    const {
       fontData,
       fontOptions,
       onPreviewFonts,
     } = this.props;
-    let { otherFonts } = fontData;
+    const { otherFonts } = fontData;
 
     if (!otherFonts.length) {
       return null;

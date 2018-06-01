@@ -19,14 +19,14 @@ const TEST_VALUES = [
 ];
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let { jsterm } = hud;
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   jsterm.focus();
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
 
   info("Execute each test value in the console");
-  for (let value of TEST_VALUES) {
+  for (const value of TEST_VALUES) {
     jsterm.setInputValue(value);
     await jsterm.execute();
   }
@@ -35,8 +35,8 @@ add_task(async function() {
 });
 
 function performTests(jsterm) {
-  let { inputNode } = jsterm;
-  let values = TEST_VALUES;
+  const { inputNode } = jsterm;
+  const values = TEST_VALUES;
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 

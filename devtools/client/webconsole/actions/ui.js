@@ -76,9 +76,9 @@ function splitConsoleCloseButtonToggle(shouldDisplayButton) {
 
 function showObjectInSidebar(actorId, messageId) {
   return (dispatch, getState) => {
-    let { parameters } = getMessage(getState(), messageId);
+    const { parameters } = getMessage(getState(), messageId);
     if (Array.isArray(parameters)) {
-      for (let parameter of parameters) {
+      for (const parameter of parameters) {
         if (parameter.actor === actorId) {
           dispatch({
             type: SHOW_OBJECT_IN_SIDEBAR,

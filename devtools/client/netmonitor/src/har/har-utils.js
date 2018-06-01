@@ -24,12 +24,12 @@ const OPEN_FLAGS = {
 };
 
 function formatDate(date) {
-  let year = String(date.getFullYear() % 100).padStart(2, "0");
-  let month = String(date.getMonth() + 1).padStart(2, "0");
-  let day = String(date.getDate()).padStart(2, "0");
-  let hour = String(date.getHours()).padStart(2, "0");
-  let minutes = String(date.getMinutes()).padStart(2, "0");
-  let seconds = String(date.getSeconds()).padStart(2, "0");
+  const year = String(date.getFullYear() % 100).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
 
   return `${year}-${month}-${day} ${hour}-${minutes}-${seconds}`;
 }
@@ -39,9 +39,9 @@ function formatDate(date) {
  */
 var HarUtils = {
   getHarFileName: function(defaultFileName, jsonp, compress) {
-    let extension = jsonp ? ".harp" : ".har";
+    const extension = jsonp ? ".harp" : ".har";
 
-    let now = new Date();
+    const now = new Date();
     let name = defaultFileName.replace(/%date/g, formatDate(now));
     name = name.replace(/\:/gm, "-", "");
     name = name.replace(/\//gm, "_", "");
@@ -66,24 +66,24 @@ var HarUtils = {
    * @param {Boolean} compress The result file is zipped if set to true.
    */
   saveToFile: function(file, jsonString, compress) {
-    let openFlags = OPEN_FLAGS.WRONLY | OPEN_FLAGS.CREATE_FILE |
+    const openFlags = OPEN_FLAGS.WRONLY | OPEN_FLAGS.CREATE_FILE |
       OPEN_FLAGS.TRUNCATE;
 
     try {
-      let foStream = Cc["@mozilla.org/network/file-output-stream;1"]
+      const foStream = Cc["@mozilla.org/network/file-output-stream;1"]
         .createInstance(Ci.nsIFileOutputStream);
 
-      let permFlags = parseInt("0666", 8);
+      const permFlags = parseInt("0666", 8);
       foStream.init(file, openFlags, permFlags, 0);
 
-      let convertor = Cc["@mozilla.org/intl/converter-output-stream;1"]
+      const convertor = Cc["@mozilla.org/intl/converter-output-stream;1"]
         .createInstance(Ci.nsIConverterOutputStream);
       convertor.init(foStream, "UTF-8");
 
       // The entire jsonString can be huge so, write the data in chunks.
-      let chunkLength = 1024 * 1024;
+      const chunkLength = 1024 * 1024;
       for (let i = 0; i <= jsonString.length; i++) {
-        let data = jsonString.substr(i, chunkLength + 1);
+        const data = jsonString.substr(i, chunkLength + 1);
         if (data) {
           convertor.writeString(data);
         }
@@ -104,15 +104,15 @@ var HarUtils = {
     }
 
     // Remember name of the original file, it'll be replaced by a zip file.
-    let originalFilePath = file.path;
-    let originalFileName = file.leafName;
+    const originalFilePath = file.path;
+    const originalFileName = file.leafName;
 
     try {
       // Rename using unique name (the file is going to be removed).
       file.moveTo(null, "temp" + (new Date()).getTime() + "temphar");
 
       // Create compressed file with the original file path name.
-      let zipFile = Cc["@mozilla.org/file/local;1"]
+      const zipFile = Cc["@mozilla.org/file/local;1"]
         .createInstance(Ci.nsIFile);
       zipFile.initWithPath(originalFilePath);
 
@@ -122,7 +122,7 @@ var HarUtils = {
         fileName = fileName.substr(0, fileName.indexOf(".zip"));
       }
 
-      let zip = new ZipWriter();
+      const zip = new ZipWriter();
       zip.open(zipFile, openFlags);
       zip.addEntryFile(fileName, Ci.nsIZipWriter.COMPRESSION_DEFAULT,
         file, false);

@@ -178,17 +178,17 @@ StyleSheetEditor.prototype = {
     }
 
     if (this._isNew) {
-      let index = this.styleSheet.styleSheetIndex + 1;
+      const index = this.styleSheet.styleSheetIndex + 1;
       return getString("newStyleSheet", index);
     }
 
     if (!this.styleSheet.href) {
-      let index = this.styleSheet.styleSheetIndex + 1;
+      const index = this.styleSheet.styleSheetIndex + 1;
       return getString("inlineStyleSheet", index);
     }
 
     if (!this._friendlyName) {
-      let sheetURI = this.styleSheet.href;
+      const sheetURI = this.styleSheet.href;
       this._friendlyName = shortSource({ href: sheetURI });
       try {
         this._friendlyName = decodeURI(this._friendlyName);
@@ -216,21 +216,21 @@ StyleSheetEditor.prototype = {
       return;
     }
 
-    let relatedSheet = this.styleSheet.relatedStyleSheet;
+    const relatedSheet = this.styleSheet.relatedStyleSheet;
     if (!relatedSheet || !relatedSheet.href) {
       return;
     }
 
     let path;
-    let href = removeQuery(relatedSheet.href);
-    let uri = NetUtil.newURI(href);
+    const href = removeQuery(relatedSheet.href);
+    const uri = NetUtil.newURI(href);
 
     if (uri.scheme == "file") {
-      let file = uri.QueryInterface(Ci.nsIFileURL).file;
+      const file = uri.QueryInterface(Ci.nsIFileURL).file;
       path = file.path;
     } else if (this.savedFile) {
-      let origHref = removeQuery(this.styleSheet.href);
-      let origUri = NetUtil.newURI(origHref);
+      const origHref = removeQuery(this.styleSheet.href);
+      const origUri = NetUtil.newURI(origHref);
       path = findLinkedFilePath(uri, origUri, this.savedFile);
     } else {
       // we can't determine path to generated file on disk
@@ -264,7 +264,7 @@ StyleSheetEditor.prototype = {
     return this.styleSheet.getText().then((longStr) => {
       return longStr.string();
     }).then((source) => {
-      let ruleCount = this.styleSheet.ruleCount;
+      const ruleCount = this.styleSheet.ruleCount;
       if (!this.styleSheet.isOriginalSource) {
         source = prettifyCSS(source, ruleCount);
       }
@@ -320,7 +320,7 @@ StyleSheetEditor.prototype = {
    * As addUnusedRegion except that it takes an array of regions
    */
   addUnusedRegions: function(regions) {
-    for (let region of regions) {
+    for (const region of regions) {
       this.addUnusedRegion(region);
     }
   },
@@ -358,8 +358,8 @@ StyleSheetEditor.prototype = {
     } else if (this.sourceEditor) {
       this._getSourceTextAndPrettify().then((newText) => {
         this._justSetText = true;
-        let firstLine = this.sourceEditor.getFirstVisibleLine();
-        let pos = this.sourceEditor.getCursor();
+        const firstLine = this.sourceEditor.getFirstVisibleLine();
+        const pos = this.sourceEditor.getCursor();
         this.sourceEditor.setText(newText);
         this.sourceEditor.setFirstVisibleLine(firstLine);
         this.sourceEditor.setCursor(pos);
@@ -379,13 +379,13 @@ StyleSheetEditor.prototype = {
     if (!rules.length && !this.mediaRules.length) {
       return;
     }
-    for (let rule of this.mediaRules) {
+    for (const rule of this.mediaRules) {
       rule.off("matches-change", this._onMediaRuleMatchesChange);
       rule.destroy();
     }
     this.mediaRules = rules;
 
-    for (let rule of rules) {
+    for (const rule of rules) {
       rule.on("matches-change", this._onMediaRuleMatchesChange);
     }
     this.emit("media-rules-changed", rules);
@@ -425,7 +425,7 @@ StyleSheetEditor.prototype = {
 
     this._inputElement = inputElement;
 
-    let config = {
+    const config = {
       value: this._state.text,
       lineNumbers: true,
       mode: Editor.modes.css,
@@ -437,7 +437,7 @@ StyleSheetEditor.prototype = {
       autocompleteOpts: { walker: this.walker, cssProperties },
       cssProperties
     };
-    let sourceEditor = this._sourceEditor = new Editor(config);
+    const sourceEditor = this._sourceEditor = new Editor(config);
 
     sourceEditor.on("dirty-change", this._onPropertyChange);
 
@@ -476,7 +476,7 @@ StyleSheetEditor.prototype = {
    *         Promise that will resolve with the editor.
    */
   getSourceEditor: function() {
-    let self = this;
+    const self = this;
 
     if (this.sourceEditor) {
       return Promise.resolve(this);
@@ -586,13 +586,13 @@ StyleSheetEditor.prototype = {
    * @param {Number} y
    */
   async _highlightSelectorAt(x, y) {
-    let pos = this.sourceEditor.getPositionFromCoords({left: x, top: y});
-    let info = this.sourceEditor.getInfoAt(pos);
+    const pos = this.sourceEditor.getPositionFromCoords({left: x, top: y});
+    const info = this.sourceEditor.getInfoAt(pos);
     if (!info || info.state !== "selector") {
       return;
     }
 
-    let node =
+    const node =
         await this.walker.getStyleSheetOwnerNode(this.styleSheet.actorID);
     await this.highlighter.show(node, {
       selector: info.selector,
@@ -621,7 +621,7 @@ StyleSheetEditor.prototype = {
    * @see savedFile
    */
   saveToFile: function(file, callback) {
-    let onFile = (returnFile) => {
+    const onFile = (returnFile) => {
       if (!returnFile) {
         if (callback) {
           callback(null);
@@ -633,11 +633,11 @@ StyleSheetEditor.prototype = {
         this._state.text = this.sourceEditor.getText();
       }
 
-      let ostream = FileUtils.openSafeFileOutputStream(returnFile);
-      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+      const ostream = FileUtils.openSafeFileOutputStream(returnFile);
+      const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                         .createInstance(Ci.nsIScriptableUnicodeConverter);
       converter.charset = "UTF-8";
-      let istream = converter.convertToInputStream(this._state.text);
+      const istream = converter.convertToInputStream(this._state.text);
 
       NetUtil.asyncCopy(istream, ostream, (status) => {
         if (!Components.isSuccessCode(status)) {
@@ -694,7 +694,7 @@ StyleSheetEditor.prototype = {
    */
   checkLinkedFileForChanges: function() {
     OS.File.stat(this.linkedCSSFile).then((info) => {
-      let lastChange = info.lastModificationDate.getTime();
+      const lastChange = info.lastModificationDate.getTime();
 
       if (this._fileModDate && lastChange != this._fileModDate) {
         this._fileModDate = lastChange;
@@ -737,13 +737,13 @@ StyleSheetEditor.prototype = {
    */
   updateLinkedStyleSheet: function() {
     OS.File.read(this.linkedCSSFile).then((array) => {
-      let decoder = new TextDecoder();
-      let text = decoder.decode(array);
+      const decoder = new TextDecoder();
+      const text = decoder.decode(array);
 
       // Ensure we don't re-fetch the text from the original source
       // actor when we're notified that the style sheet changed.
       this._isUpdating = true;
-      let relatedSheet = this.styleSheet.relatedStyleSheet;
+      const relatedSheet = this.styleSheet.relatedStyleSheet;
       relatedSheet.update(text, this.transitionsEnabled);
     }, this.markLinkedFileBroken);
   },
@@ -755,8 +755,8 @@ StyleSheetEditor.prototype = {
     * @return {array} key binding objects for the source editor
     */
   _getKeyBindings: function() {
-    let bindings = {};
-    let keybind = Editor.accel(getString("saveStyleSheet.commandkey"));
+    const bindings = {};
+    const keybind = Editor.accel(getString("saveStyleSheet.commandkey"));
 
     bindings[keybind] = () => {
       this.saveToFile(this.savedFile);
@@ -809,11 +809,11 @@ StyleSheetEditor.prototype = {
  *         The path of original file on disk
  */
 function findLinkedFilePath(uri, origUri, file) {
-  let { origBranch, branch } = findUnsharedBranches(origUri, uri);
-  let project = findProjectPath(file, origBranch);
+  const { origBranch, branch } = findUnsharedBranches(origUri, uri);
+  const project = findProjectPath(file, origBranch);
 
-  let parts = project.concat(branch);
-  let path = OS.Path.join.apply(this, parts);
+  const parts = project.concat(branch);
+  const path = OS.Path.join.apply(this, parts);
 
   return path;
 }
@@ -832,7 +832,7 @@ function findLinkedFilePath(uri, origUri, file) {
  *        array of path parts
  */
 function findProjectPath(file, branch) {
-  let path = OS.Path.split(file.path).components;
+  const path = OS.Path.split(file.path).components;
 
   for (let i = 2; i <= branch.length; i++) {
     // work backwards until we find a differing directory name

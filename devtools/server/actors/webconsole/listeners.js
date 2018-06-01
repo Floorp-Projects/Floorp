@@ -79,7 +79,7 @@ ConsoleServiceListener.prototype =
         return;
       }
 
-      let errorWindow = Services.wm.getOuterWindowWithId(message.outerWindowID);
+      const errorWindow = Services.wm.getOuterWindowWithId(message.outerWindowID);
       if (!errorWindow || !isWindowIncluded(this.window, errorWindow)) {
         return;
       }
@@ -128,7 +128,7 @@ ConsoleServiceListener.prototype =
    *         an nsIConsoleMessage
    */
   getCachedMessages: function(includePrivate = false) {
-    let errors = Services.console.getMessageArray() || [];
+    const errors = Services.console.getMessageArray() || [];
 
     // if !this.window, we're in a browser console. Still need to filter
     // private messages.
@@ -144,7 +144,7 @@ ConsoleServiceListener.prototype =
       });
     }
 
-    let ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
+    const ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
 
     return errors.filter((error) => {
       if (error instanceof Ci.nsIScriptError) {
@@ -253,7 +253,7 @@ ConsoleAPIListener.prototype =
     // Here, wrappedJSObject is not a security wrapper but a property defined
     // by the XPCOM component which allows us to unwrap the XPCOM interface and
     // access the underlying JSObject.
-    let apiMessage = message.wrappedJSObject;
+    const apiMessage = message.wrappedJSObject;
 
     if (!this.isMessageRelevant(apiMessage)) {
       return;
@@ -272,13 +272,13 @@ ConsoleAPIListener.prototype =
    *         Do we care about this message?
    */
   isMessageRelevant: function(message) {
-    let workerType = WebConsoleUtils.getWorkerType(message);
+    const workerType = WebConsoleUtils.getWorkerType(message);
 
     if (this.window && workerType === "ServiceWorker") {
       // For messages from Service Workers, message.ID is the
       // scope, which can be used to determine whether it's controlling
       // a window.
-      let scope = message.ID;
+      const scope = message.ID;
 
       if (!this.window.shouldReportForServiceWorkerScope(scope)) {
         return false;
@@ -286,7 +286,7 @@ ConsoleAPIListener.prototype =
     }
 
     if (this.window && !workerType) {
-      let msgWindow = Services.wm.getCurrentInnerWindowWithId(message.innerID);
+      const msgWindow = Services.wm.getCurrentInnerWindowWithId(message.innerID);
       if (!msgWindow || !isWindowIncluded(this.window, msgWindow)) {
         // Not the same window!
         return false;
@@ -328,7 +328,7 @@ ConsoleAPIListener.prototype =
    */
   getCachedMessages: function(includePrivate = false) {
     let messages = [];
-    let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+    const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                               .getService(Ci.nsIConsoleAPIStorage);
 
     // if !this.window, we're in a browser console. Retrieve all events
@@ -336,7 +336,7 @@ ConsoleAPIListener.prototype =
     if (!this.window) {
       messages = ConsoleAPIStorage.getEvents();
     } else {
-      let ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
+      const ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
       ids.forEach((id) => {
         messages = messages.concat(ConsoleAPIStorage.getEvents(id));
       });
@@ -403,7 +403,7 @@ ConsoleReflowListener.prototype =
    * @param boolean interruptible
    */
   sendReflow: function(start, end, interruptible) {
-    let frame = components.stack.caller.caller;
+    const frame = components.stack.caller.caller;
 
     let filename = frame ? frame.filename : null;
 
@@ -472,7 +472,7 @@ exports.ContentProcessListener = ContentProcessListener;
 
 ContentProcessListener.prototype = {
   receiveMessage(message) {
-    let logMsg = message.data;
+    const logMsg = message.data;
     logMsg.wrappedJSObject = logMsg;
     this.listener.onConsoleAPICall(logMsg);
   },
@@ -519,7 +519,7 @@ DocumentEventsListener.prototype = {
       return;
     }
 
-    let { readyState } = window.document;
+    const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
       window.addEventListener("DOMContentLoaded", this.onContentLoaded, { once: true });
     } else {
@@ -533,8 +533,8 @@ DocumentEventsListener.prototype = {
   },
 
   onContentLoaded(event) {
-    let window = event.target.defaultView;
-    let packet = {
+    const window = event.target.defaultView;
+    const packet = {
       from: this.console.actorID,
       type: "documentEvent",
       name: "dom-interactive",
@@ -547,8 +547,8 @@ DocumentEventsListener.prototype = {
   },
 
   onLoad(event) {
-    let window = event.target.defaultView;
-    let packet = {
+    const window = event.target.defaultView;
+    const packet = {
       from: this.console.actorID,
       type: "documentEvent",
       name: "dom-complete",

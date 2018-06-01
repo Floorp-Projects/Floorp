@@ -6,13 +6,13 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
-  let searchbox = $("#calls-searchbox");
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const searchbox = $("#calls-searchbox");
 
   await reload(target);
 
-  let firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([firstRecordingFinished, callListPopulated]);
@@ -43,7 +43,7 @@ async function ifTestingSupported() {
   is(CallsListView.visibleItems[0].attachment.actor.callerPreview, "Object",
     "The visible item's caller has the expected value.");
 
-  let secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
 
   SnapshotsListView._onRecordButtonClick();

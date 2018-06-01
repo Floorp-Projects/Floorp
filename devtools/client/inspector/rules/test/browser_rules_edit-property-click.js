@@ -18,14 +18,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   await testEditPropertyAndCancel(inspector, view);
 });
 
 async function testEditPropertyAndCancel(inspector, view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Test editor is created when clicking on property name");
   await focusEditableField(view, propEditor.nameSpan);
@@ -33,7 +33,7 @@ async function testEditPropertyAndCancel(inspector, view) {
   await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
 
   info("Test editor is created when clicking on ':' next to property name");
-  let nameRect = propEditor.nameSpan.getBoundingClientRect();
+  const nameRect = propEditor.nameSpan.getBoundingClientRect();
   await focusEditableField(view, propEditor.nameSpan, nameRect.width + 1);
   ok(propEditor.nameSpan.inplaceEditor, "Editor created for property name");
   await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
@@ -49,7 +49,7 @@ async function testEditPropertyAndCancel(inspector, view) {
   await onRuleviewChanged;
 
   info("Test editor is created when clicking on ';' next to property value");
-  let valueRect = propEditor.valueSpan.getBoundingClientRect();
+  const valueRect = propEditor.valueSpan.getBoundingClientRect();
   await focusEditableField(view, propEditor.valueSpan, valueRect.width + 1);
   ok(propEditor.valueSpan.inplaceEditor, "Editor created for property value");
   // When cancelling a value edition, the text-property-editor will trigger

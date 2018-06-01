@@ -38,13 +38,13 @@ var gScratchpadWindow; // Reference to the Scratchpad chrome window object
  *         object.
  */
 function openScratchpad(aReadyCallback, aOptions = {}) {
-  let win = aOptions.window ||
+  const win = aOptions.window ||
             ScratchpadManager.openScratchpad(aOptions.state);
   if (!win) {
     return;
   }
 
-  let onLoad = function() {
+  const onLoad = function() {
     win.removeEventListener("load", onLoad);
 
     win.Scratchpad.addObserver({
@@ -83,7 +83,7 @@ function openTabAndScratchpad(aOptions = {}) {
   // eslint-disable-next-line new-cap
   return new promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-    let {selectedBrowser} = gBrowser;
+    const {selectedBrowser} = gBrowser;
     BrowserTestUtils.browserLoaded(selectedBrowser).then(function() {
       openScratchpad((win, sp) => resolve([win, sp]), aOptions);
     });
@@ -106,19 +106,19 @@ function openTabAndScratchpad(aOptions = {}) {
  */
 function createTempFile(aName, aContent, aCallback = function() {}) {
   // Create a temporary file.
-  let file = FileUtils.getFile("TmpD", [aName]);
+  const file = FileUtils.getFile("TmpD", [aName]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   // Write the temporary file.
-  let fout = Cc["@mozilla.org/network/file-output-stream;1"]
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             parseInt("644", 8), fout.DEFER_OPEN);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  let fileContentStream = converter.convertToInputStream(aContent);
+  const fileContentStream = converter.convertToInputStream(aContent);
 
   NetUtil.asyncCopy(fileContentStream, fout, function(aStatus) {
     aCallback(aStatus, file);
@@ -144,11 +144,11 @@ function createTempFile(aName, aContent, aCallback = function() {}) {
  *         The promise that will be resolved when all tests are finished.
  */
 function runAsyncTests(aScratchpad, aTests) {
-  let deferred = defer();
+  const deferred = defer();
 
   (function runTest() {
     if (aTests.length) {
-      let test = aTests.shift();
+      const test = aTests.shift();
       aScratchpad.setText(test.code);
       aScratchpad[test.method]().then(function success() {
         is(aScratchpad.getText(), test.result, test.label);
@@ -183,9 +183,9 @@ function runAsyncTests(aScratchpad, aTests) {
  *         The promise that will be resolved when all tests are finished.
  */
 var runAsyncCallbackTests = async function(aScratchpad, aTests) {
-  for (let {prepare, method, then} of aTests) {
+  for (const {prepare, method, then} of aTests) {
     await prepare();
-    let res = await aScratchpad[method]();
+    const res = await aScratchpad[method]();
     await then(res);
   }
 };

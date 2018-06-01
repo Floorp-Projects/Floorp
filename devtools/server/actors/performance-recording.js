@@ -25,7 +25,7 @@ Object.assign({
       return this.actorID;
     }
 
-    let form = {
+    const form = {
       // actorID is set when this is added to a pool
       actor: this.actorID,
       configuration: this._configuration,

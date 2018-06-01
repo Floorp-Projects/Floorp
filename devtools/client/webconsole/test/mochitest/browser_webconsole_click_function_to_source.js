@@ -19,7 +19,7 @@ add_task(async function() {
 
   info("Open the Debugger panel.");
   const {panel} = await openDebugger();
-  let panelWin = panel.panelWin;
+  const panelWin = panel.panelWin;
 
   info("And right after come back to the Console panel.");
   await openConsole();
@@ -34,7 +34,7 @@ add_task(async function() {
   ok(jumpIcon, "A jump to definition button is rendered, as expected");
 
   info("Click on the jump to definition button.");
-  let onEditorLocationSet = panelWin.once(panelWin.EVENTS.EDITOR_LOCATION_SET);
+  const onEditorLocationSet = panelWin.once(panelWin.EVENTS.EDITOR_LOCATION_SET);
   jumpIcon.click();
   await onEditorLocationSet;
 

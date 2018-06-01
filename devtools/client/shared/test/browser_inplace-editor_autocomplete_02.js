@@ -31,7 +31,7 @@ const testData = [
 ];
 
 const mockGetCSSValuesForPropertyName = function(propertyName) {
-  let values = {
+  const values = {
     "display": [
       "block",
       "flex",
@@ -46,10 +46,10 @@ const mockGetCSSValuesForPropertyName = function(propertyName) {
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," +
     "inplace editor CSS value autocomplete");
-  let [host, win, doc] = await createHost();
+  const [host, win, doc] = await createHost();
 
-  let xulDocument = win.top.document;
-  let popup = new AutocompletePopup(xulDocument, { autoSelect: true });
+  const xulDocument = win.top.document;
+  const popup = new AutocompletePopup(xulDocument, { autoSelect: true });
 
   await new Promise(resolve => {
     createInplaceEditorAndClick({
@@ -68,11 +68,11 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-let runAutocompletionTest = async function(editor) {
+const runAutocompletionTest = async function(editor) {
   info("Starting to test for css property completion");
   editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
 
-  for (let data of testData) {
+  for (const data of testData) {
     await testCompletion(data, editor);
   }
 

@@ -11,11 +11,11 @@ const {getClientCssProperties} = require("devtools/shared/fronts/css-properties"
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+  const [,, doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
   // First render
   await widget.once("render");
 
@@ -29,7 +29,7 @@ add_task(async function() {
   widget.setCssValue("saturate(100%) brightness(150%)");
   await onRender;
 
-  let preset = widget.el.querySelector(".preset");
+  const preset = widget.el.querySelector(".preset");
 
   onRender = widget.once("render");
   widget._presetClick({

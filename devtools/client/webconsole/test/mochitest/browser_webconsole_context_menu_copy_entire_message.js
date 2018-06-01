@@ -29,12 +29,12 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
 // different log messages.
 
 add_task(async function() {
-  let observer = new PrefObserver("");
+  const observer = new PrefObserver("");
   let onPrefUpdated = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
   Services.prefs.setBoolPref(PREF_MESSAGE_TIMESTAMP, true);
   await onPrefUpdated;
 
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   info("Call the log function defined in the test page");
@@ -109,8 +109,8 @@ add_task(async function() {
  * menu item.
  */
 async function copyMessageContent(hud, message) {
-  let menuPopup = await openContextMenu(hud, message);
-  let copyMenuItem = menuPopup.querySelector("#console-menu-copy");
+  const menuPopup = await openContextMenu(hud, message);
+  const copyMenuItem = menuPopup.querySelector("#console-menu-copy");
   ok(copyMenuItem, "copy menu item is enabled");
 
   let clipboardText;

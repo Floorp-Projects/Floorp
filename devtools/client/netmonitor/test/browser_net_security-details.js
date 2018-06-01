@@ -10,15 +10,15 @@
 add_task(async function() {
   await pushPref("security.pki.certificate_transparency.mode", 1);
 
-  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
-  let { document, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   info("Performing a secure request.");
   const REQUESTS_URL = "https://example.com" + CORS_SJS_PATH;
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
@@ -30,19 +30,19 @@ add_task(async function() {
   await waitUntil(() => document.querySelector(
     "#security-panel .security-info-value"));
 
-  let tabpanel = document.querySelector("#security-panel");
-  let textboxes = tabpanel.querySelectorAll(".textbox-input");
+  const tabpanel = document.querySelector("#security-panel");
+  const textboxes = tabpanel.querySelectorAll(".textbox-input");
 
   // Connection
   // The protocol will be TLS but the exact version depends on which protocol
   // the test server example.com supports.
-  let protocol = textboxes[0].value;
+  const protocol = textboxes[0].value;
   ok(protocol.startsWith("TLS"), "The protocol " + protocol + " seems valid.");
 
   // The cipher suite used by the test server example.com might change at any
   // moment but all of them should start with "TLS_".
   // http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-  let suite = textboxes[1].value;
+  const suite = textboxes[1].value;
   ok(suite.startsWith("TLS_"), "The suite " + suite + " seems valid.");
 
   // Host

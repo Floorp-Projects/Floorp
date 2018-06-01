@@ -7,32 +7,32 @@
  * Test showing/hiding columns.
  */
 add_task(async function() {
-  let { monitor, tab } = await initNetMonitor(SIMPLE_URL);
+  const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, parent, connector, windowRequire } = monitor.panelWin;
-  let { requestData } = connector;
-  let {
+  const { document, store, parent, connector, windowRequire } = monitor.panelWin;
+  const { requestData } = connector;
+  const {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.loadURI(SIMPLE_URL);
   await wait;
 
-  let item = getSortedRequests(store.getState()).get(0);
+  const item = getSortedRequests(store.getState()).get(0);
   ok(item.responseHeadersAvailable, "headers are available for lazily fetching");
 
   if (item.responseHeadersAvailable && !item.responseHeaders) {
     await requestData(item.id, "responseHeaders");
   }
 
-  let requestsContainer = document.querySelector(".requests-list-contents");
+  const requestsContainer = document.querySelector(".requests-list-contents");
   ok(requestsContainer, "Container element exists as expected.");
-  let headers = document.querySelector(".requests-list-headers");
+  const headers = document.querySelector(".requests-list-headers");
 
   let columns = store.getState().ui.columns;
-  for (let column in columns) {
+  for (const column in columns) {
     if (columns[column]) {
       await testVisibleColumnContextMenuItem(column, document, parent);
       testColumnsAlignment(headers, requestsContainer);
@@ -45,7 +45,7 @@ add_task(async function() {
   }
 
   columns = store.getState().ui.columns;
-  for (let column in columns) {
+  for (const column in columns) {
     if (columns[column]) {
       await testVisibleColumnContextMenuItem(column, document, parent);
       // Right click on the white-space for the context menu to appear
@@ -79,7 +79,7 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
 
   await waitForTick();
 
-  let menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+  const menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
 
   is(menuItem.getAttribute("type"), "checkbox",
      `${column} menu item should have type="checkbox" attribute`);
@@ -87,7 +87,7 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
      `checked state of ${column} menu item should be correct`);
   ok(!menuItem.disabled, `disabled state of ${column} menu item should be correct`);
 
-  let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
+  const onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
   menuItem.click();
 
   await onHeaderRemoved;
@@ -111,7 +111,7 @@ async function testHiddenColumnContextMenuItem(column, document, parent) {
 }
 
 async function toggleAndCheckColumnVisibility(column, document, parent) {
-  let menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+  const menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
 
   is(menuItem.getAttribute("type"), "checkbox",
      `${column} menu item should have type="checkbox" attribute`);
@@ -119,7 +119,7 @@ async function toggleAndCheckColumnVisibility(column, document, parent) {
      `checked state of ${column} menu item should be correct`);
   ok(!menuItem.disabled, `disabled state of ${column} menu item should be correct`);
 
-  let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
+  const onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
   menuItem.click();
 
   await onHeaderAdded;

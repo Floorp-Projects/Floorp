@@ -26,15 +26,15 @@ const {
  *   webextension context);
  */
 add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
-  let {
+  const {
     tab, document, debugBtn,
   } = await setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, ADDON_NOBG_PATH);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Cc["@mozilla.org/process/environment;1"]
+  const env = Cc["@mozilla.org/process/environment;1"]
         .getService(Ci.nsIEnvironment);
-  let testScript = function() {
+  const testScript = function() {
     /* eslint-disable no-undef */
     toolbox.selectTool("inspector")
       .then(inspector => {
@@ -53,8 +53,8 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
 
         dump("Got a nodeActor with an inline text child\n");
 
-        let expectedValue = "Your addon does not have any document opened yet.";
-        let actualValue = nodeActor.inlineTextChild._form.nodeValue;
+        const expectedValue = "Your addon does not have any document opened yet.";
+        const actualValue = nodeActor.inlineTextChild._form.nodeValue;
 
         if (actualValue !== expectedValue) {
           throw new Error(
@@ -78,7 +78,7 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });
 
-  let onToolboxClose = BrowserToolboxProcess.once("close");
+  const onToolboxClose = BrowserToolboxProcess.once("close");
   debugBtn.click();
   await onToolboxClose;
 

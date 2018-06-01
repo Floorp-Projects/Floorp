@@ -17,7 +17,7 @@ const TEST_URI = "<style>" +
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+  const {inspector, boxmodel, testActor} = await openLayoutView();
 
   await testUnits(inspector, boxmodel, testActor);
   await testValueComesFromStyleRule(inspector, boxmodel, testActor);
@@ -31,11 +31,11 @@ async function testUnits(inspector, boxmodel, testActor) {
      "Should have the right padding");
   await selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-top > span");
+  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "3px", "Should have the right value in the editor.");
 
@@ -68,11 +68,11 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
      "Should have the right border-bottom-width");
   await selectNode("#div2", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-bottom > span");
+  const span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "1em", "Should have the right value in the editor.");
 
@@ -97,11 +97,11 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
      "Should have the right padding");
   await selectNode("#div3", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-right > span");
+  const span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "2em", "Should have the right value in the editor.");
 

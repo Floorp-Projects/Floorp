@@ -32,12 +32,12 @@ class TimingsPanel extends Component {
   }
 
   componentDidMount() {
-    let { connector, request } = this.props;
+    const { connector, request } = this.props;
     fetchNetworkUpdatePacket(connector.requestData, request, ["eventTimings"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    let { connector, request } = nextProps;
+    const { connector, request } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["eventTimings"]);
   }
 
@@ -57,7 +57,7 @@ class TimingsPanel extends Component {
       // offset of third timings box will be 0 + blocked offset + dns offset
       // If offsets sent from the backend aren't available calculate it
       // from the timing info.
-      let offset = offsets ? offsets[type] : TIMING_KEYS.slice(0, idx)
+      const offset = offsets ? offsets[type] : TIMING_KEYS.slice(0, idx)
         .reduce((acc, cur) => (acc + timings[cur] || 0), 0);
 
       const offsetScale = offset / totalTime || 0;

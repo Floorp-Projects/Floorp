@@ -44,7 +44,7 @@ function run_test() {
    */
   const platformProperties = generateCssProperties();
 
-  for (let propertyName in CSS_PROPERTIES) {
+  for (const propertyName in CSS_PROPERTIES) {
     const platformProperty = platformProperties[propertyName];
     const clientProperty = CSS_PROPERTIES[propertyName];
     const deepEqual = isJsonDeepEqual(platformProperty, clientProperty);
@@ -113,7 +113,7 @@ function isJsonDeepEqual(a, b) {
 
   // Handle objects
   if (typeof a === "object" && typeof b === "object") {
-    for (let key in a) {
+    for (const key in a) {
       if (!isJsonDeepEqual(a[key], b[key])) {
         return false;
       }

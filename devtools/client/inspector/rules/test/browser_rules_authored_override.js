@@ -7,22 +7,22 @@
 // Test for as-authored styles.
 
 async function createTestContent(style) {
-  let html = `<style type="text/css">
+  const html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
+  const {inspector, view} = await openRuleView();
   await selectNode("#testid", inspector);
   return view;
 }
 
 add_task(async function() {
-  let gradientText1 = "(orange, blue);";
-  let gradientText2 = "(pink, teal);";
+  const gradientText1 = "(orange, blue);";
+  const gradientText2 = "(pink, teal);";
 
-  let view =
+  const view =
       await createTestContent("#testid {" +
                               "  background-image: linear-gradient" +
                               gradientText1 +
@@ -32,12 +32,12 @@ add_task(async function() {
                               gradientText2 +
                               "} ");
 
-  let elementStyle = view._elementStyle;
-  let rule = elementStyle.rules[1];
+  const elementStyle = view._elementStyle;
+  const rule = elementStyle.rules[1];
 
   // Initially the last property should be active.
   for (let i = 0; i < 3; ++i) {
-    let prop = rule.textProps[i];
+    const prop = rule.textProps[i];
     is(prop.name, "background-image", "check the property name");
     is(prop.overridden, i !== 2, "check overridden for " + i);
   }
@@ -46,7 +46,7 @@ add_task(async function() {
 
   // Now the first property should be active.
   for (let i = 0; i < 3; ++i) {
-    let prop = rule.textProps[i];
+    const prop = rule.textProps[i];
     is(prop.overridden || !prop.enabled, i !== 0,
        "post-change check overridden for " + i);
   }

@@ -22,18 +22,18 @@ addDebuggerToGlobal(this);
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = "data:text/html,<script>function glorp() { }<\/script>";
   iframe.onload = firstOnLoadHandler;
   document.body.appendChild(iframe);
 
   function firstOnLoadHandler() {
-    let dbg = new Debugger();
-    let iframeDO = dbg.addDebuggee(iframe.contentWindow);
+    const dbg = new Debugger();
+    const iframeDO = dbg.addDebuggee(iframe.contentWindow);
 
     // For sanity: check that the debuggee global is the inner window,
     // and that the outer window gets a distinct D.O.
-    let iframeWindowProxyDO = iframeDO.makeDebuggeeValue(iframe.contentWindow);
+    const iframeWindowProxyDO = iframeDO.makeDebuggeeValue(iframe.contentWindow);
     ok(iframeDO !== iframeWindowProxyDO);
 
     // The real test: Debugger.Script.prototype.global returns inner windows.

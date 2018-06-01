@@ -11,7 +11,7 @@ const TEST_URL_2 =
   "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Check the inspector toolbar");
   let button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");

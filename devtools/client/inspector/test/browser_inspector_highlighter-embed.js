@@ -9,22 +9,22 @@
 const TEST_URL = URL_ROOT + "doc_inspector_embed.html";
 
 add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Get a node inside the <embed> element and select/highlight it");
-  let body = await getEmbeddedBody(inspector);
+  const body = await getEmbeddedBody(inspector);
   await selectAndHighlightNode(body, inspector);
 
-  let selectedNode = inspector.selection.nodeFront;
+  const selectedNode = inspector.selection.nodeFront;
   is(selectedNode.tagName.toLowerCase(), "body", "The selected node is <body>");
   ok(selectedNode.baseURI.endsWith("doc_inspector_menu.html"),
      "The selected node is the <body> node inside the <embed> element");
 });
 
 async function getEmbeddedBody({walker}) {
-  let embed = await walker.querySelector(walker.rootNode, "embed");
-  let {nodes} = await walker.children(embed);
-  let contentDoc = nodes[0];
-  let body = await walker.querySelector(contentDoc, "body");
+  const embed = await walker.querySelector(walker.rootNode, "embed");
+  const {nodes} = await walker.children(embed);
+  const contentDoc = nodes[0];
+  const body = await walker.querySelector(contentDoc, "body");
   return body;
 }

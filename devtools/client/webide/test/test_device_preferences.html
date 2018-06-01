@@ -23,20 +23,20 @@
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = await openWebIDE();
+          const win = await openWebIDE();
 
-          let prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
-          let docRuntime = getRuntimeDocument(win);
+          const prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
+          const docRuntime = getRuntimeDocument(win);
 
           win.AppManager.update("runtime-list");
 
           await connectToLocalRuntime(win);
 
-          let prefs = docRuntime.querySelector("#runtime-preferences");
+          const prefs = docRuntime.querySelector("#runtime-preferences");
 
           ok(!prefs.hasAttribute("disabled"), "device prefs cmd enabled");
 
-          let deck = win.document.querySelector("#deck");
+          const deck = win.document.querySelector("#deck");
 
           win.Cmds.showDevicePrefs();
           is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
@@ -49,11 +49,11 @@
 
           setDocument(prefIframe);
 
-          let fields = doc.querySelectorAll(".editable");
+          const fields = doc.querySelectorAll(".editable");
 
           addNewField();
 
-          let preference = "accessibility.accesskeycausesactivation";
+          const preference = "accessibility.accesskeycausesactivation";
 
           fieldChange(fields, preference);
 

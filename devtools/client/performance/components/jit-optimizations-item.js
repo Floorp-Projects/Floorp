@@ -59,10 +59,10 @@ class JITOptimizationsItem extends Component {
   }
 
   _renderSite({ item: site, onViewSourceInDebugger, frameData }) {
-    let attempts = site.data.attempts;
-    let lastStrategy = attempts[attempts.length - 1].strategy;
+    const attempts = site.data.attempts;
+    const lastStrategy = attempts[attempts.length - 1].strategy;
     let propString = "";
-    let propertyName = site.data.propertyName;
+    const propertyName = site.data.propertyName;
 
     // Display property name if it exists
     if (propertyName) {
@@ -73,13 +73,13 @@ class JITOptimizationsItem extends Component {
       }
     }
 
-    let sampleString = PluralForm.get(site.samples, JIT_SAMPLES)
+    const sampleString = PluralForm.get(site.samples, JIT_SAMPLES)
       .replace("#1", site.samples);
-    let text = dom.span(
+    const text = dom.span(
       { className: "optimization-site-title" },
       `${lastStrategy}${propString} – (${sampleString})`
     );
-    let frame = Frame({
+    const frame = Frame({
       onClick: () => onViewSourceInDebugger(frameData.url, site.data.line),
       frame: {
         source: frameData.url,
@@ -87,7 +87,7 @@ class JITOptimizationsItem extends Component {
         column: site.data.column,
       }
     });
-    let children = [text, frame];
+    const children = [text, frame];
 
     if (!hasSuccessfulOutcome(site)) {
       children.unshift(dom.span({ className: "opt-icon warning" }));
@@ -109,8 +109,8 @@ class JITOptimizationsItem extends Component {
   }
 
   _renderAttempt({ item: attempt }) {
-    let success = isSuccessfulOutcome(attempt.outcome);
-    let { strategy, outcome } = attempt;
+    const success = isSuccessfulOutcome(attempt.outcome);
+    const { strategy, outcome } = attempt;
     return dom.span({ className: "optimization-attempt" },
       dom.span({ className: "optimization-strategy" }, strategy),
       " → ",
@@ -125,7 +125,7 @@ class JITOptimizationsItem extends Component {
   }
 
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
-    let children = [
+    const children = [
       dom.span({ className: "optimization-observed-type-keyed" },
         `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`)
     ];
@@ -156,7 +156,7 @@ class JITOptimizationsItem extends Component {
      * TODO - Re-enable this eslint rule. The JIT tool is a work in progress, and these
      *        undefined variables may represent intended functionality.
      */
-    let {
+    const {
       depth,
       arrow,
       type,

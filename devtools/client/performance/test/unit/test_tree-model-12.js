@@ -6,9 +6,9 @@
 // in the profile that prefixes of other stacks.
 
 add_task(function() {
-  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let thread = new ThreadNode(gThread, { startTime: 0, endTime: 50 });
-  let root = getFrameNodePath(thread, "(root)");
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const thread = new ThreadNode(gThread, { startTime: 0, endTime: 50 });
+  const root = getFrameNodePath(thread, "(root)");
 
   /**
    * Samples

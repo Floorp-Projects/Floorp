@@ -17,13 +17,13 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 
 add_task(async function() {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
-  let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const tab = await addTab(URL);
+  const target = TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
-  let shortcut = L10N.getStr("toolbox.toggleHost.key");
+  const shortcut = L10N.getStr("toolbox.toggleHost.key");
 
-  let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
+  const {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
   checkHostType(toolbox, BOTTOM, SIDE);
 
   info("Switching from bottom to side");

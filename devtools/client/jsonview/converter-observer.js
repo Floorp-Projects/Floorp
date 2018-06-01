@@ -60,7 +60,7 @@ JsonViewSniffer.prototype = {
   },
 
   isTopLevelLoad: function(request) {
-    let loadInfo = request.loadInfo;
+    const loadInfo = request.loadInfo;
     if (loadInfo && loadInfo.isTopLevelLoad) {
       return (request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
     }

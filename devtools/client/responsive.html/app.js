@@ -168,7 +168,7 @@ class App extends Component {
   }
 
   render() {
-    let {
+    const {
       devices,
       displayPixelRatio,
       networkThrottling,
@@ -178,7 +178,7 @@ class App extends Component {
       viewports,
     } = this.props;
 
-    let {
+    const {
       onAddCustomDevice,
       onBrowserMounted,
       onChangeDevice,

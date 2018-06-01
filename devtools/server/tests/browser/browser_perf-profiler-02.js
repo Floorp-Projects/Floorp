@@ -14,9 +14,9 @@ const { pmmIsProfilerActive, pmmLoadFrameScripts } = require("devtools/client/pe
 add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
   initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = await connectDebuggerClient(client);
-  let firstFront = PerformanceFront(client, form);
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const firstFront = PerformanceFront(client, form);
   await firstFront.connect();
 
   pmmLoadFrameScripts(gBrowser);
@@ -24,9 +24,9 @@ add_task(async function() {
   await firstFront.startRecording();
 
   await addTab(MAIN_DOMAIN + "doc_perf.html");
-  let client2 = new DebuggerClient(DebuggerServer.connectPipe());
-  let form2 = await connectDebuggerClient(client2);
-  let secondFront = PerformanceFront(client2, form2);
+  const client2 = new DebuggerClient(DebuggerServer.connectPipe());
+  const form2 = await connectDebuggerClient(client2);
+  const secondFront = PerformanceFront(client2, form2);
   await secondFront.connect();
   pmmLoadFrameScripts(gBrowser);
 

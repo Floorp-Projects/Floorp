@@ -11,12 +11,12 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { DetailsView, JsCallTreeView } = panel.panelWin;
+  const { DetailsView, JsCallTreeView } = panel.panelWin;
 
   await DetailsView.selectView("js-calltree");
   await startRecording(panel);

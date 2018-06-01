@@ -7,13 +7,13 @@
  */
 
 async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
-  let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
+  const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+  const { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
   await reload(target);
 
-  let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  const recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
+  const callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
   await Promise.all([recordingFinished, callListPopulated]);
 
@@ -42,7 +42,7 @@ async function ifTestingSupported() {
     "8", "", "requestAnimationFrame", "(Function)", "doc_simple-canvas.html:30");
 
   function testItem(item, index, context, name, args, location) {
-    let i = CallsListView.indexOfItem(item);
+    const i = CallsListView.indexOfItem(item);
     is(i, index - 1,
       "The item at index " + index + " is correctly displayed in the UI.");
 

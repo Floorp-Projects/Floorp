@@ -21,22 +21,22 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  let highlighters = view.highlighters;
+  const {inspector, view} = await openRuleView();
+  const highlighters = view.highlighters;
 
   await selectNode("#grid", inspector);
-  let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
+  const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   await onHighlighterShown;
 
   info("Edit the 'grid' property value to 'block'.");
-  let editor = await focusEditableField(view, container);
-  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  let onDone = view.once("ruleview-changed");
+  const editor = await focusEditableField(view, container);
+  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  const onDone = view.once("ruleview-changed");
   editor.input.value = "block;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onHighlighterHidden;

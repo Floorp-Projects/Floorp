@@ -8,10 +8,10 @@
 const { toggleDiffing } = require("devtools/client/memory/actions/diffing");
 
 add_task(async function() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
+  const front = new StubbedMemoryFront();
+  const heapWorker = new HeapAnalysesClient();
   await front.attach();
-  let store = Store();
+  const store = Store();
   const { getState, dispatch } = store;
 
   equal(getState().diffing, null, "not diffing by default");

@@ -14,12 +14,12 @@ const { times } = require("devtools/client/performance/test/helpers/event-utils"
 const { dragStartCanvasGraph, dragStopCanvasGraph } = require("devtools/client/performance/test/helpers/input-utils");
 
 add_task(async function() {
-  let { panel } = await initPerformanceInNewTab({
+  const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { EVENTS, OverviewView } = panel.panelWin;
+  const { EVENTS, OverviewView } = panel.panelWin;
 
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
@@ -27,10 +27,10 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  let markersOverview = OverviewView.graphs.get("timeline");
-  let memoryGraph = OverviewView.graphs.get("memory");
-  let framerateGraph = OverviewView.graphs.get("framerate");
-  let width = framerateGraph.width;
+  const markersOverview = OverviewView.graphs.get("timeline");
+  const memoryGraph = OverviewView.graphs.get("memory");
+  const framerateGraph = OverviewView.graphs.get("framerate");
+  const width = framerateGraph.width;
 
   // Perform a selection inside the framerate graph.
 

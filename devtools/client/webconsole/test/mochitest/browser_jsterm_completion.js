@@ -10,8 +10,8 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
 add_task(async function() {
-  let {jsterm} = await openNewTabAndConsole(TEST_URI);
-  let input = jsterm.inputNode;
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const input = jsterm.inputNode;
 
   // Test typing 'docu'.
   await jstermSetValueAndComplete(jsterm, "docu");

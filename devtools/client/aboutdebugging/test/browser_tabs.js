@@ -6,7 +6,7 @@
 const TAB_URL = "data:text/html,<title>foo</title>";
 
 add_task(async function() {
-  let { tab, document } = await openAboutDebugging("tabs");
+  const { tab, document } = await openAboutDebugging("tabs");
 
   // Wait for initial tabs list which may be empty
   let tabsElement = getTabList(document);
@@ -16,25 +16,25 @@ add_task(async function() {
   tabsElement = getTabList(document);
 
   let names = [...tabsElement.querySelectorAll(".target-name")];
-  let initialTabCount = names.length;
+  const initialTabCount = names.length;
 
   info("Open a new background tab");
-  let newTab = await addTab(TAB_URL, { background: true });
+  const newTab = await addTab(TAB_URL, { background: true });
 
   info("Wait for the tab to appear in the list with the correct name");
-  let container = await waitUntilTabContainer("foo", document);
+  const container = await waitUntilTabContainer("foo", document);
 
   info("Wait until the title to update");
   await waitUntil(() => {
     return container.querySelector(".target-name").title === TAB_URL;
   }, 100);
 
-  let icon = container.querySelector(".target-icon");
+  const icon = container.querySelector(".target-icon");
   ok(icon && icon.src, "Tab icon found and src attribute is not empty");
 
   info("Check if the tab icon is a valid image");
   await new Promise(r => {
-    let image = new Image();
+    const image = new Image();
     image.onload = () => {
       ok(true, "Favicon is not a broken image");
       r();
@@ -60,8 +60,8 @@ add_task(async function() {
 });
 
 function getTabContainer(name, document) {
-  let nameElements = [...document.querySelectorAll("#tabs .target-name")];
-  let nameElement = nameElements.filter(element => element.textContent === name)[0];
+  const nameElements = [...document.querySelectorAll("#tabs .target-name")];
+  const nameElement = nameElements.filter(element => element.textContent === name)[0];
   if (nameElement) {
     return nameElement.closest(".target-container");
   }

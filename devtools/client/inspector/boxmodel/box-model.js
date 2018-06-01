@@ -130,7 +130,7 @@ BoxModel.prototype = {
       this._updateReasons.push(reason);
     }
 
-    let lastRequest = ((async function() {
+    const lastRequest = ((async function() {
       if (!this.inspector ||
           !this.isPanelVisible() ||
           !this.inspector.selection.isConnected() ||
@@ -138,13 +138,13 @@ BoxModel.prototype = {
         return null;
       }
 
-      let node = this.inspector.selection.nodeFront;
+      const node = this.inspector.selection.nodeFront;
 
       let layout = await this.inspector.pageStyle.getLayout(node, {
         autoMargins: true,
       });
 
-      let styleEntries = await this.inspector.pageStyle.getApplied(node, {
+      const styleEntries = await this.inspector.pageStyle.getApplied(node, {
         // We don't need styles applied to pseudo elements of the current node.
         skipPseudo: true
       });
@@ -152,7 +152,7 @@ BoxModel.prototype = {
 
       // Update the layout properties with whether or not the element's position is
       // editable with the geometry editor.
-      let isPositionEditable = await this.inspector.pageStyle.isPositionEditable(node);
+      const isPositionEditable = await this.inspector.pageStyle.isPositionEditable(node);
 
       layout = Object.assign({}, layout, {
         isPositionEditable,
@@ -163,7 +163,7 @@ BoxModel.prototype = {
 
       if (actorCanGetOffSetParent) {
         // Update the redux store with the latest offset parent DOM node
-        let offsetParent = await this.inspector.walker.getOffsetParent(node);
+        const offsetParent = await this.inspector.walker.getOffsetParent(node);
         this.store.dispatch(updateOffsetParent(offsetParent));
       }
 
@@ -195,7 +195,7 @@ BoxModel.prototype = {
       return;
     }
 
-    let toolbox = this.inspector.toolbox;
+    const toolbox = this.inspector.toolbox;
     toolbox.highlighterUtils.unhighlight();
   },
 
@@ -204,7 +204,7 @@ BoxModel.prototype = {
    * geometry editor enabled state.
    */
   onHideGeometryEditor() {
-    let { markup, selection, toolbox } = this.inspector;
+    const { markup, selection, toolbox } = this.inspector;
 
     this.highlighters.hideGeometryEditor();
     this.store.dispatch(updateGeometryEditorEnabled(false));
@@ -221,14 +221,14 @@ BoxModel.prototype = {
    * on the markup view.
    */
   onMarkupViewLeave() {
-    let state = this.store.getState();
-    let enabled = state.boxModel.geometryEditorEnabled;
+    const state = this.store.getState();
+    const enabled = state.boxModel.geometryEditorEnabled;
 
     if (!enabled) {
       return;
     }
 
-    let nodeFront = this.inspector.selection.nodeFront;
+    const nodeFront = this.inspector.selection.nodeFront;
     this.highlighters.showGeometryEditor(nodeFront);
   },
 
@@ -268,14 +268,14 @@ BoxModel.prototype = {
    *         The name of the property.
    */
   onShowBoxModelEditor(element, event, property) {
-    let session = new EditingSession({
+    const session = new EditingSession({
       inspector: this.inspector,
       doc: this.document,
       elementRules: this.elementRules,
     });
-    let initialValue = session.getProperty(property);
+    const initialValue = session.getProperty(property);
 
-    let editor = new InplaceEditor({
+    const editor = new InplaceEditor({
       element: element,
       initial: initialValue,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
@@ -290,13 +290,13 @@ BoxModel.prototype = {
           value += "px";
         }
 
-        let properties = [
+        const properties = [
           { name: property, value: value }
         ];
 
         if (property.substring(0, 7) == "border-") {
-          let bprop = property.substring(0, property.length - 5) + "style";
-          let style = session.getProperty(bprop);
+          const bprop = property.substring(0, property.length - 5) + "style";
+          const style = session.getProperty(bprop);
           if (!style || style == "none" || style == "hidden") {
             properties.push({ name: bprop, value: "solid" });
           }
@@ -334,8 +334,8 @@ BoxModel.prototype = {
       return;
     }
 
-    let toolbox = this.inspector.toolbox;
-    let nodeFront = this.inspector.selection.nodeFront;
+    const toolbox = this.inspector.toolbox;
+    const nodeFront = this.inspector.selection.nodeFront;
 
     toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
@@ -364,10 +364,10 @@ BoxModel.prototype = {
    * toggle button is clicked.
    */
   onToggleGeometryEditor() {
-    let { markup, selection, toolbox } = this.inspector;
-    let nodeFront = this.inspector.selection.nodeFront;
-    let state = this.store.getState();
-    let enabled = !state.boxModel.geometryEditorEnabled;
+    const { markup, selection, toolbox } = this.inspector;
+    const nodeFront = this.inspector.selection.nodeFront;
+    const state = this.store.getState();
+    const enabled = !state.boxModel.geometryEditorEnabled;
 
     this.highlighters.toggleGeometryHighlighter(nodeFront);
     this.store.dispatch(updateGeometryEditorEnabled(enabled));

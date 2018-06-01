@@ -13,9 +13,9 @@ const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(async function() {
   await addTab("about:blank");
-  let [host, win, doc] = await createHost("bottom", TEST_URI);
+  const [host, win, doc] = await createHost("bottom", TEST_URI);
 
-  let tree = new TreeWidget(doc.querySelector("div"), {
+  const tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"
   });
 
@@ -62,7 +62,7 @@ function populateTree(tree, doc) {
   tree.add(["level1.1", "level2", {id: "level3", type: "url"}]);
 
   // Adding a new non text item in the tree.
-  let node = doc.createElement("div");
+  const node = doc.createElement("div");
   node.textContent = "Foo Bar";
   node.className = "foo bar";
   tree.add([{
@@ -76,7 +76,7 @@ function populateTree(tree, doc) {
 
 // Sends a click event on the passed DOM node in an async manner
 function click(node) {
-  let win = node.ownerDocument.defaultView;
+  const win = node.ownerDocument.defaultView;
   executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, win));
 }
 
@@ -86,14 +86,14 @@ function click(node) {
 async function testKeyboardInteraction(tree, win) {
   info("Testing keyboard interaction with the tree");
   let event;
-  let pass = (d, a) => event.resolve([d, a]);
+  const pass = (d, a) => event.resolve([d, a]);
 
   info("clicking on first top level item");
   let node = tree.root.children.firstChild.firstChild;
   event = defer();
   // The select event handler will be called before the click event hasn't
   // fully finished, so wait for both of them.
-  let clicked = once(node, "click");
+  const clicked = once(node, "click");
   tree.once("select", pass);
   click(node);
   await Promise.all([event.promise, clicked]);

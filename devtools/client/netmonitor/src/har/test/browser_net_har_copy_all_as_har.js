@@ -11,7 +11,7 @@ add_task(async function() {
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.
   await pushPref("network.tcp.tcp_fastopen_enable", false);
-  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");
 
@@ -24,7 +24,7 @@ add_task(async function() {
   is(har.log.pages.length, 1, "There must be one page");
   is(har.log.entries.length, 1, "There must be one request");
 
-  let page = har.log.pages[0];
+  const page = har.log.pages[0];
   ok("onContentLoad" in page.pageTimings, "There must be onContentLoad time");
   ok("onLoad" in page.pageTimings, "There must be onLoad time");
 
@@ -63,21 +63,21 @@ add_task(async function() {
  * Reload the page and copy all as HAR.
  */
 async function reloadAndCopyAllAsHar(tab, monitor) {
-  let { connector, store, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { HarMenuUtils } = windowRequire(
+  const { connector, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { HarMenuUtils } = windowRequire(
     "devtools/client/netmonitor/src/har/har-menu-utils");
-  let { getSortedRequests } = windowRequire(
+  const { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
   await HarMenuUtils.copyAllAsHar(getSortedRequests(store.getState()), connector);
 
-  let jsonString = SpecialPowers.getClipboardData("text/unicode");
+  const jsonString = SpecialPowers.getClipboardData("text/unicode");
   return JSON.parse(jsonString);
 }

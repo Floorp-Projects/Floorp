@@ -8,7 +8,7 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<body class='class1 class2'>");
-  let {view, testActor} = await openRuleView();
+  const {view, testActor} = await openRuleView();
 
   info("Open the class panel");
   view.showClassPanel();

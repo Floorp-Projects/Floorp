@@ -21,12 +21,12 @@ const handlerMap = {
 };
 
 add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+  const helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
-  let { hide, finalize } = helper;
+  const { hide, finalize } = helper;
 
   await checkArrowsAndHandlers(helper, ".absolute-all-4", {
     "top": {x1: 506, y1: 51, x2: 506, y2: 61},
@@ -55,7 +55,7 @@ async function checkArrowsAndHandlers(helper, selector, arrows) {
 
   await helper.show(selector);
 
-  for (let side in arrows) {
+  for (const side in arrows) {
     await checkArrowAndHandler(helper, side, arrows[side]);
   }
 }
@@ -63,12 +63,12 @@ async function checkArrowsAndHandlers(helper, selector, arrows) {
 async function checkArrowAndHandler({getElementAttribute}, name, expectedCoords) {
   info("Checking " + name + "arrow and handler coordinates are correct");
 
-  let handlerX = await getElementAttribute("handler-" + name, "cx");
-  let handlerY = await getElementAttribute("handler-" + name, "cy");
+  const handlerX = await getElementAttribute("handler-" + name, "cx");
+  const handlerY = await getElementAttribute("handler-" + name, "cy");
 
-  let expectedHandlerX = await getElementAttribute("arrow-" + name,
+  const expectedHandlerX = await getElementAttribute("arrow-" + name,
                                 handlerMap[name].cx);
-  let expectedHandlerY = await getElementAttribute("arrow-" + name,
+  const expectedHandlerY = await getElementAttribute("arrow-" + name,
                                 handlerMap[name].cy);
 
   is(handlerX, expectedHandlerX,
@@ -76,8 +76,8 @@ async function checkArrowAndHandler({getElementAttribute}, name, expectedCoords)
   is(handlerY, expectedHandlerY,
     "coordinate Y for handler " + name + " is correct.");
 
-  for (let coordinate in expectedCoords) {
-    let value = await getElementAttribute("arrow-" + name, coordinate);
+  for (const coordinate in expectedCoords) {
+    const value = await getElementAttribute("arrow-" + name, coordinate);
 
     is(Math.floor(value), expectedCoords[coordinate],
       coordinate + " coordinate for arrow " + name + " is correct");

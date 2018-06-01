@@ -12,13 +12,13 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 817834";
 
 add_task(async function() {
-  let hud = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   await testEditedInputHistory(hud);
 });
 
 async function testEditedInputHistory(hud) {
-  let jsterm = hud.jsterm;
-  let inputNode = jsterm.inputNode;
+  const jsterm = hud.jsterm;
+  const inputNode = jsterm.inputNode;
 
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
   is(inputNode.selectionStart, 0);

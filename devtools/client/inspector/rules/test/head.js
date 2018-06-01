@@ -43,7 +43,7 @@ var _addTab = addTab;
 addTab = function(url) {
   return _addTab(url).then(tab => {
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-    let browser = tab.linkedBrowser;
+    const browser = tab.linkedBrowser;
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     return tab;
   });
@@ -74,8 +74,8 @@ function getStyle(testActor, selector, propName) {
  * @param {CSSRuleView} view
  */
 async function hideTooltipAndWaitForRuleViewChanged(editorTooltip, view) {
-  let onModified = view.once("ruleview-changed");
-  let onHidden = editorTooltip.tooltip.once("hidden");
+  const onModified = view.once("ruleview-changed");
+  const onHidden = editorTooltip.tooltip.once("hidden");
   editorTooltip.hide();
   await onModified;
   await onHidden;
@@ -134,12 +134,12 @@ var simulateColorPickerChange = async function(ruleView, colorPicker,
     newRgba, expectedChange) {
   let onComputedStyleChanged;
   if (expectedChange) {
-    let {selector, name, value} = expectedChange;
+    const {selector, name, value} = expectedChange;
     onComputedStyleChanged = waitForComputedStyleProperty(selector, null, name, value);
   }
-  let onRuleViewChanged = ruleView.once("ruleview-changed");
+  const onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
-  let spectrum = colorPicker.spectrum;
+  const spectrum = colorPicker.spectrum;
   info("Setting the new color");
   spectrum.rgb = newRgba;
   info("Applying the change");
@@ -177,13 +177,13 @@ var simulateColorPickerChange = async function(ruleView, colorPicker,
  */
 var openColorPickerAndSelectColor = async function(view, ruleIndex,
     propIndex, newRgba, expectedChange) {
-  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
-  let propEditor = ruleEditor.rule.textProps[propIndex].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
-  let cPicker = view.tooltips.getTooltip("colorPicker");
+  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  const propEditor = ruleEditor.rule.textProps[propIndex].editor;
+  const swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
+  const cPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Opening the colorpicker by clicking the color swatch");
-  let onColorPickerReady = cPicker.once("ready");
+  const onColorPickerReady = cPicker.once("ready");
   swatch.click();
   await onColorPickerReady;
 
@@ -215,26 +215,26 @@ var openColorPickerAndSelectColor = async function(view, ruleIndex,
  */
 var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
     propIndex, coords, expectedChange) {
-  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
-  let propEditor = ruleEditor.rule.textProps[propIndex].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
-  let bezierTooltip = view.tooltips.getTooltip("cubicBezier");
+  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  const propEditor = ruleEditor.rule.textProps[propIndex].editor;
+  const swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
+  const bezierTooltip = view.tooltips.getTooltip("cubicBezier");
 
   info("Opening the cubicBezier by clicking the swatch");
-  let onBezierWidgetReady = bezierTooltip.once("ready");
+  const onBezierWidgetReady = bezierTooltip.once("ready");
   swatch.click();
   await onBezierWidgetReady;
 
-  let widget = await bezierTooltip.widget;
+  const widget = await bezierTooltip.widget;
 
   info("Simulating a change of curve in the widget");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   widget.coordinates = coords;
   await onRuleViewChanged;
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
-    let {selector, name, value} = expectedChange;
+    const {selector, name, value} = expectedChange;
     await waitForComputedStyleProperty(selector, null, name, value);
   }
 
@@ -267,11 +267,11 @@ var addProperty = async function(view, ruleIndex, name, value,
                                  blurNewProperty = true) {
   info("Adding new property " + name + ":" + value + " to rule " + ruleIndex);
 
-  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   let editor = await focusNewRuleViewProperty(ruleEditor);
-  let numOfProps = ruleEditor.rule.textProps.length;
+  const numOfProps = ruleEditor.rule.textProps.length;
 
-  let onMutations = new Promise(r => {
+  const onMutations = new Promise(r => {
     // If we're adding the property to a non-element style rule, we don't need to wait
     // for mutations.
     if (ruleIndex !== 0) {
@@ -293,14 +293,14 @@ var addProperty = async function(view, ruleIndex, name, value,
 
   info("Adding name " + name);
   editor.input.value = name;
-  let onNameAdded = view.once("ruleview-changed");
+  const onNameAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onNameAdded;
 
   // Focus has moved to the value inplace-editor automatically.
   editor = inplaceEditor(view.styleDocument.activeElement);
-  let textProps = ruleEditor.rule.textProps;
-  let textProp = textProps[textProps.length - 1];
+  const textProps = ruleEditor.rule.textProps;
+  const textProp = textProps[textProps.length - 1];
 
   is(ruleEditor.rule.textProps.length, numOfProps + 1,
      "A new test property was added");
@@ -310,12 +310,12 @@ var addProperty = async function(view, ruleIndex, name, value,
   info("Adding value " + value);
   // Setting the input value schedules a preview to be shown in 10ms which
   // triggers a ruleview-changed event (see bug 1209295).
-  let onPreview = view.once("ruleview-changed");
+  const onPreview = view.once("ruleview-changed");
   editor.input.value = value;
   view.debounce.flush();
   await onPreview;
 
-  let onValueAdded = view.once("ruleview-changed");
+  const onValueAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey(commitValueWith, {}, view.styleWindow);
   await onValueAdded;
 
@@ -348,7 +348,7 @@ var setProperty = async function(view, textProp, value,
                                         blurNewProperty = true) {
   await focusEditableField(view, textProp.editor.valueSpan);
 
-  let onPreview = view.once("ruleview-changed");
+  const onPreview = view.once("ruleview-changed");
   if (value === null) {
     EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
   } else {
@@ -357,7 +357,7 @@ var setProperty = async function(view, textProp, value,
   view.debounce.flush();
   await onPreview;
 
-  let onValueDone = view.once("ruleview-changed");
+  const onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onValueDone;
 
@@ -382,7 +382,7 @@ var removeProperty = async function(view, textProp,
                                            blurNewProperty = true) {
   await focusEditableField(view, textProp.editor.nameSpan);
 
-  let onModifications = view.once("ruleview-changed");
+  const onModifications = view.once("ruleview-changed");
   info("Deleting the property name now");
   EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
@@ -402,7 +402,7 @@ var removeProperty = async function(view, textProp,
  *        The instance of the TextProperty to be enabled/disabled
  */
 var togglePropStatus = async function(view, textProp) {
-  let onRuleViewRefreshed = view.once("ruleview-changed");
+  const onRuleViewRefreshed = view.once("ruleview-changed");
   textProp.editor.enable.click();
   await onRuleViewRefreshed;
 };
@@ -417,7 +417,7 @@ var togglePropStatus = async function(view, textProp) {
  *        The current instance of the TestActor
  */
 async function reloadPage(inspector, testActor) {
-  let onNewRoot = inspector.once("new-root");
+  const onNewRoot = inspector.once("new-root");
   await testActor.reload();
   await onNewRoot;
   await inspector.markup._waitForChildren();
@@ -460,8 +460,8 @@ async function addNewRuleAndDismissEditor(inspector, view, expectedSelector,
   await addNewRule(inspector, view);
 
   info("Getting the new rule at index " + expectedIndex);
-  let ruleEditor = getRuleViewRuleEditor(view, expectedIndex);
-  let editor = ruleEditor.selectorText.ownerDocument.activeElement;
+  const ruleEditor = getRuleViewRuleEditor(view, expectedIndex);
+  const editor = ruleEditor.selectorText.ownerDocument.activeElement;
   is(editor.value, expectedSelector,
      "The editor for the new selector has the correct value: " + expectedSelector);
 
@@ -486,8 +486,8 @@ async function addNewRuleAndDismissEditor(inspector, view, expectedSelector,
  * @return a promise that resolves after the element received the focus
  */
 async function sendKeysAndWaitForFocus(view, element, keys) {
-  let onFocus = once(element, "focus", true);
-  for (let key of keys) {
+  const onFocus = once(element, "focus", true);
+  for (const key of keys) {
     EventUtils.sendKey(key, view.styleWindow);
   }
   await onFocus;
@@ -501,7 +501,7 @@ async function sendKeysAndWaitForFocus(view, element, keys) {
 function waitForStyleModification(inspector) {
   return new Promise(function(resolve) {
     function checkForStyleModification(mutations) {
-      for (let mutation of mutations) {
+      for (const mutation of mutations) {
         if (mutation.type === "attributes" && mutation.attributeName === "style") {
           inspector.off("markupmutation", checkForStyleModification);
           resolve();
@@ -519,7 +519,7 @@ function waitForStyleModification(inspector) {
  * @param {CSSRuleView} view
  */
 async function clickSelectorIcon(icon, view) {
-  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
   await onToggled;
 }
@@ -568,17 +568,17 @@ function checkClassPanelContent(view, classes) {
  * @param {swatch} color swatch of a particular property
  */
 async function openEyedropper(view, swatch) {
-  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
+  const tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
 
   info("Click on the swatch");
-  let onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
+  const onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
   swatch.click();
   await onColorPickerReady;
 
-  let dropperButton = tooltip.container.querySelector("#eyedropper-button");
+  const dropperButton = tooltip.container.querySelector("#eyedropper-button");
 
   info("Click on the eyedropper icon");
-  let onOpened = tooltip.once("eyedropper-opened");
+  const onOpened = tooltip.once("eyedropper-opened");
   dropperButton.click();
   await onOpened;
 }

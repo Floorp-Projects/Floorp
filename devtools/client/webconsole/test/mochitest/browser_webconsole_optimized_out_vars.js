@@ -16,19 +16,19 @@ add_task(async function() {
   // Force the old debugger UI since it's directly used (see Bug 1301705)
   await pushPref("devtools.debugger.new-debugger-frontend", false);
 
-  let hud = await openNewTabAndConsole(TEST_URI);
-  let { toolbox, panel: debuggerPanel } = await openDebugger();
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { toolbox, panel: debuggerPanel } = await openDebugger();
 
-  let sources = debuggerPanel.panelWin.DebuggerView.Sources;
+  const sources = debuggerPanel.panelWin.DebuggerView.Sources;
   await debuggerPanel.addBreakpoint({ actor: sources.values[0], line: 18 });
   await ensureThreadClientState(debuggerPanel, "resumed");
 
-  let { FETCHED_SCOPES } = debuggerPanel.panelWin.EVENTS;
-  let fetchedScopes = debuggerPanel.panelWin.once(FETCHED_SCOPES);
+  const { FETCHED_SCOPES } = debuggerPanel.panelWin.EVENTS;
+  const fetchedScopes = debuggerPanel.panelWin.once(FETCHED_SCOPES);
 
   // Cause the debuggee to pause
   ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    let button = content.document.querySelector("button");
+    const button = content.document.querySelector("button");
     button.click();
   });
 
@@ -38,7 +38,7 @@ add_task(async function() {
   await toolbox.selectTool("webconsole");
 
   // This is the meat of the test: evaluate the optimized out variable.
-  let onMessage = waitForMessage(hud, "optimized out");
+  const onMessage = waitForMessage(hud, "optimized out");
   hud.jsterm.execute("upvar");
 
   info("Waiting for optimized out message");
@@ -50,7 +50,7 @@ add_task(async function() {
 // Debugger helper functions adapted from devtools/client/debugger/test/head.js.
 
 async function ensureThreadClientState(debuggerPanel, state) {
-  let thread = debuggerPanel.panelWin.gThreadClient;
+  const thread = debuggerPanel.panelWin.gThreadClient;
   info(`Thread is: '${thread.state}'.`);
   if (thread.state != state) {
     info("Waiting for thread event: '${state}'.");
