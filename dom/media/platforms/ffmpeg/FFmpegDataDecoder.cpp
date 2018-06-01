@@ -134,7 +134,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
   if (NS_FAILED(rv)) {
     return DecodePromise::CreateAndReject(rv, __func__);
   }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
 MediaResult
@@ -202,7 +202,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDrain()
   while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) &&
          gotFrame) {
   }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>

@@ -48,7 +48,7 @@ namespace dom {
 
 ProcessingInstruction::ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                              const nsAString& aData)
-  : CharacterData(Move(aNodeInfo))
+  : CharacterData(std::move(aNodeInfo))
 {
   MOZ_ASSERT(mNodeInfo->NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE,
              "Bad NodeType in aNodeInfo");

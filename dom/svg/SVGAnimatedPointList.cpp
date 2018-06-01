@@ -165,7 +165,7 @@ SVGAnimatedPointList::
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     list->SetInfo(mElement);
-    aValue = Move(val);
+    aValue = std::move(val);
   }
   aPreventCachingOfSandwich = false;
   return rv;

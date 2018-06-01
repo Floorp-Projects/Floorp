@@ -156,7 +156,7 @@ public:
   UniquePtr<PrincipalInfo>
   TakePrincipalInfo()
   {
-    return Move(mPrincipalInfo);
+    return std::move(mPrincipalInfo);
   }
 
   bool
@@ -637,7 +637,7 @@ private:
     ir->InitChannelInfo(aCN->GetChannelInfo());
     UniquePtr<PrincipalInfo> principalInfo = aCN->TakePrincipalInfo();
     if (principalInfo) {
-      ir->SetPrincipalInfo(Move(principalInfo));
+      ir->SetPrincipalInfo(std::move(principalInfo));
     }
 
     RefPtr<InternalHeaders> internalHeaders = aCN->GetInternalHeaders();
@@ -945,7 +945,7 @@ CompareNetwork::SetPrincipalInfo(nsIChannel* aChannel)
     return rv;
   }
 
-  mPrincipalInfo = Move(principalInfo);
+  mPrincipalInfo = std::move(principalInfo);
   return NS_OK;
 }
 

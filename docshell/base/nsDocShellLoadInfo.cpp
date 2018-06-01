@@ -41,7 +41,7 @@ GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI
     return;
   }
 
-  aRPURI.emplace(Move(uri));
+  aRPURI.emplace(std::move(uri));
 }
 
 void

@@ -18,7 +18,7 @@ namespace mozilla {
 ServoMediaRule::ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule,
                                uint32_t aLine, uint32_t aColumn)
   : CSSMediaRule(Servo_MediaRule_GetRules(aRawRule).Consume(), aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
 {
 }
 

@@ -64,7 +64,7 @@ ServiceWorkerDescriptor::operator=(const ServiceWorkerDescriptor& aRight)
 }
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(ServiceWorkerDescriptor&& aRight)
-  : mData(Move(aRight.mData))
+  : mData(std::move(aRight.mData))
 {
 }
 
@@ -72,7 +72,7 @@ ServiceWorkerDescriptor&
 ServiceWorkerDescriptor::operator=(ServiceWorkerDescriptor&& aRight)
 {
   mData.reset();
-  mData = Move(aRight.mData);
+  mData = std::move(aRight.mData);
   return *this;
 }
 
@@ -103,7 +103,7 @@ ServiceWorkerDescriptor::GetPrincipal() const
 {
   AssertIsOnMainThread();
   nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
-  return Move(ref);
+  return std::move(ref);
 }
 
 const nsCString&

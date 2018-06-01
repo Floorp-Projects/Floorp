@@ -2733,7 +2733,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                             widgetTransaction;
 
   if (computeInvalidRect) {
-    props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+    props = std::move(LayerProperties::CloneFrom(layerManager->GetRoot()));
   }
 
   if (doBeginTransaction) {
@@ -2926,7 +2926,7 @@ FlushFramesArray(nsTArray<FramesWithDepth>& aSource, nsTArray<nsIFrame*>* aDest)
   aSource.Sort();
   uint32_t length = aSource.Length();
   for (uint32_t i = 0; i < length; i++) {
-    aDest->AppendElements(Move(aSource[i].mFrames));
+    aDest->AppendElements(std::move(aSource[i].mFrames));
   }
   aSource.Clear();
 }

@@ -265,12 +265,12 @@ AudioNodeStream::SetBuffer(AudioChunk&& aBuffer)
     void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
-        SetBuffer(Move(mBuffer));
+        SetBuffer(std::move(mBuffer));
     }
     AudioChunk mBuffer;
   };
 
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, Move(aBuffer)));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aBuffer)));
 }
 
 void
@@ -746,7 +746,7 @@ AudioNodeStream::ScheduleCheckForInactive()
   }
 
   auto message = MakeUnique<CheckForInactiveMessage>(this);
-  GraphImpl()->RunMessageAfterProcessing(Move(message));
+  GraphImpl()->RunMessageAfterProcessing(std::move(message));
 }
 
 void

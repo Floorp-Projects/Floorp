@@ -478,7 +478,7 @@ void CPWL_ComboBox::SetPopup(bool bPopup) {
         }
 
         m_nPopupWhere = nWhere;
-        Move(rcWindow, true, true);
+        std::move(rcWindow, true, true);
 #ifdef PDF_ENABLE_XFA
         bExit = false;
         m_pFillerNotify->OnPopupPostOpen(GetAttachedData(), bExit, 0);
@@ -489,7 +489,7 @@ void CPWL_ComboBox::SetPopup(bool bPopup) {
     }
   } else {
     m_bPopup = bPopup;
-    Move(m_rcOldWindow, true, true);
+    std::move(m_rcOldWindow, true, true);
   }
 }
 

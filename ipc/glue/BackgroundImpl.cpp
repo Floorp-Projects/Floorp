@@ -531,7 +531,7 @@ public:
                        nsTArray<ParentImpl*>* aLiveActorArray)
     : Runnable("Background::ParentImpl::ConnectActorRunnable")
     , mActor(aActor)
-    , mEndpoint(Move(aEndpoint))
+    , mEndpoint(std::move(aEndpoint))
     , mLiveActorArray(aLiveActorArray)
   {
     AssertIsInMainProcess();
@@ -693,7 +693,7 @@ bool
 BackgroundParent::Alloc(ContentParent* aContent,
                         Endpoint<PBackgroundParent>&& aEndpoint)
 {
-  return ParentImpl::Alloc(aContent, Move(aEndpoint));
+  return ParentImpl::Alloc(aContent, std::move(aEndpoint));
 }
 
 // -----------------------------------------------------------------------------
@@ -896,7 +896,7 @@ ParentImpl::Alloc(ContentParent* aContent,
   RefPtr<ParentImpl> actor = new ParentImpl(aContent);
 
   nsCOMPtr<nsIRunnable> connectRunnable =
-    new ConnectActorRunnable(actor, Move(aEndpoint),
+    new ConnectActorRunnable(actor, std::move(aEndpoint),
                              sLiveActorsForBackgroundThread);
 
   if (NS_FAILED(sBackgroundThread->Dispatch(connectRunnable,
@@ -1288,7 +1288,7 @@ ParentImpl::ConnectActorRunnable::Run()
   ParentImpl* actor;
   mActor.forget(&actor);
 
-  Endpoint<PBackgroundParent> endpoint = Move(mEndpoint);
+  Endpoint<PBackgroundParent> endpoint = std::move(mEndpoint);
 
   if (!endpoint.Bind(actor)) {
     actor->Destroy();
@@ -1316,8 +1316,8 @@ CreateActorHelper::BlockAndGetResults(RefPtr<ParentImpl>& aParentActor,
     return mMainThreadResultCode;
   }
 
-  aParentActor = Move(mParentActor);
-  aThread = Move(mThread);
+  aParentActor = std::move(mParentActor);
+  aThread = std::move(mThread);
   return NS_OK;
 }
 
@@ -1523,7 +1523,7 @@ ChildImpl::GetOrCreateForCurrentThread()
   strongActor->SetActorAlive();
 
   if (NS_IsMainThread()) {
-    if (!content->SendInitBackground(Move(parent))) {
+    if (!content->SendInitBackground(std::move(parent))) {
       MOZ_CRASH("Failed to create top level actor!");
       return nullptr;
     }
@@ -1533,7 +1533,7 @@ ChildImpl::GetOrCreateForCurrentThread()
         "dom::ContentChild::SendInitBackground",
         content,
         &ContentChild::SendInitBackground,
-        Move(parent));
+        std::move(parent));
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   }
 

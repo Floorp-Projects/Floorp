@@ -1226,7 +1226,7 @@ CacheIRCompiler::addFailurePath(FailurePath** failure)
         return true;
     }
 
-    if (!failurePaths.append(Move(newFailure)))
+    if (!failurePaths.append(std::move(newFailure)))
         return false;
 
     *failure = &failurePaths.back();

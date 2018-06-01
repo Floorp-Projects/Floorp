@@ -503,7 +503,7 @@ void OscillatorNode::SendPeriodicWaveToStream()
   SendInt32ParameterToStream(OscillatorNodeEngine::DISABLE_NORMALIZATION,
                              mPeriodicWave->DisableNormalization());
   AudioChunk data = mPeriodicWave->GetThreadSharedBuffer();
-  mStream->SetBuffer(Move(data));
+  mStream->SetBuffer(std::move(data));
 }
 
 void

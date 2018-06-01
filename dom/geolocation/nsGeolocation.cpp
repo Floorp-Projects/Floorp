@@ -313,9 +313,9 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            bool aIsHandlingUserInput,
                                            int32_t aWatchId)
   : mIsWatchPositionRequest(aWatchPositionRequest),
-    mCallback(Move(aCallback)),
-    mErrorCallback(Move(aErrorCallback)),
-    mOptions(Move(aOptions)),
+    mCallback(std::move(aCallback)),
+    mErrorCallback(std::move(aErrorCallback)),
+    mOptions(std::move(aOptions)),
     mIsHandlingUserInput(aIsHandlingUserInput),
     mLocator(aLocator),
     mWatchId(aWatchId),
@@ -1242,7 +1242,7 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
 {
   nsresult rv = GetCurrentPosition(GeoPositionCallback(&aCallback),
                                    GeoPositionErrorCallback(aErrorCallback),
-                                   Move(CreatePositionOptionsCopy(aOptions)),
+                                   std::move(CreatePositionOptionsCopy(aOptions)),
                                    aCallerType);
 
   if (NS_FAILED(rv)) {
@@ -1277,8 +1277,8 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
 
   nsIEventTarget* target = MainThreadTarget(this);
   RefPtr<nsGeolocationRequest> request =
-    new nsGeolocationRequest(this, Move(callback), Move(errorCallback),
-                             Move(options), static_cast<uint8_t>(mProtocolType), target,
+    new nsGeolocationRequest(this, std::move(callback), std::move(errorCallback),
+                             std::move(options), static_cast<uint8_t>(mProtocolType), target,
                              false, EventStateManager::IsHandlingUserInput());
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
@@ -1320,7 +1320,7 @@ Geolocation::WatchPosition(PositionCallback& aCallback,
   int32_t ret = 0;
   nsresult rv = WatchPosition(GeoPositionCallback(&aCallback),
                               GeoPositionErrorCallback(aErrorCallback),
-                              Move(CreatePositionOptionsCopy(aOptions)),
+                              std::move(CreatePositionOptionsCopy(aOptions)),
                               aCallerType,
                               &ret);
 
@@ -1341,7 +1341,7 @@ Geolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
 
   return WatchPosition(GeoPositionCallback(aCallback),
                        GeoPositionErrorCallback(aErrorCallback),
-                       Move(aOptions), CallerType::System,
+                       std::move(aOptions), CallerType::System,
                        aRv);
 }
 
@@ -1365,8 +1365,8 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
 
   nsIEventTarget* target = MainThreadTarget(this);
   RefPtr<nsGeolocationRequest> request =
-    new nsGeolocationRequest(this, Move(aCallback), Move(aErrorCallback),
-                             Move(aOptions),
+    new nsGeolocationRequest(this, std::move(aCallback), std::move(aErrorCallback),
+                             std::move(aOptions),
                              static_cast<uint8_t>(mProtocolType), target, true,
                              EventStateManager::IsHandlingUserInput(), *aRv);
 

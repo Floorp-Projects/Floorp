@@ -262,7 +262,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
     // Move constructor for use in vectors. When an MUse is moved, it stays
     // in its containing use list.
     MUse(MUse&& other)
-      : InlineListNode<MUse>(mozilla::Move(other)),
+      : InlineListNode<MUse>(std::move(other)),
         producer_(other.producer_), consumer_(other.consumer_)
     { }
 

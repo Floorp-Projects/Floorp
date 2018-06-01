@@ -140,7 +140,7 @@ public:
   }
 
   FlattenedChildIterator(FlattenedChildIterator&& aOther)
-    : ExplicitChildIterator(Move(aOther))
+    : ExplicitChildIterator(std::move(aOther))
     , mOriginalContent(aOther.mOriginalContent)
     , mXBLInvolved(aOther.mXBLInvolved)
   {}
@@ -208,8 +208,8 @@ public:
     mFlags(aFlags), mPhase(aStartAtBeginning ? eAtBegin : eAtEnd) { }
 
   AllChildrenIterator(AllChildrenIterator&& aOther)
-    : FlattenedChildIterator(Move(aOther)),
-      mAnonKids(Move(aOther.mAnonKids)), mAnonKidsIdx(aOther.mAnonKidsIdx),
+    : FlattenedChildIterator(std::move(aOther)),
+      mAnonKids(std::move(aOther.mAnonKids)), mAnonKidsIdx(aOther.mAnonKidsIdx),
       mFlags(aOther.mFlags), mPhase(aOther.mPhase)
 #ifdef DEBUG
       , mMutationGuard(aOther.mMutationGuard)

@@ -136,7 +136,7 @@ DocGroup::Dispatch(TaskCategory aCategory,
   if (mPerformanceCounter) {
     mPerformanceCounter->IncrementDispatchCounter(DispatchCategory(aCategory));
   }
-  return mTabGroup->DispatchWithDocGroup(aCategory, Move(aRunnable), this);
+  return mTabGroup->DispatchWithDocGroup(aCategory, std::move(aRunnable), this);
 }
 
 nsISerialEventTarget*
@@ -179,7 +179,7 @@ DocGroup::MoveSignalSlotListTo(nsTArray<RefPtr<HTMLSlotElement>>& aDest)
   aDest.SetCapacity(aDest.Length() + mSignalSlotList.Length());
   for (RefPtr<HTMLSlotElement>& slot : mSignalSlotList) {
     slot->RemovedFromSignalSlotList();
-    aDest.AppendElement(Move(slot));
+    aDest.AppendElement(std::move(slot));
   }
   mSignalSlotList.Clear();
 }

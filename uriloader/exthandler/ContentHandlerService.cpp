@@ -75,7 +75,7 @@ ContentHandlerService::nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo,
       while (NS_SUCCEEDED(extensionsIter->HasMore(&hasMore)) && hasMore) {
         nsAutoCString extension;
         if (NS_SUCCEEDED(extensionsIter->GetNext(extension))) {
-          extensions.AppendElement(Move(extension));
+          extensions.AppendElement(std::move(extension));
         }
       }
     }
@@ -87,7 +87,7 @@ ContentHandlerService::nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo,
                    isMIMEInfo,
                    description,
                    alwaysAskBeforeHandling,
-                   Move(extensions),
+                   std::move(extensions),
                    happ,
                    happs,
                    action);

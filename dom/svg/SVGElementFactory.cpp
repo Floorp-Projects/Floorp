@@ -31,7 +31,7 @@ StaticAutoPtr<TagAtomTable> sTagAtomTable;
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                      \
     FromParser aFromParser)                                                    \
   {                                                                            \
-    return NS_NewSVG##_classname##Element(aResult, mozilla::Move(aNodeInfo));  \
+    return NS_NewSVG##_classname##Element(aResult, std::move(aNodeInfo));  \
   }
 
 #define SVG_FROM_PARSER_TAG(_tag, _classname)

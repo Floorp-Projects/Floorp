@@ -649,13 +649,13 @@ nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
 
-  return mEventTarget->Dispatch(Move(aEvent), aFlags);
+  return mEventTarget->Dispatch(std::move(aEvent), aFlags);
 }
 
 NS_IMETHODIMP
 nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
 {
-  return mEventTarget->DelayedDispatch(Move(aEvent), aDelayMs);
+  return mEventTarget->DelayedDispatch(std::move(aEvent), aDelayMs);
 }
 
 NS_IMETHODIMP

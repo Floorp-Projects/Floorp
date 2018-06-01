@@ -476,7 +476,7 @@ FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
                                          already_AddRefed<nsIInputStream> aAsyncStream,
                                          nsIInputStream** aSyncStream)
 {
-  nsCOMPtr<nsIInputStream> asyncInputStream = Move(aAsyncStream);
+  nsCOMPtr<nsIInputStream> asyncInputStream = std::move(aAsyncStream);
 
   // If the stream is not async, we just need it to be bufferable.
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(asyncInputStream);
@@ -500,7 +500,7 @@ FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
     return NS_ERROR_FAILURE;
   }
 
-  rv = NS_NewCStringInputStream(aSyncStream, Move(buffer));
+  rv = NS_NewCStringInputStream(aSyncStream, std::move(buffer));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

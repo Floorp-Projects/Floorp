@@ -277,7 +277,7 @@ U2F::Register(const nsAString& aAppId,
                                   null_t() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(U2FTransaction(Move(AsVariant(callback))));
+  mTransaction = Some(U2FTransaction(std::move(AsVariant(callback))));
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
 }
 
@@ -423,7 +423,7 @@ U2F::Sign(const nsAString& aAppId,
                                 null_t() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(U2FTransaction(Move(AsVariant(callback))));
+  mTransaction = Some(U2FTransaction(std::move(AsVariant(callback))));
   mChild->SendRequestSign(mTransaction.ref().mId, info);
 }
 
@@ -516,7 +516,7 @@ U2F::RejectTransaction(const nsresult& aError)
 
   // Clear out mTransaction before calling ExecuteCallback() below to allow
   // reentrancy from microtask checkpoints.
-  Maybe<U2FTransaction> maybeTransaction(Move(mTransaction));
+  Maybe<U2FTransaction> maybeTransaction(std::move(mTransaction));
   MOZ_ASSERT(mTransaction.isNothing() && maybeTransaction.isSome());
 
   U2FTransaction& transaction = maybeTransaction.ref();

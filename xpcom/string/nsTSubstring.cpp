@@ -490,7 +490,7 @@ template <typename T>
 void
 nsTSubstring<T>::Assign(self_type&& aStr)
 {
-  if (!Assign(mozilla::Move(aStr), mozilla::fallible)) {
+  if (!Assign(std::move(aStr), mozilla::fallible)) {
     AllocFailed(aStr.Length());
   }
 }

@@ -100,7 +100,7 @@ class BufferList : private AllocPolicy
 
   BufferList(BufferList&& aOther)
    : mOwning(aOther.mOwning),
-     mSegments(Move(aOther.mSegments)),
+     mSegments(std::move(aOther.mSegments)),
      mSize(aOther.mSize),
      mStandardCapacity(aOther.mStandardCapacity)
   {
@@ -115,7 +115,7 @@ class BufferList : private AllocPolicy
     Clear();
 
     mOwning = aOther.mOwning;
-    mSegments = Move(aOther.mSegments);
+    mSegments = std::move(aOther.mSegments);
     mSize = aOther.mSize;
     aOther.mSegments.clear();
     aOther.mSize = 0;

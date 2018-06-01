@@ -5486,7 +5486,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
         }
       }
       newFloats.Reverse();
-      mFloats = Move(newFloats);
+      mFloats = std::move(newFloats);
     }
   }
 

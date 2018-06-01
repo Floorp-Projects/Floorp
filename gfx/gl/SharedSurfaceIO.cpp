@@ -26,7 +26,7 @@ SharedSurface_IOSurface::Create(const RefPtr<MacIOSurface>& ioSurf,
 
     typedef SharedSurface_IOSurface ptrT;
     UniquePtr<ptrT> ret( new ptrT(ioSurf, gl, size, hasAlpha) );
-    return Move(ret);
+    return std::move(ret);
 }
 
 void
@@ -219,7 +219,7 @@ SurfaceFactory_IOSurface::Create(GLContext* gl, const SurfaceCaps& caps,
 
     typedef SurfaceFactory_IOSurface ptrT;
     UniquePtr<ptrT> ret( new ptrT(gl, caps, allocator, flags, maxDims) );
-    return Move(ret);
+    return std::move(ret);
 }
 
 UniquePtr<SharedSurface>

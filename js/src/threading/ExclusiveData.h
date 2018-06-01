@@ -112,15 +112,15 @@ class ExclusiveData
     {}
 
     ExclusiveData(ExclusiveData&& rhs)
-      : lock_(mozilla::Move(rhs.lock)),
-        value_(Move(rhs.value_))
+      : lock_(std::move(rhs.lock)),
+        value_(std::move(rhs.value_))
     {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
     }
 
     ExclusiveData& operator=(ExclusiveData&& rhs) {
         this->~ExclusiveData();
-        new (mozilla::KnownNotNull, this) ExclusiveData(mozilla::Move(rhs));
+        new (mozilla::KnownNotNull, this) ExclusiveData(std::move(rhs));
         return *this;
     }
 
@@ -155,7 +155,7 @@ class ExclusiveData
 
         Guard& operator=(Guard&& rhs) {
             this->~Guard();
-            new (this) Guard(mozilla::Move(rhs));
+            new (this) Guard(std::move(rhs));
             return *this;
         }
 
@@ -214,11 +214,11 @@ class ExclusiveWaitableData : public ExclusiveData<T>
         {}
 
         Guard(Guard&& guard)
-          : Base(mozilla::Move(guard))
+          : Base(std::move(guard))
         {}
 
         Guard& operator=(Guard&& rhs) {
-            return Base::operator=(mozilla::Move(rhs));
+            return Base::operator=(std::move(rhs));
         }
 
         void wait() {

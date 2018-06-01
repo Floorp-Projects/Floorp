@@ -152,13 +152,13 @@ public:
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
     : WorkerRunnable(aWorkerPrivate)
-    , mProxy(Move(aProxy))
+    , mProxy(std::move(aProxy))
     , mStatus(aStatus)
     , mEndpoint(aEndpoint)
     , mScope(aScope)
-    , mRawP256dhKey(Move(aRawP256dhKey))
-    , mAuthSecret(Move(aAuthSecret))
-    , mAppServerKey(Move(aAppServerKey))
+    , mRawP256dhKey(std::move(aRawP256dhKey))
+    , mAuthSecret(std::move(aAuthSecret))
+    , mAppServerKey(std::move(aAppServerKey))
   { }
 
   bool
@@ -171,8 +171,8 @@ public:
       } else {
         RefPtr<PushSubscription> sub =
             new PushSubscription(nullptr, mEndpoint, mScope,
-                                 Move(mRawP256dhKey), Move(mAuthSecret),
-                                 Move(mAppServerKey));
+                                 std::move(mRawP256dhKey), std::move(mAuthSecret),
+                                 std::move(mAppServerKey));
         promise->MaybeResolve(sub);
       }
     } else if (NS_ERROR_GET_MODULE(mStatus) == NS_ERROR_MODULE_DOM_PUSH ) {
@@ -235,9 +235,9 @@ public:
                                         aStatus,
                                         endpoint,
                                         mScope,
-                                        Move(rawP256dhKey),
-                                        Move(authSecret),
-                                        Move(appServerKey));
+                                        std::move(rawP256dhKey),
+                                        std::move(authSecret),
+                                        std::move(appServerKey));
     MOZ_ALWAYS_TRUE(r->Dispatch());
 
     return NS_OK;
@@ -273,7 +273,7 @@ public:
     , mProxy(aProxy)
     , mScope(aScope)
     , mAction(aAction)
-    , mAppServerKey(Move(aAppServerKey))
+    , mAppServerKey(std::move(aAppServerKey))
   {}
 
   NS_IMETHOD
@@ -589,7 +589,7 @@ PushManager::PerformSubscriptionActionFromWorker(SubscriptionAction aAction,
   }
 
   RefPtr<GetSubscriptionRunnable> r =
-    new GetSubscriptionRunnable(proxy, mScope, aAction, Move(appServerKey));
+    new GetSubscriptionRunnable(proxy, mScope, aAction, std::move(appServerKey));
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return p.forget();

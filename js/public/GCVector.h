@@ -43,11 +43,11 @@ class GCVector
     {}
 
     GCVector(GCVector&& vec)
-      : vector(mozilla::Move(vec.vector))
+      : vector(std::move(vec.vector))
     {}
 
     GCVector& operator=(GCVector&& vec) {
-        vector = mozilla::Move(vec.vector);
+        vector = std::move(vec.vector);
         return *this;
     }
 

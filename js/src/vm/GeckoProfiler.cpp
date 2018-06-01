@@ -167,7 +167,7 @@ GeckoProfilerRuntime::profileString(JSScript* script, JSFunction* maybeFun)
 
     if (!s) {
         auto str = allocProfileString(script, maybeFun);
-        if (!str || !locked->add(s, script, mozilla::Move(str)))
+        if (!str || !locked->add(s, script, std::move(str)))
             return nullptr;
     }
 

@@ -139,7 +139,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
       ++offset;
     }
 
-    return Move(sfntData);
+    return std::move(sfntData);
   }
 
   UniquePtr<SFNTData> sfntData(new SFNTData);
@@ -147,7 +147,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
     return nullptr;
   }
 
-  return Move(sfntData);
+  return std::move(sfntData);
 }
 
 /* static */
@@ -199,7 +199,7 @@ SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames)
     if (mFonts[i]->GetU16FullName(name)) {
       fontFound = true;
     }
-    if (!aU16FullNames.append(Move(name))) {
+    if (!aU16FullNames.append(std::move(name))) {
       return false;
     }
   }

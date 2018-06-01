@@ -58,7 +58,7 @@ PacketDumper::Dump(size_t level, dom::mozPacketDumpType type, bool sending,
             pc->DumpPacket_m(level, type, sending, packet, size);
             return NS_OK;
           },
-          Move(ownedPacket)));
+          std::move(ownedPacket)));
 
   NS_DispatchToMainThread(dumpRunnable);
 }

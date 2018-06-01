@@ -6248,7 +6248,7 @@ struct JS_PUBLIC_API(FirstSubsumedFrame)
     }
 
     FirstSubsumedFrame& operator=(FirstSubsumedFrame&& rhs) {
-        new (this) FirstSubsumedFrame(mozilla::Move(rhs));
+        new (this) FirstSubsumedFrame(std::move(rhs));
         return *this;
     }
 

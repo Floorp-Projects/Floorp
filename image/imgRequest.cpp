@@ -1187,7 +1187,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
         FinishPreparingForNewPart(result);
       } else {
         nsCOMPtr<nsIRunnable> runnable =
-          new FinishPreparingForNewPartRunnable(this, Move(result));
+          new FinishPreparingForNewPartRunnable(this, std::move(result));
         eventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
       }
     }

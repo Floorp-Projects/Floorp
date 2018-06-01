@@ -129,7 +129,7 @@ ModuleGenerator::~ModuleGenerator()
 
     // Propagate error state.
     if (error_ && !*error_)
-        *error_ = Move(taskState_.lock()->errorMessage);
+        *error_ = std::move(taskState_.lock()->errorMessage);
 }
 
 bool
@@ -233,7 +233,7 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
         Sig copy;
         if (!copy.clone(*env_->funcSigs[i]))
             return false;
-        if (!metadataTier_->funcImports.emplaceBack(Move(copy), globalDataOffset))
+        if (!metadataTier_->funcImports.emplaceBack(std::move(copy), globalDataOffset))
             return false;
     }
 
@@ -255,7 +255,7 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
                 if (!copy.clone(sig))
                     return false;
 
-                if (!metadata_->sigIds.emplaceBack(Move(copy), sig.id))
+                if (!metadata_->sigIds.emplaceBack(std::move(copy), sig.id))
                     return false;
             } else {
                 sig.id = SigIdDesc::immediate(sig);
@@ -326,7 +326,7 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
         Sig sig;
         if (!sig.clone(*env_->funcSigs[funcIndex.index()]))
             return false;
-        metadataTier_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex.index(),
+        metadataTier_->funcExports.infallibleEmplaceBack(std::move(sig), funcIndex.index(),
                                                          funcIndex.isExplicit());
     }
 
@@ -647,7 +647,7 @@ wasm::ExecuteCompileTaskFromHelperThread(CompileTask* task)
     if (!ok || !taskState->finished.append(task)) {
         taskState->numFailed++;
         if (!taskState->errorMessage)
-            taskState->errorMessage = Move(error);
+            taskState->errorMessage = std::move(error);
     }
 
     taskState.notify_one(/* failed or finished */);
@@ -747,7 +747,7 @@ ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
     uint32_t funcBytecodeLength = end - begin;
 
     FuncCompileInputVector& inputs = currentTask_->inputs;
-    if (!inputs.emplaceBack(funcIndex, lineOrBytecode, begin, end, Move(lineNums)))
+    if (!inputs.emplaceBack(funcIndex, lineOrBytecode, begin, end, std::move(lineNums)))
         return false;
 
     uint32_t threshold;
@@ -843,10 +843,10 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     metadata_->maxMemoryLength = env_->maxMemoryLength;
     metadata_->startFuncIndex = env_->startFuncIndex;
     metadata_->moduleName = env_->moduleName;
-    metadata_->tables = Move(env_->tables);
-    metadata_->globals = Move(env_->globals);
-    metadata_->funcNames = Move(env_->funcNames);
-    metadata_->customSections = Move(env_->customSections);
+    metadata_->tables = std::move(env_->tables);
+    metadata_->globals = std::move(env_->globals);
+    metadata_->funcNames = std::move(env_->funcNames);
+    metadata_->customSections = std::move(env_->customSections);
 
     // Inflate the global bytes up to page size so that the total bytes are a
     // page size (as required by the allocator functions).
@@ -894,7 +894,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
                 return false;
             metadata_->debugFuncReturnTypes[i] = env_->funcSigs[i]->ret();
         }
-        metadataTier_->debugFuncToCodeRange = Move(funcToCodeRange_);
+        metadataTier_->debugFuncToCodeRange = std::move(funcToCodeRange_);
 
         static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
                       "The ModuleHash size shall not exceed the SHA1 hash size.");
@@ -966,27 +966,27 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
         if (!bytes.resize(masm_.bytesNeeded()))
             return nullptr;
         masm_.executableCopy(bytes.begin(), /* flushICache = */ false);
-        maybeDebuggingBytes = js::MakeUnique<Bytes>(Move(bytes));
+        maybeDebuggingBytes = js::MakeUnique<Bytes>(std::move(bytes));
         if (!maybeDebuggingBytes)
             return nullptr;
     }
 
-    auto codeTier = js::MakeUnique<CodeTier>(Move(metadataTier_), Move(moduleSegment));
+    auto codeTier = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
     if (!codeTier)
         return nullptr;
 
-    MutableCode code = js_new<Code>(Move(codeTier), *metadata_, Move(jumpTables));
+    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
     if (!code || !code->initialize(bytecode, *linkDataTier_))
         return nullptr;
 
-    SharedModule module(js_new<Module>(Move(assumptions_),
+    SharedModule module(js_new<Module>(std::move(assumptions_),
                                        *code,
-                                       Move(maybeDebuggingBytes),
-                                       LinkData(Move(linkDataTier_)),
-                                       Move(env_->imports),
-                                       Move(env_->exports),
-                                       Move(env_->dataSegments),
-                                       Move(env_->elemSegments),
+                                       std::move(maybeDebuggingBytes),
+                                       LinkData(std::move(linkDataTier_)),
+                                       std::move(env_->imports),
+                                       std::move(env_->exports),
+                                       std::move(env_->dataSegments),
+                                       std::move(env_->elemSegments),
                                        bytecode));
     if (!module)
         return nullptr;
@@ -1011,7 +1011,7 @@ ModuleGenerator::finishTier2(Module& module)
     if (!moduleSegment)
         return false;
 
-    auto tier2 = js::MakeUnique<CodeTier>(Move(metadataTier_), Move(moduleSegment));
+    auto tier2 = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
     if (!tier2)
         return false;
 
@@ -1021,7 +1021,7 @@ ModuleGenerator::finishTier2(Module& module)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    return module.finishTier2(Move(linkDataTier_), Move(tier2), env_);
+    return module.finishTier2(std::move(linkDataTier_), std::move(tier2), env_);
 }
 
 size_t

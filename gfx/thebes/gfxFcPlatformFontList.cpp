@@ -901,11 +901,11 @@ void
 gfxFontconfigFontEntry::UnscaledFontCache::MoveToFront(size_t aIndex) {
     if (aIndex > 0) {
         ThreadSafeWeakPtr<UnscaledFontFontconfig> front =
-            Move(mUnscaledFonts[aIndex]);
+            std::move(mUnscaledFonts[aIndex]);
         for (size_t i = aIndex; i > 0; i--) {
-            mUnscaledFonts[i] = Move(mUnscaledFonts[i-1]);
+            mUnscaledFonts[i] = std::move(mUnscaledFonts[i-1]);
         }
-        mUnscaledFonts[0] = Move(front);
+        mUnscaledFonts[0] = std::move(front);
     }
 }
 

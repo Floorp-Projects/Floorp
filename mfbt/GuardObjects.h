@@ -146,9 +146,9 @@ public:
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL \
      ::mozilla::detail::GuardObjectNotifier&& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT \
-     , ::mozilla::Move(_notifier)
+     , ::std::move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT \
-       ::mozilla::Move(_notifier)
+       ::std::move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
      do { _mCheckNotUsedAsTemporary.init(_notifier); } while (0)
 #else

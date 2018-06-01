@@ -20,7 +20,7 @@ public:
   PtrVector() = default;
   PtrVector(const PtrVector&) = delete;
   PtrVector(PtrVector&& aOther)
-    : values(Move(aOther.values))
+    : values(std::move(aOther.values))
   {}
   PtrVector& operator=(const PtrVector&) = delete;
   PtrVector& operator=(PtrVector&& aOther)

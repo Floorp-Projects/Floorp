@@ -83,9 +83,9 @@ SystemGroup::Dispatch(TaskCategory aCategory,
                       already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (!SystemGroupImpl::Initialized()) {
-    return NS_DispatchToMainThread(Move(aRunnable));
+    return NS_DispatchToMainThread(std::move(aRunnable));
   }
-  return SystemGroupImpl::Get()->Dispatch(aCategory, Move(aRunnable));
+  return SystemGroupImpl::Get()->Dispatch(aCategory, std::move(aRunnable));
 }
 
 /* static */ nsISerialEventTarget*

@@ -109,7 +109,7 @@ nsLayoutHistoryState::AddNewPresState(const nsACString& aKey,
   newState->resolution() = aRes;
   newState->scaleToResolution() = aScaleToRes;
 
-  mStates.Put(nsCString(aKey), Move(newState));
+  mStates.Put(nsCString(aKey), std::move(newState));
 
   return NS_OK;
 }
@@ -117,7 +117,7 @@ nsLayoutHistoryState::AddNewPresState(const nsACString& aKey,
 void
 nsLayoutHistoryState::AddState(const nsCString& aStateKey, UniquePtr<PresState> aState)
 {
-  mStates.Put(aStateKey, Move(aState));
+  mStates.Put(aStateKey, std::move(aState));
 }
 
 PresState*

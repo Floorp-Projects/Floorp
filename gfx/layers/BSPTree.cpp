@@ -35,7 +35,7 @@ BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
     MOZ_ASSERT(layer.geometry);
 
     if (layer.geometry->GetPoints().Length() >= 3) {
-      aLayers.AppendElement(Move(layer));
+      aLayers.AppendElement(std::move(layer));
     }
   }
 
@@ -50,7 +50,7 @@ BSPTree::BuildTree(BSPTreeNode* aRoot,
 {
   MOZ_ASSERT(!aLayers.empty());
 
-  aRoot->layers.push_back(Move(aLayers.front()));
+  aRoot->layers.push_back(std::move(aLayers.front()));
   aLayers.pop_front();
 
   if (aLayers.empty()) {
@@ -74,15 +74,15 @@ BSPTree::BuildTree(BSPTreeNode* aRoot,
 
     // Back polygon
     if (pos == 0 && neg > 0) {
-      backLayers.push_back(Move(layerPolygon));
+      backLayers.push_back(std::move(layerPolygon));
     }
     // Front polygon
     else if (pos > 0 && neg == 0) {
-      frontLayers.push_back(Move(layerPolygon));
+      frontLayers.push_back(std::move(layerPolygon));
     }
     // Coplanar polygon
     else if (pos == 0 && neg == 0) {
-      aRoot->layers.push_back(Move(layerPolygon));
+      aRoot->layers.push_back(std::move(layerPolygon));
     }
     // Polygon intersects with the splitting plane.
     else if (pos > 0 && neg > 0) {
@@ -96,11 +96,11 @@ BSPTree::BuildTree(BSPTreeNode* aRoot,
       Layer* layer = layerPolygon.layer;
 
       if (backPoints.Length() >= 3) {
-        backLayers.emplace_back(layer, Move(backPoints), normal);
+        backLayers.emplace_back(layer, std::move(backPoints), normal);
       }
 
       if (frontPoints.Length() >= 3) {
-        frontLayers.emplace_back(layer, Move(frontPoints), normal);
+        frontLayers.emplace_back(layer, std::move(frontPoints), normal);
       }
     }
   }

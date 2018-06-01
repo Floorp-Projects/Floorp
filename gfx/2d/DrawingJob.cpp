@@ -45,7 +45,7 @@ DrawingJobBuilder::EndDrawingJob(CommandBuffer* aCmdBuffer,
   MOZ_ASSERT(mDrawTarget);
   DrawingJob* task = new DrawingJob(mDrawTarget, mOffset, mStart, aCompletion, aPinToWorker);
   task->mCommandBuffer = aCmdBuffer;
-  task->mCommandOffsets = Move(mCommandOffsets);
+  task->mCommandOffsets = std::move(mCommandOffsets);
 
   mDrawTarget = nullptr;
   mOffset = IntPoint();

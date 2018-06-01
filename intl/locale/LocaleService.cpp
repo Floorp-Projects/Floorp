@@ -335,7 +335,7 @@ LocaleService::RequestedLocalesChanged()
   ReadRequestedLocales(newLocales);
 
   if (mRequestedLocales != newLocales) {
-    mRequestedLocales = Move(newLocales);
+    mRequestedLocales = std::move(newLocales);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
@@ -358,7 +358,7 @@ LocaleService::LocalesChanged()
   NegotiateAppLocales(newLocales);
 
   if (mAppLocales != newLocales) {
-    mAppLocales = Move(newLocales);
+    mAppLocales = std::move(newLocales);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
@@ -961,7 +961,7 @@ LocaleService::SetAvailableLocales(const char** aAvailable,
   }
 
   if (newLocales != mAvailableLocales) {
-    mAvailableLocales = Move(newLocales);
+    mAvailableLocales = std::move(newLocales);
     LocalesChanged();
   }
 

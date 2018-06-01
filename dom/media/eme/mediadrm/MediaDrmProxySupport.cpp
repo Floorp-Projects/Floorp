@@ -163,7 +163,7 @@ MediaDrmJavaCallbacksSupport::OnSessionBatchedKeyChanged(jni::ByteArray::Param a
   nsTArray<CDMKeyInfo> keyInfosArray;
 
   for (auto&& keyInfoObject : keyInfosObjectArray) {
-    java::SessionKeyInfo::LocalRef keyInfo(mozilla::Move(keyInfoObject));
+    java::SessionKeyInfo::LocalRef keyInfo(std::move(keyInfoObject));
     mozilla::jni::ByteArray::LocalRef keyIdByteArray = keyInfo->KeyId();
     nsTArray<int8_t> keyIdInt8Array = keyIdByteArray->GetElements();
     // Cast nsTArray<int8_t> to nsTArray<uint8_t>

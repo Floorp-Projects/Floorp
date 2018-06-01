@@ -52,7 +52,7 @@ ChromeWorker::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
 
 ChromeWorker::ChromeWorker(nsIGlobalObject* aGlobalObject,
                            already_AddRefed<WorkerPrivate> aWorkerPrivate)
-  : Worker(aGlobalObject, Move(aWorkerPrivate))
+  : Worker(aGlobalObject, std::move(aWorkerPrivate))
 {}
 
 ChromeWorker::~ChromeWorker() = default;

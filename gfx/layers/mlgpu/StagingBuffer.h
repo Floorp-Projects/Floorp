@@ -262,7 +262,7 @@ protected:
       mPos = newBuffer.get() + usedBytes;
     }
     mEnd = newBuffer.get() + newSize;
-    mBuffer = Move(newBuffer);
+    mBuffer = std::move(newBuffer);
 
     MOZ_RELEASE_ASSERT(mPos >= mBuffer.get() && mPos <= mEnd);
     return true;

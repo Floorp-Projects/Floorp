@@ -112,7 +112,7 @@ public:
   // Main thread only.
   // Uses the CDM to create a key session.
   // Calls MediaKeys::OnSessionActivated() when session is created.
-  // Assumes ownership of (Move()s) aInitData's contents.
+  // Assumes ownership of (std::move()s) aInitData's contents.
   virtual void CreateSession(uint32_t aCreateSessionToken,
                              MediaKeySessionType aSessionType,
                              PromiseId aPromiseId,
@@ -130,7 +130,7 @@ public:
   // Sends a new certificate to the CDM.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
   // processed the request.
-  // Assumes ownership of (Move()s) aCert's contents.
+  // Assumes ownership of (std::move()s) aCert's contents.
   virtual void SetServerCertificate(PromiseId aPromiseId,
                                     nsTArray<uint8_t>& aCert) = 0;
 
@@ -138,7 +138,7 @@ public:
   // Sends an update to the CDM.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
   // processed the request.
-  // Assumes ownership of (Move()s) aResponse's contents.
+  // Assumes ownership of (std::move()s) aResponse's contents.
   virtual void UpdateSession(const nsAString& aSessionId,
                              PromiseId aPromiseId,
                              nsTArray<uint8_t>& aResponse) = 0;

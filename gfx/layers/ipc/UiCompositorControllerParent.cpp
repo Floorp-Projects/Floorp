@@ -29,7 +29,7 @@ UiCompositorControllerParent::GetFromRootLayerTreeId(const LayersId& aRootLayerT
     [&](LayerTreeState& aState) -> void {
       controller = aState.mUiControllerParent;
     });
-  return Move(controller);
+  return std::move(controller);
 }
 
 /* static */ RefPtr<UiCompositorControllerParent>
@@ -42,7 +42,7 @@ UiCompositorControllerParent::Start(const LayersId& aRootLayerTreeId, Endpoint<P
       "layers::UiCompositorControllerParent::Open",
       parent,
       &UiCompositorControllerParent::Open,
-      Move(aEndpoint));
+      std::move(aEndpoint));
   CompositorThreadHolder::Loop()->PostTask(task.forget());
 
   return parent;
@@ -177,7 +177,7 @@ UiCompositorControllerParent::RecvToolbarPixelsToCompositor(Shmem&& aMem, const 
 #if defined(MOZ_WIDGET_ANDROID)
   if (mAnimator) {
     // By adopting the Shmem, the animator is responsible for deallocating.
-    mAnimator->AdoptToolbarPixels(Move(aMem), aSize);
+    mAnimator->AdoptToolbarPixels(std::move(aMem), aSize);
   } else {
     DeallocShmem(aMem);
   }

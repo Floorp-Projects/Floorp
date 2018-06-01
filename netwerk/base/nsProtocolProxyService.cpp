@@ -1878,7 +1878,7 @@ nsProtocolProxyService::RegisterFilter(nsIProtocolProxyFilter *filter,
     UnregisterFilter(filter); // remove this filter if we already have it
 
     RefPtr<FilterLink> link = new FilterLink(position, filter);
-    return InsertFilterLink(Move(link));
+    return InsertFilterLink(std::move(link));
 }
 
 NS_IMETHODIMP
@@ -1888,7 +1888,7 @@ nsProtocolProxyService::RegisterChannelFilter(nsIProtocolProxyChannelFilter *cha
     UnregisterChannelFilter(channelFilter);  // remove this filter if we already have it
 
     RefPtr<FilterLink> link = new FilterLink(position, channelFilter);
-    return InsertFilterLink(Move(link));
+    return InsertFilterLink(std::move(link));
 }
 
 nsresult

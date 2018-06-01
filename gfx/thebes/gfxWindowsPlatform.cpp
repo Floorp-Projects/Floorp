@@ -451,7 +451,7 @@ gfxWindowsPlatform::GetBackendPrefs() const
       data.mContentDefault = BackendType::DIRECT2D1_1;
     }
   }
-  return mozilla::Move(data);
+  return std::move(data);
 }
 
 void
@@ -469,7 +469,7 @@ gfxWindowsPlatform::UpdateBackendPrefs()
       data.mContentDefault = BackendType::SKIA;
     }
   }
-  InitBackendPrefs(mozilla::Move(data));
+  InitBackendPrefs(std::move(data));
 }
 
 bool

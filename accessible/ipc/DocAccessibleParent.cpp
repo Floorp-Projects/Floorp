@@ -97,7 +97,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   nsINode* node = nullptr;
   RefPtr<xpcAccEvent> event = new xpcAccEvent(type, xpcAcc, doc, node,
                                               aFromUser);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -196,7 +196,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
   MOZ_ASSERT(CheckDocTree());
 
   if (event) {
-    nsCoreUtils::DispatchAccEvent(Move(event));
+    nsCoreUtils::DispatchAccEvent(std::move(event));
   }
 
   return IPC_OK();
@@ -227,7 +227,7 @@ DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
   bool fromUser = true; // XXX fix me
   RefPtr<xpcAccEvent> event = new xpcAccEvent(aEventType, xpcAcc, doc, node,
                                               fromUser);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -263,7 +263,7 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
   RefPtr<xpcAccStateChangeEvent> event =
     new xpcAccStateChangeEvent(type, xpcAcc, doc, node, fromUser, state, extra,
                                aEnabled);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -302,7 +302,7 @@ DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID,
   uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED;
   RefPtr<xpcAccCaretMoveEvent> event =
     new xpcAccCaretMoveEvent(type, xpcAcc, doc, node, fromUser, aOffset);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -339,7 +339,7 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
   RefPtr<xpcAccTextChangeEvent> event =
     new xpcAccTextChangeEvent(type, xpcAcc, doc, node, aFromUser, aStart, aLen,
                               aIsInsert, aStr);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -383,7 +383,7 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
   xpcAccessibleDocument* xpcDoc = GetAccService()->GetXPCDocument(this);
   RefPtr<xpcAccEvent> event = new xpcAccEvent(aType, xpcTarget, xpcDoc,
                                               nullptr, false);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }
@@ -631,7 +631,7 @@ DocAccessibleParent::MaybeInitWindowEmulation()
                                                IID_IAccessible,
                                                getter_AddRefs(hwndAcc)))) {
       RefPtr<IDispatch> wrapped(mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(hwndAcc)));
-      hWndAccHolder.Set(IDispatchHolder::COMPtrType(mscom::ToProxyUniquePtr(Move(wrapped))));
+      hWndAccHolder.Set(IDispatchHolder::COMPtrType(mscom::ToProxyUniquePtr(std::move(wrapped))));
     }
 
     Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
@@ -671,14 +671,14 @@ DocAccessibleParent::SendParentCOMProxy()
 
   RefPtr<IDispatch> wrapped(mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(nativeAcc)));
 
-  IDispatchHolder::COMPtrType ptr(mscom::ToProxyUniquePtr(Move(wrapped)));
-  IDispatchHolder holder(Move(ptr));
+  IDispatchHolder::COMPtrType ptr(mscom::ToProxyUniquePtr(std::move(wrapped)));
+  IDispatchHolder holder(std::move(ptr));
   if (!PDocAccessibleParent::SendParentCOMProxy(holder)) {
     return;
   }
 
 #if defined(MOZ_CONTENT_SANDBOX)
-  mParentProxyStream = Move(holder.GetPreservedStream());
+  mParentProxyStream = std::move(holder.GetPreservedStream());
 #endif // defined(MOZ_CONTENT_SANDBOX)
 }
 
@@ -749,7 +749,7 @@ DocAccessibleParent::RecvFocusEvent(const uint64_t& aID,
   bool fromUser = true; // XXX fix me
   RefPtr<xpcAccEvent> event = new xpcAccEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                               xpcAcc, doc, node, fromUser);
-  nsCoreUtils::DispatchAccEvent(Move(event));
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
 }

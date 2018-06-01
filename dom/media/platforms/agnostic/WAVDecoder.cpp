@@ -141,7 +141,7 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 
   return DecodePromise::CreateAndResolve(
     DecodedData{ new AudioData(aOffset, aSample->mTime, duration, frames,
-                               Move(buffer), mInfo.mChannels, mInfo.mRate) },
+                               std::move(buffer), mInfo.mChannels, mInfo.mRate) },
     __func__);
 }
 

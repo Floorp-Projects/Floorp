@@ -777,7 +777,7 @@ public:
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START,
-                     Move(aBacktrace));
+                     std::move(aBacktrace));
   }
 
   ~AutoProfilerTracing()

@@ -208,7 +208,7 @@ public:
   // wants to trigger processing regularly at the most efficient time.
   DidReachEndOfBuffer Push(T&& aT)
   {
-    return PushF([&aT](T& aElement, Index) { aElement = Move(aT); });
+    return PushF([&aT](T& aElement, Index) { aElement = std::move(aT); });
   }
 
   // Pop all elements before the first invalid one, running aF on each of them

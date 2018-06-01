@@ -31,7 +31,7 @@ CreateMainThread(nsIIdlePeriod* aIdlePeriod, SynchronizedQueueT** aSynchronizedQ
 
   MainThreadQueueT* prioritized = queue.get();
 
-  RefPtr<SynchronizedQueueT> synchronizedQueue = new SynchronizedQueueT(Move(queue));
+  RefPtr<SynchronizedQueueT> synchronizedQueue = new SynchronizedQueueT(std::move(queue));
 
   prioritized->SetMutexRef(synchronizedQueue->MutexRef());
 

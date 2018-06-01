@@ -83,8 +83,8 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr
     }
 
     nsCertOverrideEntry(nsCertOverrideEntry&& toMove)
-      : mSettings(mozilla::Move(toMove.mSettings))
-      , mHostWithPort(mozilla::Move(toMove.mHostWithPort))
+      : mSettings(std::move(toMove.mSettings))
+      , mHostWithPort(std::move(toMove.mHostWithPort))
     {
     }
 

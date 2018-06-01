@@ -235,7 +235,7 @@ private:
       return Nothing();
     }
 
-    return Some(SurfacePipe { Move(pipe) } );
+    return Some(SurfacePipe { std::move(pipe) } );
   }
 
   virtual ~SurfacePipeFactory() = 0;

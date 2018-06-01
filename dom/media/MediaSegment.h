@@ -223,9 +223,9 @@ protected:
   }
 
   MediaSegment(MediaSegment&& aSegment)
-    : mDuration(Move(aSegment.mDuration))
-    , mType(Move(aSegment.mType))
-    , mLastPrincipalHandle(Move(aSegment.mLastPrincipalHandle))
+    : mDuration(std::move(aSegment.mDuration))
+    , mType(std::move(aSegment.mType))
+    , mLastPrincipalHandle(std::move(aSegment.mLastPrincipalHandle))
   {
     MOZ_COUNT_CTOR(MediaSegment);
   }
@@ -453,10 +453,10 @@ protected:
   {}
 
   MediaSegmentBase(MediaSegmentBase&& aSegment)
-    : MediaSegment(Move(aSegment))
+    : MediaSegment(std::move(aSegment))
     , mChunks()
 #ifdef MOZILLA_INTERNAL_API
-    , mTimeStamp(Move(aSegment.mTimeStamp))
+    , mTimeStamp(std::move(aSegment.mTimeStamp))
 #endif
   {
     mChunks.SwapElements(aSegment.mChunks);
@@ -482,7 +482,7 @@ protected:
     }
 
     for (; offset < aSource->mChunks.Length(); ++offset) {
-      mChunks.AppendElement(Move(aSource->mChunks[offset]));
+      mChunks.AppendElement(std::move(aSource->mChunks[offset]));
     }
 
     aSource->mChunks.ClearAndRetainStorage();

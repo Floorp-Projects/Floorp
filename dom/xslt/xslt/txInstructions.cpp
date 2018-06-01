@@ -19,8 +19,6 @@
 #include "txXSLTNumber.h"
 #include "txExecutionState.h"
 
-using mozilla::Move;
-
 nsresult
 txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
 {
@@ -101,7 +99,7 @@ txApplyTemplates::execute(txExecutionState& aEs)
 
 txAttribute::txAttribute(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
                          txNamespaceMap* aMappings)
-    : mName(Move(aName)), mNamespace(Move(aNamespace)), mMappings(aMappings)
+    : mName(std::move(aName)), mNamespace(std::move(aNamespace)), mMappings(aMappings)
 {
 }
 
@@ -192,7 +190,7 @@ txCheckParam::execute(txExecutionState& aEs)
 
 txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr>&& aCondition,
                                      txInstruction* aTarget)
-    : mCondition(Move(aCondition)), mTarget(aTarget)
+    : mCondition(std::move(aCondition)), mTarget(aTarget)
 {
 }
 
@@ -376,7 +374,7 @@ txCopy::execute(txExecutionState& aEs)
 }
 
 txCopyOf::txCopyOf(nsAutoPtr<Expr>&& aSelect)
-    : mSelect(Move(aSelect))
+    : mSelect(std::move(aSelect))
 {
 }
 
@@ -500,7 +498,7 @@ txLREAttribute::txLREAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
     : mNamespaceID(aNamespaceID),
       mLocalName(aLocalName),
       mPrefix(aPrefix),
-      mValue(Move(aValue))
+      mValue(std::move(aValue))
 {
     if (aNamespaceID == kNameSpaceID_None) {
         mLowercaseLocalName = TX_ToLowerCaseAtom(aLocalName);
@@ -556,12 +554,12 @@ txNumber::txNumber(txXSLTNumber::LevelType aLevel,
                    nsAutoPtr<Expr>&& aValue, nsAutoPtr<Expr>&& aFormat,
                    nsAutoPtr<Expr>&& aGroupingSeparator,
                    nsAutoPtr<Expr>&& aGroupingSize)
-    : mLevel(aLevel), mCount(Move(aCount)),
-      mFrom(Move(aFrom)),
-      mValue(Move(aValue)),
-      mFormat(Move(aFormat)),
-      mGroupingSeparator(Move(aGroupingSeparator)),
-      mGroupingSize(Move(aGroupingSize))
+    : mLevel(aLevel), mCount(std::move(aCount)),
+      mFrom(std::move(aFrom)),
+      mValue(std::move(aValue)),
+      mFormat(std::move(aFormat)),
+      mGroupingSeparator(std::move(aGroupingSeparator)),
+      mGroupingSize(std::move(aGroupingSize))
 {
 }
 
@@ -587,7 +585,7 @@ txPopParams::execute(txExecutionState& aEs)
 }
 
 txProcessingInstruction::txProcessingInstruction(nsAutoPtr<Expr>&& aName)
-    : mName(Move(aName))
+    : mName(std::move(aName))
 {
 }
 
@@ -614,7 +612,7 @@ txProcessingInstruction::execute(txExecutionState& aEs)
 }
 
 txPushNewContext::txPushNewContext(nsAutoPtr<Expr>&& aSelect)
-    : mSelect(Move(aSelect)), mBailTarget(nullptr)
+    : mSelect(std::move(aSelect)), mBailTarget(nullptr)
 {
 }
 
@@ -682,11 +680,11 @@ txPushNewContext::addSort(nsAutoPtr<Expr>&& aSelectExpr,
 {
     if (SortKey *key = mSortKeys.AppendElement()) {
         // workaround for not triggering the Copy Constructor
-        key->mSelectExpr = Move(aSelectExpr);
-        key->mLangExpr = Move(aLangExpr);
-        key->mDataTypeExpr = Move(aDataTypeExpr);
-        key->mOrderExpr = Move(aOrderExpr);
-        key->mCaseOrderExpr = Move(aCaseOrderExpr);
+        key->mSelectExpr = std::move(aSelectExpr);
+        key->mLangExpr = std::move(aLangExpr);
+        key->mDataTypeExpr = std::move(aDataTypeExpr);
+        key->mOrderExpr = std::move(aOrderExpr);
+        key->mCaseOrderExpr = std::move(aCaseOrderExpr);
         return NS_OK;
     }
     return NS_ERROR_OUT_OF_MEMORY;
@@ -760,7 +758,7 @@ txReturn::execute(txExecutionState& aEs)
 }
 
 txSetParam::txSetParam(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue)
-    : mName(aName), mValue(Move(aValue))
+    : mName(aName), mValue(std::move(aValue))
 {
 }
 
@@ -793,7 +791,7 @@ txSetParam::execute(txExecutionState& aEs)
 
 txSetVariable::txSetVariable(const txExpandedName& aName,
                              nsAutoPtr<Expr>&& aValue)
-    : mName(aName), mValue(Move(aValue))
+    : mName(aName), mValue(std::move(aValue))
 {
 }
 
@@ -819,8 +817,8 @@ txSetVariable::execute(txExecutionState& aEs)
 txStartElement::txStartElement(nsAutoPtr<Expr>&& aName,
                                nsAutoPtr<Expr>&& aNamespace,
                                txNamespaceMap* aMappings)
-    : mName(Move(aName)),
-      mNamespace(Move(aNamespace)),
+    : mName(std::move(aName)),
+      mNamespace(std::move(aNamespace)),
       mMappings(aMappings)
 {
 }
@@ -927,7 +925,7 @@ txText::execute(txExecutionState& aEs)
 }
 
 txValueOf::txValueOf(nsAutoPtr<Expr>&& aExpr, bool aDOE)
-    : mExpr(Move(aExpr)),
+    : mExpr(std::move(aExpr)),
       mDOE(aDOE)
 {
 }

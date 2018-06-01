@@ -27,7 +27,7 @@ ServiceWorkerRegistrationDescriptor::NewestInternal() const
   } else if (mData->active().type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
     result.emplace(mData->active().get_IPCServiceWorkerDescriptor());
   }
-  return Move(result);
+  return std::move(result);
 }
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
@@ -90,7 +90,7 @@ ServiceWorkerRegistrationDescriptor::operator=(const ServiceWorkerRegistrationDe
 }
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(ServiceWorkerRegistrationDescriptor&& aRight)
-  : mData(Move(aRight.mData))
+  : mData(std::move(aRight.mData))
 {
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
 }
@@ -99,7 +99,7 @@ ServiceWorkerRegistrationDescriptor&
 ServiceWorkerRegistrationDescriptor::operator=(ServiceWorkerRegistrationDescriptor&& aRight)
 {
   mData.reset();
-  mData = Move(aRight.mData);
+  mData = std::move(aRight.mData);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return *this;
 }
@@ -138,7 +138,7 @@ ServiceWorkerRegistrationDescriptor::GetPrincipal() const
 {
   AssertIsOnMainThread();
   nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
-  return Move(ref);
+  return std::move(ref);
 }
 
 const nsCString&
@@ -157,7 +157,7 @@ ServiceWorkerRegistrationDescriptor::GetInstalling() const
       mData->installing().get_IPCServiceWorkerDescriptor()));
   }
 
-  return Move(result);
+  return std::move(result);
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -170,7 +170,7 @@ ServiceWorkerRegistrationDescriptor::GetWaiting() const
       mData->waiting().get_IPCServiceWorkerDescriptor()));
   }
 
-  return Move(result);
+  return std::move(result);
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -183,7 +183,7 @@ ServiceWorkerRegistrationDescriptor::GetActive() const
       mData->active().get_IPCServiceWorkerDescriptor()));
   }
 
-  return Move(result);
+  return std::move(result);
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -194,7 +194,7 @@ ServiceWorkerRegistrationDescriptor::Newest() const
   if (newest.isSome()) {
     result.emplace(ServiceWorkerDescriptor(newest.ref()));
   }
-  return Move(result);
+  return std::move(result);
 }
 
 namespace {

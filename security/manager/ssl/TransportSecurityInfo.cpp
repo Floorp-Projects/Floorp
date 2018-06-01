@@ -512,7 +512,7 @@ nsresult
 TransportSecurityInfo::SetFailedCertChain(UniqueCERTCertList certList)
 {
   // nsNSSCertList takes ownership of certList
-  mFailedCertChain = new nsNSSCertList(Move(certList));
+  mFailedCertChain = new nsNSSCertList(std::move(certList));
 
   return NS_OK;
 }

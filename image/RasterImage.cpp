@@ -388,7 +388,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
   }
 
   if (result.Surface()->GetCompositingFailed()) {
-    DrawableSurface tmp = Move(result.Surface());
+    DrawableSurface tmp = std::move(result.Surface());
     return result;
   }
 
@@ -408,7 +408,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
   // IsAborted acquires the monitor for the imgFrame.
   if (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST) &&
     result.Surface()->IsAborted()) {
-    DrawableSurface tmp = Move(result.Surface());
+    DrawableSurface tmp = std::move(result.Surface());
     return result;
   }
 
@@ -623,10 +623,10 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
 
   RefPtr<SourceSurface> surface = result.Surface()->GetSourceSurface();
   if (!result.Surface()->IsFinished()) {
-    return MakeTuple(ImgDrawResult::INCOMPLETE, suggestedSize, Move(surface));
+    return MakeTuple(ImgDrawResult::INCOMPLETE, suggestedSize, std::move(surface));
   }
 
-  return MakeTuple(ImgDrawResult::SUCCESS, suggestedSize, Move(surface));
+  return MakeTuple(ImgDrawResult::SUCCESS, suggestedSize, std::move(surface));
 }
 
 IntSize
@@ -1179,7 +1179,7 @@ RasterImage::RequestDecodeForSizeInternal(const IntSize& aSize, uint32_t aFlags)
   PlaybackType playbackType = mAnimationState ? PlaybackType::eAnimated
                                               : PlaybackType::eStatic;
   LookupResult result = LookupFrame(aSize, flags, playbackType);
-  return Move(result.Surface());
+  return std::move(result.Surface());
 }
 
 static bool
@@ -1504,7 +1504,7 @@ RasterImage::Draw(gfxContext* aContext,
   bool shouldRecordTelemetry = !mDrawStartTime.IsNull() &&
                                result.Surface()->IsFinished();
 
-  auto drawResult = DrawInternal(Move(result.Surface()), aContext, aSize,
+  auto drawResult = DrawInternal(std::move(result.Surface()), aContext, aSize,
                                  aRegion, aSamplingFilter, flags, aOpacity);
 
   if (shouldRecordTelemetry) {

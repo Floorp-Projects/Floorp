@@ -374,7 +374,7 @@ GeckoMediaPluginServiceParent::GetContentParent(
     api = nsCString(aAPI),
     tags = nsTArray<nsCString>(aTags),
     helper = RefPtr<GMPCrashHelper>(aHelper),
-    holder = Move(holder)
+    holder = std::move(holder)
   ](const GenericPromise::ResolveOrRejectValue& aValue) mutable -> void {
     if (aValue.IsReject()) {
       NS_WARNING("GMPService::EnsureInitialized failed.");
@@ -393,7 +393,7 @@ GeckoMediaPluginServiceParent::GetContentParent(
       return;
     }
     self->ConnectCrashHelper(gmp->GetPluginId(), helper);
-    gmp->GetGMPContentParent(Move(holder));
+    gmp->GetGMPContentParent(std::move(holder));
   });
 
   return promise;
@@ -620,7 +620,7 @@ GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities()
       for (const GMPCapability& tag : gmp->GetCapabilities()) {
         x.capabilities().AppendElement(GMPAPITags(tag.mAPIName, tag.mAPITags));
       }
-      caps.AppendElement(Move(x));
+      caps.AppendElement(std::move(x));
     }
   }
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
@@ -1779,9 +1779,9 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
     return IPC_OK();
   }
 
-  *aOutEndpoint = Move(parent);
+  *aOutEndpoint = std::move(parent);
 
-  if (!gmp->SendInitGMPContentChild(Move(child))) {
+  if (!gmp->SendInitGMPContentChild(std::move(child))) {
     *aOutRv = NS_ERROR_FAILURE;
     *aOutErrorDescription =
       NS_LITERAL_CSTRING("SendInitGMPContentChild failed.");
@@ -1817,8 +1817,8 @@ GMPServiceParent::RecvLaunchGMPForNodeId(
   }
   return RecvLaunchGMP(nodeId,
                        aApi,
-                       Move(aTags),
-                       Move(aAlreadyBridgedTo),
+                       std::move(aTags),
+                       std::move(aAlreadyBridgedTo),
                        aOutPluginId,
                        aOutId,
                        aOutDisplayName,
@@ -1885,7 +1885,7 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
     &GMPServiceParent::CloseTransport,
     &monitor,
     &completed);
-  XRE_GetIOMessageLoop()->PostTask(Move(task.forget()));
+  XRE_GetIOMessageLoop()->PostTask(std::move(task.forget()));
 
   while (!completed) {
     lock.Wait();
@@ -1913,7 +1913,7 @@ public:
                         bool* aResult)
     : Runnable("gmp::OpenPGMPServiceParent")
     , mGMPServiceParent(aGMPServiceParent)
-    , mEndpoint(Move(aEndpoint))
+    , mEndpoint(std::move(aEndpoint))
     , mResult(aResult)
   {
   }
@@ -1949,7 +1949,7 @@ GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService)
   nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
   bool ok;
   rv = gmpThread->Dispatch(new OpenPGMPServiceParent(serviceParent,
-                                                     Move(aGMPService),
+                                                     std::move(aGMPService),
                                                      &ok),
                            NS_DISPATCH_SYNC);
 

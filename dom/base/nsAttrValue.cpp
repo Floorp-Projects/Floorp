@@ -150,7 +150,7 @@ nsAttrValue::nsAttrValue(already_AddRefed<DeclarationBlock> aValue,
                          const nsAString* aSerialized)
     : mBits(0)
 {
-  SetTo(Move(aValue), aSerialized);
+  SetTo(std::move(aValue), aSerialized);
 }
 
 nsAttrValue::nsAttrValue(const nsIntMargin& aValue)
@@ -1263,7 +1263,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
   AtomArray* array = GetAtomArrayValue();
 
-  if (!array->AppendElement(Move(classAtom))) {
+  if (!array->AppendElement(std::move(classAtom))) {
     Reset();
     return;
   }
@@ -1278,7 +1278,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
     classAtom = NS_AtomizeMainThread(Substring(start, iter));
 
-    if (!array->AppendElement(Move(classAtom))) {
+    if (!array->AppendElement(std::move(classAtom))) {
       Reset();
       return;
     }

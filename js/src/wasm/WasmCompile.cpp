@@ -105,7 +105,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     // is open.
     debugEnabled = cx->realm()->debuggerObservesAsmJS();
 
-    this->scriptedCaller = Move(scriptedCaller);
+    this->scriptedCaller = std::move(scriptedCaller);
     return assumptions.initBuildIdFromContext(cx);
 }
 

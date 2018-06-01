@@ -82,7 +82,7 @@ class SpliceableJSONWriter : public mozilla::JSONWriter
 {
 public:
   explicit SpliceableJSONWriter(mozilla::UniquePtr<mozilla::JSONWriteFunc> aWriter)
-    : JSONWriter(mozilla::Move(aWriter))
+    : JSONWriter(std::move(aWriter))
   { }
 
   void StartBareList(CollectionStyle aStyle = MultiLineStyle) {

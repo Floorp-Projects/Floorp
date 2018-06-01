@@ -356,7 +356,7 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
 
-    rv = NewObjectInputStreamFromBuffer(Move(buf), len, getter_AddRefs(ois));
+    rv = NewObjectInputStreamFromBuffer(std::move(buf), len, getter_AddRefs(ois));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mInputStreamTable.Put(uri, ois);
@@ -425,7 +425,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         rv = PathifyURI(uri, spec);
         if (NS_FAILED(rv))
             return NS_ERROR_NOT_AVAILABLE;
-        rv = sc->PutBuffer(spec.get(), Move(buf), len);
+        rv = sc->PutBuffer(spec.get(), std::move(buf), len);
         if (NS_SUCCEEDED(rv)) {
             mOutputStreamTable.Remove(uri);
             mStartupCacheURITable.PutEntry(uri);
@@ -508,7 +508,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 
     rv = startupCache->GetBuffer(kXULCacheInfoKey, &buf, &len);
     if (NS_SUCCEEDED(rv))
-        rv = NewObjectInputStreamFromBuffer(Move(buf), len,
+        rv = NewObjectInputStreamFromBuffer(std::move(buf), len,
                                             getter_AddRefs(objectInput));
 
     if (NS_SUCCEEDED(rv)) {
@@ -570,7 +570,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
             buf = MakeUnique<char[]>(len);
             rv = inputStream->Read(buf.get(), len, &amtRead);
             if (NS_SUCCEEDED(rv) && len == amtRead)
-              rv = startupCache->PutBuffer(kXULCacheInfoKey, Move(buf), len);
+              rv = startupCache->PutBuffer(kXULCacheInfoKey, std::move(buf), len);
             else {
                 rv = NS_ERROR_UNEXPECTED;
             }

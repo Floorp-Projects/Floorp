@@ -88,7 +88,7 @@ public:
     , mSamplesWaitingForKey(
         new SamplesWaitingForKey(mProxy, aType, aOnWaitingForKey))
     , mThroughputLimiter(aDecodeTaskQueue)
-    , mADTSSampleConverter(Move(aConverter))
+    , mADTSSampleConverter(std::move(aConverter))
     , mIsShutdown(false)
   {
     DDLINKCHILD("decoder", mDecoder.get());
@@ -304,7 +304,7 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
   already_AddRefed<AbstractThread> aProxyThread,
   CDMProxy* aProxy,
   const CreateDecoderParams& aParams)
-  : MediaDataDecoderProxy(Move(aProxyThread))
+  : MediaDataDecoderProxy(std::move(aProxyThread))
   , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
   , mSamplesWaitingForKey(
       new SamplesWaitingForKey(aProxy,
@@ -318,7 +318,7 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
   const CreateDecoderParams& aParams,
   already_AddRefed<MediaDataDecoder> aProxyDecoder,
   CDMProxy* aProxy)
-  : MediaDataDecoderProxy(Move(aProxyDecoder))
+  : MediaDataDecoderProxy(std::move(aProxyDecoder))
   , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
   , mSamplesWaitingForKey(
       new SamplesWaitingForKey(aProxy,
@@ -469,7 +469,7 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
                      AbstractThread::GetCurrent()->AsTaskQueue(),
                      aParams.mType,
                      aParams.mOnWaitingForKeyEvent,
-                     Move(converter)));
+                     std::move(converter)));
   return emeDecoder.forget();
 }
 

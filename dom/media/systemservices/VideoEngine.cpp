@@ -194,7 +194,7 @@ VideoEngine::Create(UniquePtr<const webrtc::Config>&& aConfig)
   LOG((__PRETTY_FUNCTION__));
   LOG(("Creating new VideoEngine with CaptureDeviceType %s",
        aConfig->Get<webrtc::CaptureDeviceInfo>().TypeName()));
-  return do_AddRef(new VideoEngine(Move(aConfig)));
+  return do_AddRef(new VideoEngine(std::move(aConfig)));
 }
 
 VideoEngine::CaptureEntry::CaptureEntry(int32_t aCapnum,

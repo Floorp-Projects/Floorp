@@ -258,7 +258,7 @@ AudioSinkWrapper::GetDebugInfo()
   if (mAudioSink) {
     AppendStringIfNotEmpty(str, mAudioSink->GetDebugInfo());
   }
-  return Move(str);
+  return std::move(str);
 }
 
 } // namespace media

@@ -347,7 +347,7 @@ nsSyncLoadService::PushSyncStreamToListener(already_AddRefed<nsIInputStream> aIn
                                             nsIStreamListener* aListener,
                                             nsIChannel* aChannel)
 {
-    nsCOMPtr<nsIInputStream> in = Move(aIn);
+    nsCOMPtr<nsIInputStream> in = std::move(aIn);
 
     // Set up buffering stream
     nsresult rv;

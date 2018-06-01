@@ -53,7 +53,7 @@ VideoDecoderManagerChild::InitForContent(Endpoint<PVideoDecoderManagerChild>&& a
 {
   InitializeThread();
   sVideoDecoderChildThread->Dispatch(NewRunnableFunction("InitForContentRunnable",
-                                                         &Open, Move(aVideoManager)), NS_DISPATCH_NORMAL);
+                                                         &Open, std::move(aVideoManager)), NS_DISPATCH_NORMAL);
 }
 
 /* static */ void
@@ -266,7 +266,7 @@ void
 VideoDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD)
 {
   RefPtr<VideoDecoderManagerChild> ref = this;
-  SurfaceDescriptorGPUVideo sd = Move(aSD);
+  SurfaceDescriptorGPUVideo sd = std::move(aSD);
   sVideoDecoderChildThread->Dispatch(
     NS_NewRunnableFunction(
       "dom::VideoDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo",

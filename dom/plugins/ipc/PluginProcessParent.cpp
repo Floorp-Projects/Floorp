@@ -75,7 +75,7 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
     }
 #endif
 
-    mLaunchCompleteTask = mozilla::Move(aLaunchCompleteTask);
+    mLaunchCompleteTask = std::move(aLaunchCompleteTask);
 
     vector<string> args;
     args.push_back(MungePluginDsoPath(mPluginFilePath));

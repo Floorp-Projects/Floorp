@@ -10,7 +10,6 @@
 
 using mozilla::detail::VectorTesting;
 using mozilla::MakeUnique;
-using mozilla::Move;
 using mozilla::UniquePtr;
 using mozilla::Vector;
 
@@ -49,7 +48,7 @@ mozilla::detail::VectorTesting::testReserved()
   MOZ_RELEASE_ASSERT(bv.reserve(1));
   MOZ_RELEASE_ASSERT(bv.reserved() == 5);
 
-  Vector<bool> bv2(Move(bv));
+  Vector<bool> bv2(std::move(bv));
   MOZ_RELEASE_ASSERT(bv.reserved() == 0);
   MOZ_RELEASE_ASSERT(bv2.reserved() == 5);
 
@@ -77,7 +76,7 @@ mozilla::detail::VectorTesting::testReserved()
   MOZ_RELEASE_ASSERT(iv.reserve(55));
   MOZ_RELEASE_ASSERT(iv.reserved() == 55);
 
-  Vector<int, 42> iv2(Move(iv));
+  Vector<int, 42> iv2(std::move(iv));
   MOZ_RELEASE_ASSERT(iv.reserved() == 0);
   MOZ_RELEASE_ASSERT(iv2.reserved() == 55);
 
@@ -133,7 +132,7 @@ struct S
 
   S(S&& rhs)
     : j(rhs.j)
-    , k(Move(rhs.k))
+    , k(std::move(rhs.k))
   {
     rhs.j = 0;
     rhs.k.reset(0);
@@ -147,7 +146,7 @@ struct S
   S& operator=(S&& rhs) {
     j = rhs.j;
     rhs.j = 0;
-    k = Move(rhs.k);
+    k = std::move(rhs.k);
     rhs.k.reset();
     moveCount++;
     return *this;
@@ -173,7 +172,7 @@ mozilla::detail::VectorTesting::testEmplaceBack()
 
   for (size_t i = 0; i < 10; i++) {
     S s(i, i * i);
-    MOZ_RELEASE_ASSERT(vec.append(Move(s)));
+    MOZ_RELEASE_ASSERT(vec.append(std::move(s)));
   }
 
   MOZ_RELEASE_ASSERT(vec.length() == 10);
@@ -205,7 +204,7 @@ mozilla::detail::VectorTesting::testReverse()
   for (uint8_t i = 0; i < 5; i++) {
     auto p = MakeUnique<uint8_t>(i);
     MOZ_RELEASE_ASSERT(p);
-    MOZ_RELEASE_ASSERT(vec.append(mozilla::Move(p)));
+    MOZ_RELEASE_ASSERT(vec.append(std::move(p)));
   }
 
   vec.reverse();
@@ -239,7 +238,7 @@ mozilla::detail::VectorTesting::testReverse()
   for (uint8_t i = 0; i < 5; i++) {
     auto p = MakeUnique<uint8_t>(i);
     MOZ_RELEASE_ASSERT(p);
-    MOZ_RELEASE_ASSERT(vec2.append(mozilla::Move(p)));
+    MOZ_RELEASE_ASSERT(vec2.append(std::move(p)));
   }
 
   vec2.reverse();
@@ -444,7 +443,7 @@ mozilla::detail::VectorTesting::testInsert()
   MOZ_RELEASE_ASSERT(S::destructCount == 0);
 
   S s(42, 43);
-  MOZ_RELEASE_ASSERT(vec.insert(vec.begin() + 4, Move(s)));
+  MOZ_RELEASE_ASSERT(vec.insert(vec.begin() + 4, std::move(s)));
 
   for (size_t i = 0; i < vec.length(); i++) {
     const S& s = vec[i];

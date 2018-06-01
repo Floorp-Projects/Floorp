@@ -30,7 +30,7 @@ public:
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventPriority aPriority) final
   {
-    return mOwner->PutEventInternal(Move(aEvent), aPriority, this);
+    return mOwner->PutEventInternal(std::move(aEvent), aPriority, this);
   }
 
   void Disconnect(const MutexAutoLock& aProofOfLock) final
@@ -49,7 +49,7 @@ private:
 
 template<class InnerQueueT>
 ThreadEventQueue<InnerQueueT>::ThreadEventQueue(UniquePtr<InnerQueueT> aQueue)
-  : mBaseQueue(Move(aQueue))
+  : mBaseQueue(std::move(aQueue))
   , mLock("ThreadEventQueue")
   , mEventsAvailable(mLock, "EventsAvail")
 {
@@ -68,7 +68,7 @@ bool
 ThreadEventQueue<InnerQueueT>::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                                         EventPriority aPriority)
 {
-  return PutEventInternal(Move(aEvent), aPriority, nullptr);
+  return PutEventInternal(std::move(aEvent), aPriority, nullptr);
 }
 
 template<class InnerQueueT>
@@ -79,7 +79,7 @@ ThreadEventQueue<InnerQueueT>::PutEventInternal(already_AddRefed<nsIRunnable>&& 
 {
   // We want to leak the reference when we fail to dispatch it, so that
   // we won't release the event in a wrong thread.
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
+  LeakRefPtr<nsIRunnable> event(std::move(aEvent));
   nsCOMPtr<nsIThreadObserver> obs;
 
   {
@@ -226,7 +226,7 @@ ThreadEventQueue<InnerQueueT>::PushEventQueue()
 
   MutexAutoLock lock(mLock);
 
-  mNestedQueues.AppendElement(NestedQueueItem(Move(queue), eventTarget));
+  mNestedQueues.AppendElement(NestedQueueItem(std::move(queue), eventTarget));
   return eventTarget.forget();
 }
 

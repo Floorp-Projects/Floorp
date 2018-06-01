@@ -105,7 +105,7 @@ ProfilerScreenshots::SubmitScreenshot(uintptr_t aWindowIdentifier,
         profiler_add_marker_for_thread(
           sourceThread,
           "CompositorScreenshot",
-          MakeUnique<ScreenshotPayload>(timeStamp, Move(dataURL),
+          MakeUnique<ScreenshotPayload>(timeStamp, std::move(dataURL),
                                         originalSize, windowIdentifier));
       }
     }

@@ -115,7 +115,7 @@ public:
       nsString(aServiceWorkerRegistrationScope),
     };
 
-    mStrings.AppendElement(Move(strings));
+    mStrings.AppendElement(std::move(strings));
     return NS_OK;
   }
 
@@ -517,7 +517,7 @@ public:
   NotificationTask(const char* aName, UniquePtr<NotificationRef> aRef,
                    NotificationAction aAction)
     : Runnable(aName)
-    , mNotificationRef(Move(aRef)), mAction(aAction)
+    , mNotificationRef(std::move(aRef)), mAction(aAction)
   {}
 
   NS_IMETHOD
@@ -856,7 +856,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   explicit MainThreadNotificationObserver(UniquePtr<NotificationRef> aRef)
-    : mNotificationRef(Move(aRef))
+    : mNotificationRef(std::move(aRef))
   {
     AssertIsOnMainThread();
   }
@@ -1207,7 +1207,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   explicit WorkerNotificationObserver(UniquePtr<NotificationRef> aRef)
-    : MainThreadNotificationObserver(Move(aRef))
+    : MainThreadNotificationObserver(std::move(aRef))
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mNotificationRef->GetNotification()->mWorkerPrivate);
@@ -1678,10 +1678,10 @@ Notification::ShowInternal()
       MOZ_ASSERT(!mWorkerPrivate->IsServiceWorker());
       // Keep a pointer so that the feature can tell the observer not to release
       // the notification.
-      mObserver = new WorkerNotificationObserver(Move(ownership));
+      mObserver = new WorkerNotificationObserver(std::move(ownership));
       observer = mObserver;
     } else {
-      observer = new MainThreadNotificationObserver(Move(ownership));
+      observer = new MainThreadNotificationObserver(std::move(ownership));
     }
   } else {
     isPersistent = true;
@@ -2030,7 +2030,7 @@ public:
                           const nsTArray<NotificationStrings>&& aStrings)
     : NotificationWorkerRunnable(aWorkerPrivate)
     , mPromiseProxy(aPromiseProxy)
-    , mStrings(Move(aStrings))
+    , mStrings(std::move(aStrings))
   {
   }
 
@@ -2096,7 +2096,7 @@ public:
     RefPtr<WorkerGetResultRunnable> r =
       new WorkerGetResultRunnable(proxy->GetWorkerPrivate(),
                                   proxy,
-                                  Move(mStrings));
+                                  std::move(mStrings));
 
     r->Dispatch();
     return NS_OK;
@@ -2211,7 +2211,7 @@ Notification::Close()
   }
 
   nsCOMPtr<nsIRunnable> closeNotificationTask =
-    new NotificationTask("Notification::Close", Move(ref),
+    new NotificationTask("Notification::Close", std::move(ref),
                          NotificationTask::eClose);
   nsresult rv = DispatchToMainThread(closeNotificationTask.forget());
 
@@ -2659,7 +2659,7 @@ Notification::CreateAndShow(JSContext* aCx,
 
   // Queue a task to show the notification.
   nsCOMPtr<nsIRunnable> showNotificationTask =
-    new NotificationTask("Notification::CreateAndShow", Move(ref),
+    new NotificationTask("Notification::CreateAndShow", std::move(ref),
                          NotificationTask::eShow);
 
   nsresult rv =
@@ -2727,17 +2727,17 @@ nsresult
 Notification::DispatchToMainThread(already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (mWorkerPrivate) {
-    return mWorkerPrivate->DispatchToMainThread(Move(aRunnable));
+    return mWorkerPrivate->DispatchToMainThread(std::move(aRunnable));
   }
   AssertIsOnMainThread();
   if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
     if (nsIEventTarget* target = global->EventTargetFor(TaskCategory::Other)) {
-      return target->Dispatch(Move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
+      return target->Dispatch(std::move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
     }
   }
   nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   MOZ_ASSERT(mainTarget);
-  return mainTarget->Dispatch(Move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
+  return mainTarget->Dispatch(std::move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
 }
 
 } // namespace dom

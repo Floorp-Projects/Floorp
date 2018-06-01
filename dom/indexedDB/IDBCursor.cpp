@@ -98,7 +98,7 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   RefPtr<IDBCursor> cursor =
     new IDBCursor(Type_ObjectStore, aBackgroundActor, aKey);
 
-  cursor->mCloneInfo = Move(aCloneInfo);
+  cursor->mCloneInfo = std::move(aCloneInfo);
 
   return cursor.forget();
 }
@@ -138,9 +138,9 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   RefPtr<IDBCursor> cursor =
     new IDBCursor(Type_Index, aBackgroundActor, aKey);
 
-  cursor->mSortKey = Move(aSortKey);
-  cursor->mPrimaryKey = Move(aPrimaryKey);
-  cursor->mCloneInfo = Move(aCloneInfo);
+  cursor->mSortKey = std::move(aSortKey);
+  cursor->mPrimaryKey = std::move(aPrimaryKey);
+  cursor->mCloneInfo = std::move(aCloneInfo);
 
   return cursor.forget();
 }
@@ -162,8 +162,8 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   RefPtr<IDBCursor> cursor =
     new IDBCursor(Type_IndexKey, aBackgroundActor, aKey);
 
-  cursor->mSortKey = Move(aSortKey);
-  cursor->mPrimaryKey = Move(aPrimaryKey);
+  cursor->mSortKey = std::move(aSortKey);
+  cursor->mPrimaryKey = std::move(aPrimaryKey);
 
   return cursor.forget();
 }
@@ -882,8 +882,8 @@ IDBCursor::Reset(Key&& aKey, StructuredCloneReadInfo&& aValue)
 
   Reset();
 
-  mKey = Move(aKey);
-  mCloneInfo = Move(aValue);
+  mKey = std::move(aKey);
+  mCloneInfo = std::move(aValue);
 
   mHaveValue = !mKey.IsUnset();
 }
@@ -896,7 +896,7 @@ IDBCursor::Reset(Key&& aKey)
 
   Reset();
 
-  mKey = Move(aKey);
+  mKey = std::move(aKey);
 
   mHaveValue = !mKey.IsUnset();
 }
@@ -912,10 +912,10 @@ IDBCursor::Reset(Key&& aKey,
 
   Reset();
 
-  mKey = Move(aKey);
-  mSortKey = Move(aSortKey);
-  mPrimaryKey = Move(aPrimaryKey);
-  mCloneInfo = Move(aValue);
+  mKey = std::move(aKey);
+  mSortKey = std::move(aSortKey);
+  mPrimaryKey = std::move(aPrimaryKey);
+  mCloneInfo = std::move(aValue);
 
   mHaveValue = !mKey.IsUnset();
 }
@@ -930,9 +930,9 @@ IDBCursor::Reset(Key&& aKey,
 
   Reset();
 
-  mKey = Move(aKey);
-  mSortKey = Move(aSortKey);
-  mPrimaryKey = Move(aPrimaryKey);
+  mKey = std::move(aKey);
+  mSortKey = std::move(aSortKey);
+  mPrimaryKey = std::move(aPrimaryKey);
 
   mHaveValue = !mKey.IsUnset();
 }

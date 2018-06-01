@@ -927,7 +927,7 @@ public:
                      nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError)
     : AbstractDoEvent(aOnSuccess, aOnError)
     , mPath(aPath)
-    , mBuffer(Move(aBuffer))
+    , mBuffer(std::move(aBuffer))
     , mBytes(aBytes)
     , mTmpPath(aTmpPath)
     , mBackupTo(aBackupTo)
@@ -1297,7 +1297,7 @@ NativeOSFileInternalsService::WriteAtomic(const nsAString& aPath,
       "nsINativeOSFileErrorCallback", onError));
 
   RefPtr<AbstractDoEvent> event = new DoWriteAtomicEvent(aPath,
-                                                         Move(buffer),
+                                                         std::move(buffer),
                                                          bytes,
                                                          dict.mTmpPath,
                                                          dict.mBackupTo,

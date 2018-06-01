@@ -367,7 +367,7 @@ URL::UpdateURLSearchParams()
 void
 URL::SetURI(already_AddRefed<nsIURI> aURI)
 {
-  mURI = Move(aURI);
+  mURI = std::move(aURI);
   MOZ_ASSERT(mURI);
 }
 

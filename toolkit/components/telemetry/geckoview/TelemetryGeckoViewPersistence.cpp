@@ -381,7 +381,7 @@ PersistenceThreadPersist()
   }
 
   // Build the JSON structure: give up the ownership of jsonWriter.
-  mozilla::JSONWriter w(mozilla::Move(jsonWriter));
+  mozilla::JSONWriter w(std::move(jsonWriter));
   w.Start();
 
   w.StartObjectProperty("scalars");

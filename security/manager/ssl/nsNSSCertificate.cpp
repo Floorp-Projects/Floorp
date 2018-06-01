@@ -843,7 +843,7 @@ NS_IMPL_ISUPPORTS_CI(nsNSSCertList,
 nsNSSCertList::nsNSSCertList(UniqueCERTCertList certList)
 {
   if (certList) {
-    mCertList = Move(certList);
+    mCertList = std::move(certList);
   } else {
     mCertList = UniqueCERTCertList(CERT_NewCertList());
   }

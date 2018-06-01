@@ -26,7 +26,7 @@ class LambdaTask : public Runnable
 public:
   explicit LambdaTask(OnRunType&& aOnRun)
     : Runnable("media::LambdaTask")
-    , mOnRun(Move(aOnRun))
+    , mOnRun(std::move(aOnRun))
   {
   }
 

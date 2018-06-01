@@ -55,7 +55,7 @@ SlicedInputStream::SlicedInputStream(already_AddRefed<nsIInputStream> aInputStre
   , mAsyncWaitRequestedCount(0)
   , mMutex("SlicedInputStream::mMutex")
 {
-  nsCOMPtr<nsIInputStream> inputStream = mozilla::Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   SetSourceStream(inputStream.forget());
 }
 
@@ -81,7 +81,7 @@ SlicedInputStream::SetSourceStream(already_AddRefed<nsIInputStream> aInputStream
 {
   MOZ_ASSERT(!mInputStream);
 
-  mInputStream = mozilla::Move(aInputStream);
+  mInputStream = std::move(aInputStream);
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
     do_QueryInterface(mInputStream);

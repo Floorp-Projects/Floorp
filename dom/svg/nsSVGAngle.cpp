@@ -381,7 +381,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
     val.mU.mOrient.mUnit = unitType;
     val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_ANGLE;
   }
-  aValue = Move(val);
+  aValue = std::move(val);
   aPreventCachingOfSandwich = false;
 
   return NS_OK;

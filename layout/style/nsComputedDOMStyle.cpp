@@ -953,7 +953,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
                      mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration(),
                    "why should we have flushed style again?");
 
-    SetResolvedComputedStyle(Move(resolvedComputedStyle), currentGeneration);
+    SetResolvedComputedStyle(std::move(resolvedComputedStyle), currentGeneration);
     NS_ASSERTION(mPseudo || !mComputedStyle->HasPseudoElementData(),
                  "should not have pseudo-element data");
   }

@@ -341,7 +341,7 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
                                time,
                                duration,
                                frames,
-                               Move(buffer),
+                               std::move(buffer),
                                mOpusParser->mChannels,
                                mOpusParser->mRate,
                                mChannelMap) },

@@ -20,7 +20,6 @@
 using namespace js;
 
 using mozilla::Maybe;
-using mozilla::Move;
 
 const char*
 js::BindingKindString(BindingKind kind)
@@ -317,7 +316,7 @@ Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
     // It is an invariant that all Scopes that have data (currently, all
     // ScopeKinds except With) must have non-null data.
     MOZ_ASSERT(data);
-    scope->initData(Move(data));
+    scope->initData(std::move(data));
 
     return scope;
 }
@@ -385,7 +384,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<VarScope::Data> dataClone = CopyScopeData<VarScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
+        return create(cx, scope->kind_, enclosing, envShape, std::move(dataClone));
       }
 
       case ScopeKind::Lexical:
@@ -397,7 +396,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<LexicalScope::Data> dataClone = CopyScopeData<LexicalScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
+        return create(cx, scope->kind_, enclosing, envShape, std::move(dataClone));
       }
 
       case ScopeKind::With:
@@ -409,7 +408,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<EvalScope::Data> dataClone = CopyScopeData<EvalScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
+        return create(cx, scope->kind_, enclosing, envShape, std::move(dataClone));
       }
 
       case ScopeKind::Global:
@@ -554,7 +553,7 @@ LexicalScope::createWithData(JSContext* cx, ScopeKind kind, MutableHandle<Unique
         return nullptr;
     }
 
-    Scope* scope = Scope::create(cx, kind, enclosing, envShape, Move(data.get()));
+    Scope* scope = Scope::create(cx, kind, enclosing, envShape, std::move(data.get()));
     if (!scope)
         return nullptr;
     MOZ_ASSERT(scope->as<LexicalScope>().firstFrameSlot() == firstFrameSlot);
@@ -689,7 +688,7 @@ FunctionScope::createWithData(JSContext* cx, MutableHandle<UniquePtr<Data>> data
             return nullptr;
 
         funScope = &scope->as<FunctionScope>();
-        funScope->initData(Move(data.get()));
+        funScope->initData(std::move(data.get()));
     }
 
     return funScope;
@@ -747,7 +746,7 @@ FunctionScope::clone(JSContext* cx, Handle<FunctionScope*> scope, HandleFunction
             return nullptr;
 
         funScopeClone = &scopeClone->as<FunctionScope>();
-        funScopeClone->initData(Move(dataClone.get()));
+        funScopeClone->initData(std::move(dataClone.get()));
     }
 
     return funScopeClone;
@@ -862,7 +861,7 @@ VarScope::createWithData(JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<
             return nullptr;
     }
 
-    Scope* scope = Scope::create(cx, kind, enclosing, envShape, Move(data.get()));
+    Scope* scope = Scope::create(cx, kind, enclosing, envShape, std::move(data.get()));
     if (!scope)
         return nullptr;
     return &scope->as<VarScope>();
@@ -959,7 +958,7 @@ GlobalScope::createWithData(JSContext* cx, ScopeKind kind, MutableHandle<UniqueP
     // global lexical scope and the global object or non-syntactic objects
     // created by embedding, all of which are not only extensible but may
     // have names on them deleted.
-    Scope* scope = Scope::create(cx, kind, nullptr, nullptr, Move(data.get()));
+    Scope* scope = Scope::create(cx, kind, nullptr, nullptr, std::move(data.get()));
     if (!scope)
         return nullptr;
     return &scope->as<GlobalScope>();
@@ -973,7 +972,7 @@ GlobalScope::clone(JSContext* cx, Handle<GlobalScope*> scope, ScopeKind kind)
     if (!dataClone)
         return nullptr;
 
-    Scope* scopeClone = Scope::create(cx, kind, nullptr, nullptr, Move(dataClone.get()));
+    Scope* scopeClone = Scope::create(cx, kind, nullptr, nullptr, std::move(dataClone.get()));
     if (!scopeClone)
         return nullptr;
     return &scopeClone->as<GlobalScope>();
@@ -1070,7 +1069,7 @@ EvalScope::createWithData(JSContext* cx, ScopeKind scopeKind, MutableHandle<Uniq
             return nullptr;
     }
 
-    Scope* scope = Scope::create(cx, scopeKind, enclosing, envShape, Move(data.get()));
+    Scope* scope = Scope::create(cx, scopeKind, enclosing, envShape, std::move(data.get()));
     if (!scope)
         return nullptr;
     return &scope->as<EvalScope>();
@@ -1196,7 +1195,7 @@ ModuleScope::createWithData(JSContext* cx, MutableHandle<UniquePtr<Data>> data,
         data->module.init(module);
 
         moduleScope = &scope->as<ModuleScope>();
-        moduleScope->initData(Move(data.get()));
+        moduleScope->initData(std::move(data.get()));
     }
 
     return moduleScope;
@@ -1282,7 +1281,7 @@ WasmInstanceScope::create(JSContext* cx, WasmInstanceObject* instance)
             return nullptr;
 
         wasmInstanceScope = &scope->as<WasmInstanceScope>();
-        wasmInstanceScope->initData(Move(data.get()));
+        wasmInstanceScope->initData(std::move(data.get()));
     }
 
     return wasmInstanceScope;
@@ -1335,7 +1334,7 @@ WasmFunctionScope::create(JSContext* cx, HandleScope enclosing, uint32_t funcInd
         return nullptr;
 
     wasmFunctionScope = &scope->as<WasmFunctionScope>();
-    wasmFunctionScope->initData(Move(data.get()));
+    wasmFunctionScope->initData(std::move(data.get()));
 
     return wasmFunctionScope;
 }

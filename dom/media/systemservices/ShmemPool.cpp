@@ -53,14 +53,14 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize)
     LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
   }
 #endif
-  return Move(res);
+  return std::move(res);
 }
 
 void ShmemPool::Put(ShmemBuffer&& aShmem)
 {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPoolFree < mShmemPool.Length());
-  mShmemPool[mPoolFree] = Move(aShmem);
+  mShmemPool[mPoolFree] = std::move(aShmem);
   mPoolFree++;
 #ifdef DEBUG
   size_t poolUse = mShmemPool.Length() - mPoolFree;

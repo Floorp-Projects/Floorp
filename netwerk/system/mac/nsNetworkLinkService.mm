@@ -186,7 +186,7 @@ static bool scanArp(char *ip, char *mac, size_t maclen)
 
         auto tmp = MakeUnique<char[]>(needed);
         memcpy(&tmp[0], &buf[0], needed);
-        buf = Move(tmp);
+        buf = std::move(tmp);
     }
     if (st == -1) {
         return false;

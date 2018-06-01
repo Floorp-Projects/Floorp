@@ -74,7 +74,7 @@ OmxPromiseLayer::FillBuffer(BufferData* aData)
 
   if (err != OMX_ErrorNone) {
     OmxBufferFailureHolder failure(err, aData);
-    aData->mPromise.Reject(Move(failure), __func__);
+    aData->mPromise.Reject(std::move(failure), __func__);
   } else {
     aData->mStatus = BufferData::BufferStatus::OMX_COMPONENT;
     GetBufferHolders(OMX_DirOutput)->AppendElement(aData);
@@ -95,10 +95,10 @@ OmxPromiseLayer::EmptyBuffer(BufferData* aData)
 
   if (err != OMX_ErrorNone) {
     OmxBufferFailureHolder failure(err, aData);
-    aData->mPromise.Reject(Move(failure), __func__);
+    aData->mPromise.Reject(std::move(failure), __func__);
   } else {
     if (aData->mRawData) {
-      mRawDatas.AppendElement(Move(aData->mRawData));
+      mRawDatas.AppendElement(std::move(aData->mRawData));
     }
     aData->mStatus = BufferData::BufferStatus::OMX_COMPONENT;
     GetBufferHolders(OMX_DirInput)->AppendElement(aData);

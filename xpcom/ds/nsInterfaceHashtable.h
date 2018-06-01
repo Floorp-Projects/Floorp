@@ -60,7 +60,7 @@ public:
    */
   void Put(KeyType aKey, already_AddRefed<Interface>&& aData)
   {
-    if (!Put(aKey, mozilla::Move(aData), mozilla::fallible)) {
+    if (!Put(aKey, std::move(aData), mozilla::fallible)) {
       NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
   }

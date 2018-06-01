@@ -117,7 +117,7 @@ public:
                nsTArray<RefPtr<Request>>&& aRequestList, Promise* aPromise)
     : mWorkerHolder(aWorkerHolder)
     , mCache(aCache)
-    , mRequestList(Move(aRequestList))
+    , mRequestList(std::move(aRequestList))
     , mPromise(aPromise)
   {
     MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
@@ -194,7 +194,7 @@ public:
         return;
       }
 
-      responseList.AppendElement(Move(response));
+      responseList.AppendElement(std::move(response));
     }
 
     MOZ_DIAGNOSTIC_ASSERT(mRequestList.Length() == responseList.Length());
@@ -363,8 +363,8 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  requestList.AppendElement(Move(request));
-  return AddAll(global, Move(requestList), aCallerType, aRv);
+  requestList.AppendElement(std::move(request));
+  return AddAll(global, std::move(requestList), aCallerType, aRv);
 }
 
 already_AddRefed<Promise>
@@ -411,10 +411,10 @@ Cache::AddAll(JSContext* aContext,
       return nullptr;
     }
 
-    requestList.AppendElement(Move(request));
+    requestList.AppendElement(std::move(request));
   }
 
-  return AddAll(global, Move(requestList), aCallerType, aRv);
+  return AddAll(global, std::move(requestList), aCallerType, aRv);
 }
 
 already_AddRefed<Promise>
@@ -618,7 +618,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    fetchList.AppendElement(Move(fetch));
+    fetchList.AppendElement(std::move(fetch));
   }
 
   RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
@@ -628,7 +628,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
 
   RefPtr<FetchHandler> handler =
     new FetchHandler(mActor->GetWorkerHolder(), this,
-                     Move(aRequestList), promise);
+                     std::move(aRequestList), promise);
 
   RefPtr<Promise> fetchPromise = Promise::All(aGlobal.Context(), fetchList, aRv);
   if (NS_WARN_IF(aRv.Failed())) {

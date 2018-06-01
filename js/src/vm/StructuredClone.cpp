@@ -234,7 +234,7 @@ struct BufferIterator {
 SharedArrayRawBufferRefs&
 SharedArrayRawBufferRefs::operator=(SharedArrayRawBufferRefs&& other)
 {
-    takeOwnership(Move(other));
+    takeOwnership(std::move(other));
     return *this;
 }
 
@@ -283,7 +283,7 @@ void
 SharedArrayRawBufferRefs::takeOwnership(SharedArrayRawBufferRefs&& other)
 {
     MOZ_ASSERT(refs_.empty());
-    refs_ = Move(other.refs_);
+    refs_ = std::move(other.refs_);
 }
 
 void
@@ -328,7 +328,7 @@ struct SCOutput {
     {
         buf.setCallbacks(callbacks, closure, policy);
     }
-    void extractBuffer(JSStructuredCloneData* data) { *data = Move(buf); }
+    void extractBuffer(JSStructuredCloneData* data) { *data = std::move(buf); }
     void discardTransferables();
 
     uint64_t tell() const { return buf.Size(); }
@@ -2843,7 +2843,7 @@ JSAutoStructuredCloneBuffer::adopt(JSStructuredCloneData&& data, uint32_t versio
                                    void* closure)
 {
     clear();
-    data_ = Move(data);
+    data_ = std::move(data);
     version_ = version;
     data_.setCallbacks(callbacks, closure, OwnTransferablePolicy::OwnsTransferablesIfAny);
 }
@@ -2859,7 +2859,7 @@ JSAutoStructuredCloneBuffer::steal(JSStructuredCloneData* data, uint32_t* versio
         *callbacks = data_.callbacks_;
     if (closure)
         *closure = data_.closure_;
-    *data = Move(data_);
+    *data = std::move(data_);
 
     version_ = 0;
     data_.setCallbacks(nullptr, nullptr, OwnTransferablePolicy::NoTransferables);

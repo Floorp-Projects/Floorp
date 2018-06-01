@@ -1444,7 +1444,7 @@ public:
   public:
     Fmtp(const std::string& aFormat, UniquePtr<Parameters> aParameters)
         : format(aFormat),
-          parameters(Move(aParameters))
+          parameters(std::move(aParameters))
     {
     }
 
@@ -1482,7 +1482,7 @@ public:
   void
   PushEntry(const std::string& format, UniquePtr<Parameters> parameters)
   {
-    mFmtps.push_back(Fmtp(format, Move(parameters)));
+    mFmtps.push_back(Fmtp(format, std::move(parameters)));
   }
 
   std::vector<Fmtp> mFmtps;

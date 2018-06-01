@@ -24,7 +24,7 @@ static void RunTest(std::deque<MozPolygon> aPolygons,
 {
   std::list<LayerPolygon> layers;
   for (MozPolygon& polygon : aPolygons) {
-    layers.push_back(LayerPolygon(nullptr, Move(polygon)));
+    layers.push_back(LayerPolygon(nullptr, std::move(polygon)));
   }
 
   const BSPTree tree(layers);

@@ -124,7 +124,7 @@ class TransportLayerLossy : public TransportLayer {
   }
 
   void SetInspector(UniquePtr<Inspector> inspector) {
-    inspector_ = Move(inspector);
+    inspector_ = std::move(inspector);
   }
 
   void StateChange(TransportLayer *layer, State state) {
@@ -735,13 +735,13 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void SetInspector(UniquePtr<Inspector> inspector) {
-    lossy_->SetInspector(Move(inspector));
+    lossy_->SetInspector(std::move(inspector));
   }
 
   void SetInspector(Inspector* in) {
     UniquePtr<Inspector> inspector(in);
 
-    lossy_->SetInspector(Move(inspector));
+    lossy_->SetInspector(std::move(inspector));
   }
 
   void SetCipherSuiteChanges(const std::vector<uint16_t>& enableThese,

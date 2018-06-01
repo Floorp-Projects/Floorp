@@ -113,7 +113,7 @@ void CPWL_Caret::SetCaret(bool bVisible,
         m_ptHead = ptHead;
         m_ptFoot = ptFoot;
         m_bFlash = true;
-        Move(m_rcInvalid, false, true);
+        std::move(m_rcInvalid, false, true);
       }
     } else {
       m_ptHead = ptHead;
@@ -122,7 +122,7 @@ void CPWL_Caret::SetCaret(bool bVisible,
       BeginTimer(PWL_CARET_FLASHINTERVAL);
       CPWL_Wnd::SetVisible(true);
       m_bFlash = true;
-      Move(m_rcInvalid, false, true);
+      std::move(m_rcInvalid, false, true);
     }
   } else {
     m_ptHead = CFX_PointF();

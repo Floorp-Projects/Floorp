@@ -870,7 +870,7 @@ ExtractSCTListFromOCSPResponse(Input cert,
                                               encodedResponse, expired);
   ASSERT_EQ(Success, rv);
 
-  result = Move(trustDomain.signedCertificateTimestamps);
+  result = std::move(trustDomain.signedCertificateTimestamps);
 }
 
 Buffer

@@ -164,7 +164,7 @@ RefPtr<TrackBuffersManager::AppendPromise>
 TrackBuffersManager::DoAppendData(already_AddRefed<MediaByteBuffer> aData,
                                   const SourceBufferAttributes& aAttributes)
 {
-  RefPtr<AppendBufferTask> task = new AppendBufferTask(Move(aData), aAttributes);
+  RefPtr<AppendBufferTask> task = new AppendBufferTask(std::move(aData), aAttributes);
   RefPtr<AppendPromise> p = task->mPromise.Ensure(__func__);
   QueueTask(task);
 

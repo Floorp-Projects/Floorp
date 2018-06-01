@@ -243,7 +243,7 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
     return NS_ERROR_FAILURE;
   }
 
-  mPipe = Move(*pipe);
+  mPipe = std::move(*pipe);
 
   mFrameRect = aFrameInfo.mFrameRect;
   mPass = 0;

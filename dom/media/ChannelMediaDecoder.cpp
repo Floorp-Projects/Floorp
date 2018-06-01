@@ -407,7 +407,7 @@ ChannelMediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
     default:
       break;
   }
-  MediaDecoder::OnPlaybackEvent(Move(aEvent));
+  MediaDecoder::OnPlaybackEvent(std::move(aEvent));
 }
 
 void
@@ -610,7 +610,7 @@ ChannelMediaDecoder::MetadataLoaded(
   UniquePtr<MetadataTags> aTags,
   MediaDecoderEventVisibility aEventVisibility)
 {
-  MediaDecoder::MetadataLoaded(Move(aInfo), Move(aTags), aEventVisibility);
+  MediaDecoder::MetadataLoaded(std::move(aInfo), std::move(aTags), aEventVisibility);
   // Set mode to PLAYBACK after reading metadata.
   mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 }

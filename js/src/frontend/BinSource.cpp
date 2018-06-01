@@ -456,7 +456,7 @@ BinASTParser<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
     metadata.lineNumber = 0;
     metadata.columnNumber = offset();
     metadata.isMuted = options().mutedErrors();
-    ReportCompileError(cx_, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+    ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 }
 
 template<typename Tok> void
@@ -467,7 +467,7 @@ BinASTParser<Tok>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list* arg
     metadata.lineNumber = 0;
     metadata.columnNumber = offset;
     metadata.isMuted = options().mutedErrors();
-    ReportCompileError(cx_, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, *args);
+    ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, *args);
 }
 
 template<typename Tok> bool
@@ -483,11 +483,11 @@ BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes
     metadata.isMuted = options().mutedErrors();
 
     if (options().werrorOption) {
-        ReportCompileError(cx_, Move(metadata), Move(notes), JSREPORT_STRICT, errorNumber, *args);
+        ReportCompileError(cx_, std::move(metadata), std::move(notes), JSREPORT_STRICT, errorNumber, *args);
         return false;
     }
 
-    return ReportCompileWarning(cx_, Move(metadata), Move(notes), JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, *args);
+    return ReportCompileWarning(cx_, std::move(metadata), std::move(notes), JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, *args);
 }
 
 bool

@@ -113,7 +113,7 @@ nsFilteredContentIterator::Init(const RawRangeBoundary& aStart,
   MOZ_ASSERT(range->StartRef() == aStart);
   MOZ_ASSERT(range->EndRef() == aEnd);
 
-  mRange = Move(range);
+  mRange = std::move(range);
 
   return InitWithRange();
 }
