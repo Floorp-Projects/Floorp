@@ -809,9 +809,7 @@ nsUrlClassifierDBServiceWorker::CloseDb()
 
   // Clear last completion result when close db so we will still cache completion
   // result next time we re-open it.
-  if (mLastResults) {
-    mLastResults->Clear();
-  }
+  mLastResults.Clear();
 
   LOG(("urlclassifier db closed\n"));
 
@@ -833,7 +831,7 @@ nsUrlClassifierDBServiceWorker::PreShutdown()
 }
 
 nsresult
-nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
+nsUrlClassifierDBServiceWorker::CacheCompletions(const ConstCacheResultArray& aResults)
 {
   if (gShuttingDownThread) {
     return NS_ERROR_ABORT;
@@ -844,14 +842,11 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     return NS_OK;
   }
 
-  // Ownership is transferred in to us
-  nsAutoPtr<CacheResultArray> resultsPtr(results);
-
-  if (resultsPtr->Length() == 0) {
+  if (aResults.Length() == 0) {
     return NS_OK;
   }
 
-  if (IsSameAsLastResults(*resultsPtr)) {
+  if (IsSameAsLastResults(aResults)) {
     LOG(("Skipping completions that have just been cached already."));
     return NS_OK;
   }
@@ -875,9 +870,8 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 
   ConstTableUpdateArray updates;
 
-  for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
+  for (const auto result : aResults) {
     bool activeTable = false;
-    CacheResult* result = resultsPtr->ElementAt(i).get();
 
     for (uint32_t table = 0; table < tables.Length(); table++) {
       if (tables[table].Equals(result->table)) {
@@ -909,18 +903,18 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 
   rv = mClassifier->ApplyFullHashes(updates);
   if (NS_SUCCEEDED(rv)) {
-    mLastResults = std::move(resultsPtr);
+    mLastResults = aResults;
   }
   return rv;
 }
 
 nsresult
-nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(const CacheResult* aCacheResult,
+nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(RefPtr<const CacheResult> aCacheResult,
                                                          RefPtr<TableUpdate> aUpdate)
 {
   RefPtr<TableUpdateV2> tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
   if (tuV2) {
-    const CacheResultV2* result = CacheResult::Cast<const CacheResultV2>(aCacheResult);
+    RefPtr<const CacheResultV2> result = CacheResult::Cast<const CacheResultV2>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (result->miss) {
@@ -939,7 +933,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(const CacheResult* aCac
 
   RefPtr<TableUpdateV4> tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
   if (tuV4) {
-    const CacheResultV4* result = CacheResult::Cast<const CacheResultV4>(aCacheResult);
+    RefPtr<const CacheResultV4> result = CacheResult::Cast<const CacheResultV4>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (LOG_ENABLED()) {
@@ -991,9 +985,7 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ClearLastResults()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
-  if (mLastResults) {
-    mLastResults->Clear();
-  }
+  mLastResults.Clear();
   return NS_OK;
 }
 
@@ -1011,16 +1003,16 @@ nsUrlClassifierDBServiceWorker::GetCacheInfo(const nsACString& aTable,
 }
 
 bool
-nsUrlClassifierDBServiceWorker::IsSameAsLastResults(const CacheResultArray& aResult) const
+nsUrlClassifierDBServiceWorker::IsSameAsLastResults(const ConstCacheResultArray& aResult) const
 {
-  if (!mLastResults || mLastResults->Length() != aResult.Length()) {
+  if (mLastResults.Length() != aResult.Length()) {
     return false;
   }
 
   bool equal = true;
-  for (uint32_t i = 0; i < mLastResults->Length() && equal; i++) {
-    CacheResult* lhs = mLastResults->ElementAt(i).get();
-    CacheResult* rhs = aResult[i].get();
+  for (uint32_t i = 0; i < mLastResults.Length() && equal; i++) {
+    RefPtr<const CacheResult> lhs = mLastResults[i];
+    RefPtr<const CacheResult> rhs = aResult[i];
 
     if (lhs->Ver() != rhs->Ver()) {
       return false;
@@ -1065,14 +1057,14 @@ private:
   ~nsUrlClassifierLookupCallback();
 
   nsresult HandleResults();
-  nsresult ProcessComplete(CacheResult* aCacheResult);
+  nsresult ProcessComplete(RefPtr<CacheResult> aCacheResult);
   nsresult CacheMisses();
 
   RefPtr<nsUrlClassifierDBService> mDBService;
   nsAutoPtr<LookupResultArray> mResults;
 
   // Completed results to send back to the worker for caching.
-  nsAutoPtr<CacheResultArray> mCacheResults;
+  ConstCacheResultArray mCacheResults;
 
   uint32_t mPendingCompletions;
   nsCOMPtr<nsIUrlClassifierCallback> mCallback;
@@ -1189,14 +1181,14 @@ nsUrlClassifierLookupCallback::CompletionV2(const nsACString& aCompleteHash,
 
   MOZ_ASSERT(!StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
 
-  nsAutoPtr<CacheResultV2> result(new CacheResultV2);
+  RefPtr<CacheResultV2> result = new CacheResultV2();
 
   result->table = aTableName;
   result->prefix.Assign(aCompleteHash);
   result->completion.Assign(aCompleteHash);
   result->addChunk = aChunkId;
 
-  return ProcessComplete(result.forget());
+  return ProcessComplete(result);
 }
 
 NS_IMETHODIMP
@@ -1220,7 +1212,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
     aNegativeCacheDuration = MAXIMUM_NEGATIVE_CACHE_DURATION_SEC;
   }
 
-  nsAutoPtr<CacheResultV4> result(new CacheResultV4);
+  RefPtr<CacheResultV4> result = new CacheResultV4();
 
   int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
 
@@ -1247,22 +1239,14 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
     result->response.fullHashes.Put(fullHash, nowSec + duration);
   }
 
-  return ProcessComplete(result.forget());
+  return ProcessComplete(result);
 }
 
 nsresult
-nsUrlClassifierLookupCallback::ProcessComplete(CacheResult* aCacheResult)
+nsUrlClassifierLookupCallback::ProcessComplete(RefPtr<CacheResult> aCacheResult)
 {
-  // Send this completion to the store for caching.
-  if (!mCacheResults) {
-    mCacheResults = new (fallible) CacheResultArray();
-    if (!mCacheResults) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   // OK if this fails, we just won't cache the item.
-  mCacheResults->AppendElement(aCacheResult, fallible);
+  mCacheResults.AppendElement(aCacheResult, fallible);
 
   // Check if this matched any of our results.
   for (uint32_t i = 0; i < mResults->Length(); i++) {
@@ -1334,11 +1318,10 @@ nsUrlClassifierLookupCallback::HandleResults()
   // Save the prefixes we checked to prevent repeated requests.
   CacheMisses();
 
-  if (mCacheResults) {
-    // This hands ownership of the cache results array back to the worker
-    // thread.
-    mDBService->CacheCompletions(mCacheResults.forget());
-  }
+  // This hands ownership of the cache results array back to the worker
+  // thread.
+  mDBService->CacheCompletions(mCacheResults);
+  mCacheResults.Clear();
 
   nsAutoCString tableStr;
   for (uint32_t i = 0; i < tables.Length(); i++) {
@@ -1361,19 +1344,12 @@ nsUrlClassifierLookupCallback::CacheMisses()
       continue;
     }
 
-    if (!mCacheResults) {
-      mCacheResults = new (fallible) CacheResultArray();
-      if (!mCacheResults) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
-    auto cacheResult = new CacheResultV2;
+    RefPtr<CacheResultV2> cacheResult = new CacheResultV2();
 
     cacheResult->table = result.mTableName;
     cacheResult->prefix = result.hash.fixedLengthPrefix;
     cacheResult->miss = true;
-    if (!mCacheResults->AppendElement(cacheResult, fallible)) {
+    if (!mCacheResults.AppendElement(cacheResult, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2431,7 +2407,7 @@ nsUrlClassifierDBService::GetCacheInfo(const nsACString& aTable,
 }
 
 nsresult
-nsUrlClassifierDBService::CacheCompletions(CacheResultArray *results)
+nsUrlClassifierDBService::CacheCompletions(const ConstCacheResultArray& results)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
