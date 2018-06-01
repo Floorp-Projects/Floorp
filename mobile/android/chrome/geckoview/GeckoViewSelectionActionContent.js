@@ -18,7 +18,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
 
     this._seqNo = 0;
     this._isActive = false;
-    this._previousMessage = {};
+    this._previousMessage = "";
 
     this._actions = [{
       id: "org.mozilla.geckoview.CUT",
@@ -97,18 +97,31 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   onEnable() {
     debug `onEnable`;
     addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
+    addEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
   }
 
   onDisable() {
     debug `onDisable`;
     removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
+    removeEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
   }
 
   /**
    * Receive and act on AccessibleCarets caret state-change
-   * (mozcaretstatechanged) events.
+   * (mozcaretstatechanged and pagehide) events.
    */
   handleEvent(aEvent) {
+    if (aEvent.type === "pagehide") {
+      // Hide any selection actions on page hide.
+      aEvent = {
+        reason: "visibilitychange",
+        caretVisibile: false,
+        selectionVisible: false,
+        collapsed: true,
+        selectionEditable: false,
+      };
+    }
+
     let reason = aEvent.reason;
 
     if (this._isActive && !aEvent.caretVisible) {
