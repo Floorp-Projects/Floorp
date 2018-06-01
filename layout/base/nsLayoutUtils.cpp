@@ -5088,6 +5088,21 @@ FormControlShrinksForPercentISize(nsIFrame* aFrame)
   return true;
 }
 
+// https://drafts.csswg.org/css-sizing-3/#percentage-sizing
+// Return true if the above spec's rule for replaced boxes applies.
+// XXX bug 1463700 will make this match the spec...
+static bool
+IsReplacedBoxResolvedAgainstZero(nsIFrame* aFrame,
+                                 const nsStyleCoord& aStyleSize,
+                                 const nsStyleCoord& aStyleMaxSize)
+{
+  const bool sizeHasPercent = aStyleSize.HasPercent();
+  return ((sizeHasPercent || aStyleMaxSize.HasPercent()) &&
+          aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) ||
+         (sizeHasPercent &&
+          FormControlShrinksForPercentISize(aFrame));
+}
+
 /**
  * Add aOffsets which describes what to add on outside of the content box
  * aContentSize (controlled by 'box-sizing') and apply min/max properties.
@@ -5149,16 +5164,8 @@ AddIntrinsicSizeOffset(gfxContext* aRenderingContext,
 
   nscoord size;
   if (aType == nsLayoutUtils::MIN_ISIZE &&
-      (((aStyleSize.HasPercent() || aStyleMaxSize.HasPercent()) &&
-        aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) ||
-       (aStyleSize.HasPercent() &&
-        FormControlShrinksForPercentISize(aFrame)))) {
-    // A percentage width or max-width on replaced elements means they
-    // can shrink to 0.
-    // This is also true for percentage widths (but not max-widths) on
-    // text inputs.
-    // Note that if this is max-width, this overrides the fixed-width
-    // rule in the next condition.
+      ::IsReplacedBoxResolvedAgainstZero(aFrame, aStyleSize, aStyleMaxSize)) {
+    // XXX bug 1463700: this doesn't handle calc() according to spec
     result = 0; // let |min| handle padding/border/margin
   } else if (GetAbsoluteCoord(aStyleSize, size) ||
              GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
