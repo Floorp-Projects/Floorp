@@ -6,6 +6,7 @@
 
 DIRS += [
     'targets',
+    'worker',
 ]
 
 DevToolsModules(
@@ -53,5 +54,4 @@ DevToolsModules(
     'webextension-inspected-window.js',
     'webextension-parent.js',
     'webgl.js',
-    'worker.js'
 )

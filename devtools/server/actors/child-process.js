@@ -14,7 +14,7 @@ const { ActorPool } = require("devtools/server/main");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("./utils/TabSources");
 
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
+loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker/worker-list", true);
 
 function ChildProcessActor(connection) {
   this.conn = connection;
