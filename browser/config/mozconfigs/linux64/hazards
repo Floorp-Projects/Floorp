@@ -40,4 +40,6 @@ CFLAGS="$CFLAGS -Wno-attributes"
 CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"
 
+NODEJS="$TOOLTOOL_DIR/node/bin/node"
+
 . "$topsrcdir/build/mozconfig.common.override"
