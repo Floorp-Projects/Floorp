@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1525377135149" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1526381862851" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2256,6 +2256,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="3a123214-b4b6-410c-a061-bbaf0d168d31" id="/^(({41c14ab8-9958-44bf-b74e-af54c1f169a6})|({78054cb2-e3e8-4070-a8ad-3fd69c8e4707})|({0089b179-8f3d-44d9-bb18-582843b0757a})|({f44ddcb4-4cc0-4866-92fa-eefda60c6720})|({1893d673-7953-4870-8069-baac49ce3335})|({fb28cac0-c2aa-4e0c-a614-cf3641196237})|({d7dee150-da14-45ba-afca-02c7a79ad805})|(RandomNameTest@RandomNameTest\.com )|(corpsearchengine@mail\.ru)|(support@work\.org))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="cbfa5303-c1bf-49c8-87d8-259738a20064" id="@vkmad">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="0f0764d5-a290-428b-a5b2-3767e1d72c71" id="{38363d75-6591-4e8b-bf01-0270623d1b6c}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
