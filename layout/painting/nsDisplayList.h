@@ -3460,7 +3460,7 @@ public:
   RetainedDisplayList(RetainedDisplayList&& aOther)
   {
     AppendToTop(&aOther);
-    mDAG = mozilla::Move(aOther.mDAG);
+    mDAG = std::move(aOther.mDAG);
   }
   ~RetainedDisplayList()
   {
@@ -3472,7 +3472,7 @@ public:
     MOZ_ASSERT(!Count(), "Can only move into an empty list!");
     MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
     AppendToTop(&aOther);
-    mDAG = mozilla::Move(aOther.mDAG);
+    mDAG = std::move(aOther.mDAG);
     return *this;
   }
 
@@ -6686,7 +6686,7 @@ public:
                                aTransformList,
                              const Point3D& aToTransformOrigin)
       : mFrame(nullptr)
-      , mTransformList(mozilla::Move(aTransformList))
+      , mTransformList(std::move(aTransformList))
       , mToTransformOrigin(aToTransformOrigin)
     {}
 

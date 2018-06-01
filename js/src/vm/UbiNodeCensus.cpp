@@ -59,7 +59,7 @@ class SimpleCount : public CountType {
                          bool reportCount=true,
                          bool reportBytes=true)
       : CountType(),
-        label(Move(label)),
+        label(std::move(label)),
         reportCount(reportCount),
         reportBytes(reportBytes)
     { }
@@ -195,10 +195,10 @@ class ByCoarseType : public CountType {
               CountBasePtr& strings,
               CountBasePtr& other)
           : CountBase(type),
-            objects(Move(objects)),
-            scripts(Move(scripts)),
-            strings(Move(strings)),
-            other(Move(other))
+            objects(std::move(objects)),
+            scripts(std::move(scripts)),
+            strings(std::move(strings)),
+            other(std::move(other))
         { }
 
         CountBasePtr objects;
@@ -213,10 +213,10 @@ class ByCoarseType : public CountType {
                  CountTypePtr& strings,
                  CountTypePtr& other)
       : CountType(),
-        objects(Move(objects)),
-        scripts(Move(scripts)),
-        strings(Move(strings)),
-        other(Move(other))
+        objects(std::move(objects)),
+        scripts(std::move(scripts)),
+        strings(std::move(strings)),
+        other(std::move(other))
     { }
 
     void destructCount(CountBase& countBase) override {
@@ -404,7 +404,7 @@ class ByObjectClass : public CountType {
 
         Count(CountType& type, CountBasePtr& other)
           : CountBase(type),
-            other(Move(other))
+            other(std::move(other))
         { }
 
         bool init() { return table.init(); }
@@ -416,8 +416,8 @@ class ByObjectClass : public CountType {
   public:
     ByObjectClass(CountTypePtr& classesType, CountTypePtr& otherType)
         : CountType(),
-          classesType(Move(classesType)),
-          otherType(Move(otherType))
+          classesType(std::move(classesType)),
+          otherType(std::move(otherType))
     { }
 
     void destructCount(CountBase& countBase) override {
@@ -466,7 +466,7 @@ ByObjectClass::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, c
     Table::AddPtr p = count.table.lookupForAdd(className);
     if (!p) {
         CountBasePtr classCount(classesType->makeCount());
-        if (!classCount || !count.table.add(p, className, Move(classCount)))
+        if (!classCount || !count.table.add(p, className, std::move(classCount)))
             return false;
     }
     return p->value()->count(mallocSizeOf, node);
@@ -515,7 +515,7 @@ class ByUbinodeType : public CountType {
   public:
     explicit ByUbinodeType(CountTypePtr& entryType)
       : CountType(),
-        entryType(Move(entryType))
+        entryType(std::move(entryType))
     { }
 
     void destructCount(CountBase& countBase) override {
@@ -557,7 +557,7 @@ ByUbinodeType::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, c
     Table::AddPtr p = count.table.lookupForAdd(key);
     if (!p) {
         CountBasePtr typesCount(entryType->makeCount());
-        if (!typesCount || !count.table.add(p, key, Move(typesCount)))
+        if (!typesCount || !count.table.add(p, key, std::move(typesCount)))
             return false;
     }
     return p->value()->count(mallocSizeOf, node);
@@ -646,7 +646,7 @@ class ByAllocationStack : public CountType {
 
         Count(CountType& type, CountBasePtr& noStack)
           : CountBase(type),
-            noStack(Move(noStack))
+            noStack(std::move(noStack))
         { }
         bool init() { return table.init(); }
     };
@@ -657,8 +657,8 @@ class ByAllocationStack : public CountType {
   public:
     ByAllocationStack(CountTypePtr& entryType, CountTypePtr& noStackType)
       : CountType(),
-        entryType(Move(entryType)),
-        noStackType(Move(noStackType))
+        entryType(std::move(entryType)),
+        noStackType(std::move(noStackType))
     { }
 
     void destructCount(CountBase& countBase) override {
@@ -714,7 +714,7 @@ ByAllocationStack::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeO
         auto p = count.table.lookupForAdd(allocationStack);
         if (!p) {
             CountBasePtr stackCount(entryType->makeCount());
-            if (!stackCount || !count.table.add(p, allocationStack, Move(stackCount)))
+            if (!stackCount || !count.table.add(p, allocationStack, std::move(stackCount)))
                 return false;
         }
         MOZ_ASSERT(p);
@@ -816,8 +816,8 @@ class ByFilename : public CountType {
 
         Count(CountType& type, CountBasePtr&& then, CountBasePtr&& noFilename)
           : CountBase(type)
-          , then(Move(then))
-          , noFilename(Move(noFilename))
+          , then(std::move(then))
+          , noFilename(std::move(noFilename))
         { }
 
         bool init() { return table.init(); }
@@ -829,8 +829,8 @@ class ByFilename : public CountType {
   public:
     ByFilename(CountTypePtr&& thenType, CountTypePtr&& noFilenameType)
         : CountType(),
-          thenType(Move(thenType)),
-          noFilenameType(Move(noFilenameType))
+          thenType(std::move(thenType)),
+          noFilenameType(std::move(noFilenameType))
     { }
 
     void destructCount(CountBase& countBase) override {
@@ -855,7 +855,7 @@ ByFilename::makeCount()
     if (!noFilenameCount)
         return nullptr;
 
-    UniquePtr<Count> count(js_new<Count>(*this, Move(thenCount), Move(noFilenameCount)));
+    UniquePtr<Count> count(js_new<Count>(*this, std::move(thenCount), std::move(noFilenameCount)));
     if (!count || !count->init())
         return nullptr;
 
@@ -887,7 +887,7 @@ ByFilename::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, cons
     Table::AddPtr p = count.table.lookupForAdd(myFilename);
     if (!p) {
         CountBasePtr thenCount(thenType->makeCount());
-        if (!thenCount || !count.table.add(p, Move(myFilename), Move(thenCount)))
+        if (!thenCount || !count.table.add(p, std::move(myFilename), std::move(thenCount)))
             return false;
     }
     return p->value()->count(mallocSizeOf, node);
@@ -1093,7 +1093,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
         if (!noFilenameType)
             return nullptr;
 
-        return CountTypePtr(cx->new_<ByFilename>(Move(thenType), Move(noFilenameType)));
+        return CountTypePtr(cx->new_<ByFilename>(std::move(thenType), std::move(noFilenameType)));
     }
 
     // We didn't recognize the breakdown type; complain.

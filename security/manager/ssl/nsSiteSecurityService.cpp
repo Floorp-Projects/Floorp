@@ -1136,7 +1136,7 @@ nsSiteSecurityService::ProcessPKPHeader(
   }
 
   // This copy to produce an nsNSSCertList should also be removed in Bug #1406854
-  nsCOMPtr<nsIX509CertList> x509CertList = new nsNSSCertList(Move(certList));
+  nsCOMPtr<nsIX509CertList> x509CertList = new nsNSSCertList(std::move(certList));
   if (!x509CertList) {
     return rv;
   }

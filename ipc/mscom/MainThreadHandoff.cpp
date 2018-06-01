@@ -719,7 +719,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
                                     effectiveIid;
 
   RefPtr<IUnknown> wrapped;
-  hr = Interceptor::Create(Move(origInterface), handoff, interceptorIid,
+  hr = Interceptor::Create(std::move(origInterface), handoff, interceptorIid,
                            getter_AddRefs(wrapped));
   MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {

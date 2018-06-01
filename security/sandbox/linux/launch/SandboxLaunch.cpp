@@ -326,7 +326,7 @@ SandboxLaunchPrepare(GeckoProcessType aType,
   if (canChroot || flags != 0) {
     auto forker = MakeUnique<SandboxFork>(flags | CLONE_NEWUSER, canChroot);
     forker->PrepareMapping(&aOptions->fds_to_remap);
-    aOptions->fork_delegate = Move(forker);
+    aOptions->fork_delegate = std::move(forker);
     if (canChroot) {
       aOptions->env_map[kSandboxChrootEnvFlag] = "1";
     }

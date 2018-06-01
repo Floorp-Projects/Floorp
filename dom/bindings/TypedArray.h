@@ -39,7 +39,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   }
 
   TypedArray_base(TypedArray_base&& aOther)
-    : SpiderMonkeyInterfaceObjectStorage(Move(aOther)),
+    : SpiderMonkeyInterfaceObjectStorage(std::move(aOther)),
       mData(aOther.mData),
       mLength(aOther.mLength),
       mShared(aOther.mShared),
@@ -164,7 +164,7 @@ public:
   {}
 
   TypedArray(TypedArray&& aOther)
-    : Base(Move(aOther))
+    : Base(std::move(aOther))
   {
   }
 
@@ -225,7 +225,7 @@ public:
   }
 
   ArrayBufferView_base(ArrayBufferView_base&& aOther)
-    : Base(Move(aOther)),
+    : Base(std::move(aOther)),
       mType(aOther.mType)
   {
     aOther.mType = js::Scalar::MaxTypedArrayViewType;

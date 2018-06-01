@@ -3517,7 +3517,7 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   auto request = MakeUnique<FullscreenRequest>(this);
   request->mIsCallerChrome = (aCallerType == CallerType::System);
 
-  OwnerDoc()->AsyncRequestFullScreen(Move(request));
+  OwnerDoc()->AsyncRequestFullScreen(std::move(request));
 }
 
 void

@@ -756,7 +756,7 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
 
   if (mBuffer) {
     AudioChunk data = mBuffer->GetThreadSharedChannelsForRate(aCx);
-    ns->SetBuffer(Move(data));
+    ns->SetBuffer(std::move(data));
 
     if (mStartCalled) {
       SendOffsetAndDurationParametersToStream(ns);

@@ -585,7 +585,7 @@ ServoAnimationValueToMatrix4x4(const RefPtr<RawServoAnimationValue>& aValue,
   Servo_AnimationValue_GetTransform(aValue, &list);
   // we expect all our transform data to arrive in device pixels
   Point3D transformOrigin = aTransformData.transformOrigin();
-  nsDisplayTransform::FrameTransformProperties props(Move(list),
+  nsDisplayTransform::FrameTransformProperties props(std::move(list),
                                                      transformOrigin);
 
   return nsDisplayTransform::GetResultingTransformMatrix(
@@ -658,7 +658,7 @@ ApplyAnimatedValue(Layer* aLayer,
       layerCompositor->SetShadowBaseTransform(transform);
       layerCompositor->SetShadowTransformSetByAnimation(true);
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 Move(transform), Move(frameTransform),
+                                 std::move(transform), std::move(frameTransform),
                                  transformData);
 
       layerCompositor->SetShadowOpacity(aLayer->GetOpacity());

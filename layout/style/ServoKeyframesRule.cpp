@@ -159,7 +159,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 ServoKeyframesRule::ServoKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
                                        uint32_t aLine, uint32_t aColumn)
   : dom::CSSKeyframesRule(aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
 {
 }
 

@@ -259,8 +259,8 @@ bool txXSLKey::addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse)
     if (!key)
         return false;
 
-    key->matchPattern = Move(aMatch);
-    key->useExpr = Move(aUse);
+    key->matchPattern = std::move(aMatch);
+    key->useExpr = std::move(aUse);
 
     return true;
 }

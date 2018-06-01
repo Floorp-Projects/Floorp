@@ -433,7 +433,7 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
         RefPtr<ServiceWorkerRegistration> reg =
           global->GetOrCreateServiceWorkerRegistration(desc);
         if (reg) {
-          regList.AppendElement(Move(reg));
+          regList.AppendElement(std::move(reg));
         }
       }
       outer->MaybeResolve(regList);

@@ -144,7 +144,7 @@ SVGAnimatedLengthList::
   nsresult rv = llai->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     llai->SetInfo(mElement, mAxis, mCanZeroPadList);
-    aValue = Move(val);
+    aValue = std::move(val);
 
     // If any of the lengths in the list depend on their context, then we must
     // prevent caching of the entire animation sandwich. This is because the
@@ -187,7 +187,7 @@ SVGAnimatedLengthList::SMILAnimatedLengthList::GetBaseValue() const
   nsresult rv = llai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     llai->SetInfo(mElement, mAxis, mCanZeroPadList);
-    val = Move(tmp);
+    val = std::move(tmp);
   }
   return val;
 }

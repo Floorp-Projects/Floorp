@@ -26,7 +26,7 @@ public:
 
   ia2AccessibleRelation(RelationType aType,
                         nsTArray<RefPtr<Accessible>>&& aTargets) :
-    mType(aType), mTargets(Move(aTargets)) {}
+    mType(aType), mTargets(std::move(aTargets)) {}
 
   // IUnknown
   DECL_IUNKNOWN

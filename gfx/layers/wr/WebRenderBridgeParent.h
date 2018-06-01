@@ -259,7 +259,7 @@ private:
   struct CompositorAnimationIdsForEpoch {
     CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch, InfallibleTArray<uint64_t>&& aIds)
       : mEpoch(aEpoch)
-      , mIds(Move(aIds))
+      , mIds(std::move(aIds))
     {
     }
 

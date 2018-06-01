@@ -759,7 +759,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           aError.Throw(NS_ERROR_FAILURE);
           return;
         }
-        argument.mPorts.Construct(Move(ports));
+        argument.mPorts.Construct(std::move(ports));
       }
 
       argument.mName = aMessage;

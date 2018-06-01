@@ -19,10 +19,10 @@ PrioritizedEventQueue<InnerQueueT>::PrioritizedEventQueue(UniquePtr<InnerQueueT>
                                                           UniquePtr<InnerQueueT> aNormalQueue,
                                                           UniquePtr<InnerQueueT> aIdleQueue,
                                                           already_AddRefed<nsIIdlePeriod> aIdlePeriod)
-  : mHighQueue(Move(aHighQueue))
-  , mInputQueue(Move(aInputQueue))
-  , mNormalQueue(Move(aNormalQueue))
-  , mIdleQueue(Move(aIdleQueue))
+  : mHighQueue(std::move(aHighQueue))
+  , mInputQueue(std::move(aInputQueue))
+  , mNormalQueue(std::move(aNormalQueue))
+  , mIdleQueue(std::move(aIdleQueue))
   , mIdlePeriod(aIdlePeriod)
 {
   static_assert(IsBaseOf<AbstractEventQueue, InnerQueueT>::value,

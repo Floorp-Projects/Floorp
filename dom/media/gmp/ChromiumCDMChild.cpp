@@ -77,7 +77,7 @@ public:
     if (mShmem.IsWritable()) {
       // The shmem wasn't extracted to send its data back up to the parent process,
       // so we can reuse the shmem.
-      mProtocol->GiveBuffer(Move(mShmem));
+      mProtocol->GiveBuffer(std::move(mShmem));
     }
   }
 
@@ -1024,7 +1024,7 @@ ChromiumCDMChild::RecvGiveBuffer(ipc::Shmem&& aBuffer)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
 
-  GiveBuffer(Move(aBuffer));
+  GiveBuffer(std::move(aBuffer));
   return IPC_OK();
 }
 
@@ -1033,7 +1033,7 @@ ChromiumCDMChild::GiveBuffer(ipc::Shmem&& aBuffer)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   size_t sz = aBuffer.Size<uint8_t>();
-  mBuffers.AppendElement(Move(aBuffer));
+  mBuffers.AppendElement(std::move(aBuffer));
   GMP_LOG("ChromiumCDMChild::RecvGiveBuffer(capacity=%zu"
           ") bufferSizes={%s} mDecoderInitialized=%d",
           sz,

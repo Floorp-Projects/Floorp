@@ -191,7 +191,7 @@ nsresult gfxFontEntry::InitializeUVSMap()
             return rv;
         }
 
-        mUVSData = Move(uvsData);
+        mUVSData = std::move(uvsData);
     }
 
     return NS_OK;
@@ -413,7 +413,7 @@ gfxFontEntry::TryGetColorGlyphs()
 class gfxFontEntry::FontTableBlobData {
 public:
     explicit FontTableBlobData(nsTArray<uint8_t>&& aBuffer)
-        : mTableData(Move(aBuffer))
+        : mTableData(std::move(aBuffer))
         , mHashtable(nullptr)
         , mHashKey(0)
     {
@@ -478,7 +478,7 @@ ShareTableAndGetBlob(nsTArray<uint8_t>&& aTable,
 {
     Clear();
     // adopts elements of aTable
-    mSharedBlobData = new FontTableBlobData(Move(aTable));
+    mSharedBlobData = new FontTableBlobData(std::move(aTable));
 
     mBlob = hb_blob_create(mSharedBlobData->GetTable(),
                            mSharedBlobData->GetTableLength(),
@@ -565,7 +565,7 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
         return nullptr;
     }
 
-    return entry->ShareTableAndGetBlob(Move(*aBuffer), mFontTableCache.get());
+    return entry->ShareTableAndGetBlob(std::move(*aBuffer), mFontTableCache.get());
 }
 
 already_AddRefed<gfxCharacterMap>

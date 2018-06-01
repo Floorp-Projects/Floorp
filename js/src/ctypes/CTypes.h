@@ -98,7 +98,7 @@ class StringBuilder {
 #ifdef DEBUG
     finished = true;
 #endif
-    return mozilla::Move(v);
+    return std::move(v);
   }
 };
 

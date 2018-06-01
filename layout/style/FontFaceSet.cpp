@@ -1811,11 +1811,11 @@ FontFaceSet::CheckLoadingFinished()
   }
 
   DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingdone"),
-                               Move(loaded));
+                               std::move(loaded));
 
   if (!failed.IsEmpty()) {
     DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingerror"),
-                                 Move(failed));
+                                 std::move(failed));
   }
 }
 

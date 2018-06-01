@@ -28,7 +28,7 @@ u2f_register_callback(uint64_t aTransactionId, rust_u2f_result* aResult)
 
   nsCOMPtr<nsIRunnable> r(NewRunnableMethod<UniquePtr<U2FResult>&&>(
       "U2FHIDTokenManager::HandleRegisterResult", gInstance,
-      &U2FHIDTokenManager::HandleRegisterResult, Move(rv)));
+      &U2FHIDTokenManager::HandleRegisterResult, std::move(rv)));
 
   MOZ_ALWAYS_SUCCEEDS(gPBackgroundThread->Dispatch(r.forget(),
                                                    NS_DISPATCH_NORMAL));
@@ -46,7 +46,7 @@ u2f_sign_callback(uint64_t aTransactionId, rust_u2f_result* aResult)
 
   nsCOMPtr<nsIRunnable> r(NewRunnableMethod<UniquePtr<U2FResult>&&>(
       "U2FHIDTokenManager::HandleSignResult", gInstance,
-      &U2FHIDTokenManager::HandleSignResult, Move(rv)));
+      &U2FHIDTokenManager::HandleSignResult, std::move(rv)));
 
   MOZ_ALWAYS_SUCCEEDS(gPBackgroundThread->Dispatch(r.forget(),
                                                    NS_DISPATCH_NORMAL));
@@ -297,7 +297,7 @@ U2FHIDTokenManager::HandleRegisterResult(UniquePtr<U2FResult>&& aResult)
 
   WebAuthnMakeCredentialResult result(mTransaction.ref().mClientDataJSON,
                                       attObj, keyHandle, regData);
-  mRegisterPromise.Resolve(Move(result), __func__);
+  mRegisterPromise.Resolve(std::move(result), __func__);
 }
 
 void
@@ -380,7 +380,7 @@ U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult)
   WebAuthnGetAssertionResult result(mTransaction.ref().mClientDataJSON,
                                     keyHandle, signatureBuf, authenticatorData,
                                     extensions, rawSignatureBuf);
-  mSignPromise.Resolve(Move(result), __func__);
+  mSignPromise.Resolve(std::move(result), __func__);
 }
 
 }

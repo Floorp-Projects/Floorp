@@ -643,8 +643,8 @@ js::CancelOffThreadParses(JSRuntime* rt)
             next = task->getNext();
             if (task->runtimeMatches(rt)) {
                 found = true;
-                AutoUnlockHelperThreadState unlock(lock);
-                HelperThreadState().cancelParseTask(rt, task->kind, task);
+                task->remove();
+                HelperThreadState().destroyParseTask(rt, task);
             }
             task = next;
         }
@@ -1472,7 +1472,7 @@ GlobalHelperThreadState::scheduleCompressionTasks(const AutoLockHelperThreadStat
         if (pending[i]->shouldStart()) {
             // OOMing during appending results in the task not being scheduled
             // and deleted.
-            Unused << worklist.append(Move(pending[i]));
+            Unused << worklist.append(std::move(pending[i]));
             remove(pending, &i);
         }
     }
@@ -1641,7 +1641,6 @@ GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, JS::OffThre
     }
     MOZ_ASSERT(found);
 #endif
-
 
     task->remove();
     return task;
@@ -1823,8 +1822,15 @@ void
 GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
                                          JS::OffThreadToken* token)
 {
-    ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
+    destroyParseTask(rt, removeFinishedParseTask(kind, token));
+}
+
+void
+GlobalHelperThreadState::destroyParseTask(JSRuntime* rt, ParseTask* parseTask)
+{
+    MOZ_ASSERT(!parseTask->isInList());
     LeaveParseTaskZone(rt, parseTask);
+    js_delete(parseTask);
 }
 
 void
@@ -2100,7 +2106,7 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
     UniquePtr<SourceCompressionTask> task;
     {
         auto& worklist = HelperThreadState().compressionWorklist(locked);
-        task = Move(worklist.back());
+        task = std::move(worklist.back());
         worklist.popBack();
         currentTask.emplace(task.get());
     }
@@ -2116,7 +2122,7 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().compressionFinishedList(locked).append(Move(task)))
+        if (!HelperThreadState().compressionFinishedList(locked).append(std::move(task)))
             oomUnsafe.crash("handleCompressionWorkload");
     }
 
@@ -2132,7 +2138,7 @@ js::EnqueueOffThreadCompression(JSContext* cx, UniquePtr<SourceCompressionTask> 
     AutoLockHelperThreadState lock;
 
     auto& pending = HelperThreadState().compressionPendingList(lock);
-    if (!pending.append(Move(task))) {
+    if (!pending.append(std::move(task))) {
         if (!cx->helperThread())
             ReportOutOfMemory(cx);
         return false;

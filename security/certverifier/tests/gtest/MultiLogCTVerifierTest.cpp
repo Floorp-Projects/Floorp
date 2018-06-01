@@ -39,7 +39,7 @@ public:
                                 mLogOperatorID,
                                 CTLogStatus::Included,
                                 0 /*disqualification time*/));
-    ASSERT_EQ(Success, mVerifier.AddLog(Move(log)));
+    ASSERT_EQ(Success, mVerifier.AddLog(std::move(log)));
 
     mTestCert = GetDEREncodedX509Cert();
     mEmbeddedCert = GetDEREncodedTestEmbeddedCert();
@@ -66,7 +66,7 @@ public:
   void EncodeSCTListForTesting(Input sct, Buffer& output)
   {
     Vector<Input> list;
-    ASSERT_TRUE(list.append(Move(sct)));
+    ASSERT_TRUE(list.append(std::move(sct)));
     ASSERT_EQ(Success, EncodeSCTList(list, output));
   }
 
@@ -236,7 +236,7 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromDisqualifiedLog)
   const uint64_t disqualificationTime = 12345u;
   ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey()),
     mLogOperatorID, CTLogStatus::Disqualified, disqualificationTime));
-  ASSERT_EQ(Success, verifier.AddLog(Move(log)));
+  ASSERT_EQ(Success, verifier.AddLog(std::move(log)));
 
   Buffer sct(GetTestSignedCertificateTimestamp());
   Buffer sctList;

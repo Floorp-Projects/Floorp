@@ -282,7 +282,7 @@ public:
       return false;
     }
 
-    aOutRegion = Move(result);
+    aOutRegion = std::move(result);
     return true;
   }
 
@@ -346,7 +346,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
   {
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       child->CheckCanary();
-      mChildren.AppendElement(Move(CloneLayerTreePropertiesInternal(child)));
+      mChildren.AppendElement(std::move(CloneLayerTreePropertiesInternal(child)));
     }
   }
 
@@ -514,7 +514,7 @@ public:
     LTI_DUMP(invalidOfLayer, "invalidOfLayer");
     result.OrWith(invalidOfLayer);
 
-    aOutRegion = Move(result);
+    aOutRegion = std::move(result);
     return true;
   }
 

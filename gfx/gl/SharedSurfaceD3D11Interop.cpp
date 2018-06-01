@@ -407,7 +407,7 @@ SharedSurface_D3D11Interop::Create(DXInterop2Device* interop,
     typedef SharedSurface_D3D11Interop ptrT;
     UniquePtr<ptrT> ret ( new ptrT(gl, size, hasAlpha, prodTex, interopFB, interopRB,
                                    interop, lockHandle, texD3D, dxgiHandle) );
-    return Move(ret);
+    return std::move(ret);
 }
 
 SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
@@ -516,7 +516,7 @@ SurfaceFactory_D3D11Interop::Create(GLContext* gl, const SurfaceCaps& caps,
 
     typedef SurfaceFactory_D3D11Interop ptrT;
     UniquePtr<ptrT> ret(new ptrT(gl, caps, allocator, flags, interop));
-    return Move(ret);
+    return std::move(ret);
 }
 
 SurfaceFactory_D3D11Interop::SurfaceFactory_D3D11Interop(GLContext* gl,

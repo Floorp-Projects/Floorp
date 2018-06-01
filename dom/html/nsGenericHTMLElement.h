@@ -1236,7 +1236,7 @@ inline nsGenericHTMLElement*                                               \
 NS_NewHTML##_elementName##Element(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, \
                                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER) \
 {                                                                          \
-  return NS_NewHTMLSharedElement(mozilla::Move(aNodeInfo), aFromParser);   \
+  return NS_NewHTMLSharedElement(std::move(aNodeInfo), aFromParser);   \
 }
 
 /**

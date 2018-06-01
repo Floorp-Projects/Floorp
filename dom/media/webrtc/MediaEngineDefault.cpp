@@ -320,7 +320,7 @@ MediaEngineDefaultVideoSource::GenerateFrame()
   }
 
   MutexAutoLock lock(mMutex);
-  mImage = Move(ycbcr_image);
+  mImage = std::move(ycbcr_image);
 }
 
 void

@@ -42,7 +42,7 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
   }
 
   auto data = static_cast<float*>(buffer->Data());
-  mCoefficients.mBuffer = Move(buffer);
+  mCoefficients.mBuffer = std::move(buffer);
 
   if (aRealData) {
     PodCopy(data, aRealData, aLength);

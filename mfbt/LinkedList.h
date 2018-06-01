@@ -180,7 +180,7 @@ public:
   LinkedListElement(LinkedListElement<T>&& aOther)
     : mIsSentinel(aOther.mIsSentinel)
   {
-    adjustLinkForMove(Move(aOther));
+    adjustLinkForMove(std::move(aOther));
   }
 
   LinkedListElement& operator=(LinkedListElement<T>&& aOther)
@@ -188,7 +188,7 @@ public:
     MOZ_ASSERT(mIsSentinel == aOther.mIsSentinel, "Mismatch NodeKind!");
     MOZ_ASSERT(!isInList(),
                "Assigning to an element in a list messes up that list!");
-    adjustLinkForMove(Move(aOther));
+    adjustLinkForMove(std::move(aOther));
     return *this;
   }
 
@@ -439,13 +439,13 @@ public:
   LinkedList() : sentinel(LinkedListElement<T>::NodeKind::Sentinel) { }
 
   LinkedList(LinkedList<T>&& aOther)
-    : sentinel(mozilla::Move(aOther.sentinel))
+    : sentinel(std::move(aOther.sentinel))
   { }
 
   LinkedList& operator=(LinkedList<T>&& aOther)
   {
     MOZ_ASSERT(isEmpty(), "Assigning to a non-empty list leaks elements in that list!");
-    sentinel = mozilla::Move(aOther.sentinel);
+    sentinel = std::move(aOther.sentinel);
     return *this;
   }
 

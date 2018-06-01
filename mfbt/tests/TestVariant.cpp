@@ -314,7 +314,7 @@ testMove()
 {
   printf("testMove\n");
   Variant<UniquePtr<int>, char> v1(MakeUnique<int>(5));
-  Variant<UniquePtr<int>, char> v2(Move(v1));
+  Variant<UniquePtr<int>, char> v2(std::move(v1));
 
   MOZ_RELEASE_ASSERT(v2.is<UniquePtr<int>>());
   MOZ_RELEASE_ASSERT(*v2.as<UniquePtr<int>>() == 5);
@@ -325,10 +325,10 @@ testMove()
   Destroyer::destroyedCount = 0;
   {
     Variant<char, UniquePtr<Destroyer>> v3(MakeUnique<Destroyer>());
-    Variant<char, UniquePtr<Destroyer>> v4(Move(v3));
+    Variant<char, UniquePtr<Destroyer>> v4(std::move(v3));
 
     Variant<char, UniquePtr<Destroyer>> v5('a');
-    v5 = Move(v4);
+    v5 = std::move(v4);
 
     auto ptr = v5.extract<UniquePtr<Destroyer>>();
     MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 0);

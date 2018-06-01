@@ -67,7 +67,7 @@ UiCompositorControllerChild::CreateForGPUProcess(const uint64_t& aProcessToken,
       "layers::UiCompositorControllerChild::OpenForGPUProcess",
       child,
       &UiCompositorControllerChild::OpenForGPUProcess,
-      Move(aEndpoint));
+      std::move(aEndpoint));
 
   GetUiThread()->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
   return child;
@@ -291,7 +291,7 @@ UiCompositorControllerChild::RecvScreenPixels(ipc::Shmem&& aMem, const ScreenInt
 {
 #if defined(MOZ_WIDGET_ANDROID)
   if (mWidget) {
-    mWidget->RecvScreenPixels(Move(aMem), aSize);
+    mWidget->RecvScreenPixels(std::move(aMem), aSize);
   }
 #endif // defined(MOZ_WIDGET_ANDROID)
 

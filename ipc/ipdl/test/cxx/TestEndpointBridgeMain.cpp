@@ -147,10 +147,10 @@ TestEndpointBridgeSubParent::RecvBridgeEm()
     fail("opening PTestEndpointOpensOpened");
   }
 
-  if (!gEndpointBridgeMainChild->SendBridged(mozilla::Move(parent))) {
+  if (!gEndpointBridgeMainChild->SendBridged(std::move(parent))) {
     fail("SendBridge failed for parent");
   }
-  if (!SendBridged(mozilla::Move(child))) {
+  if (!SendBridged(std::move(child))) {
     fail("SendBridge failed for child");
   }
 

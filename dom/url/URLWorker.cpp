@@ -225,7 +225,7 @@ public:
       return true;
     }
 
-    mRetval = Move(uri);
+    mRetval = std::move(uri);
     return true;
   }
 
@@ -318,7 +318,7 @@ public:
       return true;
     }
 
-    mRetval = Move(uri);
+    mRetval = std::move(uri);
     return true;
   }
 

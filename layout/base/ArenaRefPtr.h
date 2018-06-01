@@ -147,7 +147,7 @@ private:
       MOZ_ASSERT(mPtr->Arena());
       mPtr->Arena()->DeregisterArenaRefPtr(this);
     }
-    mPtr = Move(aPtr);
+    mPtr = std::move(aPtr);
     if (mPtr && !sameArena) {
       MOZ_ASSERT(mPtr->Arena());
       mPtr->Arena()->RegisterArenaRefPtr(this);

@@ -74,7 +74,7 @@ BufferRecycleBin::RecycleBuffer(UniquePtr<uint8_t[]> aBuffer, uint32_t aSize)
     mRecycledBuffers.Clear();
   }
   mRecycledBufferSize = aSize;
-  mRecycledBuffers.AppendElement(Move(aBuffer));
+  mRecycledBuffers.AppendElement(std::move(aBuffer));
 }
 
 UniquePtr<uint8_t[]>
@@ -87,7 +87,7 @@ BufferRecycleBin::GetBuffer(uint32_t aSize)
   }
 
   uint32_t last = mRecycledBuffers.Length() - 1;
-  UniquePtr<uint8_t[]> result = Move(mRecycledBuffers[last]);
+  UniquePtr<uint8_t[]> result = std::move(mRecycledBuffers[last]);
   mRecycledBuffers.RemoveElementAt(last);
   return result;
 }
@@ -493,7 +493,7 @@ PlanarYCbCrImage::PlanarYCbCrImage()
 RecyclingPlanarYCbCrImage::~RecyclingPlanarYCbCrImage()
 {
   if (mBuffer) {
-    mRecycleBin->RecycleBuffer(Move(mBuffer), mBufferSize);
+    mRecycleBin->RecycleBuffer(std::move(mBuffer), mBufferSize);
   }
 }
 

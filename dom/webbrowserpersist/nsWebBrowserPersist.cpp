@@ -1799,7 +1799,7 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
           "nsWebBrowserPersist::FinishSaveDocumentInternal",
           this,
           saveMethod,
-          mozilla::Move(toWalk));
+          std::move(toWalk));
         NS_DispatchToCurrentThread(saveLater);
     } else {
         // Done walking DOMs; on to the serialization phase.
@@ -2691,7 +2691,7 @@ nsWebBrowserPersist::SaveSubframeContent(
         toWalk->mDocument = aFrameContent;
         toWalk->mFile = frameURI;
         toWalk->mDataPath = frameDataURI;
-        mWalkStack.AppendElement(mozilla::Move(toWalk));
+        mWalkStack.AppendElement(std::move(toWalk));
     } else {
         rv = StoreURI(aURISpec.get());
     }

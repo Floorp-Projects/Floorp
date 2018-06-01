@@ -41,7 +41,7 @@ ChromiumCDMAdapter::ChromiumCDMAdapter(nsTArray<Pair<nsCString, nsCString>>&& aH
 #ifdef XP_WIN
   InitializeHooks();
 #endif
-  PopulateHostFiles(Move(aHostPathPairs));
+  PopulateHostFiles(std::move(aHostPathPairs));
 }
 
 void

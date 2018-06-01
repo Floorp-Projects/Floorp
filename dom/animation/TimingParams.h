@@ -175,7 +175,7 @@ struct TimingParams
 
   void SetDuration(Maybe<StickyTimeDuration>&& aDuration)
   {
-    mDuration = Move(aDuration);
+    mDuration = std::move(aDuration);
     Update();
   }
   const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
@@ -221,7 +221,7 @@ struct TimingParams
 
   void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction)
   {
-    mFunction = Move(aFunction);
+    mFunction = std::move(aFunction);
   }
   const Maybe<ComputedTimingFunction>& TimingFunction() const
   {

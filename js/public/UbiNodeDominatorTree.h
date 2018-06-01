@@ -182,8 +182,8 @@ class JS_PUBLIC_API(DominatorTree)
         JS::ubi::Vector<uint32_t> indices;
 
         DominatedSets(JS::ubi::Vector<uint32_t>&& dominated, JS::ubi::Vector<uint32_t>&& indices)
-          : dominated(mozilla::Move(dominated))
-          , indices(mozilla::Move(indices))
+          : dominated(std::move(dominated))
+          , indices(std::move(indices))
         { }
 
       public:
@@ -193,14 +193,14 @@ class JS_PUBLIC_API(DominatorTree)
 
         // DominatedSets is move-able.
         DominatedSets(DominatedSets&& rhs)
-          : dominated(mozilla::Move(rhs.dominated))
-          , indices(mozilla::Move(rhs.indices))
+          : dominated(std::move(rhs.dominated))
+          , indices(std::move(rhs.indices))
         {
             MOZ_ASSERT(this != &rhs, "self-move not allowed");
         }
         DominatedSets& operator=(DominatedSets&& rhs) {
             this->~DominatedSets();
-            new (this) DominatedSets(mozilla::Move(rhs));
+            new (this) DominatedSets(std::move(rhs));
             return *this;
         }
 
@@ -270,7 +270,7 @@ class JS_PUBLIC_API(DominatorTree)
             }
 #endif
 
-            return mozilla::Some(DominatedSets(mozilla::Move(dominated), mozilla::Move(indices)));
+            return mozilla::Some(DominatedSets(std::move(dominated), std::move(indices)));
         }
 
         /**
@@ -303,10 +303,10 @@ class JS_PUBLIC_API(DominatorTree)
 
     DominatorTree(JS::ubi::Vector<Node>&& postOrder, NodeToIndexMap&& nodeToPostOrderIndex,
                   JS::ubi::Vector<uint32_t>&& doms, DominatedSets&& dominatedSets)
-        : postOrder(mozilla::Move(postOrder))
-        , nodeToPostOrderIndex(mozilla::Move(nodeToPostOrderIndex))
-        , doms(mozilla::Move(doms))
-        , dominatedSets(mozilla::Move(dominatedSets))
+        : postOrder(std::move(postOrder))
+        , nodeToPostOrderIndex(std::move(nodeToPostOrderIndex))
+        , doms(std::move(doms))
+        , dominatedSets(std::move(dominatedSets))
         , retainedSizes(mozilla::Nothing())
     { }
 
@@ -339,7 +339,7 @@ class JS_PUBLIC_API(DominatorTree)
                 mozilla::UniquePtr<NodeSet, DeletePolicy<NodeSet>> set(js_new<NodeSet>());
                 if (!set ||
                     !set->init() ||
-                    !predecessorSets.add(p, edge.referent, mozilla::Move(set)))
+                    !predecessorSets.add(p, edge.referent, std::move(set)))
                 {
                     return false;
                 }
@@ -473,17 +473,17 @@ class JS_PUBLIC_API(DominatorTree)
 
     // DominatorTree is move-able.
     DominatorTree(DominatorTree&& rhs)
-      : postOrder(mozilla::Move(rhs.postOrder))
-      , nodeToPostOrderIndex(mozilla::Move(rhs.nodeToPostOrderIndex))
-      , doms(mozilla::Move(rhs.doms))
-      , dominatedSets(mozilla::Move(rhs.dominatedSets))
-      , retainedSizes(mozilla::Move(rhs.retainedSizes))
+      : postOrder(std::move(rhs.postOrder))
+      , nodeToPostOrderIndex(std::move(rhs.nodeToPostOrderIndex))
+      , doms(std::move(rhs.doms))
+      , dominatedSets(std::move(rhs.dominatedSets))
+      , retainedSizes(std::move(rhs.retainedSizes))
     {
         MOZ_ASSERT(this != &rhs, "self-move is not allowed");
     }
     DominatorTree& operator=(DominatorTree&& rhs) {
         this->~DominatorTree();
-        new (this) DominatorTree(mozilla::Move(rhs));
+        new (this) DominatorTree(std::move(rhs));
         return *this;
     }
 
@@ -590,10 +590,10 @@ class JS_PUBLIC_API(DominatorTree)
         if (maybeDominatedSets.isNothing())
             return mozilla::Nothing();
 
-        return mozilla::Some(DominatorTree(mozilla::Move(postOrder),
-                                           mozilla::Move(nodeToPostOrderIndex),
-                                           mozilla::Move(doms),
-                                           mozilla::Move(*maybeDominatedSets)));
+        return mozilla::Some(DominatorTree(std::move(postOrder),
+                                           std::move(nodeToPostOrderIndex),
+                                           std::move(doms),
+                                           std::move(*maybeDominatedSets)));
     }
 
     /**

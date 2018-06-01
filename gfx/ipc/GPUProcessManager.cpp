@@ -259,8 +259,8 @@ GPUProcessManager::EnsureCompositorManagerChild()
     return;
   }
 
-  mGPUChild->SendInitCompositorManager(Move(parentPipe));
-  CompositorManagerChild::Init(Move(childPipe), AllocateNamespace(),
+  mGPUChild->SendInitCompositorManager(std::move(parentPipe));
+  CompositorManagerChild::Init(std::move(childPipe), AllocateNamespace(),
                                mProcessToken);
 }
 
@@ -288,8 +288,8 @@ GPUProcessManager::EnsureImageBridgeChild()
     return;
   }
 
-  mGPUChild->SendInitImageBridge(Move(parentPipe));
-  ImageBridgeChild::InitWithGPUProcess(Move(childPipe), AllocateNamespace());
+  mGPUChild->SendInitImageBridge(std::move(parentPipe));
+  ImageBridgeChild::InitWithGPUProcess(std::move(childPipe), AllocateNamespace());
 }
 
 void
@@ -316,8 +316,8 @@ GPUProcessManager::EnsureVRManager()
     return;
   }
 
-  mGPUChild->SendInitVRManager(Move(parentPipe));
-  VRManagerChild::InitWithGPUProcess(Move(childPipe));
+  mGPUChild->SendInitVRManager(std::move(parentPipe));
+  VRManagerChild::InitWithGPUProcess(std::move(childPipe));
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -341,8 +341,8 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget, const Lay
       return nullptr;
     }
 
-    mGPUChild->SendInitUiCompositorController(aId, Move(parentPipe));
-    result = UiCompositorControllerChild::CreateForGPUProcess(mProcessToken, Move(childPipe));
+    mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
+    result = UiCompositorControllerChild::CreateForGPUProcess(mProcessToken, std::move(childPipe));
   }
   if (result) {
     result->SetBaseWidget(aWidget);
@@ -376,8 +376,8 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
     return;
   }
 
-  mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
-  mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
+  mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, std::move(vsyncChild));
+  mGPUChild->SendInitVsyncBridge(std::move(vsyncParent));
 
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessStatus"),
@@ -896,12 +896,12 @@ GPUProcessManager::CreateContentCompositorManager(base::ProcessId aOtherProcess,
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentCompositorManager(Move(parentPipe));
+    mGPUChild->SendNewContentCompositorManager(std::move(parentPipe));
   } else {
-    CompositorManagerParent::Create(Move(parentPipe));
+    CompositorManagerParent::Create(std::move(parentPipe));
   }
 
-  *aOutEndpoint = Move(childPipe);
+  *aOutEndpoint = std::move(childPipe);
   return true;
 }
 
@@ -928,14 +928,14 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentImageBridge(Move(parentPipe));
+    mGPUChild->SendNewContentImageBridge(std::move(parentPipe));
   } else {
-    if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
+    if (!ImageBridgeParent::CreateForContent(std::move(parentPipe))) {
       return false;
     }
   }
 
-  *aOutEndpoint = Move(childPipe);
+  *aOutEndpoint = std::move(childPipe);
   return true;
 }
 
@@ -971,14 +971,14 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentVRManager(Move(parentPipe));
+    mGPUChild->SendNewContentVRManager(std::move(parentPipe));
   } else {
-    if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
+    if (!VRManagerParent::CreateForContent(std::move(parentPipe))) {
       return false;
     }
   }
 
-  *aOutEndpoint = Move(childPipe);
+  *aOutEndpoint = std::move(childPipe);
   return true;
 }
 
@@ -1005,9 +1005,9 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
     return;
   }
 
-  mGPUChild->SendNewContentVideoDecoderManager(Move(parentPipe));
+  mGPUChild->SendNewContentVideoDecoderManager(std::move(parentPipe));
 
-  *aOutEndpoint = Move(childPipe);
+  *aOutEndpoint = std::move(childPipe);
 }
 
 void

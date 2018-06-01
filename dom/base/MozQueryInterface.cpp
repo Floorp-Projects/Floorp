@@ -103,7 +103,7 @@ ChromeUtils::GenerateQI(const GlobalObject& aGlobal, const Sequence<OwningString
 
   ifaces.Sort(IIDComparator());
 
-  return new MozQueryInterface(Move(ifaces));
+  return new MozQueryInterface(std::move(ifaces));
 }
 
 bool

@@ -30,7 +30,7 @@ class MozQueryInterface final : public NonRefcountedDOMObject
 {
 public:
   explicit MozQueryInterface(nsTArray<nsIID>&& aInterfaces)
-    : mInterfaces(Move(aInterfaces))
+    : mInterfaces(std::move(aInterfaces))
   {}
 
   bool QueriesTo(const nsIID& aIID) const;

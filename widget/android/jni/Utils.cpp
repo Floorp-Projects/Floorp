@@ -301,7 +301,7 @@ void DispatchToGeckoPriorityQueue(already_AddRefed<nsIRunnable> aCall)
         void Run() override { NS_ENSURE_SUCCESS_VOID(mCall->Run()); }
     };
 
-    nsAppShell::PostEvent(MakeUnique<RunnableEvent>(Move(aCall)));
+    nsAppShell::PostEvent(MakeUnique<RunnableEvent>(std::move(aCall)));
 }
 
 bool IsFennec()

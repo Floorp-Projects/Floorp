@@ -23,7 +23,7 @@ PlaceholderTransaction::PlaceholderTransaction(
   : mEditorBase(&aEditorBase)
   , mForwarding(nullptr)
   , mCompositionTransaction(nullptr)
-  , mStartSel(*Move(aSelState))
+  , mStartSel(*std::move(aSelState))
   , mAbsorb(true)
   , mCommitted(false)
 {

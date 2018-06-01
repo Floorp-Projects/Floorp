@@ -357,7 +357,7 @@ DecodeDigitallySigned(Reader& reader, DigitallySigned& output)
     return rv;
   }
 
-  output = Move(result);
+  output = std::move(result);
   return Success;
 }
 
@@ -512,7 +512,7 @@ DecodeSignedCertificateTimestamp(Reader& reader,
   }
   result.timestamp = timestamp;
 
-  output = Move(result);
+  output = std::move(result);
   return Success;
 }
 

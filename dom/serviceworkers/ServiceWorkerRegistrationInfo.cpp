@@ -421,7 +421,7 @@ ServiceWorkerRegistrationInfo::UpdateRegistrationState()
   RefPtr<ServiceWorkerRegistrationInfo> self(this);
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
     "ServiceWorkerRegistrationInfo::UpdateRegistrationState",
-    [self = Move(self)] {
+    [self = std::move(self)] {
       RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
       if (swm) {
         swm->UpdateRegistrationListeners(self);

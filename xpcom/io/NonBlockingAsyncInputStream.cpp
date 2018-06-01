@@ -60,7 +60,7 @@ NonBlockingAsyncInputStream::Create(already_AddRefed<nsIInputStream> aInputStrea
 {
   MOZ_DIAGNOSTIC_ASSERT(aResult);
 
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
 
   bool nonBlocking = false;
   nsresult rv = inputStream->IsNonBlocking(&nonBlocking);
@@ -84,7 +84,7 @@ NonBlockingAsyncInputStream::Create(already_AddRefed<nsIInputStream> aInputStrea
 }
 
 NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(already_AddRefed<nsIInputStream> aInputStream)
-  : mInputStream(Move(aInputStream))
+  : mInputStream(std::move(aInputStream))
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
@@ -142,8 +142,8 @@ NonBlockingAsyncInputStream::Close()
 
     // If we have a WaitClosureOnly runnable, it's time to use it.
     if (mWaitClosureOnly.isSome()) {
-      waitClosureOnlyRunnable = Move(mWaitClosureOnly->mRunnable);
-      waitClosureOnlyEventTarget = Move(mWaitClosureOnly->mEventTarget);
+      waitClosureOnlyRunnable = std::move(mWaitClosureOnly->mRunnable);
+      waitClosureOnlyEventTarget = std::move(mWaitClosureOnly->mEventTarget);
 
       mWaitClosureOnly.reset();
 
@@ -368,7 +368,7 @@ void
 NonBlockingAsyncInputStream::RunAsyncWaitCallback(NonBlockingAsyncInputStream::AsyncWaitRunnable* aRunnable,
                                                   already_AddRefed<nsIInputStreamCallback> aCallback)
 {
-  nsCOMPtr<nsIInputStreamCallback> callback = Move(aCallback);
+  nsCOMPtr<nsIInputStreamCallback> callback = std::move(aCallback);
 
   {
     MutexAutoLock lock(mLock);

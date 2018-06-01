@@ -120,7 +120,7 @@ ContentProcessController::IsRepaintThread()
 void
 ContentProcessController::DispatchToRepaintThread(already_AddRefed<Runnable> aTask)
 {
-  NS_DispatchToMainThread(Move(aTask));
+  NS_DispatchToMainThread(std::move(aTask));
 }
 
 } // namespace layers

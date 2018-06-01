@@ -22,7 +22,7 @@ namespace mozilla {
 
 ServoStyleRuleDeclaration::ServoStyleRuleDeclaration(
   already_AddRefed<RawServoDeclarationBlock> aDecls)
-  : mDecls(new DeclarationBlock(Move(aDecls)))
+  : mDecls(new DeclarationBlock(std::move(aDecls)))
 {
 }
 

@@ -42,7 +42,7 @@ TextChange::TextChange(long aIA2UniqueId, bool aIsInsert,
 TextChange::TextChange(TextChange&& aOther)
   : mText()
 {
-  *this = Move(aOther);
+  *this = std::move(aOther);
 }
 
 TextChange::TextChange(const TextChange& aOther)

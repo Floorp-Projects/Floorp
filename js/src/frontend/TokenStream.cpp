@@ -713,12 +713,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::reportStrictModeErrorNumberVA(Unique
         return false;
 
     if (strictMode) {
-        ReportCompileError(anyChars.cx, Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber,
+        ReportCompileError(anyChars.cx, std::move(metadata), std::move(notes), JSREPORT_ERROR, errorNumber,
                            *args);
         return false;
     }
 
-    return anyChars.compileWarning(Move(metadata), Move(notes), JSREPORT_WARNING | JSREPORT_STRICT,
+    return anyChars.compileWarning(std::move(metadata), std::move(notes), JSREPORT_WARNING | JSREPORT_STRICT,
                                    errorNumber, *args);
 }
 
@@ -728,11 +728,11 @@ TokenStreamAnyChars::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorN
 {
     if (options().werrorOption) {
         flags &= ~JSREPORT_WARNING;
-        ReportCompileError(cx, Move(metadata), Move(notes), flags, errorNumber, args);
+        ReportCompileError(cx, std::move(metadata), std::move(notes), flags, errorNumber, args);
         return false;
     }
 
-    return ReportCompileWarning(cx, Move(metadata), Move(notes), flags, errorNumber, args);
+    return ReportCompileWarning(cx, std::move(metadata), std::move(notes), flags, errorNumber, args);
 }
 
 void
@@ -895,7 +895,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::reportError(unsigned errorNumber, ..
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     ErrorMetadata metadata;
     if (computeErrorMetadata(&metadata, anyChars.currentToken().pos.begin)) {
-        ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
+        ReportCompileError(anyChars.cx, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            args);
     }
 
@@ -919,7 +919,7 @@ TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
     ErrorMetadata metadata;
     computeErrorMetadataNoOffset(&metadata);
 
-    ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+    ReportCompileError(cx, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -932,7 +932,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::warning(unsigned errorNumber, ...)
     ErrorMetadata metadata;
     bool result =
         computeErrorMetadata(&metadata, anyCharsAccess().currentToken().pos.begin) &&
-        anyCharsAccess().compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
+        anyCharsAccess().compileWarning(std::move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
                                         args);
 
     va_end(args);
@@ -954,7 +954,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::reportExtraWarningErrorNumberVA(Uniq
     if (!computeErrorMetadata(&metadata, offset))
         return false;
 
-    return anyChars.compileWarning(Move(metadata), Move(notes), JSREPORT_STRICT | JSREPORT_WARNING,
+    return anyChars.compileWarning(std::move(metadata), std::move(notes), JSREPORT_STRICT | JSREPORT_WARNING,
                                    errorNumber, *args);
 }
 
@@ -968,7 +968,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::error(unsigned errorNumber, ...)
     ErrorMetadata metadata;
     if (computeErrorMetadata(&metadata, sourceUnits.offset())) {
         TokenStreamAnyChars& anyChars = anyCharsAccess();
-        ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
+        ReportCompileError(anyChars.cx, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            args);
     }
 
@@ -982,7 +982,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::errorAtVA(uint32_t offset, unsigned 
     ErrorMetadata metadata;
     if (computeErrorMetadata(&metadata, offset)) {
         TokenStreamAnyChars& anyChars = anyCharsAccess();
-        ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
+        ReportCompileError(anyChars.cx, std::move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            *args);
     }
 }

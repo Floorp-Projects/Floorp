@@ -102,7 +102,7 @@ public:
   }
 
   ScopeExit(ScopeExit&& rhs)
-   : mExitFunction(mozilla::Move(rhs.mExitFunction))
+   : mExitFunction(std::move(rhs.mExitFunction))
    , mExecuteOnDestruction(rhs.mExecuteOnDestruction)
   {
     rhs.release();
@@ -128,7 +128,7 @@ template <typename ExitFunction>
 MOZ_MUST_USE ScopeExit<ExitFunction>
 MakeScopeExit(ExitFunction&& exitFunction)
 {
-  return ScopeExit<ExitFunction>(mozilla::Move(exitFunction));
+  return ScopeExit<ExitFunction>(std::move(exitFunction));
 }
 
 } /* namespace mozilla */

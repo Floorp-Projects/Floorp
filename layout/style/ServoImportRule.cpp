@@ -17,7 +17,7 @@ ServoImportRule::ServoImportRule(RefPtr<RawServoImportRule> aRawRule,
                                  uint32_t aLine,
                                  uint32_t aColumn)
   : CSSImportRule(aLine, aColumn)
-  , mRawRule(Move(aRawRule))
+  , mRawRule(std::move(aRawRule))
 {
   const auto* sheet = Servo_ImportRule_GetSheet(mRawRule.get());
   MOZ_ASSERT(sheet);

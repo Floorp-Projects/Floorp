@@ -301,7 +301,7 @@ EventListenerManager::AddEventListenerInternal(
   } else {
     listener->mListenerType = Listener::eNativeListener;
   }
-  listener->mListener = Move(aListenerHolder);
+  listener->mListener = std::move(aListenerHolder);
 
 
   if (aFlags.mInSystemGroup) {
@@ -731,7 +731,7 @@ EventListenerManager::AddEventListenerByType(
     }
   }
 
-  AddEventListenerInternal(Move(aListenerHolder),
+  AddEventListenerInternal(std::move(aListenerHolder),
                            message, atom, aType, flags);
 }
 
@@ -746,7 +746,7 @@ EventListenerManager::RemoveEventListenerByType(
     nsContentUtils::GetEventMessageAndAtomForListener(aType,
                                                       getter_AddRefs(atom)) :
     eUnidentifiedEvent;
-  RemoveEventListenerInternal(Move(aListenerHolder),
+  RemoveEventListenerInternal(std::move(aListenerHolder),
                               message, atom, aType, aFlags);
 }
 
@@ -1245,7 +1245,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                   nsAutoString typeStr;
                   (*aDOMEvent)->GetType(typeStr);
                   uint16_t phase = (*aDOMEvent)->EventPhase();
-                  timelines->AddMarkerForDocShell(docShell, Move(
+                  timelines->AddMarkerForDocShell(docShell, std::move(
                     MakeUnique<EventTimelineMarker>(
                       typeStr, phase, MarkerTracingType::START)));
                 }
@@ -1258,7 +1258,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               // Move the listener to the stack before handling the event.
               // The order is important, otherwise the listener could be
               // called again inside the listener.
-              listenerHolder.emplace(Move(*listener));
+              listenerHolder.emplace(std::move(*listener));
               listener = listenerHolder.ptr();
               hasRemovedListener = true;
             }
@@ -1393,7 +1393,7 @@ EventListenerManager::AddEventListener(
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
-  return AddEventListenerByType(Move(aListenerHolder), aType, flags);
+  return AddEventListenerByType(std::move(aListenerHolder), aType, flags);
 }
 
 void
@@ -1417,7 +1417,7 @@ EventListenerManager::AddEventListener(
     }
   }
   flags.mAllowUntrustedEvents = aWantsUntrusted;
-  return AddEventListenerByType(Move(aListenerHolder), aType, flags, passive);
+  return AddEventListenerByType(std::move(aListenerHolder), aType, flags, passive);
 }
 
 void
@@ -1428,7 +1428,7 @@ EventListenerManager::RemoveEventListener(
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
-  RemoveEventListenerByType(Move(aListenerHolder), aType, flags);
+  RemoveEventListenerByType(std::move(aListenerHolder), aType, flags);
 }
 
 void
@@ -1445,7 +1445,7 @@ EventListenerManager::RemoveEventListener(
     flags.mCapture = options.mCapture;
     flags.mInSystemGroup = options.mMozSystemGroup;
   }
-  RemoveEventListenerByType(Move(aListenerHolder), aType, flags);
+  RemoveEventListenerByType(std::move(aListenerHolder), aType, flags);
 }
 
 void

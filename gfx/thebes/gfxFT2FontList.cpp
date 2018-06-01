@@ -1672,7 +1672,7 @@ gfxFT2FontList::WillShutdown()
         memcpy(buf.get(), &mJarModifiedTime, bufSize);
 
         cache->PutBuffer(JAR_LAST_MODIFED_TIME,
-                         Move(buf), bufSize);
+                         std::move(buf), bufSize);
     }
     mFontNameCache = nullptr;
 }

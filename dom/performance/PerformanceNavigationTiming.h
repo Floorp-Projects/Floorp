@@ -32,7 +32,7 @@ public:
   PerformanceNavigationTiming(UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
                               Performance* aPerformance,
                               const nsAString& aName)
-    : PerformanceResourceTiming(Move(aPerformanceTiming), aPerformance, aName)
+    : PerformanceResourceTiming(std::move(aPerformanceTiming), aPerformance, aName)
   {
     SetEntryType(NS_LITERAL_STRING("navigation"));
     SetInitiatorType(NS_LITERAL_STRING("navigation"));

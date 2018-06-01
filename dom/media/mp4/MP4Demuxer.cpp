@@ -146,12 +146,12 @@ MP4Demuxer::Init()
   if (!initData.Ref()) {
     return InitPromise::CreateAndReject(
       NS_FAILED(initData.Result())
-      ? Move(initData.Result())
+      ? std::move(initData.Result())
       : MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
                     RESULT_DETAIL("Invalid MP4 metadata or OOM")),
       __func__);
   } else if (NS_FAILED(initData.Result()) && result == NS_OK) {
-    result = Move(initData.Result());
+    result = std::move(initData.Result());
   }
 
   RefPtr<BufferStream> bufferstream =
@@ -199,10 +199,10 @@ MP4Demuxer::Init()
   }
 
   if (NS_FAILED(audioTrackCount.Result()) && result == NS_OK) {
-    result = Move(audioTrackCount.Result());
+    result = std::move(audioTrackCount.Result());
   }
   if (NS_FAILED(videoTrackCount.Result()) && result == NS_OK) {
-    result = Move(videoTrackCount.Result());
+    result = std::move(videoTrackCount.Result());
   }
 
   if (audioTrackCount.Ref() != 0) {
@@ -224,20 +224,20 @@ MP4Demuxer::Init()
         }
         continue;
       } else if (NS_FAILED(info.Result()) && result == NS_OK) {
-        result = Move(info.Result());
+        result = std::move(info.Result());
       }
       MP4Metadata::ResultAndIndice indices =
         metadata.GetTrackIndice(info.Ref()->mTrackId);
       if (!indices.Ref()) {
         if (NS_FAILED(info.Result()) && result == NS_OK) {
-          result = Move(indices.Result());
+          result = std::move(indices.Result());
         }
         continue;
       }
       RefPtr<MP4TrackDemuxer> demuxer =
-        new MP4TrackDemuxer(this, Move(info.Ref()), *indices.Ref().get());
+        new MP4TrackDemuxer(this, std::move(info.Ref()), *indices.Ref().get());
       DDLINKCHILD("audio demuxer", demuxer.get());
-      mAudioDemuxers.AppendElement(Move(demuxer));
+      mAudioDemuxers.AppendElement(std::move(demuxer));
     }
   }
 
@@ -260,27 +260,27 @@ MP4Demuxer::Init()
         }
         continue;
       } else if (NS_FAILED(info.Result()) && result == NS_OK) {
-        result = Move(info.Result());
+        result = std::move(info.Result());
       }
       MP4Metadata::ResultAndIndice indices =
         metadata.GetTrackIndice(info.Ref()->mTrackId);
       if (!indices.Ref()) {
         if (NS_FAILED(info.Result()) && result == NS_OK) {
-          result = Move(indices.Result());
+          result = std::move(indices.Result());
         }
         continue;
       }
       RefPtr<MP4TrackDemuxer> demuxer =
-        new MP4TrackDemuxer(this, Move(info.Ref()), *indices.Ref().get());
+        new MP4TrackDemuxer(this, std::move(info.Ref()), *indices.Ref().get());
       DDLINKCHILD("video demuxer", demuxer.get());
-      mVideoDemuxers.AppendElement(Move(demuxer));
+      mVideoDemuxers.AppendElement(std::move(demuxer));
     }
   }
 
   MP4Metadata::ResultAndCryptoFile cryptoFile =
     metadata.Crypto();
   if (NS_FAILED(cryptoFile.Result()) && result == NS_OK) {
-    result = Move(cryptoFile.Result());
+    result = std::move(cryptoFile.Result());
   }
   MOZ_ASSERT(cryptoFile.Ref());
   if (cryptoFile.Ref()->valid) {
@@ -368,7 +368,7 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                  const IndiceWrapper& aIndices)
   : mParent(aParent)
   , mStream(new ResourceStream(mParent->mResource))
-  , mInfo(Move(aInfo))
+  , mInfo(std::move(aInfo))
   , mIndex(new Index(aIndices,
                      mStream,
                      mInfo->mTrackId,
@@ -616,7 +616,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   }
   SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
-  return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
+  return SkipAccessPointPromise::CreateAndReject(std::move(failure), __func__);
 }
 
 media::TimeIntervals
