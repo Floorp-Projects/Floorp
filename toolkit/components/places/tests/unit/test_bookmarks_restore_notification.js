@@ -135,7 +135,7 @@ add_task(async function test_json_restore_normal() {
   try {
     await BookmarkJSONUtils.importFromFile(file, { replace: true });
   } catch (e) {
-    do_throw("  Restore should not have failed" + e);
+    do_throw("  Restore should not have failed " + e);
   }
 
   await checkObservers(expectPromises, expectedData);
@@ -147,15 +147,12 @@ add_task(async function test_json_restore_empty() {
     data:       NSIOBSERVER_DATA_JSON,
     folderId:   null
   };
-  let expectPromises = registerObservers(true);
+  let expectPromises = registerObservers(false);
 
-  info("JSON restore: empty file should succeed");
+  info("JSON restore: empty file should fail");
   let file = await promiseFile("bookmarks-test_restoreNotification.json");
-  try {
-    await BookmarkJSONUtils.importFromFile(file, { replace: true });
-  } catch (e) {
-    do_throw("  Restore should not have failed" + e);
-  }
+  await Assert.rejects(BookmarkJSONUtils.importFromFile(file, { replace: true }),
+    /SyntaxError/, "Restore should reject for an empty file.");
 
   await checkObservers(expectPromises, expectedData);
   await teardown(file);
@@ -171,7 +168,7 @@ add_task(async function test_json_restore_nonexist() {
   info("JSON restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 1");
-  Assert.rejects(BookmarkJSONUtils.importFromFile(file.path, { replace: true }),
+  await Assert.rejects(BookmarkJSONUtils.importFromFile(file.path, { replace: true }),
     /Cannot restore from nonexisting json file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);
