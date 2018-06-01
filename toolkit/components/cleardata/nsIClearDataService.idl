@@ -1,0 +1,158 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIClearDataCallback;
+
+/**
+ * nsIClearDataService
+ *
+ * Provides methods for cleaning data from a nsIPrincipal and/or from a time
+ * range.
+ */
+[scriptable, uuid(6ef3ef16-a502-4576-9fb4-919f1c40bf61)]
+interface nsIClearDataService : nsISupports
+{
+  /**
+   * Delete data owned by a host. For instance: mozilla.org. Data from any
+   * possible originAttributes will be deleted.
+   * @param aHost the host to be used.
+   * @param aIsUserRequest true if this request comes from a user interaction.
+   *        This information is important because if true, it's probably better
+   *        to remove more than less, for privacy reason. If false (e.g.
+   *        Clear-Site-Data header), we don't want to delete more than what is
+   *        strictly required.
+   * @param aFlags List of flags. See below the accepted values.
+   * @param aCallback this callback will be executed when the operation is
+   *                  completed.
+   */
+  void deleteDataFromHost(in AUTF8String aHost,
+                          in bool aIsUserRequest,
+                          in uint32_t aFlags,
+                          in nsIClearDataCallback aCallback);
+
+  /**
+   * Delete data owned by a principal.
+   * @param aPrincipal the nsIPrincipal to be used.
+   * @param aIsUserRequest true if this request comes from a user interaction.
+   *        This information is important because if true, it's probably better
+   *        to remove more than less, for privacy reason. If false (e.g.
+   *        Clear-Site-Data header), we don't want to delete more than what is
+   *        strictly required.
+   * @param aFlags List of flags. See below the accepted values.
+   * @param aCallback ths callback will be executed when the operation is
+   *                  completed.
+   */
+  void deleteDataFromPrincipal(in nsIPrincipal aPrincipal,
+                               in bool aIsUserRequest,
+                               in uint32_t aFlags,
+                               in nsIClearDataCallback aCallback);
+
+  /**
+   * Delete all data in a time range. Limit excluded.
+   * @param aFrom microseconds from the epoch
+   * @param aTo microseconds from the epoch
+   * @param aIsUserRequest true if this request comes from a user interaction.
+   *        This information is important because if true, it's probably better
+   *        to remove more than less, for privacy reason. If false (e.g.
+   *        Clear-Site-Data header), we don't want to delete more than what is
+   *        strictly required.
+   * @param aFlags List of flags. See below the accepted values.
+   * @param aCallback ths callback will be executed when the operation is
+   *                  completed.
+   */
+  void deleteDataInTimeRange(in PRTime aFrom, in PRTime aTo,
+                             in bool aIsUserRequest,
+                             in uint32_t aFlags,
+                             in nsIClearDataCallback aCallback);
+
+  /**
+   * Delete all data from any host, in any time range.
+   * @param aFlags List of flags. See below the accepted values.
+   * @param aCallback ths callback will be executed when the operation is
+   *                  completed.
+   */
+  void deleteData(in uint32_t aFlags,
+                  in nsIClearDataCallback aCallback);
+
+  /**************************************************************************
+   * Listed below are the various flags which may be or'd together.
+   */
+
+  /**
+   * Delete cookies.
+   */
+  const uint32_t CLEAR_COOKIES = 1 << 0;
+
+  /**
+   * Network Cache.
+   */
+  const uint32_t CLEAR_NETWORK_CACHE = 1 << 1;
+
+  /**
+   * Image cache.
+   */
+  const uint32_t CLEAR_IMAGE_CACHE = 1 << 2;
+
+  /* TODO
+  const uint32_t CLEAR_EME = 1 << 3;
+  const uint32_t CLEAR_PLUGIN_DATA = 1 << 4;
+  const uint32_t CLEAR_DOWNLOADS = 1 << 5;
+  const uint32_t CLEAR_PASSWORDS = 1 << 6;
+  const uint32_t CLEAR_PERMISSIONS = 1 << 7;
+  const uint32_t CLEAR_DOM_QUOTA = 1 << 8;
+  const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 9;
+  const uint32_t CLEAR_PREDICTOR_CACHE = 1 << 10;
+  const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 11;
+  const uint32_t CLEAR_HSTS = 1 << 12;
+  const uint32_t CLEAR_HPKP = 1 << 13;
+  const uint32_t CLEAR_HISTORY = 1 << 14;
+  const uint32_t CLEAR_SESSION_HISTORY = 1 << 15;
+  const uint32_t CLEAR_FORMDATA = 1 << 16;
+  const uint32_t CLEAR_AUTH_TOKENS = 1 << 17;
+  const uint32_t CLEAR_LOGINS = 1 << 18;
+  */
+
+  /**
+   * Use this value to delete all the data.
+   */
+  const uint32_t CLEAR_ALL = 0xFFFF;
+
+  /**************************************************************************
+   * The following flags are helpers: they combine some of the previous flags
+   * in a more convenient way.
+   */
+
+  /**
+   * Delete all the possible caches.
+   * TODO: add CLEAR_PREDICTOR_CACHE ?
+   */
+  const uint32_t CLEAR_ALL_CACHES = CLEAR_NETWORK_CACHE | CLEAR_IMAGE_CACHE;
+
+  /*
+  const uint32_t CLEAR_DOM_STORAGES = CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_FORMDATA | CLEAR_SESSION_HISTORY;
+  */
+
+  /*
+  const uint32_t CLEAR_BROWSER_DATA = CLEAR_DOWNLOADS | CLEAR_PASSWORDS | CLEAR_PERMISSIONS | CLEAR_CONTENT_PREFERENCES | CLEAR_HISTORY | CLEAR_LOGINS;
+  */
+};
+
+/**
+ * This is a companion interface for
+ * nsIClearDataService::deleteDataFromPrincipal().
+ */
+[function, scriptable, uuid(e225517b-24c5-498a-b9fb-9993e341a398)]
+interface nsIClearDataCallback : nsISupports
+{
+  /**
+   * Called to indicate that the data cleaning is completed.
+   * @param aFailedFlags this value contains the flags that failed during the
+   *                     cleanup. If nothing failed, aFailedFlags will be 0.
+   */
+  void onDataDeleted(in uint32_t aFailedFlags);
+};
