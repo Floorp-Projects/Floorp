@@ -98,9 +98,13 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_IMAGE_CACHE = 1 << 2;
 
+  /**
+   * Data stored by external plugins.
+   */
+  const uint32_t CLEAR_PLUGIN_DATA = 1 << 3;
+
   /* TODO
-  const uint32_t CLEAR_EME = 1 << 3;
-  const uint32_t CLEAR_PLUGIN_DATA = 1 << 4;
+  const uint32_t CLEAR_EME = 1 << 4;
   const uint32_t CLEAR_DOWNLOADS = 1 << 5;
   const uint32_t CLEAR_PASSWORDS = 1 << 6;
   const uint32_t CLEAR_PERMISSIONS = 1 << 7;

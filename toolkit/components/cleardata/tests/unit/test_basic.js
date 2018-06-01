@@ -13,8 +13,7 @@ add_task(async function test_basic() {
   Assert.ok(!!service);
 
   await new Promise(aResolve => {
-    service.deleteData(Ci.nsIClearDataService.CLEAR_IMAGE_CACHE |
-                       Ci.nsIClearDataService.CLEAR_COOKIES, value => {
+    service.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => {
       Assert.equal(value, 0);
       aResolve();
     });
