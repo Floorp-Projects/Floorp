@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
@@ -325,33 +324,18 @@ var Sanitizer = {
 
     cookies: {
       async clear(range) {
-        let seenException;
         let refObj = {};
 
-        // Clear cookies.
+        // Clear cookies and plugin data.
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES);
+        await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES |
+                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
 
         // Clear deviceIds. Done asynchronously (returns before complete).
-        try {
-          let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
-                           .getService(Ci.nsIMediaManagerService);
-          mediaMgr.sanitizeDeviceIds(range && range[0]);
-        } catch (ex) {
-          seenException = ex;
-        }
-
-        // Clear plugin data.
-        try {
-          await clearPluginData(range);
-        } catch (ex) {
-          seenException = ex;
-        }
-
-        if (seenException) {
-          throw seenException;
-        }
+        let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                         .getService(Ci.nsIMediaManagerService);
+        mediaMgr.sanitizeDeviceIds(range && range[0]);
       },
     },
 
@@ -772,7 +756,7 @@ var Sanitizer = {
 
     pluginData: {
       async clear(range) {
-        await clearPluginData(range);
+        await clearData(range, Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
       },
     },
   },
@@ -859,70 +843,6 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   progress = {};
   if (seenError) {
     throw new Error("Error sanitizing");
-  }
-}
-
-async function clearPluginData(range) {
-  // Clear plugin data.
-  // As evidenced in bug 1253204, clearing plugin data can sometimes be
-  // very, very long, for mysterious reasons. Unfortunately, this is not
-  // something actionable by Mozilla, so crashing here serves no purpose.
-  //
-  // For this reason, instead of waiting for sanitization to always
-  // complete, we introduce a soft timeout. Once this timeout has
-  // elapsed, we proceed with the shutdown of Firefox.
-  let seenException;
-
-  let promiseClearPluginData = async function() {
-    const FLAG_CLEAR_ALL = Ci.nsIPluginHost.FLAG_CLEAR_ALL;
-    let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-
-    // Determine age range in seconds. (-1 means clear all.) We don't know
-    // that range[1] is actually now, so we compute age range based
-    // on the lower bound. If range results in a negative age, do nothing.
-    let age = range ? (Date.now() / 1000 - range[0] / 1000000) : -1;
-    if (!range || age >= 0) {
-      let tags = ph.getPluginTags();
-      for (let tag of tags) {
-        try {
-          let rv = await new Promise(resolve =>
-            ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
-          );
-          // If the plugin doesn't support clearing by age, clear everything.
-          if (rv == Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
-            await new Promise(resolve =>
-              ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
-            );
-          }
-        } catch (ex) {
-          // Ignore errors from plug-ins
-        }
-      }
-    }
-  };
-
-  try {
-    // We don't want to wait for this operation to complete...
-    promiseClearPluginData = promiseClearPluginData(range);
-
-    // ... at least, not for more than 10 seconds.
-    await Promise.race([
-      promiseClearPluginData,
-      new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))
-    ]);
-  } catch (ex) {
-    seenException = ex;
-  }
-
-  // Detach waiting for plugin data to be cleared.
-  promiseClearPluginData.catch(() => {
-    // If this exception is raised before the soft timeout, it
-    // will appear in `seenException`. Otherwise, it's too late
-    // to do anything about it.
-  });
-
-  if (seenException) {
-    throw seenException;
   }
 }
 
