@@ -278,8 +278,8 @@ function formatFile(stubs, type) {
 const { ${type} } =
   require("devtools/client/webconsole/types");
 
-let stubPreparedMessages = new Map();
-let stubPackets = new Map();
+const stubPreparedMessages = new Map();
+const stubPackets = new Map();
 ${stubs.preparedMessages.join("\n\n")}
 
 ${stubs.packets.join("\n\n")}
