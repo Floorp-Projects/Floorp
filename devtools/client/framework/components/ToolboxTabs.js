@@ -110,11 +110,16 @@ class ToolboxTabs extends Component {
    */
   updateCachedToolTabsWidthMap() {
     let thisNode = findDOMNode(this);
+    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils);
+    // Force a reflow before calling getBoundingWithoutFlushing on each tab.
+    thisNode.clientWidth;
+
     for (let tab of thisNode.querySelectorAll(".devtools-tab")) {
       let tabId = tab.id.replace("toolbox-tab-", "");
       if (!this._cachedToolTabsWidthMap.has(tabId)) {
-        let cs = getComputedStyle(tab);
-        this._cachedToolTabsWidthMap.set(tabId, parseInt(cs.width, 10));
+        let rect = utils.getBoundsWithoutFlushing(tab);
+        this._cachedToolTabsWidthMap.set(tabId, rect.width);
       }
     }
   }
@@ -160,11 +165,12 @@ class ToolboxTabs extends Component {
         let removingToolWidth = this._cachedToolTabsWidthMap.get(removingToolId);
         sumWidth -= removingToolWidth;
       }
-      visibleTabs.push(currentToolId);
-    }
 
-    if (visibleTabs.length === 0) {
-      visibleTabs = [enabledTabs[0]];
+      // If toolbox width is narrow, toolbox display only chevron menu.
+      // i.e. All tool tabs will overflow.
+      if ((sumWidth + selectedToolWidth) <= toolboxWidth) {
+        visibleTabs.push(currentToolId);
+      }
     }
 
     let willOverflowTabs = enabledTabs.filter(id => !visibleTabs.includes(id));
@@ -177,7 +183,7 @@ class ToolboxTabs extends Component {
     window.cancelIdleCallback(this._resizeTimerId);
     this._resizeTimerId = window.requestIdleCallback(() => {
       this.updateOverflowedTabs();
-    }, { timeout: 300 });
+    }, { timeout: 100 });
   }
 
   /**

@@ -4635,7 +4635,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         // frame's FrameMetrics on our child transform ContainerLayer instead.
         // It's worth investigating whether this ASR adjustment can be done at
         // display item creation time.
-        scrollMetadataASR = GetASRForPerspective(scrollMetadataASR, item->Frame());
+        scrollMetadataASR = GetASRForPerspective(scrollMetadataASR, item->Frame()->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME));
         params.mScrollMetadataASR = scrollMetadataASR;
         itemASR = scrollMetadataASR;
       }

@@ -88,18 +88,30 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const containerProps = {className: "devtools-tabbar"};
+    let classnames = ["devtools-tabbar"];
+    let startButtons = renderToolboxButtonsStart(this.props);
+    let endButtons = renderToolboxButtonsEnd(this.props);
+
+    if (!startButtons) {
+      classnames.push("devtools-tabbar-has-start");
+    }
+    if (!endButtons) {
+      classnames.push("devtools-tabbar-has-end");
+    }
+
     return this.props.canRender
       ? (
         div(
-          containerProps,
-          renderToolboxButtonsStart(this.props),
+          {
+            className: classnames.join(" ")
+          },
+          startButtons,
           ToolboxTabs(this.props),
-          renderToolboxButtonsEnd(this.props),
+          endButtons,
           renderToolboxControls(this.props)
         )
       )
-      : div(containerProps);
+      : div({ className: classnames.join(" ") });
   }
 }
 

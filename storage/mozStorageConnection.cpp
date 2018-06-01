@@ -1166,6 +1166,10 @@ int
 Connection::stepStatement(sqlite3 *aNativeConnection, sqlite3_stmt *aStatement)
 {
   MOZ_ASSERT(aStatement);
+
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("Connection::stepStatement", OTHER,
+                                   ::sqlite3_sql(aStatement));
+
   bool checkedMainThread = false;
   TimeStamp startTime = TimeStamp::Now();
 
@@ -1278,6 +1282,8 @@ Connection::executeSql(sqlite3 *aNativeConnection, const char *aSqlString)
 {
   if (!isConnectionReadyOnThisThread())
     return SQLITE_MISUSE;
+
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("Connection::executeSql", OTHER, aSqlString);
 
   TimeStamp startTime = TimeStamp::Now();
   int srv = ::sqlite3_exec(aNativeConnection, aSqlString, nullptr, nullptr,

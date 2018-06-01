@@ -468,7 +468,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
 
 def main(args):
-    print_line(b'setup', b'run-task started\n')
+    print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
 
     # Arguments up to '--' are ours. After are for the main task
@@ -506,18 +506,13 @@ def main(args):
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
-    if IS_POSIX:
-        if running_as_root:
-            user, group, gids = get_posix_user_group(args.user, args.group)
-            uid = user.pw_uid
-            gid = group.gr_gid
-        else:
-            print('error: run-task must be run as root on POSIX platforms')
-            return 1
-    else:
-        uid = gid = gids = None
+    uid = gid = gids = None
+    if IS_POSIX and running_as_root:
+        user, group, gids = get_posix_user_group(args.user, args.group)
+        uid = user.pw_uid
+        gid = group.gr_gid
 
-    if os.path.exists("/dev/kvm"):
+    if running_as_root and os.path.exists("/dev/kvm"):
         # Ensure kvm permissions for worker, required for Android x86
         st = os.stat("/dev/kvm")
         os.chmod("/dev/kvm", st.st_mode | 0o666)

@@ -1988,18 +1988,25 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
  */
 PlacesUtils.metadata = {
   cache: new Map(),
+  jsonPrefix: "data:application/json;base64,",
 
   /**
    * Returns the value associated with a metadata key.
    *
    * @param  {String} key
    *         The metadata key to look up.
-   * @return {*}
-   *         The value associated with the key, or `null` if not set.
+   * @param  {String|Object|Array} defaultValue
+   *         Optional. The default value to return if the value is not present,
+   *         or cannot be parsed.
+   * @resolves {*}
+   *         The value associated with the key, or the defaultValue if there is one.
+   * @rejects
+   *         Rejected if the value is not found or it cannot be parsed
+   *         and there is no defaultValue.
    */
-  get(key) {
+  get(key, defaultValue) {
     return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.get",
-      db => this.getWithConnection(db, key));
+      db => this.getWithConnection(db, key, defaultValue));
   },
 
   /**
@@ -2026,7 +2033,7 @@ PlacesUtils.metadata = {
       db => this.deleteWithConnection(db, ...keys));
   },
 
-  async getWithConnection(db, key) {
+  async getWithConnection(db, key, defaultValue) {
     key = this.canonicalizeKey(key);
     if (this.cache.has(key)) {
       return this.cache.get(key);
@@ -2039,8 +2046,26 @@ PlacesUtils.metadata = {
       let row = rows[0];
       let rawValue = row.getResultByName("value");
       // Convert blobs back to `Uint8Array`s.
-      value = row.getTypeOfIndex(0) == row.VALUE_TYPE_BLOB ?
-              new Uint8Array(rawValue) : rawValue;
+      if (row.getTypeOfIndex(0) == row.VALUE_TYPE_BLOB) {
+        value = new Uint8Array(rawValue);
+      } else if (typeof rawValue == "string" &&
+                 rawValue.startsWith(this.jsonPrefix)) {
+        try {
+          value = JSON.parse(this._base64Decode(rawValue.substr(this.jsonPrefix.length)));
+        } catch (ex) {
+          if (defaultValue !== undefined) {
+            value = defaultValue;
+          } else {
+            throw ex;
+          }
+        }
+      } else {
+        value = rawValue;
+      }
+    } else if (defaultValue !== undefined) {
+      value = defaultValue;
+    } else {
+      throw new Error(`No data stored for key ${key}`);
     }
     this.cache.set(key, value);
     return value;
@@ -2051,12 +2076,18 @@ PlacesUtils.metadata = {
       await this.deleteWithConnection(db, key);
       return;
     }
+
+    let cacheValue = value;
+    if (typeof value == "object" && ChromeUtils.getClassName(value) != "Uint8Array") {
+      value = this.jsonPrefix + this._base64Encode(JSON.stringify(value));
+    }
+
     key = this.canonicalizeKey(key);
     await db.executeCached(`
       REPLACE INTO moz_meta (key, value)
       VALUES (:key, :value)`,
       { key, value });
-    this.cache.set(key, value);
+    this.cache.set(key, cacheValue);
   },
 
   async deleteWithConnection(db, ...keys) {
@@ -2078,6 +2109,17 @@ PlacesUtils.metadata = {
       throw new TypeError("Invalid metadata key: " + key);
     }
     return key.toLowerCase();
+  },
+
+  _base64Encode(str) {
+    return ChromeUtils.base64URLEncode(
+      new TextEncoder("utf-8").encode(str),
+      {pad: true});
+  },
+
+  _base64Decode(str) {
+    return new TextDecoder("utf-8").decode(
+      ChromeUtils.base64URLDecode(str, {padding: "require"}));
   },
 };
 

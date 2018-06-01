@@ -56,6 +56,9 @@ run_schema = Schema({
     # a *-backports archive, its solver might not be able to find a
     # solution that satisfies the build dependencies.
     Optional('resolver'): Any('apt-get', 'aptitude'),
+
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 

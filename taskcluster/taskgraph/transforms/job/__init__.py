@@ -82,6 +82,9 @@ job_description_schema = Schema({
         # The key to a job implementation in a peer module to this one
         'using': basestring,
 
+        # Base work directory used to set up the task.
+        Optional('workdir'): basestring,
+
         # Any remaining content is verified against that job implementation's
         # own schema.
         Extra: object,
@@ -148,6 +151,8 @@ def make_task_description(config, jobs):
         worker['implementation'] = impl
         if os:
             worker['os'] = os
+
+        job['run'].setdefault('workdir', '/builds/worker')
 
         taskdesc = copy.deepcopy(job)
 

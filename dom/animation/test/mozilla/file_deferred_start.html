@@ -16,7 +16,7 @@
 'use strict';
 
 function waitForDocLoad() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (document.readyState === 'complete') {
       resolve();
     } else {
@@ -26,12 +26,12 @@ function waitForDocLoad() {
 }
 
 function waitForPaints() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     waitForAllPaintsFlushed(resolve);
   });
 }
 
-promise_test(function(t) {
+promise_test(async t => {
   // Test that empty animations actually start.
   //
   // Normally we tie the start of animations to when their first frame of
@@ -48,32 +48,31 @@ promise_test(function(t) {
   //
   // As a result, it's better to wait until we have a more stable state before
   // continuing.
-  var div;
-  var promiseCallbackDone = false;
-  return waitForDocLoad().then(function() {
-    div = addDiv(t);
+  await waitForDocLoad();
 
-    return waitForPaints();
-  }).then(function() {
-    div.style.animation = 'empty 1000s';
-    var animation = div.getAnimations()[0];
+  const div = addDiv(t);
 
-    animation.ready.then(function() {
-      promiseCallbackDone = true;
-    }).catch(function() {
-      assert_unreached('ready promise was rejected');
-    });
+  await waitForPaints();
 
-    // We need to wait for up to three frames. This is because in some
-    // cases it can take up to two frames for the initial layout
-    // to take place. Even after that happens we don't actually resolve the
-    // ready promise until the following tick.
-    return waitForAnimationFrames(3);
-  }).then(function() {
-    assert_true(promiseCallbackDone,
-                'ready promise for an empty animation was resolved'
-                + ' within three animation frames');
+  div.style.animation = 'empty 1000s';
+  const animation = div.getAnimations()[0];
+
+  let promiseCallbackDone = false;
+  animation.ready.then(() => {
+    promiseCallbackDone = true;
+  }).catch(() => {
+    assert_unreached('ready promise was rejected');
   });
+
+  // We need to wait for up to three frames. This is because in some
+  // cases it can take up to two frames for the initial layout
+  // to take place. Even after that happens we don't actually resolve the
+  // ready promise until the following tick.
+  await waitForAnimationFrames(3);
+
+  assert_true(promiseCallbackDone,
+              'ready promise for an empty animation was resolved'
+              + ' within three animation frames');
 }, 'Animation.ready is resolved for an empty animation');
 
 // Test that compositor animations with delays get synced correctly
@@ -81,7 +80,7 @@ promise_test(function(t) {
 // NOTE: It is important that we DON'T use
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
-promise_test(function(t) {
+promise_test(async t => {
   assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
                'Test should run without the refresh driver being under'
                + ' test control');
@@ -96,24 +95,27 @@ promise_test(function(t) {
   // As with the above test, any stray paints can cause this test to produce
   // a false negative (that is, pass when it should fail). To avoid this we
   // wait for paints and only then do we commence the test.
-  return waitForPaints().then(() => {
+  await waitForPaints();
+
+  const animation =
     div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
                 { duration: 400 * MS_PER_SEC,
                   delay: -200 * MS_PER_SEC });
 
-      return waitForPaints();
-  }).then(() => {
-    const transformStr =
-      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
-    const translateX = getTranslateXFromTransform(transformStr);
+  await waitForAnimationReadyToRestyle(animation);
 
-    // If the delay has been applied we should be about half-way through
-    // the animation. However, if we applied it twice we will be at the
-    // end of the animation already so check that we are roughly half way
-    // through.
-    assert_between_inclusive(translateX, 40, 75,
-        'Animation is about half-way through on the compositor');
-  });
+  await waitForPaints();
+
+  const transformStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+  const translateX = getTranslateXFromTransform(transformStr);
+
+  // If the delay has been applied we should be about half-way through
+  // the animation. However, if we applied it twice we will be at the
+  // end of the animation already so check that we are roughly half way
+  // through.
+  assert_between_inclusive(translateX, 40, 75,
+      'Animation is about half-way through on the compositor');
 }, 'Starting an animation with a delay starts from the correct point');
 
 // Test that compositor animations with a playback rate start at the
@@ -122,7 +124,7 @@ promise_test(function(t) {
 // NOTE: As with the previous test, it is important that we DON'T use
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
-promise_test(function(t) {
+promise_test(async t => {
   assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
                'Test should run without the refresh driver being under'
                + ' test control');
@@ -135,27 +137,27 @@ promise_test(function(t) {
   const div = addDiv(t, { class: 'target' });
 
   // Wait for the document to load and painting (see notes in previous test).
-  return waitForPaints().then(() => {
-    const animation =
-      div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
-                  200 * MS_PER_SEC);
-    animation.currentTime = 100 * MS_PER_SEC;
-    animation.playbackRate = 0.1;
+  await waitForPaints();
 
-    return waitForPaints();
-  }).then(() => {
-    const transformStr =
-      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
-    const translateX = getTranslateXFromTransform(transformStr);
+  const animation =
+    div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
+                200 * MS_PER_SEC);
+  animation.currentTime = 100 * MS_PER_SEC;
+  animation.playbackRate = 0.1;
 
-    // We pass the playback rate to the compositor independently and we have
-    // tests to ensure that it is correctly applied there. However, if, when
-    // we resolve the start time of the pending animation, we fail to
-    // incorporate the playback rate, we will end up starting from the wrong
-    // point and the current time calculated on the compositor will be wrong.
-    assert_between_inclusive(translateX, 25, 75,
-        'Animation is about half-way through on the compositor');
-  });
+  await waitForPaints();
+
+  const transformStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+  const translateX = getTranslateXFromTransform(transformStr);
+
+  // We pass the playback rate to the compositor independently and we have
+  // tests to ensure that it is correctly applied there. However, if, when
+  // we resolve the start time of the pending animation, we fail to
+  // incorporate the playback rate, we will end up starting from the wrong
+  // point and the current time calculated on the compositor will be wrong.
+  assert_between_inclusive(translateX, 25, 75,
+      'Animation is about half-way through on the compositor');
 }, 'Starting an animation with a playbackRate starts from the correct point');
 
 function getTranslateXFromTransform(transformStr) {

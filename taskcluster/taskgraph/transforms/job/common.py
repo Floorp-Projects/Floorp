@@ -27,7 +27,7 @@ def docker_worker_add_workspace_cache(config, job, taskdesc, extra=None):
             taskdesc['attributes']['build_platform'],
             taskdesc['attributes']['build_type'],
         ),
-        'mount-point': "/builds/worker/workspace",
+        'mount-point': "{workdir}/workspace".format(**job['run']),
         # Don't enable the workspace cache when we can't guarantee its
         # behavior, like on Try.
         'skip-untrusted': True,
@@ -48,7 +48,7 @@ def add_artifacts(config, job, taskdesc, path):
 
 def docker_worker_add_artifacts(config, job, taskdesc):
     """ Adds an artifact directory to the task """
-    add_artifacts(config, job, taskdesc, path='/builds/worker/artifacts/')
+    add_artifacts(config, job, taskdesc, path='{workdir}/artifacts/'.format(**job['run']))
 
 
 def generic_worker_add_artifacts(config, job, taskdesc):
@@ -85,14 +85,15 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
             'name': name,
-            'mount-point': '/builds/worker/checkouts',
+            'mount-point': '{workdir}/checkouts'.format(**job['run']),
         })
 
     taskdesc['worker'].setdefault('env', {}).update({
         'GECKO_BASE_REPOSITORY': config.params['base_repository'],
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
-        'HG_STORE_PATH': '/builds/worker/checkouts/hg-store',
+        'GECKO_PATH': '{workdir}/checkouts/gecko'.format(**job['run']),
+        'HG_STORE_PATH': '{workdir}/checkouts/hg-store'.format(**job['run']),
     })
 
     if 'comm_base_repository' in config.params:
@@ -176,11 +177,11 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
     taskdesc['worker'].setdefault('caches', []).append({
         'type': 'persistent',
         'name': 'level-%s-tooltool-cache' % level,
-        'mount-point': '/builds/worker/tooltool-cache',
+        'mount-point': '{workdir}/tooltool-cache'.format(**job['run']),
     })
 
     taskdesc['worker'].setdefault('env', {}).update({
-        'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
+        'TOOLTOOL_CACHE': '{workdir}/tooltool-cache'.format(**job['run']),
     })
 
     taskdesc['worker']['relengapi-proxy'] = True
@@ -194,7 +195,7 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
         ])
 
 
-def docker_worker_use_artifacts(config, job, taskdesc, use_artifacts):
+def support_use_artifacts(config, job, taskdesc, use_artifacts):
     """Set a JSON object of artifact URLs in an environment variable.
 
     This will tell the run-task script to download the artifacts.
@@ -214,4 +215,4 @@ def docker_worker_use_artifacts(config, job, taskdesc, use_artifacts):
 
     env = taskdesc['worker'].setdefault('env', {})
     env['USE_ARTIFACT_URLS'] = {'task-reference': json.dumps(urls)}
-    env['USE_ARTIFACT_PATH'] = '/builds/worker/use-artifacts'
+    env['USE_ARTIFACT_PATH'] = '{workdir}/use-artifacts'.format(**job['run'])
