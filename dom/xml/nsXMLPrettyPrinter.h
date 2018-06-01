@@ -44,7 +44,7 @@ private:
 
     /**
      * Signals for unhooking by setting mUnhookPending if the node changed is
-     * non-anonymous content.
+     * not in the shadow root tree nor in anonymous content.
      *
      * @param aContent  content that has changed
      */
