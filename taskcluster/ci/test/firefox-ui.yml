@@ -21,10 +21,6 @@ firefox-ui-functional-local:
         extra-options:
             - "--tag"
             - "local"
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
 
 firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
@@ -34,7 +30,4 @@ firefox-ui-functional-remote:
         extra-options:
             - "--tag"
             - "remote"
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2

@@ -26,14 +26,7 @@ cppunit:
         by-test-platform:
             android.*: xlarge
             default: default
-    run-on-projects:
-        by-test-platform:
-            windows10-64-asan/opt: []  # as an exception to windows.*
-            default: built-projects
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
+    run-on-projects: built-projects
 
 gtest:
     description: "GTests run"
@@ -44,6 +37,7 @@ gtest:
         by-test-platform:
             windows.*-pgo/.*: []  # permafails on pgo
             windows.*-nightly/.*: []  # permafails on nightly too
+            windows10-64-asan/opt: []  # permafails on asan too
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     tier:
@@ -80,7 +74,3 @@ jittest:
                 windows.*: false
                 macosx.*: false
                 default: true
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
