@@ -63,6 +63,8 @@
     "contextMenus",
     "mozillaAddons",
     "<all_urls>",
-    "https://screenshots.firefox.com/"
+    "https://screenshots.firefox.com/",
+    "resource://pdf.js/",
+    "about:reader*"
   ]
 }
