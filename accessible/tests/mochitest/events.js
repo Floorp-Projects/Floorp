@@ -1264,8 +1264,7 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, checkerOfEventSeq);
 
   this.invoke = function synthFocus_invoke() {
-    if (this.DOMNode instanceof Ci.nsIDOMNSEditableElement &&
-        this.DOMNode.editor ||
+    if (this.DOMNode.editor ||
         this.DOMNode.localName == "textbox") {
       this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
     }

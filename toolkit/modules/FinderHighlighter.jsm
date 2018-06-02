@@ -1397,7 +1397,7 @@ FinderHighlighter.prototype = {
   /**
    * For a given node returns its editable parent or null if there is none.
    * It's enough to check if node is a text node and its parent's parent is
-   * instance of nsIDOMNSEditableElement.
+   * an input or textarea.
    *
    * @param node the node we want to check
    * @returns the first node in the parent chain that is editable,
@@ -1405,7 +1405,8 @@ FinderHighlighter.prototype = {
    */
   _getEditableNode(node) {
     if (node.nodeType === node.TEXT_NODE && node.parentNode && node.parentNode.parentNode &&
-        node.parentNode.parentNode instanceof Ci.nsIDOMNSEditableElement) {
+        (ChromeUtils.getClassName(node.parentNode.parentNode) === "HTMLInputElement" ||
+         ChromeUtils.getClassName(node.parentNode.parentNode) === "HTMLTextAreaElement")) {
       return node.parentNode.parentNode;
     }
     return null;

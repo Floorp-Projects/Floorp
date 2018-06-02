@@ -29,10 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
 
       function doTest() {
         var t1 = $("t1");
-        var editor = null;
+        var editor = SpecialPowers.wrap(t1).editor;
 
-        if (t1 instanceof SpecialPowers.Ci.nsIDOMNSEditableElement)
-          editor = SpecialPowers.wrap(t1).editor;
         ok(editor, "able to get editor for the element");
         t1.focus();
         t1.select();
