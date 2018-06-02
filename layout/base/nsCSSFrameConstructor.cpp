@@ -4469,19 +4469,25 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
     return nullptr;
   }
 
-  // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
-  // return null (except for scrollcorners which have to be XUL becuase their
-  // parent reflows them with BoxReflow() which means they have to get
-  // actual-XUL frames).
-  if (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
-      aElement && !aElement->IsXULElement(nsGkAtoms::scrollcorner) &&
-      (aDisplay->mDisplay == StyleDisplay::MozBox ||
-       aDisplay->mDisplay == StyleDisplay::MozInlineBox)) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(aDisplay->mDisplay <= StyleDisplay::MozPopup,
              "Someone added a new display value?");
+
+  if (aDisplay->mDisplay == StyleDisplay::MozBox ||
+      aDisplay->mDisplay == StyleDisplay::MozInlineBox) {
+    if (!aElement->IsInNativeAnonymousSubtree() &&
+        aElement->OwnerDoc()->IsContentDocument()) {
+      aElement->OwnerDoc()->WarnOnceAbout(nsIDocument::eMozBoxOrInlineBoxDisplay);
+    }
+
+    // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
+    // return null (except for scrollcorners which have to be XUL becuase their
+    // parent reflows them with BoxReflow() which means they have to get
+    // actual-XUL frames).
+    if (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
+        !aElement->IsXULElement(nsGkAtoms::scrollcorner)) {
+      return nullptr;
+    }
+  }
 
   const FrameConstructionDataByDisplay& data =
     sXULDisplayData[size_t(aDisplay->mDisplay) - size_t(StyleDisplay::MozBox)];
