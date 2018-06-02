@@ -485,7 +485,7 @@ var BrowserUtils = {
     let linkText;
 
     // try getting a selected text in text input.
-    if (!selectionStr && focusedElement instanceof Ci.nsIDOMNSEditableElement) {
+    if (!selectionStr && focusedElement) {
       // Don't get the selection for password fields. See bug 565717.
       if (ChromeUtils.getClassName(focusedElement) === "HTMLTextAreaElement" ||
           (ChromeUtils.getClassName(focusedElement) === "HTMLInputElement" &&

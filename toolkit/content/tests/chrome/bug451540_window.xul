@@ -115,7 +115,9 @@
       let isEditableElement = await ContentTask.spawn(gBrowser, elementId, async function(elementId) {
         let doc = content.document;
         let element = doc.getElementById(elementId);
-        return element instanceof Ci.nsIDOMNSEditableElement;
+        let elementClass = ChromeUtils.getClassName(element);
+        return elementClass === "HTMLInputElement" ||
+               elementClass === "HTMLTextAreaElement";
       });
       if (!isEditableElement) {
         return;
