@@ -22,7 +22,6 @@
 #include "nsQueryObject.h"
 
 #include "nsITextControlElement.h"
-#include "nsIDOMNSEditableElement.h"
 #include "nsIRadioVisitor.h"
 #include "InputType.h"
 
@@ -1119,7 +1118,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLInputElement,
                                              nsITextControlElement,
                                              imgINotificationObserver,
                                              nsIImageLoadingContent,
-                                             nsIDOMNSEditableElement,
                                              nsIConstraintValidation)
 
 // nsINode
@@ -2342,37 +2340,30 @@ HTMLInputElement::GetOwnerNumberControl()
 }
 
 void
-HTMLInputElement::SetUserInput(const nsAString& aInput,
+HTMLInputElement::SetUserInput(const nsAString& aValue,
                                nsIPrincipal& aSubjectPrincipal) {
   if (mType == NS_FORM_INPUT_FILE &&
       !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return;
   }
 
-  SetUserInput(aInput);
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetUserInput(const nsAString& aValue)
-{
   if (mType == NS_FORM_INPUT_FILE)
   {
     Sequence<nsString> list;
     if (!list.AppendElement(aValue, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
 
-    ErrorResult rv;
-    MozSetFileNameArray(list, rv);
-    return rv.StealNSResult();
-  } else {
-    nsresult rv =
-      SetValueInternal(aValue,
-        nsTextEditorState::eSetValue_BySetUserInput |
-        nsTextEditorState::eSetValue_Notify|
-        nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MozSetFileNameArray(list, IgnoreErrors());
+    return;
   }
+
+  nsresult rv =
+    SetValueInternal(aValue,
+      nsTextEditorState::eSetValue_BySetUserInput |
+      nsTextEditorState::eSetValue_Notify|
+      nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<Element*>(this),
@@ -2384,8 +2375,6 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
   if (!ShouldBlur(this)) {
     FireChangeEventIfNeeded();
   }
-
-  return NS_OK;
 }
 
 nsIEditor*
