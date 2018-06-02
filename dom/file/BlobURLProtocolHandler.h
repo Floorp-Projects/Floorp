@@ -16,7 +16,6 @@
 #include "nsWeakReference.h"
 
 #define BLOBURI_SCHEME "blob"
-#define RTSPURI_SCHEME "rtsp"
 
 class nsIPrincipal;
 
@@ -83,12 +82,6 @@ private:
 
 bool IsBlobURI(nsIURI* aUri);
 bool IsMediaSourceURI(nsIURI* aUri);
-
-inline bool IsRtspURI(nsIURI* aUri)
-{
-  bool isRtsp;
-  return NS_SUCCEEDED(aUri->SchemeIs(RTSPURI_SCHEME, &isRtsp)) && isRtsp;
-}
 
 } // namespace dom
 } // namespace mozilla
