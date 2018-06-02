@@ -16,11 +16,10 @@ from copy import deepcopy
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.config import parse_config_file
-from mozharness.base.parallel import ChunkingMixin
 
 
 # LocalesMixin {{{1
-class LocalesMixin(ChunkingMixin):
+class LocalesMixin(object):
     def __init__(self, **kwargs):
         """ Mixins generally don't have an __init__.
         This breaks super().__init__() for children.
@@ -39,13 +38,11 @@ class LocalesMixin(ChunkingMixin):
         additional_locales = c.get("additional_locales", [])
         # List of locales can be set by using different methods in the
         # following order:
-        # 1. "locales" buildbot property: a string of locale:revision separated
+        # 1. "MOZ_LOCALES" env variable: a string of locale:revision separated
         # by space
-        # 2. "MOZ_LOCALES" env variable: a string of locale:revision separated
-        # by space
-        # 3. self.config["locales"] which can be either coming from the config
+        # 2. self.config["locales"] which can be either coming from the config
         # or from --locale command line argument
-        # 4. using self.config["locales_file"] l10n changesets file
+        # 3. using self.config["locales_file"] l10n changesets file
         locales = None
 
         # Environment variable
@@ -92,13 +89,6 @@ class LocalesMixin(ChunkingMixin):
 
         if not locales:
             return None
-        if 'total_locale_chunks' and 'this_locale_chunk' in c:
-            self.debug("Pre-chunking locale list: %s" % str(locales))
-            locales = self.query_chunked_list(locales,
-                                              c['this_locale_chunk'],
-                                              c['total_locale_chunks'],
-                                              sort=True)
-            self.debug("Post-chunking locale list: %s" % locales)
         self.locales = locales
         return self.locales
 
