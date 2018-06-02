@@ -7,22 +7,19 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
-DIRS += ['ipc']
+DIRS += ['ipc', 'uri' ]
 
 EXPORTS.mozilla.dom += [
     'BaseBlobImpl.h',
     'Blob.h',
     'BlobImpl.h',
     'BlobSet.h',
-    'BlobURL.h',
-    'BlobURLProtocolHandler.h',
     'File.h',
     'FileBlobImpl.h',
     'FileCreatorHelper.h',
     'FileList.h',
     'FileReader.h',
     'FileReaderSync.h',
-    'FontTableURIProtocolHandler.h',
     'MemoryBlobImpl.h',
     'MultipartBlobImpl.h',
     'MutableBlobStorage.h',
@@ -35,8 +32,6 @@ UNIFIED_SOURCES += [
     'Blob.cpp',
     'BlobImpl.cpp',
     'BlobSet.cpp',
-    'BlobURL.cpp',
-    'BlobURLProtocolHandler.cpp',
     'EmptyBlobImpl.cpp',
     'File.cpp',
     'FileBlobImpl.cpp',
@@ -44,7 +39,6 @@ UNIFIED_SOURCES += [
     'FileList.cpp',
     'FileReader.cpp',
     'FileReaderSync.cpp',
-    'FontTableURIProtocolHandler.cpp',
     'MemoryBlobImpl.cpp',
     'MultipartBlobImpl.cpp',
     'MutableBlobStorage.cpp',
