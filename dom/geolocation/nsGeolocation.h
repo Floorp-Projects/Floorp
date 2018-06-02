@@ -23,12 +23,10 @@
 #include "nsGeoPosition.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMGeoPosition.h"
-#include "nsIDOMGeoPositionError.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/GeolocationBinding.h"
-#include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/CallbackObject.h"
 
 #include "nsIGeolocationProvider.h"
@@ -235,32 +233,6 @@ private:
 
   // Array containing already cleared watch IDs
   nsTArray<int32_t> mClearedWatchIDs;
-};
-
-class PositionError final : public nsIDOMGeoPositionError,
-                            public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PositionError)
-
-  NS_DECL_NSIDOMGEOPOSITIONERROR
-
-  PositionError(Geolocation* aParent, int16_t aCode);
-
-  Geolocation* GetParentObject() const;
-
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  int16_t Code() const {
-    return mCode;
-  }
-
-  void NotifyCallback(const GeoPositionErrorCallback& callback);
-private:
-  ~PositionError();
-  int16_t mCode;
-  RefPtr<Geolocation> mParent;
 };
 
 } // namespace dom
