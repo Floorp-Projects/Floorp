@@ -5,7 +5,6 @@
 package org.mozilla.focus.fragment;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
@@ -1330,7 +1329,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         ViewUtils.hideKeyboard(findInPageQuery);
     }
 
-    @SuppressLint("SetTextI18n")
     private void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
         final Context context = getContext();
         if (context == null) {
@@ -1338,6 +1336,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         if (numberOfMatches > 0) {
+            // We don't want the presentation of the activeMatchOrdinal to be zero indexed. So let's
+            // increment it by one.
+            activeMatchOrdinal++;
             final String visibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
             final String accessibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
 

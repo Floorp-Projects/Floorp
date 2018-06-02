@@ -16,6 +16,8 @@
         android:ems="10"
         android:hint="@string/find_in_page_input"
         android:lines="1"
+        android:maxLines="1"
+        android:inputType="textNoSuggestions"
         android:paddingBottom="17dp"
         android:paddingTop="17dp"
         android:textCursorDrawable="@drawable/cursor"
