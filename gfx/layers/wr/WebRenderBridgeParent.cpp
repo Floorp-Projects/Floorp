@@ -1615,6 +1615,14 @@ WebRenderBridgeParent::ClearResources()
   if (mWidget) {
     mCompositorScheduler->Destroy();
   }
+
+  // Before tearing down mApi we should make sure the above transaction has been
+  // flushed back to the render backend thread. Otherwise the cleanup messages
+  // that the WebRenderAPI destructor triggers can race ahead of the transaction
+  // (because it goes directly to the RB thread, bypassing the scene builder
+  // thread) and clear caches etc. that are still in use.
+  FlushSceneBuilds();
+
   mAnimStorage = nullptr;
   mCompositorScheduler = nullptr;
   mAsyncImageManager = nullptr;

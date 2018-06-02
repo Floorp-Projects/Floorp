@@ -497,16 +497,22 @@ CompositorBridgeParent::StopAndClearResources()
   }
 
   if (mWrBridge) {
+    // Ensure we are not holding the sIndirectLayerTreesLock when destroying
+    // the WebRenderBridgeParent instances because it may block on WR.
+    std::vector<RefPtr<WebRenderBridgeParent>> indirectBridgeParents;
     { // scope lock
       MonitorAutoLock lock(*sIndirectLayerTreesLock);
-      ForEachIndirectLayerTree([] (LayerTreeState* lts, LayersId) -> void {
+      ForEachIndirectLayerTree([&] (LayerTreeState* lts, LayersId) -> void {
         if (lts->mWrBridge) {
-          lts->mWrBridge->Destroy();
-          lts->mWrBridge = nullptr;
+          indirectBridgeParents.emplace_back(lts->mWrBridge.forget());
         }
         lts->mParent = nullptr;
       });
     }
+    for (const RefPtr<WebRenderBridgeParent>& bridge : indirectBridgeParents) {
+      bridge->Destroy();
+    }
+    indirectBridgeParents.clear();
 
     // Ensure we are not holding the sIndirectLayerTreesLock here because we
     // are going to block on WR threads in order to shut it down properly.
