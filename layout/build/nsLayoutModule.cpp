@@ -59,13 +59,13 @@
 // view stuff
 #include "nsContentCreatorFunctions.h"
 
-#include "nsHostObjectURI.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIControllerContext.h"
 #include "nsZipArchive.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/LocalStorageManager.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -196,8 +196,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 
 // Factory Constructor
-typedef nsHostObjectURI::Mutator nsHostObjectURIMutator;
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURIMutator)
+typedef mozilla::dom::BlobURL::Mutator BlobURLMutator;
+NS_GENERIC_FACTORY_CONSTRUCTOR(BlobURLMutator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SessionStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
@@ -787,8 +787,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
   { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
   { &kNS_STYLESHEETSERVICE_CID, false, nullptr, nsStyleSheetServiceConstructor },
-  { &kNS_HOSTOBJECTURI_CID, false, nullptr, nsHostObjectURIMutatorConstructor }, // do_CreateInstance returns mutator
-  { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, nsHostObjectURIMutatorConstructor },
+  { &kNS_HOSTOBJECTURI_CID, false, nullptr, BlobURLMutatorConstructor }, // do_CreateInstance returns mutator
+  { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, BlobURLMutatorConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
   { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
