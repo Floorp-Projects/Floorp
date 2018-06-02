@@ -164,7 +164,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
         buildscript_kwargs = {
             'all_actions': [
                 "clobber",
-                "pull",
                 "clone-locales",
                 "list-locales",
                 "setup",
@@ -491,39 +490,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
         self.set_property("locales", json.dumps(self.locales_property))
 
     # Actions {{{2
-    def pull(self):
-        """pulls source code"""
-        config = self.config
-        dirs = self.query_abs_dirs()
-        repos = []
-        # replace dictionary for repos
-        # we need to interpolate some values:
-        # branch, branch_repo
-        # and user_repo_override if exists
-        replace_dict = {}
-        if config.get("user_repo_override"):
-            replace_dict['user_repo_override'] = config['user_repo_override']
-        # this is OK so early because we get it from automation, or
-        # the command line for local dev
-        replace_dict['revision'] = self._query_revision()
-
-        for repository in config['repos']:
-            current_repo = {}
-            for key, value in repository.iteritems():
-                try:
-                    current_repo[key] = value % replace_dict
-                except TypeError:
-                    # pass through non-interpolables, like booleans
-                    current_repo[key] = value
-                except KeyError:
-                    self.error('not all the values in "{0}" can be replaced. Check your '
-                               'configuration'.format(value))
-                    raise
-            repos.append(current_repo)
-        self.info("repositories: %s" % repos)
-        self.vcs_checkout_repos(repos, parent_dir=dirs['abs_work_dir'],
-                                tag_override=config.get('tag_override'))
-
     def clone_locales(self):
         self.pull_locale_source()
 
