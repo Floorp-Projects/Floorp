@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
 add_task(async function() {
   await pushPref("devtools.hud.loglimit", 140);
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   let onMessage = waitForMessage(hud, "test message [149]");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {

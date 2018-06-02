@@ -23,7 +23,7 @@ async function testSelectionWhenMovingBetweenBoxes(hud) {
   const jsterm = hud.jsterm;
 
   // Fill the console with some output.
-  jsterm.clearOutput();
+  hud.ui.clearOutput();
   await jsterm.execute("1 + 2");
   await waitFor(() => findMessage(hud, "3"));
   await jsterm.execute("3 + 4");

@@ -73,8 +73,8 @@ exports.items = [
         return null;
       }
 
-      const onceMessagesCleared = panel.hud.jsterm.once("messages-cleared");
-      panel.hud.jsterm.clearOutput();
+      const onceMessagesCleared = panel.hud.once("messages-cleared");
+      panel.hud.ui.clearOutput();
       return onceMessagesCleared;
     }
   },
