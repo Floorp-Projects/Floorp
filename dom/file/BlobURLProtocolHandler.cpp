@@ -599,7 +599,7 @@ BlobURLProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
 {
   Init();
 
-  nsresult rv = GenerateURIStringForBlobURL(aPrincipal, aUri);
+  nsresult rv = GenerateURIString(aPrincipal, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AddDataEntryInternal(aUri, aBlobImpl, aPrincipal);
@@ -616,7 +616,7 @@ BlobURLProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
 {
   Init();
 
-  nsresult rv = GenerateURIStringForBlobURL(aPrincipal, aUri);
+  nsresult rv = GenerateURIString(aPrincipal, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AddDataEntryInternal(aUri, aMediaSource, aPrincipal);
@@ -709,8 +709,7 @@ BlobURLProtocolHandler::HasDataEntry(const nsACString& aUri)
 }
 
 /* static */ nsresult
-BlobURLProtocolHandler::GenerateURIString(const nsACString &aScheme,
-                                          nsIPrincipal* aPrincipal,
+BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
                                           nsACString& aUri)
 {
   nsresult rv;
@@ -725,7 +724,7 @@ BlobURLProtocolHandler::GenerateURIString(const nsACString &aScheme,
   char chars[NSID_LENGTH];
   id.ToProvidedString(chars);
 
-  aUri = aScheme;
+  aUri.AssignLiteral(BLOBURI_SCHEME);
   aUri.Append(':');
 
   if (aPrincipal) {
@@ -742,14 +741,6 @@ BlobURLProtocolHandler::GenerateURIString(const nsACString &aScheme,
   aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
 
   return NS_OK;
-}
-
-/* static */ nsresult
-BlobURLProtocolHandler::GenerateURIStringForBlobURL(nsIPrincipal* aPrincipal,
-                                                    nsACString& aUri)
-{
-  return
-    GenerateURIString(NS_LITERAL_CSTRING(BLOBURI_SCHEME), aPrincipal, aUri);
 }
 
 /* static */ nsIPrincipal*
