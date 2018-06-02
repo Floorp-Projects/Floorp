@@ -511,10 +511,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 #endif
 
-    // How many compartments there are across all zones. This number includes
-    // off thread context compartments, so it isn't necessarily equal to the
-    // number of compartments visited by CompartmentsIter.
-    js::MainThreadData<size_t> numCompartments;
+    // How many realms there are across all zones. This number includes
+    // off-thread context realms, so it isn't necessarily equal to the
+    // number of realms visited by RealmsIter.
+    js::MainThreadData<size_t> numRealms;
 
     /* Locale-specific callbacks for string conversion. */
     js::MainThreadData<const JSLocaleCallbacks*> localeCallbacks;
