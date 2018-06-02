@@ -88,15 +88,17 @@ const SearchAutocompleteProviderInternal = {
   },
 
   _addEngine(engine) {
+    let domain = engine.getResultDomain();
+
     if (engine.alias) {
       this.aliasMatches.push({
         alias: engine.alias,
         engineName: engine.name,
         iconUrl: engine.iconURI ? engine.iconURI.spec : null,
+        resultDomain: domain,
       });
     }
 
-    let domain = engine.getResultDomain();
     if (domain) {
       this.priorityMatches.push({
         token: domain,
@@ -251,6 +253,8 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    *           alias: The matched search engine's alias.
    *           engineName: The display name of the search engine.
    *           iconUrl: Icon associated to the match, or null if not available.
+   *           resultDomain: The domain name for the search engine's results;
+   *                         see nsISearchEngine::getResultDomain.
    *         }
    */
   async findMatchByAlias(searchToken) {
