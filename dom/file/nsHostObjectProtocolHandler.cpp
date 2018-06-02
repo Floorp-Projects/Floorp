@@ -1040,24 +1040,6 @@ NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob)
   return NS_OK;
 }
 
-nsresult
-NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
-{
-  RefPtr<BlobImpl> blobImpl;
-  ErrorResult rv;
-  rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  blobImpl->CreateInputStream(aStream, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
                                    const char *aCharset,
