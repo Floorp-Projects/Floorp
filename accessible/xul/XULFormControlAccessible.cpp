@@ -16,7 +16,6 @@
 #include "TreeWalker.h"
 #include "XULMenuAccessible.h"
 
-#include "nsIDOMNSEditableElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
