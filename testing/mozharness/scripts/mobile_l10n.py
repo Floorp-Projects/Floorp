@@ -32,15 +32,13 @@ from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.secrets import SecretsMixin
-from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
 
 
 # MobileSingleLocale {{{1
 class MobileSingleLocale(LocalesMixin,
                          TransferMixin, TooltoolMixin, AutomationMixin,
-                         MercurialScript, BalrogMixin,
-                         VirtualenvMixin, SecretsMixin):
+                         MercurialScript, VirtualenvMixin, SecretsMixin):
     config_options = [[
         ['--locale', ],
         {"action": "extend",
@@ -114,7 +112,6 @@ class MobileSingleLocale(LocalesMixin,
                 "validate-repacks-signed",
                 "upload-repacks",
                 "create-virtualenv",
-                "submit-to-balrog",
                 "summary",
             ],
             'config': {
@@ -515,62 +512,6 @@ class MobileSingleLocale(LocalesMixin,
     def query_is_release_or_beta(self):
 
         return bool(self.config.get("is_release_or_beta"))
-
-    def submit_to_balrog(self):
-        if not self.query_is_nightly() and not self.query_is_release_or_beta():
-            self.info("Not a nightly or release build, skipping balrog submission.")
-            return
-
-        self.checkout_tools()
-
-        locales = self.query_locales()
-        if not self.config.get('taskcluster_nightly'):
-            balrogReady = True
-            for locale in locales:
-                apk_url = self.query_upload_url(locale)
-                if not apk_url:
-                    self.add_failure(locale, message="Failed to detect %s url in make upload!" %
-                                     (locale))
-                    balrogReady = False
-                    continue
-            if not balrogReady:
-                return self.fatal(message="Not all repacks successful, abort without "
-                                          "submitting to balrog.")
-
-        env = self.query_upload_env()
-        for locale in locales:
-            apkfile = self.query_apkfile_path(locale)
-            if self.config.get('taskcluster_nightly'):
-                # Taskcluster needs stage_platform
-                self.set_property("stage_platform", self.config.get("stage_platform"))
-                self.set_property("branch", self.config.get("branch"))
-            else:
-                apk_url = self.query_upload_url(locale)
-                self.set_property("completeMarUrl", apk_url)
-
-                # The Balrog submitter translates this platform into a build target
-                # via https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23  # noqa
-                self.set_property(
-                    "platform",
-                    self.config["properties"]["platform"])
-                # TODO: Is there a better way to get this?
-
-            # Set other necessary properties for Balrog submission. None need to
-            # be passed back to automation, so we won't write them to the properties
-            # files.
-            self.set_property("locale", locale)
-
-            self.set_property("appVersion", self.query_version())
-
-            self.set_property("appName", "Fennec")
-            self.set_property("completeMarSize", self.query_filesize(apkfile))
-            self.set_property("completeMarHash", self.query_sha512sum(apkfile))
-            self.set_property("isOSUpdate", False)
-            self.set_property("buildid", self.query_buildid())
-
-            props_path = os.path.join(env["UPLOAD_PATH"], locale,
-                                      'balrog_props.json')
-            self.generate_balrog_props(props_path)
 
 
 # main {{{1
