@@ -11,8 +11,8 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
-  jsterm.clearOutput();
+  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
+  ui.clearOutput();
 
   const { inputNode } = jsterm;
   const getInputHeight = () => inputNode.clientHeight;
