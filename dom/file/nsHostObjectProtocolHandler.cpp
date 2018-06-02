@@ -891,12 +891,12 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 {
   *result = nullptr;
 
-  RefPtr<BlobImpl> blobImpl;
-  NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl), true);
-  if (!blobImpl) {
+  DataInfo* info = GetDataInfoFromURI(uri, true /*aAlsoIfRevoked */);
+  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
+  RefPtr<BlobImpl> blobImpl = info->mBlobImpl;
   nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
   if (!uriPrinc) {
     return NS_ERROR_DOM_BAD_URI;
@@ -910,11 +910,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return NS_ERROR_DOM_BAD_URI;
   }
 
-#ifdef DEBUG
-  // Info can be null, in case this blob URL has been revoked already.
-  DataInfo* info = GetDataInfoFromURI(uri);
-  MOZ_ASSERT_IF(info, info->mPrincipal == principal);
-#endif
+  MOZ_ASSERT(info->mPrincipal == principal);
 
   // We want to be sure that we stop the creation of the channel if the blob URL
   // is copy-and-pasted on a different context (ex. private browsing or
@@ -1011,11 +1007,11 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
 }
 
 nsresult
-NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob, bool aAlsoIfRevoked)
+NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
 {
   *aBlob = nullptr;
 
-  DataInfo* info = GetDataInfoFromURI(aURI, aAlsoIfRevoked);
+  DataInfo* info = GetDataInfoFromURI(aURI, false /* aAlsoIfRevoked */);
   if (!info || info->mObjectType != DataInfo::eBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
