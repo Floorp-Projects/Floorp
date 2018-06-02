@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PositionError.h"
+#include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -22,7 +23,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
-#include "nsIDOMGeoPositionError.h"
 #include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
@@ -270,7 +270,7 @@ void
 nsGeolocationRequest::Notify()
 {
   SetTimeoutTimer();
-  NotifyErrorAndShutdown(nsIDOMGeoPositionError::TIMEOUT);
+  NotifyErrorAndShutdown(PositionErrorBinding::TIMEOUT);
 }
 
 void
@@ -346,7 +346,7 @@ nsGeolocationRequest::Cancel()
     return NS_OK;
   }
 
-  NotifyError(nsIDOMGeoPositionError::PERMISSION_DENIED);
+  NotifyError(PositionErrorBinding::PERMISSION_DENIED);
   return NS_OK;
 }
 
@@ -414,7 +414,7 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
     // if it is not a watch request and timeout is 0,
     // invoke the errorCallback (if present) with TIMEOUT code
     if (mOptions && mOptions->mTimeout == 0 && !mIsWatchPositionRequest) {
-      NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+      NotifyError(PositionErrorBinding::TIMEOUT);
       return NS_OK;
     }
 
@@ -425,7 +425,7 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
 
   if (NS_FAILED(rv)) {
     // Location provider error
-    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    NotifyError(PositionErrorBinding::POSITION_UNAVAILABLE);
     return NS_OK;
   }
 
@@ -504,7 +504,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   }
 
   if (!wrapped) {
-    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    NotifyError(PositionErrorBinding::POSITION_UNAVAILABLE);
     return;
   }
 
@@ -789,7 +789,7 @@ nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal)
   if (NS_FAILED(rv = mProvider->Startup()) ||
       NS_FAILED(rv = mProvider->Watch(this))) {
 
-    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    NotifyError(PositionErrorBinding::POSITION_UNAVAILABLE);
     return rv;
   }
 

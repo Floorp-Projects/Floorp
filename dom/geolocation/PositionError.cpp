@@ -11,15 +11,10 @@
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PositionError)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionError)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionError)
-NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PositionError, mParent)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PositionError)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PositionError)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PositionError, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PositionError, Release)
 
 PositionError::PositionError(Geolocation* aParent, int16_t aCode)
   : mCode(aCode)
@@ -29,33 +24,23 @@ PositionError::PositionError(Geolocation* aParent, int16_t aCode)
 
 PositionError::~PositionError() = default;
 
-
-NS_IMETHODIMP
-PositionError::GetCode(int16_t *aCode)
-{
-  NS_ENSURE_ARG_POINTER(aCode);
-  *aCode = Code();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PositionError::GetMessage(nsAString& aMessage)
+void
+PositionError::GetMessage(nsAString& aMessage) const
 {
   switch (mCode)
   {
-    case nsIDOMGeoPositionError::PERMISSION_DENIED:
+    case PositionErrorBinding::PERMISSION_DENIED:
       aMessage = NS_LITERAL_STRING("User denied geolocation prompt");
       break;
-    case nsIDOMGeoPositionError::POSITION_UNAVAILABLE:
+    case PositionErrorBinding::POSITION_UNAVAILABLE:
       aMessage = NS_LITERAL_STRING("Unknown error acquiring position");
       break;
-    case nsIDOMGeoPositionError::TIMEOUT:
+    case PositionErrorBinding::TIMEOUT:
       aMessage = NS_LITERAL_STRING("Position acquisition timed out");
       break;
     default:
       break;
   }
-  return NS_OK;
 }
 
 nsWrapperCache*

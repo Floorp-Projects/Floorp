@@ -4,7 +4,9 @@ function successCallback() {
 }
 
 function errorCallback(err) {
-  Assert.equal(Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE, err.code);
+  // PositionError has no interface object, so we can't get constants off that.
+  Assert.equal(err.POSITION_UNAVAILABLE, err.code);
+  Assert.equal(2, err.code);
   do_test_finished();
 }
 

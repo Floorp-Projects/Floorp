@@ -12,7 +12,6 @@ XPIDL_SOURCES += [
     'nsIDOMGeoPosition.idl',
     'nsIDOMGeoPositionCallback.idl',
     'nsIDOMGeoPositionCoords.idl',
-    'nsIDOMGeoPositionError.idl',
     'nsIDOMGeoPositionErrorCallback.idl',
 ]
 
