@@ -12,8 +12,13 @@ EXPORTS += [
     'nsGeoPositionIPCSerialiser.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'PositionError.h',
+]
+
 SOURCES += [
     'nsGeolocation.cpp',
+    'PositionError.cpp',
 ]
 
 UNIFIED_SOURCES += [
