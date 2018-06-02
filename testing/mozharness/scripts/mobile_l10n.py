@@ -28,7 +28,6 @@ from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
 from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.automation import AutomationMixin
-from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
@@ -38,7 +37,7 @@ from mozharness.base.python import VirtualenvMixin
 
 
 # MobileSingleLocale {{{1
-class MobileSingleLocale(LocalesMixin, ReleaseMixin,
+class MobileSingleLocale(LocalesMixin,
                          TransferMixin, TooltoolMixin, AutomationMixin,
                          MercurialScript, BalrogMixin,
                          VirtualenvMixin, SecretsMixin):
@@ -62,13 +61,6 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
          "dest": "tag_override",
          "type": "string",
          "help": "Override the tags set for all repos"
-         }
-    ], [
-        ['--release-config-file', ],
-        {"action": "store",
-         "dest": "release_config_file",
-         "type": "string",
-         "help": "Specify the release config file to use"
          }
     ], [
         ['--key-alias', ],
@@ -154,19 +146,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         if self.repack_env:
             return self.repack_env
         c = self.config
-        replace_dict = {}
-        if c.get('release_config_file'):
-            rc = self.query_release_config()
-            replace_dict = {
-                'version': rc['version'],
-                'buildnum': rc['buildnum']
-            }
-        repack_env = self.query_env(partial_env=c.get("repack_env"),
-                                    replace_dict=replace_dict)
-        if c.get('base_en_us_binary_url') and c.get('release_config_file'):
-            rc = self.query_release_config()
-            repack_env['EN_US_BINARY_URL'] = c['base_en_us_binary_url'] % replace_dict
-
+        repack_env = self.query_env(partial_env=c.get("repack_env"))
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             if self.query_is_nightly():
                 # Nightly promotion needs to set update_channel but not do all
@@ -298,12 +278,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         """
         if self.version:
             return self.version
-        c = self.config
-        if c.get('release_config_file'):
-            rc = self.query_release_config()
-            self.version = rc['version']
-        else:
-            self.version = self._query_make_variable("MOZ_APP_VERSION")
+        self.version = self._query_make_variable("MOZ_APP_VERSION")
         return self.version
 
     def query_upload_url(self, locale):
