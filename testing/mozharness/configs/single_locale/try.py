@@ -16,21 +16,6 @@ config = {
         "https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s"
     ),
 
-    # repositories
-    "repos": [{
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools",
-    }, {
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/try",
-        "revision": "%(revision)s",
-        "dest": "try",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
-        "clone_by_revision": True,
-        "clone_with_purge": True,
-    }],
     # purge options
     'is_automation': True,
 }

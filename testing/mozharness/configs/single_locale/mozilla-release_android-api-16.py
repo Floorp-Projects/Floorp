@@ -23,15 +23,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "repos": [{
-        "repo": "https://hg.mozilla.org/releases/mozilla-release",
-        "branch": "default",
-        "dest": MOZILLA_DIR,
-    }, {
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools"
-    }],
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': HG_SHARE_BASE_DIR,
