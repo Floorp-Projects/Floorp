@@ -69,30 +69,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
                           VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
-        ['--balrog-config', ],
-        {"action": "extend",
-         "dest": "config_files",
-         "type": "string",
-         "help": "Specify the balrog configuration file"}
-    ], [
-        ['--branch-config', ],
-        {"action": "extend",
-         "dest": "config_files",
-         "type": "string",
-         "help": "Specify the branch configuration file"}
-    ], [
-        ['--environment-config', ],
-        {"action": "extend",
-         "dest": "config_files",
-         "type": "string",
-         "help": "Specify the environment (staging, production, ...) configuration file"}
-    ], [
-        ['--platform-config', ],
-        {"action": "extend",
-         "dest": "config_files",
-         "type": "string",
-         "help": "Specify the platform configuration file"}
-    ], [
         ['--locale', ],
         {"action": "extend",
          "dest": "locales",
