@@ -760,6 +760,9 @@ var ActionBarHandler = {
    * Tests whether a given element is editable.
    */
   _isElementEditable: function(element) {
+    if (!element) {
+      return false;
+    }
     let elementClass = ChromeUtils.getClassName(element);
     return elementClass === "HTMLInputElement" ||
            elementClass === "HTMLTextAreaElement";
