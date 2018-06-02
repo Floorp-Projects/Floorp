@@ -51,6 +51,7 @@
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
+#include "mozilla/dom/PositionError.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
@@ -123,7 +124,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDOMGeoGeolocation.h"
-#include "nsIDOMGeoPositionError.h"
 #include "nsIDragService.h"
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
@@ -3895,13 +3895,9 @@ ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 }
 
 NS_IMETHODIMP
-ContentParent::HandleEvent(nsIDOMGeoPositionError* postionError)
+ContentParent::HandleEvent(PositionError* positionError)
 {
-  int16_t errorCode;
-  nsresult rv;
-  rv = postionError->GetCode(&errorCode);
-  NS_ENSURE_SUCCESS(rv,rv);
-  Unused << SendGeolocationError(errorCode);
+  Unused << SendGeolocationError(positionError->Code());
   return NS_OK;
 }
 

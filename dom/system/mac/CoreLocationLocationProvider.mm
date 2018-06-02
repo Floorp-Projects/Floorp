@@ -9,11 +9,11 @@
 #include "nsGeoPosition.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDOMGeoPositionError.h"
 #include "CoreLocationLocationProvider.h"
 #include "nsCocoaFeatures.h"
 #include "prtime.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/PositionErrorBinding.h"
 #include "MLSFallback.h"
 
 #include <CoreLocation/CLError.h>
@@ -67,7 +67,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
   console->LogStringMessage(NS_ConvertUTF8toUTF16([message UTF8String]).get());
 
   if ([aError code] == kCLErrorDenied) {
-    mProvider->NotifyError(nsIDOMGeoPositionError::PERMISSION_DENIED);
+    mProvider->NotifyError(dom::PositionErrorBinding::PERMISSION_DENIED);
     return;
   }
 
