@@ -38,8 +38,6 @@
    ekr@rtfm.com  Tue Nov 25 16:33:08 2003
  */
 
-static char *RCSSTRING __UNUSED__ ="Id: p_buf.c,v 1.3 2004/01/03 22:13:53 ekr Exp $";
-
 #include <string.h>
 #include <stddef.h>
 #include "nr_common.h"
