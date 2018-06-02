@@ -104,8 +104,7 @@
       let test = {
         focus_input: function(value) {
           getEditor = function() {
-            return SpecialPowers.wrap(input).QueryInterface(
-                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+            return SpecialPowers.wrap(input).editor;
           };
           setValue = function(val) {
             input.value = val;
@@ -119,8 +118,7 @@
 
         focus_text_area: function(value) {
           getEditor = function() {
-            return SpecialPowers.wrap(textArea).QueryInterface(
-                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+            return SpecialPowers.wrap(textArea).editor;
           };
           setValue = function(val) {
             textArea.value = val;

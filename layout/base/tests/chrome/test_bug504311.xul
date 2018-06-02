@@ -23,7 +23,7 @@ function doTest()
 {
   var tb = document.getElementById("tb01");
   var inputField = tb.inputField;
-  var editor = inputField.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+  var editor = inputField.editor;
   editor = editor.QueryInterface(Ci.nsIPlaintextEditor);
   editor.wrapWidth = -1;
 

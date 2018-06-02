@@ -484,8 +484,7 @@
 
       <property name="editor" readonly="true">
         <getter><![CDATA[
-          const nsIDOMNSEditableElement = Ci.nsIDOMNSEditableElement;
-          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+          return this.inputField.editor;
         ]]></getter>
       </property>
 
