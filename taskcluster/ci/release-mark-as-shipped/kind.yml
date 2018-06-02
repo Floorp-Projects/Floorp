@@ -25,13 +25,21 @@ job-defaults:
          mozilla-esr60: scriptworker-prov-v1/shipit-v1
          default: scriptworker-prov-v1/shipit-dev
    worker:
-      implementation: shipit
+      implementation: shipit-shipped
    scopes:
       by-project:
-         mozilla-beta: ['project:releng:ship-it:production']
-         mozilla-release: ['project:releng:ship-it:production']
-         mozilla-esr60: ['project:releng:ship-it:production']
-         default: ['project:releng:ship-it:staging']
+         mozilla-beta:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-shipped
+         mozilla-release:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-shipped
+         mozilla-esr60:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-shipped
+         default:
+            - project:releng:ship-it:server:staging
+            - project:releng:ship-it:action:mark-as-shipped
    run-on-projects: []
    shipping-phase: ship
 
