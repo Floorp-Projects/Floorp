@@ -32,7 +32,6 @@ SimpleTest.waitForFocus(()=>{
     }
     function isComposing() {
       return isNSEditableElement() ?  SpecialPowers.wrap(aEditor)
-                                                   .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
                                                    .editor
                                                    .composing :
                                       SpecialPowers.wrap(window)

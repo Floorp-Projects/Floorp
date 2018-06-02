@@ -40,10 +40,7 @@ function test()
 {
   function getSelectionForEditor(aEditorElement)
   {
-    const nsIDOMNSEditableElement =
-      SpecialPowers.Ci.nsIDOMNSEditableElement;
-    return SpecialPowers.wrap(aEditorElement)
-             .QueryInterface(nsIDOMNSEditableElement).editor.selection;
+    return SpecialPowers.wrap(aEditorElement).editor.selection;
   }
 
   function clear()

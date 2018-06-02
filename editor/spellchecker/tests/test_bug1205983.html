@@ -87,7 +87,6 @@ function enFocus() {
   var elem_en = document.getElementById('en-US');
   var editor_en =
     SpecialPowers.wrap(elem_en)
-                 .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
                  .editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);

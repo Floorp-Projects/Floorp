@@ -23,7 +23,6 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var i = document.createElement("input");
   document.body.appendChild(i);
-  SpecialPowers.wrap(i).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
   i.select();
   i.focus();
   is(SpecialPowers.wrap(i).editor.transactionManager.numberOfUndoItems, 0,

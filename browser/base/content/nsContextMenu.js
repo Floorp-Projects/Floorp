@@ -253,7 +253,7 @@ nsContextMenu.prototype = {
       if (this.isRemote) {
         InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
       } else {
-        InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
+        InlineSpellCheckerUI.init(this.target.editor);
         InlineSpellCheckerUI.initFromEvent(document.popupRangeParent,
                                            document.popupRangeOffset);
       }

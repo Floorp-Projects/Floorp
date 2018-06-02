@@ -58,7 +58,7 @@ var loadListener = function(evt) {
 
   var doc = evt.target.contentDocument;
   var elem = doc.getElementById('textarea');
-  var editor = SpecialPowers.wrap(elem).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  var editor = SpecialPowers.wrap(elem).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 

@@ -30,18 +30,17 @@ var FormAssistant = {
   _onPopupResponse: function(currentElement, message) {
     switch (message.action) {
       case "autocomplete": {
-        let editableElement = currentElement.QueryInterface(Ci.nsIDOMNSEditableElement);
         this._doingAutocomplete = true;
 
         // If we have an active composition string, commit it before sending
         // the autocomplete event with the text that will replace it.
         try {
-          if (editableElement.editor.composing) {
-            editableElement.editor.forceCompositionEnd();
+          if (currentElement.editor.composing) {
+            currentElement.editor.forceCompositionEnd();
           }
         } catch (e) {}
 
-        editableElement.setUserInput(message.value);
+        currentElement.setUserInput(message.value);
 
         let event = currentElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
