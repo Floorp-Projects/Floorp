@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_PositionError_h
 #define mozilla_dom_PositionError_h
 
-#include "nsIDOMGeoPositionError.h"
 #include "nsWrapperCache.h"
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
@@ -21,14 +20,11 @@ class PositionErrorCallback;
 class Geolocation;
 typedef CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback> GeoPositionErrorCallback;
 
-class PositionError final : public nsIDOMGeoPositionError,
-                            public nsWrapperCache
+class PositionError final : public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PositionError)
-
-  NS_DECL_NSIDOMGEOPOSITIONERROR
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PositionError)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PositionError)
 
   PositionError(Geolocation* aParent, int16_t aCode);
 
@@ -39,6 +35,8 @@ public:
   int16_t Code() const {
     return mCode;
   }
+
+  void GetMessage(nsAString& aMessage) const;
 
   void NotifyCallback(const GeoPositionErrorCallback& callback);
 private:
