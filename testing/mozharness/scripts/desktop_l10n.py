@@ -28,7 +28,6 @@ from mozharness.mozilla.building.buildbase import (
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
-from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
 
@@ -64,7 +63,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
+class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                           VCSMixin, BaseScript, BalrogMixin, MarMixin,
                           VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
@@ -94,12 +93,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
          "type": "string",
          "help": "Override the gecko revision to use (otherwise use automation supplied"
                  " value, or en-US revision) "}
-    ], [
-        ['--release-config-file', ],
-        {"action": "store",
-         "dest": "release_config_file",
-         "type": "string",
-         "help": "Specify the release config file to use"}
     ], [
         ['--this-chunk', ],
         {"action": "store",
@@ -407,12 +400,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
         Only valid after setup is run."""
         if self.version:
             return self.version
-        config = self.config
-        if config.get('release_config_file'):
-            release_config = self.query_release_config()
-            self.version = release_config['version']
-        else:
-            self.version = self._query_make_variable("MOZ_APP_VERSION")
+        self.version = self._query_make_variable("MOZ_APP_VERSION")
         return self.version
 
     def _map(self, func, items):
