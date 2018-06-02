@@ -127,7 +127,7 @@ inline bool IsFontTableURI(nsIURI* aUri)
 }
 
 extern nsresult
-NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::BlobImpl** aBlob, bool aAlsoIfRevoked = false);
+NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::BlobImpl** aBlob);
 
 extern nsresult
 NS_GetBlobForBlobURISpec(const nsACString& aSpec, mozilla::dom::BlobImpl** aBlob);
