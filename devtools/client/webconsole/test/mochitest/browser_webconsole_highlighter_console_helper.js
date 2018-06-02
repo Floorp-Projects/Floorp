@@ -48,14 +48,14 @@ add_task(async function() {
   const hud = await openConsole();
   const {jsterm} = hud;
 
-  jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   const onEvaluationResult = waitForMessage(hud, "<h1>");
   jsterm.execute("$0");
   await onEvaluationResult;
   ok(true, "correct output for $0");
 
-  jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   const newH1Content = "newH1Content";
   const onAssignmentResult = waitForMessage(hud, "<h1>");

@@ -17,7 +17,7 @@ const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
   await loadDocument(TEST_VIOLATION);
