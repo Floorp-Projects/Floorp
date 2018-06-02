@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -72,8 +73,8 @@ public:
   // ToJSValue overload in ToJSValue.h.
   // aArg is a const reference so we can pass rvalues like integer constants
   template <typename T>
-  void MaybeResolve(const T& aArg) {
-    MaybeSomething(aArg, &Promise::MaybeResolve);
+  void MaybeResolve(T&& aArg) {
+    MaybeSomething(std::forward<T>(aArg), &Promise::MaybeResolve);
   }
 
   void MaybeResolveWithUndefined();
@@ -182,14 +183,14 @@ protected:
 
 private:
   template <typename T>
-  void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
+  void MaybeSomething(T&& aArgument, MaybeFunc aFunc) {
     MOZ_ASSERT(PromiseObj()); // It was preserved!
 
     AutoEntryScript aes(mGlobal, "Promise resolution or rejection");
     JSContext* cx = aes.cx();
 
     JS::Rooted<JS::Value> val(cx);
-    if (!ToJSValue(cx, aArgument, &val)) {
+    if (!ToJSValue(cx, std::forward<T>(aArgument), &val)) {
       HandleException(cx);
       return;
     }
