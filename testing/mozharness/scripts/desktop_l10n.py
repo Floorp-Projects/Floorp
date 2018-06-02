@@ -119,12 +119,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
          "help": "Override the gecko revision to use (otherwise use automation supplied"
                  " value, or en-US revision) "}
     ], [
-        ['--user-repo-override', ],
-        {"action": "store",
-         "dest": "user_repo_override",
-         "type": "string",
-         "help": "Override the user repo path for all repos"}
-    ], [
         ['--release-config-file', ],
         {"action": "store",
          "dest": "release_config_file",
