@@ -30,7 +30,7 @@ var InlineSpellCheckerContent = {
     } else {
       // Use the element's editor.
       spellChecker = this._spellChecker =
-        new InlineSpellChecker(event.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
+        new InlineSpellChecker(event.target.editor);
     }
 
     this._spellChecker.initFromEvent(event.rangeParent, event.rangeOffset);

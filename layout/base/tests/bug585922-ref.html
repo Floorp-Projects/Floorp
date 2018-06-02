@@ -10,7 +10,7 @@
         var d = document.querySelector("input");
         d.value = "b";
         d.focus();
-        var editor = SpecialPowers.wrap(d).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+        var editor = SpecialPowers.wrap(d).editor;
         var sel = editor.selection;
         var t = editor.rootElement.firstChild;
         sel.collapse(t, 1); // put the caret at the end of the textbox

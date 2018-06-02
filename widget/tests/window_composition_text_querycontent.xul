@@ -115,7 +115,6 @@ var input = document.getElementById("input");
 var textareaInFrame;
 
 const nsITextInputProcessorCallback = Ci.nsITextInputProcessorCallback;
-const nsIDOMNSEditableElement = Ci.nsIDOMNSEditableElement;
 const nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
 const nsIWebNavigation = Ci.nsIWebNavigation;
 const nsIDocShell = Ci.nsIDocShell;
@@ -131,7 +130,7 @@ function hitEventLoop(aFunc, aTimes)
 
 function getEditor(aNode)
 {
-  return aNode.QueryInterface(nsIDOMNSEditableElement).editor;
+  return aNode.editor;
 }
 
 function getHTMLEditorIMESupport(aWindow)

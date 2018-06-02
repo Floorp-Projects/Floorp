@@ -32,7 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
 
         // Test 1: Undo on an empty editor - the editor should not forget about
         // the bogus node
-        t1.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
         t1Editor = t1.editor;
 
         // Did the editor recognize the new bogus node?
@@ -43,7 +42,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         // Test 2: Redo on an empty editor - the editor should not forget about
         // the bogus node
         let t2 = SpecialPowers.wrap($("t2"));
-        t2.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
         t2Editor = t2.editor;
 
         // Did the editor recognize the new bogus node?
