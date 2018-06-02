@@ -37,6 +37,12 @@ GetCompartmentPrincipal(JSCompartment* compartment)
 }
 
 nsIPrincipal*
+GetRealmPrincipal(JS::Realm* realm)
+{
+    return nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
+}
+
+nsIPrincipal*
 GetObjectPrincipal(JSObject* obj)
 {
     return GetCompartmentPrincipal(js::GetObjectCompartment(obj));

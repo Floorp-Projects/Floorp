@@ -399,6 +399,7 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 }
 
 nsIPrincipal* GetCompartmentPrincipal(JSCompartment* compartment);
+nsIPrincipal* GetRealmPrincipal(JS::Realm* realm);
 
 void NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
                                    js::NukeReferencesToWindow nukeReferencesToWindow = js::NukeWindowReferences);
