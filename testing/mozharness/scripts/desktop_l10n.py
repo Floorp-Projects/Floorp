@@ -93,18 +93,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
          "help": "Override the gecko revision to use (otherwise use automation supplied"
                  " value, or en-US revision) "}
     ], [
-        ['--this-chunk', ],
-        {"action": "store",
-         "dest": "this_locale_chunk",
-         "type": "int",
-         "help": "Specify which chunk of locales to run"}
-    ], [
-        ['--total-chunks', ],
-        {"action": "store",
-         "dest": "total_locale_chunks",
-         "type": "int",
-         "help": "Specify the total number of chunks of locales"}
-    ], [
         ['--en-us-installer-url', ],
         {"action": "store",
          "dest": "en_us_installer_url",
