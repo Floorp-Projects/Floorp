@@ -8,7 +8,6 @@
 
 """
 
-from copy import deepcopy
 import os
 import sys
 
@@ -64,13 +63,6 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
          "type": "choice",
          "choices": SUPPORTED_PLATFORMS,
          "help": "Specify the platform(s) to repack"
-         }
-    ], [
-        ['--user-repo-override', ],
-        {"action": "store",
-         "dest": "user_repo_override",
-         "type": "string",
-         "help": "Override the user repo path for all repos"
          }
     ], [
         ['--release-config-file', ],
@@ -133,16 +125,7 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
     def pull(self):
         c = self.config
         dirs = self.query_abs_dirs()
-        repos = []
-        replace_dict = {}
-        if c.get("user_repo_override"):
-            replace_dict['user_repo_override'] = c['user_repo_override']
-            # deepcopy() needed because of self.config lock bug :(
-            for repo_dict in deepcopy(c['repos']):
-                repo_dict['repo'] = repo_dict['repo'] % replace_dict
-                repos.append(repo_dict)
-        else:
-            repos = c['repos']
+        repos = c['repos']
         self.vcs_checkout_repos(repos, parent_dir=dirs['abs_work_dir'],
                                 tag_override=c.get('tag_override'))
 
