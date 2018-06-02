@@ -678,13 +678,12 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
     RootedObject newTarget(cx, newTargetArg);
 
     AutoWrapperVector toTransplant(cx);
-    if (!toTransplant.reserve(cx->runtime()->numCompartments))
-        return false;
 
     for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
         if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.infallibleAppend(WrapperValue(wp));
+            if (!toTransplant.append(WrapperValue(wp)))
+                return false;
         }
     }
 

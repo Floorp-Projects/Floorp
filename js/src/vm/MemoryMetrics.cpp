@@ -762,7 +762,7 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
                           bool anonymize, IterateCellCallback statsCellCallback)
 {
     JSRuntime* rt = cx->runtime();
-    if (!rtStats->realmStatsVector.reserve(rt->numCompartments))
+    if (!rtStats->realmStatsVector.reserve(rt->numRealms))
         return false;
 
     size_t totalZones = rt->gc.zones().length() + 1; // + 1 for the atoms zone.
