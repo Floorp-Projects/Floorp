@@ -57,16 +57,7 @@ struct ShapeUtils final
     const UniquePtr<StyleBasicShape>& aBasicShape,
     const nsPoint& aCenter, const nsRect& aRefBox);
 
-  // Compute the rect for an inset. If the inset amount is larger than
-  // aRefBox itself, this will return a rect the same shape as the inverse
-  // rect that would be created by insetting aRefBox by the inset amount.
-  // This process is *not* what is called for by the current spec at
-  // https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes.
-  // The spec currently treats empty shapes, including overly-inset rects, as
-  // defining 'empty float areas' that don't affect layout. However, it is
-  // practically useful to treat empty shapes as having edges for purposes of
-  // affecting layout, and there is growing momentum for the approach we
-  // are taking here.
+  // Compute the rect for an inset.
   // @param aRefBox the reference box of the inset.
   // @return The inset rect in app units.
   static nsRect ComputeInsetRect(
