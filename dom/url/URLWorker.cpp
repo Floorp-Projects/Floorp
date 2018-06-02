@@ -7,11 +7,11 @@
 #include "URLWorker.h"
 
 #include "mozilla/dom/Blob.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Unused.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsProxyRelease.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
@@ -59,7 +59,7 @@ public:
 
     nsAutoCString url;
     nsresult rv =
-      nsHostObjectProtocolHandler::AddDataEntry(mBlobImpl, principal, url);
+      BlobURLProtocolHandler::AddDataEntry(mBlobImpl, principal, url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
@@ -112,7 +112,7 @@ public:
     NS_ConvertUTF16toUTF8 url(mURL);
 
     nsIPrincipal* urlPrincipal =
-      nsHostObjectProtocolHandler::GetDataEntryPrincipal(url);
+      BlobURLProtocolHandler::GetDataEntryPrincipal(url);
 
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
@@ -120,7 +120,7 @@ public:
     if (urlPrincipal &&
         NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
         subsumes) {
-      nsHostObjectProtocolHandler::RemoveDataEntry(url);
+      BlobURLProtocolHandler::RemoveDataEntry(url);
     }
 
     if (!mWorkerPrivate->IsSharedWorker() &&
@@ -167,7 +167,7 @@ public:
     AssertIsOnMainThread();
 
     NS_ConvertUTF16toUTF8 url(mURL);
-    mValid = nsHostObjectProtocolHandler::HasDataEntry(url);
+    mValid = BlobURLProtocolHandler::HasDataEntry(url);
 
     return true;
   }
