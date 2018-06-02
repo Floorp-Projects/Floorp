@@ -133,9 +133,6 @@ extern nsresult
 NS_GetBlobForBlobURISpec(const nsACString& aSpec, mozilla::dom::BlobImpl** aBlob);
 
 extern nsresult
-NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
-
-extern nsresult
 NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource);
 
 #endif /* nsHostObjectProtocolHandler_h */
