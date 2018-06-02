@@ -3830,38 +3830,37 @@ Zone::destroy(FreeOp* fop)
 }
 
 /*
- * It's simpler if we preserve the invariant that every zone has at least one
- * compartment. If we know we're deleting the entire zone, then
- * SweepCompartments is allowed to delete all compartments. In this case,
- * |keepAtleastOne| is false. If any cells remain alive in the zone, set
- * |keepAtleastOne| true to prohibit sweepCompartments from deleting every
- * compartment. Instead, it preserves an arbitrary compartment in the zone.
+ * It's simpler if we preserve the invariant that every zone (except the atoms
+ * zone) has at least one compartment, and every compartment has at least one
+ * realm. If we know we're deleting the entire zone, then sweepCompartments is
+ * allowed to delete all compartments. In this case, |keepAtleastOne| is false.
+ * If any cells remain alive in the zone, set |keepAtleastOne| true to prohibit
+ * sweepCompartments from deleting every compartment. Instead, it preserves an
+ * arbitrary compartment in the zone.
  */
 void
 Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime)
 {
     MOZ_ASSERT(!compartments().empty());
-
-    mozilla::DebugOnly<JSRuntime*> rt = runtimeFromMainThread();
+    MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
 
     JSCompartment** read = compartments().begin();
     JSCompartment** end = compartments().end();
     JSCompartment** write = read;
-    bool foundOne = false;
     while (read < end) {
         JSCompartment* comp = *read++;
         Realm* realm = JS::GetRealmForCompartment(comp);
 
         /*
-         * Don't delete the last compartment and realm if all the ones before
-         * it were deleted and keepAtleastOne is true.
+         * Don't delete the last compartment and realm if keepAtleastOne is
+         * still true, meaning all the other compartments were deleted.
          */
-        bool dontDelete = read == end && !foundOne && keepAtleastOne;
-        if ((!realm->marked() && !dontDelete) || destroyingRuntime) {
-            realm->destroy(fop);
-        } else {
+        bool dontDelete = read == end && keepAtleastOne;
+        if ((realm->marked() || dontDelete) && !destroyingRuntime) {
             *write++ = comp;
-            foundOne = true;
+            keepAtleastOne = false;
+        } else {
+            realm->destroy(fop);
         }
     }
     compartments().shrinkTo(write - compartments().begin());
