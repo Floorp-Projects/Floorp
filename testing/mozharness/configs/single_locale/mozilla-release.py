@@ -13,6 +13,5 @@ config = {
     "mar_tools_url": os.environ["MAR_TOOLS_URL"],
 
     # purge options
-    'purge_minsize': 12,
     'is_automation': True,
 }

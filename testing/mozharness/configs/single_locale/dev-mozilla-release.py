@@ -7,6 +7,5 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
     # purge options
-    'purge_minsize': 12,
     'is_automation': True,
 }
