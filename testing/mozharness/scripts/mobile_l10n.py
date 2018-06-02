@@ -109,7 +109,6 @@ class MobileSingleLocale(LocalesMixin,
                 "list-locales",
                 "setup",
                 "repack",
-                "validate-repacks-signed",
                 "upload-repacks",
                 "create-virtualenv",
                 "summary",
@@ -400,33 +399,6 @@ class MobileSingleLocale(LocalesMixin,
             success_count += 1
         self.summarize_success_count(success_count, total_count,
                                      message="Repacked %d of %d binaries successfully.")
-
-    def validate_repacks_signed(self):
-        c = self.config
-        dirs = self.query_abs_dirs()
-        locales = self.query_locales()
-        base_package_name = self.query_base_package_name()
-        base_package_dir = os.path.join(dirs['abs_objdir'], 'dist')
-        repack_env = self.query_repack_env()
-        success_count = total_count = 0
-        for locale in locales:
-            total_count += 1
-            signed_path = os.path.join(base_package_dir,
-                                       base_package_name % {'locale': locale})
-            status = self.verify_android_signature(
-                signed_path,
-                script=c['signature_verification_script'],
-                env=repack_env,
-                key_alias=c['key_alias'],
-            )
-            if status:
-                self.add_failure(locale, message="Errors verifying %s binary!" % locale)
-                # No need to rm because upload is per-locale
-                continue
-            success_count += 1
-        self.summarize_success_count(success_count, total_count,
-                                     message="Validated signatures on %d of %d "
-                                             "binaries successfully.")
 
     def upload_repacks(self):
         dirs = self.query_abs_dirs()
