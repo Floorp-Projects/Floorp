@@ -23,14 +23,14 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             mozilla::LayoutDeviceIntMargin* aResult) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
+                                                     nsIFrame* aFrame,
+                                                     uint8_t aWidgetType) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
                         uint8_t aWidgetType,
-                        mozilla::LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceIntMargin* aResult) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
                                   nsIFrame* aFrame, uint8_t aWidgetType,
                                   mozilla::LayoutDeviceIntSize* aResult,
