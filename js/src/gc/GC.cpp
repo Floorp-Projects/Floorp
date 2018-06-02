@@ -7939,7 +7939,7 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     JSRuntime* rt = cx->runtime();
     JS_AbortIfWrongThread(cx);
 
-    ScopedJSDeletePtr<Zone> zoneHolder;
+    UniquePtr<Zone> zoneHolder;
 
     Zone* zone = nullptr;
     JS::ZoneSpecifier zoneSpec = options.creationOptions().zoneSpecifier();
@@ -7958,29 +7958,29 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     }
 
     if (!zone) {
-        zone = cx->new_<Zone>(cx->runtime());
-        if (!zone)
+        zoneHolder = cx->make_unique<Zone>(cx->runtime());
+        if (!zoneHolder)
             return nullptr;
-
-        zoneHolder.reset(zone);
 
         const JSPrincipals* trusted = rt->trustedPrincipals();
         bool isSystem = principals && principals == trusted;
-        if (!zone->init(isSystem)) {
+        if (!zoneHolder->init(isSystem)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
+
+        zone = zoneHolder.get();
     }
 
-    ScopedJSDeletePtr<Realm> realm(cx->new_<Realm>(zone, options));
+    UniquePtr<Realm> realm = cx->make_unique<Realm>(zone, options);
     if (!realm || !realm->init(cx))
         return nullptr;
 
     // Set up the principals.
-    JS::SetRealmPrincipals(realm, principals);
+    JS::SetRealmPrincipals(realm.get(), principals);
 
     JSCompartment* comp = realm->compartment();
-    if (!comp->realms().append(realm)) {
+    if (!comp->realms().append(realm.get())) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -8006,8 +8006,8 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         }
     }
 
-    zoneHolder.forget();
-    return realm.forget();
+    mozilla::Unused << zoneHolder.release();
+    return realm.release();
 }
 
 void

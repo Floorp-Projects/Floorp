@@ -3467,8 +3467,10 @@ JS_PUBLIC_API(void)
 JS_DropPrincipals(JSContext* cx, JSPrincipals* principals)
 {
     int rc = --principals->refcount;
-    if (rc == 0)
+    if (rc == 0) {
+        JS::AutoSuppressGCAnalysis nogc;
         cx->runtime()->destroyPrincipals(principals);
+    }
 }
 
 JS_PUBLIC_API(void)
