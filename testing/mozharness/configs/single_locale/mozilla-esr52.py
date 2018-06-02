@@ -13,6 +13,5 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",
 
     # purge options
-    'purge_minsize': 12,
     'is_automation': True,
 }
