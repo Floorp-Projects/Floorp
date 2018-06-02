@@ -22,10 +22,10 @@
 #include "nsIPrincipal.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FontTableURIProtocolHandler.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/LoadInfo.h"
 #include "nsSVGUtils.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsContentUtils.h"
 #include "gfxFont.h"
 #include "nsSMILAnimationController.h"
@@ -351,9 +351,7 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
-    nsHostObjectProtocolHandler::GenerateURIString(NS_LITERAL_CSTRING(FONTTABLEURI_SCHEME),
-                                                   nullptr,
-                                                   mSVGGlyphsDocumentURI);
+    mozilla::dom::FontTableURIProtocolHandler::GenerateURIString(mSVGGlyphsDocumentURI);
 
     rv = NS_NewURI(getter_AddRefs(uri), mSVGGlyphsDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);

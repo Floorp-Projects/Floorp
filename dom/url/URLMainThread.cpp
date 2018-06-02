@@ -8,9 +8,9 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Blob.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsNetUtil.h"
@@ -83,7 +83,7 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
     nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = nsHostObjectProtocolHandler::AddDataEntry(aBlob.Impl(), principal, url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(aBlob.Impl(), principal, url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -103,14 +103,14 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
     nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = nsHostObjectProtocolHandler::AddDataEntry(&aSource, principal, url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(&aSource, principal, url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   nsCOMPtr<nsIRunnable> revocation =
     NS_NewRunnableFunction("dom::URLMainThread::CreateObjectURL", [url] {
-      nsHostObjectProtocolHandler::RemoveDataEntry(url);
+      BlobURLProtocolHandler::RemoveDataEntry(url);
     });
 
   nsContentUtils::RunInStableState(revocation.forget());
@@ -134,11 +134,11 @@ URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
 
   nsIPrincipal* urlPrincipal =
-    nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
+    BlobURLProtocolHandler::GetDataEntryPrincipal(asciiurl);
 
   if (urlPrincipal && principal->Subsumes(urlPrincipal)) {
     global->UnregisterHostObjectURI(asciiurl);
-    nsHostObjectProtocolHandler::RemoveDataEntry(asciiurl);
+    BlobURLProtocolHandler::RemoveDataEntry(asciiurl);
   }
 }
 
@@ -159,7 +159,7 @@ URLMainThread::IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
-  return nsHostObjectProtocolHandler::HasDataEntry(asciiurl);
+  return BlobURLProtocolHandler::HasDataEntry(asciiurl);
 }
 
 void

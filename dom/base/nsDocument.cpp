@@ -127,7 +127,7 @@
 #include "nsBindingManager.h"
 #include "nsHTMLDocument.h"
 #include "nsIRequest.h"
-#include "nsHostObjectProtocolHandler.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 
 #include "nsCharsetSource.h"
 #include "nsIParser.h"

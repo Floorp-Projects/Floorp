@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHostObjectProtocolHandler.h"
+#include "BlobURLProtocolHandler.h"
 
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentChild.h"
@@ -31,9 +31,11 @@
 
 #define RELEASING_TIMER 5000
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::ipc;
+namespace mozilla {
+
+using namespace ipc;
+
+namespace dom {
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -126,8 +128,6 @@ GetDataInfoFromURI(nsIURI* aURI, bool aAlsoIfRevoked = false)
 }
 
 // Memory reporting for the hash table.
-namespace mozilla {
-
 void
 BroadcastBlobURLRegistration(const nsACString& aURI,
                              BlobImpl* aBlobImpl,
@@ -167,28 +167,6 @@ BroadcastBlobURLUnregistration(const nsCString& aURI)
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
   Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(aURI));
 }
-
-class HostObjectURLsReporter final : public nsIMemoryReporter
-{
-  ~HostObjectURLsReporter() {}
-
- public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) override
-  {
-    MOZ_COLLECT_REPORT(
-      "host-object-urls", KIND_OTHER, UNITS_COUNT,
-      gDataTable ? gDataTable->Count() : 0,
-      "The number of host objects stored for access via URLs "
-      "(e.g. blobs passed to URL.createObjectURL).");
-
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS(HostObjectURLsReporter, nsIMemoryReporter)
 
 class BlobURLsReporter final : public nsIMemoryReporter
 {
@@ -434,7 +412,7 @@ public:
     RefPtr<ReleasingTimerHolder> holder =
       new ReleasingTimerHolder(aURI, aBroadcastToOtherProcesses);
 
-    auto raii = mozilla::MakeScopeExit([holder] {
+    auto raii = MakeScopeExit([holder] {
       holder->CancelTimerAndRevokeURI();
     });
 
@@ -451,7 +429,7 @@ public:
   Run() override
   {
     RefPtr<ReleasingTimerHolder> self = this;
-    auto raii = mozilla::MakeScopeExit([self] {
+    auto raii = MakeScopeExit([self] {
       self->CancelTimerAndRevokeURI();
     });
 
@@ -580,8 +558,6 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(ReleasingTimerHolder, Runnable, nsITimerCallback,
                             nsIAsyncShutdownBlocker)
 
-} // namespace mozilla
-
 template<typename T>
 static nsresult
 AddDataEntryInternal(const nsACString& aURI, T aObject,
@@ -592,33 +568,34 @@ AddDataEntryInternal(const nsACString& aURI, T aObject,
   }
 
   DataInfo* info = new DataInfo(aObject, aPrincipal);
-  mozilla::BlobURLsReporter::GetJSStackForBlob(info);
+  BlobURLsReporter::GetJSStackForBlob(info);
 
   gDataTable->Put(aURI, info);
   return NS_OK;
 }
 
 void
-nsHostObjectProtocolHandler::Init(void)
+BlobURLProtocolHandler::Init(void)
 {
   static bool initialized = false;
 
   if (!initialized) {
     initialized = true;
-    RegisterStrongMemoryReporter(new mozilla::HostObjectURLsReporter());
-    RegisterStrongMemoryReporter(new mozilla::BlobURLsReporter());
+    RegisterStrongMemoryReporter(new BlobURLsReporter());
   }
 }
 
-nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
+BlobURLProtocolHandler::BlobURLProtocolHandler()
 {
   Init();
 }
 
+BlobURLProtocolHandler::~BlobURLProtocolHandler() = default;
+
 /* static */ nsresult
-nsHostObjectProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
-                                          nsIPrincipal* aPrincipal,
-                                          nsACString& aUri)
+BlobURLProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
+                                     nsIPrincipal* aPrincipal,
+                                     nsACString& aUri)
 {
   Init();
 
@@ -633,9 +610,9 @@ nsHostObjectProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
 }
 
 /* static */ nsresult
-nsHostObjectProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
-                                          nsIPrincipal* aPrincipal,
-                                          nsACString& aUri)
+BlobURLProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
+                                     nsIPrincipal* aPrincipal,
+                                     nsACString& aUri)
 {
   Init();
 
@@ -649,17 +626,16 @@ nsHostObjectProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
 }
 
 /* static */ nsresult
-nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aURI,
-                                          nsIPrincipal* aPrincipal,
-                                          BlobImpl* aBlobImpl)
+BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
+                                     nsIPrincipal* aPrincipal,
+                                     BlobImpl* aBlobImpl)
 {
   return AddDataEntryInternal(aURI, aBlobImpl, aPrincipal);
 }
 
 /* static */ bool
-nsHostObjectProtocolHandler::GetAllBlobURLEntries(
-  nsTArray<BlobURLRegistrationData>& aRegistrations,
-  ContentParent* aCP)
+BlobURLProtocolHandler::GetAllBlobURLEntries(nsTArray<BlobURLRegistrationData>& aRegistrations,
+                                             ContentParent* aCP)
 {
   MOZ_ASSERT(aCP);
 
@@ -692,8 +668,8 @@ nsHostObjectProtocolHandler::GetAllBlobURLEntries(
 }
 
 /*static */ void
-nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
-                                             bool aBroadcastToOtherProcesses)
+BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
+                                        bool aBroadcastToOtherProcesses)
 {
   if (!gDataTable) {
     return;
@@ -715,7 +691,7 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
 }
 
 /* static */ void
-nsHostObjectProtocolHandler::RemoveDataEntries()
+BlobURLProtocolHandler::RemoveDataEntries()
 {
   if (!gDataTable) {
     return;
@@ -727,15 +703,15 @@ nsHostObjectProtocolHandler::RemoveDataEntries()
 }
 
 /* static */ bool
-nsHostObjectProtocolHandler::HasDataEntry(const nsACString& aUri)
+BlobURLProtocolHandler::HasDataEntry(const nsACString& aUri)
 {
   return !!GetDataInfo(aUri);
 }
 
 /* static */ nsresult
-nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
-                                               nsIPrincipal* aPrincipal,
-                                               nsACString& aUri)
+BlobURLProtocolHandler::GenerateURIString(const nsACString &aScheme,
+                                          nsIPrincipal* aPrincipal,
+                                          nsACString& aUri)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -769,15 +745,15 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
 }
 
 /* static */ nsresult
-nsHostObjectProtocolHandler::GenerateURIStringForBlobURL(nsIPrincipal* aPrincipal,
-                                                         nsACString& aUri)
+BlobURLProtocolHandler::GenerateURIStringForBlobURL(nsIPrincipal* aPrincipal,
+                                                    nsACString& aUri)
 {
   return
     GenerateURIString(NS_LITERAL_CSTRING(BLOBURI_SCHEME), aPrincipal, aUri);
 }
 
 /* static */ nsIPrincipal*
-nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
+BlobURLProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
 {
   if (!gDataTable) {
     return nullptr;
@@ -793,8 +769,8 @@ nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
 }
 
 /* static */ void
-nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
-                                      nsCycleCollectionTraversalCallback& aCallback)
+BlobURLProtocolHandler::Traverse(const nsACString& aUri,
+                                 nsCycleCollectionTraversalCallback& aCallback)
 {
   if (!gDataTable) {
     return;
@@ -806,39 +782,36 @@ nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
     return;
   }
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mBlobImpl");
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "BlobURLProtocolHandler DataInfo.mBlobImpl");
   aCallback.NoteXPCOMChild(res->mBlobImpl);
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mMediaSource");
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "BlobURLProtocolHandler DataInfo.mMediaSource");
   aCallback.NoteXPCOMChild(res->mMediaSource);
 }
 
-// -----------------------------------------------------------------------
-// Protocol handler
-
-NS_IMPL_ISUPPORTS(nsHostObjectProtocolHandler, nsIProtocolHandler,
-    nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(BlobURLProtocolHandler, nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::GetDefaultPort(int32_t *result)
+BlobURLProtocolHandler::GetDefaultPort(int32_t *result)
 {
   *result = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::GetProtocolFlags(uint32_t *result)
+BlobURLProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
-            URI_NON_PERSISTABLE;
+            URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult)
+BlobURLProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult)
 {
-  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(aResult);
-  if (IsFontTableURI(aURI) || IsBlobURI(aURI)) {
+  Unused << BlobURLProtocolHandler::GetProtocolFlags(aResult);
+  if (IsBlobURI(aURI)) {
     *aResult |= URI_IS_LOCAL_RESOURCE;
   }
 
@@ -846,18 +819,10 @@ nsHostObjectProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult)
 }
 
 NS_IMETHODIMP
-nsBlobProtocolHandler::GetProtocolFlags(uint32_t *result)
-{
-  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(result);
-  *result |= URI_IS_LOCAL_RESOURCE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
-                                    const char *aCharset,
-                                    nsIURI *aBaseURI,
-                                    nsIURI **aResult)
+BlobURLProtocolHandler::NewURI(const nsACString& aSpec,
+                               const char *aCharset,
+                               nsIURI *aBaseURI,
+                               nsIURI **aResult)
 {
   *aResult = nullptr;
   nsresult rv;
@@ -865,7 +830,7 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
   DataInfo* info = GetDataInfo(aSpec);
 
   nsCOMPtr<nsIPrincipal> principal;
-  RefPtr<mozilla::dom::BlobImpl> blob;
+  RefPtr<BlobImpl> blob;
   if (info && info->mObjectType == DataInfo::eBlobImpl) {
     MOZ_ASSERT(info->mBlobImpl);
     principal = info->mPrincipal;
@@ -885,9 +850,9 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
-                                         nsILoadInfo* aLoadInfo,
-                                         nsIChannel** result)
+BlobURLProtocolHandler::NewChannel2(nsIURI* uri,
+                                    nsILoadInfo* aLoadInfo,
+                                    nsIChannel** result)
 {
   *result = nullptr;
 
@@ -970,14 +935,14 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+BlobURLProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
   return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                       bool *_retval)
+BlobURLProtocolHandler::AllowPort(int32_t port, const char *scheme,
+                                  bool *_retval)
 {
   // don't override anything.
   *_retval = false;
@@ -985,26 +950,14 @@ nsHostObjectProtocolHandler::AllowPort(int32_t port, const char *scheme,
 }
 
 NS_IMETHODIMP
-nsBlobProtocolHandler::GetScheme(nsACString &result)
+BlobURLProtocolHandler::GetScheme(nsACString &result)
 {
   result.AssignLiteral(BLOBURI_SCHEME);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontTableProtocolHandler::GetProtocolFlags(uint32_t *result)
-{
-  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(result);
-  *result |= URI_IS_LOCAL_RESOURCE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontTableProtocolHandler::GetScheme(nsACString &result)
-{
-  result.AssignLiteral(FONTTABLEURI_SCHEME);
-  return NS_OK;
-}
+} // dom namespace
+} // mozilla namespace
 
 nsresult
 NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
@@ -1036,42 +989,6 @@ NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
-                                   const char *aCharset,
-                                   nsIURI *aBaseURI,
-                                   nsIURI **aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIURI> uri;
-
-  // Either you got here via a ref or a fonttable: uri
-  if (aSpec.Length() && aSpec.CharAt(0) == '#') {
-    rv = NS_MutateURI(aBaseURI)
-           .SetRef(aSpec)
-           .Finalize(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Relative URIs (other than #ref) are not meaningful within the
-    // fonttable: scheme.
-    // If aSpec is a relative URI -other- than a bare #ref,
-    // this will leave uri empty, and we'll return a failure code below.
-    rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
-           .SetSpec(aSpec)
-           .Finalize(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  bool schemeIs;
-  if (NS_FAILED(uri->SchemeIs(FONTTABLEURI_SCHEME, &schemeIs)) || !schemeIs) {
-    NS_WARNING("Non-fonttable spec in nsFontTableProtocolHander");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  uri.forget(aResult);
-  return NS_OK;
-}
-
 nsresult
 NS_GetSourceForMediaSourceURI(nsIURI* aURI, MediaSource** aSource)
 {
@@ -1087,39 +1004,34 @@ NS_GetSourceForMediaSourceURI(nsIURI* aURI, MediaSource** aSource)
   return NS_OK;
 }
 
+namespace mozilla {
+namespace dom {
+
 #define NS_BLOBPROTOCOLHANDLER_CID \
 { 0xb43964aa, 0xa078, 0x44b2, \
   { 0xb0, 0x6b, 0xfd, 0x4d, 0x1b, 0x17, 0x2e, 0x66 } }
 
-#define NS_FONTTABLEPROTOCOLHANDLER_CID \
-{ 0x3fc8f04e, 0xd719, 0x43ca, \
-  { 0x9a, 0xd0, 0x18, 0xee, 0x32, 0x02, 0x11, 0xf2 } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlobProtocolHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontTableProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(BlobURLProtocolHandler)
 
 NS_DEFINE_NAMED_CID(NS_BLOBPROTOCOLHANDLER_CID);
-NS_DEFINE_NAMED_CID(NS_FONTTABLEPROTOCOLHANDLER_CID);
 
-static const mozilla::Module::CIDEntry kHostObjectProtocolHandlerCIDs[] = {
-  { &kNS_BLOBPROTOCOLHANDLER_CID, false, nullptr, nsBlobProtocolHandlerConstructor },
-  { &kNS_FONTTABLEPROTOCOLHANDLER_CID, false, nullptr, nsFontTableProtocolHandlerConstructor },
+static const Module::CIDEntry kBlobURLProtocolHandlerCIDs[] = {
+  { &kNS_BLOBPROTOCOLHANDLER_CID, false, nullptr, BlobURLProtocolHandlerConstructor },
   { nullptr }
 };
 
-static const mozilla::Module::ContractIDEntry kHostObjectProtocolHandlerContracts[] = {
+static const Module::ContractIDEntry kBlobURLProtocolHandlerContracts[] = {
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX BLOBURI_SCHEME, &kNS_BLOBPROTOCOLHANDLER_CID },
-  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FONTTABLEURI_SCHEME, &kNS_FONTTABLEPROTOCOLHANDLER_CID },
   { nullptr }
 };
 
-static const mozilla::Module kHostObjectProtocolHandlerModule = {
-  mozilla::Module::kVersion,
-  kHostObjectProtocolHandlerCIDs,
-  kHostObjectProtocolHandlerContracts
+static const Module kBlobURLProtocolHandlerModule = {
+  Module::kVersion,
+  kBlobURLProtocolHandlerCIDs,
+  kBlobURLProtocolHandlerContracts
 };
 
-NSMODULE_DEFN(HostObjectProtocolHandler) = &kHostObjectProtocolHandlerModule;
+NSMODULE_DEFN(BlobURLProtocolHandler) = &kBlobURLProtocolHandlerModule;
 
 bool IsType(nsIURI* aUri, DataInfo::ObjectType aType)
 {
@@ -1140,3 +1052,6 @@ bool IsMediaSourceURI(nsIURI* aUri)
 {
   return IsType(aUri, DataInfo::eMediaSource);
 }
+
+} // dom namespace
+} // mozilla namespace

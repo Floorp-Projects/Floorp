@@ -109,7 +109,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/PointerEventHandler.h"
-#include "nsHostObjectProtocolHandler.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsThreadManager.h"
 
 using namespace mozilla;
@@ -392,5 +392,5 @@ nsLayoutStatics::Shutdown()
 
   PromiseDebugging::Shutdown();
 
-  nsHostObjectProtocolHandler::RemoveDataEntries();
+  BlobURLProtocolHandler::RemoveDataEntries();
 }
