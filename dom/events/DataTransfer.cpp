@@ -197,12 +197,22 @@ DataTransfer::~DataTransfer()
 
 // static
 already_AddRefed<DataTransfer>
-DataTransfer::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+DataTransfer::Constructor(const GlobalObject& aGlobal,
+                          const nsAString& aEventType, bool aIsExternal,
+                          ErrorResult& aRv)
 {
+  nsAutoCString onEventType("on");
+  AppendUTF16toUTF8(aEventType, onEventType);
+  RefPtr<nsAtom> eventTypeAtom = NS_Atomize(onEventType);
+  if (!eventTypeAtom) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
 
+  EventMessage eventMessage = nsContentUtils::GetEventMessage(eventTypeAtom);
   RefPtr<DataTransfer> transfer = new DataTransfer(aGlobal.GetAsSupports(),
-                                                   eCopy, /* is external */ false, /* clipboard type */ -1);
-  transfer->mEffectAllowed = nsIDragService::DRAGDROP_ACTION_NONE;
+                                                     eventMessage, aIsExternal,
+                                                     -1);
   return transfer.forget();
 }
 
