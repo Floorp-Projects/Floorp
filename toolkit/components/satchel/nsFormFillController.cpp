@@ -578,7 +578,8 @@ nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
   if (mFocusedInput) {
     mSuppressOnInput = true;
-    mFocusedInput->SetUserInput(aTextValue);
+    mFocusedInput->SetUserInput(aTextValue,
+                                *nsContentUtils::GetSystemPrincipal());
     mSuppressOnInput = false;
   }
 

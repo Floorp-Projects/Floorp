@@ -87,7 +87,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
                                              nsGenericHTMLFormElementWithState,
                                              nsITextControlElement,
-                                             nsIDOMNSEditableElement,
                                              nsIMutationObserver,
                                              nsIConstraintValidation)
 
@@ -357,13 +356,7 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue, ErrorResult& aError)
 void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                                        nsIPrincipal& aSubjectPrincipal)
 {
-  SetUserInput(aValue);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetUserInput(const nsAString& aValue)
-{
-  return SetValueInternal(aValue,
+  SetValueInternal(aValue,
     nsTextEditorState::eSetValue_BySetUserInput |
     nsTextEditorState::eSetValue_Notify|
     nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
