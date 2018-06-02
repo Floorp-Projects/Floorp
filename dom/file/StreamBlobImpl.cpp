@@ -4,7 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "EmptyBlobImpl.h"
+#include "mozilla/SlicedInputStream.h"
 #include "StreamBlobImpl.h"
+#include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsICloneableInputStream.h"
 

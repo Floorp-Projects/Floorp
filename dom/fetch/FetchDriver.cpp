@@ -22,7 +22,6 @@
 
 #include "nsContentPolicyUtils.h"
 #include "nsDataHandler.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
@@ -30,6 +29,7 @@
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"
 
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/WorkerCommon.h"

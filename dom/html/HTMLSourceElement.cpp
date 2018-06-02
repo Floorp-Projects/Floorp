@@ -15,8 +15,7 @@
 
 #include "nsGkAtoms.h"
 
-#include "nsHostObjectProtocolHandler.h"
-
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/Preferences.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)

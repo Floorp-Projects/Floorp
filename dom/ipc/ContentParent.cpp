@@ -184,6 +184,7 @@
 #include "prio.h"
 #include "private/pprio.h"
 #include "ContentProcessManager.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/psm/PSMContentListener.h"
@@ -192,7 +193,6 @@
 #include "nsIBlocklistService.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIBidiKeyboard.h"
@@ -1802,7 +1802,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
   // Unregister all the BlobURLs registered by the ContentChild.
   for (uint32_t i = 0; i < mBlobURLs.Length(); ++i) {
-    nsHostObjectProtocolHandler::RemoveDataEntry(mBlobURLs[i]);
+    BlobURLProtocolHandler::RemoveDataEntry(mBlobURLs[i]);
   }
 
   mBlobURLs.Clear();
@@ -2468,8 +2468,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
 
   {
     nsTArray<BlobURLRegistrationData> registrations;
-    if (nsHostObjectProtocolHandler::GetAllBlobURLEntries(registrations,
-                                                          this)) {
+    if (BlobURLProtocolHandler::GetAllBlobURLEntries(registrations, this)) {
       for (const BlobURLRegistrationData& registration : registrations) {
         nsresult rv = TransmitPermissionsForPrincipal(registration.principal());
         Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5192,8 +5191,8 @@ ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (NS_SUCCEEDED(nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal,
-                                                             blobImpl))) {
+  if (NS_SUCCEEDED(BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal,
+                                                        blobImpl))) {
     BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
 
     // We want to store this blobURL, so we can unregister it if the child
@@ -5208,8 +5207,7 @@ ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
 mozilla::ipc::IPCResult
 ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI)
 {
-  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
-                                               false /* Don't broadcast */);
+  BlobURLProtocolHandler::RemoveDataEntry(aURI, false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
   mBlobURLs.RemoveElement(aURI);
 

@@ -7,8 +7,8 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsContentUtils.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
@@ -77,7 +77,7 @@ FileMediaResource::Open(nsIStreamListener** aStreamListener)
     rv = NS_NewLocalFileInputStream(
       getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
     NS_ENSURE_SUCCESS(rv, rv);
-  } else if (IsBlobURI(mURI)) {
+  } else if (dom::IsBlobURI(mURI)) {
     RefPtr<dom::BlobImpl> blobImpl;
     rv = NS_GetBlobForBlobURI(mURI, getter_AddRefs(blobImpl));
     NS_ENSURE_SUCCESS(rv, rv);
