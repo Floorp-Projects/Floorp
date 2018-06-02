@@ -6,6 +6,7 @@
 
 #include "BlobURLProtocolHandler.h"
 
+#include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -21,7 +22,6 @@
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
-#include "nsHostObjectURI.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIException.h" // for nsIStackFrame
 #include "nsIMemoryReporter.h"
@@ -838,7 +838,7 @@ BlobURLProtocolHandler::NewURI(const nsACString& aSpec,
   }
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_MutateURI(new nsHostObjectURI::Mutator())
+  rv = NS_MutateURI(new BlobURL::Mutator())
          .SetSpec(aSpec)
          .Apply(NS_MutatorMethod(&nsIPrincipalURIMutator::SetPrincipal, principal))
          .Finalize(uri);

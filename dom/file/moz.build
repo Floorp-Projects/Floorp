@@ -9,15 +9,12 @@ with Files("**"):
 
 DIRS += ['ipc']
 
-EXPORTS += [
-    'nsHostObjectURI.h',
-]
-
 EXPORTS.mozilla.dom += [
     'BaseBlobImpl.h',
     'Blob.h',
     'BlobImpl.h',
     'BlobSet.h',
+    'BlobURL.h',
     'BlobURLProtocolHandler.h',
     'File.h',
     'FileBlobImpl.h',
@@ -38,6 +35,7 @@ UNIFIED_SOURCES += [
     'Blob.cpp',
     'BlobImpl.cpp',
     'BlobSet.cpp',
+    'BlobURL.cpp',
     'BlobURLProtocolHandler.cpp',
     'EmptyBlobImpl.cpp',
     'File.cpp',
@@ -51,7 +49,6 @@ UNIFIED_SOURCES += [
     'MultipartBlobImpl.cpp',
     'MutableBlobStorage.cpp',
     'MutableBlobStreamListener.cpp',
-    'nsHostObjectURI.cpp',
     'StreamBlobImpl.cpp',
     'StringBlobImpl.cpp',
     'TemporaryFileBlobImpl.cpp',
