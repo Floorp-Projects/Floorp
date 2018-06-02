@@ -315,6 +315,9 @@ public:
     return mState.GetTextEditor();
   }
 
+  void SetUserInput(const nsAString& aValue,
+                    nsIPrincipal& aSubjectPrincipal);
+
 protected:
   virtual ~HTMLTextAreaElement() {}
 

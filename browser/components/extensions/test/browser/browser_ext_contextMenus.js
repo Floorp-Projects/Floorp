@@ -397,7 +397,7 @@ add_task(async function() {
   ok(result.info.selectionText.endsWith("quo voluptas nulla pariatur?"), "long text selection worked");
 
 
-  // Select a lot of text, excercise the nsIDOMNSEditableElement code path in
+  // Select a lot of text, excercise the editable element code path in
   // the Browser:GetSelection handler.
   await ContentTask.spawn(gBrowser.selectedBrowser, { }, function(arg) {
     let doc = content.document;

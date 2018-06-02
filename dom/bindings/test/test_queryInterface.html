@@ -12,20 +12,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=827546
 
   /** Test for Bug 827546 **/
 
-  var notEditable = document.createElement("div");
+  var notImage = document.createElement("div");
   var thrown;
   try {
     thrown = false;
-    SpecialPowers.do_QueryInterface(notEditable, "nsIDOMNSEditableElement");
+    SpecialPowers.do_QueryInterface(notImage, "nsIImageLoadingContent");
   } catch (e) {
     thrown = true;
   }
   ok(thrown,
-     "QI to nsIDOMNSEditableElement on a non-editable element should fail");
+     "QI to nsIImageLoadingContent on a non-image element should fail");
 
-  var editable = document.createElement("input");
-  ok(SpecialPowers.do_QueryInterface(editable, "nsIDOMNSEditableElement"),
-     "Editable element needs to support QI to nsIDOMNSEditableElement");
+  var image = document.createElement("img");
+  ok(SpecialPowers.do_QueryInterface(image, "nsIImageLoadingContent"),
+     "Image  element needs to support QI to nsIImageLoadingContent");
 
   </script>
 </head>

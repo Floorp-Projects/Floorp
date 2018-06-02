@@ -354,6 +354,12 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue, ErrorResult& aError)
   }
 }
 
+void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
+                                       nsIPrincipal& aSubjectPrincipal)
+{
+  SetUserInput(aValue);
+}
+
 NS_IMETHODIMP
 HTMLTextAreaElement::SetUserInput(const nsAString& aValue)
 {
