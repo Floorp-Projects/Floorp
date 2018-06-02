@@ -28,7 +28,6 @@ from mozharness.mozilla.building.buildbase import (
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
-from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
 
 try:
@@ -64,7 +63,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 # DesktopSingleLocale {{{1
 class DesktopSingleLocale(LocalesMixin, AutomationMixin,
-                          VCSMixin, BaseScript, BalrogMixin, MarMixin,
+                          VCSMixin, BaseScript, MarMixin,
                           VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
@@ -132,7 +131,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 "repack",
                 "taskcluster-upload",
                 "funsize-props",
-                "submit-to-balrog",
                 "summary",
             ],
             'config': {
@@ -686,34 +684,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
         return self.abs_dirs
-
-    def submit_to_balrog(self):
-        """submit to balrog"""
-        self.info("Reading build properties...")
-        # get platform, appName and hashType from configuration
-        # common values across different locales
-        config = self.config
-        platform = config["platform"]
-        appName = config['appName']
-        branch = config['branch']
-        # values from configuration
-        self.set_property("branch", branch)
-        self.set_property("appName", appName)
-        # it's hardcoded to sha512 in balrog.py
-        self.set_property("platform", platform)
-        # values common to the current repacks
-        self.set_property("buildid", self._query_buildid())
-        self.set_property("appVersion", self.query_version())
-
-        # YAY
-        def balrog_props_wrapper(locale):
-            env = self._query_upload_env()
-            props_path = os.path.join(env["UPLOAD_PATH"], locale,
-                                      'balrog_props.json')
-            self.generate_balrog_props(props_path)
-            return SUCCESS
-
-        self._map(balrog_props_wrapper, self.query_locales())
 
     def _mar_binaries(self):
         """returns a tuple with mar and mbsdiff paths"""
