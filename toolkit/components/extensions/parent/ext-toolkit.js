@@ -82,10 +82,5 @@ function makeStartupPromise(event) {
 // browserPaintedPromise and browserStartupPromise are promises that
 // resolve after the first browser window is painted and after browser
 // windows have been restored, respectively.
-// _resetStartupPromises() is accessible here for use from tests.
-global._resetStartupPromises = () => {
-  global.browserPaintedPromise = makeStartupPromise("browser-delayed-startup-finished");
-  global.browserStartupPromise = makeStartupPromise("sessionstore-windows-restored");
-};
-
-global._resetStartupPromises();
+global.browserPaintedPromise = makeStartupPromise("browser-delayed-startup-finished");
+global.browserStartupPromise = makeStartupPromise("sessionstore-windows-restored");
