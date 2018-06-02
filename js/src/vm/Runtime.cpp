@@ -133,7 +133,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     activeThreadHasScriptDataAccess(false),
 #endif
     numActiveHelperThreadZones(0),
-    numCompartments(0),
+    numRealms(0),
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     profilingScripts(false),

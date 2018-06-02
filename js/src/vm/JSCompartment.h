@@ -618,7 +618,6 @@ struct JSCompartment
 
   protected:
     explicit JSCompartment(JS::Zone* zone);
-    ~JSCompartment();
 
     MOZ_MUST_USE bool init(JSContext* cx);
 
