@@ -193,16 +193,6 @@ class LocalesMixin(ChunkingMixin):
                                        tag_override=c.get('tag_override'))
         self.gecko_locale_revisions = revs
 
-    def query_l10n_repo(self):
-        # Find the name of our repository
-        mozilla_dir = self.config['mozilla_dir']
-        repo = None
-        for repository in self.config['repos']:
-            if repository.get('dest') == mozilla_dir:
-                repo = repository['repo']
-                break
-        return repo
-
 
 # __main__ {{{1
 
