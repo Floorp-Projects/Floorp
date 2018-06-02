@@ -30,10 +30,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
-static char *RCSSTRING __UNUSED__="$Id: cb_args.c,v 1.2 2008/04/28 17:59:04 ekr Exp $";
-
 #include <stdarg.h>
 #include "nr_api.h"
 #include "cb_args.h"
