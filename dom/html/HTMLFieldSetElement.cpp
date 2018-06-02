@@ -98,11 +98,10 @@ HTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                                 aSubjectPrincipal, aNotify);
 }
 
-NS_IMETHODIMP
-HTMLFieldSetElement::GetType(nsAString& aType)
+void
+HTMLFieldSetElement::GetType(nsAString& aType) const
 {
   aType.AssignLiteral("fieldset");
-  return NS_OK;
 }
 
 /* static */
