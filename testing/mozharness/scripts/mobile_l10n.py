@@ -115,7 +115,6 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         buildscript_kwargs = {
             'all_actions': [
                 "get-secrets",
-                "clobber",
                 "clone-locales",
                 "list-locales",
                 "setup",
