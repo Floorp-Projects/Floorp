@@ -77,7 +77,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   _getSelectionController(aEvent) {
     if (aEvent.selectionEditable) {
       const focus = aEvent.target.activeElement;
-      if (focus.editor) {
+      if (focus && focus.editor) {
         return focus.editor.selectionController;
       }
     }
