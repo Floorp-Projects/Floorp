@@ -1885,10 +1885,12 @@ public:
   mozilla::dom::Element* GetPreviousElementSibling() const;
   mozilla::dom::Element* GetNextElementSibling() const;
 
-  void Before(const Sequence<OwningNodeOrString>& aNodes, ErrorResult& aRv);
-  void After(const Sequence<OwningNodeOrString>& aNodes, ErrorResult& aRv);
-  void ReplaceWith(const Sequence<OwningNodeOrString>& aNodes,
-                   ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Before(const Sequence<OwningNodeOrString>& aNodes,
+                                 ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void After(const Sequence<OwningNodeOrString>& aNodes,
+                                ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void ReplaceWith(const Sequence<OwningNodeOrString>& aNodes,
+                                      ErrorResult& aRv);
   /**
    * Remove this node from its parent, if any.
    */
@@ -1898,8 +1900,10 @@ public:
   mozilla::dom::Element* GetFirstElementChild() const;
   mozilla::dom::Element* GetLastElementChild() const;
 
-  void Prepend(const Sequence<OwningNodeOrString>& aNodes, ErrorResult& aRv);
-  void Append(const Sequence<OwningNodeOrString>& aNodes, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Prepend(const Sequence<OwningNodeOrString>& aNodes,
+                                  ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Append(const Sequence<OwningNodeOrString>& aNodes,
+                                 ErrorResult& aRv);
 
   void GetBoxQuads(const BoxQuadOptions& aOptions,
                    nsTArray<RefPtr<DOMQuad> >& aResult,
