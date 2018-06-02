@@ -114,12 +114,11 @@ typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* scrip
                                       const JS::AutoRequireNoGC& nogc);
 
 /*
- * Invoke scriptCallback on every in-use script for
- * the given compartment or for all compartments if it is null.
+ * Invoke scriptCallback on every in-use script for the given realm or for all
+ * realms if it is null.
  */
 extern void
-IterateScripts(JSContext* cx, JSCompartment* compartment,
-               void* data, IterateScriptCallback scriptCallback);
+IterateScripts(JSContext* cx, JS::Realm* realm, void* data, IterateScriptCallback scriptCallback);
 
 JS::Realm*
 NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& options);
