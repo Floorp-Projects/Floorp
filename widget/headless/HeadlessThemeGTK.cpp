@@ -23,28 +23,27 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+LayoutDeviceIntMargin
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  LayoutDeviceIntMargin* aResult)
+                                  uint8_t aWidgetType)
 {
-  aResult->top = aResult->right = aResult->bottom = aResult->left = 0;
+  LayoutDeviceIntMargin result;
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_TOOLBARBUTTON:
-      aResult->top = 6;
-      aResult->right = 7;
-      aResult->bottom = 6;
-      aResult->left = 7;
+      result.top = 6;
+      result.right = 7;
+      result.bottom = 6;
+      result.left = 7;
       break;
     case NS_THEME_FOCUS_OUTLINE:
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
-      aResult->top = 5;
-      aResult->right = 7;
-      aResult->bottom = 5;
-      aResult->left = 7;
+      result.top = 5;
+      result.right = 7;
+      result.bottom = 5;
+      result.left = 7;
       break;
     case NS_THEME_STATUSBARPANEL:
     case NS_THEME_RESIZERPANEL:
@@ -59,46 +58,46 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_GTK_INFO_BAR:
-      aResult->top = 1;
-      aResult->right = 1;
-      aResult->bottom = 1;
-      aResult->left = 1;
+      result.top = 1;
+      result.right = 1;
+      result.bottom = 1;
+      result.left = 1;
       break;
     case NS_THEME_TREEHEADERCELL:
-      aResult->top = 5;
-      aResult->right = 7;
-      aResult->bottom = 6;
-      aResult->left = 6;
+      result.top = 5;
+      result.right = 7;
+      result.bottom = 6;
+      result.left = 6;
       break;
     case NS_THEME_TAB:
-      aResult->top = 4;
-      aResult->right = 7;
-      aResult->bottom = 2;
-      aResult->left = 7;
+      result.top = 4;
+      result.right = 7;
+      result.bottom = 2;
+      result.left = 7;
       break;
     case NS_THEME_TOOLTIP:
-      aResult->top = 6;
-      aResult->right = 6;
-      aResult->bottom = 6;
-      aResult->left = 6;
+      result.top = 6;
+      result.right = 6;
+      result.bottom = 6;
+      result.left = 6;
       break;
     case NS_THEME_MENULIST:
-      aResult->top = 6;
-      aResult->right = 22;
-      aResult->bottom = 6;
-      aResult->left = 7;
+      result.top = 6;
+      result.right = 22;
+      result.bottom = 6;
+      result.left = 7;
       break;
     case NS_THEME_MENULIST_BUTTON:
-      aResult->top = 1;
-      aResult->right = 1;
-      aResult->bottom = 1;
-      aResult->left = 0;
+      result.top = 1;
+      result.right = 1;
+      result.bottom = 1;
+      result.left = 0;
       break;
     case NS_THEME_MENULIST_TEXTFIELD:
-      aResult->top = 1;
-      aResult->right = 0;
-      aResult->bottom = 1;
-      aResult->left = 1;
+      result.top = 1;
+      result.right = 0;
+      result.bottom = 1;
+      result.left = 1;
       break;
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
@@ -106,13 +105,13 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       if (IsRegularMenuItem(aFrame)) {
         break;
       }
-      aResult->top = 3;
-      aResult->right = 5;
-      aResult->bottom = 3;
-      aResult->left = 5;
+      result.top = 3;
+      result.right = 5;
+      result.bottom = 3;
+      result.left = 5;
       break;
   }
-  return NS_OK;
+  return result;
 }
 
 bool

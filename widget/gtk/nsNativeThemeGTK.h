@@ -38,14 +38,14 @@ public:
                                         uint8_t aWidgetType,
                                         const nsRect& aRect) override;
 
-  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             mozilla::LayoutDeviceIntMargin* aResult) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
+                                                     nsIFrame* aFrame,
+                                                     uint8_t aWidgetType) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
                         uint8_t aWidgetType,
-                        mozilla::LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                  nsIFrame* aFrame,
@@ -102,9 +102,9 @@ private:
   // corresponding entry in mBorderCache is valid.
   void GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
                              GtkTextDirection aDirection,
-                             mozilla::LayoutDeviceIntMargin* aResult);
+                             LayoutDeviceIntMargin* aResult);
   uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];
-  mozilla::LayoutDeviceIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
+  LayoutDeviceIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
 };
 
 #endif
