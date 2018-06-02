@@ -64,13 +64,6 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
          "help": "Override the tags set for all repos"
          }
     ], [
-        ['--user-repo-override', ],
-        {"action": "store",
-         "dest": "user_repo_override",
-         "type": "string",
-         "help": "Override the user repo path for all repos"
-         }
-    ], [
         ['--release-config-file', ],
         {"action": "store",
          "dest": "release_config_file",

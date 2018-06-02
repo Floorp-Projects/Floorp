@@ -171,24 +171,14 @@ class LocalesMixin(ChunkingMixin):
         if parent_dir is None:
             parent_dir = self.query_abs_dirs()['abs_l10n_dir']
         self.mkdir_p(parent_dir)
-        repos = []
-        replace_dict = {}
         # This block is to allow for pulling buildbot-configs in Fennec
         # release builds, since we don't pull it in MBF anymore.
         if c.get("l10n_repos"):
-            if c.get("user_repo_override"):
-                replace_dict['user_repo_override'] = c['user_repo_override']
-                for repo_dict in deepcopy(c['l10n_repos']):
-                    repo_dict['repo'] = repo_dict['repo'] % replace_dict
-                    repos.append(repo_dict)
-            else:
-                repos = c.get("l10n_repos")
+            repos = c.get("l10n_repos")
             self.vcs_checkout_repos(repos, tag_override=c.get('tag_override'))
         # Pull locales
         locales = self.query_locales()
         locale_repos = []
-        if c.get("user_repo_override"):
-            hg_l10n_base = hg_l10n_base % {"user_repo_override": c["user_repo_override"]}
         for locale in locales:
             tag = c.get('hg_l10n_tag', 'default')
             if self.l10n_revisions.get(locale):
