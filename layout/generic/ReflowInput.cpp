@@ -2598,10 +2598,9 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   }
 
   if (isThemed) {
-    LayoutDeviceIntMargin border;
-    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             mFrame, disp->mAppearance,
-                                             &border);
+    LayoutDeviceIntMargin border =
+      presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
+                                               mFrame, disp->mAppearance);
     ComputedPhysicalBorderPadding() =
       LayoutDevicePixel::ToAppUnits(border,
                                     presContext->AppUnitsPerDevPixel());
