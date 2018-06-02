@@ -40,13 +40,6 @@ public:
 
   BlobURLProtocolHandler();
 
-  // If principal is not null, its origin will be used to generate the URI.
-  static nsresult GenerateURIString(const nsACString &aScheme,
-                                    nsIPrincipal* aPrincipal,
-                                    nsACString &aUri);
-  static nsresult GenerateURIStringForBlobURL(nsIPrincipal* aPrincipal,
-                                              nsACString &aUri);
-
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
   static nsresult AddDataEntry(mozilla::dom::BlobImpl* aBlobImpl,
@@ -78,6 +71,10 @@ private:
   ~BlobURLProtocolHandler();
 
   static void Init();
+
+  // If principal is not null, its origin will be used to generate the URI.
+  static nsresult GenerateURIString(nsIPrincipal* aPrincipal,
+                                    nsACString &aUri);
 };
 
 bool IsBlobURI(nsIURI* aUri);
