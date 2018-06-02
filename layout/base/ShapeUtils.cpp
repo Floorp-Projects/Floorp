@@ -124,29 +124,15 @@ ShapeUtils::ComputeInsetRect(const UniquePtr<StyleBasicShape>& aBasicShape,
   const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
 
-  nsMargin inset(coords[0].ComputeCoordPercentCalc(aRefBox.Height()),
-                 coords[1].ComputeCoordPercentCalc(aRefBox.Width()),
-                 coords[2].ComputeCoordPercentCalc(aRefBox.Height()),
-                 coords[3].ComputeCoordPercentCalc(aRefBox.Width()));
+  nsMargin inset(coords[0].ComputeCoordPercentCalc(aRefBox.height),
+                 coords[1].ComputeCoordPercentCalc(aRefBox.width),
+                 coords[2].ComputeCoordPercentCalc(aRefBox.height),
+                 coords[3].ComputeCoordPercentCalc(aRefBox.width));
 
-  nscoord x = aRefBox.X() + inset.left;
-  nscoord width = aRefBox.Width() - inset.LeftRight();
-  nscoord y = aRefBox.Y() + inset.top;
-  nscoord height = aRefBox.Height() - inset.TopBottom();
+  nsRect insetRect(aRefBox);
+  insetRect.Deflate(inset);
 
-  // Invert left and right, if necessary.
-  if (width < 0) {
-    width *= -1;
-    x -= width;
-  }
-
-  // Invert top and bottom, if necessary.
-  if (height < 0) {
-    height *= -1;
-    y -= height;
-  }
-
-  return nsRect(x, y, width, height);
+  return insetRect;
 }
 
 /* static */ bool
