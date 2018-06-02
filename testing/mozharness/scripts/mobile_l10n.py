@@ -70,20 +70,6 @@ class MobileSingleLocale(LocalesMixin,
          "help": "Specify the signing key alias"
          }
     ], [
-        ['--this-chunk', ],
-        {"action": "store",
-         "dest": "this_locale_chunk",
-         "type": "int",
-         "help": "Specify which chunk of locales to run"
-         }
-    ], [
-        ['--total-chunks', ],
-        {"action": "store",
-         "dest": "total_locale_chunks",
-         "type": "int",
-         "help": "Specify the total number of chunks of locales"
-         }
-    ], [
         ['--revision', ],
         {"action": "store",
          "dest": "revision",
