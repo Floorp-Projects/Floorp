@@ -65,13 +65,6 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
          "help": "Specify the platform(s) to repack"
          }
     ], [
-        ['--release-config-file', ],
-        {"action": "store",
-         "dest": "release_config_file",
-         "type": "string",
-         "help": "Specify the release config file to use"
-         }
-    ], [
         ['--version', ],
         {"action": "store",
          "dest": "version",
