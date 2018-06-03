@@ -56,7 +56,7 @@ public:
 
   template <typename... Args>
   MOZ_IMPLICIT EnumeratedArray(Args&&... aArgs)
-    : mArray{mozilla::Forward<Args>(aArgs)...}
+    : mArray{std::forward<Args>(aArgs)...}
   {}
 
   explicit EnumeratedArray(const EnumeratedArray& aOther)

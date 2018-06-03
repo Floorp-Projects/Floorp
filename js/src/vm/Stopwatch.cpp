@@ -588,6 +588,7 @@ PerformanceGroup::Release()
     if (refCount_ > 0)
         return;
 
+    JS::AutoSuppressGCAnalysis nogc;
     this->Delete();
 }
 

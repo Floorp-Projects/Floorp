@@ -172,7 +172,7 @@ public:
   WriteState WritePixels(Func aFunc)
   {
     Maybe<WriteState> result;
-    while (!(result = DoWritePixelsToRow<PixelType>(Forward<Func>(aFunc)))) { }
+    while (!(result = DoWritePixelsToRow<PixelType>(std::forward<Func>(aFunc)))) { }
 
     return *result;
   }
@@ -209,7 +209,7 @@ public:
   WriteState WritePixelBlocks(Func aFunc)
   {
     Maybe<WriteState> result;
-    while (!(result = DoWritePixelBlockToRow<PixelType>(Forward<Func>(aFunc)))) { }
+    while (!(result = DoWritePixelBlockToRow<PixelType>(std::forward<Func>(aFunc)))) { }
 
     return *result;
   }
@@ -246,7 +246,7 @@ public:
   template <typename PixelType, typename Func>
   WriteState WritePixelsToRow(Func aFunc)
   {
-    return DoWritePixelsToRow<PixelType>(Forward<Func>(aFunc))
+    return DoWritePixelsToRow<PixelType>(std::forward<Func>(aFunc))
            .valueOr(WriteState::NEED_MORE_DATA);
   }
 
@@ -639,7 +639,7 @@ public:
   WriteState WritePixels(Func aFunc)
   {
     MOZ_ASSERT(mHead, "Use before configured!");
-    return mHead->WritePixels<PixelType>(Forward<Func>(aFunc));
+    return mHead->WritePixels<PixelType>(std::forward<Func>(aFunc));
   }
 
   /**
@@ -653,7 +653,7 @@ public:
   WriteState WritePixelBlocks(Func aFunc)
   {
     MOZ_ASSERT(mHead, "Use before configured!");
-    return mHead->WritePixelBlocks<PixelType>(Forward<Func>(aFunc));
+    return mHead->WritePixelBlocks<PixelType>(std::forward<Func>(aFunc));
   }
 
   /**
@@ -667,7 +667,7 @@ public:
   WriteState WritePixelsToRow(Func aFunc)
   {
     MOZ_ASSERT(mHead, "Use before configured!");
-    return mHead->WritePixelsToRow<PixelType>(Forward<Func>(aFunc));
+    return mHead->WritePixelsToRow<PixelType>(std::forward<Func>(aFunc));
   }
 
   /**

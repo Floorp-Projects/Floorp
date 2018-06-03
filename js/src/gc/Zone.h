@@ -207,7 +207,7 @@ struct Zone : public JS::shadow::Zone,
     // in gc/GC-inl.h for the possible arguments and documentation.
     template <typename T, typename... Args>
     js::gc::ZoneCellIter<T> cellIter(Args&&... args) {
-        return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this), mozilla::Forward<Args>(args)...);
+        return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this), std::forward<Args>(args)...);
     }
 
     MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,

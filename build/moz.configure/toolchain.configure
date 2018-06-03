@@ -144,7 +144,7 @@ include('android-ndk.configure', when=compiling_android)
 # This needs to happen before any compilation test is done.
 
 option('--enable-macos-target', env='MACOSX_DEPLOYMENT_TARGET', nargs=1,
-       default='10.7', help='Set the minimum MacOS version needed at runtime')
+       default='10.9', help='Set the minimum MacOS version needed at runtime')
 
 
 @depends('--enable-macos-target', target)

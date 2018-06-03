@@ -19,7 +19,7 @@ class VMSharingPolicyUnique : public MMPolicy
 public:
   template <typename... Args>
   explicit VMSharingPolicyUnique(Args... aArgs)
-    : MMPolicy(mozilla::Forward<Args>(aArgs)...)
+    : MMPolicy(std::forward<Args>(aArgs)...)
     , mNextChunkIndex(0)
   {
   }

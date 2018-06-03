@@ -178,7 +178,7 @@ public:
   template<typename... Args>
   InternalType& Construct(Args&&... aArgs)
   {
-    mImpl.emplace(Forward<Args>(aArgs)...);
+    mImpl.emplace(std::forward<Args>(aArgs)...);
     return *mImpl;
   }
 

@@ -659,7 +659,7 @@ public:
 
   AutoCleanLinkedList& operator=(AutoCleanLinkedList&& aOther)
   {
-    LinkedList<T>::operator=(Forward<LinkedList<T>>(aOther));
+    LinkedList<T>::operator=(std::forward<LinkedList<T>>(aOther));
     return *this;
   }
 

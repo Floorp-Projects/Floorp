@@ -20,7 +20,7 @@ protected:
 
   template <typename... Args>
   explicit WindowsDllPatcherBase(Args... aArgs)
-    : mVMPolicy(mozilla::Forward<Args>(aArgs)...)
+    : mVMPolicy(std::forward<Args>(aArgs)...)
   {
   }
 

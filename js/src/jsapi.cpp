@@ -3467,8 +3467,10 @@ JS_PUBLIC_API(void)
 JS_DropPrincipals(JSContext* cx, JSPrincipals* principals)
 {
     int rc = --principals->refcount;
-    if (rc == 0)
+    if (rc == 0) {
+        JS::AutoSuppressGCAnalysis nogc;
         cx->runtime()->destroyPrincipals(principals);
+    }
 }
 
 JS_PUBLIC_API(void)
@@ -7574,19 +7576,26 @@ GetScriptedCallerActivationRealmFast(JSContext* cx, Activation** activation, Rea
     }
 
     if (activationIter->isJit()) {
-        for (OnlyJSJitFrameIter iter(activationIter); !iter.done(); ++iter) {
-            if (!iter.frame().isScripted())
-                continue;
-            if (!iter.frame().script()->selfHosted()) {
-                *activation = activationIter.activation();
-                *realm = iter.frame().script()->realm();
+        jit::JitActivation* act = activationIter->asJit();
+        JitFrameIter iter(act);
+        while (true) {
+            iter.skipNonScriptedJSFrames();
+            if (iter.done())
+                break;
+
+            if (!iter.isSelfHostedIgnoringInlining()) {
+                *activation = act;
+                *realm = iter.realm();
                 return true;
             }
-            if (iter.frame().isIonScripted()) {
+
+            if (iter.isJSJit() && iter.asJSJit().isIonScripted()) {
                 // Ion might have inlined non-self-hosted scripts in this
                 // self-hosted script.
                 return false;
             }
+
+            ++iter;
         }
     } else if (activationIter->isInterpreter()) {
         InterpreterActivation* act = activationIter->asInterpreter();

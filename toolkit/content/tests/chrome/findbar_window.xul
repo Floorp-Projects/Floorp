@@ -181,7 +181,7 @@
       await openFindbar();
       checkFindbarState("plain text", SEARCH_TEXT);
 
-      // Test nsIDOMNSEditableElement with selection.
+      // Test editable element with selection.
       await ContentTask.spawn(gBrowser, null, async function() {
         let textInput = content.document.getElementById("text");
         textInput.focus();
@@ -190,7 +190,7 @@
       await openFindbar();
       checkFindbarState("text input", SAMPLE_TEXT);
 
-      // Test non-editable nsIDOMNSEditableElement (button).
+      // Test non-editable input element (type="button").
       await ContentTask.spawn(gBrowser, null, async function() {
         content.document.getElementById("button").focus();
       });

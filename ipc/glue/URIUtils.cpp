@@ -10,12 +10,12 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/BlobURL.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"
 #include "nsJARURI.h"
 #include "nsIIconURI.h"
-#include "nsHostObjectURI.h"
 #include "NullPrincipalURI.h"
 #include "nsJSProtocolHandler.h"
 #include "nsNetCID.h"
@@ -109,7 +109,7 @@ DeserializeURI(const URIParams& aParams)
       break;
 
     case URIParams::THostObjectURIParams:
-      mutator = new nsHostObjectURI::Mutator();
+      mutator = new mozilla::dom::BlobURL::Mutator();
       break;
 
     default:

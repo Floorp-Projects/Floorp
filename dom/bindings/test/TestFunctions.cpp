@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TestFunctions.h"
 #include "mozilla/dom/TestFunctionsBinding.h"
 #include "nsStringBuffer.h"
@@ -106,6 +107,37 @@ TestFunctions::ThrowToRejectPromise(GlobalObject& aGlobal, ErrorResult& aError)
 {
   aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   return nullptr;
+}
+
+int32_t
+TestFunctions::One() const
+{
+  return 1;
+}
+
+int32_t
+TestFunctions::Two() const
+{
+  return 2;
+}
+
+bool
+TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj)
+{
+  // We purposefully don't use WindowOrNull here, because we want to
+  // demonstrate the incorrect behavior we get, not just fail some asserts.
+  RefPtr<nsGlobalWindowInner> win;
+  UNWRAP_OBJECT(Window, aObj, win);
+  if (!win) {
+    return false;
+  }
+
+  nsIDocument* doc = win->GetDoc();
+  if (!doc) {
+    return false;
+  }
+
+  return doc->GetDocumentURI()->GetSpecOrDefault().EqualsLiteral("about:blank");
 }
 
 bool

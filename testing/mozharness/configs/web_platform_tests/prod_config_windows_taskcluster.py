@@ -25,10 +25,6 @@ config = {
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
 
-    "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
-    ],
-
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [
         {
@@ -53,8 +49,6 @@ config = {
             'enabled': True
         }
     ],
-
-    "blob_uploader_auth_file" : 'C:/builds/oauth.txt',
 
     "download_minidump_stackwalk": True,
 

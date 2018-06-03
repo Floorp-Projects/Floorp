@@ -5131,6 +5131,11 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             if not self.isToJSON():
                 raise WebIDLError("[Default] is only allowed on toJSON operations",
                                   [attr.location, self.location])
+
+            if self.signatures()[0][0] != BuiltinTypes[IDLBuiltinType.Types.object]:
+                raise WebIDLError("The return type of the default toJSON "
+                                  "operation must be 'object'",
+                                  [attr.location, self.location]);
         elif (identifier == "Throws" or
               identifier == "CanOOM" or
               identifier == "NewObject" or

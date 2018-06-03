@@ -200,7 +200,7 @@ MakeNotNull(Args&&... aArgs)
   using Pointee = typename detail::PointedTo<T>::NonConstType;
   static_assert(!IsArray<Pointee>::value,
                 "MakeNotNull cannot construct an array");
-  return NotNull<T>(new Pointee(Forward<Args>(aArgs)...));
+  return NotNull<T>(new Pointee(std::forward<Args>(aArgs)...));
 }
 
 // Compare two NotNulls.

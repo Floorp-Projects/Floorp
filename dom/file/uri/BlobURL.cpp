@@ -4,24 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHostObjectURI.h"
-
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsHostObjectProtocolHandler.h"
 
+#include "mozilla/dom/BlobURL.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kHOSTOBJECTURICID, NS_HOSTOBJECTURI_CID);
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 
-NS_IMPL_ADDREF_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
-NS_IMPL_RELEASE_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
+NS_IMPL_ADDREF_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
+NS_IMPL_RELEASE_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
 
-NS_INTERFACE_MAP_BEGIN(nsHostObjectURI)
+NS_INTERFACE_MAP_BEGIN(BlobURL)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -38,7 +39,7 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 // nsIURIWithPrincipal methods:
 
 NS_IMETHODIMP
-nsHostObjectURI::GetPrincipal(nsIPrincipal** aPrincipal)
+BlobURL::GetPrincipal(nsIPrincipal** aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
@@ -48,7 +49,7 @@ nsHostObjectURI::GetPrincipal(nsIPrincipal** aPrincipal)
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetPrincipalUri(nsIURI** aUri)
+BlobURL::GetPrincipalUri(nsIURI** aUri)
 {
   if (mPrincipal) {
     mPrincipal->GetURI(aUri);
@@ -63,14 +64,14 @@ nsHostObjectURI::GetPrincipalUri(nsIURI** aUri)
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsHostObjectURI::Read(nsIObjectInputStream* aStream)
+BlobURL::Read(nsIObjectInputStream* aStream)
 {
   NS_NOTREACHED("Use nsIURIMutator.read() instead");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsHostObjectURI::ReadPrivate(nsIObjectInputStream *aStream)
+BlobURL::ReadPrivate(nsIObjectInputStream *aStream)
 {
   nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -85,7 +86,7 @@ nsHostObjectURI::ReadPrivate(nsIObjectInputStream *aStream)
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::Write(nsIObjectOutputStream* aStream)
+BlobURL::Write(nsIObjectOutputStream* aStream)
 {
   nsresult rv = mozilla::net::nsSimpleURI::Write(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -98,7 +99,7 @@ nsHostObjectURI::Write(nsIObjectOutputStream* aStream)
 
 // nsIIPCSerializableURI methods:
 void
-nsHostObjectURI::Serialize(mozilla::ipc::URIParams& aParams)
+BlobURL::Serialize(mozilla::ipc::URIParams& aParams)
 {
   using namespace mozilla::ipc;
 
@@ -125,7 +126,7 @@ nsHostObjectURI::Serialize(mozilla::ipc::URIParams& aParams)
 }
 
 bool
-nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
+BlobURL::Deserialize(const mozilla::ipc::URIParams& aParams)
 {
   using namespace mozilla::ipc;
 
@@ -154,7 +155,7 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
 }
 
 nsresult
-nsHostObjectURI::SetScheme(const nsACString& aScheme)
+BlobURL::SetScheme(const nsACString& aScheme)
 {
   // Disallow setting the scheme, since that could cause us to be associated
   // with a different protocol handler that doesn't expect us to be carrying
@@ -164,9 +165,9 @@ nsHostObjectURI::SetScheme(const nsACString& aScheme)
 
 // nsIURI methods:
 nsresult
-nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                               const nsACString& newRef,
-                               nsIURI** aClone)
+BlobURL::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+                       const nsACString& newRef,
+                       nsIURI** aClone)
 {
   nsCOMPtr<nsIURI> simpleClone;
   nsresult rv =
@@ -174,12 +175,12 @@ nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHa
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
-  RefPtr<nsHostObjectURI> uriCheck;
+  RefPtr<BlobURL> uriCheck;
   rv = simpleClone->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(uriCheck));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && uriCheck);
 #endif
 
-  nsHostObjectURI* u = static_cast<nsHostObjectURI*>(simpleClone.get());
+  BlobURL* u = static_cast<BlobURL*>(simpleClone.get());
 
   u->mPrincipal = mPrincipal;
 
@@ -188,16 +189,16 @@ nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHa
 }
 
 /* virtual */ nsresult
-nsHostObjectURI::EqualsInternal(nsIURI* aOther,
-                                mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                                bool* aResult)
+BlobURL::EqualsInternal(nsIURI* aOther,
+                        mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+                        bool* aResult)
 {
   if (!aOther) {
     *aResult = false;
     return NS_OK;
   }
 
-  RefPtr<nsHostObjectURI> otherUri;
+  RefPtr<BlobURL> otherUri;
   aOther->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(otherUri));
   if (!otherUri) {
     *aResult = false;
@@ -220,16 +221,16 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
 }
 
 // Queries this list of interfaces. If none match, it queries mURI.
-NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsHostObjectURI::Mutator,
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(BlobURL::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
                                 nsIPrincipalURIMutator,
                                 nsISerializable)
 
 NS_IMETHODIMP
-nsHostObjectURI::Mutate(nsIURIMutator** aMutator)
+BlobURL::Mutate(nsIURIMutator** aMutator)
 {
-    RefPtr<nsHostObjectURI::Mutator> mutator = new nsHostObjectURI::Mutator();
+    RefPtr<BlobURL::Mutator> mutator = new BlobURL::Mutator();
     nsresult rv = mutator->InitFromURI(this);
     if (NS_FAILED(rv)) {
         return rv;
@@ -240,7 +241,7 @@ nsHostObjectURI::Mutate(nsIURIMutator** aMutator)
 
 // nsIClassInfo methods:
 NS_IMETHODIMP
-nsHostObjectURI::GetInterfaces(uint32_t *count, nsIID * **array)
+BlobURL::GetInterfaces(uint32_t *count, nsIID * **array)
 {
   *count = 0;
   *array = nullptr;
@@ -248,14 +249,14 @@ nsHostObjectURI::GetInterfaces(uint32_t *count, nsIID * **array)
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetScriptableHelper(nsIXPCScriptable **_retval)
+BlobURL::GetScriptableHelper(nsIXPCScriptable **_retval)
 {
   *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetContractID(nsACString& aContractID)
+BlobURL::GetContractID(nsACString& aContractID)
 {
   // Make sure to modify any subclasses as needed if this ever
   // changes.
@@ -264,14 +265,14 @@ nsHostObjectURI::GetContractID(nsACString& aContractID)
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetClassDescription(nsACString& aClassDescription)
+BlobURL::GetClassDescription(nsACString& aClassDescription)
 {
   aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetClassID(nsCID * *aClassID)
+BlobURL::GetClassID(nsCID * *aClassID)
 {
   // Make sure to modify any subclasses as needed if this ever
   // changes to not call the virtual GetClassIDNoAlloc.
@@ -282,14 +283,14 @@ nsHostObjectURI::GetClassID(nsCID * *aClassID)
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetFlags(uint32_t *aFlags)
+BlobURL::GetFlags(uint32_t *aFlags)
 {
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHostObjectURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+BlobURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
   *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;

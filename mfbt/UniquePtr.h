@@ -260,7 +260,7 @@ public:
   }
 
   UniquePtr(UniquePtr&& aOther)
-    : mTuple(aOther.release(), Forward<DeleterType>(aOther.get_deleter()))
+    : mTuple(aOther.release(), std::forward<DeleterType>(aOther.get_deleter()))
   {}
 
   MOZ_IMPLICIT
@@ -281,7 +281,7 @@ public:
                                ? IsSame<D, E>::value
                                : IsConvertible<E, D>::value),
                               int>::Type aDummy = 0)
-    : mTuple(aOther.release(), Forward<E>(aOther.get_deleter()))
+    : mTuple(aOther.release(), std::forward<E>(aOther.get_deleter()))
   {
   }
 
@@ -290,7 +290,7 @@ public:
   UniquePtr& operator=(UniquePtr&& aOther)
   {
     reset(aOther.release());
-    get_deleter() = Forward<DeleterType>(aOther.get_deleter());
+    get_deleter() = std::forward<DeleterType>(aOther.get_deleter());
     return *this;
   }
 
@@ -304,7 +304,7 @@ public:
                   "can't assign from UniquePtr holding an array");
 
     reset(aOther.release());
-    get_deleter() = Forward<E>(aOther.get_deleter());
+    get_deleter() = std::forward<E>(aOther.get_deleter());
     return *this;
   }
 
@@ -429,7 +429,7 @@ public:
   = delete;
 
   UniquePtr(UniquePtr&& aOther)
-    : mTuple(aOther.release(), Forward<DeleterType>(aOther.get_deleter()))
+    : mTuple(aOther.release(), std::forward<DeleterType>(aOther.get_deleter()))
   {}
 
   MOZ_IMPLICIT
@@ -445,7 +445,7 @@ public:
   UniquePtr& operator=(UniquePtr&& aOther)
   {
     reset(aOther.release());
-    get_deleter() = Forward<DeleterType>(aOther.get_deleter());
+    get_deleter() = std::forward<DeleterType>(aOther.get_deleter());
     return *this;
   }
 
@@ -677,7 +677,7 @@ template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject
 MakeUnique(Args&&... aArgs)
 {
-  return UniquePtr<T>(new T(Forward<Args>(aArgs)...));
+  return UniquePtr<T>(new T(std::forward<Args>(aArgs)...));
 }
 
 template<typename T>

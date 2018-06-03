@@ -19,11 +19,11 @@
           var t = $("target");
           doIs(t.value, "Test", "Typing should work");
           (function() {
-            SpecialPowers.wrap(t).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor.undo(1);
+            SpecialPowers.wrap(t).editor.undo(1);
           })()
           doIs(t.value, "", "Undo should work");
           (function() {
-            SpecialPowers.wrap(t).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor.redo(1);
+            SpecialPowers.wrap(t).editor.redo(1);
           })()
           doIs(t.value, "Test", "Redo should work");
           window.parent.postMessage("f", "*");

@@ -40,15 +40,14 @@ public:
   nscolor GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
                              uint8_t aWidgetType) override;
 
-  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
-                             nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             mozilla::LayoutDeviceIntMargin* aResult) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
+                                                     nsIFrame* aFrame,
+                                                     uint8_t aWidgetType) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
                         uint8_t aWidgetType,
-                        mozilla::LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
@@ -100,14 +99,13 @@ protected:
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aClipRect);
-  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
-                                  nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  mozilla::LayoutDeviceIntMargin* aResult);
+  MOZ_MUST_USE LayoutDeviceIntMargin ClassicGetWidgetBorder(nsDeviceContext* aContext,
+                                                            nsIFrame* aFrame,
+                                                            uint8_t aWidgetType);
   bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                nsIFrame* aFrame,
                                uint8_t aWidgetType,
-                               mozilla::LayoutDeviceIntMargin* aResult);
+                               LayoutDeviceIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame, uint8_t aWidgetType,
                                        mozilla::LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
@@ -131,9 +129,11 @@ protected:
                                int aPart, int aState,
                                RECT* aWidgetRect, RECT* aClipRect);
 
-  nsresult GetCachedWidgetBorder(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
-                                 uint8_t aWidgetType, int32_t aPart, int32_t aState,
-                                 mozilla::LayoutDeviceIntMargin* aResult);
+  MOZ_MUST_USE LayoutDeviceIntMargin GetCachedWidgetBorder(HANDLE aTheme,
+                                                           nsUXThemeClass aThemeClass,
+                                                           uint8_t aWidgetType,
+                                                           int32_t aPart,
+                                                           int32_t aState);
 
   nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
                                       uint8_t aWidgetType, int32_t aPart, int32_t aState,
@@ -151,7 +151,7 @@ private:
   // the aWidgetType value instead, but there would be some uncacheable values, since
   // we derive some theme parts from other arguments.
   uint8_t mBorderCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
-  mozilla::LayoutDeviceIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
+  LayoutDeviceIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   // See the above not for mBorderCache and friends. However mozilla::LayoutDeviceIntSize
   // is half the size of nsIntMargin, making the cache roughly half as large. In total

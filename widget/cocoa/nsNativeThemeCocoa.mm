@@ -3764,30 +3764,29 @@ static const LayoutDeviceIntMargin kAquaDropdownBorder(1, 22, 2, 5);
 static const LayoutDeviceIntMargin kAquaComboboxBorder(3, 20, 3, 4);
 static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
 
-NS_IMETHODIMP
+LayoutDeviceIntMargin
 nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
                                     nsIFrame* aFrame,
-                                    uint8_t aWidgetType,
-                                    LayoutDeviceIntMargin* aResult)
+                                    uint8_t aWidgetType)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  LayoutDeviceIntMargin result;
 
-  aResult->SizeTo(0, 0, 0, 0);
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     {
       if (IsButtonTypeMenu(aFrame)) {
-        *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
+        result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       } else {
-        *aResult = DirectionAwareMargin(LayoutDeviceIntMargin(1, 7, 3, 7), aFrame);
+        result = DirectionAwareMargin(LayoutDeviceIntMargin(1, 7, 3, 7), aFrame);
       }
       break;
     }
 
     case NS_THEME_TOOLBARBUTTON:
     {
-      *aResult = DirectionAwareMargin(LayoutDeviceIntMargin(1, 4, 1, 4), aFrame);
+      result = DirectionAwareMargin(LayoutDeviceIntMargin(1, 4, 1, 4), aFrame);
       break;
     }
 
@@ -3796,17 +3795,17 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     {
       // nsCheckboxRadioFrame::GetIntrinsicWidth and nsCheckboxRadioFrame::GetIntrinsicHeight
       // assume a border width of 2px.
-      aResult->SizeTo(2, 2, 2, 2);
+      result.SizeTo(2, 2, 2, 2);
       break;
     }
 
     case NS_THEME_MENULIST:
     case NS_THEME_MENULIST_BUTTON:
-      *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
+      result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
     case NS_THEME_MENULIST_TEXTFIELD:
-      *aResult = DirectionAwareMargin(kAquaComboboxBorder, aFrame);
+      result = DirectionAwareMargin(kAquaComboboxBorder, aFrame);
       break;
 
     case NS_THEME_NUMBER_INPUT:
@@ -3820,23 +3819,23 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
 
       frameOutset += textPadding;
 
-      aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
+      result.SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
       break;
     }
 
     case NS_THEME_TEXTFIELD_MULTILINE:
-      aResult->SizeTo(1, 1, 1, 1);
+      result.SizeTo(1, 1, 1, 1);
       break;
 
     case NS_THEME_SEARCHFIELD:
-      *aResult = DirectionAwareMargin(kAquaSearchfieldBorder, aFrame);
+      result = DirectionAwareMargin(kAquaSearchfieldBorder, aFrame);
       break;
 
     case NS_THEME_LISTBOX:
     {
       SInt32 frameOutset = 0;
       ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
-      aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
+      result.SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
       break;
     }
 
@@ -3850,20 +3849,20 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
           // scrollbar. Starting with 10.10, the expected rect for thumb
           // rendering is the full width of the scrollbar.
           if (isHorizontal) {
-            aResult->top = 2;
-            aResult->bottom = 1;
+            result.top = 2;
+            result.bottom = 1;
           } else {
-            aResult->left = 2;
-            aResult->right = 1;
+            result.left = 2;
+            result.right = 1;
           }
         }
         // Leave a bit of space at the start and the end on all OS X versions.
         if (isHorizontal) {
-          aResult->left = 1;
-          aResult->right = 1;
+          result.left = 1;
+          result.right = 1;
         } else {
-          aResult->top = 1;
-          aResult->bottom = 1;
+          result.top = 1;
+          result.bottom = 1;
         }
       }
 
@@ -3871,17 +3870,15 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     }
 
     case NS_THEME_STATUSBAR:
-      aResult->SizeTo(1, 0, 0, 0);
+      result.SizeTo(1, 0, 0, 0);
       break;
   }
 
   if (IsHiDPIContext(aContext)) {
-    *aResult = *aResult + *aResult; // doubled
+    result = result + result; // doubled
   }
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(result);
 }
 
 // Return false here to indicate that CSS padding values should be used. There is

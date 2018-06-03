@@ -145,7 +145,7 @@ struct MediaPlaybackEvent
   template<typename T>
   MediaPlaybackEvent(EventType aType, T&& aArg)
     : mType(aType)
-    , mData(Forward<T>(aArg))
+    , mData(std::forward<T>(aArg))
   {
   }
 };

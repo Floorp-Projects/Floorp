@@ -63,7 +63,7 @@ struct VectorImpl
   MOZ_NONNULL(1)
   static inline void new_(T* aDst, Args&&... aArgs)
   {
-    new(KnownNotNull, aDst) T(Forward<Args>(aArgs)...);
+    new(KnownNotNull, aDst) T(std::forward<Args>(aArgs)...);
   }
 
   /* Destroys constructed objects in the range [aBegin, aEnd). */
@@ -168,7 +168,7 @@ struct VectorImpl<T, N, AP, true>
     // T(args...) will be treated like a C-style cast in the unary case and
     // allow unsafe conversions. Both forms should be equivalent to an
     // optimizing compiler.
-    T temp(Forward<Args>(aArgs)...);
+    T temp(std::forward<Args>(aArgs)...);
     *aDst = temp;
   }
 
@@ -706,7 +706,7 @@ public:
   {
     if (!growByUninitialized(1))
       return false;
-    Impl::new_(&back(), Forward<Args>(aArgs)...);
+    Impl::new_(&back(), std::forward<Args>(aArgs)...);
     return true;
   }
 
@@ -723,7 +723,7 @@ public:
    */
   template<typename U> void infallibleAppend(U&& aU)
   {
-    internalAppend(Forward<U>(aU));
+    internalAppend(std::forward<U>(aU));
   }
   void infallibleAppendN(const T& aT, size_t aN)
   {
@@ -741,7 +741,7 @@ public:
   void infallibleEmplaceBack(Args&&... aArgs)
   {
     infallibleGrowByUninitialized(1);
-    Impl::new_(&back(), Forward<Args>(aArgs)...);
+    Impl::new_(&back(), std::forward<Args>(aArgs)...);
   }
 
   void popBack();
@@ -1277,7 +1277,7 @@ Vector<T, N, AP>::internalAppend(U&& aU)
 {
   MOZ_ASSERT(mLength + 1 <= mTail.mReserved);
   MOZ_ASSERT(mTail.mReserved <= mTail.mCapacity);
-  Impl::new_(endNoCheck(), Forward<U>(aU));
+  Impl::new_(endNoCheck(), std::forward<U>(aU));
   ++mLength;
 }
 
@@ -1323,7 +1323,7 @@ Vector<T, N, AP>::insert(T* aP, U&& aVal)
   MOZ_ASSERT(pos <= mLength);
   size_t oldLength = mLength;
   if (pos == oldLength) {
-    if (!append(Forward<U>(aVal))) {
+    if (!append(std::forward<U>(aVal))) {
       return nullptr;
     }
   } else {
@@ -1334,7 +1334,7 @@ Vector<T, N, AP>::insert(T* aP, U&& aVal)
     for (size_t i = oldLength - 1; i > pos; --i) {
       (*this)[i] = std::move((*this)[i - 1]);
     }
-    (*this)[pos] = Forward<U>(aVal);
+    (*this)[pos] = std::forward<U>(aVal);
   }
   return begin() + pos;
 }
@@ -1417,7 +1417,7 @@ Vector<T, N, AP>::append(U&& aU)
     mTail.mReserved = mLength + 1;
   }
 #endif
-  internalAppend(Forward<U>(aU));
+  internalAppend(std::forward<U>(aU));
   return true;
 }
 

@@ -74,7 +74,6 @@ load 432068-2.xul
 load 433296-1.xul
 load 433429.xul
 load 452185.html
-load 460900-1.xul
 load 464149-1.xul
 asserts(0-1) load 464407-1.xhtml # Bugs 450974, 1267054, 718883
 load 467080.xul

@@ -1759,6 +1759,37 @@ menuseparator {
 .function-signature .comma {
   color: var(--object-color);
 }
+.source-icon {
+  position: relative;
+  background-color: var(--theme-comment);
+  mask-size: 100%;
+  display: inline-block;
+  margin-inline-end: 5px;
+}
+
+.source-icon,
+.source-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.source-icon.prettyPrint {
+  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.source-icon.blackBox {
+  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.source-icon.react {
+  mask-size: 100%;
+  background: var(--theme-highlight-bluegrey);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2901,37 +2932,6 @@ debug-expression-error {
   border: 1px solid var(--theme-comment-alt);
   border-radius: 2px;
   margin: 0 -1px -1px -1px;
-}
-.source-icon {
-  position: relative;
-  background-color: var(--theme-comment);
-  mask-size: 100%;
-  display: inline-block;
-  margin-inline-end: 5px;
-}
-
-.source-icon,
-.source-icon svg {
-  width: 15px;
-  height: 15px;
-}
-
-.source-icon.prettyPrint {
-  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-  fill: var(--theme-textbox-box-shadow);
-}
-
-.source-icon.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-}
-
-.source-icon.react {
-  mask-size: 100%;
-  background: var(--theme-highlight-bluegrey);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

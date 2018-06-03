@@ -5,10 +5,10 @@
 #include "FileMediaResource.h"
 #include "MediaContainerType.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsICloneableInputStream.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
@@ -50,7 +50,7 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
   }
 
   RefPtr<mozilla::dom::BlobImpl> blobImpl;
-  if (IsBlobURI(uri) &&
+  if (dom::IsBlobURI(uri) &&
       NS_SUCCEEDED(NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl))) &&
       blobImpl) {
     IgnoredErrorResult rv;

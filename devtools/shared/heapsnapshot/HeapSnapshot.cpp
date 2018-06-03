@@ -918,13 +918,13 @@ class TwoByteString : public Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName
 
 public:
   template<typename T>
-  MOZ_IMPLICIT TwoByteString(T&& rhs) : Base(Forward<T>(rhs)) { }
+  MOZ_IMPLICIT TwoByteString(T&& rhs) : Base(std::forward<T>(rhs)) { }
 
   template<typename T>
   TwoByteString& operator=(T&& rhs) {
     MOZ_ASSERT(this != &rhs, "self-move disallowed");
     this->~TwoByteString();
-    new (this) TwoByteString(Forward<T>(rhs));
+    new (this) TwoByteString(std::forward<T>(rhs));
     return *this;
   }
 

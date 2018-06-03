@@ -1758,11 +1758,8 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
       nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
     aDocument->NodePrincipal()->Equals(existing, &sameOrigin);
     MOZ_ASSERT(sameOrigin);
-
-    JSCompartment* compartment = JS::GetCompartmentForRealm(realm);
     MOZ_ASSERT_IF(aDocument == oldDoc,
-                  xpc::GetCompartmentPrincipal(compartment) ==
-                  aDocument->NodePrincipal());
+                  xpc::GetRealmPrincipal(realm) == aDocument->NodePrincipal());
 #endif
     if (aDocument != oldDoc) {
       JS::SetRealmPrincipals(realm,

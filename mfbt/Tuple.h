@@ -139,7 +139,7 @@ struct TupleImpl<Index, HeadT, TailT...>
                     Group<OtherHeadT, OtherTailT...>,
                     Group<HeadT, TailT...>>::value>::Type>
   explicit TupleImpl(OtherHeadT&& aHead, OtherTailT&&... aTail)
-    : Base(Forward<OtherTailT>(aTail)...), mHead(Forward<OtherHeadT>(aHead)) { }
+    : Base(std::forward<OtherTailT>(aTail)...), mHead(std::forward<OtherHeadT>(aHead)) { }
 
   // Copy and move constructors.
   // We'd like to use '= default' to implement these, but MSVC 2013's support
@@ -149,7 +149,7 @@ struct TupleImpl<Index, HeadT, TailT...>
     , mHead(Head(aOther)) {}
   TupleImpl(TupleImpl&& aOther)
     : Base(std::move(Tail(aOther)))
-    , mHead(Forward<HeadT>(Head(aOther))) {}
+    , mHead(std::forward<HeadT>(Head(aOther))) {}
 
   // Assign from a tuple whose elements are convertible to the elements
   // of this tuple.
@@ -225,7 +225,7 @@ public:
                     detail::Group<OtherHead, OtherTail...>,
                     detail::Group<Elements...>>::value>::Type>
   explicit Tuple(OtherHead&& aHead, OtherTail&&... aTail)
-    : Impl(Forward<OtherHead>(aHead), Forward<OtherTail>(aTail)...) { }
+    : Impl(std::forward<OtherHead>(aHead), std::forward<OtherTail>(aTail)...) { }
   Tuple(const Tuple& aOther) : Impl(aOther) { }
   Tuple(Tuple&& aOther) : Impl(std::move(aOther)) { }
 
@@ -282,17 +282,17 @@ public:
                     detail::Group<AArg, BArg>,
                     detail::Group<A, B>>::value>::Type>
   explicit Tuple(AArg&& aA, BArg&& aB)
-    : Impl(Forward<AArg>(aA), Forward<BArg>(aB)) { }
+    : Impl(std::forward<AArg>(aA), std::forward<BArg>(aB)) { }
   Tuple(const Tuple& aOther) : Impl(aOther) { }
   Tuple(Tuple&& aOther) : Impl(std::move(aOther)) { }
   explicit Tuple(const Pair<A, B>& aOther)
     : Impl(aOther.first(), aOther.second()) { }
-  explicit Tuple(Pair<A, B>&& aOther) : Impl(Forward<A>(aOther.first()),
-                                    Forward<B>(aOther.second())) { }
+  explicit Tuple(Pair<A, B>&& aOther) : Impl(std::forward<A>(aOther.first()),
+                                    std::forward<B>(aOther.second())) { }
   explicit Tuple(const std::pair<A, B>& aOther)
     : Impl(aOther.first, aOther.second) { }
-  explicit Tuple(std::pair<A, B>&& aOther) : Impl(Forward<A>(aOther.first),
-                                    Forward<B>(aOther.second)) { }
+  explicit Tuple(std::pair<A, B>&& aOther) : Impl(std::forward<A>(aOther.first),
+                                    std::forward<B>(aOther.second)) { }
 
   template <typename AArg, typename BArg>
   Tuple& operator=(const Tuple<AArg, BArg>& aOther)
@@ -326,8 +326,8 @@ public:
   template <typename AArg, typename BArg>
   Tuple& operator=(Pair<AArg, BArg>&& aOther)
   {
-    Impl::Head(*this) = Forward<AArg>(aOther.first());
-    Impl::Tail(*this).Head(*this) = Forward<BArg>(aOther.second());
+    Impl::Head(*this) = std::forward<AArg>(aOther.first());
+    Impl::Tail(*this).Head(*this) = std::forward<BArg>(aOther.second());
     return *this;
   }
   template <typename AArg, typename BArg>
@@ -340,8 +340,8 @@ public:
   template <typename AArg, typename BArg>
   Tuple& operator=(std::pair<AArg, BArg>&& aOther)
   {
-    Impl::Head(*this) = Forward<AArg>(aOther.first);
-    Impl::Tail(*this).Head(*this) = Forward<BArg>(aOther.second);
+    Impl::Head(*this) = std::forward<AArg>(aOther.first);
+    Impl::Tail(*this).Head(*this) = std::forward<BArg>(aOther.second);
     return *this;
   }
 };
@@ -433,7 +433,7 @@ template<typename... Elements>
 inline Tuple<typename Decay<Elements>::Type...>
 MakeTuple(Elements&&... aElements)
 {
-  return Tuple<typename Decay<Elements>::Type...>(Forward<Elements>(aElements)...);
+  return Tuple<typename Decay<Elements>::Type...>(std::forward<Elements>(aElements)...);
 }
 
 /**

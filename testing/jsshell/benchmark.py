@@ -71,7 +71,7 @@ class Benchmark(object):
         """Resets state between runs."""
         self.perfherder_data = {
             'framework': {
-                'name': 'jsshell-bench',
+                'name': 'js-bench',
             },
             'suites': [
                 {

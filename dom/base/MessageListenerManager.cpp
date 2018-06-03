@@ -10,7 +10,7 @@ namespace mozilla {
 namespace dom {
 
 MessageListenerManager::MessageListenerManager(ipc::MessageManagerCallback* aCallback,
-                                               ChromeMessageBroadcaster* aParentManager,
+                                               MessageBroadcaster* aParentManager,
                                                ipc::MessageManagerFlags aFlags)
   : nsFrameMessageManager(aCallback, aFlags),
     mParentManager(aParentManager)

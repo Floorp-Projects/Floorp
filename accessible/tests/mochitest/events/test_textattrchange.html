@@ -24,9 +24,6 @@
 
   <script type="application/javascript">
 
-    const nsIDOMNSEditableElement =
-      Ci.nsIDOMNSEditableElement;
-
     ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm");
 
     function spelledTextInvoker(aID) {
@@ -37,7 +34,7 @@
       ];
 
       this.invoke = function spelledTextInvoker_invoke() {
-        var editor = this.DOMNode.QueryInterface(nsIDOMNSEditableElement).editor;
+        var editor = this.DOMNode.editor;
         var spellChecker = new InlineSpellChecker(editor);
         spellChecker.enabled = true;
 

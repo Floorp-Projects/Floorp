@@ -9,16 +9,12 @@
  */
 
 /* Horizontal enabled */
-.autorepeatbutton-up[orient="horizontal"],
-.autorepeatbutton-down:-moz-locale-dir(rtl)[orient="horizontal"],
 .scrollbutton-up[orient="horizontal"],
 .scrollbutton-down:-moz-locale-dir(rtl)[orient="horizontal"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
-.autorepeatbutton-down[orient="horizontal"],
-.autorepeatbutton-up:-moz-locale-dir(rtl)[orient="horizontal"],
 .scrollbutton-down[orient="horizontal"],
 .scrollbutton-up:-moz-locale-dir(rtl)[orient="horizontal"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-rit.gif");
@@ -26,16 +22,12 @@
 }
 
  /* Horizontal disabled */
-.autorepeatbutton-up[orient="horizontal"][disabled="true"],
-.autorepeatbutton-down:-moz-locale-dir(rtl)[orient="horizontal"][disabled="true"],
 .scrollbutton-up[orient="horizontal"][disabled="true"],
 .scrollbutton-down:-moz-locale-dir(rtl)[orient="horizontal"][disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft-dis.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
-.autorepeatbutton-down[orient="horizontal"][disabled="true"],
-.autorepeatbutton-up:-moz-locale-dir(rtl)[orient="horizontal"][disabled="true"],
 .scrollbutton-down[orient="horizontal"][disabled="true"],
 .scrollbutton-up:-moz-locale-dir(rtl)[orient="horizontal"][disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-dis.gif");
@@ -43,26 +35,22 @@
 }
 
 /* Vertical enabled */
-.autorepeatbutton-up,
 .scrollbutton-up {
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
-.autorepeatbutton-down,
 .scrollbutton-down {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 /* Vertical disabled */
-.autorepeatbutton-up[disabled="true"],
 .scrollbutton-up[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-up-dis.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
-.autorepeatbutton-down[disabled="true"],
 .scrollbutton-down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
   -moz-image-region: auto; /* cut off inheritance */
@@ -73,7 +61,6 @@
   display: none;
 }
 
-autorepeatbutton,
 .scrollbutton-up,
 .scrollbutton-down {
   -moz-box-align: center;
@@ -84,13 +71,15 @@ autorepeatbutton,
   margin-inline-end: 2px;
 }
 
-autorepeatbutton {
+arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-up,
+arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-down {
+  -moz-appearance: none;
   border: 1px solid transparent;
   padding: 1px;
 }
 
-autorepeatbutton:not([disabled="true"]):hover,
-autorepeatbutton:not([disabled="true"]):hover:active {
+arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-up:not([disabled="true"]):hover,
+arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-down:not([disabled="true"]):hover {
   margin: 1px;
   border: 1px inset ThreeDFace;
   padding-top: 2px;

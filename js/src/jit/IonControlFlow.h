@@ -25,12 +25,12 @@ class CFGControlInstruction;
 #define TRIVIAL_CFG_NEW_WRAPPERS                                              \
     template <typename... Args>                                               \
     static CFGThisOpcode* New(TempAllocator& alloc, Args&&... args) {         \
-        return new(alloc) CFGThisOpcode(mozilla::Forward<Args>(args)...);     \
+        return new(alloc) CFGThisOpcode(std::forward<Args>(args)...);     \
     }                                                                         \
     template <typename... Args>                                               \
     static CFGThisOpcode* New(TempAllocator::Fallible alloc, Args&&... args)  \
     {                                                                         \
-        return new(alloc) CFGThisOpcode(mozilla::Forward<Args>(args)...);     \
+        return new(alloc) CFGThisOpcode(std::forward<Args>(args)...);     \
     }
 
 class CFGSpace

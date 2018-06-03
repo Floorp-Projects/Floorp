@@ -155,7 +155,7 @@ public:
    */
   void SetLastPrincipalHandle(PrincipalHandle aLastPrincipalHandle)
   {
-    mLastPrincipalHandle = Forward<PrincipalHandle>(aLastPrincipalHandle);
+    mLastPrincipalHandle = std::forward<PrincipalHandle>(aLastPrincipalHandle);
   }
 
   /**

@@ -26,7 +26,7 @@ WithDownscalingFilter(const IntSize& aInputSize,
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  WithFilterPipeline(decoder, Forward<Func>(aFunc),
+  WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      DownscalingConfig { aInputSize,
                                          SurfaceFormat::B8G8R8A8 },
                      SurfaceConfig { decoder, aOutputSize,

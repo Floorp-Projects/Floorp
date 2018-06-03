@@ -64,11 +64,8 @@
   }
 
   function getSelection(aElement) {
-    if (aElement instanceof Ci.nsIDOMNSEditableElement) {
-      return aElement.QueryInterface(Ci.nsIDOMNSEditableElement)
-                     .editor.selection;
-    }
-    return null;
+    // aElement is known to be a textarea here.
+    return aElement.editor.selection;
   }
 
   function testCaretPosition(aDomWinUtils, aOffset, aRectDims) {

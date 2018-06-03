@@ -65,7 +65,7 @@ class MOZ_NON_TEMPORARY_CLASS ActivationContextRegion final
 public:
   template <typename... Args>
   explicit ActivationContextRegion(Args... aArgs)
-    : mActCtx(Forward<Args>(aArgs)...)
+    : mActCtx(std::forward<Args>(aArgs)...)
     , mActCookie(0)
   {
     Activate();

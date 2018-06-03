@@ -138,7 +138,7 @@ public:
         "detail::Listener::ApplyWithArgs",
         this,
         &Listener::ApplyWithArgs,
-        Forward<Ts>(aEvents)...));
+        std::forward<Ts>(aEvents)...));
     } else {
       DispatchTask(NewRunnableMethod(
         "detail::Listener::ApplyWithNoArgs", this, &Listener::ApplyWithNoArgs));
@@ -178,7 +178,7 @@ public:
   template <typename F>
   ListenerImpl(Target* aTarget, F&& aFunction)
     : mTarget(aTarget)
-    , mFunction(Forward<F>(aFunction))
+    , mFunction(std::forward<F>(aFunction))
   {
   }
 
@@ -345,7 +345,7 @@ class MediaEventSourceImpl {
     MOZ_ASSERT(Lp == ListenerPolicy::NonExclusive || mListeners.IsEmpty());
     auto l = mListeners.AppendElement();
     *l = new ListenerImpl<Target, Function>(
-      aTarget, Forward<Function>(aFunction));
+      aTarget, std::forward<Function>(aFunction));
     return MediaEventListener(*l);
   }
 
@@ -383,13 +383,13 @@ public:
   template<typename Function>
   MediaEventListener
   Connect(AbstractThread* aTarget, Function&& aFunction) {
-    return ConnectInternal(aTarget, Forward<Function>(aFunction));
+    return ConnectInternal(aTarget, std::forward<Function>(aFunction));
   }
 
   template<typename Function>
   MediaEventListener
   Connect(nsIEventTarget* aTarget, Function&& aFunction) {
-    return ConnectInternal(aTarget, Forward<Function>(aFunction));
+    return ConnectInternal(aTarget, std::forward<Function>(aFunction));
   }
 
   /**
@@ -430,7 +430,7 @@ protected:
         mListeners.RemoveElementAt(i);
         continue;
       }
-      l->Dispatch(Forward<Ts>(aEvents)...);
+      l->Dispatch(std::forward<Ts>(aEvents)...);
     }
   }
 
@@ -482,7 +482,7 @@ class MediaEventProducerExc : public MediaEventSourceExc<Es...> {
 public:
   template <typename... Ts>
   void Notify(Ts&&... aEvents) {
-    this->NotifyInternal(Forward<Ts>(aEvents)...);
+    this->NotifyInternal(std::forward<Ts>(aEvents)...);
   }
 };
 

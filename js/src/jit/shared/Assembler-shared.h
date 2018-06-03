@@ -927,7 +927,7 @@ class AssemblerShared
     template <typename... Args>
     void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, Args&&... args) {
         enoughMemory_ &= callSites_.emplaceBack(desc, retAddr.offset());
-        enoughMemory_ &= callSiteTargets_.emplaceBack(mozilla::Forward<Args>(args)...);
+        enoughMemory_ &= callSiteTargets_.emplaceBack(std::forward<Args>(args)...);
     }
     void append(wasm::Trap trap, wasm::TrapSite site) {
         enoughMemory_ &= trapSites_[trap].append(site);

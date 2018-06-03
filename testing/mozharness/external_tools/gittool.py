@@ -42,7 +42,6 @@ if __name__ == '__main__':
     parser.set_defaults(
         revision=os.environ.get('GIT_REV'),
         branch=os.environ.get('GIT_BRANCH', None),
-        propsfile=os.environ.get('PROPERTIES_FILE'),
         loglevel=logging.INFO,
         shared_dir=os.environ.get('GIT_SHARE_BASE_DIR'),
         mirrors=None,

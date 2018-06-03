@@ -19,7 +19,7 @@ interface Principal;
  *
  * Message managers that always have exactly one "other side" are of
  * type MessageSender.  Parent-side message managers that have many
- * "other sides" are of type ChromeMessageBroadcaster.
+ * "other sides" are of type MessageBroadcaster.
  *
  * Child-side message managers can send synchronous messages to their
  * parent side, but not the other way around.
@@ -94,13 +94,13 @@ interface Principal;
  * ----------
  *
  * The global MMg and window MMw's are message broadcasters implementing
- * ChromeMessageBroadcaster while the frame MMp's are simple message
- * senders (MessageSender). Their counterparts in the content processes
- * are message senders implementing ContentFrameMessageManager.
+ * MessageBroadcaster while the frame MMp's are simple message senders (MessageSender).
+ * Their counterparts in the content processes are message senders implementing
+ * ContentFrameMessageManager.
  *
  *                 MessageListenerManager
  *               /                        \
- * MessageSender                            ChromeMessageBroadcaster
+ * MessageSender                            MessageBroadcaster
  *       |
  * SyncMessageSender (content process/in-process only)
  *       |
@@ -352,6 +352,10 @@ interface SyncMessageSender : MessageSender
                                optional Principal? principal = null);
 };
 
+/**
+ * ChildProcessMessageManager is used in a child process to communicate with the parent
+ * process.
+ */
 [ChromeOnly]
 interface ChildProcessMessageManager : SyncMessageSender
 {
@@ -503,7 +507,7 @@ ContentProcessMessageManager implements MessageManagerGlobal;
  * managers within its window.
  */
 [ChromeOnly]
-interface ChromeMessageBroadcaster : MessageListenerManager
+interface MessageBroadcaster : MessageListenerManager
 {
   /**
    * Like |sendAsyncMessage()|, but also broadcasts this message to
@@ -534,12 +538,38 @@ interface ChromeMessageBroadcaster : MessageListenerManager
    */
    void releaseCachedProcesses();
 };
-ChromeMessageBroadcaster implements GlobalProcessScriptLoader;
+
+/**
+ * ChromeMessageBroadcaster is used for window and group message managers.
+ */
+[ChromeOnly]
+interface ChromeMessageBroadcaster : MessageBroadcaster
+{
+};
 ChromeMessageBroadcaster implements FrameScriptLoader;
+
+/**
+ * ParentProcessMessageManager is used in a parent process to communicate with all the
+ * child processes.
+ */
+[ChromeOnly]
+interface ParentProcessMessageManager : MessageBroadcaster
+{
+};
+ParentProcessMessageManager implements GlobalProcessScriptLoader;
 
 [ChromeOnly]
 interface ChromeMessageSender : MessageSender
 {
 };
-ChromeMessageSender implements ProcessScriptLoader;
 ChromeMessageSender implements FrameScriptLoader;
+
+/**
+ * ProcessMessageManager is used in a parent process to communicate with a child process
+ * (or with the process itself in a single-process scenario).
+ */
+[ChromeOnly]
+interface ProcessMessageManager : MessageSender
+{
+};
+ProcessMessageManager implements ProcessScriptLoader;

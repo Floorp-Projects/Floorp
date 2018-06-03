@@ -31,7 +31,7 @@ WithADAM7InterpolatingFilter(const IntSize& aSize, Func aFunc)
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 
-  WithFilterPipeline(decoder, Forward<Func>(aFunc),
+  WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      ADAM7InterpolatingConfig { },
                      SurfaceConfig { decoder, aSize,
                                      SurfaceFormat::B8G8R8A8, false });

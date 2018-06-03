@@ -6,7 +6,6 @@
 
 # This is a template config file for web-platform-tests test.
 
-import os
 import sys
 
 config = {
@@ -24,12 +23,6 @@ config = {
         'python': sys.executable,
         'hg': 'c:/mozilla-build/hg/hg',
     },
-
-    "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
-    ],
-
-    "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
 
     "download_minidump_stackwalk": True,
 

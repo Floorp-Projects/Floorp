@@ -103,9 +103,9 @@ class WindowsDllInterceptor final
 public:
   template <typename... Args>
   explicit WindowsDllInterceptor(Args... aArgs)
-    : mDetourPatcher(mozilla::Forward<Args>(aArgs)...)
+    : mDetourPatcher(std::forward<Args>(aArgs)...)
 #if defined(_M_IX86)
-    , mNopSpacePatcher(mozilla::Forward<Args>(aArgs)...)
+    , mNopSpacePatcher(std::forward<Args>(aArgs)...)
 #endif // defined(_M_IX86)
     , mModule(nullptr)
     , mNHooks(0)

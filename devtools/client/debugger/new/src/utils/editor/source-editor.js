@@ -75,6 +75,10 @@ class SourceEditor {
     return this.editor;
   }
 
+  get CodeMirror() {
+    return CodeMirror;
+  }
+
   setText(str) {
     this.editor.setValue(str);
   }

@@ -906,20 +906,12 @@ pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
 macro_rules! parse_enabled_property_name {
     ($prop_name:ident, $found:ident, $default:expr) => {{
         let prop_name = $prop_name.as_ref().unwrap().as_str_unchecked();
-        // XXX This can be simplified once Option::filter is stable.
-        let prop_id = PropertyId::parse(prop_name).ok().and_then(|p| {
-            if p.enabled_for_all_content() {
-                Some(p)
-            } else {
-                None
-            }
-        });
-        match prop_id {
-            Some(p) => {
+        match PropertyId::parse_enabled_for_all_content(prop_name) {
+            Ok(p) => {
                 *$found = true;
                 p
             }
-            None => {
+            Err(..) => {
                 *$found = false;
                 return $default;
             }
@@ -941,7 +933,7 @@ pub unsafe extern "C" fn Servo_Property_IsInherited(
     prop_name: *const nsACString,
 ) -> bool {
     let prop_name = prop_name.as_ref().unwrap().as_str_unchecked();
-    let prop_id = match PropertyId::parse(prop_name) {
+    let prop_id = match PropertyId::parse_enabled_for_all_content(prop_name) {
         Ok(id) => id,
         Err(_) => return false,
     };
@@ -3476,9 +3468,9 @@ pub extern "C" fn Servo_DeclarationBlock_GetNthProperty(
 macro_rules! get_property_id_from_property {
     ($property: ident, $ret: expr) => {{
         let property = $property.as_ref().unwrap().as_str_unchecked();
-        match PropertyId::parse(property.into()) {
+        match PropertyId::parse_enabled_for_all_content(property) {
             Ok(property_id) => property_id,
-            Err(_) => { return $ret; }
+            Err(_) => return $ret,
         }
     }}
 }

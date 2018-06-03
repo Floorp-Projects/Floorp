@@ -33,20 +33,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
       listener.prototype =
       {
         NotifyDocumentWillBeDestroyed: function () {
-          if (this.input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
-            var editor = SpecialPowers.wrap(this.input).editor;
-            editor.removeDocumentStateListener(this);
-          }
+          var editor = SpecialPowers.wrap(this.input).editor;
+          editor.removeDocumentStateListener(this);
         },
 
         NotifyDocumentCreated: function () {
         },
 
         NotifyDocumentStateChanged: function (aNowDirty) {
-          if (this.input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
-            var editor = SpecialPowers.wrap(this.input).editor;
-            editor.removeDocumentStateListener(this);
-          }
+          var editor = SpecialPowers.wrap(this.input).editor;
+          editor.removeDocumentStateListener(this);
         },
 
         QueryInterface: SpecialPowers.wrapCallback(function(iid) {
@@ -59,34 +55,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
 
       function doTest() {
         var input = document.getElementById("ip");
-        if (input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
-          // Add multiple listeners to the same editor
-          var editor = SpecialPowers.wrap(input).editor;
-          var listener1 = new listener();
-          listener1.input = input;
-          var listener2 = new listener();
-          listener2.input = input;
-          var listener3 = new listener();
-          listener3.input = input;
-          editor.addDocumentStateListener(listener1);
-          editor.addDocumentStateListener(listener2);
-          editor.addDocumentStateListener(listener3);
 
-          // Test 1. Fire NotifyDocumentStateChanged notifications where the
-          // listeners remove themselves
-          input.value = "mozilla";
-          editor.undo(1);
+        // Add multiple listeners to the same editor
+        var editor = SpecialPowers.wrap(input).editor;
+        var listener1 = new listener();
+        listener1.input = input;
+        var listener2 = new listener();
+        listener2.input = input;
+        var listener3 = new listener();
+        listener3.input = input;
+        editor.addDocumentStateListener(listener1);
+        editor.addDocumentStateListener(listener2);
+        editor.addDocumentStateListener(listener3);
 
-          // Report success if we get here - clearly we didn't crash
-          ok(true, "Multiple listeners removed themselves after " +
-                   "NotifyDocumentStateChanged notifications - didn't crash");
+        // Test 1. Fire NotifyDocumentStateChanged notifications where the
+        // listeners remove themselves
+        input.value = "mozilla";
+        editor.undo(1);
 
-         // Add the listeners again for the next test
-         editor.addDocumentStateListener(listener1);
-         editor.addDocumentStateListener(listener2);
-         editor.addDocumentStateListener(listener3);
+        // Report success if we get here - clearly we didn't crash
+        ok(true, "Multiple listeners removed themselves after " +
+                 "NotifyDocumentStateChanged notifications - didn't crash");
 
-        }
+        // Add the listeners again for the next test
+        editor.addDocumentStateListener(listener1);
+        editor.addDocumentStateListener(listener2);
+        editor.addDocumentStateListener(listener3);
         
         // Test 2. Fire NotifyDocumentWillBeDestroyed notifications where the
         // listeners remove themselves (though in the real world, listeners

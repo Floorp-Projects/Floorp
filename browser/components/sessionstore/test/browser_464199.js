@@ -68,8 +68,9 @@ add_task(async function() {
   is(countByTitle(closedTabs, REMEMBER), remember_count,
      "Everything is set up.");
 
+  let promise = promiseClearHistory();
   await ForgetAboutSite.removeDataFromDomain("example.net");
-  await promiseClearHistory();
+  await promise;
   closedTabs = JSON.parse(ss.getClosedTabData(newWin));
   is(closedTabs.length, remember_count,
      "The correct amout of tabs was removed");

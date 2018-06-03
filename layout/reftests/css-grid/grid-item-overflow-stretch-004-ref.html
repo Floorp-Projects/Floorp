@@ -18,8 +18,8 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   grid-gap: 5px;
   border:1px solid;
 }
-.c2 { grid: 7px 30x 3px / 7px 112px 3px; grid-gap: 5px;}
-.c3 { grid: 7px 30x 3px / 7px 70px 3px; grid-gap: 5px;}
+.c2 { grid: 7px 30px 3px / 7px 112px 3px; grid-gap: 5px;}
+.c3 { grid: 7px 30px 3px / 7px 70px 3px; grid-gap: 5px;}
 
 .grid > * {
   grid-area: 2/2;
@@ -33,9 +33,7 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   justify-self: safe center;
   align-self: safe center;
 }
-.h > .grid { grid: 7px 102px 3px / 7px 70px 3px; grid-gap: 5px;}
-.h > .grid.c2 { grid: 7px 30px 3px / 7px 70px 3px; grid-gap: 5px;}
-.h > .grid.c3 { grid: 7px 108px 3px / 7px 70px 3px; grid-gap: 5px;}
+.h > .grid { grid: 7px 30px 3px / 7px 70px 3px; grid-gap: 5px; }
 
 .oa { overflow: auto; }
 .p { width: 100%; }
@@ -52,8 +50,8 @@ br { clear:both; }
 </head>
 <body>
 
-<div class="grid"><span class="p oa"><x></x></span></div>
-<div class="grid"><span class="p "><x></x></span></div>
+<div class="grid c3"><span class="p oa"><x></x></span></div>
+<div class="grid c3"><span class="p "><x></x></span></div>
 <div class="grid c2"><span class="p x" style="height:5px; margin-left:31.5px; margin-top:11.5px"><x></x></span></div>
 <div class="grid c2"><span class="  " style="width:68px"><x></x></span></div>
 
@@ -70,15 +68,15 @@ br { clear:both; }
 
 <div class="grid"><span class="p oa"><x></x></span></div>
 <div class="grid"><span class="p "><x></x></span></div>
-<div class="grid c2"><span class="p x" style=""><x></x></span></div>
-<div class="grid c2"><span class="  " style="height:28px; width:68px;"><x></x></span></div>
+<div class="grid"><span class="p x" style=""><x></x></span></div>
+<div class="grid"><span class="  " style="height:28px; width:68px;"><x></x></span></div>
 
 <br>
 
-<div class="grid c3"><span class="m p oa"><x></x></span></div>
-<div class="grid c3"><span class="m p"><x></x></span></div>
-<div class="grid c2"><span class="m p x" style="justify-self:start;align-self:start"><x></x></span></div>
-<div class="grid c2"><span class="m  " style="height:22px; width:58px"><x></x></span></div>
+<div class="grid"><span class="m p oa"><x></x></span></div>
+<div class="grid"><span class="m p"><x></x></span></div>
+<div class="grid"><span class="m p x" style="justify-self:start;align-self:start"><x></x></span></div>
+<div class="grid"><span class="m  " style="height:22px; width:58px"><x></x></span></div>
 
 <br>
 

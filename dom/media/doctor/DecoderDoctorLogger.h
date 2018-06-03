@@ -87,7 +87,7 @@ public:
         aSubjectPointer,
         aCategory,
         aLabel,
-        DDLogValue{ Forward<Value>(aValue) });
+        DDLogValue{ std::forward<Value>(aValue) });
   }
 
   template<typename Subject, typename Value>
@@ -100,7 +100,7 @@ public:
                   aSubject,
                   aCategory,
                   aLabel,
-                  Forward<Value>(aValue));
+                  std::forward<Value>(aValue));
   }
 
   // EagerLogValue that can explicitly take strings, as the templated function
@@ -154,7 +154,7 @@ public:
         aCategory,
         aLabel,
         DDLogValue{
-          nsCString{ nsPrintfCString(aFormat, Forward<Args>(aArgs)...) } });
+          nsCString{ nsPrintfCString(aFormat, std::forward<Args>(aArgs)...) } });
   }
 
   template<typename Subject>
@@ -182,7 +182,7 @@ public:
                    aCategory,
                    aLabel,
                    aFormat,
-                   Forward<Args>(aArgs)...);
+                   std::forward<Args>(aArgs)...);
   }
 
   static void MozLogPrintf(const char* aSubjectTypeName,
@@ -209,7 +209,7 @@ public:
                            const char* aFormat,
                            Args&&... aArgs)
   {
-    nsCString printed = nsPrintfCString(aFormat, Forward<Args>(aArgs)...);
+    nsCString printed = nsPrintfCString(aFormat, std::forward<Args>(aArgs)...);
     Log(aSubjectTypeName,
         aSubjectPointer,
         CategoryForMozLogLevel(aLogLevel),
@@ -245,7 +245,7 @@ public:
                  aLogModule,
                  aLogLevel,
                  aFormat,
-                 Forward<Args>(aArgs)...);
+                 std::forward<Args>(aArgs)...);
   }
 
   // Special logging functions. Consider using DecoderDoctorLifeLogger to
