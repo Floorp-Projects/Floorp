@@ -149,9 +149,9 @@ JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSOb
 }
 
 JS_FRIEND_API(bool)
-JS_GetIsSecureContext(JSCompartment* compartment)
+JS::GetIsSecureContext(JS::Realm* realm)
 {
-    return JS::GetRealmForCompartment(compartment)->creationOptions().secureContext();
+    return realm->creationOptions().secureContext();
 }
 
 JS_FRIEND_API(JSPrincipals*)

@@ -1958,16 +1958,10 @@ JS_PUBLIC_API(const RealmCreationOptions&)
 RealmCreationOptionsRef(JSCompartment* compartment);
 
 JS_PUBLIC_API(const RealmCreationOptions&)
-RealmCreationOptionsRef(JSObject* obj);
-
-JS_PUBLIC_API(const RealmCreationOptions&)
 RealmCreationOptionsRef(JSContext* cx);
 
 JS_PUBLIC_API(RealmBehaviors&)
-RealmBehaviorsRef(JSCompartment* compartment);
-
-JS_PUBLIC_API(RealmBehaviors&)
-RealmBehaviorsRef(JSObject* obj);
+RealmBehaviorsRef(JS::Realm* realm);
 
 JS_PUBLIC_API(RealmBehaviors&)
 RealmBehaviorsRef(JSContext* cx);

@@ -1873,12 +1873,6 @@ JS::RealmCreationOptionsRef(JSCompartment* compartment)
 }
 
 const JS::RealmCreationOptions&
-JS::RealmCreationOptionsRef(JSObject* obj)
-{
-    return obj->realm()->creationOptions();
-}
-
-const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSContext* cx)
 {
     return cx->realm()->creationOptions();
@@ -1904,15 +1898,9 @@ JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 }
 
 JS::RealmBehaviors&
-JS::RealmBehaviorsRef(JSCompartment* compartment)
+JS::RealmBehaviorsRef(JS::Realm* realm)
 {
-    return JS::GetRealmForCompartment(compartment)->behaviors();
-}
-
-JS::RealmBehaviors&
-JS::RealmBehaviorsRef(JSObject* obj)
-{
-    return obj->realm()->behaviors();
+    return realm->behaviors();
 }
 
 JS::RealmBehaviors&
