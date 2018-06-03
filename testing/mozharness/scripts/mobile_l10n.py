@@ -429,22 +429,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         self.summarize_success_count(success_count, total_count,
                                      message="Make Upload for %d of %d locales successful.")
 
-    def query_apkfile_path(self, locale):
-
-        dirs = self.query_abs_dirs()
-        apkdir = os.path.join(dirs['abs_objdir'], 'dist')
-        r = r"(\.)" + re.escape(locale) + r"(\.*)"
-
-        apks = []
-        for f in os.listdir(apkdir):
-            if f.endswith(".apk") and re.search(r, f):
-                apks.append(f)
-        if len(apks) == 0:
-            self.fatal("Found no apks files in %s, don't know what to do:\n%s" %
-                       (apkdir, apks), exit_code=1)
-
-        return os.path.join(apkdir, apks[0])
-
     def query_is_release_or_beta(self):
 
         return bool(self.config.get("is_release_or_beta"))
