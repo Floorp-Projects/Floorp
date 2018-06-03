@@ -7617,7 +7617,8 @@ nsGlobalWindowInner::GetConsole(JSContext* aCx, ErrorResult& aRv)
 bool
 nsGlobalWindowInner::IsSecureContext() const
 {
-  return JS_GetIsSecureContext(js::GetObjectCompartment(GetWrapperPreserveColor()));
+  JS::Realm* realm = js::GetNonCCWObjectRealm(GetWrapperPreserveColor());
+  return JS::GetIsSecureContext(realm);
 }
 
 already_AddRefed<External>
