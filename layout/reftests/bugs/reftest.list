@@ -1303,7 +1303,7 @@ random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 == 478811-4.html 478811-4-ref.html
 == 478956-1a.html 478956-1-ref.html
 == 478956-1b.html 478956-1-ref.html
-== 480017-1.html 480017-1-ref.html
+pref(layout.css.xul-display-values.content.enabled,true) == 480017-1.html 480017-1-ref.html
 == 480880-1a.html 480880-1-ref.html
 == 480880-1b.html 480880-1-ref.html
 == 480880-1c.html 480880-1-ref.html
