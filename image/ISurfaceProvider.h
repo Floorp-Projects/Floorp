@@ -110,13 +110,12 @@ protected:
   /// index of the desired frame.
   virtual DrawableFrameRef DrawableRef(size_t aFrame) = 0;
 
-  /// @return an eagerly computed raw access reference to a surface. For
-  /// dynamically generated animation surfaces, @aFrame specifies the 0-based
-  /// index of the desired frame.
-  virtual RawAccessFrameRef RawAccessRef(size_t aFrame)
+  /// @return an imgFrame at the 0-based index of the desired frame, as
+  /// specified by @aFrame. Only applies for animated images.
+  virtual already_AddRefed<imgFrame> GetFrame(size_t aFrame)
   {
-    MOZ_ASSERT_UNREACHABLE("Surface provider does not support raw access!");
-    return RawAccessFrameRef();
+    MOZ_ASSERT_UNREACHABLE("Surface provider does not support direct access!");
+    return nullptr;
   }
 
   /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
@@ -208,16 +207,16 @@ public:
     return mDrawableRef ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  RawAccessFrameRef RawAccessRef(size_t aFrame)
+  already_AddRefed<imgFrame> GetFrame(size_t aFrame)
   {
     MOZ_ASSERT(mHaveSurface, "Trying to get on an empty DrawableSurface?");
 
     if (!mProvider) {
       MOZ_ASSERT_UNREACHABLE("Trying to get on a static DrawableSurface?");
-      return RawAccessFrameRef();
+      return nullptr;
     }
 
-    return mProvider->RawAccessRef(aFrame);
+    return mProvider->GetFrame(aFrame);
   }
 
   void Reset()

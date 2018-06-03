@@ -142,22 +142,19 @@ AnimationSurfaceProvider::DrawableRef(size_t aFrame)
   return frame->DrawableRef();
 }
 
-RawAccessFrameRef
-AnimationSurfaceProvider::RawAccessRef(size_t aFrame)
+already_AddRefed<imgFrame>
+AnimationSurfaceProvider::GetFrame(size_t aFrame)
 {
   MutexAutoLock lock(mFramesMutex);
 
   if (Availability().IsPlaceholder()) {
-    MOZ_ASSERT_UNREACHABLE("Calling RawAccessRef() on a placeholder");
+    MOZ_ASSERT_UNREACHABLE("Calling GetFrame() on a placeholder");
     return RawAccessFrameRef();
   }
 
-  imgFrame* frame = mFrames.Get(aFrame);
-  if (!frame) {
-    return RawAccessFrameRef();
-  }
-
-  return frame->RawAccessRef(/* aOnlyFinished */ true);
+  RefPtr<imgFrame> frame = mFrames.Get(aFrame);
+  MOZ_ASSERT_IF(frame, frame->IsFinished());
+  return frame.forget();
 }
 
 bool
