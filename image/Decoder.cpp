@@ -361,25 +361,10 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
   if (frameNum == 1) {
     MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
     aPreviousFrame->SetRawAccessOnly();
-
-    // If we dispose of the first frame by clearing it, then the first frame's
-    // refresh area is all of itself.
-    // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR).
-    DisposalMethod prevDisposal = aPreviousFrame->GetDisposalMethod();
-    if (prevDisposal == DisposalMethod::CLEAR ||
-        prevDisposal == DisposalMethod::CLEAR_ALL ||
-        prevDisposal == DisposalMethod::RESTORE_PREVIOUS) {
-      mFirstFrameRefreshArea = aPreviousFrame->GetRect();
-    }
   }
 
   if (frameNum > 0) {
     ref->SetRawAccessOnly();
-
-    // Some GIFs are huge but only have a small area that they animate. We only
-    // need to refresh that small area when frame 0 comes around again.
-    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea,
-                                     ref->GetBoundedBlendRect());
 
     if (ShouldBlendAnimation()) {
       if (aPreviousFrame->GetDisposalMethod() !=
@@ -495,11 +480,34 @@ Decoder::PostFrameStop(Opacity aFrameOpacity)
 
   mLoopLength += mCurrentFrame->GetTimeout();
 
-  // If we're not sending partial invalidations, then we send an invalidation
-  // here when the first frame is complete.
-  if (!ShouldSendPartialInvalidations() && mFrameCount == 1) {
-    mInvalidRect.UnionRect(mInvalidRect,
-                           IntRect(IntPoint(), Size()));
+  if (mFrameCount == 1) {
+    // If we're not sending partial invalidations, then we send an invalidation
+    // here when the first frame is complete.
+    if (!ShouldSendPartialInvalidations()) {
+      mInvalidRect.UnionRect(mInvalidRect,
+                             IntRect(IntPoint(), Size()));
+    }
+
+    // If we dispose of the first frame by clearing it, then the first frame's
+    // refresh area is all of itself. RESTORE_PREVIOUS is invalid (assumed to
+    // be DISPOSE_CLEAR).
+    switch (mCurrentFrame->GetDisposalMethod()) {
+      default:
+        MOZ_FALLTHROUGH_ASSERT("Unexpected DisposalMethod");
+      case DisposalMethod::CLEAR:
+      case DisposalMethod::CLEAR_ALL:
+      case DisposalMethod::RESTORE_PREVIOUS:
+        mFirstFrameRefreshArea = IntRect(IntPoint(), Size());
+        break;
+      case DisposalMethod::KEEP:
+      case DisposalMethod::NOT_SPECIFIED:
+        break;
+    }
+  } else {
+    // Some GIFs are huge but only have a small area that they animate. We only
+    // need to refresh that small area when frame 0 comes around again.
+    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea,
+                                     mCurrentFrame->GetBoundedBlendRect());
   }
 }
 
