@@ -1904,15 +1904,9 @@ JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 }
 
 JS::RealmBehaviors&
-JS::RealmBehaviorsRef(JSCompartment* compartment)
+JS::RealmBehaviorsRef(JS::Realm* realm)
 {
-    return JS::GetRealmForCompartment(compartment)->behaviors();
-}
-
-JS::RealmBehaviors&
-JS::RealmBehaviorsRef(JSObject* obj)
-{
-    return obj->realm()->behaviors();
+    return realm->behaviors();
 }
 
 JS::RealmBehaviors&
