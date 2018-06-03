@@ -938,6 +938,13 @@ class Window extends WindowBase {
     }
   }
 
+  * getHighlightedTabs() {
+    let {tabManager} = this.extension;
+    for (let tab of this.window.gBrowser.selectedTabs) {
+      yield tabManager.getWrapper(tab);
+    }
+  }
+
   get activeTab() {
     let {tabManager} = this.extension;
 

@@ -2613,7 +2613,7 @@ window._gBrowser = {
       return;
 
     let tabs = this.getTabsToTheEndFrom(aTab);
-    this.removeCollectionOfTabs(tabs);
+    this.removeTabs(tabs);
   },
 
   removeAllTabsBut(aTab) {
@@ -2623,7 +2623,7 @@ window._gBrowser = {
 
     let tabs = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
     this.selectedTab = aTab;
-    this.removeCollectionOfTabs(tabs);
+    this.removeTabs(tabs);
   },
 
   removeMultiSelectedTabs() {
@@ -2631,12 +2631,10 @@ window._gBrowser = {
       return;
     }
 
-    let selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
-                                  .filter(tab => tab.isConnected);
-    this.removeCollectionOfTabs(selectedTabs);
+    this.removeTabs(this.selectedTabs);
   },
 
-  removeCollectionOfTabs(tabs) {
+  removeTabs(tabs) {
     let tabsWithBeforeUnload = [];
     let lastToClose;
     let aParams = {animation: true};
@@ -3679,16 +3677,23 @@ window._gBrowser = {
   },
 
   clearMultiSelectedTabs(updatePositionalAttributes) {
-    const selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet);
-    for (let tab of selectedTabs) {
-      if (tab.isConnected && tab.multiselected) {
-        tab.removeAttribute("multiselected");
-      }
+    for (let tab of this.selectedTabs) {
+      tab.removeAttribute("multiselected");
     }
     this._multiSelectedTabsSet = new WeakSet();
     if (updatePositionalAttributes) {
       this.tabContainer._setPositionalAttributes();
     }
+  },
+
+  get selectedTabs() {
+    let {selectedTab, _multiSelectedTabsSet} = this;
+    let tabs = ChromeUtils.nondeterministicGetWeakSetKeys(_multiSelectedTabsSet)
+      .filter(tab => tab.isConnected && !tab.closing);
+    if (!_multiSelectedTabsSet.has(selectedTab)) {
+      tabs.push(selectedTab);
+    }
+    return tabs;
   },
 
   get multiSelectedTabsCount() {
@@ -3710,17 +3715,14 @@ window._gBrowser = {
   },
 
   toggleMuteAudioOnMultiSelectedTabs(aTab) {
-    const selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
-                                    .filter(tab => tab.isConnected);
     let tabsToToggle;
-
     if (aTab.activeMediaBlocked) {
-      tabsToToggle = selectedTabs.filter(tab =>
+      tabsToToggle = this.selectedTabs.filter(tab =>
         tab.activeMediaBlocked || tab.linkedBrowser.audioMuted
       );
     } else {
       let tabMuted = aTab.linkedBrowser.audioMuted;
-      tabsToToggle = selectedTabs.filter(tab =>
+      tabsToToggle = this.selectedTabs.filter(tab =>
         // When a user is looking to mute selected tabs, then media-blocked tabs
         // should not be toggled. Otherwise those media-blocked tabs are going into a
         // playing and unmuted state.
