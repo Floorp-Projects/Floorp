@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
-
 PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
 
 const server = createHttpServer({hosts: ["example.com"]});
@@ -237,7 +235,11 @@ let extensionData = {
   },
 };
 
-async function test_contentscript_storage(storageType) {
+add_task(async function test_contentscript() {
+  await ExtensionTestUtils.startAddonManager();
+  Services.prefs.setBoolPref(STORAGE_SYNC_PREF, true);
+
+
   let contentPage = await ExtensionTestUtils.loadContentPage(
     "http://example.com/data/file_sample.html");
 
@@ -245,28 +247,12 @@ async function test_contentscript_storage(storageType) {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  extension.sendMessage(`test-${storageType}`);
+  extension.sendMessage("test-local");
+  await extension.awaitMessage("test-finished");
+
+  extension.sendMessage("test-sync");
   await extension.awaitMessage("test-finished");
 
   await extension.unload();
   await contentPage.close();
-}
-
-add_task(async function setup() {
-  await ExtensionTestUtils.startAddonManager();
-});
-
-add_task(async function test_contentscript_storage_sync() {
-  return runWithPrefs([[STORAGE_SYNC_PREF, true]],
-                      () => test_contentscript_storage("sync"));
-});
-
-add_task(async function test_contentscript_storage_local_file_backend() {
-  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
-                      () => test_contentscript_storage("local"));
-});
-
-add_task(async function test_contentscript_storage_local_idb_backend() {
-  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
-                      () => test_contentscript_storage("local"));
 });

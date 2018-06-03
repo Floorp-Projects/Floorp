@@ -41,7 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
@@ -103,13 +102,6 @@ const {
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
-
-// The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
-// storage used by the browser.storage.local API is not directly accessible from the extension code).
-XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
-  return ContextualIdentityService.getDefaultPrivateIdentity(
-    "userContextIdInternal.webextStorageLocal").userContextId;
-});
 
 /**
  * Classify an individual permission from a webextension manifest
@@ -225,22 +217,16 @@ var UninstallObserver = {
     }
 
     if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
-      // Clear browser.storage.local backends.
+      // Clear browser.local.storage
       AsyncShutdown.profileChangeTeardown.addBlocker(
-        `Clear Extension Storage ${addon.id} (File Backend)`,
-        ExtensionStorage.clear(addon.id, {shouldNotifyListeners: false}));
+        `Clear Extension Storage ${addon.id}`,
+        ExtensionStorage.clear(addon.id));
 
       // Clear any IndexedDB storage created by the extension
       let baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
       let principal = Services.scriptSecurityManager.createCodebasePrincipal(
         baseURI, {});
       Services.qms.clearStoragesForPrincipal(principal);
-
-      // Clear any storage.local data stored in the IDBBackend.
-      let storagePrincipal = Services.scriptSecurityManager.createCodebasePrincipal(baseURI, {
-        userContextId: WEBEXT_STORAGE_USER_CONTEXT_ID,
-      });
-      Services.qms.clearStoragesForPrincipal(storagePrincipal);
 
       // Clear localStorage created by the extension
       let storage = Services.domStorageManager.getStorage(null, principal);
@@ -1285,7 +1271,6 @@ class Extension extends ExtensionData {
     this.baseURL = this.getURL("");
     this.baseURI = Services.io.newURI(this.baseURL).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
-
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
 
@@ -1407,8 +1392,8 @@ class Extension extends ExtensionData {
     this.emit("test-harness-message", ...args);
   }
 
-  createPrincipal(uri = this.baseURI, originAttributes = {}) {
-    return Services.scriptSecurityManager.createCodebasePrincipal(uri, originAttributes);
+  createPrincipal(uri = this.baseURI) {
+    return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   }
 
   // Checks that the given URL is a child of our baseURI.
