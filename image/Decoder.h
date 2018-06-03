@@ -445,6 +445,12 @@ public:
     return mRestoreDirtyRect;
   }
 
+  const gfx::IntRect& GetRecycleRect() const
+  {
+    MOZ_ASSERT(ShouldBlendAnimation());
+    return mRecycleRect;
+  }
+
   bool HasFrameToTake() const { return mHasFrameToTake; }
   void ClearHasFrameToTake() {
     MOZ_ASSERT(mHasFrameToTake);
@@ -606,6 +612,8 @@ private:
   gfx::IntRect mInvalidRect; // Tracks new rows as the current frame is decoded.
   gfx::IntRect mRestoreDirtyRect; // Tracks an invalidation region between the
                                   // restore frame and the previous frame.
+  gfx::IntRect mRecycleRect; // Tracks an invalidation region between the recycled
+                             // frame and the current frame.
   Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
   Maybe<gfx::IntSize> mExpectedSize; // The expected size of the image.
   Progress mProgress;
