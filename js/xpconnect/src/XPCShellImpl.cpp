@@ -1332,14 +1332,14 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
                 return 1;
             }
 
-            // Even if we're building in a configuration where source is
-            // discarded, there's no reason to do that on XPCShell, and doing so
-            // might break various automation scripts.
-            JS::RealmBehaviorsRef(glob).setDiscardSource(false);
-
             backstagePass->SetGlobalObject(glob);
 
             JSAutoRealm ar(cx, glob);
+
+            // Even if we're building in a configuration where source is
+            // discarded, there's no reason to do that on XPCShell, and doing so
+            // might break various automation scripts.
+            JS::RealmBehaviorsRef(cx).setDiscardSource(false);
 
             if (!JS_InitReflectParse(cx, glob)) {
                 return 1;
