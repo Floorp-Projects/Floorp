@@ -32,13 +32,12 @@ from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.secrets import SecretsMixin
-from mozharness.base.python import VirtualenvMixin
 
 
 # MobileSingleLocale {{{1
 class MobileSingleLocale(LocalesMixin,
                          TransferMixin, TooltoolMixin, AutomationMixin,
-                         MercurialScript, VirtualenvMixin, SecretsMixin):
+                         MercurialScript, SecretsMixin):
     config_options = [[
         ['--locale', ],
         {"action": "extend",
@@ -96,14 +95,9 @@ class MobileSingleLocale(LocalesMixin,
                 "setup",
                 "repack",
                 "upload-repacks",
-                "create-virtualenv",
                 "summary",
             ],
             'config': {
-                'virtualenv_modules': [
-                    'requests==2.8.1',
-                ],
-                'virtualenv_path': 'venv',
             },
         }
         LocalesMixin.__init__(self)
