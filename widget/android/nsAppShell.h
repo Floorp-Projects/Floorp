@@ -152,7 +152,7 @@ public:
     typename mozilla::EnableIf<!mozilla::IsBaseOf<Event, T>::value, void>::Type
     SyncRunEvent(T&& lambda)
     {
-        SyncRunEvent(LambdaEvent<T>(mozilla::Forward<T>(lambda)));
+        SyncRunEvent(LambdaEvent<T>(std::forward<T>(lambda)));
     }
 
     static already_AddRefed<nsIURI> ResolveURI(const nsCString& aUriStr);

@@ -31,7 +31,6 @@
 
 using namespace js;
 
-using mozilla::Forward;
 using mozilla::Maybe;
 using mozilla::Nothing;
 

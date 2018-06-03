@@ -394,14 +394,15 @@ Zone::deleteEmptyCompartment(JSCompartment* comp)
 {
     MOZ_ASSERT(comp->zone() == this);
     MOZ_ASSERT(arenas.checkEmptyArenaLists());
-    for (auto& i : compartments()) {
-        if (i == comp) {
-            compartments().erase(&i);
-            JS::GetRealmForCompartment(comp)->destroy(runtimeFromMainThread()->defaultFreeOp());
-            return;
-        }
-    }
-    MOZ_CRASH("Compartment not found");
+
+    MOZ_ASSERT(compartments().length() == 1);
+    MOZ_ASSERT(compartments()[0] == comp);
+    MOZ_ASSERT(comp->realms().length() == 1);
+
+    Realm* realm = comp->realms()[0];
+    realm->destroy(runtimeFromMainThread()->defaultFreeOp());
+
+    compartments().clear();
 }
 
 void

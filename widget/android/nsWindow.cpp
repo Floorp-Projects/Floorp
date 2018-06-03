@@ -145,7 +145,7 @@ public:
                 InstanceType&& aInstance)
         : Runnable("nsWindowEvent")
         , mLambda(std::move(aLambda))
-        , mInstance(Forward<InstanceType>(aInstance))
+        , mInstance(std::forward<InstanceType>(aInstance))
     {}
 
     explicit WindowEvent(Lambda&& aLambda)
@@ -199,7 +199,7 @@ nsWindow::NativePtr<Impl>::Attach(Instance aInstance, nsWindow* aWindow,
     MOZ_ASSERT(!mPtr && !mImpl);
 
     Impl* const impl = new Impl(
-            this, aWindow, mozilla::Forward<Args>(aArgs)...);
+            this, aWindow, std::forward<Args>(aArgs)...);
     mImpl = impl;
 
     // CallAttachNative transfers ownership of impl.

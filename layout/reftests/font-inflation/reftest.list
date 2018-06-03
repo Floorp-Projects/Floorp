@@ -64,8 +64,8 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != disable-fontinfl-on-mobile-5.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body.html fixed-height-body-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body-child.html fixed-height-body-child-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body.html fixed-height-body-ref.html # Bug 1392106
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body-child.html fixed-height-body-child-ref.html # Bug 1392106
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline-ref.html
 
 # The tests below use nonzero values of the lineThreshold preference.

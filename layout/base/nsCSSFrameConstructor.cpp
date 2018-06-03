@@ -234,9 +234,6 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsIFrame*
-NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-
 nsContainerFrame*
 NS_NewRootBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
@@ -4292,7 +4289,6 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
     SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
     SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
     SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
-    SCROLLABLE_XUL_CREATE(autorepeatbutton, NS_NewAutoRepeatBoxFrame),
     SCROLLABLE_XUL_CREATE(titlebar, NS_NewTitleBarFrame),
     SCROLLABLE_XUL_CREATE(resizer, NS_NewResizerFrame),
     SCROLLABLE_XUL_CREATE(toolbarpaletteitem, NS_NewBoxFrame),

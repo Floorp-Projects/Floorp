@@ -562,7 +562,7 @@ win64-ccov/debug:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/ccov_debug.py
-    run-on-projects: []
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -576,7 +576,7 @@ win64-asan/debug:
     treeherder:
         platform: windows2012-64/asan
         symbol: Bd
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -592,7 +592,7 @@ win64-asan/debug:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_debug.py
-    run-on-projects: []
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -606,7 +606,7 @@ win64-asan/opt:
     treeherder:
         platform: windows2012-64/asan
         symbol: Bo
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -622,7 +622,7 @@ win64-asan/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_opt.py
-    run-on-projects: []
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust

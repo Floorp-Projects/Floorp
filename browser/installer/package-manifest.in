@@ -324,6 +324,9 @@
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
+@RESPATH@/components/ClearDataService.manifest
+@RESPATH@/components/ClearDataService.js
+
 #ifdef MOZ_WEBRTC
 @RESPATH@/components/PeerConnection.js
 @RESPATH@/components/PeerConnection.manifest

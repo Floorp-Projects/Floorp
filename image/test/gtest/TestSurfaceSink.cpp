@@ -31,7 +31,7 @@ WithSurfaceSink(Func aFunc)
 
   const bool flipVertically = Orientation == Orient::FLIP_VERTICALLY;
 
-  WithFilterPipeline(decoder, Forward<Func>(aFunc),
+  WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      SurfaceConfig { decoder, IntSize(100, 100),
                                      SurfaceFormat::B8G8R8A8, flipVertically });
 }
@@ -42,7 +42,7 @@ WithPalettedSurfaceSink(const IntRect& aFrameRect, Func aFunc)
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  WithFilterPipeline(decoder, Forward<Func>(aFunc),
+  WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      PalettedSurfaceConfig { decoder, IntSize(100, 100),
                                              aFrameRect, SurfaceFormat::B8G8R8A8,
                                              8, false });

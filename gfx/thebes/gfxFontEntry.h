@@ -925,4 +925,29 @@ protected:
     };
 };
 
+// Struct used in the gfxFontGroup font list to keep track of a font family
+// together with the CSS generic (if any) that was mapped to it in this
+// particular case (so it can be reported to the DevTools font inspector).
+struct FamilyAndGeneric final {
+    FamilyAndGeneric()
+        : mFamily(nullptr)
+        , mGeneric(mozilla::FontFamilyType::eFamily_none)
+    {
+    }
+    FamilyAndGeneric(const FamilyAndGeneric& aOther)
+        : mFamily(aOther.mFamily)
+        , mGeneric(aOther.mGeneric)
+    {
+    }
+    explicit FamilyAndGeneric(gfxFontFamily* aFamily,
+                              mozilla::FontFamilyType aGeneric =
+                                  mozilla::FontFamilyType::eFamily_none)
+        : mFamily(aFamily)
+        , mGeneric(aGeneric)
+    {
+    }
+    gfxFontFamily* mFamily;
+    mozilla::FontFamilyType mGeneric;
+};
+
 #endif

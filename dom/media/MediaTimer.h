@@ -153,8 +153,8 @@ public:
     mTarget = aTarget;
     mMediaTimer->WaitUntil(mTarget, __func__)->Then(
       mTargetThread, __func__,
-      Forward<ResolveFunc>(aResolver),
-      Forward<RejectFunc>(aRejector))
+      std::forward<ResolveFunc>(aResolver),
+      std::forward<RejectFunc>(aRejector))
     ->Track(mRequest);
   }
 

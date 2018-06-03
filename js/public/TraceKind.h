@@ -196,12 +196,12 @@ template <> struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSO
 template <typename F, typename... Args>
 auto
 DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args)
-  -> decltype(f. JS_DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
+  -> decltype(f. JS_DEPENDENT_TEMPLATE_HINT operator()<JSObject>(std::forward<Args>(args)...))
 {
     switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _) \
       case JS::TraceKind::name: \
-        return f. JS_DEPENDENT_TEMPLATE_HINT operator()<type>(mozilla::Forward<Args>(args)...);
+        return f. JS_DEPENDENT_TEMPLATE_HINT operator()<type>(std::forward<Args>(args)...);
       JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
       default:
@@ -213,12 +213,12 @@ DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args)
 template <typename F, typename... Args>
 auto
 DispatchTraceKindTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
-  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSObject*>(nullptr), std::forward<Args>(args)...))
 {
     switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _) \
       case JS::TraceKind::name: \
-          return f(static_cast<type*>(thing), mozilla::Forward<Args>(args)...);
+          return f(static_cast<type*>(thing), std::forward<Args>(args)...);
       JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
       default:

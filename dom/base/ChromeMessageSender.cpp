@@ -10,24 +10,6 @@
 namespace mozilla {
 namespace dom {
 
-ChromeMessageSender::ChromeMessageSender(ipc::MessageManagerCallback* aCallback,
-                                         ChromeMessageBroadcaster* aParentManager,
-                                         MessageManagerFlags aFlags)
-  : MessageSender(aCallback, aParentManager, aFlags | MessageManagerFlags::MM_CHROME)
-{
-  MOZ_ASSERT(!(aFlags & ~(MessageManagerFlags::MM_GLOBAL |
-                          MessageManagerFlags::MM_PROCESSMANAGER |
-                          MessageManagerFlags::MM_OWNSCALLBACK)));
-
-  // This is a bit hackish. We attach to the parent, but only if we have a callback. We
-  // don't have a callback for the frame message manager, and for parent process message
-  // managers (except the parent in-process message manager). In those cases we wait until
-  // the child process is running (see MessageSender::InitWithCallback).
-  if (aParentManager && mCallback) {
-    aParentManager->AddChildManager(this);
-  }
-}
-
 JSObject*
 ChromeMessageSender::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto)

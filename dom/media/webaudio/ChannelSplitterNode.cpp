@@ -53,9 +53,9 @@ public:
 ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
                                          uint16_t aOutputCount)
   : AudioNode(aContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
+              aOutputCount,
+              ChannelCountMode::Explicit,
+              ChannelInterpretation::Discrete)
   , mOutputCount(aOutputCount)
 {
   mStream = AudioNodeStream::Create(aContext,
@@ -82,8 +82,22 @@ ChannelSplitterNode::Create(AudioContext& aAudioContext,
   RefPtr<ChannelSplitterNode> audioNode =
     new ChannelSplitterNode(&aAudioContext, aOptions.mNumberOfOutputs);
 
-  audioNode->Initialize(aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  // Manually check that the other options are valid, this node has channelCount,
+  // channelCountMode and channelInterpretation constraints: they cannot be
+  // changed from the default.
+  if (aOptions.mChannelCount.WasPassed() &&
+      aOptions.mChannelCount.Value() != audioNode->ChannelCount()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  if (aOptions.mChannelInterpretation.WasPassed() &&
+      aOptions.mChannelInterpretation.Value() != audioNode->ChannelInterpretationValue()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  if (aOptions.mChannelCountMode.WasPassed() &&
+      aOptions.mChannelCountMode.Value() != audioNode->ChannelCountModeValue()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 

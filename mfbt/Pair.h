@@ -41,8 +41,8 @@ struct PairHelper<A, B, AsMember, AsMember>
 protected:
   template<typename AArg, typename BArg>
   PairHelper(AArg&& aA, BArg&& aB)
-    : mFirstA(Forward<AArg>(aA)),
-      mSecondB(Forward<BArg>(aB))
+    : mFirstA(std::forward<AArg>(aA)),
+      mSecondB(std::forward<BArg>(aB))
   {}
 
   A& first() { return mFirstA; }
@@ -67,8 +67,8 @@ struct PairHelper<A, B, AsMember, AsBase> : private B
 protected:
   template<typename AArg, typename BArg>
   PairHelper(AArg&& aA, BArg&& aB)
-    : B(Forward<BArg>(aB)),
-      mFirstA(Forward<AArg>(aA))
+    : B(std::forward<BArg>(aB)),
+      mFirstA(std::forward<AArg>(aA))
   {}
 
   A& first() { return mFirstA; }
@@ -92,8 +92,8 @@ struct PairHelper<A, B, AsBase, AsMember> : private A
 protected:
   template<typename AArg, typename BArg>
   PairHelper(AArg&& aA, BArg&& aB)
-    : A(Forward<AArg>(aA)),
-      mSecondB(Forward<BArg>(aB))
+    : A(std::forward<AArg>(aA)),
+      mSecondB(std::forward<BArg>(aB))
   {}
 
   A& first() { return *this; }
@@ -117,8 +117,8 @@ struct PairHelper<A, B, AsBase, AsBase> : private A, private B
 protected:
   template<typename AArg, typename BArg>
   PairHelper(AArg&& aA, BArg&& aB)
-    : A(Forward<AArg>(aA)),
-      B(Forward<BArg>(aB))
+    : A(std::forward<AArg>(aA)),
+      B(std::forward<BArg>(aB))
   {}
 
   A& first() { return static_cast<A&>(*this); }
@@ -157,7 +157,7 @@ struct Pair
 public:
   template<typename AArg, typename BArg>
   Pair(AArg&& aA, BArg&& aB)
-    : Base(Forward<AArg>(aA), Forward<BArg>(aB))
+    : Base(std::forward<AArg>(aA), std::forward<BArg>(aB))
   {}
 
   Pair(Pair&& aOther)
@@ -210,8 +210,8 @@ MakePair(A&& aA, B&& aB)
   return
     Pair<typename RemoveCV<typename RemoveReference<A>::Type>::Type,
          typename RemoveCV<typename RemoveReference<B>::Type>::Type>(
-             Forward<A>(aA),
-             Forward<B>(aB));
+             std::forward<A>(aA),
+             std::forward<B>(aB));
 }
 
 } // namespace mozilla

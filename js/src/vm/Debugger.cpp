@@ -4232,12 +4232,12 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         cx(cx),
         debugger(dbg),
         iterMarker(&cx->runtime()->gc),
-        compartments(cx->zone()),
+        realms(cx->zone()),
         url(cx),
         displayURLString(cx),
         hasSource(false),
         source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr))),
-        innermostForCompartment(cx->zone()),
+        innermostForRealm(cx->zone()),
         vector(cx, ScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx))
     {}
@@ -4247,8 +4247,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * haven't enough memory.
      */
     bool init() {
-        if (!compartments.init() ||
-            !innermostForCompartment.init())
+        if (!realms.init() ||
+            !innermostForRealm.init())
         {
             ReportOutOfMemory(cx);
             return false;
@@ -4411,21 +4411,21 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
     /*
-     * Search all relevant compartments and the stack for scripts matching
+     * Search all relevant realms and the stack for scripts matching
      * this query, and append the matching scripts to |vector|.
      */
     bool findScripts() {
         if (!prepareQuery() || !delazifyScripts())
             return false;
 
-        JSCompartment* singletonComp = nullptr;
-        if (compartments.count() == 1)
-            singletonComp = compartments.all().front();
+        Realm* singletonRealm = nullptr;
+        if (realms.count() == 1)
+            singletonRealm = realms.all().front();
 
-        /* Search each compartment for debuggee scripts. */
+        /* Search each realm for debuggee scripts. */
         MOZ_ASSERT(vector.empty());
         oom = false;
-        IterateScripts(cx, singletonComp, this, considerScript);
+        IterateScripts(cx, singletonRealm, this, considerScript);
         if (oom) {
             ReportOutOfMemory(cx);
             return false;
@@ -4438,11 +4438,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         /*
          * For most queries, we just accumulate results in 'vector' as we find
          * them. But if this is an 'innermost' query, then we've accumulated the
-         * results in the 'innermostForCompartment' map. In that case, we now need to
+         * results in the 'innermostForRealm' map. In that case, we now need to
          * walk that map and populate 'vector'.
          */
         if (innermost) {
-            for (CompartmentToScriptMap::Range r = innermostForCompartment.all();
+            for (RealmToScriptMap::Range r = innermostForRealm.all();
                  !r.empty();
                  r.popFront())
             {
@@ -4484,14 +4484,13 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     /* The debugger for which we conduct queries. */
     Debugger* debugger;
 
-    /* Require the set of compartments to stay fixed while the ScriptQuery is alive. */
+    /* Require the set of realms to stay fixed while the ScriptQuery is alive. */
     gc::AutoEnterIteration iterMarker;
 
-    typedef HashSet<JSCompartment*, DefaultHasher<JSCompartment*>, ZoneAllocPolicy>
-        CompartmentSet;
+    using RealmSet = HashSet<Realm*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
 
-    /* A script must be in one of these compartments to match the query. */
-    CompartmentSet compartments;
+    /* A script must be in one of these realms to match the query. */
+    RealmSet realms;
 
     /* If this is a string, matching scripts have urls equal to it. */
     RootedValue url;
@@ -4520,15 +4519,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     /* True if the query has an 'innermost' property whose value is true. */
     bool innermost;
 
-    typedef HashMap<JSCompartment*, JSScript*, DefaultHasher<JSCompartment*>, ZoneAllocPolicy>
-        CompartmentToScriptMap;
+    using RealmToScriptMap = HashMap<Realm*, JSScript*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
 
     /*
-     * For 'innermost' queries, a map from compartments to the innermost script
-     * we've seen so far in that compartment. (Template instantiation code size
+     * For 'innermost' queries, a map from realms to the innermost script
+     * we've seen so far in that realm. (Template instantiation code size
      * explosion ho!)
      */
-    CompartmentToScriptMap innermostForCompartment;
+    RealmToScriptMap innermostForRealm;
 
     /*
      * Accumulate the scripts in an Rooted<ScriptVector>, instead of creating
@@ -4545,14 +4543,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     /* Indicates whether OOM has occurred while matching. */
     bool oom;
 
-    bool addCompartment(JSCompartment* comp) {
-        return compartments.put(comp);
+    bool addRealm(Realm* realm) {
+        return realms.put(realm);
     }
 
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject* global) {
-        MOZ_ASSERT(compartments.count() == 0);
-        if (!addCompartment(global->compartment())) {
+        MOZ_ASSERT(realms.count() == 0);
+        if (!addRealm(global->realm())) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -4564,10 +4562,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * globals.
      */
     bool matchAllDebuggeeGlobals() {
-        MOZ_ASSERT(compartments.count() == 0);
-        /* Build our compartment set from the debugger's set of debuggee globals. */
+        MOZ_ASSERT(realms.count() == 0);
+        /* Build our realm set from the debugger's set of debuggee globals. */
         for (WeakGlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
-            if (!addCompartment(r.front()->compartment())) {
+            if (!addRealm(r.front()->realm())) {
                 ReportOutOfMemory(cx);
                 return false;
             }
@@ -4591,11 +4589,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
     bool delazifyScripts() {
-        // All scripts in debuggee compartments must be visible, so delazify
+        // All scripts in debuggee realms must be visible, so delazify
         // everything.
-        for (auto r = compartments.all(); !r.empty(); r.popFront()) {
-            JSCompartment* comp = r.front();
-            Realm* realm = JS::GetRealmForCompartment(comp);
+        for (auto r = realms.all(); !r.empty(); r.popFront()) {
+            Realm* realm = r.front();
             if (!realm->ensureDelazifyScriptsForDebugger(cx))
                 return false;
         }
@@ -4610,7 +4607,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
     /*
      * If |script| matches this query, append it to |vector| or place it in
-     * |innermostForCompartment|, as appropriate. Set |oom| if an out of memory
+     * |innermostForRealm|, as appropriate. Set |oom| if an out of memory
      * condition occurred.
      */
     void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
@@ -4619,8 +4616,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         // initialized from fullyInit{FromEmitter,Trivial} due to errors.
         if (oom || script->selfHosted() || !script->code())
             return;
-        JSCompartment* compartment = script->compartment();
-        if (!compartments.has(compartment))
+        Realm* realm = script->realm();
+        if (!realms.has(realm))
             return;
         if (urlCString.ptr()) {
             bool gotFilename = false;
@@ -4659,15 +4656,15 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
              * For 'innermost' queries, we don't place scripts in |vector| right
              * away; we may later find another script that is nested inside this
              * one. Instead, we record the innermost script we've found so far
-             * for each compartment in innermostForCompartment, and only
-             * populate |vector| at the bottom of findScripts, when we've
-             * traversed all the scripts.
+             * for each realm in innermostForRealm, and only populate |vector|
+             * at the bottom of findScripts, when we've traversed all the
+             * scripts.
              *
              * So: check this script against the innermost one we've found so
-             * far (if any), as recorded in innermostForCompartment, and replace
-             * that if it's better.
+             * far (if any), as recorded in innermostForRealm, and replace that
+             * if it's better.
              */
-            CompartmentToScriptMap::AddPtr p = innermostForCompartment.lookupForAdd(compartment);
+            RealmToScriptMap::AddPtr p = innermostForRealm.lookupForAdd(realm);
             if (p) {
                 /* Is our newly found script deeper than the last one we found? */
                 JSScript* incumbent = p->value();
@@ -4679,9 +4676,9 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             } else {
                 /*
                  * This is the first matching script we've encountered for this
-                 * compartment, so it is thus the innermost such script.
+                 * realm, so it is thus the innermost such script.
                  */
-                if (!innermostForCompartment.add(p, compartment, script)) {
+                if (!innermostForRealm.add(p, realm, script)) {
                     oom = true;
                     return;
                 }
@@ -4781,6 +4778,9 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     /* The vector that we are accumulating results in. */
     AutoObjectVector objects;
 
+    /* The set of debuggee compartments. */
+    JS::CompartmentSet debuggeeCompartments;
+
     /*
      * Parse the query object |query|, and prepare to match only the objects it
      * specifies.
@@ -4814,6 +4814,18 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     bool findObjects() {
         if (!prepareQuery())
             return false;
+
+        if (!debuggeeCompartments.init()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        for (WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
+            if (!debuggeeCompartments.put(r.front()->compartment())) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+        }
 
         {
             /*
@@ -4866,10 +4878,20 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
          * node.
          */
         JSCompartment* comp = referent.compartment();
-        if (comp && !dbg->isDebuggeeUnbarriered(JS::GetRealmForCompartment(comp))) {
+        if (comp && !debuggeeCompartments.has(comp)) {
             traversal.abandonReferent();
             return true;
         }
+
+        /*
+         * If the referent has an associated realm and it's not a debuggee
+         * realm, skip it. Don't abandonReferent() here like above: realms
+         * within a compartment can reference each other without going through
+         * cross-compartment wrappers.
+         */
+        Realm* realm = referent.realm();
+        if (realm && !dbg->isDebuggeeUnbarriered(realm))
+            return true;
 
         /*
          * If the referent is an object and matches our query's restrictions,

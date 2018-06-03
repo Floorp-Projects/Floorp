@@ -176,10 +176,10 @@ template <>
 struct FallibleHashMethods<SavedFrame::HashPolicy>
 {
     template <typename Lookup> static bool hasHash(Lookup&& l) {
-        return SavedFrame::HashPolicy::hasHash(mozilla::Forward<Lookup>(l));
+        return SavedFrame::HashPolicy::hasHash(std::forward<Lookup>(l));
     }
     template <typename Lookup> static bool ensureHash(Lookup&& l) {
-        return SavedFrame::HashPolicy::ensureHash(mozilla::Forward<Lookup>(l));
+        return SavedFrame::HashPolicy::ensureHash(std::forward<Lookup>(l));
     }
 };
 

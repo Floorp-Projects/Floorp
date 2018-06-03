@@ -5,7 +5,39 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.repo_update:transforms
    - taskgraph.transforms.task:transforms
+
+
+job-defaults:
+   worker:
+      env:
+         DO_HSTS:
+            by-project:
+               mozilla-central: "1"
+               mozilla-esr60: "1"
+               default: ""
+         DO_HPKP:
+            by-project:
+               mozilla-central: "1"
+               mozilla-esr60: "1"
+               default: ""
+         DO_BLOCKLIST:
+            by-project:
+               mozilla-central: "1"
+               mozilla-esr60: "1"
+               mozilla-beta: "1"
+               default: ""
+         DO_REMOTE_SETTINGS:
+            by-project:
+               mozilla-central: "1"
+               mozilla-esr60: "1"
+               mozilla-beta: "1"
+               default: ""
+         USE_MOZILLA_CENTRAL:
+            by-project:
+               mozilla-central: "1"
+               default: ""
 
 
 jobs:
@@ -25,12 +57,6 @@ jobs:
          docker-image: {in-tree: periodic-updates}
          max-run-time: 3600  # Sometimes takes ~40 minutes
          env:
-            DO_HSTS: "1"
-            DO_HPKP: "1"
-            DO_BLOCKLIST: "1"
-            DO_REMOTE_SETTINGS: "1"
-            USE_MOZILLA_CENTRAL: "1"
-            BRANCH: mozilla-central
             PRODUCT: firefox
             REVIEWERS: "mtabara, jlund"
          command:

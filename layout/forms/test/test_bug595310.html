@@ -43,7 +43,6 @@ addLoadEvent(function() {
   function synthesizeDropText(aElement, aText)
   {
     var editor = SpecialPowers.wrap(aElement)
-                              .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
                               .editor
                               .QueryInterface(SpecialPowers.Ci.nsIPlaintextEditor);
 

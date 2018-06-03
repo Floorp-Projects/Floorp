@@ -65,7 +65,8 @@ namespace InspectorUtils {
   // to access via its .ranges attribute.
   [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(
       Range range,
-      optional unsigned long maxRanges = 0);
+      optional unsigned long maxRanges = 0,
+      optional boolean skipCollapsedWhitespace = true);
 
   sequence<DOMString> getCSSPseudoElementNames();
   void addPseudoClassLock(Element element,
@@ -134,6 +135,8 @@ interface InspectorFontFace {
   readonly attribute DOMString CSSFamilyName; // a family name that could be used in CSS font-family
                                               // (not necessarily the actual name that was used,
                                               // due to aliases, generics, localized names, etc)
+  readonly attribute DOMString CSSGeneric; // CSS generic (serif, sans-serif, etc) that was mapped
+                                           // to this font, if any (frequently empty!)
 
   [NewObject,Throws] sequence<InspectorVariationAxis> getVariationAxes();
   [NewObject,Throws] sequence<InspectorVariationInstance> getVariationInstances();

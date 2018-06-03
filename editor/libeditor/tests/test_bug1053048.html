@@ -16,14 +16,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
   SimpleTest.waitForFocus(runTests);
 
   const nsISelectionListener = SpecialPowers.Ci.nsISelectionListener;
-  const nsIDOMNSEditableElement = SpecialPowers.Ci.nsIDOMNSEditableElement;
 
   function runTests()
   {
     var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
     textarea.focus();
 
-    var editor = textarea.QueryInterface(nsIDOMNSEditableElement).editor;
+    var editor = textarea.editor;
     var selectionPrivate = editor.selection;
 
     var selectionListener = {

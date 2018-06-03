@@ -6,7 +6,6 @@
 
 FRAME_ID(BRFrame, Br, Leaf)
 FRAME_ID(DetailsFrame, Details, NotLeaf)
-FRAME_ID(nsAutoRepeatBoxFrame, Box, NotLeaf)
 FRAME_ID(nsBCTableCellFrame, BCTableCell, NotLeaf)
 FRAME_ID(nsBackdropFrame, Backdrop, Leaf)
 FRAME_ID(nsBlockFrame, Block, NotLeaf)

@@ -55,7 +55,7 @@ using JS::ubi::Node;
 using JS::ubi::EdgeVector;
 using JS::ubi::StackFrame;
 using JS::ubi::TracerConcrete;
-using JS::ubi::TracerConcreteWithCompartment;
+using JS::ubi::TracerConcreteWithRealm;
 
 struct CopyToBufferMatcher
 {
@@ -161,6 +161,7 @@ CoarseType Concrete<void>::coarseType() const      { MOZ_CRASH("null ubi::Node")
 const char16_t* Concrete<void>::typeName() const   { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const             { MOZ_CRASH("null ubi::Node"); }
 JSCompartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
+JS::Realm* Concrete<void>::realm() const           { MOZ_CRASH("null ubi::Node"); }
 
 UniquePtr<EdgeRange>
 Concrete<void>::edges(JSContext*, bool) const {
@@ -357,12 +358,20 @@ template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSContext* cx, boo
 
 template<typename Referent>
 JSCompartment*
-TracerConcreteWithCompartment<Referent>::compartment() const
+TracerConcreteWithRealm<Referent>::compartment() const
 {
     return TracerBase::get().compartment();
 }
 
-template JSCompartment* TracerConcreteWithCompartment<JSScript>::compartment() const;
+template<typename Referent>
+Realm*
+TracerConcreteWithRealm<Referent>::realm() const
+{
+    return TracerBase::get().realm();
+}
+
+template Realm* TracerConcreteWithRealm<JSScript>::realm() const;
+template JSCompartment* TracerConcreteWithRealm<JSScript>::compartment() const;
 
 bool
 Concrete<JSObject>::hasAllocationStack() const
@@ -405,6 +414,20 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
 
     outName[len] = '\0';
     return true;
+}
+
+JSCompartment*
+Concrete<JSObject>::compartment() const
+{
+    return Concrete::get().compartment();
+}
+
+Realm*
+Concrete<JSObject>::realm() const
+{
+    // Cross-compartment wrappers are shared by all realms in the compartment,
+    // so we return nullptr in that case.
+    return JS::GetObjectRealmOrNull(&Concrete::get());
 }
 
 const char16_t Concrete<JS::Symbol>::concreteTypeName[] = u"JS::Symbol";

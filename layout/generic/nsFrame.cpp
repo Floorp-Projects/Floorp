@@ -1381,10 +1381,10 @@ nsIFrame::GetUsedBorder() const
 
   const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    LayoutDeviceIntMargin widgetBorder;
     nsPresContext* pc = PresContext();
-    pc->GetTheme()->GetWidgetBorder(pc->DeviceContext(), mutable_this,
-                                    disp->mAppearance, &widgetBorder);
+    LayoutDeviceIntMargin widgetBorder =
+      pc->GetTheme()->GetWidgetBorder(pc->DeviceContext(), mutable_this,
+                                      disp->mAppearance);
     border = LayoutDevicePixel::ToAppUnits(widgetBorder,
                                            pc->AppUnitsPerDevPixel());
     return border;
@@ -5550,10 +5550,9 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, nscoord aPercentageBasis, bool aForISize)
   if (aFrame->IsThemed(disp)) {
     nsPresContext* presContext = aFrame->PresContext();
 
-    LayoutDeviceIntMargin border;
-    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             aFrame, disp->mAppearance,
-                                             &border);
+    LayoutDeviceIntMargin border =
+      presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
+                                               aFrame, disp->mAppearance);
     result.hBorder =
       presContext->DevPixelsToAppUnits(verticalAxis ? border.TopBottom()
                                                     : border.LeftRight());

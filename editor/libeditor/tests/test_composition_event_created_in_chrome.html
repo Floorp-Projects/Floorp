@@ -22,8 +22,7 @@ var gInputElement = document.getElementById("input");
 
 function getEditor(aInputElement)
 {
-  var editableElement = SpecialPowers.wrap(aInputElement).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
-  ok(editableElement, "The input element doesn't have nsIDOMNSEditableElement interface");
+  var editableElement = SpecialPowers.wrap(aInputElement);
   ok(editableElement.editor, "There is no editor for the input element");
   return editableElement.editor;
 }

@@ -105,7 +105,7 @@ fuzzy-if(OSX||winWidget,218,621)  css-writing-modes/inline-block-alignment-ortho
 fuzzy-if(OSX||winWidget,135,1080) css-writing-modes/inline-block-alignment-slr-009.xht
 fuzzy-if(OSX||winWidget,112,960)  css-writing-modes/inline-block-alignment-srl-008.xht
 fuzzy-if(OSX||winWidget,213,1540) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-direction-???-0??.xht
-fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/row-progression-???-0??.xht
+fuzzy-if(OSX||winWidget,110,1200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/row-progression-???-0??.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-00?.xht
 fuzzy-if(winWidget,110,1200) fuzzy-if(webrender&&cocoaWidget,1-1,2-2) css-writing-modes/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-srl-006.xht
@@ -153,16 +153,16 @@ random css-writing-modes/line-box-direction-vlr-016.xht
 random css-writing-modes/line-box-direction-vrl-015.xht
 
 # Bug 1220352
-fails css-writing-modes/line-box-height-vlr-003.xht
-fails css-writing-modes/line-box-height-vlr-005.xht
-fails css-writing-modes/line-box-height-vlr-011.xht
-fails css-writing-modes/line-box-height-vlr-013.xht
-fails css-writing-modes/line-box-height-vlr-021.xht
-fails css-writing-modes/line-box-height-vlr-023.xht
-fails css-writing-modes/line-box-height-vrl-002.xht
-fails css-writing-modes/line-box-height-vrl-004.xht
-fails css-writing-modes/line-box-height-vrl-010.xht
-fails css-writing-modes/line-box-height-vrl-012.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-003.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-005.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-011.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-013.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-021.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-023.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-002.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-004.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-010.xht
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-012.xht
 
 # Bug 1258635 - text-combine-upright: digits
 skip css-writing-modes/full-width-003.html
@@ -331,6 +331,7 @@ skip selectors/selectors-empty-001.xml
 skip selectors/selectors-namespace-001.xml
 
 # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) counter-styles-3/system-cyclic.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) counter-styles-3/dependent-builtin.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) counter-styles-3/redefine-attr-mapping.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/margin-v??-00?.xht
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/padding-v??-00?.xht
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/percent-margin-v??-00?.xht
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/percent-padding-v??-00?.xht

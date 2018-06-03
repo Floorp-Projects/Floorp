@@ -150,7 +150,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
     typedef typename ScopedTaskFactory<Runnable>::TaskWrapper TaskWrapper;
 
     RefPtr<TaskWrapper> task = new TaskWrapper(this);
-    task->Init(object_, method, mozilla::MakeTuple(mozilla::Forward<Elements>(elements)...));
+    task->Init(object_, method, mozilla::MakeTuple(std::forward<Elements>(elements)...));
     return task.forget();
   }
 
@@ -167,7 +167,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
      {
        obj_ = obj;
        meth_ = meth;
-       params_ = mozilla::Forward<Params>(params);
+       params_ = std::forward<Params>(params);
     }
 
     NS_IMETHOD Run() override {
@@ -280,7 +280,7 @@ class RunnableMethod : public mozilla::CancelableRunnable,
      : mozilla::CancelableRunnable("RunnableMethod")
      , obj_(obj)
      , meth_(meth)
-     , params_(mozilla::Forward<Params>(params))
+     , params_(std::forward<Params>(params))
    {
      this->RetainCallee(obj_);
   }
@@ -323,7 +323,7 @@ NewRunnableMethod(T* object, Method method, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::Runnable> t =
     new RunnableMethod<T, Method, ArgsTuple>(object, method,
-                                             mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+                                             mozilla::MakeTuple(std::forward<Args>(args)...));
   return t.forget();
 }
 
@@ -337,7 +337,7 @@ class RunnableFunction : public mozilla::CancelableRunnable {
    RunnableFunction(const char* name, Function function, Params&& params)
      : mozilla::CancelableRunnable(name)
      , function_(function)
-     , params_(mozilla::Forward<Params>(params))
+     , params_(std::forward<Params>(params))
    {
   }
 
@@ -365,7 +365,7 @@ NewCancelableRunnableFunction(const char* name, Function function, Args&&... arg
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::CancelableRunnable> t =
     new RunnableFunction<Function, ArgsTuple>(name, function,
-                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+                                              mozilla::MakeTuple(std::forward<Args>(args)...));
   return t.forget();
 }
 
@@ -375,7 +375,7 @@ NewRunnableFunction(const char* name, Function function, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::Runnable> t =
     new RunnableFunction<Function, ArgsTuple>(name, function,
-                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+                                              mozilla::MakeTuple(std::forward<Args>(args)...));
   return t.forget();
 }
 

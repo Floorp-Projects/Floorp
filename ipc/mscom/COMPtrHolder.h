@@ -36,12 +36,12 @@ public:
   }
 
   explicit COMPtrHolder(COMPtrType&& aPtr)
-    : mPtr(Forward<COMPtrType>(aPtr))
+    : mPtr(std::forward<COMPtrType>(aPtr))
   {
   }
 
   COMPtrHolder(COMPtrType&& aPtr, const ActivationContext& aActCtx)
-    : mPtr(Forward<COMPtrType>(aPtr))
+    : mPtr(std::forward<COMPtrType>(aPtr))
     , mActCtx(aActCtx)
   {
   }
@@ -58,7 +58,7 @@ public:
 
   void Set(COMPtrType&& aPtr)
   {
-    mPtr = Forward<COMPtrType>(aPtr);
+    mPtr = std::forward<COMPtrType>(aPtr);
   }
 
   void SetActCtx(const ActivationContext& aActCtx)

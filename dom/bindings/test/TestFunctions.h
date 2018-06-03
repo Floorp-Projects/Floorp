@@ -46,6 +46,11 @@ public:
   ThrowToRejectPromise(GlobalObject& aGlobal,
                        ErrorResult& aError);
 
+  int32_t One() const;
+  int32_t Two() const;
+
+  static bool ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj);
+
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aWrapper);
 private:

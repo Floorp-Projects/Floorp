@@ -2647,7 +2647,8 @@ public:
 
   void Destroy()
   {
-    mReferenceToThis = nullptr;
+    RefPtr<JSPurpleBuffer> referenceToThis;
+    mReferenceToThis.swap(referenceToThis);
     mValues.Clear();
     mObjects.Clear();
     mozilla::DropJSObjects(this);
@@ -3489,6 +3490,8 @@ nsCycleCollector::nsCycleCollector() :
 
 nsCycleCollector::~nsCycleCollector()
 {
+  MOZ_ASSERT(!mJSPurpleBuffer, "Didn't call JSPurpleBuffer::Destroy?");
+
   UnregisterWeakMemoryReporter(this);
 }
 
@@ -3988,6 +3991,10 @@ nsCycleCollector::Shutdown(bool aDoCollect)
 
   if (aDoCollect) {
     ShutdownCollect();
+  }
+
+  if (mJSPurpleBuffer) {
+    mJSPurpleBuffer->Destroy();
   }
 }
 

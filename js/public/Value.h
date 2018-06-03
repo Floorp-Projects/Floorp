@@ -1429,33 +1429,33 @@ class HeapBase<JS::Value, Wrapper> : public WrappedPtrOperations<JS::Value, Wrap
 template <typename F, typename... Args>
 auto
 DispatchTyped(F f, const JS::Value& val, Args&&... args)
-  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSObject*>(nullptr), std::forward<Args>(args)...))
 {
     if (val.isString()) {
         JSString* str = val.toString();
         MOZ_ASSERT(gc::IsCellPointerValid(str));
-        return f(str, mozilla::Forward<Args>(args)...);
+        return f(str, std::forward<Args>(args)...);
     }
     if (val.isObject()) {
         JSObject* obj = &val.toObject();
         MOZ_ASSERT(gc::IsCellPointerValid(obj));
-        return f(obj, mozilla::Forward<Args>(args)...);
+        return f(obj, std::forward<Args>(args)...);
     }
     if (val.isSymbol()) {
         JS::Symbol* sym = val.toSymbol();
         MOZ_ASSERT(gc::IsCellPointerValid(sym));
-        return f(sym, mozilla::Forward<Args>(args)...);
+        return f(sym, std::forward<Args>(args)...);
     }
 #ifdef ENABLE_BIGINT
     if (val.isBigInt()) {
         JS::BigInt* bi = val.toBigInt();
         MOZ_ASSERT(gc::IsCellPointerValid(bi));
-        return f(bi, mozilla::Forward<Args>(args)...);
+        return f(bi, std::forward<Args>(args)...);
     }
 #endif
     if (MOZ_UNLIKELY(val.isPrivateGCThing())) {
         MOZ_ASSERT(gc::IsCellPointerValid(val.toGCThing()));
-        return DispatchTyped(f, val.toGCCellPtr(), mozilla::Forward<Args>(args)...);
+        return DispatchTyped(f, val.toGCCellPtr(), std::forward<Args>(args)...);
     }
     MOZ_ASSERT(!val.isGCThing());
     return F::defaultValue(val);

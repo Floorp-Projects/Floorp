@@ -162,7 +162,7 @@
 #include "mozilla/dom/PCycleCollectWithLogsChild.h"
 
 #include "nsIScriptSecurityManager.h"
-#include "nsHostObjectProtocolHandler.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 
 #ifdef MOZ_WEBRTC
 #include "signaling/src/peerconnection/WebrtcGlobalChild.h"
@@ -2367,7 +2367,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     gFirstIdleTask = nullptr;
   }
 
-  nsHostObjectProtocolHandler::RemoveDataEntries();
+  BlobURLProtocolHandler::RemoveDataEntries();
 
   mAlertObservers.Clear();
 
@@ -2765,15 +2765,14 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
     RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(registration.blob());
     MOZ_ASSERT(blobImpl);
 
-    nsHostObjectProtocolHandler::AddDataEntry(registration.url(),
-                                              registration.principal(),
-                                              blobImpl);
+    BlobURLProtocolHandler::AddDataEntry(registration.url(),
+                                         registration.principal(),
+                                         blobImpl);
     // If we have received an already-revoked blobURL, we have to keep it alive
-    // for a while (see nsHostObjectProtocolHandler) in order to support pending
+    // for a while (see BlobURLProtocolHandler) in order to support pending
     // operations such as navigation, download and so on.
     if (registration.revoked()) {
-      nsHostObjectProtocolHandler::RemoveDataEntry(registration.url(),
-                                                   false);
+      BlobURLProtocolHandler::RemoveDataEntry(registration.url(), false);
     }
   }
 
@@ -3364,15 +3363,15 @@ ContentChild::RecvBlobURLRegistration(const nsCString& aURI,
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(blobImpl);
 
-  nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
+  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
-  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
-                                               /* aBroadcastToOtherProcesses = */ false);
+  BlobURLProtocolHandler::RemoveDataEntry(aURI,
+                                          /* aBroadcastToOtherProcesses = */ false);
   return IPC_OK();
 }
 

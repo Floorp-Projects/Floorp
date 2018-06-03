@@ -63,7 +63,7 @@ var loadListener = function(evt) {
     elem = doc.getElementById('en-US');
   }
 
-  var editor = SpecialPowers.wrap(elem).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  var editor = SpecialPowers.wrap(elem).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 

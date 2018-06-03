@@ -50,7 +50,6 @@ crashtest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
 
 jsreftest:
@@ -83,7 +82,6 @@ jsreftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
 
 reftest:
@@ -129,7 +127,6 @@ reftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64-asan.*: 3
             default: default
 
 reftest-gpu:
@@ -171,7 +168,3 @@ reftest-no-accel:
                 windows10-64.*/opt: false
                 macosx.*: false
                 default: true
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default

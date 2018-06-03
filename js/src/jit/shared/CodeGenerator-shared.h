@@ -653,8 +653,8 @@ class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...>
   public:
     template <typename ProvidedHead, typename... ProvidedTail>
     explicit ArgSeq(ProvidedHead&& head, ProvidedTail&&... tail)
-      : ArgSeq<TailTypes...>(mozilla::Forward<ProvidedTail>(tail)...),
-        head_(mozilla::Forward<ProvidedHead>(head))
+      : ArgSeq<TailTypes...>(std::forward<ProvidedTail>(tail)...),
+        head_(std::forward<ProvidedHead>(head))
     { }
 
     // Arguments are pushed in reverse order, from last argument to first
@@ -669,7 +669,7 @@ template <typename... ArgTypes>
 inline ArgSeq<ArgTypes...>
 ArgList(ArgTypes&&... args)
 {
-    return ArgSeq<ArgTypes...>(mozilla::Forward<ArgTypes>(args)...);
+    return ArgSeq<ArgTypes...>(std::forward<ArgTypes>(args)...);
 }
 
 // Store wrappers, to generate the right move of data after the VM call.

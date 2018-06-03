@@ -6,6 +6,7 @@
 
 #include "InspectorFontFace.h"
 
+#include "gfxPlatformFontList.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "nsFontFaceLoader.h"
@@ -53,6 +54,19 @@ void
 InspectorFontFace::GetCSSFamilyName(nsAString& aCSSFamilyName)
 {
   aCSSFamilyName = mFontEntry->FamilyName();
+}
+
+void
+InspectorFontFace::GetCSSGeneric(nsAString& aName)
+{
+  auto genericType =
+    FontFamilyType(mMatchType & gfxTextRange::MatchType::kGenericMask);
+  if (genericType >= FontFamilyType::eFamily_generic_first &&
+      genericType <= FontFamilyType::eFamily_generic_last) {
+    aName.AssignASCII(gfxPlatformFontList::GetGenericName(genericType));
+  } else {
+    aName.Truncate(0);
+  }
 }
 
 ServoFontFaceRule*

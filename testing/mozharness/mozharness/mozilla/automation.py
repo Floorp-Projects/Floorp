@@ -64,12 +64,9 @@ class AutomationMixin(object):
             if set_return_code:
                 self.return_code = EXIT_STATUS_DICT[self.worst_status]
 
-    def set_property(self, prop_name, prop_value, write_to_file=False):
+    def set_property(self, prop_name, prop_value):
         self.info("Setting property %s to %s" % (prop_name, prop_value))
         self.properties[prop_name] = prop_value
-        if write_to_file:
-            return self.dump_properties(prop_list=[prop_name],
-                                        file_name=prop_name)
         return self.properties[prop_name]
 
     def query_property(self, prop_name):

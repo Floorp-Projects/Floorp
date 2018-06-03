@@ -139,7 +139,8 @@ protected:
     cairo_scaled_font_t*
     CreateScaledFont(FcPattern* aRenderPattern,
                      gfxFloat aAdjustedSize,
-                     const gfxFontStyle *aStyle);
+                     const gfxFontStyle *aStyle,
+                     FT_Face aFTFace);
 
     // override to pull data from FTFace
     virtual nsresult
@@ -305,7 +306,7 @@ public:
                      uint32_t aLength) override;
 
     bool FindAndAddFamilies(const nsAString& aFamily,
-                            nsTArray<gfxFontFamily*>* aOutput,
+                            nsTArray<FamilyAndGeneric>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
@@ -318,7 +319,7 @@ public:
     // override to use fontconfig lookup for generics
     void AddGenericFonts(mozilla::FontFamilyType aGenericType,
                          nsAtom* aLanguage,
-                         nsTArray<gfxFontFamily*>& aFamilyList) override;
+                         nsTArray<FamilyAndGeneric>& aFamilyList) override;
 
     void ClearLangGroupPrefFonts() override;
 
@@ -399,7 +400,7 @@ protected:
     // these pointers will be invalidated. InitFontList() flushes the cache
     // in this case.
     nsDataHashtable<nsCStringHashKey,
-                    nsTArray<gfxFontFamily*>> mFcSubstituteCache;
+                    nsTArray<FamilyAndGeneric>> mFcSubstituteCache;
 
     nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;
     nsCountedRef<FcConfig> mLastConfig;

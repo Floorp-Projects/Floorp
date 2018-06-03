@@ -86,26 +86,6 @@ class TryToolsMixin(TransferMixin):
             msg = self.config["try_message"]
         elif 'TRY_COMMIT_MSG' in os.environ:
             msg = os.environ['TRY_COMMIT_MSG']
-        elif self._is_try():
-            # This commit message was potentially truncated or not available
-            # (e.g. if running in TaskCluster), get the full message from hg.
-            repo_url = 'https://hg.mozilla.org/%s/'
-            rev = os.environ.get('GECKO_HEAD_REV')
-            repo_path = self.config.get('branch')
-            if repo_path:
-                repo_url = repo_url % repo_path
-            else:
-                repo_url = os.environ.get('GECKO_HEAD_REPOSITORY',
-                                          repo_url % 'try')
-            if not repo_url.endswith('/'):
-                repo_url += '/'
-
-            url = '{}json-pushes?changeset={}&full=1'.format(repo_url, rev)
-
-            pushinfo = self.load_json_from_url(url)
-            for k, v in pushinfo.items():
-                if isinstance(v, dict) and 'changesets' in v:
-                    msg = v['changesets'][-1]['desc']
 
         if not msg:
             self.warning('Try message not found.')

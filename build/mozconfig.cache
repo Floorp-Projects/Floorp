@@ -4,46 +4,7 @@
 
 # Setup for build cache
 
-# Avoid duplication if the file happens to be included twice.
-if test -z "$bucket" -a -z "$NO_CACHE"; then
-
-# buildbot (or builders that use buildprops.json):
-if [ -f $topsrcdir/../buildprops.json ]; then
-read branch platform master <<EOF
-$(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.json").read())["properties"]; print p["branch"], p["platform"], p["master"]' 2> /dev/null)
-EOF
-
-bucket=
-if test -z "$SCCACHE_DISABLE"; then
-    case "${branch}" in
-    try)
-        case "${master}" in
-        *scl1.mozilla.com*|*.scl3.mozilla.com*)
-            bucket=mozilla-releng-s3-cache-us-west-1-try
-            ;;
-        *use1.mozilla.com*)
-            bucket=mozilla-releng-s3-cache-us-east-1-try
-            ;;
-        *usw2.mozilla.com*)
-            bucket=mozilla-releng-s3-cache-us-west-2-try
-            ;;
-        esac
-        ;;
-    autoland|mozilla-inbound)
-        case "${master}" in
-        *use1.mozilla.com*)
-            bucket=mozilla-releng-s3-cache-us-east-1-prod
-            ;;
-        *usw2.mozilla.com*)
-            bucket=mozilla-releng-s3-cache-us-west-2-prod
-            ;;
-        esac
-        ;;
-    esac
-fi
-fi
-
-# builds where buildprops didn't have the data (eg: taskcluster or non-buildbot) and without sccache disabled:
+# builds where buildprops didn't have the data (eg: taskcluster) and without sccache disabled:
 if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
 
     # prevent rerun if az is set, or wget is not available
@@ -130,6 +91,4 @@ if test -n "$bucket"; then
         mk_add_options "export MOZ_DEBUG_FLAGS=-Z7"
         ;;
     esac
-fi
-
 fi

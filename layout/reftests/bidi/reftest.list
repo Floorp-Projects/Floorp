@@ -121,7 +121,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
-== 712600-1.html 712600-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 712600-1.html 712600-1-ref.html # Bug 1392106
 == 712600-2.html 712600-2-ref.html
 == 712600-2-dyn.html 712600-2-ref.html
 == 712600-3.html 712600-3-ref.html

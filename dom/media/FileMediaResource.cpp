@@ -6,8 +6,9 @@
 #include "FileMediaResource.h"
 
 #include "mozilla/AbstractThread.h"
+#include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsContentUtils.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
@@ -75,11 +76,19 @@ FileMediaResource::Open(nsIStreamListener** aStreamListener)
 
     rv = NS_NewLocalFileInputStream(
       getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
-  } else if (IsBlobURI(mURI)) {
-    rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
-  }
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (dom::IsBlobURI(mURI)) {
+    RefPtr<dom::BlobImpl> blobImpl;
+    rv = NS_GetBlobForBlobURI(mURI, getter_AddRefs(blobImpl));
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(blobImpl);
 
-  NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult err;
+    blobImpl->CreateInputStream(getter_AddRefs(mInput), err);
+    if (NS_WARN_IF(err.Failed())) {
+      return err.StealNSResult();
+    }
+  }
 
   mSeekable = do_QueryInterface(mInput);
   if (!mSeekable) {

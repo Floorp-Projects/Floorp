@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsITextControlElement.h"
 #include "nsIControllers.h"
-#include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
@@ -39,7 +38,6 @@ class HTMLFormSubmission;
 
 class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
                                   public nsITextControlElement,
-                                  public nsIDOMNSEditableElement,
                                   public nsStubMutationObserver,
                                   public nsIConstraintValidation
 {
@@ -61,15 +59,6 @@ public:
   {
     return true;
   }
-
-  // nsIDOMNSEditableElement
-  NS_IMETHOD GetEditor(nsIEditor** aEditor) override
-  {
-    nsCOMPtr<nsIEditor> editor = GetEditor();
-    editor.forget(aEditor);
-    return NS_OK;
-  }
-  NS_IMETHOD SetUserInput(const nsAString& aInput) override;
 
   // nsIFormControl
   NS_IMETHOD Reset() override;
@@ -314,6 +303,9 @@ public:
   {
     return mState.GetTextEditor();
   }
+
+  void SetUserInput(const nsAString& aValue,
+                    nsIPrincipal& aSubjectPrincipal);
 
 protected:
   virtual ~HTMLTextAreaElement() {}

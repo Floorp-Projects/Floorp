@@ -83,7 +83,7 @@ public:
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
   }
 
-  NS_IMETHOD GetType(nsAString & aType);
+  void GetType(nsAString & aType) const;
 
   nsIHTMLCollection* Elements();
 

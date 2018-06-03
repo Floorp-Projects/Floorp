@@ -864,8 +864,11 @@ public:
     virtual ~gfxFontGroup();
 
     // Returns first valid font in the fontlist or default font.
-    // Initiates userfont loads if userfont not loaded
-    gfxFont* GetFirstValidFont(uint32_t aCh = 0x20);
+    // Initiates userfont loads if userfont not loaded.
+    // aGeneric: if non-null, returns the CSS generic type that was mapped to
+    //           this font
+    gfxFont* GetFirstValidFont(uint32_t aCh = 0x20,
+                               mozilla::FontFamilyType* aGeneric = nullptr);
 
     // Returns the first font in the font-group that has an OpenType MATH table,
     // or null if no such font is available. The GetMathConstant methods may be
@@ -1025,13 +1028,15 @@ protected:
     class FamilyFace {
     public:
         FamilyFace() : mFamily(nullptr), mFontEntry(nullptr),
+                       mGeneric(mozilla::eFamily_none),
                        mFontCreated(false),
                        mLoading(false), mInvalid(false),
                        mCheckForFallbackFaces(false)
         { }
 
-        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
-            : mFamily(aFamily), mFontCreated(true),
+        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont,
+                   mozilla::FontFamilyType aGeneric)
+            : mFamily(aFamily), mGeneric(aGeneric), mFontCreated(true),
               mLoading(false), mInvalid(false), mCheckForFallbackFaces(false)
         {
             NS_ASSERTION(aFont, "font pointer must not be null");
@@ -1042,8 +1047,9 @@ protected:
             NS_ADDREF(aFont);
         }
 
-        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry)
-            : mFamily(aFamily), mFontCreated(false),
+        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
+                   mozilla::FontFamilyType aGeneric)
+            : mFamily(aFamily), mGeneric(aGeneric), mFontCreated(false),
               mLoading(false), mInvalid(false), mCheckForFallbackFaces(false)
         {
             NS_ASSERTION(aFontEntry, "font entry pointer must not be null");
@@ -1056,6 +1062,7 @@ protected:
 
         FamilyFace(const FamilyFace& aOtherFamilyFace)
             : mFamily(aOtherFamilyFace.mFamily),
+              mGeneric(aOtherFamilyFace.mGeneric),
               mFontCreated(aOtherFamilyFace.mFontCreated),
               mLoading(aOtherFamilyFace.mLoading),
               mInvalid(aOtherFamilyFace.mInvalid),
@@ -1088,6 +1095,7 @@ protected:
             }
 
             mFamily = aOther.mFamily;
+            mGeneric = aOther.mGeneric;
             mFontCreated = aOther.mFontCreated;
             mLoading = aOther.mLoading;
             mInvalid = aOther.mInvalid;
@@ -1111,6 +1119,8 @@ protected:
         gfxFontEntry* FontEntry() const {
             return mFontCreated ? mFont->GetFontEntry() : mFontEntry;
         }
+
+        mozilla::FontFamilyType Generic() const { return mGeneric; }
 
         bool IsUserFontContainer() const {
             return FontEntry()->mIsUserFontContainer;
@@ -1148,6 +1158,7 @@ protected:
             gfxFont* MOZ_OWNING_REF      mFont;
             gfxFontEntry* MOZ_OWNING_REF mFontEntry;
         };
+        mozilla::FontFamilyType mGeneric;
         bool                    mFontCreated : 1;
         bool                    mLoading     : 1;
         bool                    mInvalid     : 1;
@@ -1259,10 +1270,11 @@ protected:
 
     // lookup and add a font with a given name (i.e. *not* a generic!)
     void AddPlatformFont(const nsAString& aName,
-                         nsTArray<gfxFontFamily*>& aFamilyList);
+                         nsTArray<FamilyAndGeneric>& aFamilyList);
 
     // do style selection and add entries to list
-    void AddFamilyToFontList(gfxFontFamily* aFamily);
+    void AddFamilyToFontList(gfxFontFamily* aFamily,
+                             mozilla::FontFamilyType aGeneric);
 };
 
 // A "missing font recorder" is to be used during text-run creation to keep

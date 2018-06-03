@@ -40,8 +40,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
-using mozilla::Forward;
-
 namespace js {
 
 namespace detail {
@@ -176,7 +174,7 @@ class OrderedHashTable
     MOZ_MUST_USE bool put(ElementInput&& element) {
         HashNumber h = prepareHash(Ops::getKey(element));
         if (Data* e = lookup(Ops::getKey(element), h)) {
-            e->element = Forward<ElementInput>(element);
+            e->element = std::forward<ElementInput>(element);
             return true;
         }
 
@@ -191,7 +189,7 @@ class OrderedHashTable
         h >>= hashShift;
         liveCount++;
         Data* e = &data[dataLength++];
-        new (e) Data(Forward<ElementInput>(element), hashTable[h]);
+        new (e) Data(std::forward<ElementInput>(element), hashTable[h]);
         hashTable[h] = e;
         return true;
     }
@@ -761,7 +759,7 @@ class OrderedHashMap
       public:
         Entry() : key(), value() {}
         template <typename V>
-        Entry(const Key& k, V&& v) : key(k), value(Forward<V>(v)) {}
+        Entry(const Key& k, V&& v) : key(k), value(std::forward<V>(v)) {}
         Entry(Entry&& rhs) : key(std::move(rhs.key)), value(std::move(rhs.value)) {}
 
         const Key key;
@@ -808,7 +806,7 @@ class OrderedHashMap
 
     template <typename V>
     MOZ_MUST_USE bool put(const Key& key, V&& value) {
-        return impl.put(Entry(key, Forward<V>(value)));
+        return impl.put(Entry(key, std::forward<V>(value)));
     }
 
     HashNumber hash(const Key& key) const { return impl.prepareHash(key); }

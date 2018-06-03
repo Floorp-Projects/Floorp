@@ -81,7 +81,7 @@ public:
   template<typename OnSuccessType>
   void Then(OnSuccessType&& aOnSuccess)
   {
-    Then(Forward<OnSuccessType>(aOnSuccess), [](ErrorType&){});
+    Then(std::forward<OnSuccessType>(aOnSuccess), [](ErrorType&){});
   }
 
   template<typename OnSuccessType, typename OnFailureType>
@@ -105,8 +105,8 @@ public:
       OnSuccessType mOnSuccess;
       OnFailureType mOnFailure;
     };
-    mFunctors = MakeUnique<Functors>(Forward<OnSuccessType>(aOnSuccess),
-                                     Forward<OnFailureType>(aOnFailure));
+    mFunctors = MakeUnique<Functors>(std::forward<OnSuccessType>(aOnSuccess),
+                                     std::forward<OnFailureType>(aOnFailure));
     if (mDone) {
       if (!mRejected) {
         mFunctors->Succeed(mValue);
@@ -216,7 +216,7 @@ already_AddRefed<LambdaRunnable<OnRunType>>
 NewRunnableFrom(OnRunType&& aOnRun)
 {
   typedef LambdaRunnable<OnRunType> LambdaType;
-  RefPtr<LambdaType> lambda = new LambdaType(Forward<OnRunType>(aOnRun));
+  RefPtr<LambdaType> lambda = new LambdaType(std::forward<OnRunType>(aOnRun));
   return lambda.forget();
 }
 
@@ -448,13 +448,13 @@ Await(
                  __func__,
                  [&](ResolveValueType&& aResolveValue) {
                    MonitorAutoLock lock(mon);
-                   aResolveFunction(Forward<ResolveValueType>(aResolveValue));
+                   aResolveFunction(std::forward<ResolveValueType>(aResolveValue));
                    done = true;
                    mon.Notify();
                  },
                  [&](RejectValueType&& aRejectValue) {
                    MonitorAutoLock lock(mon);
-                   aRejectFunction(Forward<RejectValueType>(aRejectValue));
+                   aRejectFunction(std::forward<RejectValueType>(aRejectValue));
                    done = true;
                    mon.Notify();
                  });

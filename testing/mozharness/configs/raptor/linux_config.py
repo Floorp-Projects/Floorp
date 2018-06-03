@@ -28,10 +28,6 @@ config = {
         "setup-mitmproxy",
         "run-tests",
     ],
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
-    "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,
     "minidump_tooltool_manifest_path": TOOLTOOL_MANIFEST_PATH,

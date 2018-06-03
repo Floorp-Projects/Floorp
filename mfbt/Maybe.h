@@ -327,7 +327,7 @@ public:
     if (isSome()) {
       return ref();
     }
-    return Forward<V>(aDefault);
+    return std::forward<V>(aDefault);
   }
 
   /*
@@ -596,7 +596,7 @@ void
 Maybe<T>::emplace(Args&&... aArgs)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsSome);
-  ::new (KnownNotNull, data()) T(Forward<Args>(aArgs)...);
+  ::new (KnownNotNull, data()) T(std::forward<Args>(aArgs)...);
   mIsSome = true;
 }
 
@@ -617,7 +617,7 @@ Maybe<U>
 Some(T&& aValue)
 {
   Maybe<U> value;
-  value.emplace(Forward<T>(aValue));
+  value.emplace(std::forward<T>(aValue));
   return value;
 }
 

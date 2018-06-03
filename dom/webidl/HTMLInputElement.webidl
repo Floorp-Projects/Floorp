@@ -187,10 +187,8 @@ partial interface HTMLInputElement {
   AutocompleteInfo? getAutocompleteInfo();
 };
 
-partial interface HTMLInputElement {
-  // Mirrored chrome-only nsIDOMNSEditableElement methods.  Please make sure
-  // to update this list if nsIDOMNSEditableElement changes.
-
+[NoInterfaceObject]
+interface MozEditableElement {
   [Pure, ChromeOnly]
   readonly attribute nsIEditor? editor;
 
@@ -200,6 +198,8 @@ partial interface HTMLInputElement {
   [Func="IsChromeOrXBL", NeedsSubjectPrincipal]
   void setUserInput(DOMString input);
 };
+
+HTMLInputElement implements MozEditableElement;
 
 partial interface HTMLInputElement {
   [Pref="dom.input.dirpicker", SetterThrows]

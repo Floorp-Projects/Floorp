@@ -263,9 +263,9 @@ struct IsResult<Result<V, E>> : TrueType { };
 template <typename V, typename E>
 auto
 ToResult(Result<V, E>&& aValue)
-  -> decltype(Forward<Result<V, E>>(aValue))
+  -> decltype(std::forward<Result<V, E>>(aValue))
 {
-  return Forward<Result<V, E>>(aValue);
+  return std::forward<Result<V, E>>(aValue);
 }
 
 /**

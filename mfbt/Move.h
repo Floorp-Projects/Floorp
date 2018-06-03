@@ -137,7 +137,7 @@ namespace mozilla {
  * template like so[0]:
  *
  *   template <typename XArg, typename YArg>
- *   C::C(XArg&& x, YArg&& y) : x(Forward<XArg>(x)), y(Forward<YArg>(y)) { }
+ *   C::C(XArg&& x, YArg&& y) : x(std::forward<XArg>(x)), y(std::forward<YArg>(y)) { }
  *
  * ("'Don't Repeat Yourself'? What's that?")
  *
@@ -165,7 +165,7 @@ namespace mozilla {
  *   collapses to 'Y&'. Because the arguments are declared as rvalue references
  *   to template arguments, the lvalue-ness "shines through" where present.
  *
- * Then, the 'Forward<T>' function --- you must invoke 'Forward' with its type
+ * Then, the 'std::forward<T>' function --- you must invoke 'Forward' with its type
  * argument --- returns an lvalue reference or an rvalue reference to its
  * argument, depending on what T is. In our unified constructor definition, that
  * means that we'll invoke either the copy or move constructors for x and y,
@@ -193,26 +193,6 @@ namespace mozilla {
  *      int tmp = s.x;
  *      C(tmp, 0); // OK: tmp not a bit-field
  */
-
-/**
- * These two overloads are identical to std::forward(); they are necessary until
- * our stlport supports std::forward().
- */
-template<typename T>
-inline T&&
-Forward(typename RemoveReference<T>::Type& aX)
-{
-  return static_cast<T&&>(aX);
-}
-
-template<typename T>
-inline T&&
-Forward(typename RemoveReference<T>::Type&& aX)
-{
-  static_assert(!IsLvalueReference<T>::value,
-                "misuse of Forward detected!  try the other overload");
-  return static_cast<T&&>(aX);
-}
 
 /** Swap |aX| and |aY| using move-construction if possible. */
 template<typename T>
