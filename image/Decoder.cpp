@@ -339,6 +339,10 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
     return RawAccessFrameRef();
   }
 
+  // There is no underlying data to reuse, so reset the recycle rect to be
+  // the full frame, to ensure the restore frame is fully copied.
+  mRecycleRect = IntRect(IntPoint(0, 0), aOutputSize);
+
   auto frame = MakeNotNull<RefPtr<imgFrame>>();
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
