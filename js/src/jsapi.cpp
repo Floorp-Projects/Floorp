@@ -1873,12 +1873,6 @@ JS::RealmCreationOptionsRef(JSCompartment* compartment)
 }
 
 const JS::RealmCreationOptions&
-JS::RealmCreationOptionsRef(JSObject* obj)
-{
-    return obj->realm()->creationOptions();
-}
-
-const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSContext* cx)
 {
     return cx->realm()->creationOptions();
