@@ -196,7 +196,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                 "--no-pause-after-test"]
 
         if not sys.platform.startswith("linux"):
-            cmd += ["--exclude=css"]
+            cmd += ["--exclude=css",
+                    "--include=css/css-scrollbars"]
 
         for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)
