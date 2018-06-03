@@ -493,7 +493,7 @@ CustomElementRegistry::CreateCustomElementCallback(
   if (aAdoptedCallbackArgs) {
     callback->SetAdoptedCallbackArgs(*aAdoptedCallbackArgs);
   }
-  return callback;
+  return std::move(callback);
 }
 
 /* static */ void

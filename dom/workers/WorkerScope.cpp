@@ -548,7 +548,7 @@ WorkerGlobalScope::GetClientState() const
 {
   Maybe<ClientState> state;
   state.emplace(mWorkerPrivate->GetClientState());
-  return state;
+  return std::move(state);
 }
 
 Maybe<ServiceWorkerDescriptor>

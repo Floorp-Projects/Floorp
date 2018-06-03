@@ -75,7 +75,7 @@ static UniqueA
 ReturnLocalA()
 {
   UniqueA a(new A);
-  return a;
+  return std::move(a);
 }
 
 static void
@@ -368,7 +368,7 @@ MallocedInt(int aI)
   UniquePtr<int, FreeSignature>
     ptr(static_cast<int*>(malloc(sizeof(int))), free);
   *ptr = aI;
-  return ptr;
+  return std::move(ptr);
 }
 static bool
 TestFunctionReferenceDeleter()

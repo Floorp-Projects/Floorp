@@ -514,7 +514,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
     previousItemIndex = Some(merge.ProcessItemFromNewList(item, previousItemIndex));
   }
 
-  *aOutList = merge.Finalize();
+  *aOutList = std::move(merge.Finalize());
   aOutContainerASR = merge.mContainerASR;
   return merge.mResultIsModified;
 }

@@ -28,7 +28,7 @@ BackEdge::clone() const
         if (!clone->name_)
             return nullptr;
     }
-    return clone;
+    return std::move(clone);
 }
 
 #ifdef DEBUG

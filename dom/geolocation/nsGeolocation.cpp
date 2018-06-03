@@ -1164,7 +1164,7 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
 {
   nsresult rv = GetCurrentPosition(GeoPositionCallback(&aCallback),
                                    GeoPositionErrorCallback(aErrorCallback),
-                                   CreatePositionOptionsCopy(aOptions),
+                                   std::move(CreatePositionOptionsCopy(aOptions)),
                                    aCallerType);
 
   if (NS_FAILED(rv)) {
@@ -1242,7 +1242,7 @@ Geolocation::WatchPosition(PositionCallback& aCallback,
   int32_t ret = 0;
   nsresult rv = WatchPosition(GeoPositionCallback(&aCallback),
                               GeoPositionErrorCallback(aErrorCallback),
-                              CreatePositionOptionsCopy(aOptions),
+                              std::move(CreatePositionOptionsCopy(aOptions)),
                               aCallerType,
                               &ret);
 

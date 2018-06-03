@@ -1601,7 +1601,7 @@ DecodeExportName(Decoder& d, CStringSet* dupSet)
     if (!dupSet->add(p, exportName.get()))
         return nullptr;
 
-    return exportName;
+    return std::move(exportName);
 }
 
 static bool
