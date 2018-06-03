@@ -1448,29 +1448,28 @@ static inline double
 StretchDistance(const gfxFontEntry* aFontEntry, FontStretch aTargetStretch)
 {
     const double kReverseDistance = 1000.0;
-    double distance = 0.0;
 
     FontStretch minStretch = aFontEntry->Stretch().Min();
     FontStretch maxStretch = aFontEntry->Stretch().Max();
 
-    if (aTargetStretch < minStretch || aTargetStretch > maxStretch) {
-        // stretch values are in the range 0 .. 1000
-        // if aTargetStretch is >100, we prefer larger values;
-        // if <=100, prefer smaller
+    // The stretch value is a (non-negative) percentage; currently we support
+    // values in the range 0 .. 1000. (If the upper limit is ever increased,
+    // the kReverseDistance value used here may need to be adjusted.)
+    // If aTargetStretch is >100, we prefer larger values if available;
+    // if <=100, we prefer smaller values if available.
+    if (aTargetStretch < minStretch) {
         if (aTargetStretch > FontStretch::Normal()) {
-            distance = (minStretch - aTargetStretch);
-        } else {
-            distance = (aTargetStretch - maxStretch);
+            return minStretch - aTargetStretch;
         }
-        // if the computed "distance" here is negative, it means that
-        // aFontEntry lies in the "non-preferred" direction from aTargetStretch,
-        // so we treat that as larger than any preferred-direction distance
-        // (max possible is 1000) by adding an extra 1000 to the absolute value
-        if (distance < 0.0f) {
-            distance = kReverseDistance - distance;
-        }
+        return (minStretch - aTargetStretch) + kReverseDistance;
     }
-    return distance;
+    if (aTargetStretch > maxStretch) {
+        if (aTargetStretch <= FontStretch::Normal()) {
+            return aTargetStretch - maxStretch;
+        }
+        return (aTargetStretch - maxStretch) + kReverseDistance;
+    }
+    return 0.0;
 }
 
 // Calculate weight distance with values in the range (0..1000). In general,
