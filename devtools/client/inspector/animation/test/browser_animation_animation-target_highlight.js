@@ -8,6 +8,7 @@
 // * unhighlight when mouse out from the above element
 // * lock highlighting when click on the inspect icon in animation target component
 // * add 'highlighting' class to animation target component during locking
+// * mouseover locked target node
 // * unlock highlighting when click on the above icon
 // * lock highlighting when click on the other inspect icon
 // * if the locked node has multi animations,
@@ -48,6 +49,17 @@ add_task(async function() {
   await wait(500);
   ok(panel.querySelectorAll(".animation-target")[0].classList.contains("highlighting"),
     "The highlighted element still should have 'highlighting' class");
+
+  info("Check no highlight event occur by mouse over locked target");
+  let highlightEventCount = 0;
+  const highlightEventCounter = () => {
+    highlightEventCount += 1;
+  };
+  toolbox.on("node-highlight", highlightEventCounter);
+  mouseOverOnTargetNode(animationInspector, panel, 0);
+  await wait(500);
+  is(highlightEventCount, 0, "Highlight event should not occur");
+  toolbox.off("node-highlight", highlightEventCounter);
 
   info("Highlighting another animation target");
   onHighlighterShown = inspector.highlighters.once("box-model-highlighter-shown");
