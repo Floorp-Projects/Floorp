@@ -28,7 +28,6 @@ from mozharness.mozilla.building.buildbase import (
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
-from mozharness.base.python import VirtualenvMixin
 
 try:
     import simplejson as json
@@ -64,7 +63,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 # DesktopSingleLocale {{{1
 class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                           VCSMixin, BaseScript, MarMixin,
-                          VirtualenvMixin, TransferMixin):
+                          TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
         ['--locale', ],
@@ -129,10 +128,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 "log_name": "single_locale",
                 "appName": "Firefox",
                 "hashType": "sha512",
-                'virtualenv_modules': [
-                    'requests==2.8.1',
-                ],
-                'virtualenv_path': 'venv',
             },
         }
 
