@@ -297,6 +297,17 @@
           if (hoveredTab) {
             hoveredTab._mouseenter();
           }
+
+          // Update before-multiselected attributes.
+          // gBrowser may not be initialized yet, so avoid using it
+          for (let i = 0; i < visibleTabs.length - 1; i++) {
+            let tab = visibleTabs[i];
+            let nextTab = visibleTabs[i + 1];
+            tab.removeAttribute("before-multiselected");
+            if (nextTab.multiselected) {
+              tab.setAttribute("before-multiselected", "true");
+            }
+          }
         ]]></body>
       </method>
 
@@ -1545,7 +1556,7 @@
       <xul:stack class="tab-stack" flex="1">
         <xul:vbox xbl:inherits="selected=visuallyselected,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="selected=visuallyselected"
+          <xul:hbox xbl:inherits="selected=visuallyselected,multiselected,before-multiselected"
                     class="tab-line"/>
           <xul:spacer flex="1"/>
           <xul:hbox class="tab-bottom-line"/>
@@ -1582,7 +1593,7 @@
                     onunderflow="this.removeAttribute('textoverflow');"
                     flex="1">
             <xul:label class="tab-text tab-label"
-                       xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention,multiselected"
+                       xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
                        role="presentation"/>
           </xul:hbox>
           <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked"
@@ -1666,6 +1677,11 @@
       <property name="multiselected" readonly="true">
         <getter>
           return this.getAttribute("multiselected") == "true";
+        </getter>
+      </property>
+      <property name="beforeMultiselected" readonly="true">
+        <getter>
+          return this.getAttribute("before-multiselected") == "true";
         </getter>
       </property>
       <!--
@@ -2004,7 +2020,12 @@
           if (gBrowser.multiSelectedTabsCount > 0 && !overCloseButton) {
             // Tabs were previously multi-selected and user clicks on a tab
             // without holding Ctrl/Cmd Key
-            gBrowser.clearMultiSelectedTabs();
+
+            // Force positional attributes to update when the
+            // target (of the click) is the "active" tab.
+            let updatePositionalAttr = gBrowser.selectedTab == this;
+
+            gBrowser.clearMultiSelectedTabs(updatePositionalAttr);
           }
         }
 
