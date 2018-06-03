@@ -3624,13 +3624,17 @@ window._gBrowser = {
     return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
   },
 
-  addToMultiSelectedTabs(aTab) {
+  addToMultiSelectedTabs(aTab, skipPositionalAttributes) {
     if (aTab.multiselected) {
       return;
     }
 
     aTab.setAttribute("multiselected", "true");
     this._multiSelectedTabsSet.add(aTab);
+
+    if (!skipPositionalAttributes) {
+      this.tabContainer._setPositionalAttributes();
+    }
   },
 
   /**
@@ -3652,8 +3656,9 @@ window._gBrowser = {
       [indexOfTab1, indexOfTab2] : [indexOfTab2, indexOfTab1];
 
     for (let i = lowerIndex; i <= higherIndex; i++) {
-      this.addToMultiSelectedTabs(tabs[i]);
+      this.addToMultiSelectedTabs(tabs[i], true);
     }
+    this.tabContainer._setPositionalAttributes();
   },
 
   removeFromMultiSelectedTabs(aTab) {
@@ -3661,10 +3666,11 @@ window._gBrowser = {
       return;
     }
     aTab.removeAttribute("multiselected");
+    this.tabContainer._setPositionalAttributes();
     this._multiSelectedTabsSet.delete(aTab);
   },
 
-  clearMultiSelectedTabs() {
+  clearMultiSelectedTabs(updatePositionalAttributes) {
     const selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet);
     for (let tab of selectedTabs) {
       if (tab.isConnected && tab.multiselected) {
@@ -3672,6 +3678,9 @@ window._gBrowser = {
       }
     }
     this._multiSelectedTabsSet = new WeakSet();
+    if (updatePositionalAttributes) {
+      this.tabContainer._setPositionalAttributes();
+    }
   },
 
   get multiSelectedTabsCount() {

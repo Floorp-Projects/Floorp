@@ -535,6 +535,7 @@
   background-repeat: repeat-x;
 }
 
+.tab-line[multiselected],
 .tab-line[selected=true] {
   background-color: var(--tab-line-color);
 }
@@ -566,7 +567,7 @@
   background-color: rgba(255,255,255,.1);
 }
 
-.tab-line:not([selected=true]) {
+.tab-line:not([selected=true]):not([multiselected]) {
   opacity: 0;
   transform: scaleX(0);
   transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
@@ -580,6 +581,16 @@
 
 #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]) {
   background-color: rgba(255,255,255,.2);
+}
+
+/* Tab multi-selected */
+
+.tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
+  background-color: rgba(0,0,0,.1);
+}
+
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
+  background-color: rgba(255,255,255,.1);
 }
 
 /* Pinned tabs */
@@ -665,9 +676,11 @@
 %else
 :root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
 %endif
-/* Show full height tab separators on hover. */
+/* Show full height tab separators on hover and multiselection. */
 .tabbrowser-tab:hover::after,
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforehovered]::after {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforehovered]::after,
+.tabbrowser-tab[multiselected]::after,
+.tabbrowser-tab[before-multiselected]::after {
   margin-top: var(--tabs-top-border-width);
   margin-bottom: 0;
 }
