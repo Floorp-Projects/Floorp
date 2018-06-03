@@ -53,6 +53,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mColormap(nullptr)
   , mColormapSize(0)
   , mImage(aImage)
+  , mFrameRecycler(nullptr)
   , mProgress(NoProgress)
   , mFrameCount(0)
   , mLoopLength(FrameTimeout::Zero())
@@ -339,33 +340,12 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
     return RawAccessFrameRef();
   }
 
-  // There is no underlying data to reuse, so reset the recycle rect to be
-  // the full frame, to ensure the restore frame is fully copied.
-  mRecycleRect = IntRect(IntPoint(0, 0), aOutputSize);
-
-  auto frame = MakeNotNull<RefPtr<imgFrame>>();
-  bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-  if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
-                                      aPaletteDepth, nonPremult,
-                                      aAnimParams, ShouldBlendAnimation()))) {
-    NS_WARNING("imgFrame::Init should succeed");
-    return RawAccessFrameRef();
-  }
-
-  RawAccessFrameRef ref = frame->RawAccessRef();
-  if (!ref) {
-    frame->Abort();
-    return RawAccessFrameRef();
-  }
-
   if (frameNum == 1) {
     MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
     aPreviousFrame->SetRawAccessOnly();
   }
 
   if (frameNum > 0) {
-    ref->SetRawAccessOnly();
-
     if (ShouldBlendAnimation()) {
       if (aPreviousFrame->GetDisposalMethod() !=
           DisposalMethod::RESTORE_PREVIOUS) {
@@ -383,6 +363,64 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
         // forgotten due to us restoring the same frame again.
         mRestoreDirtyRect = aPreviousFrame->GetBoundedBlendRect();
       }
+    }
+  }
+
+  RawAccessFrameRef ref;
+
+  // If we have a frame recycler, it must be for an animated image producing
+  // full frames. If the higher layers are discarding frames because of the
+  // memory footprint, then the recycler will allow us to reuse the buffers.
+  // Each frame should be the same size and have mostly the same properties.
+  if (mFrameRecycler) {
+    MOZ_ASSERT(ShouldBlendAnimation());
+    MOZ_ASSERT(aPaletteDepth == 0);
+    MOZ_ASSERT(aAnimParams);
+    MOZ_ASSERT(aFrameRect.IsEqualEdges(IntRect(IntPoint(0, 0), aOutputSize)));
+
+    ref = mFrameRecycler->RecycleFrame(mRecycleRect);
+    if (ref) {
+      // If the recycled frame is actually the current restore frame, we cannot
+      // use it. If the next restore frame is the new frame we are creating, in
+      // theory we could reuse it, but we would need to store the restore frame
+      // animation parameters elsewhere. For now we just drop it.
+      bool blocked = ref.get() == mRestoreFrame.get();
+      if (!blocked) {
+        nsresult rv = ref->InitForDecoderRecycle(aAnimParams.ref());
+        blocked = NS_WARN_IF(NS_FAILED(rv));
+      }
+
+      if (blocked) {
+        ref.reset();
+      }
+    }
+  }
+
+  // Either the recycler had nothing to give us, or we don't have a recycler.
+  // Produce a new frame to store the data.
+  if (!ref) {
+    // There is no underlying data to reuse, so reset the recycle rect to be
+    // the full frame, to ensure the restore frame is fully copied.
+    mRecycleRect = IntRect(IntPoint(0, 0), aOutputSize);
+
+    bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
+    auto frame = MakeNotNull<RefPtr<imgFrame>>();
+    if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
+                                        aPaletteDepth, nonPremult,
+                                        aAnimParams, ShouldBlendAnimation(),
+                                        bool(mFrameRecycler)))) {
+      NS_WARNING("imgFrame::Init should succeed");
+      return RawAccessFrameRef();
+    }
+
+    ref = frame->RawAccessRef();
+    if (!ref) {
+      frame->Abort();
+      return RawAccessFrameRef();
+    }
+
+    if (frameNum > 0) {
+      frame->SetRawAccessOnly();
     }
   }
 
