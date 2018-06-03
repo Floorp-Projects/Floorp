@@ -265,6 +265,17 @@ private: // methods
     SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
       : mDrawable(aDrawable), mFormat(aFormat)
     { }
+    SurfaceWithFormat(SurfaceWithFormat&& aOther)
+      : mDrawable(std::move(aOther.mDrawable)), mFormat(aOther.mFormat)
+    { }
+    SurfaceWithFormat& operator=(SurfaceWithFormat&& aOther)
+    {
+      mDrawable = std::move(aOther.mDrawable);
+      mFormat = aOther.mFormat;
+      return *this;
+    }
+    SurfaceWithFormat& operator=(const SurfaceWithFormat& aOther) = delete;
+    SurfaceWithFormat(const SurfaceWithFormat& aOther) = delete;
     bool IsValid() { return !!mDrawable; }
   };
 

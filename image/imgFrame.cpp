@@ -562,26 +562,33 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     return false;
   }
 
-  MonitorAutoLock lock(mMonitor);
-
-  // Possibly convert this image into a GPU texture, this may also cause our
-  // mLockedSurface to be released and the OS to release the underlying memory.
-  Optimize(aContext->GetDrawTarget());
-
-  bool doPartialDecode = !AreAllPixelsWritten();
-
-  RefPtr<SourceSurface> surf = GetSourceSurfaceInternal();
-  if (!surf) {
-    return false;
-  }
-
-  gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
-  bool doTile = !imageRect.Contains(aRegion.Rect()) &&
-                !(aImageFlags & imgIContainer::FLAG_CLAMP);
-
+  // Perform the draw and freeing of the surface outside the lock. We want to
+  // avoid contention with the decoder if we can.
+  RefPtr<SourceSurface> surf;
+  SurfaceWithFormat surfaceResult;
   ImageRegion region(aRegion);
-  SurfaceWithFormat surfaceResult =
-    SurfaceForDrawing(doPartialDecode, doTile, region, surf);
+  gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
+
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    // Possibly convert this image into a GPU texture, this may also cause our
+    // mLockedSurface to be released and the OS to release the underlying memory.
+    Optimize(aContext->GetDrawTarget());
+
+    bool doPartialDecode = !AreAllPixelsWritten();
+
+    surf = GetSourceSurfaceInternal();
+    if (!surf) {
+      return false;
+    }
+
+    bool doTile = !imageRect.Contains(aRegion.Rect()) &&
+                  !(aImageFlags & imgIContainer::FLAG_CLAMP);
+
+    surfaceResult =
+      SurfaceForDrawing(doPartialDecode, doTile, region, surf);
+  }
 
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
