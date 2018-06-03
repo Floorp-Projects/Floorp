@@ -236,7 +236,7 @@ FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState,
 RefreshResult
 FrameAnimator::AdvanceFrame(AnimationState& aState,
                             DrawableSurface& aFrames,
-                            RawAccessFrameRef& aCurrentFrame,
+                            RefPtr<imgFrame>& aCurrentFrame,
                             TimeStamp aTime)
 {
   AUTO_PROFILER_LABEL("FrameAnimator::AdvanceFrame", GRAPHICS);
@@ -295,7 +295,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
   // the appropriate notification on the main thread. Make sure we stay in sync
   // with AnimationState.
   MOZ_ASSERT(nextFrameIndex < aState.KnownFrameCount());
-  RawAccessFrameRef nextFrame = aFrames.RawAccessRef(nextFrameIndex);
+  RefPtr<imgFrame> nextFrame = aFrames.GetFrame(nextFrameIndex);
 
   // We should always check to see if we have the next frame even if we have
   // previously finished decoding. If we needed to redecode (e.g. due to a draw
@@ -321,8 +321,13 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
     ret.mDirtyRect = aState.FirstFrameRefreshArea();
   } else if (!nextFrame->IsFullFrame()) {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
+    RawAccessFrameRef currentRef =
+      aCurrentFrame->RawAccessRef(/* aFinished */ true);
+    RawAccessFrameRef nextRef =
+      nextFrame->RawAccessRef(/* aFinished */ true);
+
     // Change frame
-    if (!DoBlend(aCurrentFrame, nextFrame, nextFrameIndex, &ret.mDirtyRect)) {
+    if (!DoBlend(currentRef, nextRef, nextFrameIndex, &ret.mDirtyRect)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
@@ -441,8 +446,8 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
     return ret;
   }
 
-  RawAccessFrameRef currentFrame =
-    result.Surface().RawAccessRef(aState.mCurrentAnimationFrameIndex);
+  RefPtr<imgFrame> currentFrame =
+    result.Surface().GetFrame(aState.mCurrentAnimationFrameIndex);
 
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
@@ -614,7 +619,10 @@ FrameAnimator::DoBlend(const RawAccessFrameRef& aPrevFrame,
                        uint32_t aNextFrameIndex,
                        IntRect* aDirtyRect)
 {
-  MOZ_ASSERT(aPrevFrame && aNextFrame, "Should have frames here");
+  if (!aPrevFrame || !aNextFrame) {
+    MOZ_ASSERT_UNREACHABLE("Should have RawAccessFrameRefs to blend!");
+    return false;
+  }
 
   DisposalMethod prevDisposalMethod = aPrevFrame->GetDisposalMethod();
   bool prevHasAlpha = aPrevFrame->FormatHasAlpha();
