@@ -113,7 +113,7 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
   const TransformData dontCare = {};
   SetAnimatedValue(aId,
                    std::move(aTransformInDevSpace),
-                   gfx::Matrix4x4(),
+                   std::move(gfx::Matrix4x4()),
                    dontCare);
 }
 
@@ -581,8 +581,8 @@ AnimationHelper::SetAnimations(
       animation.iterationStart(),
       static_cast<dom::PlaybackDirection>(animation.direction()),
       static_cast<dom::FillMode>(animation.fillMode()),
-      AnimationUtils::TimingFunctionToComputedTimingFunction(
-           animation.easingFunction())
+      std::move(AnimationUtils::TimingFunctionToComputedTimingFunction(
+           animation.easingFunction()))
     };
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;

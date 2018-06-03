@@ -22,7 +22,7 @@ GetClassifier()
   nsresult rv = classifier->Open(*file);
   EXPECT_TRUE(rv == NS_OK);
 
-  return classifier;
+  return std::move(classifier);
 }
 
 static nsresult

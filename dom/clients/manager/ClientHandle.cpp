@@ -203,7 +203,7 @@ ClientHandle::OnDetach()
   }
 
   RefPtr<GenericPromise> ref(mDetachPromise);
-  return ref;
+  return std::move(ref);
 }
 
 } // namespace dom

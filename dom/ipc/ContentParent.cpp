@@ -4469,8 +4469,8 @@ ContentParent::RecvNotifyTabDestroying(const TabId& aTabId,
 nsTArray<TabContext>
 ContentParent::GetManagedTabContext()
 {
-  return ContentProcessManager::GetSingleton()->
-    GetTabContextByContentProcess(this->ChildID());
+  return std::move(ContentProcessManager::GetSingleton()->
+          GetTabContextByContentProcess(this->ChildID()));
 }
 
 mozilla::docshell::POfflineCacheUpdateParent*

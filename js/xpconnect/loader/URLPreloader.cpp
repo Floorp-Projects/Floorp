@@ -624,11 +624,11 @@ URLPreloader::CacheKey::ToFileLocation()
         nsCOMPtr<nsIFile> file;
         MOZ_TRY(NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPath), false,
                                 getter_AddRefs(file)));
-        return FileLocation(file);
+        return std::move(FileLocation(file));
     }
 
     RefPtr<nsZipArchive> zip = Archive();
-    return FileLocation(zip, mPath.get());
+    return std::move(FileLocation(zip, mPath.get()));
 }
 
 Result<const nsCString, nsresult>

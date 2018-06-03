@@ -2320,25 +2320,25 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 Maybe<ClientInfo>
 nsPIDOMWindowInner::GetClientInfo() const
 {
-  return nsGlobalWindowInner::Cast(this)->GetClientInfo();
+  return std::move(nsGlobalWindowInner::Cast(this)->GetClientInfo());
 }
 
 Maybe<ClientState>
 nsPIDOMWindowInner::GetClientState() const
 {
-  return nsGlobalWindowInner::Cast(this)->GetClientState();
+  return std::move(nsGlobalWindowInner::Cast(this)->GetClientState());
 }
 
 Maybe<ServiceWorkerDescriptor>
 nsPIDOMWindowInner::GetController() const
 {
-  return nsGlobalWindowInner::Cast(this)->GetController();
+  return std::move(nsGlobalWindowInner::Cast(this)->GetController());
 }
 
 RefPtr<mozilla::dom::ServiceWorker>
 nsPIDOMWindowInner::GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor)
 {
-  return nsGlobalWindowInner::Cast(this)->GetOrCreateServiceWorker(aDescriptor);
+  return std::move(nsGlobalWindowInner::Cast(this)->GetOrCreateServiceWorker(aDescriptor));
 }
 
 void
@@ -5498,7 +5498,7 @@ nsGlobalWindowInner::ShowSlowScriptDialog(const nsString& aAddonId)
 
     // GetStringFromName can return NS_OK and still give nullptr string
     failed = failed || NS_FAILED(rv) || result.IsEmpty();
-    return result;
+    return std::move(result);
   };
 
   bool isAddonScript = !aAddonId.IsEmpty();
@@ -6329,7 +6329,7 @@ nsGlobalWindowInner::GetClientInfo() const
   if (mClientSource) {
     clientInfo.emplace(mClientSource->Info());
   }
-  return clientInfo;
+  return std::move(clientInfo);
 }
 
 Maybe<ClientState>
@@ -6344,7 +6344,7 @@ nsGlobalWindowInner::GetClientState() const
       clientState.emplace(state);
     }
   }
-  return clientState;
+  return std::move(clientState);
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -6355,7 +6355,7 @@ nsGlobalWindowInner::GetController() const
   if (mClientSource) {
     controller = mClientSource->GetController();
   }
-  return controller;
+  return std::move(controller);
 }
 
 RefPtr<ServiceWorker>

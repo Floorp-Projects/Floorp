@@ -244,7 +244,7 @@ protected:
             // Ownership of event object transfers to the return value.
             mozilla::UniquePtr<Event> event(mQueue.popFirst());
             if (!event || !event->mPostTime) {
-                return event;
+                return std::move(event);
             }
 
 #ifdef EARLY_BETA_OR_EARLIER
@@ -255,7 +255,7 @@ protected:
             sLatencyCount[latencyType]++;
             sLatencyTime[latencyType] += latency;
 #endif
-            return event;
+            return std::move(event);
         }
 
     } mEventQueue;

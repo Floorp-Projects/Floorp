@@ -257,7 +257,7 @@ AppleVTDecoder::ProcessDrain()
   MonitorAutoLock mon(mMonitor);
   DecodedData samples;
   while (!mReorderQueue.IsEmpty()) {
-    samples.AppendElement(mReorderQueue.Pop());
+    samples.AppendElement(std::move(mReorderQueue.Pop()));
   }
   return DecodePromise::CreateAndResolve(std::move(samples), __func__);
 }

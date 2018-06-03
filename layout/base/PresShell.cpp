@@ -6253,7 +6253,7 @@ PresShell::Paint(nsView*         aViewToPaint,
       // calling ComputeDifferences in that case because it assumes non-null
       // and crashes.
       if (computeInvalidRect && layerManager->GetRoot()) {
-        props = LayerProperties::CloneFrom(layerManager->GetRoot());
+        props = std::move(LayerProperties::CloneFrom(layerManager->GetRoot()));
       }
 
       MaybeSetupTransactionIdAllocator(layerManager, presContext);

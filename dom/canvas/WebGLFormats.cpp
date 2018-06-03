@@ -827,7 +827,7 @@ FormatUsageAuthority::CreateForWebGL1(gl::GLContext* gl)
     if (!AddUnsizedFormats(ptr, gl))
         return nullptr;
 
-    return ret;
+    return std::move(ret);
 }
 
 UniquePtr<FormatUsageAuthority>
@@ -1062,7 +1062,7 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
 
     ////////////////////////////////////
 
-    return ret;
+    return std::move(ret);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
