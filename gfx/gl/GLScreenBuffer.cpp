@@ -48,7 +48,7 @@ GLScreenBuffer::Create(GLContext* gl,
     if (caps.antialias &&
         !gl->IsSupported(GLFeature::framebuffer_multisample))
     {
-        return ret;
+        return std::move(ret);
     }
 
     layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
@@ -59,7 +59,7 @@ GLScreenBuffer::Create(GLContext* gl,
     UniquePtr<SurfaceFactory> factory = MakeUnique<SurfaceFactory_Basic>(gl, caps, flags);
 
     ret.reset( new GLScreenBuffer(gl, caps, std::move(factory)) );
-    return ret;
+    return std::move(ret);
 }
 
 /* static */ UniquePtr<SurfaceFactory>
@@ -953,7 +953,7 @@ ReadBuffer::Create(GLContext* gl,
     if (!isComplete)
         return nullptr;
 
-    return ret;
+    return std::move(ret);
 }
 
 ReadBuffer::~ReadBuffer()

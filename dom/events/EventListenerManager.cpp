@@ -1245,9 +1245,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                   nsAutoString typeStr;
                   (*aDOMEvent)->GetType(typeStr);
                   uint16_t phase = (*aDOMEvent)->EventPhase();
-                  timelines->AddMarkerForDocShell(docShell,
+                  timelines->AddMarkerForDocShell(docShell, std::move(
                     MakeUnique<EventTimelineMarker>(
-                      typeStr, phase, MarkerTracingType::START));
+                      typeStr, phase, MarkerTracingType::START)));
                 }
               }
             }

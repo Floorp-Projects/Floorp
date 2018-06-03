@@ -3497,10 +3497,10 @@ WorkerPrivate::GetClientInfo() const
   Maybe<ClientInfo> clientInfo;
   if (!mClientSource) {
     MOZ_DIAGNOSTIC_ASSERT(mStatus >= Terminating);
-    return clientInfo;
+    return std::move(clientInfo);
   }
   clientInfo.emplace(mClientSource->Info());
-  return clientInfo;
+  return std::move(clientInfo);
 }
 
 const ClientState
@@ -3510,7 +3510,7 @@ WorkerPrivate::GetClientState() const
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   ClientState state;
   mClientSource->SnapshotState(&state);
-  return state;
+  return std::move(state);
 }
 
 const Maybe<ServiceWorkerDescriptor>

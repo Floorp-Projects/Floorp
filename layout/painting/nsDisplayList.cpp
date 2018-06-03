@@ -2733,7 +2733,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                             widgetTransaction;
 
   if (computeInvalidRect) {
-    props = LayerProperties::CloneFrom(layerManager->GetRoot());
+    props = std::move(LayerProperties::CloneFrom(layerManager->GetRoot()));
   }
 
   if (doBeginTransaction) {

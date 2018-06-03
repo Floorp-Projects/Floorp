@@ -90,7 +90,7 @@ public:
   public:
     explicit Iterator(EffectSet& aEffectSet)
       : mEffectSet(aEffectSet)
-      , mHashIterator(aEffectSet.mEffects.Iter())
+      , mHashIterator(std::move(aEffectSet.mEffects.Iter()))
       , mIsEndIterator(false)
     {
 #ifdef DEBUG

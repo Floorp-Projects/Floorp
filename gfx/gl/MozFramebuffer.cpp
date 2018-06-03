@@ -134,7 +134,7 @@ MozFramebuffer::CreateWith(GLContext* const gl, const gfx::IntSize& size,
         return nullptr;
     }
 
-    return mozFB;
+    return std::move(mozFB);
 }
 
 ////////////////////

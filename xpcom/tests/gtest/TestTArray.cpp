@@ -138,16 +138,8 @@ TEST(TArray, AssignmentOperatorSelfAssignment)
 
   array = *&array;
   ASSERT_EQ(DummyArray(), array);
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wself-move"
-#endif
-  array = std::move(array); // self-move
+  array = std::move(array);
   ASSERT_EQ(DummyArray(), array);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 }
 
 TEST(TArray, CopyOverlappingForwards)
