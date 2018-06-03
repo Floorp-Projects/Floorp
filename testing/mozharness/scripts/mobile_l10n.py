@@ -429,20 +429,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         self.summarize_success_count(success_count, total_count,
                                      message="Make Upload for %d of %d locales successful.")
 
-    def checkout_tools(self):
-        dirs = self.query_abs_dirs()
-
-        # We need hg.m.o/build/tools checked out
-        self.info("Checking out tools")
-        repos = [{
-            'repo': self.config['tools_repo'],
-            'vcs': "hg",
-            'branch': "default",
-            'dest': dirs['abs_tools_dir'],
-        }]
-        rev = self.vcs_checkout(**repos[0])
-        self.set_property("tools_revision", rev)
-
     def query_apkfile_path(self, locale):
 
         dirs = self.query_abs_dirs()
