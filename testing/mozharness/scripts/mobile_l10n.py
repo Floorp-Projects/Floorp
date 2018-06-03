@@ -427,10 +427,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         self.summarize_success_count(success_count, total_count,
                                      message="Make Upload for %d of %d locales successful.")
 
-    def query_is_release_or_beta(self):
-
-        return bool(self.config.get("is_release_or_beta"))
-
 
 # main {{{1
 if __name__ == '__main__':
