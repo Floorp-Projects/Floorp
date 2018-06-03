@@ -8,6 +8,9 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
+#include "mozilla/RangedPtr.h"
 
 #include <gmp.h>
 #include <math.h>
@@ -23,6 +26,10 @@
 #include "vm/SelfHosting.h"
 
 using namespace js;
+
+using mozilla::Maybe;
+using mozilla::Range;
+using mozilla::RangedPtr;
 
 // The following functions are wrappers for use with
 // mp_set_memory_functions. GMP passes extra arguments to the realloc
@@ -159,6 +166,11 @@ js::ToBigInt(JSContext* cx, HandleValue val)
     if (v.isBoolean())
         return BigInt::createFromBoolean(cx, v.toBoolean());
 
+    if (v.isString()) {
+        RootedString str(cx, v.toString());
+        return StringToBigInt(cx, str, 0);
+    }
+
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
     return nullptr;
 }
@@ -177,6 +189,97 @@ BigInt::toString(JSContext* cx, BigInt* x, uint8_t radix)
     mpz_get_str(str.get(), radix, x->num_);
 
     return NewStringCopyZ<CanGC>(cx, str.get());
+}
+
+// BigInt proposal section 7.2
+template <typename CharT>
+bool
+js::StringToBigIntImpl(const Range<const CharT>& chars, uint8_t radix,
+                       HandleBigInt res)
+{
+    const RangedPtr<const CharT> end = chars.end();
+    RangedPtr<const CharT> s = chars.begin();
+    Maybe<int8_t> sign;
+
+    s = SkipSpace(s.get(), end.get());
+
+    if (s != end && s[0] == '+') {
+        sign.emplace(1);
+        s++;
+    } else if (s != end && s[0] == '-') {
+        sign.emplace(-1);
+        s++;
+    }
+
+    if (!radix) {
+        radix = 10;
+
+        if (end - s >= 2 && s[0] == '0') {
+            if (s[1] == 'x' || s[1] == 'X') {
+                radix = 16;
+                s += 2;
+            } else if (s[1] == 'o' || s[1] == 'O') {
+                radix = 8;
+                s += 2;
+            } else if (s[1] == 'b' || s[1] == 'B') {
+                radix = 2;
+                s += 2;
+            }
+
+            if (radix != 10 && s == end)
+                return false;
+        }
+    }
+
+    if (sign && radix != 10)
+        return false;
+
+    mpz_set_ui(res->num_, 0);
+
+    for (; s < end; s++) {
+        unsigned digit;
+        if (!mozilla::IsAsciiAlphanumeric(s[0])) {
+            s = SkipSpace(s.get(), end.get());
+            if (s == end)
+                break;
+            return false;
+        }
+        digit = mozilla::AsciiAlphanumericToNumber(s[0]);
+        if (digit >= radix)
+            return false;
+        mpz_mul_ui(res->num_, res->num_, radix);
+        mpz_add_ui(res->num_, res->num_, digit);
+    }
+
+    if (sign.valueOr(1) < 0)
+        mpz_neg(res->num_, res->num_);
+
+    return true;
+}
+
+BigInt*
+js::StringToBigInt(JSContext* cx, HandleString str, uint8_t radix)
+{
+    RootedBigInt res(cx, BigInt::create(cx));
+
+    JSLinearString* linear = str->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+
+    {
+        JS::AutoCheckCannotGC nogc;
+        if (linear->hasLatin1Chars()) {
+            if (StringToBigIntImpl(linear->latin1Range(nogc), radix, res))
+                return res;
+        } else {
+            if (StringToBigIntImpl(linear->twoByteRange(nogc), radix, res))
+                return res;
+        }
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BIGINT_INVALID_SYNTAX);
+    return nullptr;
 }
 
 void
