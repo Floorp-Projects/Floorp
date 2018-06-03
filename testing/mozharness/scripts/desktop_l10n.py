@@ -19,7 +19,6 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.script import BaseScript
-from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.building.buildbase import (
@@ -62,8 +61,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 # DesktopSingleLocale {{{1
 class DesktopSingleLocale(LocalesMixin, AutomationMixin,
-                          VCSMixin, BaseScript, MarMixin,
-                          TransferMixin):
+                          VCSMixin, BaseScript, MarMixin):
     """Manages desktop repacks"""
     config_options = [[
         ['--locale', ],

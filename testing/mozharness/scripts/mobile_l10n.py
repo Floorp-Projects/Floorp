@@ -26,7 +26,6 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
-from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -35,8 +34,7 @@ from mozharness.mozilla.secrets import SecretsMixin
 
 
 # MobileSingleLocale {{{1
-class MobileSingleLocale(LocalesMixin,
-                         TransferMixin, TooltoolMixin, AutomationMixin,
+class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
                          MercurialScript, SecretsMixin):
     config_options = [[
         ['--locale', ],
