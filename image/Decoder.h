@@ -451,6 +451,11 @@ public:
     return mRecycleRect;
   }
 
+  const gfx::IntRect& GetFirstFrameRefreshArea() const
+  {
+    return mFirstFrameRefreshArea;
+  }
+
   bool HasFrameToTake() const { return mHasFrameToTake; }
   void ClearHasFrameToTake() {
     MOZ_ASSERT(mHasFrameToTake);
