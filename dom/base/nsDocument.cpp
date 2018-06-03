@@ -127,7 +127,7 @@
 #include "nsBindingManager.h"
 #include "nsHTMLDocument.h"
 #include "nsIRequest.h"
-#include "nsHostObjectProtocolHandler.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 
 #include "nsCharsetSource.h"
 #include "nsIParser.h"
@@ -229,7 +229,6 @@
 #include "nsViewportInfo.h"
 #include "mozilla/StaticPtr.h"
 #include "nsITextControlElement.h"
-#include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"

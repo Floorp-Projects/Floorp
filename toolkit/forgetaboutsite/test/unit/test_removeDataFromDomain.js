@@ -338,8 +338,9 @@ async function test_content_preferences_cleared_with_direct_match() {
   Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
   Assert.ok(await preference_exists(TEST_URI));
+  let promisePurgeNotification = waitForPurgeNotification();
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  await waitForPurgeNotification();
+  await promisePurgeNotification;
   Assert.equal(false, await preference_exists(TEST_URI));
 }
 
@@ -348,8 +349,9 @@ async function test_content_preferences_cleared_with_subdomain() {
   Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
   Assert.ok(await preference_exists(TEST_URI));
+  let promisePurgeNotification = waitForPurgeNotification();
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  await waitForPurgeNotification();
+  await promisePurgeNotification;
   Assert.equal(false, await preference_exists(TEST_URI));
 }
 
@@ -358,13 +360,15 @@ async function test_content_preferences_not_cleared_with_uri_contains_domain() {
   Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
   Assert.ok(await preference_exists(TEST_URI));
+  let promisePurgeNotification = waitForPurgeNotification();
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  await waitForPurgeNotification();
+  await promisePurgeNotification;
   Assert.ok(await preference_exists(TEST_URI));
 
   // Reset state
+  promisePurgeNotification = waitForPurgeNotification();
   await ForgetAboutSite.removeDataFromDomain("ilovemozilla.org");
-  await waitForPurgeNotification();
+  await promisePurgeNotification;
   Assert.equal(false, await preference_exists(TEST_URI));
 }
 
@@ -483,8 +487,9 @@ async function test_storage_cleared() {
     Assert.equal(storage.getItem("test"), "value" + i);
   }
 
+  let promisePurgeNotification = waitForPurgeNotification();
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  await waitForPurgeNotification();
+  await promisePurgeNotification;
 
   Assert.equal(s[0].getItem("test"), null);
   Assert.equal(s[0].length, 0);

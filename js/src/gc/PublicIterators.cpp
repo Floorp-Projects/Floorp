@@ -85,18 +85,17 @@ js::IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback)
 }
 
 void
-js::IterateScripts(JSContext* cx, JSCompartment* compartment,
-                   void* data, IterateScriptCallback scriptCallback)
+js::IterateScripts(JSContext* cx, Realm* realm, void* data, IterateScriptCallback scriptCallback)
 {
     MOZ_ASSERT(!cx->suppressGC);
     AutoEmptyNursery empty(cx);
     AutoPrepareForTracing prep(cx);
     JS::AutoSuppressGCAnalysis nogc;
 
-    if (compartment) {
-        Zone* zone = compartment->zone();
+    if (realm) {
+        Zone* zone = realm->zone();
         for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next()) {
-            if (script->compartment() == compartment)
+            if (script->realm() == realm)
                 scriptCallback(cx->runtime(), data, script, nogc);
         }
     } else {

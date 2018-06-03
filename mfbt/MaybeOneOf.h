@@ -106,7 +106,7 @@ public:
   {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
-    ::new (KnownNotNull, data()) T(Forward<Args>(aArgs)...);
+    ::new (KnownNotNull, data()) T(std::forward<Args>(aArgs)...);
   }
 
   template <class T>

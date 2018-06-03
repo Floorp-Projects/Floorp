@@ -22,7 +22,7 @@ template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject
 MakeUniqueFallible(Args&&... aArgs)
 {
-  return UniquePtr<T>(new (fallible) T(Forward<Args>(aArgs)...));
+  return UniquePtr<T>(new (fallible) T(std::forward<Args>(aArgs)...));
 }
 
 template<typename T>

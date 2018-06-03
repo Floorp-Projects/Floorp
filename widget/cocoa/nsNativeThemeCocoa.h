@@ -379,15 +379,14 @@ public:
                                         nsIFrame* aFrame,
                                         uint8_t aWidgetType,
                                         const nsRect& aRect) override;
-  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext,
-                             nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             mozilla::LayoutDeviceIntMargin* aResult) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
+                                                     nsIFrame* aFrame,
+                                                     uint8_t aWidgetType) override;
 
    bool GetWidgetPadding(nsDeviceContext* aContext,
                          nsIFrame* aFrame,
                          uint8_t aWidgetType,
-                         mozilla::LayoutDeviceIntMargin* aResult) override;
+                         LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                    uint8_t aWidgetType, nsRect* aOverflowRect) override;
@@ -421,8 +420,8 @@ public:
 protected:
   virtual ~nsNativeThemeCocoa();
 
-  mozilla::LayoutDeviceIntMargin
-  DirectionAwareMargin(const mozilla::LayoutDeviceIntMargin& aMargin,
+  LayoutDeviceIntMargin
+  DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                        nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
   bool IsWindowSheet(nsIFrame* aFrame);

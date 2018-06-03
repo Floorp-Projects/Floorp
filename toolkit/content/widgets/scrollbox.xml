@@ -27,11 +27,16 @@
   </binding>
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+
     <content>
-      <xul:autorepeatbutton class="autorepeatbutton-up"
-                            anonid="scrollbutton-up"
-                            xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
-                            oncommand="_autorepeatbuttonScroll(event);"/>
+      <xul:toolbarbutton class="scrollbutton-up"
+                         anonid="scrollbutton-up"
+                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
+                         onmouseover="_startScroll(-1);"
+                         onmouseout="_stopScroll();"/>
       <xul:spacer class="arrowscrollbox-overflow-start-indicator"
                   xbl:inherits="collapsed=scrolledtostart"/>
       <xul:scrollbox class="arrowscrollbox-scrollbox"
@@ -42,10 +47,11 @@
       </xul:scrollbox>
       <xul:spacer class="arrowscrollbox-overflow-end-indicator"
                   xbl:inherits="collapsed=scrolledtoend"/>
-      <xul:autorepeatbutton class="autorepeatbutton-down"
-                            anonid="scrollbutton-down"
-                            xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
-                            oncommand="_autorepeatbuttonScroll(event);"/>
+      <xul:toolbarbutton class="scrollbutton-down"
+                         anonid="scrollbutton-down"
+                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
+                         onmouseover="_startScroll(1);"
+                         onmouseout="_stopScroll();"/>
     </content>
 
     <implementation>
@@ -58,6 +64,14 @@
         this.setAttribute("notoverflowing", "true");
         this._updateScrollButtonsDisabledState();
       ]]></constructor>
+
+      <destructor><![CDATA[
+        // Release timer to avoid reference cycles.
+        if (this._scrollTimer) {
+          this._scrollTimer.cancel();
+          this._scrollTimer = null;
+        }
+      ]]></destructor>
 
       <field name="_scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
@@ -316,16 +330,35 @@
         ]]></body>
       </method>
 
-      <method name="_autorepeatbuttonScroll">
-        <parameter name="event"/>
+      <method name="_startScroll">
+        <parameter name="index"/>
         <body><![CDATA[
-          var dir = event.originalTarget == this._scrollButtonUp ? -1 : 1;
-          if (this._isRTLScrollbox)
-            dir *= -1;
+          if (this._isRTLScrollbox) {
+            index *= -1;
+          }
 
-          this.scrollByPixels(this.scrollIncrement * dir);
+          if (!this._scrollTimer) {
+            this._scrollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          } else {
+            this._scrollTimer.cancel();
+          }
 
-          event.stopPropagation();
+          let callback = () => this.scrollByPixels(this.scrollIncrement * index);
+
+          // Use the same REPEAT_DELAY as "nsRepeatService.h".
+          let scrollDelay = /Mac/.test(navigator.platform) ? 25 : 50;
+
+          this._scrollTimer.initWithCallback(callback, scrollDelay,
+                                             Ci.nsITimer.TYPE_REPEATING_SLACK);
+          callback();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_stopScroll">
+        <body><![CDATA[
+          if (this._scrollTimer)
+            this._scrollTimer.cancel();
         ]]></body>
       </method>
 
@@ -571,12 +604,6 @@
         this._direction = 0;
       ]]></handler>
     </handlers>
-  </binding>
-
-  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <content repeat="hover">
-      <xul:image class="autorepeatbutton-icon"/>
-    </content>
   </binding>
 
   <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">

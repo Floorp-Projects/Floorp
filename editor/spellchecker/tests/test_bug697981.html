@@ -63,7 +63,7 @@ SimpleTest.waitForFocus(function() {
 
 function deFocus() {
   elem_de = document.getElementById('de-DE');
-  editor_de = SpecialPowers.wrap(elem_de).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  editor_de = SpecialPowers.wrap(elem_de).editor;
   editor_de.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
 
@@ -84,7 +84,7 @@ function deFocus() {
 
 function enFocus() {
   var elem_en = document.getElementById('en-US');
-  var editor_en = SpecialPowers.wrap(elem_en).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  var editor_en = SpecialPowers.wrap(elem_en).editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 

@@ -3715,7 +3715,7 @@ MaxContentContribution(const GridItemInfo&    aGridItem,
 }
 
 // Computes the min-size contribution for a grid item, as defined at
-// https://drafts.csswg.org/css-grid/#min-size-contributions
+// https://drafts.csswg.org/css-grid/#min-size-contribution
 static nscoord
 MinSize(const GridItemInfo&    aGridItem,
         const GridReflowInput& aState,
@@ -3732,7 +3732,7 @@ MinSize(const GridItemInfo&    aGridItem,
   const nsStylePosition* stylePos = child->StylePosition();
   const nsStyleCoord& sizeStyle =
     axis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
-  if (sizeStyle.GetUnit() != eStyleUnit_Auto) {
+  if (sizeStyle.GetUnit() != eStyleUnit_Auto && !sizeStyle.HasPercent()) {
     nscoord s =
       MinContentContribution(aGridItem, aState, aRC, aCBWM, aAxis, aCache);
     aCache->mMinSize.emplace(s);

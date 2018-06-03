@@ -232,6 +232,8 @@ enum class StyleOrient : uint8_t {
 };
 
 // See nsStyleDisplay
+//
+// These need to be in sync with WillChangeBits in box.rs.
 #define NS_STYLE_WILL_CHANGE_STACKING_CONTEXT   (1<<0)
 #define NS_STYLE_WILL_CHANGE_TRANSFORM          (1<<1)
 #define NS_STYLE_WILL_CHANGE_SCROLL             (1<<2)

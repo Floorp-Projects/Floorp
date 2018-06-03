@@ -256,8 +256,7 @@ Finder.prototype = {
 
     let selText;
 
-    if (focusedElement instanceof Ci.nsIDOMNSEditableElement &&
-        focusedElement.editor) {
+    if (focusedElement && focusedElement.editor) {
       // The user may have a selection in an input or textarea.
       selText = focusedElement.editor.selectionController
         .getSelection(Ci.nsISelectionController.SELECTION_NORMAL)
@@ -489,7 +488,7 @@ Finder.prototype = {
       // The selection can be into an input or a textarea element.
       let nodes = win.document.querySelectorAll("input, textarea");
       for (let node of nodes) {
-        if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
+        if (node.editor) {
           try {
             let sc = node.editor.selectionController;
             selection = sc.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);

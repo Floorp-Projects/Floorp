@@ -21,6 +21,7 @@ DIRS += [
     'asyncshutdown',
     'backgroundhangmonitor',
     'browser',
+    'cleardata',
     'cloudstorage',
     'commandlines',
     'contentprefs',

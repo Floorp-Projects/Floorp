@@ -71,7 +71,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   struct CapabilityCandidate {
     explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
                                  uint32_t aDistance = 0)
-    : mCapability(Forward<webrtc::CaptureCapability>(aCapability))
+    : mCapability(std::forward<webrtc::CaptureCapability>(aCapability))
     , mDistance(aDistance) {}
 
     const webrtc::CaptureCapability mCapability;

@@ -7,9 +7,9 @@
 
 #include "mozilla/Move.h"
 #include "ImageURL.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsLayoutUtils.h"
 #include "nsString.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "nsIDocument.h"

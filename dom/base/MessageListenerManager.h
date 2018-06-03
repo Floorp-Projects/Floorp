@@ -14,6 +14,12 @@
 namespace mozilla {
 namespace dom {
 
+class MessageBroadcaster;
+
+/**
+ * Implementation for the WebIDL MessageListenerManager interface. Base class for message
+ * managers that are exposed to script.
+ */
 class MessageListenerManager : public nsFrameMessageManager,
                                public nsWrapperCache
 {
@@ -22,12 +28,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageListenerManager,
                                                          nsFrameMessageManager)
 
-  ChromeMessageBroadcaster* GetParentObject()
+  MessageBroadcaster* GetParentObject()
   {
     return mParentManager;
   }
 
-  virtual ChromeMessageBroadcaster* GetParentManager() override
+  virtual MessageBroadcaster* GetParentManager() override
   {
     return mParentManager;
   }
@@ -40,11 +46,11 @@ public:
 
 protected:
   MessageListenerManager(ipc::MessageManagerCallback* aCallback,
-                         ChromeMessageBroadcaster* aParentManager,
+                         MessageBroadcaster* aParentManager,
                          MessageManagerFlags aFlags);
   virtual ~MessageListenerManager();
 
-  RefPtr<ChromeMessageBroadcaster> mParentManager;
+  RefPtr<MessageBroadcaster> mParentManager;
 };
 
 } // namespace dom

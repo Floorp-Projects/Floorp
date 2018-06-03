@@ -1413,18 +1413,18 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   Unused << chan->GetApplyConversion(&applyConversion);
   chan->SetApplyConversion(false);
 
+  nsresult channelStatus = NS_OK;
+  chan->GetStatus(&channelStatus);
+
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.
   nsCOMPtr<nsISupports> cacheEntry;
-  nsresult channelStatus = NS_OK;
   uint32_t cacheKey = 0;
   nsAutoCString altDataType;
 
   if (httpChannelImpl) {
     httpChannelImpl->GetCacheToken(getter_AddRefs(cacheEntry));
     mCacheEntry = do_QueryInterface(cacheEntry);
-
-    httpChannelImpl->GetStatus(&channelStatus);
 
     httpChannelImpl->GetCacheKey(&cacheKey);
 
@@ -1766,17 +1766,15 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
   // was not designed with this in mind and its not necessary to replace
   // the HttpChannelChild/Parent objects in this case.
   if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
-    nsCOMPtr<nsIInterceptedChannel> newIntercepted = do_QueryInterface(newChannel);
-    if (newIntercepted) {
-#ifdef DEBUG
-      // Note, InterceptedHttpChannel can also do an internal redirect
-      // for opaque response interception.  This should not actually
-      // happen here in e10s mode.
-      nsCOMPtr<nsIInterceptedChannel> oldIntercepted =
+    nsCOMPtr<nsIInterceptedChannel> oldIntercepted =
         do_QueryInterface(static_cast<nsIChannel*>(mChannel.get()));
-      MOZ_ASSERT(!oldIntercepted);
-#endif
+    nsCOMPtr<nsIInterceptedChannel> newIntercepted = do_QueryInterface(newChannel);
 
+    // We only want to hide the special internal redirect from nsHttpChannel
+    // to InterceptedHttpChannel.  We want to allow through internal redirects
+    // initiated from the InterceptedHttpChannel even if they are to another
+    // InterceptedHttpChannel.
+    if (!oldIntercepted && newIntercepted) {
       // We need to move across the reserved and initial client information
       // to the new channel.  Normally this would be handled by the child
       // ClientChannelHelper, but that is not notified of this redirect since

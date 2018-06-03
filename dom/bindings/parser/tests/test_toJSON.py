@@ -47,6 +47,48 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface Test {
+              long toJSON();
+            };
+            """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(not threw, "Should allow a toJSON method with 'long' as return type.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+            interface Test {
+              [Default] object toJSON();
+            };
+            """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(not threw, "Should allow a default toJSON method with 'object' as return type.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+            interface Test {
+              [Default] long toJSON();
+            };
+            """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw, "Should not allow a default toJSON method with non-'object' as return type.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+            interface Test {
               any toJSON();
             };
             """)

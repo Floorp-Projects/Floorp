@@ -30,8 +30,11 @@ function test1() {
 }
 
 function errorCallback(error) {
-    is(error.code, 
-        SpecialPowers.Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE, "Geolocation error handler fired");
+    // PositionError has no interface object, so we can't get constants off that.
+    is(error.code, error.POSITION_UNAVAILABLE,
+       "Geolocation error handler fired");
+    is(error.POSITION_UNAVAILABLE, 2,
+       "Value of POSITION_UNAVAILABLE should be correct");
     SimpleTest.finish();
 }
 

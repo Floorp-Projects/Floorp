@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
-import os
-
 config = {
     "options": [
         "--prefs-root=%(test_path)s/prefs",
@@ -15,12 +13,6 @@ config = {
         "--host-cert-path=%(test_path)s/certs/web-platform.test.pem",
         "--certutil-binary=%(test_install_path)s/bin/certutil",
     ],
-
-    "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
-    ],
-
-    "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
 
     "download_minidump_stackwalk": True,
 

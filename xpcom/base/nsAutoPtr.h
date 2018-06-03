@@ -216,7 +216,7 @@ public:
     template<typename... ActualArgs>
     R operator()(ActualArgs&&... aArgs)
     {
-      return ((*mRawPtr).*mFunction)(mozilla::Forward<ActualArgs>(aArgs)...);
+      return ((*mRawPtr).*mFunction)(std::forward<ActualArgs>(aArgs)...);
     }
   };
 

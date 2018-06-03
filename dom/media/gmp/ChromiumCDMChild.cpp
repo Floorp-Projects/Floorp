@@ -197,7 +197,7 @@ ChromiumCDMChild::CallMethod(MethodType aMethod, ParamType&&... aParams)
   MOZ_ASSERT(IsOnMessageLoopThread());
   // Avoid calling member function after destroy.
   if (!mDestroyed) {
-    Unused << (this->*aMethod)(Forward<ParamType>(aParams)...);
+    Unused << (this->*aMethod)(std::forward<ParamType>(aParams)...);
   }
 }
 
@@ -208,7 +208,7 @@ ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
                                           ParamType&&... aParams)
 {
   if (IsOnMessageLoopThread()) {
-    CallMethod(aMethod, Forward<ParamType>(aParams)...);
+    CallMethod(aMethod, std::forward<ParamType>(aParams)...);
   } else {
     auto m = &ChromiumCDMChild::CallMethod<
         decltype(aMethod), const typename RemoveReference<ParamType>::Type&...>;
@@ -219,7 +219,7 @@ ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
                         this,
                         m,
                         aMethod,
-                        Forward<ParamType>(aParams)...);
+                        std::forward<ParamType>(aParams)...);
     mPlugin->GMPMessageLoop()->PostTask(t.forget());
   }
 }

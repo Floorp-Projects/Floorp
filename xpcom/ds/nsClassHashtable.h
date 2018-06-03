@@ -90,7 +90,7 @@ nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
   auto count = this->Count();
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (count != this->Count()) {
-    ent->mData = new T(mozilla::Forward<Args>(aConstructionArgs)...);
+    ent->mData = new T(std::forward<Args>(aConstructionArgs)...);
   }
   return ent->mData;
 }

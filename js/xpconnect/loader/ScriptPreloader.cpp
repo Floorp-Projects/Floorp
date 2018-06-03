@@ -809,7 +809,7 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         MOZ_ASSERT(!script->HasArray());
 
         script->mSize = xdrData.Length();
-        script->mXDRData.construct<nsTArray<uint8_t>>(Forward<nsTArray<uint8_t>>(xdrData));
+        script->mXDRData.construct<nsTArray<uint8_t>>(std::forward<nsTArray<uint8_t>>(xdrData));
 
         auto& data = script->Array();
         script->mXDRRange.emplace(data.Elements(), data.Length());

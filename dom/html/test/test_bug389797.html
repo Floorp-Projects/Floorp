@@ -36,16 +36,6 @@ function HTML_TAG(aTagName, aImplClass) {
   // inherit from them do.
   interfacesNonClassinfo[aTagName] = [ ];
 
-  var interfaceName = "nsIDOM" + getClassName(aTagName);
-  if (interfaceName in SpecialPowers.Ci) {  // no nsIDOMHTMLSpanElement
-    interfaces[aTagName].push(interfaceName);
-  }
-
-  var interfaceNameNS = "nsIDOMNS" + getClassName(aTagName);
-  if (interfaceNameNS in SpecialPowers.Ci) {
-    interfaces[aTagName].push(interfaceNameNS);
-  }
-
   if (arguments.length > 2) {
     for (var i = 0; i < arguments[2].length; ++i) {
       interfaces[aTagName].push(arguments[2][i]);
@@ -148,8 +138,7 @@ HTML_TAG("iframe", "IFrame", [ "nsIDOMMozBrowserFrame" ],
 HTML_TAG("image", "");
 HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
 HTML_TAG("input", "Input", [], [ "imgINotificationObserver",
-                                 "nsIImageLoadingContent",
-                                 "nsIDOMNSEditableElement" ]);
+                                 "nsIImageLoadingContent" ]);
 HTML_TAG("ins", "Mod");
 HTML_TAG("kbd", "");
 HTML_TAG("keygen", "Span");
@@ -201,7 +190,7 @@ HTML_TAG("sup", "");
 HTML_TAG("table", "Table");
 HTML_TAG("tbody", "TableSection");
 HTML_TAG("td", "TableCell");
-HTML_TAG("textarea", "TextArea", [], [ "nsIDOMNSEditableElement" ]);
+HTML_TAG("textarea", "TextArea");
 HTML_TAG("tfoot", "TableSection");
 HTML_TAG("th", "TableCell");
 HTML_TAG("thead", "TableSection");

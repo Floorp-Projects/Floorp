@@ -1,3 +1,3 @@
 == background-image-gradient-1.html background-image-gradient-1-ref.html
-== line-height-1.html line-height-1-ref.html
-== line-height-2.html line-height-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == line-height-1.html line-height-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == line-height-2.html line-height-2-ref.html # Bug 1392106

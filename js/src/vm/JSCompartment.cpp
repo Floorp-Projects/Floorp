@@ -44,9 +44,7 @@ using mozilla::PodArrayZero;
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread())
-{
-    runtime_->numCompartments++;
-}
+{}
 
 ObjectRealm::ObjectRealm(JS::Zone* zone)
   : innerViews(zone)
@@ -69,6 +67,8 @@ Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
+
+    runtime_->numRealms++;
 }
 
 Realm::~Realm()
@@ -84,11 +84,9 @@ Realm::~Realm()
     if (!runtime_->gc.shutdownCollectedEverything())
         objectGroups_.unboxedLayouts.clear();
 #endif
-}
 
-JSCompartment::~JSCompartment()
-{
-    runtime_->numCompartments--;
+    MOZ_ASSERT(runtime_->numRealms > 0);
+    runtime_->numRealms--;
 }
 
 bool

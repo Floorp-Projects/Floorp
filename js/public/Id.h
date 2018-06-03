@@ -229,12 +229,12 @@ struct BarrierMethods<jsid>
 template <typename F, typename... Args>
 auto
 DispatchTyped(F f, const jsid& id, Args&&... args)
-  -> decltype(f(static_cast<JSString*>(nullptr), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSString*>(nullptr), std::forward<Args>(args)...))
 {
     if (JSID_IS_STRING(id))
-        return f(JSID_TO_STRING(id), mozilla::Forward<Args>(args)...);
+        return f(JSID_TO_STRING(id), std::forward<Args>(args)...);
     if (JSID_IS_SYMBOL(id))
-        return f(JSID_TO_SYMBOL(id), mozilla::Forward<Args>(args)...);
+        return f(JSID_TO_SYMBOL(id), std::forward<Args>(args)...);
     MOZ_ASSERT(!JSID_IS_GCTHING(id));
     return F::defaultValue(id);
 }

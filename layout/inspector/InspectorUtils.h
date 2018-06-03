@@ -225,6 +225,7 @@ public:
                                nsRange& aRange,
                                uint32_t aMaxRanges, // max number of ranges to
                                                     // record for each face
+                               bool aSkipCollapsedWhitespace,
                                nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                ErrorResult& aRv);
 

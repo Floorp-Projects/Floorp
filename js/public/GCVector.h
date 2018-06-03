@@ -76,17 +76,17 @@ class GCVector
     void clear() { return vector.clear(); }
     void clearAndFree() { return vector.clearAndFree(); }
 
-    template<typename U> bool append(U&& item) { return vector.append(mozilla::Forward<U>(item)); }
+    template<typename U> bool append(U&& item) { return vector.append(std::forward<U>(item)); }
 
     template<typename... Args>
     MOZ_MUST_USE bool
     emplaceBack(Args&&... args) {
-        return vector.emplaceBack(mozilla::Forward<Args>(args)...);
+        return vector.emplaceBack(std::forward<Args>(args)...);
     }
 
     template<typename U>
     void infallibleAppend(U&& aU) {
-        return vector.infallibleAppend(mozilla::Forward<U>(aU));
+        return vector.infallibleAppend(std::forward<U>(aU));
     }
     void infallibleAppendN(const T& aT, size_t aN) {
         return vector.infallibleAppendN(aT, aN);
@@ -214,10 +214,10 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
     void clear() { vec().clear(); }
     void clearAndFree() { vec().clearAndFree(); }
     template<typename U>
-    MOZ_MUST_USE bool append(U&& aU) { return vec().append(mozilla::Forward<U>(aU)); }
+    MOZ_MUST_USE bool append(U&& aU) { return vec().append(std::forward<U>(aU)); }
     template<typename... Args>
     MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
-        return vec().emplaceBack(mozilla::Forward<Args...>(aArgs...));
+        return vec().emplaceBack(std::forward<Args...>(aArgs...));
     }
     template<typename U>
     MOZ_MUST_USE bool appendAll(const U& aU) { return vec().appendAll(aU); }
@@ -231,7 +231,7 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
         return vec().append(aBegin, aLength);
     }
     template<typename U> void infallibleAppend(U&& aU) {
-        vec().infallibleAppend(mozilla::Forward<U>(aU));
+        vec().infallibleAppend(std::forward<U>(aU));
     }
     void infallibleAppendN(const T& aT, size_t aN) { vec().infallibleAppendN(aT, aN); }
     template<typename U> void infallibleAppend(const U* aBegin, const U* aEnd) {
@@ -243,7 +243,7 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
     void popBack() { vec().popBack(); }
     T popCopy() { return vec().popCopy(); }
     template<typename U> T* insert(T* aP, U&& aVal) {
-        return vec().insert(aP, mozilla::Forward<U>(aVal));
+        return vec().insert(aP, std::forward<U>(aVal));
     }
     void erase(T* aT) { vec().erase(aT); }
     void erase(T* aBegin, T* aEnd) { vec().erase(aBegin, aEnd); }

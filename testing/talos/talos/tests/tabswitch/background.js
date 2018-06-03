@@ -8,6 +8,6 @@
  * function that is used to report results.
  */
 
-let frameScriptPath = "content/tabswitch-content-process.js";
+let processScriptPath = "content/tabswitch-content-process.js";
 
-browser.tps.setup({ frameScriptPath });
+browser.tps.setup({ processScriptPath });

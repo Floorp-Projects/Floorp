@@ -31,7 +31,7 @@ struct IPDLParamTraits
     static_assert(IsSame<P, typename IPC::ParamTraitsSelector<R>::Type>::value,
                   "IPDLParamTraits::Write only forwards calls which work via WriteParam");
 
-    IPC::ParamTraits<P>::Write(aMsg, Forward<R>(aParam));
+    IPC::ParamTraits<P>::Write(aMsg, std::forward<R>(aParam));
   }
 
   template<typename R>
@@ -61,7 +61,7 @@ WriteIPDLParam(IPC::Message* aMsg,
                P&& aParam)
 {
   IPDLParamTraits<typename IPC::ParamTraitsSelector<P>::Type>
-    ::Write(aMsg, aActor, Forward<P>(aParam));
+    ::Write(aMsg, aActor, std::forward<P>(aParam));
 }
 
 template<typename P>

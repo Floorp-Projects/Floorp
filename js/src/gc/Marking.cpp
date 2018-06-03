@@ -1466,12 +1466,12 @@ CallTraceHook(Functor f, JSTracer* trc, JSObject* obj, CheckGeneration check, Ar
 
     if (clasp->isTrace(InlineTypedObject::obj_trace)) {
         Shape** pshape = obj->as<InlineTypedObject>().addressOfShapeFromGC();
-        f(pshape, mozilla::Forward<Args>(args)...);
+        f(pshape, std::forward<Args>(args)...);
 
         InlineTypedObject& tobj = obj->as<InlineTypedObject>();
         if (tobj.typeDescr().hasTraceList()) {
             VisitTraceList(f, tobj.typeDescr().traceList(), tobj.inlineTypedMemForGC(),
-                           mozilla::Forward<Args>(args)...);
+                           std::forward<Args>(args)...);
         }
 
         return nullptr;
@@ -1480,7 +1480,7 @@ CallTraceHook(Functor f, JSTracer* trc, JSObject* obj, CheckGeneration check, Ar
     if (clasp == &UnboxedPlainObject::class_) {
         JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
         if (*pexpando)
-            f(pexpando, mozilla::Forward<Args>(args)...);
+            f(pexpando, std::forward<Args>(args)...);
 
         UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
         const UnboxedLayout& layout = check == CheckGeneration::DoChecks
@@ -1488,7 +1488,7 @@ CallTraceHook(Functor f, JSTracer* trc, JSObject* obj, CheckGeneration check, Ar
                                       : unboxed.layoutDontCheckGeneration();
         if (layout.traceList()) {
             VisitTraceList(f, layout.traceList(), unboxed.data(),
-                           mozilla::Forward<Args>(args)...);
+                           std::forward<Args>(args)...);
         }
 
         return nullptr;
@@ -1506,19 +1506,19 @@ static void
 VisitTraceList(F f, const int32_t* traceList, uint8_t* memory, Args&&... args)
 {
     while (*traceList != -1) {
-        f(reinterpret_cast<JSString**>(memory + *traceList), mozilla::Forward<Args>(args)...);
+        f(reinterpret_cast<JSString**>(memory + *traceList), std::forward<Args>(args)...);
         traceList++;
     }
     traceList++;
     while (*traceList != -1) {
         JSObject** objp = reinterpret_cast<JSObject**>(memory + *traceList);
         if (*objp)
-            f(objp, mozilla::Forward<Args>(args)...);
+            f(objp, std::forward<Args>(args)...);
         traceList++;
     }
     traceList++;
     while (*traceList != -1) {
-        f(reinterpret_cast<Value*>(memory + *traceList), mozilla::Forward<Args>(args)...);
+        f(reinterpret_cast<Value*>(memory + *traceList), std::forward<Args>(args)...);
         traceList++;
     }
 }

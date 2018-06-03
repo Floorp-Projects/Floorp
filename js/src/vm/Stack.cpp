@@ -522,6 +522,28 @@ JitFrameIter::skipNonScriptedJSFrames()
 }
 
 bool
+JitFrameIter::isSelfHostedIgnoringInlining() const
+{
+    MOZ_ASSERT(!done());
+
+    if (isWasm())
+        return false;
+
+    return asJSJit().script()->selfHosted();
+}
+
+JS::Realm*
+JitFrameIter::realm() const
+{
+    MOZ_ASSERT(!done());
+
+    if (isWasm())
+        return asWasm().instance()->realm();
+
+    return asJSJit().script()->realm();
+}
+
+bool
 JitFrameIter::done() const
 {
     if (!isSome())

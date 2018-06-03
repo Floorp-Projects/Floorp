@@ -45,7 +45,7 @@ template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject
 MakeUnique(Args&&... aArgs)
 {
-  return UniquePtr<T>(js_new<T>(mozilla::Forward<Args>(aArgs)...));
+  return UniquePtr<T>(js_new<T>(std::forward<Args>(aArgs)...));
 }
 
 template<typename T>

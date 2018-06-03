@@ -98,14 +98,12 @@ test-verify:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # do not run on ccov; see also the enable_code_coverage transform
+            # do not run on ccov or jsdcov
             .*-ccov/.*: []
+            .*-jsdcov/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2
     mozharness:
         script:
             by-test-platform:
@@ -140,14 +138,12 @@ test-verify-gpu:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # do not run on ccov; see also the enable_code_coverage transform
+            # do not run on ccov or jsdcov
             .*-ccov/.*: []
+            .*-jsdcov/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2
     mozharness:
         script:
             by-test-platform:
@@ -179,13 +175,9 @@ test-coverage:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # only run on mozilla-central and try.
-            .*-ccov/.*: ['mozilla-central', 'try']
+            .*-ccov/.*: built-projects
             default: []
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
+    tier: 2
     mozharness:
         script:
             by-test-platform:

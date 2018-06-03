@@ -280,7 +280,8 @@ popupnotificationcontent {
 
 /* autorepeatbuttons in menus */
 
-.popup-internal-box > autorepeatbutton {
+.popup-internal-box > .scrollbutton-up,
+.popup-internal-box > .scrollbutton-down {
   height: 15px;
   position: relative;
   list-style-image: none;
@@ -296,25 +297,26 @@ popupnotificationcontent {
   -moz-appearance: menuitem;
 }
 
-.popup-internal-box > .autorepeatbutton-up {
+.popup-internal-box > .scrollbutton-up {
   padding-top: 1px; /* 4px padding-top from the .popup-internal-box. */
   margin-bottom: -15px;
 }
 
-.popup-internal-box > .autorepeatbutton-up > .autorepeatbutton-icon {
+.popup-internal-box > .scrollbutton-up > .toolbarbutton-icon {
   -moz-appearance: button-arrow-up;
 }
 
-.popup-internal-box > .autorepeatbutton-down {
+.popup-internal-box > .scrollbutton-down {
   padding-top: 5px;
   margin-top: -15px;
 }
 
-.popup-internal-box > .autorepeatbutton-down > .autorepeatbutton-icon {
+.popup-internal-box > .scrollbutton-down > .toolbarbutton-icon {
   -moz-appearance: button-arrow-down;
 }
 
-.popup-internal-box > autorepeatbutton[disabled="true"] {
+.popup-internal-box > .scrollbutton-up[disabled="true"],
+.popup-internal-box > .scrollbutton-down[disabled="true"] {
   visibility: collapse;
 }
 

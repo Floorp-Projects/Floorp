@@ -237,7 +237,6 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
     if (content->IsAnyOfXULElements(nsGkAtoms::button,
                                     nsGkAtoms::checkbox,
                                     nsGkAtoms::radio,
-                                    nsGkAtoms::autorepeatbutton,
                                     nsGkAtoms::menu,
                                     nsGkAtoms::menubutton,
                                     nsGkAtoms::menuitem,

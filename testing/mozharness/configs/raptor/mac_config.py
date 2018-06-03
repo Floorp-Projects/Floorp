@@ -37,10 +37,6 @@ config = {
     "postflight_run_cmd_suites": [
         SCREEN_RESOLUTION_CHECK,
     ],
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
-    "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": "macosx64-minidump_stackwalk",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/macosx64/releng.manifest",

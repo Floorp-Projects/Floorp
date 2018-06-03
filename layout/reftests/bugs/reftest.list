@@ -695,8 +695,8 @@ fuzzy(37,20) == 379349-1b.xhtml 379349-1-ref.xhtml
 fuzzy(37,20) == 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
-fuzzy-if(Android,2,140) == 379349-3a.xhtml 379349-3-ref.xhtml
-fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3-ref.xhtml
+fuzzy-if(Android,2,140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3a.xhtml 379349-3-ref.xhtml # bug 1392106
+fuzzy-if(Android,2,140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3b.xhtml 379349-3-ref.xhtml # bug 1392106
 == 379361-1.html 379361-1-ref.html
 == 379361-2.html 379361-2-ref.html
 == 379361-3.html 379361-3-ref.html
@@ -802,7 +802,7 @@ fuzzy-if(skiaContent,1,600) == 393649-1.html 393649-1-ref.html
 == 393671-1.html 393671-1-ref.html
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
-== 393760-1.xml 393760-1-ref.xml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
 fuzzy-if(skiaContent,1,500) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
@@ -1410,7 +1410,7 @@ fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-random-if(cocoaWidget||winWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982 and bug 1375012
+random == 508816-1.xul 508816-1-ref.xul # Bug 1375012
 == 508816-2.html 508816-2-ref.html
 skip-if(isDebugBuild) == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
@@ -2076,3 +2076,4 @@ pref(layout.css.moz-document.url-prefix-hack.enabled,true) == 1446470.html 10350
 pref(layout.css.moz-document.url-prefix-hack.enabled,false) == 1446470-2.html 1035091-ref.html
 test-pref(layout.css.prefixes.gradients,false) == 1451874.html 1451874-ref.html
 fuzzy-if(!(webrender&&gtkWidget),1-2,17500-17500) == 1412375.html 1412375-ref.html
+test-pref(layout.css.contain.enabled,false) == 1466008.html 1466008-ref.html

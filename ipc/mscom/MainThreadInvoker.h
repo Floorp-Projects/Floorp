@@ -47,7 +47,7 @@ InvokeOnMainThread(const char* aName,
 {
   nsCOMPtr<nsIRunnable> runnable(
     NewNonOwningRunnableMethod<Args...>(aName, aObject, aMethod,
-                                          Forward<Args>(aArgs)...));
+                                          std::forward<Args>(aArgs)...));
 
   MainThreadInvoker invoker;
   return invoker.Invoke(runnable.forget());

@@ -39,9 +39,15 @@ public:
                                 Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                 std::vector<FontVariation>* aOutVariations) override;
 
+  void ApplyVariations(const FontVariation* aVariations, uint32_t aNumVariations);
+
+  bool HasVariationSettings() override;
+
 private:
   friend class NativeFontResourceFontconfig;
   friend class UnscaledFontFontconfig;
+
+  void GetVariationSettings(std::vector<FontVariation>* aVariations);
 
   struct InstanceData
   {
@@ -72,7 +78,9 @@ private:
     CreateFromInstanceData(const InstanceData& aInstanceData,
                            UnscaledFontFontconfig* aUnscaledFont,
                            Float aSize,
-                           NativeFontResource* aNativeFontResource = nullptr);
+                           const FontVariation* aVariations,
+                           uint32_t aNumVariations,
+                           NativeFontResourceFontconfig* aNativeFontResource = nullptr);
 
   FcPattern* mPattern;
 };

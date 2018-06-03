@@ -32,8 +32,7 @@ public:
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual void MouseClicked(mozilla::WidgetGUIEvent* aEvent)
-  { DoMouseClick(aEvent, false); }
+  virtual void MouseClicked(mozilla::WidgetGUIEvent* aEvent);
 
   void Blurred();
 
@@ -43,11 +42,6 @@ public:
   }
 #endif
 
-  /**
-   * Our implementation of MouseClicked.
-   * @param aTrustEvent if true and aEvent as null, then assume the event was trusted
-   */
-  void DoMouseClick(mozilla::WidgetGUIEvent* aEvent, bool aTrustEvent);
   void UpdateMouseThrough() override { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 
 private:

@@ -67,7 +67,7 @@ public:
   public:
     template <typename M2, typename T2>
     ResultAndType(M2&& aM, T2&& aT)
-      : mResult(Forward<M2>(aM)), mT(Forward<T2>(aT))
+      : mResult(std::forward<M2>(aM)), mT(std::forward<T2>(aT))
     {
     }
     ResultAndType(const ResultAndType&) = default;

@@ -1138,6 +1138,11 @@ pref("print.print_via_parent", true);
 pref("print.print_via_parent", false);
 #endif
 
+// Variation fonts can't always be embedded in certain output formats
+// such as PDF. To work around this, draw the variation fonts using
+// paths instead of using font embedding.
+pref("print.font-variations-as-paths", true);
+
 // Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
 // in a document.

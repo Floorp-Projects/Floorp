@@ -35,6 +35,14 @@ SEC_BEGIN_PROTOS
 extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
                                   unsigned int len);
 
+/* Allocate and make an item with the requested contents.
+ *
+ * We seem to have mostly given up on SECItemType, so the result is
+ * always siBuffer.
+ */
+extern SECStatus SECITEM_MakeItem(PLArenaPool *arena, SECItem *dest,
+                                  unsigned char *data, unsigned int len);
+
 /*
 ** This is a legacy function containing bugs. It doesn't update item->len,
 ** and it has other issues as described in bug 298649 and bug 298938.

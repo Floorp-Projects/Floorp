@@ -81,7 +81,6 @@ function test()
 {
   function getSelectionForEditor(aEditorElement)
   {
-    const nsIDOMNSEditableElement = SpecialPowers.Ci.nsIDOMNSEditableElement;
     return SpecialPowers.wrap(aEditorElement).editor.selection;
   }
 

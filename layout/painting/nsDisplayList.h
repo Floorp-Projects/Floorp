@@ -2011,7 +2011,7 @@ template<typename T, typename... Args>
 MOZ_ALWAYS_INLINE T*
 MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
 {
-  T* item = new (aBuilder) T(aBuilder, mozilla::Forward<Args>(aArgs)...);
+  T* item = new (aBuilder) T(aBuilder, std::forward<Args>(aArgs)...);
 
   const mozilla::SmallPointerArray<mozilla::DisplayItemData>& array =
     item->Frame()->DisplayItemData();

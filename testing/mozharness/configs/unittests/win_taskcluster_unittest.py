@@ -293,11 +293,7 @@ config = {
     ],
     "vcs_output_timeout": 1000,
     "minidump_save_path": "%(abs_work_dir)s/../minidumps",
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
     "structured_suites": ["reftest"],
-    'blob_uploader_auth_file': 'C:/builds/oauth.txt',
     "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest",

@@ -1275,13 +1275,12 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
   }
 }
 
-NS_IMETHODIMP
+LayoutDeviceIntMargin
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  LayoutDeviceIntMargin* aResult)
+                                  uint8_t aWidgetType)
 {
+  LayoutDeviceIntMargin result;
   GtkTextDirection direction = GetTextDirection(aFrame);
-  aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_HORIZONTAL:
   case NS_THEME_SCROLLBAR_VERTICAL:
@@ -1293,10 +1292,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
         GetActiveScrollbarMetrics(orientation);
 
       const GtkBorder& border = metrics->border.scrollbar;
-      aResult->top = border.top;
-      aResult->right = border.right;
-      aResult->bottom = border.bottom;
-      aResult->left = border.left;
+      result.top = border.top;
+      result.right = border.right;
+      result.bottom = border.bottom;
+      result.left = border.left;
     }
     break;
   case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
@@ -1309,10 +1308,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
         GetActiveScrollbarMetrics(orientation);
 
       const GtkBorder& border = metrics->border.track;
-      aResult->top = border.top;
-      aResult->right = border.right;
-      aResult->bottom = border.bottom;
-      aResult->left = border.left;
+      result.top = border.top;
+      result.right = border.right;
+      result.bottom = border.bottom;
+      result.left = border.left;
     }
     break;
   case NS_THEME_TOOLBOX:
@@ -1334,11 +1333,11 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       gint flags;
 
       if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
-                                &flags))
-        return NS_OK;
-
-      moz_gtk_get_tab_border(&aResult->left, &aResult->top,
-                             &aResult->right, &aResult->bottom, direction,
+                                &flags)) {
+        return result;
+      }
+      moz_gtk_get_tab_border(&result.left, &result.top,
+                             &result.right, &result.bottom, direction,
                              (GtkTabFlags)flags, gtkWidgetType);
     }
     break;
@@ -1353,16 +1352,16 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     MOZ_FALLTHROUGH;
   default:
     {
-      GetCachedWidgetBorder(aFrame, aWidgetType, direction, aResult);
+      GetCachedWidgetBorder(aFrame, aWidgetType, direction, &result);
     }
   }
 
   gint scale = GetMonitorScaleFactor(aFrame);
-  aResult->top *= scale;
-  aResult->right *= scale;
-  aResult->bottom *= scale;
-  aResult->left *= scale;
-  return NS_OK;
+  result.top *= scale;
+  result.right *= scale;
+  result.bottom *= scale;
+  result.left *= scale;
+  return result;
 }
 
 bool

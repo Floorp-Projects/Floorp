@@ -32,9 +32,9 @@ addLoadEvent(function() {
   var source = context.createBufferSource();
 
   var splitter = context.createChannelSplitter();
-  is(splitter.channelCount, 2, "splitter node has 2 input channels by default");
-  is(splitter.channelCountMode, "max", "Correct channelCountMode for the splitter node");
-  is(splitter.channelInterpretation, "speakers", "Correct channelCountInterpretation for the splitter node");
+  is(splitter.channelCount, 6, "splitter node has 2 input channels by default");
+  is(splitter.channelCountMode, "explicit", "Correct channelCountMode for the splitter node");
+  is(splitter.channelInterpretation, "discrete", "Correct channelCountInterpretation for the splitter node");
 
   source.buffer = buffer;
   var gain = context.createGain();

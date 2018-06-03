@@ -338,7 +338,7 @@ RegisteredProxy::~RegisteredProxy()
 
 RegisteredProxy::RegisteredProxy(RegisteredProxy&& aOther)
 {
-  *this = mozilla::Forward<RegisteredProxy>(aOther);
+  *this = std::forward<RegisteredProxy>(aOther);
 }
 
 RegisteredProxy&

@@ -176,7 +176,6 @@ class StackFrame;
 namespace JS {
 namespace ubi {
 
-using mozilla::Forward;
 using mozilla::Maybe;
 using mozilla::RangedPtr;
 using mozilla::Variant;
@@ -196,13 +195,13 @@ class JS_PUBLIC_API(AtomOrTwoByteChars) : public Variant<JSAtom*, const char16_t
 
   public:
     template<typename T>
-    MOZ_IMPLICIT AtomOrTwoByteChars(T&& rhs) : Base(Forward<T>(rhs)) { }
+    MOZ_IMPLICIT AtomOrTwoByteChars(T&& rhs) : Base(std::forward<T>(rhs)) { }
 
     template<typename T>
     AtomOrTwoByteChars& operator=(T&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move disallowed");
         this->~AtomOrTwoByteChars();
-        new (this) AtomOrTwoByteChars(Forward<T>(rhs));
+        new (this) AtomOrTwoByteChars(std::forward<T>(rhs));
         return *this;
     }
 
@@ -603,6 +602,13 @@ class JS_PUBLIC_API(Base) {
     // nullptr is returned.
     virtual JSCompartment* compartment() const { return nullptr; }
 
+    // Return the realm for this node. Some ubi::Node referents are not
+    // associated with Realms, such as JSStrings (which are associated
+    // with Zones) or cross-compartment wrappers (which are associated with
+    // compartments). When the referent is not associated with a realm,
+    // nullptr is returned.
+    virtual JS::Realm* realm() const { return nullptr; }
+
     // Return whether this node's referent's allocation stack was captured.
     virtual bool hasAllocationStack() const { return false; }
 
@@ -776,6 +782,7 @@ class Node {
     const char16_t* typeName()      const { return base()->typeName(); }
     JS::Zone* zone()                const { return base()->zone(); }
     JSCompartment* compartment()    const { return base()->compartment(); }
+    JS::Realm* realm()              const { return base()->realm(); }
     const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
     MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
         return base()->jsObjectConstructorName(cx, outName);
@@ -981,7 +988,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(RootList) {
 
     // Find all GC roots.
     MOZ_MUST_USE bool init();
-    // Find only GC roots in the provided set of |JSCompartment|s.
+    // Find only GC roots in the provided set of |JSCompartment|s. Note: it's
+    // important to take a CompartmentSet and not a RealmSet: objects in
+    // same-compartment realms can reference each other directly, without going
+    // through CCWs, so if we used a RealmSet here we would miss edges.
     MOZ_MUST_USE bool init(CompartmentSet& debuggees);
     // Find only GC roots in the given Debugger object's set of debuggee
     // compartments.
@@ -1027,14 +1037,16 @@ class JS_PUBLIC_API(TracerConcrete) : public Base {
     Referent& get() const { return *static_cast<Referent*>(ptr); }
 };
 
-// For JS::TraceChildren-based types that have a 'compartment' method.
+// For JS::TraceChildren-based types that have 'realm' and 'compartment'
+// methods.
 template<typename Referent>
-class JS_PUBLIC_API(TracerConcreteWithCompartment) : public TracerConcrete<Referent> {
+class JS_PUBLIC_API(TracerConcreteWithRealm) : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
     JSCompartment* compartment() const override;
+    JS::Realm* realm() const override;
 
   protected:
-    explicit TracerConcreteWithCompartment(Referent* ptr) : TracerBase(ptr) { }
+    explicit TracerConcreteWithRealm(Referent* ptr) : TracerBase(ptr) { }
 };
 
 // Define specializations for some commonly-used public JSAPI types.
@@ -1074,9 +1086,9 @@ class JS_PUBLIC_API(Concrete<JS::BigInt>) : TracerConcrete<JS::BigInt> {
 #endif
 
 template<>
-class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithCompartment<JSScript> {
+class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithRealm<JSScript> {
   protected:
-    explicit Concrete(JSScript *ptr) : TracerConcreteWithCompartment<JSScript>(ptr) { }
+    explicit Concrete(JSScript *ptr) : TracerConcreteWithRealm<JSScript>(ptr) { }
 
   public:
     static void construct(void *storage, JSScript *ptr) { new (storage) Concrete(ptr); }
@@ -1091,14 +1103,17 @@ class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithCompartment<JSScript
 
 // The JSObject specialization.
 template<>
-class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcreteWithCompartment<JSObject> {
+class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcrete<JSObject> {
   protected:
-    explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
+    explicit Concrete(JSObject* ptr) : TracerConcrete<JSObject>(ptr) { }
 
   public:
     static void construct(void* storage, JSObject* ptr) {
         new (storage) Concrete(ptr);
     }
+
+    JSCompartment* compartment() const override;
+    JS::Realm* realm() const override;
 
     const char* jsObjectClassName() const override;
     MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName)
@@ -1139,6 +1154,7 @@ class JS_PUBLIC_API(Concrete<void>) : public Base {
     js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     JS::Zone* zone() const override;
     JSCompartment* compartment() const override;
+    JS::Realm* realm() const override;
     CoarseType coarseType() const final;
 
     explicit Concrete(void* ptr) : Base(ptr) { }

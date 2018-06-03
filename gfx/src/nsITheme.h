@@ -56,6 +56,9 @@ class IpcResourceUpdateQueue;
  * the constants in nsThemeConstants.h).
  */
 class nsITheme: public nsISupports {
+protected:
+  using LayoutDeviceIntMargin = mozilla::LayoutDeviceIntMargin;
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
 
@@ -96,12 +99,11 @@ public:
                                                 const nsRect& aRect) { return false; }
 
   /**
-   * Get the border for the widget, in device pixels.
+   * Return the border for the widget, in device pixels.
    */
-  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
-                             nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             mozilla::LayoutDeviceIntMargin* aResult) = 0;
+  virtual MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
+                                                             nsIFrame* aFrame,
+                                                             uint8_t aWidgetType) = 0;
 
   /**
    * This method can return false to indicate that the CSS padding
@@ -115,7 +117,7 @@ public:
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  mozilla::LayoutDeviceIntMargin* aResult) = 0;
+                                  LayoutDeviceIntMargin* aResult) = 0;
 
   /**
    * On entry, *aResult is positioned at 0,0 and sized to the new size

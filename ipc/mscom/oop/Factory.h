@@ -41,7 +41,7 @@ class MOZ_NONHEAP_CLASS Factory : public IClassFactory
   template <typename... Args>
   HRESULT DoCreate(HRESULT (*aFnPtr)(IUnknown*, REFIID, void**), Args... args)
   {
-    return aFnPtr(mozilla::Forward<Args>(args)...);
+    return aFnPtr(std::forward<Args>(args)...);
   }
 
 public:

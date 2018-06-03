@@ -37,8 +37,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/MessageBroadcaster.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -48,6 +50,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/FileBlobImpl.h"
+#include "mozilla/dom/FontTableURIProtocolHandler.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -110,7 +113,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5StringParser.h"
 #include "nsHTMLDocument.h"
@@ -2366,8 +2368,7 @@ nsContentUtils::IsCallerContentXBL()
   // For remote XUL, we run XBL in the XUL scope. Given that we care about
   // compat and not security for remote XUL, just always claim to be XBL.
   if (!xpc::AllowContentXBLScope(realm)) {
-    DebugOnly<JSCompartment*> c = JS::GetCompartmentForRealm(realm);
-    MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
+    MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetRealmPrincipal(realm)));
     return true;
   }
 
@@ -7656,7 +7657,7 @@ nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost)
 }
 
 bool
-nsContentUtils::CallOnAllRemoteChildren(ChromeMessageBroadcaster* aManager,
+nsContentUtils::CallOnAllRemoteChildren(MessageBroadcaster* aManager,
                                         CallOnRemoteChildFunction aCallback,
                                         void* aArg)
 {
@@ -7667,7 +7668,7 @@ nsContentUtils::CallOnAllRemoteChildren(ChromeMessageBroadcaster* aManager,
       continue;
     }
 
-    RefPtr<ChromeMessageBroadcaster> nonLeafMM = ChromeMessageBroadcaster::From(childMM);
+    RefPtr<MessageBroadcaster> nonLeafMM = MessageBroadcaster::From(childMM);
     if (nonLeafMM) {
       if (CallOnAllRemoteChildren(nonLeafMM, aCallback, aArg)) {
         return true;
@@ -7697,7 +7698,7 @@ nsContentUtils::CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
 {
   nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
   if (window->IsChromeWindow()) {
-    RefPtr<ChromeMessageBroadcaster> windowMM = window->GetMessageManager();
+    RefPtr<MessageBroadcaster> windowMM = window->GetMessageManager();
     if (windowMM) {
       CallOnAllRemoteChildren(windowMM, aCallback, aArg);
     }

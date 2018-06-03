@@ -6,11 +6,11 @@
 
 #include "WindowsLocationProvider.h"
 #include "nsGeoPosition.h"
-#include "nsIDOMGeoPositionError.h"
 #include "nsComponentManagerUtils.h"
 #include "prtime.h"
 #include "MLSFallback.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/PositionErrorBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -129,11 +129,11 @@ LocationEvent::OnStatusChanged(REFIID aReportType,
   uint16_t err;
   switch (aStatus) {
   case REPORT_ACCESS_DENIED:
-    err = nsIDOMGeoPositionError::PERMISSION_DENIED;
+    err = PositionErrorBinding::PERMISSION_DENIED;
     break;
   case REPORT_NOT_SUPPORTED:
   case REPORT_ERROR:
-    err = nsIDOMGeoPositionError::POSITION_UNAVAILABLE;
+    err = PositionErrorBinding::POSITION_UNAVAILABLE;
     break;
   default:
     return S_OK;

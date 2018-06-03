@@ -18,6 +18,7 @@
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/dom/StyleSheetList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

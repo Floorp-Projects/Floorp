@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_NameSpaceConstants_h__
 #define mozilla_dom_NameSpaceConstants_h__
 
+#include <stdint.h>
+
 #define kNameSpaceID_Unknown -1
 // 0 is special at C++, so use a static const int32_t for
 // kNameSpaceID_None to keep if from being cast to pointers
