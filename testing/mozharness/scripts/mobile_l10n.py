@@ -159,8 +159,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
                                     replace_dict=replace_dict)
-        if self.query_is_release_or_beta():
-            upload_env['MOZ_PKG_VERSION'] = '%(version)s' % replace_dict
         self.upload_env = upload_env
         return self.upload_env
 
