@@ -184,9 +184,6 @@ typedef void
 extern JS_FRIEND_API(void)
 JS_SetSetUseCounterCallback(JSContext* cx, JSSetUseCounterCallback callback);
 
-extern JS_FRIEND_API(bool)
-JS_GetIsSecureContext(JSCompartment* compartment);
-
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment);
 
@@ -327,6 +324,9 @@ GetRealmPrincipals(JS::Realm* realm);
 
 extern JS_FRIEND_API(void)
 SetRealmPrincipals(JS::Realm* realm, JSPrincipals* principals);
+
+extern JS_FRIEND_API(bool)
+GetIsSecureContext(JS::Realm* realm);
 
 } // namespace JS
 
