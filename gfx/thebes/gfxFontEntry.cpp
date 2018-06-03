@@ -1487,41 +1487,46 @@ StretchDistance(const gfxFontEntry* aFontEntry, FontStretch aTargetStretch)
 static inline double
 WeightDistance(const gfxFontEntry* aFontEntry, FontWeight aTargetWeight)
 {
+    const double kNotWithinCentralRange = 100.0;
     const double kReverseDistance = 600.0;
 
-    double distance = 0.0, addedDistance = 0.0;
     FontWeight minWeight = aFontEntry->Weight().Min();
     FontWeight maxWeight = aFontEntry->Weight().Max();
-    if (aTargetWeight < minWeight || aTargetWeight > maxWeight) {
-        if (aTargetWeight > FontWeight(500)) {
-            distance = minWeight - aTargetWeight;
-        } else if (aTargetWeight < FontWeight(400)) {
-            distance = aTargetWeight - maxWeight;
-        } else {
-            // special case - target is between 400 and 500
 
-            // font weights between 400 and 500 are close
-            if (maxWeight >= FontWeight(400) &&
-                minWeight <= FontWeight(500)) {
-                if (maxWeight < aTargetWeight) {
-                    distance = FontWeight(500) - maxWeight;
-                } else {
-                    distance = minWeight - aTargetWeight;
-                }
-            } else {
-                // font weights outside use rule for target weights < 400 with
-                // added distance to separate from font weights in
-                // the [400..500] range
-                distance = aTargetWeight - maxWeight;
-                addedDistance = 100.0;
-            }
-        }
-        if (distance < 0.0) {
-            distance = kReverseDistance - distance;
-        }
-        distance += addedDistance;
+    if (aTargetWeight >= minWeight && aTargetWeight <= maxWeight) {
+        // Target is within the face's range, so it's a perfect match
+        return 0.0;
     }
-    return distance;
+
+    if (aTargetWeight < FontWeight(400)) {
+        // Requested a lighter-than-400 weight
+        if (maxWeight < aTargetWeight) {
+            return aTargetWeight - maxWeight;
+        }
+        // Add reverse-search penalty for bolder faces
+        return (minWeight - aTargetWeight) + kReverseDistance;
+    }
+
+    if (aTargetWeight > FontWeight(500)) {
+        // Requested a bolder-than-500 weight
+        if (minWeight > aTargetWeight) {
+            return minWeight - aTargetWeight;
+        }
+        // Add reverse-search penalty for lighter faces
+        return (aTargetWeight - maxWeight) + kReverseDistance;
+    }
+
+    // Special case for requested weight in the [400..500] range
+    if (minWeight > aTargetWeight) {
+        if (minWeight <= FontWeight(500)) {
+            // Bolder weight up to 500 is first choice
+            return minWeight - aTargetWeight;
+        }
+        // Other bolder weights get a reverse-search penalty
+        return (minWeight - aTargetWeight) + kReverseDistance;
+    }
+    // Lighter weights are not as good as bolder ones within [400..500]
+    return (aTargetWeight - maxWeight) + kNotWithinCentralRange;
 }
 
 static inline double
