@@ -1057,7 +1057,8 @@ MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& 
 void
 MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
-    as_sync();
+    if (barrier)
+        as_sync();
 }
 
 // ===============================================================
