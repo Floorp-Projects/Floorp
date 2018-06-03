@@ -119,9 +119,13 @@ add_task(async function test_MatchPattern_matches() {
   pass({url: "about:foo", pattern: ["about:foo", "about:foo*"], options: {restrictSchemes: false}});
   pass({url: "about:foo", pattern: ["about:foo*"], options: {restrictSchemes: false}});
   pass({url: "about:foobar", pattern: ["about:foo*"], options: {restrictSchemes: false}});
+
   pass({url: "resource://foo/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
   fail({url: "resource://fog/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
   fail({url: "about:foo", pattern: ["about:meh"], options: {restrictSchemes: false}});
+
+  // about: matchers should ignore ignorePath.
+  pass({url: "about:reader?http://e.com/", pattern: ["about:reader*"], options: {ignorePath: true, restrictSchemes: false}});
 });
 
 add_task(async function test_MatchPattern_overlaps() {
