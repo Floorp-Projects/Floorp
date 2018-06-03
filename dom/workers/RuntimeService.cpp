@@ -2375,13 +2375,13 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
 
     created = true;
   } else {
-    // Check whether the secure context state matches.  The current compartment
-    // of aCx is the compartment of the SharedWorker constructor that was
-    // invoked, which is the compartment of the document that will be hooked up
-    // to the worker, so that's what we want to check.
+    // Check whether the secure context state matches.  The current realm
+    // of aCx is the realm of the SharedWorker constructor that was invoked,
+    // which is the realm of the document that will be hooked up to the worker,
+    // so that's what we want to check.
     shouldAttachToWorkerPrivate =
       workerPrivate->IsSecureContext() ==
-        JS_GetIsSecureContext(js::GetContextCompartment(aCx));
+        JS::GetIsSecureContext(js::GetContextRealm(aCx));
 
     // If we're attaching to an existing SharedWorker private, then we
     // must update the overriden load group to account for our document's
