@@ -21,8 +21,8 @@ struct RawServoFontFaceRule;
 namespace mozilla {
 struct CSSFontFaceDescriptors;
 class PostTraversalTask;
-class ServoFontFaceRule;
 namespace dom {
+class CSSFontFaceRule;
 class FontFaceBufferSource;
 struct FontFaceDescriptors;
 class FontFaceSet;
