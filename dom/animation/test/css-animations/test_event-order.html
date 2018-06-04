@@ -42,13 +42,13 @@ events (${expectedEvents.map(event => event.type).join(', ')})`);
 const setupAnimation = (t, animationStyle, receiveEvents) => {
   const div = addDiv(t, { style: "animation: " + animationStyle });
 
-  ['start', 'iteration', 'end'].forEach(name => {
+  for (const name of ['start', 'iteration', 'end']) {
     div['onanimation' + name] = evt => {
     receiveEvents.push({ type:        evt.type,
                          target:      evt.target,
                          elapsedTime: evt.elapsedTime });
     };
-  });
+  }
 
   const watcher = new EventWatcher(t, div, [ 'animationstart',
                                              'animationiteration',

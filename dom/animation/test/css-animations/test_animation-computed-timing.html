@@ -299,12 +299,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  [{fill: '',          progress: [ null, null ]},
-   {fill: 'none',      progress: [ null, null ]},
-   {fill: 'forwards',  progress: [ null, 1.0 ]},
-   {fill: 'backwards', progress: [ 0.0, null ]},
-   {fill: 'both',      progress: [ 0.0, 1.0 ]}]
-  .forEach(test => {
+  const tests = [{ fill: '',          progress: [ null, null ] },
+                 { fill: 'none',      progress: [ null, null ] },
+                 { fill: 'forwards',  progress: [ null, 1.0 ] },
+                 { fill: 'backwards', progress: [ 0.0, null ] },
+                 { fill: 'both',      progress: [ 0.0, 1.0 ] }];
+  for (const test of tests) {
     const div =
       addDiv(t, {style: 'animation: moveAnimation 100s 10s ' + test.fill});
     const anim = div.getAnimations()[0];
@@ -313,7 +313,7 @@ test(t => {
     anim.finish();
     assert_true(anim.effect.getComputedTiming().progress === test.progress[1],
                 'finished progress with "' + test.fill + '" fill');
-  });
+  }
 }, 'progress of an animation with different fill modes');
 
 test(t => {

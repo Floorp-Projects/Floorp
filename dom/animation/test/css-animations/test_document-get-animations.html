@@ -261,9 +261,9 @@ test(t => {
   const parent = addDiv(t, { 'id': 'parent' });
   const child = addDiv(t);
   parent.appendChild(child);
-  [parent, child].forEach((div) => {
+  for (const div of [parent, child]) {
     div.setAttribute('style', 'animation: animBottom 10s');
-  });
+  }
 
   const anims = document.getAnimations();
   assert_equals(anims.length, 4,
