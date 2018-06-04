@@ -774,19 +774,9 @@ WMFVideoMFTManager::InitInternal()
       mVideoInfo.mDisplay.height);
 
   if (!mUseHwAccel) {
-    RefPtr<ID3D11Device> device =
-      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-    if (!device) {
-      device = gfx::DeviceManagerDx::Get()->GetContentDevice();
-    }
+    RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
     if (device) {
-      RefPtr<ID3D10Multithread> multi;
-      HRESULT hr =
-        device->QueryInterface((ID3D10Multithread**)getter_AddRefs(multi));
-      if (SUCCEEDED(hr) && multi) {
-        multi->SetMultithreadProtected(TRUE);
-        mIMFUsable = true;
-      }
+      mIMFUsable = true;
     }
   }
   return MediaResult(NS_OK);

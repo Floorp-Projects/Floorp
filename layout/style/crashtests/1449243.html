@@ -1,0 +1,13 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+  host.attachShadow({ mode: 'open' }).innerHTML = `
+    <style>
+      div { color: green }
+    </style>
+    <div></div>
+  `;
+  document.body.offsetTop;
+  host.shadowRoot.styleSheets[0].insertRule("[foo] { color: green }", 0);
+  host.shadowRoot.querySelector("div").setAttribute("foo", "bar");
+</script>

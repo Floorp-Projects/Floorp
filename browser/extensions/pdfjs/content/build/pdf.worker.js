@@ -20240,7 +20240,7 @@ var PDFFunction = function PDFFunctionClosure() {
       var outputSize = range.length / 2;
       domain = toMultiArray(domain);
       range = toMultiArray(range);
-      var size = toNumberArray(dict.get('Size'));
+      var size = toNumberArray(dict.getArray('Size'));
       var bps = dict.get('BitsPerSample');
       var order = dict.get('Order') || 1;
       if (order !== 1) {
@@ -21103,8 +21103,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.517';
-var pdfjsBuild = '7cd6c0fb';
+var pdfjsVersion = '2.0.536';
+var pdfjsBuild = '5053d02b';
 var pdfjsCoreWorker = __w_pdfjs_require__(20);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -21305,7 +21305,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.517';
+    let workerVersion = '2.0.536';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -21460,9 +21460,9 @@ var WorkerMessageHandler = {
             finishWorkerTask(task);
             pdfManager.updatePassword(data.password);
             pdfManagerReady();
-          }).catch(function (ex) {
+          }).catch(function (boundException) {
             finishWorkerTask(task);
-            handler.send('PasswordException', ex);
+            handler.send('PasswordException', boundException);
           }.bind(null, e));
         } else if (e instanceof _util.InvalidPDFException) {
           handler.send('InvalidPDF', e);
@@ -27368,6 +27368,15 @@ let DNLMarkerError = function DNLMarkerErrorClosure() {
   DNLMarkerError.constructor = DNLMarkerError;
   return DNLMarkerError;
 }();
+let EOIMarkerError = function EOIMarkerErrorClosure() {
+  function EOIMarkerError(message) {
+    this.message = message;
+  }
+  EOIMarkerError.prototype = new Error();
+  EOIMarkerError.prototype.name = 'EOIMarkerError';
+  EOIMarkerError.constructor = EOIMarkerError;
+  return EOIMarkerError;
+}();
 var JpegImage = function JpegImageClosure() {
   var dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
   var dctCos1 = 4017;
@@ -27451,6 +27460,8 @@ var JpegImage = function JpegImageClosure() {
             if (scanLines > 0 && scanLines !== frame.scanLines) {
               throw new DNLMarkerError('Found DNL marker (0xFFDC) while parsing scan data', scanLines);
             }
+          } else if (nextByte === 0xD9) {
+            throw new EOIMarkerError('Found EOI marker (0xFFD9) while parsing scan data');
           }
           throw new JpegError(`unexpected marker ${(bitsData << 8 | nextByte).toString(16)}`);
         }
@@ -27937,7 +27948,7 @@ var JpegImage = function JpegImageClosure() {
         throw new JpegError('SOI not found');
       }
       fileMarker = readUint16();
-      while (fileMarker !== 0xFFD9) {
+      markerLoop: while (fileMarker !== 0xFFD9) {
         var i, j, l;
         switch (fileMarker) {
           case 0xFFE0:
@@ -28095,8 +28106,11 @@ var JpegImage = function JpegImageClosure() {
               offset += processed;
             } catch (ex) {
               if (ex instanceof DNLMarkerError) {
-                (0, _util.warn)('Attempting to re-parse JPEG image using "scanLines" ' + 'parameter found in DNL marker (0xFFDC) segment.');
+                (0, _util.warn)(`${ex.message} -- attempting to re-parse the JPEG image.`);
                 return this.parse(data, { dnlScanLines: ex.scanLines });
+              } else if (ex instanceof EOIMarkerError) {
+                (0, _util.warn)(`${ex.message} -- ignoring the rest of the image data.`);
+                break markerLoop;
               }
               throw ex;
             }

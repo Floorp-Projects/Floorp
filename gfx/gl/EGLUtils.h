@@ -26,24 +26,16 @@ public:
     static EGLImageWrapper* Create(GLContext* gl, GLuint tex);
 
 private:
-    GLLibraryEGL& mLibrary;
+    const RefPtr<GLLibraryEGL> mLibrary;
     const EGLDisplay mDisplay;
 public:
     const EGLImage mImage;
 private:
     EGLSync mSync;
 
-    EGLImageWrapper(GLLibraryEGL& library,
+    EGLImageWrapper(GLLibraryEGL* library,
                     EGLDisplay display,
-                    EGLImage image)
-        : mLibrary(library)
-        , mDisplay(display)
-        , mImage(image)
-        , mSync(0)
-    {
-        MOZ_ASSERT(mImage);
-    }
-
+                    EGLImage image);
 public:
     ~EGLImageWrapper();
 

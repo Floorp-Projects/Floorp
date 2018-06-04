@@ -172,10 +172,11 @@ TextureImageEGL::BindTexImage()
     if (mBound && !ReleaseTexImage())
         return false;
 
+    auto* egl = gl::GLLibraryEGL::Get();
     EGLBoolean success =
-        sEGLLibrary.fBindTexImage(EGL_DISPLAY(),
-                                  (EGLSurface)mSurface,
-                                  LOCAL_EGL_BACK_BUFFER);
+        egl->fBindTexImage(EGL_DISPLAY(),
+                           (EGLSurface)mSurface,
+                           LOCAL_EGL_BACK_BUFFER);
 
     if (success == LOCAL_EGL_FALSE)
         return false;
@@ -190,10 +191,11 @@ TextureImageEGL::ReleaseTexImage()
     if (!mBound)
         return true;
 
+    auto* egl = gl::GLLibraryEGL::Get();
     EGLBoolean success =
-        sEGLLibrary.fReleaseTexImage(EGL_DISPLAY(),
-                                      (EGLSurface)mSurface,
-                                      LOCAL_EGL_BACK_BUFFER);
+        egl->fReleaseTexImage(EGL_DISPLAY(),
+                              (EGLSurface)mSurface,
+                              LOCAL_EGL_BACK_BUFFER);
 
     if (success == LOCAL_EGL_FALSE)
         return false;
@@ -208,7 +210,8 @@ TextureImageEGL::DestroyEGLSurface(void)
     if (!mSurface)
         return;
 
-    sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+    auto* egl = gl::GLLibraryEGL::Get();
+    egl->fDestroySurface(EGL_DISPLAY(), mSurface);
     mSurface = nullptr;
 }
 

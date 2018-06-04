@@ -27,7 +27,6 @@
 #include "nsReadableUtils.h"
 #include "mozilla/net/MozURL_ffi.h"
 
-
 //
 // setenv MOZ_LOG nsStandardURL:5
 //
@@ -3493,8 +3492,10 @@ FromIPCSegment(const nsACString& aSpec, const ipc::StandardURLSegment& aSegment,
         return false;
     }
 
+    CheckedInt<uint32_t> segmentLen = aSegment.position();
+    segmentLen += aSegment.length();
     // Make sure the segment does not extend beyond the spec.
-    if (NS_WARN_IF(aSegment.position() + aSegment.length() > aSpec.Length())) {
+    if (NS_WARN_IF(!segmentLen.isValid() || segmentLen.value() > aSpec.Length())) {
         return false;
     }
 

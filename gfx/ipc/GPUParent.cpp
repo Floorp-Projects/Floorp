@@ -11,6 +11,7 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "GLContextProvider.h"
 #include "GPUProcessHost.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
@@ -498,6 +499,20 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   if (wr::RenderThread::Get()) {
     wr::RenderThread::ShutDown();
   }
+
+  // Shut down the default GL context provider.
+  gl::GLContextProvider::Shutdown();
+
+#if defined(XP_WIN)
+  // The above shutdown calls operate on the available context providers on
+  // most platforms.  Windows is a "special snowflake", though, and has three
+  // context providers available, so we have to shut all of them down.
+  // We should only support the default GL provider on Windows; then, this
+  // could go away. Unfortunately, we currently support WGL (the default) for
+  // WebGL on Optimus.
+  gl::GLContextProviderEGL::Shutdown();
+#endif
+
   Factory::ShutDown();
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
