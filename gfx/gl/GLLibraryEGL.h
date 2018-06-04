@@ -57,7 +57,12 @@ void AfterEGLCall(const char* funcName);
 
 class GLLibraryEGL
 {
+protected:
+  ~GLLibraryEGL() {}
+
 public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLLibraryEGL)
+
     GLLibraryEGL()
         : mSymbols{nullptr}
         , mInitialized(false)
@@ -366,7 +371,11 @@ public:
 
     bool ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surface);
 
-    bool EnsureInitialized(bool forceAccel, nsACString* const out_failureId);
+    inline static GLLibraryEGL* Get() {
+        return sEGLLibrary;
+    }
+
+    static bool EnsureInitialized(bool forceAccel, nsACString* const out_failureId);
 
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();
@@ -489,6 +498,7 @@ private:
     } mSymbols;
 
 private:
+    bool DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId);
     EGLDisplay CreateDisplay(bool forceAccel,
                              const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                              nsACString* const out_failureId);
@@ -501,10 +511,10 @@ private:
     bool mIsANGLE;
     bool mIsWARP;
     static StaticMutex sMutex;
+    static StaticRefPtr<GLLibraryEGL> sEGLLibrary;
 };
 
-extern GLLibraryEGL sEGLLibrary;
-#define EGL_DISPLAY()        sEGLLibrary.Display()
+#define EGL_DISPLAY()        GLLibraryEGL::Get()->Display()
 
 } /* namespace gl */
 } /* namespace mozilla */

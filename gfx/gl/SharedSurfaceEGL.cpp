@@ -23,7 +23,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
                                bool hasAlpha,
                                EGLContext context)
 {
-    GLLibraryEGL* egl = &sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     MOZ_ASSERT(egl);
     MOZ_ASSERT(context);
 
@@ -157,7 +157,8 @@ SharedSurface_EGLImage::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surfa
 {
     MOZ_ASSERT(out_surface);
     MOZ_ASSERT(NS_IsMainThread());
-    return sEGLLibrary.ReadbackEGLImage(mImage, out_surface);
+    auto* egl = gl::GLLibraryEGL::Get();
+    return egl->ReadbackEGLImage(mImage, out_surface);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -172,7 +173,7 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
     typedef SurfaceFactory_EGLImage ptrT;
     UniquePtr<ptrT> ret;
 
-    GLLibraryEGL* egl = &sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     if (SharedSurface_EGLImage::HasExtensions(egl, prodGL)) {
         ret.reset( new ptrT(prodGL, caps, allocator, flags, context) );
     }
