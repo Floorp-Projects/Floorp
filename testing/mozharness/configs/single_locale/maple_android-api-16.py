@@ -32,7 +32,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": "nightly-maple",
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android",
 
     # Balrog
