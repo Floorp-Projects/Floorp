@@ -52,11 +52,9 @@ configuration_tokens = ('branch',
 # some other values such as "%(version)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
-runtime_config_tokens = ('version', 'locale', 'from_buildid',
-                         'abs_objdir', 'revision',
-                         'to_buildid', 'en_us_binary_url',
-                         'en_us_installer_binary_url', 'mar_tools_url',
-                         'who')
+runtime_config_tokens = ('version', 'locale', 'abs_objdir', 'revision',
+                         'en_us_binary_url', 'en_us_installer_binary_url',
+                         'mar_tools_url')
 
 
 # DesktopSingleLocale {{{1
