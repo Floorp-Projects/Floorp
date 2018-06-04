@@ -8915,6 +8915,9 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     return result;
 }
 
+// Used to allocate memory when jemalloc isn't yet initialized.
+JS_DECLARE_NEW_METHODS(SystemAlloc_New, malloc, static)
+
 static void
 SetOutputFile(const char* const envVar,
               RCFile* defaultOut,
@@ -8925,9 +8928,12 @@ SetOutputFile(const char* const envVar,
     const char* outPath = getenv(envVar);
     FILE* newfp;
     if (outPath && *outPath && (newfp = fopen(outPath, "w")))
-        outFile = js_new<RCFile>(newfp);
+        outFile = SystemAlloc_New<RCFile>(newfp);
     else
         outFile = defaultOut;
+
+    if (!outFile)
+        MOZ_CRASH("Failed to allocate output file");
 
     outFile->acquire();
     *outFileP = outFile;
