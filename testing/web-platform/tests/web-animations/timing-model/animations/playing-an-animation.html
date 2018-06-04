@@ -36,6 +36,23 @@ test(t => {
   assert_time_equals_literal(animation.currentTime, 100 * MS_PER_SEC);
 }, 'Playing a finished and reversed animation seeks to end');
 
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.finish();
+
+  // Initiate a pause then abort it
+  animation.pause();
+  animation.play();
+
+  // Wait to return to running state
+  await animation.ready;
+
+  assert_true(animation.currentTime < 100 * 1000,
+              'After aborting a pause when finished, the current time should'
+              + ' jump back to the start of the animation');
+}, 'Playing a pause-pending but previously finished animation seeks back to'
+   + ' to the start');
+
 test(t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.cancel();
