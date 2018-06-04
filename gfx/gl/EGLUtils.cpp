@@ -5,6 +5,7 @@
 #include "EGLUtils.h"
 
 #include "GLContextEGL.h"
+#include "GLLibraryEGL.h"
 
 namespace mozilla {
 namespace gl {
@@ -12,8 +13,10 @@ namespace gl {
 bool
 DoesEGLContextSupportSharingWithEGLImage(GLContext* gl)
 {
-    return sEGLLibrary.HasKHRImageBase() &&
-           sEGLLibrary.HasKHRImageTexture2D() &&
+    auto* egl = gl::GLLibraryEGL::Get();
+
+    return egl->HasKHRImageBase() &&
+           egl->HasKHRImageTexture2D() &&
            gl->IsExtensionSupported(GLContext::OES_EGL_image);
 }
 
@@ -22,13 +25,15 @@ CreateEGLImage(GLContext* gl, GLuint tex)
 {
     MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
+    auto* egl = gl::GLLibraryEGL::Get();
+
     EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
     EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
-    EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
-                                              eglContext,
-                                              LOCAL_EGL_GL_TEXTURE_2D,
-                                              clientBuffer,
-                                              nullptr);
+    EGLImage image = egl->fCreateImage(EGL_DISPLAY(),
+                                       eglContext,
+                                       LOCAL_EGL_GL_TEXTURE_2D,
+                                       clientBuffer,
+                                       nullptr);
     return image;
 }
 
@@ -40,29 +45,41 @@ EGLImageWrapper::Create(GLContext* gl, GLuint tex)
 {
     MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
-    GLLibraryEGL& library = sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
+
     EGLDisplay display = EGL_DISPLAY();
     EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
     EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
-    EGLImage image = library.fCreateImage(display,
-                                          eglContext,
-                                          LOCAL_EGL_GL_TEXTURE_2D,
-                                          clientBuffer,
-                                          nullptr);
+    EGLImage image = egl->fCreateImage(display,
+                                       eglContext,
+                                       LOCAL_EGL_GL_TEXTURE_2D,
+                                       clientBuffer,
+                                       nullptr);
     if (!image) {
 #ifdef DEBUG
         printf_stderr("Could not create EGL images: ERROR (0x%04x)\n",
-                      sEGLLibrary.fGetError());
+                      egl->fGetError());
 #endif
         return nullptr;
     }
 
-    return new EGLImageWrapper(library, display, image);
+    return new EGLImageWrapper(egl, display, image);
+}
+
+EGLImageWrapper::EGLImageWrapper(GLLibraryEGL* library,
+                                 EGLDisplay display,
+                                 EGLImage image)
+    : mLibrary(library)
+    , mDisplay(display)
+    , mImage(image)
+    , mSync(0)
+{
+    MOZ_ASSERT(mImage);
 }
 
 EGLImageWrapper::~EGLImageWrapper()
 {
-    mLibrary.fDestroyImage(mDisplay, mImage);
+    mLibrary->fDestroyImage(mDisplay, mImage);
 }
 
 bool
@@ -70,10 +87,10 @@ EGLImageWrapper::FenceSync(GLContext* gl)
 {
     MOZ_ASSERT(!mSync);
 
-    if (mLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
-        mSync = mLibrary.fCreateSync(mDisplay,
-                                     LOCAL_EGL_SYNC_FENCE,
-                                     nullptr);
+    if (mLibrary->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+        mSync = mLibrary->fCreateSync(mDisplay,
+                                      LOCAL_EGL_SYNC_FENCE,
+                                      nullptr);
         // We need to flush to make sure the sync object enters the command stream;
         // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
         // happens on a different thread/context.
@@ -100,11 +117,11 @@ EGLImageWrapper::ClientWaitSync()
     const uint64_t ns_per_ms = 1000 * 1000;
     EGLTime timeout = 1000 * ns_per_ms;
 
-    EGLint result = mLibrary.fClientWaitSync(mDisplay,
-                                             mSync,
-                                             0,
-                                             timeout);
-    mLibrary.fDestroySync(mDisplay, mSync);
+    EGLint result = mLibrary->fClientWaitSync(mDisplay,
+                                              mSync,
+                                              0,
+                                              timeout);
+    mLibrary->fDestroySync(mDisplay, mSync);
     mSync = nullptr;
 
     return result == LOCAL_EGL_CONDITION_SATISFIED;

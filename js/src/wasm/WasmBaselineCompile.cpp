@@ -9779,7 +9779,6 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleGreaterThanOrEqual));
 
           // Sign extensions
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
           case uint16_t(Op::I32Extend8S):
             CHECK_NEXT(emitConversion(emitExtendI32_8, ValType::I32, ValType::I32));
           case uint16_t(Op::I32Extend16S):
@@ -9790,7 +9789,6 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversion(emitExtendI64_16, ValType::I64, ValType::I64));
           case uint16_t(Op::I64Extend32S):
             CHECK_NEXT(emitConversion(emitExtendI64_32, ValType::I64, ValType::I64));
-#endif
 
           // Memory Related
           case uint16_t(Op::GrowMemory):
