@@ -103,6 +103,8 @@ public:
     void UnbindTex2DOffscreen(GLContext* aOffscreen);
     void BindOffscreenFramebuffer();
 
+    void Destroy();
+
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
                                      const gfx::IntSize& size,
@@ -116,6 +118,7 @@ protected:
 public:
     const EGLConfig mConfig;
 protected:
+    const RefPtr<GLLibraryEGL> mEgl;
     EGLSurface mSurface;
     const EGLSurface mFallbackSurface;
 public:
