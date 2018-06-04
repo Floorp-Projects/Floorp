@@ -95,8 +95,8 @@ RootActor (root.js)
    |   Returned by "getProcess" request with a id argument, matching the
    |   targeted process.
    |
-   \-- BrowserAddonActor (addon.js)
-       Targets the javascript of add-ons.
+   \-- AddonTargetActor (addon.js)
+       Targets a legacy (non-WebExtension) add-on.
        Returned by "listAddons" request.
 ```
 

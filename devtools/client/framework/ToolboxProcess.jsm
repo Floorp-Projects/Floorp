@@ -113,7 +113,7 @@ BrowserToolboxProcess.getBrowserToolboxSessionState = function() {
 };
 
 /**
- * Passes a set of options to the BrowserAddonActors for the given ID.
+ * Passes a set of options to the AddonTargetActors for the given ID.
  *
  * @param id string
  *        The ID of the add-on to pass the options to

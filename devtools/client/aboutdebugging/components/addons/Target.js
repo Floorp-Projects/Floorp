@@ -156,7 +156,7 @@ class AddonTarget extends Component {
       connect: PropTypes.object,
       debugDisabled: PropTypes.bool,
       target: PropTypes.shape({
-        addonActor: PropTypes.string.isRequired,
+        addonTargetActor: PropTypes.string.isRequired,
         addonID: PropTypes.string.isRequired,
         form: PropTypes.object.isRequired,
         icon: PropTypes.string,
@@ -195,7 +195,7 @@ class AddonTarget extends Component {
     const { AboutDebugging } = window;
     try {
       await client.request({
-        to: target.addonActor,
+        to: target.addonTargetActor,
         type: "reload"
       });
       AboutDebugging.emit("addon-reload");

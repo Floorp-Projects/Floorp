@@ -350,8 +350,9 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
-    return !!(this._form && this._form.actor &&
-              this._form.actor.match(/conn\d+\.addon\d+/)) || this.isWebExtension;
+    const isLegacyAddon = !!(this._form && this._form.actor &&
+      this._form.actor.match(/conn\d+\.addon(Target)?\d+/));
+    return isLegacyAddon || this.isWebExtension;
   },
 
   get isWebExtension() {
@@ -420,7 +421,7 @@ TabTarget.prototype = {
       this._chrome = false;
     } else if (this._form.isWebExtension &&
           this.client.mainRoot.traits.webExtensionAddonConnect) {
-      // The addonActor form is related to a WebExtensionParentActor instance,
+      // The addonTargetActor form is related to a WebExtensionParentActor instance,
       // which isn't a target actor on its own, it is an actor living in the parent
       // process with access to the addon metadata, it can control the addon (e.g.
       // reloading it) and listen to the AddonManager events related to the lifecycle of
