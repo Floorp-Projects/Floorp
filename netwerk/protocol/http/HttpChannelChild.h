@@ -146,7 +146,6 @@ protected:
                                              const uint32_t& cacheKey,
                                              const nsCString& altDataType,
                                              const int64_t& altDataLen,
-                                             const OptionalIPCServiceWorkerDescriptor& aController,
                                              const bool& aApplyConversion) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(const uint32_t& registrarId,
@@ -420,7 +419,6 @@ private:
                       const uint32_t& cacheKey,
                       const nsCString& altDataType,
                       const int64_t& altDataLen,
-                      const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
                       const bool& aApplyConversion);
   void MaybeDivertOnData(const nsCString& data,
                          const uint64_t& offset,
