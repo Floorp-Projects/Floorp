@@ -5383,21 +5383,19 @@ class ImmediateSweepWeakCacheTask : public GCParallelTaskHelper<ImmediateSweepWe
 };
 
 static void
-UpdateAtomsBitmap(GCParallelTask* task)
+UpdateAtomsBitmap(JSRuntime* runtime)
 {
-    JSRuntime* runtime = task->runtime();
-
     DenseBitmap marked;
     if (runtime->gc.atomMarking.computeBitmapFromChunkMarkBits(runtime, marked)) {
         for (GCZonesIter zone(runtime); !zone.done(); zone.next())
-            runtime->gc.atomMarking.updateZoneBitmap(zone, marked);
+            runtime->gc.atomMarking.refineZoneBitmapForCollectedZone(zone, marked);
     } else {
-        // Ignore OOM in computeBitmapFromChunkMarkBits. The updateZoneBitmap
-        // call can only remove atoms from the zone bitmap, so it is
-        // conservative to just not call it.
+        // Ignore OOM in computeBitmapFromChunkMarkBits. The
+        // refineZoneBitmapForCollectedZone call can only remove atoms from the
+        // zone bitmap, so it is conservative to just not call it.
     }
 
-    runtime->gc.atomMarking.updateChunkMarkBits(runtime);
+    runtime->gc.atomMarking.markAtomsUsedByUncollectedZones(runtime);
 
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
@@ -5700,14 +5698,18 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         callFinalizeCallbacks(fop, JSFINALIZE_GROUP_START);
     }
 
+    // Updating the atom marking bitmaps. This marks atoms referenced by
+    // uncollected zones so cannot be done in parallel with the other sweeping
+    // work below.
+    if (sweepingAtoms) {
+        AutoPhase ap(stats(), PhaseKind::UPDATE_ATOMS_BITMAP);
+        UpdateAtomsBitmap(rt);
+    }
+
     sweepDebuggerOnMainThread(fop);
 
     {
         AutoLockHelperThreadState lock;
-
-        Maybe<AutoRunParallelTask> updateAtomsBitmap;
-        if (sweepingAtoms)
-            updateAtomsBitmap.emplace(rt, UpdateAtomsBitmap, PhaseKind::UPDATE_ATOMS_BITMAP, lock);
 
         AutoPhase ap(stats(), PhaseKind::SWEEP_COMPARTMENTS);
 
