@@ -29,7 +29,7 @@ add_task(async function() {
 
   let matches = uris.map(uri => ({ uri: Services.io.newURI(uri),
                                    title: "test visit for " + uri }));
-  let book_index = Math.ceil(Services.prefs.getIntPref("browser.urlbar.maxRichResults") / 4);
+  let book_index = Math.ceil(Services.prefs.getIntPref("browser.urlbar.maxRichResults", 10) / 4);
   matches.splice(book_index, 0, { uri: Services.io.newURI(bm.url.href),
                                   title: "test_book", "style": ["bookmark"] });
 
