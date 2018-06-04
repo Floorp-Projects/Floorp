@@ -141,23 +141,6 @@ IsXrayWrapper(JSObject* obj);
 JSObject*
 XrayAwareCalleeGlobal(JSObject* fun);
 
-// A version of XrayAwareCalleeGlobal that can be used from a binding
-// specialized getter.  We need this function because in a specialized getter we
-// don't have a callee JSFunction, so can't use xpc::XrayAwareCalleeGlobal.
-// Instead we do something a bit hacky using our current compartment and "this"
-// value.  Note that for the Xray case thisObj will NOT be in the compartment of
-// "cx".
-//
-// As expected, the outparam "global" need not be same-compartment with either
-// thisObj or cx, though it _will_ be same-compartment with one of them.
-//
-// This function can fail; the return value indicates success or failure.
-bool
-XrayAwareCalleeGlobalForSpecializedGetters(JSContext* cx,
-                                           JS::Handle<JSObject*> thisObj,
-                                           JS::MutableHandle<JSObject*> global);
-
-
 void
 TraceXPCGlobal(JSTracer* trc, JSObject* obj);
 

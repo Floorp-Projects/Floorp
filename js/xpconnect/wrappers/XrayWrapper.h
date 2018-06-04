@@ -37,9 +37,6 @@ namespace XrayUtils {
 bool
 IsTransparent(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id);
 
-JSObject*
-GetNativePropertiesObject(JSContext* cx, JSObject* wrapper);
-
 bool
 HasNativeProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                   bool* hasProp);
@@ -464,8 +461,6 @@ extern template class PermissiveXrayDOM;
 extern template class SecurityXrayDOM;
 extern template class PermissiveXrayJS;
 extern template class PermissiveXrayOpaque;
-
-class AutoSetWrapperNotShadowing;
 
 /*
  * Slots for Xray expando objects.  See comments in XrayWrapper.cpp for details
