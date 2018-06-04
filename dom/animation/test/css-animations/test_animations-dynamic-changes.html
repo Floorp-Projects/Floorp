@@ -21,15 +21,13 @@ promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim1 100s';
   const originalAnimation = div.getAnimations()[0];
-  let originalStartTime;
-  let originalCurrentTime;
 
   // Wait a moment so we can confirm the startTime doesn't change (and doesn't
   // simply reflect the current time).
   await originalAnimation.ready;
 
-  originalStartTime = originalAnimation.startTime;
-  originalCurrentTime = originalAnimation.currentTime;
+  const originalStartTime = originalAnimation.startTime;
+  const originalCurrentTime = originalAnimation.currentTime;
 
   // Wait a moment so we can confirm the startTime doesn't change (and
   // doesn't simply reflect the current time).
@@ -89,17 +87,18 @@ promise_test(async t => {
   assert_true(animations[0] !== animation1 && animations[0] !== animation2,
               'New Animation is prepended to start of list');
   assert_equals(animations[1], animation1,
-                'First Animation is in second position after update');
+                'First animation is in second position after update');
   assert_equals(animations[2], animation2,
-                'Second Animation is in third position after update');
+                'Second animation is in third position after update');
   assert_equals(animations[1].startTime, animations[2].startTime,
-                'Old Animations have the same start time');
+                'Old animations have the same start time');
+  assert_equals(animations[0].startTime, null,
+                'New animation has a null start time');
 
-  // TODO: Check that animations[0].startTime === null
   await animations[0].ready;
 
   assert_greater_than(animations[0].startTime, animations[1].startTime,
-                      'New Animation has later start time');
+                      'New animation has later start time');
 }, 'Only the startTimes of existing animations are preserved');
 
 promise_test(async t => {
@@ -129,22 +128,20 @@ promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim1 100s';
   const firstAddedAnimation = div.getAnimations()[0];
-  let secondAddedAnimation;
-  let animations;
 
   // Wait and add second Animation
   await firstAddedAnimation.ready;
   await waitForFrame();
 
   div.style.animation = 'anim1 100s, anim1 100s';
-  secondAddedAnimation = div.getAnimations()[0];
+  const secondAddedAnimation = div.getAnimations()[0];
 
   // Wait again and add another Animation
   await secondAddedAnimation.ready;
   await waitForFrame();
 
   div.style.animation = 'anim1 100s, anim2 100s, anim1 100s';
-  animations = div.getAnimations();
+  const animations = div.getAnimations();
   assert_not_equals(firstAddedAnimation, secondAddedAnimation,
                     'New Animations are added to start of the list');
   assert_equals(animations[0], secondAddedAnimation,
