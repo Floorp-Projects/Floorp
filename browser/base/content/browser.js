@@ -3756,8 +3756,8 @@ const DOMEventHandler = {
         break;
 
       case "Link:SetIcon":
-        this.setIcon(aMsg.target, aMsg.data.url, aMsg.data.loadingPrincipal,
-                     aMsg.data.requestContextID, aMsg.data.canUseForTab);
+        this.setIconFromLink(aMsg.target, aMsg.data.originalURL, aMsg.data.loadingPrincipal,
+                             aMsg.data.canUseForTab, aMsg.data.expiration, aMsg.data.iconURL);
         break;
 
       case "Link:AddSearch":
@@ -3776,21 +3776,16 @@ const DOMEventHandler = {
     return true;
   },
 
-  setIcon(aBrowser, aURL, aLoadingPrincipal, aRequestContextID = 0, aCanUseForTab = true) {
-    if (gBrowser.isFailedIcon(aURL))
-      return false;
-
+  setIconFromLink(aBrowser, aOriginalURL, aLoadingPrincipal, aCanUseForTab, aExpiration, aIconURL = aOriginalURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab)
       return false;
 
     let loadingPrincipal = aLoadingPrincipal ||
                            Services.scriptSecurityManager.getSystemPrincipal();
-    if (aURL) {
-      gBrowser.storeIcon(aBrowser, aURL, loadingPrincipal, aRequestContextID);
-    }
+    gBrowser.storeIcon(aBrowser, aOriginalURL, loadingPrincipal, aExpiration, aOriginalURL);
     if (aCanUseForTab) {
-      gBrowser.setIcon(tab, aURL, loadingPrincipal, aRequestContextID);
+      gBrowser.setIcon(tab, aIconURL, aOriginalURL);
     }
     return true;
   },
