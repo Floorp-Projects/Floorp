@@ -316,20 +316,26 @@ RenderMinimap(ContainerT* aContainer,
   gfx::Color pageBorderColor(0, 0, 0);
   gfx::Color criticalDisplayPortColor(1.f, 1.f, 0);
   gfx::Color displayPortColor(0, 1.f, 0);
-  gfx::Color viewPortColor(0, 0, 1.f, 0.3f);
+  gfx::Color layoutPortColor(1.f, 0, 0);
+  gfx::Color visualPortColor(0, 0, 1.f, 0.3f);
 
   // Rects
   ParentLayerRect compositionBounds = fm.GetCompositionBounds();
   LayerRect scrollRect = fm.GetScrollableRect() * fm.LayersPixelsPerCSSPixel();
-  LayerRect viewRect = ParentLayerRect(scrollOffset, compositionBounds.Size()) / LayerToParentLayerScale(1);
+  LayerRect visualRect = ParentLayerRect(scrollOffset, compositionBounds.Size()) / LayerToParentLayerScale(1);
   LayerRect dp = (fm.GetDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel();
+  Maybe<LayerRect> layoutRect;
   Maybe<LayerRect> cdp;
+  if (fm.IsRootContent()) {
+    CSSRect viewport = aSampler->GetCurrentAsyncLayoutViewport(wrapper);
+    layoutRect = Some(viewport * fm.LayersPixelsPerCSSPixel());
+  }
   if (!fm.GetCriticalDisplayPort().IsEmpty()) {
     cdp = Some((fm.GetCriticalDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel());
   }
 
   // Don't render trivial minimap. They can show up from textboxes and other tiny frames.
-  if (viewRect.Width() < 64 && viewRect.Height() < 64) {
+  if (visualRect.Width() < 64 && visualRect.Height() < 64) {
     return;
   }
 
@@ -374,9 +380,16 @@ RenderMinimap(ContainerT* aContainer,
     compositor->SlowDrawRect(r, criticalDisplayPortColor, clipRect, aContainer->GetEffectiveTransform());
   }
 
-  // Render the viewport.
-  r = transform.TransformBounds(viewRect.ToUnknownRect());
-  compositor->SlowDrawRect(r, viewPortColor, clipRect, aContainer->GetEffectiveTransform(), 2);
+  // Render the layout viewport if it exists (which is only in the root
+  // content APZC).
+  if (layoutRect) {
+    r = transform.TransformBounds(layoutRect->ToUnknownRect());
+    compositor->SlowDrawRect(r, layoutPortColor, clipRect, aContainer->GetEffectiveTransform());
+  }
+
+  // Render the visual viewport.
+  r = transform.TransformBounds(visualRect.ToUnknownRect());
+  compositor->SlowDrawRect(r, visualPortColor, clipRect, aContainer->GetEffectiveTransform(), 2);
 }
 
 template<class ContainerT> void
