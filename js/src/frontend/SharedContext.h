@@ -400,17 +400,17 @@ class FunctionBox : public ObjectBox, public SharedContext
                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
-        MOZ_ASSERT(context->keepAtoms);
+        MOZ_ASSERT(context->zone()->hasKeptAtoms());
         return MutableHandle<LexicalScope::Data*>::fromMarkedLocation(&namedLambdaBindings_);
     }
 
     MutableHandle<FunctionScope::Data*> functionScopeBindings() {
-        MOZ_ASSERT(context->keepAtoms);
+        MOZ_ASSERT(context->zone()->hasKeptAtoms());
         return MutableHandle<FunctionScope::Data*>::fromMarkedLocation(&functionScopeBindings_);
     }
 
     MutableHandle<VarScope::Data*> extraVarScopeBindings() {
-        MOZ_ASSERT(context->keepAtoms);
+        MOZ_ASSERT(context->zone()->hasKeptAtoms());
         return MutableHandle<VarScope::Data*>::fromMarkedLocation(&extraVarScopeBindings_);
     }
 
