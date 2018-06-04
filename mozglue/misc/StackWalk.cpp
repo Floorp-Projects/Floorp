@@ -507,9 +507,15 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
     return;
   }
 
-  HANDLE currentThread = ::GetCurrentThread();
-  HANDLE targetThread = aThread ? aThread : currentThread;
-  data.walkCallingThread = (targetThread == currentThread);
+  HANDLE targetThread = aThread;
+  if (!aThread) {
+    targetThread = ::GetCurrentThread();
+    data.walkCallingThread = true;
+  } else {
+    DWORD threadId = ::GetThreadId(aThread);
+    DWORD currentThreadId = ::GetCurrentThreadId();
+    data.walkCallingThread = (threadId == currentThreadId);
+  }
 
   // Have to duplicate handle to get a real handle.
   if (!myProcess) {
