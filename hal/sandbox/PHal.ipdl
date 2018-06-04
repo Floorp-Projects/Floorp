@@ -13,8 +13,6 @@ using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientatio
 using mozilla::hal::SensorType from "mozilla/HalSensor.h";
 using mozilla::hal::SensorAccuracyType from "mozilla/HalSensor.h";
 using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
-using mozilla::hal::SwitchState from "mozilla/HalTypes.h";
-using mozilla::hal::SwitchDevice from "mozilla/HalTypes.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using nsIntRect from "nsRect.h";
 using PRTime from "prtime.h";
@@ -39,11 +37,6 @@ struct NetworkInformation {
   uint32_t type;
   bool   isWifi;
   uint32_t dhcpGateway;
-};
-
-struct SwitchEvent {
-  SwitchDevice device;
-  SwitchState status;
 };
 
 struct WakeLockInformation {
@@ -73,7 +66,6 @@ child:
     async NotifyNetworkChange(NetworkInformation aNetworkInfo);
     async NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
     async NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
-    async NotifySwitchChange(SwitchEvent aEvent);
 
 parent:
     async Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
@@ -103,9 +95,6 @@ parent:
     sync LockScreenOrientation(ScreenOrientationInternal aOrientation)
       returns (bool allowed);
     async UnlockScreenOrientation();
- 
-    async EnableSwitchNotifications(SwitchDevice aDevice);
-    async DisableSwitchNotifications(SwitchDevice aDevice);
 
 child:
     async NotifySensorChange(SensorData aSensorData);
