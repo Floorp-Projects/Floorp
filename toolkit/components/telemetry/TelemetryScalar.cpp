@@ -1270,6 +1270,29 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
 void internal_ApplyPendingOperations(const StaticMutexAutoLock& lock);
 
 /**
+ * Record that the high-water mark for the pending operations list was reached once.
+ *
+ * Important:
+ * This appends one additional operation.
+ * This needs to happen while still in deserialization mode.
+ */
+void internal_RecordHighwatermarkReached(const StaticMutexAutoLock& lock)
+{
+  MOZ_ASSERT(gIsDeserializing);
+  MOZ_ASSERT(gScalarsActions);
+
+  // We can't call `internal_RecordScalarAction` here, because we are already
+  // getting called from there after the high-water mark check.
+  // But we know that `gScalarsActions` is a valid array and can append directly.
+  ScalarID id = ScalarID::TELEMETRY_PENDING_OPERATIONS_HIGHWATERMARK_REACHED;
+  ScalarAction action{
+    static_cast<uint32_t>(id), false, ScalarActionType::eAdd,
+    Some(ScalarVariant(1u)), ProcessID::Parent
+  };
+  gScalarsActions->AppendElement(action);
+}
+
+/**
  * Record the given action on a scalar into the pending actions list.
  *
  * If the pending actions list overflows the high water mark length
@@ -1294,6 +1317,7 @@ internal_RecordScalarAction(const StaticMutexAutoLock& lock,
   // If loading still happens afterwards, some scalar values might be
   // overwritten and inconsistent, but we won't lose operations on otherwise untouched probes.
   if (gScalarsActions->Length() > kScalarActionsArrayHighWaterMark) {
+    internal_RecordHighwatermarkReached(lock);
     internal_ApplyPendingOperations(lock);
     return;
   }
@@ -1346,6 +1370,7 @@ internal_RecordKeyedScalarAction(const StaticMutexAutoLock& lock,
   // If loading still happens afterwards, some scalar values might be
   // overwritten and inconsistent, but we won't lose operations on otherwise untouched probes.
   if (gKeyedScalarsActions->Length() > kScalarActionsArrayHighWaterMark) {
+    internal_RecordHighwatermarkReached(lock);
     internal_ApplyPendingOperations(lock);
     return;
   }

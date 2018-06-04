@@ -1270,6 +1270,22 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  pending_operations_highwatermark_reached:
+    bug_numbers:
+      - 1465052
+    description: >
+      The number of times the pending operations list reached the
+      high-water mark, leading to operations being applied immediately.
+    expires: "65"
+    kind: uint
+    keyed: false
+    notification_emails:
+      - jrediger@mozilla.com
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
