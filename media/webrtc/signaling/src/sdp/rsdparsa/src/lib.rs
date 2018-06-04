@@ -616,6 +616,16 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
                 }
             }
         }
+        if msection.get_attribute(SdpAttributeType::Recvonly).is_some() {
+            if let Some(&SdpAttribute::Simulcast(ref x)) = msection.get_attribute(SdpAttributeType::Simulcast) {
+                if x.send.len() > 0 {
+                    return Err(SdpParserError::Sequence {
+                        message: "Simulcast can't define send parameters for recvonly".to_string(),
+                        line_number: 0,
+                    });
+                }
+            }
+        }
     }
 
     Ok(())
