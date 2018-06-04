@@ -88,7 +88,7 @@ var onConnectionReady = async function([aType, aTraits]) {
     // listAddons throws if the runtime doesn't support addons
   }
 
-  let parent = document.getElementById("addonActors");
+  let parent = document.getElementById("addonTargetActors");
   if (addons.length > 0) {
     // Add one entry for each add-on.
     for (const addon of addons) {

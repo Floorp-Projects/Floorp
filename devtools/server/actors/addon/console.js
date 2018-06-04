@@ -30,7 +30,7 @@ const addonConsolePrototype = extend({}, WebConsoleActor.prototype);
  * @param object connection
  *        The connection to the client, DebuggerServerConnection.
  * @param object parentActor
- *        The parent BrowserAddonActor actor.
+ *        The parent AddonTargetActor actor.
  */
 addonConsolePrototype.initialize = function(addon, connection, parentActor) {
   this.addon = addon;
