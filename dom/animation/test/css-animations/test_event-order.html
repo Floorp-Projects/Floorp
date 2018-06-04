@@ -23,7 +23,7 @@
  *        events, each having the form:
  *          [ event type, target element, elapsed time ]
  */
-function checkEvents(actualEvents, ...expectedEvents) {
+const checkEvents = (actualEvents, ...expectedEvents) => {
   assert_equals(actualEvents.length, expectedEvents.length,
                 `Number of actual events (${actualEvents.length}: \
 ${actualEvents.map(event => event.type).join(', ')}) should match expected \
@@ -37,9 +37,9 @@ events (${expectedEvents.map(event => event.type).join(', ')})`);
     assert_equals(expectedEvents[i][2], actualEvent.elapsedTime,
                   'Event\'s elapsed time should match');
   });
-}
+};
 
-function setupAnimation(t, animationStyle, receiveEvents) {
+const setupAnimation = (t, animationStyle, receiveEvents) => {
   const div = addDiv(t, { style: "animation: " + animationStyle });
 
   ['start', 'iteration', 'end'].forEach(name => {
@@ -57,7 +57,7 @@ function setupAnimation(t, animationStyle, receiveEvents) {
   const animation = div.getAnimations()[0];
 
   return [animation, watcher, div];
-}
+};
 
 promise_test(t => {
   let events = [];
