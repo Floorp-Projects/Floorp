@@ -38,22 +38,20 @@ test(t => {
               'infinite animation');
 }, 'Test exceptions when finishing infinite animation');
 
-async_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL + ' paused';
   const animation = div.getAnimations()[0];
+  await animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    animation.finish();
-    assert_equals(animation.playState, 'finished',
-                  'The play state of a paused animation should become ' +
-                  '"finished" after finish() is called');
-    assert_times_equal(animation.startTime,
-                       animation.timeline.currentTime - ANIM_DURATION,
-                       'The start time of a paused animation should be set ' +
-                       'after calling finish()');
-    t.done();
-  }));
+  animation.finish();
+  assert_equals(animation.playState, 'finished',
+                'The play state of a paused animation should become ' +
+                '"finished" after finish() is called');
+  assert_times_equal(animation.startTime,
+                     animation.timeline.currentTime - ANIM_DURATION,
+                     'The start time of a paused animation should be set ' +
+                     'after calling finish()');
 }, 'Test finish() while paused');
 
 test(t => {
