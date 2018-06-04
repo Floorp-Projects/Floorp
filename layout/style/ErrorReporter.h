@@ -22,11 +22,14 @@ namespace css {
 
 class Loader;
 
-class ErrorReporter {
+// FIXME(emilio): Probably better to call this ErrorBuilder or something?
+class MOZ_STACK_CLASS ErrorReporter final
+{
 public:
   ErrorReporter(const StyleSheet* aSheet,
                 const Loader* aLoader,
                 nsIURI* aURI);
+
   ~ErrorReporter();
 
   static void ReleaseGlobals();
@@ -38,8 +41,8 @@ public:
   }
 
   static bool ShouldReportErrors(const nsIDocument&);
-
-  bool ShouldReportErrors();
+  static bool ShouldReportErrors(const StyleSheet* aSheet,
+                                 const Loader* aLoader);
 
   void OutputError(uint32_t aLineNumber,
                    uint32_t aLineOffset,
@@ -64,13 +67,12 @@ private:
   static bool sInitialized;
   static bool sReportErrors;
 
-  nsAutoString mError;
+  nsString mError;
   nsString mErrorLine;
   nsString mFileName;
   const StyleSheet* mSheet;
   const Loader* mLoader;
-  nsIURI *mURI;
-  uint64_t mInnerWindowID;
+  nsIURI* mURI;
   uint32_t mErrorLineNumber;
   uint32_t mPrevErrorLineNumber;
   uint32_t mErrorColNumber;
