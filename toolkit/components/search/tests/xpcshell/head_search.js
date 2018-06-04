@@ -232,7 +232,7 @@ function isUSTimezone() {
 
 const kDefaultenginenamePref = "browser.search.defaultenginename";
 const kTestEngineName = "Test search engine";
-const REQ_LOCALES_CHANGED_TOPIC = "intl:requested-locales-changed";
+const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 
 function getDefaultEngineName(isUS) {
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
@@ -463,7 +463,7 @@ function asyncReInit() {
   let promise = waitForSearchNotification("reinit-complete");
 
   Services.search.QueryInterface(Ci.nsIObserver)
-          .observe(null, REQ_LOCALES_CHANGED_TOPIC, null);
+          .observe(null, TOPIC_LOCALES_CHANGE, null);
 
   return promise;
 }

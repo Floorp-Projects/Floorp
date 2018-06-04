@@ -44,11 +44,5 @@ with Files("all-locales"):
 with Files("en-US/**"):
     BUG_COMPONENT = ("Core", "Localization")
 
-with Files("search/**"):
-    BUG_COMPONENT = ("Firefox", "Search")
-
-with Files("searchplugins/**"):
-    BUG_COMPONENT = ("Firefox", "Search")
-
 with Files("shipped-locales"):
     BUG_COMPONENT = ("Core", "Localization")

@@ -48,3 +48,7 @@ res/table-remove-row.gif
 res/multilocale.txt
 modules/commonjs/index.js
 update.locale
+chrome/chrome/searchplugins/bolcom-fy-NL.xml
+chrome/chrome/searchplugins/bolcom-nl.xml
+chrome/chrome/searchplugins/ddg.xml
+chrome/chrome/searchplugins/duckduckgo.xml
