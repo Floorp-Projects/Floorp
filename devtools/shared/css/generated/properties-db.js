@@ -1388,71 +1388,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "-moz-window-opacity": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-opacity"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "unset"
-    ]
-  },
-  "-moz-window-transform": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-transform"
-    ],
-    "supports": [],
-    "values": [
-      "accumulatematrix",
-      "inherit",
-      "initial",
-      "interpolatematrix",
-      "matrix",
-      "matrix3d",
-      "none",
-      "perspective",
-      "rotate",
-      "rotate3d",
-      "rotateX",
-      "rotateY",
-      "rotateZ",
-      "scale",
-      "scale3d",
-      "scaleX",
-      "scaleY",
-      "scaleZ",
-      "skew",
-      "skewX",
-      "skewY",
-      "translate",
-      "translate3d",
-      "translateX",
-      "translateY",
-      "translateZ",
-      "unset"
-    ]
-  },
-  "-moz-window-transform-origin": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-transform-origin"
-    ],
-    "supports": [],
-    "values": [
-      "bottom",
-      "center",
-      "inherit",
-      "initial",
-      "left",
-      "right",
-      "top",
-      "unset"
-    ]
-  },
   "-webkit-align-content": {
     "isInherited": false,
     "subproperties": [
@@ -2968,6 +2903,14 @@ exports.CSS_PROPERTIES = {
       "text-combine-upright",
       "text-rendering",
       "-moz-control-character-visibility",
+      "cursor",
+      "pointer-events",
+      "-moz-user-input",
+      "-moz-user-modify",
+      "-moz-user-focus",
+      "caret-color",
+      "scrollbar-face-color",
+      "scrollbar-track-color",
       "list-style-position",
       "list-style-type",
       "list-style-image",
@@ -2989,12 +2932,6 @@ exports.CSS_PROPERTIES = {
       "padding-right",
       "padding-bottom",
       "padding-left",
-      "cursor",
-      "pointer-events",
-      "-moz-user-input",
-      "-moz-user-modify",
-      "-moz-user-focus",
-      "caret-color",
       "top",
       "right",
       "bottom",
@@ -3042,9 +2979,6 @@ exports.CSS_PROPERTIES = {
       "ime-mode",
       "-moz-user-select",
       "-moz-window-dragging",
-      "-moz-window-opacity",
-      "-moz-window-transform",
-      "-moz-window-transform-origin",
       "-moz-force-broken-image-icon",
       "text-anchor",
       "color-interpolation",
@@ -9256,6 +9190,14 @@ exports.PREFERENCES = [
   [
     "scroll-snap-type-y",
     "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "scrollbar-face-color",
+    "layout.css.scrollbar-colors.enabled"
+  ],
+  [
+    "scrollbar-track-color",
+    "layout.css.scrollbar-colors.enabled"
   ],
   [
     "shape-image-threshold",
