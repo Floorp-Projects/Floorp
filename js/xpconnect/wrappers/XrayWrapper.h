@@ -146,10 +146,6 @@ class DOMXrayTraits : public XrayTraits
 public:
     constexpr DOMXrayTraits() = default;
 
-    enum {
-        HasPrototype = 1
-    };
-
     static const XrayType Type = XrayForDOMObject;
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
@@ -202,9 +198,6 @@ protected:
 class JSXrayTraits : public XrayTraits
 {
 public:
-    enum {
-        HasPrototype = 1
-    };
     static const XrayType Type = XrayForJSObject;
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
@@ -319,9 +312,6 @@ public:
 class OpaqueXrayTraits : public XrayTraits
 {
 public:
-    enum {
-        HasPrototype = 1
-    };
     static const XrayType Type = XrayForOpaqueObject;
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
@@ -404,12 +394,13 @@ public:
 XrayType GetXrayType(JSObject* obj);
 XrayTraits* GetXrayTraits(JSObject* obj);
 
-// NB: Base *must* derive from JSProxyHandler
 template <typename Base, typename Traits>
 class XrayWrapper : public Base {
+    static_assert(mozilla::IsBaseOf<js::BaseProxyHandler, Base>::value,
+                  "Base *must* derive from js::BaseProxyHandler");
   public:
     constexpr explicit XrayWrapper(unsigned flags)
-      : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG, Traits::HasPrototype)
+      : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG, /* aHasPrototype = */ true)
     { };
 
     /* Standard internal methods. */
@@ -458,28 +449,6 @@ class XrayWrapper : public Base {
     virtual const char* className(JSContext* cx, JS::HandleObject proxy) const override;
 
     static const XrayWrapper singleton;
-
-  private:
-    template <bool HasPrototype>
-    typename mozilla::EnableIf<HasPrototype, bool>::Type
-        getPrototypeHelper(JSContext* cx, JS::HandleObject wrapper,
-                           JS::HandleObject target, JS::MutableHandleObject protop) const
-    {
-        return Traits::singleton.getPrototype(cx, wrapper, target, protop);
-    }
-    template <bool HasPrototype>
-    typename mozilla::EnableIf<!HasPrototype, bool>::Type
-        getPrototypeHelper(JSContext* cx, JS::HandleObject wrapper,
-                           JS::HandleObject target, JS::MutableHandleObject protop) const
-    {
-        return Base::getPrototype(cx, wrapper, protop);
-    }
-    bool getPrototypeHelper(JSContext* cx, JS::HandleObject wrapper,
-                            JS::HandleObject target, JS::MutableHandleObject protop) const
-    {
-        return getPrototypeHelper<Traits::HasPrototype>(cx, wrapper, target,
-                                                        protop);
-    }
 
   protected:
     bool getPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper, unsigned flags,
