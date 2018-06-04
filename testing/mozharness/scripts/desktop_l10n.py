@@ -112,7 +112,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 "list-locales",
                 "setup",
                 "repack",
-                "funsize-props",
                 "summary",
             ],
             'config': {
