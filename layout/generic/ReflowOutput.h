@@ -19,9 +19,6 @@ namespace mozilla {
 struct ReflowInput;
 } // namespace mozilla
 
-// Option flags
-#define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
-
 /**
  * When we store overflow areas as an array of scrollable and visual
  * overflow, we use these indices.
@@ -295,11 +292,6 @@ public:
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
   // Metrics that _exactly_ enclose the text to allow precise MathML placements.
-  // If the NS_REFLOW_CALC_BOUNDING_METRICS flag is set, then the caller is
-  // requesting that you also compute additional details about your inner
-  // bounding box and italic correction. For example, the bounding box of
-  // msup is the smallest rectangle that _exactly_ encloses both the text
-  // of the base and the text of the superscript.
   nsBoundingMetrics mBoundingMetrics;  // [OUT]
 
   // Carried out block-end margin values. This is the collapsed
