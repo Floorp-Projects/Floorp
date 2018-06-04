@@ -14,8 +14,6 @@ module.exports = {
     "WindowBase": true,
     "WindowManagerBase": true,
     "WindowTrackerBase": true,
-    "browserPaintedPromise": true,
-    "browserStartupPromise": true,
     "getContainerForCookieStoreId": true,
     "getCookieStoreIdForContainer": true,
     "getCookieStoreIdForTab": true,
