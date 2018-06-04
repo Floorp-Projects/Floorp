@@ -189,7 +189,7 @@ function synthesizeKey(aEvent, aFocusElementId, aCallback)
 // also keydown/keyup events too.
 function* runKeyEventTests()
 {
-  var name; // Current test name. Needs to be renamed later.
+  var currentTestName;
   var eventList, keyDownFlags, keyUpFlags, testingEvent, expectedDOMKeyCode;
   const kShiftFlag    = 0x1;
   const kCtrlFlag     = 0x2;
@@ -225,40 +225,49 @@ function* runKeyEventTests()
       }
       switch (e.key) {
         case "Shift":
-          is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Shift " + e.type + " event mismatch");
-          is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Shift " + e.type + " event mismatch");
-          is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of Shift " + e.type + " event mismatch");
-          is(e.shiftKey, e.type == "keydown", name + ", Shift of Shift " + e.type + " event mismatch");
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0,
+             currentTestName + ", Ctrl of Shift " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             currentTestName + ", Command of Shift " + e.type + " event mismatch");
+          is(e.altKey, (flags & kAltFlag) != 0,
+             currentTestName + ", Alt of Shift " + e.type + " event mismatch");
+          is(e.shiftKey, e.type == "keydown",
+             currentTestName + ", Shift of Shift " + e.type + " event mismatch");
           // AltGr on Windows is always pressed after and released before Shift key operation.
           is(e.getModifierState("AltGraph"), (IS_MAC && e.altKey),
-             name + ", AltGraph of Shift " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of Shift " + e.type + " event mismatch");
           return (testingEvent.modifiers.shiftKey || testingEvent.modifiers.shiftRightKey) &&
                  removeFlag(e, kShiftFlag) && expectedDOMKeyCode != e.keyCode;
         case "Control":
-          is(e.ctrlKey, e.type == "keydown", name + ", Ctrl of Ctrl " + e.type + " event mismatch");
-          is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Ctrl " + e.type + " event mismatch");
+          is(e.ctrlKey, e.type == "keydown",
+             currentTestName + ", Ctrl of Ctrl " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             currentTestName + ", Command of Ctrl " + e.type + " event mismatch");
           // When AltGr key is released on Windows, ControlLeft keyup event
           // is followed by AltRight keyup event.  However, altKey should be
           // false in such case.
           is(e.altKey, (flags & kAltFlag) != 0 && !(IS_WIN && !!testingEvent.modifiers.altGrKey),
-             name + ", Alt of Ctrl " + e.type + " event mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Ctrl " + e.type + " event mismatch");
+             currentTestName + ", Alt of Ctrl " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of Ctrl " + e.type + " event mismatch");
           is(e.getModifierState("AltGraph"),
              (IS_WIN && !!testingEvent.modifiers.altGrKey && e.type == "keyup") || (IS_MAC && e.altKey),
-             name + ", AltGraph of Ctrl " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of Ctrl " + e.type + " event mismatch");
           return (testingEvent.modifiers.ctrlKey || testingEvent.modifiers.ctrlRightKey ||
                   (IS_WIN && !!testingEvent.modifiers.altGrKey)) &&
                  removeFlag(e, kCtrlFlag) && expectedDOMKeyCode != e.keyCode;
         case "Alt":
           is(e.ctrlKey, (flags & kCtrlFlag) != 0 && !(IS_WIN && !!testingEvent.modifiers.altGrKey),
-             name + ", Ctrl of Alt " + e.type + " event mismatch");
-          is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of Alt " + e.type + " event mismatch");
+             currentTestName + ", Ctrl of Alt " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             currentTestName + ", Command of Alt " + e.type + " event mismatch");
           is(e.altKey, e.type == "keydown" && !(IS_WIN && !!testingEvent.modifiers.altGrKey),
-             name + ", Alt of Alt " + e.type + " event mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Alt " + e.type + " event mismatch");
+             currentTestName + ", Alt of Alt " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of Alt " + e.type + " event mismatch");
           is(e.getModifierState("AltGraph"),
              e.type == "keydown" && ((IS_WIN && !!testingEvent.modifiers.altGrKey) || (IS_MAC && e.altKey)),
-             name + ", AltGraph of Alt " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of Alt " + e.type + " event mismatch");
           return (testingEvent.modifiers.altKey || testingEvent.modifiers.altRightKey ||
                   (IS_WIN && !!testingEvent.modifiers.altGrKey)) &&
                  removeFlag(e, kAltFlag) && expectedDOMKeyCode != e.keyCode;
@@ -269,44 +278,57 @@ function* runKeyEventTests()
           // and Alt key.  Therefore, when AltGraph keyboard event is fired,
           // both ctrlKey and altKey are always false on Windows.
           is(e.ctrlKey, (flags & kCtrlFlag) != 0 && !IS_WIN,
-             name + ", Ctrl of AltGraph " + e.type + " event mismatch");
+             currentTestName + ", Ctrl of AltGraph " + e.type + " event mismatch");
           is(e.metaKey, (flags & kMetaFlag) != 0,
-             name + ", Command of AltGraph " + e.type + " event mismatch");
+             currentTestName + ", Command of AltGraph " + e.type + " event mismatch");
           is(e.altKey, (flags & kAltFlag) != 0 && !IS_WIN,
-             name + ", Alt of AltGraph " + e.type + " event mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Ctrl " + e.type + " event mismatch");
+             currentTestName + ", Alt of AltGraph " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of Ctrl " + e.type + " event mismatch");
           is(e.getModifierState("AltGraph"), e.type === "keydown",
-             name + ", AltGraph of AltGraph " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of AltGraph " + e.type + " event mismatch");
           return IS_WIN && testingEvent.modifiers.altGrKey &&
                  removeFlag(e, kAltGraphFlag) && expectedDOMKeyCode != e.keyCode;
         case "Meta":
-          is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of Command " + e.type + " evnet mismatch");
-          is(e.metaKey, e.type == "keydown", name + ", Command of Command " + e.type + " evnet mismatch");
-          is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of Command " + e.type + " evnet mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of Command " + e.type + " evnet mismatch");
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0,
+             currentTestName + ", Ctrl of Command " + e.type + " event mismatch");
+          is(e.metaKey, e.type == "keydown",
+             currentTestName + ", Command of Command " + e.type + " event mismatch");
+          is(e.altKey, (flags & kAltFlag) != 0,
+             currentTestName + ", Alt of Command " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of Command " + e.type + " event mismatch");
           is(e.getModifierState("AltGraph"),
              (IS_WIN && (flags & kAltGraphFlag) != 0) || (IS_MAC && e.altKey),
-             name + ", AltGraph of Meta " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of Meta " + e.type + " event mismatch");
           return (testingEvent.modifiers.metaKey || testingEvent.modifiers.metaRightKey) &&
                  removeFlag(e, kMetaFlag) && expectedDOMKeyCode != e.keyCode;
         case "NumLock":
-          is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of NumLock " + e.type + " event mismatch");
-          is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of NumLock " + e.type + " event mismatch");
-          is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of NumLock " + e.type + " event mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of NumLock " + e.type + " event mismatch");
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0,
+             currentTestName + ", Ctrl of NumLock " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             currentTestName + ", Command of NumLock " + e.type + " event mismatch");
+          is(e.altKey, (flags & kAltFlag) != 0,
+             currentTestName + ", Alt of NumLock " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of NumLock " + e.type + " event mismatch");
           is(e.getModifierState("AltGraph"), false,
-             name + ", AltGraph of NumLock " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of NumLock " + e.type + " event mismatch");
           // AltGr on Windows is always pressed after and released before NumLock key operation.
           return (testingEvent.modifiers.numLockKey || testingEvent.modifiers.numericKeyPadKey) &&
                  removeFlag(e, kNumLockFlag) && expectedDOMKeyCode != e.keyCode;
         case "CapsLock":
-          is(e.ctrlKey, (flags & kCtrlFlag) != 0, name + ", Ctrl of CapsLock " + e.type + " event mismatch");
-          is(e.metaKey, (flags & kMetaFlag) != 0, name + ", Command of CapsLock " + e.type + " event mismatch");
-          is(e.altKey, (flags & kAltFlag) != 0, name + ", Alt of CapsLock " + e.type + " event mismatch");
-          is(e.shiftKey, (flags & kShiftFlag) != 0, name + ", Shift of CapsLock " + e.type + " event mismatch");
+          is(e.ctrlKey, (flags & kCtrlFlag) != 0,
+             currentTestName + ", Ctrl of CapsLock " + e.type + " event mismatch");
+          is(e.metaKey, (flags & kMetaFlag) != 0,
+             currentTestName + ", Command of CapsLock " + e.type + " event mismatch");
+          is(e.altKey, (flags & kAltFlag) != 0,
+             currentTestName + ", Alt of CapsLock " + e.type + " event mismatch");
+          is(e.shiftKey, (flags & kShiftFlag) != 0,
+             currentTestName + ", Shift of CapsLock " + e.type + " event mismatch");
           // AltGr on Windows is always pressed after and released before CapsLock key operation.
           is(e.getModifierState("AltGraph"), false,
-             name + ", AltGraph of CapsLock " + e.type + " event mismatch");
+             currentTestName + ", AltGraph of CapsLock " + e.type + " event mismatch");
           return testingEvent.modifiers.capsLockKey &&
                  removeFlag(e, kCapsLockFlag) && expectedDOMKeyCode != e.keyCode;
       }
@@ -383,8 +405,8 @@ function* runKeyEventTests()
     testingEvent = aEvent;
     expectedDOMKeyCode = aExpectedGeckoKeyCode;
 
-    name = eventToString(aEvent);
-    ok(true, "Starting: " + name);
+    currentTestName = eventToString(aEvent);
+    ok(true, "Starting: " + currentTestName);
 
     return synthesizeKey(aEvent, "button", function() {
 
@@ -399,17 +421,21 @@ function* runKeyEventTests()
       }
       if (aShouldDelivedEvent & SHOULD_DELIVER_KEYUP)
         expectEventTypeList.push("keyup");
-      is(eventList.length, expectEventTypeList.length, name + ", wrong number of key events");
+      is(eventList.length, expectEventTypeList.length,
+         currentTestName + ", wrong number of key events");
 
       var longerLength = Math.max(eventList.length, expectEventTypeList.length);
       var keypressCount = 0;
       for (var i = 0; i < longerLength; i++) {
         var firedEventType = i < eventList.length ? eventList[i].type : "";
         var expectEventType = i < expectEventTypeList.length ? expectEventTypeList[i] : "";
-        if (firedEventType != "")
-          is(firedEventType, expectEventType, name + ", " + expectEventType + " should be fired");
-        else
-          is(firedEventType, expectEventType, name + ", a needed event is not fired");
+        if (firedEventType != "") {
+          is(firedEventType, expectEventType,
+             currentTestName + ", " + expectEventType + " should be fired");
+        } else {
+          is(firedEventType, expectEventType,
+             currentTestName + ", a needed event is not fired");
+        }
 
         if (firedEventType != "") {
           var expectedKeyValue =
@@ -434,9 +460,9 @@ function* runKeyEventTests()
               break;
             default:
               is(e.shiftKey, !!(aEvent.modifiers.shiftKey || aEvent.modifiers.shiftRightKey),
-                 name + ", Shift of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Shift of " + e.type + " of " + e.code + " mismatch");
               is(e.metaKey, !!(aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey),
-                 name + ", Command of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Command of " + e.type + " of " + e.code + " mismatch");
               var isControlPressed = !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
               var isAltPressed = !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
               var isAltGraphExpected =
@@ -452,33 +478,39 @@ function* runKeyEventTests()
                 isAltExpected = false;
               }
               is(e.ctrlKey, isControlExpected,
-                 name + ", Ctrl of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Ctrl of " + e.type + " of " + e.code + " mismatch");
               is(e.altKey, isAltExpected,
-                 name + ", Alt of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Alt of " + e.type + " of " + e.code + " mismatch");
               is(e.getModifierState("AltGraph"), isAltGraphExpected,
-                 name + ", AltGraph of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", AltGraph of " + e.type + " of " + e.code + " mismatch");
               break;
           }
 
-          is(e.key, expectedKeyValue, name + ", wrong key value");
-          is(e.code, aExpectedCodeValue, name + ", wrong code value");
+          is(e.key, expectedKeyValue, currentTestName + ", wrong key value");
+          is(e.code, aExpectedCodeValue, currentTestName + ", wrong code value");
 
           if (aExpectGeckoChar.length > 0 && e.type == "keypress") {
-            is(e.charCode, aExpectGeckoChar.charCodeAt(keypressCount++), name + ", charcode");
+            is(e.charCode, aExpectGeckoChar.charCodeAt(keypressCount++),
+               currentTestName + ", charcode");
             if (aExpectedGeckoKeyCode >= 0) {
               if (aExpectGeckoChar) {
-                is(e.keyCode, 0, name + ", wrong keycode");
+                is(e.keyCode, 0,
+                   currentTestName + ", wrong keycode");
               } else {
-                is(e.keyCode, aExpectedGeckoKeyCode, name + ", wrong keycode");
+                is(e.keyCode, aExpectedGeckoKeyCode,
+                   currentTestName + ", wrong keycode");
               }
             }
           } else {
-            is(e.charCode, 0, name + ", no charcode");
+            is(e.charCode, 0,
+               currentTestName + ", no charcode");
             if (aExpectedGeckoKeyCode >= 0) {
-              is(e.keyCode, aExpectedGeckoKeyCode, name + ", wrong keycode");
+              is(e.keyCode, aExpectedGeckoKeyCode,
+                 currentTestName + ", wrong keycode");
             }
           }
-          is(e.location, aExpectLocation, name + ", wrong location");
+          is(e.location, aExpectLocation,
+             currentTestName + ", wrong location");
         }
       }
 
@@ -4771,9 +4803,10 @@ function* runAccessKeyTests()
 
     return synthesizeKey(aEvent, "button", function() {
 
-      var name = eventToString(aEvent);
+      var currentTestName = eventToString(aEvent);
 
-      is(activationCount, aShouldActivate ? 1 : 0, name + ", activating '" + aAccessKey + "'");
+      is(activationCount, aShouldActivate ? 1 : 0,
+         currentTestName + ", activating '" + aAccessKey + "'");
 
       continueTest();
     });
@@ -5237,7 +5270,7 @@ function* runTextInputTests()
     textbox.value = "";
     textbox.focus();
 
-    var name = eventToString(aEvent);
+    var currentTestName = eventToString(aEvent);
 
     // Check if the text comes with keypress events rather than composition events.
     var keypress = 0;
@@ -5245,28 +5278,32 @@ function* runTextInputTests()
       keypress++;
       if (keypress == 1 && aExpectText == "") {
         if (!aEvent.ctrlKey && !aEvent.altKey) {
-          is(aEvent.charCode, 0, name + ", the charCode value should be 0 when it shouldn't cause inputting text");
+          is(aEvent.charCode, 0,
+             currentTestName + ", the charCode value should be 0 when it shouldn't cause inputting text");
         }
         return;
       }
       if (keypress > aExpectText.length) {
-        ok(false, name + " causes too many keypress events");
+        ok(false, currentTestName + " causes too many keypress events");
         return;
       }
       is(aEvent.key, aExpectText[keypress - 1],
-         name + ", " + keypress + "th keypress event's key value should be '" + aExpectText[keypress - 1] + "'");
+         currentTestName + ", " + keypress + "th keypress event's key value should be '" + aExpectText[keypress - 1] + "'");
       is(aEvent.charCode, aExpectText.charCodeAt(keypress - 1),
-         name + ", " + keypress + "th keypress event's charCode value should be 0x" + parseInt(aExpectText.charCodeAt(keypress - 1), 16));
+         currentTestName + ", " + keypress + "th keypress event's charCode value should be 0x" + parseInt(aExpectText.charCodeAt(keypress - 1), 16));
     }
     textbox.addEventListener("keypress", onKeypress, true);
 
     return synthesizeKey(aEvent, "textbox", function() {
       textbox.removeEventListener("keypress", onKeypress, true);
       if (aExpectText == "") {
-        is(keypress, 1, name + " should cause one keypress event because it doesn't cause inputting text");
+        is(keypress, 1,
+           currentTestName + " should cause one keypress event because it doesn't cause inputting text");
       } else {
-        is(keypress, aExpectText.length, name + " should cause " + aExpectText.length + " keypress events");
-        is(textbox.value, aExpectText, name + " does not input correct text.");
+        is(keypress, aExpectText.length,
+           currentTestName + " should cause " + aExpectText.length + " keypress events");
+        is(textbox.value, aExpectText,
+           currentTestName + " does not input correct text.");
       }
 
       continueTest();
@@ -5367,7 +5404,7 @@ function* runAltRightKeyOnWindows()
     return synthesizeKey({layout: aKeyboardLayout.layout, keyCode: WIN_VK_RMENU,
                           modifiers: {}, chars: ""}, "button", function() {
       const kDescription =
-        "runAltRightKeyOnWindows(" + aKeyboardLayout.layout.name + "): ";
+        "runAltRightKeyOnWindows(" + aKeyboardLayout.layout.currentTestName + "): ";
       if (aKeyboardLayout.layout.hasAltGrOnWin) {
         is(events.length, 4,
            kDescription + "AltRight should fire 2 pairs of keydown and keyup events");
