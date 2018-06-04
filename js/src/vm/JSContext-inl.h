@@ -586,4 +586,19 @@ JSContext::caches()
     return runtime()->caches();
 }
 
+inline
+js::AutoKeepAtoms::AutoKeepAtoms(JSContext* cx
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : cx(cx)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    cx->zone()->keepAtoms();
+}
+
+inline
+js::AutoKeepAtoms::~AutoKeepAtoms()
+{
+    cx->zone()->releaseAtoms();
+};
+
 #endif /* vm_JSContext_inl_h */
