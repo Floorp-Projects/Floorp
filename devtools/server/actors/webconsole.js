@@ -875,6 +875,7 @@ WebConsoleActor.prototype =
    * JavaScript string and sends back a packet with a unique ID.
    * The result will be returned later as an unsolicited `evaluationResult`,
    * that can be associated back to this request via the `resultID` field.
+   * Cannot be async, see Comment two on Bug #1452920
    *
    * @param object request
    *        The JSON request object received from the Web Console client.
@@ -896,6 +897,39 @@ WebConsoleActor.prototype =
     // Then, execute the script that may pause.
     const response = this.evaluateJS(request);
     response.resultID = resultID;
+
+    this._waitForHelperResultAndSend(response).catch(e =>
+      DevToolsUtils.reportException(
+        "evaluateJSAsync",
+        Error(`Encountered error while waiting for Helper Result: ${e}`)
+      )
+    );
+  },
+
+  /**
+   * In order to have asynchronous commands such as screenshot, we have to be
+   * able to handle promises in the helper result. This method handles waiting
+   * for the promise, and then dispatching the result
+   *
+   *
+   * @private
+   * @param object response
+   *         The response packet to send to with the unique id in the
+   *         `resultID` field, and potentially a promise in the helperResult
+   *         field.
+   *
+   * @return object
+   *         The response packet to send to with the unique id in the
+   *         `resultID` field, with a sanitized helperResult field.
+   */
+  _waitForHelperResultAndSend: async function(response) {
+    // Wait for asynchronous command completion before sending back the response
+    if (
+      response.helperResult &&
+      typeof response.helperResult.then == "function"
+    ) {
+      response.helperResult = await response.helperResult;
+    }
 
     // Finally, send an unsolicited evaluationResult packet with
     // the normal return value
