@@ -376,6 +376,12 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
 bool
 GLLibraryEGL::DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId)
 {
+    if (mInitialized && !mSymbols.fTerminate) {
+        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_DESTROYED");
+        MOZ_ASSERT(false);
+        return false;
+    }
+
     if (mInitialized) {
         return true;
     }
@@ -679,6 +685,20 @@ GLLibraryEGL::DoEnsureInitialized(bool forceAccel, nsACString* const out_failure
 
 #undef SYMBOL
 #undef END_OF_SYMBOLS
+
+void
+GLLibraryEGL::Shutdown()
+{
+    if (this != sEGLLibrary) {
+        return;
+    }
+    if (mEGLDisplay) {
+        fTerminate(mEGLDisplay);
+        mEGLDisplay = EGL_NO_DISPLAY;
+    }
+    mSymbols = {};
+    sEGLLibrary = nullptr;
+}
 
 EGLDisplay
 GLLibraryEGL::CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString* const out_failureId)

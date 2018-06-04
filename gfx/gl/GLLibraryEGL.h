@@ -377,6 +377,8 @@ public:
 
     static bool EnsureInitialized(bool forceAccel, nsACString* const out_failureId);
 
+    void Shutdown();
+
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();
 

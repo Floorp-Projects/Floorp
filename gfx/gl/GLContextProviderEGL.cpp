@@ -296,6 +296,7 @@ GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
                            EGLContext context)
     : GLContext(flags, caps, nullptr, isOffscreen, false)
     , mConfig(config)
+    , mEgl(gl::GLLibraryEGL::Get())
     , mSurface(surface)
     , mFallbackSurface(CreateFallbackSurface(config))
     , mContext(context)
@@ -326,9 +327,7 @@ GLContextEGL::~GLContextEGL()
     printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 
-    auto* egl = gl::GLLibraryEGL::Get();
-
-    egl->fDestroyContext(EGL_DISPLAY(), mContext);
+    mEgl->fDestroyContext(EGL_DISPLAY(), mContext);
 
     mozilla::gl::DestroySurface(mSurface);
     mozilla::gl::DestroySurface(mFallbackSurface);
@@ -365,10 +364,8 @@ GLContextEGL::Init()
     static_assert(sizeof(GLint) >= sizeof(int32_t), "GLint is smaller than int32_t");
     mMaxTextureImageSize = INT32_MAX;
 
-    auto* egl = gl::GLLibraryEGL::Get();
-
-    mShareWithEGLImage = egl->HasKHRImageBase() &&
-                         egl->HasKHRImageTexture2D() &&
+    mShareWithEGLImage = mEgl->HasKHRImageBase() &&
+                         mEgl->HasKHRImageTexture2D() &&
                          IsExtensionSupported(OES_EGL_image);
 
     return true;
@@ -383,9 +380,7 @@ GLContextEGL::BindTexImage()
     if (mBound && !ReleaseTexImage())
         return false;
 
-    auto* egl = gl::GLLibraryEGL::Get();
-
-    EGLBoolean success = egl->fBindTexImage(EGL_DISPLAY(),
+    EGLBoolean success = mEgl->fBindTexImage(EGL_DISPLAY(),
         (EGLSurface)mSurface, LOCAL_EGL_BACK_BUFFER);
     if (success == LOCAL_EGL_FALSE)
         return false;
@@ -403,12 +398,10 @@ GLContextEGL::ReleaseTexImage()
     if (!mSurface)
         return false;
 
-    auto* egl = gl::GLLibraryEGL::Get();
-
     EGLBoolean success;
-    success = egl->fReleaseTexImage(EGL_DISPLAY(),
-                                    (EGLSurface)mSurface,
-                                    LOCAL_EGL_BACK_BUFFER);
+    success = mEgl->fReleaseTexImage(EGL_DISPLAY(),
+                                     (EGLSurface)mSurface,
+                                     LOCAL_EGL_BACK_BUFFER);
     if (success == LOCAL_EGL_FALSE)
         return false;
 
@@ -441,12 +434,10 @@ GLContextEGL::MakeCurrentImpl() const
         surface = mFallbackSurface;
     }
 
-    auto* egl = gl::GLLibraryEGL::Get();
-
-    const bool succeeded = egl->fMakeCurrent(EGL_DISPLAY(), surface, surface,
-                                             mContext);
+    const bool succeeded = mEgl->fMakeCurrent(EGL_DISPLAY(), surface, surface,
+                                              mContext);
     if (!succeeded) {
-        const auto eglError = egl->fGetError();
+        const auto eglError = mEgl->fGetError();
         if (eglError == LOCAL_EGL_CONTEXT_LOST) {
             mContextLost = true;
             NS_WARNING("EGL context has been lost.");
@@ -464,8 +455,7 @@ GLContextEGL::MakeCurrentImpl() const
 bool
 GLContextEGL::IsCurrentImpl() const
 {
-    auto* egl = gl::GLLibraryEGL::Get();
-    return egl->fGetCurrentContext() == mContext;
+    return mEgl->fGetCurrentContext() == mContext;
 }
 
 bool
@@ -504,21 +494,18 @@ GLContextEGL::ReleaseSurface() {
 bool
 GLContextEGL::SetupLookupFunction()
 {
-    auto* egl = gl::GLLibraryEGL::Get();
-
-    mLookupFunc = egl->GetLookupFunction();
+    mLookupFunc = mEgl->GetLookupFunction();
     return true;
 }
 
 bool
 GLContextEGL::SwapBuffers()
 {
-    auto* egl = gl::GLLibraryEGL::Get();
     EGLSurface surface = mSurfaceOverride != EGL_NO_SURFACE
                           ? mSurfaceOverride
                           : mSurface;
     if (surface) {
-        return egl->fSwapBuffers(EGL_DISPLAY(), surface);
+        return mEgl->fSwapBuffers(EGL_DISPLAY(), surface);
     } else {
         return false;
     }
@@ -527,20 +514,18 @@ GLContextEGL::SwapBuffers()
 void
 GLContextEGL::GetWSIInfo(nsCString* const out) const
 {
-    auto* egl = gl::GLLibraryEGL::Get();
-
     out->AppendLiteral("EGL_VENDOR: ");
-    out->Append((const char*)egl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_VENDOR));
+    out->Append((const char*)mEgl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_VENDOR));
 
     out->AppendLiteral("\nEGL_VERSION: ");
-    out->Append((const char*)egl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_VERSION));
+    out->Append((const char*)mEgl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_VERSION));
 
     out->AppendLiteral("\nEGL_EXTENSIONS: ");
-    out->Append((const char*)egl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_EXTENSIONS));
+    out->Append((const char*)mEgl->fQueryString(EGL_DISPLAY(), LOCAL_EGL_EXTENSIONS));
 
 #ifndef ANDROID // This query will crash some old android.
     out->AppendLiteral("\nEGL_EXTENSIONS(nullptr): ");
-    out->Append((const char*)egl->fQueryString(nullptr, LOCAL_EGL_EXTENSIONS));
+    out->Append((const char*)mEgl->fQueryString(nullptr, LOCAL_EGL_EXTENSIONS));
 #endif
 }
 
@@ -1211,6 +1196,10 @@ GLContextProviderEGL::GetGlobalContext()
 /*static*/ void
 GLContextProviderEGL::Shutdown()
 {
+    const RefPtr<GLLibraryEGL> egl = GLLibraryEGL::Get();
+    if (egl) {
+        egl->Shutdown();
+    }
 }
 
 } /* namespace gl */
