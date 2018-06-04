@@ -251,9 +251,7 @@ impl Example for App {
         builder.push_stacking_context(
             &info,
             None,
-            None,
             api::TransformStyle::Flat,
-            None,
             api::MixBlendMode::Normal,
             Vec::new(),
             api::GlyphRasterSpace::Screen,

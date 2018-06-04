@@ -20,10 +20,11 @@ use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient};
 use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
 use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform};
 use {LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId};
-use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollSensitivity, Shadow, SpecificDisplayItem};
-use {StackingContext, StickyFrameDisplayItem, StickyOffsetBounds, TextDisplayItem, TransformStyle};
-use {YuvColorSpace, YuvData, YuvImageDisplayItem};
+use {PropertyBinding, PushReferenceFrameDisplayListItem, PushStackingContextDisplayItem};
+use {RadialGradient, RadialGradientDisplayItem, RectangleDisplayItem, ReferenceFrame};
+use {ScrollFrameDisplayItem, ScrollSensitivity, Shadow, SpecificDisplayItem, StackingContext};
+use {StickyFrameDisplayItem, StickyOffsetBounds, TextDisplayItem, TransformStyle, YuvColorSpace};
+use {YuvData, YuvImageDisplayItem};
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
 // This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_PRIM_HEADER - VECS_PER_TEXT_RUN) * 2
@@ -481,6 +482,8 @@ impl Serialize for BuiltDisplayList {
                         item.iter.list.get(item.iter.cur_filters).collect()
                     ),
                     SpecificDisplayItem::PopStackingContext => PopStackingContext,
+                    SpecificDisplayItem::PushReferenceFrame(v) => PushReferenceFrame(v),
+                    SpecificDisplayItem::PopReferenceFrame => PopReferenceFrame,
                     SpecificDisplayItem::SetGradientStops => SetGradientStops(
                         item.iter.list.get(item.iter.cur_stops).collect()
                     ),
@@ -555,13 +558,15 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         SpecificDisplayItem::Iframe(specific_item)
                     }
                     PushStackingContext(specific_item, filters) => {
-                        if specific_item.stacking_context.reference_frame_id.is_some() {
-                            total_clip_ids += 1;
-                        }
                         DisplayListBuilder::push_iter_impl(&mut temp, filters);
                         SpecificDisplayItem::PushStackingContext(specific_item)
                     },
                     PopStackingContext => SpecificDisplayItem::PopStackingContext,
+                    PushReferenceFrame(specific_item) => {
+                        total_clip_ids += 1;
+                        SpecificDisplayItem::PushReferenceFrame(specific_item)
+                    }
+                    PopReferenceFrame => SpecificDisplayItem::PopReferenceFrame,
                     SetGradientStops(stops) => {
                         DisplayListBuilder::push_iter_impl(&mut temp, stops);
                         SpecificDisplayItem::SetGradientStops
@@ -1277,30 +1282,41 @@ impl DisplayListBuilder {
         self.push_item(item, info);
     }
 
+    pub fn push_reference_frame(
+        &mut self,
+        info: &LayoutPrimitiveInfo,
+        transform: Option<PropertyBinding<LayoutTransform>>,
+        perspective: Option<LayoutTransform>,
+    ) -> ClipId {
+        let id = self.generate_clip_id();
+        let item = SpecificDisplayItem::PushReferenceFrame(PushReferenceFrameDisplayListItem {
+            reference_frame: ReferenceFrame {
+                transform,
+                perspective,
+                id,
+            },
+        });
+        self.push_item(item, info);
+        id
+    }
+
+    pub fn pop_reference_frame(&mut self) {
+        self.push_new_empty_item(SpecificDisplayItem::PopReferenceFrame);
+    }
+
     pub fn push_stacking_context(
         &mut self,
         info: &LayoutPrimitiveInfo,
         clip_node_id: Option<ClipId>,
-        transform: Option<PropertyBinding<LayoutTransform>>,
         transform_style: TransformStyle,
-        perspective: Option<LayoutTransform>,
         mix_blend_mode: MixBlendMode,
         filters: Vec<FilterOp>,
         glyph_raster_space: GlyphRasterSpace,
-    ) -> Option<ClipId> {
-        let reference_frame_id = if transform.is_some() || perspective.is_some() {
-            Some(self.generate_clip_id())
-        } else {
-            None
-        };
-
+    ) {
         let item = SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
             stacking_context: StackingContext {
-                transform,
                 transform_style,
-                perspective,
                 mix_blend_mode,
-                reference_frame_id,
                 clip_node_id,
                 glyph_raster_space,
             },
@@ -1308,8 +1324,6 @@ impl DisplayListBuilder {
 
         self.push_item(item, info);
         self.push_iter(&filters);
-
-        reference_frame_id
     }
 
     pub fn pop_stacking_context(&mut self) {

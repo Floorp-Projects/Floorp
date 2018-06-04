@@ -230,7 +230,7 @@ HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
   // display the element
   ps->PostRecreateFramesFor(newContent);
 
-  return std::move(newContent);
+  return newContent;
 }
 
 // Removes event listener and calls DeleteRefToAnonymousNode.

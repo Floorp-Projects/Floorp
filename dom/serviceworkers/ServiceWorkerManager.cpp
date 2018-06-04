@@ -324,7 +324,7 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
     RefPtr<ServiceWorkerRegistrationInfo> old =
       entry.Data()->mRegistrationInfo.forget();
 
-    ref = std::move(entry.Data()->mClientHandle->Control(active));
+    ref = entry.Data()->mClientHandle->Control(active);
     entry.Data()->mRegistrationInfo = aRegistrationInfo;
 
     if (old != aRegistrationInfo) {
@@ -334,14 +334,14 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
 
     Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
 
-    return std::move(ref);
+    return ref;
   }
 
   RefPtr<ClientHandle> clientHandle =
     ClientManager::CreateHandle(aClientInfo,
                                 SystemGroup::EventTargetFor(TaskCategory::Other));
 
-  ref = std::move(clientHandle->Control(active));
+  ref = clientHandle->Control(active);
 
   aRegistrationInfo->StartControllingClient();
 
@@ -358,7 +358,7 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
 
-  return std::move(ref);
+  return ref;
 }
 
 void

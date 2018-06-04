@@ -1661,32 +1661,47 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     };
 
     let mut prim_info = LayoutPrimitiveInfo::new(bounds);
+
+    *out_is_reference_frame = transform_binding.is_some() || perspective.is_some();
+    if *out_is_reference_frame {
+        let ref_frame_id = state.frame_builder
+            .dl_builder
+            .push_reference_frame(&prim_info, transform_binding, perspective);
+        match ref_frame_id {
+            ClipId::Clip(id, pipeline_id) => {
+                assert!(pipeline_id == state.pipeline_id);
+                *out_reference_frame_id = id;
+            },
+            _ => panic!("Pushing a reference frame must produce a ClipId::Clip"),
+        }
+
+        prim_info.rect.origin = LayoutPoint::zero();
+        prim_info.clip_rect.origin = LayoutPoint::zero();
+        state.frame_builder.dl_builder.push_clip_id(ref_frame_id);
+    }
+
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
 
-    let ref_frame_id = state.frame_builder
+    state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
                                 clip_node_id,
-                                transform_binding,
                                 transform_style,
-                                perspective,
                                 mix_blend_mode,
                                 filters,
                                 glyph_raster_space);
-    if let Some(ClipId::Clip(id, pipeline_id)) = ref_frame_id {
-        assert!(pipeline_id == state.pipeline_id);
-        *out_is_reference_frame = true;
-        *out_reference_frame_id = id;
-    } else {
-        *out_is_reference_frame = false;
-    }
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
+pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState,
+                                             is_reference_frame: bool) {
     debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
+    if is_reference_frame {
+        state.frame_builder.dl_builder.pop_clip_id();
+        state.frame_builder.dl_builder.pop_reference_frame();
+    }
 }
 
 #[no_mangle]

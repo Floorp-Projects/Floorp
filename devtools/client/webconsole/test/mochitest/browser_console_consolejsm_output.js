@@ -19,7 +19,7 @@ add_task(async function testCategoryLogs() {
 
   await checkMessageExists(hud, "bug861338-log-cached");
 
-  hud.jsterm.clearOutput(true);
+  hud.ui.clearOutput(true);
 
   function testTrace() {
     console.trace();
@@ -48,7 +48,7 @@ add_task(async function testCategoryLogs() {
   await checkMessageExists(hud, "console.trace()");
   await checkMessageExists(hud, "foobarTimer");
 
-  hud.jsterm.clearOutput(true);
+  hud.ui.clearOutput(true);
   await HUDService.toggleBrowserConsole();
 });
 
@@ -79,7 +79,7 @@ add_task(async function testFilter() {
   await checkMessageHidden(hud, shouldBeHidden);
 
   await resetFilters(hud);
-  hud.jsterm.clearOutput(true);
+  hud.ui.clearOutput(true);
   await HUDService.toggleBrowserConsole();
 });
 

@@ -65,7 +65,7 @@ async function getObjectInspector(hud) {
   // Filter out other messages to ensure ours stays visible.
   ui.filterBox.value = "browser_console_hide_jsterm_test";
 
-  jsterm.clearOutput();
+  hud.ui.clearOutput();
   jsterm.execute("new Object({ browser_console_hide_jsterm_test: true })");
 
   const message = await waitFor(

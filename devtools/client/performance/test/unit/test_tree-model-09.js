@@ -6,6 +6,8 @@
  * Tests that when displaying only content nodes, platform nodes are generalized.
  */
 
+var { CATEGORY_INDEX } = require("devtools/client/performance/modules/categories");
+
 add_task(function test() {
   const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   const url = (n) => `http://content/${n}`;
@@ -32,16 +34,19 @@ add_task(function test() {
 
   equal(root.calls.length, 2, "root has 2 children");
   ok(getFrameNodePath(root, url("A")), "root has content child");
-  ok(getFrameNodePath(root, "9000"),
+  ok(getFrameNodePath(root, `${CATEGORY_INDEX("tools")}`),
     "root has platform generalized child from Chrome JS");
-  equal(getFrameNodePath(root, "9000").calls.length, 0,
+  equal(getFrameNodePath(root, `${CATEGORY_INDEX("tools")}`).calls.length, 0,
     "platform generalized child is a leaf.");
 
-  ok(getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 9000`),
+  ok(getFrameNodePath(root,
+       `${url("A")} > ${url("E")} > ${url("F")} > ${CATEGORY_INDEX("tools")}`),
      "a second leaf of the generalized Chrome JS exists.");
 
-  equal(getFrameNodePath(root, "9000").category,
-     getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 9000`).category,
+  equal(getFrameNodePath(root, `${CATEGORY_INDEX("tools")}`).category,
+     getFrameNodePath(root,
+       `${url("A")} > ${url("E")} > ${url("F")} > ${CATEGORY_INDEX("tools")}`
+     ).category,
      "generalized frames of same type are duplicated in top-down view");
 });
 

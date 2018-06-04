@@ -134,6 +134,7 @@ CreateMetadataNode(StringTable& strings)
     "EventLoopNestingLevel",
     "ipc_channel_error",
     "IsGarbageCollecting",
+    "LowCommitSpaceEvents",
     "MozCrashReason",
     "OOMAllocationSize",
     "ProductID",

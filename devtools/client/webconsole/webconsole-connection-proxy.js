@@ -387,7 +387,7 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onLastPrivateContextExited: function(type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
-      this.webConsoleFrame.jsterm.clearPrivateMessages();
+      this.webConsoleFrame.clearPrivateMessages();
     }
   },
 

@@ -1,3 +1,5 @@
+MOZ_AUTOMATION_L10N_CHECK=0
+
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}

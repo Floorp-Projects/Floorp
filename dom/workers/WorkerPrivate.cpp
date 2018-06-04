@@ -3497,10 +3497,10 @@ WorkerPrivate::GetClientInfo() const
   Maybe<ClientInfo> clientInfo;
   if (!mClientSource) {
     MOZ_DIAGNOSTIC_ASSERT(mStatus >= Terminating);
-    return std::move(clientInfo);
+    return clientInfo;
   }
   clientInfo.emplace(mClientSource->Info());
-  return std::move(clientInfo);
+  return clientInfo;
 }
 
 const ClientState
@@ -3510,7 +3510,7 @@ WorkerPrivate::GetClientState() const
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   ClientState state;
   mClientSource->SnapshotState(&state);
-  return std::move(state);
+  return state;
 }
 
 const Maybe<ServiceWorkerDescriptor>
@@ -3820,6 +3820,8 @@ WorkerPrivate::DisableMemoryReporter()
 void
 WorkerPrivate::WaitForWorkerEvents()
 {
+  AUTO_PROFILER_LABEL("WorkerPrivate::WaitForWorkerEvents", IDLE);
+
   AssertIsOnWorkerThread();
   mMutex.AssertCurrentThreadOwns();
 

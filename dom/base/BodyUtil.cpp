@@ -296,6 +296,10 @@ public:
   bool
   Parse()
   {
+    if (mData.IsEmpty()) {
+      return false;
+    }
+
     // Determine boundary from mimetype.
     const char* boundaryId = nullptr;
     boundaryId = strstr(mMimeType.BeginWriting(), "boundary");
@@ -387,7 +391,7 @@ public:
       }
     }
 
-    NS_NOTREACHED("Should never reach here.");
+    MOZ_ASSERT_UNREACHABLE("Should never reach here.");
     return false;
   }
 

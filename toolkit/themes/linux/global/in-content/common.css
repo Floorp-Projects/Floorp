@@ -64,13 +64,6 @@ xul|*.radio-label-box {
   -moz-appearance: none;
 }
 
-/* Override OS-theme-based color to make it visible
-   on dark color themes. */
-xul|radio:not([disabled="true"]):hover,
-xul|checkbox:not([disabled="true"]):hover {
-  color: var(--in-content-text-color);
-}
-
 xul|*.numberbox-input-box {
   -moz-appearance: none;
   border-width: 0;
