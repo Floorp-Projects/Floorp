@@ -8,12 +8,8 @@
 """
 
 import os
-from urlparse import urljoin
 import pprint
 import sys
-from copy import deepcopy
-
-sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.config import parse_config_file
 
