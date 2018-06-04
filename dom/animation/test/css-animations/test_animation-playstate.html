@@ -13,34 +13,26 @@
 'use strict';
 
 test(t => {
-  const div = addDiv(t);
-  const cs = getComputedStyle(div);
-  div.style.animation = 'anim 1000s';
+  const div = addDiv(t, { 'style': 'animation: anim 1000s' });
   const animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'running');
 }, 'Animation returns correct playState when running');
 
 test(t => {
-  const div = addDiv(t);
-  const cs = getComputedStyle(div);
-  div.style.animation = 'anim 1000s paused';
+  const div = addDiv(t, { 'style': 'animation: anim 1000s paused' });
   const animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'paused');
 }, 'Animation returns correct playState when paused');
 
 test(t => {
-  const div = addDiv(t);
-  const cs = getComputedStyle(div);
-  div.style.animation = 'anim 1000s';
+  const div = addDiv(t, { 'style': 'animation: anim 1000s' });
   const animation = div.getAnimations()[0];
   animation.pause();
   assert_equals(animation.playState, 'paused');
 }, 'Animation.playState updates when paused by script');
 
 test(t => {
-  const div = addDiv(t);
-  const cs = getComputedStyle(div);
-  div.style.animation = 'anim 1000s paused';
+  const div = addDiv(t, { 'style': 'animation: anim 1000s paused' });
   const animation = div.getAnimations()[0];
   div.style.animationPlayState = 'running';
 
@@ -51,8 +43,7 @@ test(t => {
 }, 'Animation.playState updates when resumed by setting style');
 
 test(t => {
-  const div = addDiv(t);
-  div.style.animation = 'anim 1000s';
+  const div = addDiv(t, { 'style': 'animation: anim 1000s' });
   const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(animation.playState, 'idle');
