@@ -5405,14 +5405,14 @@ UpdateAtomsBitmap(GCParallelTask* task)
     DenseBitmap marked;
     if (runtime->gc.atomMarking.computeBitmapFromChunkMarkBits(runtime, marked)) {
         for (GCZonesIter zone(runtime); !zone.done(); zone.next())
-            runtime->gc.atomMarking.updateZoneBitmap(zone, marked);
+            runtime->gc.atomMarking.refineZoneBitmapForCollectedZone(zone, marked);
     } else {
-        // Ignore OOM in computeBitmapFromChunkMarkBits. The updateZoneBitmap
-        // call can only remove atoms from the zone bitmap, so it is
-        // conservative to just not call it.
+        // Ignore OOM in computeBitmapFromChunkMarkBits. The
+        // refineZoneBitmapForCollectedZone call can only remove atoms from the
+        // zone bitmap, so it is conservative to just not call it.
     }
 
-    runtime->gc.atomMarking.updateChunkMarkBits(runtime);
+    runtime->gc.atomMarking.markAtomsUsedByUncollectedZones(runtime);
 
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
