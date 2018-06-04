@@ -211,6 +211,7 @@ sdp_get_media_protocol(const RustMediaSection* aMediaSec);
 RustSdpFormatType sdp_get_format_type(const RustMediaSection* aMediaSec);
 StringVec* sdp_get_format_string_vec(const RustMediaSection* aMediaSec);
 U32Vec* sdp_get_format_u32_vec(const RustMediaSection* aMediaSec);
+void sdp_set_media_port(const RustMediaSection* aMediaSec, uint32_t aPort);
 uint32_t sdp_get_media_port(const RustMediaSection* aMediaSec);
 uint32_t sdp_get_media_port_count(const RustMediaSection* aMediaSec);
 uint32_t sdp_get_media_bandwidth(const RustMediaSection* aMediaSec,
