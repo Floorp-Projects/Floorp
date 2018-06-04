@@ -63,7 +63,7 @@ job-defaults:
       last-watershed:
          by-project:
             birch:
-               by-build-platform:
+               by-platform:
                   linux*: "57.0"
                   linux64*: "57.0"
                   macosx64*: "57.0"
@@ -74,7 +74,7 @@ job-defaults:
             maple: "56.0b3"
             mozilla-beta: "56.0b3"
             mozilla-release:
-               by-build-platform:
+               by-platform:
                   linux*: "57.0"
                   linux64*: "57.0"
                   macosx64*: "57.0"
@@ -82,7 +82,7 @@ job-defaults:
                   win64*: "56.0"
                   default: null
             mozilla-esr52:
-               by-build-platform:
+               by-platform:
                   macosx64: "45.9.0esr"
                   win32: "45.3.0esr"
                   win64: "45.3.0esr"
