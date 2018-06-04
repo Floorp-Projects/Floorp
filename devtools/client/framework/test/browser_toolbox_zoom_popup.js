@@ -95,8 +95,8 @@ async function getButtonAndMenuRects(toolbox, menuButton) {
   });
   ok(menuPopup, "Menu popup is displayed.");
 
-  const btnRect = menuButton.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
-  const menuRect = menuPopup.getBoxQuads({relativeTo: toolbox.doc})[0].bounds;
+  const btnRect = menuButton.getBoxQuads({relativeTo: toolbox.doc})[0].getBounds();
+  const menuRect = menuPopup.getBoxQuads({relativeTo: toolbox.doc})[0].getBounds();
 
   info("Hide popup menu.");
   const onPopupHidden = once(menuPopup, "popuphidden");

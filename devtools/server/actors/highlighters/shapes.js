@@ -456,7 +456,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const win =  this.win;
       const nodeWin = this.currentNode.ownerGlobal;
       // Get bounding box of iframe document relative to global document.
-      const { bounds } = nodeWin.document.getBoxQuads({ relativeTo: win.document })[0];
+      const bounds = nodeWin.document
+                            .getBoxQuads({ relativeTo: win.document })[0]
+                            .getBounds();
       xOffset = bounds.left - nodeWin.scrollX + win.scrollX;
       yOffset = bounds.top - nodeWin.scrollY + win.scrollY;
     }
