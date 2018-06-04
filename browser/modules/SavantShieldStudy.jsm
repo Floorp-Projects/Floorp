@@ -37,6 +37,9 @@ class SavantShieldStudyClass {
       this.endStudy("ineligible");
       return;
     }
+
+    // TODO check expiration, add study duration override pref
+
     // check the pref in case Normandy flipped it on before we could add the pref listener
     this.shouldCollect = Services.prefs.getBoolPref(this.STUDY_PREF);
     if (this.shouldCollect) {
@@ -70,10 +73,7 @@ class SavantShieldStudyClass {
 
   // Called on every Firefox shutdown and endStudy
   uninit() {
-    // TODO: Make sure uninit() is called on every Firefox shutdown (look inside
-    // nsBrowserGlue.js to see where Normandy uninits)
-    // TODO: See what happens during Normandy's uninit method to ensure nothing
-    // is forgotten.
+    // TODO: clear study expiration override pref and remove its listener
     Services.prefs.removeObserver(this.STUDY_PREF, this);
     Services.prefs.clearUserPref(this.STUDY_PREF);
     Services.prefs.clearUserPref(PREF_LOG_LEVEL);
