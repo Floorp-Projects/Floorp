@@ -24,7 +24,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
                                        LayersId aLayersId)
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
-  , mLocked(false)
+  , mLockCount(0)
   , mLayersId(aLayersId)
   , mScrollbarAnimationId(0)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
@@ -74,7 +74,7 @@ HitTestingTreeNode::Destroy()
 bool
 HitTestingTreeNode::IsRecyclable(const RecursiveMutexAutoLock& aProofOfTreeLock)
 {
-  return !(IsPrimaryHolder() || mLocked);
+  return !(IsPrimaryHolder() || (mLockCount > 0));
 }
 
 void
@@ -410,15 +410,14 @@ HitTestingTreeNode::SetApzcParent(AsyncPanZoomController* aParent)
 void
 HitTestingTreeNode::Lock(const RecursiveMutexAutoLock& aProofOfTreeLock)
 {
-  MOZ_ASSERT(!mLocked);
-  mLocked = true;
+  mLockCount++;
 }
 
 void
 HitTestingTreeNode::Unlock(const RecursiveMutexAutoLock& aProofOfTreeLock)
 {
-  MOZ_ASSERT(mLocked);
-  mLocked = false;
+  MOZ_ASSERT(mLockCount > 0);
+  mLockCount--;
 }
 
 HitTestingTreeNodeAutoLock::HitTestingTreeNodeAutoLock()
