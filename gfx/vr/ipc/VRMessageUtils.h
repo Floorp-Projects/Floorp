@@ -104,7 +104,6 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mPresentingGroups);
     WriteParam(aMsg, aParam.mGroupMask);
     WriteParam(aMsg, aParam.mFrameId);
-    WriteParam(aMsg, aParam.mPresentingGeneration);
     WriteParam(aMsg, aParam.mDisplayState);
     for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
       WriteParam(aMsg, aParam.mLastSensorState[i]);
@@ -118,7 +117,6 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mPresentingGroups)) ||
         !ReadParam(aMsg, aIter, &(aResult->mGroupMask)) ||
         !ReadParam(aMsg, aIter, &(aResult->mFrameId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDisplayState))) {
       return false;
     }

@@ -365,18 +365,6 @@ VRDisplayOSVR::SubmitFrame(MacIOSurface* aMacIOSurface,
   return false;
 }
 
-#elif defined(MOZ_ANDROID_GOOGLE_VR)
-
-bool
-VRDisplayOSVR::SubmitFrame(const mozilla::layers::EGLImageDescriptor*,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect)
-{
-  // XXX Add code to submit frame
-  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
-  return false;
-}
-
 #endif
 
 void
