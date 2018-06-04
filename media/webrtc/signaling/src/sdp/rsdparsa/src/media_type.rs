@@ -93,6 +93,10 @@ impl SdpMedia {
         &self.media.media
     }
 
+    pub fn set_port(&mut self, port: u32) {
+        self.media.port = port;
+    }
+
     pub fn get_port(&self) -> u32 {
         self.media.port
     }

@@ -106,6 +106,11 @@ pub unsafe extern "C" fn sdp_get_format_u32_vec(sdp_media: *const SdpMedia) -> *
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn sdp_set_media_port(sdp_media: *mut SdpMedia, port: uint32_t) {
+    (*sdp_media).set_port(port);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn sdp_get_media_port(sdp_media: *const SdpMedia) -> uint32_t {
     (*sdp_media).get_port()
 }
