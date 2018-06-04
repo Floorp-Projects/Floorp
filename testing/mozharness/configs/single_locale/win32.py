@@ -19,7 +19,6 @@ config = {
     "hg_l10n_tag": "default",
 
     # MAR
-    "application_ini": "application.ini",
     "local_mar_tool_dir": "dist\\host\\bin",
     "mar": "mar.exe",
     "mbsdiff": "mbsdiff.exe",
