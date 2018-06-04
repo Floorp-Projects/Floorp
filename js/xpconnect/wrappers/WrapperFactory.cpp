@@ -400,9 +400,7 @@ SelectWrapper(bool securityWrapper, XrayType xrayType, bool waiveXrays, JSObject
     // Ok, we're using Xray. If this isn't a security wrapper, use the permissive
     // version and skip the filter.
     if (!securityWrapper) {
-        if (xrayType == XrayForWrappedNative)
-            return &PermissiveXrayXPCWN::singleton;
-        else if (xrayType == XrayForDOMObject)
+        if (xrayType == XrayForDOMObject)
             return &PermissiveXrayDOM::singleton;
         else if (xrayType == XrayForJSObject)
             return &PermissiveXrayJS::singleton;
@@ -435,7 +433,6 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
                GetProxyHandler(obj) == &XrayWaiver ||
                js::IsWindowProxy(obj),
                "wrapped object passed to rewrap");
-    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(JS_GetClass(obj)), "trying to wrap a holder");
     MOZ_ASSERT(!js::IsWindow(obj));
     MOZ_ASSERT(dom::IsJSAPIActive());
 
