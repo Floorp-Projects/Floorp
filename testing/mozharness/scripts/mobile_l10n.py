@@ -133,7 +133,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         if self.upload_env:
             return self.upload_env
 
-        upload_env = self.query_env(partial_env=c.get("upload_env"),
+        upload_env = self.query_env(partial_env=self.config.get("upload_env"),
                                     replace_dict=self.config)
         self.upload_env = upload_env
         return self.upload_env
