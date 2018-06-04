@@ -173,7 +173,7 @@ ConfigForMime(const nsACString& aMimeType)
       conf.reset(new OmxAmrConfig<OmxAmrSampleRate::kWideBand>());
     }
   }
-  return std::move(conf);
+  return conf;
 }
 
 // There should be a better way to calculate it.
@@ -231,7 +231,7 @@ ConfigForMime(const nsACString& aMimeType)
   if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
     conf.reset(new OmxCommonVideoConfig());
   }
-  return std::move(conf);
+  return conf;
 }
 
 OMX_ERRORTYPE

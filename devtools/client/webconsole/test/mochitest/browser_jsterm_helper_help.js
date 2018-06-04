@@ -18,7 +18,7 @@ add_task(async function() {
     }
   };
 
-  jsterm.clearOutput();
+  hud.ui.clearOutput();
   await jsterm.execute("help()");
   await jsterm.execute("help");
   await jsterm.execute("?");

@@ -85,7 +85,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
 StackingContextHelper::~StackingContextHelper()
 {
   if (mBuilder) {
-    mBuilder->PopStackingContext();
+    mBuilder->PopStackingContext(mReferenceFrameId.isSome());
   }
 }
 

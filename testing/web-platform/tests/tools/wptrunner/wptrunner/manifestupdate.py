@@ -116,6 +116,7 @@ class TestNode(ManifestItem):
         ManifestItem.__init__(self, node)
         self.subtests = {}
         self._from_file = True
+        self.new_disabled = False
         self.update_properties = {
             "expected": ExpectedUpdate(self),
             "max-asserts": MaxAssertsUpdate(self),

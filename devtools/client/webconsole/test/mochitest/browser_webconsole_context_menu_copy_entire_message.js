@@ -35,7 +35,7 @@ add_task(async function() {
   await onPrefUpdated;
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   info("Call the log function defined in the test page");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {

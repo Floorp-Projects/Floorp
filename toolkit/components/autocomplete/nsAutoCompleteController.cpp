@@ -1529,8 +1529,20 @@ nsAutoCompleteController::CompleteDefaultIndex(int32_t aResultIndex)
   nsAutoString resultValue;
   if (NS_SUCCEEDED(GetDefaultCompleteValue(aResultIndex, true, resultValue))) {
     CompleteValue(resultValue);
-
     mDefaultIndexCompleted = true;
+  } else {
+    // Reset the search string again, in case it was completed with
+    // mPlaceholderCompletionString, but the actually received result doesn't
+    // have a default index result. Only reset the input when necessary, to
+    // avoid triggering unnecessary new searches.
+    nsAutoString inputValue;
+    input->GetTextValue(inputValue);
+    if (!inputValue.Equals(mSearchString)) {
+      SetValueOfInputTo(mSearchString,
+                        nsIAutoCompleteInput::TEXTVALUE_REASON_REVERT);
+      input->SelectTextRange(mSearchString.Length(), mSearchString.Length());
+    }
+    mPlaceholderCompletionString.Truncate();
   }
 
   return NS_OK;

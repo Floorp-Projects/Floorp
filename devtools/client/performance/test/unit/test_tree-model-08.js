@@ -9,7 +9,7 @@
 add_task(function test() {
   const FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
   const { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");
-  const { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
+  const { CATEGORY_INDEX } = require("devtools/client/performance/modules/categories");
   const compute = frame => {
     FrameUtils.computeIsContentAndCategory(frame);
     return frame;
@@ -39,7 +39,7 @@ add_task(function test() {
     new FrameNode("Foo::Bar::Baz", compute({
       location: "Foo::Bar::Baz",
       line: 456,
-      category: CATEGORY_MASK("other"),
+      category: CATEGORY_INDEX("other"),
     }), false),
     new FrameNode("EnterJIT", compute({
       location: "EnterJIT",

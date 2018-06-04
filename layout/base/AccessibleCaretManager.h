@@ -349,10 +349,19 @@ protected:
   // carets become tilt only when they are overlapping.
   static bool sCaretsAlwaysTilt;
 
-  // By default, javascript content selection changes closes AccessibleCarets and
-  // UI interactions. Optionally, we can try to maintain the active UI, keeping
-  // carets and ActionBar available.
-  static bool sCaretsScriptUpdates;
+  enum ScriptUpdateMode : int32_t {
+    // By default, always hide carets for selection changes due to JS calls.
+    kScriptAlwaysHide,
+    // Update any visible carets for selection changes due to JS calls,
+    // but don't show carets if carets are hidden.
+    kScriptUpdateVisible,
+    // Always show carets for selection changes due to JS calls.
+    kScriptAlwaysShow
+  };
+
+  // Preference to indicate how to update carets for selection changes due to
+  // JS calls, as one of the ScriptUpdateMode constants.
+  static int32_t sCaretsScriptUpdates;
 
   // Preference to allow one caret to be dragged across the other caret without
   // any limitation. When set to false, one caret cannot be dragged across the

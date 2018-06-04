@@ -38,49 +38,49 @@ CONFIG_PER_BOUNCER_PRODUCT = {
     'apk': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'android': 'fennec-{version}.:lang.android-arm.apk',
-            'android-x86': 'fennec-{version}.:lang.android-i386.apk',
+            'android': '{product}-{version}.:lang.android-arm.apk',
+            'android-x86': '{product}-{version}.:lang.android-i386.apk',
         },
     },
     'complete-mar': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'default': 'firefox-{version}.complete.mar',
+            'default': '{product}-{version}.complete.mar',
         },
     },
     'complete-mar-candidates': {
         'path_template': CANDIDATES_PATH_TEMPLATE,
         'file_names': {
-            'default': 'firefox-{version}.complete.mar',
+            'default': '{product}-{version}.complete.mar',
         },
     },
     'installer': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'linux': 'firefox-{version}.tar.bz2',
-            'linux64': 'firefox-{version}.tar.bz2',
-            'osx': 'Firefox%20{version}.dmg',
-            'win': 'Firefox%20Setup%20{version}.exe',
-            'win64': 'Firefox%20Setup%20{version}.exe',
+            'linux': '{product}-{version}.tar.bz2',
+            'linux64': '{product}-{version}.tar.bz2',
+            'osx': '{pretty_product}%20{version}.dmg',
+            'win': '{pretty_product}%20Setup%20{version}.exe',
+            'win64': '{pretty_product}%20Setup%20{version}.exe',
         },
     },
     'partial-mar': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'default': 'firefox-{previous_version}-{version}.partial.mar',
+            'default': '{product}-{previous_version}-{version}.partial.mar',
         },
     },
     'partial-mar-candidates': {
         'path_template': CANDIDATES_PATH_TEMPLATE,
         'file_names': {
-            'default': 'firefox-{previous_version}-{version}.partial.mar',
+            'default': '{product}-{previous_version}-{version}.partial.mar',
         },
     },
     'stub-installer': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
-            'win': 'Firefox%20Installer.exe',
-            'win64': 'Firefox%20Installer.exe',
+            'win': '{pretty_product}%20Installer.exe',
+            'win64': '{pretty_product}%20Installer.exe',
         },
     },
 }
@@ -186,8 +186,12 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
             # Thus no default value is defined there
             continue
 
+        file_name_product = _craft_filename_product(product)
         file_name = file_name_template.format(
-            version=current_version, previous_version=strip_build_data(previous_version)
+            product=file_name_product,
+            pretty_product=file_name_product.capitalize(),
+            version=current_version,
+            previous_version=strip_build_data(previous_version),
         )
 
         path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['path_template']
@@ -217,6 +221,10 @@ def _craft_ftp_platform(bouncer_platform, file_name):
         return 'win32'
 
     return ftp_platform
+
+
+def _craft_filename_product(product):
+    return 'firefox' if product == 'devedition' else product
 
 
 def craft_bouncer_product_name(product, bouncer_product, current_version,

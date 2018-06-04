@@ -7,7 +7,6 @@
   ### DO NOT edit it by hand.                                       ###
 
 COMPILE_FLAGS["OS_INCLUDES"] = []
-COMPILE_FLAGS["STL"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
@@ -89,6 +88,7 @@ if CONFIG["OS_TARGET"] == "DragonFly":
 if CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
+        "-msse2",
         "-msse2"
     ]
 
@@ -123,7 +123,6 @@ if CONFIG["OS_TARGET"] == "NetBSD":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
-        "-msse2",
         "-msse2"
     ]
 

@@ -18,7 +18,7 @@ add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   info("Test Copy URL menu item for text log");
 
@@ -36,7 +36,7 @@ add_task(async function() {
   ok(!copyURLItem, "Copy URL menu item is hidden for a simple text message");
 
   await hideContextMenu(hud);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   info("Test Copy URL menu item for network log");
 

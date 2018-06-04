@@ -7,7 +7,6 @@
   ### DO NOT edit it by hand.                                       ###
 
 COMPILE_FLAGS["OS_INCLUDES"] = []
-COMPILE_FLAGS["STL"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True

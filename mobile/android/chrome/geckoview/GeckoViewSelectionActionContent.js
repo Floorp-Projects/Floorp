@@ -18,48 +18,43 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
 
     this._seqNo = 0;
     this._isActive = false;
-    this._previousMessage = {};
+    this._previousMessage = "";
 
     this._actions = [{
       id: "org.mozilla.geckoview.CUT",
       predicate: e => !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
-      perform: _ => this._domWindowUtils.sendContentCommandEvent("cut"),
+      perform: _ => docShell.doCommand("cmd_cut"),
     }, {
       id: "org.mozilla.geckoview.COPY",
       predicate: e => !e.collapsed && !this._isPasswordField(e),
-      perform: _ => this._domWindowUtils.sendContentCommandEvent("copy"),
+      perform: _ => docShell.doCommand("cmd_copy"),
     }, {
       id: "org.mozilla.geckoview.PASTE",
       predicate: e => e.selectionEditable &&
                       Services.clipboard.hasDataMatchingFlavors(
                           ["text/unicode"], 1, Ci.nsIClipboard.kGlobalClipboard),
-      perform: _ => this._domWindowUtils.sendContentCommandEvent("paste"),
+      perform: _ => docShell.doCommand("cmd_paste"),
     }, {
       id: "org.mozilla.geckoview.DELETE",
       predicate: e => !e.collapsed && e.selectionEditable,
-      perform: _ => this._domWindowUtils.sendContentCommandEvent("delete"),
+      perform: _ => docShell.doCommand("cmd_delete"),
     }, {
       id: "org.mozilla.geckoview.COLLAPSE_TO_START",
       predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => this._getSelection(e).collapseToStart(),
+      perform: e => docShell.doCommand("cmd_moveLeft"),
     }, {
       id: "org.mozilla.geckoview.COLLAPSE_TO_END",
       predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => this._getSelection(e).collapseToEnd(),
+      perform: e => docShell.doCommand("cmd_moveRight"),
     }, {
       id: "org.mozilla.geckoview.UNSELECT",
       predicate: e => !e.collapsed && !e.selectionEditable,
-      perform: e => this._getSelection(e).removeAllRanges(),
+      perform: e => docShell.doCommand("cmd_selectNone"),
     }, {
       id: "org.mozilla.geckoview.SELECT_ALL",
       predicate: e => e.reason !== "longpressonemptycontent",
-      perform: e => this._getSelectionController(e).selectAll(),
+      perform: e => docShell.doCommand("cmd_selectAll"),
     }];
-  }
-
-  get _domWindowUtils() {
-    return content.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
   }
 
   _isPasswordField(aEvent) {
@@ -72,27 +67,6 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
     return win && win.HTMLInputElement &&
            focus instanceof win.HTMLInputElement &&
            !focus.mozIsTextField(/* excludePassword */ true);
-  }
-
-  _getSelectionController(aEvent) {
-    if (aEvent.selectionEditable) {
-      const focus = aEvent.target.activeElement;
-      if (focus && focus.editor) {
-        return focus.editor.selectionController;
-      }
-    }
-
-    return aEvent.target.defaultView
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDocShell)
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsISelectionDisplay)
-                 .QueryInterface(Ci.nsISelectionController);
-  }
-
-  _getSelection(aEvent) {
-    return this._getSelectionController(aEvent)
-               .getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
   }
 
   _getFrameOffset(aEvent) {
@@ -123,18 +97,31 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   onEnable() {
     debug `onEnable`;
     addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
+    addEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
   }
 
   onDisable() {
     debug `onDisable`;
     removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
+    removeEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
   }
 
   /**
    * Receive and act on AccessibleCarets caret state-change
-   * (mozcaretstatechanged) events.
+   * (mozcaretstatechanged and pagehide) events.
    */
   handleEvent(aEvent) {
+    if (aEvent.type === "pagehide") {
+      // Hide any selection actions on page hide.
+      aEvent = {
+        reason: "visibilitychange",
+        caretVisibile: false,
+        selectionVisible: false,
+        collapsed: true,
+        selectionEditable: false,
+      };
+    }
+
     let reason = aEvent.reason;
 
     if (this._isActive && !aEvent.caretVisible) {
@@ -146,7 +133,9 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
     } else if (aEvent.selectionEditable &&
                aEvent.collapsed &&
                reason !== "longpressonemptycontent" &&
-               reason !== "taponcaret") {
+               reason !== "taponcaret" &&
+               !Services.prefs.getBoolPref(
+                   "geckoview.selection_action.show_on_focus", false)) {
       // Don't show selection actions when merely focusing on an editor or
       // repositioning the cursor. Wait until long press or the caret is tapped
       // in order to match Android behavior.
@@ -205,10 +194,12 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
         onSuccess: response => {
           if (response.seqNo !== this._seqNo) {
             // Stale action.
+            warn `Stale response ${response.id}`;
             return;
           }
           let action = actions.find(action => action.id === response.id);
           if (action) {
+            debug `Performing ${response.id}`;
             action.perform.call(this, aEvent, response);
           } else {
             warn `Invalid action ${response.id}`;

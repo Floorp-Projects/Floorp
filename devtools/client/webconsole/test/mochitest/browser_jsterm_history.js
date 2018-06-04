@@ -16,9 +16,9 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 add_task(async function() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
   const { inputNode } = jsterm;
-  jsterm.clearOutput();
+  ui.clearOutput();
 
   for (const command of COMMANDS) {
     info(`Executing command ${command}`);
