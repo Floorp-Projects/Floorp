@@ -154,5 +154,171 @@ AnimationFrameRetainedBuffer::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
 }
 
+AnimationFrameDiscardingQueue::AnimationFrameDiscardingQueue(AnimationFrameRetainedBuffer&& aQueue)
+  : AnimationFrameBuffer(aQueue)
+  , mInsertIndex(aQueue.mFrames.Length())
+  , mFirstFrame(std::move(aQueue.mFrames[0]))
+{
+  MOZ_ASSERT(!mSizeKnown);
+  MOZ_ASSERT(!mRedecodeError);
+  MOZ_ASSERT(mInsertIndex > 0);
+  MOZ_ASSERT(mGetIndex > 0);
+  mMayDiscard = true;
+
+  for (size_t i = aQueue.mGetIndex; i < mInsertIndex; ++i) {
+    MOZ_ASSERT(aQueue.mFrames[i]);
+    mDisplay.push_back(std::move(aQueue.mFrames[i]));
+  }
+}
+
+bool
+AnimationFrameDiscardingQueue::InsertInternal(RefPtr<imgFrame>&& aFrame)
+{
+  // Even though we don't use redecoded first frames for display purposes, we
+  // will still use them for recycling, so we still need to insert it.
+  mDisplay.push_back(std::move(aFrame));
+  ++mInsertIndex;
+  MOZ_ASSERT(mInsertIndex <= mSize);
+  return true;
+}
+
+bool
+AnimationFrameDiscardingQueue::ResetInternal()
+{
+  mDisplay.clear();
+  mInsertIndex = 0;
+
+  bool restartDecoder = mPending == 0;
+  mPending = 2 * mBatch;
+  return restartDecoder;
+}
+
+bool
+AnimationFrameDiscardingQueue::MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea)
+{
+  if (NS_WARN_IF(mInsertIndex != mSize)) {
+    MOZ_ASSERT(mSizeKnown);
+    mRedecodeError = true;
+    mPending = 0;
+  }
+
+  // We reached the end of the animation, the next frame we get, if we get
+  // another, will be the first frame again.
+  mInsertIndex = 0;
+  mSizeKnown = true;
+
+  // Since we only request advancing when we want to resume at a certain point
+  // in the animation, we should never exceed the number of frames.
+  MOZ_ASSERT(mAdvance == 0);
+  return mPending > 0;
+}
+
+void
+AnimationFrameDiscardingQueue::AdvanceInternal()
+{
+  // We only want to change the current frame index if we have advanced. This
+  // means either a higher frame index, or going back to the beginning.
+  // We should never have advanced beyond the frame buffer.
+  MOZ_ASSERT(mGetIndex < mSize);
+
+  // Unless we are recycling, we should have the current frame still in the
+  // display queue. Either way, we should at least have an entry in the queue
+  // which we need to consume.
+  MOZ_ASSERT(mRecycling || bool(mDisplay.front()));
+  MOZ_ASSERT(!mDisplay.empty());
+  mDisplay.pop_front();
+  MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
+
+  if (mDisplay.size() + mPending - 1 < mBatch) {
+    // If we have fewer frames than the batch size, then ask for more. If we
+    // do not have any pending, then we know that there is no active decoding.
+    mPending += mBatch;
+  }
+}
+
+imgFrame*
+AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
+{
+  // If we are advancing on behalf of the animation, we don't expect it to be
+  // getting any frames (besides the first) until we get the desired frame.
+  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
+
+  // The first frame is stored separately. If we only need the frame for
+  // display purposes, we can return it right away. If we need it for advancing
+  // the animation, we want to verify the recreated first frame is available
+  // before allowing it continue.
+  if (aForDisplay && aFrame == 0) {
+    return mFirstFrame.get();
+  }
+
+  // If we don't have that frame, return an empty frame ref.
+  if (aFrame >= mSize) {
+    return nullptr;
+  }
+
+  size_t offset;
+  if (aFrame >= mGetIndex) {
+    offset = aFrame - mGetIndex;
+  } else if (!mSizeKnown) {
+    MOZ_ASSERT_UNREACHABLE("Requesting previous frame after we have advanced!");
+    return nullptr;
+  } else {
+    offset = mSize - mGetIndex + aFrame;
+  }
+
+  if (offset >= mDisplay.size()) {
+    return nullptr;
+  }
+
+  // If we have space for the frame, it should always be available.
+  MOZ_ASSERT(mDisplay[offset]);
+  return mDisplay[offset].get();
+}
+
+bool
+AnimationFrameDiscardingQueue::IsFirstFrameFinished() const
+{
+  MOZ_ASSERT(mFirstFrame);
+  MOZ_ASSERT(mFirstFrame->IsFinished());
+  return true;
+}
+
+bool
+AnimationFrameDiscardingQueue::IsLastInsertedFrame(imgFrame* aFrame) const
+{
+  return !mDisplay.empty() && mDisplay.back().get() == aFrame;
+}
+
+void
+AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                      const AddSizeOfCb& aCallback)
+{
+  mFirstFrame->AddSizeOfExcludingThis(aMallocSizeOf,
+    [&](AddSizeOfCbData& aMetadata) {
+      aMetadata.index = 1;
+      aCallback(aMetadata);
+    }
+  );
+
+  size_t i = mGetIndex;
+  for (const RefPtr<imgFrame>& frame : mDisplay) {
+    ++i;
+    if (mSize < i) {
+      // First frame again, we already covered it above.
+      MOZ_ASSERT(mFirstFrame.get() == frame.get());
+      i = 1;
+      continue;
+    }
+
+    frame->AddSizeOfExcludingThis(aMallocSizeOf,
+      [&](AddSizeOfCbData& aMetadata) {
+        aMetadata.index = i;
+        aCallback(aMetadata);
+      }
+    );
+  }
+}
+
 } // namespace image
 } // namespace mozilla
