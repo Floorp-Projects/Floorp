@@ -146,6 +146,10 @@ private:
   uint32_t mSuspendCount;
   bool mIsPending;
 
+  // This will only be true while DoOnStartRequest is in progress.
+  // It is used to enforce that DivertToParent is only called during that time.
+  bool mDuringOnStart = false;
+
   PRTime mLastModifiedTime;
   uint64_t mStartPos;
   nsCString mEntityID;
