@@ -63,8 +63,8 @@
 namespace js {
 namespace coverage {
 
-LCovSource::LCovSource(LifoAlloc* alloc, UniqueChars name)
-  : name_(std::move(name)),
+LCovSource::LCovSource(LifoAlloc* alloc, const char* name)
+  : name_(name),
     outFN_(alloc),
     outFNDA_(alloc),
     numFunctionsFound_(0),
@@ -80,7 +80,7 @@ LCovSource::LCovSource(LifoAlloc* alloc, UniqueChars name)
 }
 
 LCovSource::LCovSource(LCovSource&& src)
-  : name_(std::move(src.name_)),
+  : name_(src.name_),
     outFN_(src.outFN_),
     outFNDA_(src.outFNDA_),
     numFunctionsFound_(src.numFunctionsFound_),
@@ -94,6 +94,12 @@ LCovSource::LCovSource(LCovSource&& src)
     maxLineHit_(src.maxLineHit_),
     hasTopLevelScript_(src.hasTopLevelScript_)
 {
+    src.name_ = nullptr;
+}
+
+LCovSource::~LCovSource()
+{
+    js_delete(name_);
 }
 
 void
@@ -103,7 +109,7 @@ LCovSource::exportInto(GenericPrinter& out) const
     if (!hasTopLevelScript_)
         return;
 
-    out.printf("SF:%s\n", name_.get());
+    out.printf("SF:%s\n", name_);
 
     outFN_.exportInto(out);
     outFNDA_.exportInto(out);
@@ -503,14 +509,14 @@ LCovRealm::lookupOrAdd(JS::Realm* realm, const char* name)
         }
     }
 
-    UniqueChars source_name = DuplicateString(name);
+    char* source_name = js_strdup(name);
     if (!source_name) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }
 
     // Allocate a new LCovSource for the current top-level.
-    if (!sources_->emplaceBack(LCovSource(&alloc_, std::move(source_name)))) {
+    if (!sources_->append(std::move(LCovSource(&alloc_, source_name)))) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }
