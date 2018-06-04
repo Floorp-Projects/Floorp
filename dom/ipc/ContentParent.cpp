@@ -123,7 +123,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
-#include "nsIDOMGeoGeolocation.h"
+#include "nsGeolocation.h"
 #include "nsIDragService.h"
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
@@ -3836,10 +3836,7 @@ AddGeolocationListener(nsIDOMGeoPositionCallback* watcher,
                        nsIDOMGeoPositionErrorCallback* errorCallBack,
                        bool highAccuracy)
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return -1;
-  }
+  RefPtr<Geolocation> geo = Geolocation::NonWindowSingleton();
 
   UniquePtr<PositionOptions> options = MakeUnique<PositionOptions>();
   options->mTimeout = 0;
@@ -3865,10 +3862,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvRemoveGeolocationListener()
 {
   if (mGeolocationWatchID != -1) {
-    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-    if (!geo) {
-      return IPC_OK();
-    }
+    RefPtr<Geolocation> geo = Geolocation::NonWindowSingleton();
     geo->ClearWatch(mGeolocationWatchID);
     mGeolocationWatchID = -1;
   }
