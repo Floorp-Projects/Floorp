@@ -106,6 +106,20 @@ savant:
     extra_keys:
       subcategory: The broad event category for this probe. E.g. navigation
       engine: The id of the search engine used.
+  end_study:
+    objects: ["ineligible", "study_disable", "expired"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time a study ending condition occurs for the Savant
+      Shield study. The object field records the reason that caused the ending.
+    bug_numbers: [1457226, 1462725]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
