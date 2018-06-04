@@ -53,6 +53,15 @@ promise_test(async t => {
 }, 'Playing a pause-pending but previously finished animation seeks back to'
    + ' to the start');
 
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.finish();
+  await animation.ready;
+
+  animation.play();
+  assert_equals(animation.startTime, null, 'start time is unresolved');
+}, 'Playing a finished animation clears the start time');
+
 test(t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.cancel();

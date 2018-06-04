@@ -13,10 +13,12 @@
 'use strict';
 
 test(t => {
-  const div = addDiv(t, { 'style': 'animation: anim 1000s' });
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
   const animation = div.getAnimations()[0];
+  assert_true(animation.pending);
   assert_equals(animation.playState, 'running');
-}, 'Animation returns correct playState when running');
+  assert_equals(animation.startTime, null);
+}, 'A new CSS animation is initially play-pending');
 
 test(t => {
   const div = addDiv(t, { 'style': 'animation: anim 1000s paused' });
