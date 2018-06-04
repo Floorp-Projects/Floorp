@@ -6,6 +6,7 @@
 #include "AnimationSurfaceProvider.h"
 
 #include "gfxPrefs.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "nsProxyRelease.h"
 
 #include "DecodePool.h"
@@ -52,6 +53,10 @@ AnimationSurfaceProvider::AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
 AnimationSurfaceProvider::~AnimationSurfaceProvider()
 {
   DropImageReference();
+
+  if (mDecoder) {
+    mDecoder->SetFrameRecycler(nullptr);
+  }
 }
 
 void
@@ -397,13 +402,26 @@ AnimationSurfaceProvider::RequestFrameDiscarding()
   mFramesMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mDecoder);
 
-  if (mFrames->MayDiscard()) {
+  if (mFrames->MayDiscard() || mFrames->IsRecycling()) {
     MOZ_ASSERT_UNREACHABLE("Already replaced frame queue!");
     return;
   }
 
   auto oldFrameQueue = static_cast<AnimationFrameRetainedBuffer*>(mFrames.get());
-  mFrames.reset(new AnimationFrameDiscardingQueue(std::move(*oldFrameQueue)));
+
+  // We only recycle if it is a full frame. Partial frames may be sized
+  // differently from each other. We do not support recycling with WebRender
+  // and shared surfaces at this time as there is additional synchronization
+  // required to know when it is safe to recycle.
+  MOZ_ASSERT(!mDecoder->GetFrameRecycler());
+  if (gfxPrefs::ImageAnimatedDecodeOnDemandRecycle() &&
+      mDecoder->ShouldBlendAnimation() &&
+      (!gfxVars::GetUseWebRenderOrDefault() || !gfxPrefs::ImageMemShared())) {
+    mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
+    mDecoder->SetFrameRecycler(this);
+  } else {
+    mFrames.reset(new AnimationFrameDiscardingQueue(std::move(*oldFrameQueue)));
+  }
 }
 
 void
@@ -462,6 +480,14 @@ AnimationSurfaceProvider::ShouldPreferSyncRun() const
   MOZ_ASSERT(mDecoder);
 
   return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
+}
+
+RawAccessFrameRef
+AnimationSurfaceProvider::RecycleFrame(gfx::IntRect& aRecycleRect)
+{
+  MutexAutoLock lock(mFramesMutex);
+  MOZ_ASSERT(mFrames->IsRecycling());
+  return mFrames->RecycleFrame(aRecycleRect);
 }
 
 } // namespace image
