@@ -1000,8 +1000,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  RefPtr<HitTestingTreeNode> node =
-    GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics);
+  HitTestingTreeNodeAutoLock node;
+  GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics, node);
   if (!node) {
     return nsEventStatus_eConsumeNoDefault;
   }
