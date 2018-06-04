@@ -9,6 +9,19 @@ var EXPORTED_SYMBOLS = ["ShieldStudySavant"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+// See LOG_LEVELS in Console.jsm. Examples: "all", "info", "warn", & "error".
+const PREF_LOG_LEVEL = "shield.savant.loglevel";
+
+// Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+  let consoleOptions = {
+    maxLogLevelPref: PREF_LOG_LEVEL,
+    prefix: "ShieldStudySavant",
+  };
+  return new ConsoleAPI(consoleOptions);
+});
+
 class ShieldStudySavantClass {
   constructor() {
     this.SHIELD_STUDY_SAVANT_PREF = "shield.savant.enabled";
@@ -37,6 +50,7 @@ class ShieldStudySavantClass {
   }
 
   enableCollection() {
+    log.debug("Study has been enabled; turning on data collection.");
     // TODO: enable data collection
   }
 
@@ -47,12 +61,14 @@ class ShieldStudySavantClass {
   }
 
   disableCollection() {
+    log.debug("Study has been disabled; turning off data collection.");
     // TODO: disable data collection
   }
 
   uninit() {
     Services.prefs.removeObserver(this.SHIELD_STUDY_SAVANT_PREF, this);
     Services.prefs.clearUserPref(this.SHIELD_STUDY_SAVANT_PREF);
+    Services.prefs.clearUserPref(PREF_LOG_LEVEL);
   }
 };
 
