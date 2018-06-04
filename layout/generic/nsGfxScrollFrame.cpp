@@ -674,7 +674,7 @@ void
 nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
                                   const ReflowOutput& aDesiredSize)
 {
-  ReflowOutput kidDesiredSize(aDesiredSize.GetWritingMode(), aDesiredSize.mFlags);
+  ReflowOutput kidDesiredSize(aDesiredSize.GetWritingMode());
   ReflowScrolledFrame(aState, GuessHScrollbarNeeded(*aState),
                       GuessVScrollbarNeeded(*aState), &kidDesiredSize, true);
 
