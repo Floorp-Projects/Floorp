@@ -13,29 +13,50 @@
 namespace mozilla {
 namespace dom {
 
-class CSSKeyframesRule : public css::Rule
-{
-protected:
-  using css::Rule::Rule;
-  virtual ~CSSKeyframesRule() {}
+class CSSKeyframeList;
 
+class CSSKeyframesRule final : public css::Rule
+{
 public:
-  // Let's not worry for now about sorting out whether we're a leaf or not.
-  bool IsCCLeaf() const override { return false; }
+  CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
+                   uint32_t aLine, uint32_t aColumn);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframesRule,
+                                           css::Rule)
+
+  bool IsCCLeaf() const final;
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  void SetStyleSheet(StyleSheet* aSheet) final;
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
-  virtual void GetName(nsAString& aName) const = 0;
-  virtual void SetName(const nsAString& aName) = 0;
-  virtual CSSRuleList* CssRules() = 0;
-  virtual void AppendRule(const nsAString& aRule) = 0;
-  virtual void DeleteRule(const nsAString& aKey) = 0;
-  virtual CSSKeyframeRule* FindRule(const nsAString& aKey) = 0;
+  void GetCssText(nsAString& aCssText) const final;
+  void GetName(nsAString& aName) const;
+  void SetName(const nsAString& aName);
+  CSSRuleList* CssRules();
+  void AppendRule(const nsAString& aRule);
+  void DeleteRule(const nsAString& aKey);
+  CSSKeyframeRule* FindRule(const nsAString& aKey);
 
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+
+private:
+  uint32_t FindRuleIndexForKey(const nsAString& aKey);
+
+  template<typename Func>
+  void UpdateRule(Func aCallback);
+
+  virtual ~CSSKeyframesRule();
+
+  RefPtr<RawServoKeyframesRule> mRawRule;
+  RefPtr<CSSKeyframeList> mKeyframeList; // lazily constructed
 };
 
 } // namespace dom

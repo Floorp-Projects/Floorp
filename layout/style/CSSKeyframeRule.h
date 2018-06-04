@@ -8,30 +8,55 @@
 #define mozilla_dom_CSSKeyframeRule_h
 
 #include "mozilla/css/Rule.h"
+#include "mozilla/ServoBindingTypes.h"
 
 class nsICSSDeclaration;
+class DeclarationBlock;
 
 namespace mozilla {
 namespace dom {
 
-class CSSKeyframeRule : public css::Rule
-{
-protected:
-  using css::Rule::Rule;
-  virtual ~CSSKeyframeRule() {}
+class CSSKeyframeDeclaration;
 
+class CSSKeyframeRule final : public css::Rule
+{
 public:
-  bool IsCCLeaf() const override { return Rule::IsCCLeaf(); }
+  CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
+                  uint32_t aLine, uint32_t aColumn);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeRule,
+                                           css::Rule)
+  bool IsCCLeaf() const final;
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  RawServoKeyframe* Raw() const { return mRaw; }
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRuleBinding::KEYFRAME_RULE; }
-  virtual void GetKeyText(nsAString& aKey) = 0;
-  virtual void SetKeyText(const nsAString& aKey) = 0;
-  virtual nsICSSDeclaration* Style() = 0;
+  void GetCssText(nsAString& aCssText) const final;
+  void GetKeyText(nsAString& aKey);
+  void SetKeyText(const nsAString& aKey);
+  nsICSSDeclaration* Style();
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+
+private:
+  virtual ~CSSKeyframeRule();
+
+  friend class CSSKeyframeDeclaration;
+
+  template<typename Func>
+  void UpdateRule(Func aCallback);
+
+  RefPtr<RawServoKeyframe> mRaw;
+  // lazily created when needed
+  RefPtr<CSSKeyframeDeclaration> mDeclaration;
 };
 
 } // namespace dom
