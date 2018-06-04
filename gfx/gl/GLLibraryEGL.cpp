@@ -43,7 +43,7 @@ namespace mozilla {
 namespace gl {
 
 StaticMutex GLLibraryEGL::sMutex;
-GLLibraryEGL sEGLLibrary;
+StaticRefPtr<GLLibraryEGL> GLLibraryEGL::sEGLLibrary;
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLExtensionNames[] = {
@@ -365,9 +365,23 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
     return true;
 }
 
+/* static */ bool
+GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId) {
+    if (!sEGLLibrary) {
+        sEGLLibrary = new GLLibraryEGL();
+    }
+    return sEGLLibrary->DoEnsureInitialized(forceAccel, out_failureId);
+}
+
 bool
-GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId)
+GLLibraryEGL::DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId)
 {
+    if (mInitialized && !mSymbols.fTerminate) {
+        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_DESTROYED");
+        MOZ_ASSERT(false);
+        return false;
+    }
+
     if (mInitialized) {
         return true;
     }
@@ -671,6 +685,20 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
 
 #undef SYMBOL
 #undef END_OF_SYMBOLS
+
+void
+GLLibraryEGL::Shutdown()
+{
+    if (this != sEGLLibrary) {
+        return;
+    }
+    if (mEGLDisplay) {
+        fTerminate(mEGLDisplay);
+        mEGLDisplay = EGL_NO_DISPLAY;
+    }
+    mSymbols = {};
+    sEGLLibrary = nullptr;
+}
 
 EGLDisplay
 GLLibraryEGL::CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString* const out_failureId)

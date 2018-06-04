@@ -311,10 +311,11 @@ VRDisplayGVR::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor
   GVR_CHECK(gvr_frame_bind_buffer(frame, 0));
 
   EGLint status = LOCAL_EGL_CONDITION_SATISFIED;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   if (sync) {
-    MOZ_ASSERT(sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
-    status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), sync, 0, LOCAL_EGL_FOREVER);
+    MOZ_ASSERT(egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
+    status = egl->fClientWaitSync(EGL_DISPLAY(), sync, 0, LOCAL_EGL_FOREVER);
   }
 
   if (status != LOCAL_EGL_CONDITION_SATISFIED) {

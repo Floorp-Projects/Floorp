@@ -296,18 +296,16 @@ if (wasmSaturatingTruncationSupported()) {
     testConversion('i64', 'trunc_u:sat', 'f32', '-infinity', '0');
 }
 
-if (wasmSignExtensionSupported()) {
-    testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
-    testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
-    testSignExtension('i32', 'extend16_s', 'i32', 0x7FFF, 0x7FFF);
-    testSignExtension('i32', 'extend16_s', 'i32', 0x8000, -0x8000);
-    testSignExtension('i64', 'extend8_s', 'i64', 0x7F, 0x7F);
-    testSignExtension('i64', 'extend8_s', 'i64', 0x80, -0x80);
-    testSignExtension('i64', 'extend16_s', 'i64', 0x7FFF, 0x7FFF);
-    testSignExtension('i64', 'extend16_s', 'i64', 0x8000, -0x8000);
-    testSignExtension('i64', 'extend32_s', 'i64', 0x7FFFFFFF, 0x7FFFFFFF);
-    testSignExtension('i64', 'extend32_s', 'i64', "0x80000000", "0xFFFFFFFF80000000");
-}
+testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
+testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
+testSignExtension('i32', 'extend16_s', 'i32', 0x7FFF, 0x7FFF);
+testSignExtension('i32', 'extend16_s', 'i32', 0x8000, -0x8000);
+testSignExtension('i64', 'extend8_s', 'i64', 0x7F, 0x7F);
+testSignExtension('i64', 'extend8_s', 'i64', 0x80, -0x80);
+testSignExtension('i64', 'extend16_s', 'i64', 0x7FFF, 0x7FFF);
+testSignExtension('i64', 'extend16_s', 'i64', 0x8000, -0x8000);
+testSignExtension('i64', 'extend32_s', 'i64', 0x7FFFFFFF, 0x7FFFFFFF);
+testSignExtension('i64', 'extend32_s', 'i64', "0x80000000", "0xFFFFFFFF80000000");
 
 // i32.trunc_s* : all values in ] -2**31 - 1; 2**31 [ are acceptable.
 // f32:

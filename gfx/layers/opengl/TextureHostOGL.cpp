@@ -656,11 +656,12 @@ EGLImageTextureHost::Lock()
     return false;
   }
 
+  auto* egl = gl::GLLibraryEGL::Get();
   EGLint status = LOCAL_EGL_CONDITION_SATISFIED;
 
   if (mSync) {
-    MOZ_ASSERT(sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
-    status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSync, 0, LOCAL_EGL_FOREVER);
+    MOZ_ASSERT(egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
+    status = egl->fClientWaitSync(EGL_DISPLAY(), mSync, 0, LOCAL_EGL_FOREVER);
   }
 
   if (status != LOCAL_EGL_CONDITION_SATISFIED) {

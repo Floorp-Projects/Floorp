@@ -46,7 +46,7 @@ CreatePBufferSurface(GLLibraryEGL* egl,
 SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
                                        const gfx::IntSize& size, bool hasAlpha)
 {
-    GLLibraryEGL* egl = &sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     MOZ_ASSERT(egl);
     MOZ_ASSERT(egl->IsExtensionSupported(
                GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle));
@@ -325,7 +325,7 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
                                         const RefPtr<layers::LayersIPCChannel>& allocator,
                                         const layers::TextureFlags& flags)
 {
-    GLLibraryEGL* egl = &sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     if (!egl)
         return nullptr;
 

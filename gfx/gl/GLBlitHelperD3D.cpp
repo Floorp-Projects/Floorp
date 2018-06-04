@@ -22,30 +22,30 @@ namespace gl {
 static EGLStreamKHR
 StreamFromD3DTexture(ID3D11Texture2D* const texD3D, const EGLAttrib* const postAttribs)
 {
-    auto& egl = sEGLLibrary;
-    if (!egl.IsExtensionSupported(GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
-        !egl.IsExtensionSupported(GLLibraryEGL::ANGLE_stream_producer_d3d_texture))
+    auto* egl = gl::GLLibraryEGL::Get();
+    if (!egl->IsExtensionSupported(GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
+        !egl->IsExtensionSupported(GLLibraryEGL::ANGLE_stream_producer_d3d_texture))
     {
         return 0;
     }
 
-    const auto& display = egl.Display();
-    const auto stream = egl.fCreateStreamKHR(display, nullptr);
+    const auto& display = egl->Display();
+    const auto stream = egl->fCreateStreamKHR(display, nullptr);
     MOZ_ASSERT(stream);
     if (!stream)
         return 0;
     bool ok = true;
-    MOZ_ALWAYS_TRUE( ok &= bool(egl.fStreamConsumerGLTextureExternalAttribsNV(display,
-                                                                              stream,
-                                                                              nullptr)) );
-    MOZ_ALWAYS_TRUE( ok &= bool(egl.fCreateStreamProducerD3DTextureANGLE(display, stream,
-                                                                         nullptr)) );
-    MOZ_ALWAYS_TRUE( ok &= bool(egl.fStreamPostD3DTextureANGLE(display, stream, texD3D,
-                                                               postAttribs)) );
+    MOZ_ALWAYS_TRUE( ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(display,
+                                                                               stream,
+                                                                               nullptr)) );
+    MOZ_ALWAYS_TRUE( ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(display, stream,
+                                                                          nullptr)) );
+    MOZ_ALWAYS_TRUE( ok &= bool(egl->fStreamPostD3DTextureANGLE(display, stream, texD3D,
+                                                                postAttribs)) );
     if (ok)
         return stream;
 
-    (void)egl.fDestroyStreamKHR(display, stream);
+    (void)egl->fDestroyStreamKHR(display, stream);
     return 0;
 }
 
@@ -88,8 +88,8 @@ public:
         MOZ_RELEASE_ASSERT(numPlanes >= 1 && numPlanes <= 3);
 
         const auto& gl = mParent.mGL;
-        auto& egl = sEGLLibrary;
-        const auto& display = egl.Display();
+        auto* egl = gl::GLLibraryEGL::Get();
+        const auto& display = egl->Display();
 
         gl->fGenTextures(numPlanes, mTempTexs);
 
@@ -106,7 +106,7 @@ public:
 
         if (mSuccess) {
             for (uint8_t i = 0; i < mNumPlanes; i++) {
-                MOZ_ALWAYS_TRUE( egl.fStreamConsumerAcquireKHR(display, mStreams[i]) );
+                MOZ_ALWAYS_TRUE( egl->fStreamConsumerAcquireKHR(display, mStreams[i]) );
 
                 auto& mutex = mMutexList[i];
                 texD3DList[i]->QueryInterface(IID_IDXGIKeyedMutex,
@@ -125,12 +125,12 @@ public:
     ~BindAnglePlanes()
     {
         const auto& gl = mParent.mGL;
-        auto& egl = sEGLLibrary;
-        const auto& display = egl.Display();
+        auto* egl = gl::GLLibraryEGL::Get();
+        const auto& display = egl->Display();
 
         if (mSuccess) {
             for (uint8_t i = 0; i < mNumPlanes; i++) {
-                MOZ_ALWAYS_TRUE( egl.fStreamConsumerReleaseKHR(display, mStreams[i]) );
+                MOZ_ALWAYS_TRUE( egl->fStreamConsumerReleaseKHR(display, mStreams[i]) );
                 if (mMutexList[i]) {
                     mMutexList[i]->ReleaseSync(0);
                 }
@@ -138,7 +138,7 @@ public:
         }
 
         for (uint8_t i = 0; i < mNumPlanes; i++) {
-            (void)egl.fDestroyStreamKHR(display, mStreams[i]);
+            (void)egl->fDestroyStreamKHR(display, mStreams[i]);
         }
 
         gl->fDeleteTextures(mNumPlanes, mTempTexs);
@@ -158,12 +158,12 @@ GLBlitHelper::GetD3D11() const
     if (!mGL->IsANGLE())
         return nullptr;
 
-    auto& egl = sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     EGLDeviceEXT deviceEGL = 0;
-    MOZ_ALWAYS_TRUE( egl.fQueryDisplayAttribEXT(egl.Display(), LOCAL_EGL_DEVICE_EXT,
-                                                (EGLAttrib*)&deviceEGL) );
-    if (!egl.fQueryDeviceAttribEXT(deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
-                                   (EGLAttrib*)(ID3D11Device**)getter_AddRefs(mD3D11)))
+    MOZ_ALWAYS_TRUE( egl->fQueryDisplayAttribEXT(egl->Display(), LOCAL_EGL_DEVICE_EXT,
+                                                 (EGLAttrib*)&deviceEGL) );
+    if (!egl->fQueryDeviceAttribEXT(deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
+                                    (EGLAttrib*)(ID3D11Device**)getter_AddRefs(mD3D11)))
     {
         MOZ_ASSERT(false, "d3d9?");
         return nullptr;

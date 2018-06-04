@@ -1260,12 +1260,10 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::UnaryOpcode, Op::I32Eqz, begin, cur_);
                 if (consume(u"eq"))
                     return WasmToken(WasmToken::ComparisonOpcode, Op::I32Eq, begin, cur_);
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
                 if (consume(u"extend8_s"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I32Extend8S, begin, cur_);
                 if (consume(u"extend16_s"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I32Extend16S, begin, cur_);
-#endif
                 break;
               case 'g':
                 if (consume(u"ge_s"))
@@ -1502,14 +1500,12 @@ WasmTokenStream::next()
                 if (consume(u"extend_u/i32"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I64ExtendUI32,
                                      begin, cur_);
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
                 if (consume(u"extend8_s"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I64Extend8S, begin, cur_);
                 if (consume(u"extend16_s"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I64Extend16S, begin, cur_);
                 if (consume(u"extend32_s"))
                     return WasmToken(WasmToken::ConversionOpcode, Op::I64Extend32S, begin, cur_);
-#endif
                 break;
               case 'g':
                 if (consume(u"ge_s"))

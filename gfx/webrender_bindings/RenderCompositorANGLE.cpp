@@ -53,7 +53,7 @@ RenderCompositorANGLE::~RenderCompositorANGLE()
 ID3D11Device*
 RenderCompositorANGLE::GetDeviceOfEGLDisplay()
 {
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   // Fetch the D3D11 device.
   EGLDeviceEXT eglDevice = nullptr;
@@ -71,14 +71,13 @@ RenderCompositorANGLE::GetDeviceOfEGLDisplay()
 bool
 RenderCompositorANGLE::Initialize()
 {
-  const auto& egl = &gl::sEGLLibrary;
-
   nsCString discardFailureId;
-  if (!egl->EnsureInitialized(/* forceAccel */ true, &discardFailureId)) {
+  if (!gl::GLLibraryEGL::EnsureInitialized(/* forceAccel */ true, &discardFailureId)) {
     gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
     return false;
   }
 
+  auto* egl = gl::GLLibraryEGL::Get();
   mDevice = GetDeviceOfEGLDisplay();
 
   if (!mDevice) {
@@ -368,7 +367,7 @@ RenderCompositorANGLE::ResizeBufferIfNeeded()
     }
   }
 
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   const EGLint pbuffer_attribs[]{
     LOCAL_EGL_WIDTH, size.width,
@@ -399,7 +398,7 @@ RenderCompositorANGLE::ResizeBufferIfNeeded()
 void
 RenderCompositorANGLE::DestroyEGLSurface()
 {
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   // Release EGLSurface of back buffer before calling ResizeBuffers().
   if (mEGLSurface) {
