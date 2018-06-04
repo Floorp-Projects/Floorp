@@ -118,8 +118,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
             'config': {
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
-                "buildid_section": "App",
-                "buildid_option": "BuildID",
                 "log_name": "single_locale",
                 "hashType": "sha512",
             },
