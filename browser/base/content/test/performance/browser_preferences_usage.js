@@ -186,14 +186,6 @@ add_task(async function navigate_around() {
       min: 20,
       max: 30,
     },
-    "browser.chrome.favicons": {
-      min: 50,
-      max: 55,
-    },
-    "browser.chrome.site_icons": {
-      min: 50,
-      max: 55,
-    },
     "toolkit.cosmeticAnimations.enabled": {
       min: 45,
       max: 55,
