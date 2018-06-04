@@ -7936,6 +7936,17 @@ nsIDocument::CanSavePresentation(nsIRequest *aNewRequest)
 
       nsCOMPtr<nsIRequest> request = do_QueryInterface(elem);
       if (request && request != aNewRequest && request != baseChannel) {
+        // Favicon loads don't need to block caching.
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+        if (channel) {
+          nsCOMPtr<nsILoadInfo> li;
+          channel->GetLoadInfo(getter_AddRefs(li));
+          if (li) {
+            if (li->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
+              continue;
+            }
+          }
+        }
 #ifdef DEBUG_PAGE_CACHE
         nsAutoCString requestName, docSpec;
         request->GetName(requestName);
