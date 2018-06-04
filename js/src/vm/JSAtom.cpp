@@ -385,8 +385,11 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
         AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
         if (pp) {
             JSAtom* atom = pp->asPtr(cx);
-            if (zonePtr)
-                mozilla::Unused << zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false));
+            if (zonePtr && !zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))) {
+                ReportOutOfMemory(cx);
+                return nullptr;
+            }
+
             return atom;
         }
     }
@@ -402,8 +405,10 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
 
     cx->atomMarking().inlinedMarkAtom(cx, atom);
 
-    if (zonePtr)
-        mozilla::Unused << zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false));
+    if (zonePtr && !zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
 
     return atom;
 }
