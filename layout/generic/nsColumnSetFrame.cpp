@@ -747,7 +747,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
         kidReflowInput.mFlags.mNextInFlowUntouched = true;
       }
 
-      ReflowOutput kidDesiredSize(wm, aDesiredSize.mFlags);
+      ReflowOutput kidDesiredSize(wm);
 
       // XXX it would be cool to consult the float manager for the
       // previous block to figure out the region of floats from the

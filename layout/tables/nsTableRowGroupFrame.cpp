@@ -391,10 +391,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerSize);
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
-      // XXXldb We used to only pass aDesiredSize.mFlags through for the
-      // incremental reflow codepath.
-      ReflowOutput desiredSize(aReflowInput.reflowInput,
-                                      aDesiredSize.mFlags);
+      ReflowOutput desiredSize(aReflowInput.reflowInput);
       desiredSize.ClearSize();
 
       // Reflow the child into the available space, giving it as much bsize as
