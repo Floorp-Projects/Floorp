@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {AddonsFront} = require("devtools/shared/fronts/addons");
+const {AddonsFront} = require("devtools/shared/fronts/addon/addons");
 
 startupAddonsManager();
 

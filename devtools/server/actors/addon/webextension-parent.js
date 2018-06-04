@@ -6,7 +6,7 @@
 
 const {DebuggerServer} = require("devtools/server/main");
 const protocol = require("devtools/shared/protocol");
-const {webExtensionSpec} = require("devtools/shared/specs/webextension-parent");
+const {webExtensionSpec} = require("devtools/shared/specs/addon/webextension-parent");
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");

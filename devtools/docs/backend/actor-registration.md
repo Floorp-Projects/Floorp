@@ -23,7 +23,7 @@ DebuggerServer.registerModule("devtools/server/actors/webconsole", {
 To register a global actor:
 
 ```
-DebuggerServer.registerModule("devtools/server/actors/addons", {
+DebuggerServer.registerModule("devtools/server/actors/addon/addons", {
   prefix: "addons",
   constructor: "AddonsActor",
   type: { global: true }

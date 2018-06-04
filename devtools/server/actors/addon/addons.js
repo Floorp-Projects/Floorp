@@ -7,7 +7,7 @@
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
 const protocol = require("devtools/shared/protocol");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
-const {addonsSpec} = require("devtools/shared/specs/addons");
+const {addonsSpec} = require("devtools/shared/specs/addon/addons");
 
 const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
 

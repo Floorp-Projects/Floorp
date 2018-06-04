@@ -16,7 +16,7 @@ loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspe
 
 const {
   webExtensionInspectedWindowSpec,
-} = require("devtools/shared/specs/webextension-inspected-window");
+} = require("devtools/shared/specs/addon/webextension-inspected-window");
 
 const {WebExtensionPolicy} = Cu.getGlobalForObject(require("resource://gre/modules/XPCOMUtils.jsm"));
 

@@ -310,7 +310,7 @@ WebConsoleActor.prototype =
    */
   _webConsoleCommandsCache: null,
 
-  actorPrefix: "console",
+  typeName: "console",
 
   get globalDebugObject() {
     return this.parentActor.threadActor.globalDebugObject;

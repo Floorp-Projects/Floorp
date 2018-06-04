@@ -5,7 +5,7 @@
 
 const {
   webExtensionInspectedWindowSpec,
-} = require("devtools/shared/specs/webextension-inspected-window");
+} = require("devtools/shared/specs/addon/webextension-inspected-window");
 
 const protocol = require("devtools/shared/protocol");
 

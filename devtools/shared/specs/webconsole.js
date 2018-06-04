@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {types, generateActorSpec, RetVal, Option} = require("devtools/shared/protocol");
@@ -36,7 +37,7 @@ types.addDictType("console.cachedmessages", {
   timeStamp: "nullable:string"
 });
 
-const webconsoleSpec = generateActorSpec({
+const webconsoleSpecPrototype = {
   typeName: "console",
 
   methods: {
@@ -114,6 +115,9 @@ const webconsoleSpec = generateActorSpec({
       response: RetVal("json")
     }
   }
-});
+};
 
+const webconsoleSpec = generateActorSpec(webconsoleSpecPrototype);
+
+exports.webconsoleSpecPrototype = webconsoleSpecPrototype;
 exports.webconsoleSpec = webconsoleSpec;

@@ -24,8 +24,23 @@ const Types = exports.__TypesForTests = [
   },
   {
     types: ["addons"],
-    spec: "devtools/shared/specs/addons",
-    front: "devtools/shared/fronts/addons",
+    spec: "devtools/shared/specs/addon/addons",
+    front: "devtools/shared/fronts/addon/addons",
+  },
+  {
+    types: ["addonConsole"],
+    spec: "devtools/shared/specs/addon/console",
+    front: null,
+  },
+  {
+    types: ["webExtensionInspectedWindow"],
+    spec: "devtools/shared/specs/addon/webextension-inspected-window",
+    front: "devtools/shared/fronts/addon/webextension-inspected-window",
+  },
+  {
+    types: ["webExtensionAddon"],
+    spec: "devtools/shared/specs/addon/webextension-parent",
+    front: null,
   },
   {
     types: ["animationplayer", "animations"],
@@ -252,16 +267,6 @@ const Types = exports.__TypesForTests = [
   {
     types: ["console"],
     spec: "devtools/shared/specs/webconsole",
-    front: null,
-  },
-  {
-    types: ["webExtensionInspectedWindow"],
-    spec: "devtools/shared/specs/webextension-inspected-window",
-    front: "devtools/shared/fronts/webextension-inspected-window",
-  },
-  {
-    types: ["webExtensionAddon"],
-    spec: "devtools/shared/specs/webextension-parent",
     front: null,
   },
   {
