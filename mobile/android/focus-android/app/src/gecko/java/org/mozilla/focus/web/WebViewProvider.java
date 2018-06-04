@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -76,6 +77,9 @@ public class WebViewProvider {
         private boolean isSecure;
         private GeckoSession geckoSession;
         private String webViewTitle;
+        private boolean isLoadingInternalUrl = false;
+        private String internalAboutData = null;
+        private String internalRightsData = null;
 
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -364,6 +368,24 @@ public class WebViewProvider {
         private GeckoSession.NavigationDelegate createNavigationDelegate() {
             return new GeckoSession.NavigationDelegate() {
                 public void onLocationChange(GeckoSession session, String url) {
+                    // Save internal data: urls we should override to present focus:about, focus:rights
+                    if (isLoadingInternalUrl) {
+                        if (currentUrl.equals(LocalizedContent.URL_ABOUT)) {
+                            internalAboutData = url;
+                        } else if (currentUrl.equals(LocalizedContent.URL_RIGHTS)) {
+                            internalRightsData = url;
+                        }
+                        isLoadingInternalUrl = false;
+                        url = currentUrl;
+                    }
+
+                    // Check for internal data: urls to instead present focus:rights, focus:about
+                    if (!TextUtils.isEmpty(internalAboutData) && internalAboutData.equals(url)) {
+                        url = LocalizedContent.URL_ABOUT;
+                    } else if (!TextUtils.isEmpty(internalRightsData) && internalRightsData.equals(url)) {
+                        url = LocalizedContent.URL_RIGHTS;
+                    }
+
                     currentUrl = url;
                     if (callback != null) {
                         callback.onURLChanged(url);
@@ -486,6 +508,10 @@ public class WebViewProvider {
         @Override
         public void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL) {
             geckoSession.loadData(data.getBytes(Charsets.UTF_8), mimeType, baseURL);
+            currentUrl = baseURL;
+            if (currentUrl.equals(LocalizedContent.URL_RIGHTS) || currentUrl.equals(LocalizedContent.URL_ABOUT)) {
+                isLoadingInternalUrl = true;
+            }
         }
 
         private void sendTelemetrySnapshots() {
