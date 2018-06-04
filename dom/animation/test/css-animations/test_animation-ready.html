@@ -41,13 +41,8 @@ promise_test(async t => {
   div.style.animation = '';
   getComputedStyle(div).animation;
 
-  try {
-    await readyPromise;
-    assert_unreached('ready promise is fulfilled');
-  } catch(err) {
-    assert_equals(err.name, 'AbortError',
-                  'ready promise is rejected with AbortError');
-  }
+  await promise_rejects(t, 'AbortError', readyPromise,
+                        'ready promise is rejected with AbortError');
 }, 'ready promise is rejected when an animation is canceled by resetting'
    + ' the animation property');
 
@@ -68,13 +63,8 @@ promise_test(async t => {
   div.style.animation = 'def 100s';
   getComputedStyle(div).animation;
 
-  try {
-    await readyPromise;
-    assert_unreached('ready promise is fulfilled');
-  } catch(err) {
-    assert_equals(err.name, 'AbortError',
-                  'ready promise is rejected with AbortError');
-  }
+  await promise_rejects(t, 'AbortError', readyPromise,
+                        'ready promise is rejected with AbortError');
 }, 'ready promise is rejected when an animation is canceled by updating'
    + ' the animation property');
 
@@ -103,47 +93,6 @@ promise_test(async t => {
   assert_equals(animation.ready, firstReadyPromise,
                 'Ready promise objects are identical after redundant pause');
 }, 'Pausing twice re-uses the same Promise');
-
-promise_test(async t => {
-  const div = addDiv(t, { style: 'animation: abc 100s' });
-  const animation = div.getAnimations()[0];
-
-  await animation.ready;
-
-  div.style.animationPlayState = 'paused';
-
-  // Flush style and verify we're pending at the same time
-  assert_true(animation.pending, 'Animation is pending');
-  const pauseReadyPromise = animation.ready;
-
-  // Now play again immediately
-  div.style.animationPlayState = 'running';
-  assert_true(animation.pending, 'Animation is still pending');
-  assert_equals(animation.ready, pauseReadyPromise,
-                'The pause Promise is re-used when playing while waiting'
-                + ' to pause');
-
-  await animation.ready;
-
-  assert_true(!animation.pending && animation.playState === 'running',
-              'Animation is running after aborting a pause');
-}, 'If a pause operation is interrupted, the ready promise is reused');
-
-promise_test(async t => {
-  const div = addDiv(t, { style: 'animation: abc 100s' });
-  const animation = div.getAnimations()[0];
-
-  await animation.ready;
-
-  div.style.animationPlayState = 'paused';
-
-  const resolvedAnimation = await animation.ready;
-
-  assert_equals(resolvedAnimation, animation,
-                'Promise received when ready Promise for a pause operation'
-                + ' is completed is the animation on which the pause was'
-                + ' performed');
-}, 'When a pause is complete the Promise callback gets the correct animation');
 
 </script>
 </body>
