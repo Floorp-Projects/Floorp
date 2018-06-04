@@ -96,11 +96,11 @@ class TelemetryEvents {
 
   enableCollection() {
     log.debug("Study has been enabled; turning ON data collection.");
-    // Services.telemetry.setEventRecordingEnabled(this.STUDY_TELEMETRY_CATEGORY, true);
+    Services.telemetry.setEventRecordingEnabled(this.STUDY_TELEMETRY_CATEGORY, true);
   }
 
   disableCollection() {
     log.debug("Study has been disabled; turning OFF data collection.");
-    // Services.telemetry.setEventRecordingEnabled(this.STUDY_TELEMETRY_CATEGORY, false);
+    Services.telemetry.setEventRecordingEnabled(this.STUDY_TELEMETRY_CATEGORY, false);
   }
 }
