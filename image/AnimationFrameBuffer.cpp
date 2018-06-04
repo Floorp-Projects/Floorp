@@ -320,5 +320,113 @@ AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf
   }
 }
 
+AnimationFrameRecyclingQueue::AnimationFrameRecyclingQueue(AnimationFrameRetainedBuffer&& aQueue)
+  : AnimationFrameDiscardingQueue(std::move(aQueue))
+{
+  // In an ideal world, we would always save the already displayed frames for
+  // recycling but none of the frames were marked as recyclable. We will incur
+  // the extra allocation cost for a few more frames.
+  mRecycling = true;
+}
+
+void
+AnimationFrameRecyclingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                     const AddSizeOfCb& aCallback)
+{
+  AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(aMallocSizeOf,
+                                                        aCallback);
+
+  for (const RecycleEntry& entry : mRecycle) {
+    if (entry.mFrame) {
+      entry.mFrame->AddSizeOfExcludingThis(aMallocSizeOf,
+        [&](AddSizeOfCbData& aMetadata) {
+          aMetadata.index = 0; // Frame is not applicable
+          aCallback(aMetadata);
+        }
+      );
+    }
+  }
+}
+
+void
+AnimationFrameRecyclingQueue::AdvanceInternal()
+{
+  MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
+
+  RefPtr<imgFrame>& front = mDisplay.front();
+
+  // The first frame should always have a dirty rect that matches the frame
+  // rect. As such, we should use mFirstFrameRefreshArea instead for recycle
+  // rect calculations.
+  MOZ_ASSERT_IF(mGetIndex == 1,
+                front->GetRect().IsEqualEdges(front->GetDirtyRect()));
+
+  RecycleEntry newEntry(mGetIndex == 1 ? mFirstFrameRefreshArea
+                                       : front->GetDirtyRect());
+
+  // If we are allowed to recycle the frame, then we should save it before the
+  // base class's AdvanceInternal discards it.
+  if (front->ShouldRecycle()) {
+    // Calculate the recycle rect for the recycled frame. This is the cumulative
+    // dirty rect of all of the frames ahead of us to be displayed, and to be
+    // used for recycling. Or in other words, the dirty rect between the
+    // recycled frame and the decoded frame which reuses the buffer.
+    for (const RefPtr<imgFrame>& frame : mDisplay) {
+      newEntry.mRecycleRect = newEntry.mRecycleRect.Union(frame->GetDirtyRect());
+    }
+    for (const RecycleEntry& entry : mRecycle) {
+      newEntry.mRecycleRect = newEntry.mRecycleRect.Union(entry.mDirtyRect);
+    }
+
+    newEntry.mFrame = std::move(front);
+  }
+
+  // Even if the frame itself isn't saved, we want the dirty rect to calculate
+  // the recycle rect for future recycled frames.
+  mRecycle.push_back(std::move(newEntry));
+  AnimationFrameDiscardingQueue::AdvanceInternal();
+}
+
+bool
+AnimationFrameRecyclingQueue::ResetInternal()
+{
+  mRecycle.clear();
+  return AnimationFrameDiscardingQueue::ResetInternal();
+}
+
+RawAccessFrameRef
+AnimationFrameRecyclingQueue::RecycleFrame(gfx::IntRect& aRecycleRect)
+{
+  if (mRecycle.empty()) {
+    return RawAccessFrameRef();
+  }
+
+  RawAccessFrameRef frame;
+  if (mRecycle.front().mFrame) {
+    frame = mRecycle.front().mFrame->RawAccessRef();
+    if (frame) {
+      aRecycleRect = mRecycle.front().mRecycleRect;
+    }
+  }
+
+  mRecycle.pop_front();
+  return frame;
+}
+
+bool
+AnimationFrameRecyclingQueue::MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea)
+{
+  bool continueDecoding =
+    AnimationFrameDiscardingQueue::MarkComplete(aFirstFrameRefreshArea);
+
+  MOZ_ASSERT_IF(!mRedecodeError,
+                mFirstFrameRefreshArea.IsEmpty() ||
+                mFirstFrameRefreshArea.IsEqualEdges(aFirstFrameRefreshArea));
+
+  mFirstFrameRefreshArea = aFirstFrameRefreshArea;
+  return continueDecoding;
+}
+
 } // namespace image
 } // namespace mozilla

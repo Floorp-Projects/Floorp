@@ -422,6 +422,74 @@ protected:
   RefPtr<imgFrame> mFirstFrame;
 };
 
+/**
+ * An AnimationFrameRecyclingQueue will only retain up to mBatch * 2 frames.
+ * When the animation advances, it will place the old current frame into a
+ * recycling queue to be reused for a future allocation. This only works for
+ * animated images where we decoded full sized frames into their own buffers,
+ * so that the buffers are all identically sized and contain the complete frame
+ * data.
+ */
+class AnimationFrameRecyclingQueue final : public AnimationFrameDiscardingQueue
+{
+public:
+  explicit AnimationFrameRecyclingQueue(AnimationFrameRetainedBuffer&& aQueue);
+
+  bool MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea) override;
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              const AddSizeOfCb& aCallback) override;
+
+  RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) override;
+
+  struct RecycleEntry {
+    explicit RecycleEntry(const gfx::IntRect &aDirtyRect)
+      : mDirtyRect(aDirtyRect)
+    { }
+
+    RecycleEntry(RecycleEntry&& aOther)
+      : mFrame(std::move(aOther.mFrame))
+      , mDirtyRect(aOther.mDirtyRect)
+      , mRecycleRect(aOther.mRecycleRect)
+    {
+    }
+
+    RecycleEntry& operator=(RecycleEntry&& aOther)
+    {
+      mFrame = std::move(aOther.mFrame);
+      mDirtyRect = aOther.mDirtyRect;
+      mRecycleRect = aOther.mRecycleRect;
+      return *this;
+    }
+
+    RecycleEntry(const RecycleEntry& aOther) = delete;
+    RecycleEntry& operator=(const RecycleEntry& aOther) = delete;
+
+    RefPtr<imgFrame> mFrame;   // The frame containing the buffer to recycle.
+    gfx::IntRect mDirtyRect;   // The dirty rect of the frame itself.
+    gfx::IntRect mRecycleRect; // The dirty rect between the recycled frame and
+                               // the future frame that will be written to it.
+  };
+
+  const std::deque<RecycleEntry>& Recycle() const { return mRecycle; }
+  const gfx::IntRect& FirstFrameRefreshArea() const
+  {
+    return mFirstFrameRefreshArea;
+  }
+
+protected:
+  void AdvanceInternal() override;
+  bool ResetInternal() override;
+
+  /// Queue storing frames to be recycled by the decoder to produce its future
+  /// frames. May contain up to mBatch frames, where the last frame in the queue
+  /// is adjacent to the first frame in the mDisplay queue.
+  std::deque<RecycleEntry> mRecycle;
+
+  /// The first frame refresh area. This is used instead of the dirty rect for
+  /// the last frame when transitioning back to the first frame.
+  gfx::IntRect mFirstFrameRefreshArea;
+};
+
 } // namespace image
 } // namespace mozilla
 
