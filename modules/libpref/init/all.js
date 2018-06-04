@@ -4642,6 +4642,11 @@ pref("image.animated.decode-on-demand.threshold-kb", 20480);
 // animation's currently displayed frame.
 pref("image.animated.decode-on-demand.batch-size", 6);
 
+// Whether we should recycle already displayed frames instead of discarding
+// them. This saves on the allocation itself, and may be able to reuse the
+// contents as well. Only applies if generating full frames.
+pref("image.animated.decode-on-demand.recycle", true);
+
 // Whether we should generate full frames at decode time or partial frames which
 // are combined at display time (historical behavior and default).
 pref("image.animated.generate-full-frames", false);
