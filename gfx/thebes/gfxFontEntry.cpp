@@ -1386,61 +1386,156 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 static inline double
 StyleDistance(const gfxFontEntry* aFontEntry, FontSlantStyle aTargetStyle)
 {
-    FontSlantStyle minStyle = aFontEntry->SlantStyle().Min();
+    const FontSlantStyle minStyle = aFontEntry->SlantStyle().Min();
     if (aTargetStyle == minStyle) {
         return 0.0; // styles match exactly ==> 0
     }
 
-    // Compare oblique angles to see how closely they match.
-    // The range of angles is [-90.0 .. 90.0], although in practice values
-    // are unlikely to get anywhere near the extremes.
-    // The style 'italic' is treated as having the same angle as the default
-    // for 'oblique', but with a constant added to the distance to reflect
-    // distinction.
+    // bias added to angle difference when searching in the non-preferred
+    // direction from a target angle
+    const double kReverse = 100.0;
 
-    double extraDistance = 0.0;
-    const double kReverseDistance = 100.0;
+    // bias added when we've crossed from positive to negative angles or
+    // vice versa
+    const double kNegate = 200.0;
 
-    double target;
     if (aTargetStyle.IsNormal()) {
-        target = 0.0;
-        extraDistance = 300.0;
-    } else if (aTargetStyle.IsOblique()) {
-        target = aTargetStyle.ObliqueAngle();
-    } else {
-        target = FontSlantStyle::Oblique().ObliqueAngle();
-        extraDistance = 200.0;
-    }
-
-    FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
-
-    double minAngle, maxAngle;
-    // There can only be a range of styles if it's oblique
-    if (minStyle.IsNormal()) {
-        minAngle = maxAngle = 0.0;
-        extraDistance = 300.0;
-    } else if (minStyle.IsOblique()) {
-        MOZ_ASSERT(maxStyle.IsOblique());
-        minAngle = minStyle.ObliqueAngle();
-        maxAngle = maxStyle.ObliqueAngle();
-    } else {
-        minAngle = maxAngle = FontSlantStyle::Oblique().ObliqueAngle();
-        extraDistance = 200.0;
-    }
-
-    double distance = 0.0;
-    if (target < minAngle || target > maxAngle) {
-        if (target > 0.0) {
-            distance = minAngle - target;
-        } else {
-            distance = target - maxAngle;
+        if (minStyle.IsOblique()) {
+            // to distinguish oblique 0deg from normal, we add 1.0 to the angle
+            const double minAngle = minStyle.ObliqueAngle();
+            if (minAngle >= 0.0) {
+                return 1.0 + minAngle;
+            }
+            const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+            const double maxAngle = maxStyle.ObliqueAngle();
+            if (maxAngle >= 0.0) {
+                // [min,max] range includes 0.0, so just return our minimum
+                return 1.0;
+            }
+            // negative oblique is even worse than italic
+            return kNegate - maxAngle;
         }
-    }
-    if (distance < 0.0) {
-        distance = kReverseDistance - distance;
+        // must be italic, which is worse than any non-negative oblique;
+        // treat as a match in the wrong search direction
+        MOZ_ASSERT(minStyle.IsItalic());
+        return kReverse;
     }
 
-    return distance + extraDistance;
+    const double kDefaultAngle = FontSlantStyle::Oblique().ObliqueAngle();
+
+    if (aTargetStyle.IsItalic()) {
+        if (minStyle.IsOblique()) {
+            const double minAngle = minStyle.ObliqueAngle();
+            if (minAngle >= kDefaultAngle) {
+                return 1.0 + (minAngle - kDefaultAngle);
+            }
+            const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+            const double maxAngle = maxStyle.ObliqueAngle();
+            if (maxAngle >= kDefaultAngle) {
+                return 1.0;
+            }
+            if (maxAngle > 0.0) {
+                // wrong direction but still > 0, add bias of 100
+                return kReverse + (kDefaultAngle - maxAngle);
+            }
+            // negative oblique angle, add bias of 300
+            return kReverse + kNegate + (kDefaultAngle - maxAngle);
+        }
+        // normal is worse than oblique > 0, but better than oblique <= 0
+        MOZ_ASSERT(minStyle.IsNormal());
+        return kNegate;
+    }
+
+    // target is oblique <angle>: four different cases depending on
+    // the value of the <angle>, which determines the preferred direction
+    // of search
+    const double targetAngle = aTargetStyle.ObliqueAngle();
+    if (targetAngle >= kDefaultAngle) {
+        if (minStyle.IsOblique()) {
+            const double minAngle = minStyle.ObliqueAngle();
+            if (minAngle >= targetAngle) {
+                return minAngle - targetAngle;
+            }
+            const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+            const double maxAngle = maxStyle.ObliqueAngle();
+            if (maxAngle >= targetAngle) {
+                return 0.0;
+            }
+            if (maxAngle > 0.0) {
+                return kReverse + (targetAngle - maxAngle);
+            }
+            return kReverse + kNegate + (targetAngle - maxAngle);
+        }
+        if (minStyle.IsItalic()) {
+            return kReverse + kNegate;
+        }
+        return kReverse + kNegate + 1.0;
+    }
+
+    if (targetAngle <= -kDefaultAngle) {
+        if (minStyle.IsOblique()) {
+            const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+            const double maxAngle = maxStyle.ObliqueAngle();
+            if (maxAngle <= targetAngle) {
+                return targetAngle - maxAngle;
+            }
+            const double minAngle = minStyle.ObliqueAngle();
+            if (minAngle <= targetAngle) {
+                return 0.0;
+            }
+            if (minAngle < 0.0) {
+                return kReverse + (minAngle - targetAngle);
+            }
+            return kReverse + kNegate + (minAngle - targetAngle);
+        }
+        if (minStyle.IsItalic()) {
+            return kReverse + kNegate;
+        }
+        return kReverse + kNegate + 1.0;
+    }
+
+    if (targetAngle >= 0.0) {
+        if (minStyle.IsOblique()) {
+            const double minAngle = minStyle.ObliqueAngle();
+            if (minAngle > targetAngle) {
+                return kReverse + (minAngle - targetAngle);
+            }
+            const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+            const double maxAngle = maxStyle.ObliqueAngle();
+            if (maxAngle >= targetAngle) {
+                return 0.0;
+            }
+            if (maxAngle > 0.0) {
+                return targetAngle - maxAngle;
+            }
+            return kReverse + kNegate + (targetAngle - maxAngle);
+        }
+        if (minStyle.IsItalic()) {
+            return kReverse + kNegate - 2.0;
+        }
+        return kReverse + kNegate - 1.0;
+    }
+
+    // last case: (targetAngle < 0.0 && targetAngle > kDefaultAngle)
+    if (minStyle.IsOblique()) {
+        const FontSlantStyle maxStyle = aFontEntry->SlantStyle().Max();
+        const double maxAngle = maxStyle.ObliqueAngle();
+        if (maxAngle < targetAngle) {
+            return kReverse + (targetAngle - maxAngle);
+        }
+        const double minAngle = minStyle.ObliqueAngle();
+        if (minAngle <= targetAngle) {
+            return 0.0;
+        }
+        if (minAngle < 0.0) {
+            return minAngle - targetAngle;
+        }
+        return kReverse + kNegate + (minAngle - targetAngle);
+    }
+    if (minStyle.IsItalic()) {
+        return kReverse + kNegate - 2.0;
+    }
+    return kReverse + kNegate - 1.0;
 }
 
 // stretch distance ==> [0,2000]
@@ -1448,29 +1543,28 @@ static inline double
 StretchDistance(const gfxFontEntry* aFontEntry, FontStretch aTargetStretch)
 {
     const double kReverseDistance = 1000.0;
-    double distance = 0.0;
 
     FontStretch minStretch = aFontEntry->Stretch().Min();
     FontStretch maxStretch = aFontEntry->Stretch().Max();
 
-    if (aTargetStretch < minStretch || aTargetStretch > maxStretch) {
-        // stretch values are in the range 0 .. 1000
-        // if aTargetStretch is >100, we prefer larger values;
-        // if <=100, prefer smaller
+    // The stretch value is a (non-negative) percentage; currently we support
+    // values in the range 0 .. 1000. (If the upper limit is ever increased,
+    // the kReverseDistance value used here may need to be adjusted.)
+    // If aTargetStretch is >100, we prefer larger values if available;
+    // if <=100, we prefer smaller values if available.
+    if (aTargetStretch < minStretch) {
         if (aTargetStretch > FontStretch::Normal()) {
-            distance = (minStretch - aTargetStretch);
-        } else {
-            distance = (aTargetStretch - maxStretch);
+            return minStretch - aTargetStretch;
         }
-        // if the computed "distance" here is negative, it means that
-        // aFontEntry lies in the "non-preferred" direction from aTargetStretch,
-        // so we treat that as larger than any preferred-direction distance
-        // (max possible is 1000) by adding an extra 1000 to the absolute value
-        if (distance < 0.0f) {
-            distance = kReverseDistance - distance;
-        }
+        return (minStretch - aTargetStretch) + kReverseDistance;
     }
-    return distance;
+    if (aTargetStretch > maxStretch) {
+        if (aTargetStretch <= FontStretch::Normal()) {
+            return aTargetStretch - maxStretch;
+        }
+        return (aTargetStretch - maxStretch) + kReverseDistance;
+    }
+    return 0.0;
 }
 
 // Calculate weight distance with values in the range (0..1000). In general,
@@ -1488,41 +1582,46 @@ StretchDistance(const gfxFontEntry* aFontEntry, FontStretch aTargetStretch)
 static inline double
 WeightDistance(const gfxFontEntry* aFontEntry, FontWeight aTargetWeight)
 {
+    const double kNotWithinCentralRange = 100.0;
     const double kReverseDistance = 600.0;
 
-    double distance = 0.0, addedDistance = 0.0;
     FontWeight minWeight = aFontEntry->Weight().Min();
     FontWeight maxWeight = aFontEntry->Weight().Max();
-    if (aTargetWeight < minWeight || aTargetWeight > maxWeight) {
-        if (aTargetWeight > FontWeight(500)) {
-            distance = minWeight - aTargetWeight;
-        } else if (aTargetWeight < FontWeight(400)) {
-            distance = aTargetWeight - maxWeight;
-        } else {
-            // special case - target is between 400 and 500
 
-            // font weights between 400 and 500 are close
-            if (maxWeight >= FontWeight(400) &&
-                minWeight <= FontWeight(500)) {
-                if (maxWeight < aTargetWeight) {
-                    distance = FontWeight(500) - maxWeight;
-                } else {
-                    distance = minWeight - aTargetWeight;
-                }
-            } else {
-                // font weights outside use rule for target weights < 400 with
-                // added distance to separate from font weights in
-                // the [400..500] range
-                distance = aTargetWeight - maxWeight;
-                addedDistance = 100.0;
-            }
-        }
-        if (distance < 0.0) {
-            distance = kReverseDistance - distance;
-        }
-        distance += addedDistance;
+    if (aTargetWeight >= minWeight && aTargetWeight <= maxWeight) {
+        // Target is within the face's range, so it's a perfect match
+        return 0.0;
     }
-    return distance;
+
+    if (aTargetWeight < FontWeight(400)) {
+        // Requested a lighter-than-400 weight
+        if (maxWeight < aTargetWeight) {
+            return aTargetWeight - maxWeight;
+        }
+        // Add reverse-search penalty for bolder faces
+        return (minWeight - aTargetWeight) + kReverseDistance;
+    }
+
+    if (aTargetWeight > FontWeight(500)) {
+        // Requested a bolder-than-500 weight
+        if (minWeight > aTargetWeight) {
+            return minWeight - aTargetWeight;
+        }
+        // Add reverse-search penalty for lighter faces
+        return (aTargetWeight - maxWeight) + kReverseDistance;
+    }
+
+    // Special case for requested weight in the [400..500] range
+    if (minWeight > aTargetWeight) {
+        if (minWeight <= FontWeight(500)) {
+            // Bolder weight up to 500 is first choice
+            return minWeight - aTargetWeight;
+        }
+        // Other bolder weights get a reverse-search penalty
+        return (minWeight - aTargetWeight) + kReverseDistance;
+    }
+    // Lighter weights are not as good as bolder ones within [400..500]
+    return (aTargetWeight - maxWeight) + kNotWithinCentralRange;
 }
 
 static inline double
