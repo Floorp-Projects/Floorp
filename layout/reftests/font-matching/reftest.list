@@ -158,5 +158,7 @@ skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-
 skip-if(!cocoaWidget) == legacy-family-names-1.html legacy-family-names-1-ref.html
 skip-if(!winWidget) == legacy-family-names-2.html legacy-family-names-2-ref.html
 
+== descriptor-ranges.html descriptor-ranges-ref.html
+
 # Reset default prefs.
 default-preferences
