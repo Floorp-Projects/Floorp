@@ -580,6 +580,94 @@ impl FromStr for SdpAttribute {
     }
 }
 
+#[derive(Clone, PartialEq)]
+pub enum SdpAttributeType {
+    BundleOnly,
+    Candidate,
+    EndOfCandidates,
+    Extmap,
+    Fingerprint,
+    Fmtp,
+    Group,
+    IceLite,
+    IceMismatch,
+    IceOptions,
+    IcePwd,
+    IceUfrag,
+    Identity,
+    ImageAttr,
+    Inactive,
+    Label,
+    MaxMessageSize,
+    MaxPtime,
+    Mid,
+    Msid,
+    MsidSemantic,
+    Ptime,
+    Rid,
+    Recvonly,
+    RemoteCandidate,
+    Rtpmap,
+    Rtcp,
+    Rtcpfb,
+    RtcpMux,
+    RtcpRsize,
+    Sctpmap,
+    SctpPort,
+    Sendonly,
+    Sendrecv,
+    Setup,
+    Simulcast,
+    Ssrc,
+    SsrcGroup,
+}
+
+impl<'a> From<&'a SdpAttribute> for SdpAttributeType {
+    fn from(other: &SdpAttribute) -> Self {
+        match *other {
+            SdpAttribute::BundleOnly{..} => SdpAttributeType::BundleOnly,
+            SdpAttribute::Candidate{..} => SdpAttributeType::Candidate,
+            SdpAttribute::EndOfCandidates{..} => SdpAttributeType::EndOfCandidates,
+            SdpAttribute::Extmap{..} => SdpAttributeType::Extmap,
+            SdpAttribute::Fingerprint{..} => SdpAttributeType::Fingerprint,
+            SdpAttribute::Fmtp{..} => SdpAttributeType::Fmtp,
+            SdpAttribute::Group{..} => SdpAttributeType::Group,
+            SdpAttribute::IceLite{..} => SdpAttributeType::IceLite,
+            SdpAttribute::IceMismatch{..} => SdpAttributeType::IceMismatch,
+            SdpAttribute::IceOptions{..} => SdpAttributeType::IceOptions,
+            SdpAttribute::IcePwd{..} => SdpAttributeType::IcePwd,
+            SdpAttribute::IceUfrag{..} => SdpAttributeType::IceUfrag,
+            SdpAttribute::Identity{..} => SdpAttributeType::Identity,
+            SdpAttribute::ImageAttr{..} => SdpAttributeType::ImageAttr,
+            SdpAttribute::Inactive{..} => SdpAttributeType::Inactive,
+            SdpAttribute::Label{..} => SdpAttributeType::Label,
+            SdpAttribute::MaxMessageSize{..} => SdpAttributeType::MaxMessageSize,
+            SdpAttribute::MaxPtime{..} => SdpAttributeType::MaxPtime,
+            SdpAttribute::Mid{..} => SdpAttributeType::Mid,
+            SdpAttribute::Msid{..} => SdpAttributeType::Msid,
+            SdpAttribute::MsidSemantic{..} => SdpAttributeType::MsidSemantic,
+            SdpAttribute::Ptime{..} => SdpAttributeType::Ptime,
+            SdpAttribute::Rid{..} => SdpAttributeType::Rid,
+            SdpAttribute::Recvonly{..} => SdpAttributeType::Recvonly,
+            SdpAttribute::RemoteCandidate{..} => SdpAttributeType::RemoteCandidate,
+            SdpAttribute::Rtcp{..} => SdpAttributeType::Rtcp,
+            SdpAttribute::Rtcpfb{..} => SdpAttributeType::Rtcpfb,
+            SdpAttribute::RtcpMux{..} => SdpAttributeType::RtcpMux,
+            SdpAttribute::RtcpRsize{..} => SdpAttributeType::RtcpRsize,
+            SdpAttribute::Rtpmap{..} => SdpAttributeType::Rtpmap,
+            SdpAttribute::Sctpmap{..} => SdpAttributeType::Sctpmap,
+            SdpAttribute::SctpPort{..} => SdpAttributeType::SctpPort,
+            SdpAttribute::Sendonly{..} => SdpAttributeType::Sendonly,
+            SdpAttribute::Sendrecv{..} => SdpAttributeType::Sendrecv,
+            SdpAttribute::Setup{..} => SdpAttributeType::Setup,
+            SdpAttribute::Simulcast{..} => SdpAttributeType::Simulcast,
+            SdpAttribute::Ssrc{..} => SdpAttributeType::Ssrc,
+            SdpAttribute::SsrcGroup{..} => SdpAttributeType::SsrcGroup
+        }
+    }
+}
+
+
 fn string_or_empty(to_parse: &str) -> Result<String, SdpParserInternalError> {
     if to_parse.is_empty() {
         Err(SdpParserInternalError::Generic("This attribute is required to have a value"

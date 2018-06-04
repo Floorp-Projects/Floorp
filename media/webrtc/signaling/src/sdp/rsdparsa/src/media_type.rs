@@ -1,6 +1,6 @@
 use std::fmt;
 use {SdpType, SdpLine, SdpBandwidth, SdpConnection};
-use attribute_type::SdpAttribute;
+use attribute_type::{SdpAttribute, SdpAttributeType};
 use error::{SdpParserError, SdpParserInternalError};
 
 #[derive(Clone)]
@@ -141,15 +141,8 @@ impl SdpMedia {
         Ok(self.attribute.push(attr.clone()))
     }
 
-    // FIXME this is a temporary hack until we re-oranize the SdpAttribute enum
-    // so that we can build a generic has_attribute(X) function
-    pub fn has_extmap_attribute(&self) -> bool {
-        for attribute in &self.attribute {
-            if let &SdpAttribute::Extmap(_) = attribute {
-                return true;
-            }
-        }
-        false
+    pub fn get_attribute(&self, t: SdpAttributeType) -> Option<&SdpAttribute> {
+        self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).next()
     }
 
     pub fn has_connection(&self) -> bool {

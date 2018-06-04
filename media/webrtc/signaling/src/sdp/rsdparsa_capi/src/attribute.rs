@@ -2,7 +2,7 @@ use std::slice;
 use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t};
 
 use rsdparsa::SdpSession;
-use rsdparsa::attribute_type::{SdpAttribute, SdpAttributePayloadType, SdpAttributeFingerprint, SdpAttributeSetup, SdpAttributeSsrc, SdpAttributeRtpmap, SdpAttributeMsid, SdpAttributeMsidSemantic, SdpAttributeGroupSemantic, SdpAttributeGroup, SdpAttributeRtcp, SdpAttributeRtcpFb, SdpAttributeSctpmap, SdpAttributeRemoteCandidate, SdpAttributeExtmap, SdpAttributeDirection};
+use rsdparsa::attribute_type::{SdpAttribute, SdpAttributeType, SdpAttributePayloadType, SdpAttributeFingerprint, SdpAttributeSetup, SdpAttributeSsrc, SdpAttributeRtpmap, SdpAttributeMsid, SdpAttributeMsidSemantic, SdpAttributeGroupSemantic, SdpAttributeGroup, SdpAttributeRtcp, SdpAttributeRtcpFb, SdpAttributeSctpmap, SdpAttributeRemoteCandidate, SdpAttributeExtmap, SdpAttributeDirection};
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 
 use types::StringView;
