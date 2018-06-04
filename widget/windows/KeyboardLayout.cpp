@@ -1526,6 +1526,20 @@ NativeKey::InitWithKeyOrChar()
 
   keyboardLayout->InitNativeKey(*this);
 
+  // Now, we can know if the key produces character(s) or a dead key with
+  // AltGraph modifier.  When user emulates AltGr key press with pressing
+  // both Ctrl and Alt and the key produces character(s) or a dead key, we
+  // need to replace Control and Alt state with AltGraph if the keyboard
+  // layout has AltGr key.
+  // Note that if Ctrl and/or Alt are pressed (not to emulate to press AltGr),
+  // we need to set actual modifiers to eKeyDown and eKeyUp.
+  if (MaybeEmulatingAltGraph() &&
+      (mCommittedCharsAndModifiers.IsProducingCharsWithAltGr() ||
+       mKeyNameIndex == KEY_NAME_INDEX_Dead)) {
+    mModKeyState.Unset(MODIFIER_CONTROL | MODIFIER_ALT);
+    mModKeyState.Set(MODIFIER_ALTGRAPH);
+  }
+
   mIsDeadKey =
     (IsFollowedByDeadCharMessage() ||
      keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState));
@@ -1563,6 +1577,9 @@ NativeKey::InitCommittedCharsAndModifiersWithFollowingCharMessages()
   Modifiers modifiers = mModKeyState.GetModifiers();
   if (IsFollowedByPrintableCharMessage()) {
     modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
+    if (MaybeEmulatingAltGraph()) {
+      modifiers |= MODIFIER_ALTGRAPH;
+    }
   }
   // NOTE: This method assumes that WM_CHAR and WM_SYSCHAR are never retrieved
   //       at same time.
@@ -1695,6 +1712,12 @@ NativeKey::InitWithAppCommand()
     ::GetKeyboardState(kbdState);
     mIsSkippableInRemoteProcess = mIsRepeat = !!kbdState[mVirtualKeyCode];
   }
+}
+
+bool
+NativeKey::MaybeEmulatingAltGraph() const
+{
+  return IsControl() && IsAlt() && KeyboardLayout::GetInstance()->HasAltGr();
 }
 
 // static

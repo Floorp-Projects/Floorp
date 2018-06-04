@@ -111,6 +111,11 @@ public:
     return mChars.Length();
   }
 
+  bool IsProducingCharsWithAltGr() const
+  {
+    return !IsEmpty() && (ModifiersAt(0) & MODIFIER_ALTGRAPH) != 0;
+  }
+
   void FillModifiers(Modifiers aModifiers);
   /**
    * OverwriteModifiersIfBeginsWith() assigns mModifiers with aOther between
@@ -480,6 +485,7 @@ public:
 
   bool IsControl() const { return mModKeyState.IsControl(); }
   bool IsAlt() const { return mModKeyState.IsAlt(); }
+  bool MaybeEmulatingAltGraph() const;
   Modifiers GetModifiers() const { return mModKeyState.GetModifiers(); }
   const ModifierKeyState& ModifierKeyStateRef() const
   {
