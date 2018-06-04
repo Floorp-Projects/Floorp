@@ -200,21 +200,15 @@ namespace mozilla {
  */
 class ReflowOutput {
 public:
-  // XXXldb Should |aFlags| generally be passed from parent to child?
-  // Some places do it, and some don't.  |aFlags| should perhaps go away
-  // entirely.
-  // XXX width/height/ascent are OUT parameters and so they shouldn't
-  // have to be initialized, but there are some bad frame classes that
-  // aren't properly setting them when returning from Reflow()...
-  explicit ReflowOutput(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
+  explicit ReflowOutput(mozilla::WritingMode aWritingMode)
     : mISize(0)
     , mBSize(0)
     , mBlockStartAscent(ASK_FOR_BASELINE)
-    , mFlags(aFlags)
     , mWritingMode(aWritingMode)
-  {}
+  {
+  }
 
-  explicit ReflowOutput(const ReflowInput& aState, uint32_t aFlags = 0);
+  explicit ReflowOutput(const ReflowInput& aReflowInput);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to
@@ -328,11 +322,6 @@ public:
 private:
   nscoord mISize, mBSize; // [OUT] desired width and height (border-box)
   nscoord mBlockStartAscent; // [OUT] baseline (in Block direction), or ASK_FOR_BASELINE
-
-public:
-  uint32_t mFlags;
-
-private:
   mozilla::WritingMode mWritingMode;
 };
 

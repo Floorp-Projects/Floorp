@@ -136,8 +136,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 
   for (nsIFrame* childFrame : PrincipalChildList()) {
     // ask our children to compute their bounding metrics
-    ReflowOutput childDesiredSize(aReflowInput.GetWritingMode(),
-                                         aDesiredSize.mFlags);
+    ReflowOutput childDesiredSize(aReflowInput.GetWritingMode());
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
