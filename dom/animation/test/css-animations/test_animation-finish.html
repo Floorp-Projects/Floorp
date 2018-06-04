@@ -19,12 +19,12 @@ const ANIM_PROP_VAL = 'anim 100s';
 const ANIM_DURATION = 100000; // ms
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
   div.style.animationIterationCount = 'infinite';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
-  var threw = false;
+  let threw = false;
   try {
     animation.finish();
   } catch (e) {
@@ -39,9 +39,9 @@ test(t => {
 }, 'Test exceptions when finishing infinite animation');
 
 async_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL + ' paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   animation.ready.then(t.step_func(() => {
     animation.finish();
@@ -57,9 +57,9 @@ async_test(t => {
 }, 'Test finish() while paused');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL + ' paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   // Update playbackRate so we can test that the calculated startTime
   // respects it
@@ -78,9 +78,9 @@ test(t => {
 }, 'Test finish() while pause-pending with positive playbackRate');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL + ' paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   animation.playbackRate = -2;
   animation.finish();

@@ -14,21 +14,21 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'xyz 100s';
   assert_equals(div.getAnimations()[0].animationName, 'xyz',
                 'Animation name matches keyframes rule name');
 }, 'Animation name makes keyframe rule');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'x\\yz 100s';
   assert_equals(div.getAnimations()[0].animationName, 'xyz',
                 'Escaped animation name matches keyframes rule name');
 }, 'Escaped animation name');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'x\\79 z 100s';
   assert_equals(div.getAnimations()[0].animationName, 'xyz',
                 'Hex-escaped animation name matches keyframes rule'

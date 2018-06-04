@@ -12,9 +12,9 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'abc 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(animation.id, '', 'id for CSS Animation is initially empty');
   animation.id = 'anim'
 
