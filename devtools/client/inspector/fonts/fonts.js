@@ -158,15 +158,32 @@ class FontInspector {
   }
 
   /**
-   * Get all expected CSS font properties and values from the node's computed style.
+   * Get all expected CSS font properties and values from the node's matching rules and
+   * fallback to computed style.
    *
    * @return {Object}
    */
   getFontProperties() {
+    const KEYWORD_VALUES = ["initial", "inherit", "unset", "none"];
     const properties = {};
 
+    // First, get all expected font properties from computed styles.
     for (const prop of FONT_PROPERTIES) {
       properties[prop] = this.nodeComputedStyle[prop].value;
+    }
+
+    // Then, replace with enabled font properties found on any of the rules that apply.
+    for (const rule of this.ruleView.rules) {
+      for (const textProp of rule.textProps) {
+        if (FONT_PROPERTIES.includes(textProp.name) &&
+            !KEYWORD_VALUES.includes(textProp.value) &&
+            !textProp.value.includes("calc(") &&
+            !textProp.value.includes("var(") &&
+            !textProp.overridden &&
+            textProp.enabled) {
+          properties[textProp.name] = textProp.value;
+        }
+      }
     }
 
     return properties;
