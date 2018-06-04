@@ -267,20 +267,21 @@ test(t => {
                 'current localTime after setting currentTime');
 }, 'localTime of an animation is always equal to currentTime');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
 
   const anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
-  return anim.ready.then(() => {
-    assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
-                  'localTime is equal to currentTime');
-    return waitForFrame();
-  }).then(() => {
-    assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
-                  'localTime is equal to currentTime');
-  });
+  await anim.ready;
+
+  assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
+                'localTime is equal to currentTime');
+
+  await waitForFrame();
+
+  assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
+                'localTime is equal to currentTime');
 }, 'localTime reflects playbackRate immediately');
 
 test(t => {

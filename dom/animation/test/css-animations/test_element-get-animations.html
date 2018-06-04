@@ -33,7 +33,7 @@ test(t => {
     + ' with no animations');
 }, 'getAnimations for non-animated content');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
 
   // FIXME: This test does too many things. It should be split up.
@@ -43,31 +43,30 @@ promise_test(t => {
   let animations = div.getAnimations();
   assert_equals(animations.length, 1,
     'getAnimations returns an Animation running CSS Animations');
-  return animations[0].ready.then(() => {
-    const startTime = animations[0].startTime;
-    assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-      'CSS animation has a sensible start time');
+  await animations[0].ready;
 
-    // Wait a moment then add a second animation.
-    //
-    // We wait for the next frame so that we can test that the start times of
-    // the animations differ.
-    return waitForFrame();
-  }).then(() => {
-    div.style.animation = 'anim1 100s, anim2 100s';
-    animations = div.getAnimations();
-    assert_equals(animations.length, 2,
-      'getAnimations returns one Animation for each value of'
-      + ' animation-name');
-    // Wait until both Animations are ready
-    // (We don't make any assumptions about the order of the Animations since
-    //  that is the purpose of the following test.)
-    return waitForAllAnimations(animations);
-  }).then(() => {
-    assert_true(animations[0].startTime < animations[1].startTime,
-      'Additional Animations for CSS animations start after the original'
-      + ' animation and appear later in the list');
-  });
+  const startTime = animations[0].startTime;
+  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
+    'CSS animation has a sensible start time');
+
+  // Wait a moment then add a second animation.
+  //
+  // We wait for the next frame so that we can test that the start times of
+  // the animations differ.
+  await waitForFrame();
+
+  div.style.animation = 'anim1 100s, anim2 100s';
+  animations = div.getAnimations();
+  assert_equals(animations.length, 2,
+    'getAnimations returns one Animation for each value of animation-name');
+  // Wait until both Animations are ready
+  // (We don't make any assumptions about the order of the Animations since
+  //  that is the purpose of the following test.)
+  await waitForAllAnimations(animations);
+
+  assert_true(animations[0].startTime < animations[1].startTime,
+    'Additional Animations for CSS animations start after the original'
+    + ' animation and appear later in the list');
 }, 'getAnimations for CSS Animations');
 
 test(t => {
@@ -86,7 +85,7 @@ test(t => {
     + ' that targets multiple properties');
 }, 'getAnimations for multi-property animations');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
 
   // Add an animation
@@ -96,19 +95,20 @@ promise_test(t => {
 
   // Wait until a frame after the animation starts, then add a transition
   let animations = div.getAnimations();
-  return animations[0].ready.then(waitForFrame).then(() => {
-    div.style.transition = 'all 100s';
-    div.style.backgroundColor = 'green';
+  await animations[0].ready;
+  await waitForFrame();
 
-    animations = div.getAnimations();
-    assert_equals(animations.length, 2,
-      'getAnimations returns Animations for both animations and'
-      + ' transitions that run simultaneously');
-    assert_class_string(animations[0], 'CSSTransition',
-                        'First-returned animation is the CSS Transition');
-    assert_class_string(animations[1], 'CSSAnimation',
-                        'Second-returned animation is the CSS Animation');
-  });
+  div.style.transition = 'all 100s';
+  div.style.backgroundColor = 'green';
+
+  animations = div.getAnimations();
+  assert_equals(animations.length, 2,
+    'getAnimations returns Animations for both animations and'
+    + ' transitions that run simultaneously');
+  assert_class_string(animations[0], 'CSSTransition',
+                      'First-returned animation is the CSS Transition');
+  assert_class_string(animations[1], 'CSSAnimation',
+                      'Second-returned animation is the CSS Animation');
 }, 'getAnimations for both CSS Animations and CSS Transitions at once');
 
 async_test(t => {
@@ -173,7 +173,7 @@ test(t => {
     + ' animation-name is found');
 }, 'getAnimations for CSS Animations with animation-name: missing');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim1 100s, notyet 100s';
   let animations = div.getAnimations();
@@ -181,19 +181,20 @@ promise_test(t => {
     'getAnimations initally only returns Animations for CSS Animations whose'
     + ' animation-name is found');
 
-  return animations[0].ready.then(waitForFrame).then(() => {
-    const keyframes = '@keyframes notyet { to { left: 100px; } }';
-    document.styleSheets[0].insertRule(keyframes, 0);
-    animations = div.getAnimations();
-    assert_equals(animations.length, 2,
-      'getAnimations includes Animation when @keyframes rule is added'
-      + ' later');
-    return waitForAllAnimations(animations);
-  }).then(() => {
-    assert_true(animations[0].startTime < animations[1].startTime,
-      'Newly added animation has a later start time');
-    document.styleSheets[0].deleteRule(0);
-  });
+  await animations[0].ready;
+  await waitForFrame();
+
+  const keyframes = '@keyframes notyet { to { left: 100px; } }';
+  document.styleSheets[0].insertRule(keyframes, 0);
+  animations = div.getAnimations();
+  assert_equals(animations.length, 2,
+    'getAnimations includes Animation when @keyframes rule is added'
+    + ' later');
+  await waitForAllAnimations(animations);
+
+  assert_true(animations[0].startTime < animations[1].startTime,
+    'Newly added animation has a later start time');
+  document.styleSheets[0].deleteRule(0);
 }, 'getAnimations for CSS Animations where the @keyframes rule is added'
    + ' later');
 
@@ -213,18 +214,19 @@ test(t => {
     + ' empty keyframes rule');
 }, 'getAnimations for CSS Animations with empty keyframes rule');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim1 100s 100s';
   const animations = div.getAnimations();
   assert_equals(animations.length, 1,
     'getAnimations returns animations for CSS animations whose'
     + ' delay makes them start later');
-  return animations[0].ready.then(waitForFrame).then(() => {
-    assert_true(animations[0].startTime <= document.timeline.currentTime,
-      'For CSS Animations in delay phase, the start time of the Animation is'
-      + ' not in the future');
-  });
+  await animations[0].ready;
+  await waitForFrame();
+
+  assert_true(animations[0].startTime <= document.timeline.currentTime,
+    'For CSS Animations in delay phase, the start time of the Animation is'
+    + ' not in the future');
 }, 'getAnimations for CSS animations in delay phase');
 
 test(t => {
@@ -279,33 +281,33 @@ test(t => {
 
 }, 'getAnimations for CSS Animations that are cancelled');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim2 100s';
 
-  return div.getAnimations()[0].ready.then(() => {
-    // Prepend to the list and test that even though anim1 was triggered
-    // *after* anim2, it should come first because it appears first
-    // in the animation-name property.
-    div.style.animation = 'anim1 100s, anim2 100s';
-    let anims = div.getAnimations();
-    assert_equals(anims[0].animationName, 'anim1',
-                  'animation order after prepending to list');
-    assert_equals(anims[1].animationName, 'anim2',
-                  'animation order after prepending to list');
+  await div.getAnimations()[0].ready;
 
-    // Normally calling cancel and play would this push anim1 to the top of
-    // the stack but it shouldn't for CSS animations that map an the
-    // animation-name property.
-    const anim1 = anims[0];
-    anim1.cancel();
-    anim1.play();
-    anims = div.getAnimations();
-    assert_equals(anims[0].animationName, 'anim1',
-                  'animation order after cancelling and restarting');
-    assert_equals(anims[1].animationName, 'anim2',
-                  'animation order after cancelling and restarting');
-  });
+  // Prepend to the list and test that even though anim1 was triggered
+  // *after* anim2, it should come first because it appears first
+  // in the animation-name property.
+  div.style.animation = 'anim1 100s, anim2 100s';
+  let anims = div.getAnimations();
+  assert_equals(anims[0].animationName, 'anim1',
+                'animation order after prepending to list');
+  assert_equals(anims[1].animationName, 'anim2',
+                'animation order after prepending to list');
+
+  // Normally calling cancel and play would this push anim1 to the top of
+  // the stack but it shouldn't for CSS animations that map an the
+  // animation-name property.
+  const anim1 = anims[0];
+  anim1.cancel();
+  anim1.play();
+  anims = div.getAnimations();
+  assert_equals(anims[0].animationName, 'anim1',
+                'animation order after cancelling and restarting');
+  assert_equals(anims[1].animationName, 'anim2',
+                'animation order after cancelling and restarting');
 }, 'getAnimations for CSS Animations follows animation-name order');
 
 test(t => {

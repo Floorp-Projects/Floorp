@@ -59,85 +59,86 @@ const setupAnimation = (t, animationStyle, receiveEvents) => {
   return [animation, watcher, div];
 };
 
-promise_test(t => {
+promise_test(async t => {
   let events = [];
   const [animation1, watcher1, div1] =
     setupAnimation(t, 'anim 100s 2 paused', events);
   const [animation2, watcher2, div2] =
     setupAnimation(t, 'anim 100s 2 paused', events);
 
-  return Promise.all([ watcher1.wait_for('animationstart'),
-                       watcher2.wait_for('animationstart') ]).then(() => {
-    checkEvents(events, ['animationstart', div1, 0],
-                        ['animationstart', div2, 0]);
+  await Promise.all([ watcher1.wait_for('animationstart'),
+                      watcher2.wait_for('animationstart') ]);
 
-    events.length = 0;  // Clear received event array
+  checkEvents(events, ['animationstart', div1, 0],
+                      ['animationstart', div2, 0]);
 
-    animation1.currentTime = 100 * MS_PER_SEC;
-    animation2.currentTime = 100 * MS_PER_SEC;
-    return Promise.all([ watcher1.wait_for('animationiteration'),
-                         watcher2.wait_for('animationiteration') ]);
-  }).then(() => {
-    checkEvents(events, ['animationiteration', div1, 100],
-                        ['animationiteration', div2, 100]);
+  events.length = 0;  // Clear received event array
 
-    events.length = 0;  // Clear received event array
+  animation1.currentTime = 100 * MS_PER_SEC;
+  animation2.currentTime = 100 * MS_PER_SEC;
 
-    animation1.finish();
-    animation2.finish();
+  await Promise.all([ watcher1.wait_for('animationiteration'),
+                      watcher2.wait_for('animationiteration') ]);
 
-    return Promise.all([ watcher1.wait_for('animationend'),
-                         watcher2.wait_for('animationend') ]);
-  }).then(() => {
-    checkEvents(events, ['animationend', div1, 200],
-                        ['animationend', div2, 200]);
-  });
+  checkEvents(events, ['animationiteration', div1, 100],
+                      ['animationiteration', div2, 100]);
+
+  events.length = 0;  // Clear received event array
+
+  animation1.finish();
+  animation2.finish();
+
+  await Promise.all([ watcher1.wait_for('animationend'),
+                      watcher2.wait_for('animationend') ]);
+
+  checkEvents(events, ['animationend', div1, 200],
+                      ['animationend', div2, 200]);
 }, 'Test same events are ordered by elements.');
 
-promise_test(t => {
+promise_test(async t => {
   let events = [];
   const [animation1, watcher1, div1] =
     setupAnimation(t, 'anim 200s 400s', events);
   const [animation2, watcher2, div2] =
     setupAnimation(t, 'anim 300s 2', events);
 
-  return watcher2.wait_for('animationstart').then(evt => {
-    animation1.currentTime = 400 * MS_PER_SEC;
-    animation2.currentTime = 400 * MS_PER_SEC;
+  await watcher2.wait_for('animationstart');
 
-    events.length = 0;  // Clear received event array
+  animation1.currentTime = 400 * MS_PER_SEC;
+  animation2.currentTime = 400 * MS_PER_SEC;
 
-    return Promise.all([ watcher1.wait_for('animationstart'),
-                         watcher2.wait_for('animationiteration') ]);
-  }).then(() => {
-    checkEvents(events, ['animationiteration', div2, 300],
-                        ['animationstart',     div1, 0]);
-  });
+  events.length = 0;  // Clear received event array
+
+  await Promise.all([ watcher1.wait_for('animationstart'),
+                      watcher2.wait_for('animationiteration') ]);
+
+  checkEvents(events, ['animationiteration', div2, 300],
+                      ['animationstart',     div1, 0]);
 }, 'Test start and iteration events are ordered by time.');
 
-promise_test(t => {
+promise_test(async t => {
   let events = [];
   const [animation1, watcher1, div1] =
     setupAnimation(t, 'anim 150s', events);
   const [animation2, watcher2, div2] =
     setupAnimation(t, 'anim 100s 2', events);
 
-  return Promise.all([ watcher1.wait_for('animationstart'),
-                       watcher2.wait_for('animationstart') ]).then(() => {
-    animation1.currentTime = 150 * MS_PER_SEC;
-    animation2.currentTime = 150 * MS_PER_SEC;
+  await Promise.all([ watcher1.wait_for('animationstart'),
+                      watcher2.wait_for('animationstart') ]);
 
-    events.length = 0;  // Clear received event array
+  animation1.currentTime = 150 * MS_PER_SEC;
+  animation2.currentTime = 150 * MS_PER_SEC;
 
-    return Promise.all([ watcher1.wait_for('animationend'),
-                         watcher2.wait_for('animationiteration') ]);
-  }).then(() => {
-    checkEvents(events, ['animationiteration', div2, 100],
-                        ['animationend',       div1, 150]);
-  });
+  events.length = 0;  // Clear received event array
+
+  await Promise.all([ watcher1.wait_for('animationend'),
+                      watcher2.wait_for('animationiteration') ]);
+
+  checkEvents(events, ['animationiteration', div2, 100],
+                      ['animationend',       div1, 150]);
 }, 'Test iteration and end events are ordered by time.');
 
-promise_test(t => {
+promise_test(async t => {
   let events = [];
   const [animation1, watcher1, div1] =
     setupAnimation(t, 'anim 100s 100s', events);
@@ -147,15 +148,15 @@ promise_test(t => {
   animation1.finish();
   animation2.finish();
 
-  return Promise.all([ watcher1.wait_for([ 'animationstart',
-                                           'animationend' ]),
-                       watcher2.wait_for([ 'animationstart',
-                                           'animationend' ]) ]).then(() => {
-    checkEvents(events, ['animationstart', div2, 0],
-                        ['animationstart', div1, 0],
-                        ['animationend',   div1, 100],
-                        ['animationend',   div2, 200]);
-  });
+  await Promise.all([ watcher1.wait_for([ 'animationstart',
+                                          'animationend' ]),
+                      watcher2.wait_for([ 'animationstart',
+                                          'animationend' ]) ]);
+
+  checkEvents(events, ['animationstart', div2, 0],
+                      ['animationstart', div1, 0],
+                      ['animationend',   div1, 100],
+                      ['animationend',   div2, 200]);
 }, 'Test start and end events are sorted correctly when fired simultaneously');
 
 </script>

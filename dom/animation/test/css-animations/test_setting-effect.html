@@ -18,55 +18,55 @@
 <script>
 'use strict';
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   const watcher = new EventWatcher(t, div, [ 'animationend',
                                              'animationcancel' ]);
   const animation = div.getAnimations()[0];
-  return animation.ready.then(() => {
-    animation.currentTime = 50 * MS_PER_SEC;
-    animation.effect = null;
-    assert_equals(animation.playState, 'finished');
-    assert_equals(getComputedStyle(div).marginLeft, '0px');
-    return watcher.wait_for('animationend');
-  });
+  await animation.ready;
+
+  animation.currentTime = 50 * MS_PER_SEC;
+  animation.effect = null;
+  assert_equals(animation.playState, 'finished');
+  assert_equals(getComputedStyle(div).marginLeft, '0px');
+  await watcher.wait_for('animationend');
 }, 'Setting a null effect on a running animation fires an animationend event');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   const animation = div.getAnimations()[0];
-  return animation.ready.then(() => {
-    animation.currentTime = 50 * MS_PER_SEC;
-    animation.effect = new KeyframeEffect(div,
-                                          { left: [ '0px' , '100px'] },
-                                          100 * MS_PER_SEC);
-    assert_equals(animation.playState, 'running');
-    assert_equals(getComputedStyle(div).marginLeft, '0px');
-    assert_equals(getComputedStyle(div).left, '50px');
-  });
+  await animation.ready;
+
+  animation.currentTime = 50 * MS_PER_SEC;
+  animation.effect = new KeyframeEffect(div,
+                                        { left: [ '0px' , '100px'] },
+                                        100 * MS_PER_SEC);
+  assert_equals(animation.playState, 'running');
+  assert_equals(getComputedStyle(div).marginLeft, '0px');
+  assert_equals(getComputedStyle(div).left, '50px');
 }, 'Replacing an animation\'s effect with an effect that targets a different ' +
    'property should update both properties');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   const animation = div.getAnimations()[0];
-  return animation.ready.then(() => {
-    animation.currentTime = 50 * MS_PER_SEC;
-    animation.effect = new KeyframeEffect(div,
-                                          { left: [ '0px' , '100px'] },
-                                          20 * MS_PER_SEC);
-    assert_equals(animation.playState, 'finished');
-  });
+  await animation.ready;
+
+  animation.currentTime = 50 * MS_PER_SEC;
+  animation.effect = new KeyframeEffect(div,
+                                        { left: [ '0px' , '100px'] },
+                                        20 * MS_PER_SEC);
+  assert_equals(animation.playState, 'finished');
 }, 'Replacing an animation\'s effect with a shorter one that should have ' +
    'already finished, the animation finishes immediately');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
@@ -78,13 +78,13 @@ promise_test(t => {
                                         100 * MS_PER_SEC);
   assert_true(animation.pending);
 
-  return animation.ready.then(() => {
-    assert_false(animation.pending);
-  });
+  await animation.ready;
+
+  assert_false(animation.pending);
 }, 'A play-pending animation\'s effect whose effect is replaced still exits ' +
    'the pending state');
 
-promise_test(t => {
+promise_test(async t => {
   const div1 = addDiv(t);
   const div2 = addDiv(t);
 
@@ -99,16 +99,16 @@ promise_test(t => {
                                         { left: [ '0px', '100px' ] },
                                         100 * MS_PER_SEC);
 
-  return watcher1.wait_for('animationstart').then(() => {
-    assert_equals(animation.effect.target, div2);
+  await watcher1.wait_for('animationstart');
 
-    // Then wait a couple of frames and check that no event was dispatched.
-    return waitForAnimationFrames(2);
-  });
+  assert_equals(animation.effect.target, div2);
+
+  // Then wait a couple of frames and check that no event was dispatched.
+  await waitForAnimationFrames(2);
 }, 'The event is dispatched at the original element even after setting an ' +
    'effect with a different target element');
 
-promise_test(t => {
+promise_test(async t => {
   const div = addDiv(t);
   const watcher = new EventWatcher(t, div, [ 'animationstart',
                                              'animationend',
@@ -117,14 +117,12 @@ promise_test(t => {
   const animation = div.getAnimations()[0];
   animation.finish();
 
-  return watcher.wait_for([ 'animationstart',
-                            'animationend' ]).then(evt => {
-    // Set a longer effect
-    animation.effect = new KeyframeEffect(div,
-                                          { left: [ '0px', '100px' ] },
-                                          200 * MS_PER_SEC);
-    return watcher.wait_for('animationstart');
-  });
+  await watcher.wait_for([ 'animationstart', 'animationend' ]);
+  // Set a longer effect
+  animation.effect = new KeyframeEffect(div,
+                                        { left: [ '0px', '100px' ] },
+                                        200 * MS_PER_SEC);
+  await watcher.wait_for('animationstart');
 }, 'After replacing a finished animation\'s effect with a longer one ' +
    'it fires an animationstart event');
 
