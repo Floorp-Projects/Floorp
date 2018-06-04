@@ -110,9 +110,9 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
 
     @Throws(JSONException::class)
     internal fun serializeSession(session: Session): JSONObject {
-        val json = JSONObject()
-        json.put("url", session.url)
-        return json
+        return JSONObject().apply {
+            put("url", session.url)
+        }
     }
 
     @Throws(JSONException::class)
@@ -121,12 +121,26 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
     }
 
     private fun serializeEngineSession(engineSession: EngineSession): JSONObject {
-        // We don't currently persist any engine session state
-        return JSONObject()
+        return JSONObject().apply {
+            engineSession.saveState().forEach({ k, v -> if (shouldSerialize(v)) put(k, v) })
+        }
     }
 
     private fun deserializeEngineSession(engine: Engine, json: JSONObject): EngineSession {
-        // We don't currently persist any engine session state
-        return engine.createSession()
+        return engine.createSession().apply {
+            val values = mutableMapOf<String, Any>()
+            json.keys().forEach { k -> values[k] = json[k] }
+            restoreState(values)
+        }
+    }
+
+    private fun shouldSerialize(value: Any): Boolean {
+        // For now we only persist primitive types
+        return when (value) {
+            is Number -> true
+            is Boolean -> true
+            is String -> true
+            else -> false
+        }
     }
 }

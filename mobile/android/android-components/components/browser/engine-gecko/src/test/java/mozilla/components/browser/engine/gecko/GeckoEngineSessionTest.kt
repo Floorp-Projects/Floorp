@@ -8,12 +8,14 @@ import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mozilla.gecko.util.BundleEventListener
-import org.mozilla.gecko.util.EventCallback
-import org.mozilla.gecko.util.GeckoBundle
+import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.robolectric.RobolectricTestRunner
@@ -51,11 +53,11 @@ class GeckoEngineSessionTest {
         })
 
         engineSession.geckoSession.progressDelegate.onPageStart(null, "http://mozilla.org")
-        assertEquals(PROGRESS_START, observedProgress)
+        assertEquals(GeckoEngineSession.PROGRESS_START, observedProgress)
         assertEquals(true, observedLoadingState)
 
         engineSession.geckoSession.progressDelegate.onPageStop(null, true)
-        assertEquals(PROGRESS_STOP, observedProgress)
+        assertEquals(GeckoEngineSession.PROGRESS_STOP, observedProgress)
         assertEquals(false, observedLoadingState)
 
         val securityInfo = mock(GeckoSession.ProgressDelegate.SecurityInformation::class.java)
@@ -100,11 +102,10 @@ class GeckoEngineSessionTest {
     fun testLoadUrl() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var loadUriReceived = false
-        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
-            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
-                loadUriReceived = true
-            }
-        }, "GeckoView:LoadUri")
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> loadUriReceived = true },
+                "GeckoView:LoadUri"
+        )
 
         engineSession.loadUrl("http://mozilla.org")
         assertTrue(loadUriReceived)
@@ -116,11 +117,10 @@ class GeckoEngineSessionTest {
         engineSession.loadUrl("http://mozilla.org")
 
         var reloadReceived = false
-        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
-            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
-                reloadReceived = true
-            }
-        }, "GeckoView:Reload")
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> reloadReceived = true },
+                "GeckoView:Reload"
+        )
 
         engineSession.reload()
         assertTrue(reloadReceived)
@@ -130,11 +130,10 @@ class GeckoEngineSessionTest {
     fun testGoBack() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
-        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
-            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
-                eventReceived = true
-            }
-        }, "GeckoView:GoBack")
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> eventReceived = true },
+                "GeckoView:GoBack"
+        )
 
         engineSession.goBack()
         assertTrue(eventReceived)
@@ -144,13 +143,51 @@ class GeckoEngineSessionTest {
     fun testGoForward() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
-        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
-            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
-                eventReceived = true
-            }
-        }, "GeckoView:GoForward")
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> eventReceived = true },
+                "GeckoView:GoForward"
+        )
 
         engineSession.goForward()
+        assertTrue(eventReceived)
+    }
+
+    @Test
+    fun testSaveState() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = mock(GeckoSession::class.java)
+        val currentState = GeckoSession.SessionState("")
+        val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
+
+        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
+                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(currentState) })
+
+        assertEquals(stateMap, engineSession.saveState())
+    }
+
+    @Test
+    fun testSaveStateThrowsExceptionOnNullResult() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = mock(GeckoSession::class.java)
+        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
+                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(null) })
+
+        try {
+            engineSession.saveState()
+            fail("Expected GeckoEngineException")
+        } catch (e: GeckoEngineException) { }
+    }
+
+    @Test
+    fun testRestoreState() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var eventReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> eventReceived = true },
+                "GeckoView:RestoreState"
+        )
+
+        engineSession.restoreState(mapOf(GeckoEngineSession.GECKO_STATE_KEY to ""))
         assertTrue(eventReceived)
     }
 }

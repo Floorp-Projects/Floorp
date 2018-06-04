@@ -98,6 +98,10 @@ class EngineSessionTest {
 }
 
 open class DummyEngineSession : EngineSession() {
+    override fun restoreState(state: Map<String, Any>) {}
+
+    override fun saveState(): Map<String, Any> { return emptyMap() }
+
     override fun loadUrl(url: String) {}
 
     override fun reload() {}

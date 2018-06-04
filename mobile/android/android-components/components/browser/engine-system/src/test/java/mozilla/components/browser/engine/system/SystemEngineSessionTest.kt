@@ -1,10 +1,12 @@
 package mozilla.components.browser.engine.system
 
+import android.os.Bundle
 import android.webkit.WebView
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
@@ -65,12 +67,22 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testGoForward() {
+    fun testSaveState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
         `when`(engineSession.currentView()).thenReturn(webView)
 
-        engineSession.goForward()
-        verify(webView).goForward()
+        engineSession.saveState()
+        verify(webView).saveState(any(Bundle::class.java))
+    }
+
+    @Test
+    fun testRestoreState() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.restoreState(emptyMap())
+        verify(webView).restoreState(any(Bundle::class.java))
     }
 }

@@ -21,6 +21,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.FileNotFoundException
@@ -32,10 +33,13 @@ class DefaultSessionStorageTest {
     @Test
     fun testPersistAndRestore() {
         val session = Session("http://mozilla.org")
+        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+
         val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
         val engine = mock(Engine::class.java)
-        `when`(engine.createSession()).thenReturn(engineSession)
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
         val persisted = storage.persist(mapOf(session to engineSession), session.id)
@@ -43,8 +47,12 @@ class DefaultSessionStorageTest {
 
         val (sessions, selectedSession) = storage.restore(engine)
         assertEquals(1, sessions.size)
-        assertEquals(session.url, sessions.keys.first().url)
+        assertEquals(session, sessions.keys.first())
         assertEquals(session.id, selectedSession)
+        assertEquals(session.url, sessions.keys.first().url)
+
+        val restoredEngineSession = sessions.values.first()
+        verify(restoredEngineSession).restoreState(engineSessionState.filter { it.key != "k3" })
     }
 
     @Test

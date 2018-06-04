@@ -4,13 +4,12 @@
 
 package mozilla.components.browser.engine.gecko
 
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
-
-const val PROGRESS_START = 25
-const val PROGRESS_STOP = 100
 
 /**
  * Gecko-based EngineSession implementation.
@@ -19,7 +18,7 @@ class GeckoEngineSession(
     runtime: GeckoRuntime
 ) : EngineSession() {
 
-    internal val geckoSession = GeckoSession()
+    internal var geckoSession = GeckoSession()
 
     init {
         geckoSession.open(runtime)
@@ -54,6 +53,42 @@ class GeckoEngineSession(
      */
     override fun goForward() {
         geckoSession.goForward()
+    }
+
+    /**
+     * See [EngineSession.saveState]
+     *
+     * GeckoView provides a String representing the entire session state. We
+     * store this String using a single Map entry with key GECKO_STATE_KEY.
+
+     * See https://bugzilla.mozilla.org/show_bug.cgi?id=1441810 for
+     * discussion on sync vs. async, where a decision was made that
+     * callers should provide synchronous wrappers, if needed. In case we're
+     * asking for the state when persisting, a separate (independent) thread
+     * is used so we're not blocking anything else. In case of calling this
+     * method from onPause or similar, we also want a synchronous response.
+     */
+    @Throws(GeckoEngineException::class)
+    override fun saveState(): Map<String, Any> = runBlocking {
+        val stateMap = CompletableDeferred<Map<String, Any>>()
+        geckoSession.saveState({ state ->
+            if (state != null) {
+                stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
+            } else {
+                stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
+            }
+        })
+        stateMap.await()
+    }
+
+    /**
+     * See [EngineSession.restoreState]
+     */
+    override fun restoreState(state: Map<String, Any>) {
+        if (state.containsKey(GECKO_STATE_KEY)) {
+            val sessionState = GeckoSession.SessionState(state[GECKO_STATE_KEY] as String)
+            geckoSession.restoreState(sessionState)
+        }
     }
 
     /**
@@ -121,5 +156,11 @@ class GeckoEngineSession(
                 }
             }
         }
+    }
+
+    companion object {
+        internal const val PROGRESS_START = 25
+        internal const val PROGRESS_STOP = 100
+        internal const val GECKO_STATE_KEY = "GECKO_STATE"
     }
 }

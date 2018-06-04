@@ -16,10 +16,10 @@ class SessionProxyTest {
         val session = Session("")
         val engineSession = object : EngineSession() {
             override fun goBack() { }
-
             override fun goForward() { }
-
             override fun reload() { }
+            override fun restoreState(state: Map<String, Any>) { }
+            override fun saveState(): Map<String, Any> { return emptyMap() }
 
             override fun loadUrl(url: String) {
                 notifyObservers { onLocationChange(url) }
@@ -48,6 +48,9 @@ class SessionProxyTest {
             override fun goBack() { }
             override fun goForward() { }
             override fun reload() { }
+            override fun restoreState(state: Map<String, Any>) { }
+            override fun saveState(): Map<String, Any> { return emptyMap() }
+
             override fun loadUrl(url: String) {
                 if (url.startsWith("https://")) {
                     notifyObservers { onSecurityChange(true, "host", "issuer") }

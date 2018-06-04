@@ -69,6 +69,23 @@ abstract class EngineSession {
     abstract fun goForward()
 
     /**
+     * Saves and returns the engine state. Engine implementations are not required
+     * to persist the state anywhere else than in the returned map. Engines that
+     * already provide a serialized state can use a single entry in this map to
+     * provide this state. The only requirement is that the same map can be used
+     * to restore the original state. See [restoreState] and the specific
+     * engine implementation for details.
+     */
+    abstract fun saveState(): Map<String, Any>
+
+    /**
+     * Restores the engine state as provided by [saveState].
+     *
+     * @param state state retrieved from [saveState]
+     */
+    abstract fun restoreState(state: Map<String, Any>)
+
+    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */

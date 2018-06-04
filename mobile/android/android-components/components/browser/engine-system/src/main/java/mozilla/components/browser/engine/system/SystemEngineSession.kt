@@ -4,8 +4,10 @@
 
 package mozilla.components.browser.engine.system
 
+import android.os.Bundle
 import android.webkit.WebView
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.ktx.kotlin.toBundle
 import java.lang.ref.WeakReference
 
 /**
@@ -51,9 +53,29 @@ class SystemEngineSession : EngineSession() {
         currentView()?.goForward()
     }
 
+    /**
+     * See [EngineSession.saveState]
+     */
+    override fun saveState(): Map<String, Any> {
+        val state = Bundle()
+        currentView()?.saveState(state)
+
+        return mutableMapOf<String, Any>().apply {
+            state.keySet().forEach { k -> put(k, state[k]) }
+        }
+    }
+
+    /**
+     * See [EngineSession.restoreState]
+     */
+    override fun restoreState(state: Map<String, Any>) {
+        currentView()?.restoreState(state.toBundle())
+    }
+
     internal fun currentView(): WebView? {
         return view?.get()?.currentWebView
     }
+
     /**
      * Helper method to notify observers from other classes in this package. This is needed as
      * almost everything is implemented by WebView and its listeners. There is no actual concept of
