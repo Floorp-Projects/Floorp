@@ -117,14 +117,14 @@ LoadInfoArgsToLoadInfo(const mozilla::net::OptionalLoadInfoArgs& aOptionalLoadIn
  */
 void
 LoadInfoToParentLoadInfoForwarder(nsILoadInfo *aLoadInfo,
-                                  mozilla::net::ParentLoadInfoForwarderArgs* outLoadInfoChildForwardArgs);
+                                  mozilla::net::ParentLoadInfoForwarderArgs* aForwarderArgsOut);
 
 /**
  * Merges (replaces) properties of an existing LoadInfo on a child process
  * with properties carried down through ParentLoadInfoForwarderArgs.
  */
 nsresult
-MergeParentLoadInfoForwarder(mozilla::net::ParentLoadInfoForwarderArgs const& outLoadInfoChildForwardArgs,
+MergeParentLoadInfoForwarder(mozilla::net::ParentLoadInfoForwarderArgs const& aForwarderArgs,
                              nsILoadInfo *aLoadInfo);
 
 } // namespace ipc
