@@ -942,6 +942,24 @@ Geolocation::~Geolocation()
   }
 }
 
+StaticRefPtr<Geolocation> Geolocation::sNonWindowSingleton;
+
+already_AddRefed<Geolocation>
+Geolocation::NonWindowSingleton()
+{
+  if (sNonWindowSingleton) {
+    return do_AddRef(sNonWindowSingleton);
+  }
+
+  RefPtr<Geolocation> result = new Geolocation();
+  DebugOnly<nsresult> rv = result->Init();
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "How can this fail?");
+
+  ClearOnShutdown(&sNonWindowSingleton);
+  sNonWindowSingleton = result;
+  return result.forget();
+}
+
 nsresult
 Geolocation::Init(nsPIDOMWindowInner* aContentDom)
 {
