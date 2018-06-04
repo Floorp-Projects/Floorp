@@ -238,7 +238,7 @@ test(t => {
    + ' animation');
 
 test(t => {
-  kTimingFunctionValues.forEach(function(easing) {
+  for (const easing of kTimingFunctionValues) {
     const div = addDiv(t);
 
     div.style.animation = 'anim-simple-three 100s ' + easing;
@@ -250,7 +250,7 @@ test(t => {
       assert_equals(frames[i].easing, easing,
                     "value for 'easing' on ComputedKeyframe #" + i);
     }
-  });
+  }
 }, 'KeyframeEffect.getKeyframes() returns frames with expected easing'
    + ' values, when the easing comes from animation-timing-function on the'
    + ' element');
