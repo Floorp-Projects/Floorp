@@ -121,7 +121,7 @@ SOURCES += [
     'ProfileReset.cpp',
 ]
 
-if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
+if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
         'glxtest.cpp',
     ]
@@ -147,7 +147,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
+if CONFIG['MOZ_X11']:
     DEFINES['USE_GLX_TEST'] = True
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
