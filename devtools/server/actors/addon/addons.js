@@ -27,7 +27,7 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
 
     // TODO: once the add-on actor has been refactored to use
     // protocol.js, we could return it directly.
-    // return new BrowserAddonActor(this.conn, addon);
+    // return new AddonTargetActor(this.conn, addon);
 
     // Return a pseudo add-on object that a calling client can work
     // with. Provide a flag that the client can use to detect when it

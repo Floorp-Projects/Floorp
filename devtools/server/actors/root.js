@@ -395,21 +395,21 @@ RootActor.prototype = {
     // Reattach the onListChanged listener now that a client requested the list.
     addonList.onListChanged = this._onAddonListChanged;
 
-    return addonList.getList().then((addonActors) => {
-      const addonActorPool = new ActorPool(this.conn);
-      for (const addonActor of addonActors) {
-        addonActorPool.addActor(addonActor);
+    return addonList.getList().then((addonTargetActors) => {
+      const addonTargetActorPool = new ActorPool(this.conn);
+      for (const addonTargetActor of addonTargetActors) {
+        addonTargetActorPool.addActor(addonTargetActor);
       }
 
-      if (this._addonActorPool) {
-        this.conn.removeActorPool(this._addonActorPool);
+      if (this._addonTargetActorPool) {
+        this.conn.removeActorPool(this._addonTargetActorPool);
       }
-      this._addonActorPool = addonActorPool;
-      this.conn.addActorPool(this._addonActorPool);
+      this._addonTargetActorPool = addonTargetActorPool;
+      this.conn.addActorPool(this._addonTargetActorPool);
 
       return {
         "from": this.actorID,
-        "addons": addonActors.map(addonActor => addonActor.form())
+        "addons": addonTargetActors.map(addonTargetActor => addonTargetActor.form())
       };
     });
   },
