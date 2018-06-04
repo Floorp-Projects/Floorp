@@ -2315,10 +2315,19 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     appCacheChannel->GetChooseApplicationCache(&chooseAppcache);
   }
 
+  nsCOMPtr<nsILoadInfo> newChannelLoadInfo;
+  nsCOMPtr<nsIChannel> newChannel = do_QueryInterface(mRedirectChannelChild);
+  if (newChannel) {
+    Unused << newChannel->GetLoadInfo(getter_AddRefs(newChannelLoadInfo));
+  }
+
+  ChildLoadInfoForwarderArgs loadInfoForwarder;
+  LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo, &loadInfoForwarder);
+
   if (mIPCOpen)
-    SendRedirect2Verify(result, *headerTuples, loadFlags, referrerPolicy,
-                        referrerURI, redirectURI, corsPreflightArgs,
-                        chooseAppcache);
+    SendRedirect2Verify(result, *headerTuples, loadInfoForwarder, loadFlags,
+                        referrerPolicy, referrerURI, redirectURI,
+                        corsPreflightArgs, chooseAppcache);
 
   return NS_OK;
 }

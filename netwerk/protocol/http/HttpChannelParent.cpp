@@ -879,8 +879,9 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
 }
 
 mozilla::ipc::IPCResult
-HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
+HttpChannelParent::RecvRedirect2Verify(const nsresult& aResult,
                                        const RequestHeaderTuples& changedHeaders,
+                                       const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
                                        const uint32_t& loadFlags,
                                        const uint32_t& referrerPolicy,
                                        const OptionalURIParams& aReferrerURI,
@@ -889,8 +890,15 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const bool& aChooseAppcache)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
-       this, static_cast<uint32_t>(result)));
+       this, static_cast<uint32_t>(aResult)));
+
+  // Result from the child.  If something fails here, we might overwrite a
+  // success with a further failure.
+  nsresult result = aResult;
+
+  // Local results.
   nsresult rv;
+
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHttpChannel> newHttpChannel =
         do_QueryInterface(mRedirectChannel);
@@ -936,6 +944,13 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         do_QueryInterface(newHttpChannel);
       if (appCacheChannel) {
         appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
+      }
+
+      nsCOMPtr<nsILoadInfo> newLoadInfo;
+      Unused << newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+      rv = MergeChildLoadInfoForwarder(aLoadInfoForwarder, newLoadInfo);
+      if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
+        result = rv;
       }
     }
   }

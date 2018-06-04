@@ -49,6 +49,7 @@ struct ParamTraits<mozilla::OriginAttributes>
 
 namespace mozilla {
 namespace net {
+class ChildLoadInfoForwarderArgs;
 class OptionalLoadInfoArgs;
 class ParentLoadInfoForwarderArgs;
 class RedirectHistoryEntryInfo;
@@ -126,6 +127,22 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo *aLoadInfo,
 nsresult
 MergeParentLoadInfoForwarder(mozilla::net::ParentLoadInfoForwarderArgs const& aForwarderArgs,
                              nsILoadInfo *aLoadInfo);
+
+/**
+ * Fills ChildLoadInfoForwarderArgs with properties we want to carry to the
+ * parent process after the initial channel creation.
+ */
+void
+LoadInfoToChildLoadInfoForwarder(nsILoadInfo* aLoadInfo,
+                                 mozilla::net::ChildLoadInfoForwarderArgs* aForwarderArgsOut);
+
+/**
+ * Merges (replaces) properties of an existing LoadInfo on the parent process
+ * with properties contained in a ChildLoadInfoForwarderArgs.
+ */
+nsresult
+MergeChildLoadInfoForwarder(const mozilla::net::ChildLoadInfoForwarderArgs& aForwardArgs,
+                            nsILoadInfo* aLoadInfo);
 
 } // namespace ipc
 } // namespace mozilla
