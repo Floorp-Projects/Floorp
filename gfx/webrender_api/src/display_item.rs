@@ -109,6 +109,8 @@ pub enum SpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
+    PushReferenceFrame(PushReferenceFrameDisplayListItem),
+    PopReferenceFrame,
     SetGradientStops,
     PushShadow(Shadow),
     PopAllShadows,
@@ -138,6 +140,8 @@ pub enum CompletelySpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem, Vec<FilterOp>),
     PopStackingContext,
+    PushReferenceFrame(PushReferenceFrameDisplayListItem),
+    PopReferenceFrame,
     SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
@@ -386,6 +390,12 @@ pub enum BorderStyle {
     Outset = 9,
 }
 
+impl BorderStyle {
+    pub fn is_hidden(&self) -> bool {
+        *self == BorderStyle::Hidden || *self == BorderStyle::None
+    }
+}
+
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum BoxShadowClipMode {
@@ -463,17 +473,26 @@ pub struct RadialGradientDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PushReferenceFrameDisplayListItem {
+    pub reference_frame: ReferenceFrame,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ReferenceFrame {
+    pub transform: Option<PropertyBinding<LayoutTransform>>,
+    pub perspective: Option<LayoutTransform>,
+    pub id: ClipId,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PushStackingContextDisplayItem {
     pub stacking_context: StackingContext,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
-    pub transform: Option<PropertyBinding<LayoutTransform>>,
     pub transform_style: TransformStyle,
-    pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
-    pub reference_frame_id: Option<ClipId>,
     pub clip_node_id: Option<ClipId>,
     pub glyph_raster_space: GlyphRasterSpace,
 } // IMPLICIT: filters: Vec<FilterOp>

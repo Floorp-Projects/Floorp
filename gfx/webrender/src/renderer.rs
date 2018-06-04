@@ -2887,8 +2887,18 @@ impl Renderer {
 
             for alpha_batch_container in &target.alpha_batch_containers {
                 if let Some(target_rect) = alpha_batch_container.target_rect {
+                    // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
+                    let rect = if render_target.is_none() {
+                        let mut rect = target_rect
+                            .intersection(&framebuffer_target_rect.to_i32())
+                            .unwrap_or(DeviceIntRect::zero());
+                        rect.origin.y = target_size.height as i32 - rect.origin.y - rect.size.height;
+                        rect
+                    } else {
+                        target_rect
+                    };
                     self.device.enable_scissor();
-                    self.device.set_scissor_rect(target_rect);
+                    self.device.set_scissor_rect(rect);
                 }
 
                 // Draw opaque batches front-to-back for maximum
@@ -2930,8 +2940,18 @@ impl Renderer {
 
         for alpha_batch_container in &target.alpha_batch_containers {
             if let Some(target_rect) = alpha_batch_container.target_rect {
+                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
+                let rect = if render_target.is_none() {
+                    let mut rect = target_rect
+                        .intersection(&framebuffer_target_rect.to_i32())
+                        .unwrap_or(DeviceIntRect::zero());
+                    rect.origin.y = target_size.height as i32 - rect.origin.y - rect.size.height;
+                    rect
+                } else {
+                    target_rect
+                };
                 self.device.enable_scissor();
-                self.device.set_scissor_rect(target_rect);
+                self.device.set_scissor_rect(rect);
             }
 
             for batch in &alpha_batch_container.alpha_batches {

@@ -471,16 +471,16 @@ impl<'a> DisplayListFlattener<'a> {
                 BorderStyle::Solid |
                 BorderStyle::Hidden |
                 BorderStyle::None |
+                BorderStyle::Double |
                 BorderStyle::Inset |
+                BorderStyle::Groove |
+                BorderStyle::Ridge |
                 BorderStyle::Outset => {
                     true
                 }
 
-                BorderStyle::Double |
                 BorderStyle::Dotted |
-                BorderStyle::Dashed |
-                BorderStyle::Groove |
-                BorderStyle::Ridge => {
+                BorderStyle::Dashed => {
                     false
                 }
             }
@@ -1016,9 +1016,16 @@ impl DotInfo {
 }
 
 #[derive(Debug)]
+pub struct BorderSegmentInfo {
+    task_rect: DeviceRect,
+    segment: BorderSegment,
+    radius: DeviceSize,
+    widths: DeviceSize,
+}
+
+#[derive(Debug)]
 pub struct BorderRenderTaskInfo {
-    pub instances: Vec<BorderInstance>,
-    pub segments: Vec<BrushSegment>,
+    pub border_segments: Vec<BorderSegmentInfo>,
     pub size: DeviceIntSize,
 }
 
@@ -1028,9 +1035,9 @@ impl BorderRenderTaskInfo {
         border: &NormalBorder,
         widths: &BorderWidths,
         scale: LayoutToDeviceScale,
+        brush_segments: &mut Vec<BrushSegment>,
     ) -> Self {
-        let mut instances = Vec::new();
-        let mut segments = Vec::new();
+        let mut border_segments = Vec::new();
 
         let dp_width_top = (widths.top * scale.0).ceil();
         let dp_width_bottom = (widths.bottom * scale.0).ceil();
@@ -1088,15 +1095,6 @@ impl BorderRenderTaskInfo {
             dp_size_tl.height.max(dp_size_tr.height) + height_inner + dp_size_bl.height.max(dp_size_br.height),
         );
 
-        // These modulate colors are not part of the specification. They
-        // are derived from the Gecko source code and experimentation, and
-        // used to modulate the colors in order to generate colors for
-        // the inset/outset and groove/ridge border styles.
-        let left_color = border.left.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
-        let top_color = border.top.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
-        let right_color = border.right.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
-        let bottom_color = border.bottom.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
-
         add_edge_segment(
             LayoutRect::from_floats(
                 rect.origin.x,
@@ -1110,13 +1108,12 @@ impl BorderRenderTaskInfo {
                 dp_width_left,
                 size.height - dp_size_bl.height,
             ),
-            border.left.style,
-            left_color,
+            &border.left,
             BorderSegment::Left,
             EdgeAaSegmentMask::LEFT | EdgeAaSegmentMask::RIGHT,
-            &mut instances,
+            &mut border_segments,
             BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_Y,
-            &mut segments,
+            brush_segments,
         );
 
         add_edge_segment(
@@ -1132,13 +1129,12 @@ impl BorderRenderTaskInfo {
                 size.width - dp_size_tr.width,
                 dp_width_top,
             ),
-            border.top.style,
-            top_color,
+            &border.top,
             BorderSegment::Top,
             EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::BOTTOM,
-            &mut instances,
+            &mut border_segments,
             BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_X,
-            &mut segments,
+            brush_segments,
         );
 
         add_edge_segment(
@@ -1154,13 +1150,12 @@ impl BorderRenderTaskInfo {
                 size.width,
                 size.height - dp_size_br.height,
             ),
-            border.right.style,
-            right_color,
+            &border.right,
             BorderSegment::Right,
             EdgeAaSegmentMask::RIGHT | EdgeAaSegmentMask::LEFT,
-            &mut instances,
+            &mut border_segments,
             BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_Y,
-            &mut segments,
+            brush_segments,
         );
 
         add_edge_segment(
@@ -1176,13 +1171,12 @@ impl BorderRenderTaskInfo {
                 size.width - dp_size_br.width,
                 size.height,
             ),
-            border.bottom.style,
-            bottom_color,
+            &border.bottom,
             BorderSegment::Bottom,
             EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::TOP,
-            &mut instances,
+            &mut border_segments,
             BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_X,
-            &mut segments,
+            brush_segments,
         );
 
         add_corner_segment(
@@ -1198,16 +1192,14 @@ impl BorderRenderTaskInfo {
                 dp_size_tl.width,
                 dp_size_tl.height,
             ),
-            border.left.style,
-            left_color,
-            border.top.style,
-            top_color,
+            &border.left,
+            &border.top,
             DeviceSize::new(dp_width_left, dp_width_top),
             dp_corner_tl,
             BorderSegment::TopLeft,
             EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::LEFT,
-            &mut instances,
-            &mut segments,
+            &mut border_segments,
+            brush_segments,
         );
 
         add_corner_segment(
@@ -1223,16 +1215,14 @@ impl BorderRenderTaskInfo {
                 size.width,
                 dp_size_tr.height,
             ),
-            border.top.style,
-            top_color,
-            border.right.style,
-            right_color,
+            &border.top,
+            &border.right,
             DeviceSize::new(dp_width_right, dp_width_top),
             dp_corner_tr,
             BorderSegment::TopRight,
             EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::RIGHT,
-            &mut instances,
-            &mut segments,
+            &mut border_segments,
+            brush_segments,
         );
 
         add_corner_segment(
@@ -1248,16 +1238,14 @@ impl BorderRenderTaskInfo {
                 size.width,
                 size.height,
             ),
-            border.right.style,
-            right_color,
-            border.bottom.style,
-            bottom_color,
+            &border.right,
+            &border.bottom,
             DeviceSize::new(dp_width_right, dp_width_bottom),
             dp_corner_br,
             BorderSegment::BottomRight,
             EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::RIGHT,
-            &mut instances,
-            &mut segments,
+            &mut border_segments,
+            brush_segments,
         );
 
         add_corner_segment(
@@ -1273,23 +1261,81 @@ impl BorderRenderTaskInfo {
                 dp_size_bl.width,
                 size.height,
             ),
-            border.bottom.style,
-            bottom_color,
-            border.left.style,
-            left_color,
+            &border.bottom,
+            &border.left,
             DeviceSize::new(dp_width_left, dp_width_bottom),
             dp_corner_bl,
             BorderSegment::BottomLeft,
             EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::LEFT,
-            &mut instances,
-            &mut segments,
+            &mut border_segments,
+            brush_segments,
         );
 
         BorderRenderTaskInfo {
-            segments,
-            instances,
+            border_segments,
             size: size.to_i32(),
         }
+    }
+
+    pub fn build_instances(
+        &self,
+        border: &NormalBorder,
+    ) -> Vec<BorderInstance> {
+        let mut instances = Vec::new();
+
+        for info in &self.border_segments {
+            let (side0, side1, flip0, flip1) = match info.segment {
+                BorderSegment::Left => (&border.left, &border.left, false, false),
+                BorderSegment::Top => (&border.top, &border.top, false, false),
+                BorderSegment::Right => (&border.right, &border.right, true, true),
+                BorderSegment::Bottom => (&border.bottom, &border.bottom, true, true),
+                BorderSegment::TopLeft => (&border.left, &border.top, false, false),
+                BorderSegment::TopRight => (&border.top, &border.right, false, true),
+                BorderSegment::BottomRight => (&border.right, &border.bottom, true, true),
+                BorderSegment::BottomLeft => (&border.bottom, &border.left, true, false),
+            };
+
+            let style0 = if side0.style.is_hidden() {
+                side1.style
+            } else {
+                side0.style
+            };
+            let style1 = if side1.style.is_hidden() {
+                side0.style
+            } else {
+                side1.style
+            };
+
+            // These modulate colors are not part of the specification. They
+            // are derived from the Gecko source code and experimentation, and
+            // used to modulate the colors in order to generate colors for
+            // the inset/outset and groove/ridge border styles.
+            let color0 = if flip0 {
+                side0.border_color(2.0 / 3.0, 1.0, 0.7, 0.3)
+            } else {
+                side0.border_color(1.0, 2.0 / 3.0, 0.3, 0.7)
+            };
+
+            let color1 = if flip1 {
+                side1.border_color(2.0 / 3.0, 1.0, 0.7, 0.3)
+            } else {
+                side1.border_color(1.0, 2.0 / 3.0, 0.3, 0.7)
+            };
+
+            add_segment(
+                info.task_rect,
+                style0,
+                style1,
+                color0,
+                color1,
+                info.segment,
+                &mut instances,
+                info.widths,
+                info.radius,
+            );
+        }
+
+        instances
     }
 }
 
@@ -1347,23 +1393,16 @@ fn add_segment(
 fn add_corner_segment(
     image_rect: LayoutRect,
     task_rect: DeviceRect,
-    mut style0: BorderStyle,
-    color0: ColorF,
-    mut style1: BorderStyle,
-    color1: ColorF,
+    side0: &BorderSide,
+    side1: &BorderSide,
     widths: DeviceSize,
     radius: DeviceSize,
     segment: BorderSegment,
     edge_flags: EdgeAaSegmentMask,
-    instances: &mut Vec<BorderInstance>,
+    border_segments: &mut Vec<BorderSegmentInfo>,
     brush_segments: &mut Vec<BrushSegment>,
 ) {
-    // TODO(gw): This will need to be a bit more involved when
-    //           we support other border types here. For example,
-    //           groove / ridge borders will always need to
-    //           use two instances.
-
-    if color0.a <= 0.0 && color1.a <= 0.0 {
+    if side0.color.a <= 0.0 && side1.color.a <= 0.0 {
         return;
     }
 
@@ -1371,31 +1410,16 @@ fn add_corner_segment(
         return;
     }
 
-    let style0_hidden = style0 == BorderStyle::Hidden || style0 == BorderStyle::None;
-    let style1_hidden = style1 == BorderStyle::Hidden || style1 == BorderStyle::None;
-
-    if style0_hidden && style1_hidden {
+    if side0.style.is_hidden() && side1.style.is_hidden() {
         return;
     }
 
-    if style0_hidden {
-        style0 = style1;
-    }
-    if style1_hidden {
-        style1 = style0;
-    }
-
-    add_segment(
+    border_segments.push(BorderSegmentInfo {
         task_rect,
-        style0,
-        style1,
-        color0,
-        color1,
         segment,
-        instances,
-        widths,
         radius,
-    );
+        widths,
+    });
 
     add_brush_segment(
         image_rect,
@@ -1409,33 +1433,27 @@ fn add_corner_segment(
 fn add_edge_segment(
     image_rect: LayoutRect,
     task_rect: DeviceRect,
-    style: BorderStyle,
-    color: ColorF,
+    side: &BorderSide,
     segment: BorderSegment,
     edge_flags: EdgeAaSegmentMask,
-    instances: &mut Vec<BorderInstance>,
+    border_segments: &mut Vec<BorderSegmentInfo>,
     brush_flags: BrushFlags,
     brush_segments: &mut Vec<BrushSegment>,
 ) {
-    if color.a <= 0.0 {
+    if side.color.a <= 0.0 {
         return;
     }
 
-    if style == BorderStyle::Hidden || style == BorderStyle::None {
+    if side.style.is_hidden() {
         return;
     }
 
-    add_segment(
+    border_segments.push(BorderSegmentInfo {
         task_rect,
-        style,
-        style,
-        color,
-        color,
         segment,
-        instances,
-        DeviceSize::zero(),
-        DeviceSize::zero(),
-    );
+        radius: DeviceSize::zero(),
+        widths: task_rect.size,
+    });
 
     add_brush_segment(
         image_rect,
