@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
 
 loader.lazyGetter(this, "WebExtensionInspectedWindowFront", () => {
   return require(
-    "devtools/shared/fronts/webextension-inspected-window"
+    "devtools/shared/fronts/addon/webextension-inspected-window"
   ).WebExtensionInspectedWindowFront;
 }, true);
 

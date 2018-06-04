@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {addonsSpec} = require("devtools/shared/specs/addons");
+const {addonsSpec} = require("devtools/shared/specs/addon/addons");
 const protocol = require("devtools/shared/protocol");
 
 const AddonsFront = protocol.FrontClassWithSpec(addonsSpec, {

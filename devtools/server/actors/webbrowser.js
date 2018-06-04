@@ -14,7 +14,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
 loader.lazyRequireGetter(this, "FrameTargetActorProxy", "devtools/server/actors/targets/frame-proxy", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
-loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/webextension-parent", true);
+loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/addon/webextension-parent", true);
 loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
