@@ -20,6 +20,7 @@ const ANIM_DURATION = 100 * MS_PER_SEC;
 
 promise_test(async t => {
   const div = addDiv(t);
+
   // Set up pending animation
   div.style.animation = ANIM_PROP_VAL;
   const animation = div.getAnimations()[0];
@@ -29,16 +30,12 @@ promise_test(async t => {
   div.style.animation = '';
   getComputedStyle(div).animation;
 
-  try {
-    await originalFinishedPromise;
-    assert_unreached('Original finished promise should not be fulfilled');
-  } catch (err) {
-    assert_equals(err.name, 'AbortError',
-                  'finished promise is rejected with AbortError');
-    assert_not_equals(animation.finished, originalFinishedPromise,
-                      'Finished promise should change after the original is ' +
-                      'rejected');
-  }
+  await promise_rejects(t, 'AbortError', originalFinishedPromise,
+                        'finished promise is rejected with AbortError');
+
+  assert_not_equals(animation.finished, originalFinishedPromise,
+                    'Finished promise should change after the original is ' +
+                    'rejected');
 }, 'finished promise is rejected when an animation is canceled by resetting ' +
    'the animation property');
 
@@ -57,16 +54,12 @@ promise_test(async t => {
   div.style.animation = 'def 100s';
   getComputedStyle(div).animation;
 
-  try {
-    await originalFinishedPromise;
-    assert_unreached('Original finished promise should not be fulfilled');
-  } catch (err) {
-    assert_equals(err.name, 'AbortError',
-                  'finished promise is rejected with AbortError');
-    assert_not_equals(animation.finished, originalFinishedPromise,
-                      'Finished promise should change after the original is ' +
-                      'rejected');
-  }
+  await promise_rejects(t, 'AbortError', originalFinishedPromise,
+                        'finished promise is rejected with AbortError');
+
+  assert_not_equals(animation.finished, originalFinishedPromise,
+                    'Finished promise should change after the original is ' +
+                    'rejected');
 }, 'finished promise is rejected when an animation is canceled by changing ' +
    'the animation property');
 
@@ -83,12 +76,10 @@ promise_test(async t => {
   await waitForAnimationFrames(2);
 
   assert_equals(animation.finished, originalFinishedPromise,
-                'Should not replay when animation-play-state changes to ' +
-                '"running" on finished animation');
+                'The finished promise should NOT be reset');
   assert_equals(animation.currentTime, ANIM_DURATION,
-                'currentTime should not change when animation-play-state ' +
-                'changes to "running" on finished animation');
-}, 'Test finished promise changes when animationPlayState set to running');
+                'Sanity check: the current time should not change');
+}, 'finished promise is not reset when animationPlayState is set to running');
 
 </script>
 </body>
