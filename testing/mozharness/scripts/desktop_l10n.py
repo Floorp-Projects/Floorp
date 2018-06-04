@@ -118,7 +118,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
                 "log_name": "single_locale",
-                "hashType": "sha512",
             },
         }
 
