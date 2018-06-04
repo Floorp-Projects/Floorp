@@ -1078,6 +1078,8 @@ BrowserGlue.prototype = {
     }
 
     Normandy.uninit();
+
+    SavantShieldStudy.uninit();
   },
 
   // All initial windows have opened.
