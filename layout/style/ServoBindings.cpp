@@ -67,6 +67,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
@@ -180,6 +181,13 @@ Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
 {
   MOZ_ASSERT(aAnonContent);
   delete aAnonContent;
+}
+
+const nsTArray<RefPtr<nsINode>>*
+Gecko_GetAssignedNodes(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(HTMLSlotElement::FromNode(aElement));
+  return &static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
 }
 
 void

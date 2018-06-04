@@ -469,6 +469,7 @@ structs-types = [
     "mozilla::UniquePtr",
     "ServoRawOffsetArc",
     "nsIContent",
+    "nsINode",
     "nsIDocument",
     "nsIDocument_DocumentTheme",
     "nsSimpleContentList",
