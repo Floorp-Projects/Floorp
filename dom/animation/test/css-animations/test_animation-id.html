@@ -17,8 +17,8 @@ test(t => {
   div.style.animation = 'abc 100s';
   const animation = div.getAnimations()[0];
   assert_equals(animation.id, '', 'id for CSS Animation is initially empty');
-  animation.id = 'anim'
 
+  animation.id = 'anim'
   assert_equals(animation.id, 'anim', 'animation.id reflects the value set');
 }, 'Animation.id for CSS Animations');
 
