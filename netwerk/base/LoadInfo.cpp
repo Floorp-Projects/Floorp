@@ -1317,6 +1317,11 @@ void
 LoadInfo::SetReservedClientInfo(const ClientInfo& aClientInfo)
 {
   MOZ_DIAGNOSTIC_ASSERT(mInitialClientInfo.isNothing());
+  // Treat assignments of the same value as a no-op.  The emplace below
+  // will normally assert when overwriting an existing value.
+  if (mReservedClientInfo.isSome() && mReservedClientInfo.ref() == aClientInfo) {
+    return;
+  }
   mReservedClientInfo.emplace(aClientInfo);
 }
 
@@ -1331,6 +1336,11 @@ LoadInfo::SetInitialClientInfo(const ClientInfo& aClientInfo)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mReservedClientSource);
   MOZ_DIAGNOSTIC_ASSERT(mReservedClientInfo.isNothing());
+  // Treat assignments of the same value as a no-op.  The emplace below
+  // will normally assert when overwriting an existing value.
+  if (mInitialClientInfo.isSome() && mInitialClientInfo.ref() == aClientInfo) {
+    return;
+  }
   mInitialClientInfo.emplace(aClientInfo);
 }
 
