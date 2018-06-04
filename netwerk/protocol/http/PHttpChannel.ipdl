@@ -111,7 +111,6 @@ child:
                        uint32_t            cacheKey,
                        nsCString           altDataType,
                        int64_t             altDataLength,
-                       OptionalIPCServiceWorkerDescriptor controller,
                        bool                applyConversion);
 
   // Used to cancel child channel if we hit errors during creating and
