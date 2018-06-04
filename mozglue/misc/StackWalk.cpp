@@ -254,10 +254,9 @@ WalkStackMain64(struct WalkStackData* aData)
     context = &context_buf;
     memset(context, 0, sizeof(CONTEXT));
     context->ContextFlags = CONTEXT_FULL;
-    if (!GetThreadContext(aData->thread, context)) {
-      if (aData->walkCallingThread) {
-        PrintError("GetThreadContext");
-      }
+    if (aData->walkCallingThread) {
+      ::RtlCaptureContext(context);
+    } else if (!GetThreadContext(aData->thread, context)) {
       return;
     }
   } else {
