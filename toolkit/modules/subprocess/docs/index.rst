@@ -1,7 +1,7 @@
 .. _Subprocess:
 
 =================
-Supbrocess Module
+Subprocess Module
 =================
 
 The Subprocess module allows a caller to spawn a native host executable, and
