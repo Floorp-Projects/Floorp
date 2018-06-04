@@ -73,7 +73,7 @@ class DebugKeystore:
         contains = True
         try:
             self._check(args)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             contains = False
         if self.verbose:
             log.info('Keystore %s %s alias %s' %
