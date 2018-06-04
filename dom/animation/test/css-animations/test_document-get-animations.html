@@ -236,8 +236,8 @@ test(t => {
   const div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.getAnimations()[0].cancel();
   assert_equals(document.getAnimations().length, 0,
-                'CSS animations cancelled by the API are not returned');
-}, 'CSS Animations cancelled via the API are not returned');
+                'CSS animations canceled by the API are not returned');
+}, 'CSS Animations canceled via the API are not returned');
 
 test(t => {
   const div = addDiv(t, { style: 'animation: animLeft 100s' });
@@ -245,9 +245,9 @@ test(t => {
   anim.cancel();
   anim.play();
   assert_equals(document.getAnimations().length, 1,
-                'CSS animations cancelled and restarted by the API are ' +
+                'CSS animations canceled and restarted by the API are ' +
                 'returned');
-}, 'CSS Animations cancelled and restarted via the API are returned');
+}, 'CSS Animations canceled and restarted via the API are returned');
 
 test(t => {
   addStyle(t, { '#parent::after': 'animation: animLeft 10s;',

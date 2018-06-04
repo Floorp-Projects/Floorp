@@ -301,7 +301,7 @@ promise_test(async t => {
   animation.cancel();
   // Then wait a couple of frames and check that no event was dispatched.
   await waitForAnimationFrames(2);
-}, 'Call Animation.cancel after cancelling animation.');
+}, 'Call Animation.cancel after canceling animation.');
 
 promise_test(async t => {
   const { animation, watcher } = setupAnimation(t, 'anim 100s');
@@ -312,7 +312,7 @@ promise_test(async t => {
   animation.cancel();
   animation.play();
   await watcher.wait_for([ 'animationcancel', 'animationstart' ]);
-}, 'Restart animation after cancelling animation immediately.');
+}, 'Restart animation after canceling animation immediately.');
 
 promise_test(async t => {
   const { animation, watcher } = setupAnimation(t, 'anim 100s');
@@ -355,7 +355,7 @@ promise_test(async t => {
   animation.effect = null;
   // Then wait a couple of frames and check that no event was dispatched.
   await waitForAnimationFrames(2);
-}, 'Set null target effect after cancelling the animation.');
+}, 'Set null target effect after canceling the animation.');
 
 promise_test(async t => {
   const { animation, watcher } = setupAnimation(t, 'anim 100s');
