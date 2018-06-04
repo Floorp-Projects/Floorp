@@ -6395,9 +6395,6 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   state.mCols.CalculateSizes(state, state.mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              constraint);
-  state.mCols.mGridGap =
-    nsLayoutUtils::ResolveGapToLength(state.mGridStyle->mColumnGap,
-                                      NS_UNCONSTRAINEDSIZE);
   nscoord length = 0;
   for (const TrackSize& sz : state.mCols.mSizes) {
     length += sz.mBase;
