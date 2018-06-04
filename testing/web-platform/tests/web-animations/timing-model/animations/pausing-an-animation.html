@@ -42,5 +42,23 @@ promise_test(async t => {
 }, 'A pause-pending animation maintains the current time when applying a'
    + ' pending playback rate');
 
+promise_test(async t => {
+  // This test does not cover a specific step in the algorithm but serves as a
+  // high-level sanity check that pausing does, in fact, freeze the current
+  // time.
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  await animation.ready;
+
+  animation.pause();
+  await animation.ready;
+
+  const currentTimeAfterPausing = animation.currentTime;
+
+  await waitForNextFrame();
+
+  assert_equals(animation.currentTime, currentTimeAfterPausing,
+    'Animation.currentTime is unchanged after pausing');
+}, 'The animation\'s current time remains fixed after pausing');
+
 </script>
 </body>
