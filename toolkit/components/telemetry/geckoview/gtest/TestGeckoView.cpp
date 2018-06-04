@@ -618,10 +618,14 @@ TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
 TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
+  const char* testProbeName = "telemetry.test.unsigned_int_kind";
+  const char* reachedName = "telemetry.pending_operations_highwatermark_reached";
+
   Unused << mTelemetry->ClearScalars();
 
-  uint32_t initialValue = 0;
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, initialValue);
+  // Setting initial values so we can test them easily
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 0u);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_PENDING_OPERATIONS_HIGHWATERMARK_REACHED, 0u);
 
   // Force loading mode
   TelemetryScalar::DeserializationStarted();
@@ -635,12 +639,14 @@ TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
   // Nothing should be applied yet
   JS::RootedValue scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, 0);
+  CheckUintScalar(testProbeName, cx.GetJSContext(), scalarsSnapshot, 0);
+  CheckUintScalar(reachedName, cx.GetJSContext(), scalarsSnapshot, 0);
 
   // Spill over the buffer to immediately apply all operations
   Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 1);
 
   // Now we should see all values
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue+1);
+  CheckUintScalar(testProbeName, cx.GetJSContext(), scalarsSnapshot, expectedValue+1);
+  CheckUintScalar(reachedName, cx.GetJSContext(), scalarsSnapshot, 1);
 }
