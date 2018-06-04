@@ -42,12 +42,6 @@ interface nsIScriptableUnicodeConverter : nsISupports
   AString ConvertToUnicode(in ACString aSrc);
 
   /**
-   * Converts an array of bytes to a unicode string.
-   */
-  AString convertFromByteArray([const,array,size_is(aCount)] in octet aData,
-                               in unsigned long aCount);
-
-  /**
    * Convert a unicode string to an array of bytes. Finish does not need to be
    * called.
    */
