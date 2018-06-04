@@ -11,7 +11,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   div.style.animation = 'abc 100s';
   var animation = div.getAnimations()[0];

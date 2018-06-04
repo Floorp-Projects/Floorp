@@ -11,7 +11,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
@@ -19,7 +19,7 @@ test(function(t) {
   assert_equals(animation.playState, 'running');
 }, 'Animation returns correct playState when running');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -27,7 +27,7 @@ test(function(t) {
   assert_equals(animation.playState, 'paused');
 }, 'Animation returns correct playState when paused');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
@@ -36,7 +36,7 @@ test(function(t) {
   assert_equals(animation.playState, 'paused');
 }, 'Animation.playState updates when paused by script');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -49,7 +49,7 @@ test(function(t) {
                 + ' animation-play-state (got: ' + animation.playState + ')');
 }, 'Animation.playState updates when resumed by setting style');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 1000s';
   var animation = div.getAnimations()[0];

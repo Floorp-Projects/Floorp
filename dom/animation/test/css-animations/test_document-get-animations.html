@@ -28,13 +28,13 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   assert_equals(document.getAnimations().length, 0,
     'getAnimations returns an empty sequence for a document'
     + ' with no animations');
 }, 'getAnimations for non-animated content');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
 
   // Add an animation
@@ -53,7 +53,7 @@ test(function(t) {
                 'getAnimations returns no running CSS Animations');
 }, 'getAnimations for CSS Animations');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   div.style.animation = 'animLeft 100s, animTop 100s, animRight 100s, ' +
                         'animBottom 100s';
@@ -71,7 +71,7 @@ test(function(t) {
                 'Order of fourth animation returned');
 }, 'Order of CSS Animations - within an element');
 
-test(function(t) {
+test(t => {
   var div1 = addDiv(t, { style: 'animation: animLeft 100s' });
   var div2 = addDiv(t, { style: 'animation: animLeft 100s' });
   var div3 = addDiv(t, { style: 'animation: animLeft 100s' });
@@ -112,7 +112,7 @@ test(function(t) {
 
 }, 'Order of CSS Animations - across elements');
 
-test(function(t) {
+test(t => {
   var div1 = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
   var div2 = addDiv(t, { style: 'animation: animBottom 100s' });
 
@@ -122,7 +122,7 @@ test(function(t) {
   var animations = document.getAnimations();
   assert_equals(animations.length, expectedResults.length,
                 'getAnimations returns all running CSS Animations');
-  animations.forEach(function(anim, i) {
+  animations.forEach((anim, i) => {
     assert_equals(anim.effect.target, expectedResults[i][0],
                   'Target of animation in position ' + i);
     assert_equals(anim.animationName, expectedResults[i][1],
@@ -141,7 +141,7 @@ test(function(t) {
   assert_equals(animations.length, expectedResults.length,
                 'getAnimations returns all running CSS Animations after ' +
                 'making changes');
-  animations.forEach(function(anim, i) {
+  animations.forEach((anim, i) => {
     assert_equals(anim.effect.target, expectedResults[i][0],
                   'Target of animation in position ' + i + ' after changes');
     assert_equals(anim.animationName, expectedResults[i][1],
@@ -149,7 +149,7 @@ test(function(t) {
   });
 }, 'Order of CSS Animations - across and within elements');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
   var animLeft = document.getAnimations()[0];
   assert_equals(animLeft.animationName, 'animLeft',
@@ -167,7 +167,7 @@ test(function(t) {
   assert_equals(animations[1], animLeft, 'Free animations come last');
 }, 'Order of CSS Animations - markup-bound vs free animations');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
   var animLeft = document.getAnimations()[0];
   var animTop  = document.getAnimations()[1];
@@ -193,7 +193,7 @@ test(function(t) {
                 ' does not change');
 }, 'Order of CSS Animations - free animations');
 
-test(function(t) {
+test(t => {
   // Add an animation first
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.style.top = '0px';
@@ -212,34 +212,34 @@ test(function(t) {
   assert_class_string(animations[1], 'CSSAnimation', 'Animation comes second');
 }, 'Order of CSS Animations and CSS Transitions');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s forwards' });
   div.getAnimations()[0].finish();
   assert_equals(document.getAnimations().length, 1,
                 'Forwards-filling CSS animations are returned');
 }, 'Finished but filling CSS Animations are returned');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.getAnimations()[0].finish();
   assert_equals(document.getAnimations().length, 0,
                 'Non-filling finished CSS animations are not returned');
 }, 'Finished but not filling CSS Animations are not returned');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s 100s' });
   assert_equals(document.getAnimations().length, 1,
                 'Yet-to-start CSS animations are returned');
 }, 'Yet-to-start CSS Animations are returned');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.getAnimations()[0].cancel();
   assert_equals(document.getAnimations().length, 0,
                 'CSS animations cancelled by the API are not returned');
 }, 'CSS Animations cancelled via the API are not returned');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   var anim = div.getAnimations()[0];
   anim.cancel();
@@ -249,7 +249,7 @@ test(function(t) {
                 'returned');
 }, 'CSS Animations cancelled and restarted via the API are returned');
 
-test(function(t) {
+test(t => {
   addStyle(t, { '#parent::after': 'animation: animLeft 10s;',
                 '#parent::before': 'animation: animRight 10s;' });
   // create two divs with these arrangement:

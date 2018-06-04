@@ -18,14 +18,14 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   var watcher = new EventWatcher(t, div, [ 'animationend',
                                            'animationcancel' ]);
   var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = null;
     assert_equals(animation.playState, 'finished');
@@ -34,12 +34,12 @@ promise_test(function(t) {
   });
 }, 'Setting a null effect on a running animation fires an animationend event');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = new KeyframeEffect(div,
                                           { left: [ '0px' , '100px'] },
@@ -51,12 +51,12 @@ promise_test(function(t) {
 }, 'Replacing an animation\'s effect with an effect that targets a different ' +
    'property should update both properties');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
 
   var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = new KeyframeEffect(div,
                                           { left: [ '0px' , '100px'] },
@@ -66,7 +66,7 @@ promise_test(function(t) {
 }, 'Replacing an animation\'s effect with a shorter one that should have ' +
    'already finished, the animation finishes immediately');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
 
@@ -78,13 +78,13 @@ promise_test(function(t) {
                                         100 * MS_PER_SEC);
   assert_true(animation.pending);
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_false(animation.pending);
   });
 }, 'A play-pending animation\'s effect whose effect is replaced still exits ' +
    'the pending state');
 
-promise_test(function(t) {
+promise_test(t => {
   var div1 = addDiv(t);
   var div2 = addDiv(t);
 
@@ -99,7 +99,7 @@ promise_test(function(t) {
                                         { left: [ '0px', '100px' ] },
                                         100 * MS_PER_SEC);
 
-  return watcher1.wait_for('animationstart').then(function() {
+  return watcher1.wait_for('animationstart').then(() => {
     assert_equals(animation.effect.target, div2);
 
     // Then wait a couple of frames and check that no event was dispatched.
@@ -108,7 +108,7 @@ promise_test(function(t) {
 }, 'The event is dispatched at the original element even after setting an ' +
    'effect with a different target element');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var watcher = new EventWatcher(t, div, [ 'animationstart',
                                            'animationend',
@@ -118,7 +118,7 @@ promise_test(function(t) {
   animation.finish();
 
   return watcher.wait_for([ 'animationstart',
-                            'animationend' ]).then(function(evt) {
+                            'animationend' ]).then(evt => {
     // Set a longer effect
     animation.effect = new KeyframeEffect(div,
                                           { left: [ '0px', '100px' ] },

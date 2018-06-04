@@ -44,7 +44,7 @@ AnimationEventHandler.prototype.clear = () => {
   this.animationcancel    = undefined;
 }
 
-function setupAnimation(t, animationStyle) {
+const setupAnimation = (t, animationStyle) => {
   const div = addDiv(t, { style: 'animation: ' + animationStyle });
   // Note that this AnimationEventHandler should be created before EventWatcher
   // to capture all events in the handler prior to the EventWatcher since
@@ -57,7 +57,7 @@ function setupAnimation(t, animationStyle) {
   const animation = div.getAnimations()[0];
 
   return { animation, watcher, div, handler };
-}
+};
 
 promise_test(t => {
   // Add 1ms delay to ensure that the delay is not included in the elapsedTime.

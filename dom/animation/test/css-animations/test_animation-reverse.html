@@ -13,7 +13,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
   div.style.animation = "";
