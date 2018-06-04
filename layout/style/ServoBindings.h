@@ -144,6 +144,7 @@ RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);
 RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed element, bool is_before);
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
+const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(RawGeckoElementBorrowed element);
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
