@@ -44,7 +44,7 @@ add_task(async function() {
 function waitForOutOfBoundScrubber({win, scrubberEl}) {
   return new Promise(resolve => {
     function check() {
-      const pos = scrubberEl.getBoxQuads()[0].bounds.right;
+      const pos = scrubberEl.getBoxQuads()[0].getBounds().right;
       const width = win.document.documentElement.offsetWidth;
       if (pos >= width) {
         setTimeout(resolve, 50);
