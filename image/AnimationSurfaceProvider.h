@@ -10,6 +10,8 @@
 #ifndef mozilla_image_AnimationSurfaceProvider_h
 #define mozilla_image_AnimationSurfaceProvider_h
 
+#include "mozilla/UniquePtr.h"
+
 #include "FrameAnimator.h"
 #include "IDecodingTask.h"
 #include "ISurfaceProvider.h"
@@ -84,6 +86,7 @@ private:
   void DropImageReference();
   void AnnounceSurfaceAvailable();
   void FinishDecoding();
+  void RequestFrameDiscarding();
 
   // @returns Whether or not we should continue decoding.
   bool CheckForNewFrameAtYield();
@@ -104,7 +107,7 @@ private:
   mutable Mutex mFramesMutex;
 
   /// The frames of this animation, in order.
-  AnimationFrameBuffer mFrames;
+  UniquePtr<AnimationFrameBuffer> mFrames;
 };
 
 } // namespace image
