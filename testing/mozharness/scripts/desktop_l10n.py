@@ -49,10 +49,10 @@ configuration_tokens = ('branch',
                         'platform',
                         'update_channel',
                         )
-# some other values such as "%(version)s", "%(buildid)s", ...
+# some other values such as "%(version)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
-runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
+runtime_config_tokens = ('version', 'locale', 'from_buildid',
                          'abs_objdir', 'revision',
                          'to_buildid', 'en_us_binary_url',
                          'en_us_installer_binary_url', 'mar_tools_url',
@@ -136,8 +136,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
             **buildscript_kwargs
         )
 
-        self.buildid = None
-        self.make_ident_output = None
         self.bootstrap_env = None
         self.upload_env = None
         self.revision = None
@@ -305,33 +303,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         l10n_env = self._query_upload_env().copy()
         l10n_env.update(self.query_bootstrap_env())
         return l10n_env
-
-    def _query_make_ident_output(self):
-        """Get |make ident| output from the objdir.
-        Only valid after setup is run.
-       """
-        if self.make_ident_output:
-            return self.make_ident_output
-        dirs = self.query_abs_dirs()
-        self.make_ident_output = self._get_output_from_make(
-            target=["ident"],
-            cwd=dirs['abs_locales_dir'],
-            env=self.query_bootstrap_env())
-        return self.make_ident_output
-
-    def _query_buildid(self):
-        """Get buildid from the objdir.
-        Only valid after setup is run.
-       """
-        if self.buildid:
-            return self.buildid
-        r = re.compile(r"buildid (\d+)")
-        output = self._query_make_ident_output()
-        for line in output.splitlines():
-            match = r.match(line)
-            if match:
-                self.buildid = match.groups()[0]
-        return self.buildid
 
     def _query_revision(self):
         """ Get the gecko revision in this order of precedence
