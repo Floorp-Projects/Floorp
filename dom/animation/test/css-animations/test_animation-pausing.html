@@ -17,10 +17,10 @@
 const getMarginLeft = cs => parseFloat(cs.marginLeft);
 
 promise_test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
   animation.play();
@@ -32,10 +32,10 @@ promise_test(t => {
 }, 'play() overrides animation-play-state');
 
 promise_test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
@@ -51,14 +51,14 @@ promise_test(t => {
 }, 'pause() overrides animation-play-state');
 
 promise_test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
   animation.play();
-  var previousAnimVal;
+  let previousAnimVal;
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'running';
@@ -82,10 +82,10 @@ promise_test(t => {
 }, 'play() is overridden by later setting "animation-play-state: paused"');
 
 promise_test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
@@ -94,7 +94,7 @@ promise_test(t => {
   // call to play() and fail to correctly override the pause style.
   div.style.animationPlayState = 'paused';
   animation.play();
-  var previousAnimVal = getMarginLeft(cs);
+  const previousAnimVal = getMarginLeft(cs);
 
   return animation.ready.then(waitForNextFrame).then(() => {
     assert_equals(cs.animationPlayState, 'paused',
@@ -105,10 +105,10 @@ promise_test(t => {
 }, 'play() flushes pending changes to animation-play-state first');
 
 promise_test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
@@ -124,7 +124,7 @@ promise_test(t => {
   // even if we set style before calling the API.
   div.style.animationPlayState = 'running';
   animation.pause();
-  var previousAnimVal = getMarginLeft(cs);
+  const previousAnimVal = getMarginLeft(cs);
 
   return animation.ready.then(waitForNextFrame).then(() => {
     assert_equals(cs.animationPlayState, 'running',
@@ -136,9 +136,9 @@ promise_test(t => {
 // (Note that we can't actually test for this; see comment above, in test-body.)
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: anim 1000s' });
-  var animation = div.getAnimations()[0];
-  var readyPromiseRun = false;
+  const div = addDiv(t, { style: 'animation: anim 1000s' });
+  const animation = div.getAnimations()[0];
+  let readyPromiseRun = false;
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';

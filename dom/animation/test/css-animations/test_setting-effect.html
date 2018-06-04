@@ -19,12 +19,12 @@
 'use strict';
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
-  var watcher = new EventWatcher(t, div, [ 'animationend',
-                                           'animationcancel' ]);
-  var animation = div.getAnimations()[0];
+  const watcher = new EventWatcher(t, div, [ 'animationend',
+                                             'animationcancel' ]);
+  const animation = div.getAnimations()[0];
   return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = null;
@@ -35,10 +35,10 @@ promise_test(t => {
 }, 'Setting a null effect on a running animation fires an animationend event');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = new KeyframeEffect(div,
@@ -52,10 +52,10 @@ promise_test(t => {
    'property should update both properties');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   return animation.ready.then(() => {
     animation.currentTime = 50 * MS_PER_SEC;
     animation.effect = new KeyframeEffect(div,
@@ -67,10 +67,10 @@ promise_test(t => {
    'already finished, the animation finishes immediately');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim 100s';
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_true(animation.pending);
 
   animation.effect = new KeyframeEffect(div,
@@ -85,16 +85,16 @@ promise_test(t => {
    'the pending state');
 
 promise_test(t => {
-  var div1 = addDiv(t);
-  var div2 = addDiv(t);
+  const div1 = addDiv(t);
+  const div2 = addDiv(t);
 
-  var watcher1 = new EventWatcher(t, div1, 'animationstart');
+  const watcher1 = new EventWatcher(t, div1, 'animationstart');
   // Watch |div2| as well to ensure it does *not* get events.
-  var watcher2 = new EventWatcher(t, div2, 'animationstart');
+  const watcher2 = new EventWatcher(t, div2, 'animationstart');
 
   div1.style.animation = 'anim 100s';
 
-  var animation = div1.getAnimations()[0];
+  const animation = div1.getAnimations()[0];
   animation.effect = new KeyframeEffect(div2,
                                         { left: [ '0px', '100px' ] },
                                         100 * MS_PER_SEC);
@@ -109,12 +109,12 @@ promise_test(t => {
    'effect with a different target element');
 
 promise_test(t => {
-  var div = addDiv(t);
-  var watcher = new EventWatcher(t, div, [ 'animationstart',
-                                           'animationend',
-                                           'animationcancel' ]);
+  const div = addDiv(t);
+  const watcher = new EventWatcher(t, div, [ 'animationstart',
+                                             'animationend',
+                                             'animationcancel' ]);
   div.style.animation = 'anim 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.finish();
 
   return watcher.wait_for([ 'animationstart',

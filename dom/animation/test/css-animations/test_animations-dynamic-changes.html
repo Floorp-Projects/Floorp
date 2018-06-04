@@ -15,11 +15,11 @@
 'use strict';
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim1 100s';
-  var originalAnimation = div.getAnimations()[0];
-  var originalStartTime;
-  var originalCurrentTime;
+  const originalAnimation = div.getAnimations()[0];
+  let originalStartTime;
+  let originalCurrentTime;
 
   // Wait a moment so we can confirm the startTime doesn't change (and doesn't
   // simply reflect the current time).
@@ -32,7 +32,7 @@ promise_test(t => {
     return waitForNextFrame();
   }).then(() => {
     div.style.animationDuration = '200s';
-    var animation = div.getAnimations()[0];
+    const animation = div.getAnimations()[0];
     assert_equals(animation, originalAnimation,
                   'The same Animation is returned after updating'
                   + ' animation duration');
@@ -47,13 +47,13 @@ promise_test(t => {
 }, 'Animations preserve their startTime when changed');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim1 100s, anim1 100s';
 
   // Store original state
-  var animations = div.getAnimations();
-  var animation1 = animations[0];
-  var animation2 = animations[1];
+  let animations = div.getAnimations();
+  const animation1 = animations[0];
+  const animation2 = animations[1];
 
   // Update first in list
   div.style.animationDuration = '200s, 100s';
@@ -65,13 +65,13 @@ test(t => {
 }, 'Updated Animations maintain their order in the list');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim1 200s, anim1 100s';
 
   // Store original state
-  var animations = div.getAnimations();
-  var animation1 = animations[0];
-  var animation2 = animations[1];
+  let animations = div.getAnimations();
+  const animation1 = animations[0];
+  const animation2 = animations[1];
 
   // Wait before continuing so we can compare start times (otherwise the
   // new Animation objects and existing Animation objects will all have the same
@@ -98,15 +98,15 @@ promise_test(t => {
 }, 'Only the startTimes of existing animations are preserved');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim1 100s, anim1 100s';
-  var secondAnimation = div.getAnimations()[1];
+  const secondAnimation = div.getAnimations()[1];
 
   // Wait before continuing so we can compare start times
   return secondAnimation.ready.then(waitForNextFrame).then(() => {
     // Trim list of animations
     div.style.animationName = 'anim1';
-    var animations = div.getAnimations();
+    const animations = div.getAnimations();
     assert_equals(animations.length, 1, 'List of Animations was trimmed');
     assert_equals(animations[0], secondAnimation,
                   'Remaining Animation is the second one in the list');
@@ -120,11 +120,11 @@ promise_test(t => {
    + ' the state of existing Animations');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim1 100s';
-  var firstAddedAnimation = div.getAnimations()[0],
-      secondAddedAnimation,
-      animations;
+  const firstAddedAnimation = div.getAnimations()[0];
+  let secondAddedAnimation;
+  let animations;
 
   // Wait and add second Animation
   return firstAddedAnimation.ready.then(waitForFrame).then(() => {

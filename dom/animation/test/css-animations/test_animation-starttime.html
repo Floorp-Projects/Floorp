@@ -46,21 +46,21 @@ const CSS_ANIM_EVENTS =
   ['animationstart', 'animationiteration', 'animationend'];
 
 test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
 
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created (play-pending) animation is unresolved');
 
 test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  const animation = div.getAnimations()[0];
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created (pause-pending) animation is unresolved');
 
 promise_test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_true(animation.startTime > 0,
@@ -69,8 +69,8 @@ promise_test(t => {
 }, 'startTime is resolved when running');
 
 promise_test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_equals(animation.startTime, null,
@@ -79,8 +79,8 @@ promise_test(t => {
 }, 'startTime is unresolved when paused');
 
 promise_test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';
@@ -98,8 +98,8 @@ promise_test(t => {
 }, 'startTime while pause-pending and play-pending');
 
 promise_test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
   // Seek to end to put us in the finished state
   animation.currentTime = 100 * MS_PER_SEC;
 
@@ -112,8 +112,8 @@ promise_test(t => {
 }, 'startTime while play-pending from finished state');
 
 test(t => {
-  var div = addDiv(t, { 'style': 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { 'style': 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
   animation.finish();
   // Call play() which puts us back in the running state
   animation.play();
@@ -122,17 +122,17 @@ test(t => {
 }, 'startTime while play-pending from finished state using finish()');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
 
   assert_equals(animation.startTime, null, 'The initial startTime is null');
-  var initialTimelineTime = document.timeline.currentTime;
+  const initialTimelineTime = document.timeline.currentTime;
 
   return animation.ready.then(() => {
     assert_true(animation.startTime > initialTimelineTime,
                 'After the animation has started, startTime is greater than ' +
                 'the time when it was started');
-    var startTimeBeforePausing = animation.startTime;
+    const startTimeBeforePausing = animation.startTime;
 
     div.style.animationPlayState = 'paused';
     // Flush styles just in case querying animation.startTime doesn't flush
@@ -151,10 +151,10 @@ promise_test(t => {
 }, 'Pausing should make the startTime become null');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s 100s';
-  var animation = div.getAnimations()[0];
-  var currentTime = animation.timeline.currentTime;
+  const animation = div.getAnimations()[0];
+  const currentTime = animation.timeline.currentTime;
   animation.startTime = currentTime;
 
   assert_times_equal(animation.startTime, currentTime,
@@ -163,10 +163,10 @@ test(t => {
    'startTime');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = 'anim 100s 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
@@ -182,12 +182,12 @@ promise_test(t => {
 }, 'Skipping forward through animation');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = 'anim 100s 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.startTime = animation.timeline.currentTime - 200 * MS_PER_SEC;
-  var previousTimelineTime = animation.timeline.currentTime;
+  const previousTimelineTime = animation.timeline.currentTime;
 
   return eventWatcher.wait_for(['animationstart',
                                 'animationend']).then(() => {
@@ -227,10 +227,10 @@ promise_test(t => {
 // redundant changes if no events were detected in that time.
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
   animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
@@ -239,10 +239,10 @@ promise_test(t => {
 }, 'Redundant change, before -> active, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
   animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
@@ -251,12 +251,12 @@ promise_test(t => {
 }, 'Redundant change, before -> after, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
-  var retPromise =  eventWatcher.wait_for('animationstart').then(() => {
+  const retPromise =  eventWatcher.wait_for('animationstart').then(() => {
     animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
     animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
@@ -269,12 +269,12 @@ promise_test(t => {
 }, 'Redundant change, active -> before, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
-  var retPromise = eventWatcher.wait_for('animationstart').then(() => {
+  const retPromise = eventWatcher.wait_for('animationstart').then(() => {
     animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
     animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
@@ -287,13 +287,13 @@ promise_test(t => {
 }, 'Redundant change, active -> after, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
-  var retPromise = eventWatcher.wait_for(['animationstart',
-                                          'animationend']).then(() => {
+  const retPromise = eventWatcher.wait_for(['animationstart',
+                                            'animationend']).then(() => {
     animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
     animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
@@ -306,13 +306,13 @@ promise_test(t => {
 }, 'Redundant change, after -> before, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  const div = addDiv(t, {'class': 'animated-div'});
+  const eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = "anim 100s 100s";
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
-  var retPromise = eventWatcher.wait_for(['animationstart',
-                                          'animationend']).then(() => {
+  const retPromise = eventWatcher.wait_for(['animationstart',
+                                            'animationend']).then(() => {
     animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
     animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
@@ -326,10 +326,10 @@ promise_test(t => {
 }, 'Redundant change, after -> active, then back');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s 100s';
-  var animation = div.getAnimations()[0];
-  var storedCurrentTime;
+  const animation = div.getAnimations()[0];
+  let storedCurrentTime;
 
   return animation.ready.then(() => {
     storedCurrentTime = animation.currentTime;
@@ -342,12 +342,12 @@ promise_test(t => {
 }, 'Setting startTime to null');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
-    var savedStartTime = animation.startTime;
+    const savedStartTime = animation.startTime;
 
     assert_not_equals(animation.startTime, null,
       'Animation.startTime not null on ready Promise resolve');
@@ -363,9 +363,9 @@ promise_test(t => {
 }, 'Animation.startTime after pausing');
 
 promise_test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     animation.cancel();

@@ -51,9 +51,9 @@ const setupAnimation = (t, animationStyle) => {
   // testharness.js proceeds when the EventWatcher received watching events.
   const handler = new AnimationEventHandler(div);
   const watcher = new EventWatcher(t, div, [ 'animationstart',
-                                           'animationiteration',
-                                           'animationend',
-                                           'animationcancel' ]);
+                                             'animationiteration',
+                                             'animationend',
+                                             'animationcancel' ]);
   const animation = div.getAnimations()[0];
 
   return { animation, watcher, div, handler };

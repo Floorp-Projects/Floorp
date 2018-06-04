@@ -18,13 +18,13 @@ const ANIM_PROP_VAL = 'abc 100s';
 const ANIM_DURATION = 100 * MS_PER_SEC;
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   // Set up pending animation
   div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-  var previousFinishedPromise = animation.finished;
+  const animation = div.getAnimations()[0];
+  const previousFinishedPromise = animation.finished;
   // Set up listeners on finished promise
-  var retPromise = animation.finished.then(() => {
+  const retPromise = animation.finished.then(() => {
     assert_unreached('finished promise is fulfilled');
   }).catch(err => {
     assert_equals(err.name, 'AbortError',
@@ -43,18 +43,18 @@ promise_test(t => {
    'the animation property');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   // As before, but this time instead of removing all animations, simply update
   // the list of animations. At least for Firefox, updating is a different
   // code path.
 
   // Set up pending animation
   div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-  var previousFinishedPromise = animation.finished;
+  const animation = div.getAnimations()[0];
+  const previousFinishedPromise = animation.finished;
 
   // Set up listeners on finished promise
-  var retPromise = animation.finished.then(() => {
+  const retPromise = animation.finished.then(() => {
     assert_unreached('finished promise was fulfilled');
   }).catch(err => {
     assert_equals(err.name, 'AbortError',
@@ -73,10 +73,10 @@ promise_test(t => {
    'the animation property');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-  var previousFinishedPromise = animation.finished;
+  const animation = div.getAnimations()[0];
+  const previousFinishedPromise = animation.finished;
   animation.currentTime = ANIM_DURATION;
   return animation.finished.then(() => {
     div.style.animationPlayState = 'running';

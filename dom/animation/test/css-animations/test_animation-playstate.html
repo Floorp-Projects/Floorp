@@ -12,35 +12,35 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'running');
 }, 'Animation returns correct playState when running');
 
 test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'paused');
 }, 'Animation returns correct playState when paused');
 
 test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.pause();
   assert_equals(animation.playState, 'paused');
 }, 'Animation.playState updates when paused by script');
 
 test(t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   div.style.animationPlayState = 'running';
 
   // This test also checks that calling playState flushes style
@@ -50,9 +50,9 @@ test(t => {
 }, 'Animation.playState updates when resumed by setting style');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'anim 1000s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(animation.playState, 'idle');
 }, 'Animation returns correct playState when cancelled');
