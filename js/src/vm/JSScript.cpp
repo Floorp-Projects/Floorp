@@ -2701,7 +2701,7 @@ JSScript::initScriptName(JSContext* cx)
         realm()->scriptNameMap = std::move(map);
     }
 
-    UniqueChars name = DuplicateString(filename());
+    UniqueChars name(js_strdup(filename()));
     if (!name) {
         ReportOutOfMemory(cx);
         return false;

@@ -1382,6 +1382,13 @@ JS_updateMallocCounter(JSContext* cx, size_t nbytes)
     return cx->updateMallocCounter(nbytes);
 }
 
+JS_PUBLIC_API(char*)
+JS_strdup(JSContext* cx, const char* s)
+{
+    AssertHeapIsIdle();
+    return DuplicateString(cx, s).release();
+}
+
 #undef JS_AddRoot
 
 JS_PUBLIC_API(bool)
@@ -3986,7 +3993,7 @@ JS::OwningCompileOptions::setFile(JSContext* cx, const char* f)
 {
     char* copy = nullptr;
     if (f) {
-        copy = DuplicateString(cx, f).release();
+        copy = JS_strdup(cx, f);
         if (!copy)
             return false;
     }
@@ -4030,7 +4037,7 @@ JS::OwningCompileOptions::setIntroducerFilename(JSContext* cx, const char* s)
 {
     char* copy = nullptr;
     if (s) {
-        copy = DuplicateString(cx, s).release();
+        copy = JS_strdup(cx, s);
         if (!copy)
             return false;
     }
@@ -6844,7 +6851,7 @@ JS_GetDefaultLocale(JSContext* cx)
 {
     AssertHeapIsIdle();
     if (const char* locale = cx->runtime()->getDefaultLocale())
-        return DuplicateString(cx, locale);
+        return UniqueChars(JS_strdup(cx, locale));
 
     return nullptr;
 }
