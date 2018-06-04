@@ -15,7 +15,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsIStringBundle.h"
 #include "nsNSSCallbacks.h"
 #include "prerror.h"
 #include "sslt.h"
@@ -54,9 +53,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
-
-  NS_IMETHOD GetPIPNSSBundleString(const char* name,
-                                   nsAString& outString) = 0;
 
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
@@ -108,8 +104,6 @@ public:
 
   static nsresult GetNewPrompter(nsIPrompt** result);
 
-  NS_IMETHOD GetPIPNSSBundleString(const char* name,
-                                   nsAString& outString) override;
   NS_IMETHOD LogoutAuthenticatedPK11() override;
 
 #ifdef DEBUG
@@ -153,7 +147,6 @@ private:
   void setValidationOptions(bool isInitialSetting,
                             const mozilla::MutexAutoLock& proofOfLock);
   nsresult setEnabledTLSVersions();
-  nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterObservers();
 
@@ -179,7 +172,6 @@ private:
   mozilla::Mutex mMutex;
 
   // The following members are accessed from more than one thread:
-  nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   bool mNSSInitialized;
 #ifdef DEBUG
   nsString mTestBuiltInRootHash;

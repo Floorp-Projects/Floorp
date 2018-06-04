@@ -1,0 +1,26 @@
+Metadata-Version: 1.1
+Name: python-hglib
+Version: 2.4
+Summary: Mercurial Python library
+Home-page: http://selenic.com/repo/python-hglib
+Author: Idan Kamara
+Author-email: idankk86@gmail.com
+License: MIT
+Description: python-hglib
+        ============
+        
+        python-hglib is a library with a fast, convenient interface to Mercurial.
+        It uses Mercurial's command server for communication with hg.
+        
+        Installation is standard:
+        
+          $ python setup.py install
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.4
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4

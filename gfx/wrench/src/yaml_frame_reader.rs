@@ -1254,6 +1254,26 @@ impl YamlFrameReader {
         Some(self.to_complex_clip_region(complex_clip))
     }
 
+    pub fn get_item_type_from_yaml(item: &Yaml) -> &str {
+        let shorthands = [
+            "rect",
+            "image",
+            "text",
+            "glyphs",
+            "box-shadow", // Note: box_shadow shorthand check has to come before border.
+            "border",
+            "gradient",
+            "radial-gradient",
+        ];
+
+        for shorthand in shorthands.iter() {
+            if !item[*shorthand].is_badvalue() {
+                return shorthand;
+            }
+        }
+        item["type"].as_str().unwrap_or("unknown")
+    }
+
     pub fn add_display_list_items_from_yaml(
         &mut self,
         dl: &mut DisplayListBuilder,
@@ -1268,32 +1288,13 @@ impl YamlFrameReader {
             LayoutSize::new(big_number, big_number));
 
         for item in yaml.as_vec().unwrap() {
-            // an explicit type can be skipped with some shorthand
-            let item_type = if !item["rect"].is_badvalue() {
-                "rect"
-            } else if !item["image"].is_badvalue() {
-                "image"
-            } else if !item["text"].is_badvalue() {
-                "text"
-            } else if !item["glyphs"].is_badvalue() {
-                "glyphs"
-            } else if !item["box-shadow"].is_badvalue() {
-                // Note: box_shadow shorthand check has to come before border.
-                "box-shadow"
-            } else if !item["border"].is_badvalue() {
-                "border"
-            } else if !item["gradient"].is_badvalue() {
-                "gradient"
-            } else if !item["radial-gradient"].is_badvalue() {
-                "radial-gradient"
-            } else {
-                item["type"].as_str().unwrap_or("unknown")
-            };
+            let item_type = Self::get_item_type_from_yaml(item);
 
-            // We never skip stacking contexts because they are structural elements
-            // of the display list.
-            if item_type != "stacking-context" && self.include_only.contains(&item_type.to_owned())
-            {
+            // We never skip stacking contexts and reference frames because
+            // they are structural elements of the display list.
+            if item_type != "stacking-context" &&
+                item_type != "reference-frame" &&
+                self.include_only.contains(&item_type.to_owned()) {
                 continue;
             }
 
@@ -1343,6 +1344,7 @@ impl YamlFrameReader {
                 "stacking-context" => {
                     self.add_stacking_context_from_yaml(dl, wrench, item, false, &mut info)
                 }
+                "reference-frame" => self.handle_reference_frame(dl, wrench, item, &mut info),
                 "shadow" => self.handle_push_shadow(dl, item, &mut info),
                 "pop-all-shadows" => self.handle_pop_all_shadows(dl),
                 _ => println!("Skipping unknown item type: {:?}", item),
@@ -1503,21 +1505,21 @@ impl YamlFrameReader {
             .unwrap_or(wrench.window_size_f32())
     }
 
-    pub fn add_stacking_context_from_yaml(
+    pub fn push_reference_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
         yaml: &Yaml,
-        is_root: bool,
         info: &mut LayoutPrimitiveInfo,
-    ) {
+    ) -> ClipId {
         let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
         let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
-
         let default_transform_origin = LayoutPoint::new(
             bounds.origin.x + bounds.size.width * 0.5,
             bounds.origin.y + bounds.size.height * 0.5,
         );
+
+        info.rect = bounds;
 
         let transform_origin = yaml["transform-origin"]
             .as_point()
@@ -1531,8 +1533,6 @@ impl YamlFrameReader {
             .as_transform(&transform_origin)
             .map(|transform| transform.into());
 
-        let clip_node_id = self.to_clip_id(&yaml["clip-node"], dl.pipeline_id);
-
         let perspective = match yaml["perspective"].as_f32() {
             Some(value) if value != 0.0 => {
                 Some(make_perspective(perspective_origin, value as f32))
@@ -1541,6 +1541,58 @@ impl YamlFrameReader {
             _ => yaml["perspective"].as_matrix4d(),
         };
 
+        let reference_frame_id = dl.push_reference_frame(info, transform.into(), perspective);
+
+        let numeric_id = yaml["reference-frame-id"].as_i64();
+        if let Some(numeric_id) = numeric_id {
+            self.add_clip_id_mapping(numeric_id as u64, reference_frame_id);
+        }
+
+        reference_frame_id
+    }
+
+    pub fn handle_reference_frame(
+        &mut self,
+        dl: &mut DisplayListBuilder,
+        wrench: &mut Wrench,
+        yaml: &Yaml,
+        info: &mut LayoutPrimitiveInfo,
+    ) {
+        let reference_frame_id = self.push_reference_frame(dl, wrench, yaml, info);
+
+        if !yaml["items"].is_badvalue() {
+            dl.push_clip_id(reference_frame_id);
+            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+            dl.pop_clip_id();
+        }
+
+        dl.pop_reference_frame();
+    }
+
+    pub fn add_stacking_context_from_yaml(
+        &mut self,
+        dl: &mut DisplayListBuilder,
+        wrench: &mut Wrench,
+        yaml: &Yaml,
+        is_root: bool,
+        info: &mut LayoutPrimitiveInfo,
+    ) {
+        let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
+        let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
+        info.rect = bounds;
+        info.clip_rect = bounds;
+
+        let reference_frame_id = if !yaml["transform"].is_badvalue() ||
+            !yaml["perspective"].is_badvalue() {
+            let reference_frame_id = self.push_reference_frame(dl, wrench, yaml, info);
+            info.rect.origin = LayoutPoint::zero();
+            info.clip_rect.origin = LayoutPoint::zero();
+            Some(reference_frame_id)
+        } else {
+            None
+        };
+
+        let clip_node_id = self.to_clip_id(&yaml["clip-node"], dl.pipeline_id);
         let transform_style = yaml["transform-style"]
             .as_transform_style()
             .unwrap_or(TransformStyle::Flat);
@@ -1559,33 +1611,33 @@ impl YamlFrameReader {
         }
 
         let filters = yaml["filters"].as_vec_filter_op().unwrap_or(vec![]);
-        info.rect = bounds;
-        info.clip_rect = bounds;
 
-        let reference_frame_id = dl.push_stacking_context(
+        if let Some(reference_frame_id) = reference_frame_id {
+            dl.push_clip_id(reference_frame_id);
+        }
+
+        dl.push_stacking_context(
             &info,
             clip_node_id,
-            transform.into(),
             transform_style,
-            perspective,
             mix_blend_mode,
             filters,
             glyph_raster_space,
         );
-
-        let numeric_id = yaml["reference-frame-id"].as_i64();
-        match (numeric_id, reference_frame_id) {
-            (Some(numeric_id), Some(reference_frame_id)) => {
-                self.add_clip_id_mapping(numeric_id as u64, reference_frame_id);
-            }
-            _ => {},
-        }
 
         if !yaml["items"].is_badvalue() {
             self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
         }
 
         dl.pop_stacking_context();
+
+        if reference_frame_id.is_some() {
+            dl.pop_clip_id();
+        }
+
+        if reference_frame_id.is_some() {
+            dl.pop_reference_frame();
+        }
     }
 }
 

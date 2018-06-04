@@ -346,7 +346,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
   {
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       child->CheckCanary();
-      mChildren.AppendElement(std::move(CloneLayerTreePropertiesInternal(child)));
+      mChildren.AppendElement(CloneLayerTreePropertiesInternal(child));
     }
   }
 

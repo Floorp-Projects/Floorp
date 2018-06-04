@@ -227,6 +227,7 @@ this.CrashManager.prototype = Object.freeze({
     "AsyncShutdownTimeout",
     "BuildID",
     "ipc_channel_error",
+    "LowCommitSpaceEvents",
     "ProductID",
     "ProductName",
     "ReleaseChannel",

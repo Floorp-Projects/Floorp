@@ -44,7 +44,7 @@ add_task(async function() {
 });
 
 async function testMessages(hud) {
-  hud.jsterm.clearOutput(true);
+  hud.ui.clearOutput(true);
 
   expectUncaughtException();
 

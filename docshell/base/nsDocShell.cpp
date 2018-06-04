@@ -2865,7 +2865,7 @@ nsDocShell::GetInitialClientInfo() const
   if (mInitialClientSource) {
     Maybe<ClientInfo> result;
     result.emplace(mInitialClientSource->Info());
-    return std::move(result);
+    return result;
   }
 
   nsGlobalWindowInner* innerWindow =
@@ -14067,10 +14067,10 @@ nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
   if (mJSRunToCompletionDepth == 0) {
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
     if (timelines && timelines->HasConsumer(this)) {
-      timelines->AddMarkerForDocShell(this, std::move(
+      timelines->AddMarkerForDocShell(this,
         mozilla::MakeUnique<JavascriptTimelineMarker>(
           aReason, aFunctionName, aFilename, aLineNumber, MarkerTracingType::START,
-          aAsyncStack, aAsyncCause)));
+          aAsyncStack, aAsyncCause));
     }
   }
 

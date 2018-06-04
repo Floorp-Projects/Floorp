@@ -20,7 +20,7 @@ add_task(async function() {
   info("Focus after console is opened");
   ok(hasFocus(inputNode), "input node is focused after console is opened");
 
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
   ok(hasFocus(inputNode), "input node is focused after output is cleared");
 
   info("Focus during message logging");

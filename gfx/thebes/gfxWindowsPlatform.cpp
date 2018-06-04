@@ -899,7 +899,7 @@ void
 gfxWindowsPlatform::SchedulePaintIfDeviceReset()
 {
   AUTO_PROFILER_LABEL("gfxWindowsPlatform::SchedulePaintIfDeviceReset",
-                      GRAPHICS);
+                      OTHER);
 
   DeviceResetReason resetReason = DeviceResetReason::OK;
   if (!DidRenderingDeviceReset(&resetReason)) {

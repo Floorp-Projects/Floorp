@@ -432,7 +432,7 @@ nsContentPermissionUtils::GetContentPermissionRequestParentById(const TabId& aTa
     }
   }
 
-  return std::move(parentArray);
+  return parentArray;
 }
 
 /* static */ void
@@ -455,7 +455,7 @@ nsContentPermissionUtils::GetContentPermissionRequestChildById(const TabId& aTab
     }
   }
 
-  return std::move(childArray);
+  return childArray;
 }
 
 /* static */ void

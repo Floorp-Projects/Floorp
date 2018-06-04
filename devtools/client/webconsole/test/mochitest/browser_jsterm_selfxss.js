@@ -19,8 +19,8 @@ const stringToCopy = "foobazbarBug642615";
 add_task(async function() {
   await pushPref("devtools.selfxss.count", 0);
 
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
-  jsterm.clearOutput();
+  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  ui.clearOutput();
   ok(!jsterm.completeNode.value, "no completeNode.value");
 
   jsterm.setInputValue("doc");

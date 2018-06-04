@@ -1832,7 +1832,7 @@ var AddonManagerInternal = {
         if (install.addon.type == "theme" &&
             !!install.addon.userDisabled &&
             !install.addon.appDisabled) {
-              install.addon.userDisabled = false;
+          install.addon.enable();
         }
 
         let needsRestart = (install.addon.pendingOperations != AddonManager.PENDING_NONE);

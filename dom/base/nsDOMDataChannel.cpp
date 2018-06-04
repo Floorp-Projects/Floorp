@@ -136,6 +136,18 @@ nsDOMDataChannel::Reliable() const
   return mDataChannel->GetType() == mozilla::DataChannelConnection::RELIABLE;
 }
 
+mozilla::dom::Nullable<uint16_t>
+nsDOMDataChannel::GetMaxPacketLifeTime() const
+{
+  return mDataChannel->GetMaxPacketLifeTime();
+}
+
+mozilla::dom::Nullable<uint16_t>
+nsDOMDataChannel::GetMaxRetransmits() const
+{
+  return mDataChannel->GetMaxRetransmits();
+}
+
 bool
 nsDOMDataChannel::Ordered() const
 {

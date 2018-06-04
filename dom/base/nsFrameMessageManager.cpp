@@ -509,7 +509,7 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
                "Should not have parent manager in content!");
 
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "nsFrameMessageManager::SendMessage", EVENTS, aMessageName);
+    "nsFrameMessageManager::SendMessage", OTHER, aMessageName);
 
   if (sSendingSyncMessage && aIsSync) {
     // No kind of blocking send should be issued on top of a sync message.

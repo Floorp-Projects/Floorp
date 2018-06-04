@@ -542,6 +542,31 @@ function hitTest(point) {
   return { hitInfo: result.hitResult, scrollId: result.scrollId };
 }
 
+// Returns a canonical stringification of the hitInfo bitfield.
+function hitInfoToString(hitInfo) {
+  var strs = [];
+  for (var flag in APZHitResultFlags) {
+    if ((hitInfo & APZHitResultFlags[flag]) != 0) {
+      strs.push(flag);
+    }
+  }
+  if (strs.length == 0) {
+    return "INVISIBLE";
+  }
+  strs.sort(function(a, b) {
+    return APZHitResultFlags[a] - APZHitResultFlags[b];
+  });
+  return strs.join(" | ");
+}
+
+// Takes an object returned by hitTest, along with the expected values, and
+// asserts that they match. Notably, it uses hitInfoToString to provide a
+// more useful message for the case that the hit info doesn't match
+function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, desc) {
+  is(hitInfoToString(hitResult.hitInfo), hitInfoToString(expectedHitInfo), desc + " hit info");
+  is(hitResult.scrollId, expectedScrollId, desc + " scrollid");
+}
+
 // Symbolic constants used by hitTestScrollbar().
 var ScrollbarTrackLocation = {
     START: 1,
@@ -597,17 +622,10 @@ function hitTestScrollbar(params) {
   // behaviour on different platforms which makes testing harder.
   var expectedHitInfo = APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR;
   if (params.expectThumb) {
-    // WebRender will hit-test scroll thumbs even inside inactive scrollframes,
-    // because the hit-test is based on display items and we do in fact generate
-    // the display items for the scroll thumb. The user-observed behaviour is
-    // going to be unaffected because the dispatch-to-content flag will also be
-    // set on these thumbs so it's not like APZ will allow async-scrolling them
-    // before the scrollframe has been activated/layerized. In non-WebRender we
-    // do not generate the layers for thumbs on inactive scrollframes, so the
-    // hit test will be accordingly different.
+    // We do not generate the layers for thumbs on inactive scrollframes.
     expectedHitInfo |= APZHitResultFlags.DISPATCH_TO_CONTENT;
-    if (config.isWebRender || params.layerState == LayerState.ACTIVE) {
-        expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
+    if (params.layerState == LayerState.ACTIVE) {
+      expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
   }
 
@@ -623,11 +641,10 @@ function hitTestScrollbar(params) {
              ? (boundingClientRect.y + scrollbarArrowButtonHeight + 5)
              : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5)
     };
-    var {hitInfo, scrollId} = hitTest(verticalScrollbarPoint);
-    is(hitInfo, expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
-       scrollframeMsg + " - vertical scrollbar hit info");
-    is(scrollId, params.expectedScrollId,
-       scrollframeMsg + " - vertical scrollbar scrollid");
+    checkHitResult(hitTest(verticalScrollbarPoint),
+                   expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
+                   params.expectedScrollId,
+                   scrollframeMsg + " - vertical scrollbar");
   }
 
   if (params.directions.horizontal && horizontalScrollbarHeight > 0) {
@@ -637,11 +654,10 @@ function hitTestScrollbar(params) {
              : (boundingClientRect.right - verticalScrollbarWidth - scrollbarArrowButtonWidth - 5),
         y: boundingClientRect.bottom - (horizontalScrollbarHeight / 2),
     };
-    var {hitInfo, scrollId} = hitTest(horizontalScrollbarPoint);
-    is(hitInfo, expectedHitInfo,
-       scrollframeMsg + " - horizontal scrollbar hit info");
-    is(scrollId, params.expectedScrollId,
-       scrollframeMsg + " - horizontal scrollbar scrollid");
+    checkHitResult(hitTest(horizontalScrollbarPoint),
+                   expectedHitInfo,
+                   params.expectedScrollId,
+                   scrollframeMsg + " - horizontal scrollbar");
   }
 }
 

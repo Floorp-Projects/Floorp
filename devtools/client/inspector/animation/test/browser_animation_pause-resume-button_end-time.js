@@ -26,10 +26,12 @@ add_task(async function() {
   await setClassAttribute(animationInspector, ".animated", "ball still");
   info("Make the current time of animation to be over its end time");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
+  await clickOnPlaybackRateSelector(animationInspector, panel, 10);
   info("Resume animations");
   await clickOnPauseResumeButton(animationInspector, panel);
   assertPlayState(animationInspector.state.animations, ["running", "running"]);
   assertCurrentTimeLessThanDuration(animationInspector.state.animations);
+  assertScrubberPosition(panel);
 });
 
 function assertPlayState(animations, expectedState) {
@@ -42,6 +44,12 @@ function assertPlayState(animations, expectedState) {
 function assertCurrentTimeLessThanDuration(animations) {
   animations.forEach((animation, index) => {
     ok(animation.state.currentTime < animation.state.duration,
-       "The current time of animation[${ index }] should be less than its duration");
+       `The current time of animation[${ index }] should be less than its duration`);
   });
+}
+
+function assertScrubberPosition(panel) {
+  const scrubberEl = panel.querySelector(".current-time-scrubber");
+  const translateX = parseFloat(scrubberEl.style.transform.match(/-?\d+(\.\d+)?/)[0]);
+  ok(translateX >= 0, "The translateX of scrubber position should be zero or more");
 }

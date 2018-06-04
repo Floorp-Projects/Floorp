@@ -8,3 +8,13 @@ with Files('**'):
 DIRS += [
     'dumps',
 ]
+
+EXTRA_COMPONENTS += [
+    'servicesSettings.manifest',
+]
+
+EXTRA_JS_MODULES['services-settings'] += [
+    'remote-settings.js',
+]
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

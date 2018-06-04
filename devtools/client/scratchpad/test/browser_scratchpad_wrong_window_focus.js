@@ -29,7 +29,7 @@ function test() {
         const target = TargetFactory.forTab(gBrowser.selectedTab);
         gDevTools.showToolbox(target, "webconsole").then((toolbox) => {
           const hud = toolbox.getCurrentPanel().hud;
-          hud.jsterm.clearOutput(true);
+          hud.ui.clearOutput(true);
           testFocus(sw, hud);
         });
       });

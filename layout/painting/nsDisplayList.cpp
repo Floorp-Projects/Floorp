@@ -2733,7 +2733,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                             widgetTransaction;
 
   if (computeInvalidRect) {
-    props = std::move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+    props = LayerProperties::CloneFrom(layerManager->GetRoot());
   }
 
   if (doBeginTransaction) {
@@ -8015,35 +8015,13 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame *aFrame, nsDisplayItem *aItem,
-                                       const nsRect& aChildrenBuildingRect,
-                                       uint32_t aIndex)
-  : nsDisplayItem(aBuilder, aFrame)
-  , mStoredList(aBuilder, aFrame, aItem)
-  , mTransformGetter(nullptr)
-  , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
-  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
-  , mChildrenBuildingRect(aChildrenBuildingRect)
-  , mIndex(aIndex)
-  , mNoExtendContext(false)
-  , mIsTransformSeparator(false)
-  , mTransformPreserves3DInited(false)
-  , mAllowAsyncAnimation(false)
-{
-  MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
-  SetReferenceFrameToAncestor(aBuilder);
-  Init(aBuilder);
-}
-
-nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame *aFrame, nsDisplayList *aList,
                                        const nsRect& aChildrenBuildingRect,
                                        const Matrix4x4& aTransform,
                                        uint32_t aIndex)
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aList)
-  , mTransform(aTransform)
+  , mTransform(Some(aTransform))
   , mTransformGetter(nullptr)
   , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
   , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
@@ -8506,26 +8484,47 @@ static bool IsFrameVisible(nsIFrame* aFrame, const Matrix4x4& aMatrix)
 const Matrix4x4Flagged&
 nsDisplayTransform::GetTransform() const
 {
-  if (mTransform.IsIdentity()) {
-    float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+  if (mTransform) {
+    return *mTransform;
+  }
+
+  float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  if (mTransformGetter) {
+    mTransform.emplace(mTransformGetter(mFrame, scale));
     Point3D newOrigin =
       Point3D(NSAppUnitsToFloatPixels(mToReferenceFrame.x, scale),
               NSAppUnitsToFloatPixels(mToReferenceFrame.y, scale),
               0.0f);
-    if (mTransformGetter) {
-      mTransform = mTransformGetter(mFrame, scale);
-      mTransform.ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
-    } else if (!mIsTransformSeparator) {
-      DebugOnly<bool> isReference =
-        mFrame->IsTransformed() ||
-        mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
-      MOZ_ASSERT(isReference);
-      mTransform =
-        GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                    scale, INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN);
-    }
+    mTransform->ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
+  } else if (!mIsTransformSeparator) {
+    DebugOnly<bool> isReference =
+      mFrame->IsTransformed() ||
+      mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
+    MOZ_ASSERT(isReference);
+    mTransform.emplace(
+      GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
+                                  scale, INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN));
+  } else {
+    // Use identity matrix
+    mTransform.emplace();
   }
-  return mTransform;
+
+  return *mTransform;
+}
+
+const Matrix4x4Flagged&
+nsDisplayTransform::GetInverseTransform() const
+{
+  if (mInverseTransform) {
+    return *mInverseTransform;
+  }
+
+  MOZ_ASSERT(!GetTransform().IsSingular());
+
+  mInverseTransform.emplace(GetTransform().Inverse());
+
+  return *mInverseTransform;
 }
 
 Matrix4x4
@@ -9038,29 +9037,6 @@ nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   return result;
 }
 
-/* The transform is uniform if it fills the entire bounding rect and the
- * wrapped list is uniform.  See GetOpaqueRegion for discussion of why this
- * works.
- */
-Maybe<nscolor>
-nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder) const
-{
-  nsRect untransformedVisible;
-  if (!UntransformBuildingRect(aBuilder, &untransformedVisible)) {
-    return Nothing();
-  }
-  const Matrix4x4Flagged& matrix = GetTransform();
-
-  Matrix matrix2d;
-  if (matrix.Is2D(&matrix2d) &&
-      matrix2d.PreservesAxisAlignedRectangles() &&
-      mStoredList.GetBuildingRect().Contains(untransformedVisible)) {
-    return mStoredList.IsUniform(aBuilder);
-  }
-
-  return Nothing();
-}
-
 /* TransformRect takes in as parameters a rectangle (in app space) and returns
  * the smallest rectangle (in app space) containing the transformed image of
  * that rectangle.  That is, it takes the four corners of the rectangle,
@@ -9125,9 +9101,9 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
                                          const nsRect& aRect,
                                          nsRect *aOutRect) const
 {
-  const Matrix4x4Flagged& matrix = GetTransform();
-  if (matrix.IsSingular())
+  if (GetTransform().IsSingular()) {
     return false;
+  }
 
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -9144,7 +9120,7 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
                             NSAppUnitsToFloatPixels(childBounds.height, factor));
 
   /* We want to untransform the matrix, so invert the transformation first! */
-  result = matrix.Inverse().ProjectRectBounds(result, childGfxBounds);
+  result = GetInverseTransform().ProjectRectBounds(result, childGfxBounds);
 
   *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
 

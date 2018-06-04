@@ -1245,9 +1245,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                   nsAutoString typeStr;
                   (*aDOMEvent)->GetType(typeStr);
                   uint16_t phase = (*aDOMEvent)->EventPhase();
-                  timelines->AddMarkerForDocShell(docShell, std::move(
+                  timelines->AddMarkerForDocShell(docShell,
                     MakeUnique<EventTimelineMarker>(
-                      typeStr, phase, MarkerTracingType::START)));
+                      typeStr, phase, MarkerTracingType::START));
                 }
               }
             }
@@ -1273,7 +1273,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               nsAutoString typeStr;
               (*aDOMEvent)->GetType(typeStr);
               AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-                "EventListenerManager::HandleEventInternal", EVENTS, typeStr);
+                "EventListenerManager::HandleEventInternal", OTHER, typeStr);
 
               uint16_t phase = (*aDOMEvent)->EventPhase();
               profiler_add_marker(

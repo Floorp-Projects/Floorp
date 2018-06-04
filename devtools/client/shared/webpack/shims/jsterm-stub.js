@@ -22,7 +22,6 @@ JSTerm.prototype = {
   },
 
   openVariablesView() { },
-  clearOutput() { },
 
   init() {
     this.doc = this.hud.window.document;

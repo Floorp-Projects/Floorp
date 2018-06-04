@@ -103,7 +103,7 @@ ServiceWorkerDescriptor::GetPrincipal() const
 {
   AssertIsOnMainThread();
   nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
-  return std::move(ref);
+  return ref;
 }
 
 const nsCString&

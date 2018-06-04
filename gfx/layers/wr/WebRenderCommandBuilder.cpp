@@ -1543,7 +1543,7 @@ PaintByLayer(nsDisplayItem* aItem,
 {
   UniquePtr<LayerProperties> props;
   if (aManager->GetRoot()) {
-    props = std::move(LayerProperties::CloneFrom(aManager->GetRoot()));
+    props = LayerProperties::CloneFrom(aManager->GetRoot());
   }
   FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
   layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);

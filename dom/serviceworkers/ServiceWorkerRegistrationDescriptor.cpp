@@ -27,7 +27,7 @@ ServiceWorkerRegistrationDescriptor::NewestInternal() const
   } else if (mData->active().type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
     result.emplace(mData->active().get_IPCServiceWorkerDescriptor());
   }
-  return std::move(result);
+  return result;
 }
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
@@ -138,7 +138,7 @@ ServiceWorkerRegistrationDescriptor::GetPrincipal() const
 {
   AssertIsOnMainThread();
   nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
-  return std::move(ref);
+  return ref;
 }
 
 const nsCString&
@@ -157,7 +157,7 @@ ServiceWorkerRegistrationDescriptor::GetInstalling() const
       mData->installing().get_IPCServiceWorkerDescriptor()));
   }
 
-  return std::move(result);
+  return result;
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -170,7 +170,7 @@ ServiceWorkerRegistrationDescriptor::GetWaiting() const
       mData->waiting().get_IPCServiceWorkerDescriptor()));
   }
 
-  return std::move(result);
+  return result;
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -183,7 +183,7 @@ ServiceWorkerRegistrationDescriptor::GetActive() const
       mData->active().get_IPCServiceWorkerDescriptor()));
   }
 
-  return std::move(result);
+  return result;
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -194,7 +194,7 @@ ServiceWorkerRegistrationDescriptor::Newest() const
   if (newest.isSome()) {
     result.emplace(ServiceWorkerDescriptor(newest.ref()));
   }
-  return std::move(result);
+  return result;
 }
 
 namespace {

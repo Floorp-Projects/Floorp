@@ -290,7 +290,7 @@ public:
           const nsTArray<wr::WrFilterOp>& aFilters,
           bool aIsBackfaceVisible,
           const wr::GlyphRasterSpace& aRasterSpace);
-  void PopStackingContext();
+  void PopStackingContext(bool aIsReferenceFrame);
 
   wr::WrClipChainId DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,
                                     const nsTArray<wr::WrClipId>& aClips);

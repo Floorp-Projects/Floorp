@@ -1885,7 +1885,7 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
     &GMPServiceParent::CloseTransport,
     &monitor,
     &completed);
-  XRE_GetIOMessageLoop()->PostTask(std::move(task.forget()));
+  XRE_GetIOMessageLoop()->PostTask(task.forget());
 
   while (!completed) {
     lock.Wait();

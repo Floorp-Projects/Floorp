@@ -25,14 +25,15 @@ import kotlin.reflect.KClass
  */
 open class BaseSessionTest(noErrorCollector: Boolean = false) {
     companion object {
-        const val INVALID_URI = "http://www.test.invalid/"
+        const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
+        const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"
+        const val INVALID_URI = "http://www.test.invalid/"
         const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
-        const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
+        const val SELECTION_ACTION_PATH = "/assets/www/selectionAction.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
-        const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
     }
 

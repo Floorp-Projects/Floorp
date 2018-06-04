@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import copy
+import json
 import subprocess
 
 from taskgraph.transforms.base import TransformSequence
@@ -56,6 +57,7 @@ def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by project, etc."""
     fields = [
         "run.config",
+        "run.extra-config",
     ]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
@@ -67,6 +69,12 @@ def handle_keyed_by(config, jobs):
             job["run"]["command"].extend(["--config", cfg])
 
         del job["run"]["config"]
+
+        if 'extra-config' in job['run']:
+            env = job['worker'].setdefault('env', {})
+            env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(job['run']['extra-config'])
+            del job["run"]["extra-config"]
+
         yield job
 
 
