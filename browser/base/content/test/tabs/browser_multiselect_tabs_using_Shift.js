@@ -5,7 +5,7 @@ add_task(async function prefNotSet() {
     let tab2 = await addTab();
     let tab3 = await addTab();
 
-    let mSelectedTabs = gBrowser._multiSelectedTabsMap;
+    let mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
     await BrowserTestUtils.switchTab(gBrowser, tab1);
 
@@ -42,7 +42,7 @@ add_task(async function noItemsInTheCollectionBeforeShiftClicking() {
     let tab3 = await addTab();
     let tab4 = await addTab();
     let tab5 = await addTab();
-    let mSelectedTabs = gBrowser._multiSelectedTabsMap;
+    let mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
     await BrowserTestUtils.switchTab(gBrowser, tab1);
 
@@ -77,7 +77,7 @@ add_task(async function itemsInTheCollectionBeforeShiftClicking() {
     let tab4 = await addTab();
     let tab5 = await addTab();
 
-    let mSelectedTabs = gBrowser._multiSelectedTabsMap;
+    let mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
     await BrowserTestUtils.switchTab(gBrowser, () => triggerClickOn(tab1, {}));
 
