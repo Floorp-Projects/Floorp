@@ -29,7 +29,7 @@ UiCompositorControllerParent::GetFromRootLayerTreeId(const LayersId& aRootLayerT
     [&](LayerTreeState& aState) -> void {
       controller = aState.mUiControllerParent;
     });
-  return std::move(controller);
+  return controller;
 }
 
 /* static */ RefPtr<UiCompositorControllerParent>

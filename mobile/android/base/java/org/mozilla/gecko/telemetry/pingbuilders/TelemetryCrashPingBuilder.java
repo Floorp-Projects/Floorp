@@ -49,6 +49,7 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
         "EventLoopNestingLevel",
         "ipc_channel_error",
         "IsGarbageCollecting",
+        "LowCommitSpaceEvents",
         "MozCrashReason",
         "OOMAllocationSize",
         "ProductID",

@@ -26,7 +26,7 @@ public:
   static SurfacePipe SimpleSurfacePipe()
   {
     SurfacePipe pipe;
-    return std::move(pipe);
+    return pipe;
   }
 
   template <typename T>

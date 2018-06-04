@@ -22,7 +22,7 @@ add_task(async function() {
   for (const [errorMessageName, expression] of Object.entries(ErrorDocStatements)) {
     const title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
 
-    jsterm.clearOutput();
+    hud.ui.clearOutput();
     const onMessage = waitForMessage(hud, "RangeError:");
     jsterm.execute(expression);
     const {node} = await onMessage;

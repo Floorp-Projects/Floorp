@@ -1281,7 +1281,7 @@ ServiceWorkerRegistrar::GetShutdownPhase() const
   nsCOMPtr<nsIAsyncShutdownClient> client;
   rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
   RELEASE_ASSERT_SUCCEEDED(rv, "profileBeforeChange shutdown blocker");
-  return std::move(client);
+  return client;
 }
 
 #undef RELEASE_ASSERT_SUCCEEDED

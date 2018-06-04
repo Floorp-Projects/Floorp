@@ -288,7 +288,7 @@ class JSTerm extends Component {
     if (helperResult && helperResult.type) {
       switch (helperResult.type) {
         case "clearOutput":
-          this.clearOutput();
+          this.hud.clearOutput();
           break;
         case "clearHistory":
           this.props.clearHistory();
@@ -482,40 +482,6 @@ class JSTerm extends Component {
     }
 
     return grip ? grip.actor : null;
-  }
-
-  /**
-   * Clear the Web Console output.
-   *
-   * This method emits the "messages-cleared" notification.
-   *
-   * @param boolean clearStorage
-   *        True if you want to clear the console messages storage associated to
-   *        this Web Console.
-   */
-  clearOutput(clearStorage) {
-    if (this.hud && this.hud.consoleOutput) {
-      this.hud.consoleOutput.dispatchMessagesClear();
-    }
-
-    this.webConsoleClient.clearNetworkRequests();
-    if (clearStorage) {
-      this.webConsoleClient.clearMessagesCache();
-    }
-    this.focus();
-    this.emit("messages-cleared");
-  }
-
-  /**
-   * Remove all of the private messages from the Web Console output.
-   *
-   * This method emits the "private-messages-cleared" notification.
-   */
-  clearPrivateMessages() {
-    if (this.hud && this.hud.consoleOutput) {
-      this.hud.consoleOutput.dispatchPrivateMessagesClear();
-      this.emit("private-messages-cleared");
-    }
   }
 
   /**

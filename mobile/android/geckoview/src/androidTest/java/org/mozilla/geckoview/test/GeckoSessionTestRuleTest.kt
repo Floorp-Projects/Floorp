@@ -1118,7 +1118,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun delegateDuringNextWait_hasPrecedenceWithSpecificSession() {
-        var newSession = sessionRule.createOpenSession()
+        val newSession = sessionRule.createOpenSession()
         var counter = 0
 
         newSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
@@ -1143,7 +1143,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun delegateDuringNextWait_specificSessionOverridesAll() {
-        var newSession = sessionRule.createOpenSession()
+        val newSession = sessionRule.createOpenSession()
         var counter = 0
 
         newSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
@@ -1543,5 +1543,92 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.forceGarbageCollection()
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
+    }
+
+    private interface TestDelegate {
+        fun onDelegate(foo: String, bar: String): Int
+    }
+
+    @Test fun addExternalDelegateUntilTestEnd() {
+        lateinit var delegate: TestDelegate
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                TestDelegate::class, { newDelegate -> delegate = newDelegate }, { },
+                object : TestDelegate {
+            @AssertCalled(count = 1)
+            override fun onDelegate(foo: String, bar: String): Int {
+                assertThat("First argument should be correct", foo, equalTo("foo"))
+                assertThat("Second argument should be correct", bar, equalTo("bar"))
+                return 42
+            }
+        })
+
+        assertThat("Delegate should be registered", delegate, notNullValue())
+        assertThat("Delegate return value should be correct",
+                   delegate.onDelegate("foo", "bar"), equalTo(42))
+        sessionRule.performTestEndCheck()
+    }
+
+    @Test(expected = AssertionError::class)
+    fun addExternalDelegateUntilTestEnd_throwOnNotCalled() {
+        sessionRule.addExternalDelegateUntilTestEnd(TestDelegate::class, { }, { },
+                                                    object : TestDelegate {
+            @AssertCalled(count = 1)
+            override fun onDelegate(foo: String, bar: String): Int {
+                return 42
+            }
+        })
+        sessionRule.performTestEndCheck()
+    }
+
+    @Test fun addExternalDelegateDuringNextWait() {
+        var delegate: Runnable? = null
+
+        sessionRule.addExternalDelegateDuringNextWait(Runnable::class,
+                                                      { newDelegate -> delegate = newDelegate },
+                                                      { delegate = null }, Runnable { })
+
+        assertThat("Delegate should be registered", delegate, notNullValue())
+        delegate?.run()
+
+        mainSession.reload()
+        mainSession.waitForPageStop()
+        mainSession.forCallbacksDuringWait(Runnable @AssertCalled(count = 1) {})
+
+        assertThat("Delegate should be unregistered after wait", delegate, nullValue())
+    }
+
+    @Test fun addExternalDelegateDuringNextWait_hasPrecedence() {
+        var delegate: TestDelegate? = null
+        val register = { newDelegate: TestDelegate -> delegate = newDelegate }
+        val unregister = { _: TestDelegate -> delegate = null }
+
+        sessionRule.addExternalDelegateDuringNextWait(TestDelegate::class, register, unregister,
+                                                      object : TestDelegate {
+            @AssertCalled(count = 1)
+            override fun onDelegate(foo: String, bar: String): Int {
+                return 24
+            }
+        })
+
+        sessionRule.addExternalDelegateUntilTestEnd(TestDelegate::class, register, unregister,
+                                                    object : TestDelegate {
+            @AssertCalled(count = 1)
+            override fun onDelegate(foo: String, bar: String): Int {
+                return 42
+            }
+        })
+
+        assertThat("Wait delegate should be registered", delegate, notNullValue())
+        assertThat("Wait delegate return value should be correct",
+                   delegate?.onDelegate("", ""), equalTo(24))
+
+        mainSession.reload()
+        mainSession.waitForPageStop()
+
+        assertThat("Test delegate should still be registered", delegate, notNullValue())
+        assertThat("Test delegate return value should be correct",
+                   delegate?.onDelegate("", ""), equalTo(42))
+        sessionRule.performTestEndCheck()
     }
 }

@@ -752,7 +752,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
                              nsView* aView,
                              nsEventStatus* aStatus)
 {
-  AUTO_PROFILER_LABEL("nsViewManager::DispatchEvent", EVENTS);
+  AUTO_PROFILER_LABEL("nsViewManager::DispatchEvent", OTHER);
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if ((mouseEvent &&

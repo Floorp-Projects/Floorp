@@ -332,7 +332,7 @@ SurfaceFactory::NewTexClient(const gfx::IntSize& size)
         StopRecycling(cur);
     }
 
-    UniquePtr<SharedSurface> surf = std::move(CreateShared(size));
+    UniquePtr<SharedSurface> surf = CreateShared(size);
     if (!surf)
         return nullptr;
 

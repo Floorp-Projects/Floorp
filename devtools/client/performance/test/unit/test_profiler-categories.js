@@ -7,7 +7,7 @@
  */
 
 add_task(function() {
-  const { CATEGORIES, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
+  const { CATEGORIES } = require("devtools/client/performance/modules/categories");
   const { L10N } = require("devtools/client/performance/modules/global");
   const count = CATEGORIES.length;
 
@@ -22,12 +22,4 @@ add_task(function() {
 
   ok(CATEGORIES.every(e => e.label === L10N.getStr("category." + e.abbrev)),
     "All categories have a correctly localized label.");
-
-  ok(Object.keys(CATEGORY_MAPPINGS).every(e => (Number(e) >= 9000 && Number(e) <= 9999) ||
-                                                Number.isInteger(Math.log2(e))),
-    "All bitmask mappings keys are powers of 2, or between 9000-9999 for special " +
-    "categories.");
-
-  ok(Object.keys(CATEGORY_MAPPINGS).every(e => CATEGORIES.includes(CATEGORY_MAPPINGS[e])),
-    "All bitmask mappings point to a category.");
 });

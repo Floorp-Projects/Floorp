@@ -3651,9 +3651,7 @@ GeckoDriver.prototype.commands = {
   "getTitle": GeckoDriver.prototype.getTitle,
   "getWindowHandle": GeckoDriver.prototype.getWindowHandle,
   "getWindowHandles": GeckoDriver.prototype.getWindowHandles,
-  "getWindowPosition": GeckoDriver.prototype.getWindowRect, // redirect for compatibility
   "getWindowRect": GeckoDriver.prototype.getWindowRect,
-  "getWindowSize": GeckoDriver.prototype.getWindowRect, // redirect for compatibility
   "goBack": GeckoDriver.prototype.goBack,
   "goForward": GeckoDriver.prototype.goForward,
   "isElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
@@ -3667,9 +3665,7 @@ GeckoDriver.prototype.commands = {
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "sendKeysToElement": GeckoDriver.prototype.sendKeysToElement,
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
-  "setWindowPosition": GeckoDriver.prototype.setWindowRect, // redirect for compatibility
   "setWindowRect": GeckoDriver.prototype.setWindowRect,
-  "setWindowSize": GeckoDriver.prototype.setWindowRect, // redirect for compatibility
   "switchToFrame": GeckoDriver.prototype.switchToFrame,
   "switchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
   "switchToShadowRoot": GeckoDriver.prototype.switchToShadowRoot,

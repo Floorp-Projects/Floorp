@@ -707,7 +707,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
     EVLOG("nsAppShell::ProcessNextNativeEvent %d", mayWait);
 
-    AUTO_PROFILER_LABEL("nsAppShell::ProcessNextNativeEvent", EVENTS);
+    AUTO_PROFILER_LABEL("nsAppShell::ProcessNextNativeEvent", OTHER);
 
     mozilla::UniquePtr<Event> curEvent;
 
@@ -726,7 +726,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             }
 
             AUTO_PROFILER_LABEL("nsAppShell::ProcessNextNativeEvent:Wait",
-                                EVENTS);
+                                IDLE);
             mozilla::HangMonitor::Suspend();
 
             curEvent = mEventQueue.Pop(/* mayWait */ true);

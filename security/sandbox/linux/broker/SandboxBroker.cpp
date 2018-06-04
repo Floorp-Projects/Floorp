@@ -77,7 +77,7 @@ SandboxBroker::Create(UniquePtr<const Policy> aPolicy, int aChildPid,
   } else {
     aClientFdOut = ipc::FileDescriptor(clientFd);
   }
-  return std::move(rv);
+  return rv;
 }
 
 SandboxBroker::~SandboxBroker() {

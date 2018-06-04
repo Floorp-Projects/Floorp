@@ -524,14 +524,14 @@ intrinsic_DecompileArg(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
 
-    HandleValue value = args[1];
-    UniqueChars str = DecompileArgument(cx, args[0].toInt32(), value);
+    RootedValue value(cx, args[1]);
+    ScopedJSFreePtr<char> str(DecompileArgument(cx, args[0].toInt32(), value));
     if (!str)
         return false;
-    JSString* result = NewStringCopyZ<CanGC>(cx, str.get());
-    if (!result)
+    JSAtom* atom = Atomize(cx, str, strlen(str));
+    if (!atom)
         return false;
-    args.rval().setString(result);
+    args.rval().setString(atom);
     return true;
 }
 

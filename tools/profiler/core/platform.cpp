@@ -55,6 +55,7 @@
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
+#include "nsIPropertyBag2.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1560,12 +1561,52 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 }
 
 static void
+StreamCategories(SpliceableJSONWriter& aWriter)
+{
+  // Same order as ProfilingStackFrame::Category.
+  // The list of available color names is:
+  // transparent, grey, purple, yellow, orange, lightblue, green, blue, magenta
+  aWriter.Start();
+  aWriter.StringProperty("name", "Idle");
+  aWriter.StringProperty("color", "transparent");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Other");
+  aWriter.StringProperty("color", "grey");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Layout");
+  aWriter.StringProperty("color", "purple");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "JavaScript");
+  aWriter.StringProperty("color", "yellow");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "GC / CC");
+  aWriter.StringProperty("color", "orange");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Network");
+  aWriter.StringProperty("color", "lightblue");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Graphics");
+  aWriter.StringProperty("color", "green");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "DOM");
+  aWriter.StringProperty("color", "blue");
+  aWriter.EndObject();
+}
+
+static void
 StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
                          bool aIsShuttingDown)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 10);
+  aWriter.IntProperty("version", 11);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -1582,6 +1623,10 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
   } else {
     aWriter.NullProperty("shutdownTime");
   }
+
+  aWriter.StartArrayProperty("categories");
+  StreamCategories(aWriter);
+  aWriter.EndArray();
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
@@ -1663,6 +1708,20 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
       aWriter.StringProperty("sourceURL", string.Data());
   }
 
+  nsCOMPtr<nsIPropertyBag2> systemInfo =
+    do_GetService("@mozilla.org/system-info;1");
+  if (systemInfo) {
+    int32_t cpus;
+    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucores"), &cpus);
+    if (!NS_FAILED(res)) {
+      aWriter.IntProperty("physicalCPUs", cpus);
+    }
+    res = systemInfo->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
+    if (!NS_FAILED(res)) {
+      aWriter.IntProperty("logicalCPUs", cpus);
+    }
+  }
+
   // We should avoid collecting extension metadata for profiler while XPCOM is
   // shutting down since it cannot create a new ExtensionPolicyService.
   if (!gXPCOMShuttingDown) {
@@ -1733,7 +1792,7 @@ CollectJavaThreadProfileData()
     }
     sampleId++;
   }
-  return std::move(buffer);
+  return buffer;
 }
 #endif
 

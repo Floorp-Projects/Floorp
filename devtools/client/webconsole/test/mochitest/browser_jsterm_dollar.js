@@ -18,13 +18,13 @@ add_task(async function() {
 });
 
 async function test$(hud) {
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
   const msg = await hud.jsterm.execute("$(document.body)");
   ok(msg.textContent.includes("<p>"), "jsterm output is correct for $()");
 }
 
 async function test$$(hud) {
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
   hud.jsterm.setInputValue();
   const msg = await hud.jsterm.execute("$$(document)");
   ok(msg.textContent.includes("621644"), "jsterm output is correct for $$()");

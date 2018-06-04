@@ -30,13 +30,13 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
     UniquePtr<SharedSurface_EGLImage> ret;
 
     if (!HasExtensions(egl, prodGL)) {
-        return std::move(ret);
+        return ret;
     }
 
     MOZ_ALWAYS_TRUE(prodGL->MakeCurrent());
     GLuint prodTex = CreateTextureForOffscreen(prodGL, formats, size);
     if (!prodTex) {
-        return std::move(ret);
+        return ret;
     }
 
     EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(uintptr_t(prodTex));
@@ -45,12 +45,12 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
                                        nullptr);
     if (!image) {
         prodGL->fDeleteTextures(1, &prodTex);
-        return std::move(ret);
+        return ret;
     }
 
     ret.reset( new SharedSurface_EGLImage(prodGL, egl, size, hasAlpha,
                                           formats, prodTex, image) );
-    return std::move(ret);
+    return ret;
 }
 
 bool
@@ -178,7 +178,7 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
         ret.reset( new ptrT(prodGL, caps, allocator, flags, context) );
     }
 
-    return std::move(ret);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -201,12 +201,12 @@ SharedSurface_SurfaceTexture::Create(GLContext* prodGL,
     MOZ_ASSERT(egl);
     EGLSurface eglSurface = egl->CreateCompatibleSurface(window.NativeWindow());
     if (!eglSurface) {
-        return std::move(ret);
+        return ret;
     }
 
     ret.reset(new SharedSurface_SurfaceTexture(prodGL, size, hasAlpha,
                                                formats, surface, eglSurface));
-    return std::move(ret);
+    return ret;
 }
 
 SharedSurface_SurfaceTexture::SharedSurface_SurfaceTexture(GLContext* gl,
@@ -293,7 +293,7 @@ SurfaceFactory_SurfaceTexture::Create(GLContext* prodGL, const SurfaceCaps& caps
 {
     UniquePtr<SurfaceFactory_SurfaceTexture> ret(
         new SurfaceFactory_SurfaceTexture(prodGL, caps, allocator, flags));
-    return std::move(ret);
+    return ret;
 }
 
 UniquePtr<SharedSurface>

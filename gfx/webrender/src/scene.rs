@@ -115,6 +115,13 @@ impl Scene {
         self.root_pipeline_id = Some(pipeline_id);
     }
 
+    pub fn get_display_list_for_pipeline(&self, pipeline_id: PipelineId) -> &BuiltDisplayList {
+        &self.pipelines
+            .get(&pipeline_id)
+            .expect("Expected to find display list for pipeline")
+            .display_list
+    }
+
     pub fn set_display_list(
         &mut self,
         pipeline_id: PipelineId,

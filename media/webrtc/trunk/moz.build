@@ -184,12 +184,11 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "OpenBSD":
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
         "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
@@ -313,10 +312,11 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 
     DIRS += [
         "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
     ]

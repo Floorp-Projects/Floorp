@@ -10,7 +10,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
 add_task(async function() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
   const input = jsterm.inputNode;
 
   // Test typing 'docu'.
@@ -50,7 +50,7 @@ add_task(async function() {
   is(jsterm.completeNode.value, "                entsByTagNameNS",
      "'document.getElem' completion");
 
-  jsterm.clearOutput();
+  ui.clearOutput();
 
   await jstermSetValueAndComplete(jsterm, "docu");
   is(jsterm.completeNode.value, "    ment", "'docu' completion");

@@ -8,7 +8,7 @@ import importlib
 import os
 import sys
 
-from sphinx.util.compat import Directive
+from docutils.parsers.rst import Directive
 from sphinx.util.docstrings import prepare_docstring
 
 

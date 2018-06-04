@@ -49,8 +49,3 @@ checkbox[disabled="true"] {
   margin: 2px;
 }
 
-checkbox:not([disabled="true"]):hover {
-  color: -moz-buttonhovertext;
-  text-shadow: none;
-}
-

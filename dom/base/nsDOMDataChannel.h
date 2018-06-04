@@ -55,6 +55,8 @@ public:
   void GetLabel(nsAString& aLabel);
   void GetProtocol(nsAString& aProtocol);
   bool Reliable() const;
+  mozilla::dom::Nullable<uint16_t> GetMaxPacketLifeTime() const;
+  mozilla::dom::Nullable<uint16_t> GetMaxRetransmits() const;
   mozilla::dom::RTCDataChannelState ReadyState() const;
   uint32_t BufferedAmount() const;
   uint32_t BufferedAmountLowThreshold() const;

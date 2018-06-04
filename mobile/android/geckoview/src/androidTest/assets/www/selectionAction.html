@@ -1,0 +1,19 @@
+<html>
+    <head><title>SelectionActionDelegate Test</title></head>
+    <body>
+        <div id="text">lorem</div>
+        <input id="input" value="ipsum">
+        <textarea id="textarea">dolor</textarea>
+        <div id="contenteditable" contenteditable="true">sit</div>
+        <iframe id="iframe" src="selectionAction_frame.html"></iframe>
+        <iframe id="designmode" src="selectionAction_frame.html"></iframe>
+    </body>
+    <script>
+        addEventListener("load", function() {
+            document.getElementById("iframe").contentDocument.body.textContent = "amet";
+            var designmode = document.getElementById("designmode");
+            designmode.contentDocument.body.textContent = "consectetur";
+            designmode.contentDocument.designMode = "on";
+        });
+    </script>
+</html>

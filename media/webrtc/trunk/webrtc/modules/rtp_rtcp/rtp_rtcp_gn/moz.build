@@ -7,7 +7,6 @@
   ### DO NOT edit it by hand.                                       ###
 
 COMPILE_FLAGS["OS_INCLUDES"] = []
-COMPILE_FLAGS["STL"] = []
 AllowCompilerWarnings()
 
 DEFINES["BWE_TEST_LOGGING_COMPILE_TIME_ENABLE"] = "0"

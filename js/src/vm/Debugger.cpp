@@ -11,8 +11,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 
-#include <utility>
-
 #include "jsfriendapi.h"
 #include "jsnum.h"
 
@@ -30,7 +28,6 @@
 #include "js/Vector.h"
 #include "js/Wrapper.h"
 #include "proxy/ScriptedProxyHandler.h"
-#include "util/Text.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -451,17 +448,25 @@ ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
     return true;
 }
 
+EvalOptions::~EvalOptions()
+{
+    js_free(const_cast<char*>(filename_));
+}
+
 bool
 EvalOptions::setFilename(JSContext* cx, const char* filename)
 {
-    JS::UniqueChars copy;
+    char* copy = nullptr;
     if (filename) {
-        copy = DuplicateString(cx, filename);
+        copy = JS_strdup(cx, filename);
         if (!copy)
             return false;
     }
 
-    filename_ = std::move(copy);
+    // EvalOptions always owns filename_, so this cast is okay.
+    js_free(const_cast<char*>(filename_));
+
+    filename_ = copy;
     return true;
 }
 
