@@ -267,19 +267,19 @@ test(t => {
   div.style.animation = 'anim1 100s';
 
   assert_equals(div.getAnimations().length, 1,
-    'getAnimations returns an animation before cancelling');
+    'getAnimations returns an animation before canceling');
 
   const animation = div.getAnimations()[0];
 
   animation.cancel();
   assert_equals(div.getAnimations().length, 0,
-    'getAnimations does not return cancelled animations');
+    'getAnimations does not return canceled animations');
 
   animation.play();
   assert_equals(div.getAnimations().length, 1,
-    'getAnimations returns cancelled animations that have been re-started');
+    'getAnimations returns canceled animations that have been re-started');
 
-}, 'getAnimations for CSS Animations that are cancelled');
+}, 'getAnimations for CSS Animations that are canceled');
 
 promise_test(async t => {
   const div = addDiv(t);
@@ -305,9 +305,9 @@ promise_test(async t => {
   anim1.play();
   anims = div.getAnimations();
   assert_equals(anims[0].animationName, 'anim1',
-                'animation order after cancelling and restarting');
+                'animation order after canceling and restarting');
   assert_equals(anims[1].animationName, 'anim2',
-                'animation order after cancelling and restarting');
+                'animation order after canceling and restarting');
 }, 'getAnimations for CSS Animations follows animation-name order');
 
 test(t => {

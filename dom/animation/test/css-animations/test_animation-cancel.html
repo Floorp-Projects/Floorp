@@ -27,11 +27,11 @@ promise_test(async t => {
   await animation.ready;
 
   assert_not_equals(getComputedStyle(div).transform, 'none',
-                    'transform style is animated before cancelling');
+                    'transform style is animated before canceling');
   animation.cancel();
   assert_equals(getComputedStyle(div).transform, 'none',
-                'transform style is no longer animated after cancelling');
-}, 'Animated style is cleared after cancelling a running CSS animation');
+                'transform style is no longer animated after canceling');
+}, 'Animated style is cleared after canceling a running CSS animation');
 
 promise_test(async t => {
   const div = addDiv(t, { style: 'animation: translateAnim 100s forwards' });
@@ -41,11 +41,11 @@ promise_test(async t => {
   await animation.ready;
 
   assert_not_equals(getComputedStyle(div).transform, 'none',
-                    'transform style is filling before cancelling');
+                    'transform style is filling before canceling');
   animation.cancel();
   assert_equals(getComputedStyle(div).transform, 'none',
-                'fill style is cleared after cancelling');
-}, 'Animated style is cleared after cancelling a filling CSS animation');
+                'fill style is cleared after canceling');
+}, 'Animated style is cleared after canceling a filling CSS animation');
 
 test(t => {
   const div = addDiv(t, { style: 'animation: marginLeftAnim 100s linear' });
@@ -53,11 +53,11 @@ test(t => {
   animation.cancel();
 
   assert_equals(getComputedStyle(div).marginLeft, '0px',
-                'margin-left style is not animated after cancelling');
+                'margin-left style is not animated after canceling');
 
   animation.currentTime = 50 * 1000;
   assert_equals(getComputedStyle(div).marginLeft, '50px',
-                'margin-left style is updated when cancelled animation is'
+                'margin-left style is updated when canceled animation is'
                 + ' seeked');
 }, 'After canceling an animation, it can still be seeked');
 
@@ -70,7 +70,7 @@ promise_test(async t => {
 
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
-                'margin-left style is not animated after cancelling');
+                'margin-left style is not animated after canceling');
   animation.play();
   assert_equals(getComputedStyle(div).marginLeft, '100px',
                 'margin-left style is animated after re-starting animation');
@@ -79,7 +79,7 @@ promise_test(async t => {
 
   assert_equals(animation.playState, 'running',
                 'Animation succeeds in running after being re-started');
-}, 'After cancelling an animation, it can still be re-used');
+}, 'After canceling an animation, it can still be re-used');
 
 test(t => {
   const div =
@@ -87,7 +87,7 @@ test(t => {
   const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
-                'margin-left style is not animated after cancelling');
+                'margin-left style is not animated after canceling');
 
   // Trigger a change to some animation properties and check that this
   // doesn't cause the animation to become live again
@@ -97,7 +97,7 @@ test(t => {
                 + ' animation-duration');
   assert_equals(animation.playState, 'idle',
                 'Animation is still idle after updating animation-duration');
-}, 'After cancelling an animation, updating animation properties doesn\'t make'
+}, 'After canceling an animation, updating animation properties doesn\'t make'
    + ' it live again');
 
 test(t => {
@@ -106,7 +106,7 @@ test(t => {
   const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
-                'margin-left style is not animated after cancelling');
+                'margin-left style is not animated after canceling');
 
   // Make some changes to animation-play-state and check that the
   // animation doesn't become live again. This is because it should be
@@ -131,7 +131,7 @@ test(t => {
                 'Animation is still idle after re-setting'
                 + ' animation-play-state: running');
 
-}, 'After cancelling an animation, updating animation-play-state doesn\'t'
+}, 'After canceling an animation, updating animation-play-state doesn\'t'
    + ' make it live again');
 
 promise_test(async t => {
