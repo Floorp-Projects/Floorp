@@ -687,11 +687,11 @@ void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
 
-mozilla::css::ErrorReporter* Gecko_CreateCSSErrorReporter(mozilla::StyleSheet* sheet,
-                                                          mozilla::css::Loader* loader,
-                                                          nsIURI* uri);
-void Gecko_DestroyCSSErrorReporter(mozilla::css::ErrorReporter* reporter);
-void Gecko_ReportUnexpectedCSSError(mozilla::css::ErrorReporter* reporter,
+bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
+                                 const mozilla::css::Loader* loader);
+void Gecko_ReportUnexpectedCSSError(const mozilla::StyleSheet* sheet,
+                                    const mozilla::css::Loader* loader,
+                                    nsIURI* uri,
                                     const char* message,
                                     const char* param,
                                     uint32_t paramLen,
