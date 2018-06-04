@@ -31,9 +31,10 @@ from mach.decorators import (
 #      by name. If this function is renamed or removed, that file should
 #      be updated accordingly as well.
 def REMOVED(cls):
-    """Command no longer exists! Use the Gradle configuration rooted in the top source directory instead.
+    """Command no longer exists! Use the Gradle configuration rooted in the top source directory
+    instead.
 
-    See https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build#Developing_Firefox_for_Android_in_Android_Studio_or_IDEA_IntelliJ.
+    See https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build#Developing_Firefox_for_Android_in_Android_Studio_or_IDEA_IntelliJ.  # NOQA: E501
     """
     return False
 
@@ -42,7 +43,8 @@ def REMOVED(cls):
 class MachCommands(MachCommandBase):
     def _root_url(self, artifactdir=None, objdir=None):
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            return 'https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/{}'.format(os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir)
+            return 'https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/{}'.format(
+                os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir)
         else:
             return os.path.join(self.topobjdir, objdir)
 
@@ -54,7 +56,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'assemble-app',
                 """Assemble Firefox for Android.
-        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_assemble_app(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] +
@@ -64,7 +66,8 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'generate-sdk-bindings',
                 """Generate SDK bindings used when building GeckoView.""")
-    @CommandArgument('inputs', nargs='+', help='config files, like [/path/to/ClassName-classes.txt]+')
+    @CommandArgument('inputs', nargs='+', help='config files, '
+                     'like [/path/to/ClassName-classes.txt]+')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_sdk_bindings(self, inputs, args):
         import itertools
@@ -77,7 +80,8 @@ class MachCommands(MachCommandBase):
         bindings_args = '-Pgenerate_sdk_bindings_args={}'.format(':'.join(bindings_inputs))
 
         ret = self.gradle(
-            self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args, verbose=True)
+            self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args,
+            verbose=True)
 
         return ret
 
@@ -86,12 +90,14 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_generated_jni_wrappers(self, args):
         ret = self.gradle(
-            self.substs['GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS'] + args, verbose=True)
+            self.substs['GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS'] + args,
+            verbose=True)
 
         return ret
 
     @SubCommand('android', 'generate-fennec-jni-wrappers',
-                """Generate Fennec-specific JNI wrappers used when building Firefox for Android.""")
+                """Generate Fennec-specific JNI wrappers used when building
+                Firefox for Android.""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_fennec_jni_wrappers(self, args):
         ret = self.gradle(
@@ -101,17 +107,19 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'test',
                 """Run Android local unit tests.
-        See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] +
                           ["--continue"] + args, verbose=True)
 
-        ret |= self._parse_android_test_results('public/app/unittest', 'gradle/build/mobile/android/app',
+        ret |= self._parse_android_test_results('public/app/unittest',
+                                                'gradle/build/mobile/android/app',
                                                 (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],))
 
-        ret |= self._parse_android_test_results('public/geckoview/unittest', 'gradle/build/mobile/android/geckoview',
-                                                (self.substs['GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME'],))
+        ret |= self._parse_android_test_results('public/geckoview/unittest',
+                                                'gradle/build/mobile/android/geckoview',
+                                                (self.substs['GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME'],))  # NOQA: E501
 
         return ret
 
@@ -147,13 +155,13 @@ class MachCommands(MachCommandBase):
                 root = tree.getroot()
 
                 # Log reports for Tree Herder "Job Details".
-                print('TinderboxPrint: report<br/><a href="{}/{}/index.html">HTML {} report</a>, visit "Inspect Task" link for details'.format(root_url, report, report))
+                print('TinderboxPrint: report<br/><a href="{}/{}/index.html">HTML {} report</a>, visit "Inspect Task" link for details'.format(root_url, report, report))  # NOQA: E501
 
                 # And make the report display as soon as possible.
                 failed = root.findall('testcase/error') or root.findall('testcase/failure')
                 if failed:
                     print(
-                        'TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))
+                        'TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))  # NOQA: E501
 
                 print('SUITE-START | android-test | {} {}'.format(report, root.get('name')))
 
@@ -187,14 +195,14 @@ class MachCommands(MachCommandBase):
                 print('SUITE-END | android-test | {} {}'.format(report, root.get('name')))
 
         if not found_reports:
-            print('TEST-UNEXPECTED-FAIL | android-test | No reports found under {}'.format(gradledir))
+            print('TEST-UNEXPECTED-FAIL | android-test | No reports found under {}'.format(gradledir))  # NOQA: E501
             return 1
 
         return ret
 
     @SubCommand('android', 'lint',
                 """Run Android lint.
-        See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] +
@@ -212,19 +220,21 @@ class MachCommands(MachCommandBase):
         reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             f = open(os.path.join(
-                self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
+                self.topobjdir,
+                'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)),
+                     'rt')
             tree = ET.parse(f)
             root = tree.getroot()
 
             # Log reports for Tree Herder "Job Details".
             html_report_url = '{}/lint-results-{}.html'.format(root_url, report)
             xml_report_url = '{}/lint-results-{}.xml'.format(root_url, report)
-            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
-            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
+            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))  # NOQA: E501
+            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))  # NOQA: E501
 
             # And make the report display as soon as possible.
             if root.findall("issue[@severity='Error']"):
-                print('TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: {}'.format(html_report_url))
+                print('TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: {}'.format(html_report_url))  # NOQA: E501
 
             print('SUITE-START | android-lint | {}'.format(report))
             for issue in root.findall("issue[@severity='Error']"):
@@ -240,7 +250,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'checkstyle',
                 """Run Android checkstyle.
-        See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_checkstyle(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] +
@@ -252,7 +262,8 @@ class MachCommands(MachCommandBase):
         import xml.etree.ElementTree as ET
 
         f = open(os.path.join(self.topobjdir,
-                              'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'), 'rt')
+                              'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'),
+                 'rt')
         tree = ET.parse(f)
         root = tree.getroot()
 
@@ -262,15 +273,15 @@ class MachCommands(MachCommandBase):
             objdir='gradle/build/mobile/android/app/reports/checkstyle')
 
         # Log reports for Tree Herder "Job Details".
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.html">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.xml">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
+        print('TinderboxPrint: report<br/><a href="{}/checkstyle.html">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))  # NOQA: E501
+        print('TinderboxPrint: report<br/><a href="{}/checkstyle.xml">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))  # NOQA: E501
 
         # And make the report display as soon as possible.
         if root.findall('file/error'):
             ret |= 1
 
         if ret:
-            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}/checkstyle.html'.format(root_url))
+            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}/checkstyle.html'.format(root_url))  # NOQA: E501
 
         print('SUITE-START | android-checkstyle')
         for file in root.findall('file'):
@@ -295,7 +306,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'findbugs',
                 """Run Android findbugs.
-        See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-findbugs""")
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-findbugs""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
         ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] +
@@ -313,8 +324,10 @@ class MachCommands(MachCommandBase):
         reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             try:
-                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs',
-                                      'findbugs-{}-output.xml'.format(report)), 'rt')
+                f = open(os.path.join(
+                    self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs',
+                    'findbugs-{}-output.xml'.format(report)),
+                         'rt')
             except IOError:
                 continue
 
@@ -324,12 +337,12 @@ class MachCommands(MachCommandBase):
             # Log reports for Tree Herder "Job Details".
             html_report_url = '{}/findbugs-{}-output.html'.format(root_url, report)
             xml_report_url = '{}/findbugs-{}-output.xml'.format(root_url, report)
-            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
-            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
+            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))  # NOQA: E501
+            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))  # NOQA: E501
 
             # And make the report display as soon as possible.
             if root.findall("./BugInstance"):
-                print('TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: {}'.format(html_report_url))
+                print('TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: {}'.format(html_report_url))  # NOQA: E501
 
             print('SUITE-START | android-findbugs | {}'.format(report))
             for error in root.findall('./BugInstance'):
@@ -337,9 +350,13 @@ class MachCommands(MachCommandBase):
                 # error, so for now let's just output the <error> XML
                 # tag.
                 print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report,
-                                                                 error.get('type'), error.find('Class').get('classname')))
+                                                                 error.get('type'),
+                                                                 error.find('Class')
+                                                                 .get('classname')))
                 for line in ET.tostring(error).strip().splitlines():
-                    print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report, error.get('type'), line))
+                    print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report,
+                                                                     error.get('type'),
+                                                                     line))
                 ret |= 1
             print('SUITE-END | android-findbugs | {}'.format(report))
 
@@ -347,7 +364,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'gradle-dependencies',
                 """Collect Android Gradle dependencies.
-        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_gradle_dependencies(self, args):
         # We don't want to gate producing dependency archives on clean
@@ -360,11 +377,12 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'archive-geckoview',
                 """Create GeckoView archives.
-        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_archive_geckoview(self, args):
         ret = self.gradle(
-            self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args, verbose=True)
+            self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args,
+            verbose=True)
 
         return ret
 
@@ -494,11 +512,12 @@ class MachCommands(MachCommandBase):
         # happens during the maven deployment generating the GeckoView
         # documents; this works around "error: unmappable character
         # for encoding ASCII" in exoplayer2.  See
-        # https://discuss.gradle.org/t/unmappable-character-for-encoding-ascii-when-building-a-utf-8-project/10692/11
+        # https://discuss.gradle.org/t/unmappable-character-for-encoding-ascii-when-building-a-utf-8-project/10692/11  # NOQA: E501
         # and especially https://stackoverflow.com/a/21755671.
 
-        return self.run_process([self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
-                                append_env={
+        return self.run_process(
+            [self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
+            append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,
                 'JAVA_TOOL_OPTIONS': '-Dfile.encoding=utf-8',
@@ -523,8 +542,10 @@ class AndroidEmulatorCommands(MachCommandBase):
     @Command('android-emulator', category='devenv',
              conditions=[],
              description='Run the Android emulator with an AVD from test automation.')
-    @CommandArgument('--version', metavar='VERSION', choices=['4.3', '6.0', '7.0', 'x86', 'x86-6.0', 'x86-7.0'],
-                     help='Specify Android version to run in emulator. One of "4.3", "6.0", "7.0", "x86", "x86-6.0", or "x86-7.0".',
+    @CommandArgument('--version', metavar='VERSION',
+                     choices=['4.3', '6.0', '7.0', 'x86', 'x86-6.0', 'x86-7.0'],
+                     help='Specify Android version to run in emulator. '
+                     'One of "4.3", "6.0", "7.0", "x86", "x86-6.0", or "x86-7.0".',
                      default='4.3')
     @CommandArgument('--wait', action='store_true',
                      help='Wait for emulator to be closed.')
