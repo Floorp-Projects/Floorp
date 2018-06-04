@@ -788,7 +788,7 @@ ByAllocationStack::report(JSContext* cx, CountBase& countBase, MutableHandleValu
 
 // A count type that categorizes nodes by their script's filename.
 class ByFilename : public CountType {
-    using UniqueCString = UniquePtr<char, JS::FreePolicy>;
+    using UniqueCString = JS::UniqueChars;
 
     struct UniqueCStringHasher {
         using Lookup = UniqueCString;
@@ -880,7 +880,7 @@ ByFilename::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, cons
     if (!filename)
         return count.noFilename->count(mallocSizeOf, node);
 
-    UniqueCString myFilename(js_strdup(filename));
+    UniqueCString myFilename = DuplicateString(filename);
     if (!myFilename)
         return false;
 
