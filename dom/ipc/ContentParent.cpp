@@ -3842,9 +3842,7 @@ AddGeolocationListener(nsIDOMGeoPositionCallback* watcher,
   options->mTimeout = 0;
   options->mMaximumAge = 0;
   options->mEnableHighAccuracy = highAccuracy;
-  int32_t retval = 1;
-  geo->WatchPosition(watcher, errorCallBack, std::move(options), &retval);
-  return retval;
+  return geo->WatchPosition(watcher, errorCallBack, std::move(options));
 }
 
 mozilla::ipc::IPCResult
