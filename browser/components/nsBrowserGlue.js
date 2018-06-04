@@ -137,6 +137,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
+  ShieldStudySavant: "resource:///modules/ShieldStudySavant.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   UITour: "resource:///modules/UITour.jsm",
@@ -1060,6 +1061,8 @@ BrowserGlue.prototype = {
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
+
+    ShieldStudySavant.init();
   },
 
   _sendMediaTelemetry() {
