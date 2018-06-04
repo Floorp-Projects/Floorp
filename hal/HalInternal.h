@@ -55,16 +55,6 @@ void EnableScreenConfigurationNotifications();
 void DisableScreenConfigurationNotifications();
 
 /**
- * Enable switch notifications from the backend
- */
-void EnableSwitchNotifications(hal::SwitchDevice aDevice);
-
-/**
- * Disable switch notifications from the backend
- */
-void DisableSwitchNotifications(hal::SwitchDevice aDevice);
-
-/**
  * Has the child-side HAL IPC object been destroyed?  If so, you shouldn't send
  * messages to hal_sandbox.
  */
