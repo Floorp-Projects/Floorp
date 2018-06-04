@@ -15,7 +15,6 @@ config = {
     "locales_dir": "mobile/android/locales",
     "locales_platform": "android-api-16",
     "ignore_locales": ["en-US"],
-    "tools_repo": "https://hg.mozilla.org/build/tools",
     "platform": "android",
     "build_target": "Android_arm-eabi-gcc3",
     "tooltool_config": {
