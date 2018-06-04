@@ -164,7 +164,6 @@ IdentifyCrossOriginObject(JSObject* obj)
 {
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     const js::Class* clasp = js::GetObjectClass(obj);
-    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(Jsvalify(clasp)), "shouldn't have a holder here");
 
     if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location"))
         return CrossOriginLocation;
