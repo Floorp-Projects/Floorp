@@ -37,8 +37,6 @@ test(t => {
 promise_test(async t => {
   const div = addDiv(t);
 
-  // FIXME: This test does too many things. It should be split up.
-
   // Add an animation
   div.style.animation = 'anim1 100s';
   let animations = div.getAnimations();
@@ -46,28 +44,13 @@ promise_test(async t => {
     'getAnimations returns an Animation running CSS Animations');
   await animations[0].ready;
 
-  const startTime = animations[0].startTime;
-  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-    'CSS animation has a sensible start time');
-
-  // Wait a moment then add a second animation.
-  //
-  // We wait for the next frame so that we can test that the start times of
-  // the animations differ.
-  await waitForFrame();
-
+  // Add a second animation
   div.style.animation = 'anim1 100s, anim2 100s';
   animations = div.getAnimations();
   assert_equals(animations.length, 2,
-    'getAnimations returns one Animation for each value of animation-name');
-  // Wait until both Animations are ready
-  // (We don't make any assumptions about the order of the Animations since
-  //  that is the purpose of the following test.)
-  await waitForAllAnimations(animations);
-
-  assert_true(animations[0].startTime < animations[1].startTime,
-    'Additional Animations for CSS animations start after the original'
-    + ' animation and appear later in the list');
+    'getAnimations returns one CSSAnimation for each value of animation-name');
+  // (We don't check the order of the Animations since that is covered by tests
+  //  later in this file.)
 }, 'getAnimations for CSS Animations');
 
 test(t => {
@@ -256,8 +239,11 @@ test(t => {
   // Update duration (an Animation change)
   div.style.animationDuration = '200s';
   const extendedAnimation = div.getAnimations()[0];
-  // FIXME: Check extendedAnimation.effect.timing.duration has changed once the
-  // API is available
+  assert_equals(
+    extendedAnimation.effect.getTiming().duration,
+    200 * MS_PER_SEC,
+    'animation\'s duration has been updated'
+  );
   assert_equals(originalAnimation, extendedAnimation,
                 'getAnimations returns the same objects even when their'
                 + ' duration changes');
@@ -322,7 +308,8 @@ test(t => {
                 'Should find only the element');
   assert_equals(animations[0].effect.target, target,
                 'Effect target should be the element');
-}, 'Test AnimationFilter{ subtree: false } with single element');
+}, '{ subtree: false } on a leaf element returns the element\'s animations'
+   + ' and ignore pseudo-elements');
 
 test(t => {
   addStyle(t, { '#target::after': 'animation: anim1 10s;',
@@ -343,7 +330,8 @@ test(t => {
   assert_equals(animations[2].effect.target.type, '::after',
                 'The animation targeting the ::after pesudo-element ' +
                 'should be returned last');
-}, 'Test AnimationFilter{ subtree: true } with single element');
+}, '{ subtree: true } on a leaf element returns the element\'s animations'
+   + ' and its pseudo-elements\' animations');
 
 test(t => {
   addStyle(t, { '#parent::after': 'animation: anim1 10s;',
@@ -361,7 +349,8 @@ test(t => {
                 'Should find only the element even if it has a child');
   assert_equals(animations[0].effect.target, parent,
                 'Effect target shuld be the element');
-}, 'Test AnimationFilter{ subtree: false } with element that has a child');
+}, '{ subtree: false } on an element with a child returns only the element\'s'
+   + ' animations');
 
 test(t => {
   addStyle(t, { '#parent::after': 'animation: anim1 10s;',
@@ -405,7 +394,8 @@ test(t => {
                 'should be returned last');
   assert_equals(animations[5].effect.target.parentElement, child,
                 'This ::after element should be child of child element');
-}, 'Test AnimationFilter{ subtree: true } with element that has a child');
+}, '{ subtree: true } on an element with a child returns animations from the'
+   + ' element, its pseudo-elements, its child and its child pseudo-elements');
 
 test(t => {
   const parent = addDiv(t, { 'id': 'parent' });
@@ -450,7 +440,8 @@ test(t => {
                 'The animation targeting the child2 element ' +
                 'should be returned last');
 
-}, 'Test AnimationFilter{ subtree: true } with element that has many descendant');
+}, '{ subtree: true } on an element with many descendants returns animations'
+   + ' from all the descendants');
 
 </script>
 </body>
