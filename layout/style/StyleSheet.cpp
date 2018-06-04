@@ -25,6 +25,8 @@
 
 namespace mozilla {
 
+using namespace dom;
+
 StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode,
                        CORSMode aCORSMode,
                        net::ReferrerPolicy aReferrerPolicy,
