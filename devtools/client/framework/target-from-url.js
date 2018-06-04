@@ -48,7 +48,7 @@ exports.targetFromURL = async function targetFromURL(url) {
   }
   let id = params.get("id");
   // Allows to spawn a chrome enabled target for any context
-  // (handy to debug chrome stuff in a child process)
+  // (handy to debug chrome stuff in a content process)
   let chrome = params.has("chrome");
 
   let form, isBrowsingContext;
@@ -79,7 +79,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       form = response.form;
       chrome = true;
       if (id != 0) {
-        // Child processes are not exposing browsing context target actors with the full
+        // Content processes are not exposing browsing context target actors with the full
         // set of tab-scoped actors we would get from a browser tab. Instead, they only
         // support debugger and console.
         isBrowsingContext = false;

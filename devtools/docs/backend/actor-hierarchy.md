@@ -73,8 +73,8 @@ RootActor (root.js)
    |   Returned by "listWorkers" request to the root actor to get all workers.
    |   Returned by "listWorkers" request to a FrameTargetActorProxy to get
    |   workers for a specific frame.
-   |   Returned by "listWorkers" request to a ChildProcessActor to get workers
-   |   for the chrome of the child process.
+   |   Returned by "listWorkers" request to a ContentProcessTargetActor to get
+   |   workers for the chrome of the child process.
    |
    |-- ChromeWindowTargetActor (chrome-window.js)
    |   Targets a single window, such as a browser window in Firefox, but it can
@@ -89,10 +89,11 @@ RootActor (root.js)
    |   Extended by WebExtensionChildActor.
    |   Returned by "getProcess" request without any argument.
    |
-   |-- ChildProcessActor (child-process.js)
-   |   Targets the chrome of the child process (e10s).
-   |   Returned by "getProcess" request with a id argument,
-   |   matching the targeted process.
+   |-- ContentProcessTargetActor (content-process.js)
+   |   Targets all resources in a content process of Firefox (chrome sandboxes,
+   |   frame scripts, documents, etc.)
+   |   Returned by "getProcess" request with a id argument, matching the
+   |   targeted process.
    |
    \-- BrowserAddonActor (addon.js)
        Targets the javascript of add-ons.

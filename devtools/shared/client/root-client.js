@@ -91,8 +91,8 @@ RootClient.prototype = {
   listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
 
   /**
-   * Retrieve all service worker registrations as well as workers from the parent
-   * and child processes. Listing service workers involves merging information coming from
+   * Retrieve all service worker registrations as well as workers from the parent and
+   * content processes. Listing service workers involves merging information coming from
    * registrations and workers, this method will combine this information to present a
    * unified array of serviceWorkers. If you are only interested in other workers, use
    * listWorkers.
