@@ -309,8 +309,8 @@ test(t => {
   animation.cancel();
 
   assert_equals(animation.currentTime, null,
-                'The currentTime of a cancelled animation should be null');
-}, 'Animation.currentTime after cancelling');
+                'The currentTime of a canceled animation should be null');
+}, 'Animation.currentTime after canceling');
 
 promise_test(async t => {
   const div = addDiv(t, {'class': 'animated-div'});
