@@ -31,22 +31,24 @@ EGLImageCreateFromNativeBuffer(GLContext* aGL, void* aBuffer, const gfx::IntSize
         LOCAL_EGL_NONE, LOCAL_EGL_NONE,
     };
 
+    auto* egl = gl::GLLibraryEGL::Get();
     bool hasCropRect = (aCropSize.width != 0 && aCropSize.height != 0);
     EGLint* usedAttrs = attrs;
-    if (hasCropRect && sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EGL_ANDROID_image_crop)) {
+    if (hasCropRect && egl->IsExtensionSupported(GLLibraryEGL::EGL_ANDROID_image_crop)) {
         usedAttrs = cropAttrs;
     }
 
-    return sEGLLibrary.fCreateImage(sEGLLibrary.Display(),
-                                     EGL_NO_CONTEXT,
-                                     LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                     aBuffer, usedAttrs);
+    return egl->fCreateImage(egl->Display(),
+                             EGL_NO_CONTEXT,
+                             LOCAL_EGL_NATIVE_BUFFER_ANDROID,
+                             aBuffer, usedAttrs);
 }
 
 void
 EGLImageDestroy(GLContext* aGL, EGLImage aImage)
 {
-    sEGLLibrary.fDestroyImage(sEGLLibrary.Display(), aImage);
+    auto* egl = gl::GLLibraryEGL::Get();
+    egl->fDestroyImage(egl->Display(), aImage);
 }
 
 } // namespace layers
