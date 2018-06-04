@@ -207,9 +207,7 @@ def make_job_description(config, jobs):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
             run['use-magic-mh-args'] = False
         else:
-            if build_platform.startswith('macosx'):
-                worker_type = 'aws-provisioner-v1/gecko-%s-b-macosx64' % level
-            elif build_platform.startswith('linux'):
+            if build_platform.startswith(('linux', 'macosx')):
                 worker_type = 'aws-provisioner-v1/gecko-%s-b-linux' % level
             else:
                 raise NotImplementedError(
