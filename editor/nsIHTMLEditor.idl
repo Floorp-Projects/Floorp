@@ -466,11 +466,5 @@ interface nsIHTMLEditor : nsISupports
    * @return    true if CR in a paragraph creates a new paragraph
    */
   attribute boolean returnInParagraphCreatesNewParagraph;
-
-  /**
-   * Get an active editor's editing host in DOM window.  If this editor isn't
-   * active in the DOM window, this returns NULL.
-   */
-  [noscript, notxpcom] Element GetActiveEditingHost();
 };
 
