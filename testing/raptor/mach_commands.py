@@ -49,7 +49,7 @@ class RaptorRunner(MozbuildObject):
         self.raptor_args = raptor_args
 
     def make_config(self):
-        default_actions = ['populate-webroot', 'create-virtualenv', 'run-tests']
+        default_actions = ['populate-webroot', 'install-chrome', 'create-virtualenv', 'run-tests']
         self.config = {
             'run_local': True,
             'binary_path': self.binary_path,
@@ -66,7 +66,7 @@ class RaptorRunner(MozbuildObject):
             },
             'title': socket.gethostname(),
             'default_actions': default_actions,
-            'raptor_extra_options': self.raptor_args,
+            'raptor_cmd_line_args': self.raptor_args,
             'python3_manifest': {
                 'win32': 'python3.manifest',
                 'win64': 'python3_x64.manifest',

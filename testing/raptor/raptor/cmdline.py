@@ -15,13 +15,13 @@ def create_parser(mach_interface=False):
 
     add_arg('-t', '--test', required=True, dest='test',
             help="name of raptor test to run")
+    add_arg('--app', default='firefox', dest='app',
+            help="name of the application we are testing (default: firefox)",
+            choices=['firefox', 'chrome'])
+    add_arg('-b', '--binary', dest='binary',
+            help="path to the browser executable that we are testing")
     if not mach_interface:
-        add_arg('--app', default='firefox', dest='app',
-                help="name of the application we are testing (default: firefox)",
-                choices=['firefox', 'chrome'])
-        add_arg('-b', '--binary', required=True, dest='binary',
-                help="path to the browser executable that we are testing")
-        add_arg('--branchName', dest="branch_name", default=None,
+        add_arg('--branchName', dest="branch_name", default='',
                 help="Name of the branch we are testing on")
         add_arg('--symbolsPath', dest='symbols_path',
                 help="Path to the symbols for the build we are testing")
@@ -36,6 +36,8 @@ def create_parser(mach_interface=False):
 
 def verify_options(parser, args):
     ctx = vars(args)
+    if args.binary is None:
+        parser.error("--binary is required!")
 
     if not os.path.isfile(args.binary):
         parser.error("{binary} does not exist!".format(**ctx))
