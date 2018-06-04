@@ -347,15 +347,13 @@ nsFilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirecti
 
   if (aNode && mFilter) {
     nsCOMPtr<nsINode> currentNode = aNode;
-    bool skipIt;
     while (1) {
-      nsresult rv = mFilter->Skip(aNode, &skipIt);
-      if (NS_SUCCEEDED(rv) && skipIt) {
+      if (mFilter->Skip(aNode)) {
         aDidSkip = true;
         // Get the next/prev node and then
         // see if we should skip that
         nsCOMPtr<nsINode> advNode;
-        rv = AdvanceNode(aNode, *getter_AddRefs(advNode), aDir);
+        nsresult rv = AdvanceNode(aNode, *getter_AddRefs(advNode), aDir);
         if (NS_SUCCEEDED(rv) && advNode) {
           aNode = advNode;
         } else {
