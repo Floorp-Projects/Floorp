@@ -1786,9 +1786,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
                                                  JS::MutableHandle<PropertyDescriptor> desc)
                                                  const
 {
-    // We can't assert !Traits::HasPrototypes here, because
-    // CrossOriginXrayWrapper::getOwnPropertyDescriptor calls us, but it uses
-    // DOMXrayTraits, which have HasPrototype.
+    // CrossOriginXrayWrapper::getOwnPropertyDescriptor calls this.
 
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
@@ -2058,13 +2056,6 @@ XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
                                MutableHandleValue vp) const
 {
     // Skip our Base if it isn't already ProxyHandler.
-    // NB: None of the functions we call are prepared for the receiver not
-    // being the wrapper, so ignore the receiver here.
-    RootedValue thisv(cx);
-    if (Traits::HasPrototype)
-      thisv = receiver;
-    else
-      thisv.setObject(*wrapper);
 
     // This uses getPropertyDescriptor for backward compatibility with
     // the old BaseProxyHandler::get implementation.
@@ -2092,7 +2083,7 @@ XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
         return true;
     }
 
-    return Call(cx, thisv, getter, HandleValueArray::empty(), vp);
+    return Call(cx, receiver, getter, HandleValueArray::empty(), vp);
 }
 
 template <typename Base, typename Traits>
@@ -2100,12 +2091,8 @@ bool
 XrayWrapper<Base, Traits>::set(JSContext* cx, HandleObject wrapper, HandleId id, HandleValue v,
                                HandleValue receiver, ObjectOpResult& result) const
 {
-    MOZ_ASSERT(!Traits::HasPrototype);
-    // Skip our Base if it isn't already BaseProxyHandler.
-    // NB: None of the functions we call are prepared for the receiver not
-    // being the wrapper, so ignore the receiver here.
-    RootedValue wrapperValue(cx, ObjectValue(*wrapper));
-    return js::BaseProxyHandler::set(cx, wrapper, id, v, wrapperValue, result);
+    MOZ_CRASH("Shouldn't be called");
+    return false;
 }
 
 template <typename Base, typename Traits>
@@ -2146,9 +2133,8 @@ template <typename Base, typename Traits>
 JSObject*
 XrayWrapper<Base, Traits>::enumerate(JSContext* cx, HandleObject wrapper) const
 {
-    MOZ_ASSERT(!Traits::HasPrototype, "Why did we get called?");
-    // Skip our Base if it isn't already ProxyHandler.
-    return js::BaseProxyHandler::enumerate(cx, wrapper);
+    MOZ_CRASH("Shouldn't be called");
+    return nullptr;
 }
 
 template <typename Base, typename Traits>
@@ -2224,7 +2210,7 @@ XrayWrapper<Base, Traits>::getPrototype(JSContext* cx, JS::HandleObject wrapper,
     Value cached = js::GetReservedSlot(holder,
                                        Traits::HOLDER_SLOT_CACHED_PROTO);
     if (cached.isUndefined()) {
-        if (!getPrototypeHelper(cx, wrapper, target, protop))
+        if (!Traits::singleton.getPrototype(cx, wrapper, target, protop))
             return false;
 
         js::SetReservedSlot(holder, Traits::HOLDER_SLOT_CACHED_PROTO,
