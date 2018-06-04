@@ -2859,12 +2859,17 @@ GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount)
 //  2) typed object type descriptor objects
 //  3) all other objects
 //
-// Since we want to minimize the number of phases, we put everything else into
-// the first phase and label it the 'misc' phase.
+// Also, JSScripts and LazyScripts can have pointers to each other. Each can be
+// updated safely without requiring the referent to be up-to-date, but TSAN can
+// warn about data races when calling IsForwarded() on the new location of a
+// cell that is being updated in parallel. To avoid this, we update these in
+// separate phases.
+//
+// Since we want to minimize the number of phases, arrange kinds into three
+// arbitrary phases.
 
-static const AllocKinds UpdatePhaseMisc {
+static const AllocKinds UpdatePhaseOne {
     AllocKind::SCRIPT,
-    AllocKind::LAZY_SCRIPT,
     AllocKind::BASE_SHAPE,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
@@ -2874,7 +2879,10 @@ static const AllocKinds UpdatePhaseMisc {
     AllocKind::SCOPE
 };
 
-static const AllocKinds UpdatePhaseObjects {
+// UpdatePhaseTwo is typed object descriptor objects.
+
+static const AllocKinds UpdatePhaseThree {
+    AllocKind::LAZY_SCRIPT,
     AllocKind::FUNCTION,
     AllocKind::FUNCTION_EXTENDED,
     AllocKind::OBJECT0,
@@ -2896,13 +2904,13 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 {
     size_t bgTaskCount = CellUpdateBackgroundTaskCount();
 
-    updateCellPointers(zone, UpdatePhaseMisc, bgTaskCount);
+    updateCellPointers(zone, UpdatePhaseOne, bgTaskCount);
 
-    // Update TypeDescrs before all other objects as typed objects access these
-    // objects when we trace them.
+    // UpdatePhaseTwo: Update TypeDescrs before all other objects as typed
+    // objects access these objects when we trace them.
     updateTypeDescrObjects(trc, zone);
 
-    updateCellPointers(zone, UpdatePhaseObjects, bgTaskCount);
+    updateCellPointers(zone, UpdatePhaseThree, bgTaskCount);
 }
 
 /*
