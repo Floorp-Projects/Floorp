@@ -7,6 +7,7 @@
 #define mozilla_image_AnimationFrameBuffer_h
 
 #include "ISurfaceProvider.h"
+#include <deque>
 
 namespace mozilla {
 namespace image {
@@ -184,8 +185,8 @@ public:
    * currently displayed frame, it will return YIELD to indicate the caller
    * should stop decoding. Otherwise it will return CONTINUE.
    *
-   * If we cross the threshold, it will return DISCARD or DISCARD_CONTINUE, to
-   * indicate that the caller should switch to a new queue type.
+   * If we cross the threshold, it will return DISCARD_YIELD or DISCARD_CONTINUE
+   * to indicate that the caller should switch to a new queue type.
    *
    * @param aFrame      The frame to insert into the buffer.
    *
@@ -383,6 +384,42 @@ private:
 
   // The maximum number of frames we can have before discarding.
   size_t mThreshold;
+};
+
+/**
+ * An AnimationFrameDiscardingQueue will only retain up to mBatch * 2 frames.
+ * When the animation advances, it will discard the old current frame.
+ */
+class AnimationFrameDiscardingQueue : public AnimationFrameBuffer
+{
+public:
+  explicit AnimationFrameDiscardingQueue(AnimationFrameRetainedBuffer&& aQueue);
+
+  imgFrame* Get(size_t aFrame, bool aForDisplay) final;
+  bool IsFirstFrameFinished() const final;
+  bool IsLastInsertedFrame(imgFrame* aFrame) const final;
+  bool MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea) override;
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              const AddSizeOfCb& aCallback) override;
+
+  const std::deque<RefPtr<imgFrame>>& Display() const { return mDisplay; }
+  const imgFrame* FirstFrame() const { return mFirstFrame; }
+  size_t PendingInsert() const { return mInsertIndex; }
+
+protected:
+  bool InsertInternal(RefPtr<imgFrame>&& aFrame) override;
+  void AdvanceInternal() override;
+  bool ResetInternal() override;
+
+  /// The sequential index of the frame we inserting next.
+  size_t mInsertIndex;
+
+  /// Queue storing frames to be displayed by the animator. The first frame in
+  /// the queue is the currently displayed frame.
+  std::deque<RefPtr<imgFrame>> mDisplay;
+
+  /// The first frame which is never discarded, and preferentially reused.
+  RefPtr<imgFrame> mFirstFrame;
 };
 
 } // namespace image
