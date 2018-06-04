@@ -34,7 +34,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android",
 
     # Balrog
