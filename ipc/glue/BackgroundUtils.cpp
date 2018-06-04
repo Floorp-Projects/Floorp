@@ -587,19 +587,27 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
 
 void
 LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
-                                  ParentLoadInfoForwarderArgs* outLoadInfoChildForwardArgs)
+                                  ParentLoadInfoForwarderArgs* aForwarderArgsOut)
 {
   if (!aLoadInfo) {
+    *aForwarderArgsOut = ParentLoadInfoForwarderArgs(false, void_t());
     return;
   }
 
-  *outLoadInfoChildForwardArgs = ParentLoadInfoForwarderArgs(
-    aLoadInfo->GetAllowInsecureRedirectToDataURI()
+  OptionalIPCServiceWorkerDescriptor ipcController = void_t();
+  Maybe<ServiceWorkerDescriptor> controller(aLoadInfo->GetController());
+  if (controller.isSome()) {
+    ipcController = controller.ref().ToIPC();
+  }
+
+  *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
+    aLoadInfo->GetAllowInsecureRedirectToDataURI(),
+    ipcController
   );
 }
 
 nsresult
-MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& outLoadInfoChildForwardArgs,
+MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& aForwarderArgs,
                              nsILoadInfo* aLoadInfo)
 {
   if (!aLoadInfo) {
@@ -609,8 +617,15 @@ MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& outLoadInfoChild
   nsresult rv;
 
   rv = aLoadInfo->SetAllowInsecureRedirectToDataURI(
-    outLoadInfoChildForwardArgs.allowInsecureRedirectToDataURI());
+    aForwarderArgs.allowInsecureRedirectToDataURI());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  aLoadInfo->ClearController();
+  auto& controller = aForwarderArgs.controller();
+  if (controller.type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
+    aLoadInfo->SetController(
+      ServiceWorkerDescriptor(controller.get_IPCServiceWorkerDescriptor()));
+  }
 
   return NS_OK;
 }

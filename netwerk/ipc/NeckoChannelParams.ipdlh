@@ -128,6 +128,10 @@ struct ParentLoadInfoForwarderArgs
   // checks can pass.
   bool allowInsecureRedirectToDataURI;
 
+  // The ServiceWorker controller that may be set in the parent when
+  // interception occurs.
+  OptionalIPCServiceWorkerDescriptor controller;
+
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
   // in BackgroundUtils.cpp/.h!
