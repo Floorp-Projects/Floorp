@@ -124,7 +124,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 "buildid_option": "BuildID",
                 "application_ini": "application.ini",
                 "log_name": "single_locale",
-                "appName": "Firefox",
                 "hashType": "sha512",
             },
         }

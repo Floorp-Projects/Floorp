@@ -32,7 +32,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": "try", # XXX Invalid
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android", # XXX Validate
 
     # Balrog
