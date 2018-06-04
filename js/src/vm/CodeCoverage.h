@@ -13,7 +13,6 @@
 
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 
 #include "vm/Printer.h"
 
@@ -26,13 +25,13 @@ namespace coverage {
 class LCovSource
 {
   public:
-    LCovSource(LifoAlloc* alloc, JS::UniqueChars name);
+    LCovSource(LifoAlloc* alloc, const char* name);
     LCovSource(LCovSource&& src);
-    ~LCovSource() = default;
+    ~LCovSource();
 
     // Whether the given script name matches this LCovSource.
     bool match(const char* name) const {
-        return strcmp(name_.get(), name) == 0;
+        return strcmp(name_, name) == 0;
     }
 
     // Whether the current source is complete and if it can be flushed.
@@ -54,7 +53,7 @@ class LCovSource
 
   private:
     // Name of the source file.
-    JS::UniqueChars name_;
+    const char* name_;
 
     // LifoAlloc strings which hold the filename of each function as
     // well as the number of hits for each function.

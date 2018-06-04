@@ -17,7 +17,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Unused.h"
 
 #include <chrono>
 #ifdef JS_POSIX_NSPR
@@ -44,7 +43,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <thread>
-#include <utility>
 #ifdef XP_UNIX
 # include <sys/mman.h>
 # include <sys/stat.h>
@@ -4972,12 +4970,11 @@ class AutoCStringVector
         for (size_t i = 0; i < argv_.length(); i++)
             js_free(argv_[i]);
     }
-    bool append(UniqueChars&& arg) {
-        if (!argv_.append(arg.get()))
+    bool append(char* arg) {
+        if (!argv_.append(arg)) {
+            js_free(arg);
             return false;
-
-        // Now owned by this vector.
-        mozilla::Unused << arg.release();
+        }
         return true;
     }
     char* const* get() const {
@@ -4989,22 +4986,22 @@ class AutoCStringVector
     char* operator[](size_t i) const {
         return argv_[i];
     }
-    void replace(size_t i, UniqueChars arg) {
+    void replace(size_t i, char* arg) {
         js_free(argv_[i]);
-        argv_[i] = arg.release();
+        argv_[i] = arg;
     }
-    const char* back() const {
+    char* back() const {
         return argv_.back();
     }
-    void replaceBack(UniqueChars arg) {
+    void replaceBack(char* arg) {
         js_free(argv_.back());
-        argv_.back() = arg.release();
+        argv_.back() = arg;
     }
 };
 
 #if defined(XP_WIN)
 static bool
-EscapeForShell(JSContext* cx, AutoCStringVector& argv)
+EscapeForShell(AutoCStringVector& argv)
 {
     // Windows will break arguments in argv by various spaces, so we wrap each
     // argument in quotes and escape quotes within. Even with quotes, \ will be
@@ -5021,12 +5018,12 @@ EscapeForShell(JSContext* cx, AutoCStringVector& argv)
                 newLen++;
         }
 
-        UniqueChars escaped(cx->pod_malloc<char>(newLen));
+        char* escaped = (char*)js_malloc(newLen);
         if (!escaped)
             return false;
 
         char* src = argv[i];
-        char* dst = escaped.get();
+        char* dst = escaped;
         *dst++ = '\"';
         while (*src) {
             if (*src == '\"' || *src == '\\')
@@ -5035,9 +5032,9 @@ EscapeForShell(JSContext* cx, AutoCStringVector& argv)
         }
         *dst++ = '\"';
         *dst++ = '\0';
-        MOZ_ASSERT(escaped.get() + newLen == dst);
+        MOZ_ASSERT(escaped + newLen == dst);
 
-        argv.replace(i, std::move(escaped));
+        argv.replace(i, escaped);
     }
     return true;
 }
@@ -5066,14 +5063,13 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
-    UniqueChars shellPath = DuplicateString(cx, sArgv[0]);
-    if (!shellPath || !argv.append(std::move(shellPath)))
+    if (!argv.append(js_strdup(sArgv[0])))
         return false;
 
     // Propagate selected flags from the current shell
     for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-        UniqueChars flags = DuplicateString(cx, sPropagatedFlags[i]);
-        if (!flags || !argv.append(std::move(flags)))
+        char* cstr = js_strdup(sPropagatedFlags[i]);
+        if (!cstr || !argv.append(cstr))
             return false;
     }
 
@@ -5081,22 +5077,16 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
         str = ToString(cx, args[i]);
-        if (!str)
-            return false;
-
-        UniqueChars arg(JS_EncodeString(cx, str));
-        if (!arg || !argv.append(std::move(arg)))
+        if (!str || !argv.append(JS_EncodeString(cx, str)))
             return false;
 
         // As a special case, if the caller passes "--js-cache", replace that
         // with "--js-cache=$(jsCacheDir)"
         if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
             UniqueChars newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
-            if (!newArg) {
-                JS_ReportOutOfMemory(cx);
+            if (!newArg)
                 return false;
-            }
-            argv.replaceBack(std::move(newArg));
+            argv.replaceBack(newArg.release());
         }
     }
 
@@ -5106,7 +5096,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
 
     int status = 0;
 #if defined(XP_WIN)
-    if (!EscapeForShell(cx, argv))
+    if (!EscapeForShell(argv))
         return false;
     status = _spawnv(_P_WAIT, sArgv[0], argv.get());
 #else
@@ -8786,15 +8776,14 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableDisassemblyDumps = op.getBoolOption('D');
     cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
-    if (const char* jsCacheOpt = op.getStringOption("js-cache")) {
-        UniqueChars jsCacheChars;
+    jsCacheDir = op.getStringOption("js-cache");
+    if (jsCacheDir) {
         if (!op.getBoolOption("no-js-cache-per-process"))
-            jsCacheChars = JS_smprintf("%s/%u", jsCacheOpt, (unsigned)getpid());
+            jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid()).release();
         else
-            jsCacheChars = DuplicateString(jsCacheOpt);
-        if (!jsCacheChars)
+            jsCacheDir = JS_strdup(cx, jsCacheDir);
+        if (!jsCacheDir)
             return false;
-        jsCacheDir = jsCacheChars.release();
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir).release();
     }
 
