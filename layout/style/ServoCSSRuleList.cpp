@@ -8,6 +8,7 @@
 
 #include "mozilla/ServoCSSRuleList.h"
 
+#include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
@@ -16,7 +17,6 @@
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/ServoFontFeatureValuesRule.h"
-#include "mozilla/ServoKeyframesRule.h"
 #include "mozilla/ServoMediaRule.h"
 #include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoStyleRule.h"
@@ -105,7 +105,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         break;                                                              \
       }
       CASE_RULE(STYLE, Style)
-      CASE_RULE(KEYFRAMES, Keyframes)
+      CASE_RULE_CSS(KEYFRAMES, Keyframes)
       CASE_RULE(MEDIA, Media)
       CASE_RULE_CSS(NAMESPACE, Namespace)
       CASE_RULE(PAGE, Page)
