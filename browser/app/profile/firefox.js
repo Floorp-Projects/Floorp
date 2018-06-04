@@ -1726,4 +1726,4 @@ pref("app.shield.optoutstudies.enabled", false);
 
 // Savant Shield study preferences
 pref("shield.savant.enabled", false);
-pref("shield.savant.loglevel", "debug");
+pref("shield.savant.loglevel", "warn");
