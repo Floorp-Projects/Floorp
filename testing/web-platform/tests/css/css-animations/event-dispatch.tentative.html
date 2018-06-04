@@ -6,57 +6,25 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="support/testcommon.js"></script>
 <style>
-  @keyframes anim {
-    from { margin-left: 0px; }
-    to { margin-left: 100px; }
-  }
+@keyframes anim {
+  from { margin-left: 0px; }
+  to { margin-left: 100px; }
+}
 </style>
 <body>
 <div id="log"></div>
 <script>
 'use strict';
 
-/**
- * Helper class to record the elapsedTime member of each event.
- * The EventWatcher class in testharness.js allows us to wait on
- * multiple events in a certain order but only records the event
- * parameters of the most recent event.
- */
-function AnimationEventHandler(target) {
-  this.target = target;
-  this.target.onanimationstart = evt => {
-   this.animationstart = evt.elapsedTime;
-  };
-  this.target.onanimationiteration = evt => {
-    this.animationiteration = evt.elapsedTime;
-  };
-  this.target.onanimationend = evt => {
-    this.animationend = evt.elapsedTime;
-  };
-  this.target.onanimationcancel = evt => {
-    this.animationcancel = evt.elapsedTime;
-  };
-}
-AnimationEventHandler.prototype.clear = () => {
-  this.animationstart     = undefined;
-  this.animationiteration = undefined;
-  this.animationend       = undefined;
-  this.animationcancel    = undefined;
-}
-
 const setupAnimation = (t, animationStyle) => {
   const div = addDiv(t, { style: 'animation: ' + animationStyle });
-  // Note that this AnimationEventHandler should be created before EventWatcher
-  // to capture all events in the handler prior to the EventWatcher since
-  // testharness.js proceeds when the EventWatcher received watching events.
-  const handler = new AnimationEventHandler(div);
   const watcher = new EventWatcher(t, div, [ 'animationstart',
                                              'animationiteration',
                                              'animationend',
                                              'animationcancel' ]);
   const animation = div.getAnimations()[0];
 
-  return { animation, watcher, div, handler };
+  return { animation, watcher, div };
 };
 
 promise_test(async t => {
@@ -68,19 +36,20 @@ promise_test(async t => {
 }, 'Idle -> Active');
 
 promise_test(async t => {
-  const { animation, watcher, div, handler } = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   // Seek to After phase.
   animation.finish();
 
-  await watcher.wait_for([ 'animationstart', 'animationend' ]);
-  assert_equals(handler.animationstart, 0.0);
-  assert_equals(handler.animationend, 100);
+  const events = await watcher.wait_for(['animationstart', 'animationend'], {
+    record: 'all',
+  });
+  assert_equals(events[0].elapsedTime, 0.0);
+  assert_equals(events[1].elapsedTime, 100);
 }, 'Idle -> After');
 
 promise_test(async t => {
-  const { animation, watcher } =
-    setupAnimation(t, 'anim 100s 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s paused');
 
   await animation.ready;
 
@@ -92,17 +61,19 @@ promise_test(async t => {
 }, 'Before -> Active');
 
 promise_test(async t => {
-  const { animation, watcher, div, handler } =
-    setupAnimation(t, 'anim 100s 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s paused');
+  const allEvents = watcher.wait_for(['animationstart', 'animationend'], {
+    record: 'all',
+  });
 
   await animation.ready;
 
   // Seek to After phase.
   animation.finish();
 
-  await watcher.wait_for([ 'animationstart', 'animationend' ]);
-  assert_equals(handler.animationstart, 0.0);
-  assert_equals(handler.animationend, 100.0);
+  const events = await allEvents;
+  assert_equals(events[0].elapsedTime, 0.0);
+  assert_equals(events[1].elapsedTime, 100.0);
 }, 'Before -> After');
 
 promise_test(async t => {
@@ -118,7 +89,7 @@ promise_test(async t => {
 }, 'Active -> Idle, display: none');
 
 promise_test(async t => {
-  const { animation, watcher, div } = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   await watcher.wait_for('animationstart');
 
@@ -133,7 +104,7 @@ promise_test(async t => {
 
 promise_test(async t => {
   // We should NOT pause animation since calling cancel synchronously.
-  const { animation, watcher, div } = setupAnimation(t, 'anim 100s');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s');
 
   await watcher.wait_for('animationstart');
 
@@ -145,8 +116,7 @@ promise_test(async t => {
 }, 'Active -> Idle, calling Animation.cancel()');
 
 promise_test(async t => {
-  const { animation, watcher } =
-    setupAnimation(t, 'anim 100s 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to Active phase.
   animation.currentTime = 100 * MS_PER_SEC;
@@ -172,8 +142,7 @@ promise_test(async t => {
 }, 'Active -> After');
 
 promise_test(async t => {
-  const { animation, watcher, div, handler } =
-    setupAnimation(t, 'anim 100s 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to After phase.
   animation.finish();
@@ -182,15 +151,15 @@ promise_test(async t => {
   // Seek to Before phase.
   animation.currentTime = 0;
 
-  handler.clear();
-  await watcher.wait_for([ 'animationstart', 'animationend' ]);
-  assert_equals(handler.animationstart, 100.0);
-  assert_equals(handler.animationend, 0.0);
+  const events = await watcher.wait_for(['animationstart', 'animationend'], {
+    record: 'all',
+  });
+  assert_equals(events[0].elapsedTime, 100.0);
+  assert_equals(events[1].elapsedTime, 0.0);
 }, 'After -> Before');
 
 promise_test(async t => {
-  const { animation, watcher, div } =
-    setupAnimation(t, 'anim 100s 100s paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to After phase.
   animation.finish();
@@ -204,8 +173,7 @@ promise_test(async t => {
 }, 'After -> Active');
 
 promise_test(async t => {
-  const { animation, watcher, div }
-    = setupAnimation(t, 'anim 100s 100s 3 paused');
+  const { animation, watcher } = setupAnimation(t, 'anim 100s 100s 3 paused');
 
   await animation.ready;
 
