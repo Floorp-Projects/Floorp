@@ -63,22 +63,22 @@ static_assert(!IsConvertible<nsTArray<const int>, Span<int>>::value,
 /**
  * Rust slice-compatible nullptr replacement value.
  */
-#define SLICE_CONST_INT_PTR reinterpret_cast<const int*>(0x1)
+#define SLICE_CONST_INT_PTR reinterpret_cast<const int*>(alignof(const int))
 
 /**
  * Rust slice-compatible nullptr replacement value.
  */
-#define SLICE_INT_PTR reinterpret_cast<int*>(0x1)
+#define SLICE_INT_PTR reinterpret_cast<int*>(alignof(int))
 
 /**
  * Rust slice-compatible nullptr replacement value.
  */
-#define SLICE_CONST_INT_PTR_PTR reinterpret_cast<const int**>(0x1)
+#define SLICE_CONST_INT_PTR_PTR reinterpret_cast<const int**>(alignof(const int*))
 
 /**
  * Rust slice-compatible nullptr replacement value.
  */
-#define SLICE_INT_PTR_PTR reinterpret_cast<int**>(0x1)
+#define SLICE_INT_PTR_PTR reinterpret_cast<int**>(alignof(int *))
 
 namespace {
 struct BaseClass
@@ -1997,7 +1997,7 @@ SPAN_TEST(as_bytes)
     ASSERT_EQ(bs.size_bytes(), 0U);
     ASSERT_EQ(static_cast<const void*>(bs.data()),
               static_cast<const void*>(s.data()));
-    ASSERT_EQ(bs.data(), reinterpret_cast<const uint8_t*>(0x1));
+    ASSERT_EQ(bs.data(), reinterpret_cast<const uint8_t*>(SLICE_INT_PTR));
   }
 
   {
@@ -2031,7 +2031,7 @@ SPAN_TEST(as_writable_bytes)
     ASSERT_EQ(bs.Length(), 0U);
     ASSERT_EQ(bs.size_bytes(), 0U);
     ASSERT_EQ(static_cast<void*>(bs.data()), static_cast<void*>(s.data()));
-    ASSERT_EQ(bs.data(), reinterpret_cast<uint8_t*>(0x1));
+    ASSERT_EQ(bs.data(), reinterpret_cast<uint8_t*>(SLICE_INT_PTR));
   }
 
   {
