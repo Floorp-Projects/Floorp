@@ -13,9 +13,9 @@
 #include "mozilla/gfx/2D.h"
 #include "brotli/decode.h"
 #include "zlib.h"
+#include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -69,7 +69,7 @@ InspectorFontFace::GetCSSGeneric(nsAString& aName)
   }
 }
 
-ServoFontFaceRule*
+CSSFontFaceRule*
 InspectorFontFace::GetRule()
 {
   if (!mRule) {
@@ -94,7 +94,7 @@ InspectorFontFace::GetRule()
       // it's probably fine for now.
       uint32_t line, column;
       Servo_FontFaceRule_GetSourceLocation(rule, &line, &column);
-      mRule = new ServoFontFaceRule(do_AddRef(rule), line, column);
+      mRule = new CSSFontFaceRule(do_AddRef(rule), line, column);
     }
   }
   return mRule;
