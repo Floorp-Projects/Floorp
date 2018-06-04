@@ -29,7 +29,6 @@ DevToolsModules(
     'breakpoint.js',
     'call-watcher.js',
     'canvas.js',
-    'child-process.js',
     'common.js',
     'css-properties.js',
     'csscoverage.js',
