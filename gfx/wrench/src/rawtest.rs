@@ -154,6 +154,13 @@ impl<'a> RawtestHarness<'a> {
             Some(31),
         );
 
+        let called = Arc::new(AtomicIsize::new(0));
+        let called_inner = Arc::clone(&called);
+
+        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
+            called_inner.fetch_add(1, Ordering::SeqCst);
+        });
+
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
         let info = LayoutPrimitiveInfo::new(rect(0., -9600.0, 1510.000031, 111256.));
@@ -177,13 +184,6 @@ impl<'a> RawtestHarness<'a> {
         let mut epoch = Epoch(0);
 
         self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
-
-        let called = Arc::new(AtomicIsize::new(0));
-        let called_inner = Arc::clone(&called);
-
-        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
-            called_inner.fetch_add(1, Ordering::SeqCst);
-        });
 
         let pixels = self.render_and_get_pixels(window_rect);
 
@@ -225,6 +225,8 @@ impl<'a> RawtestHarness<'a> {
         txn = Transaction::new();
         txn.delete_image(blob_img);
         self.wrench.api.update_resources(txn.resource_updates);
+
+        *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
     fn test_offscreen_blob(&mut self) {
@@ -362,6 +364,13 @@ impl<'a> RawtestHarness<'a> {
             );
         }
 
+        let called = Arc::new(AtomicIsize::new(0));
+        let called_inner = Arc::clone(&called);
+
+        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
+            assert_eq!(0, called_inner.fetch_add(1, Ordering::SeqCst));
+        });
+
         // draw the blob the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
@@ -379,16 +388,9 @@ impl<'a> RawtestHarness<'a> {
 
         self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
 
-        let called = Arc::new(AtomicIsize::new(0));
-        let called_inner = Arc::clone(&called);
-
-        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
-            called_inner.fetch_add(1, Ordering::SeqCst);
-        });
-
         let pixels_first = self.render_and_get_pixels(window_rect);
 
-        assert!(called.load(Ordering::SeqCst) == 1);
+        assert_eq!(1, called.load(Ordering::SeqCst));
 
         // draw the blob image a second time at a different location
 
@@ -411,13 +413,16 @@ impl<'a> RawtestHarness<'a> {
         let pixels_second = self.render_and_get_pixels(window_rect);
 
         // make sure we only requested once
-        assert!(called.load(Ordering::SeqCst) == 1);
+        assert_eq!(1, called.load(Ordering::SeqCst));
 
         // use png;
         // png::save_flipped("out1.png", &pixels_first, window_rect.size);
         // png::save_flipped("out2.png", &pixels_second, window_rect.size);
 
         assert!(pixels_first != pixels_second);
+
+        // cleanup
+        *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
     fn test_blob_update_epoch_test(&mut self) {
@@ -539,6 +544,9 @@ impl<'a> RawtestHarness<'a> {
         assert_eq!(img1_requested.load(Ordering::SeqCst), 3);
         // the second image should've been requested twice
         assert_eq!(img2_requested.load(Ordering::SeqCst), 2);
+
+        // cleanup
+        *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
     fn test_blob_update_test(&mut self) {
