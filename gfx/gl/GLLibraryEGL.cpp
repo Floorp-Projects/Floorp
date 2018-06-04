@@ -43,7 +43,7 @@ namespace mozilla {
 namespace gl {
 
 StaticMutex GLLibraryEGL::sMutex;
-GLLibraryEGL sEGLLibrary;
+StaticRefPtr<GLLibraryEGL> GLLibraryEGL::sEGLLibrary;
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLExtensionNames[] = {
@@ -365,8 +365,16 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
     return true;
 }
 
+/* static */ bool
+GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId) {
+    if (!sEGLLibrary) {
+        sEGLLibrary = new GLLibraryEGL();
+    }
+    return sEGLLibrary->DoEnsureInitialized(forceAccel, out_failureId);
+}
+
 bool
-GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId)
+GLLibraryEGL::DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId)
 {
     if (mInitialized) {
         return true;

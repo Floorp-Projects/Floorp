@@ -67,7 +67,7 @@ RenderDXGITextureHostOGL::EnsureLockable()
     return true;
   }
 
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   // We use EGLStream to get the converted gl handle from d3d texture. The
   // NV_stream_consumer_gltexture_yuv and ANGLE_stream_producer_d3d_texture
@@ -203,7 +203,7 @@ RenderDXGITextureHostOGL::DeleteTextureHandle()
     mTextureHandle[i] = 0;
   }
 
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
   if (mSurface) {
     egl->fDestroySurface(egl->Display(), mSurface);
     mSurface = 0;
@@ -273,7 +273,7 @@ RenderDXGIYCbCrTextureHostOGL::EnsureLockable()
     return true;
   }
 
-  const auto& egl = &gl::sEGLLibrary;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   // The eglCreatePbufferFromClientBuffer doesn't support R8 format, so we
   // use EGLStream to get the converted gl handle from d3d R8 texture.
@@ -413,7 +413,7 @@ RenderDXGIYCbCrTextureHostOGL::DeleteTextureHandle()
     mTextures[i] = nullptr;
     mKeyedMutexs[i] = nullptr;
 
-    const auto& egl = &gl::sEGLLibrary;
+    auto* egl = gl::GLLibraryEGL::Get();
     if (mSurfaces[i]) {
       egl->fDestroySurface(egl->Display(), mSurfaces[i]);
       mSurfaces[i] = 0;
