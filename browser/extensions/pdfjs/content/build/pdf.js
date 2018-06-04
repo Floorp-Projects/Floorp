@@ -1620,13 +1620,9 @@ module.exports = typeof window !== 'undefined' && window.Math === Math ? window 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 let compatibilityParams = Object.create(null);
 ;
-const apiCompatibilityParams = Object.freeze(compatibilityParams);
-exports.apiCompatibilityParams = apiCompatibilityParams;
+exports.apiCompatibilityParams = Object.freeze(compatibilityParams);
 
 /***/ }),
 /* 4 */
@@ -1650,8 +1646,8 @@ exports.GlobalWorkerOptions = GlobalWorkerOptions;
 "use strict";
 
 
-var pdfjsVersion = '2.0.517';
-var pdfjsBuild = '7cd6c0fb';
+var pdfjsVersion = '2.0.536';
+var pdfjsBuild = '5053d02b';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayAPI = __w_pdfjs_require__(9);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(17);
@@ -4844,7 +4840,7 @@ function getDocument(src) {
   params.pdfBug = params.pdfBug === true;
   const NativeImageDecoderValues = Object.values(_util.NativeImageDecoding);
   if (params.nativeImageDecoderSupport === undefined || !NativeImageDecoderValues.includes(params.nativeImageDecoderSupport)) {
-    params.nativeImageDecoderSupport = _util.NativeImageDecoding.DECODE;
+    params.nativeImageDecoderSupport = _api_compatibility.apiCompatibilityParams.nativeImageDecoderSupport || _util.NativeImageDecoding.DECODE;
   }
   if (!Number.isInteger(params.maxImageSize)) {
     params.maxImageSize = -1;
@@ -4853,7 +4849,7 @@ function getDocument(src) {
     params.isEvalSupported = true;
   }
   if (typeof params.disableFontFace !== 'boolean') {
-    params.disableFontFace = false;
+    params.disableFontFace = _api_compatibility.apiCompatibilityParams.disableFontFace || false;
   }
   if (typeof params.disableRange !== 'boolean') {
     params.disableRange = _api_compatibility.apiCompatibilityParams.disableRange || false;
@@ -4929,7 +4925,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.517',
+    apiVersion: '2.0.536',
     source: {
       data: source.data,
       url: source.url,
@@ -5751,7 +5747,11 @@ var WorkerTransport = function WorkerTransportClosure() {
           var updatePassword = password => {
             this._passwordCapability.resolve({ password });
           };
-          loadingTask.onPassword(updatePassword, exception.code);
+          try {
+            loadingTask.onPassword(updatePassword, exception.code);
+          } catch (ex) {
+            this._passwordCapability.reject(ex);
+          }
         } else {
           this._passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
         }
@@ -6054,7 +6054,9 @@ var WorkerTransport = function WorkerTransportClosure() {
         disableRange: params.disableRange,
         disableStream: params.disableStream,
         disableAutoFetch: params.disableAutoFetch,
-        disableCreateObjectURL: params.disableCreateObjectURL
+        disableCreateObjectURL: params.disableCreateObjectURL,
+        disableFontFace: params.disableFontFace,
+        nativeImageDecoderSupport: params.nativeImageDecoderSupport
       });
     }
   };
@@ -6252,8 +6254,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.517';
-  exports.build = build = '7cd6c0fb';
+  exports.version = version = '2.0.536';
+  exports.build = build = '5053d02b';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;

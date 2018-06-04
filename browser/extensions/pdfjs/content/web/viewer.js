@@ -3207,13 +3207,9 @@ exports.OptionKind = OptionKind;
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 let compatibilityParams = Object.create(null);
 ;
-const viewerCompatibilityParams = Object.freeze(compatibilityParams);
-exports.viewerCompatibilityParams = viewerCompatibilityParams;
+exports.viewerCompatibilityParams = Object.freeze(compatibilityParams);
 
 /***/ }),
 /* 9 */
