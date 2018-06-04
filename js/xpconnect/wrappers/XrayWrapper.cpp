@@ -145,39 +145,6 @@ XrayAwareCalleeGlobal(JSObject* fun)
   return js::GetGlobalForObjectCrossCompartment(xrayTarget);
 }
 
-bool
-XrayAwareCalleeGlobalForSpecializedGetters(JSContext* cx,
-                                           JS::Handle<JSObject*> thisObj,
-                                           JS::MutableHandle<JSObject*> global)
-{
-    JS::Rooted<JSObject*> wrappedObj(cx, thisObj);
-    if (!JS_WrapObject(cx, &wrappedObj)) {
-        return false;
-    }
-
-    if (xpc::WrapperFactory::IsXrayWrapper(wrappedObj)) {
-        // Our current compartment would generaly get xrays to thisObj.  That
-        // means we're presumably doing a call over Xrays, an the compartment of
-        // the callee is presumably that of thisObj.  This isn't _necessarily_
-        // true (e.g. chrome code could be using a chrome-side getter and doing
-        // .call() with a content-side this value), but people shouldn't do
-        // that!
-        //
-        // If someoen does do something weird here, the only impact is that we
-        // will create the rejected promise that a promise-returning getter
-        // creates around any exceptions it throws in the "wrong" compartment.
-        // In particular, we might create it in the content compartment even
-        // though we should really have created it in the chrome compartment
-        // (for the case when a chrome getter is invoked with a content object
-        // instead of just invoking the xrayed getter).
-        global.set(js::GetGlobalForObjectCrossCompartment(thisObj));
-        return true;
-    }
-
-    global.set(JS::CurrentGlobalOrNull(cx));
-    return true;
-}
-
 JSObject*
 XrayTraits::getExpandoChain(HandleObject obj)
 {
@@ -1363,12 +1330,6 @@ XrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
 
 static const size_t JSSLOT_XRAY_HOLDER = 0;
 
-static JSObject*
-GetHolder(JSObject* obj)
-{
-    return &js::GetProxyReservedSlot(obj, JSSLOT_XRAY_HOLDER).toObject();
-}
-
 /* static */ JSObject*
 XrayTraits::getHolder(JSObject* wrapper)
 {
@@ -1706,17 +1667,6 @@ DOMXrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
 }
 
 namespace XrayUtils {
-
-JSObject*
-GetNativePropertiesObject(JSContext* cx, JSObject* wrapper)
-{
-    MOZ_ASSERT(js::IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper),
-               "bad object passed in");
-
-    JSObject* holder = GetHolder(wrapper);
-    MOZ_ASSERT(holder, "uninitialized wrapper being used?");
-    return holder;
-}
 
 bool
 HasNativeProperty(JSContext* cx, HandleObject wrapper, HandleId id, bool* hasProp)
