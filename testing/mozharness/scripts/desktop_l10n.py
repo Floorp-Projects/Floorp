@@ -638,12 +638,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         config = self.config
         return (config['mar'], config['mbsdiff'])
 
-    def _mar_dir(self, dirname):
-        """returns the full path of dirname;
-            dirname is an entry in configuration"""
-        dirs = self.query_abs_dirs()
-        return os.path.join(dirs['abs_objdir'], self.config[dirname])
-
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):
         # set the default authentication file based on platform; this
