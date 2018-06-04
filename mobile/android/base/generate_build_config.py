@@ -23,7 +23,6 @@ from __future__ import (
 
 from collections import defaultdict
 import os
-import sys
 
 import buildconfig
 
