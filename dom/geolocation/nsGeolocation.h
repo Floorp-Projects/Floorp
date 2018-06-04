@@ -178,6 +178,9 @@ public:
   // Check to see if any active request requires high accuracy
   bool HighAccuracyRequested();
 
+  // Get the singleton non-window Geolocation instance.  This never returns null.
+  static already_AddRefed<Geolocation> NonWindowSingleton();
+
 private:
 
   ~Geolocation();
@@ -233,6 +236,9 @@ private:
 
   // Array containing already cleared watch IDs
   nsTArray<int32_t> mClearedWatchIDs;
+
+  // Our cached non-window singleton.
+  static mozilla::StaticRefPtr<Geolocation> sNonWindowSingleton;
 };
 
 } // namespace dom
