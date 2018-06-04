@@ -14,11 +14,9 @@
 <script>
 'use strict';
 
-function getMarginLeft(cs) {
-  return parseFloat(cs.marginLeft);
-}
+const getMarginLeft = cs => parseFloat(cs.marginLeft);
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -27,13 +25,13 @@ promise_test(function(t) {
                 'Initial value of margin-left is zero');
   animation.play();
 
-  return animation.ready.then(waitForNextFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(() => {
     assert_greater_than(getMarginLeft(cs), 0,
                         'Playing value of margin-left is greater than zero');
   });
 }, 'play() overrides animation-play-state');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -44,7 +42,7 @@ promise_test(function(t) {
   animation.pause();
   div.style.animationPlayState = 'running';
 
-  return animation.ready.then(waitForNextFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(() => {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), 0,
@@ -52,7 +50,7 @@ promise_test(function(t) {
   });
 }, 'pause() overrides animation-play-state');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -62,28 +60,28 @@ promise_test(function(t) {
   animation.play();
   var previousAnimVal;
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     div.style.animationPlayState = 'running';
     cs.animationPlayState; // Trigger style resolution
     return waitForNextFrame();
-  }).then(function() {
+  }).then(() => {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     div.style.animationPlayState = 'paused';
     return animation.ready;
-  }).then(function() {
+  }).then(() => {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     previousAnimVal = getMarginLeft(cs);
     return waitForNextFrame();
-  }).then(function() {
+  }).then(() => {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'Animated value of margin-left does not change when'
                   + ' paused by style');
   });
 }, 'play() is overridden by later setting "animation-play-state: paused"');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
@@ -98,7 +96,7 @@ promise_test(function(t) {
   animation.play();
   var previousAnimVal = getMarginLeft(cs);
 
-  return animation.ready.then(waitForNextFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(() => {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     assert_greater_than(getMarginLeft(cs), previousAnimVal,
@@ -106,7 +104,7 @@ promise_test(function(t) {
   });
 }, 'play() flushes pending changes to animation-play-state first');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
@@ -128,7 +126,7 @@ promise_test(function(t) {
   animation.pause();
   var previousAnimVal = getMarginLeft(cs);
 
-  return animation.ready.then(waitForNextFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(() => {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), previousAnimVal,
@@ -137,12 +135,12 @@ promise_test(function(t) {
 }, 'pause() applies pending changes to animation-play-state first');
 // (Note that we can't actually test for this; see comment above, in test-body.)
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t, { style: 'animation: anim 1000s' });
   var animation = div.getAnimations()[0];
   var readyPromiseRun = false;
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';
     assert_true(animation.pending && animation.playState === 'paused',
                 'Animation is pause-pending');

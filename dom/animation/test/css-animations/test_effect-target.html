@@ -17,7 +17,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
   var animation = div.getAnimations()[0];
@@ -25,7 +25,7 @@ test(function(t) {
     'Animation.target is the animatable div');
 }, 'Returned CSS animations have the correct effect target');
 
-test(function(t) {
+test(t => {
   addStyle(t, { '.after::after': 'animation: anim 10s, anim 100s;' });
   var div = addDiv(t, { class: 'after' });
   var anims = document.getAnimations();
@@ -35,7 +35,7 @@ test(function(t) {
                 'Both animations return the same target object');
 }, 'effect.target should return the same CSSPseudoElement object each time');
 
-test(function(t) {
+test(t => {
   addStyle(t, { '.after::after': 'animation: anim 10s;' });
   var div = addDiv(t, { class: 'after' });
   var pseudoTarget = document.getAnimations()[0].effect.target;

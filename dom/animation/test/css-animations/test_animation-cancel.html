@@ -20,11 +20,11 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t, { style: 'animation: translateAnim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is animated before cancelling');
     animation.cancel();
@@ -33,12 +33,12 @@ promise_test(function(t) {
   });
 }, 'Animated style is cleared after cancelling a running CSS animation');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t, { style: 'animation: translateAnim 100s forwards' });
   var animation = div.getAnimations()[0];
   animation.finish();
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is filling before cancelling');
     animation.cancel();
@@ -47,7 +47,7 @@ promise_test(function(t) {
   });
 }, 'Animated style is cleared after cancelling a filling CSS animation');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'animation: marginLeftAnim 100s linear' });
   var animation = div.getAnimations()[0];
   animation.cancel();
@@ -61,12 +61,12 @@ test(function(t) {
                 + ' seeked');
 }, 'After canceling an animation, it can still be seeked');
 
-promise_test(function(t) {
+promise_test(t => {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     animation.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
                   'margin-left style is not animated after cancelling');
@@ -74,13 +74,13 @@ promise_test(function(t) {
     assert_equals(getComputedStyle(div).marginLeft, '100px',
                   'margin-left style is animated after re-starting animation');
     return animation.ready;
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.playState, 'running',
                   'Animation succeeds in running after being re-started');
   });
 }, 'After cancelling an animation, it can still be re-used');
 
-test(function(t) {
+test(t => {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
   var animation = div.getAnimations()[0];
@@ -99,7 +99,7 @@ test(function(t) {
 }, 'After cancelling an animation, updating animation properties doesn\'t make'
    + ' it live again');
 
-test(function(t) {
+test(t => {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
   var animation = div.getAnimations()[0];
@@ -133,40 +133,40 @@ test(function(t) {
 }, 'After cancelling an animation, updating animation-play-state doesn\'t'
    + ' make it live again');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t, { style: 'animation: translateAnim 10s both' });
   div.style.marginLeft = '0px';
 
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
 
     div.style.animationName = 'none';
     flushComputedStyle(div);
     return waitForFrame();
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.playState, 'idle');
     assert_equals(getComputedStyle(div).marginLeft, '0px');
   });
 }, 'Setting animation-name to \'none\' cancels the animation');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t, { style: 'animation: translateAnim 10s both' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
 
     div.style.display = 'none';
     return waitForFrame();
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.playState, 'idle');
     assert_equals(getComputedStyle(div).marginLeft, '0px');
   });
 }, 'Setting display:none on an element cancel its animations');
 
-promise_test(function(t) {
+promise_test(t => {
   var parentDiv = addDiv(t);
   var childDiv  = document.createElement('div');
   parentDiv.appendChild(childDiv);
@@ -176,12 +176,12 @@ promise_test(function(t) {
 
   var animation = childDiv.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
 
     parentDiv.style.display = 'none';
     return waitForFrame();
-  }).then(function() {
+  }).then(() => {
     assert_equals(animation.playState, 'idle');
     assert_equals(getComputedStyle(childDiv).marginLeft, '0px');
   });

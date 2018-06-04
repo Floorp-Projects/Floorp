@@ -28,7 +28,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { class: 'before' });
   var pseudoTarget = document.getAnimations()[0].effect.target;
   assert_equals(pseudoTarget.getAnimations().length, 1,
@@ -37,7 +37,7 @@ test(function(t) {
                 'CSS animation name matches');
 }, 'getAnimations returns CSSAnimation objects');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { class: 'after-with-mix-anims-trans' });
   // Trigger transitions
   flushComputedStyle(div);
