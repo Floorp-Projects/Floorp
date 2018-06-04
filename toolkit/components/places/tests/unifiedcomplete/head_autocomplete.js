@@ -172,7 +172,7 @@ async function check_autocomplete(test) {
   await PlacesTestUtils.promiseAsyncUpdates();
 
   // Make an AutoCompleteInput that uses our searches and confirms results.
-  let input = new AutoCompleteInput(["unifiedcomplete"]);
+  let input = test.input || new AutoCompleteInput(["unifiedcomplete"]);
   input.textValue = test.search;
 
   if (test.searchParam)
@@ -286,6 +286,7 @@ async function check_autocomplete(test) {
     Assert.equal(input.textValue, test.completed,
                  "Completed value is correct");
   }
+  return input;
 }
 
 var addBookmark = async function(aBookmarkObj) {

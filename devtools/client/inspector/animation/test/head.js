@@ -761,3 +761,61 @@ function findStopElement(linearGradientEl, offset) {
 
   return null;
 }
+
+/**
+ * Do test for keyframes-graph_computed-value-path-1/2.
+ *
+ * @param {Array} testData
+ */
+async function testKeyframesGraphComputedValuePath(testData) {
+  await addTab(URL_ROOT + "doc_multi_keyframes.html");
+  await removeAnimatedElementsExcept(testData.map(t => `.${ t.targetClass }`));
+  const { animationInspector, panel } = await openAnimationInspector();
+
+  for (const { properties, targetClass } of testData) {
+    info(`Checking keyframes graph for ${ targetClass }`);
+    await clickOnAnimationByTargetSelector(animationInspector,
+                                           panel, `.${ targetClass }`);
+
+    for (const property of properties) {
+      const {
+        name,
+        computedValuePathClass,
+        expectedPathSegments,
+        expectedStopColors,
+      } = property;
+
+      const testTarget = `${ name } in ${ targetClass }`;
+      info(`Checking keyframes graph for ${ testTarget }`);
+      info(`Checking keyframes graph path existence for ${ testTarget }`);
+      const keyframesGraphPathEl = panel.querySelector(`.${ name }`);
+      ok(keyframesGraphPathEl,
+         `The keyframes graph path element of ${ testTarget } should be existence`);
+
+      info(`Checking computed value path existence for ${ testTarget }`);
+      const computedValuePathEl =
+        keyframesGraphPathEl.querySelector(`.${ computedValuePathClass }`);
+      ok(computedValuePathEl,
+         `The computed value path element of ${ testTarget } should be existence`);
+
+      info(`Checking path segments for ${ testTarget }`);
+      const pathEl = computedValuePathEl.querySelector("path");
+      ok(pathEl, `The <path> element of ${ testTarget } should be existence`);
+      assertPathSegments(pathEl, true, expectedPathSegments);
+
+      if (!expectedStopColors) {
+        continue;
+      }
+
+      info(`Checking linearGradient for ${ testTarget }`);
+      const linearGradientEl = computedValuePathEl.querySelector("linearGradient");
+      ok(linearGradientEl,
+         `The <linearGradientEl> element of ${ testTarget } should be existence`);
+
+      for (const expectedStopColor of expectedStopColors) {
+        const { offset, color } = expectedStopColor;
+        assertLinearGradient(linearGradientEl, offset, color);
+      }
+    }
+  }
+}

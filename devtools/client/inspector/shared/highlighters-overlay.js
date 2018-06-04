@@ -443,6 +443,7 @@ class HighlightersOverlay {
     }
 
     this.boxModelHighlighterShown = node;
+    this.emit("box-model-highlighter-shown", node);
   }
 
   /**
@@ -454,7 +455,9 @@ class HighlightersOverlay {
     }
 
     await this.highlighters.BoxModelHighlighter.hide();
+    const node = this.boxModelHighlighterShown;
     this.boxModelHighlighterShown = null;
+    this.emit("box-model-highlighter-hidden", node);
   }
 
   /**

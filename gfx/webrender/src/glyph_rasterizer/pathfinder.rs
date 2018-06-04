@@ -81,7 +81,6 @@ unsafe impl Send for ThreadSafePathfinderFontContext {}
 unsafe impl Sync for ThreadSafePathfinderFontContext { }
 
 impl GlyphRasterizer {
-
     pub(in super) fn add_font_to_pathfinder(&mut self, font_key: &FontKey, template: &FontTemplate) {
         let font_contexts = Arc::clone(&self.font_contexts);
         debug!("add_font_to_pathfinder({:?})", font_key);
@@ -180,56 +179,55 @@ impl GlyphRasterizer {
                 Entry::Vacant(_) => {}
             }
 
-            let cached_glyph_info = match cached_glyph_info {
-                Some(cached_glyph_info) => cached_glyph_info,
-                None => {
-                    let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
+            if cached_glyph_info.is_none() {
+                let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
 
-                    let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
-                        font_key: font.font_key.clone(),
-                        size: font.size,
+                let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
+                    font_key: font.font_key.clone(),
+                    size: font.size,
+                };
+
+                // TODO: pathfinder will need to support 2D subpixel offset
+                let pathfinder_subpixel_offset =
+                    pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset.0 as u8);
+                let pathfinder_glyph_key =
+                    pathfinder_font_renderer::GlyphKey::new(glyph_key.index,
+                                                            pathfinder_subpixel_offset);
+
+                if let Ok(glyph_dimensions) =
+                        pathfinder_font_context.glyph_dimensions(&pathfinder_font_instance,
+                                                                 &pathfinder_glyph_key,
+                                                                 false) {
+                    let render_task_cache_key = RenderTaskCacheKey {
+                        size: TypedSize2D::from_untyped(&glyph_dimensions.size.to_i32()),
+                        kind: RenderTaskCacheKeyKind::Glyph(self.next_gpu_glyph_cache_key),
                     };
-
-                    // TODO: pathfinder will need to support 2D subpixel offset
-                    let pathfinder_subpixel_offset =
-                        pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset.0 as u8);
-                    let pathfinder_glyph_key =
-                        pathfinder_font_renderer::GlyphKey::new(glyph_key.index,
-                                                                pathfinder_subpixel_offset);
-                    let glyph_dimensions =
-                        match pathfinder_font_context.glyph_dimensions(&pathfinder_font_instance,
-                                                                       &pathfinder_glyph_key,
-                                                                       false) {
-                            Ok(glyph_dimensions) => glyph_dimensions,
-                            Err(_) => continue,
-                        };
-
-                    let cached_glyph_info = CachedGlyphInfo {
-                        render_task_cache_key: RenderTaskCacheKey {
-                            size: TypedSize2D::from_untyped(&glyph_dimensions.size.to_i32()),
-                            kind: RenderTaskCacheKeyKind::Glyph(self.next_gpu_glyph_cache_key),
-                        },
+                    cached_glyph_info = Some(CachedGlyphInfo {
+                        render_task_cache_key,
                         format: font.get_glyph_format(),
                         origin: DeviceIntPoint::new(glyph_dimensions.origin.x as i32,
                                                     -glyph_dimensions.origin.y as i32),
-                    };
+                    });
                     self.next_gpu_glyph_cache_key.0 += 1;
-                    cached_glyph_info
                 }
-            };
+            }
 
-            let handle =
-                match self.request_glyph_from_pathfinder_if_necessary(glyph_key,
-                                                                      &font,
-                                                                      cached_glyph_info.clone(),
-                                                                      texture_cache,
-                                                                      gpu_cache,
-                                                                      render_task_cache,
-                                                                      render_task_tree,
-                                                                      render_passes) {
-                    Ok(_) => GlyphCacheEntry::Cached(cached_glyph_info),
-                    Err(_) => GlyphCacheEntry::Blank,
-                };
+            let handle = match cached_glyph_info {
+                Some(glyph_info) => {
+                    match self.request_glyph_from_pathfinder_if_necessary(glyph_key,
+                                                                          &font,
+                                                                          glyph_info.clone(),
+                                                                          texture_cache,
+                                                                          gpu_cache,
+                                                                          render_task_cache,
+                                                                          render_task_tree,
+                                                                          render_passes) {
+                        Ok(_) => GlyphCacheEntry::Cached(glyph_info),
+                        Err(_) => GlyphCacheEntry::Blank,
+                    }
+                }
+                None => GlyphCacheEntry::Blank,
+            };
 
             glyph_key_cache.insert(glyph_key.clone(), handle);
         }

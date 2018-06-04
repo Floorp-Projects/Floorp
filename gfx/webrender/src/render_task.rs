@@ -701,7 +701,13 @@ impl RenderTask {
             }
         };
 
-        let (target_rect, target_index) = self.get_target_rect();
+        let (mut target_rect, target_index) = self.get_target_rect();
+        // The primitives inside a fixed-location render task
+        // are already placed to their corresponding positions,
+        // so the shader doesn't need to shift by the origin.
+        if let RenderTaskLocation::Fixed(_) = self.location {
+            target_rect.origin = DeviceIntPoint::origin();
+        };
 
         RenderTaskData {
             data: [

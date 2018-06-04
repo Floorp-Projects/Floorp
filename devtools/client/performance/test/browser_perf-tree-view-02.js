@@ -124,7 +124,7 @@ add_task(function() {
     "The .A.B node's function cell displays the correct line.");
   is($fun(".call-tree-host", $$(".call-tree-item")[2]).textContent.trim(), "foo",
     "The .A.B node's function cell displays the correct host.");
-  is($fun(".call-tree-category", $$(".call-tree-item")[2]).textContent.trim(), "Styles",
+  is($fun(".call-tree-category", $$(".call-tree-item")[2]).textContent.trim(), "Layout",
     "The .A.B node's function cell displays the correct category.");
 
   is($$dur(3).textContent.trim(), "5 ms",

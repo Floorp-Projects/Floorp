@@ -144,7 +144,7 @@ CompositorVsyncScheduler::PostVRTask(TimeStamp aTimestamp)
       &CompositorVsyncScheduler::DispatchVREvents,
       aTimestamp);
     mCurrentVRListenerTask = task;
-    VRListenerThreadHolder::Loop()->PostDelayedTask(std::move(task.forget()), 0);
+    VRListenerThreadHolder::Loop()->PostDelayedTask(task.forget(), 0);
   }
 }
 

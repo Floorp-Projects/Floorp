@@ -1145,7 +1145,8 @@ void wr_dp_pop_scroll_layer(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_pop_stacking_context(WrState *aState)
+void wr_dp_pop_stacking_context(WrState *aState,
+                                bool aIsReferenceFrame)
 WR_FUNC;
 
 WR_INLINE

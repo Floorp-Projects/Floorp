@@ -131,6 +131,11 @@ static bool gAppShellMethodsSwizzled = false;
 
 - (void)sendEvent:(NSEvent *)anEvent
 {
+  // Mark this function as non-idle because it's one of the exit points from
+  // the event loop (running inside of -[GeckoNSApplication nextEventMatchingMask:...])
+  // into non-idle code. So we basically unset the IDLE category from the inside.
+  AUTO_PROFILER_LABEL("-[GeckoNSApplication sendEvent:]", OTHER);
+
   mozilla::HangMonitor::NotifyActivity();
   if ([anEvent type] == NSApplicationDefined &&
       [anEvent subtype] == kEventSubtypeTrace) {
@@ -152,6 +157,20 @@ static bool gAppShellMethodsSwizzled = false;
                            inMode:(NSString*)mode
                           dequeue:(BOOL)flag
 {
+  // When we're waiting in the event loop, this is the last function under our
+  // control that's on the stack, so this is the function that we mark with the
+  // IDLE category.
+  // However, when we're processing an event or when our CFRunLoopSource runs,
+  // this function is still on the stack - "the event loop calls us". So we
+  // need to mark functions that enter non-idle code with a different profiler
+  // category, usually OTHER. This gives the profiler a rough approximation of
+  // idleness but isn't perfect. For example, sometimes there's some Cocoa-
+  // internal activity that's triggered from the event loop, and we'll
+  // misidentify the stacks for that activity as idle because there's no Gecko
+  // code on the stack that can change the stack's category to something
+  // non-idle.
+  AUTO_PROFILER_LABEL("-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]", IDLE);
+
   if (expiration) {
     mozilla::HangMonitor::Suspend();
   }
@@ -400,7 +419,7 @@ void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  AUTO_PROFILER_LABEL("nsAppShell::ProcessGeckoEvents", EVENTS);
+  AUTO_PROFILER_LABEL("nsAppShell::ProcessGeckoEvents", OTHER);
 
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 

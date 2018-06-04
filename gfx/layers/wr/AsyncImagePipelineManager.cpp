@@ -320,18 +320,19 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
     wr::DisplayListBuilder builder(pipelineId, contentSize);
 
     float opacity = 1.0f;
-    builder.PushStackingContext(wr::ToLayoutRect(pipeline->mScBounds),
-                                nullptr,
-                                nullptr,
-                                &opacity,
-                                pipeline->mScTransform.IsIdentity() ? nullptr : &pipeline->mScTransform,
-                                wr::TransformStyle::Flat,
-                                nullptr,
-                                pipeline->mMixBlendMode,
-                                nsTArray<wr::WrFilterOp>(),
-                                true,
-                                // This is fine to do unconditionally because we only push images here.
-                                wr::GlyphRasterSpace::Screen());
+    Maybe<wr::WrClipId> referenceFrameId = builder.PushStackingContext(
+        wr::ToLayoutRect(pipeline->mScBounds),
+        nullptr,
+        nullptr,
+        &opacity,
+        pipeline->mScTransform.IsIdentity() ? nullptr : &pipeline->mScTransform,
+        wr::TransformStyle::Flat,
+        nullptr,
+        pipeline->mMixBlendMode,
+        nsTArray<wr::WrFilterOp>(),
+        true,
+        // This is fine to do unconditionally because we only push images here.
+        wr::GlyphRasterSpace::Screen());
 
     if (pipeline->mCurrentTexture && !keys.IsEmpty()) {
       LayoutDeviceRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
@@ -358,7 +359,7 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
       }
     }
 
-    builder.PopStackingContext();
+    builder.PopStackingContext(referenceFrameId.isSome());
 
     wr::BuiltDisplayList dl;
     wr::LayoutSize builderContentSize;

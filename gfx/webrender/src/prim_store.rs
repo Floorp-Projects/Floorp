@@ -1469,6 +1469,7 @@ impl PrimitiveStore {
                 let scale = world_scale * frame_context.device_pixel_scale;
                 let scale_au = Au::from_f32_px(scale.0);
                 let needs_update = scale_au != cache_key.scale;
+                let mut new_segments = Vec::new();
 
                 if needs_update {
                     cache_key.scale = scale_au;
@@ -1478,6 +1479,7 @@ impl PrimitiveStore {
                         border,
                         widths,
                         scale,
+                        &mut new_segments,
                     ));
                 }
 
@@ -1495,7 +1497,7 @@ impl PrimitiveStore {
                     |render_tasks| {
                         let task = RenderTask::new_border(
                             task_info.size,
-                            task_info.instances.clone(),
+                            task_info.build_instances(border),
                         );
 
                         let task_id = render_tasks.add(task);
@@ -1508,7 +1510,7 @@ impl PrimitiveStore {
 
                 if needs_update {
                     brush.segment_desc = Some(BrushSegmentDescriptor {
-                        segments: task_info.segments.clone(),
+                        segments: new_segments,
                         clip_mask_kind: BrushClipMaskKind::Unknown,
                     });
                 }

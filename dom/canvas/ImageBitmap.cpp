@@ -804,7 +804,7 @@ ImageBitmap::ToCloneData() const
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
 
-  return std::move(result);
+  return result;
 }
 
 /* static */ already_AddRefed<ImageBitmap>

@@ -178,6 +178,25 @@ fn maybe_radius_yaml(radius: &BorderRadius) -> Option<Yaml> {
     }
 }
 
+fn write_reference_frame(
+    parent: &mut Table,
+    reference_frame: &ReferenceFrame,
+    properties: &SceneProperties,
+    clip_id_mapper: &mut ClipIdMapper,
+) {
+    matrix4d_node(
+        parent,
+        "transform",
+        &properties.resolve_layout_transform(&reference_frame.transform)
+    );
+
+    if let Some(perspective) = reference_frame.perspective {
+        matrix4d_node(parent, "perspective", &perspective);
+    }
+
+    usize_node(parent, "id", clip_id_mapper.add_id(reference_frame.id));
+}
+
 fn write_stacking_context(
     parent: &mut Table,
     sc: &StackingContext,
@@ -185,8 +204,6 @@ fn write_stacking_context(
     filter_iter: AuxIter<FilterOp>,
     clip_id_mapper: &ClipIdMapper,
 ) {
-    matrix4d_node(parent, "transform", &properties.resolve_layout_transform(&sc.transform));
-
     enum_node(parent, "transform-style", sc.transform_style);
 
     let glyph_raster_space = match sc.glyph_raster_space {
@@ -201,10 +218,6 @@ fn write_stacking_context(
 
     if let Some(clip_node_id) = sc.clip_node_id {
         yaml_node(parent, "clip-node", clip_id_mapper.map_id(&clip_node_id));
-    }
-
-    if let Some(perspective) = sc.perspective {
-        matrix4d_node(parent, "perspective", &perspective);
     }
 
     // mix_blend_mode
@@ -1031,6 +1044,19 @@ impl YamlFrameWriter {
                     self.write_display_list(&mut v, display_list, scene, &mut sub_iter, clip_id_mapper);
                     continue_traversal = Some(sub_iter);
                 }
+                PushReferenceFrame(item) => {
+                    str_node(&mut v, "type", "reference-frame");
+                    write_reference_frame(
+                        &mut v,
+                        &item.reference_frame,
+                        &scene.properties,
+                        clip_id_mapper
+                    );
+
+                    let mut sub_iter = base.sub_iter();
+                    self.write_display_list(&mut v, display_list, scene, &mut sub_iter, clip_id_mapper);
+                    continue_traversal = Some(sub_iter);
+                }
                 Clip(item) => {
                     str_node(&mut v, "type", "clip");
                     usize_node(&mut v, "id", clip_id_mapper.add_id(item.id));
@@ -1121,6 +1147,7 @@ impl YamlFrameWriter {
                 }
 
                 PopStackingContext => return,
+                PopReferenceFrame => return,
                 SetGradientStops => panic!("dummy item yielded?"),
                 PushShadow(shadow) => {
                     str_node(&mut v, "type", "shadow");

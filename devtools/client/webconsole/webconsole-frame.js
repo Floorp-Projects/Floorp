@@ -123,6 +123,39 @@ WebConsoleFrame.prototype = {
     return this._destroyer.promise;
   },
 
+  /**
+   * Clear the Web Console output.
+   *
+   * This method emits the "messages-cleared" notification.
+   *
+   * @param boolean clearStorage
+   *        True if you want to clear the console messages storage associated to
+   *        this Web Console.
+   */
+  clearOutput(clearStorage) {
+    if (this.consoleOutput) {
+      this.consoleOutput.dispatchMessagesClear();
+    }
+    this.webConsoleClient.clearNetworkRequests();
+    if (clearStorage) {
+      this.webConsoleClient.clearMessagesCache();
+    }
+    this.jsterm.focus();
+    this.emit("messages-cleared");
+  },
+
+  /**
+   * Remove all of the private messages from the Web Console output.
+   *
+   * This method emits the "private-messages-cleared" notification.
+   */
+  clearPrivateMessages() {
+    if (this.consoleOutput) {
+      this.consoleOutput.dispatchPrivateMessagesClear();
+      this.emit("private-messages-cleared");
+    }
+  },
+
   _onUpdateListeners() {
 
   },
@@ -238,7 +271,7 @@ WebConsoleFrame.prototype = {
       clearShortcut = l10n.getStr("webconsole.clear.key");
     }
 
-    shortcuts.on(clearShortcut, () => this.jsterm.clearOutput(true));
+    shortcuts.on(clearShortcut, () => this.clearOutput(true));
 
     if (this.isBrowserConsole) {
       // Make sure keyboard shortcuts work immediately after opening
@@ -338,7 +371,7 @@ WebConsoleFrame.prototype = {
       packet._type = true;
       this.consoleOutput.dispatchMessageAdd(packet);
     } else {
-      this.jsterm.clearOutput(false);
+      this.clearOutput(false);
     }
 
     if (packet.url) {

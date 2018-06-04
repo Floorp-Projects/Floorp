@@ -5758,7 +5758,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
     ffiType->elements[i] = ffiBaseType;
   ffiType->elements[length] = nullptr;
 
-  return std::move(ffiType);
+  return ffiType;
 }
 
 bool
@@ -6306,7 +6306,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
   ffiType->alignment = structAlign;
 #endif
 
-  return std::move(ffiType);
+  return ffiType;
 }
 
 bool

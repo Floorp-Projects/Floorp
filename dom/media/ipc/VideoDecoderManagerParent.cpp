@@ -44,7 +44,7 @@ VideoDecoderManagerParent::StoreImage(Image* aImage, TextureClient* aTexture)
 
   mImageMap[ret.handle()] = aImage;
   mTextureMap[ret.handle()] = aTexture;
-  return std::move(ret);
+  return ret;
 }
 
 StaticRefPtr<nsIThread> sVideoDecoderManagerThread;

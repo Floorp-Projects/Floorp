@@ -1310,7 +1310,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     mDestroyedFrames = MakeUnique<nsTHashtable<nsPtrHashKey<const nsIFrame>>>();
   }
 
-  AUTO_PROFILER_LABEL("RestyleManager::ProcessRestyledFrames", CSS);
+  AUTO_PROFILER_LABEL("RestyleManager::ProcessRestyledFrames", LAYOUT);
 
   nsPresContext* presContext = PresContext();
   nsCSSFrameConstructor* frameConstructor = presContext->FrameConstructor();

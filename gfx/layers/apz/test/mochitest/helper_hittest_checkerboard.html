@@ -44,11 +44,10 @@ function* test(testDriver) {
   // Hit-test the middle of the scrollframe, which is now inside the
   // checkerboarded region, and check that we hit the scrollframe and
   // not its parent.
-  var {hitInfo, scrollId} = hitTest(centerOf(scroller));
-  is(hitInfo, APZHitResultFlags.VISIBLE,
-     "active scrollframe hit info");
-  is(scrollId, scrollerViewId,
-     "active scrollframe scrollid");
+  checkHitResult(hitTest(centerOf(scroller)),
+                 APZHitResultFlags.VISIBLE,
+                 scrollerViewId,
+                 "active scrollframe");
 
   subtestDone();
 }
