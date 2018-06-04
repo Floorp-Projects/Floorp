@@ -672,7 +672,7 @@ var Policies = {
           });
         }
         if (param.Default) {
-          runOnce("setDefaultSearchEngine", () => {
+          runOncePerModification("setDefaultSearchEngine", param.Default, () => {
             let defaultEngine;
             try {
               defaultEngine = Services.search.getEngineByName(param.Default);
