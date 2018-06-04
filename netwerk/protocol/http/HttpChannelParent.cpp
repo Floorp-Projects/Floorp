@@ -1445,21 +1445,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   ParentLoadInfoForwarderArgs loadInfoForwarderArg;
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
 
-  // Maybe pass back the ServiceWorkerDescriptor controller for this channel.
-  // For subresource loads the controller is already known when the channel
-  // is first open and comes down to us via the LoadInfo.  For non-subresource
-  // loads, however, the controller is selected based on the URL by the
-  // ServiceWorkerManager.  In these cases we need to communicate the controller
-  // back to the child process so the resulting window/worker can set its
-  // navigator.serviceWorker.controller correctly immediately.
-  OptionalIPCServiceWorkerDescriptor ipcController = void_t();
-  if (ServiceWorkerParentInterceptEnabled() && loadInfo) {
-    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
-    if (controller.isSome()) {
-      ipcController = controller.ref().ToIPC();
-    }
-  }
-
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
   rv = NS_OK;
@@ -1479,7 +1464,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           cacheKey,
                           altDataType,
                           altDataLen,
-                          ipcController,
                           applyConversion))
   {
     rv = NS_ERROR_UNEXPECTED;
