@@ -46,25 +46,24 @@ class MachCommands(MachCommandBase):
         else:
             return os.path.join(self.topobjdir, objdir)
 
-
     @Command('android', category='devenv',
-        description='Run Android-specific commands.',
-        conditions=[conditions.is_android])
+             description='Run Android-specific commands.',
+             conditions=[conditions.is_android])
     def android(self):
         pass
 
     @SubCommand('android', 'assemble-app',
-        """Assemble Firefox for Android.
+                """Assemble Firefox for Android.
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_assemble_app(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] + ['-x', 'lint', '--continue'] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] +
+                          ['-x', 'lint', '--continue'] + args, verbose=True)
 
         return ret
 
-
     @SubCommand('android', 'generate-sdk-bindings',
-        """Generate SDK bindings used when building GeckoView.""")
+                """Generate SDK bindings used when building GeckoView.""")
     @CommandArgument('inputs', nargs='+', help='config files, like [/path/to/ClassName-classes.txt]+')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_sdk_bindings(self, inputs, args):
@@ -77,35 +76,36 @@ class MachCommands(MachCommandBase):
         bindings_inputs = list(itertools.chain(*((input, stem(input)) for input in inputs)))
         bindings_args = '-Pgenerate_sdk_bindings_args={}'.format(':'.join(bindings_inputs))
 
-        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args, verbose=True)
+        ret = self.gradle(
+            self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args, verbose=True)
 
         return ret
-
 
     @SubCommand('android', 'generate-generated-jni-wrappers',
-        """Generate GeckoView JNI wrappers used when building GeckoView.""")
+                """Generate GeckoView JNI wrappers used when building GeckoView.""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_generated_jni_wrappers(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS'] + args, verbose=True)
+        ret = self.gradle(
+            self.substs['GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS'] + args, verbose=True)
 
         return ret
-
 
     @SubCommand('android', 'generate-fennec-jni-wrappers',
-        """Generate Fennec-specific JNI wrappers used when building Firefox for Android.""")
+                """Generate Fennec-specific JNI wrappers used when building Firefox for Android.""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_generate_fennec_jni_wrappers(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS'] + args, verbose=True)
+        ret = self.gradle(
+            self.substs['GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS'] + args, verbose=True)
 
         return ret
 
-
     @SubCommand('android', 'test',
-        """Run Android local unit tests.
+                """Run Android local unit tests.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] +
+                          ["--continue"] + args, verbose=True)
 
         ret |= self._parse_android_test_results('public/app/unittest', 'gradle/build/mobile/android/app',
                                                 (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],))
@@ -152,7 +152,8 @@ class MachCommands(MachCommandBase):
                 # And make the report display as soon as possible.
                 failed = root.findall('testcase/error') or root.findall('testcase/failure')
                 if failed:
-                    print('TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))
+                    print(
+                        'TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))
 
                 print('SUITE-START | android-test | {} {}'.format(report, root.get('name')))
 
@@ -191,13 +192,13 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-
     @SubCommand('android', 'lint',
-        """Run Android lint.
+                """Run Android lint.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] +
+                          ["--continue"] + args, verbose=True)
 
         # Android Lint produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -210,7 +211,8 @@ class MachCommands(MachCommandBase):
 
         reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
-            f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
+            f = open(os.path.join(
+                self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
             root = tree.getroot()
 
@@ -236,20 +238,21 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-
     @SubCommand('android', 'checkstyle',
-        """Run Android checkstyle.
+                """Run Android checkstyle.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_checkstyle(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] +
+                          ["--continue"] + args, verbose=True)
 
         # Checkstyle produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'), 'rt')
+        f = open(os.path.join(self.topobjdir,
+                              'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'), 'rt')
         tree = ET.parse(f)
         root = tree.getroot()
 
@@ -290,13 +293,13 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-
     @SubCommand('android', 'findbugs',
-        """Run Android findbugs.
+                """Run Android findbugs.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-findbugs""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] +
+                          ["--continue"] + args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -310,7 +313,8 @@ class MachCommands(MachCommandBase):
         reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
         for report in reports:
             try:
-                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', 'findbugs-{}-output.xml'.format(report)), 'rt')
+                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs',
+                                      'findbugs-{}-output.xml'.format(report)), 'rt')
             except IOError:
                 continue
 
@@ -332,7 +336,8 @@ class MachCommands(MachCommandBase):
                 # There's no particular advantage to formatting the
                 # error, so for now let's just output the <error> XML
                 # tag.
-                print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report, error.get('type'), error.find('Class').get('classname')))
+                print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report,
+                                                                 error.get('type'), error.find('Class').get('classname')))
                 for line in ET.tostring(error).strip().splitlines():
                     print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report, error.get('type'), line))
                 ret |= 1
@@ -340,44 +345,44 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-
     @SubCommand('android', 'gradle-dependencies',
-        """Collect Android Gradle dependencies.
+                """Collect Android Gradle dependencies.
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_gradle_dependencies(self, args):
         # We don't want to gate producing dependency archives on clean
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
-        self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] + ["--continue"] + args, verbose=True)
+        self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] +
+                    ["--continue"] + args, verbose=True)
 
         return 0
 
-
     @SubCommand('android', 'archive-geckoview',
-        """Create GeckoView archives.
+                """Create GeckoView archives.
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_archive_geckoview(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(
+            self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args, verbose=True)
 
         return ret
 
     @SubCommand('android', 'geckoview-docs',
-        """Create GeckoView javadoc and optionally upload to Github""")
+                """Create GeckoView javadoc and optionally upload to Github""")
     @CommandArgument('--archive', action='store_true',
-        help='Generate a javadoc archive.')
+                     help='Generate a javadoc archive.')
     @CommandArgument('--upload', metavar='USER/REPO',
-        help='Upload generated javadoc to Github, '
-             'using the specified USER/REPO.')
+                     help='Upload generated javadoc to Github, '
+                     'using the specified USER/REPO.')
     @CommandArgument('--upload-branch', metavar='BRANCH[/PATH]',
-        default='gh-pages/javadoc',
-        help='Use the specified branch/path for commits.')
+                     default='gh-pages/javadoc',
+                     help='Use the specified branch/path for commits.')
     @CommandArgument('--upload-message', metavar='MSG',
-        default='GeckoView docs upload',
-        help='Use the specified message for commits.')
+                     default='GeckoView docs upload',
+                     help='Use the specified message for commits.')
     @CommandArgument('--variant', default='debug',
-        help='Gradle variant used to generate javadoc.')
+                     help='Gradle variant used to generate javadoc.')
     def android_geckoview_docs(self, archive, upload, upload_branch,
                                upload_message, variant):
 
@@ -454,12 +459,11 @@ class MachCommands(MachCommandBase):
             mozfile.remove(keyfile)
         return 0
 
-
     @Command('gradle', category='devenv',
-        description='Run gradle.',
-        conditions=[conditions.is_android])
+             description='Run gradle.',
+             conditions=[conditions.is_android])
     @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output for what commands the build is running.')
+                     help='Verbose output for what commands the build is running.')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def gradle(self, args, verbose=False):
         if not verbose:
@@ -472,7 +476,7 @@ class MachCommands(MachCommandBase):
         java_home = os.path.dirname(os.path.dirname(self.substs['JAVA']))
 
         gradle_flags = self.substs.get('GRADLE_FLAGS', '') or \
-                       os.environ.get('GRADLE_FLAGS', '')
+            os.environ.get('GRADLE_FLAGS', '')
         gradle_flags = shell_split(gradle_flags)
 
         # We force the Gradle JVM to run with the UTF-8 encoding, since we
@@ -494,17 +498,17 @@ class MachCommands(MachCommandBase):
         # and especially https://stackoverflow.com/a/21755671.
 
         return self.run_process([self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
-            append_env={
+                                append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,
                 'JAVA_TOOL_OPTIONS': '-Dfile.encoding=utf-8',
             },
-            pass_thru=True, # Allow user to run gradle interactively.
-            ensure_exit_code=False, # Don't throw on non-zero exit code.
+            pass_thru=True,  # Allow user to run gradle interactively.
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir))
 
     @Command('gradle-install', category='devenv',
-        conditions=[REMOVED])
+             conditions=[REMOVED])
     def gradle_install(self):
         pass
 
@@ -517,21 +521,22 @@ class AndroidEmulatorCommands(MachCommandBase):
        the tooltool server and installed.
     """
     @Command('android-emulator', category='devenv',
-        conditions=[],
-        description='Run the Android emulator with an AVD from test automation.')
+             conditions=[],
+             description='Run the Android emulator with an AVD from test automation.')
     @CommandArgument('--version', metavar='VERSION', choices=['4.3', '6.0', '7.0', 'x86', 'x86-6.0', 'x86-7.0'],
-        help='Specify Android version to run in emulator. One of "4.3", "6.0", "7.0", "x86", "x86-6.0", or "x86-7.0".',
-        default='4.3')
+                     help='Specify Android version to run in emulator. One of "4.3", "6.0", "7.0", "x86", "x86-6.0", or "x86-7.0".',
+                     default='4.3')
     @CommandArgument('--wait', action='store_true',
-        help='Wait for emulator to be closed.')
+                     help='Wait for emulator to be closed.')
     @CommandArgument('--force-update', action='store_true',
-        help='Update AVD definition even when AVD is already installed.')
+                     help='Update AVD definition even when AVD is already installed.')
     @CommandArgument('--verbose', action='store_true',
-        help='Log informative status messages.')
+                     help='Log informative status messages.')
     def emulator(self, version, wait=False, force_update=False, verbose=False):
         from mozrunner.devices.android_device import AndroidEmulator
 
-        emulator = AndroidEmulator(version, verbose, substs=self.substs, device_serial='emulator-5554')
+        emulator = AndroidEmulator(version, verbose, substs=self.substs,
+                                   device_serial='emulator-5554')
         if emulator.is_running():
             # It is possible to run multiple emulators simultaneously, but:
             #  - if more than one emulator is using the same avd, errors may
@@ -597,12 +602,12 @@ class AutophoneCommands(MachCommandBase):
        If necessary, autophone is cloned from github, installed, and configured.
     """
     @Command('autophone', category='devenv',
-        conditions=[],
-        description='Run autophone.')
+             conditions=[],
+             description='Run autophone.')
     @CommandArgument('--clean', action='store_true',
-        help='Delete an existing autophone installation.')
+                     help='Delete an existing autophone installation.')
     @CommandArgument('--verbose', action='store_true',
-        help='Log informative status messages.')
+                     help='Log informative status messages.')
     def autophone(self, clean=False, verbose=False):
         import platform
         from mozrunner.devices.autophone import AutophoneRunner
@@ -610,7 +615,7 @@ class AutophoneCommands(MachCommandBase):
         if platform.system() == "Windows":
             # Autophone is normally run on Linux or OSX.
             self.log(logging.ERROR, "autophone", {},
-                "This mach command is not supported on Windows!")
+                     "This mach command is not supported on Windows!")
             return -1
 
         runner = AutophoneRunner(self, verbose)
