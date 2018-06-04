@@ -5,36 +5,25 @@ add_task(async function() {
   const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
   const URL = ROOT + "discovery.html";
 
+  let iconPromise = waitForFaviconMessage(true, "http://mochi.test:8888/favicon.ico");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
-
-  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
-  // favicon loads, we have to wait some time before checking that icon was
-  // stored properly.
-  let promiseIcon = BrowserTestUtils.waitForCondition(
-    () => {
-      let tabIcon = gBrowser.getIcon();
-      info("Found icon " + tabIcon);
-      return tabIcon == ROOT + "two.png";
-    },
-    "wait for icon load to finish", 200, 25);
+  let icon = await iconPromise;
 
   await ContentTask.spawn(gBrowser.selectedBrowser, ROOT, root => {
     let doc = content.document;
-    let head = doc.getElementById("linkparent");
+    let head = doc.head;
     let link = doc.createElement("link");
     link.rel = "icon";
-    link.href = root + "one.png";
+    link.href = root + "rich_moz_1.png";
     link.type = "image/png";
     head.appendChild(link);
     let link2 = link.cloneNode(false);
-    link2.href = root + "two.png";
+    link2.href = root + "rich_moz_2.png";
     head.appendChild(link2);
   });
 
-  await promiseIcon;
-  // The test must have at least one pass.
-  Assert.equal(gBrowser.getIcon(), ROOT + "two.png",
-               "The expected icon has been set");
+  icon = await waitForFaviconMessage();
+  Assert.equal(icon.iconURL, ROOT + "rich_moz_2.png", "The expected icon has been set");
 
   BrowserTestUtils.removeTab(tab);
 });

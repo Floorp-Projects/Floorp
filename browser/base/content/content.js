@@ -321,7 +321,7 @@ var ClickEventHandler = {
 };
 ClickEventHandler.init();
 
-ContentLinkHandler.init(this);
+new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
 
 // TODO: Load this lazily so the JSM is run only if a relevant event/message fires.
