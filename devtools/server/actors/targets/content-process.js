@@ -4,6 +4,13 @@
 
 "use strict";
 
+/*
+ * Target actor for all resources in a content process of Firefox (chrome sandboxes, frame
+ * scripts, documents, etc.)
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 
@@ -12,11 +19,11 @@ const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { ActorPool } = require("devtools/server/main");
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { TabSources } = require("./utils/TabSources");
+const { TabSources } = require("devtools/server/actors/utils/TabSources");
 
 loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
 
-function ChildProcessActor(connection) {
+function ContentProcessTargetActor(connection) {
   this.conn = connection;
   this._contextPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._contextPool);
@@ -35,10 +42,10 @@ function ChildProcessActor(connection) {
       while (windowEnumerator.hasMoreElements()) {
         const window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
         const tabChildGlobal = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDocShell)
-                                   .sameTypeRootTreeItem
-                                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIContentFrameMessageManager);
+                                     .getInterface(Ci.nsIDocShell)
+                                     .sameTypeRootTreeItem
+                                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIContentFrameMessageManager);
         tabs.push(tabChildGlobal);
       }
       return tabs;
@@ -58,10 +65,10 @@ function ChildProcessActor(connection) {
   this._workerTargetActorPool = null;
   this._onWorkerListChanged = this._onWorkerListChanged.bind(this);
 }
-exports.ChildProcessActor = ChildProcessActor;
+exports.ContentProcessTargetActor = ContentProcessTargetActor;
 
-ChildProcessActor.prototype = {
-  actorPrefix: "process",
+ContentProcessTargetActor.prototype = {
+  actorPrefix: "contentProcessTarget",
 
   get isRootActor() {
     return true;
@@ -160,6 +167,6 @@ ChildProcessActor.prototype = {
   },
 };
 
-ChildProcessActor.prototype.requestTypes = {
-  "listWorkers": ChildProcessActor.prototype.onListWorkers,
+ContentProcessTargetActor.prototype.requestTypes = {
+  "listWorkers": ContentProcessTargetActor.prototype.onListWorkers,
 };

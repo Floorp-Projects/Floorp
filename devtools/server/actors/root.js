@@ -519,7 +519,8 @@ RootActor.prototype = {
       }
       if (!this._parentProcessTargetActor) {
         // Create a ParentProcessTargetActor for the parent process
-        const { ParentProcessTargetActor } = require("devtools/server/actors/targets/parent-process");
+        const { ParentProcessTargetActor } =
+          require("devtools/server/actors/targets/parent-process");
         this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
         this._globalActorPool.addActor(this._parentProcessTargetActor);
       }

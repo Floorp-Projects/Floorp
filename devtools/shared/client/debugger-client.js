@@ -514,8 +514,8 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Fetch the ParentProcessTargetActor for the main process or ChildProcessActor for a
-   * a given child process ID.
+   * Fetch the ParentProcessTargetActor for the main process or
+   * ContentProcessTargetActor for a given content process ID.
    *
    * @param number id
    *        The ID for the process to attach (returned by `listProcesses`).
