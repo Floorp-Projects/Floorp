@@ -97,8 +97,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
             **buildscript_kwargs
         )
         self.base_package_name = None
-        self.buildid = None
-        self.make_ident_output = None
         self.repack_env = None
         self.revision = None
         self.upload_env = None
@@ -134,57 +132,11 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
     def query_upload_env(self):
         if self.upload_env:
             return self.upload_env
-        c = self.config
-        replace_dict = {
-            'buildid': self.query_buildid(),
-            'version': self.query_version(),
-        }
-        replace_dict.update(c)
-
-        # Android l10n builds use a non-standard location for l10n files.  Other
-        # builds go to 'mozilla-central-l10n', while android builds add part of
-        # the platform name as well, like 'mozilla-central-android-api-16-l10n'.
-        # So we override the branch with something that contains the platform
-        # name.
-        replace_dict['branch'] = c['upload_branch']
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
-                                    replace_dict=replace_dict)
+                                    replace_dict=self.config)
         self.upload_env = upload_env
         return self.upload_env
-
-    def _query_make_ident_output(self):
-        """Get |make ident| output from the objdir.
-        Only valid after setup is run.
-        """
-        if self.make_ident_output:
-            return self.make_ident_output
-        env = self.query_repack_env()
-        dirs = self.query_abs_dirs()
-        output = self.get_output_from_command(["make", "ident"],
-                                              cwd=dirs['abs_locales_dir'],
-                                              env=env,
-                                              silent=True,
-                                              halt_on_failure=True)
-        parser = OutputParser(config=self.config, log_obj=self.log_obj,
-                              error_list=MakefileErrorList)
-        parser.add_lines(output)
-        self.make_ident_output = output
-        return output
-
-    def query_buildid(self):
-        """Get buildid from the objdir.
-        Only valid after setup is run.
-        """
-        if self.buildid:
-            return self.buildid
-        r = re.compile("buildid (\d+)")
-        output = self._query_make_ident_output()
-        for line in output.splitlines():
-            m = r.match(line)
-            if m:
-                self.buildid = m.groups()[0]
-        return self.buildid
 
     def query_revision(self):
         """ Get the gecko revision in this order of precedence
@@ -289,7 +241,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
 
     # list_locales() is defined in LocalesMixin.
 
-    def _setup_configure(self, buildid=None):
+    def _setup_configure(self):
         dirs = self.query_abs_dirs()
         env = self.query_repack_env()
 
@@ -306,11 +258,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
             'config/export',
             'buildid.h',
         ]
-
-        # Force the buildid if one is defined.
-        if buildid:
-            env = dict(env)
-            env['MOZ_BUILD_DATE'] = str(buildid)
 
         self.run_command([sys.executable, mach, 'build'] + targets,
                          cwd=dirs['abs_mozilla_dir'],
