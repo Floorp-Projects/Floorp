@@ -809,14 +809,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-// Flac
-// Use new MediaFormatReader architecture for plain ogg.
-VARCACHE_PREF(
-  "media.ogg.flac.enabled",
-   MediaOggFlacEnabled,
-  RelaxedAtomicBool, true
-)
-
 VARCACHE_PREF(
   "media.flac.enabled",
    MediaFlacEnabled,
