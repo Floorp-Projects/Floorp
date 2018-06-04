@@ -28,6 +28,7 @@ using namespace jit;
 
 using mozilla::Abs;
 using mozilla::BitwiseCast;
+using mozilla::DebugOnly;
 using mozilla::IsPositiveZero;
 using mozilla::Maybe;
 

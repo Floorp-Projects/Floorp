@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include <utility>
+
 #include "jit/CodeGenerator.h"
 #include "jit/CompactBuffer.h"
 #include "jit/JitcodeMap.h"
