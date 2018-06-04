@@ -46,6 +46,10 @@ protected:
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
+#elif defined(MOZ_WIDGET_ANDROID)
+  bool SubmitFrame(const layers::SurfaceTextureDescriptor& aSurface,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect) override;
 #endif
 
 public:
@@ -106,12 +110,15 @@ private:
   // there can only be one
   RefPtr<impl::VRDisplayExternal> mDisplay;
   nsTArray<RefPtr<impl::VRControllerExternal>> mExternalController;
-
 #if defined(XP_MACOSX)
   int mShmemFD;
 #elif defined(XP_WIN)
   HANDLE mShmemFile;
+#elif defined(MOZ_WIDGET_ANDROID)
+  bool mDoShutdown;
+  bool mExternalStructFailed;
 #endif
+
   volatile VRExternalShmem* mExternalShmem;
 
   void OpenShmem();

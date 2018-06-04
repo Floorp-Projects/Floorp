@@ -26,9 +26,9 @@
 
 #endif
 
-#if defined(MOZ_ANDROID_GOOGLE_VR)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/CompositorThread.h"
-#endif // defined(MOZ_ANDROID_GOOGLE_VR)
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 
 using namespace mozilla;
@@ -77,7 +77,7 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
   mDisplayInfo.mPresentingGroups = 0;
   mDisplayInfo.mGroupMask = kVRGroupContent;
   mDisplayInfo.mFrameId = 0;
-  mDisplayInfo.mPresentingGeneration = 0;
+  mDisplayInfo.mDisplayState.mPresentingGeneration = 0;
   mDisplayInfo.mDisplayState.mDisplayName[0] = '\0';
 }
 
@@ -268,9 +268,9 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
                                    const gfx::Rect& aLeftEyeRect,
                                    const gfx::Rect& aRightEyeRect)
 {
-#if !defined(MOZ_ANDROID_GOOGLE_VR)
+#if !defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
-#endif // !defined(MOZ_ANDROID_GOOGLE_VR)
+#endif // !defined(MOZ_WIDGET_ANDROID)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
 
   mFrameStarted = false;
@@ -337,10 +337,10 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
       }
       break;
     }
-#elif defined(MOZ_ANDROID_GOOGLE_VR)
-    case SurfaceDescriptor::TEGLImageDescriptor: {
-      const EGLImageDescriptor& desc = aTexture.get_EGLImageDescriptor();
-      if (!SubmitFrame(&desc, aLeftEyeRect, aRightEyeRect)) {
+#elif defined(MOZ_WIDGET_ANDROID)
+    case SurfaceDescriptor::TSurfaceTextureDescriptor: {
+      const SurfaceTextureDescriptor& desc = aTexture.get_SurfaceTextureDescriptor();
+      if (!SubmitFrame(desc, aLeftEyeRect, aRightEyeRect)) {
         return;
       }
       break;
@@ -352,7 +352,7 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
     }
   }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_ANDROID_GOOGLE_VR)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
 
   /**
    * Trigger the next VSync immediately after we are successfully
@@ -381,11 +381,11 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect)
 {
-#if !defined(MOZ_ANDROID_GOOGLE_VR)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (!mSubmitThread) {
     mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
   }
-#endif // !defined(MOZ_ANDROID_GOOGLE_VR)
+#endif // !defined(MOZ_WIDGET_ANDROID)
 
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
@@ -402,12 +402,12 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
       StoreCopyPassByConstLRef<gfx::Rect>, StoreCopyPassByConstLRef<gfx::Rect>>(
       "gfx::VRDisplayHost::SubmitFrameInternal", this, &VRDisplayHost::SubmitFrameInternal,
       aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
-#if !defined(MOZ_ANDROID_GOOGLE_VR)
+#if !defined(MOZ_WIDGET_ANDROID)
   mSubmitThread->Start();
   mSubmitThread->PostTask(submit.forget());
 #else
   CompositorThreadHolder::Loop()->PostTask(submit.forget());
-#endif // defined(MOZ_ANDROID_GOOGLE_VR)
+#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 bool
