@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ShieldStudySavant"];
+var EXPORTED_SYMBOLS = ["SavantShieldStudy"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -17,14 +17,14 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
   let consoleOptions = {
     maxLogLevelPref: PREF_LOG_LEVEL,
-    prefix: "ShieldStudySavant",
+    prefix: "SavantShieldStudy",
   };
   return new ConsoleAPI(consoleOptions);
 });
 
-class ShieldStudySavantClass {
+class SavantShieldStudyClass {
   constructor() {
-    this.SHIELD_STUDY_SAVANT_PREF = "shield.savant.enabled";
+    this.STUDY_PREF = "shield.savant.enabled";
     this.STUDY_TELEMETRY_CATEGORY = "savant";
   }
 
@@ -38,15 +38,15 @@ class ShieldStudySavantClass {
       return;
     }
     // check the pref in case Normandy flipped it on before we could add the pref listener
-    this.shouldCollect = Services.prefs.getBoolPref(this.SHIELD_STUDY_SAVANT_PREF);
+    this.shouldCollect = Services.prefs.getBoolPref(this.STUDY_PREF);
     if (this.shouldCollect) {
       this.TelemetryEvents.enableCollection();
     }
-    Services.prefs.addObserver(this.SHIELD_STUDY_SAVANT_PREF, this);
+    Services.prefs.addObserver(this.STUDY_PREF, this);
   }
 
   observe(subject, topic, data) {
-    if (topic === "nsPref:changed" && data === this.SHIELD_STUDY_SAVANT_PREF) {
+    if (topic === "nsPref:changed" && data === this.STUDY_PREF) {
       // toggle state of the pref
       this.shouldCollect = !this.shouldCollect;
       if (this.shouldCollect) {
@@ -64,7 +64,7 @@ class ShieldStudySavantClass {
 
   endStudy(reason) {
     this.TelemetryEvents.disableCollection();
-    // TODO: send endStudy ping with reason code
+    // Services.telemetry.recordEvent(this.STUDY_TELEMETRY_CATEGORY, "end_study", reason);
     this.uninit();
   }
 
@@ -74,13 +74,13 @@ class ShieldStudySavantClass {
     // nsBrowserGlue.js to see where Normandy uninits)
     // TODO: See what happens during Normandy's uninit method to ensure nothing
     // is forgotten.
-    Services.prefs.removeObserver(this.SHIELD_STUDY_SAVANT_PREF, this);
-    Services.prefs.clearUserPref(this.SHIELD_STUDY_SAVANT_PREF);
+    Services.prefs.removeObserver(this.STUDY_PREF, this);
+    Services.prefs.clearUserPref(this.STUDY_PREF);
     Services.prefs.clearUserPref(PREF_LOG_LEVEL);
   }
 }
 
-const ShieldStudySavant = new ShieldStudySavantClass();
+const SavantShieldStudy = new SavantShieldStudyClass();
 
 // references:
 // - https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/normandy/lib/TelemetryEvents.jsm
@@ -88,10 +88,6 @@ const ShieldStudySavant = new ShieldStudySavantClass();
 class TelemetryEvents {
   constructor(studyCategory) {
     this.STUDY_TELEMETRY_CATEGORY = studyCategory;
-  }
-
-  sendEvent(method, object, value, extra) {
-    Services.telemetry.recordEvent(this.STUDY_TELEMETRY_CATEGORY, method, object, value, extra);
   }
 
   enableCollection() {

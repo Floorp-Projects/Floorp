@@ -98,7 +98,7 @@ savant:
       This is recorded on each search navigation.
       The value field records the action used to trigger the search:
         "enter", "oneoff", "suggestion", "alias", null (for contextmenu)
-    bug_numbers: [1316281, 1457226]
+    bug_numbers: [1316281, 1457226, 1462725]
     notification_emails:
       - "bdanforth@mozilla.com"
       - "shong@mozilla.com"
