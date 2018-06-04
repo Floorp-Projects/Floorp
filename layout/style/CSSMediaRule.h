@@ -8,23 +8,48 @@
 #define mozilla_dom_CSSMediaRule_h
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla {
 namespace dom {
 
-class CSSMediaRule : public css::ConditionRule
+class CSSMediaRule final : public css::ConditionRule
 {
-protected:
-  using ConditionRule::ConditionRule;
-  virtual ~CSSMediaRule() {}
-
 public:
+  CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
+               uint32_t aLine, uint32_t aColumn);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSMediaRule, css::ConditionRule)
+
+  void SetStyleSheet(StyleSheet* aSheet) override;
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  RawServoMediaRule* Raw() const { return mRawRule; }
+
   // WebIDL interface
   uint16_t Type() const override { return CSSRuleBinding::MEDIA_RULE; }
-  virtual MediaList* Media() = 0;
+  // WebIDL interface
+  void GetCssText(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
+  dom::MediaList* Media();
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+private:
+  virtual ~CSSMediaRule();
+
+  RefPtr<RawServoMediaRule> mRawRule;
+  RefPtr<dom::MediaList> mMediaList;
 };
 
 } // namespace dom
