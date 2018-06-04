@@ -20,6 +20,8 @@
 #include "mozilla/dom/VRServiceTest.h"
 #include "mozilla/layers/SyncObject.h"
 
+using namespace mozilla::dom;
+
 namespace {
 const nsTArray<RefPtr<dom::VREventObserver>>::index_type kNoIndex =
   nsTArray<RefPtr<dom::VREventObserver> >::NoIndex;
