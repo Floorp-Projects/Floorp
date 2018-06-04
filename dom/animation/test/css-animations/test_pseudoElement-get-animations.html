@@ -29,8 +29,8 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t, { class: 'before' });
-  var pseudoTarget = document.getAnimations()[0].effect.target;
+  const div = addDiv(t, { class: 'before' });
+  const pseudoTarget = document.getAnimations()[0].effect.target;
   assert_equals(pseudoTarget.getAnimations().length, 1,
                 'Expected number of animations are returned');
   assert_equals(pseudoTarget.getAnimations()[0].animationName, 'anim1',
@@ -38,22 +38,22 @@ test(t => {
 }, 'getAnimations returns CSSAnimation objects');
 
 test(t => {
-  var div = addDiv(t, { class: 'after-with-mix-anims-trans' });
+  const div = addDiv(t, { class: 'after-with-mix-anims-trans' });
   // Trigger transitions
   flushComputedStyle(div);
   div.classList.add('after-change');
 
   // Create additional animation on the pseudo-element from script
-  var pseudoTarget = document.getAnimations()[0].effect.target;
-  var effect = new KeyframeEffect(pseudoTarget,
-                                  { background: ["blue", "red"] },
-                                  3 * MS_PER_SEC);
-  var newAnimation = new Animation(effect, document.timeline);
+  const pseudoTarget = document.getAnimations()[0].effect.target;
+  const effect = new KeyframeEffect(pseudoTarget,
+                                    { background: ["blue", "red"] },
+                                    3 * MS_PER_SEC);
+  const newAnimation = new Animation(effect, document.timeline);
   newAnimation.id = 'scripted-anim';
   newAnimation.play();
 
   // Check order - the script-generated animation should appear later
-  var anims = pseudoTarget.getAnimations();
+  const anims = pseudoTarget.getAnimations();
   assert_equals(anims.length, 5,
                 'Got expected number of animations/trnasitions running on ' +
                 '::after pseudo element');

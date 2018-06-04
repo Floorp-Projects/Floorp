@@ -21,8 +21,8 @@
 'use strict';
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: translateAnim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: translateAnim 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_not_equals(getComputedStyle(div).transform, 'none',
@@ -34,8 +34,8 @@ promise_test(t => {
 }, 'Animated style is cleared after cancelling a running CSS animation');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: translateAnim 100s forwards' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: translateAnim 100s forwards' });
+  const animation = div.getAnimations()[0];
   animation.finish();
 
   return animation.ready.then(() => {
@@ -48,8 +48,8 @@ promise_test(t => {
 }, 'Animated style is cleared after cancelling a filling CSS animation');
 
 test(t => {
-  var div = addDiv(t, { style: 'animation: marginLeftAnim 100s linear' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: marginLeftAnim 100s linear' });
+  const animation = div.getAnimations()[0];
   animation.cancel();
 
   assert_equals(getComputedStyle(div).marginLeft, '0px',
@@ -62,9 +62,9 @@ test(t => {
 }, 'After canceling an animation, it can still be seeked');
 
 promise_test(t => {
-  var div =
+  const div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     animation.cancel();
@@ -81,9 +81,9 @@ promise_test(t => {
 }, 'After cancelling an animation, it can still be re-used');
 
 test(t => {
-  var div =
+  const div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
                 'margin-left style is not animated after cancelling');
@@ -100,9 +100,9 @@ test(t => {
    + ' it live again');
 
 test(t => {
-  var div =
+  const div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
                 'margin-left style is not animated after cancelling');
@@ -134,10 +134,10 @@ test(t => {
    + ' make it live again');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: translateAnim 10s both' });
+  const div = addDiv(t, { style: 'animation: translateAnim 10s both' });
   div.style.marginLeft = '0px';
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
@@ -152,8 +152,8 @@ promise_test(t => {
 }, 'Setting animation-name to \'none\' cancels the animation');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: translateAnim 10s both' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: translateAnim 10s both' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');
@@ -167,14 +167,14 @@ promise_test(t => {
 }, 'Setting display:none on an element cancel its animations');
 
 promise_test(t => {
-  var parentDiv = addDiv(t);
-  var childDiv  = document.createElement('div');
+  const parentDiv = addDiv(t);
+  const childDiv  = document.createElement('div');
   parentDiv.appendChild(childDiv);
 
   childDiv.setAttribute('style', 'animation: translateAnim 10s both');
   flushComputedStyle(childDiv);
 
-  var animation = childDiv.getAnimations()[0];
+  const animation = childDiv.getAnimations()[0];
 
   return animation.ready.then(() => {
     assert_equals(animation.playState, 'running');

@@ -14,8 +14,8 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t, { style: 'animation: anim 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: anim 100s' });
+  const animation = div.getAnimations()[0];
   div.style.animation = "";
   flushComputedStyle(div);
 

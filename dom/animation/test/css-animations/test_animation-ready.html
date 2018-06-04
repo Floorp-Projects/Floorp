@@ -14,10 +14,10 @@
 'use strict';
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.animation = 'abc 100s paused';
-  var animation = div.getAnimations()[0];
-  var originalReadyPromise = animation.ready;
+  const animation = div.getAnimations()[0];
+  const originalReadyPromise = animation.ready;
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'running';
@@ -28,15 +28,15 @@ promise_test(t => {
 }, 'A new ready promise is created when setting animation-play-state: running');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Set up pending animation
   div.style.animation = 'abc 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
-  var retPromise = animation.ready.then(() => {
+  const retPromise = animation.ready.then(() => {
     assert_unreached('ready promise is fulfilled');
   }).catch(err => {
     assert_equals(err.name, 'AbortError',
@@ -52,7 +52,7 @@ promise_test(t => {
    + ' the animation property');
 
 promise_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // As before, but this time instead of removing all animations, simply update
   // the list of animations. At least for Firefox, updating is a different
@@ -60,11 +60,11 @@ promise_test(t => {
 
   // Set up pending animation
   div.style.animation = 'abc 100s';
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
-  var retPromise = animation.ready.then(() => {
+  const retPromise = animation.ready.then(() => {
     assert_unreached('ready promise was fulfilled');
   }).catch(err => {
     assert_equals(err.name, 'AbortError',
@@ -80,9 +80,9 @@ promise_test(t => {
    + ' the animation property');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: abc 100s' });
-  var animation = div.getAnimations()[0];
-  var originalReadyPromise = animation.ready;
+  const div = addDiv(t, { style: 'animation: abc 100s' });
+  const animation = div.getAnimations()[0];
+  const originalReadyPromise = animation.ready;
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';
@@ -93,12 +93,12 @@ promise_test(t => {
 }, 'A new ready promise is created when setting animation-play-state: paused');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: abc 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: abc 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';
-    var firstReadyPromise = animation.ready;
+    const firstReadyPromise = animation.ready;
     animation.pause();
     assert_equals(animation.ready, firstReadyPromise,
                   'Ready promise objects are identical after redundant pause');
@@ -106,15 +106,15 @@ promise_test(t => {
 }, 'Pausing twice re-uses the same Promise');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: abc 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: abc 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';
 
     // Flush style and verify we're pending at the same time
     assert_true(animation.pending, 'Animation is pending');
-    var pauseReadyPromise = animation.ready;
+    const pauseReadyPromise = animation.ready;
 
     // Now play again immediately
     div.style.animationPlayState = 'running';
@@ -131,8 +131,8 @@ promise_test(t => {
 }, 'If a pause operation is interrupted, the ready promise is reused');
 
 promise_test(t => {
-  var div = addDiv(t, { style: 'animation: abc 100s' });
-  var animation = div.getAnimations()[0];
+  const div = addDiv(t, { style: 'animation: abc 100s' });
+  const animation = div.getAnimations()[0];
 
   return animation.ready.then(() => {
     div.style.animationPlayState = 'paused';

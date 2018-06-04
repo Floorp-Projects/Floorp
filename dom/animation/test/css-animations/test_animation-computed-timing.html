@@ -20,22 +20,22 @@
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, 0,
                 'Initial value of delay');
 }, 'delay of a new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s -10s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s -10s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, -10 * MS_PER_SEC,
                 'Initial value of delay');
 }, 'Negative delay of a new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 10s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 10s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, 10 * MS_PER_SEC,
                 'Initial value of delay');
 }, 'Positive delay of a new animation');
@@ -46,8 +46,8 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endDelay, 0,
                 'Initial value of endDelay');
 }, 'endDelay of a new animation');
@@ -58,12 +58,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var getEffectWithFill = fill => {
-    var div = addDiv(t, {style: 'animation: moveAnimation 100s ' + fill});
+  const getEffectWithFill = fill => {
+    const div = addDiv(t, {style: 'animation: moveAnimation 100s ' + fill});
     return div.getAnimations()[0].effect;
   };
 
-  var effect = getEffectWithFill('');
+  let effect = getEffectWithFill('');
   assert_equals(effect.getComputedTiming().fill, 'none',
                 'Initial value of fill');
   effect = getEffectWithFill('forwards');
@@ -83,8 +83,8 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterationStart, 0,
                 'Initial value of iterationStart');
 }, 'iterationStart of a new animation');
@@ -95,22 +95,22 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterations, 1,
                 'Initial value of iterations');
 }, 'iterations of a new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 2016.5'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 2016.5'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterations, 2016.5,
                 'Initial value of iterations');
 }, 'iterations of a finitely repeating animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s infinite'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterations, Infinity,
                 'Initial value of iterations');
 }, 'iterations of an infinitely repeating animation');
@@ -121,8 +121,8 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s -10s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s -10s infinite'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().duration, 100 * MS_PER_SEC,
                 'Initial value of duration');
 }, 'duration of a new animation');
@@ -133,12 +133,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var getEffectWithDir = dir => {
-    var div = addDiv(t, {style: 'animation: moveAnimation 100s ' + dir});
+  const getEffectWithDir = dir => {
+    const div = addDiv(t, {style: 'animation: moveAnimation 100s ' + dir});
     return div.getAnimations()[0].effect;
   };
 
-  var effect = getEffectWithDir('');
+  let effect = getEffectWithDir('');
   assert_equals(effect.getComputedTiming().direction, 'normal',
                 'Initial value of normal direction');
   effect = getEffectWithDir('reverse');
@@ -158,8 +158,8 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().easing, 'linear',
                 'Initial value of easing');
 }, 'easing of a new animation');
@@ -171,30 +171,30 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endTime, 100 * MS_PER_SEC,
                 'Initial value of endTime');
 }, 'endTime of an new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s -5s'});
-  var effect = div.getAnimations()[0].effect;
-  var answer = (100 - 5) * MS_PER_SEC;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s -5s'});
+  const effect = div.getAnimations()[0].effect;
+  const answer = (100 - 5) * MS_PER_SEC;
   assert_equals(effect.getComputedTiming().endTime, answer,
                 'Initial value of endTime');
 }, 'endTime of an animation with a negative delay');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 10s -100s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 10s -100s infinite'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endTime, Infinity,
                 'Initial value of endTime');
 }, 'endTime of an infinitely repeating animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 100s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 100s infinite'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endTime, 100 * MS_PER_SEC,
                 'Initial value of endTime');
 }, 'endTime of an infinitely repeating zero-duration animation');
@@ -202,8 +202,8 @@ test(t => {
 test(t => {
   // Fill forwards so div.getAnimations()[0] won't return an
   // undefined value.
-  var div = addDiv(t, {style: 'animation: moveAnimation 10s -100s forwards'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 10s -100s forwards'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endTime, 0,
                 'Initial value of endTime');
 }, 'endTime of an animation that finishes before its startTime');
@@ -215,23 +215,23 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 5'});
-  var effect = div.getAnimations()[0].effect;
-  var answer = 100 * MS_PER_SEC * 5;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 5'});
+  const effect = div.getAnimations()[0].effect;
+  const answer = 100 * MS_PER_SEC * 5;
   assert_equals(effect.getComputedTiming().activeDuration, answer,
                 'Initial value of activeDuration');
 }, 'activeDuration of a new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s infinite'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().activeDuration, Infinity,
                 'Initial value of activeDuration');
 }, 'activeDuration of an infinitely repeating animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 1s infinite'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 1s infinite'});
+  const effect = div.getAnimations()[0].effect;
   // If either the iteration duration or iteration count are zero,
   // the active duration is zero.
   assert_equals(effect.getComputedTiming().activeDuration, 0,
@@ -239,8 +239,8 @@ test(t => {
 }, 'activeDuration of an infinitely repeating zero-duration animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 1s 0'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 1s 0'});
+  const effect = div.getAnimations()[0].effect;
   // If either the iteration duration or iteration count are zero,
   // the active duration is zero.
   assert_equals(effect.getComputedTiming().activeDuration, 0,
@@ -253,24 +253,24 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().localTime, 0,
                 'Initial value of localTime');
 }, 'localTime of a new animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const anim = div.getAnimations()[0];
   anim.currentTime = 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                 'current localTime after setting currentTime');
 }, 'localTime of an animation is always equal to currentTime');
 
 promise_test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
 
-  var anim = div.getAnimations()[0];
+  const anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
   return anim.ready.then(() => {
@@ -284,8 +284,8 @@ promise_test(t => {
 }, 'localTime reflects playbackRate immediately');
 
 test(t => {
-  var div = addDiv(t);
-  var effect = new KeyframeEffect(div, {left: ["0px", "100px"]});
+  const div = addDiv(t);
+  const effect = new KeyframeEffect(div, {left: ["0px", "100px"]});
 
   assert_equals(effect.getComputedTiming().localTime, null,
                 'localTime for orphaned effect');
@@ -304,9 +304,9 @@ test(t => {
    {fill: 'backwards', progress: [ 0.0, null ]},
    {fill: 'both',      progress: [ 0.0, 1.0 ]}]
   .forEach(test => {
-    var div =
+    const div =
       addDiv(t, {style: 'animation: moveAnimation 100s 10s ' + test.fill});
-    var anim = div.getAnimations()[0];
+    const anim = div.getAnimations()[0];
     assert_true(anim.effect.getComputedTiming().progress === test.progress[0],
                 'initial progress with "' + test.fill + '" fill');
     anim.finish();
@@ -316,8 +316,8 @@ test(t => {
 }, 'progress of an animation with different fill modes');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 10s 10 both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 10s 10 both'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
@@ -336,14 +336,13 @@ test(t => {
 }, 'progress of an integral repeating animation with normal direction');
 
 test(t => {
-  var div = addDiv(t);
   // Note: FillMode here is "both" because
   // 1. Since this a zero-duration animation, it will already have finished
   //    so it won't be returned by getAnimations() unless it fills forwards.
   // 2. Fill backwards, so the progress before phase wouldn't be
   //    unresolved (null value).
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s infinite both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s infinite both'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Initial value of progress in after phase');
@@ -356,8 +355,8 @@ test(t => {
 
 test(t => {
   // Default iterations = 1
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s both'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Initial value of progress in after phase');
@@ -369,8 +368,8 @@ test(t => {
 }, 'progress of a finitely repeating zero-duration animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 5s 10.25 both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 5s 10.25 both'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress (before phase)');
@@ -383,8 +382,8 @@ test(t => {
 }, 'progress of a non-integral repeating zero-duration animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 5s 10.25 both reverse'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 5s 10.25 both reverse'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Initial value of progress (before phase)');
@@ -397,8 +396,8 @@ test(t => {
    'with reversing direction');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 10s 10.25 both alternate'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 10s 10.25 both alternate'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
@@ -418,8 +417,8 @@ test(t => {
    'with alternate direction');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 10s 10.25 both alternate-reverse'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 10s 10.25 both alternate-reverse'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Initial value of progress');
@@ -439,8 +438,8 @@ test(t => {
    'with alternate-reversing direction');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 10.25 both alternate'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 10.25 both alternate'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Initial value of progress');
@@ -457,8 +456,8 @@ test(t => {
    'with alternate direction');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 10.25 both alternate-reverse'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 10.25 both alternate-reverse'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Initial value of progress');
@@ -480,16 +479,16 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 2s'});
-  var effect = div.getAnimations()[0].effect;
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 2s'});
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().currentIteration, null,
                 'Initial value of currentIteration before phase');
 }, 'currentIteration of a new animation with no backwards fill is unresolved ' +
    'in before phase');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s'});
+  const anim = div.getAnimations()[0];
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
 }, 'currentIteration of a new animation is zero');
@@ -500,8 +499,8 @@ test(t => {
   //    so it won't be returned by getAnimations() unless it fills forwards.
   // 2. Fill backwards, so the currentIteration (before phase) wouldn't be
   //    unresolved (null value).
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s infinite both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s infinite both'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().currentIteration, Infinity,
                 'Initial value of currentIteration in after phase');
@@ -513,8 +512,8 @@ test(t => {
 }, 'currentIteration of an infinitely repeating zero-duration animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 0s 10.5 both'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 0s 10.5 both'});
+  const anim = div.getAnimations()[0];
 
   // Note: currentIteration = ceil(iteration start + iteration count) - 1
   assert_equals(anim.effect.getComputedTiming().currentIteration, 10,
@@ -527,8 +526,8 @@ test(t => {
 }, 'currentIteration of a finitely repeating zero-duration animation');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 5.5 forwards'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 5.5 forwards'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
@@ -544,8 +543,8 @@ test(t => {
 }, 'currentIteration of an animation with a non-integral iteration count');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s 2 forwards'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s 2 forwards'});
+  const anim = div.getAnimations()[0];
 
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
@@ -556,8 +555,8 @@ test(t => {
 }, 'currentIteration of an animation with an integral iteration count');
 
 test(t => {
-  var div = addDiv(t, {style: 'animation: moveAnimation 100s forwards'});
-  var anim = div.getAnimations()[0];
+  const div = addDiv(t, {style: 'animation: moveAnimation 100s forwards'});
+  const anim = div.getAnimations()[0];
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
   // Finish
@@ -567,8 +566,8 @@ test(t => {
 }, 'currentIteration of an animation with a default iteration count');
 
 test(t => {
-  var div = addDiv(t);
-  var effect = new KeyframeEffect(div, {left: ["0px", "100px"]});
+  const div = addDiv(t);
+  const effect = new KeyframeEffect(div, {left: ["0px", "100px"]});
 
   assert_equals(effect.getComputedTiming().currentIteration, null,
                 'currentIteration for orphaned effect');
