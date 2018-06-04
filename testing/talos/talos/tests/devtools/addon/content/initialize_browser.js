@@ -1,5 +1,4 @@
 function initializeBrowser(win) {
-  Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosParentProfiler.js", win);
   Services.scriptloader.loadSubScript("chrome://damp/content/damp.js", win);
 
   const PREFIX = "damp@mozilla.org:";
