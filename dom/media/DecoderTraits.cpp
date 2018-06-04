@@ -98,8 +98,8 @@ CanHandleCodecsType(const MediaContainerType& aType,
     if (WaveDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
     }
-    // We can only reach this position if a particular codec was requested,
-    // ogg is supported and working: the codec must be invalid.
+    // We can only reach this position if a particular codec was requested, wave
+    // is supported and working: the codec must be invalid or not supported.
     return CANPLAY_NO;
   }
   if (WebMDecoder::IsSupportedType(mimeType)) {
