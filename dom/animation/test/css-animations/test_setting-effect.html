@@ -5,14 +5,14 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src='../testcommon.js'></script>
 <style>
-  @keyframes anim {
-    from {
-      margin-left: 0px;
-    }
-    to {
-      margin-left: 100px;
-    }
+@keyframes anim {
+  from {
+    margin-left: 0px;
   }
+  to {
+    margin-left: 100px;
+  }
+}
 </style>
 <body>
 <div id="log"></div>
@@ -46,7 +46,6 @@ promise_test(async t => {
   animation.effect = new KeyframeEffect(div,
                                         { left: [ '0px' , '100px'] },
                                         100 * MS_PER_SEC);
-  assert_equals(animation.playState, 'running');
   assert_equals(getComputedStyle(div).marginLeft, '0px');
   assert_equals(getComputedStyle(div).left, '50px');
 }, 'Replacing an animation\'s effect with an effect that targets a different ' +
@@ -106,8 +105,8 @@ promise_test(async t => {
 
   // Then wait a couple of frames and check that no event was dispatched.
   await waitForAnimationFrames(2);
-}, 'The event is dispatched at the original element even after setting an ' +
-   'effect with a different target element');
+}, 'CSS animation events are dispatched at the original element even after'
+   + ' setting an effect with a different target element');
 
 promise_test(async t => {
   const div = addDiv(t);
