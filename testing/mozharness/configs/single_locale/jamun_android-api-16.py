@@ -13,7 +13,6 @@ config = {
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "nightly_build": True,
-    "tools_repo": "https://hg.mozilla.org/build/tools",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
