@@ -55,8 +55,9 @@ def add_command(config, tasks):
         "updater-platform",
     ]
 
+    release_config = get_release_config(config)
+
     for task in tasks:
-        release_config = get_release_config(config)
         task["description"] = "generate update verify config for {}".format(
             task["attributes"]["build_platform"]
         )
@@ -92,9 +93,12 @@ def add_command(config, tasks):
 
         for arg in keyed_by_args:
             thing = "extra.{}".format(arg)
-            extra = config.params.copy()
-            extra["build-platform"] = task["attributes"]["build_platform"]
-            resolve_keyed_by(task, thing, thing, **extra)
+            resolve_keyed_by(
+                task, thing,
+                item_name=task['name'],
+                project=config.params['project'],
+                platform=task['attributes']['build_platform'],
+            )
             # ignore things that resolved to null
             if not task["extra"].get(arg):
                 continue
