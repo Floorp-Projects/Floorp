@@ -9,7 +9,7 @@ pub mod media_type;
 pub mod network;
 pub mod unsupported_types;
 
-use attribute_type::{SdpAttribute, parse_attribute};
+use attribute_type::{SdpAttribute, SdpAttributeType, parse_attribute};
 use error::{SdpParserInternalError, SdpParserError};
 use media_type::{SdpMedia, SdpMediaLine, parse_media, parse_media_vector};
 use network::{parse_addrtype, parse_nettype, parse_unicast_addr};
@@ -160,15 +160,8 @@ impl SdpSession {
         !self.attribute.is_empty()
     }
 
-    // FIXME this is a temporary hack until we re-oranize the SdpAttribute enum
-    // so that we can build a generic has_attribute(X) function
-    fn has_extmap_attribute(&self) -> bool {
-        for attribute in &self.attribute {
-            if let &SdpAttribute::Extmap(_) = attribute {
-                return true;
-            }
-        }
-        false
+    pub fn get_attribute(&self, t: SdpAttributeType) -> Option<&SdpAttribute> {
+       self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).next()
     }
 
     pub fn has_media(&self) -> bool {
@@ -600,14 +593,27 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
     }
 
     // Check that extmaps are not defined on session and media level
-    if session.has_extmap_attribute() {
+    if session.get_attribute(SdpAttributeType::Extmap).is_some() {
         for msection in &session.media {
-            if msection.has_extmap_attribute() {
+            if msection.get_attribute(SdpAttributeType::Extmap).is_some() {
                 return Err(SdpParserError::Sequence {
                                message: "Extmap can't be define at session and media level"
                                    .to_string(),
                                line_number: 0,
                            });
+            }
+        }
+    }
+
+    for msection in &session.media {
+        if msection.get_attribute(SdpAttributeType::Sendonly).is_some() {
+            if let Some(&SdpAttribute::Simulcast(ref x)) = msection.get_attribute(SdpAttributeType::Simulcast) {
+                if x.receive.len() > 0 {
+                    return Err(SdpParserError::Sequence {
+                        message: "Simulcast can't define receive parameters for sendonly".to_string(),
+                        line_number: 0,
+                    });
+                }
             }
         }
     }
@@ -674,7 +680,7 @@ fn test_sanity_check_sdp_session_extmap() {
     }
     let ret = sdp_session.add_attribute(&extmap);
     assert!(ret.is_ok());
-    assert!(sdp_session.has_extmap_attribute());
+    assert!(sdp_session.get_attribute(SdpAttributeType::Extmap).is_some());
 
     assert!(sanity_check_sdp_session(&sdp_session).is_ok());
 
@@ -688,7 +694,7 @@ fn test_sanity_check_sdp_session_extmap() {
     }
     let mut second_media = create_dummy_media_section();
     assert!(second_media.add_attribute(&mextmap).is_ok());
-    assert!(second_media.has_extmap_attribute());
+    assert!(second_media.get_attribute(SdpAttributeType::Extmap).is_some());
 
     sdp_session.extend_media(vec![second_media]);
     assert!(sdp_session.media.len() == 2);
