@@ -14,7 +14,7 @@ var { assert } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
-loader.lazyRequireGetter(this, "AddonConsoleActor", "devtools/server/actors/addon-console", true);
+loader.lazyRequireGetter(this, "AddonConsoleActor", "devtools/server/actors/addon/console", true);
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 

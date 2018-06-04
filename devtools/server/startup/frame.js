@@ -53,7 +53,7 @@ try {
         let actor;
 
         if (addonId) {
-          const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
+          const { WebExtensionChildActor } = require("devtools/server/actors/addon/webextension");
           actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
         } else {
           const { FrameTargetActor } = require("devtools/server/actors/targets/frame");

@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'addon',
     'targets',
     'worker',
 ]
@@ -12,7 +13,6 @@ DIRS += [
 DevToolsModules(
     'accessibility.js',
     'actor-registry.js',
-    'addons.js',
     'animation.js',
     'breakpoint.js',
     'call-watcher.js',
@@ -51,7 +51,5 @@ DevToolsModules(
     'timeline.js',
     'webaudio.js',
     'webconsole.js',
-    'webextension-inspected-window.js',
-    'webextension-parent.js',
     'webgl.js',
 )

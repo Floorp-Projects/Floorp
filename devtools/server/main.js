@@ -399,7 +399,7 @@ var DebuggerServer = {
       constructor: "ActorRegistryActor",
       type: { global: true }
     });
-    this.registerModule("devtools/server/actors/addons", {
+    this.registerModule("devtools/server/actors/addon/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
       type: { global: true }
@@ -527,7 +527,7 @@ var DebuggerServer = {
       constructor: "EmulationActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/webextension-inspected-window", {
+    this.registerModule("devtools/server/actors/addon/webextension-inspected-window", {
       prefix: "webExtensionInspectedWindow",
       constructor: "WebExtensionInspectedWindowActor",
       type: { tab: true }

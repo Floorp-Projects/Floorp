@@ -11,7 +11,7 @@ loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webcon
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
+const { addonConsoleSpec } = require("devtools/shared/specs/addon/console");
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
@@ -39,9 +39,6 @@ addonConsolePrototype.initialize = function(addon, connection, parentActor) {
 };
 
 update(addonConsolePrototype, {
-  // TODO: remove once webconsole is updated to protocol.js, Bug #1450946
-  actorPrefix: "addonConsole",
-
   /**
    * The add-on that this console watches.
    */
@@ -95,7 +92,4 @@ update(addonConsolePrototype, {
   },
 });
 
-exports.AddonConsoleActor = ActorClassWithSpec(webconsoleSpec, addonConsolePrototype);
-
-// TODO: remove once protocol.js can handle inheritance. Bug #1450960
-exports.AddonConsoleActor.prototype.typeName = "addonConsole";
+exports.AddonConsoleActor = ActorClassWithSpec(addonConsoleSpec, addonConsolePrototype);
