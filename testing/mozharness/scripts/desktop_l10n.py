@@ -15,7 +15,7 @@ import sys
 import shlex
 
 # load modules from parent dir
-sys.path.insert(1, os.path.dirname(sys.path[0]))
+sys.path.insert(1, os.path.dirname(sys.path[0]))  # noqa
 
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.script import BaseScript

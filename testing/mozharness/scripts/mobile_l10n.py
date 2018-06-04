@@ -22,7 +22,7 @@ except ImportError:
     import json
 
 # load modules from parent dir
-sys.path.insert(1, os.path.dirname(sys.path[0]))
+sys.path.insert(1, os.path.dirname(sys.path[0]))  # noqa
 
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
