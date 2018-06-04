@@ -58,15 +58,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
          "help": "Override the tags set for all repos"
          }
     ], [
-        ['--key-alias', ],
-        {"action": "store",
-         "dest": "key_alias",
-         "type": "choice",
-         "default": "nightly",
-         "choices": ["nightly", "release"],
-         "help": "Specify the signing key alias"
-         }
-    ], [
         ['--revision', ],
         {"action": "store",
          "dest": "revision",
