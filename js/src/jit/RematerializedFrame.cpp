@@ -6,6 +6,8 @@
 
 #include "jit/RematerializedFrame.h"
 
+#include <utility>
+
 #include "jit/JitFrames.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"

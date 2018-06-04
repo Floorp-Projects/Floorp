@@ -6,6 +6,8 @@
 
 #include "jit/CacheIRCompiler.h"
 
+#include <utility>
+
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 

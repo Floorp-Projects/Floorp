@@ -7,6 +7,7 @@
 #include "jit/arm/CodeGenerator-arm.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
@@ -30,6 +31,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using JS::GenericNaN;
