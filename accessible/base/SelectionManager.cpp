@@ -209,7 +209,8 @@ SelectionManager::ProcessSelectionChanged(SelData* aSelData)
 
   HyperTextAccessible* text = nsAccUtils::GetTextContainer(cntrNode);
   if (!text) {
-    NS_NOTREACHED("We must reach document accessible implementing text interface!");
+    // FIXME bug 1126649
+    NS_ERROR("We must reach document accessible implementing text interface!");
     return;
   }
 
