@@ -7,7 +7,7 @@
 #ifndef mozilla_ServoStyleRuleMap_h
 #define mozilla_ServoStyleRuleMap_h
 
-#include "mozilla/ServoStyleRule.h"
+#include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/StyleSheet.h"
 
 #include "nsDataHashtable.h"
@@ -33,7 +33,7 @@ public:
   void EnsureTable(nsXBLPrototypeResources&);
   void EnsureTable(dom::ShadowRoot&);
 
-  ServoStyleRule* Lookup(const RawServoStyleRule* aRawRule) const
+  dom::CSSStyleRule* Lookup(const RawServoStyleRule* aRawRule) const
   {
     return mTable.Get(aRawRule);
   }
@@ -59,7 +59,7 @@ private:
   void FillTableFromStyleSheet(StyleSheet&);
 
   typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
-                          WeakPtr<ServoStyleRule>> Hashtable;
+                          WeakPtr<dom::CSSStyleRule>> Hashtable;
   Hashtable mTable;
 };
 

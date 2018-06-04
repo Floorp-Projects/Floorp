@@ -15,7 +15,9 @@
 
 namespace mozilla {
 
-class ServoStyleRule;
+namespace dom {
+class CSSStyleRule;
+} // namespace dom
 class StyleSheet;
 namespace css {
 class GroupRule;
