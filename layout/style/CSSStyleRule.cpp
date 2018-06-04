@@ -4,9 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* representation of CSSStyleRule for stylo */
-
-#include "mozilla/ServoStyleRule.h"
+#include "mozilla/dom/CSSStyleRule.h"
 
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
@@ -17,22 +15,23 @@
 using namespace mozilla::dom;
 
 namespace mozilla {
+namespace dom {
 
-// -- ServoStyleRuleDeclaration ---------------------------------------
+// -- CSSStyleRuleDeclaration ---------------------------------------
 
-ServoStyleRuleDeclaration::ServoStyleRuleDeclaration(
+CSSStyleRuleDeclaration::CSSStyleRuleDeclaration(
   already_AddRefed<RawServoDeclarationBlock> aDecls)
   : mDecls(new DeclarationBlock(std::move(aDecls)))
 {
 }
 
-ServoStyleRuleDeclaration::~ServoStyleRuleDeclaration()
+CSSStyleRuleDeclaration::~CSSStyleRuleDeclaration()
 {
   mDecls->SetOwningRule(nullptr);
 }
 
-// QueryInterface implementation for ServoStyleRuleDeclaration
-NS_INTERFACE_MAP_BEGIN(ServoStyleRuleDeclaration)
+// QueryInterface implementation for CSSStyleRuleDeclaration
+NS_INTERFACE_MAP_BEGIN(CSSStyleRuleDeclaration)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   // We forward the cycle collection interfaces to Rule(), which is
   // never null (in fact, we're part of that object!)
@@ -43,33 +42,33 @@ NS_INTERFACE_MAP_BEGIN(ServoStyleRuleDeclaration)
   else
 NS_IMPL_QUERY_TAIL_INHERITING(nsDOMCSSDeclaration)
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(ServoStyleRuleDeclaration, Rule())
-NS_IMPL_RELEASE_USING_AGGREGATOR(ServoStyleRuleDeclaration, Rule())
+NS_IMPL_ADDREF_USING_AGGREGATOR(CSSStyleRuleDeclaration, Rule())
+NS_IMPL_RELEASE_USING_AGGREGATOR(CSSStyleRuleDeclaration, Rule())
 
 /* nsDOMCSSDeclaration implementation */
 
 css::Rule*
-ServoStyleRuleDeclaration::GetParentRule()
+CSSStyleRuleDeclaration::GetParentRule()
 {
   return Rule();
 }
 
 nsINode*
-ServoStyleRuleDeclaration::GetParentObject()
+CSSStyleRuleDeclaration::GetParentObject()
 {
   return Rule()->GetParentObject();
 }
 
 DeclarationBlock*
-ServoStyleRuleDeclaration::GetCSSDeclaration(Operation aOperation)
+CSSStyleRuleDeclaration::GetCSSDeclaration(Operation aOperation)
 {
   return mDecls;
 }
 
 nsresult
-ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
+CSSStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
-  ServoStyleRule* rule = Rule();
+  CSSStyleRule* rule = Rule();
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
     if (aDecl != mDecls) {
       mDecls->SetOwningRule(nullptr);
@@ -84,21 +83,21 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 }
 
 nsIDocument*
-ServoStyleRuleDeclaration::DocToUpdate()
+CSSStyleRuleDeclaration::DocToUpdate()
 {
   return nullptr;
 }
 
 nsDOMCSSDeclaration::ParsingEnvironment
-ServoStyleRuleDeclaration::GetParsingEnvironment(
+CSSStyleRuleDeclaration::GetParsingEnvironment(
   nsIPrincipal* aSubjectPrincipal) const
 {
   return GetParsingEnvironmentForRule(Rule());
 }
 
-// -- ServoStyleRule --------------------------------------------------
+// -- CSSStyleRule --------------------------------------------------
 
-ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
+CSSStyleRule::CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
                                uint32_t aLine, uint32_t aColumn)
   : BindingStyleRule(aLine, aColumn)
   , mRawRule(aRawRule)
@@ -106,11 +105,11 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
 {
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ServoStyleRule, css::Rule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSStyleRule, css::Rule)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleRule)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CSSStyleRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSStyleRule, css::Rule)
   // Keep this in sync with IsCCLeaf.
 
   // Trace the wrapper for our declaration.  This just expands out
@@ -119,7 +118,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
   tmp->mDecls.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSStyleRule, css::Rule)
   // Keep this in sync with IsCCLeaf.
 
   // Unlink the wrapper for our declaraton.  This just expands out
@@ -128,12 +127,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServoStyleRule, css::Rule)
   tmp->mDecls.ReleaseWrapper(static_cast<nsISupports*>(p));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleRule, css::Rule)
   // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool
-ServoStyleRule::IsCCLeaf() const
+CSSStyleRule::IsCCLeaf() const
 {
   if (!Rule::IsCCLeaf()) {
     return false;
@@ -143,7 +142,7 @@ ServoStyleRule::IsCCLeaf() const
 }
 
 size_t
-ServoStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+CSSStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 
@@ -157,7 +156,7 @@ ServoStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 #ifdef DEBUG
 void
-ServoStyleRule::List(FILE* out, int32_t aIndent) const
+CSSStyleRule::List(FILE* out, int32_t aIndent) const
 {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
@@ -171,13 +170,13 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 /* CSSRule implementation */
 
 void
-ServoStyleRule::GetCssText(nsAString& aCssText) const
+CSSStyleRule::GetCssText(nsAString& aCssText) const
 {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
 }
 
 nsICSSDeclaration*
-ServoStyleRule::Style()
+CSSStyleRule::Style()
 {
   return &mDecls;
 }
@@ -185,13 +184,13 @@ ServoStyleRule::Style()
 /* CSSStyleRule implementation */
 
 void
-ServoStyleRule::GetSelectorText(nsAString& aSelectorText)
+CSSStyleRule::GetSelectorText(nsAString& aSelectorText)
 {
   Servo_StyleRule_GetSelectorText(mRawRule, &aSelectorText);
 }
 
 void
-ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
+CSSStyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
   if (RefPtr<StyleSheet> sheet = GetStyleSheet()) {
     // StyleRule lives inside of the Inner, it is unsafe to call WillDirty
@@ -207,7 +206,7 @@ ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
 }
 
 uint32_t
-ServoStyleRule::GetSelectorCount()
+CSSStyleRule::GetSelectorCount()
 {
   uint32_t aCount;
   Servo_StyleRule_GetSelectorCount(mRawRule, &aCount);
@@ -215,21 +214,21 @@ ServoStyleRule::GetSelectorCount()
 }
 
 nsresult
-ServoStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
+CSSStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
 {
   Servo_StyleRule_GetSelectorTextAtIndex(mRawRule, aSelectorIndex, &aText);
   return NS_OK;
 }
 
 nsresult
-ServoStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
+CSSStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
 {
   Servo_StyleRule_GetSpecificityAtIndex(mRawRule, aSelectorIndex, aSpecificity);
   return NS_OK;
 }
 
 nsresult
-ServoStyleRule::SelectorMatchesElement(Element* aElement,
+CSSStyleRule::SelectorMatchesElement(Element* aElement,
                                        uint32_t aSelectorIndex,
                                        const nsAString& aPseudo,
                                        bool* aMatches)
@@ -253,9 +252,10 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
 }
 
 NotNull<DeclarationBlock*>
-ServoStyleRule::GetDeclarationBlock() const
+CSSStyleRule::GetDeclarationBlock() const
 {
   return WrapNotNull(mDecls.mDecls);
 }
 
+} // namespace dom
 } // namespace mozilla
