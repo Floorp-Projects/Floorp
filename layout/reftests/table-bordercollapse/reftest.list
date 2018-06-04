@@ -89,9 +89,9 @@ fails-if(webrender) == frame_vsides_rules_none.html frame_vsides_rules_none_ref.
 == borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks-ref.html
 == borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks-ref.html
 == borderhandling-rules-border-none-quirks.html borderhandling-rules-border-none-quirks-ref.html
-fails-if(webrender) == borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks-ref.html
-fails-if(webrender) == borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks-ref.html
-fails-if(webrender) == borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks-ref.html
+== borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks-ref.html
+== borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks-ref.html
+== borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks-ref.html
 == borderhandling-rules-border-all-quirks.html borderhandling-rules-border-all-quirks-ref.html
 == borderhandling-rules-border-empty-strict.html borderhandling-rules-border-empty-strict-ref.html
 == borderhandling-rules-border-rules-strict.html borderhandling-rules-border-rules-strict-ref.html
