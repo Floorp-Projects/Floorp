@@ -609,7 +609,7 @@ AppendKeyframe(double aOffset,
     RefPtr<RawServoDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
     frame.mPropertyValues.AppendElement(
-      std::move(PropertyValuePair(aProperty, std::move(decl))));
+      PropertyValuePair(aProperty, std::move(decl)));
   } else {
     MOZ_CRASH("old style system disabled");
   }

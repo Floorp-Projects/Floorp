@@ -302,7 +302,7 @@ nsPKCS12Blob::newPKCS12FilePassword(uint32_t& passwordBufferLength,
   if (!pressedOK) {
     return NS_OK;
   }
-  passwordBuffer = std::move(stringToBigEndianBytes(password, passwordBufferLength));
+  passwordBuffer = stringToBigEndianBytes(password, passwordBufferLength);
   return NS_OK;
 }
 
@@ -328,7 +328,7 @@ nsPKCS12Blob::getPKCS12FilePassword(uint32_t& passwordBufferLength,
   if (!pressedOK) {
     return NS_OK;
   }
-  passwordBuffer = std::move(stringToBigEndianBytes(password, passwordBufferLength));
+  passwordBuffer = stringToBigEndianBytes(password, passwordBufferLength);
   return NS_OK;
 }
 

@@ -277,7 +277,7 @@ U2F::Register(const nsAString& aAppId,
                                   null_t() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(U2FTransaction(std::move(AsVariant(callback))));
+  mTransaction = Some(U2FTransaction(AsVariant(callback)));
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
 }
 
@@ -423,7 +423,7 @@ U2F::Sign(const nsAString& aAppId,
                                 null_t() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(U2FTransaction(std::move(AsVariant(callback))));
+  mTransaction = Some(U2FTransaction(AsVariant(callback)));
   mChild->SendRequestSign(mTransaction.ref().mId, info);
 }
 

@@ -151,7 +151,7 @@ ClientInfo::GetPrincipal() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
-  return std::move(ref);
+  return ref;
 }
 
 } // namespace dom

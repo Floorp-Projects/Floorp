@@ -1006,7 +1006,7 @@ var gPrivacyPane = {
    */
   updateAutoplayMediaControlsVisibility() {
     document.getElementById("autoplayMediaBox").hidden =
-      !Services.prefs.getBoolPref("media.autoplay.enabled.user-gestures-needed");
+      !Services.prefs.getBoolPref("media.autoplay.enabled.user-gestures-needed", false);
   },
 
   /**

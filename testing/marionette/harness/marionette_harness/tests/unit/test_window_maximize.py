@@ -18,17 +18,17 @@ class TestWindowMaximize(MarionetteTestCase):
             }""", sandbox=None)
 
         # ensure window is not maximized
-        self.marionette.set_window_size(
-            self.max["width"] - 100, self.max["height"] - 100)
-        actual = self.marionette.window_size
+        self.marionette.set_window_rect(
+            width=self.max["width"] - 100, height=self.max["height"] - 100)
+        actual = self.marionette.window_rect
         self.assertNotEqual(actual["width"], self.max["width"])
         self.assertNotEqual(actual["height"], self.max["height"])
 
         self.original_size = actual
 
     def tearDown(self):
-        self.marionette.set_window_size(
-            self.original_size["width"], self.original_size["height"])
+        self.marionette.set_window_rect(
+            width=self.original_size["width"], height=self.original_size["height"])
 
     def assert_window_maximized(self, actual, delta=None):
         if self.marionette.session_capabilities["platformName"] == "windows_nt":

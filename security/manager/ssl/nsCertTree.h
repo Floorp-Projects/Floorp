@@ -125,7 +125,6 @@ private:
   int32_t                         mNumOrgs;
   int32_t                         mNumRows;
   PLDHashTable mCompareCache;
-  nsCOMPtr<nsINSSComponent> mNSSComponent;
   nsCOMPtr<nsICertOverrideService> mOverrideService;
   RefPtr<nsCertOverrideService> mOriginalOverrideService;
 

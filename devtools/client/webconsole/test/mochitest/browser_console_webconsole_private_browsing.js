@@ -85,7 +85,7 @@ add_task(async function() {
   ok(true, "Messages are displayed as expected");
 
   info("close the private window and check if private messages are removed");
-  const onPrivateMessagesCleared = hud.jsterm.once("private-messages-cleared");
+  const onPrivateMessagesCleared = hud.ui.once("private-messages-cleared");
   privateWindow.BrowserTryToCloseWindow();
   await onPrivateMessagesCleared;
 

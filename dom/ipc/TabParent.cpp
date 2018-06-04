@@ -1672,7 +1672,7 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            nsTArray<StructuredCloneData>* aRetVal)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "TabParent::RecvSyncMessage", EVENTS, aMessage);
+    "TabParent::RecvSyncMessage", OTHER, aMessage);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -1692,7 +1692,7 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
                           nsTArray<StructuredCloneData>* aRetVal)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "TabParent::RecvRpcMessage", EVENTS, aMessage);
+    "TabParent::RecvRpcMessage", OTHER, aMessage);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -1711,7 +1711,7 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const ClonedMessageData& aData)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "TabParent::RecvAsyncMessage", EVENTS, aMessage);
+    "TabParent::RecvAsyncMessage", OTHER, aMessage);
 
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);

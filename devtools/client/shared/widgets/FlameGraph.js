@@ -13,7 +13,9 @@ loader.lazyRequireGetter(this, "EventEmitter",
 loader.lazyRequireGetter(this, "getColor",
   "devtools/client/shared/theme", true);
 
-loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
+loader.lazyRequireGetter(this, "CATEGORIES",
+  "devtools/client/performance/modules/categories", true);
+loader.lazyRequireGetter(this, "CATEGORY_INDEX",
   "devtools/client/performance/modules/categories", true);
 loader.lazyRequireGetter(this, "FrameUtils",
   "devtools/client/performance/modules/logic/frame-utils");
@@ -1292,7 +1294,8 @@ var FlameGraphUtils = {
         if (frameKey !== "" && frameKey !== "(root)") {
           // If the frame is a meta category, use the category label.
           if (mutableFrameKeyOptions.isMetaCategoryOut) {
-            frameKey = CATEGORY_MAPPINGS[frameKey].label;
+            const category = CATEGORIES[frameKey] || CATEGORIES[CATEGORY_INDEX("other")];
+            frameKey = category.label;
           }
 
           sampleFrames[stackDepth] = inflatedFrame;

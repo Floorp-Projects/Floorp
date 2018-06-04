@@ -362,7 +362,7 @@ var LightweightThemeManager = {
       let wrapper = new AddonWrapper(current);
 
       AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
-      this.themeChanged(null);
+      _prefs.setCharPref("selectedThemeID", "");
       AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       _themeIDBeingDisabled = null;
     }

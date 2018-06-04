@@ -419,6 +419,10 @@ public:
 
   uint16_t GetType() { return mPrPolicy; }
 
+  dom::Nullable<uint16_t> GetMaxPacketLifeTime() const;
+
+  dom::Nullable<uint16_t> GetMaxRetransmits() const;
+
   bool GetOrdered() { return !(mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED); }
 
   // Amount of data buffered to send

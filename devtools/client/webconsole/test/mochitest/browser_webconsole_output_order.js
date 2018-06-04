@@ -13,7 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 
   const messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
   const onMessages = waitForMessages({

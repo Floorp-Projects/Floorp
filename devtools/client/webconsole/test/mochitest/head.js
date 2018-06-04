@@ -46,7 +46,7 @@ registerCleanupFunction(async function() {
   const browserConsole = HUDService.getBrowserConsole();
   if (browserConsole) {
     if (browserConsole.jsterm) {
-      browserConsole.jsterm.clearOutput(true);
+      browserConsole.jsterm.hud.clearOutput(true);
     }
     await HUDService.toggleBrowserConsole();
   }

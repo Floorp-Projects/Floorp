@@ -275,8 +275,8 @@ class RemoteSettingsClient {
     // a packaged JSON dump.
     if (timestamp == null) {
       try {
-        const { data } = await this._loadDumpFile();
-        await c.loadDump(data);
+         const { data } = await this._loadDumpFile();
+         await c.loadDump(data);
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);

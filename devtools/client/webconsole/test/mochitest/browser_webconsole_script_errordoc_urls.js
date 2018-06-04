@@ -66,5 +66,5 @@ async function testScriptError(hud, testData) {
 
   ok(hrefs.has(url), `Expected a link to ${url}.`);
 
-  hud.jsterm.clearOutput();
+  hud.ui.clearOutput();
 }

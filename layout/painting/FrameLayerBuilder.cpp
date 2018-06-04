@@ -6618,8 +6618,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
     if (timelines && timelines->HasConsumer(docShell)) {
-      timelines->AddMarkerForDocShell(docShell, std::move(
-        MakeUnique<LayerTimelineMarker>(aRegionToDraw)));
+      timelines->AddMarkerForDocShell(docShell,
+        MakeUnique<LayerTimelineMarker>(aRegionToDraw));
     }
   }
 

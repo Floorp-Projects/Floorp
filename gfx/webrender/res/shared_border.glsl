@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef WR_VERTEX_SHADER
-
 // Border styles as defined in webrender_api/types.rs
 #define BORDER_STYLE_NONE         0
 #define BORDER_STYLE_SOLID        1
@@ -15,6 +13,8 @@
 #define BORDER_STYLE_RIDGE        7
 #define BORDER_STYLE_INSET        8
 #define BORDER_STYLE_OUTSET       9
+
+#ifdef WR_VERTEX_SHADER
 
 struct Border {
     vec4 style;

@@ -440,8 +440,8 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
     }
 
     promiseList->AddPromise(
-      source->StartOp(std::move(ClientGetInfoAndStateArgs(source->Info().Id(),
-                                                     source->Info().PrincipalInfo()))));
+      source->StartOp(ClientGetInfoAndStateArgs(source->Info().Id(),
+                                                source->Info().PrincipalInfo())));
   }
 
   // Maybe finish the promise now in case we didn't find any matching clients.
