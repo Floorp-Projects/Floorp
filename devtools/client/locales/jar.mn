@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [localization] @AB_CD@.jar:
-    devtools (en-US/**/*.ftl)
+    devtools (%*.ftl)
 
 @AB_CD@.jar:
 %   locale devtools @AB_CD@ %locale/@AB_CD@/devtools/client/
