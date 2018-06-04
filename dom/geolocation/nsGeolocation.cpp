@@ -916,8 +916,7 @@ nsGeolocationService::RemoveLocator(Geolocation* aLocator)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Geolocation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoGeolocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGeoGeolocation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
 NS_INTERFACE_MAP_END
 
@@ -1182,7 +1181,7 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
 {
   nsresult rv = GetCurrentPosition(GeoPositionCallback(&aCallback),
                                    GeoPositionErrorCallback(aErrorCallback),
-                                   std::move(CreatePositionOptionsCopy(aOptions)),
+                                   CreatePositionOptionsCopy(aOptions),
                                    aCallerType);
 
   if (NS_FAILED(rv)) {
@@ -1257,43 +1256,38 @@ Geolocation::WatchPosition(PositionCallback& aCallback,
                            CallerType aCallerType,
                            ErrorResult& aRv)
 {
-  int32_t ret = 0;
-  nsresult rv = WatchPosition(GeoPositionCallback(&aCallback),
-                              GeoPositionErrorCallback(aErrorCallback),
-                              std::move(CreatePositionOptionsCopy(aOptions)),
-                              aCallerType,
-                              &ret);
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-
-  return ret;
+  return WatchPosition(GeoPositionCallback(&aCallback),
+                       GeoPositionErrorCallback(aErrorCallback),
+                       CreatePositionOptionsCopy(aOptions),
+                       aCallerType,
+                       aRv);
 }
 
-NS_IMETHODIMP
+int32_t
 Geolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
                            nsIDOMGeoPositionErrorCallback *aErrorCallback,
-                           UniquePtr<PositionOptions>&& aOptions,
-                           int32_t* aRv)
+                           UniquePtr<PositionOptions>&& aOptions)
 {
-  NS_ENSURE_ARG_POINTER(aCallback);
+  MOZ_ASSERT(aCallback);
 
   return WatchPosition(GeoPositionCallback(aCallback),
                        GeoPositionErrorCallback(aErrorCallback),
                        std::move(aOptions), CallerType::System,
-                       aRv);
+                       IgnoreErrors());
 }
 
-nsresult
+// On errors we return -1 because that's not a valid watch id and will
+// get ignored in clearWatch.
+int32_t
 Geolocation::WatchPosition(GeoPositionCallback aCallback,
                            GeoPositionErrorCallback aErrorCallback,
                            UniquePtr<PositionOptions>&& aOptions,
                            CallerType aCallerType,
-                           int32_t* aRv)
+                           ErrorResult& aRv)
 {
   if (mWatchingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW) {
-    return NS_ERROR_NOT_AVAILABLE;
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return -1;
   }
 
   // Count the number of requests per protocol/scheme.
@@ -1301,47 +1295,50 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
                         static_cast<uint8_t>(mProtocolType));
 
   // The watch ID:
-  *aRv = mLastWatchId++;
+  int32_t watchId = mLastWatchId++;
 
   nsIEventTarget* target = MainThreadTarget(this);
   RefPtr<nsGeolocationRequest> request =
     new nsGeolocationRequest(this, std::move(aCallback), std::move(aErrorCallback),
                              std::move(aOptions),
                              static_cast<uint8_t>(mProtocolType), target, true,
-                             EventStateManager::IsHandlingUserInput(), *aRv);
+                             EventStateManager::IsHandlingUserInput(), watchId);
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       nsContentUtils::ResistFingerprinting(aCallerType)) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     target->Dispatch(ev.forget());
-    return NS_OK;
+    return watchId;
   }
 
   if (!mOwner && aCallerType != CallerType::System) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return -1;
   }
 
   if (mOwner) {
-    if (!RegisterRequestWithPrompt(request))
-      return NS_ERROR_NOT_AVAILABLE;
+    if (!RegisterRequestWithPrompt(request)) {
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return -1;
+    }
 
-    return NS_OK;
+    return watchId;
   }
 
   if (aCallerType != CallerType::System) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return -1;
   }
 
   request->Allow(JS::UndefinedHandleValue);
-
-  return NS_OK;
+  return watchId;
 }
 
-NS_IMETHODIMP
+void
 Geolocation::ClearWatch(int32_t aWatchId)
 {
   if (aWatchId < 0) {
-    return NS_OK;
+    return;
   }
 
   if (!mClearedWatchIDs.Contains(aWatchId)) {
@@ -1367,8 +1364,6 @@ Geolocation::ClearWatch(int32_t aWatchId)
       break;
     }
   }
-
-  return NS_OK;
 }
 
 bool
