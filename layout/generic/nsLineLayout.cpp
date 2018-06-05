@@ -902,7 +902,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Note that we don't bother positioning the frame yet, because we're probably
   // going to end up moving it when we do the block-direction alignment.
 
-  // Adjust spacemanager coordinate system for the frame.
+  // Adjust float manager coordinate system for the frame.
   ReflowOutput reflowOutput(lineWM);
 #ifdef DEBUG
   reflowOutput.ISize(lineWM) = nscoord(0xdeadbeef);
