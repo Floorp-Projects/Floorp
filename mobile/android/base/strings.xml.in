@@ -43,11 +43,6 @@
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_button_next">&firstrun_button_next;</string>
 
-  <string name="firstrun_tabqueue_message_off">&firstrun_tabqueue_message_off;</string>
-  <string name="firstrun_tabqueue_subtext_off">&firstrun_tabqueue_subtext_off;</string>
-  <string name="firstrun_tabqueue_message_on">&firstrun_tabqueue_message_on;</string>
-  <string name="firstrun_tabqueue_subtext_on">&firstrun_tabqueue_subtext_on;</string>
-
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
 
   <string name="bookmarks_title">&bookmarks_title;</string>
