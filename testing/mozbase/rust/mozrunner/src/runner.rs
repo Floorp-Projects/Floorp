@@ -265,7 +265,6 @@ impl Runner for FirefoxRunner {
         if !self.args.iter().any(|x| is_profile_arg(x)) {
             cmd.arg("-profile").arg(&self.profile.path);
         }
-        cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
 
         info!("Running command: {:?}", cmd);
         let process = cmd.spawn()?;
