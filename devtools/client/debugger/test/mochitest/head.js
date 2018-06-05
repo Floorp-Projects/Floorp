@@ -183,30 +183,17 @@ function getAddonActorForId(aClient, aAddonId) {
   return deferred.promise;
 }
 
-function attachTabActorForUrl(aClient, aUrl) {
-  let deferred = promise.defer();
-
-  getTabActorForUrl(aClient, aUrl).then(aGrip => {
-    aClient.attachTab(aGrip.actor, aResponse => {
-      deferred.resolve([aGrip, aResponse]);
-    });
-  });
-
-  return deferred.promise;
+async function attachTabActorForUrl(aClient, aUrl) {
+  let grip = await getTabActorForUrl(aClient, aUrl);
+  let [ response ] = await aClient.attachTab(grip.actor);
+  return [grip, response];
 }
 
-function attachThreadActorForUrl(aClient, aUrl) {
-  let deferred = promise.defer();
-
-  attachTabActorForUrl(aClient, aUrl).then(([aGrip, aResponse]) => {
-    aClient.attachThread(aResponse.threadActor, (aResponse, aThreadClient) => {
-      aThreadClient.resume(aResponse => {
-        deferred.resolve(aThreadClient);
-      });
-    });
-  });
-
-  return deferred.promise;
+async function attachThreadActorForUrl(aClient, aUrl) {
+  let [grip, response] = await attachTabActorForUrl(aClient, aUrl);
+  let [response2, threadClient] = await aClient.attachThread(response.threadActor);
+  await threadClient.resume();
+  return threadClient;
 }
 
 // Override once from shared-head, as some tests depend on trying native DOM listeners
@@ -679,16 +666,14 @@ AddonDebugger.prototype = {
 
   _attachConsole: function () {
     let deferred = promise.defer();
-    this.client.attachConsole(this.target.form.consoleActor, ["ConsoleAPI"], (aResponse, aWebConsoleClient) => {
-      if (aResponse.error) {
-        deferred.reject(aResponse);
-      }
-      else {
+    this.client.attachConsole(this.target.form.consoleActor, ["ConsoleAPI"])
+      .then(([aResponse, aWebConsoleClient]) => {
         this.webConsole = aWebConsoleClient;
         this.client.addListener("consoleAPICall", this._onConsoleAPICall);
         deferred.resolve();
-      }
-    });
+      }, e => {
+        deferred.reject(e); 
+      });
     return deferred.promise;
   },
 
@@ -956,7 +941,7 @@ function attachAddonActorForId(aClient, aAddonId) {
   let deferred = promise.defer();
 
   getAddonActorForId(aClient, aAddonId).then(aGrip => {
-    aClient.attachAddon(aGrip.actor, aResponse => {
+    aClient.attachAddon(aGrip.actor).then(([aResponse]) => {
       deferred.resolve([aGrip, aResponse]);
     });
   });
@@ -1108,11 +1093,7 @@ function findTab(tabs, url) {
 
 function attachTab(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return new Promise(function (resolve) {
-    client.attachTab(tab.actor, function (response, tabClient) {
-      resolve([response, tabClient]);
-    });
-  });
+  return client.attachTab(tab.actor);
 }
 
 function listWorkers(tabClient) {
@@ -1136,11 +1117,7 @@ function findWorker(workers, url) {
 
 function attachWorker(tabClient, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
-  return new Promise(function (resolve, reject) {
-    tabClient.attachWorker(worker.actor, function (response, workerClient) {
-      resolve([response, workerClient]);
-    });
-  });
+  return tabClient.attachWorker(worker.actor);
 }
 
 function waitForWorkerListChanged(tabClient) {
@@ -1155,11 +1132,7 @@ function waitForWorkerListChanged(tabClient) {
 
 function attachThread(workerClient, options) {
   info("Attaching to thread.");
-  return new Promise(function (resolve, reject) {
-    workerClient.attachThread(options, function (response, threadClient) {
-      resolve([response, threadClient]);
-    });
-  });
+  return workerClient.attachThread(options);
 }
 
 function waitForWorkerClose(workerClient) {

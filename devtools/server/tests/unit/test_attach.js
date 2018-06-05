@@ -22,7 +22,7 @@ function run_test() {
 }
 
 function test_attach(tabClient) {
-  tabClient.attachThread({}, function(response, threadClient) {
+  tabClient.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.state, "paused");
     threadClient.resume(cleanup);
   });

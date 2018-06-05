@@ -439,24 +439,19 @@ TabTarget.prototype = {
 
     this._setupRemoteListeners();
 
-    const attachTab = () => {
-      this._client.attachTab(this._form.actor, (response, tabClient) => {
-        if (!tabClient) {
-          this._remote.reject("Unable to attach to the tab");
-          return;
-        }
+    const attachTab = async () => {
+      try {
+        const [ response, tabClient ] = await this._client.attachTab(this._form.actor);
         this.activeTab = tabClient;
         this.threadActor = response.threadActor;
-
-        attachConsole();
-      });
-    };
-
-    const onConsoleAttached = (response, consoleClient) => {
-      if (!consoleClient) {
-        this._remote.reject("Unable to attach to the console");
+      } catch (e) {
+        this._remote.reject("Unable to attach to the tab: " + e);
         return;
       }
+      attachConsole();
+    };
+
+    const onConsoleAttached = ([response, consoleClient]) => {
       this.activeConsole = consoleClient;
 
       this._onInspectObject = packet => this.emit("inspect-object", packet);
@@ -466,7 +461,11 @@ TabTarget.prototype = {
     };
 
     const attachConsole = () => {
-      this._client.attachConsole(this._form.consoleActor, [], onConsoleAttached);
+      this._client.attachConsole(this._form.consoleActor, [])
+        .then(onConsoleAttached, response => {
+          this._remote.reject(
+            `Unable to attach to the console [${response.error}]: ${response.message}`);
+        });
     };
 
     if (this.isLocalTab) {

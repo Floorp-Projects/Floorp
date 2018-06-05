@@ -2056,17 +2056,16 @@ ScratchpadTab.prototype = {
     this._attach(aSubject).then(aTarget => {
       const consoleActor = aTarget.form.consoleActor;
       const client = aTarget.client;
-      client.attachConsole(consoleActor, [], (aResponse, aWebConsoleClient) => {
-        if (aResponse.error) {
-          reportError("attachConsole", aResponse);
-          deferred.reject(aResponse);
-        } else {
+      client.attachConsole(consoleActor, [])
+        .then(([aResponse, aWebConsoleClient]) => {
           deferred.resolve({
             webConsoleClient: aWebConsoleClient,
             debuggerClient: client
           });
-        }
-      });
+        }, error => {
+          reportError("attachConsole", error);
+          deferred.reject(error);
+        });
     });
 
     return deferred.promise;
