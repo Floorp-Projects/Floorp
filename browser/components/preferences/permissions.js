@@ -330,14 +330,14 @@ var gPermissionManager = {
     }
   },
 
-  onPermissionSelected() {
+  onPermissionSelect() {
     var hasSelection = this._tree.view.selection.count > 0;
     var hasRows = this._tree.view.rowCount > 0;
     document.getElementById("removePermission").disabled = !hasRows || !hasSelection;
     document.getElementById("removeAllPermissions").disabled = !hasRows;
   },
 
-  onPermissionDeleted() {
+  onPermissionDelete() {
     if (!this._view.rowCount)
       return;
     var removedPermissions = [];
@@ -350,7 +350,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = !this._permissions.length;
   },
 
-  onAllPermissionsDeleted() {
+  onAllPermissionsDelete() {
     if (!this._view.rowCount)
       return;
     var removedPermissions = [];
@@ -365,10 +365,10 @@ var gPermissionManager = {
 
   onPermissionKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
-      this.onPermissionDeleted();
+      this.onPermissionDelete();
     } else if (AppConstants.platform == "macosx" &&
                aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
-      this.onPermissionDeleted();
+      this.onPermissionDelete();
       aEvent.preventDefault();
     }
   },
