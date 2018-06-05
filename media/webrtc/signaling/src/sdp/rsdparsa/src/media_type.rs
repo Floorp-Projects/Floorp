@@ -1,6 +1,6 @@
 use std::fmt;
 use {SdpType, SdpLine, SdpBandwidth, SdpConnection};
-use attribute_type::{SdpAttribute, SdpAttributeType};
+use attribute_type::{SdpAttribute, SdpAttributeType, SdpAttributeRtpmap};
 use error::{SdpParserError, SdpParserInternalError};
 
 #[derive(Clone)]
@@ -144,6 +144,33 @@ impl SdpMedia {
     pub fn get_attribute(&self, t: SdpAttributeType) -> Option<&SdpAttribute> {
         self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).next()
     }
+    
+    pub fn remove_codecs(&mut self) {
+        match self.media.formats{
+            SdpFormatList::Integers(_) => self.media.formats = SdpFormatList::Integers(Vec::new()),
+            SdpFormatList::Strings(_) => self.media.formats = SdpFormatList::Strings(Vec::new()),
+        }
+
+        self.attribute.retain({|x|
+            match x {
+                &SdpAttribute::Rtpmap(_) |
+                &SdpAttribute::Fmtp(_) |
+                &SdpAttribute::Rtcpfb(_) |
+                &SdpAttribute::Sctpmap(_) => false,
+                _ => true
+            }
+        });
+    }
+
+    pub fn add_codec(&mut self, rtpmap: SdpAttributeRtpmap) -> Result<(),SdpParserInternalError> {
+          match self.media.formats {
+             SdpFormatList::Integers(ref mut x) => x.push(rtpmap.payload_type as u32),
+             SdpFormatList::Strings(ref mut x) => x.push(rtpmap.payload_type.to_string()),
+         }
+
+        self.add_attribute(&SdpAttribute::Rtpmap(rtpmap))?;
+        Ok(())
+    }    
 
     pub fn has_connection(&self) -> bool {
         self.connection.is_some()
