@@ -3614,7 +3614,7 @@ fn remove_property(
     property_id: PropertyId
 ) -> bool {
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.remove_property(&property_id)
+        decls.remove_property(&property_id, |_| {})
     })
 }
 
