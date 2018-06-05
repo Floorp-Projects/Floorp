@@ -126,6 +126,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     return mTransceivers;
   }
 
+  nsPIDOMWindowInner* GetWindow() const;
+
   void AlpnNegotiated_s(const std::string& aAlpn);
   static void AlpnNegotiated_m(const std::string& aParentHandle,
                                const std::string& aAlpn);
@@ -247,9 +249,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Used to track the state of the request.
   bool mProxyResolveCompleted;
 
-  // Used to store the result of the request.
-  std::string mProxyHost;
-  uint16_t mProxyPort;
+  // Used to track proxy existence and socket proxy configuration.
+  std::unique_ptr<NrSocketProxyConfig> mProxyConfig;
 
   // Used to cancel incoming stun addrs response
   RefPtr<net::StunAddrsRequestChild> mStunAddrsRequest;

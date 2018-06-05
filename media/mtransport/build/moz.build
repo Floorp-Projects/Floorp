@@ -10,6 +10,7 @@ EXPORTS.mtransport += [
     '../dtlsidentity.h',
     '../m_cpp_utils.h',
     '../mediapacket.h',
+    '../nr_socket_proxy_config.h',
     '../nricectx.h',
     '../nricemediastream.h',
     '../nriceresolverfake.h',
@@ -36,7 +37,8 @@ include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 # These files cannot be built in unified mode because of the redefinition of
 # getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
-# nr_socket_short_term_violation_time.
+# nr_socket_short_term_violation_time, nrappkit/IPDL typedef conflicts in
+# PBrowserOrId and WebrtcProxyChannelChild.
 SOURCES += mtransport_cppsrcs
 
 FINAL_LIBRARY = 'xul'

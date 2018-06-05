@@ -267,12 +267,9 @@ MediaTransportHandler::Destroy()
 }
 
 nsresult
-MediaTransportHandler::SetProxyServer(const std::string& aProxyHost,
-                                      uint16_t aProxyPort,
-                                      const std::string& aAlpnProtocols)
+MediaTransportHandler::SetProxyServer(NrSocketProxyConfig&& aProxyConfig)
 {
-  NrIceProxyServer proxyServer(aProxyHost, aProxyPort, aAlpnProtocols);
-  return mIceCtx->SetProxyServer(proxyServer);
+  return mIceCtx->SetProxyServer(std::move(aProxyConfig));
 }
 
 void
