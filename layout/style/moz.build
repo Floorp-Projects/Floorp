@@ -82,7 +82,6 @@ EXPORTS.mozilla += [
     'ServoBindingTypes.h',
     'ServoComputedData.h',
     'ServoComputedDataInlines.h',
-    'ServoCounterStyleRule.h',
     'ServoCSSParser.h',
     'ServoCSSRuleList.h',
     'ServoDocumentRule.h',
@@ -109,6 +108,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'CSS.h',
+    'CSSCounterStyleRule.h',
     'CSSFontFaceRule.h',
     'CSSFontFeatureValuesRule.h',
     'CSSImportRule.h',
@@ -149,6 +149,7 @@ UNIFIED_SOURCES += [
     'ComputedStyle.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
+    'CSSCounterStyleRule.cpp',
     'CSSFontFaceRule.cpp',
     'CSSFontFeatureValuesRule.cpp',
     'CSSImportRule.cpp',
@@ -201,7 +202,6 @@ UNIFIED_SOURCES += [
     'PreloadedStyleSheet.cpp',
     'Rule.cpp',
     'ServoBindings.cpp',
-    'ServoCounterStyleRule.cpp',
     'ServoCSSParser.cpp',
     'ServoCSSRuleList.cpp',
     'ServoDocumentRule.cpp',

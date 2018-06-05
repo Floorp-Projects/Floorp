@@ -8,6 +8,7 @@
 
 #include "mozilla/ServoCSSRuleList.h"
 
+#include "mozilla/dom/CSSCounterStyleRule.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
@@ -15,7 +16,6 @@
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoCounterStyleRule.h"
 #include "mozilla/ServoDocumentRule.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoFontFeatureValuesRule.h"
@@ -114,7 +114,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(IMPORT, Import)
       CASE_RULE(FONT_FEATURE_VALUES, FontFeatureValues)
       CASE_RULE_CSS(FONT_FACE, FontFace)
-      CASE_RULE(COUNTER_STYLE, CounterStyle)
+      CASE_RULE_CSS(COUNTER_STYLE, CounterStyle)
 #undef CASE_RULE
       case CSSRuleBinding::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
