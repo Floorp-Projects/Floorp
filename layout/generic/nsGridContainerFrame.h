@@ -233,6 +233,18 @@ public:
                            NS_STATE_GRID_IS_COL_SUBGRID);
   }
 
+  /** Return true if this frame has an item that is subgridded in our aAxis. */
+  bool HasSubgridItems(mozilla::LogicalAxis aAxis) const {
+    return HasAnyStateBits(
+      aAxis == mozilla::eLogicalAxisBlock ? NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM
+                                          : NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
+  }
+  /** Return true if this frame has any subgrid items. */
+  bool HasSubgridItems() const {
+    return HasAnyStateBits(NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM |
+                           NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
+  }
+
   /**
    * Return a containing grid frame, and ensure it has computed grid info
    * @return nullptr if aFrame has no grid container, or frame was destroyed
