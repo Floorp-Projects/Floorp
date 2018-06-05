@@ -4,12 +4,11 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
-
-const protocol = require("devtools/shared/protocol");
-const {nodeSpec, nodeListSpec} = require("devtools/shared/specs/node");
-
+const { Cu } = require("chrome");
+const Services = require("Services");
 const InspectorUtils = require("InspectorUtils");
+const protocol = require("devtools/shared/protocol");
+const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 
@@ -27,6 +26,9 @@ loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string
 loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "EventParsers", "devtools/server/actors/inspector/event-parsers", true);
+
+const SUBGRID_ENABLED =
+  Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
@@ -256,6 +258,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     } catch (e) {
       // Fails for <scrollbar> elements.
     }
+
+    if (SUBGRID_ENABLED &&
+        (display === "grid" || display === "inline-grid") &&
+        (style.gridTemplateRows === "subgrid" ||
+         style.gridTemplateColumns === "subgrid")) {
+      display = "subgrid";
+    }
+
     return display;
   },
 
