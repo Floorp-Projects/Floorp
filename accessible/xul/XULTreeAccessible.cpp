@@ -126,7 +126,7 @@ XULTreeAccessible::Value(nsString& aValue) const
   if (currentIndex >= 0) {
     nsCOMPtr<nsITreeColumn> keyCol;
 
-    nsCOMPtr<nsITreeColumns> cols;
+    RefPtr<nsTreeColumns> cols;
     mTree->GetColumns(getter_AddRefs(cols));
     if (cols)
       cols->GetKeyColumn(getter_AddRefs(keyCol));
@@ -618,7 +618,7 @@ XULTreeAccessible::TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
     endRow = rowCount - 1;
   }
 
-  nsCOMPtr<nsITreeColumns> treeColumns;
+  RefPtr<nsTreeColumns> treeColumns;
   mTree->GetColumns(getter_AddRefs(treeColumns));
   if (!treeColumns)
     return;
@@ -983,7 +983,7 @@ XULTreeItemAccessibleBase::DispatchClickEvent(nsIContent* aContent,
   if (IsDefunct())
     return;
 
-  nsCOMPtr<nsITreeColumns> columns;
+  RefPtr<nsTreeColumns> columns;
   mTree->GetColumns(getter_AddRefs(columns));
   if (!columns)
     return;
@@ -1028,7 +1028,7 @@ XULTreeItemAccessibleBase::IsExpandable() const
     bool isEmpty = false;
     mTreeView->IsContainerEmpty(mRow, &isEmpty);
     if (!isEmpty) {
-      nsCOMPtr<nsITreeColumns> columns;
+      RefPtr<nsTreeColumns> columns;
       mTree->GetColumns(getter_AddRefs(columns));
       nsCOMPtr<nsITreeColumn> primaryColumn;
       if (columns) {
@@ -1116,7 +1116,7 @@ XULTreeItemAccessible::Shutdown()
 role
 XULTreeItemAccessible::NativeRole() const
 {
-  nsCOMPtr<nsITreeColumns> columns;
+  RefPtr<nsTreeColumns> columns;
   mTree->GetColumns(getter_AddRefs(columns));
   if (!columns) {
     NS_ERROR("No tree columns object in the tree!");

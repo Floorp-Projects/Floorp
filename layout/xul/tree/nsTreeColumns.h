@@ -17,6 +17,7 @@
 #include "nsWrapperCache.h"
 #include "nsString.h"
 
+class nsAtom;
 class nsTreeBodyFrame;
 class nsTreeColumns;
 class nsIFrame;
