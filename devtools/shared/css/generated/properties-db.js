@@ -2968,14 +2968,6 @@ exports.CSS_PROPERTIES = {
       "text-combine-upright",
       "text-rendering",
       "-moz-control-character-visibility",
-      "cursor",
-      "pointer-events",
-      "-moz-user-input",
-      "-moz-user-modify",
-      "-moz-user-focus",
-      "caret-color",
-      "scrollbar-face-color",
-      "scrollbar-track-color",
       "list-style-position",
       "list-style-type",
       "list-style-image",
@@ -2997,6 +2989,12 @@ exports.CSS_PROPERTIES = {
       "padding-right",
       "padding-bottom",
       "padding-left",
+      "cursor",
+      "pointer-events",
+      "-moz-user-input",
+      "-moz-user-modify",
+      "-moz-user-focus",
+      "caret-color",
       "top",
       "right",
       "bottom",
@@ -9258,14 +9256,6 @@ exports.PREFERENCES = [
   [
     "scroll-snap-type-y",
     "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "scrollbar-face-color",
-    "layout.css.scrollbar-colors.enabled"
-  ],
-  [
-    "scrollbar-track-color",
-    "layout.css.scrollbar-colors.enabled"
   ],
   [
     "shape-image-threshold",
