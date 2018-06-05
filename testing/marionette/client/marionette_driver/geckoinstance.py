@@ -545,7 +545,7 @@ class DesktopInstance(GeckoInstance):
         # Disable browser animations
         "toolkit.cosmeticAnimations.enabled": False,
 
-        # Do not warn on exit when multiple tabs are open
+        # Do not warn when closing all open tabs
         "browser.tabs.warnOnClose": False,
         # Do not warn when closing all other open tabs
         "browser.tabs.warnOnCloseOtherTabs": False,
