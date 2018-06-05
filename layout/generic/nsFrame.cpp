@@ -7749,7 +7749,7 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
   if (mContent) {
     aTo += nsPrintfCString(" [content=%p]", static_cast<void*>(mContent));
   }
-  aTo += nsPrintfCString(" [sc=%p", static_cast<void*>(mComputedStyle));
+  aTo += nsPrintfCString(" [cs=%p", static_cast<void*>(mComputedStyle));
   if (mComputedStyle) {
     nsAtom* pseudoTag = mComputedStyle->GetPseudo();
     if (pseudoTag) {
