@@ -3585,6 +3585,7 @@ WorkerMain(void* arg)
 
     sc->isWorker = true;
     JS_SetContextPrivate(cx, sc);
+    JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
     SetWorkerContextOptions(cx);
     JS::SetBuildIdOp(cx, ShellBuildId);
 
