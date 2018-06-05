@@ -145,7 +145,6 @@ public final class SessionTextInput {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
-        boolean isInputActive();
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
@@ -160,8 +159,7 @@ public final class SessionTextInput {
         // ENDT_MONITOR stops the monitor for composing character rects.
         @WrapForJNI final int END_MONITOR = 3;
 
-        void sendKeyEvent(@Nullable View view, boolean inputActive, int action,
-                          @NonNull KeyEvent event);
+        void sendKeyEvent(@Nullable View view, int action, @NonNull KeyEvent event);
         Editable getEditable();
         void setBatchMode(boolean isBatchMode);
         Handler setInputConnectionHandler(@NonNull Handler handler);
@@ -427,7 +425,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyPreIme(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyPreIme(getView(), keyCode, event);
     }
 
     /**
@@ -439,7 +437,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyDown(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyDown(getView(), keyCode, event);
     }
 
     /**
@@ -451,7 +449,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyUp(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyUp(getView(), keyCode, event);
     }
 
     /**
@@ -463,7 +461,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyLongPress(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyLongPress(getView(), keyCode, event);
     }
 
     /**
@@ -477,18 +475,7 @@ public final class SessionTextInput {
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyMultiple(getView(), isInputActive(), keyCode, repeatCount, event);
-    }
-
-    /**
-     * Return whether there is an active input connection, usually as a result of a
-     * focused input field.
-     *
-     * @return True if input is active.
-     */
-    public boolean isInputActive() {
-        ThreadUtils.assertOnUiThread();
-        return mInputConnection != null && mInputConnection.isInputActive();
+        return mEditable.onKeyMultiple(getView(), keyCode, repeatCount, event);
     }
 
     /**
