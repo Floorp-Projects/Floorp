@@ -17,7 +17,8 @@
 enum DllBlocklistInitFlags
 {
   eDllBlocklistInitFlagDefault = 0,
-  eDllBlocklistInitFlagIsChildProcess = 1
+  eDllBlocklistInitFlagIsChildProcess = 1,
+  eDllBlocklistInitFlagWasBootstrapped = 2
 };
 
 MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
