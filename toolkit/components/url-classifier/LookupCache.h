@@ -31,6 +31,8 @@ public:
                    mPartialHashLength(0), mConfirmed(false),
                    mProtocolV2(true) {}
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LookupResult);
+
   // The fragment that matched in the LookupCache
   union {
     Prefix fixedLengthPrefix;
@@ -83,9 +85,11 @@ public:
   bool mConfirmed;
 
   bool mProtocolV2;
+private:
+  ~LookupResult() {}
 };
 
-typedef nsTArray<LookupResult> LookupResultArray;
+typedef nsTArray<RefPtr<LookupResult>> LookupResultArray;
 
 class CacheResult {
 public:
