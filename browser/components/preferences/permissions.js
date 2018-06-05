@@ -458,15 +458,7 @@ var gPermissionManager = {
     let column = document.querySelector(`treecol[data-field-name=${aColumn}]`);
     column.setAttribute("sortDirection", sortDirection);
   },
-
-  setOrigin(aOrigin) {
-    document.getElementById("url").value = aOrigin;
-  }
 };
-
-function setOrigin(aOrigin) {
-  gPermissionManager.setOrigin(aOrigin);
-}
 
 function initWithParams(aParams) {
   gPermissionManager.init(aParams);
