@@ -590,7 +590,7 @@ import java.lang.reflect.Proxy;
     @Override
     public boolean sendKeyEvent(@NonNull KeyEvent event) {
         event = translateKey(event.getKeyCode(), event);
-        mEditableClient.sendKeyEvent(getView(), isInputActive(), event.getAction(), event);
+        mEditableClient.sendKeyEvent(getView(), event.getAction(), event);
         return false; // seems to always return false
     }
 
@@ -635,12 +635,6 @@ import java.lang.reflect.Proxy;
                 }
                 break;
         }
-    }
-
-    @Override // SessionTextInput.InputConnectionClient
-    public synchronized boolean isInputActive() {
-        // Make sure this picks up PASSWORD state as well.
-        return mIMEState != IME_STATE_DISABLED;
     }
 
     @Override // SessionTextInput.EditableListener
