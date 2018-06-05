@@ -289,7 +289,7 @@ import java.lang.reflect.Proxy;
                 mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
 
                 mSoftInputReentrancyGuard = true;
-                getInputDelegate().showSoftInput();
+                getInputDelegate().showSoftInput(mSession);
                 mSoftInputReentrancyGuard = false;
             }
         });
@@ -303,7 +303,7 @@ import java.lang.reflect.Proxy;
             @Override
             public void run() {
                 mSoftInputReentrancyGuard = true;
-                getInputDelegate().hideSoftInput();
+                getInputDelegate().hideSoftInput(mSession);
                 mSoftInputReentrancyGuard = false;
             }
         });
@@ -313,7 +313,7 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().restartInput(reason);
+                getInputDelegate().restartInput(mSession, reason);
             }
         });
     }
@@ -343,7 +343,7 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateExtractedText(request, extractedText);
+                getInputDelegate().updateExtractedText(mSession, request, extractedText);
             }
         });
     }
@@ -371,7 +371,8 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateSelection(start, end, compositionStart, compositionEnd);
+                getInputDelegate().updateSelection(mSession, start, end,
+                                                   compositionStart, compositionEnd);
             }
         });
     }
@@ -437,7 +438,7 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateCursorAnchorInfo(info);
+                getInputDelegate().updateCursorAnchorInfo(mSession, info);
             }
         });
     }
