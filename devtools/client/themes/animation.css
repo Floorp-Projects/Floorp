@@ -386,6 +386,13 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-detail-header {
   display: flex;
+  padding-inline-end: 0;
+}
+
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the close button in. */
+:root[platform="mac"] .animation-detail-header {
+  padding-inline-end: 3px;
 }
 
 .animation-detail-title {
@@ -393,6 +400,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.animation-detail-close-button {
+  margin: 0;
 }
 
 .animation-detail-close-button::before {
@@ -487,18 +498,18 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   border-left: var(--tick-line-style);
   border-right: var(--tick-line-style);
   bottom: 0;
-	left: var(--sidebar-width);
+  left: var(--sidebar-width);
   min-height: 100%;
-	position: sticky;
+  position: sticky;
   top: 0;
-	width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .animated-property-list-background span {
   border-left: var(--tick-line-style);
-	height: 100%;
-	left: 50%;
-	position: absolute;
+  height: 100%;
+  left: 50%;
+  position: absolute;
 }
 
 .animated-property-list {
