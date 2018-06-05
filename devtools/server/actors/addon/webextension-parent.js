@@ -13,7 +13,7 @@ loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionPa
 
 /**
  * Creates the actor that represents the addon in the parent process, which connects
- * itself to a WebExtensionChildActor counterpart which is created in the
+ * itself to a WebExtensionTargetActor counterpart which is created in the
  * extension process (or in the main process if the WebExtensions OOP mode is disabled).
  *
  * The WebExtensionParentActor subscribes itself as an AddonListener on the AddonManager

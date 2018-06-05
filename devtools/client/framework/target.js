@@ -357,8 +357,8 @@ TabTarget.prototype = {
 
   get isWebExtension() {
     return !!(this._form && this._form.actor && (
-      this._form.actor.match(/conn\d+\.webExtension\d+/) ||
-      this._form.actor.match(/child\d+\/webExtension\d+/)
+      this._form.actor.match(/conn\d+\.webExtension(Target)?\d+/) ||
+      this._form.actor.match(/child\d+\/webExtension(Target)?\d+/)
     ));
   },
 
@@ -427,7 +427,7 @@ TabTarget.prototype = {
       // reloading it) and listen to the AddonManager events related to the lifecycle of
       // the addon (e.g. when the addon is disabled or uninstalled).
       // To retrieve the target actor instance, we call its "connect" method, (which
-      // fetches the target actor form from a WebExtensionChildActor instance).
+      // fetches the target actor form from a WebExtensionTargetActor instance).
       const {form} = await this._client.request({
         to: this._form.actor, type: "connect",
       });

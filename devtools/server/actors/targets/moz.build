@@ -12,5 +12,6 @@ DevToolsModules(
     'frame-proxy.js',
     'frame.js',
     'parent-process.js',
+    'webextension.js',
     'worker.js',
 )
