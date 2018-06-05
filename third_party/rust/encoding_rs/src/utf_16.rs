@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use super::*;
 use handles::*;
 use variant::*;
-use super::*;
 
 pub struct Utf16Decoder {
     lead_surrogate: u16, // If non-zero and pending_bmp == false, a pending lead surrogate
@@ -20,19 +20,18 @@ pub struct Utf16Decoder {
 
 impl Utf16Decoder {
     pub fn new(big_endian: bool) -> VariantDecoder {
-        VariantDecoder::Utf16(
-            Utf16Decoder {
-                lead_surrogate: 0,
-                lead_byte: None,
-                be: big_endian,
-                pending_bmp: false,
-            }
-        )
+        VariantDecoder::Utf16(Utf16Decoder {
+            lead_surrogate: 0,
+            lead_byte: None,
+            be: big_endian,
+            pending_bmp: false,
+        })
     }
 
     pub fn additional_from_state(&self) -> usize {
-        1 + if self.lead_byte.is_some() { 1 } else { 0 } +
-        if self.lead_surrogate == 0 { 0 } else { 2 }
+        1
+            + if self.lead_byte.is_some() { 1 } else { 0 }
+            + if self.lead_surrogate == 0 { 0 } else { 2 }
     }
 
     pub fn max_utf16_buffer_length(&self, byte_length: usize) -> Option<usize> {
@@ -77,7 +76,19 @@ impl Utf16Decoder {
                 }
             }
         },
-        {},
+        {
+            // This is the fast path. The rest runs only at the
+            // start and end for partial sequences.
+            if self.lead_byte.is_none() && self.lead_surrogate == 0 {
+                if let Some((read, written)) = if self.be {
+                    dest.copy_utf16_from::<BigEndian>(&mut source)
+                } else {
+                    dest.copy_utf16_from::<LittleEndian>(&mut source)
+                } {
+                    return (DecoderResult::Malformed(2, 0), read, written);
+                }
+            }
+        },
         {
             debug_assert!(!self.pending_bmp);
             if self.lead_surrogate != 0 {
@@ -121,9 +132,11 @@ impl Utf16Decoder {
                             // error and this one becomes the new
                             // pending one.
                             self.lead_surrogate = code_unit as u16;
-                            return (DecoderResult::Malformed(2, 2),
-                                    unread_handle.consumed(),
-                                    destination_handle.written());
+                            return (
+                                DecoderResult::Malformed(2, 2),
+                                unread_handle.consumed(),
+                                destination_handle.written(),
+                            );
                         }
                         self.lead_surrogate = code_unit;
                         continue;
@@ -131,9 +144,11 @@ impl Utf16Decoder {
                     if high_bits == 0xDC00u16 {
                         // low surrogate
                         if self.lead_surrogate == 0 {
-                            return (DecoderResult::Malformed(2, 0),
-                                    unread_handle.consumed(),
-                                    destination_handle.written());
+                            return (
+                                DecoderResult::Malformed(2, 0),
+                                unread_handle.consumed(),
+                                destination_handle.written(),
+                            );
                         }
                         destination_handle.write_surrogate_pair(self.lead_surrogate, code_unit);
                         self.lead_surrogate = 0;
@@ -146,9 +161,11 @@ impl Utf16Decoder {
                         // pending BMP character.
                         self.lead_surrogate = code_unit;
                         self.pending_bmp = true;
-                        return (DecoderResult::Malformed(2, 2),
-                                unread_handle.consumed(),
-                                destination_handle.written());
+                        return (
+                            DecoderResult::Malformed(2, 2),
+                            unread_handle.consumed(),
+                            destination_handle.written(),
+                        );
                     }
                     destination_handle.write_bmp(code_unit);
                     continue;
@@ -215,6 +232,15 @@ mod tests {
 
         decode_utf_16le(b"\x3D\xD8\x03\x26", "\u{FFFD}\u{2603}");
         decode_utf_16be(b"\xD8\x3D\x26\x03", "\u{FFFD}\u{2603}");
+
+        // The \xFF makes sure that the parts before and after have different alignment
+        let long_le = b"\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8\xA9\xDC\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8\x00\x00\x00\x00\x00\x00\x00\x00\xA9\xDC\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8\xA9\xDC\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8\x00\x00\x00\x00\x00\x00\x00\x00\xA9\xDC\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3D\xD8";
+        let long_be = b"\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D\xDC\xA9\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D\x00\x00\x00\x00\x00\x00\x00\x00\xDC\xA9\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D\xFF\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D\xDC\xA9\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D\x00\x00\x00\x00\x00\x00\x00\x00\xDC\xA9\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xD8\x3D";
+        let long_expect = "\x00\x00\x00\x00\u{1F4A9}\x00\x00\x00\x00\u{FFFD}\x00\x00\x00\x00\u{FFFD}\x00\x00\x00\x00\x00\x00\x00\x00\u{FFFD}";
+        decode_utf_16le(&long_le[..long_le.len() / 2], long_expect);
+        decode_utf_16be(&long_be[..long_be.len() / 2], long_expect);
+        decode_utf_16le(&long_le[long_le.len() / 2 + 1..], long_expect);
+        decode_utf_16be(&long_be[long_be.len() / 2 + 1..], long_expect);
     }
 
     #[test]

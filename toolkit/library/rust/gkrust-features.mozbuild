@@ -26,8 +26,6 @@ if (CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android') or CONFIG
 if CONFIG['MOZ_MEMORY']:
     gkrust_features += ['moz_memory']
 
-gkrust_features += ['no-static-ideograph-encoder-tables']
-
 # See details in toolkit/library/rust/shared/lib.rs
 # A string test is not the best thing, but it works well enough here.
 if CONFIG['RUSTC_VERSION'] < "1.27":

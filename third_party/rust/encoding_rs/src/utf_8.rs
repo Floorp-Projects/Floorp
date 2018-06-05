@@ -10,11 +10,11 @@
 #[cfg(feature = "parallel-utf8")]
 extern crate rayon;
 
-use handles::*;
-use variant::*;
 use super::*;
 use ascii::ascii_to_basic_latin;
 use ascii::basic_latin_to_ascii;
+use handles::*;
+use variant::*;
 
 // Keep this cfg_if in sync with whether the utf_8_core module is defined in lib.rs.
 cfg_if! {
@@ -48,21 +48,22 @@ pub const UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 7;
 // Instead, please regenerate using generate-encoding-data.py
 
 /// Bit is 1 if the trail is invalid.
-pub static UTF8_TRAIL_INVALID: [u8; 256] =
-    [248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 144, 144, 144, 144,
-     144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 160, 160, 160, 160, 160, 160,
-     160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160,
-     160, 160, 160, 160, 160, 160, 160, 160, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-     248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248];
+pub static UTF8_TRAIL_INVALID: [u8; 256] = [
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 80, 80, 80, 80, 80, 80,
+    80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144,
+    144, 144, 144, 144, 144, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160,
+    160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
+    248, 248, 248, 248, 248, 248,
+];
 // END GENERATED CODE
 
 #[cfg(feature = "parallel-utf8")]
@@ -80,9 +81,9 @@ pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
         // which we are trying to optimize here.
         if len < 290000 {
             return match run_utf8_validation(&bytes[..len]) {
-                       Ok(_) => bytes.len(),
-                       Err(e) => e.valid_up_to(),
-                   };
+                Ok(_) => bytes.len(),
+                Err(e) => e.valid_up_to(),
+            };
         }
         let mid = len >> 1;
         let mut adjusted = mid;
@@ -132,12 +133,8 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
             let dst_remaining = &mut dst[written..];
             let length = ::std::cmp::min(src_remaining.len(), dst_remaining.len());
             match unsafe {
-                      ascii_to_basic_latin(
-                    src_remaining.as_ptr(),
-                    dst_remaining.as_mut_ptr(),
-                    length,
-                )
-                  } {
+                ascii_to_basic_latin(src_remaining.as_ptr(), dst_remaining.as_mut_ptr(), length)
+            } {
                 None => {
                     read += length;
                     written += length;
@@ -185,14 +182,15 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         // Three-byte normal
                         let second = src[read + 1];
                         let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0xFu32) << 12) |
-                                    ((second as u32 & 0x3Fu32) << 6) |
-                                    (third as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0xFu32) << 12)
+                            | ((second as u32 & 0x3Fu32) << 6)
+                            | (third as u32 & 0x3Fu32);
                         dst[written] = point as u16;
                         read += 3;
                         written += 1;
@@ -201,15 +199,16 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         // Three-byte special lower bound
                         let second = src[read + 1];
                         let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize] &
-                             UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize]
+                            & UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0xFu32) << 12) |
-                                    ((second as u32 & 0x3Fu32) << 6) |
-                                    (third as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0xFu32) << 12)
+                            | ((second as u32 & 0x3Fu32) << 6)
+                            | (third as u32 & 0x3Fu32);
                         dst[written] = point as u16;
                         read += 3;
                         written += 1;
@@ -218,15 +217,16 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         // Three-byte special upper bound
                         let second = src[read + 1];
                         let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize] &
-                             UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize]
+                            & UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0xFu32) << 12) |
-                                    ((second as u32 & 0x3Fu32) << 6) |
-                                    (third as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0xFu32) << 12)
+                            | ((second as u32 & 0x3Fu32) << 6)
+                            | (third as u32 & 0x3Fu32);
                         dst[written] = point as u16;
                         read += 3;
                         written += 1;
@@ -239,16 +239,17 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         let second = src[read + 1];
                         let third = src[read + 2];
                         let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL) |
-                            (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
+                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0x7u32) << 18) |
-                                    ((second as u32 & 0x3Fu32) << 12) |
-                                    ((third as u32 & 0x3Fu32) << 6) |
-                                    (fourth as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0x7u32) << 18)
+                            | ((second as u32 & 0x3Fu32) << 12)
+                            | ((third as u32 & 0x3Fu32) << 6)
+                            | (fourth as u32 & 0x3Fu32);
                         dst[written] = (0xD7C0 + (point >> 10)) as u16;
                         dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
                         read += 4;
@@ -262,17 +263,18 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         let second = src[read + 1];
                         let third = src[read + 2];
                         let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize] &
-                             UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL) |
-                            (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize]
+                            & UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
+                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0x7u32) << 18) |
-                                    ((second as u32 & 0x3Fu32) << 12) |
-                                    ((third as u32 & 0x3Fu32) << 6) |
-                                    (fourth as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0x7u32) << 18)
+                            | ((second as u32 & 0x3Fu32) << 12)
+                            | ((third as u32 & 0x3Fu32) << 6)
+                            | (fourth as u32 & 0x3Fu32);
                         dst[written] = (0xD7C0 + (point >> 10)) as u16;
                         dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
                         read += 4;
@@ -286,17 +288,18 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                         let second = src[read + 1];
                         let third = src[read + 2];
                         let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize] &
-                             UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL) |
-                            (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL) |
-                            (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL)) !=
-                           0 {
+                        if ((UTF8_TRAIL_INVALID[second as usize]
+                            & UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
+                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
+                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
+                            != 0
+                        {
                             break 'outer;
                         }
-                        let point = (((byte as u32) & 0x7u32) << 18) |
-                                    ((second as u32 & 0x3Fu32) << 12) |
-                                    ((third as u32 & 0x3Fu32) << 6) |
-                                    (fourth as u32 & 0x3Fu32);
+                        let point = (((byte as u32) & 0x7u32) << 18)
+                            | ((second as u32 & 0x3Fu32) << 12)
+                            | ((third as u32 & 0x3Fu32) << 6)
+                            | (fourth as u32 & 0x3Fu32);
                         dst[written] = (0xD7C0 + (point >> 10)) as u16;
                         dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
                         read += 4;
@@ -363,13 +366,15 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                 }
                 let second = src[read + 1];
                 let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL) |
-                    (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                   0 {
+                if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
+                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                    != 0
+                {
                     break 'outer;
                 }
-                let point = (((byte as u32) & 0xFu32) << 12) | ((second as u32 & 0x3Fu32) << 6) |
-                            (third as u32 & 0x3Fu32);
+                let point = (((byte as u32) & 0xFu32) << 12)
+                    | ((second as u32 & 0x3Fu32) << 6)
+                    | (third as u32 & 0x3Fu32);
                 dst[written] = point as u16;
                 read = new_read;
                 written += 1;
@@ -382,14 +387,16 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                 }
                 let second = src[read + 1];
                 let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize] &
-                     UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL) |
-                    (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                   0 {
+                if ((UTF8_TRAIL_INVALID[second as usize]
+                    & UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
+                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                    != 0
+                {
                     break 'outer;
                 }
-                let point = (((byte as u32) & 0xFu32) << 12) | ((second as u32 & 0x3Fu32) << 6) |
-                            (third as u32 & 0x3Fu32);
+                let point = (((byte as u32) & 0xFu32) << 12)
+                    | ((second as u32 & 0x3Fu32) << 6)
+                    | (third as u32 & 0x3Fu32);
                 dst[written] = point as u16;
                 read = new_read;
                 written += 1;
@@ -402,14 +409,16 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                 }
                 let second = src[read + 1];
                 let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize] &
-                     UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL) |
-                    (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)) !=
-                   0 {
+                if ((UTF8_TRAIL_INVALID[second as usize]
+                    & UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
+                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
+                    != 0
+                {
                     break 'outer;
                 }
-                let point = (((byte as u32) & 0xFu32) << 12) | ((second as u32 & 0x3Fu32) << 6) |
-                            (third as u32 & 0x3Fu32);
+                let point = (((byte as u32) & 0xFu32) << 12)
+                    | ((second as u32 & 0x3Fu32) << 6)
+                    | (third as u32 & 0x3Fu32);
                 dst[written] = point as u16;
                 read = new_read;
                 written += 1;
@@ -426,7 +435,7 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
 
 pub struct Utf8Decoder {
     code_point: u32,
-    bytes_seen: usize, // 1, 2 or 3: counts continuations only
+    bytes_seen: usize,   // 1, 2 or 3: counts continuations only
     bytes_needed: usize, // 1, 2 or 3: counts continuations only
     lower_boundary: u8,
     upper_boundary: u8,
@@ -485,7 +494,11 @@ impl Utf8Decoder {
                 self.code_point = 0;
                 self.bytes_needed = 0;
                 self.bytes_seen = 0;
-                return (DecoderResult::Malformed(bad_bytes, 0), src_consumed, dest.written());
+                return (
+                    DecoderResult::Malformed(bad_bytes, 0),
+                    src_consumed,
+                    dest.written(),
+                );
             }
         },
         {
@@ -495,9 +508,11 @@ impl Utf8Decoder {
                     continue;
                 }
                 if b < 0xC2u8 {
-                    return (DecoderResult::Malformed(1, 0),
-                            unread_handle.consumed(),
-                            destination_handle.written());
+                    return (
+                        DecoderResult::Malformed(1, 0),
+                        unread_handle.consumed(),
+                        destination_handle.written(),
+                    );
                 }
                 if b < 0xE0u8 {
                     self.bytes_needed = 1;
@@ -524,9 +539,11 @@ impl Utf8Decoder {
                     self.code_point = b as u32 & 0x7;
                     continue;
                 }
-                return (DecoderResult::Malformed(1, 0),
-                        unread_handle.consumed(),
-                        destination_handle.written());
+                return (
+                    DecoderResult::Malformed(1, 0),
+                    unread_handle.consumed(),
+                    destination_handle.written(),
+                );
             }
             // self.bytes_needed != 0
             if !(b >= self.lower_boundary && b <= self.upper_boundary) {
@@ -536,9 +553,11 @@ impl Utf8Decoder {
                 self.bytes_seen = 0;
                 self.lower_boundary = 0x80u8;
                 self.upper_boundary = 0xBFu8;
-                return (DecoderResult::Malformed(bad_bytes, 0),
-                        unread_handle.unread(),
-                        destination_handle.written());
+                return (
+                    DecoderResult::Malformed(bad_bytes, 0),
+                    unread_handle.unread(),
+                    destination_handle.written(),
+                );
             }
             self.lower_boundary = 0x80u8;
             self.upper_boundary = 0xBFu8;
@@ -575,24 +594,27 @@ impl Utf8Encoder {
         Encoder::new(encoding, VariantEncoder::Utf8(Utf8Encoder))
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         checked_add(1, u16_length.checked_mul(3))
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         Some(byte_length)
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(never_loop))]
-    pub fn encode_from_utf16_raw(&mut self,
-                                 src: &[u16],
-                                 dst: &mut [u8],
-                                 _last: bool)
-                                 -> (EncoderResult, usize, usize) {
+    pub fn encode_from_utf16_raw(
+        &mut self,
+        src: &[u16],
+        dst: &mut [u8],
+        _last: bool,
+    ) -> (EncoderResult, usize, usize) {
         let mut read = 0;
         let mut written = 0;
         'outer: loop {
@@ -605,12 +627,8 @@ impl Utf8Encoder {
                     (EncoderResult::InputEmpty, src_remaining.len())
                 };
                 match unsafe {
-                          basic_latin_to_ascii(
-                        src_remaining.as_ptr(),
-                        dst_remaining.as_mut_ptr(),
-                        length,
-                    )
-                      } {
+                    basic_latin_to_ascii(src_remaining.as_ptr(), dst_remaining.as_mut_ptr(), length)
+                } {
                     None => {
                         read += length;
                         written += length;
@@ -664,8 +682,8 @@ impl Utf8Encoder {
                         if second_minus_low_surrogate_start <= (0xDFFF - 0xDC00) {
                             // The next code unit is a low surrogate. Advance position.
                             read += 1;
-                            let astral = ((unit as u32) << 10) + second as u32 -
-                                         (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32);
+                            let astral = ((unit as u32) << 10) + second as u32
+                                - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32);
                             dst[written] = (astral >> 18) as u8 | 0xF0u8;
                             written += 1;
                             dst[written] = ((astral & 0x3F000u32) >> 12) as u8 | 0x80u8;
@@ -710,11 +728,12 @@ impl Utf8Encoder {
         }
     }
 
-    pub fn encode_from_utf8_raw(&mut self,
-                                src: &str,
-                                dst: &mut [u8],
-                                _last: bool)
-                                -> (EncoderResult, usize, usize) {
+    pub fn encode_from_utf8_raw(
+        &mut self,
+        src: &str,
+        dst: &mut [u8],
+        _last: bool,
+    ) -> (EncoderResult, usize, usize) {
         let mut to_write = src.len();
         if to_write <= dst.len() {
             unsafe {
@@ -922,7 +941,6 @@ mod tests {
         // Highest four-byte with last byte replaced with 0xFF
         decode_utf8_to_utf8(b"a\xF4\x8F\xBF\xFF", "a\u{FFFD}\u{FFFD}");
         decode_utf8_to_utf8(b"a\xF4\x8F\xBF\xFFZ", "a\u{FFFD}\u{FFFD}Z");
-
     }
 
     #[test]

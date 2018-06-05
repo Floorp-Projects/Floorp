@@ -37,8 +37,8 @@ rustc.
 
 ## rustfmt
 
-The `rustfmt` version used for this code is 0.8.4. Please either use that
-version or avoid using `rustfmt` (so as not to reformat all the code).
+The `rustfmt` version used for this code is `rustfmt-nightly`. Please either
+use that version or avoid using `rustfmt` (so as not to reformat all the code).
 
 ## Unit tests
 

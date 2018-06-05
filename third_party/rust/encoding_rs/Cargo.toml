@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_rs"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
@@ -32,7 +32,7 @@ version = "1.0"
 optional = true
 
 [dependencies.simd]
-version = "0.2.0"
+version = "0.2.2"
 optional = true
 [dev-dependencies.bincode]
 version = "0.8"
@@ -44,7 +44,9 @@ version = "1.0"
 version = "1.0"
 
 [features]
-no-static-ideograph-encoder-tables = []
+less-slow-big5-hanzi-encode = []
+less-slow-gb-hanzi-encode = []
+less-slow-kanji-encode = []
 simd-accel = ["simd"]
 [badges.travis-ci]
 repository = "hsivonen/encoding_rs"
