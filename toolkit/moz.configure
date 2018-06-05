@@ -845,10 +845,9 @@ option('--enable-rust-simd', env='MOZ_RUST_SIMD',
 
 @depends('--enable-rust-simd', target)
 def rust_simd(value, target):
-    # As of 2017-06-13, the simd crate only works on aarch64,
-    # x86 and x86_64. It's meant to work on 32-bit ARM, too,
-    # but currently does not.
-    if target.cpu in ('aarch64', 'x86', 'x86_64') and value:
+    # As of 2018-06-05, the simd crate only works on aarch64,
+    # armv7, x86 and x86_64.
+    if target.cpu in ('aarch64', 'arm', 'x86', 'x86_64') and value:
         return True
 
 set_config('MOZ_RUST_SIMD', rust_simd)
