@@ -54,6 +54,7 @@
                 android:layout_marginBottom="@dimen/floating_action_button_margin"
                 android:layout_marginEnd="@dimen/floating_action_button_margin"
                 android:elevation="4dp"
+                android:src="@drawable/tab_number_border"
                 android:visibility="gone"
                 app:backgroundTint="@color/colorMultitasking"
                 app:rippleColor="@color/colorMultitaskingPressed"

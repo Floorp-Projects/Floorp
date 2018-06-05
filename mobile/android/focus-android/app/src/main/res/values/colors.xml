@@ -23,8 +23,8 @@
     <color name="colorErase">@color/photonMagenta70</color>
     <color name="colorErasePressed">@color/photonMagenta80</color>
 
-    <color name="colorMultitasking">@color/photonBlue50</color>
-    <color name="colorMultitaskingPressed">@color/photonBlue60</color>
+    <color name="colorMultitasking">@color/photonMagenta70</color>
+    <color name="colorMultitaskingPressed">@color/photonMagenta80</color>
 
     <color name="colorSheetSessionBackground">#fff9f9fa</color>
     <color name="colorSheetSessionBackgroundPressed">#ffededf0</color>

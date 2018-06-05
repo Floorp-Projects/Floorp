@@ -24,7 +24,7 @@
     <dimen name="firstrun_card_width">300dp</dimen>
     <dimen name="firstrun_card_height">460dp</dimen>
 
-    <dimen name="tabs_button_text_size">16dp</dimen>
+    <dimen name="tabs_button_text_size">12dp</dimen>
 
     <dimen name="floating_action_button_size">56dp</dimen>
 
