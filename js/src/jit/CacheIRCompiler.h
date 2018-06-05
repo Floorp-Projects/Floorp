@@ -73,7 +73,6 @@ namespace jit {
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
     _(LoadObjectTruthyResult)             \
-    _(CompareStringResult)                \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
     _(ArrayJoinResult)                    \
