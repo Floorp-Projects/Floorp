@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1253064 - Prefer Clang to GCC in local developer builds
+Bug 1459785 - ANGLE update; moved files require clobber due to bug 1421146.
