@@ -251,6 +251,8 @@ impl Runner for FirefoxRunner {
     }
 
     fn start(mut self) -> Result<FirefoxProcess, RunnerError> {
+        self.profile.user_prefs()?.write()?;
+
         let stdout = self.stdout.unwrap_or_else(|| Stdio::inherit());
         let stderr = self.stderr.unwrap_or_else(|| Stdio::inherit());
 
@@ -265,12 +267,10 @@ impl Runner for FirefoxRunner {
         }
         cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
 
-        self.profile.user_prefs()?.write()?;
-
         info!("Running command: {:?}", cmd);
         let process = cmd.spawn()?;
         Ok(FirefoxProcess {
-            process: process,
+            process,
             profile: self.profile
         })
     }
