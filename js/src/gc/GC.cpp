@@ -7073,8 +7073,10 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
     {
         char budgetBuffer[32];
         budget.describe(budgetBuffer, 32);
-        stats().writeLogMessage("Incremental: %d, useZeal: %d, budget: %s",
-            bool(isIncremental), bool(useZeal), budgetBuffer);
+        stats().writeLogMessage(
+            "Incremental: %d, lastMarkSlice: %d, useZeal: %d, budget: %s",
+            bool(isIncremental), bool(lastMarkSlice), bool(useZeal),
+            budgetBuffer);
     }
 #endif
     MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental || lastMarkSlice);
