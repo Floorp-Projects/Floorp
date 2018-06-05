@@ -28,7 +28,7 @@ MARKUPMAP(aside,
 
 MARKUPMAP(blockquote,
           New_HyperText,
-          roles::BLOCKQUOTE)
+          roles::SECTION)
 
 MARKUPMAP(dd,
           New_HTMLDefinition,
