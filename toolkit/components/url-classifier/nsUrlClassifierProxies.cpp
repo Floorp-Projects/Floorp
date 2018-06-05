@@ -129,7 +129,7 @@ UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable::Run()
 nsresult
 UrlClassifierDBServiceWorkerProxy::DoLocalLookup(const nsACString& spec,
                                                  const nsACString& tables,
-                                                 LookupResultArray* results) const
+                                                 LookupResultArray& results) const
 
 {
   // Run synchronously on background thread. NS_DISPATCH_SYNC does *not* do
@@ -287,17 +287,17 @@ NS_IMPL_ISUPPORTS(UrlClassifierLookupCallbackProxy,
                   nsIUrlClassifierLookupCallback)
 
 NS_IMETHODIMP
-UrlClassifierLookupCallbackProxy::LookupComplete
-  (LookupResultArray * aResults)
+UrlClassifierLookupCallbackProxy::LookupComplete(UniquePtr<LookupResultArray> aResults)
 {
-  nsCOMPtr<nsIRunnable> r = new LookupCompleteRunnable(mTarget, aResults);
+  nsCOMPtr<nsIRunnable> r = new LookupCompleteRunnable(mTarget,
+                                                       std::move(aResults));
   return NS_DispatchToMainThread(r);
 }
 
 NS_IMETHODIMP
 UrlClassifierLookupCallbackProxy::LookupCompleteRunnable::Run()
 {
-  mTarget->LookupComplete(mResults);
+  mTarget->LookupComplete(std::move(mResults));
   return NS_OK;
 }
 

@@ -211,7 +211,7 @@ public:
   // either the main thread or the worker thread.
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,
-                         LookupResultArray* results);
+                         LookupResultArray& results);
 
   // Open the DB connection
   nsresult GCC_MANGLING_WORKAROUND OpenDb();
