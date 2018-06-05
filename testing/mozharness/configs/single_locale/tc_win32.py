@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "locales_file": "src/browser/locales/all-locales",
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
