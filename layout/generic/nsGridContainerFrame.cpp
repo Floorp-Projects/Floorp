@@ -6330,6 +6330,36 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+void
+nsGridContainerFrame::Init(nsIContent*       aContent,
+                           nsContainerFrame* aParent,
+                           nsIFrame*         aPrevInFlow)
+{
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+
+  nsFrameState bits = nsFrameState(0);
+  if (MOZ_LIKELY(!aPrevInFlow)) {
+    // skip our scroll frame and such if we have it
+    auto* parent = aParent;
+    while (parent && parent->GetContent() == aContent) {
+      parent = parent->GetParent();
+    }
+    if (parent && parent->IsGridContainerFrame()) {
+      const auto* pos = StylePosition();
+      if (pos->GridTemplateColumns().mIsSubgrid) {
+        bits |= NS_STATE_GRID_IS_COL_SUBGRID;
+      }
+      if (pos->GridTemplateRows().mIsSubgrid) {
+        bits |= NS_STATE_GRID_IS_ROW_SUBGRID;
+      }
+    }
+  } else {
+    bits = aPrevInFlow->GetStateBits() & (NS_STATE_GRID_IS_COL_SUBGRID |
+                                          NS_STATE_GRID_IS_ROW_SUBGRID);
+  }
+  AddStateBits(bits);
+}
+
 nscoord
 nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                      IntrinsicISizeType  aType)
