@@ -46,11 +46,6 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script non262/SIMD/load-sab-b
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
-# flatMap and flatten are Nightly-only
-skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
-skip-if(!Array.prototype.flat) include test262/built-ins/Array/prototype/flat/jstests.list
-
-
 #####################################
 # Test262 tests disabled on browser #
 #####################################
