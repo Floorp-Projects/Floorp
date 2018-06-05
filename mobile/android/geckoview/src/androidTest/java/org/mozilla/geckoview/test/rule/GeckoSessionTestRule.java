@@ -42,6 +42,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.os.Process;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -560,6 +561,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         public boolean isAutomation() {
             return !getEnvVar("MOZ_IN_AUTOMATION").isEmpty();
+        }
+
+        public boolean shouldShutdownOnCrash() {
+            return !getEnvVar("MOZ_CRASHREPORTER_SHUTDOWN").isEmpty();
         }
 
         public boolean isMultiprocess() {
@@ -1184,6 +1189,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     }
 
                     if (sOnCrash.equals(method) && !mIgnoreCrash && isUsingSession(session)) {
+                        if (env.shouldShutdownOnCrash()) {
+                            sRuntime.shutdown();
+                        }
+
                         throw new RuntimeException("Content process crashed");
                     }
 
@@ -1242,13 +1251,24 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
                     .extras(InstrumentationRegistry.getArguments())
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true)
                     .remoteDebuggingEnabled(true);
+
+            if (env.isAutomation()) {
+                runtimeSettingsBuilder
+                        .nativeCrashReportingEnabled(true)
+                        .javaCrashReportingEnabled(true);
+            }
 
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
+
+            sRuntime.setDelegate(new GeckoRuntime.Delegate() {
+                @Override
+                public void onShutdown() {
+                    Process.killProcess(Process.myPid());
+                }
+            });
         }
 
         if (sCachedSession != null && !sCachedSession.isOpen()) {
