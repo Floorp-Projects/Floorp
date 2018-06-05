@@ -86,8 +86,8 @@ protected:
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) = 0;
-#elif defined(MOZ_WIDGET_ANDROID)
-  virtual bool SubmitFrame(const mozilla::layers::SurfaceTextureDescriptor& aSurface,
+#elif defined(MOZ_ANDROID_GOOGLE_VR)
+  virtual bool SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) = 0;
 #endif

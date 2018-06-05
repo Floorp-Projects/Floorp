@@ -24,11 +24,7 @@ static const char* kShmemName = "moz.gecko.vr_ext.0.0.1";
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 static const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
-#elif defined(MOZ_WIDGET_ANDROID)
-#include <string.h>
-#include <pthread.h>
-#include "GeckoVRManager.h"
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif
 
 #include "gfxVRExternal.h"
 #include "VRManagerParent.h"
@@ -176,16 +172,6 @@ VRDisplayExternal::SubmitFrame(MacIOSurface* aMacIOSurface,
   return result;
 }
 
-#elif defined(MOZ_WIDGET_ANDROID)
-
-bool
-VRDisplayExternal::SubmitFrame(const layers::SurfaceTextureDescriptor& aSurface,
-                               const gfx::Rect& aLeftEyeRect,
-                               const gfx::Rect& aRightEyeRect) {
-
-  return false;
-}
-
 #endif
 
 VRControllerExternal::VRControllerExternal(dom::GamepadHand aHand, uint32_t aDisplayID,
@@ -215,9 +201,6 @@ VRSystemManagerExternal::VRSystemManagerExternal()
   mShmemFD = 0;
 #elif defined(XP_WIN)
   mShmemFile = NULL;
-#elif defined(MOZ_WIDGET_ANDROID)
-  mDoShutdown = false;
-  mExternalStructFailed = false;
 #endif
 }
 
@@ -231,13 +214,10 @@ VRSystemManagerExternal::OpenShmem()
 {
   if (mExternalShmem) {
     return;
-#if defined(MOZ_WIDGET_ANDROID)
-  } else if (mExternalStructFailed) {
-    return;
-#endif // defined(MOZ_WIDGET_ANDROID)
   }
 
 #if defined(XP_MACOSX)
+
   if (mShmemFD == 0) {
     mShmemFD = shm_open(kShmemName, O_RDWR, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
   }
@@ -264,6 +244,7 @@ VRSystemManagerExternal::OpenShmem()
   }
 
 #elif defined(XP_WIN)
+
   if (mShmemFile == NULL) {
     mShmemFile = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, kShmemName);
     if (mShmemFile == NULL) {
@@ -285,21 +266,6 @@ VRSystemManagerExternal::OpenShmem()
     CloseShmem();
     return;
   }
-#elif defined(MOZ_WIDGET_ANDROID)
-  mExternalShmem = (VRExternalShmem*)mozilla::GeckoVRManager::GetExternalContext();
-  if (!mExternalShmem) {
-    return;
-  }
-  if (mExternalShmem->version != kVRExternalVersion) {
-    mExternalShmem = nullptr;
-    mExternalStructFailed = true;
-    return;
-  }
-  if (mExternalShmem->size != sizeof(VRExternalShmem)) {
-    mExternalShmem = nullptr;
-    mExternalStructFailed = true;
-    return;
-  }
 #endif
   CheckForShutdown();
 }
@@ -307,23 +273,18 @@ VRSystemManagerExternal::OpenShmem()
 void
 VRSystemManagerExternal::CheckForShutdown()
 {
-#if defined(MOZ_WIDGET_ANDROID)
-  if (mDoShutdown) {
-    Shutdown();
-  }
-#else
   if (mExternalShmem) {
     if (mExternalShmem->generationA == -1 && mExternalShmem->generationB == -1) {
       Shutdown();
     }
   }
-#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 void
 VRSystemManagerExternal::CloseShmem()
 {
 #if defined(XP_MACOSX)
+  
   if (mExternalShmem) {
     munmap((void *)mExternalShmem, sizeof(VRExternalShmem));
     mExternalShmem = NULL;
@@ -332,6 +293,7 @@ VRSystemManagerExternal::CloseShmem()
     close(mShmemFD);
   }
   mShmemFD = 0;
+  
 #elif defined(XP_WIN)
   if (mExternalShmem) {
     UnmapViewOfFile((void *)mExternalShmem);
@@ -341,8 +303,6 @@ VRSystemManagerExternal::CloseShmem()
     CloseHandle(mShmemFile);
     mShmemFile = NULL;
   }
-#elif defined(MOZ_WIDGET_ANDROID)
-  mExternalShmem = NULL;
 #endif
 }
 
@@ -373,9 +333,6 @@ VRSystemManagerExternal::Shutdown()
   }
   RemoveControllers();
   CloseShmem();
-#if defined(MOZ_WIDGET_ANDROID)
-  mDoShutdown = false;
-#endif
 }
 
 void
@@ -493,16 +450,7 @@ VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState, VRHMDSensorSta
 {
   MOZ_ASSERT(mExternalShmem);
   if (mExternalShmem) {
-#if defined(MOZ_WIDGET_ANDROID)
-    if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->systemMutex)) == 0) {
-        memcpy(aDisplayState, (void*)&(mExternalShmem->state.displayState), sizeof(VRDisplayState));
-        if (aSensorState) {
-          memcpy(aSensorState, (void*)&(mExternalShmem->state.sensorState), sizeof(VRHMDSensorState));
-        }
-        pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->systemMutex));
-        mDoShutdown = aDisplayState->shutdown;
-    }
-#else
+    // TODO - Add locking here for non-x86 platforms
     VRExternalShmem tmp;
     memcpy(&tmp, (void *)mExternalShmem, sizeof(VRExternalShmem));
     if (tmp.generationA == tmp.generationB && tmp.generationA != 0 && tmp.generationA != -1) {
@@ -511,6 +459,5 @@ VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState, VRHMDSensorSta
         memcpy(aSensorState, &tmp.state.sensorState, sizeof(VRHMDSensorState));
       }
     }
-#endif // defined(MOZ_WIDGET_ANDROID)
   }
 }

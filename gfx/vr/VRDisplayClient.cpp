@@ -81,7 +81,7 @@ VRDisplayClient::SetGroupMask(uint32_t aGroupMask)
 bool
 VRDisplayClient::IsPresentationGenerationCurrent() const
 {
-  if (mLastPresentingGeneration != mDisplayInfo.mDisplayState.mPresentingGeneration) {
+  if (mLastPresentingGeneration != mDisplayInfo.mPresentingGeneration) {
     return false;
   }
 
@@ -91,7 +91,7 @@ VRDisplayClient::IsPresentationGenerationCurrent() const
 void
 VRDisplayClient::MakePresentationGenerationCurrent()
 {
-  mLastPresentingGeneration = mDisplayInfo.mDisplayState.mPresentingGeneration;
+  mLastPresentingGeneration = mDisplayInfo.mPresentingGeneration;
 }
 
 void
