@@ -254,9 +254,10 @@ WalkStackMain64(struct WalkStackData* aData)
     context = &context_buf;
     memset(context, 0, sizeof(CONTEXT));
     context->ContextFlags = CONTEXT_FULL;
-    if (aData->walkCallingThread) {
-      ::RtlCaptureContext(context);
-    } else if (!GetThreadContext(aData->thread, context)) {
+    if (!GetThreadContext(aData->thread, context)) {
+      if (aData->walkCallingThread) {
+        PrintError("GetThreadContext");
+      }
       return;
     }
   } else {
@@ -506,15 +507,9 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
     return;
   }
 
-  HANDLE targetThread = aThread;
-  if (!aThread) {
-    targetThread = ::GetCurrentThread();
-    data.walkCallingThread = true;
-  } else {
-    DWORD threadId = ::GetThreadId(aThread);
-    DWORD currentThreadId = ::GetCurrentThreadId();
-    data.walkCallingThread = (threadId == currentThreadId);
-  }
+  HANDLE currentThread = ::GetCurrentThread();
+  HANDLE targetThread = aThread ? aThread : currentThread;
+  data.walkCallingThread = (targetThread == currentThread);
 
   // Have to duplicate handle to get a real handle.
   if (!myProcess) {
