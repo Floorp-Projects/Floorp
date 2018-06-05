@@ -92,6 +92,8 @@ function workerTestGetUserAgent(cb) {
   });
 }
 
+var completeInstall = null;
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
@@ -108,7 +110,7 @@ addEventListener('message', function workerWrapperOnMessage(e) {
     }
   }
   if ("ServiceWorker" in self) {
-    self.clients.matchAll().then(function(clients) {
+    self.clients.matchAll({ includeUncontrolled: true }).then(function(clients) {
       for (var i = 0; i < clients.length; ++i) {
         if (clients[i].url.indexOf("message_receiver.html") > -1) {
           client = clients[i];
@@ -120,6 +122,7 @@ addEventListener('message', function workerWrapperOnMessage(e) {
       }
       context = "ServiceWorker";
       runScript();
+      completeInstall();
     });
   } else {
     client = self;
@@ -127,3 +130,7 @@ addEventListener('message', function workerWrapperOnMessage(e) {
     runScript();
   }
 });
+
+addEventListener("install", e => {
+  e.waitUntil(new Promise(resolve => completeInstall = resolve));
+})
