@@ -33,7 +33,7 @@
 #include "nsComponentManagerUtils.h"
 
 #include "nsITreeBoxObject.h"
-#include "nsITreeColumns.h"
+#include "nsTreeColumns.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -522,7 +522,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
 already_AddRefed<nsITreeColumn>
 nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
 {
-  nsCOMPtr<nsITreeColumns> cols;
+  RefPtr<nsTreeColumns> cols;
   aTree->GetColumns(getter_AddRefs(cols));
   if (!cols)
     return nullptr;
@@ -540,7 +540,7 @@ nsCoreUtils::GetSensibleColumnCount(nsITreeBoxObject *aTree)
 {
   uint32_t count = 0;
 
-  nsCOMPtr<nsITreeColumns> cols;
+  RefPtr<nsTreeColumns> cols;
   aTree->GetColumns(getter_AddRefs(cols));
   if (!cols)
     return count;
