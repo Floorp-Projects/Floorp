@@ -21,6 +21,5 @@ DevToolsModules(
     'symbol-iterator-client.js',
     'tab-client.js',
     'thread-client.js',
-    'trace-client.js',
     'worker-client.js',
 )
