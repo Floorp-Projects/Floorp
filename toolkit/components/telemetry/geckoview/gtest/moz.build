@@ -10,7 +10,6 @@ LOCAL_INCLUDES += [
     '../',
     '../..',
     '../../..',
-    '/toolkit/components/jsoncpp/include',
     '/toolkit/components/telemetry/tests/gtest',
     '/xpcom/io',
 ]
@@ -18,7 +17,6 @@ LOCAL_INCLUDES += [
 DEFINES['MOZ_TELEMETRY_GECKOVIEW'] = True
 
 UNIFIED_SOURCES = [
-    '../TelemetryGeckoViewPersistence.cpp',
     'TestGeckoView.cpp',
 ]
 
