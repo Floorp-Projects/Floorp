@@ -10,7 +10,7 @@
 
 # ChunkingMixin {{{1
 class ChunkingMixin(object):
-    """Generic Chunking helper methods.
+    """Generic signing helper methods.
     """
     def query_chunked_list(self, possible_list, this_chunk, total_chunks,
                            sort=False):
