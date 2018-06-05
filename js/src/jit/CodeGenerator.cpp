@@ -43,6 +43,7 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
+#include "jit/VMFunctions.h"
 #include "util/Unicode.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -7719,12 +7720,6 @@ CodeGenerator::visitBinaryV(LBinaryV* lir)
         MOZ_CRASH("Unexpected binary op");
     }
 }
-
-typedef bool (*StringCompareFn)(JSContext*, HandleString, HandleString, bool*);
-static const VMFunction StringsEqualInfo =
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>, "StringsEqual");
-static const VMFunction StringsNotEqualInfo =
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>, "StringsEqual");
 
 void
 CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left, Register right,
