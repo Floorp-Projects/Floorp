@@ -250,6 +250,11 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["webExtensionTarget"],
+    spec: "devtools/shared/specs/targets/webextension",
+    front: null,
+  },
+  {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
     front: null,

@@ -9,5 +9,6 @@ DevToolsModules(
     'chrome-window.js',
     'frame.js',
     'parent-process.js',
+    'webextension.js',
     'worker.js',
 )

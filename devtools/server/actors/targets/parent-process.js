@@ -8,7 +8,7 @@
  * Target actor for the entire parent process.
  *
  * This actor extends BrowsingContextTargetActor.
- * This actor is extended by WebExtensionChildActor.
+ * This actor is extended by WebExtensionTargetActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
