@@ -30,5 +30,4 @@ config = {
         "MOZ_OBJDIR": OBJDIR,
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "upload_branch": "%s-android-api-16" % BRANCH,
 }
