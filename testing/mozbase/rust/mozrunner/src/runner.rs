@@ -13,6 +13,8 @@ use std::process::{Child, Command, Stdio};
 use std::thread;
 use std::time;
 
+use firefox_args::Arg;
+
 pub trait Runner {
     type Process;
 
@@ -262,7 +264,24 @@ impl Runner for FirefoxRunner {
             .stdout(stdout)
             .stderr(stderr);
 
-        if !self.args.iter().any(|x| is_profile_arg(x)) {
+        let mut seen_foreground = false;
+        let mut seen_no_remote = false;
+        let mut seen_profile = false;
+        for arg in self.args.iter() {
+            match arg.into() {
+                Arg::Foreground => seen_foreground = true,
+                Arg::NoRemote => seen_no_remote = true,
+                Arg::Profile | Arg::NamedProfile | Arg::ProfileManager => seen_profile = true,
+                Arg::Other(_) | Arg::None => {},
+            }
+        }
+        if !seen_foreground {
+            cmd.arg("-foreground");
+        }
+        if !seen_no_remote {
+            cmd.arg("-no-remote");
+        }
+        if !seen_profile {
             cmd.arg("-profile").arg(&self.profile.path);
         }
 
@@ -270,70 +289,8 @@ impl Runner for FirefoxRunner {
         let process = cmd.spawn()?;
         Ok(FirefoxProcess {
             process,
-            profile: self.profile
+            profile: self.profile,
         })
-    }
-}
-
-fn parse_arg_name<T>(arg: T) -> Option<String>
-where
-    T: AsRef<OsStr>,
-{
-    let arg_os_str: &OsStr = arg.as_ref();
-    let arg_str = arg_os_str.to_string_lossy();
-
-    let mut start = 0;
-    let mut end = 0;
-
-    for (i, c) in arg_str.chars().enumerate() {
-        if i == 0 {
-            if !platform::arg_prefix_char(c) {
-                break;
-            }
-        } else if i == 1 {
-            if name_end_char(c) {
-                break;
-            } else if c != '-' {
-                start = i;
-                end = start + 1;
-            } else {
-                start = i + 1;
-                end = start;
-            }
-        } else {
-            end += 1;
-            if name_end_char(c) {
-                end -= 1;
-                break;
-            }
-        }
-    }
-
-    if start > 0 && end > start {
-        Some(arg_str[start..end].into())
-    } else {
-        None
-    }
-}
-
-fn name_end_char(c: char) -> bool {
-    c == ' ' || c == '='
-}
-
-/// Check if an argument string affects the Firefox profile
-///
-/// Returns a boolean indicating whether a given string
-/// contains one of the `-P`, `-Profile` or `-ProfileManager`
-/// arguments, respecting the various platform-specific conventions.
-pub fn is_profile_arg<T>(arg: T) -> bool
-where
-    T: AsRef<OsStr>,
-{
-    if let Some(name) = parse_arg_name(arg) {
-        name.eq_ignore_ascii_case("profile") || name.eq_ignore_ascii_case("p")
-            || name.eq_ignore_ascii_case("profilemanager")
-    } else {
-        false
     }
 }
 
@@ -464,62 +421,5 @@ pub mod platform {
 
     pub fn arg_prefix_char(c: char) -> bool {
         c == '-'
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{is_profile_arg, parse_arg_name};
-
-    fn parse(arg: &str, name: Option<&str>) {
-        let result = parse_arg_name(arg);
-        assert_eq!(result, name.map(|x| x.to_string()));
-    }
-
-    #[test]
-    fn test_parse_arg_name() {
-        parse("-p", Some("p"));
-        parse("--p", Some("p"));
-        parse("--profile foo", Some("profile"));
-        parse("--profile", Some("profile"));
-        parse("--", None);
-        parse("", None);
-        parse("-=", None);
-        parse("--=", None);
-        parse("-- foo", None);
-        parse("foo", None);
-        parse("/ foo", None);
-        parse("/- foo", None);
-        parse("/=foo", None);
-        parse("foo", None);
-        parse("-profile", Some("profile"));
-        parse("-profile=foo", Some("profile"));
-        parse("-profile = foo", Some("profile"));
-        parse("-profile abc", Some("profile"));
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn test_parse_arg_name_windows() {
-        parse("/profile", Some("profile"));
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    #[test]
-    fn test_parse_arg_name_non_windows() {
-        parse("/profile", None);
-    }
-
-    #[test]
-    fn test_is_profile_arg() {
-        assert!(is_profile_arg("--profile"));
-        assert!(is_profile_arg("-p"));
-        assert!(is_profile_arg("-PROFILEMANAGER"));
-        assert!(is_profile_arg("-ProfileMANAGER"));
-        assert!(!is_profile_arg("-- profile"));
-        assert!(!is_profile_arg("-profiled"));
-        assert!(!is_profile_arg("-p1"));
-        assert!(is_profile_arg("-p test"));
-        assert!(is_profile_arg("-profile /foo"));
     }
 }
