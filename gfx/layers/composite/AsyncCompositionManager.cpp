@@ -1249,9 +1249,10 @@ AsyncCompositionManager::GetFrameUniformity(FrameUniformityData* aOutData)
 }
 
 bool
-AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
-                                             TimeDuration aVsyncRate,
-                                             TransformsToSkip aSkip)
+AsyncCompositionManager::TransformShadowTree(
+  TimeStamp aCurrentFrame,
+  TimeDuration aVsyncRate,
+  CompositorBridgeParentBase::TransformsToSkip aSkip)
 {
   AUTO_PROFILER_LABEL("AsyncCompositionManager::TransformShadowTree", GRAPHICS);
 
@@ -1300,7 +1301,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   // started animations.
   mPreviousFrameTimeStamp = wantNextFrame ? aCurrentFrame : TimeStamp();
 
-  if (!(aSkip & TransformsToSkip::APZ)) {
+  if (!(aSkip & CompositorBridgeParentBase::TransformsToSkip::APZ)) {
     // FIXME/bug 775437: unify this interface with the ~native-fennec
     // derived code
     //
