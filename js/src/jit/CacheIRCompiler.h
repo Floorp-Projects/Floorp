@@ -19,6 +19,9 @@ namespace jit {
 #define CACHE_IR_SHARED_OPS(_)            \
     _(GuardIsObject)                      \
     _(GuardIsNullOrUndefined)             \
+    _(GuardIsNotNullOrUndefined)          \
+    _(GuardIsNull)                        \
+    _(GuardIsUndefined)                   \
     _(GuardIsObjectOrNull)                \
     _(GuardIsBoolean)                     \
     _(GuardIsString)                      \
@@ -95,6 +98,7 @@ namespace jit {
     _(CompareSymbolResult)                \
     _(CompareInt32Result)                 \
     _(CompareDoubleResult)                \
+    _(CompareObjectUndefinedNullResult)   \
     _(ArrayJoinResult)                    \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
