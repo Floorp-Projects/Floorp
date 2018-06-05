@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "locales_file": "src/browser/locales/all-locales",
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
         "MOZ_OBJDIR": "obj-firefox",
