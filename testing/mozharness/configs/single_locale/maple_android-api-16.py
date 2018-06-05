@@ -14,22 +14,10 @@ config = {
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "nightly_build": True,
-    "tools_repo": "https://hg.mozilla.org/build/tools",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "repos": [{
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools",
-    }, {
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/projects/maple",
-        "revision": "%(revision)s",
-        "dest": MOZILLA_DIR,
-    }],
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': "/builds/hg-shared",
@@ -43,7 +31,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": "nightly-maple",
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android",
 
     # Balrog

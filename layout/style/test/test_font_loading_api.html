@@ -224,12 +224,12 @@ function runTest() {
 
   }).then(function() {
 
-    // (TEST 3) Test that document.fonts.ready starts out resolved with the
-    // FontFaceSet.
+    // (TEST 3) Test that document.fonts.ready is resolved with the
+    // document.fonts FontFaceSet.
     var p = Promise.resolve();
     sourceDocuments.forEach(function({ doc, what }) {
-      p = p.then(function() {
-        return is_resolved_with(doc.fonts.ready, doc.fonts, "initial value of document.fonts", "(TEST 3) (" + what + ")");
+      p = p.then(doc.fonts.ready).then(function() {
+        return is_resolved_with(doc.fonts.ready, doc.fonts, "document.fonts.ready resolves with document.fonts", "(TEST 3) (" + what + ")");
       });
     });
     return p;

@@ -188,8 +188,11 @@ pub fn serialize_identifier<W>(mut value: &str, dest: &mut W) -> fmt::Result whe
     }
 }
 
-
-fn serialize_name<W>(value: &str, dest: &mut W) -> fmt::Result where W:fmt::Write {
+/// Write a CSS name, like a custom property name.
+///
+/// You should only use this when you know what you're doing, when in doubt,
+/// consider using `serialize_identifier`.
+pub fn serialize_name<W>(value: &str, dest: &mut W) -> fmt::Result where W:fmt::Write {
     let mut chunk_start = 0;
     for (i, b) in value.bytes().enumerate() {
         let escaped = match b {

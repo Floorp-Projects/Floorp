@@ -6,15 +6,6 @@
     "locales_platform": "android-multilocale",
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US", "multi"],
-    "repos": [{
-        "repo": "https://hg.mozilla.org/releases/mozilla-release",
-        "branch": "default",
-        "dest": "build"
-    },{
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools"
-    }],
     "vcs_share_base": "/builds/hg-shared",
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "required_config_vars": ["tag_override"],

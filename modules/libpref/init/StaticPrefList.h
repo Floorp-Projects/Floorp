@@ -170,6 +170,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Is CSS error reporting enabled?
+VARCACHE_PREF(
+  "layout.css.report_errors",
+  layout_css_report_errors,
+  bool, true
+)
+
 // Is support for the font-display @font-face descriptor enabled?
 VARCACHE_PREF(
   "layout.css.font-display.enabled",

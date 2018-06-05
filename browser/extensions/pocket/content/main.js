@@ -394,6 +394,12 @@ var pktUI = (function() {
         // Open a new tab with a given url
         var _openTabWithUrlMessageId = "openTabWithUrl";
         pktUIMessaging.addMessageListener(iframe, _openTabWithUrlMessageId, function(panelId, data, contentPrincipal) {
+            try {
+              urlSecurityCheck(data.url, contentPrincipal, Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+            } catch (ex) {
+              return;
+            }
+
             var url = data.url;
             openTabWithUrl(url, contentPrincipal);
             pktUIMessaging.sendResponseMessageToPanel(panelId, _openTabWithUrlMessageId, url);

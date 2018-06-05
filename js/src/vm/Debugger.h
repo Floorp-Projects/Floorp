@@ -21,6 +21,7 @@
 #include "js/Debug.h"
 #include "js/GCVariant.h"
 #include "js/HashTable.h"
+#include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSCompartment.h"
@@ -255,13 +256,13 @@ class AutoSuppressDebuggeeNoExecuteChecks
 };
 
 class MOZ_RAII EvalOptions {
-    const char* filename_;
-    unsigned lineno_;
+    JS::UniqueChars filename_;
+    unsigned lineno_ = 1;
 
   public:
-    EvalOptions() : filename_(nullptr), lineno_(1) {}
-    ~EvalOptions();
-    const char* filename() const { return filename_; }
+    EvalOptions() = default;
+    ~EvalOptions() = default;
+    const char* filename() const { return filename_.get(); }
     unsigned lineno() const { return lineno_; }
     MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
     void setLineno(unsigned lineno) { lineno_ = lineno; }

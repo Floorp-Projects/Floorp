@@ -9,21 +9,25 @@
 use cssparser::{CowRcStr, serialize_identifier, ToCss};
 use cssparser::{SourceLocation, ParseError, ParseErrorKind, Token, BasicParseErrorKind};
 use selectors::parser::SelectorParseErrorKind;
+use std::cell::Cell;
 use std::ffi::CStr;
 use std::ptr;
 use style::error_reporting::{ParseErrorReporter, ContextualParseError};
-use style::gecko_bindings::bindings::{Gecko_CreateCSSErrorReporter, Gecko_DestroyCSSErrorReporter};
-use style::gecko_bindings::bindings::Gecko_ReportUnexpectedCSSError;
+use style::gecko_bindings::bindings;
 use style::gecko_bindings::structs::{Loader, StyleSheet as DomStyleSheet, nsIURI};
-use style::gecko_bindings::structs::ErrorReporter as GeckoErrorReporter;
 use style::gecko_bindings::structs::URLExtraData as RawUrlExtraData;
 use style::stylesheets::UrlExtraData;
 use style_traits::{StyleParseErrorKind, ValueParseErrorKind};
 
 pub type ErrorKind<'i> = ParseErrorKind<'i, StyleParseErrorKind<'i>>;
 
-/// Wrapper around an instance of Gecko's CSS error reporter.
-pub struct ErrorReporter(*mut GeckoErrorReporter);
+/// An error reporter with all the data we need to report errors.
+pub struct ErrorReporter {
+    sheet: *const DomStyleSheet,
+    loader: *const Loader,
+    uri: *mut nsIURI,
+    cached_error_reporting_enabled: Cell<Option<bool>>,
+}
 
 impl ErrorReporter {
     /// Create a new instance of the Gecko error reporter.
@@ -32,19 +36,17 @@ impl ErrorReporter {
         loader: *mut Loader,
         extra_data: *mut RawUrlExtraData,
     ) -> Self {
-        unsafe {
-            let url = extra_data.as_ref()
+        let uri = unsafe {
+            extra_data.as_ref()
                 .map(|d| d.mBaseURI.raw::<nsIURI>())
-                .unwrap_or(ptr::null_mut());
-            ErrorReporter(Gecko_CreateCSSErrorReporter(sheet, loader, url))
-        }
-    }
-}
+                .unwrap_or(ptr::null_mut())
+        };
 
-impl Drop for ErrorReporter {
-    fn drop(&mut self) {
-        unsafe {
-            Gecko_DestroyCSSErrorReporter(self.0);
+        ErrorReporter {
+            sheet,
+            loader,
+            uri,
+            cached_error_reporting_enabled: Cell::new(None),
         }
     }
 }
@@ -391,7 +393,22 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
 }
 
 impl ErrorReporter {
+    fn reporting_enabled(&self) -> bool {
+        if let Some(enabled) = self.cached_error_reporting_enabled.get() {
+            return enabled;
+        }
+        let enabled = unsafe {
+            bindings::Gecko_ErrorReportingEnabled(self.sheet, self.loader)
+        };
+        self.cached_error_reporting_enabled.set(Some(enabled));
+        enabled
+    }
+
     pub fn report(&self, location: SourceLocation, error: ContextualParseError) {
+        if !self.reporting_enabled() {
+            return;
+        }
+
         let (pre, name, action) = error.to_gecko_message();
         let suffix = match action {
             Action::Nothing => ptr::null(),
@@ -408,18 +425,22 @@ impl ErrorReporter {
         // The CSS source text is unused and will be removed in bug 1381188.
         let source = "";
         unsafe {
-            Gecko_ReportUnexpectedCSSError(self.0,
-                                           name.as_ptr() as *const _,
-                                           param_ptr as *const _,
-                                           param.as_ref().map_or(0, |p| p.len()) as u32,
-                                           pre.map_or(ptr::null(), |p| p.as_ptr()) as *const _,
-                                           pre_param_ptr as *const _,
-                                           pre_param.as_ref().map_or(0, |p| p.len()) as u32,
-                                           suffix as *const _,
-                                           source.as_ptr() as *const _,
-                                           source.len() as u32,
-                                           location.line,
-                                           location.column);
+            bindings::Gecko_ReportUnexpectedCSSError(
+                self.sheet,
+                self.loader,
+                self.uri,
+                name.as_ptr() as *const _,
+                param_ptr as *const _,
+                param.as_ref().map_or(0, |p| p.len()) as u32,
+                pre.map_or(ptr::null(), |p| p.as_ptr()) as *const _,
+                pre_param_ptr as *const _,
+                pre_param.as_ref().map_or(0, |p| p.len()) as u32,
+                suffix as *const _,
+                source.as_ptr() as *const _,
+                source.len() as u32,
+                location.line,
+                location.column,
+            );
         }
     }
 }

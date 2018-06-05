@@ -1478,6 +1478,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mPreCreatedTracks)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTrackManager)
@@ -1724,6 +1725,14 @@ HTMLMediaElement::ShutdownDecoder()
   mWaitingForKeyListener.DisconnectIfExists();
   if (mMediaSource) {
     mMediaSource->CompletePendingTransactions();
+  }
+  for (OutputMediaStream& out : mOutputStreams) {
+    if (!out.mCapturingDecoder) {
+      continue;
+    }
+    out.mNextAvailableTrackID = std::max<TrackID>(
+      mDecoder->NextAvailableTrackIDFor(out.mStream->GetInputStream()),
+      out.mNextAvailableTrackID);
   }
   mDecoder->Shutdown();
   DDUNLINKCHILD(mDecoder.get());
@@ -3538,6 +3547,7 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
     out->mCapturingDecoder = true;
     mDecoder->AddOutputStream(
       out->mStream->GetInputStream()->AsProcessedStream(),
+      out->mNextAvailableTrackID,
       aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED);
   } else if (mSrcStream) {
     out->mCapturingMediaStream = true;
@@ -3551,21 +3561,23 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
 
   if (mDecoder) {
     if (HasAudio()) {
-      TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
+      TrackID audioTrackId = out->mNextAvailableTrackID++;
       RefPtr<MediaStreamTrackSource> trackSource =
         getter->GetMediaStreamTrackSource(audioTrackId);
       RefPtr<MediaStreamTrack> track = out->mStream->CreateDOMTrack(
         audioTrackId, MediaSegment::AUDIO, trackSource);
+      out->mPreCreatedTracks.AppendElement(track);
       out->mStream->AddTrackInternal(track);
       LOG(LogLevel::Debug,
           ("Created audio track %d for captured decoder", audioTrackId));
     }
     if (IsVideo() && HasVideo() && !out->mCapturingAudioOnly) {
-      TrackID videoTrackId = mMediaInfo.mVideo.mTrackId;
+      TrackID videoTrackId = out->mNextAvailableTrackID++;
       RefPtr<MediaStreamTrackSource> trackSource =
         getter->GetMediaStreamTrackSource(videoTrackId);
       RefPtr<MediaStreamTrack> track = out->mStream->CreateDOMTrack(
         videoTrackId, MediaSegment::VIDEO, trackSource);
+      out->mPreCreatedTracks.AppendElement(track);
       out->mStream->AddTrackInternal(track);
       LOG(LogLevel::Debug,
           ("Created video track %d for captured decoder", videoTrackId));
@@ -4238,11 +4250,11 @@ HTMLMediaElement::WakeLockRelease()
 }
 
 HTMLMediaElement::OutputMediaStream::OutputMediaStream()
-  : mFinishWhenEnded(false)
+  : mNextAvailableTrackID(1)
+  , mFinishWhenEnded(false)
   , mCapturingAudioOnly(false)
   , mCapturingDecoder(false)
   , mCapturingMediaStream(false)
-  , mNextAvailableTrackID(1)
 {
 }
 
@@ -4968,6 +4980,7 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 
     ms.mCapturingDecoder = true;
     aDecoder->AddOutputStream(ms.mStream->GetInputStream()->AsProcessedStream(),
+                              ms.mNextAvailableTrackID,
                               ms.mFinishWhenEnded);
   }
 
@@ -7944,6 +7957,21 @@ HTMLMediaElement::RemoveMediaTracks()
   }
 
   mMediaTracksConstructed = false;
+
+  for (OutputMediaStream& ms : mOutputStreams) {
+    if (!ms.mCapturingDecoder) {
+      continue;
+    }
+    for (RefPtr<MediaStreamTrack>& t : ms.mPreCreatedTracks) {
+      if (t->Ended()) {
+        continue;
+      }
+      mAbstractMainThread->Dispatch(NewRunnableMethod(
+        "dom::HTMLMediaElement::RemoveMediaTracks",
+        t, &MediaStreamTrack::OverrideEnded));
+    }
+    ms.mPreCreatedTracks.Clear();
+  }
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper

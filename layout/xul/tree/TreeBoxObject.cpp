@@ -15,7 +15,6 @@
 #include "nsError.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
-#include "nsITreeColumns.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
@@ -237,7 +236,7 @@ TreeBoxObject::GetColumns()
   return nullptr;
 }
 
-NS_IMETHODIMP TreeBoxObject::GetColumns(nsITreeColumns** aColumns)
+NS_IMETHODIMP TreeBoxObject::GetColumns(nsTreeColumns** aColumns)
 {
   *aColumns = GetColumns().take();
   return NS_OK;
