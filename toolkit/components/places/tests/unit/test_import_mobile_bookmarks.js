@@ -131,13 +131,9 @@ add_task(async function test_restore_mobile_bookmarks_folder() {
     }],
   }, "Should restore mobile bookmark folder contents into mobile root");
 
-  // We rewrite queries to point to the root ID instead of the name
-  // ("MOBILE_BOOKMARKS") so that we don't break them if the user downgrades
-  // to an earlier release channel. This can be removed along with the anno in
-  // bug 1306445.
   let queryById = await PlacesUtils.bookmarks.fetch("XF4yRP6bTuil");
-  equal(queryById.url.href, "place:folder=" + PlacesUtils.mobileFolderId,
-    "Should rewrite mobile query to point to root ID");
+  equal(queryById.url.href, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
+    "Should rewrite mobile query to point to root GUID");
 
   await PlacesUtils.bookmarks.eraseEverything();
 });
