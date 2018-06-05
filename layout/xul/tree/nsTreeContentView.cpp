@@ -13,6 +13,7 @@
 #include "nsError.h"
 #include "nsIXULSortService.h"
 #include "nsTreeBodyFrame.h"
+#include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
@@ -951,11 +952,10 @@ nsTreeContentView::AttributeChanged(dom::Element* aElement,
   if (aElement->IsXULElement(nsGkAtoms::treecol)) {
     if (aAttribute == nsGkAtoms::properties) {
       if (mBoxObject) {
-        nsCOMPtr<nsITreeColumns> cols;
+        RefPtr<nsTreeColumns> cols;
         mBoxObject->GetColumns(getter_AddRefs(cols));
         if (cols) {
-          nsCOMPtr<nsITreeColumn> col;
-          cols->GetColumnFor(aElement, getter_AddRefs(col));
+          RefPtr<nsTreeColumn> col = cols->GetColumnFor(aElement);
           mBoxObject->InvalidateColumn(col);
         }
       }

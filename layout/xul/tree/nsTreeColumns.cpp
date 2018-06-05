@@ -157,7 +157,7 @@ nsTreeColumn::GetElement(Element** aElement)
 }
 
 NS_IMETHODIMP
-nsTreeColumn::GetColumns(nsITreeColumns** aColumns)
+nsTreeColumn::GetColumns(nsTreeColumns** aColumns)
 {
   NS_IF_ADDREF(*aColumns = mColumns);
   return NS_OK;

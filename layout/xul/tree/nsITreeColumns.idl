@@ -4,16 +4,15 @@
 
 #include "nsISupports.idl"
 
-interface nsITreeColumns;
-
 webidl Element;
+webidl TreeColumns;
 
 [scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
 interface nsITreeColumn : nsISupports
 {
   readonly attribute Element element;
 
-  readonly attribute nsITreeColumns columns;
+  readonly attribute TreeColumns columns;
 
   readonly attribute long x;
   readonly attribute long width;
