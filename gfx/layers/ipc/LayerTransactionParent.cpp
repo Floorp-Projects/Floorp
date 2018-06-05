@@ -744,6 +744,58 @@ LayerTransactionParent::RecvGetAnimationTransform(const uint64_t& aCompositorAni
 }
 
 mozilla::ipc::IPCResult
+LayerTransactionParent::RecvGetTransform(const LayerHandle& aLayerHandle,
+                                         MaybeTransform* aTransform)
+{
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  Layer* layer = AsLayer(aLayerHandle);
+  if (!layer) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mCompositorBridge->ApplyAsyncProperties(
+    this, CompositorBridgeParentBase::TransformsToSkip::NoneOfThem);
+
+  Matrix4x4 transform = layer->AsHostLayer()->GetShadowBaseTransform();
+  // Undo the scale transform applied by FrameTransformToTransformInDevice in
+  // AsyncCompositionManager.cpp.
+  if (ContainerLayer* c = layer->AsContainerLayer()) {
+    transform.PostScale(1.0f/c->GetInheritedXScale(),
+                        1.0f/c->GetInheritedYScale(),
+                        1.0f);
+  }
+  float scale = 1;
+  Point3D scaledOrigin;
+  Point3D transformOrigin;
+  for (uint32_t i = 0; i < layer->GetAnimations().Length(); i++) {
+    if (layer->GetAnimations()[i].data().type() == AnimationData::TTransformData) {
+      const TransformData& data = layer->GetAnimations()[i].data().get_TransformData();
+      scale = data.appUnitsPerDevPixel();
+      scaledOrigin =
+        Point3D(NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
+                NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)),
+                0.0f);
+      transformOrigin = data.transformOrigin();
+      break;
+    }
+  }
+
+  // If our parent isn't a perspective layer, then the offset into reference
+  // frame coordinates will have been applied to us. Add an inverse translation
+  // to cancel it out.
+  if (!layer->GetParent() || !layer->GetParent()->GetTransformIsPerspective()) {
+    transform.PostTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
+  }
+
+  *aTransform = transform;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
                                                  const float& aX, const float& aY)
 {
