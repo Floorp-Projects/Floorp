@@ -38,6 +38,15 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
   }
 
   nsIRootBox* rootBox = do_QueryFrame(rootFrame);
+
+  // If the rootBox was not found yet this may be a top level non-XUL document.
+  if (rootFrame && !rootBox) {
+    // In a non-XUL document the rootFrame here will be a nsHTMLScrollFrame,
+    // get the nsCanvasFrame (which is the popup container) from it.
+    rootFrame = rootFrame->GetContentInsertionFrame();
+    rootBox = do_QueryFrame(rootFrame);
+  }
+
   return rootBox;
 }
 
@@ -221,11 +230,9 @@ nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
   // popupset.  Since the anonymous content is associated with the
   // nsDocElementBoxFrame, we'll get a new popupset when the new doc
   // element box frame is created.
-  if (!mPopupSetFrame || !aPopupSet) {
-    mPopupSetFrame = aPopupSet;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Popup set is already defined! Only 1 allowed.");
-  }
+  MOZ_ASSERT(!aPopupSet || !mPopupSetFrame,
+             "Popup set is already defined! Only 1 allowed.");
+  mPopupSetFrame = aPopupSet;
 }
 
 Element*
