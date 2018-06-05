@@ -5,11 +5,8 @@
 "use strict";
 
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const eventSource = require("devtools/shared/client/event-source");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-
-const noop = () => {};
 
 function WorkerClient(client, form) {
   this.client = client;
@@ -55,14 +52,13 @@ WorkerClient.prototype = {
     },
   }),
 
-  attachThread: function(options = {}, onResponse = noop) {
+  attachThread: function(options = {}) {
     if (this.thread) {
       const response = [{
         type: "connected",
         threadActor: this.thread._actor,
         consoleActor: this.consoleActor,
       }, this.thread];
-      DevToolsUtils.executeSoon(() => onResponse(response));
       return response;
     }
 
@@ -72,29 +68,17 @@ WorkerClient.prototype = {
       type: "connect",
       options,
     }).then(connectResponse => {
-      if (connectResponse.error) {
-        onResponse(connectResponse, null);
-        return [connectResponse, null];
-      }
-
       return this.request({
         to: connectResponse.threadActor,
         type: "attach",
         options,
       }).then(attachResponse => {
-        if (attachResponse.error) {
-          onResponse(attachResponse, null);
-        }
-
         this.thread = new ThreadClient(this, connectResponse.threadActor);
         this.consoleActor = connectResponse.consoleActor;
         this.client.registerClient(this.thread);
 
-        onResponse(connectResponse, this.thread);
         return [connectResponse, this.thread];
       });
-    }, error => {
-      onResponse(error, null);
     });
   },
 

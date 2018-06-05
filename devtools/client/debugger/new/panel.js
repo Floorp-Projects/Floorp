@@ -83,18 +83,12 @@ DebuggerPanel.prototype = {
     });
   },
 
-  openWorkerToolbox: function(worker) {
-    this.toolbox.target.client.attachWorker(
-      worker.actor,
-      (response, workerClient) => {
-        const workerTarget = TargetFactory.forWorker(workerClient);
-        gDevTools
-          .showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW)
-          .then(toolbox => {
-            toolbox.once("destroy", () => workerClient.detach());
-          });
-      }
-    );
+  openWorkerToolbox: async function(worker) {
+    const [response, workerClient] =
+      await this.toolbox.target.client.attachWorker(worker.actor);
+    const workerTarget = TargetFactory.forWorker(workerClient);
+    const toolbox = await gDevTools.showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW);
+    toolbox.once("destroy", () => workerClient.detach());
   },
 
   getFrames: function() {
