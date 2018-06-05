@@ -11,6 +11,8 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 
+#include <utility>
+
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
@@ -131,7 +133,7 @@ class TraceLoggerEvent {
     {}
     explicit TraceLoggerEvent(TraceLoggerTextId textId);
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script);
-    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column);
+    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, uint32_t line, uint32_t column);
     explicit TraceLoggerEvent(const char* text);
     TraceLoggerEvent(const TraceLoggerEvent& event);
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
@@ -154,7 +156,7 @@ class TraceLoggerEvent {
     TraceLoggerEvent() {}
     explicit TraceLoggerEvent(TraceLoggerTextId textId) {}
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script) {}
-    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column) {}
+    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, uint32_t line, uint32_t column) {}
     explicit TraceLoggerEvent(const char* text) {}
     TraceLoggerEvent(const TraceLoggerEvent& event) {}
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other) { return *this; };
@@ -185,9 +187,9 @@ class TraceLoggerEventPayload {
     mozilla::Atomic<uint32_t> pointerCount_;
 
   public:
-    TraceLoggerEventPayload(uint32_t textId, char* string)
+    TraceLoggerEventPayload(uint32_t textId, UniqueChars string)
       : textId_(textId),
-        string_(string),
+        string_(std::move(string)),
         uses_(0)
     { }
 
@@ -442,8 +444,8 @@ class TraceLoggerThreadState
     // Note: it is not allowed to use them in logTimestamp.
     TraceLoggerEventPayload* getOrCreateEventPayload(const char* text);
     TraceLoggerEventPayload* getOrCreateEventPayload(JSScript* script);
-    TraceLoggerEventPayload* getOrCreateEventPayload(const char* filename, size_t lineno,
-                                                     size_t colno, const void* p);
+    TraceLoggerEventPayload* getOrCreateEventPayload(const char* filename, uint32_t lineno,
+                                                     uint32_t colno, const void* p);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {

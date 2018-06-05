@@ -64,13 +64,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
          "help": "Override the tags set for all repos"
          }
     ], [
-        ["--user-repo-override"],
-        {"action": "store",
-         "dest": "user_repo_override",
-         "type": "string",
-         "help": "Override the user repo path for all repos"
-         }
-    ], [
         ["--l10n-dir"],
         {"action": "store",
          "dest": "l10n_dir",
@@ -112,16 +105,7 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
 
     def pull_build_source(self):
         c = self.config
-        repos = []
-        replace_dict = {}
-        # Replace %(user_repo_override)s with c['user_repo_override']
-        if c.get("user_repo_override"):
-            replace_dict['user_repo_override'] = c['user_repo_override']
-            for repo_dict in deepcopy(c['repos']):
-                repo_dict['repo'] = repo_dict['repo'] % replace_dict
-                repos.append(repo_dict)
-        else:
-            repos = c['repos']
+        repos = c['repos']
         self.vcs_checkout_repos(repos, tag_override=c.get('tag_override'))
 
     # pull_locale_source() defined in LocalesMixin.

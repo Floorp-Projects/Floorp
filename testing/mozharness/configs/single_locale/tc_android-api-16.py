@@ -1,7 +1,5 @@
 config = {
-    "stage_platform": "android-api-16",
     "locales_file": "src/mobile/locales/l10n-changesets.json",
-    "tools_repo": "https://hg.mozilla.org/build/tools",
     "mozconfig": "src/mobile/android/config/mozconfigs/android-api-16/l10n-nightly",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
