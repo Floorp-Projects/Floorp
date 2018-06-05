@@ -9,6 +9,7 @@ Library('winlauncher')
 FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
+    'DllBlocklistWin.cpp',
     'LauncherProcessWin.cpp',
     'LaunchUnelevated.cpp',
 ]
