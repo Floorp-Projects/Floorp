@@ -731,7 +731,7 @@ ServiceWorkerRegistrationWorkerThread::Update()
   // Avoid infinite update loops by ignoring update() calls during top
   // level script evaluation.  See:
   // https://github.com/slightlyoff/ServiceWorker/issues/800
-  if (workerRef->Private()->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
+  if (workerRef->Private()->IsLoadingWorkerScript()) {
     return ServiceWorkerRegistrationPromise::CreateAndResolve(mDescriptor,
                                                               __func__);
   }
