@@ -39,7 +39,7 @@ function test_child_breakpoint() {
     const source = gThreadClient.source(packet.frame.where.source);
     const location = { line: gDebuggee.line0 + 3 };
 
-    source.setBreakpoint(location, function(response, bpClient) {
+    source.setBreakpoint(location).then(function([response, bpClient]) {
       // actualLocation is not returned when breakpoints don't skip forward.
       Assert.equal(response.actualLocation, undefined);
 

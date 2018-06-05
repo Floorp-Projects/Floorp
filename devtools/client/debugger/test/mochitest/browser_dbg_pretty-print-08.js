@@ -42,7 +42,7 @@ function findSource() {
 }
 
 function prettyPrintSource(source) {
-  gThreadClient.source(gSource).prettyPrint(2, runCode);
+  gThreadClient.source(gSource).prettyPrint(2).then(runCode);
 }
 
 function runCode({ error }) {
@@ -62,13 +62,11 @@ function testDbgStatement(event, { why, frame }) {
 function setBreakpoint() {
   gThreadClient.source(gSource).setBreakpoint(
     { line: BP_LOCATION.line,
-      column: BP_LOCATION.column },
-    ({ error, actualLocation }) => {
-      ok(!error, "error should not exist");
+      column: BP_LOCATION.column })
+    .then(([{ actualLocation }]) => {
       ok(!actualLocation, "actualLocation should not exist");
       testStepping();
-    }
-  );
+    });
 }
 
 function testStepping() {

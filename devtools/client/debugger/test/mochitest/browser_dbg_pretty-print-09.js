@@ -47,7 +47,7 @@ function findSource() {
 }
 
 function prettyPrint() {
-  gThreadClient.source(gSource).prettyPrint(2, runCode);
+  gThreadClient.source(gSource).prettyPrint(2).then(runCode);
 }
 
 function runCode({ error }) {
@@ -66,7 +66,7 @@ function testDbgStatement(event, { frame, why }) {
 }
 
 function disablePrettyPrint() {
-  gThreadClient.source(gSource).disablePrettyPrint(testUgly);
+  gThreadClient.source(gSource).disablePrettyPrint().then(testUgly);
 }
 
 function testUgly({ error, source }) {
