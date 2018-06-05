@@ -709,26 +709,23 @@ SampleAnimations(Layer* aLayer,
             break;
           }
           case AnimationHelper::SampleResult::Skipped:
-            // We don't need to update animation values for this layer since
-            // the values haven't changed.
-#ifdef DEBUG
-            // Sanity check that the animation value is surely unchanged.
             switch (animations[0].property()) {
               case eCSSProperty_opacity:
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
+#ifdef DEBUG
                 // Disable this assertion until the root cause is fixed in bug
                 // 1459775.
                 // MOZ_ASSERT(FuzzyEqualsMultiplicative(
                 //   Servo_AnimationValue_GetOpacity(animationValue),
                 //   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
+#endif
                 break;
               case eCSSProperty_transform: {
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowTransformSetByAnimation());
-
                 MOZ_ASSERT(previousValue);
-
+#ifdef DEBUG
                 const TransformData& transformData =
                   animations[0].data().get_TransformData();
                 Matrix4x4 frameTransform =
@@ -740,13 +737,27 @@ SampleAnimations(Layer* aLayer,
                 MOZ_ASSERT(
                   previousValue->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
                   transformInDevice));
+#endif
+                // In the case of transform we have to set the unchanged
+                // transform value again becasue APZC might have modified the
+                // previous shadow base transform value.
+                HostLayer* layerCompositor = layer->AsHostLayer();
+                layerCompositor->SetShadowBaseTransform(
+                  // FIXME: Bug 1459775: It seems possible that we somehow try
+                  // to sample animations and skip it even if the previous value
+                  // has been discarded from the animation storage when we enable
+                  // layer tree cache. So for the safety, in the case where we
+                  // have no previous animation value, we set non-animating value
+                  // instead.
+                  previousValue
+                    ? previousValue->mTransform.mTransformInDevSpace
+                    : layer->GetBaseTransform());
                 break;
               }
               default:
                 MOZ_ASSERT_UNREACHABLE("Unsupported properties");
                 break;
             }
-#endif
             break;
           case AnimationHelper::SampleResult::None: {
             HostLayer* layerCompositor = layer->AsHostLayer();
