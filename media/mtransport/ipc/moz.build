@@ -7,18 +7,31 @@ EXPORTS.mozilla.net += [
     'PStunAddrsParams.h',
     'StunAddrsRequestChild.h',
     'StunAddrsRequestParent.h',
+    'WebrtcProxyChannel.h',
+    'WebrtcProxyChannelCallback.h',
+    'WebrtcProxyChannelChild.h',
+    'WebrtcProxyChannelParent.h',
 ]
 
 UNIFIED_SOURCES += [
     'StunAddrsRequestChild.cpp',
     'StunAddrsRequestParent.cpp',
+    'WebrtcProxyChannel.cpp',
+    'WebrtcProxyChannelChild.cpp',
+    'WebrtcProxyChannelParent.cpp',
+    'WebrtcProxyLog.cpp',
 ]
 
 IPDL_SOURCES += [
     'PStunAddrsRequest.ipdl',
+    'PWebrtcProxyChannel.ipdl',
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = 'xul'
 
+LOCAL_INCLUDES += [
+    '/netwerk/base',
+    '/netwerk/protocol/http',
+]
