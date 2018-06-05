@@ -14,6 +14,7 @@
 #include "Role.h"
 #include "States.h"
 #include "nsQueryObject.h"
+#include "nsTreeColumns.h"
 
 #include "nsIBoxObject.h"
 #include "nsIMutableArray.h"
@@ -218,8 +219,7 @@ XULTreeGridAccessible::NativeRole() const
     return roles::NOTHING;
   }
 
-  nsCOMPtr<nsITreeColumn> primaryColumn;
-  treeColumns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
+  nsTreeColumn* primaryColumn = treeColumns->GetPrimaryColumn();
 
   return primaryColumn ? roles::TREE_TABLE : roles::TABLE;
 }
@@ -398,8 +398,7 @@ XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
 
   bool nameChanged = false;
   for (int32_t colIdx = aStartColIdx; colIdx <= aEndColIdx; ++colIdx) {
-    nsCOMPtr<nsITreeColumn> column;
-    treeColumns->GetColumnAt(colIdx, getter_AddRefs(column));
+    nsTreeColumn* column = treeColumns->GetColumnAt(colIdx);
     if (column && !nsCoreUtils::IsColumnHidden(column)) {
       XULTreeGridCellAccessible* cell = GetCellAccessible(column);
       if (cell)
