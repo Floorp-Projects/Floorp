@@ -4,7 +4,6 @@ BRANCH = "autoland"
 MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-firefox"
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-16/en-US" % BRANCH
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -29,7 +28,7 @@ config = {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "MOZ_OBJDIR": OBJDIR,
-        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
+        "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
