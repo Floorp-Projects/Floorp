@@ -7,10 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use handles::*;
-use data::*;
-use variant::*;
 use super::*;
+use data::*;
+use handles::*;
+use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range;
 use super::in_inclusive_range16;
@@ -25,12 +25,10 @@ impl ShiftJisDecoder {
     }
 
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
-        byte_length.checked_add(
-            match self.lead {
-                None => 0,
-                Some(_) => 1,
-            }
-        )
+        byte_length.checked_add(match self.lead {
+            None => 0,
+            Some(_) => 1,
+        })
     }
 
     pub fn max_utf16_buffer_length(&self, byte_length: usize) -> Option<usize> {
@@ -176,15 +174,17 @@ impl ShiftJisEncoder {
         Encoder::new(encoding, VariantEncoder::ShiftJis(ShiftJisEncoder))
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         u16_length.checked_mul(2)
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         byte_length.checked_add(1)
     }
 
@@ -201,15 +201,16 @@ impl ShiftJisEncoder {
                     let pointer = if 0x4EDD == bmp {
                         // Ideograph on the symbol row!
                         23
-                    } else if let Some(pos) =
-                        jis0208_level2_and_additional_kanji_encode(bmp) {
+                    } else if let Some(pos) = jis0208_level2_and_additional_kanji_encode(bmp) {
                         4418 + pos
                     } else if let Some(pos) = position(&IBM_KANJI[..], bmp) {
                         10744 + pos
                     } else {
-                        return (EncoderResult::unmappable_from_bmp(bmp),
-                                source.consumed(),
-                                handle.written());
+                        return (
+                            EncoderResult::unmappable_from_bmp(bmp),
+                            source.consumed(),
+                            handle.written(),
+                        );
                     };
                     let lead = pointer / 188;
                     let lead_offset = if lead < 0x1F { 0x81usize } else { 0xC1usize };
@@ -247,17 +248,21 @@ impl ShiftJisEncoder {
                             10716 + bmp_minus_roman as usize
                         } else if let Some(pointer) = jis0208_range_encode(bmp) {
                             pointer
-                        } else if in_inclusive_range16(bmp, 0xFA0E, 0xFA2D) || bmp == 0xF929 ||
-                                  bmp == 0xF9DC {
+                        } else if in_inclusive_range16(bmp, 0xFA0E, 0xFA2D)
+                            || bmp == 0xF929
+                            || bmp == 0xF9DC
+                        {
                             // Guaranteed to be found in IBM_KANJI
                             let pos = position(&IBM_KANJI[..], bmp).unwrap();
                             10744 + pos
                         } else if let Some(pointer) = jis0208_symbol_encode(bmp) {
                             pointer
                         } else {
-                            return (EncoderResult::unmappable_from_bmp(bmp),
-                                    source.consumed(),
-                                    handle.written());
+                            return (
+                                EncoderResult::unmappable_from_bmp(bmp),
+                                source.consumed(),
+                                handle.written(),
+                            );
                         };
                         let lead = pointer / 188;
                         let lead_offset = if lead < 0x1F { 0x81usize } else { 0xC1usize };

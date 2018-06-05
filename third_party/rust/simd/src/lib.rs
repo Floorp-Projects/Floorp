@@ -232,3 +232,573 @@ pub mod x86;
 pub mod arm;
 #[cfg(any(feature = "doc", target_arch = "aarch64"))]
 pub mod aarch64;
+
+#[cfg(test)]
+mod tests {
+
+    use super::u8x16;
+    use super::u16x8;
+    use super::u32x4;
+    use super::f32x4;
+
+    #[test]
+    fn test_u8x16_none_not_any() {
+        let x1 = u8x16::splat(1);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_none_not_all() {
+        let x1 = u8x16::splat(1);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_all_any() {
+        let x1 = u8x16::splat(1);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_all_all() {
+        let x1 = u8x16::splat(1);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_except_last_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u8x16::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_except_last_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_except_first_any() {
+        let x1 = u8x16::new(1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_except_first_not_all() {
+        let x1 = u8x16::new(1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_only_last_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_only_last_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u8x16::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_only_first_any() {
+        let x1 = u8x16::new(1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_only_first_not_all() {
+        let x1 = u8x16::new(1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_except_thirteenth_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_except_thirteenth_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_except_fifth_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_except_fifth_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_only_thirteenth_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_only_thirteenth_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u8x16_only_fifth_any() {
+        let x1 = u8x16::new(2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u8x16_only_fifth_not_all() {
+        let x1 = u8x16::new(2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u8x16::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_none_not_any() {
+        let x1 = u16x8::splat(1);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_none_not_all() {
+        let x1 = u16x8::splat(1);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_all_any() {
+        let x1 = u16x8::splat(1);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_all_all() {
+        let x1 = u16x8::splat(1);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_except_last_any() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u16x8::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_except_last_not_all() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_except_first_any() {
+        let x1 = u16x8::new(1, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_except_first_not_all() {
+        let x1 = u16x8::new(1, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_only_last_any() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_only_last_not_all() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 2, 2, 1);
+        let x2 = u16x8::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_only_first_any() {
+        let x1 = u16x8::new(1, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_only_first_not_all() {
+        let x1 = u16x8::new(1, 2, 2, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_except_sixth_any() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 1, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_except_sixth_not_all() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 1, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_except_third_any() {
+        let x1 = u16x8::new(2, 2, 1, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_except_third_not_all() {
+        let x1 = u16x8::new(2, 2, 1, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_only_sixth_any() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 1, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_only_sixth_not_all() {
+        let x1 = u16x8::new(2, 2, 2, 2, 2, 1, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u16x8_only_third_any() {
+        let x1 = u16x8::new(2, 2, 1, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u16x8_only_third_not_all() {
+        let x1 = u16x8::new(2, 2, 1, 2, 2, 2, 2, 2);
+        let x2 = u16x8::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_none_not_any() {
+        let x1 = u32x4::splat(1);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_none_not_all() {
+        let x1 = u32x4::splat(1);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_all_any() {
+        let x1 = u32x4::splat(1);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_all_all() {
+        let x1 = u32x4::splat(1);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_except_last_any() {
+        let x1 = u32x4::new(2, 2, 2, 1);
+        let x2 = u32x4::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_except_last_not_all() {
+        let x1 = u32x4::new(2, 2, 2, 1);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_except_first_any() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_except_first_not_all() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_only_last_any() {
+        let x1 = u32x4::new(2, 2, 2, 1);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_only_last_not_all() {
+        let x1 = u32x4::new(2, 2, 2, 1);
+        let x2 = u32x4::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_only_first_any() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_only_first_not_all() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_except_second_any() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_except_second_not_all() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_except_third_any() {
+        let x1 = u32x4::new(2, 2, 1, 2);
+        let x2 = u32x4::splat(2);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_except_third_not_all() {
+        let x1 = u32x4::new(2, 2, 1, 2);
+        let x2 = u32x4::splat(2);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_only_second_any() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_only_second_not_all() {
+        let x1 = u32x4::new(1, 2, 2, 2);
+        let x2 = u32x4::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_u32x4_only_third_any() {
+        let x1 = u32x4::new(2, 2, 1, 2);
+        let x2 = u32x4::splat(1);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_u32x4_only_third_not_all() {
+        let x1 = u32x4::new(2, 2, 1, 2);
+        let x2 = u32x4::splat(1);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_none_not_any() {
+        let x1 = f32x4::splat(1.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_none_not_all() {
+        let x1 = f32x4::splat(1.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_all_any() {
+        let x1 = f32x4::splat(1.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_all_all() {
+        let x1 = f32x4::splat(1.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_except_last_any() {
+        let x1 = f32x4::new(2.0, 2.0, 2.0, 1.0);
+        let x2 = f32x4::splat(2.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_except_last_not_all() {
+        let x1 = f32x4::new(2.0, 2.0, 2.0, 1.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_except_first_any() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_except_first_not_all() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_only_last_any() {
+        let x1 = f32x4::new(2.0, 2.0, 2.0, 1.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_only_last_not_all() {
+        let x1 = f32x4::new(2.0, 2.0, 2.0, 1.0);
+        let x2 = f32x4::splat(1.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_only_first_any() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_only_first_not_all() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_except_second_any() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_except_second_not_all() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_except_third_any() {
+        let x1 = f32x4::new(2.0, 2.0, 1.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_except_third_not_all() {
+        let x1 = f32x4::new(2.0, 2.0, 1.0, 2.0);
+        let x2 = f32x4::splat(2.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_only_second_any() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_only_second_not_all() {
+        let x1 = f32x4::new(1.0, 2.0, 2.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+    #[test]
+    fn test_f32x4_only_third_any() {
+        let x1 = f32x4::new(2.0, 2.0, 1.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!((x1.eq(x2)).any());
+    }
+
+    #[test]
+    fn test_f32x4_only_third_not_all() {
+        let x1 = f32x4::new(2.0, 2.0, 1.0, 2.0);
+        let x2 = f32x4::splat(1.0);
+        assert!(!(x1.eq(x2)).all());
+    }
+
+}

@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_c"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "C API for encoding_rs"
 homepage = "https://docs.rs/encoding_c/"
@@ -22,8 +22,10 @@ keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_c"
 [dependencies.encoding_rs]
-version = "0.7.0"
+version = "0.8.0"
 
 [features]
+less-slow-big5-hanzi-encode = ["encoding_rs/less-slow-big5-hanzi-encode"]
+less-slow-gb-hanzi-encode = ["encoding_rs/less-slow-gb-hanzi-encode"]
+less-slow-kanji-encode = ["encoding_rs/less-slow-kanji-encode"]
 simd-accel = ["encoding_rs/simd-accel"]
-no-static-ideograph-encoder-tables = ["encoding_rs/no-static-ideograph-encoder-tables"]

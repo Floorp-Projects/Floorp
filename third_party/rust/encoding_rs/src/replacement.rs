@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use variant::*;
 use super::*;
+use variant::*;
 
 pub struct ReplacementDecoder {
     emitted: bool,
@@ -31,11 +31,12 @@ impl ReplacementDecoder {
         Some(3)
     }
 
-    pub fn decode_to_utf16_raw(&mut self,
-                               src: &[u8],
-                               dst: &mut [u16],
-                               _last: bool)
-                               -> (DecoderResult, usize, usize) {
+    pub fn decode_to_utf16_raw(
+        &mut self,
+        src: &[u8],
+        dst: &mut [u16],
+        _last: bool,
+    ) -> (DecoderResult, usize, usize) {
         // Don't err if the input stream is empty. See
         // https://github.com/whatwg/encoding/issues/33
         if self.emitted || src.is_empty() {
@@ -49,11 +50,12 @@ impl ReplacementDecoder {
         }
     }
 
-    pub fn decode_to_utf8_raw(&mut self,
-                              src: &[u8],
-                              dst: &mut [u8],
-                              _last: bool)
-                              -> (DecoderResult, usize, usize) {
+    pub fn decode_to_utf8_raw(
+        &mut self,
+        src: &[u8],
+        dst: &mut [u8],
+        _last: bool,
+    ) -> (DecoderResult, usize, usize) {
         // Don't err if the input stream is empty. See
         // https://github.com/whatwg/encoding/issues/33
         if self.emitted || src.is_empty() {

@@ -2,36 +2,122 @@ use super::super::*;
 use sixty_four::{i64x2, u64x2};
 
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct u32x2(u32, u32);
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct i32x2(i32, i32);
 #[repr(simd)]
-#[derive(Copy, Clone)]
-pub struct f32x2(f32, f32);
+#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy)]
+pub struct bool32ix2(i32, i32);
 
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
+pub struct f32x2(f32, f32);
+#[repr(simd)]
+#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy)]
+pub struct bool32fx2(i32, i32);
+
+#[repr(simd)]
+#[derive(Debug, Copy, Clone)]
 pub struct u16x4(u16, u16, u16, u16);
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct i16x4(i16, i16, i16, i16);
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy)]
+pub struct bool16ix4(i16, i16, i16, i16);
+
+#[repr(simd)]
+#[derive(Debug, Copy, Clone)]
 pub struct u8x8(u8, u8, u8, u8,
             u8, u8, u8, u8);
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct i8x8(i8, i8, i8, i8,
                 i8, i8, i8, i8);
+#[repr(simd)]
+#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy)]
+pub struct bool8ix8(i8, i8, i8, i8,
+                    i8, i8, i8, i8);
 
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct i64x1(i64);
 #[repr(simd)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct u64x1(u64);
+
+macro_rules! half_bools {
+    ($($ty: ty, $as_u: ty, $elem: ty, $all: ident ($min: ident), $any: ident ($max: ident);)*) => {
+        $(
+            impl $ty {
+                #[inline]
+                pub fn $all(self) -> bool {
+                    unsafe {
+                        let t: $as_u = bitcast(self);
+                        let y = $min(t, mem::uninitialized());
+                        let y32: u32x2 = bitcast(y);
+                        y32.0 == 0xFFFFFFFF
+                    }
+                }
+                #[inline]
+                pub fn $any(self) -> bool {
+                    unsafe {
+                        let t: $as_u = bitcast(self);
+                        let y = $max(t, mem::uninitialized());
+                        let y32: u32x2 = bitcast(y);
+                        y32.0 != 0
+                    }
+                }
+            }
+
+            impl Clone for $ty {
+                #[inline] fn clone(&self) -> Self {
+                    *self
+                }
+            }
+
+            unsafe impl Simd for $ty {
+                type Bool = $ty;
+                type Elem = $elem;
+            }
+
+            )*
+    }
+}
+
+half_bools! {
+    bool32fx2, u32x2, i32, bool32fx2_all(arm_vpmin_u32), bool32fx2_any(arm_vpmax_u32);
+    bool8ix8, u8x8, i8, bool8ix8_all(arm_vpmin_u8), bool8ix8_any(arm_vpmax_u8);
+    bool16ix4, u16x4, i16, bool16ix4_all(arm_vpmin_u16), bool16ix4_any(arm_vpmax_u16);
+    bool32ix2, u32x2, f32, bool32ix2_all(arm_vpmin_u32), bool32ix2_any(arm_vpmax_u32);
+}
+
+macro_rules! half_simd {
+    ($($ty: ty, $elem: ty, $bool_ty: ty;)*) => {
+        $(
+            unsafe impl Simd for $ty {
+                type Bool = $bool_ty;
+                type Elem = $elem;
+            }
+            )*
+    }
+}
+
+half_simd! {
+    f32x2, f32, bool32fx2;
+    u32x2, u32, bool32ix2;
+    i32x2, i32, bool32ix2;
+    u16x4, u16, bool16ix4;
+    i16x4, i16, bool16ix4;
+    u8x8, u8, bool8ix8;
+    i8x8, i8, bool8ix8;
+}
 
 #[allow(dead_code)]
 extern "platform-intrinsic" {
@@ -497,24 +583,30 @@ pub mod common {
     }
 
     macro_rules! bools {
-        ($($ty: ty, $half: ty, $all: ident ($min: ident), $any: ident ($max: ident);)*) => {
+        ($($ty: ty, $as_u: ty, $shuffle_fn: ident, $lo_idxs: expr, $hi_idxs: expr, $all: ident ($min: ident), $any: ident ($max: ident);)*) => {
             $(
                 #[inline]
                 pub fn $all(x: $ty) -> bool {
                     unsafe {
-                        let (lo, hi): ($half, $half) = mem::transmute(x);
+                        let t: $as_u = bitcast(x);
+                        let lo = $shuffle_fn(t, t, $lo_idxs);
+                        let hi = $shuffle_fn(t, t, $hi_idxs);
                         let x = super::$min(lo, hi);
                         let y = super::$min(x, mem::uninitialized());
-                        y.0 != 0
+                        let y32: u32x2 = bitcast(y);
+                        y32.0 == 0xFFFFFFFF
                     }
                 }
                 #[inline]
                 pub fn $any(x: $ty) -> bool {
                     unsafe {
-                        let (lo, hi): ($half, $half) = mem::transmute(x);
+                        let t: $as_u = bitcast(x);
+                        let lo = $shuffle_fn(t, t, $lo_idxs);
+                        let hi = $shuffle_fn(t, t, $hi_idxs);
                         let x = super::$max(lo, hi);
                         let y = super::$max(x, mem::uninitialized());
-                        y.0 != 0
+                        let y32: u32x2 = bitcast(y);
+                        y32.0 != 0
                     }
                 }
                 )*
@@ -522,9 +614,9 @@ pub mod common {
     }
 
     bools! {
-        bool32fx4, arm::neon::u32x2, bool32fx4_all(arm_vpmin_u32), bool32fx4_any(arm_vpmax_u32);
-        bool8ix16, arm::neon::u8x8, bool8ix16_all(arm_vpmin_u8), bool8ix16_any(arm_vpmax_u8);
-        bool16ix8, arm::neon::u16x4, bool16ix8_all(arm_vpmin_u16), bool16ix8_any(arm_vpmax_u16);
-        bool32ix4, arm::neon::u32x2, bool32ix4_all(arm_vpmin_u32), bool32ix4_any(arm_vpmax_u32);
+        bool32fx4, u32x4, simd_shuffle2, [0, 1], [2, 3], bool32fx4_all(arm_vpmin_u32), bool32fx4_any(arm_vpmax_u32);
+        bool8ix16, u8x16, simd_shuffle8, [0, 1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14, 15], bool8ix16_all(arm_vpmin_u8), bool8ix16_any(arm_vpmax_u8);
+        bool16ix8, u16x8, simd_shuffle4, [0, 1, 2, 3], [4, 5, 6, 7], bool16ix8_all(arm_vpmin_u16), bool16ix8_any(arm_vpmax_u16);
+        bool32ix4, u32x4, simd_shuffle2, [0, 1], [2, 3], bool32ix4_all(arm_vpmin_u32), bool32ix4_any(arm_vpmax_u32);
     }
 }

@@ -7,13 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use handles::*;
-use data::*;
-use variant::*;
 use super::*;
+use data::*;
+use handles::*;
+use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
-use super::in_range16;
 use super::in_inclusive_range16;
+use super::in_range16;
 
 pub struct EucKrDecoder {
     lead: Option<u8>,
@@ -25,12 +25,10 @@ impl EucKrDecoder {
     }
 
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
-        byte_length.checked_add(
-            match self.lead {
-                None => 0,
-                Some(_) => 1,
-            }
-        )
+        byte_length.checked_add(match self.lead {
+            None => 0,
+            Some(_) => 1,
+        })
     }
 
     pub fn max_utf16_buffer_length(&self, byte_length: usize) -> Option<usize> {
@@ -207,10 +205,12 @@ fn ksx1001_encode_misc(bmp: u16) -> Option<(usize, usize)> {
             return Some((0x81 + 0x25, 0xA1 + pos));
         }
     }
-    if in_inclusive_range16(bmp, 0x2015, 0x266D) || in_inclusive_range16(bmp, 0x321C, 0x33D8) ||
-       in_inclusive_range16(bmp, 0xFF3C, 0xFFE5) ||
-       in_inclusive_range16(bmp, 0x00A1, 0x00F7) ||
-       in_inclusive_range16(bmp, 0x02C7, 0x02DD) {
+    if in_inclusive_range16(bmp, 0x2015, 0x266D)
+        || in_inclusive_range16(bmp, 0x321C, 0x33D8)
+        || in_inclusive_range16(bmp, 0xFF3C, 0xFFE5)
+        || in_inclusive_range16(bmp, 0x00A1, 0x00F7)
+        || in_inclusive_range16(bmp, 0x02C7, 0x02DD)
+    {
         if let Some(pos) = position(&KSX1001_SYMBOLS[3..], bmp) {
             if pos < (94 - 3) {
                 return Some((0xA1, pos + 0xA1 + 3));
@@ -228,15 +228,17 @@ impl EucKrEncoder {
         Encoder::new(encoding, VariantEncoder::EucKr(EucKrEncoder))
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         u16_length.checked_mul(2)
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         byte_length.checked_add(1)
     }
 
@@ -287,21 +289,27 @@ impl EucKrEncoder {
                         let hanja_trail = (hanja_pointer % 94) + 0xA1;
                         (hanja_lead, hanja_trail)
                     } else {
-                        return (EncoderResult::unmappable_from_bmp(bmp),
-                                source.consumed(),
-                                handle.written());
+                        return (
+                            EncoderResult::unmappable_from_bmp(bmp),
+                            source.consumed(),
+                            handle.written(),
+                        );
                     }
                 } else {
-                    return (EncoderResult::unmappable_from_bmp(bmp),
-                            source.consumed(),
-                            handle.written());
+                    return (
+                        EncoderResult::unmappable_from_bmp(bmp),
+                        source.consumed(),
+                        handle.written(),
+                    );
                 }
             } else if let Some((lead, trail)) = ksx1001_encode_misc(bmp) {
                 (lead, trail)
             } else {
-                return (EncoderResult::unmappable_from_bmp(bmp),
-                        source.consumed(),
-                        handle.written());
+                return (
+                    EncoderResult::unmappable_from_bmp(bmp),
+                    source.consumed(),
+                    handle.written(),
+                );
             };
             handle.write_two(lead as u8, trail as u8)
         },
