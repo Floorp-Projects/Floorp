@@ -125,6 +125,8 @@ protected:
                                                   bool* aHasAnimationOpacity) override;
   mozilla::ipc::IPCResult RecvGetAnimationTransform(const uint64_t& aCompositorAnimationsId,
                                                     MaybeTransform* aTransform) override;
+  mozilla::ipc::IPCResult RecvGetTransform(const LayerHandle& aHandle,
+                                           MaybeTransform* aTransform) override;
   mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
                                                    const float& aX, const float& aY) override;
   mozilla::ipc::IPCResult RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
