@@ -26,7 +26,6 @@ loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-clie
 loader.lazyRequireGetter(this, "RootClient", "devtools/shared/client/root-client");
 loader.lazyRequireGetter(this, "TabClient", "devtools/shared/client/tab-client");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-loader.lazyRequireGetter(this, "TraceClient", "devtools/shared/client/trace-client");
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 
@@ -483,39 +482,8 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a trace actor.
-   *
-   * @param string traceActor
-   *        The actor ID for the tracer to attach.
-   * @param function onResponse
-   *        Called with the response packet and a TraceClient
-   *        (which will be undefined on error).
-   */
-  attachTracer: function(traceActor, onResponse = noop) {
-    if (this._clients.has(traceActor)) {
-      const client = this._clients.get(traceActor);
-      DevToolsUtils.executeSoon(() => onResponse({}, client));
-      return promise.resolve([{}, client]);
-    }
-
-    const packet = {
-      to: traceActor,
-      type: "attach"
-    };
-    return this.request(packet).then(response => {
-      let traceClient;
-      if (!response.error) {
-        traceClient = new TraceClient(this, traceActor);
-        this.registerClient(traceClient);
-      }
-      onResponse(response, traceClient);
-      return [response, traceClient];
-    });
-  },
-
-  /**
-   * Fetch the ParentProcessTargetActor for the main process or
-   * ContentProcessTargetActor for a given content process ID.
+   * Fetch the ChromeActor for the main process or ChildProcessActor for a
+   * a given child process ID.
    *
    * @param number id
    *        The ID for the process to attach (returned by `listProcesses`).
