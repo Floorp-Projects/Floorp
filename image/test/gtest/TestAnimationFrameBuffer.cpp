@@ -12,14 +12,151 @@ using namespace mozilla;
 using namespace mozilla::image;
 
 static already_AddRefed<imgFrame>
-CreateEmptyFrame()
+CreateEmptyFrame(const IntSize& aSize = IntSize(1, 1),
+                 const IntRect& aFrameRect = IntRect(0, 0, 1, 1),
+                 bool aCanRecycle = true)
 {
   RefPtr<imgFrame> frame = new imgFrame();
-  nsresult rv = frame->InitForAnimator(nsIntSize(1, 1), SurfaceFormat::B8G8R8A8);
+  AnimationParams animParams { aFrameRect, FrameTimeout::Forever(),
+                               /* aFrameNum */ 1, BlendMethod::OVER,
+                               DisposalMethod::NOT_SPECIFIED };
+  nsresult rv =
+    frame->InitForDecoder(aSize, IntRect(IntPoint(0, 0), aSize),
+                          SurfaceFormat::B8G8R8A8, 0, false,
+                          Some(animParams), true, aCanRecycle);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
+  frame->SetRawAccessOnly();
   frame->Finish();
   return frame.forget();
+}
+
+static void
+PrepareForDiscardingQueue(AnimationFrameRetainedBuffer& aQueue)
+{
+  ASSERT_EQ(size_t(0), aQueue.Size());
+  ASSERT_LT(size_t(1), aQueue.Batch());
+
+  AnimationFrameBuffer::InsertStatus status =
+    aQueue.Insert(CreateEmptyFrame());
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  while (true) {
+    status = aQueue.Insert(CreateEmptyFrame());
+    bool restartDecoder = aQueue.AdvanceTo(aQueue.Size() - 1);
+    EXPECT_FALSE(restartDecoder);
+
+    if (status == AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE) {
+      break;
+    }
+    EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+  }
+
+  EXPECT_EQ(aQueue.Threshold(), aQueue.Size());
+}
+
+static void
+VerifyDiscardingQueueContents(AnimationFrameDiscardingQueue& aQueue)
+{
+  auto frames = aQueue.Display();
+  for (auto i : frames) {
+    EXPECT_TRUE(i != nullptr);
+  }
+}
+
+static void
+VerifyInsertInternal(AnimationFrameBuffer& aQueue,
+                     imgFrame* aFrame)
+{
+  // Determine the frame index where we just inserted the frame.
+  size_t frameIndex;
+  if (aQueue.MayDiscard()) {
+    const AnimationFrameDiscardingQueue& queue =
+      *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
+    frameIndex = queue.PendingInsert() == 0 ? queue.Size() - 1
+                                            : queue.PendingInsert() - 1;
+  } else {
+    ASSERT_FALSE(aQueue.SizeKnown());
+    frameIndex = aQueue.Size() - 1;
+  }
+
+  // Make sure we can get the frame from that index.
+  RefPtr<imgFrame> frame = aQueue.Get(frameIndex, false);
+  EXPECT_EQ(aFrame, frame.get());
+}
+
+static void
+VerifyAdvance(AnimationFrameBuffer& aQueue,
+              size_t aExpectedFrame,
+              bool aExpectedRestartDecoder)
+{
+  bool restartDecoder = aQueue.AdvanceTo(aExpectedFrame);
+  EXPECT_EQ(aExpectedRestartDecoder, restartDecoder);
+}
+
+static void
+VerifyInsertAndAdvance(AnimationFrameBuffer& aQueue,
+                       size_t aExpectedFrame,
+                       AnimationFrameBuffer::InsertStatus aExpectedStatus)
+{
+  // Insert the decoded frame.
+  RefPtr<imgFrame> frame = CreateEmptyFrame();
+  AnimationFrameBuffer::InsertStatus status =
+    aQueue.Insert(RefPtr<imgFrame>(frame));
+  EXPECT_EQ(aExpectedStatus, status);
+  EXPECT_TRUE(aQueue.IsLastInsertedFrame(frame));
+  VerifyInsertInternal(aQueue, frame);
+
+  // Advance the display frame.
+  bool expectedRestartDecoder =
+    aExpectedStatus == AnimationFrameBuffer::InsertStatus::YIELD;
+  VerifyAdvance(aQueue, aExpectedFrame, expectedRestartDecoder);
+}
+
+static void
+VerifyMarkComplete(AnimationFrameBuffer& aQueue,
+                   bool aExpectedContinue,
+                   const IntRect& aRefreshArea = IntRect(0, 0, 1, 1))
+{
+  bool keepDecoding = aQueue.MarkComplete(aRefreshArea);
+  EXPECT_EQ(aExpectedContinue, keepDecoding);
+}
+
+static void
+VerifyInsert(AnimationFrameBuffer& aQueue,
+             AnimationFrameBuffer::InsertStatus aExpectedStatus)
+{
+  RefPtr<imgFrame> frame = CreateEmptyFrame();
+  AnimationFrameBuffer::InsertStatus status =
+    aQueue.Insert(RefPtr<imgFrame>(frame));
+  EXPECT_EQ(aExpectedStatus, status);
+  EXPECT_TRUE(aQueue.IsLastInsertedFrame(frame));
+  VerifyInsertInternal(aQueue, frame);
+}
+
+static void
+VerifyReset(AnimationFrameBuffer& aQueue,
+            bool aExpectedContinue,
+            const imgFrame* aFirstFrame)
+{
+  bool keepDecoding = aQueue.Reset();
+  EXPECT_EQ(aExpectedContinue, keepDecoding);
+  EXPECT_EQ(aQueue.Batch() * 2, aQueue.PendingDecode());
+  EXPECT_EQ(aFirstFrame, aQueue.Get(0, true));
+
+  if (!aQueue.MayDiscard()) {
+    const AnimationFrameRetainedBuffer& queue =
+      *static_cast<AnimationFrameRetainedBuffer*>(&aQueue);
+    EXPECT_EQ(aFirstFrame, queue.Frames()[0].get());
+    EXPECT_EQ(aFirstFrame, aQueue.Get(0, false));
+  } else {
+    const AnimationFrameDiscardingQueue& queue =
+      *static_cast<AnimationFrameDiscardingQueue*>(&aQueue);
+    EXPECT_EQ(size_t(0), queue.PendingInsert());
+    EXPECT_EQ(size_t(0), queue.Display().size());
+    EXPECT_EQ(aFirstFrame, queue.FirstFrame());
+    EXPECT_EQ(nullptr, aQueue.Get(0, false));
+  }
 }
 
 class ImageAnimationFrameBuffer : public ::testing::Test
@@ -286,3 +423,127 @@ TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset)
   EXPECT_EQ(size_t(5), buffer.Size());
 }
 
+static void TestDiscardingQueueLoop(AnimationFrameDiscardingQueue& aQueue,
+                                    const imgFrame* aFirstFrame,
+                                    size_t aThreshold,
+                                    size_t aBatch,
+                                    size_t aStartFrame)
+{
+  // We should be advanced right up to the last decoded frame.
+  EXPECT_TRUE(aQueue.MayDiscard());
+  EXPECT_FALSE(aQueue.SizeKnown());
+  EXPECT_EQ(aBatch, aQueue.Batch());
+  EXPECT_EQ(aThreshold, aQueue.PendingInsert());
+  EXPECT_EQ(aThreshold, aQueue.Size());
+  EXPECT_EQ(aFirstFrame, aQueue.FirstFrame());
+  EXPECT_EQ(size_t(1), aQueue.Display().size());
+  EXPECT_EQ(size_t(3), aQueue.PendingDecode());
+  VerifyDiscardingQueueContents(aQueue);
+
+  // Make sure frames get removed as we advance.
+  VerifyInsertAndAdvance(aQueue, 5, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  EXPECT_EQ(size_t(1), aQueue.Display().size());
+  VerifyInsertAndAdvance(aQueue, 6, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  EXPECT_EQ(size_t(1), aQueue.Display().size());
+  VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  EXPECT_EQ(size_t(1), aQueue.Display().size());
+
+  // We should get throttled if we insert too much.
+  VerifyInsert(aQueue, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  EXPECT_EQ(size_t(2), aQueue.Display().size());
+  EXPECT_EQ(size_t(1), aQueue.PendingDecode());
+  VerifyInsert(aQueue, AnimationFrameBuffer::InsertStatus::YIELD);
+  EXPECT_EQ(size_t(3), aQueue.Display().size());
+  EXPECT_EQ(size_t(0), aQueue.PendingDecode());
+
+  // We should get restarted if we advance.
+  VerifyAdvance(aQueue, 8, true);
+  EXPECT_EQ(size_t(2), aQueue.PendingDecode());
+  VerifyAdvance(aQueue, 9, false);
+  EXPECT_EQ(size_t(2), aQueue.PendingDecode());
+
+  // We should continue decoding if we completed, since we are discarding.
+  VerifyMarkComplete(aQueue, true);
+  EXPECT_EQ(size_t(2), aQueue.PendingDecode());
+  EXPECT_EQ(size_t(10), aQueue.Size());
+  EXPECT_TRUE(aQueue.SizeKnown());
+  EXPECT_FALSE(aQueue.HasRedecodeError());
+
+  // Insert the first frames of the animation.
+  VerifyInsert(aQueue, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsert(aQueue, AnimationFrameBuffer::InsertStatus::YIELD);
+  EXPECT_EQ(size_t(0), aQueue.PendingDecode());
+  EXPECT_EQ(size_t(10), aQueue.Size());
+
+  // Advance back at the beginning. The first frame should only match for
+  // display purposes.
+  VerifyAdvance(aQueue, 0, true);
+  EXPECT_EQ(size_t(2), aQueue.PendingDecode());
+  EXPECT_TRUE(aQueue.FirstFrame() != nullptr);
+  EXPECT_TRUE(aQueue.Get(0, false) != nullptr);
+  EXPECT_NE(aQueue.FirstFrame(), aQueue.Get(0, false));
+  EXPECT_EQ(aQueue.FirstFrame(), aQueue.Get(0, true));
+
+  // Reiterate one more time and make it loops back.
+  VerifyInsertAndAdvance(aQueue, 1, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 2, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(aQueue, 3, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 4, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(aQueue, 5, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 6, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 8, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  EXPECT_EQ(size_t(10), aQueue.PendingInsert());
+  VerifyMarkComplete(aQueue, true);
+  EXPECT_EQ(size_t(0), aQueue.PendingInsert());
+
+  VerifyInsertAndAdvance(aQueue, 9, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(aQueue, 0, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(aQueue, 1, AnimationFrameBuffer::InsertStatus::CONTINUE);
+}
+
+TEST_F(ImageAnimationFrameBuffer, DiscardingLoop)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  const size_t kStartFrame = 0;
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  PrepareForDiscardingQueue(retained);
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  TestDiscardingQueueLoop(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
+
+static void TestDiscardingQueueReset(AnimationFrameDiscardingQueue& aQueue,
+                                     const imgFrame* aFirstFrame,
+                                     size_t aThreshold,
+                                     size_t aBatch,
+                                     size_t aStartFrame)
+{
+  // We should be advanced right up to the last decoded frame.
+  EXPECT_TRUE(aQueue.MayDiscard());
+  EXPECT_FALSE(aQueue.SizeKnown());
+  EXPECT_EQ(aBatch, aQueue.Batch());
+  EXPECT_EQ(aThreshold, aQueue.PendingInsert());
+  EXPECT_EQ(aThreshold, aQueue.Size());
+  EXPECT_EQ(aFirstFrame, aQueue.FirstFrame());
+  EXPECT_EQ(size_t(1), aQueue.Display().size());
+  EXPECT_EQ(size_t(4), aQueue.PendingDecode());
+  VerifyDiscardingQueueContents(aQueue);
+
+  // Reset should clear everything except the first frame.
+  VerifyReset(aQueue, false, aFirstFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
+{
+  const size_t kThreshold = 8;
+  const size_t kBatch = 3;
+  const size_t kStartFrame = 0;
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  PrepareForDiscardingQueue(retained);
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
