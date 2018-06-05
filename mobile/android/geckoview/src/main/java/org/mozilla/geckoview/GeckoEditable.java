@@ -1219,7 +1219,7 @@ import android.view.inputmethod.EditorInfo;
 
                 // Do not reset mIMEState here; see comments in notifyIMEContext
                 if (mIMEState != SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-                    icRestartInput(SessionTextInput.Delegate.RESTART_REASON_FOCUS);
+                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS);
                 }
                 break;
 
@@ -1248,7 +1248,7 @@ import android.view.inputmethod.EditorInfo;
                     }
                 }
                 // No longer have composition; perform reset.
-                icRestartInput(SessionTextInput.Delegate.RESTART_REASON_CONTENT_CHANGE);
+                icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
                 return; // Don't notify listener.
             }
 
@@ -1320,16 +1320,19 @@ import android.view.inputmethod.EditorInfo;
         // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
         // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
         // restartInput here.
-        if (oldState != SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-            if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-                icRestartInput(SessionTextInput.Delegate.RESTART_REASON_BLUR);
-            } else if (mFocusedChild != null) {
-                icRestartInput(SessionTextInput.Delegate.RESTART_REASON_CONTENT_CHANGE);
-            }
+
+        // In either case, there is nothing to do here if we were disabled before.
+        if (oldState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            return;
+        }
+        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR);
+        } else if (mFocusedChild != null) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
         }
     }
 
-    private void icRestartInput(@SessionTextInput.Delegate.RestartReason final int reason) {
+    private void icRestartInput(@GeckoSession.TextInputDelegate.RestartReason final int reason) {
         if (DEBUG) {
             assertOnIcThread();
         }
