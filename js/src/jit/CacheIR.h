@@ -182,6 +182,9 @@ extern const char* CacheKindNames[];
     _(GuardIsObject)                      \
     _(GuardIsObjectOrNull)                \
     _(GuardIsNullOrUndefined)             \
+    _(GuardIsNotNullOrUndefined)          \
+    _(GuardIsNull)                        \
+    _(GuardIsUndefined)                   \
     _(GuardIsBoolean)                     \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
@@ -326,6 +329,7 @@ extern const char* CacheKindNames[];
     _(CompareSymbolResult)                \
     _(CompareInt32Result)                 \
     _(CompareDoubleResult)                \
+    _(CompareObjectUndefinedNullResult)   \
                                           \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
@@ -601,6 +605,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void guardIsNullOrUndefined(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsNullOrUndefined, val);
+    }
+    void guardIsNotNullOrUndefined(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsNotNullOrUndefined, val);
+    }
+    void guardIsNull(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsNull, val);
+    }
+    void guardIsUndefined(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsUndefined, val);
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
         MOZ_ASSERT(shape);
@@ -1259,6 +1272,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(op));
     }
+    void compareObjectUndefinedNullResult(uint32_t op, ObjOperandId object) {
+        writeOpWithOperandId(CacheOp::CompareObjectUndefinedNullResult, object);
+        buffer_.writeByte(uint32_t(op));
+    }
     void compareSymbolResult(uint32_t op, SymbolOperandId lhs, SymbolOperandId rhs) {
         writeOpWithOperandId(CacheOp::CompareSymbolResult, lhs);
         writeOperandId(rhs);
@@ -1830,6 +1847,8 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 

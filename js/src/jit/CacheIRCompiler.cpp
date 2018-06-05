@@ -1377,6 +1377,63 @@ CacheIRCompiler::emitGuardIsNullOrUndefined()
     return true;
 }
 
+
+bool
+CacheIRCompiler::emitGuardIsNotNullOrUndefined()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+        return false;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestNull(Assembler::Equal, input, failure->label());
+    masm.branchTestUndefined(Assembler::Equal, input, failure->label());
+
+    return true;
+}
+
+
+bool
+CacheIRCompiler::emitGuardIsNull()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_NULL)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label success;
+    masm.branchTestNull(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsUndefined()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_UNDEFINED)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+
 bool
 CacheIRCompiler::emitGuardIsObjectOrNull()
 {
@@ -3133,6 +3190,35 @@ CacheIRCompiler::emitCompareDoubleResult()
     masm.bind(&ifTrue);
     masm.moveValue(BooleanValue(true), output.valueReg());
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitCompareObjectUndefinedNullResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSOp op = reader.jsop();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+        // obj !== undefined/null for all objects.
+        masm.moveValue(BooleanValue(op == JSOP_STRICTNE), output.valueReg());
+    } else {
+        MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE);
+        AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+        Label done, emulatesUndefined;
+        masm.branchIfObjectEmulatesUndefined(obj, scratch, failure->label(), &emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_NE), output.valueReg());
+        masm.jump(&done);
+        masm.bind(&emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_EQ), output.valueReg());
+        masm.bind(&done);
+    }
     return true;
 }
 
