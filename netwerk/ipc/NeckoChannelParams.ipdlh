@@ -128,9 +128,32 @@ struct ParentLoadInfoForwarderArgs
   // checks can pass.
   bool allowInsecureRedirectToDataURI;
 
+  // The ServiceWorker controller that may be set in the parent when
+  // interception occurs.
+  OptionalIPCServiceWorkerDescriptor controller;
+
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
   // in BackgroundUtils.cpp/.h!
+};
+
+/**
+ * This structure is used to carry selected properties of a LoadInfo
+ * object to the parent process that might have changed in the child
+ * during a redirect.  We don't want to use LoadInfoArgs for that since
+ * it's too huge and we only care about small subpart of properties
+ * anyway.
+ */
+struct ChildLoadInfoForwarderArgs
+{
+  // The reserved and initial ClientInfo values may change during a
+  // redirect if the new channel is cross-origin to the old channel.
+  OptionalIPCClientInfo reservedClientInfo;
+  OptionalIPCClientInfo initialClientInfo;
+
+  // The ServiceWorker controller may be cleared in the child during
+  // a redirect.
+  OptionalIPCServiceWorkerDescriptor controller;
 };
 
 //-----------------------------------------------------------------------------

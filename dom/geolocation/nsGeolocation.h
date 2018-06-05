@@ -21,7 +21,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsGeoPosition.h"
-#include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMGeoPosition.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
@@ -120,17 +119,15 @@ namespace dom {
 /**
  * Can return a geolocation info
  */
-class Geolocation final : public nsIDOMGeoGeolocation,
-                          public nsIGeolocationUpdate,
+class Geolocation final : public nsIGeolocationUpdate,
                           public nsWrapperCache
 {
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Geolocation, nsIDOMGeoGeolocation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Geolocation)
 
   NS_DECL_NSIGEOLOCATIONUPDATE
-  NS_DECL_NSIDOMGEOGEOLOCATION
 
   Geolocation();
 
@@ -149,6 +146,12 @@ public:
                           const PositionOptions& aOptions,
                           CallerType aCallerType,
                           ErrorResult& aRv);
+  void ClearWatch(int32_t aWatchId);
+
+  // A WatchPosition for C++ use.  Returns -1 if we failed to actually watch.
+  int32_t WatchPosition(nsIDOMGeoPositionCallback* aCallback,
+                        nsIDOMGeoPositionErrorCallback* aErrorCallback,
+                        UniquePtr<PositionOptions>&& aOptions);
 
   // Returns true if any of the callbacks are repeating
   bool HasActiveCallbacks();
@@ -178,6 +181,9 @@ public:
   // Check to see if any active request requires high accuracy
   bool HighAccuracyRequested();
 
+  // Get the singleton non-window Geolocation instance.  This never returns null.
+  static already_AddRefed<Geolocation> NonWindowSingleton();
+
 private:
 
   ~Geolocation();
@@ -186,11 +192,11 @@ private:
                               GeoPositionErrorCallback aErrorCallback,
                               UniquePtr<PositionOptions>&& aOptions,
                               CallerType aCallerType);
-  nsresult WatchPosition(GeoPositionCallback aCallback,
-                         GeoPositionErrorCallback aErrorCallback,
-                         UniquePtr<PositionOptions>&& aOptions,
-                         CallerType aCallerType,
-                         int32_t* aRv);
+  int32_t WatchPosition(GeoPositionCallback aCallback,
+                        GeoPositionErrorCallback aErrorCallback,
+                        UniquePtr<PositionOptions>&& aOptions,
+                        CallerType aCallerType,
+                        ErrorResult& aRv);
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
@@ -233,16 +239,12 @@ private:
 
   // Array containing already cleared watch IDs
   nsTArray<int32_t> mClearedWatchIDs;
+
+  // Our cached non-window singleton.
+  static mozilla::StaticRefPtr<Geolocation> sNonWindowSingleton;
 };
 
 } // namespace dom
-
-inline nsISupports*
-ToSupports(dom::Geolocation* aGeolocation)
-{
-  return ToSupports(static_cast<nsIDOMGeoGeolocation*>(aGeolocation));
-}
-
 } // namespace mozilla
 
 #endif /* nsGeoLocation_h */

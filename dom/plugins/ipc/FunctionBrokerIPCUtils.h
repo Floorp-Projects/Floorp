@@ -40,6 +40,7 @@ enum FunctionHookId
   , ID_HttpQueryInfoA
   , ID_HttpSendRequestA
   , ID_HttpSendRequestExA
+  , ID_HttpEndRequestA
   , ID_InternetQueryOptionA
   , ID_InternetErrorDlg
   , ID_AcquireCredentialsHandleA
@@ -287,7 +288,7 @@ struct ParamTraits<OpenFileNameIPC>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(StringPrintf(L"[%S, %S, %S, %S]", aParam.mFilter.c_str(),
+    aLog->append(StringPrintf(L"[%ls, %ls, %ls, %ls]", aParam.mFilter.c_str(),
                               aParam.mCustomFilterIn.c_str(), aParam.mFile.c_str(),
                               aParam.mTitle.c_str()));
   }
@@ -321,7 +322,7 @@ struct ParamTraits<OpenFileNameRetIPC>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(StringPrintf(L"[%S, %S, %S, %d, %d]", aParam.mCustomFilterOut.c_str(),
+    aLog->append(StringPrintf(L"[%ls, %ls, %ls, %d, %d]", aParam.mCustomFilterOut.c_str(),
                               aParam.mFile.c_str(), aParam.mFileTitle.c_str(),
                               aParam.mFileOffset, aParam.mFileExtension));
   }

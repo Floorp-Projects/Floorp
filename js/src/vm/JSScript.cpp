@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <new>
 #include <string.h>
+#include <utility>
 
 #include "jsapi.h"
 #include "jstypes.h"

@@ -60,6 +60,12 @@ ClientInfo::~ClientInfo()
 {
 }
 
+bool
+ClientInfo::operator==(const ClientInfo& aRight) const
+{
+  return *mData == *aRight.mData;
+}
+
 const nsID&
 ClientInfo::Id() const
 {

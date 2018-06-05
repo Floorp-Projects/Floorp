@@ -58,9 +58,6 @@ def is_internal(prop):
     OTHER_INTERNALS = [
         "-moz-context-properties",
         "-moz-control-character-visibility",
-        "-moz-window-opacity",
-        "-moz-window-transform",
-        "-moz-window-transform-origin",
     ]
     return prop.name in OTHER_INTERNALS
 

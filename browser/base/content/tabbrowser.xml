@@ -79,6 +79,7 @@
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
                           style="min-width: 1px;"
+                          clicktoscroll="true"
                           class="tabbrowser-arrowscrollbox">
 <!--
  This is a hack to circumvent bug 472020, otherwise the tabs show up on the

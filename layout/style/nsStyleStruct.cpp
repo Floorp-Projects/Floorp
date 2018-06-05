@@ -3426,29 +3426,6 @@ StyleTransition::SetInitialValues()
   mProperty = eCSSPropertyExtra_all_properties;
 }
 
-void
-StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
-                                    const nsAString& aPropertyString)
-{
-  MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
-                                        CSSEnabledState::eForAllContent) ==
-               aProperty,
-             "property and property string should match");
-  RefPtr<nsAtom> temp = NS_Atomize(aPropertyString);
-  SetUnknownProperty(aProperty, temp);
-}
-
-void
-StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
-                                    nsAtom* aPropertyString)
-{
-  MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||
-             aProperty == eCSSPropertyExtra_variable,
-             "should be either unknown or custom property");
-  mProperty = aProperty;
-  mUnknownProperty = aPropertyString;
-}
-
 bool
 StyleTransition::operator==(const StyleTransition& aOther) const
 {

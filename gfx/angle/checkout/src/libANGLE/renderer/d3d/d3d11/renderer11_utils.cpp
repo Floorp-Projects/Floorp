@@ -21,7 +21,6 @@
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
-#include "libANGLE/renderer/d3d/IndexBuffer.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/dxgi_support_table.h"
@@ -2358,57 +2357,15 @@ bool UsePrimitiveRestartWorkaround(bool primitiveRestartFixedIndexEnabled, GLenu
     return (!primitiveRestartFixedIndexEnabled && type == GL_UNSIGNED_SHORT);
 }
 
-bool IsStreamingIndexData(const gl::Context *context, GLenum srcType)
-{
-    const auto &glState = context->getGLState();
-    gl::Buffer *glBuffer = glState.getVertexArray()->getElementArrayBuffer().get();
-
-    // Case 1: the indices are passed by pointer, which forces the streaming of index data
-    if (glBuffer == nullptr)
-    {
-        return true;
-    }
-
-    bool primitiveRestartWorkaround =
-        UsePrimitiveRestartWorkaround(glState.isPrimitiveRestartEnabled(), srcType);
-
-    BufferD3D *buffer    = GetImplAs<BufferD3D>(glBuffer);
-    const GLenum dstType = (srcType == GL_UNSIGNED_INT || primitiveRestartWorkaround)
-                               ? GL_UNSIGNED_INT
-                               : GL_UNSIGNED_SHORT;
-
-    // Case 2a: the buffer can be used directly
-    if (buffer->supportsDirectBinding() && dstType == srcType)
-    {
-        return false;
-    }
-
-    // Case 2b: use a static translated copy or fall back to streaming
-    StaticIndexBufferInterface *staticBuffer = buffer->getStaticIndexBuffer();
-    if (staticBuffer == nullptr)
-    {
-        return true;
-    }
-
-    if ((staticBuffer->getBufferSize() == 0) || (staticBuffer->getIndexType() != dstType))
-    {
-        return true;
-    }
-
-    return false;
-}
-
 IndexStorageType ClassifyIndexStorage(const gl::State &glState,
                                       const gl::Buffer *elementArrayBuffer,
                                       GLenum elementType,
                                       GLenum destElementType,
-                                      unsigned int offset,
-                                      bool *needsTranslation)
+                                      unsigned int offset)
 {
     // No buffer bound means we are streaming from a client pointer.
     if (!elementArrayBuffer || !IsOffsetAligned(elementType, offset))
     {
-        *needsTranslation = true;
         return IndexStorageType::Dynamic;
     }
 
@@ -2416,7 +2373,6 @@ IndexStorageType ClassifyIndexStorage(const gl::State &glState,
     BufferD3D *bufferD3D = GetImplAs<BufferD3D>(elementArrayBuffer);
     if (bufferD3D->supportsDirectBinding() && destElementType == elementType)
     {
-        *needsTranslation = false;
         return IndexStorageType::Direct;
     }
 
@@ -2424,15 +2380,10 @@ IndexStorageType ClassifyIndexStorage(const gl::State &glState,
     StaticIndexBufferInterface *staticBuffer = bufferD3D->getStaticIndexBuffer();
     if (staticBuffer != nullptr)
     {
-        // Need to re-translate the static data if has never been used, or changed type.
-        *needsTranslation =
-            (staticBuffer->getBufferSize() == 0 || staticBuffer->getIndexType() != destElementType);
         return IndexStorageType::Static;
     }
 
     // Static buffer not available, fall back to streaming.
-    *needsTranslation = true;
     return IndexStorageType::Dynamic;
 }
-
 }  // namespace rx

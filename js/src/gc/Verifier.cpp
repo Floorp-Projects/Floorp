@@ -184,7 +184,6 @@ gc::GCRuntime::startVerifyPreBarriers()
         return;
 
     if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
-        cx->keepAtoms ||
         rt->hasHelperThreadZones())
     {
         return;
@@ -360,7 +359,6 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     if (!compartmentCreated &&
         IsIncrementalGCUnsafe(rt) == AbortReason::None &&
-        !rt->mainContextFromOwnThread()->keepAtoms &&
         !rt->hasHelperThreadZones())
     {
         CheckEdgeTracer cetrc(rt);

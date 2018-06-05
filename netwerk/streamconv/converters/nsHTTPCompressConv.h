@@ -62,7 +62,7 @@ public:
     , mStatus(NS_OK)
     , mBrotliStateIsStreamEnd(false)
   {
-    BrotliDecoderStateInit(&mState);
+    BrotliDecoderStateInit(&mState, 0, 0, 0);
   }
   ~BrotliWrapper()
   {

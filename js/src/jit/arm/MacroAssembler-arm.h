@@ -14,8 +14,6 @@
 #include "jit/MoveResolver.h"
 #include "vm/BytecodeUtil.h"
 
-using mozilla::DebugOnly;
-
 namespace js {
 namespace jit {
 
@@ -329,11 +327,11 @@ class MacroAssemblerARM : public Assembler
     void ma_ldrh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
-    void ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode = Offset,
+    void ma_ldrd(EDtrAddr addr, Register rt, mozilla::DebugOnly<Register> rt2, Index mode = Offset,
                  Condition cc = Always);
     void ma_strb(Register rt, DTRAddr addr, Index mode = Offset, Condition cc = Always);
     void ma_strh(Register rt, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
-    void ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode = Offset,
+    void ma_strd(Register rt, mozilla::DebugOnly<Register> rt2, EDtrAddr addr, Index mode = Offset,
                  Condition cc = Always);
 
     // Specialty for moving N bits of data, where n == 8,16,32,64.

@@ -11,6 +11,8 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Maybe.h"
 
+#include <utility>
+
 #include "frontend/BinSource-macros.h"
 #include "frontend/BinSourceRuntimeSupport.h"
 

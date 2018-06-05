@@ -155,6 +155,12 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   if (!mDocument->DidFireDOMContentLoaded()) {
     mDocument->AddSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
                                       this, false, false);
+  } else {
+    // In some cases we can't rely on CheckLoadingFinished being called from
+    // the refresh driver.  For example, documents in display:none iframes.
+    // Or if the document has finished loading and painting at the time that
+    // script requests document.fonts and causes us to get here.
+    CheckLoadingFinished();
   }
 
   mDocument->CSSLoader()->AddObserver(this);
@@ -395,6 +401,14 @@ FontFaceSet::GetReady(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // There may be outstanding style changes that will trigger the loading of
+  // new fonts.  We need to flush layout to initiate any such loads so that
+  // if mReady is currently resolved we replace it with a new pending Promise.
+  // (That replacement will happen under this flush call.)
+  if (mDocument) {
+    mDocument->FlushPendingNotifications(FlushType::Layout);
+  }
+
   if (!mReady) {
     nsCOMPtr<nsIGlobalObject> global = GetParentObject();
     mReady = Promise::Create(global, aRv);
@@ -408,7 +422,6 @@ FontFaceSet::GetReady(ErrorResult& aRv)
     }
   }
 
-  FlushUserFontSet();
   return mReady;
 }
 
@@ -1678,7 +1691,8 @@ FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise()
                             false))->PostDOMEvent();
 
   if (PrefEnabled()) {
-    if (mReady) {
+    if (mReady &&
+        mReady->State() != Promise::PromiseState::Pending) {
       if (GetParentObject()) {
         ErrorResult rv;
         mReady = Promise::Create(GetParentObject(), rv);
@@ -1760,9 +1774,10 @@ FontFaceSet::CheckLoadingFinished()
     return;
   }
 
-  if (mStatus == FontFaceSetLoadStatus::Loaded) {
-    // We've already resolved mReady and dispatched the loadingdone/loadingerror
-    // events.
+  if ((mReady && mReady->State() != Promise::PromiseState::Pending) ||
+      mResolveLazilyCreatedReadyPromise) {
+    // We've already resolved mReady (or set the flag to do that lazily) and
+    // dispatched the loadingdone/loadingerror events.
     return;
   }
 

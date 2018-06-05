@@ -200,6 +200,38 @@ ANGLE_EXPORT void GL_APIENTRY
 DrawTexxOES(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
 ANGLE_EXPORT void GL_APIENTRY DrawTexxvOES(const GLfixed *coords);
 
+// GL_OES_framebuffer_object
+ANGLE_EXPORT void GL_APIENTRY BindFramebufferOES(GLenum target, GLuint framebuffer);
+ANGLE_EXPORT void GL_APIENTRY BindRenderbufferOES(GLenum target, GLuint renderbuffer);
+ANGLE_EXPORT GLenum GL_APIENTRY CheckFramebufferStatusOES(GLenum target);
+ANGLE_EXPORT void GL_APIENTRY DeleteFramebuffersOES(GLsizei n, const GLuint *framebuffers);
+ANGLE_EXPORT void GL_APIENTRY DeleteRenderbuffersOES(GLsizei n, const GLuint *renderbuffers);
+ANGLE_EXPORT void GL_APIENTRY FramebufferRenderbufferOES(GLenum target,
+                                                         GLenum attachment,
+                                                         GLenum renderbuffertarget,
+                                                         GLuint renderbuffer);
+ANGLE_EXPORT void GL_APIENTRY FramebufferTexture2DOES(GLenum target,
+                                                      GLenum attachment,
+                                                      GLenum textarget,
+                                                      GLuint texture,
+                                                      GLint level);
+ANGLE_EXPORT void GL_APIENTRY GenFramebuffersOES(GLsizei n, GLuint *framebuffers);
+ANGLE_EXPORT void GL_APIENTRY GenRenderbuffersOES(GLsizei n, GLuint *renderbuffers);
+ANGLE_EXPORT void GL_APIENTRY GenerateMipmapOES(GLenum target);
+ANGLE_EXPORT void GL_APIENTRY GetFramebufferAttachmentParameterivOES(GLenum target,
+                                                                     GLenum attachment,
+                                                                     GLenum pname,
+                                                                     GLint *params);
+ANGLE_EXPORT void GL_APIENTRY GetRenderbufferParameterivOES(GLenum target,
+                                                            GLenum pname,
+                                                            GLint *params);
+ANGLE_EXPORT GLboolean GL_APIENTRY IsFramebufferOES(GLuint framebuffer);
+ANGLE_EXPORT GLboolean GL_APIENTRY IsRenderbufferOES(GLuint renderbuffer);
+ANGLE_EXPORT void GL_APIENTRY RenderbufferStorageOES(GLenum target,
+                                                     GLenum internalformat,
+                                                     GLsizei width,
+                                                     GLsizei height);
+
 // GL_OES_get_program_binary
 ANGLE_EXPORT void GL_APIENTRY GetProgramBinaryOES(GLuint program,
                                                   GLsizei bufSize,
@@ -233,6 +265,17 @@ ANGLE_EXPORT void GL_APIENTRY PointSizePointerOES(GLenum type, GLsizei stride, c
 
 // GL_OES_query_matrix
 ANGLE_EXPORT GLbitfield GL_APIENTRY QueryMatrixxOES(GLfixed *mantissa, GLint *exponent);
+
+// GL_OES_texture_cube_map
+ANGLE_EXPORT void GL_APIENTRY GetTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params);
+ANGLE_EXPORT void GL_APIENTRY GetTexGenivOES(GLenum coord, GLenum pname, GLint *params);
+ANGLE_EXPORT void GL_APIENTRY GetTexGenxvOES(GLenum coord, GLenum pname, GLfixed *params);
+ANGLE_EXPORT void GL_APIENTRY TexGenfOES(GLenum coord, GLenum pname, GLfloat param);
+ANGLE_EXPORT void GL_APIENTRY TexGenfvOES(GLenum coord, GLenum pname, const GLfloat *params);
+ANGLE_EXPORT void GL_APIENTRY TexGeniOES(GLenum coord, GLenum pname, GLint param);
+ANGLE_EXPORT void GL_APIENTRY TexGenivOES(GLenum coord, GLenum pname, const GLint *params);
+ANGLE_EXPORT void GL_APIENTRY TexGenxOES(GLenum coord, GLenum pname, GLfixed param);
+ANGLE_EXPORT void GL_APIENTRY TexGenxvOES(GLenum coord, GLenum pname, const GLfixed *params);
 
 // GL_OES_vertex_array_object
 ANGLE_EXPORT void GL_APIENTRY BindVertexArrayOES(GLuint array);

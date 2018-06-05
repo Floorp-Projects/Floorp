@@ -275,6 +275,7 @@ js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& sessi
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
     if (atomsZone->isCollecting())
         traceRuntimeAtoms(trc, session.lock());
+    traceKeptAtoms(trc);
     JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     traceRuntimeCommon(trc, MarkRuntime, session);
 }
@@ -328,6 +329,18 @@ js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& 
     TraceAtoms(trc, lock);
     TraceWellKnownSymbols(trc);
     jit::JitRuntime::Trace(trc, lock);
+}
+
+void
+js::gc::GCRuntime::traceKeptAtoms(JSTracer* trc)
+{
+    // We don't have exact rooting information for atoms while parsing. When
+    // this is happeninng we set a flag on the zone and trace all atoms in the
+    // zone's cache.
+    for (GCZonesIter zone(trc->runtime()); !zone.done(); zone.next()) {
+        if (zone->hasKeptAtoms())
+            zone->traceAtomCache(trc);
+    }
 }
 
 void

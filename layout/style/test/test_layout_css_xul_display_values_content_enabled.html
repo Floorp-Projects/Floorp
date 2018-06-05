@@ -1,0 +1,34 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div></div>
+<script>
+const VALUES = [
+  "-moz-box",
+  "-moz-inline-box",
+  "-moz-grid",
+  "-moz-inline-grid",
+  "-moz-grid-group",
+  "-moz-grid-line",
+  "-moz-stack",
+  "-moz-inline-stack",
+  "-moz-deck",
+  "-moz-popup",
+  "-moz-groupbox",
+];
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["layout.css.xul-display-values.content.enabled", true]]}
+).then(runTest);
+
+function runTest() {
+  const div = document.querySelector("div");
+  for (const value of VALUES) {
+    div.style.display = value;
+    is(div.style.display, value);
+    is(getComputedStyle(div).display, value);
+    ok(CSS.supports("display", value));
+  }
+  SimpleTest.finish();
+}
+</script>

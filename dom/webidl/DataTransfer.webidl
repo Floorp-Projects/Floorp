@@ -7,7 +7,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#the-datatransfer-interface
  */
 
-[ChromeConstructor(DOMString eventType, boolean isExternal)]
+[Constructor]
 interface DataTransfer {
            attribute DOMString dropEffect;
            attribute DOMString effectAllowed;

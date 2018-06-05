@@ -11,7 +11,7 @@
 
 #include "compiler/translator/HashNames.h"
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 
 namespace sh
 {
@@ -44,7 +44,7 @@ class TOutputGLSLBase : public TIntermTraverser
     void writeInvariantQualifier(const TType &type);
     void writeVariableType(const TType &type);
     virtual bool writeVariablePrecision(TPrecision precision) = 0;
-    void writeFunctionParameters(const TIntermSequence &args);
+    void writeFunctionParameters(const TFunction *func);
     const TConstantUnion *writeConstantUnion(const TType &type, const TConstantUnion *pConstUnion);
     void writeConstructorTriplet(Visit visit, const TType &type);
     ImmutableString getTypeName(const TType &type);
@@ -58,7 +58,7 @@ class TOutputGLSLBase : public TIntermTraverser
     bool visitIfElse(Visit visit, TIntermIfElse *node) override;
     bool visitSwitch(Visit visit, TIntermSwitch *node) override;
     bool visitCase(Visit visit, TIntermCase *node) override;
-    bool visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node) override;
+    void visitFunctionPrototype(TIntermFunctionPrototype *node) override;
     bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
     bool visitBlock(Visit visit, TIntermBlock *node) override;
@@ -76,9 +76,10 @@ class TOutputGLSLBase : public TIntermTraverser
     // Used to translate function names for differences between ESSL and GLSL
     virtual ImmutableString translateTextureFunction(const ImmutableString &name) { return name; }
 
+    void declareStruct(const TStructure *structure);
+
   private:
     bool structDeclared(const TStructure *structure) const;
-    void declareStruct(const TStructure *structure);
 
     void declareInterfaceBlockLayout(const TInterfaceBlock *interfaceBlock);
     void declareInterfaceBlock(const TInterfaceBlock *interfaceBlock);

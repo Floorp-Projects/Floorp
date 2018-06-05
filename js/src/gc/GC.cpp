@@ -3401,10 +3401,9 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason, size_t used, s
 #endif
 
     if (zone->isAtomsZone()) {
-        /* We can't do a zone GC of the atoms zone. */
-        if (rt->mainContextFromOwnThread()->keepAtoms || rt->hasHelperThreadZones()) {
-            /* Skip GC and retrigger later, since atoms zone won't be collected
-             * if keepAtoms is true. */
+        /* We can't do a zone GC of just the atoms zone. */
+        if (rt->hasHelperThreadZones()) {
+            /* We can't collect atoms while off-thread parsing is allocating. */
             fullGCForAtomsRequested_ = true;
             return false;
         }
@@ -4029,7 +4028,7 @@ GCRuntime::purgeRuntime()
         realm->purge();
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        zone->atomCache().clearAndShrink();
+        zone->purgeAtomCacheOrDefer();
         zone->externalStringCache().purge();
         zone->functionToStringCache().purge();
     }
