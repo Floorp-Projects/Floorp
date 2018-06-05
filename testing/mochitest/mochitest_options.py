@@ -916,6 +916,13 @@ class AndroidArguments(ArgumentContainer):
         if build_obj:
             options.log_mach = '-'
 
+            objdir_xpi_stage = os.path.join(build_obj.distdir, 'xpi-stage')
+            if os.path.isdir(objdir_xpi_stage):
+                options.extensionsToInstall = [
+                    os.path.join(objdir_xpi_stage, 'mochijar'),
+                    os.path.join(objdir_xpi_stage, 'specialpowers'),
+                ]
+
         if options.remoteWebServer is None:
             if os.name != "nt":
                 options.remoteWebServer = moznetwork.get_ip()
