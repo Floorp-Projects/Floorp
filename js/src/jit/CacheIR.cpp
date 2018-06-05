@@ -4858,6 +4858,28 @@ CompareIRGenerator::tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId)
 }
 
 bool
+CompareIRGenerator::tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!(lhsVal_.isNullOrUndefined() && rhsVal_.isObject()) &&
+        !(rhsVal_.isNullOrUndefined() && lhsVal_.isObject()))
+        return false;
+
+    if (op_ != JSOP_EQ && op_ != JSOP_NE)
+        return false;
+
+    ValOperandId obj = rhsVal_.isObject() ? rhsId : lhsId;
+    ValOperandId undefOrNull = rhsVal_.isObject() ? lhsId : rhsId;
+
+    writer.guardIsNullOrUndefined(undefOrNull);
+    ObjOperandId objOperand = writer.guardIsObject(obj);
+    writer.compareObjectUndefinedNullResult(op_, objOperand);
+    writer.returnFromIC();
+
+    trackAttached("ObjectUndefined");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4876,6 +4898,8 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachObject(lhsId, rhsId))
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
+            return true;
+        if (tryAttachObjectUndefined(lhsId, rhsId))
             return true;
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
