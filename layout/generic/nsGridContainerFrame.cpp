@@ -3171,6 +3171,10 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   const nsStylePosition* const gridStyle = aState.mGridStyle;
   MOZ_ASSERT(mCellMap.mCells.IsEmpty(), "unexpected entries in cell map");
 
+  // SubgridPlaceGridItems will set these if we find any subgrid items.
+  aState.mFrame->RemoveStateBits(NS_STATE_GRID_HAS_COL_SUBGRID_ITEM |
+                                 NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM);
+
   // http://dev.w3.org/csswg/css-grid/#grid-definition
   // Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
   // This is determined by the larger of the number of rows/columns defined
@@ -6395,7 +6399,9 @@ nsGridContainerFrame::Init(nsIContent*       aContent,
     }
   } else {
     bits = aPrevInFlow->GetStateBits() & (NS_STATE_GRID_IS_COL_SUBGRID |
-                                          NS_STATE_GRID_IS_ROW_SUBGRID);
+                                          NS_STATE_GRID_IS_ROW_SUBGRID |
+                                          NS_STATE_GRID_HAS_COL_SUBGRID_ITEM |
+                                          NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM);
   }
   AddStateBits(bits);
 }
