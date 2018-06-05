@@ -1020,7 +1020,12 @@ enum Role {
    */
   EDITCOMBOBOX = 174,
 
-  LAST_ROLE = EDITCOMBOBOX
+  /**
+   * A section of content that is quoted from another source.
+   */
+  BLOCKQUOTE = 175,
+
+  LAST_ROLE = BLOCKQUOTE
 };
 
 } // namespace role
