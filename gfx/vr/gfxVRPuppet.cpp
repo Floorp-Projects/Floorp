@@ -558,12 +558,12 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
   return false;
 }
 
-#elif defined(MOZ_WIDGET_ANDROID)
+#elif defined(MOZ_ANDROID_GOOGLE_VR)
 
 bool
-VRDisplayPuppet::SubmitFrame(const mozilla::layers::SurfaceTextureDescriptor& aDescriptor,
-                             const gfx::Rect& aLeftEyeRect,
-                             const gfx::Rect& aRightEyeRect)
+VRDisplayPuppet::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect)
 {
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   return false;
