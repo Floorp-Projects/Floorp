@@ -301,6 +301,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       const fontFace = {
         name: font.name,
         CSSFamilyName: font.CSSFamilyName,
+        CSSGeneric: font.CSSGeneric || null,
         srcIndex: font.srcIndex,
         URI: font.URI,
         format: font.format,

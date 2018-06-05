@@ -43,10 +43,11 @@ module.exports = {
     };
   },
 
-  updateFontEditor(fonts, properties = {}) {
+  updateFontEditor(fonts, families = { used: [], notUsed: [] }, properties = {}) {
     return {
       type: UPDATE_EDITOR_STATE,
       fonts,
+      families,
       properties,
     };
   },
