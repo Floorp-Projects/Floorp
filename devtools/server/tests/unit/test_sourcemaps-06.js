@@ -77,10 +77,7 @@ function testContents(sources, timesCalled, callback) {
   const sourceClient = gThreadClient.source(sources[0]);
 
   if (sourceClient.url) {
-    sourceClient.source((response) => {
-      Assert.ok(!response.error,
-                "Should not get an error loading the source from sourcesContent");
-
+    sourceClient.source().then(response => {
       const expectedContent = "content for " + source.url.replace(/^.*\//, "");
       Assert.equal(response.source, expectedContent,
                    "Should have the expected source content");

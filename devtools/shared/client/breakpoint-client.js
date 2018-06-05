@@ -106,13 +106,9 @@ BreakpointClient.prototype = {
           return;
         }
 
-        this.source.setBreakpoint(info, (resp, newBreakpoint) => {
-          if (resp && resp.error) {
-            deferred.reject(resp);
-          } else {
-            deferred.resolve(newBreakpoint);
-          }
-        });
+        deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
+          return newBreakpoint;
+        }));
       });
     } else {
       // The property shouldn't even exist if the condition is blank

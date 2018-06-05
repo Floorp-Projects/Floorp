@@ -47,7 +47,11 @@ function test_breakpoint_running() {
     });
 
     const source = gThreadClient.source(packet.frame.where.source);
-    source.setBreakpoint(location, function(response) {
+    source.setBreakpoint(location).then(function() {
+      executeSoon(function() {
+        gClient.close().then(gCallback);
+      });
+    }, function(response) {
       // Eval scripts don't stick around long enough for the breakpoint to be set,
       // so just make sure we got the expected response from the actor.
       Assert.notEqual(response.error, "noScript");

@@ -47,17 +47,13 @@ function test_cached_original_sources() {
 
 function onNewSource(event, packet) {
   const sourceClient = gThreadClient.source(packet.source);
-  sourceClient.source(function(response) {
-    Assert.ok(!response.error,
-              "Should not be an error grabbing the source");
+  sourceClient.source().then(function(response) {
     Assert.equal(response.source, "initial content",
                  "The correct source content should be sent");
 
     writeFile("temp.js", "new content");
 
-    sourceClient.source(function(response) {
-      Assert.ok(!response.error,
-                "Should not be an error grabbing the source");
+    sourceClient.source().then(function(response) {
       Assert.equal(response.source, "new content",
                    "The correct source content should not be cached, " +
                    "so we should get the new content");

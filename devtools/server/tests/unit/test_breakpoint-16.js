@@ -45,7 +45,7 @@ function test_column_breakpoint() {
     };
     let timesBreakpointHit = 0;
 
-    source.setBreakpoint(location, function(response, bpClient) {
+    source.setBreakpoint(location).then(function([response, bpClient]) {
       gThreadClient.addListener("paused", function onPaused(event, packet) {
         Assert.equal(packet.type, "paused");
         Assert.equal(packet.why.type, "breakpoint");
