@@ -23,10 +23,12 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
-const EventEmitter = require("devtools/shared/event-emitter");
 const InspectorUtils = require("InspectorUtils");
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
+
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { tabSpec } = require("devtools/shared/specs/tab");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
@@ -84,162 +86,160 @@ function getInnerId(window) {
                .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 }
 
-/**
- * Creates a TabActor whose main goal is to manage lifetime and
- * expose the tab actors being registered via DebuggerServer.registerModule.
- * But also track the lifetime of the document being tracked.
- *
- * ### Main requests:
- *
- * `attach`/`detach` requests:
- *  - start/stop document watching:
- *    Starts watching for new documents and emits `tabNavigated` and
- *    `frameUpdate` over RDP.
- *  - retrieve the thread actor:
- *    Instantiates a ThreadActor that can be later attached to in order to
- *    debug JS sources in the document.
- * `switchToFrame`:
- *  Change the targeted document of the whole TabActor, and its child tab actors
- *  to an iframe or back to its original document.
- *
- * Most of the TabActor properties (like `chromeEventHandler` or `docShells`)
- * are meant to be used by the various child tab actors.
- *
- * ### RDP events:
- *
- *  - `tabNavigated`:
- *    Sent when the tab is about to navigate or has just navigated to
- *    a different document.
- *    This event contains the following attributes:
- *     * url (string) The new URI being loaded.
- *     * nativeConsoleAPI (boolean) `false` if the console API of the page has
- *                                          been overridden (e.g. by Firebug),
- *                                  `true`  if the Gecko implementation is used.
- *     * state (string) `start` if we just start requesting the new URL,
- *                      `stop`  if the new URL is done loading.
- *     * isFrameSwitching (boolean) Indicates the event is dispatched when
- *                                  switching the TabActor context to
- *                                  a different frame. When we switch to
- *                                  an iframe, there is no document load.
- *                                  The targeted document is most likely
- *                                  going to be already done loading.
- *     * title (string) The document title being loaded.
- *                      (sent only on state=stop)
- *
- *  - `frameUpdate`:
- *    Sent when there was a change in the child frames contained in the document
- *    or when the tab's context was switched to another frame.
- *    This event can have four different forms depending on the type of change:
- *    * One or many frames are updated:
- *      { frames: [{ id, url, title, parentID }, ...] }
- *    * One frame got destroyed:
- *      { frames: [{ id, destroy: true }]}
- *    * All frames got destroyed:
- *      { destroyAll: true }
- *    * We switched the context of the TabActor to a specific frame:
- *      { selected: #id }
- *
- * ### Internal, non-rdp events:
- * Various events are also dispatched on the TabActor itself that are not
- * related to RDP, so, not sent to the client. They all relate to the documents
- * tracked by the TabActor (its main targeted document, but also any of its
- * iframes).
- *  - will-navigate
- *    This event fires once navigation starts.
- *    All pending user prompts are dealt with,
- *    but it is fired before the first request starts.
- *  - navigate
- *    This event is fired once the document's readyState is "complete".
- *  - window-ready
- *    This event is fired in various distinct scenarios:
- *     * When a new Window object is crafted, equivalent of `DOMWindowCreated`.
- *       It is dispatched before any page script is executed.
- *     * We will have already received a window-ready event for this window
- *       when it was created, but we received a window-destroyed event when
- *       it was frozen into the bfcache, and now the user navigated back to
- *       this page, so it's now live again and we should resume handling it.
- *     * For each existing document, when an `attach` request is received.
- *       At this point scripts in the page will be already loaded.
- *     * When `swapFrameLoaders` is used, such as with moving tabs between
- *       windows or toggling Responsive Design Mode.
- *  - window-destroyed
- *    This event is fired in two cases:
- *     * When the window object is destroyed, i.e. when the related document
- *       is garbage collected. This can happen when the tab is closed or the
- *       iframe is removed from the DOM.
- *       It is equivalent of `inner-window-destroyed` event.
- *     * When the page goes into the bfcache and gets frozen.
- *       The equivalent of `pagehide`.
- *  - changed-toplevel-document
- *    This event fires when we switch the TabActor targeted document
- *    to one of its iframes, or back to its original top document.
- *    It is dispatched between window-destroyed and window-ready.
- *  - stylesheet-added
- *    This event is fired when a StyleSheetActor is created.
- *    It contains the following attribute :
- *     * actor (StyleSheetActor) The created actor.
- *
- * Note that *all* these events are dispatched in the following order
- * when we switch the context of the TabActor to a given iframe:
- *  - will-navigate
- *  - window-destroyed
- *  - changed-toplevel-document
- *  - window-ready
- *  - navigate
- *
- * This class is subclassed by ContentActor and others.
- * Subclasses are expected to implement a getter for the docShell property.
- *
- * @param connection DebuggerServerConnection
- *        The conection to the client.
- */
-function TabActor(connection) {
-  // This usage of decorate should be removed in favor of using ES6 extends EventEmitter.
-  // See Bug 1394816.
-  EventEmitter.decorate(this);
+const tabPrototype = {
 
-  this.conn = connection;
-  this._tabActorPool = null;
-  // A map of actor names to actor instances provided by extensions.
-  this._extraActors = {};
-  this._exited = false;
-  this._sources = null;
+  /**
+   * Creates a TabActor whose main goal is to manage lifetime and
+   * expose the tab actors being registered via DebuggerServer.registerModule.
+   * But also track the lifetime of the document being tracked.
+   *
+   * ### Main requests:
+   *
+   * `attach`/`detach` requests:
+   *  - start/stop document watching:
+   *    Starts watching for new documents and emits `tabNavigated` and
+   *    `frameUpdate` over RDP.
+   *  - retrieve the thread actor:
+   *    Instantiates a ThreadActor that can be later attached to in order to
+   *    debug JS sources in the document.
+   * `switchToFrame`:
+   *  Change the targeted document of the whole TabActor, and its child tab actors
+   *  to an iframe or back to its original document.
+   *
+   * Most of the TabActor properties (like `chromeEventHandler` or `docShells`)
+   * are meant to be used by the various child tab actors.
+   *
+   * ### RDP events:
+   *
+   *  - `tabNavigated`:
+   *    Sent when the tab is about to navigate or has just navigated to
+   *    a different document.
+   *    This event contains the following attributes:
+   *     * url (string) The new URI being loaded.
+   *     * nativeConsoleAPI (boolean) `false` if the console API of the page has
+   *                                          been overridden (e.g. by Firebug),
+   *                                  `true`  if the Gecko implementation is used.
+   *     * state (string) `start` if we just start requesting the new URL,
+   *                      `stop`  if the new URL is done loading.
+   *     * isFrameSwitching (boolean) Indicates the event is dispatched when
+   *                                  switching the TabActor context to
+   *                                  a different frame. When we switch to
+   *                                  an iframe, there is no document load.
+   *                                  The targeted document is most likely
+   *                                  going to be already done loading.
+   *     * title (string) The document title being loaded.
+   *                      (sent only on state=stop)
+   *
+   *  - `frameUpdate`:
+   *    Sent when there was a change in the child frames contained in the document
+   *    or when the tab's context was switched to another frame.
+   *    This event can have four different forms depending on the type of change:
+   *    * One or many frames are updated:
+   *      { frames: [{ id, url, title, parentID }, ...] }
+   *    * One frame got destroyed:
+   *      { frames: [{ id, destroy: true }]}
+   *    * All frames got destroyed:
+   *      { destroyAll: true }
+   *    * We switched the context of the TabActor to a specific frame:
+   *      { selected: #id }
+   *
+   * ### Internal, non-rdp events:
+   * Various events are also dispatched on the TabActor itself that are not
+   * related to RDP, so, not sent to the client. They all relate to the documents
+   * tracked by the TabActor (its main targeted document, but also any of its
+   * iframes).
+   *  - will-navigate
+   *    This event fires once navigation starts.
+   *    All pending user prompts are dealt with,
+   *    but it is fired before the first request starts.
+   *  - navigate
+   *    This event is fired once the document's readyState is "complete".
+   *  - window-ready
+   *    This event is fired in various distinct scenarios:
+   *     * When a new Window object is crafted, equivalent of `DOMWindowCreated`.
+   *       It is dispatched before any page script is executed.
+   *     * We will have already received a window-ready event for this window
+   *       when it was created, but we received a window-destroyed event when
+   *       it was frozen into the bfcache, and now the user navigated back to
+   *       this page, so it's now live again and we should resume handling it.
+   *     * For each existing document, when an `attach` request is received.
+   *       At this point scripts in the page will be already loaded.
+   *     * When `swapFrameLoaders` is used, such as with moving tabs between
+   *       windows or toggling Responsive Design Mode.
+   *  - window-destroyed
+   *    This event is fired in two cases:
+   *     * When the window object is destroyed, i.e. when the related document
+   *       is garbage collected. This can happen when the tab is closed or the
+   *       iframe is removed from the DOM.
+   *       It is equivalent of `inner-window-destroyed` event.
+   *     * When the page goes into the bfcache and gets frozen.
+   *       The equivalent of `pagehide`.
+   *  - changed-toplevel-document
+   *    This event fires when we switch the TabActor targeted document
+   *    to one of its iframes, or back to its original top document.
+   *    It is dispatched between window-destroyed and window-ready.
+   *  - stylesheet-added
+   *    This event is fired when a StyleSheetActor is created.
+   *    It contains the following attribute :
+   *     * actor (StyleSheetActor) The created actor.
+   *
+   * Note that *all* these events are dispatched in the following order
+   * when we switch the context of the TabActor to a given iframe:
+   *  - will-navigate
+   *  - window-destroyed
+   *  - changed-toplevel-document
+   *  - window-ready
+   *  - navigate
+   *
+   * This class is subclassed by ContentActor and others.
+   * Subclasses are expected to implement a getter for the docShell property.
+   *
+   * @param connection DebuggerServerConnection
+   *        The conection to the client.
+   */
+  initialize: function(connection) {
+    Actor.prototype.initialize.call(this, connection);
 
-  // Map of DOM stylesheets to StyleSheetActors
-  this._styleSheetActors = new Map();
+    this._tabActorPool = null;
+    // A map of actor names to actor instances provided by extensions.
+    this._extraActors = {};
+    this._exited = false;
+    this._sources = null;
 
-  this._shouldAddNewGlobalAsDebuggee =
-    this._shouldAddNewGlobalAsDebuggee.bind(this);
+    // Map of DOM stylesheets to StyleSheetActors
+    this._styleSheetActors = new Map();
 
-  this.makeDebugger = makeDebugger.bind(null, {
-    findDebuggees: () => {
-      return this.windows.concat(this.webextensionsContentScriptGlobals);
-    },
-    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
-  });
+    this._shouldAddNewGlobalAsDebuggee =
+      this._shouldAddNewGlobalAsDebuggee.bind(this);
 
-  // Flag eventually overloaded by sub classes in order to watch new docshells
-  // Used by the ChromeActor to list all frames in the Browser Toolbox
-  this.listenForNewDocShells = false;
+    this.makeDebugger = makeDebugger.bind(null, {
+      findDebuggees: () => {
+        return this.windows.concat(this.webextensionsContentScriptGlobals);
+      },
+      shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
+    });
 
-  this.traits = {
-    reconfigure: true,
-    // Supports frame listing via `listFrames` request and `frameUpdate` events
-    // as well as frame switching via `switchToFrame` request
-    frames: true,
-    // Do not require to send reconfigure request to reset the document state
-    // to what it was before using the TabActor
-    noTabReconfigureOnClose: true,
-    // Supports the logInPage request.
-    logInPage: true,
-  };
+    // Flag eventually overloaded by sub classes in order to watch new docshells
+    // Used by the ChromeActor to list all frames in the Browser Toolbox
+    this.listenForNewDocShells = false;
 
-  this._workerActorList = null;
-  this._workerActorPool = null;
-  this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
-}
+    this.traits = {
+      reconfigure: true,
+      // Supports frame listing via `listFrames` request and `frameUpdate` events
+      // as well as frame switching via `switchToFrame` request
+      frames: true,
+      // Do not require to send reconfigure request to reset the document state
+      // to what it was before using the TabActor
+      noTabReconfigureOnClose: true,
+      // Supports the logInPage request.
+      logInPage: true,
+    };
 
-TabActor.prototype = {
+    this._workerActorList = null;
+    this._workerActorPool = null;
+    this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
+  },
+
   traits: null,
 
   // Optional console API listener options (e.g. used by the WebExtensionActor to
@@ -492,6 +492,7 @@ TabActor.prototype = {
    * Called when the actor is removed from the connection.
    */
   destroy() {
+    Actor.prototype.destroy.call(this);
     this.exit();
   },
 
@@ -785,7 +786,10 @@ TabActor.prototype = {
     let parentID = undefined;
     // Ignore the parent of the original document on non-e10s firefox,
     // as we get the xul window as parent and don't care about it.
-    if (window.parent && window != this._originalWindow) {
+    // Furthermore, ignore setting parentID when parent window is same as
+    // current window in order to deal with front end. e.g. toolbox will be fall
+    // into infinite loop due to recursive search with by using parent id.
+    if (window.parent && window.parent != window && window != this._originalWindow) {
       parentID = window.parent
                        .QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils)
@@ -1460,24 +1464,8 @@ TabActor.prototype = {
   },
 };
 
-/**
- * The request types this actor can handle.
- */
-TabActor.prototype.requestTypes = {
-  "attach": TabActor.prototype.attach,
-  "detach": TabActor.prototype.detach,
-  "focus": TabActor.prototype.focus,
-  "reload": TabActor.prototype.reload,
-  "navigateTo": TabActor.prototype.navigateTo,
-  "reconfigure": TabActor.prototype.reconfigure,
-  "ensureCSSErrorReportingEnabled": TabActor.prototype.ensureCSSErrorReportingEnabled,
-  "switchToFrame": TabActor.prototype.switchToFrame,
-  "listFrames": TabActor.prototype.listFrames,
-  "listWorkers": TabActor.prototype.listWorkers,
-  "logInPage": TabActor.prototype.logInPage,
-};
-
-exports.TabActor = TabActor;
+exports.tabPrototype = tabPrototype;
+exports.TabActor = ActorClassWithSpec(tabSpec, tabPrototype);
 
 /**
  * The DebuggerProgressListener object is an nsIWebProgressListener which

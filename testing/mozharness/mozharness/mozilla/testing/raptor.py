@@ -141,12 +141,16 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
             kw_options['branchName'] = self.config['branch']
         if self.symbols_path:
             kw_options['symbolsPath'] = self.symbols_path
+        if self.config.get('obj_path', None) is not None:
+            kw_options['obj-path'] = self.config['obj_path']
         kw_options.update(kw)
         # configure profiling options
         options.extend(self.query_gecko_profile_options())
         # extra arguments
         if args is not None:
             options += args
+        if self.config.get('run_local', False):
+            options.extend(['--run-local'])
         if 'raptor_extra_options' in self.config:
             options += self.config['raptor_extra_options']
         if self.config.get('code_coverage', False):

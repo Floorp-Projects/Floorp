@@ -2,7 +2,6 @@ use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
 use std::collections::HashMap;
 use std::convert::From;
-use std::env;
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
@@ -339,23 +338,12 @@ where
     }
 }
 
-fn find_binary(name: &str) -> Option<PathBuf> {
-    env::var("PATH").ok().and_then(|path_env| {
-        for mut path in env::split_paths(&*path_env) {
-            path.push(name);
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
-    })
-}
-
 #[cfg(target_os = "linux")]
 pub mod platform {
-    use super::find_binary;
+    use path::find_binary;
     use std::path::PathBuf;
 
+    /// Searches the system path for `firefox`.
     pub fn firefox_default_path() -> Option<PathBuf> {
         find_binary("firefox")
     }
@@ -367,14 +355,18 @@ pub mod platform {
 
 #[cfg(target_os = "macos")]
 pub mod platform {
-    use super::find_binary;
+    use path::{find_binary, is_binary};
     use std::env;
     use std::path::PathBuf;
 
+    /// Searches the system path for `firefox-bin`, then looks for
+    /// `Applications/Firefox.app/Contents/MacOS/firefox-bin` under both `/`
+    /// (system root) and the user home directory.
     pub fn firefox_default_path() -> Option<PathBuf> {
         if let Some(path) = find_binary("firefox-bin") {
             return Some(path);
         }
+
         let home = env::home_dir();
         for &(prefix_home, trial_path) in [
             (
@@ -384,15 +376,16 @@ pub mod platform {
             (true, "Applications/Firefox.app/Contents/MacOS/firefox-bin"),
         ].iter()
         {
-            let path = match (home.as_ref(), prefix_home) {
+            let path = match (home, prefix_home) {
                 (Some(ref home_dir), true) => home_dir.join(trial_path),
                 (None, true) => continue,
-                (_, false) => PathBuf::from(trial_path),
+                (_, false) => trial_path.to_path_buf(),
             };
-            if path.exists() {
+            if is_binary(path) {
                 return Some(path);
             }
         }
+
         None
     }
 
@@ -403,16 +396,18 @@ pub mod platform {
 
 #[cfg(target_os = "windows")]
 pub mod platform {
-    use super::find_binary;
+    use path::{find_binary, is_binary};
     use std::io::Error;
     use std::path::PathBuf;
     use winreg::RegKey;
     use winreg::enums::*;
 
+    /// Searches the Windows registry, then the system path for `firefox.exe`.
+    ///
+    /// It _does not_ currently check the `HKEY_CURRENT_USER` tree.
     pub fn firefox_default_path() -> Option<PathBuf> {
-        let opt_path = firefox_registry_path().unwrap_or(None);
-        if let Some(path) = opt_path {
-            if path.exists() {
+        if let Ok(Some(path)) = firefox_registry_path() {
+            if is_binary(&path) {
                 return Some(path);
             }
         };
@@ -422,25 +417,28 @@ pub mod platform {
     fn firefox_registry_path() -> Result<Option<PathBuf>, Error> {
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
         for subtree_key in ["SOFTWARE", "SOFTWARE\\WOW6432Node"].iter() {
-            let subtree = try!(hklm.open_subkey_with_flags(subtree_key, KEY_READ));
+            let subtree = hklm.open_subkey_with_flags(subtree_key, KEY_READ)?;
             let mozilla_org = match subtree.open_subkey_with_flags("mozilla.org\\Mozilla", KEY_READ) {
                 Ok(val) => val,
-                Err(_) => continue
+                Err(_) => continue,
             };
-            let current_version: String = try!(mozilla_org.get_value("CurrentVersion"));
-            let mozilla = try!(subtree.open_subkey_with_flags("Mozilla", KEY_READ));
+            let current_version: String = mozilla_org.get_value("CurrentVersion")?;
+            let mozilla = subtree.open_subkey_with_flags("Mozilla", KEY_READ)?;
             for key_res in mozilla.enum_keys() {
-                let key = try!(key_res);
-                let section_data = try!(mozilla.open_subkey_with_flags(&key, KEY_READ));
+                let key = key_res?;
+                let section_data = mozilla.open_subkey_with_flags(&key, KEY_READ)?;
                 let version: Result<String, _> = section_data.get_value("GeckoVer");
                 if let Ok(ver) = version {
                     if ver == current_version {
                         let mut bin_key = key.to_owned();
                         bin_key.push_str("\\bin");
                         if let Ok(bin_subtree) = mozilla.open_subkey_with_flags(bin_key, KEY_READ) {
-                            let path: Result<String, _> = bin_subtree.get_value("PathToExe");
-                            if let Ok(path) = path {
-                                return Ok(Some(PathBuf::from(path)));
+                            let path_to_exe: Result<String, _> = bin_subtree.get_value("PathToExe");
+                            if let Ok(path_to_exe) = path_to_exe {
+                                let path = PathBuf::from(path_to_exe);
+                                if is_binary(&path) {
+                                    return Ok(Some(path));
+                                }
                             }
                         }
                     }
@@ -459,6 +457,8 @@ pub mod platform {
 pub mod platform {
     use std::path::PathBuf;
 
+    /// Returns `None` for all other operating systems than Linux, macOS, and
+    /// Windows.
     pub fn firefox_default_path() -> Option<PathBuf> {
         None
     }

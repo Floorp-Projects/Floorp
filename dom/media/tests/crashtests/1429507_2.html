@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      try { o1 = window.open("") } catch(e) { }
+      try { o1.location.reload() } catch(e) { }
+      try { o2 = o1.navigator } catch(e) { }
+      try { o3 = o2.mediaDevices } catch(e) { }
+      try { o4 = new XMLHttpRequest() } catch(e) { }
+      try { o3.getUserMedia({video: true, fake: true }).then((stream) => {}).catch((error) => {}) } catch (e) {}
+      try { o4.open("T", "aa", false) } catch(e) { }
+      try { o4.send() } catch(e) { }
+      try { o3.getUserMedia({video: true}).then((stream) => {}).catch((error) => {}) } catch (e) {}
+    </script>
+  </head>
+</html>

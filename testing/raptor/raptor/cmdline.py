@@ -21,10 +21,14 @@ def create_parser(mach_interface=False):
                 choices=['firefox', 'chrome'])
         add_arg('-b', '--binary', required=True, dest='binary',
                 help="path to the browser executable that we are testing")
-        add_arg('--branchName', dest="branch_name", default='',
+        add_arg('--branchName', dest="branch_name", default=None,
                 help="Name of the branch we are testing on")
         add_arg('--symbolsPath', dest='symbols_path',
                 help="Path to the symbols for the build we are testing")
+        add_arg('--run-local', dest="run_local", default=False, action="store_true",
+                help="Flag that indicates if raptor is running locally or in production")
+        add_arg('--obj-path', dest="obj_path", default=None,
+                help="Browser build obj_path (received when running in production)")
 
     add_logging_group(parser)
     return parser

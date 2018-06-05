@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <script>
+      try { o1 = window.open("") } catch (e) {}
+      try { o1.location.reload() } catch (e) {}
+      try { o2 = new RTCPeerConnection({iceServers: [{"url": "stun:d"}]}) } catch (e) {}
+      try { o1.navigator.mediaDevices.getUserMedia({video: true, fake: true}).catch((error) => {}) } catch (e) {}
+      try { o2.createOffer({offerToReceiveVideo: true}).then((offer) => {
+        try { o1.navigator.mediaDevices.getUserMedia({video: true}) } catch (e) {};
+      }) } catch (e) {}
+    </script>
+  </head>
+</html>

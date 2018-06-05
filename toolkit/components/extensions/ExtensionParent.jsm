@@ -1729,6 +1729,16 @@ for (let name of StartupCache.STORE_NAMES) {
   StartupCache[name] = new CacheStore(name);
 }
 
+function makeStartupPromise(event) {
+  return ExtensionUtils.promiseObserved(event).then(() => {});
+}
+
+// browserPaintedPromise and browserStartupPromise are promises that
+// resolve after the first browser window is painted and after browser
+// windows have been restored, respectively.
+let browserPaintedPromise = makeStartupPromise("browser-delayed-startup-finished");
+let browserStartupPromise = makeStartupPromise("sessionstore-windows-restored");
+
 var ExtensionParent = {
   GlobalManager,
   HiddenExtensionPage,
@@ -1737,6 +1747,8 @@ var ExtensionParent = {
   StartupCache,
   WebExtensionPolicy,
   apiManager,
+  browserPaintedPromise,
+  browserStartupPromise,
   promiseExtensionViewLoaded,
   watchExtensionProxyContextLoad,
   DebugUtils,

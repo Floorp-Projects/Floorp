@@ -37,3 +37,16 @@ raptor-firefox-tp6:
     mozharness:
         extra-options:
             - --test=raptor-firefox-tp6
+
+raptor-firefox-speedometer:
+    description: "Raptor Firefox speedometer"
+    try-name: raptor-firefox-speedometer
+    treeherder-symbol: Rap(sp)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['try']
+            default: ['try']
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer

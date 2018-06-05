@@ -12,8 +12,6 @@
 #if defined(XP_IOS)
 #include <mach/vm_map.h>
 #define mach_vm_address_t vm_address_t
-#define mach_vm_allocate vm_allocate
-#define mach_vm_deallocate vm_deallocate
 #define mach_vm_map vm_map
 #define mach_vm_read vm_read
 #define mach_vm_region_recurse vm_region_recurse_64
@@ -535,32 +533,21 @@ SharedMemoryBasic::Create(size_t size)
 {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
-  mach_vm_address_t address;
-
-  kern_return_t kr = mach_vm_allocate(mach_task_self(), &address, round_page(size), VM_FLAGS_ANYWHERE);
-  if (kr != KERN_SUCCESS) {
-    LOG_ERROR("Failed to allocate mach_vm_allocate shared memory (%zu bytes). %s (%x)\n",
-              size, mach_error_string(kr), kr);
-    return false;
-  }
-
   memory_object_size_t memoryObjectSize = round_page(size);
 
-  kr = mach_make_memory_entry_64(mach_task_self(),
-                                 &memoryObjectSize,
-                                 address,
-                                 VM_PROT_DEFAULT,
-                                 &mPort,
-                                 MACH_PORT_NULL);
+  kern_return_t kr = mach_make_memory_entry_64(mach_task_self(),
+                                               &memoryObjectSize,
+                                               0,
+                                               MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT,
+                                               &mPort,
+                                               MACH_PORT_NULL);
   if (kr != KERN_SUCCESS || memoryObjectSize < round_page(size)) {
     LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n",
               size, mach_error_string(kr), kr);
     CloseHandle();
-    mach_vm_deallocate(mach_task_self(), address, round_page(size));
     return false;
   }
 
-  mMemory = toPointer(address);
   Mapped(size);
   return true;
 }
@@ -568,9 +555,7 @@ SharedMemoryBasic::Create(size_t size)
 bool
 SharedMemoryBasic::Map(size_t size)
 {
-  if (mMemory) {
-    return true;
-  }
+  MOZ_ASSERT(mMemory == nullptr);
 
   if (MACH_PORT_NULL == mPort) {
     return false;

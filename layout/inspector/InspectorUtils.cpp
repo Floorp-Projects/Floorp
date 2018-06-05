@@ -399,6 +399,19 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
 }
 
 /* static */ void
+InspectorUtils::GetCSSPropertyPrefs(GlobalObject& aGlobalObject,
+                                    nsTArray<PropertyPref>& aResult)
+{
+  for (const auto* src = nsCSSProps::kPropertyPrefTable;
+       src->mPropID != eCSSProperty_UNKNOWN; src++) {
+    PropertyPref& dest = *aResult.AppendElement();
+    const nsCString& name = nsCSSProps::GetStringValue(src->mPropID);
+    dest.mName.Assign(NS_ConvertASCIItoUTF16(name));
+    dest.mPref.AssignASCII(src->mPref);
+  }
+}
+
+/* static */ void
 InspectorUtils::GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
                                                const nsAString& aProperty,
                                                nsTArray<nsString>& aResult,

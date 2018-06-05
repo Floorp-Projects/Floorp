@@ -1,7 +1,8 @@
 // This file can be customized to report results as needed.
 
 (function () {
-    if ((!window.testRunner && location.search != '?webkit' && location.hash != '#webkit') && location.search != '?gecko')
+    if ((!window.testRunner && location.search != '?webkit' && location.hash != '#webkit')
+         && location.search != '?gecko' && location.search != '?raptor')
         return;
 
     if (window.testRunner)
@@ -73,7 +74,7 @@
             for (var fullName in measuredValuesByFullName)
                 fullNames.push(fullName);
 
-            if (typeof tpRecordTime !== "undefined") {
+            if (typeof tpRecordTime !== "undefined" || location.search == '?raptor') {
                 var values = new Array;
                 for (var i = 0; i < fullNames.length; i++) {
                     values.push(measuredValuesByFullName[fullNames[i]]);
@@ -84,7 +85,12 @@
                         fullNames.push(fullName);
                     }
                 }
-                tpRecordTime(values.join(','), 0, fullNames.join(','));
+                if (location.search == '?raptor') {
+                    _data = ['raptor-benchmark', 'speedometer', measuredValuesByFullName];
+                    window.postMessage(_data, '*');
+                } else {
+                    tpRecordTime(values.join(','), 0, fullNames.join(','));
+                }
             } else {
                 for (var i = 0; i < fullNames.length; i++) {
                     var values = measuredValuesByFullName[fullNames[i]];

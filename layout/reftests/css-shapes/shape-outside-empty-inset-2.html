@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Shape-outside empty zero-sized inset, with shape-margin acts like a circle</title>
+<style>
+  body {
+    line-height: 0;
+  }
+  .container {
+    width: 600px;
+  }
+  box {
+    display: inline-block;
+    background-color: blue;
+    width: 100px;
+    height: 20px;
+  }
+  .shape {
+    float: left;
+    width: 200px;
+    height: 180px;
+    shape-outside: inset(50% 50%);
+    shape-margin: 90px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="shape"></div>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+<box></box><br>
+</div>
+</body>
+</html>

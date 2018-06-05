@@ -9,6 +9,7 @@
 #include "blink/PeriodicWave.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Preferences.h"
@@ -44,6 +45,7 @@
 #include "AudioListener.h"
 #include "AudioNodeStream.h"
 #include "AudioStream.h"
+#include "AutoplayPolicy.h"
 #include "BiquadFilterNode.h"
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
@@ -83,6 +85,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDestination)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromiseGripArray)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingResumePromises)
   if (!tmp->mIsStarted) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveNodes)
   }
@@ -101,6 +104,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDestination)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromiseGripArray)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingResumePromises)
   if (!tmp->mIsStarted) {
     MOZ_ASSERT(tmp->mIsOffline,
                "Online AudioContexts should always be started");
@@ -149,12 +153,27 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  mDestination = new AudioDestinationNode(this, aIsOffline,
-                                          aNumberOfChannels, aLength, aSampleRate);
+  bool allowedToStart = AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this));
+  mDestination = new AudioDestinationNode(this,
+                                          aIsOffline,
+                                          allowedToStart,
+                                          aNumberOfChannels,
+                                          aLength,
+                                          aSampleRate);
 
   // The context can't be muted until it has a destination.
   if (mute) {
     Mute();
+  }
+
+  // If we won't allow audio context to start, we need to suspend all its stream
+  // in order to delay the state changing from 'suspend' to 'start'.
+  if (!allowedToStart) {
+    ErrorResult rv;
+    RefPtr<Promise> dummy = Suspend(rv);
+    MOZ_ASSERT(!rv.Failed(), "can't create promise");
+    MOZ_ASSERT(dummy->State() != Promise::PromiseState::Rejected,
+               "suspend failed");
   }
 }
 
@@ -726,6 +745,11 @@ AudioContext::Shutdown()
     }
 
     mPromiseGripArray.Clear();
+
+    for (const auto& p : mPendingResumePromises) {
+      p->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+    mPendingResumePromises.Clear();
   }
 
   // Release references to active nodes.
@@ -905,6 +929,16 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
     }
   }
 
+  // Resolve all pending promises once the audio context has been allowed to
+  // start.
+  if (mAudioContextState == AudioContextState::Suspended &&
+      aNewState == AudioContextState::Running) {
+    for (const auto& p : mPendingResumePromises) {
+      p->MaybeResolveWithUndefined();
+    }
+    mPendingResumePromises.Clear();
+  }
+
   if (mAudioContextState != aNewState) {
     RefPtr<OnStateChangeTask> task = new OnStateChangeTask(this);
     Dispatch(task.forget());
@@ -988,22 +1022,24 @@ AudioContext::Resume(ErrorResult& aRv)
     return promise.forget();
   }
 
-  Destination()->Resume();
+  mPendingResumePromises.AppendElement(promise);
 
-  nsTArray<MediaStream*> streams;
-  // If mSuspendCalled is false then we already resumed all our streams,
-  // so don't resume them again (since suspend(); resume(); resume(); should
-  // be OK). But we still need to do ApplyAudioContextOperation
-  // to ensure our new promise is resolved.
-  if (mSuspendCalled) {
-    streams = GetAllStreams();
+  if (AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this))) {
+    Destination()->Resume();
+
+    nsTArray<MediaStream*> streams;
+    // If mSuspendCalled is false then we already resumed all our streams,
+    // so don't resume them again (since suspend(); resume(); resume(); should
+    // be OK). But we still need to do ApplyAudioContextOperation
+    // to ensure our new promise is resolved.
+    if (mSuspendCalled) {
+      streams = GetAllStreams();
+    }
+    Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
+                                        streams,
+                                        AudioContextOperation::Resume, promise);
+    mSuspendCalled = false;
   }
-  mPromiseGripArray.AppendElement(promise);
-  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                      streams,
-                                      AudioContextOperation::Resume, promise);
-
-  mSuspendCalled = false;
 
   return promise.forget();
 }

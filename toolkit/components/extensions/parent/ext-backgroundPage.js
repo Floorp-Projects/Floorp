@@ -6,6 +6,8 @@ ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 var {
   HiddenExtensionPage,
+  browserPaintedPromise,
+  browserStartupPromise,
   promiseExtensionViewLoaded,
 } = ExtensionParent;
 

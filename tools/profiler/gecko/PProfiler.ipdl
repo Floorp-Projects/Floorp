@@ -23,7 +23,7 @@ child:
   async Pause();
   async Resume();
 
-  async GatherProfile() returns (nsCString profile);
+  async GatherProfile() returns (Shmem profile);
 };
 
 } // namespace mozilla

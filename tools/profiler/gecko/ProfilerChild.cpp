@@ -88,10 +88,26 @@ CollectProfileOrEmptyString(bool aIsShuttingDown)
   return profileCString;
 }
 
+Shmem
+ProfilerChild::ConvertProfileStringToShmem(const nsCString& aProfileCString) {
+  Shmem shmem;
+  if (!AllocShmem(aProfileCString.Length(),
+                  SharedMemory::TYPE_BASIC,
+                  &shmem)) {
+    return shmem;
+  }
+
+  PodCopy(shmem.get<char>(),
+          aProfileCString.BeginReading(),
+          aProfileCString.Length());
+  return shmem;
+}
+
 mozilla::ipc::IPCResult
 ProfilerChild::RecvGatherProfile(GatherProfileResolver&& aResolve)
 {
-  aResolve(CollectProfileOrEmptyString(/* aIsShuttingDown */ false));
+  nsCString profile = CollectProfileOrEmptyString(/* aIsShuttingDown */ false);
+  aResolve(ConvertProfileStringToShmem(profile));
   return IPC_OK();
 }
 

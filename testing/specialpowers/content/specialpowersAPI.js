@@ -1717,7 +1717,7 @@ SpecialPowersAPI.prototype = {
     var parts = props.split(".");
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
-      if (obj[p]) {
+      if (obj[p] != undefined) {
         obj = obj[p];
       } else {
         return null;

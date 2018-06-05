@@ -114,21 +114,12 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval)
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString& _retval)
 {
-  return ConvertFromByteArray(
-    reinterpret_cast<const uint8_t*>(aSrc.BeginReading()),
-    aSrc.Length(),
-    _retval);
-}
-
-NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertFromByteArray(const uint8_t* aData,
-                                                   uint32_t aCount,
-                                                   nsAString& _retval)
-{
   if (!mDecoder)
     return NS_ERROR_FAILURE;
 
-  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aCount);
+  uint32_t length = aSrc.Length();
+
+  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(length);
   if (!needed.isValid() || needed.value() > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -137,7 +128,7 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const uint8_t* aData,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto src = MakeSpan(aData, aCount);
+  auto src = MakeSpan(reinterpret_cast<const uint8_t*>(aSrc.BeginReading()), length);
   uint32_t result;
   size_t read;
   size_t written;
@@ -157,7 +148,7 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const uint8_t* aData,
       mDecoder->DecodeToUTF16(src, _retval, false);
   }
   MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aCount);
+  MOZ_ASSERT(read == length);
   MOZ_ASSERT(written <= needed.value());
   Unused << hadErrors;
   if (!_retval.SetLength(written, fallible)) {
