@@ -247,12 +247,6 @@ public:
   }
 
 public:
-  struct PropertyPref
-  {
-    nsCSSPropertyID mPropID;
-    const char* mPref;
-  };
-  static const PropertyPref kPropertyPrefTable[];
 
 // Storing the enabledstate_ value in an nsCSSPropertyID variable is a small hack
 // to avoid needing a separate variable declaration for its real type
