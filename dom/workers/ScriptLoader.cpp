@@ -913,7 +913,7 @@ private:
   {
     AssertIsOnMainThread();
 
-    if (IsMainWorkerScript() && mWorkerPrivate->IsServiceWorker()) {
+    if (IsMainWorkerScript()) {
       mWorkerPrivate->SetLoadingWorkerScript(true);
     }
 
@@ -2186,7 +2186,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
 
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
 
-  if (mIsWorkerScript && aWorkerPrivate->IsServiceWorker()) {
+  if (mIsWorkerScript) {
     aWorkerPrivate->SetLoadingWorkerScript(false);
   }
 
