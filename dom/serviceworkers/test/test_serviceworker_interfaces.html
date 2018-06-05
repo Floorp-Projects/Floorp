@@ -12,10 +12,13 @@
 <script class="testbody" type="text/javascript">
 
   function setupSW(registration) {
-    var worker = registration.waiting ||
+    var iframe;
+    var worker = registration.installing ||
+                 registration.waiting ||
                  registration.active;
     window.onmessage = function(event) {
       if (event.data.type == 'finish') {
+        iframe.remove();
         registration.unregister().then(function(success) {
           ok(success, "The service worker should be unregistered successfully");
 
@@ -63,7 +66,7 @@
       SimpleTest.finish();
     };
 
-    var iframe = document.createElement("iframe");
+    iframe = document.createElement("iframe");
     iframe.src = "message_receiver.html";
     iframe.onload = function() {
       worker.postMessage({ script: "test_serviceworker_interfaces.js" });
@@ -72,8 +75,8 @@
   }
 
   function runTest() {
-    navigator.serviceWorker.ready.then(setupSW);
-    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."});
+    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."})
+      .then(setupSW);
   }
 
   SimpleTest.waitForExplicitFinish();
