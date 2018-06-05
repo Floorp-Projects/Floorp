@@ -41,7 +41,7 @@ interface nsITreeColumn : nsISupports
 
 interface nsITreeBoxObject;
 
-[scriptable, uuid(f8a8d6b4-6788-438d-9009-7142798767ab)]
+[scriptable, builtinclass, uuid(f8a8d6b4-6788-438d-9009-7142798767ab)]
 interface nsITreeColumns : nsISupports
 {
   /**
