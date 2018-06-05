@@ -8,7 +8,7 @@ use mozprofile::preferences::Pref;
 // a Testing :: Marionette peer before you make any changes to this file.
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 80] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 52] = [
         // Make sure Shield doesn't hit the network.
         ("app.normandy.api_url", Pref::new("")),
 
@@ -18,37 +18,9 @@ lazy_static! {
         // Disable automatically upgrading Firefox
         ("app.update.enabled", Pref::new(false)),
 
-        // Increase the APZ content response timeout in tests to 1
-        // minute.  This is to accommodate the fact that test environments
-        // tends to be slower than production environments (with the
-        // b2g emulator being the slowest of them all), resulting in the
-        // production timeout value sometimes being exceeded and causing
-        // false-positive test failures.
-        //
-        // (bug 1176798, bug 1177018, bug 1210465)
-        ("apz.content_response_timeout", Pref::new(60000)),
-
         // Enable the dump function, which sends messages to the system
         // console
         ("browser.dom.window.dump.enabled", Pref::new(true)),
-
-        // Indicate that the download panel has been shown once so
-        // that whichever download test runs first does not show the popup
-        // inconsistently
-        ("browser.download.panel.shown", Pref::new(true)),
-
-        // Implicitly accept license
-        ("browser.EULA.override", Pref::new(true)),
-
-        // Never start the browser in offline mode
-        ("browser.offline", Pref::new(false)),
-
-        // Background thumbnails in particular cause grief, and disabling
-        // thumbnails in general cannot hurt
-        ("browser.pagethumbnails.capturing_disabled", Pref::new(true)),
-
-        // Avoid performing Reader Mode intros during tests
-        ("browser.reader.detectedFirstArticle", Pref::new(true)),
 
         // Disable safebrowsing components
         ("browser.safebrowsing.blockedURIs.enabled", Pref::new(false)),
@@ -57,9 +29,6 @@ lazy_static! {
         ("browser.safebrowsing.malware.enabled", Pref::new(false)),
         ("browser.safebrowsing.phishing.enabled", Pref::new(false)),
 
-        // Disable updates to search engines
-        ("browser.search.update", Pref::new(false)),
-
         // Do not restore the last open set of tabs if the browser crashed
         ("browser.sessionstore.resume_from_crash", Pref::new(false)),
 
@@ -67,6 +36,7 @@ lazy_static! {
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
 
         // Do not warn when quitting with multiple tabs
+        // TODO: Remove once minimum supported Firefox release is 61.
         ("browser.showQuitWarning", Pref::new(false)),
 
         // Disable Android snippets
@@ -81,41 +51,19 @@ lazy_static! {
         // Start with a blank page (about:blank)
         ("browser.startup.page", Pref::new(0)),
 
-        // Disable tab animation
-        ("browser.tabs.animate", Pref::new(false)),
-
-        // Do not warn when quitting a window with multiple tabs
+        // Do not close the window when the last tab gets closed
+        // TODO: Remove once minimum supported Firefox release is 61.
         ("browser.tabs.closeWindowWithLastTab", Pref::new(false)),
 
-        // Do not allow background tabs to be zombified, otherwise for
-        // tests that open additional tabs, the test harness tab itself
-        // might get unloaded
-        ("browser.tabs.disableBackgroundZombification", Pref::new(false)),
-
-        // Do not warn on exit when multiple tabs are open
+        // Do not warn when closing all open tabs
+        // TODO: Remove once minimum supported Firefox release is 61.
         ("browser.tabs.warnOnClose", Pref::new(false)),
-
-        // Do not warn when closing all other open tabs
-        ("browser.tabs.warnOnCloseOtherTabs", Pref::new(false)),
-
-        // Do not warn when multiple tabs will be opened
-        ("browser.tabs.warnOnOpen", Pref::new(false)),
-
-        // Disable first run splash page on Windows 10
-        ("browser.usedOnWindows10.introURL", Pref::new("")),
 
         // Disable the UI tour
         ("browser.uitour.enabled", Pref::new(false)),
 
-        // Turn off search suggestions in the location bar so as not to trigger
-        // network connections.
-        ("browser.urlbar.suggest.searches", Pref::new(false)),
-
-        // Turn off the location bar search suggestions opt-in.  It interferes with
-        // tests that don't expect it to be there.
-        ("browser.urlbar.userMadeSearchSuggestionsChoice", Pref::new(true)),
-
         // Do not warn on quitting Firefox
+        // TODO: Remove once minimum supported Firefox release is 61.
         ("browser.warnOnQuit", Pref::new(false)),
 
         // Do not show datareporting policy notifications which can
@@ -130,42 +78,24 @@ lazy_static! {
         ("datareporting.policy.dataSubmissionPolicyAccepted", Pref::new(false)),
         ("datareporting.policy.dataSubmissionPolicyBypassNotification", Pref::new(true)),
 
-        // Disable popup-blocker
-        ("dom.disable_open_during_load", Pref::new(false)),
-
-        // Enabling the support for File object creation in the content process
-        ("dom.file.createInChild", Pref::new(true)),
-
         // Disable the ProcessHangMonitor
         ("dom.ipc.reportProcessHangs", Pref::new(false)),
-
-        // Disable slow script dialogues
-        ("dom.max_chrome_script_run_time", Pref::new(0)),
-        ("dom.max_script_run_time", Pref::new(0)),
 
         // Only load extensions from the application and user profile
         // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         ("extensions.autoDisableScopes", Pref::new(0)),
         ("extensions.enabledScopes", Pref::new(5)),
 
-        // Disable metadata caching for installed add-ons by default
-        ("extensions.getAddons.cache.enabled", Pref::new(false)),
-
         // Disable intalling any distribution extensions or add-ons
         ("extensions.installDistroAddons", Pref::new(false)),
 
         // Make sure Shield doesn't hit the network.
-        // Removed in Firefox 60.
+        // TODO: Remove once minimum supported Firefox release is 60.
         ("extensions.shield-recipe-client.api_url", Pref::new("")),
-
-        ("extensions.showMismatchUI", Pref::new(false)),
 
         // Turn off extension updates so they do not bother tests
         ("extensions.update.enabled", Pref::new(false)),
         ("extensions.update.notifyUser", Pref::new(false)),
-
-        // Make sure opening about:addons will not hit the network
-        ("extensions.webservice.discoverURL", Pref::new("http://%(server)s/dummy/discoveryURL")),
 
         // Allow the application to have focus even it runs in the
         // background
@@ -187,18 +117,9 @@ lazy_static! {
         // Show chrome errors and warnings in the error console
         ("javascript.options.showInConsole", Pref::new(true)),
 
-        // Make sure the disk cache does not get auto disabled
-        ("network.http.bypass-cachelock-threshold", Pref::new(200000)),
-
         // Do not prompt with long usernames or passwords in URLs
+        // TODO: Remove once minimum supported Firefox release is 61.
         ("network.http.phishy-userpass-length", Pref::new(255)),
-
-        // Do not prompt for temporary redirects
-        ("network.http.prompt-temp-redirect", Pref::new(false)),
-
-        // Disable speculative connections so they are not reported as
-        // leaking when they are hanging around
-        ("network.http.speculative-parallel-limit", Pref::new(0)),
 
         // Do not automatically switch between offline and online
         ("network.manage-offline-status", Pref::new(false)),
@@ -211,24 +132,8 @@ lazy_static! {
         // c.f. https://github.com/mozilla/geckodriver/issues/225.
         ("plugin.state.flash", Pref::new(0)),
 
-        // Local documents have access to all other local docments,
-        // including directory listings.
-        ("security.fileuri.strict_origin_policy", Pref::new(false)),
-
-        // Tests don't wait for the notification button security delay
-        ("security.notification_enable_delay", Pref::new(0)),
-
         // Ensure blocklist updates don't hit the network
         ("services.settings.server", Pref::new("http://%(server)s/dummy/blocklist/")),
-
-        // Do not automatically fill sign-in forms with known usernames
-        // and passwords
-        ("signon.autofillForms", Pref::new(false)),
-
-        // Disable password capture, so that tests that include forms
-        // are not influenced by the presence of the persistent doorhanger
-        // notification
-        ("signon.rememberSignons", Pref::new(false)),
 
         // Disable first run pages
         ("startup.homepage_welcome_url", Pref::new("about:blank")),
