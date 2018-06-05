@@ -321,6 +321,8 @@ ExtensionManager = {
     let policy = WebExtensionPolicy.getByID(extension.id);
     if (!policy) {
       let localizeCallback, allowedOrigins, webAccessibleResources;
+      let restrictSchemes = !extension.permissions.has("mozillaAddons");
+
       if (extension.localize) {
         // We have a real Extension object.
         localizeCallback = extension.localize.bind(extension);
@@ -329,11 +331,9 @@ ExtensionManager = {
       } else {
         // We have serialized extension data;
         localizeCallback = str => extensions.get(policy).localize(str);
-        allowedOrigins = new MatchPatternSet(extension.whiteListedHosts);
+        allowedOrigins = new MatchPatternSet(extension.whiteListedHosts, {restrictSchemes});
         webAccessibleResources = extension.webAccessibleResources.map(host => new MatchGlob(host));
       }
-
-      let restrictSchemes = !extension.permissions.has("mozillaAddons");
 
       policy = new WebExtensionPolicy({
         id: extension.id,
