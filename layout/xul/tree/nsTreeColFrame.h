@@ -48,7 +48,7 @@ protected:
   nsITreeBoxObject* GetTreeBoxObject();
 
   /**
-   * Helper method that gets the nsITreeColumns object this column belongs to
+   * Helper method that gets the TreeColumns object this column belongs to
    * and calls InvalidateColumns() on it.
    */
   void InvalidateColumns(bool aCanWalkFrameTree = true);
