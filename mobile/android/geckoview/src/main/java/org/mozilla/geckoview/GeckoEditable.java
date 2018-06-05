@@ -870,8 +870,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void sendKeyEvent(final @Nullable View view, final boolean inputActive, final int action,
-                             @NonNull KeyEvent event) {
+    public void sendKeyEvent(final @Nullable View view, final int action, @NonNull KeyEvent event) {
         final Editable editable = getEditable();
         if (editable == null) {
             return;
@@ -885,7 +884,7 @@ import android.view.inputmethod.EditorInfo;
         final int keyCode = event.getKeyCode();
         final boolean handled;
 
-        if (!inputActive || shouldSkipKeyListener(keyCode, event)) {
+        if (shouldSkipKeyListener(keyCode, event)) {
             handled = false;
         } else if (action == KeyEvent.ACTION_DOWN) {
             setSuppressKeyUp(true);
@@ -946,6 +945,10 @@ import android.view.inputmethod.EditorInfo;
     }
 
     private boolean shouldSkipKeyListener(final int keyCode, final @NonNull KeyEvent event) {
+        if (mIMEState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            return true;
+        }
+
         // Preserve enter and tab keys for the browser
         if (keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_TAB) {
@@ -1961,32 +1964,31 @@ import android.view.inputmethod.EditorInfo;
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
-    public boolean onKeyPreIme(final @Nullable View view, final boolean inputActive,
-                               final int keyCode, final @NonNull KeyEvent event) {
+    public boolean onKeyPreIme(final @Nullable View view, final int keyCode,
+                               final @NonNull KeyEvent event) {
         return false;
     }
 
-    public boolean onKeyDown(final @Nullable View view, final boolean inputActive,
-                             final int keyCode, final @NonNull KeyEvent event) {
-        return processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event);
+    public boolean onKeyDown(final @Nullable View view, final int keyCode,
+                             final @NonNull KeyEvent event) {
+        return processKey(view, KeyEvent.ACTION_DOWN, keyCode, event);
     }
 
-    public boolean onKeyUp(final @Nullable View view, final boolean inputActive,
-                           final int keyCode, final @NonNull KeyEvent event) {
-        return processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event);
+    public boolean onKeyUp(final @Nullable View view, final int keyCode,
+                           final @NonNull KeyEvent event) {
+        return processKey(view, KeyEvent.ACTION_UP, keyCode, event);
     }
 
-    public boolean onKeyMultiple(final @Nullable View view, final boolean inputActive,
-                                 final int keyCode, int repeatCount,
+    public boolean onKeyMultiple(final @Nullable View view, final int keyCode, int repeatCount,
                                  final @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
             final String str = event.getCharacters();
             for (int i = 0; i < str.length(); i++) {
                 final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
-                if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN,
+                if (!processKey(view, KeyEvent.ACTION_DOWN,
                                 KeyEvent.KEYCODE_UNKNOWN, charEvent) ||
-                    !processKey(view, inputActive, KeyEvent.ACTION_UP,
+                    !processKey(view, KeyEvent.ACTION_UP,
                                 KeyEvent.KEYCODE_UNKNOWN, charEvent)) {
                     return false;
                 }
@@ -1995,16 +1997,16 @@ import android.view.inputmethod.EditorInfo;
         }
 
         while ((repeatCount--) > 0) {
-            if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event) ||
-                !processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event)) {
+            if (!processKey(view, KeyEvent.ACTION_DOWN, keyCode, event) ||
+                !processKey(view, KeyEvent.ACTION_UP, keyCode, event)) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean onKeyLongPress(final @Nullable View view, final boolean inputActive,
-                                  final int keyCode, final @NonNull KeyEvent event) {
+    public boolean onKeyLongPress(final @Nullable View view, final int keyCode,
+                                  final @NonNull KeyEvent event) {
         return false;
     }
 
@@ -2027,8 +2029,8 @@ import android.view.inputmethod.EditorInfo;
         };
     }
 
-    private boolean processKey(final @Nullable View view, final boolean inputActive,
-                               final int action, final int keyCode, final @NonNull KeyEvent event) {
+    private boolean processKey(final @Nullable View view, final int action, final int keyCode,
+                               final @NonNull KeyEvent event) {
         if (keyCode > KeyEvent.getMaxKeyCode() || !shouldProcessKey(keyCode, event)) {
             return false;
         }
@@ -2036,7 +2038,7 @@ import android.view.inputmethod.EditorInfo;
         postToInputConnection(new Runnable() {
             @Override
             public void run() {
-                sendKeyEvent(view, inputActive, action, event);
+                sendKeyEvent(view, action, event);
             }
         });
         return true;
