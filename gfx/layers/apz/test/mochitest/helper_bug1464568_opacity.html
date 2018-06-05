@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that opacity animation is correctly placed during asynchronous scrolling</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #anim {
+      background: green;
+      width: 100px;
+      height: 100px;
+      animation: anim 100s step-start;
+    }
+    @keyframes anim {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+ <!--
+  This height should be smaller than window height, otherwise the animation
+  followed by this element will be out of view, thus the animation doesn't run
+  on the compositor.
+  -->
+ <div style="height: 500px"></div>
+ <div id="anim"></div>
+</body>
+<script>
+'use strict';
+
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+async function test_opacity() {
+  utils.setDisplayPortForElement(0, 0, 300, 1000, document.documentElement, 1);
+  await promiseAllPaintsDone();
+
+  let transform = utils.getOMTCTransform(anim);
+  is(transform, "matrix(1, 0, 0, 1, 0, 0)",
+     "The element shouldn't be moved before scrolling");
+
+  utils.setAsyncScrollOffset(document.documentElement, 0, 300);
+
+  await new Promise(resolve => waitForApzFlushedRepaints(resolve));
+
+  transform = utils.getOMTCTransform(anim);
+  is(transform, "matrix(1, 0, 0, 1, 0, -300)",
+     "Element should have been moved by the offset");
+}
+
+if (utils.layerManagerType == 'WebRender') {
+  ok(true, "This test doesn't need to run on WebRender");
+  subtestDone();
+} else {
+  waitUntilApzStable().then(test_opacity).then(subtestDone);
+}
+
+</script>
+</html>
