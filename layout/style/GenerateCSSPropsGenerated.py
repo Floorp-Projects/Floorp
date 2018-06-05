@@ -33,9 +33,9 @@ def generate(output, dataFile):
 
 """)
 
-    properties = runpy.run_path(dataFile)["data"]
+    raw_properties = runpy.run_path(dataFile)["data"]
     properties = [PropertyWrapper(i, p)
-                  for i, p in enumerate(properties)
+                  for i, p in enumerate(raw_properties)
                   if p.type() != "alias"]
 
     # Generate kIDLNameTable
@@ -56,6 +56,20 @@ def generate(output, dataFile):
                  "kIDLNameSortPositionTable[eCSSProperty_COUNT] = {\n")
     for (p, position) in ps:
         output.write("  {},\n".format(position))
+    output.write("};\n\n")
+
+    # Generate preferences table
+    output.write("const nsCSSProps::PropertyPref "
+                 "nsCSSProps::kPropertyPrefTable[] = {\n")
+    for p in raw_properties:
+        if not p.pref:
+            continue
+        if p.type() != "alias":
+            prop_id = "eCSSProperty_" + p.id
+        else:
+            prop_id = "eCSSPropertyAlias_" + p.alias_id
+        output.write("  {{ {}, \"{}\" }},\n".format(prop_id, p.pref))
+    output.write("  { eCSSProperty_UNKNOWN, nullptr },\n")
     output.write("};\n\n")
 
     # Generate shorthand subprop tables

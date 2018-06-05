@@ -123,25 +123,11 @@ nsCSSProps::AddRefTable(void)
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
       prefObserversInited = true;
-
-      #define OBSERVE_PROP(pref_, id_)                                        \
-        if (pref_[0]) {                                                       \
-          Preferences::AddBoolVarCache(&gPropertyEnabled[id_],                \
-                                       pref_);                                \
-        }
-
-      #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_) \
-        OBSERVE_PROP(pref_, eCSSProperty_##id_)
-      #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
-        OBSERVE_PROP(pref_, eCSSProperty_##id_)
-      #define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
-        OBSERVE_PROP(pref_, eCSSPropertyAlias_##aliasid_)
-      #include "mozilla/ServoCSSPropList.h"
-      #undef CSS_PROP_ALIAS
-      #undef CSS_PROP_SHORTHAND
-      #undef CSS_PROP_LONGHAND
-
-      #undef OBSERVE_PROP
+      for (const PropertyPref* pref = kPropertyPrefTable;
+           pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
+        bool* enabled = &gPropertyEnabled[pref->mPropID];
+        Preferences::AddBoolVarCache(enabled, pref->mPref);
+      }
     }
   }
 }

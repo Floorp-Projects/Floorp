@@ -877,7 +877,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     availSize.BSize(wm) = 1;
   }
 
-  ReflowOutput kidSize(wm, aDesiredSize.mFlags);
+  ReflowOutput kidSize(wm);
   kidSize.ClearSize();
   SetPriorAvailISize(aReflowInput.AvailableISize());
   nsIFrame* firstKid = mFrames.FirstChild();

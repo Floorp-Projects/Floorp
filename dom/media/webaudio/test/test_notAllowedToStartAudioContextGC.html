@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test GC for not-allow-to-start audio context</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.requestFlakyTimeout(`Checking that something does not happen`);
+
+SimpleTest.waitForExplicitFinish();
+
+var destId;
+
+function observer(subject, topic, data) {
+  let id = parseInt(data);
+  ok(id != destId, "dropping another node, not the context's destination");
+}
+
+SpecialPowers.addAsyncObserver(observer, "webaudio-node-demise", false);
+SimpleTest.registerCleanupFunction(function() {
+  SpecialPowers.removeAsyncObserver(observer, "webaudio-node-demise");
+});
+
+SpecialPowers.pushPrefEnv({"set": [["media.autoplay.enabled", false],
+                                   ["media.autoplay.enabled.user-gestures-needed", true]]},
+                          startTest);
+
+function startTest() {
+  info("- create audio context -");
+  let ac = new AudioContext();
+
+  info("- get node Id -");
+  destId = SpecialPowers.getPrivilegedProps(ac.destination, "id");
+
+  info("- trigger GCs -");
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  SpecialPowers.forceGC();
+
+  info("- after three GCs -");
+
+  // We're doing this async so that we can receive observerservice messages.
+  setTimeout(function() {
+    ok(true, `AudioContext that has been prevented
+              from starting has correctly survived GC`)
+    SimpleTest.finish();
+  }, 1);
+}
+
+</script>
+</pre>
+</body>
+</html>

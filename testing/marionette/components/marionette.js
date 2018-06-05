@@ -80,18 +80,6 @@ const RECOMMENDED_PREFS = new Map([
   // inconsistently.
   ["browser.download.panel.shown", true],
 
-  // Do not show the EULA notification.
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["browser.EULA.override", true],
-
-  // Never start the browser in offline mode
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["browser.offline", false],
-
   // Background thumbnails in particular cause grief, and disabling
   // thumbnails in general cannot hurt
   ["browser.pagethumbnails.capturing_disabled", true],
@@ -120,19 +108,25 @@ const RECOMMENDED_PREFS = new Map([
   // as it is picked up at runtime.
   ["browser.shell.checkDefaultBrowser", false],
 
-  // Start with a blank page (about:blank)
-  ["browser.startup.page", 0],
+  // Do not warn when quitting with multiple tabs
+  ["browser.showQuitWarning", false],
 
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
 
-  // Disable browser animations
+  // Disable browser animations (tabs, fullscreen, sliding alerts)
   ["toolkit.cosmeticAnimations.enabled", false],
 
-  // Do not allow background tabs to be zombified, otherwise for tests
-  // that open additional tabs, the test harness tab itself might get
+  // Do not close the window when the last tab gets closed
+  ["browser.tabs.closeWindowWithLastTab", false],
+
+  // Do not allow background tabs to be zombified on Android, otherwise for
+  // tests that open additional tabs, the test harness tab itself might get
   // unloaded
   ["browser.tabs.disableBackgroundZombification", false],
+
+  // Do not warn when closing all open tabs
+  ["browser.tabs.warnOnClose", false],
 
   // Do not warn when closing all other open tabs
   ["browser.tabs.warnOnCloseOtherTabs", false],
@@ -152,9 +146,8 @@ const RECOMMENDED_PREFS = new Map([
   // network connections.
   ["browser.urlbar.suggest.searches", false],
 
-  // Turn off the location bar search suggestions opt-in.  It interferes with
-  // tests that don't expect it to be there.
-  ["browser.urlbar.userMadeSearchSuggestionsChoice", true],
+  // Do not warn on quitting Firefox
+  ["browser.warnOnQuit", false],
 
   // Do not show datareporting policy notifications which can
   // interfere with tests
@@ -228,6 +221,9 @@ const RECOMMENDED_PREFS = new Map([
 
   // Show chrome errors and warnings in the error console
   ["javascript.options.showInConsole", true],
+
+  // Do not prompt with long usernames or passwords in URLs
+  ["network.http.phishy-userpass-length", 255],
 
   // Do not prompt for temporary redirects
   ["network.http.prompt-temp-redirect", false],

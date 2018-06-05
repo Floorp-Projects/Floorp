@@ -88,6 +88,10 @@ parent:
   // be void_t.
   sync GetAnimationTransform(uint64_t aCompositorAnimationId) returns (MaybeTransform transform);
 
+  // Returns the value of the transform applied to the layer by animation and
+  // APZC.
+  sync GetTransform(LayerHandle layer) returns (MaybeTransform transform);
+
   // The next time the layer tree is composited, add this async scroll offset in
   // CSS pixels for the given ViewID.
   // Useful for testing rendering of async scrolling.

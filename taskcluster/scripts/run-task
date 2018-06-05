@@ -28,6 +28,7 @@ import io
 import json
 import os
 import re
+import shutil
 import socket
 import stat
 import subprocess
@@ -707,9 +708,10 @@ def main(args):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
+    use_artifact_path = os.environ.get('USE_ARTIFACT_PATH')
+
     def prepare_use_artifact(key, url):
         print_line(b'setup', b'fetching artifact from %s\n' % url.encode('utf-8'))
-        use_artifact_path = os.environ['USE_ARTIFACT_PATH']
         path = os.path.join(use_artifact_path, key)
         if not os.path.isdir(path):
             os.makedirs(path)
@@ -727,7 +729,11 @@ def main(args):
             for url in urls:
                 prepare_use_artifact(key, url)
 
-    return run_and_prefix_output(b'task', task_args)
+    try:
+        return run_and_prefix_output(b'task', task_args)
+    finally:
+        if use_artifact_path and os.path.isdir(use_artifact_path):
+            shutil.rmtree(use_artifact_path)
 
 
 if __name__ == '__main__':

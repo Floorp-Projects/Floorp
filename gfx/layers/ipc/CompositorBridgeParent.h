@@ -113,7 +113,9 @@ public:
   virtual bool SetTestSampleTime(const LayersId& aId,
                                  const TimeStamp& aTime) { return true; }
   virtual void LeaveTestMode(const LayersId& aId) { }
-  virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
+  enum class TransformsToSkip : uint8_t { NoneOfThem = 0, APZ = 1 };
+  virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
+                                    TransformsToSkip aSkip) = 0;
   virtual void SetTestAsyncScrollOffset(const LayersId& aLayersId,
                                         const FrameMetrics::ViewID& aScrollId,
                                         const CSSPoint& aPoint) = 0;
@@ -178,6 +180,8 @@ private:
   RefPtr<CompositorManagerParent> mCompositorManager;
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CompositorBridgeParentBase::TransformsToSkip)
+
 class CompositorBridgeParent final : public CompositorBridgeParentBase
                                    , public CompositorController
                                    , public CompositorVsyncSchedulerOwner
@@ -237,7 +241,8 @@ public:
   bool SetTestSampleTime(const LayersId& aId,
                          const TimeStamp& aTime) override;
   void LeaveTestMode(const LayersId& aId) override;
-  void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) override;
+  void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
+                            TransformsToSkip aSkip) override;
   CompositorAnimationStorage* GetAnimationStorage();
   void SetTestAsyncScrollOffset(const LayersId& aLayersId,
                                 const FrameMetrics::ViewID& aScrollId,

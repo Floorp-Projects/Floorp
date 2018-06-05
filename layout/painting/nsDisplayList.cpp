@@ -5003,7 +5003,9 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                                                    mFrame->Style());
 
   if (!borderRenderer) {
-    return false;
+    // No border renderer means "there is no outline".
+    // Paint nothing and return success.
+    return true;
   }
 
   borderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);

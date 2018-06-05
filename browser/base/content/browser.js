@@ -796,14 +796,13 @@ var gPopupBlockerObserver = {
       }
     } catch (e) { }
 
-    var bundlePreferences = document.getElementById("bundle_preferences");
     var params = { blockVisible: false,
                    sessionVisible: false,
                    allowVisible: true,
                    prefilledHost: prefillValue,
                    permissionType: "popup",
-                   windowTitle: bundlePreferences.getString("popuppermissionstitle2"),
-                   introText: bundlePreferences.getString("popuppermissionstext") };
+    };
+
     var existingWindow = Services.wm.getMostRecentWindow("Browser:Permissions");
     if (existingWindow) {
       existingWindow.initWithParams(params);

@@ -1697,6 +1697,16 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getOMTAStyle(in Element aElement, in AString aProperty,
                        [optional] in AString aPseudoElement);
 
+  /*
+   * Returns the value of the transform value on the compositor thread.
+   * Unlike the above getOMTAStyle, the transform value returned by this
+   * includes both of animating and APZ values.
+   * Note: This function doesn't work on WebRender at all.  Also this function
+   * does work only for transform layer and opacity layer with animations.
+   */
+  AString getOMTCTransform(in Element aElement,
+                           [optional] in AString aPseudoElement);
+
   /**
    * If aHandlingInput is true, this informs the event state manager that
    * we're handling user input. Otherwise, this is a no-op (as by default

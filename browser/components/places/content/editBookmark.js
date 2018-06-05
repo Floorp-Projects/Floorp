@@ -4,7 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const LAST_USED_ANNO = "bookmarkPropertiesDialog/folderLastUsed";
 const MAX_FOLDER_ITEM_IN_MENU_LIST = 5;
 
 var gEditItemOverlay = {
@@ -46,7 +45,6 @@ var gEditItemOverlay = {
     let visibleRows = new Set();
     let isParentReadOnly = false;
     let postData = aInitInfo.postData;
-    let parentId = -1;
     let parentGuid = null;
 
     if (node && isItem) {
@@ -55,14 +53,13 @@ var gEditItemOverlay = {
       }
       let parent = node.parent;
       isParentReadOnly = !PlacesUtils.nodeIsFolder(parent);
-      parentId = parent.itemId;
       parentGuid = parent.bookmarkGuid;
     }
 
     let focusedElement = aInitInfo.focusedElement;
     let onPanelReady = aInitInfo.onPanelReady;
 
-    return this._paneInfo = { itemId, itemGuid, parentId, parentGuid, isItem,
+    return this._paneInfo = { itemId, itemGuid, parentGuid, isItem,
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
@@ -209,7 +206,7 @@ var gEditItemOverlay = {
     if (this.initialized)
       this.uninitPanel(false);
 
-    let { parentId, isItem, isURI,
+    let { parentGuid, isItem, isURI,
           isBookmark, bulkTagging, uris,
           visibleRows, focusedElement,
           onPanelReady } = this._setPaneInfo(aInfo);
@@ -258,7 +255,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentId).catch(Cu.reportError);
+      this._initFolderMenuList(parentGuid).catch(Cu.reportError);
     }
 
     // Selection count.
@@ -357,26 +354,25 @@ var gEditItemOverlay = {
    * Appends a menu-item representing a bookmarks folder to a menu-popup.
    * @param aMenupopup
    *        The popup to which the menu-item should be added.
-   * @param aFolderId
+   * @param aFolderGuid
    *        The identifier of the bookmarks folder.
    * @param aTitle
    *        The title to use as a label.
    * @return the new menu item.
    */
-  _appendFolderItemToMenupopup(aMenupopup, aFolderId, aTitle) {
+  _appendFolderItemToMenupopup(aMenupopup, aFolderGuid, aTitle) {
     // First make sure the folders-separator is visible
     this._element("foldersSeparator").hidden = false;
 
     var folderMenuItem = document.createElement("menuitem");
-    var folderTitle = aTitle;
-    folderMenuItem.folderId = aFolderId;
-    folderMenuItem.setAttribute("label", folderTitle);
+    folderMenuItem.folderGuid = aFolderGuid;
+    folderMenuItem.setAttribute("label", aTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
     aMenupopup.appendChild(folderMenuItem);
     return folderMenuItem;
   },
 
-  async _initFolderMenuList(aSelectedFolder) {
+  async _initFolderMenuList(aSelectedFolderGuid) {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
     while (menupopup.childNodes.length > 6)
@@ -386,58 +382,46 @@ var gEditItemOverlay = {
     if (!this._staticFoldersListBuilt) {
       let unfiledItem = this._element("unfiledRootItem");
       unfiledItem.label = PlacesUtils.getString("OtherBookmarksFolderTitle");
-      unfiledItem.folderId = PlacesUtils.unfiledBookmarksFolderId;
+      unfiledItem.folderGuid = PlacesUtils.bookmarks.unfiledGuid;
       let bmMenuItem = this._element("bmRootItem");
       bmMenuItem.label = PlacesUtils.getString("BookmarksMenuFolderTitle");
-      bmMenuItem.folderId = PlacesUtils.bookmarksMenuFolderId;
+      bmMenuItem.folderGuid = PlacesUtils.bookmarks.menuGuid;
       let toolbarItem = this._element("toolbarFolderItem");
       toolbarItem.label = PlacesUtils.getString("BookmarksToolbarFolderTitle");
-      toolbarItem.folderId = PlacesUtils.toolbarFolderId;
+      toolbarItem.folderGuid = PlacesUtils.bookmarks.toolbarGuid;
       this._staticFoldersListBuilt = true;
     }
 
     // List of recently used folders:
-    var folderIds =
-      PlacesUtils.annotations.getItemsWithAnnotation(LAST_USED_ANNO);
+    let lastUsedFolderGuids =
+      await PlacesUtils.metadata.get(PlacesUIUtils.LAST_USED_FOLDERS_META_KEY, []);
 
     /**
-     * The value of the LAST_USED_ANNO annotation is the time (in the form of
-     * Date.getTime) at which the folder has been last used.
+     * The list of last used folders is sorted in most-recent first order.
      *
      * First we build the annotated folders array, each item has both the
      * folder identifier and the time at which it was last-used by this dialog
      * set. Then we sort it descendingly based on the time field.
      */
     this._recentFolders = [];
-    for (let folderId of folderIds) {
-      var lastUsed =
-        PlacesUtils.annotations.getItemAnnotation(folderId, LAST_USED_ANNO);
-      let guid = await PlacesUtils.promiseItemGuid(folderId);
+    for (let guid of lastUsedFolderGuids) {
       let bm = await PlacesUtils.bookmarks.fetch(guid);
-      // Since this could be a root mobile folder, we should get the proper
-      // title.
-      let title = PlacesUtils.bookmarks.getLocalizedTitle(bm);
-      this._recentFolders.push({ folderId, guid, title, lastUsed });
+      if (bm) {
+        let title = PlacesUtils.bookmarks.getLocalizedTitle(bm);
+        this._recentFolders.push({ guid, title });
+      }
     }
-    this._recentFolders.sort(function(a, b) {
-      if (b.lastUsed < a.lastUsed)
-        return -1;
-      if (b.lastUsed > a.lastUsed)
-        return 1;
-      return 0;
-    });
 
     var numberOfItems = Math.min(MAX_FOLDER_ITEM_IN_MENU_LIST,
                                  this._recentFolders.length);
     for (let i = 0; i < numberOfItems; i++) {
       await this._appendFolderItemToMenupopup(menupopup,
-                                              this._recentFolders[i].folderId,
+                                              this._recentFolders[i].guid,
                                               this._recentFolders[i].title);
     }
 
-    let selectedFolderGuid = await PlacesUtils.promiseItemGuid(aSelectedFolder);
-    let title = (await PlacesUtils.bookmarks.fetch(selectedFolderGuid)).title;
-    var defaultItem = this._getFolderMenuItem(aSelectedFolder, title);
+    let title = (await PlacesUtils.bookmarks.fetch(aSelectedFolderGuid)).title;
+    var defaultItem = this._getFolderMenuItem(aSelectedFolderGuid, title);
     this._folderMenuList.selectedItem = defaultItem;
 
     // Set a selectedIndex attribute to show special icons
@@ -476,6 +460,10 @@ var gEditItemOverlay = {
 
     this._setPaneInfo(null);
     this._firstEditedField = "";
+  },
+
+  get selectedFolderGuid() {
+    return this._folderMenuList.selectedItem && this._folderMenuList.selectedItem.folderGuid;
   },
 
   onTagsFieldChange() {
@@ -695,16 +683,16 @@ var gEditItemOverlay = {
    * folder if such an item exists. Otherwise, this creates a menu-item for the
    * folder. If the items-count limit (see MAX_FOLDERS_IN_MENU_LIST) is reached,
    * the new item replaces the last menu-item.
-   * @param aFolderId
+   * @param aFolderGuid
    *        The identifier of the bookmarks folder.
    * @param aTitle
    *        The title to use in case of menuitem creation.
    * @return handle to the menuitem.
    */
-  _getFolderMenuItem(aFolderId, aTitle) {
+  _getFolderMenuItem(aFolderGuid, aTitle) {
     let menupopup = this._folderMenuList.menupopup;
     let menuItem = Array.prototype.find.call(
-      menupopup.childNodes, item => item.folderId === aFolderId);
+      menupopup.childNodes, item => item.folderGuid === aFolderGuid);
     if (menuItem !== undefined)
       return menuItem;
 
@@ -712,7 +700,7 @@ var gEditItemOverlay = {
     if (menupopup.childNodes.length == 4 + MAX_FOLDER_ITEM_IN_MENU_LIST)
       menupopup.removeChild(menupopup.lastChild);
 
-    return this._appendFolderItemToMenupopup(menupopup, aFolderId, aTitle);
+    return this._appendFolderItemToMenupopup(menupopup, aFolderGuid, aTitle);
   },
 
   async onFolderMenuListCommand(aEvent) {
@@ -728,7 +716,7 @@ var gEditItemOverlay = {
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible
-      let item = this._getFolderMenuItem(this._paneInfo.parentId,
+      let item = this._getFolderMenuItem(this._paneInfo.parentGuid,
                                          this._paneInfo.title);
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
@@ -738,24 +726,16 @@ var gEditItemOverlay = {
     }
 
     // Move the item
-    let containerId = this._folderMenuList.selectedItem.folderId;
-    if (this._paneInfo.parentId != containerId &&
-        this._paneInfo.itemId != containerId) {
-      let newParentGuid = await PlacesUtils.promiseItemGuid(containerId);
-      let guid = this._paneInfo.itemGuid;
-      await PlacesTransactions.Move({ guid, newParentGuid }).transact();
-
-      // Mark the containing folder as recently-used if it isn't in the
-      // static list
-      if (containerId != PlacesUtils.unfiledBookmarksFolderId &&
-          containerId != PlacesUtils.toolbarFolderId &&
-          containerId != PlacesUtils.bookmarksMenuFolderId) {
-        this._markFolderAsRecentlyUsed(containerId)
-            .catch(Cu.reportError);
-      }
+    let containerGuid = this._folderMenuList.selectedItem.folderGuid;
+    if (this._paneInfo.parentGuid != containerGuid &&
+        this._paneInfo.itemGuid != containerGuid) {
+      await PlacesTransactions.Move({
+        guid: this._paneInfo.itemGuid,
+        newParentGuid: containerGuid
+      }).transact();
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
-      if (containerId == PlacesUtils.toolbarFolderId) {
+      if (containerGuid == PlacesUtils.bookmarks.toolbarGuid) {
         Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar");
       }
     }
@@ -765,8 +745,8 @@ var gEditItemOverlay = {
     if (!folderTreeRow.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
       if (!selectedNode ||
-          PlacesUtils.getConcreteItemId(selectedNode) != containerId)
-        this._folderTree.selectItems([containerId]);
+          PlacesUtils.getConcreteItemGuid(selectedNode) != containerGuid)
+        this._folderTree.selectItems([containerGuid]);
     }
   },
 
@@ -780,48 +760,13 @@ var gEditItemOverlay = {
     if (!selectedNode)
       return;
 
-    var folderId = PlacesUtils.getConcreteItemId(selectedNode);
-    if (this._folderMenuList.selectedItem.folderId == folderId)
+    var folderGuid = PlacesUtils.getConcreteItemGuid(selectedNode);
+    if (this._folderMenuList.selectedItem.folderGuid == folderGuid)
       return;
 
-    var folderItem = this._getFolderMenuItem(folderId, selectedNode.title);
+    var folderItem = this._getFolderMenuItem(folderGuid, selectedNode.title);
     this._folderMenuList.selectedItem = folderItem;
     folderItem.doCommand();
-  },
-
-  async _markFolderAsRecentlyUsed(aFolderId) {
-    // Expire old unused recent folders.
-    let guids = [];
-    while (this._recentFolders.length > MAX_FOLDER_ITEM_IN_MENU_LIST) {
-      let folderId = this._recentFolders.pop().folderId;
-      let guid = await PlacesUtils.promiseItemGuid(folderId);
-      guids.push(guid);
-    }
-    if (guids.length > 0) {
-      let annotation = this._getLastUsedAnnotationObject(false);
-      PlacesTransactions.Annotate({ guids, annotation  })
-                        .transact().catch(Cu.reportError);
-    }
-
-    // Mark folder as recently used
-    let annotation = this._getLastUsedAnnotationObject(true);
-    let guid = await PlacesUtils.promiseItemGuid(aFolderId);
-    PlacesTransactions.Annotate({ guid, annotation })
-                      .transact().catch(Cu.reportError);
-  },
-
-  /**
-   * Returns an object which could then be used to set/unset the
-   * LAST_USED_ANNO annotation for a folder.
-   *
-   * @param aLastUsed
-   *        Whether to set or unset the LAST_USED_ANNO annotation.
-   * @returns an object representing the annotation which could then be used
-   *          with the transaction manager.
-   */
-  _getLastUsedAnnotationObject(aLastUsed) {
-    return { name: LAST_USED_ANNO,
-             value: aLastUsed ? new Date().getTime() : null };
   },
 
   _rebuildTagsSelectorList() {
@@ -1074,18 +1019,17 @@ var gEditItemOverlay = {
       return;
     }
 
-    this._paneInfo.parentId = newParentId;
     this._paneInfo.parentGuid = newParentGuid;
 
     if (!this._paneInfo.visibleRows.has("folderRow") ||
-        newParentId == this._folderMenuList.selectedItem.folderId) {
+        newParentGuid == this._folderMenuList.selectedItem.folderGuid) {
       return;
     }
 
     // Just setting selectItem _does not_ trigger oncommand, so we don't
     // recurse.
     PlacesUtils.bookmarks.fetch(newParentGuid).then(bm => {
-      this._folderMenuList.selectedItem = this._getFolderMenuItem(newParentId,
+      this._folderMenuList.selectedItem = this._getFolderMenuItem(newParentGuid,
                                                                   bm.title);
     });
   },

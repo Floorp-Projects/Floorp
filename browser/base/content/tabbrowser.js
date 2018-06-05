@@ -136,7 +136,7 @@ window._gBrowser = {
 
   _removingTabs: [],
 
-  _multiSelectedTabsMap: new WeakMap(),
+  _multiSelectedTabsSet: new WeakSet(),
 
   _lastMultiSelectedTabRef: null,
 
@@ -2624,8 +2624,8 @@ window._gBrowser = {
       return;
     }
 
-    let selectedTabs = ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
-                                    .filter(tab => tab.isConnected);
+    let selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
+                                  .filter(tab => tab.isConnected);
     this.removeCollectionOfTabs(selectedTabs);
   },
 
@@ -3630,7 +3630,7 @@ window._gBrowser = {
     }
 
     aTab.setAttribute("multiselected", "true");
-    this._multiSelectedTabsMap.set(aTab, null);
+    this._multiSelectedTabsSet.add(aTab);
   },
 
   /**
@@ -3661,28 +3661,28 @@ window._gBrowser = {
       return;
     }
     aTab.removeAttribute("multiselected");
-    this._multiSelectedTabsMap.delete(aTab);
+    this._multiSelectedTabsSet.delete(aTab);
   },
 
   clearMultiSelectedTabs() {
-    const selectedTabs = ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap);
+    const selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet);
     for (let tab of selectedTabs) {
       if (tab.isConnected && tab.multiselected) {
         tab.removeAttribute("multiselected");
       }
     }
-    this._multiSelectedTabsMap = new WeakMap();
+    this._multiSelectedTabsSet = new WeakSet();
   },
 
   get multiSelectedTabsCount() {
-    return ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
+    return ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
       .filter(tab => tab.isConnected && !tab.closing)
       .length;
   },
 
   get lastMultiSelectedTab() {
     let tab = this._lastMultiSelectedTabRef ? this._lastMultiSelectedTabRef.get() : null;
-    if (tab && tab.isConnected && this._multiSelectedTabsMap.has(tab)) {
+    if (tab && tab.isConnected && this._multiSelectedTabsSet.has(tab)) {
       return tab;
     }
     return gBrowser.selectedTab;

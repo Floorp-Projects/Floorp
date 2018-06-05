@@ -108,27 +108,8 @@ function LightweightThemeConsumer(aDocument) {
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
-  // Whether the active lightweight theme should be shown on the window.
-  _enabled: true,
   // Whether a lightweight theme is enabled.
   _active: false,
-
-  enable() {
-    this._enabled = true;
-    this._update(this._lastData);
-  },
-
-  disable() {
-    // Dance to keep the data, but reset the applied styles:
-    let lastData = this._lastData;
-    this._update(null);
-    this._enabled = false;
-    this._lastData = lastData;
-  },
-
-  getData() {
-    return this._enabled ? Cu.cloneInto(this._lastData, this._win) : null;
-  },
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
@@ -169,8 +150,6 @@ LightweightThemeConsumer.prototype = {
       this._lastData = aData;
       aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
     }
-    if (!this._enabled)
-      return;
 
     let root = this._doc.documentElement;
 
@@ -209,9 +188,6 @@ LightweightThemeConsumer.prototype = {
       root.setAttribute("lwthemefooter", "true");
     else
       root.removeAttribute("lwthemefooter");
-
-    Services.obs.notifyObservers(this._win, "lightweight-theme-window-updated",
-                                 JSON.stringify(aData));
   }
 };
 

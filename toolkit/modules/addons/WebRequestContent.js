@@ -78,7 +78,6 @@ var ContentPolicy = {
 
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let policyType = loadInfo.externalContentPolicyType;
-    let node = loadInfo.loadingContext;
     let loadingPrincipal = loadInfo.loadingPrincipal;
     let requestPrincipal = loadInfo.triggeringPrincipal;
     let requestOrigin = null;
@@ -126,9 +125,11 @@ var ContentPolicy = {
         .outerWindowID;
     }
 
-    if (policyType == Ci.nsIContentPolicy.TYPE_SUBDOCUMENT ||
-        (ChromeUtils.getClassName(node) == "XULElement" &&
-         node.localName == "browser")) {
+    let node = loadInfo.loadingContext;
+    if (node &&
+        (policyType == Ci.nsIContentPolicy.TYPE_SUBDOCUMENT ||
+         (ChromeUtils.getClassName(node) == "XULElement" &&
+          node.localName == "browser"))) {
       // Chrome sets frameId to the ID of the sub-window. But when
       // Firefox loads an iframe, it sets |node| to the <iframe>
       // element, whose window is the parent window. We adopt the

@@ -2,7 +2,7 @@ const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 
 add_task(async function clickWithoutPrefSet() {
   let tab = await addTab();
-  let mSelectedTabs = gBrowser._multiSelectedTabsMap;
+  let mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
   isnot(gBrowser.selectedTab, tab, "Tab doesn't have focus");
 
@@ -29,7 +29,7 @@ add_task(async function clickWithPrefSet() {
     ]
   });
 
-  let mSelectedTabs = gBrowser._multiSelectedTabsMap;
+  let mSelectedTabs = gBrowser._multiSelectedTabsSet;
   const initialFocusedTab = gBrowser.selectedTab;
   const tab = await addTab();
 
@@ -60,8 +60,8 @@ add_task(async function clearSelection() {
   await triggerClickOn(tab1, { ctrlKey: true });
   await triggerClickOn(tab2, { ctrlKey: true });
 
-  ok(tab1.multiselected && gBrowser._multiSelectedTabsMap.has(tab1), "Tab1 is (multi) selected");
-  ok(tab2.multiselected && gBrowser._multiSelectedTabsMap.has(tab2), "Tab2 is (multi) selected");
+  ok(tab1.multiselected && gBrowser._multiSelectedTabsSet.has(tab1), "Tab1 is (multi) selected");
+  ok(tab2.multiselected && gBrowser._multiSelectedTabsSet.has(tab2), "Tab2 is (multi) selected");
   is(gBrowser.multiSelectedTabsCount, 2, "Two tabs (multi) selected");
   isnot(tab3, gBrowser.selectedTab, "Tab3 doesn't have focus");
 

@@ -66,7 +66,7 @@ add_test(function test_Timeouts_fromJSON_invalid_type() {
     session.Timeouts.fromJSON({script: "foobar"});
   } catch (e) {
     equal(e.name, InvalidArgumentError.name);
-    equal(e.message, "Expected [object String] \"foobar\" to be an integer");
+    equal(e.message, "Expected [object String] \"script\" to be a positive integer, got [object String] \"foobar\"");
   }
 
   run_next_test();
@@ -77,7 +77,7 @@ add_test(function test_Timeouts_fromJSON_bounds() {
     session.Timeouts.fromJSON({script: -42});
   } catch (e) {
     equal(e.name, InvalidArgumentError.name);
-    equal(e.message, "Expected [object Number] -42 to be >= 0");
+    equal(e.message, "Expected [object String] \"script\" to be a positive integer, got [object Number] -42");
   }
 
   run_next_test();
