@@ -466,7 +466,8 @@ CrossProcessCompositorBridgeParent::LeaveTestMode(const LayersId& aId)
 
 void
 CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
-    LayerTransactionParent* aLayerTree)
+    LayerTransactionParent* aLayerTree,
+    TransformsToSkip aSkip)
 {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
@@ -477,7 +478,7 @@ CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
   }
 
   MOZ_ASSERT(state->mParent);
-  state->mParent->ApplyAsyncProperties(aLayerTree);
+  state->mParent->ApplyAsyncProperties(aLayerTree, aSkip);
 }
 
 void

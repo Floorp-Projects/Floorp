@@ -88,7 +88,8 @@ public:
   bool SetTestSampleTime(const LayersId& aId,
                          const TimeStamp& aTime) override;
   void LeaveTestMode(const LayersId& aId) override;
-  void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) override;
+  void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
+                            TransformsToSkip aSkip) override;
   void SetTestAsyncScrollOffset(const LayersId& aLayersId,
                                 const FrameMetrics::ViewID& aScrollId,
                                 const CSSPoint& aPoint) override;
