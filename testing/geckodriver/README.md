@@ -51,7 +51,7 @@ status] of the latest [Firefox Nightly](http://whattrainisitnow.com/)
 on [MDN].  We also keep track of known [Selenium], [remote protocol],
 and [specification] problems in our [issue tracker].
 
-Support is best in Firefox 55 and greater, although generally the more
+Support is best in Firefox 57 and greater, although generally the more
 recent the Firefox version, the better the experience as they have more
 bug fixes and features.  Some features will only be available in the
 most recent Firefox versions, and we strongly advise using the latest
