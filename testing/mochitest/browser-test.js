@@ -511,10 +511,25 @@ Tester.prototype = {
       "webConsoleCommandController",
     ];
 
-    if (this.tests.length)
-      this.waitForGraphicsTestWindowToBeGone(this.nextTest.bind(this));
-    else
+    if (this.tests.length) {
+      this.waitForWindowsReady().then(() => {
+        this.nextTest();
+      });
+    } else {
       this.finish();
+    }
+  },
+
+  async waitForWindowsReady() {
+    await new Promise(resolve => this.waitForGraphicsTestWindowToBeGone(resolve));
+    await this.promiseMainWindowReady();
+  },
+
+  async promiseMainWindowReady() {
+    if (!gBrowserInit.idleTasksFinished) {
+      await this.TestUtils.topicObserved("browser-idle-startup-tasks-finished",
+                                         subject => subject === window);
+    }
   },
 
   waitForGraphicsTestWindowToBeGone(aCallback) {
