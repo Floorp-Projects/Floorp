@@ -182,10 +182,6 @@ var Authentication = {
         await this._completeVerification(account.username);
       }
 
-      if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
-        Logger.logInfo("Logging into Weave.");
-        await Weave.Service.login();
-      }
       return true;
     } catch (error) {
       throw new Error("signIn() failed with: " + error.message);
