@@ -137,7 +137,8 @@ class Test_get_browser_config(object):
                 'error_filename',
                 'no_upload_results',
                 'stylothreads',
-                'subtests']
+                'subtests',
+                'preferences']
 
     def test_that_contains_title(self):
         config_no_optionals = dict.fromkeys(self.required, '')
