@@ -6152,6 +6152,48 @@ ssl_ClientSetCipherSuite(sslSocket *ss, SSL3ProtocolVersion version,
     return ssl3_SetupCipherSuite(ss, initHashes);
 }
 
+/* Check that session ID we received from the server, if any, matches our
+ * expectations, depending on whether we're in compat mode and whether we
+ * negotiated TLS 1.3+ or TLS 1.2-.
+ */
+static PRBool
+ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
+{
+    sslSessionID *sid = ss->sec.ci.sid;
+    PRBool sidMatch = PR_FALSE;
+    PRBool sentFakeSid = PR_FALSE;
+    PRBool sentRealSid = sid && sid->version < SSL_LIBRARY_VERSION_TLS_1_3;
+
+    /* If attempting to resume a TLS 1.2 connection, the session ID won't be a
+     * fake. Check for the real value. */
+    if (sentRealSid) {
+        sidMatch = (sidBytes->len == sid->u.ssl3.sessionIDLength) &&
+                   PORT_Memcmp(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len) == 0;
+    } else {
+        /* Otherwise, the session ID was a fake if TLS 1.3 compat mode is
+         * enabled.  If so, check for the fake value. */
+        sentFakeSid = ss->opt.enableTls13CompatMode && !IS_DTLS(ss);
+        if (sentFakeSid && sidBytes->len == SSL3_SESSIONID_BYTES) {
+            PRUint8 buf[SSL3_SESSIONID_BYTES];
+            ssl_MakeFakeSid(ss, buf);
+            sidMatch = PORT_Memcmp(buf, sidBytes->data, sidBytes->len) == 0;
+        }
+    }
+
+    /* TLS 1.2: Session ID shouldn't match if we sent a fake. */
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return !sentFakeSid || !sidMatch;
+    }
+
+    /* TLS 1.3: We sent a session ID.  The server's should match. */
+    if (sentRealSid || sentFakeSid) {
+        return sidMatch;
+    }
+
+    /* TLS 1.3: The server shouldn't send a session ID. */
+    return sidBytes->len == 0;
+}
+
 /* Called from ssl3_HandleHandshakeMessage() when it has deciphered a complete
  * ssl3 ServerHello message.
  * Caller must hold Handshake and RecvBuf locks.
@@ -6359,22 +6401,10 @@ ssl3_HandleServerHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
     }
 
     /* Check that the session ID is as expected. */
-    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
-        PRUint8 buf[SSL3_SESSIONID_BYTES];
-        unsigned int expectedSidLen;
-        if (ss->opt.enableTls13CompatMode && !IS_DTLS(ss)) {
-            expectedSidLen = SSL3_SESSIONID_BYTES;
-            ssl_MakeFakeSid(ss, buf);
-        } else {
-            expectedSidLen = 0;
-        }
-        if (sidBytes.len != expectedSidLen ||
-            (expectedSidLen > 0 &&
-             PORT_Memcmp(buf, sidBytes.data, expectedSidLen) != 0)) {
-            desc = illegal_parameter;
-            errCode = SSL_ERROR_RX_MALFORMED_SERVER_HELLO;
-            goto alert_loser;
-        }
+    if (!ssl_CheckServerSessionIdCorrectness(ss, &sidBytes)) {
+        desc = illegal_parameter;
+        errCode = SSL_ERROR_RX_MALFORMED_SERVER_HELLO;
+        goto alert_loser;
     }
 
     /* Only initialize hashes if this isn't a Hello Retry. */
