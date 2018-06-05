@@ -24,8 +24,6 @@ function checkBasicAttributes(token) {
   let expectedTokenName = bundle.GetStringFromName("PrivateTokenDescription");
   equal(token.tokenName, expectedTokenName,
         "Actual and expected name should match");
-  equal(token.tokenLabel, expectedTokenName,
-        "Actual and expected label should match");
   equal(token.tokenManID, bundle.GetStringFromName("ManufacturerID"),
         "Actual and expected manufacturer ID should match");
   equal(token.tokenHWVersion, "0.0",

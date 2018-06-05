@@ -29,6 +29,8 @@ LossyUTF8ToUTF16(const char* str, uint32_t len, /*out*/ nsAString& result);
 nsresult
 GetPIPNSSBundleString(const char* stringName, nsAString& result);
 nsresult
+GetPIPNSSBundleString(const char* stringName, nsACString& result);
+nsresult
 PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
                               uint32_t numParams, nsAString& result);
 
