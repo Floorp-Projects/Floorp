@@ -8367,8 +8367,7 @@ PresShell::GetCurrentItemAndPositionForElement(Element* aFocusedElement,
           RefPtr<nsTreeColumns> cols;
           treeBox->GetColumns(getter_AddRefs(cols));
           if (cols) {
-            nsCOMPtr<nsITreeColumn> col;
-            cols->GetFirstColumn(getter_AddRefs(col));
+            nsTreeColumn* col = cols->GetFirstColumn();
             if (col) {
               RefPtr<Element> colElement;
               col->GetElement(getter_AddRefs(colElement));

@@ -8,12 +8,12 @@
 #define nsTreeSelection_h__
 
 #include "nsITreeSelection.h"
-#include "nsITreeColumns.h"
 #include "nsITimer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
 class nsITreeBoxObject;
+class nsITreeColumn;
 struct nsTreeRange;
 
 class nsTreeSelection final : public nsINativeTreeSelection
