@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <utility>
 
 #include "jsexn.h"
 #include "jsnum.h"

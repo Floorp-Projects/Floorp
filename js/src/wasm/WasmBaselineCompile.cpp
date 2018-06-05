@@ -110,6 +110,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
+#include <utility>
+
 #include "jit/AtomicOp.h"
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"

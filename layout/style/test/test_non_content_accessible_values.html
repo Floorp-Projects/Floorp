@@ -1,0 +1,65 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="sheet"></style>
+<div></div>
+<script>
+const NON_CONTENT_ACCESSIBLE_VALUES = {
+  "display": [
+    // FIXME(emilio, bug TBD): Remove from content these two too.
+    // "-moz-box",
+    // "-moz-inline-box",
+    "-moz-grid",
+    "-moz-inline-grid",
+    "-moz-grid-group",
+    "-moz-grid-line",
+    "-moz-stack",
+    "-moz-inline-stack",
+    "-moz-deck",
+    "-moz-popup",
+    "-moz-groupbox",
+  ],
+};
+
+const sheet = document.getElementById("sheet");
+const div = document.querySelector("div");
+
+test(function() {
+  sheet.textContent = `div { color: initial }`;
+  assert_equals(sheet.sheet.cssRules[0].style.length, 1);
+}, "sanity");
+
+for (const prop in NON_CONTENT_ACCESSIBLE_VALUES) {
+  test(function() {
+    const values = NON_CONTENT_ACCESSIBLE_VALUES[prop];
+    for (const value of values) {
+      sheet.textContent = `div { ${prop}: ${value} }`;
+      const block = sheet.sheet.cssRules[0].style;
+      assert_equals(
+        block.length,
+        0,
+        `${prop}: ${value} should not be parsed in content`
+      );
+      block.setProperty(prop, value);
+      assert_equals(
+        block.length,
+        0,
+        `${prop}: ${value} should not be settable via CSSOM in content`
+      );
+      div.style.setProperty(prop, value);
+      assert_equals(
+        div.style.length,
+        0,
+        `${prop}: ${value} should not be settable via CSSOM in content (inline style)`
+      );
+      assert_not_equals(
+        getComputedStyle(div).getPropertyValue(prop),
+        value,
+        `${prop}: ${value} should not be settable via CSSOM in content (gcs)`
+      );
+
+      assert_false(CSS.supports(prop, value), `${prop}: ${value} should not claim to be supported`)
+    }
+  }, prop + " non-accessible values")
+}
+</script>

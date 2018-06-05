@@ -189,6 +189,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& status) override;
   virtual mozilla::ipc::IPCResult RecvRedirect2Verify(const nsresult& result,
                                                       const RequestHeaderTuples& changedHeaders,
+                                                      const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
                                                       const uint32_t& loadFlags,
                                                       const uint32_t& referrerPolicy,
                                                       const OptionalURIParams& aReferrerURI,

@@ -254,6 +254,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "layout.css.xul-display-values.content.enabled",
+   layout_css_xul_display_values_content_enabled,
+  bool, false
+)
+
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 VARCACHE_PREF(
   "layout.css.grid-template-subgrid-value.enabled",

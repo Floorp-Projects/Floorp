@@ -1,0 +1,67 @@
+commit 595ccab4acc3d818e98a82a3a6bb9849aa1e7cca
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue May 29 19:19:54 2018 -0700
+
+    Use stringstream with locale override.
+    
+    Add test for compiling float literals in locales with comma decimal separators.
+    
+    Handle inexplicable test setlocale failure on Android,Linux. (Require success on other platforms)
+    
+    Skip setting the locale on Android, which is always C locale in C++, but for some
+    reason std::locale::classic isn't implemented as a no-op.
+    
+    Bug: angleproject:2607
+    Test: angle_unittests
+    Change-Id: I7c97cb56c01335db46f532fb8af3f9a4f2a30564
+
+commit 2426b097472f19c907b3c734d6186d444f9be9ad
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Fri May 18 18:32:16 2018 -0700
+
+    Add `formatType` arg to computeSkipBytes.
+    
+    Fix texture upload format tests:
+    - Format tests should definitely run on ES3 also.
+    - Also set filters to NEAREST since some formats aren't filterable.
+    - Fix RGB9_E5 test reference encoding and add a test for it.
+    - True int/uint textures require i/usamplers.
+    
+    Bug: angleproject:2576
+    Change-Id: Ia5bac34cdee6554a88db339de443689a71a0cf70
+
+commit 1c428b64f565ca0305ef875bc1a7d5643c7fb856
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Mon May 7 17:23:57 2018 -0700
+
+    Add headers to build file lists.
+    
+    Bug: angleproject:2535
+    Change-Id: If4d3037e43b403683554a710e89a76befd9b354a
+
+Cherries picked
+================================================================================
+Merge base from: origin/chromium/3396
+
+commit 702006f4a07e4f0069f189679f5c84ebda7c5772
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Fri May 11 16:54:17 2018 -0400
+
+    D3D11: Fix out-of-range access with robust access.
+    
+    When using a vertex buffer with DYNAMIC usage, with robust buffer
+    access enabled, we would sometimes read out-of-bounds when using very
+    large values for the index range. An unchecked signed addition would
+    overflow and lead to reading a negative offset.
+    
+    Fix this problem by keeping the value size_t whenever possible. Also do
+    clamped casts when converting to a smaller values.
+    
+    Also adds a regression test.
+    
+    Also combined with 26b0bfb46: Fix warnings from size_t conversions.
+    
+    Bug: chromium:842028
+    Change-Id: Ie1a8f476f3e97149362eb9855f08450c067ff807
+    Reviewed-on: https://chromium-review.googlesource.com/1064721
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>

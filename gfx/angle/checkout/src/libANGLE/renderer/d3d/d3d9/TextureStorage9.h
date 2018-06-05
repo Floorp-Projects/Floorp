@@ -33,10 +33,10 @@ class TextureStorage9 : public TextureStorage
     DWORD getUsage() const;
 
     virtual gl::Error getSurfaceLevel(const gl::Context *context,
-                                      GLenum target,
+                                      gl::TextureTarget target,
                                       int level,
                                       bool dirty,
-                                      IDirect3DSurface9 **outSurface) = 0;
+                                      IDirect3DSurface9 **outSurface)    = 0;
     virtual gl::Error getBaseTexture(const gl::Context *context,
                                      IDirect3DBaseTexture9 **outTexture) = 0;
 
@@ -79,7 +79,7 @@ class TextureStorage9_2D : public TextureStorage9
     ~TextureStorage9_2D() override;
 
     gl::Error getSurfaceLevel(const gl::Context *context,
-                              GLenum target,
+                              gl::TextureTarget target,
                               int level,
                               bool dirty,
                               IDirect3DSurface9 **outSurface) override;
@@ -105,7 +105,7 @@ class TextureStorage9_EGLImage final : public TextureStorage9
     ~TextureStorage9_EGLImage() override;
 
     gl::Error getSurfaceLevel(const gl::Context *context,
-                              GLenum target,
+                              gl::TextureTarget target,
                               int level,
                               bool dirty,
                               IDirect3DSurface9 **outSurface) override;
@@ -130,7 +130,7 @@ class TextureStorage9_Cube : public TextureStorage9
     ~TextureStorage9_Cube() override;
 
     gl::Error getSurfaceLevel(const gl::Context *context,
-                              GLenum target,
+                              gl::TextureTarget target,
                               int level,
                               bool dirty,
                               IDirect3DSurface9 **outSurface) override;

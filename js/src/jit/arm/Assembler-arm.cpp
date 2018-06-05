@@ -24,6 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::CountLeadingZeroes32;
+using mozilla::DebugOnly;
 
 using LabelDoc = DisassemblerSpew::LabelDoc;
 using LiteralDoc = DisassemblerSpew::LiteralDoc;

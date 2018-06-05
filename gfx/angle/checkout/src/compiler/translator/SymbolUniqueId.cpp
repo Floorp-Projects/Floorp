@@ -22,11 +22,6 @@ TSymbolUniqueId::TSymbolUniqueId(const TSymbol &symbol) : mId(symbol.uniqueId().
 
 TSymbolUniqueId &TSymbolUniqueId::operator=(const TSymbolUniqueId &) = default;
 
-int TSymbolUniqueId::get() const
-{
-    return mId;
-}
-
 bool TSymbolUniqueId::operator==(const TSymbolUniqueId &other) const
 {
     return mId == other.mId;

@@ -16,6 +16,58 @@ namespace gl
 {
 
 template <>
+AlphaTestFunc FromGLenum<AlphaTestFunc>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_ALWAYS:
+            return AlphaTestFunc::AlwaysPass;
+        case GL_EQUAL:
+            return AlphaTestFunc::Equal;
+        case GL_GEQUAL:
+            return AlphaTestFunc::Gequal;
+        case GL_GREATER:
+            return AlphaTestFunc::Greater;
+        case GL_LEQUAL:
+            return AlphaTestFunc::Lequal;
+        case GL_LESS:
+            return AlphaTestFunc::Less;
+        case GL_NEVER:
+            return AlphaTestFunc::Never;
+        case GL_NOTEQUAL:
+            return AlphaTestFunc::NotEqual;
+        default:
+            return AlphaTestFunc::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(AlphaTestFunc from)
+{
+    switch (from)
+    {
+        case AlphaTestFunc::AlwaysPass:
+            return GL_ALWAYS;
+        case AlphaTestFunc::Equal:
+            return GL_EQUAL;
+        case AlphaTestFunc::Gequal:
+            return GL_GEQUAL;
+        case AlphaTestFunc::Greater:
+            return GL_GREATER;
+        case AlphaTestFunc::Lequal:
+            return GL_LEQUAL;
+        case AlphaTestFunc::Less:
+            return GL_LESS;
+        case AlphaTestFunc::Never:
+            return GL_NEVER;
+        case AlphaTestFunc::NotEqual:
+            return GL_NOTEQUAL;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
 BufferBinding FromGLenum<BufferBinding>(GLenum from)
 {
     switch (from)
@@ -165,6 +217,574 @@ GLenum ToGLenum(CullFaceMode from)
             return GL_FRONT;
         case CullFaceMode::FrontAndBack:
             return GL_FRONT_AND_BACK;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+FogMode FromGLenum<FogMode>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_EXP:
+            return FogMode::Exp;
+        case GL_EXP2:
+            return FogMode::Exp2;
+        case GL_LINEAR:
+            return FogMode::Linear;
+        default:
+            return FogMode::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(FogMode from)
+{
+    switch (from)
+    {
+        case FogMode::Exp:
+            return GL_EXP;
+        case FogMode::Exp2:
+            return GL_EXP2;
+        case FogMode::Linear:
+            return GL_LINEAR;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+HintSetting FromGLenum<HintSetting>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_DONT_CARE:
+            return HintSetting::DontCare;
+        case GL_FASTEST:
+            return HintSetting::Fastest;
+        case GL_NICEST:
+            return HintSetting::Nicest;
+        default:
+            return HintSetting::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(HintSetting from)
+{
+    switch (from)
+    {
+        case HintSetting::DontCare:
+            return GL_DONT_CARE;
+        case HintSetting::Fastest:
+            return GL_FASTEST;
+        case HintSetting::Nicest:
+            return GL_NICEST;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+LogicalOperation FromGLenum<LogicalOperation>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_AND:
+            return LogicalOperation::And;
+        case GL_AND_INVERTED:
+            return LogicalOperation::AndInverted;
+        case GL_AND_REVERSE:
+            return LogicalOperation::AndReverse;
+        case GL_CLEAR:
+            return LogicalOperation::Clear;
+        case GL_COPY:
+            return LogicalOperation::Copy;
+        case GL_COPY_INVERTED:
+            return LogicalOperation::CopyInverted;
+        case GL_EQUIV:
+            return LogicalOperation::Equiv;
+        case GL_INVERT:
+            return LogicalOperation::Invert;
+        case GL_NAND:
+            return LogicalOperation::Nand;
+        case GL_NOOP:
+            return LogicalOperation::Noop;
+        case GL_NOR:
+            return LogicalOperation::Nor;
+        case GL_OR:
+            return LogicalOperation::Or;
+        case GL_OR_INVERTED:
+            return LogicalOperation::OrInverted;
+        case GL_OR_REVERSE:
+            return LogicalOperation::OrReverse;
+        case GL_SET:
+            return LogicalOperation::Set;
+        case GL_XOR:
+            return LogicalOperation::Xor;
+        default:
+            return LogicalOperation::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(LogicalOperation from)
+{
+    switch (from)
+    {
+        case LogicalOperation::And:
+            return GL_AND;
+        case LogicalOperation::AndInverted:
+            return GL_AND_INVERTED;
+        case LogicalOperation::AndReverse:
+            return GL_AND_REVERSE;
+        case LogicalOperation::Clear:
+            return GL_CLEAR;
+        case LogicalOperation::Copy:
+            return GL_COPY;
+        case LogicalOperation::CopyInverted:
+            return GL_COPY_INVERTED;
+        case LogicalOperation::Equiv:
+            return GL_EQUIV;
+        case LogicalOperation::Invert:
+            return GL_INVERT;
+        case LogicalOperation::Nand:
+            return GL_NAND;
+        case LogicalOperation::Noop:
+            return GL_NOOP;
+        case LogicalOperation::Nor:
+            return GL_NOR;
+        case LogicalOperation::Or:
+            return GL_OR;
+        case LogicalOperation::OrInverted:
+            return GL_OR_INVERTED;
+        case LogicalOperation::OrReverse:
+            return GL_OR_REVERSE;
+        case LogicalOperation::Set:
+            return GL_SET;
+        case LogicalOperation::Xor:
+            return GL_XOR;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+MatrixType FromGLenum<MatrixType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_MODELVIEW:
+            return MatrixType::Modelview;
+        case GL_PROJECTION:
+            return MatrixType::Projection;
+        case GL_TEXTURE:
+            return MatrixType::Texture;
+        default:
+            return MatrixType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(MatrixType from)
+{
+    switch (from)
+    {
+        case MatrixType::Modelview:
+            return GL_MODELVIEW;
+        case MatrixType::Projection:
+            return GL_PROJECTION;
+        case MatrixType::Texture:
+            return GL_TEXTURE;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+ShaderType FromGLenum<ShaderType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_VERTEX_SHADER:
+            return ShaderType::Vertex;
+        case GL_FRAGMENT_SHADER:
+            return ShaderType::Fragment;
+        case GL_GEOMETRY_SHADER_EXT:
+            return ShaderType::Geometry;
+        case GL_COMPUTE_SHADER:
+            return ShaderType::Compute;
+        default:
+            return ShaderType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(ShaderType from)
+{
+    switch (from)
+    {
+        case ShaderType::Vertex:
+            return GL_VERTEX_SHADER;
+        case ShaderType::Fragment:
+            return GL_FRAGMENT_SHADER;
+        case ShaderType::Geometry:
+            return GL_GEOMETRY_SHADER_EXT;
+        case ShaderType::Compute:
+            return GL_COMPUTE_SHADER;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+ShadingModel FromGLenum<ShadingModel>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_FLAT:
+            return ShadingModel::Flat;
+        case GL_SMOOTH:
+            return ShadingModel::Smooth;
+        default:
+            return ShadingModel::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(ShadingModel from)
+{
+    switch (from)
+    {
+        case ShadingModel::Flat:
+            return GL_FLAT;
+        case ShadingModel::Smooth:
+            return GL_SMOOTH;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureCombine FromGLenum<TextureCombine>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_ADD:
+            return TextureCombine::Add;
+        case GL_ADD_SIGNED:
+            return TextureCombine::AddSigned;
+        case GL_DOT3_RGB:
+            return TextureCombine::Dot3Rgb;
+        case GL_DOT3_RGBA:
+            return TextureCombine::Dot3Rgba;
+        case GL_INTERPOLATE:
+            return TextureCombine::Interpolate;
+        case GL_MODULATE:
+            return TextureCombine::Modulate;
+        case GL_REPLACE:
+            return TextureCombine::Replace;
+        case GL_SUBTRACT:
+            return TextureCombine::Subtract;
+        default:
+            return TextureCombine::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureCombine from)
+{
+    switch (from)
+    {
+        case TextureCombine::Add:
+            return GL_ADD;
+        case TextureCombine::AddSigned:
+            return GL_ADD_SIGNED;
+        case TextureCombine::Dot3Rgb:
+            return GL_DOT3_RGB;
+        case TextureCombine::Dot3Rgba:
+            return GL_DOT3_RGBA;
+        case TextureCombine::Interpolate:
+            return GL_INTERPOLATE;
+        case TextureCombine::Modulate:
+            return GL_MODULATE;
+        case TextureCombine::Replace:
+            return GL_REPLACE;
+        case TextureCombine::Subtract:
+            return GL_SUBTRACT;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureEnvMode FromGLenum<TextureEnvMode>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_ADD:
+            return TextureEnvMode::Add;
+        case GL_BLEND:
+            return TextureEnvMode::Blend;
+        case GL_COMBINE:
+            return TextureEnvMode::Combine;
+        case GL_DECAL:
+            return TextureEnvMode::Decal;
+        case GL_MODULATE:
+            return TextureEnvMode::Modulate;
+        case GL_REPLACE:
+            return TextureEnvMode::Replace;
+        default:
+            return TextureEnvMode::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureEnvMode from)
+{
+    switch (from)
+    {
+        case TextureEnvMode::Add:
+            return GL_ADD;
+        case TextureEnvMode::Blend:
+            return GL_BLEND;
+        case TextureEnvMode::Combine:
+            return GL_COMBINE;
+        case TextureEnvMode::Decal:
+            return GL_DECAL;
+        case TextureEnvMode::Modulate:
+            return GL_MODULATE;
+        case TextureEnvMode::Replace:
+            return GL_REPLACE;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureOp FromGLenum<TextureOp>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_ONE_MINUS_SRC_ALPHA:
+            return TextureOp::OneMinusSrcAlpha;
+        case GL_ONE_MINUS_SRC_COLOR:
+            return TextureOp::OneMinusSrcColor;
+        case GL_SRC_ALPHA:
+            return TextureOp::SrcAlpha;
+        case GL_SRC_COLOR:
+            return TextureOp::SrcColor;
+        default:
+            return TextureOp::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureOp from)
+{
+    switch (from)
+    {
+        case TextureOp::OneMinusSrcAlpha:
+            return GL_ONE_MINUS_SRC_ALPHA;
+        case TextureOp::OneMinusSrcColor:
+            return GL_ONE_MINUS_SRC_COLOR;
+        case TextureOp::SrcAlpha:
+            return GL_SRC_ALPHA;
+        case TextureOp::SrcColor:
+            return GL_SRC_COLOR;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureSrc FromGLenum<TextureSrc>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_CONSTANT:
+            return TextureSrc::Constant;
+        case GL_PREVIOUS:
+            return TextureSrc::Previous;
+        case GL_PRIMARY_COLOR:
+            return TextureSrc::PrimaryColor;
+        case GL_TEXTURE:
+            return TextureSrc::Texture;
+        default:
+            return TextureSrc::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureSrc from)
+{
+    switch (from)
+    {
+        case TextureSrc::Constant:
+            return GL_CONSTANT;
+        case TextureSrc::Previous:
+            return GL_PREVIOUS;
+        case TextureSrc::PrimaryColor:
+            return GL_PRIMARY_COLOR;
+        case TextureSrc::Texture:
+            return GL_TEXTURE;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureTarget FromGLenum<TextureTarget>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_TEXTURE_2D:
+            return TextureTarget::_2D;
+        case GL_TEXTURE_2D_ARRAY:
+            return TextureTarget::_2DArray;
+        case GL_TEXTURE_2D_MULTISAMPLE:
+            return TextureTarget::_2DMultisample;
+        case GL_TEXTURE_3D:
+            return TextureTarget::_3D;
+        case GL_TEXTURE_EXTERNAL_OES:
+            return TextureTarget::External;
+        case GL_TEXTURE_RECTANGLE_ANGLE:
+            return TextureTarget::Rectangle;
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+            return TextureTarget::CubeMapPositiveX;
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+            return TextureTarget::CubeMapNegativeX;
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+            return TextureTarget::CubeMapPositiveY;
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+            return TextureTarget::CubeMapNegativeY;
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+            return TextureTarget::CubeMapPositiveZ;
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+            return TextureTarget::CubeMapNegativeZ;
+        default:
+            return TextureTarget::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureTarget from)
+{
+    switch (from)
+    {
+        case TextureTarget::_2D:
+            return GL_TEXTURE_2D;
+        case TextureTarget::_2DArray:
+            return GL_TEXTURE_2D_ARRAY;
+        case TextureTarget::_2DMultisample:
+            return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureTarget::_3D:
+            return GL_TEXTURE_3D;
+        case TextureTarget::External:
+            return GL_TEXTURE_EXTERNAL_OES;
+        case TextureTarget::Rectangle:
+            return GL_TEXTURE_RECTANGLE_ANGLE;
+        case TextureTarget::CubeMapPositiveX:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        case TextureTarget::CubeMapNegativeX:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+        case TextureTarget::CubeMapPositiveY:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+        case TextureTarget::CubeMapNegativeY:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+        case TextureTarget::CubeMapPositiveZ:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+        case TextureTarget::CubeMapNegativeZ:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+TextureType FromGLenum<TextureType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_TEXTURE_2D:
+            return TextureType::_2D;
+        case GL_TEXTURE_2D_ARRAY:
+            return TextureType::_2DArray;
+        case GL_TEXTURE_2D_MULTISAMPLE:
+            return TextureType::_2DMultisample;
+        case GL_TEXTURE_3D:
+            return TextureType::_3D;
+        case GL_TEXTURE_EXTERNAL_OES:
+            return TextureType::External;
+        case GL_TEXTURE_RECTANGLE_ANGLE:
+            return TextureType::Rectangle;
+        case GL_TEXTURE_CUBE_MAP:
+            return TextureType::CubeMap;
+        default:
+            return TextureType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureType from)
+{
+    switch (from)
+    {
+        case TextureType::_2D:
+            return GL_TEXTURE_2D;
+        case TextureType::_2DArray:
+            return GL_TEXTURE_2D_ARRAY;
+        case TextureType::_2DMultisample:
+            return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureType::_3D:
+            return GL_TEXTURE_3D;
+        case TextureType::External:
+            return GL_TEXTURE_EXTERNAL_OES;
+        case TextureType::Rectangle:
+            return GL_TEXTURE_RECTANGLE_ANGLE;
+        case TextureType::CubeMap:
+            return GL_TEXTURE_CUBE_MAP;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+template <>
+VertexArrayType FromGLenum<VertexArrayType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_COLOR_ARRAY:
+            return VertexArrayType::Color;
+        case GL_NORMAL_ARRAY:
+            return VertexArrayType::Normal;
+        case GL_POINT_SIZE_ARRAY_OES:
+            return VertexArrayType::PointSize;
+        case GL_TEXTURE_COORD_ARRAY:
+            return VertexArrayType::TextureCoord;
+        case GL_VERTEX_ARRAY:
+            return VertexArrayType::Vertex;
+        default:
+            return VertexArrayType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(VertexArrayType from)
+{
+    switch (from)
+    {
+        case VertexArrayType::Color:
+            return GL_COLOR_ARRAY;
+        case VertexArrayType::Normal:
+            return GL_NORMAL_ARRAY;
+        case VertexArrayType::PointSize:
+            return GL_POINT_SIZE_ARRAY_OES;
+        case VertexArrayType::TextureCoord:
+            return GL_TEXTURE_COORD_ARRAY;
+        case VertexArrayType::Vertex:
+            return GL_VERTEX_ARRAY;
         default:
             UNREACHABLE();
             return GL_NONE;

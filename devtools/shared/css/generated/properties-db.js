@@ -1388,71 +1388,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "-moz-window-opacity": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-opacity"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "unset"
-    ]
-  },
-  "-moz-window-transform": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-transform"
-    ],
-    "supports": [],
-    "values": [
-      "accumulatematrix",
-      "inherit",
-      "initial",
-      "interpolatematrix",
-      "matrix",
-      "matrix3d",
-      "none",
-      "perspective",
-      "rotate",
-      "rotate3d",
-      "rotateX",
-      "rotateY",
-      "rotateZ",
-      "scale",
-      "scale3d",
-      "scaleX",
-      "scaleY",
-      "scaleZ",
-      "skew",
-      "skewX",
-      "skewY",
-      "translate",
-      "translate3d",
-      "translateX",
-      "translateY",
-      "translateZ",
-      "unset"
-    ]
-  },
-  "-moz-window-transform-origin": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-window-transform-origin"
-    ],
-    "supports": [],
-    "values": [
-      "bottom",
-      "center",
-      "inherit",
-      "initial",
-      "left",
-      "right",
-      "top",
-      "unset"
-    ]
-  },
   "-webkit-align-content": {
     "isInherited": false,
     "subproperties": [
@@ -3044,9 +2979,6 @@ exports.CSS_PROPERTIES = {
       "ime-mode",
       "-moz-user-select",
       "-moz-window-dragging",
-      "-moz-window-opacity",
-      "-moz-window-transform",
-      "-moz-window-transform-origin",
       "-moz-force-broken-image-icon",
       "text-anchor",
       "color-interpolation",

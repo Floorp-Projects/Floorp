@@ -1578,7 +1578,7 @@ struct nsGridContainerFrame::Tracks
    */
   void AlignJustifyContent(const nsStylePosition* aStyle,
                            WritingMode            aWM,
-                           const LogicalSize&     aContainerSize);
+                           nscoord                aContentSize);
 
   nscoord GridLineEdge(uint32_t aLine, GridLineSide aSide) const
   {
@@ -2385,7 +2385,7 @@ nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   mCols.CalculateSizes(*this, mGridItems, mColFunctions,
                        aContentBox.ISize(mWM), &GridArea::mCols,
                        aConstraint);
-  mCols.AlignJustifyContent(mGridStyle, mWM, aContentBox);
+  mCols.AlignJustifyContent(mGridStyle, mWM, aContentBox.ISize(mWM));
   // Column positions and sizes are now final.
   mCols.mCanResolveLineRangeSize = true;
 
@@ -4634,7 +4634,7 @@ void
 nsGridContainerFrame::Tracks::AlignJustifyContent(
   const nsStylePosition* aStyle,
   WritingMode            aWM,
-  const LogicalSize&     aContainerSize)
+  nscoord                aContentSize)
 {
   if (mSizes.IsEmpty()) {
     return;
@@ -4664,9 +4664,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
         ++numAutoTracks;
       }
     }
-    nscoord cbSize = isAlign ? aContainerSize.BSize(aWM)
-                             : aContainerSize.ISize(aWM);
-    space = cbSize - trackSizeSum - SumOfGridGaps();
+    space = aContentSize - trackSizeSum - SumOfGridGaps();
     // Use the fallback value instead when applicable.
     if (space < 0 ||
         (alignment == NS_STYLE_ALIGN_SPACE_BETWEEN && mSizes.Length() == 1)) {
@@ -5997,7 +5995,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     }
     // Apply 'align/justify-content' to the grid.
     // CalculateTrackSizes did the columns.
-    gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, contentArea.Size(wm));
+    gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, bSize);
   }
 
   bSize = ReflowChildren(gridReflowInput, contentArea, aDesiredSize, aStatus);
@@ -6397,9 +6395,6 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   state.mCols.CalculateSizes(state, state.mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              constraint);
-  state.mCols.mGridGap =
-    nsLayoutUtils::ResolveGapToLength(state.mGridStyle->mColumnGap,
-                                      NS_UNCONSTRAINEDSIZE);
   nscoord length = 0;
   for (const TrackSize& sz : state.mCols.mSizes) {
     length += sz.mBase;
