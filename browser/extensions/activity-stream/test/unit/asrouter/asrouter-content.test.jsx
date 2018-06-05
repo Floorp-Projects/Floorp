@@ -89,6 +89,25 @@ describe("ASRouterUISurface", () => {
     assert.isTrue(wrapper.exists());
   });
 
+  describe("snippets", () => {
+    it("should send correct event and source when snippet link is clicked", () => {
+      const content = {button_url: "https://foo.com", button_type: "anchor", button_label: "foo", ...FAKE_MESSAGE.content};
+      const message = Object.assign({}, FAKE_MESSAGE, {content});
+      wrapper.setState({message});
+
+      wrapper.find("a.ASRouterAnchor").simulate("click");
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "CLICK_BUTTON");
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
+    });
+    it("should send correct event and source when snippet is blocked", () => {
+      wrapper.setState({message: FAKE_MESSAGE});
+
+      wrapper.find(".blockButton").simulate("click");
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "BLOCK");
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
+    });
+  });
+
   describe("impressions", () => {
     function simulateVisibilityChange(value) {
       fakeDocument.visibilityState = value;
@@ -115,12 +134,13 @@ describe("ASRouterUISurface", () => {
       assert.calledOnce(ASRouterUtils.sendTelemetry);
     });
 
-    it("should the right data in the ", () => {
+    it("should send the correct impression source", () => {
       wrapper.setState({message: FAKE_MESSAGE});
-      assert.notCalled(ASRouterUtils.sendTelemetry);
-
       simulateVisibilityChange("visible");
+
       assert.calledOnce(ASRouterUtils.sendTelemetry);
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "IMPRESSION");
+      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
     });
 
     it("should send an impression ping when the page is visible and a message gets loaded", () => {
@@ -169,6 +189,7 @@ describe("ASRouterUISurface", () => {
       assert.propertyVal(payload, "message_id", FAKE_MESSAGE.id);
       assert.propertyVal(payload, "event", "IMPRESSION");
       assert.propertyVal(payload, "action", `${FAKE_MESSAGE.provider}_user_event`);
+      assert.propertyVal(payload, "source", "NEWTAB_FOOTER_BAR");
     });
   });
 });

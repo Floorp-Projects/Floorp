@@ -44,7 +44,6 @@ body {
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-secondary-color: #737373;
-  --newtab-text-tertiary-color: #737373;
   --newtab-textbox-background-color: #FFF;
   --newtab-textbox-border: rgba(12, 12, 13, 0.2);
   --newtab-textbox-focus-color: #0060DF;
@@ -87,7 +86,6 @@ body {
   --newtab-text-conditional-color: #F9F9FA;
   --newtab-text-primary-color: #F9F9FA;
   --newtab-text-secondary-color: rgba(249, 249, 250, 0.8);
-  --newtab-text-tertiary-color: rgba(249, 249, 250, 0.6);
   --newtab-textbox-background-color: #38383D;
   --newtab-textbox-border: rgba(249, 249, 250, 0.2);
   --newtab-textbox-focus-color: #45A1FF;
@@ -1341,14 +1339,14 @@ main {
     word-wrap: break-word; }
   .card-outer .card-context {
     bottom: 0;
-    color: var(--newtab-text-tertiary-color);
+    color: var(--newtab-text-secondary-color);
     display: flex;
     font-size: 11px;
     offset-inline-start: 0;
     padding: 9px 16px 9px 14px;
     position: absolute; }
   .card-outer .card-context-icon {
-    fill: var(--newtab-icon-tertiary-color);
+    fill: var(--newtab-text-secondary-color);
     height: 22px;
     margin-inline-end: 6px; }
   .card-outer .card-context-label {
@@ -1393,9 +1391,9 @@ main {
     line-height: 10px; }
   .compact-cards .card-outer .card-text .card-title,
   .compact-cards .card-outer .card-text:not(.no-description) .card-title {
-    font-size: 10px;
-    line-height: 12px;
-    max-height: 12px;
+    font-size: 12px;
+    line-height: 13px;
+    max-height: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; }
@@ -1404,7 +1402,7 @@ main {
   .compact-cards .card-outer .card-context {
     background-color: var(--newtab-card-background-color);
     border-radius: 16px;
-    clip-path: inset(0 0 4px);
+    clip-path: inset(-1px -1px 4px);
     height: 32px;
     width: 32px;
     padding: 8px;
@@ -1414,13 +1412,13 @@ main {
     .compact-cards .card-outer .card-context::after {
       border: 1px solid var(--newtab-card-hairline-color);
       border-bottom: 0;
-      border-radius: 16px 16px 0 0;
+      border-radius: 17px 17px 0 0;
       content: '';
       position: absolute;
-      height: 50%;
-      width: 100%;
-      top: 0;
-      left: 0; }
+      height: 17px;
+      width: 34px;
+      top: -1px;
+      left: -1px; }
     .compact-cards .card-outer .card-context .card-context-icon {
       margin-inline-end: 0;
       height: 16px;
@@ -1638,8 +1636,10 @@ main {
   background-color: var(--newtab-button-secondary-color);
   font-family: inherit;
   padding: 8px 15px;
-  margin-left: 12px;
+  margin-inline-start: 12px;
   color: inherit; }
+  .tall .ASRouterButton {
+    margin-inline-start: 20px; }
 
 .SnippetBaseContainer {
   position: fixed;
@@ -1760,10 +1760,23 @@ main {
       padding: 4px 0 6px 0;
       font-size: 15px; }
 
+.SimpleSnippet.tall {
+  padding: 27px 0; }
+
 .SimpleSnippet .title {
   display: inline;
   font-size: inherit;
   margin: 0; }
+
+.SimpleSnippet .titleIcon {
+  background-repeat: no-repeat;
+  background-size: 14px;
+  height: 16px;
+  width: 16px;
+  margin-top: 2px;
+  margin-inline-end: 2px;
+  display: inline-block;
+  vertical-align: top; }
 
 .SimpleSnippet .body {
   display: inline;
@@ -1774,6 +1787,9 @@ main {
   width: 42px;
   margin-inline-end: 12px;
   flex-shrink: 0; }
+
+.SimpleSnippet.tall .icon {
+  margin-inline-end: 20px; }
 
 .SimpleSnippet .ASRouterAnchor {
   color: inherit;
