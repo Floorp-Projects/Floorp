@@ -12,12 +12,15 @@
 #include "mozilla/ScopeExit.h"
 
 #include <string.h>
+#include <utility>
 
 #include "jsapi.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
+#include "js/Printf.h"
 #include "threading/LockGuard.h"
+#include "util/Text.h"
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
@@ -418,17 +421,15 @@ TraceLoggerThreadState::getOrCreateEventPayload(const char* text)
         return p->value();
     }
 
-    char* str = js_strdup(text);
+    UniqueChars str = DuplicateString(text);
     if (!str)
         return nullptr;
 
     uint32_t textId = nextTextId;
 
-    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
-    if (!payload) {
-        js_free(str);
+    auto* payload = js_new<TraceLoggerEventPayload>(textId, std::move(str));
+    if (!payload)
         return nullptr;
-    }
 
     if (!textIdPayloads.putNew(textId, payload)) {
         js_delete(payload);
@@ -450,7 +451,7 @@ TraceLoggerThreadState::getOrCreateEventPayload(const char* text)
 
 TraceLoggerEventPayload*
 TraceLoggerThreadState::getOrCreateEventPayload(const char* filename,
-                                                size_t lineno, size_t colno, const void* ptr)
+                                                uint32_t lineno, uint32_t colno, const void* ptr)
 {
     if (!filename)
         filename = "<unknown>";
@@ -467,29 +468,14 @@ TraceLoggerThreadState::getOrCreateEventPayload(const char* filename,
         }
     }
 
-    // Compute the length of the string to create.
-    size_t lenFilename = strlen(filename);
-    size_t lenLineno = 1;
-    for (size_t i = lineno; i /= 10; lenLineno++);
-    size_t lenColno = 1;
-    for (size_t i = colno; i /= 10; lenColno++);
-
-    size_t len = 7 + lenFilename + 1 + lenLineno + 1 + lenColno;
-    char* str = js_pod_malloc<char>(len + 1);
+    UniqueChars str = JS_smprintf("script %s:%u:%u", filename, lineno, colno);
     if (!str)
         return nullptr;
 
-    DebugOnly<size_t> ret =
-        snprintf(str, len + 1, "script %s:%zu:%zu", filename, lineno, colno);
-    MOZ_ASSERT(ret == len);
-    MOZ_ASSERT(strlen(str) == len);
-
     uint32_t textId = nextTextId;
-    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
-    if (!payload) {
-        js_free(str);
+    auto* payload = js_new<TraceLoggerEventPayload>(textId, std::move(str));
+    if (!payload)
         return nullptr;
-    }
 
     if (!textIdPayloads.putNew(textId, payload)) {
         js_delete(payload);
@@ -1030,8 +1016,8 @@ TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId type, JSScript* script)
   : TraceLoggerEvent(type, script->filename(), script->lineno(), script->column())
 { }
 
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line,
-                                   size_t column)
+TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId type, const char* filename, uint32_t line,
+                                   uint32_t column)
   : payload_()
 {
     MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts ||

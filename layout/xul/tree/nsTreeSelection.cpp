@@ -16,6 +16,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
+#include "nsTreeColumns.h"
 
 using namespace mozilla;
 

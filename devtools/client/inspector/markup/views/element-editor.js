@@ -42,6 +42,7 @@ const DISPLAY_TYPES = {
   "inline-flex": INSPECTOR_L10N.getStr("markupView.display.flex.tooltiptext"),
   "grid": INSPECTOR_L10N.getStr("markupView.display.grid.tooltiptext"),
   "inline-grid": INSPECTOR_L10N.getStr("markupView.display.inlineGrid.tooltiptext"),
+  "subgrid": INSPECTOR_L10N.getStr("markupView.display.subgrid.tooltiptiptext"),
   "flow-root": INSPECTOR_L10N.getStr("markupView.display.flowRoot.tooltiptext"),
   "contents": INSPECTOR_L10N.getStr("markupView.display.contents.tooltiptext2"),
 };

@@ -56,6 +56,8 @@ LazyLogModule::operator LogModule*()
     mLog = tmp;
   }
 
+  mCanary.Check();
+
   return tmp;
 }
 

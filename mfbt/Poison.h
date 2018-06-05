@@ -81,8 +81,9 @@ namespace mozilla {
  */
 class CorruptionCanary {
 public:
-  CorruptionCanary() {
-    mValue = kCanarySet;
+  constexpr CorruptionCanary()
+    : mValue(kCanarySet)
+  {
   }
 
   ~CorruptionCanary() {

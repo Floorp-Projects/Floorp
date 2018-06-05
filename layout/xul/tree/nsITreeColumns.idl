@@ -4,16 +4,15 @@
 
 #include "nsISupports.idl"
 
-interface nsITreeColumns;
-
 webidl Element;
+webidl TreeColumns;
 
 [scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
 interface nsITreeColumn : nsISupports
 {
   readonly attribute Element element;
 
-  readonly attribute nsITreeColumns columns;
+  readonly attribute TreeColumns columns;
 
   readonly attribute long x;
   readonly attribute long width;
@@ -37,58 +36,4 @@ interface nsITreeColumn : nsISupports
   nsITreeColumn getPrevious();
 
   void invalidate();
-};
-
-interface nsITreeBoxObject;
-
-[scriptable, uuid(f8a8d6b4-6788-438d-9009-7142798767ab)]
-interface nsITreeColumns : nsISupports
-{
-  /**
-   * The tree widget for these columns.
-   */
-  readonly attribute nsITreeBoxObject tree;
-
-  /**
-   * The number of columns.
-   */
-  readonly attribute long count;
-
-  /**
-   * An alias for count (for the benefit of scripts which treat this as an
-   * array).
-   */
-  readonly attribute long length;
-
-  /**
-   * Get the first/last column.
-   */
-  nsITreeColumn getFirstColumn();
-  nsITreeColumn getLastColumn();
-
-  /**
-   * Attribute based column getters.
-   */
-  nsITreeColumn getPrimaryColumn();
-  nsITreeColumn getSortedColumn();
-  nsITreeColumn getKeyColumn();
-
-  /**
-   * Get the column for the given element.
-   */
-  nsITreeColumn getColumnFor(in Element element);
-
-  /**
-   * Parametric column getters.
-   */
-  nsITreeColumn getNamedColumn(in AString id);
-  nsITreeColumn getColumnAt(in long index);
-
-  /**
-   * This method is called whenever a treecol is added or removed and
-   * the column cache needs to be rebuilt.
-   */
-  void invalidateColumns();
-
-  void restoreNaturalOrder();
 };

@@ -44,8 +44,8 @@ class SharedImmutableStringsCache
     struct Hasher;
 
   public:
-    using OwnedChars = mozilla::UniquePtr<char[], JS::FreePolicy>;
-    using OwnedTwoByteChars = mozilla::UniquePtr<char16_t[], JS::FreePolicy>;
+    using OwnedChars = JS::UniqueChars;
+    using OwnedTwoByteChars = JS::UniqueTwoByteChars;
 
     /**
      * Get the canonical, shared, and de-duplicated version of the given `const
@@ -55,8 +55,8 @@ class SharedImmutableStringsCache
      * `intoOwnedChars` must create an owned version of the given string, and
      * must have one of the following types:
      *
-     *     mozilla::UniquePtr<char[], JS::FreePolicy>   intoOwnedChars();
-     *     mozilla::UniquePtr<char[], JS::FreePolicy>&& intoOwnedChars();
+     *     JS::UniqueChars   intoOwnedChars();
+     *     JS::UniqueChars&& intoOwnedChars();
      *
      * It can be used by callers to elide a copy of the string when it is safe
      * to give up ownership of the lookup string to the cache. It must return a
@@ -98,8 +98,8 @@ class SharedImmutableStringsCache
      * `intoOwnedTwoByteChars` must create an owned version of the given string,
      * and must have one of the following types:
      *
-     *     mozilla::UniquePtr<char16_t[], JS::FreePolicy>   intoOwnedTwoByteChars();
-     *     mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& intoOwnedTwoByteChars();
+     *     JS::UniqueTwoByteChars   intoOwnedTwoByteChars();
+     *     JS::UniqueTwoByteChars&& intoOwnedTwoByteChars();
      *
      * It can be used by callers to elide a copy of the string when it is safe
      * to give up ownership of the lookup string to the cache. It must return a

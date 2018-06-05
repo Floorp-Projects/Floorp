@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.23.4"
+version = "0.23.9"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -23,7 +23,7 @@ keywords = ["css", "syntax", "parser"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
 [dependencies.cssparser-macros]
-version = "0.3"
+version = "0.3.3"
 
 [dependencies.dtoa-short]
 version = "0.3"
@@ -59,13 +59,13 @@ version = "0.7"
 [dev-dependencies.rustc-serialize]
 version = "0.3"
 [build-dependencies.proc-macro2]
-version = "0.2"
+version = "0.3"
 
 [build-dependencies.quote]
-version = "0.4.1"
+version = "0.5"
 
 [build-dependencies.syn]
-version = "0.12"
+version = "0.13"
 features = ["extra-traits", "fold"]
 
 [features]

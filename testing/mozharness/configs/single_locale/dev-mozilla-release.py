@@ -6,21 +6,6 @@ config = {
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
-    # repositories
-    # staging release uses jamun
-    "repos": [{
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools",
-    }, {
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/projects/jamun",
-        "branch": "%(revision)s",
-        "dest": "jamun",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
-    }],
     # purge options
-    'purge_minsize': 12,
     'is_automation': True,
 }
