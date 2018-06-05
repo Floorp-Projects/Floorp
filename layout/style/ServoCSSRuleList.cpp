@@ -15,12 +15,12 @@
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDocumentRule.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoFontFeatureValuesRule.h"
-#include "mozilla/ServoSupportsRule.h"
 #include "mozilla/StyleSheet.h"
 
 using namespace mozilla::dom;
@@ -109,7 +109,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE_CSS(MEDIA, Media)
       CASE_RULE_CSS(NAMESPACE, Namespace)
       CASE_RULE_CSS(PAGE, Page)
-      CASE_RULE(SUPPORTS, Supports)
+      CASE_RULE_CSS(SUPPORTS, Supports)
       CASE_RULE(DOCUMENT, Document)
       CASE_RULE(IMPORT, Import)
       CASE_RULE(FONT_FEATURE_VALUES, FontFeatureValues)
