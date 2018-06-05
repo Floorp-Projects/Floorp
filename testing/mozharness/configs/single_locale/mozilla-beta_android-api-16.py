@@ -29,7 +29,7 @@ config = {
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
-        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
+        "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_OBJDIR": OBJDIR,
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
