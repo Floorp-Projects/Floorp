@@ -1113,8 +1113,9 @@ BrowserGlue.prototype = {
     AutoCompletePopup.uninit();
     DateTimePickerParent.uninit();
 
-    // Browser errors are only collected on Nightly
-    if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {
+    // Browser errors are only collected on Nightly, but telemetry for
+    // them is collected on all channels.
+    if (AppConstants.MOZ_DATA_REPORTING) {
       this.browserErrorReporter.uninit();
     }
 
@@ -1130,8 +1131,9 @@ BrowserGlue.prototype = {
     }
     this._windowsWereRestored = true;
 
-    // Browser errors are only collected on Nightly
-    if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {
+    // Browser errors are only collected on Nightly, but telemetry for
+    // them is collected on all channels.
+    if (AppConstants.MOZ_DATA_REPORTING) {
       this.browserErrorReporter.init();
     }
 
