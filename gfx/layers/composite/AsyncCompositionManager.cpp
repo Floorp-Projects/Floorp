@@ -705,7 +705,7 @@ SampleAnimations(Layer* aLayer,
           }
           case AnimationHelper::SampleResult::Skipped:
             switch (animations[0].property()) {
-              case eCSSProperty_opacity:
+              case eCSSProperty_opacity: {
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
 #ifdef DEBUG
@@ -715,7 +715,15 @@ SampleAnimations(Layer* aLayer,
                 //   Servo_AnimationValue_GetOpacity(animationValue),
                 //   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
 #endif
+                // Even if opacity animation value has unchanged, we have to set
+                // the shadow base transform value here since the value might
+                // have been changed by APZC.
+                HostLayer* layerCompositor = layer->AsHostLayer();
+                layerCompositor->SetShadowBaseTransform(
+                  layer->GetBaseTransform());
+                layerCompositor->SetShadowTransformSetByAnimation(false);
                 break;
+              }
               case eCSSProperty_transform: {
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowTransformSetByAnimation());
