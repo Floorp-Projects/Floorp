@@ -67,7 +67,7 @@ function attachURL(url, callback) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener);
               // eslint-disable-next-line max-nested-callbacks
-              client.attachTab(tab.actor, function(_response, _tabClient) {
+              client.attachTab(tab.actor).then(function() {
                 try {
                   callback(null, client, tab, win.document);
                 } catch (ex) {

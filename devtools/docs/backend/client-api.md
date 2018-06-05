@@ -85,7 +85,7 @@ function attachToTab() {
     let tab = response.tabs[response.selected];
 
     // Attach to the tab.
-    client.attachTab(tab.actor, (response, tabClient) => {
+    client.attachTab(tab.actor).then(([response, tabClient]) => {
       if (!tabClient) {
         return;
       }
@@ -123,7 +123,7 @@ Once the application is attached to a tab, it can attach to its thread in order 
 // Assuming the application is already attached to the tab, and response is the first
 // argument of the attachTab callback.
 
-client.attachThread(response.threadActor, function(response, threadClient) {
+client.attachThread(response.threadActor).then(function([response, threadClient]) {
   if (!threadClient) {
     return;
   }
@@ -195,7 +195,7 @@ function debugTab() {
     // Find the active tab.
     let tab = response.tabs[response.selected];
     // Attach to the tab.
-    client.attachTab(tab.actor, (response, tabClient) => {
+    client.attachTab(tab.actor).then(([response, tabClient]) => {
       if (!tabClient) {
         return;
       }

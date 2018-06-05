@@ -29,14 +29,10 @@ function initDebuggerClient() {
   return new DebuggerClient(transport);
 }
 
-function attachThread(client, actor) {
-  return new Promise(resolve => {
-    client.attachTab(actor, (response, tabClient) => {
-      tabClient.attachThread(null, (r, threadClient) => {
-        resolve(threadClient);
-      });
-    });
-  });
+async function attachThread(client, actor) {
+  let [response, tabClient] = await client.attachTab(actor);
+  let [response2, threadClient] = await tabClient.attachThread(null);
+  return threadClient;
 }
 
 function onNewGlobal() {

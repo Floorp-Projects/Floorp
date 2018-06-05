@@ -21,7 +21,7 @@ function run_test() {
 }
 
 function test_attach(response, tabClient) {
-  tabClient.attachThread({}, function(response, threadClient) {
+  tabClient.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.paused, true);
     threadClient.resume(function() {
       test_interrupt(threadClient);
