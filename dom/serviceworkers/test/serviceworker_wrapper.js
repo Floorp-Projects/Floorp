@@ -83,11 +83,18 @@ function workerTestGetStorageManager(cb) {
   });
 }
 
+var completeInstall;
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
-  self.clients.matchAll().then(function(clients) {
-    client = clients[0];
+  self.clients.matchAll({ includeUncontrolled: true }).then(function(clients) {
+    for (var i = 0; i < clients.length; ++i) {
+      if (clients[i].url.includes("message_receiver.html")) {
+        client = clients[i];
+        break;
+      }
+    }
     try {
       importScripts(data.script);
     } catch(e) {
@@ -97,5 +104,10 @@ addEventListener('message', function workerWrapperOnMessage(e) {
         msg: 'worker failed to import ' + data.script + "; error: " + e.message
       });
     }
+    completeInstall();
   });
+});
+
+addEventListener('install', e => {
+  e.waitUntil(new Promise(resolve => completeInstall = resolve));
 });
