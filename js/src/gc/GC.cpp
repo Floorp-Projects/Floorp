@@ -4666,6 +4666,9 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoTraceSession& session)
 
     gc->waitBackgroundSweepEnd();
 
+    /* Wait for off-thread parsing which can allocate. */
+    HelperThreadState().waitForAllThreads();
+
     /* Save existing mark bits. */
     {
         AutoLockGC lock(runtime);

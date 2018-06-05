@@ -23,6 +23,7 @@
 #endif
 #include "nsIRootBox.h"
 #include "nsIBoxObject.h"
+#include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"

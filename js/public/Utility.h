@@ -418,8 +418,6 @@ static inline void js_free(void* p)
     // js_malloc().
     free(p);
 }
-
-JS_PUBLIC_API(char*) js_strdup(const char* s);
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
 #include <new>

@@ -11,6 +11,10 @@ const TEST_URI = `
     #grid {
       display: grid;
     }
+    #subgrid {
+      display: grid;
+      grid: subgrid;
+    }
     #flex {
       display: flex;
     }
@@ -18,13 +22,18 @@ const TEST_URI = `
       display: block;
     }
   </style>
-  <div id="grid">Grid</div>
+  <div id="grid">
+    <div id="subgrid"></div>
+  </div>
   <div id="flex">Flex</div>
   <div id="block">Block</div>
   <span>HELLO WORLD</span>
 `;
 
 add_task(async function() {
+  info("Enable subgrid in order to see the subgrid display type.");
+  await pushPref("layout.css.grid-template-subgrid-value.enabled", true);
+
   const {inspector} = await openInspectorForURL("data:text/html;charset=utf-8," +
     encodeURIComponent(TEST_URI));
 
@@ -34,6 +43,15 @@ add_task(async function() {
   const gridDisplayNode = gridContainer.elt.querySelector(".markupview-display-badge");
   is(gridDisplayNode.textContent, "grid", "Got the correct display type for #grid.");
   is(gridDisplayNode.style.display, "inline-block", "#grid display node is shown.");
+
+  info("Check the display node is shown and the value of #subgrid.");
+  await selectNode("#subgrid", inspector);
+  const subgridContainer = await getContainerForSelector("#subgrid", inspector);
+  const subgridDisplayNode = subgridContainer.elt.querySelector(
+    ".markupview-display-badge");
+  is(subgridDisplayNode.textContent, "subgrid",
+    "Got the correct display type for #subgrid");
+  is(subgridDisplayNode.style.display, "inline-block", "#subgrid display node is shown");
 
   info("Check the display node is shown and the value of #flex.");
   await selectNode("#flex", inspector);

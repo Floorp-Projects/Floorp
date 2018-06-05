@@ -17,6 +17,7 @@
 #include "nsWrapperCache.h"
 #include "nsString.h"
 
+class nsAtom;
 class nsTreeBodyFrame;
 class nsTreeColumns;
 class nsIFrame;
@@ -160,7 +161,7 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsTreeColumn, NS_TREECOLUMN_IMPL_CID)
 
-class nsTreeColumns final : public nsITreeColumns
+class nsTreeColumns final : public nsISupports
                           , public nsWrapperCache
 {
 private:
@@ -171,7 +172,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumns)
-  NS_DECL_NSITREECOLUMNS
 
   nsIContent* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -199,8 +199,8 @@ public:
   nsTreeColumn* GetNamedColumn(const nsAString& aId);
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
-  // Uses XPCOM InvalidateColumns().
-  // Uses XPCOM RestoreNaturalOrder().
+  void InvalidateColumns();
+  void RestoreNaturalOrder();
 
   friend class nsTreeBodyFrame;
 protected:

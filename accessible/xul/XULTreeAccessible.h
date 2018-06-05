@@ -8,10 +8,10 @@
 
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
-#include "nsITreeColumns.h"
 #include "XULListboxAccessible.h"
 
 class nsTreeBodyFrame;
+class nsITreeColumn;
 
 namespace mozilla {
 namespace a11y {

@@ -409,7 +409,6 @@ public:
     , mOriginAttributes(aWorkerPrivate->GetOriginAttributes())
   {
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
-    MOZ_ASSERT(aWorkerPrivate->LoadScriptAsPartOfLoadingServiceWorkerScript());
     AssertIsOnMainThread();
   }
 
@@ -837,6 +836,12 @@ private:
     return mIsMainScript && mWorkerScriptType == WorkerScript;
   }
 
+  bool
+  IsDebuggerScript() const
+  {
+    return mWorkerScriptType == DebuggerScript;
+  }
+
   void
   CancelMainThreadWithBindingAborted()
   {
@@ -908,12 +913,11 @@ private:
   {
     AssertIsOnMainThread();
 
-    if (IsMainWorkerScript() && mWorkerPrivate->IsServiceWorker()) {
+    if (IsMainWorkerScript()) {
       mWorkerPrivate->SetLoadingWorkerScript(true);
     }
 
-    if (!mWorkerPrivate->IsServiceWorker() ||
-        !mWorkerPrivate->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
+    if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
       for (uint32_t index = 0, len = mLoadInfos.Length(); index < len;
            ++index) {
         nsresult rv = LoadScript(index);
@@ -1789,9 +1793,12 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   // must handle loading and offlining new importScripts() here, however.
   if (aValue.isUndefined()) {
     // If this is the main script or we're not loading a new service worker
-    // then this is an error.  The storage was probably wiped without
-    // removing the service worker registration.
-    if (NS_WARN_IF(mIsWorkerScript || mState != ServiceWorkerState::Parsed)) {
+    // then this is an error.  This can happen for internal reasons, like
+    // storage was probably wiped without removing the service worker
+    // registration.  It can also happen for exposed reasons like the
+    // service worker script calling importScripts() after install.
+    if (NS_WARN_IF(mIsWorkerScript || (mState != ServiceWorkerState::Parsed &&
+                                       mState != ServiceWorkerState::Installing))) {
       Fail(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
@@ -2179,7 +2186,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
 
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
 
-  if (mIsWorkerScript && aWorkerPrivate->IsServiceWorker()) {
+  if (mIsWorkerScript) {
     aWorkerPrivate->SetLoadingWorkerScript(false);
   }
 
