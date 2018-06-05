@@ -133,7 +133,7 @@ int16_t gBadPortList[] = {
   143,  // imap2
   179,  // bgp
   389,  // ldap
-  //427,  // afp (alternate)
+  427,  // afp (alternate)
   465,  // smtp (alternate)
   512,  // print / exec
   513,  // login
@@ -144,7 +144,7 @@ int16_t gBadPortList[] = {
   531,  // chat
   532,  // netnews
   540,  // uucp
-  //548,  // afp
+  548,  // afp
   556,  // remotefs
   563,  // nntp+ssl
   587,  // smtp (outgoing)
@@ -161,7 +161,7 @@ int16_t gBadPortList[] = {
   6667, // irc (default)
   6668, // irc (alternate)
   6669, // irc (alternate)
-  //6697, // irc+tls
+  6697, // irc+tls
   0,    // Sentinel value: This MUST be zero
 };
 
