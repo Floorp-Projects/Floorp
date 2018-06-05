@@ -44,18 +44,6 @@ var _fromByTestLists =
                            { midComp: "rgba(225, 225, 225, 0.8)",
                              toComp:  "rgb(255, 255, 255)"}),
   ],
-  // Bug 1457353: Change from nsColor to StyleComplexColor causes addition
-  // with currentcolor to break. Bug 1465307 for work to re-enable.
-  colorNoCurrentColor: [
-    new AnimTestcaseFromBy("rgba(10, 20, 30, 0.2)", "rgba(50, 50, 50, 1)",
-                             // (rgb(10, 20, 30) * 0.2 * 0.5 + rgb(52, 54, 56) * 1.0 * 0.5) * (1 / 0.6)
-                           { midComp: "rgba(45, 48, 52, 0.6)",
-                             // (rgb(10, 20, 30) * 0.2 + rgb(50, 50, 50) * 1) / 1.0
-                             toComp:  "rgb(52, 54, 56)"}),
-    new AnimTestcaseFromBy("rgba(100, 100, 100, 0.6)", "rgba(240, 240, 240, 1)",
-                           { midComp: "rgba(225, 225, 225, 0.8)",
-                             toComp:  "rgb(255, 255, 255)"}),
-  ],
   lengthNoUnits: [
     new AnimTestcaseFromBy("0", "50",  { fromComp: "0px", // 0 acts like 0px
                                          midComp:  "25px",
@@ -146,7 +134,7 @@ var gFromByBundles =
   ]),
   // Bug 1457353: Change from nsColor to StyleComplexColor causes addition
   // with currentcolor to break. Bug 1465307 for work to re-enable.
-  new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.colorNoCurrentColor),
+  new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.color),
   new TestcaseBundle(gPropList.marker,         _fromByTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_end,     _fromByTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_mid,     _fromByTestLists.URIsAndNone),
