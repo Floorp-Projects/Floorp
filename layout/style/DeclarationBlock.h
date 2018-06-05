@@ -189,13 +189,37 @@ public:
     return Servo_DeclarationBlock_GetNthProperty(mRaw, aIndex, &aReturn);
   }
 
-  void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const;
-  void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const;
-  bool GetPropertyIsImportant(const nsAString& aProperty) const;
+  void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const
+  {
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    Servo_DeclarationBlock_GetPropertyValue(mRaw, &property, &aValue);
+  }
+
+  void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const
+  {
+    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropID, &aValue);
+  }
+
+  bool GetPropertyIsImportant(const nsAString& aProperty) const
+  {
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    return Servo_DeclarationBlock_GetPropertyIsImportant(mRaw, &property);
+  }
+
   // Returns whether the property was removed.
-  bool RemoveProperty(const nsAString& aProperty);
+  bool RemoveProperty(const nsAString& aProperty)
+  {
+    AssertMutable();
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    return Servo_DeclarationBlock_RemoveProperty(mRaw, &property);
+  }
+
   // Returns whether the property was removed.
-  bool RemovePropertyByID(nsCSSPropertyID aProperty);
+  bool RemovePropertyByID(nsCSSPropertyID aProperty)
+  {
+    AssertMutable();
+    return Servo_DeclarationBlock_RemovePropertyById(mRaw, aProperty);
+  }
 
 private:
   ~DeclarationBlock() = default;
