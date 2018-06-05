@@ -13,12 +13,12 @@
 #include "nsString.h"
 #ifdef MOZ_XUL
 #include "nsITreeBoxObject.h"
-#include "nsITreeColumns.h"
 #endif
 #include "nsWeakPtr.h"
 #include "mozilla/Attributes.h"
 
 class nsIContent;
+class nsITreeColumn;
 
 namespace mozilla {
 namespace dom {

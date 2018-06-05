@@ -9,6 +9,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIContent.h"
+#include "nsTreeColumns.h"
 
 NS_IMPL_ISUPPORTS(nsTreeImageListener, imgINotificationObserver)
 
