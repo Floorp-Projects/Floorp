@@ -1275,18 +1275,16 @@ var AddonManagerInternal = {
       Services.obs.notifyObservers(null, "addons-background-update-start");
 
       if (this.updateEnabled) {
-        let scope = {};
-        ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
-        scope.LightweightThemeManager.updateCurrentTheme();
+        // Keep track of all the async add-on updates happening in parallel
+        let updates = [];
+
+        updates.push(LightweightThemeManager.updateThemes());
 
         let allAddons = await this.getAllAddons();
 
         // Repopulate repository cache first, to ensure compatibility overrides
         // are up to date before checking for addon updates.
         await AddonRepository.backgroundUpdateCheck();
-
-        // Keep track of all the async add-on updates happening in parallel
-        let updates = [];
 
         for (let addon of allAddons) {
           // Check all add-ons for updates so that any compatibility updates will
