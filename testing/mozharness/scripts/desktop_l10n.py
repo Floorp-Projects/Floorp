@@ -68,12 +68,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
          "help": "Specify the locale(s) to sign and update. Optionally pass"
                  " revision separated by colon, en-GB:default."}
     ], [
-        ['--locales-file', ],
-        {"action": "store",
-         "dest": "locales_file",
-         "type": "string",
-         "help": "Specify a file to determine which locales to sign and update"}
-    ], [
         ['--tag-override', ],
         {"action": "store",
          "dest": "tag_override",

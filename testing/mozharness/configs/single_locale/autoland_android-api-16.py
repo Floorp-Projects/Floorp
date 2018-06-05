@@ -11,7 +11,6 @@ config = {
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
-    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "nightly_build": True,
