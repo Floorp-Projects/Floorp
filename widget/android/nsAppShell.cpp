@@ -425,6 +425,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoProcessManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
+        mozilla::GeckoVRManager::Init();
         nsWindow::InitNatives();
 
         if (jni::IsFennec()) {
