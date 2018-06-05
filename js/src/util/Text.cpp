@@ -36,12 +36,6 @@ js_strchr_limit(const Latin1Char* s, char16_t c, const Latin1Char* limit);
 template const char16_t*
 js_strchr_limit(const char16_t* s, char16_t c, const char16_t* limit);
 
-JS_PUBLIC_API(char*)
-js_strdup(const char* s)
-{
-    return DuplicateString(s).release();
-}
-
 int32_t
 js_fputs(const char16_t* s, FILE* f)
 {

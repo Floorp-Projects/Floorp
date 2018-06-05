@@ -12,20 +12,6 @@ config = {
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",
 
-    # repositories
-    "repos": [{
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools",
-    }, {
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
-        "revision": "%(revision)s",
-        "dest": "mozilla-esr52",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
-    }],
     # purge options
-    'purge_minsize': 12,
     'is_automation': True,
 }

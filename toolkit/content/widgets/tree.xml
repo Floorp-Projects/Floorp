@@ -84,7 +84,7 @@
                 readonly="true"/>
 # contentView is obsolete (see bug 202391)
       <property name="contentView"
-                onget="return this.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
+                onget="return this.view;"
                 readonly="true"/>
 # builderView is obsolete (see bug 202393)
       <property name="builderView"

@@ -33,7 +33,7 @@
 #include "nsComponentManagerUtils.h"
 
 #include "nsITreeBoxObject.h"
-#include "nsITreeColumns.h"
+#include "nsTreeColumns.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -522,13 +522,12 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
 already_AddRefed<nsITreeColumn>
 nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
 {
-  nsCOMPtr<nsITreeColumns> cols;
+  RefPtr<nsTreeColumns> cols;
   aTree->GetColumns(getter_AddRefs(cols));
   if (!cols)
     return nullptr;
 
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetFirstColumn(getter_AddRefs(column));
+  RefPtr<nsTreeColumn> column = cols->GetFirstColumn();
   if (column && IsColumnHidden(column))
     return GetNextSensibleColumn(column);
 
@@ -540,21 +539,18 @@ nsCoreUtils::GetSensibleColumnCount(nsITreeBoxObject *aTree)
 {
   uint32_t count = 0;
 
-  nsCOMPtr<nsITreeColumns> cols;
+  RefPtr<nsTreeColumns> cols;
   aTree->GetColumns(getter_AddRefs(cols));
   if (!cols)
     return count;
 
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetFirstColumn(getter_AddRefs(column));
+  nsTreeColumn* column = cols->GetFirstColumn();
 
   while (column) {
     if (!IsColumnHidden(column))
       count++;
 
-    nsCOMPtr<nsITreeColumn> nextColumn;
-    column->GetNext(getter_AddRefs(nextColumn));
-    column.swap(nextColumn);
+    column = column->GetNext();
   }
 
   return count;

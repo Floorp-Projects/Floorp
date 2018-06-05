@@ -145,7 +145,7 @@ function runTests()
   });
 
   // Test if data:font is same-origin.
-  let p7 = new Promise(resolve => {
+  let p7 = new Promise((resolve, reject) => {
     let text = document.createElement('p');
     // Cross-domain font will not load according to [1] so we try to apply
     // data:font to this text and see if the font can be loaded.
@@ -154,13 +154,17 @@ function runTests()
     text.innerHTML = "This text should trigger 'TestFont' to load.";
     document.body.appendChild(text);
 
-    document.fonts.onloadingdone = function (fontFaceSetEvent) {
-      is(fontFaceSetEvent.fontfaces.length, 1);
+    document.fonts.ready.then(fontFaces => {
+      is(fontFaces.size, 1, "should FontFace entry for data:font");
+      fontFaces.forEach(fontFace => {
+        is(fontFace.status, "loaded", "data:font should be same-origin");
+      });
       resolve();
-    };
-    document.fonts.onloadingerror = function (fontFaceSetEvent) {
+    },
+    _ => {
       ok(false, "data:font is not same-origin.");
-    };
+      reject();
+    });
   });
 
   Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(() => {

@@ -13,7 +13,7 @@
 #include "nsIBoxObject.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TreeBoxObject.h"
-#include "nsITreeColumns.h"
+#include "nsTreeColumns.h"
 #include "nsDisplayList.h"
 #include "nsTreeBodyFrame.h"
 #include "nsXULElement.h"
@@ -185,7 +185,7 @@ nsTreeColFrame::InvalidateColumns(bool aCanWalkFrameTree)
 {
   nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
   if (treeBoxObject) {
-    nsCOMPtr<nsITreeColumns> columns;
+    RefPtr<nsTreeColumns> columns;
 
     if (aCanWalkFrameTree) {
       treeBoxObject->GetColumns(getter_AddRefs(columns));

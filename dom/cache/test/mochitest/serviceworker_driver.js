@@ -4,8 +4,10 @@
 function serviceWorkerTestExec(testFile) {
   return new Promise(function(resolve, reject) {
     function setupSW(registration) {
-      var worker = registration.waiting ||
+      var worker = registration.installing ||
+                   registration.waiting ||
                    registration.active;
+      var iframe;
 
       window.addEventListener("message",function onMessage(event) {
         if (event.data.context != "ServiceWorker") {
@@ -13,6 +15,7 @@ function serviceWorkerTestExec(testFile) {
         }
         if (event.data.type == 'finish') {
           window.removeEventListener("message", onMessage);
+          iframe.remove();
           registration.unregister()
             .then(resolve)
             .catch(reject);
@@ -23,7 +26,7 @@ function serviceWorkerTestExec(testFile) {
 
       worker.onerror = reject;
 
-      var iframe = document.createElement("iframe");
+      iframe = document.createElement("iframe");
       iframe.src = "message_receiver.html";
       iframe.onload = function() {
         worker.postMessage({ script: testFile });
@@ -31,7 +34,7 @@ function serviceWorkerTestExec(testFile) {
       document.body.appendChild(iframe);
     }
 
-    navigator.serviceWorker.ready.then(setupSW);
-    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."});
+    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
+      .then(setupSW);
   });
 }

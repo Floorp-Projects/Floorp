@@ -8,10 +8,10 @@
 interface nsITreeView;
 interface nsITreeSelection;
 interface nsITreeColumn;
-interface nsITreeColumns;
 interface nsIScriptableRegion;
 
 webidl Element;
+webidl TreeColumns;
 
 /**
  * This interface cannot become builtinclass until bug 1438525 is fixed.
@@ -22,7 +22,7 @@ interface nsITreeBoxObject : nsISupports
   /**
    * Obtain the columns.
    */
-  readonly attribute nsITreeColumns columns;
+  readonly attribute TreeColumns columns;
 
   /**
    * The view that backs the tree and that supplies it with its data.

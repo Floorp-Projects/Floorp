@@ -13,26 +13,11 @@ config = {
     "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
-    "tools_repo": "https://hg.mozilla.org/build/tools",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
     "nightly_build": True,
-    "repos": [{
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools",
-    }, {
-        "vcs": "hg",
-        "repo": "https://hg.mozilla.org/try",
-        "revision": "%(revision)s",
-        "dest": "try",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
-        "clone_by_revision": True,
-        "clone_with_purge": True,
-    }],
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': "/builds/hg-shared",
@@ -46,7 +31,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": "try", # XXX Invalid
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android", # XXX Validate
 
     # Balrog

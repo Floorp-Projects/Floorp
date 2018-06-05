@@ -10,7 +10,6 @@
 #include "nsArrayUtils.h"
 #include "nsHashKeys.h"
 #include "nsISupportsPrimitives.h"
-#include "nsITreeColumns.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
@@ -23,6 +22,7 @@
 #include "nsUnicharUtils.h"
 #include "nsXPCOMCID.h"
 #include "nsString.h"
+#include "nsTreeColumns.h"
 #include "pkix/pkixtypes.h"
 
 using namespace mozilla;
