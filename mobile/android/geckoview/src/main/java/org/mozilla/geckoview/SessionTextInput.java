@@ -18,7 +18,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
@@ -32,9 +31,6 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 /**
  * {@code SessionTextInput} handles text input for {@code GeckoSession} through key events or input
  * methods. It is typically used to implement certain methods in {@link android.view.View}
@@ -44,101 +40,11 @@ import java.lang.annotation.RetentionPolicy;
  * For full functionality, {@code SessionTextInput} requires a {@link android.view.View} to be set
  * first through {@link #setView}. When a {@link android.view.View} is not set or set to null,
  * {@code SessionTextInput} will operate in a reduced functionality mode. See {@link
- * #onCreateInputConnection} and methods in {@link Delegate} for changes in behavior in this
- * viewless mode.
+ * #onCreateInputConnection} and methods in {@link GeckoSession.TextInputDelegate} for changes in
+ * behavior in this viewless mode.
  */
 public final class SessionTextInput {
     /* package */ static final String LOGTAG = "GeckoSessionTextInput";
-
-    /**
-     * Interface that SessionTextInput uses for performing operations such as opening and closing
-     * the software keyboard. If the delegate is not set, these operations are forwarded to the
-     * system {@link android.view.inputmethod.InputMethodManager} automatically.
-     */
-    public interface Delegate {
-        @Retention(RetentionPolicy.SOURCE)
-        @IntDef({RESTART_REASON_FOCUS, RESTART_REASON_BLUR, RESTART_REASON_CONTENT_CHANGE})
-        @interface RestartReason {}
-        /** Restarting input due to an input field gaining focus. */
-        int RESTART_REASON_FOCUS = 0;
-        /** Restarting input due to an input field losing focus. */
-        int RESTART_REASON_BLUR = 1;
-        /**
-         * Restarting input due to the content of the input field changing. For example, the
-         * input field type may have changed, or the current composition may have been committed
-         * outside of the input method.
-         */
-        int RESTART_REASON_CONTENT_CHANGE = 2;
-
-        /**
-         * Reset the input method, and discard any existing states such as the current composition
-         * or current autocompletion. Because the current focused editor may have changed, as
-         * part of the reset, a custom input method would normally call {@link
-         * #onCreateInputConnection} to update its knowledge of the focused editor. Note that
-         * {@code restartInput} should be used to detect changes in focus, rather than {@link
-         * #showSoftInput} or {@link #hideSoftInput}, because focus changes are not always
-         * accompanied by requests to show or hide the soft input. This method is always called,
-         * even in viewless mode.
-         *
-         * @param session Session instance.
-         * @param reason Reason for the reset.
-         */
-        void restartInput(@NonNull GeckoSession session, @RestartReason int reason);
-
-        /**
-         * Display the soft input. May be called consecutively, even if the soft input is
-         * already shown. This method is always called, even in viewless mode.
-         *
-         * @param session Session instance.
-         * @see #hideSoftInput
-         * */
-        void showSoftInput(@NonNull GeckoSession session);
-
-        /**
-         * Hide the soft input. May be called consecutively, even if the soft input is
-         * already hidden. This method is always called, even in viewless mode.
-         *
-         * @param session Session instance.
-         * @see #showSoftInput
-         * */
-        void hideSoftInput(@NonNull GeckoSession session);
-
-        /**
-         * Update the soft input on the current selection. This method is <i>not</i> called
-         * in viewless mode.
-         *
-         * @param session Session instance.
-         * @param selStart Start offset of the selection.
-         * @param selEnd End offset of the selection.
-         * @param compositionStart Composition start offset, or -1 if there is no composition.
-         * @param compositionEnd Composition end offset, or -1 if there is no composition.
-         */
-        void updateSelection(@NonNull GeckoSession session, int selStart, int selEnd,
-                             int compositionStart, int compositionEnd);
-
-        /**
-         * Update the soft input on the current extracted text, as requested through
-         * {@link android.view.inputmethod.InputConnection#getExtractedText}.
-         * Consequently, this method is <i>not</i> called in viewless mode.
-         *
-         * @param session Session instance.
-         * @param request The extract text request.
-         * @param text The extracted text.
-         */
-        void updateExtractedText(@NonNull GeckoSession session,
-                                 @NonNull ExtractedTextRequest request,
-                                 @NonNull ExtractedText text);
-
-        /**
-         * Update the cursor-anchor information as requested through
-         * {@link android.view.inputmethod.InputConnection#requestCursorUpdates}.
-         * Consequently, this method is <i>not</i> called in viewless mode.
-         *
-         * @param session Session instance.
-         * @param info Cursor-anchor information.
-         */
-        void updateCursorAnchorInfo(@NonNull GeckoSession session, @NonNull CursorAnchorInfo info);
-    }
 
     // Interface to access GeckoInputConnection from SessionTextInput.
     /* package */ interface InputConnectionClient {
@@ -196,7 +102,7 @@ public final class SessionTextInput {
         void updateCompositionRects(final RectF[] aRects);
     }
 
-    private static final class DefaultDelegate implements Delegate {
+    private static final class DefaultDelegate implements GeckoSession.TextInputDelegate {
         public static final DefaultDelegate INSTANCE = new DefaultDelegate();
 
         private InputMethodManager getInputMethodManager(@Nullable final View view) {
@@ -318,7 +224,7 @@ public final class SessionTextInput {
     private final GeckoEditable mEditable;
     private final GeckoEditableChild mEditableChild;
     private InputConnectionClient mInputConnection;
-    private Delegate mDelegate;
+    private GeckoSession.TextInputDelegate mDelegate;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
                                    final @NonNull NativeQueue queue) {
@@ -481,9 +387,9 @@ public final class SessionTextInput {
     /**
      * Set the current text input delegate.
      *
-     * @param delegate Delegate instance or null to restore to default.
+     * @param delegate TextInputDelegate instance or null to restore to default.
      */
-    public void setDelegate(@Nullable final Delegate delegate) {
+    public void setDelegate(@Nullable final GeckoSession.TextInputDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         mDelegate = delegate;
     }
@@ -491,9 +397,9 @@ public final class SessionTextInput {
     /**
      * Get the current text input delegate.
      *
-     * @return Delegate instance or a default instance if no delegate has been set.
+     * @return TextInputDelegate instance or a default instance if no delegate has been set.
      */
-    public Delegate getDelegate() {
+    public GeckoSession.TextInputDelegate getDelegate() {
         ThreadUtils.assertOnUiThread();
         if (mDelegate == null) {
             mDelegate = DefaultDelegate.INSTANCE;
