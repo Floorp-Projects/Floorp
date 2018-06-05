@@ -66,6 +66,18 @@ GetPIPNSSBundleString(const char* stringName, nsAString& result)
 }
 
 nsresult
+GetPIPNSSBundleString(const char* stringName, nsACString& result)
+{
+  nsAutoString tmp;
+  nsresult rv = GetPIPNSSBundleString(stringName, tmp);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  result.Assign(NS_ConvertUTF16toUTF8(tmp));
+  return NS_OK;
+}
+
+nsresult
 PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
                               uint32_t numParams, nsAString& result)
 {
