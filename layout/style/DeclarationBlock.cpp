@@ -19,8 +19,8 @@ DeclarationBlock::FromCssText(const nsAString& aCssText,
                               css::Loader* aLoader)
 {
   NS_ConvertUTF16toUTF8 value(aCssText);
-  RefPtr<RawServoDeclarationBlock>
-      raw = Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
+  RefPtr<RawServoDeclarationBlock> raw =
+      Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
   RefPtr<DeclarationBlock> decl = new DeclarationBlock(raw.forget());
   return decl.forget();
 }
