@@ -1,0 +1,18 @@
+<style>
+* {
+  -moz-binding: url(l)
+}
+</style>
+<script>
+o1 = document.createElement('span')
+o2 = document.createElement('span')
+document.documentElement.appendChild(o2)
+o2.appendChild(document.createElement('colgroup'))
+o3 = document.createComment('')
+o2.attachShadow({ mode: "open" }).append(o3)
+window.onload = () => {
+  o4 = document.createRange()
+  o4.setStartBefore(o3)
+  o4.insertNode(o1)
+}
+</script>

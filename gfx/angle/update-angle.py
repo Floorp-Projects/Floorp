@@ -13,6 +13,9 @@ Gecko with this script.
 
 This script leaves a record of the merge-base and cherry-picks that we pull into
 Gecko. (gfx/angle/cherries.log)
+
+ANGLE<->Chrome version mappings are here: https://omahaproxy.appspot.com/
+An easy choice is to grab Chrome's Beta's ANGLE branch.
 '''
 
 import json
@@ -22,6 +25,8 @@ import re
 import shutil
 import subprocess
 import sys
+
+from vendor_from_git import *
 
 REPO_DIR = Path.cwd()
 GECKO_ANGLE_DIR = Path(__file__).parent
@@ -37,40 +42,14 @@ COMMON_HEADER = [
 
 # --
 
-def print_now(*args):
-    print(*args)
-    sys.stdout.flush()
-
-
-def run_checked(*args, **kwargs):
-    print_now(' ', args)
-    return subprocess.run(args, check=True, shell=True, **kwargs)
-
-
 def sorted_items(x):
     for k in sorted(x.keys()):
         yield (k, x[k])
 
 # --
 
-CHERRIES_PATH = Path(GECKO_ANGLE_DIR, 'cherries.log')
-print_now('Logging cherries ({})'.format(CHERRIES_PATH))
-
 MERGE_BASE = sys.argv[1]
-MERGE_BASE = run_checked('git', 'merge-base', 'HEAD', MERGE_BASE,
-                         stdout=subprocess.PIPE).stdout.decode().strip()
-
-mb_info = run_checked('git', 'log', '{}~1..{}'.format(MERGE_BASE, MERGE_BASE),
-                      stdout=subprocess.PIPE).stdout
-cherries = run_checked('git', 'log', MERGE_BASE + '..', stdout=subprocess.PIPE).stdout
-
-with open(CHERRIES_PATH, 'wb') as f:
-    f.write(cherries)
-    f.write(b'\nCherries picked')
-    f.write(b'\n' + (b'=' * 80))
-    f.write(b'\nMerge base')
-    f.write(b'\n\n')
-    f.write(mb_info)
+record_cherry_picks(GECKO_ANGLE_DIR, MERGE_BASE)
 
 # --
 
@@ -78,7 +57,7 @@ print_now('Importing graph')
 
 shutil.rmtree(OUT_DIR, True)
 
-run_checked('gn', 'gen', OUT_DIR)
+run_checked('gn', 'gen', OUT_DIR, shell=True)
 
 GN_ARGS = '''
 # Build arguments go here.
@@ -94,7 +73,8 @@ with open(OUT_DIR + '/args.gn', 'wb') as f:
 
 # --
 
-p = run_checked('gn', 'desc', '--format=json', OUT_DIR, '*', stdout=subprocess.PIPE)
+p = run_checked('gn', 'desc', '--format=json', OUT_DIR, '*', stdout=subprocess.PIPE,
+                shell=True)
 
 print_now('Processing graph')
 descs = json.loads(p.stdout.decode())

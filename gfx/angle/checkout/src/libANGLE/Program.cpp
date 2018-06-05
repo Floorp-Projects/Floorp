@@ -205,7 +205,7 @@ bool IncludeSameArrayElement(const std::set<std::string> &nameSet, const std::st
     return false;
 }
 
-bool validateInterfaceBlocksCount(GLuint maxInterfaceBlocks,
+bool ValidateInterfaceBlocksCount(GLuint maxInterfaceBlocks,
                                   const std::vector<sh::InterfaceBlock> &interfaceBlocks,
                                   const std::string &errorMessage,
                                   InfoLog &infoLog)
@@ -213,7 +213,7 @@ bool validateInterfaceBlocksCount(GLuint maxInterfaceBlocks,
     GLuint blockCount = 0;
     for (const sh::InterfaceBlock &block : interfaceBlocks)
     {
-        if (block.staticUse || block.layout != sh::BLOCKLAYOUT_PACKED)
+        if (block.active || block.layout != sh::BLOCKLAYOUT_PACKED)
         {
             blockCount += (block.arraySize ? block.arraySize : 1);
             if (blockCount > maxInterfaceBlocks)
@@ -277,22 +277,13 @@ void InitUniformBlockLinker(const gl::Context *context,
                             const ProgramState &state,
                             UniformBlockLinker *blockLinker)
 {
-    if (state.getAttachedVertexShader())
+    for (ShaderType shaderType : AllShaderTypes())
     {
-        blockLinker->addShaderBlocks(GL_VERTEX_SHADER,
-                                     &state.getAttachedVertexShader()->getUniformBlocks(context));
-    }
-
-    if (state.getAttachedFragmentShader())
-    {
-        blockLinker->addShaderBlocks(GL_FRAGMENT_SHADER,
-                                     &state.getAttachedFragmentShader()->getUniformBlocks(context));
-    }
-
-    if (state.getAttachedComputeShader())
-    {
-        blockLinker->addShaderBlocks(GL_COMPUTE_SHADER,
-                                     &state.getAttachedComputeShader()->getUniformBlocks(context));
+        Shader *shader = state.getAttachedShader(shaderType);
+        if (shader)
+        {
+            blockLinker->addShaderBlocks(shaderType, &shader->getUniformBlocks(context));
+        }
     }
 }
 
@@ -300,23 +291,13 @@ void InitShaderStorageBlockLinker(const gl::Context *context,
                                   const ProgramState &state,
                                   ShaderStorageBlockLinker *blockLinker)
 {
-    if (state.getAttachedVertexShader())
+    for (ShaderType shaderType : AllShaderTypes())
     {
-        blockLinker->addShaderBlocks(
-            GL_VERTEX_SHADER, &state.getAttachedVertexShader()->getShaderStorageBlocks(context));
-    }
-
-    if (state.getAttachedFragmentShader())
-    {
-        blockLinker->addShaderBlocks(
-            GL_FRAGMENT_SHADER,
-            &state.getAttachedFragmentShader()->getShaderStorageBlocks(context));
-    }
-
-    if (state.getAttachedComputeShader())
-    {
-        blockLinker->addShaderBlocks(
-            GL_COMPUTE_SHADER, &state.getAttachedComputeShader()->getShaderStorageBlocks(context));
+        Shader *shader = state.getAttachedShader(shaderType);
+        if (shader != nullptr)
+        {
+            blockLinker->addShaderBlocks(shaderType, &shader->getShaderStorageBlocks(context));
+        }
     }
 }
 
@@ -394,6 +375,142 @@ const char *GetLinkMismatchErrorString(LinkMismatchError linkError)
             UNREACHABLE();
             return "";
     }
+}
+
+LinkMismatchError LinkValidateInterfaceBlockFields(const sh::InterfaceBlockField &blockField1,
+                                                   const sh::InterfaceBlockField &blockField2,
+                                                   bool webglCompatibility,
+                                                   std::string *mismatchedBlockFieldName)
+{
+    if (blockField1.name != blockField2.name)
+    {
+        return LinkMismatchError::FIELD_NAME_MISMATCH;
+    }
+
+    // If webgl, validate precision of UBO fields, otherwise don't.  See Khronos bug 10287.
+    LinkMismatchError linkError = Program::LinkValidateVariablesBase(
+        blockField1, blockField2, webglCompatibility, true, mismatchedBlockFieldName);
+    if (linkError != LinkMismatchError::NO_MISMATCH)
+    {
+        AddParentPrefix(blockField1.name, mismatchedBlockFieldName);
+        return linkError;
+    }
+
+    if (blockField1.isRowMajorLayout != blockField2.isRowMajorLayout)
+    {
+        AddParentPrefix(blockField1.name, mismatchedBlockFieldName);
+        return LinkMismatchError::MATRIX_PACKING_MISMATCH;
+    }
+
+    return LinkMismatchError::NO_MISMATCH;
+}
+
+LinkMismatchError AreMatchingInterfaceBlocks(const sh::InterfaceBlock &interfaceBlock1,
+                                             const sh::InterfaceBlock &interfaceBlock2,
+                                             bool webglCompatibility,
+                                             std::string *mismatchedBlockFieldName)
+{
+    // validate blocks for the same member types
+    if (interfaceBlock1.fields.size() != interfaceBlock2.fields.size())
+    {
+        return LinkMismatchError::FIELD_NUMBER_MISMATCH;
+    }
+    if (interfaceBlock1.arraySize != interfaceBlock2.arraySize)
+    {
+        return LinkMismatchError::ARRAY_SIZE_MISMATCH;
+    }
+    if (interfaceBlock1.layout != interfaceBlock2.layout ||
+        interfaceBlock1.binding != interfaceBlock2.binding)
+    {
+        return LinkMismatchError::LAYOUT_QUALIFIER_MISMATCH;
+    }
+    const unsigned int numBlockMembers = static_cast<unsigned int>(interfaceBlock1.fields.size());
+    for (unsigned int blockMemberIndex = 0; blockMemberIndex < numBlockMembers; blockMemberIndex++)
+    {
+        const sh::InterfaceBlockField &member1 = interfaceBlock1.fields[blockMemberIndex];
+        const sh::InterfaceBlockField &member2 = interfaceBlock2.fields[blockMemberIndex];
+
+        LinkMismatchError linkError = LinkValidateInterfaceBlockFields(
+            member1, member2, webglCompatibility, mismatchedBlockFieldName);
+        if (linkError != LinkMismatchError::NO_MISMATCH)
+        {
+            return linkError;
+        }
+    }
+    return LinkMismatchError::NO_MISMATCH;
+}
+
+bool ValidateGraphicsInterfaceBlocks(const std::vector<sh::InterfaceBlock> &vertexInterfaceBlocks,
+                                     const std::vector<sh::InterfaceBlock> &fragmentInterfaceBlocks,
+                                     InfoLog &infoLog,
+                                     bool webglCompatibility,
+                                     sh::BlockType blockType,
+                                     GLuint maxCombinedInterfaceBlocks)
+{
+    // Check that interface blocks defined in the vertex and fragment shaders are identical
+    typedef std::map<std::string, const sh::InterfaceBlock *> InterfaceBlockMap;
+    InterfaceBlockMap linkedInterfaceBlocks;
+    GLuint blockCount = 0;
+
+    for (const sh::InterfaceBlock &vertexInterfaceBlock : vertexInterfaceBlocks)
+    {
+        linkedInterfaceBlocks[vertexInterfaceBlock.name] = &vertexInterfaceBlock;
+        if (IsActiveInterfaceBlock(vertexInterfaceBlock))
+        {
+            blockCount += std::max(vertexInterfaceBlock.arraySize, 1u);
+        }
+    }
+
+    for (const sh::InterfaceBlock &fragmentInterfaceBlock : fragmentInterfaceBlocks)
+    {
+        auto entry = linkedInterfaceBlocks.find(fragmentInterfaceBlock.name);
+        if (entry != linkedInterfaceBlocks.end())
+        {
+            const sh::InterfaceBlock &vertexInterfaceBlock = *(entry->second);
+            std::string mismatchedBlockFieldName;
+            LinkMismatchError linkError =
+                AreMatchingInterfaceBlocks(vertexInterfaceBlock, fragmentInterfaceBlock,
+                                           webglCompatibility, &mismatchedBlockFieldName);
+            if (linkError != LinkMismatchError::NO_MISMATCH)
+            {
+                LogLinkMismatch(infoLog, fragmentInterfaceBlock.name, "interface block", linkError,
+                                mismatchedBlockFieldName, ShaderType::Vertex, ShaderType::Fragment);
+                return false;
+            }
+        }
+
+        // [OpenGL ES 3.1] Chapter 7.6.2 Page 105:
+        // If a uniform block is used by multiple shader stages, each such use counts separately
+        // against this combined limit.
+        // [OpenGL ES 3.1] Chapter 7.8 Page 111:
+        // If a shader storage block in a program is referenced by multiple shaders, each such
+        // reference counts separately against this combined limit.
+        if (IsActiveInterfaceBlock(fragmentInterfaceBlock))
+        {
+            blockCount += std::max(fragmentInterfaceBlock.arraySize, 1u);
+        }
+    }
+
+    if (blockCount > maxCombinedInterfaceBlocks)
+    {
+        switch (blockType)
+        {
+            case sh::BlockType::BLOCK_UNIFORM:
+                infoLog << "The sum of the number of active uniform blocks exceeds "
+                           "MAX_COMBINED_UNIFORM_BLOCKS ("
+                        << maxCombinedInterfaceBlocks << ").";
+                break;
+            case sh::BlockType::BLOCK_BUFFER:
+                infoLog << "The sum of the number of active shader storage blocks exceeds "
+                           "MAX_COMBINED_SHADER_STORAGE_BLOCKS ("
+                        << maxCombinedInterfaceBlocks << ").";
+                break;
+            default:
+                UNREACHABLE();
+        }
+        return false;
+    }
+    return true;
 }
 
 }  // anonymous namespace
@@ -489,8 +606,8 @@ void LogLinkMismatch(InfoLog &infoLog,
                      const char *variableType,
                      LinkMismatchError linkError,
                      const std::string &mismatchedStructOrBlockFieldName,
-                     GLenum shaderType1,
-                     GLenum shaderType2)
+                     ShaderType shaderType1,
+                     ShaderType shaderType2)
 {
     std::ostringstream stream;
     stream << GetLinkMismatchErrorString(linkError) << "s of " << variableType << " '"
@@ -507,6 +624,12 @@ void LogLinkMismatch(InfoLog &infoLog,
     infoLog << stream.str();
 }
 
+bool IsActiveInterfaceBlock(const sh::InterfaceBlock &interfaceBlock)
+{
+    // Only 'packed' blocks are allowed to be considered inactive.
+    return interfaceBlock.active || interfaceBlock.layout != sh::BLOCKLAYOUT_PACKED;
+}
+
 // VariableLocation implementation.
 VariableLocation::VariableLocation() : arrayIndex(0), index(kUnused), ignored(false)
 {
@@ -519,7 +642,7 @@ VariableLocation::VariableLocation(unsigned int arrayIndex, unsigned int index)
 }
 
 // SamplerBindings implementation.
-SamplerBinding::SamplerBinding(GLenum textureTypeIn, size_t elementCount, bool unreferenced)
+SamplerBinding::SamplerBinding(TextureType textureTypeIn, size_t elementCount, bool unreferenced)
     : textureType(textureTypeIn), boundTextureUnits(elementCount, 0), unreferenced(unreferenced)
 {
 }
@@ -606,6 +729,24 @@ ProgramState::~ProgramState()
 const std::string &ProgramState::getLabel()
 {
     return mLabel;
+}
+
+Shader *ProgramState::getAttachedShader(ShaderType shaderType) const
+{
+    switch (shaderType)
+    {
+        case ShaderType::Vertex:
+            return mAttachedVertexShader;
+        case ShaderType::Fragment:
+            return mAttachedFragmentShader;
+        case ShaderType::Compute:
+            return mAttachedComputeShader;
+        case ShaderType::Geometry:
+            return mAttachedGeometryShader;
+        default:
+            UNREACHABLE();
+            return nullptr;
+    }
 }
 
 GLuint ProgramState::getUniformIndexFromName(const std::string &name) const
@@ -704,7 +845,8 @@ void Program::onDestroy(const Context *context)
         mState.mAttachedGeometryShader = nullptr;
     }
 
-    mProgram->destroy(context);
+    // TODO(jmadill): Handle error in the Context.
+    ANGLE_SWALLOW_ERR(mProgram->destroy(context));
 
     ASSERT(!mState.mAttachedVertexShader && !mState.mAttachedFragmentShader &&
            !mState.mAttachedComputeShader && !mState.mAttachedGeometryShader);
@@ -727,28 +869,28 @@ void Program::attachShader(Shader *shader)
 {
     switch (shader->getType())
     {
-        case GL_VERTEX_SHADER:
+        case ShaderType::Vertex:
         {
             ASSERT(!mState.mAttachedVertexShader);
             mState.mAttachedVertexShader = shader;
             mState.mAttachedVertexShader->addRef();
             break;
         }
-        case GL_FRAGMENT_SHADER:
+        case ShaderType::Fragment:
         {
             ASSERT(!mState.mAttachedFragmentShader);
             mState.mAttachedFragmentShader = shader;
             mState.mAttachedFragmentShader->addRef();
             break;
         }
-        case GL_COMPUTE_SHADER:
+        case ShaderType::Compute:
         {
             ASSERT(!mState.mAttachedComputeShader);
             mState.mAttachedComputeShader = shader;
             mState.mAttachedComputeShader->addRef();
             break;
         }
-        case GL_GEOMETRY_SHADER_EXT:
+        case ShaderType::Geometry:
         {
             ASSERT(!mState.mAttachedGeometryShader);
             mState.mAttachedGeometryShader = shader;
@@ -764,28 +906,28 @@ void Program::detachShader(const Context *context, Shader *shader)
 {
     switch (shader->getType())
     {
-        case GL_VERTEX_SHADER:
+        case ShaderType::Vertex:
         {
             ASSERT(mState.mAttachedVertexShader == shader);
             shader->release(context);
             mState.mAttachedVertexShader = nullptr;
             break;
         }
-        case GL_FRAGMENT_SHADER:
+        case ShaderType::Fragment:
         {
             ASSERT(mState.mAttachedFragmentShader == shader);
             shader->release(context);
             mState.mAttachedFragmentShader = nullptr;
             break;
         }
-        case GL_COMPUTE_SHADER:
+        case ShaderType::Compute:
         {
             ASSERT(mState.mAttachedComputeShader == shader);
             shader->release(context);
             mState.mAttachedComputeShader = nullptr;
             break;
         }
-        case GL_GEOMETRY_SHADER_EXT:
+        case ShaderType::Geometry:
         {
             ASSERT(mState.mAttachedGeometryShader == shader);
             shader->release(context);
@@ -801,6 +943,11 @@ int Program::getAttachedShadersCount() const
 {
     return (mState.mAttachedVertexShader ? 1 : 0) + (mState.mAttachedFragmentShader ? 1 : 0) +
            (mState.mAttachedComputeShader ? 1 : 0) + (mState.mAttachedGeometryShader ? 1 : 0);
+}
+
+const Shader *Program::getAttachedShader(ShaderType shaderType) const
+{
+    return mState.getAttachedShader(shaderType);
 }
 
 void Program::bindAttributeLocation(GLuint index, const char *name)
@@ -824,7 +971,7 @@ BindingInfo Program::getFragmentInputBindingInfo(const Context *context, GLint i
     ret.type  = GL_NONE;
     ret.valid = false;
 
-    Shader *fragmentShader = mState.getAttachedFragmentShader();
+    Shader *fragmentShader = mState.getAttachedShader(ShaderType::Fragment);
     ASSERT(fragmentShader);
 
     // Find the actual fragment shader varying we're interested in
@@ -902,9 +1049,16 @@ Error Program::link(const gl::Context *context)
     double startTime = platform->currentTime(platform);
 
     unlink();
+    mInfoLog.reset();
+
+    // Validate we have properly attached shaders before checking the cache.
+    if (!linkValidateShaders(context, mInfoLog))
+    {
+        return NoError();
+    }
 
     ProgramHash programHash;
-    auto *cache = context->getMemoryProgramCache();
+    MemoryProgramCache *cache = context->getMemoryProgramCache();
     if (cache)
     {
         ANGLE_TRY_RESULT(cache->getProgram(context, this, &mState, &programHash), mLinked);
@@ -921,12 +1075,9 @@ Error Program::link(const gl::Context *context)
 
     // Cache load failed, fall through to normal linking.
     unlink();
-    mInfoLog.reset();
 
-    if (!linkValidateShaders(context, mInfoLog))
-    {
-        return NoError();
-    }
+    // Re-link shaders after the unlink call.
+    ASSERT(linkValidateShaders(context, mInfoLog));
 
     if (mState.mAttachedComputeShader)
     {
@@ -1063,22 +1214,46 @@ void Program::updateLinkedShaderStages()
 
     if (mState.mAttachedVertexShader)
     {
-        mState.mLinkedShaderStages.set(SHADER_VERTEX);
+        mState.mLinkedShaderStages.set(ShaderType::Vertex);
     }
 
     if (mState.mAttachedFragmentShader)
     {
-        mState.mLinkedShaderStages.set(SHADER_FRAGMENT);
+        mState.mLinkedShaderStages.set(ShaderType::Fragment);
     }
 
     if (mState.mAttachedComputeShader)
     {
-        mState.mLinkedShaderStages.set(SHADER_COMPUTE);
+        mState.mLinkedShaderStages.set(ShaderType::Compute);
     }
 
     if (mState.mAttachedGeometryShader)
     {
-        mState.mLinkedShaderStages.set(SHADER_GEOMETRY);
+        mState.mLinkedShaderStages.set(ShaderType::Geometry);
+    }
+}
+
+void ProgramState::updateTransformFeedbackStrides()
+{
+    if (mTransformFeedbackBufferMode == GL_INTERLEAVED_ATTRIBS)
+    {
+        mTransformFeedbackStrides.resize(1);
+        size_t totalSize = 0;
+        for (auto &varying : mLinkedTransformFeedbackVaryings)
+        {
+            totalSize += varying.size() * VariableExternalSize(varying.type);
+        }
+        mTransformFeedbackStrides[0] = static_cast<GLsizei>(totalSize);
+    }
+    else
+    {
+        mTransformFeedbackStrides.resize(mLinkedTransformFeedbackVaryings.size());
+        for (size_t i = 0; i < mLinkedTransformFeedbackVaryings.size(); i++)
+        {
+            auto &varying = mLinkedTransformFeedbackVaryings[i];
+            mTransformFeedbackStrides[i] =
+                static_cast<GLsizei>(varying.size() * VariableExternalSize(varying.type));
+        }
     }
 }
 
@@ -1113,11 +1288,18 @@ void Program::unlink()
     mValidated = false;
 
     mLinked = false;
+    mInfoLog.reset();
 }
 
 bool Program::isLinked() const
 {
     return mLinked;
+}
+
+bool Program::hasLinkedShaderStage(ShaderType shaderType) const
+{
+    ASSERT(shaderType != ShaderType::InvalidEnum);
+    return mState.mLinkedShaderStages[shaderType];
 }
 
 Error Program::loadBinary(const Context *context,
@@ -1837,11 +2019,12 @@ bool Program::validateSamplers(InfoLog *infoLog, const Caps &caps)
 
     if (mTextureUnitTypesCache.empty())
     {
-        mTextureUnitTypesCache.resize(caps.maxCombinedTextureImageUnits, GL_NONE);
+        mTextureUnitTypesCache.resize(caps.maxCombinedTextureImageUnits, TextureType::InvalidEnum);
     }
     else
     {
-        std::fill(mTextureUnitTypesCache.begin(), mTextureUnitTypesCache.end(), GL_NONE);
+        std::fill(mTextureUnitTypesCache.begin(), mTextureUnitTypesCache.end(),
+                  TextureType::InvalidEnum);
     }
 
     // if any two active samplers in a program are of different types, but refer to the same
@@ -1852,7 +2035,7 @@ bool Program::validateSamplers(InfoLog *infoLog, const Caps &caps)
         if (samplerBinding.unreferenced)
             continue;
 
-        GLenum textureType = samplerBinding.textureType;
+        TextureType textureType = samplerBinding.textureType;
 
         for (GLuint textureUnit : samplerBinding.boundTextureUnits)
         {
@@ -1869,7 +2052,7 @@ bool Program::validateSamplers(InfoLog *infoLog, const Caps &caps)
                 return false;
             }
 
-            if (mTextureUnitTypesCache[textureUnit] != GL_NONE)
+            if (mTextureUnitTypesCache[textureUnit] != TextureType::InvalidEnum)
             {
                 if (textureType != mTextureUnitTypesCache[textureUnit])
                 {
@@ -2102,7 +2285,7 @@ bool Program::linkValidateShaders(const Context *context, InfoLog &infoLog)
             infoLog << "Attached compute shader is not compiled.";
             return false;
         }
-        ASSERT(computeShader->getType() == GL_COMPUTE_SHADER);
+        ASSERT(computeShader->getType() == ShaderType::Compute);
 
         mState.mComputeShaderLocalSize = computeShader->getWorkGroupSize(context);
 
@@ -2121,14 +2304,14 @@ bool Program::linkValidateShaders(const Context *context, InfoLog &infoLog)
             infoLog << "No compiled fragment shader when at least one graphics shader is attached.";
             return false;
         }
-        ASSERT(fragmentShader->getType() == GL_FRAGMENT_SHADER);
+        ASSERT(fragmentShader->getType() == ShaderType::Fragment);
 
         if (!vertexShader || !vertexShader->isCompiled(context))
         {
             infoLog << "No compiled vertex shader when at least one graphics shader is attached.";
             return false;
         }
-        ASSERT(vertexShader->getType() == GL_VERTEX_SHADER);
+        ASSERT(vertexShader->getType() == ShaderType::Vertex);
 
         int vertexShaderVersion = vertexShader->getShaderVersion(context);
         if (fragmentShader->getShaderVersion(context) != vertexShaderVersion)
@@ -2160,7 +2343,7 @@ bool Program::linkValidateShaders(const Context *context, InfoLog &infoLog)
                 mInfoLog << "Geometry shader version does not match vertex shader version.";
                 return false;
             }
-            ASSERT(geometryShader->getType() == GL_GEOMETRY_SHADER_EXT);
+            ASSERT(geometryShader->getType() == ShaderType::Geometry);
 
             Optional<GLenum> inputPrimitive =
                 geometryShader->getGeometryShaderInputPrimitiveType(context);
@@ -2261,7 +2444,7 @@ bool Program::linkValidateShaderInterfaceMatching(const Context *context,
     const std::vector<sh::Varying> &outputVaryings = generatingShader->getOutputVaryings(context);
     const std::vector<sh::Varying> &inputVaryings  = consumingShader->getInputVaryings(context);
 
-    bool validateGeometryShaderInputs = consumingShader->getType() == GL_GEOMETRY_SHADER_EXT;
+    bool validateGeometryShaderInputs = consumingShader->getType() == ShaderType::Geometry;
 
     for (const sh::Varying &input : inputVaryings)
     {
@@ -2296,7 +2479,9 @@ bool Program::linkValidateShaderInterfaceMatching(const Context *context,
             }
         }
 
-        // We permit unmatched, unreferenced varyings
+        // We permit unmatched, unreferenced varyings. Note that this specifically depends on
+        // whether the input is statically used - a statically used input should fail this test even
+        // if it is not active. GLSL ES 3.00.6 section 4.3.10.
         if (!matched && input.staticUse)
         {
             infoLog << GetShaderTypeString(consumingShader->getType()) << " varying " << input.name
@@ -2425,7 +2610,7 @@ void Program::linkSamplerAndImageBindings()
     for (unsigned int samplerIndex : mState.mSamplerUniformRange)
     {
         const auto &samplerUniform = mState.mUniforms[samplerIndex];
-        GLenum textureType         = SamplerTypeToTextureType(samplerUniform.type);
+        TextureType textureType    = SamplerTypeToTextureType(samplerUniform.type);
         mState.mSamplerBindings.emplace_back(
             SamplerBinding(textureType, samplerUniform.getBasicTypeElementCount(), false));
     }
@@ -2466,48 +2651,31 @@ bool Program::linkAtomicCounterBuffers()
         }
     }
     // TODO(jie.a.chen@intel.com): Count each atomic counter buffer to validate against
-    // gl_Max[Vertex|Fragment|Compute|Combined]AtomicCounterBuffers.
+    // gl_Max[Vertex|Fragment|Compute|Geometry|Combined]AtomicCounterBuffers.
 
     return true;
-}
-
-LinkMismatchError Program::LinkValidateInterfaceBlockFields(
-    const sh::InterfaceBlockField &blockField1,
-    const sh::InterfaceBlockField &blockField2,
-    bool webglCompatibility,
-    std::string *mismatchedBlockFieldName)
-{
-    if (blockField1.name != blockField2.name)
-    {
-        return LinkMismatchError::FIELD_NAME_MISMATCH;
-    }
-
-    // If webgl, validate precision of UBO fields, otherwise don't.  See Khronos bug 10287.
-    LinkMismatchError linkError = LinkValidateVariablesBase(
-        blockField1, blockField2, webglCompatibility, true, mismatchedBlockFieldName);
-    if (linkError != LinkMismatchError::NO_MISMATCH)
-    {
-        AddParentPrefix(blockField1.name, mismatchedBlockFieldName);
-        return linkError;
-    }
-
-    if (blockField1.isRowMajorLayout != blockField2.isRowMajorLayout)
-    {
-        AddParentPrefix(blockField1.name, mismatchedBlockFieldName);
-        return LinkMismatchError::MATRIX_PACKING_MISMATCH;
-    }
-
-    return LinkMismatchError::NO_MISMATCH;
 }
 
 // Assigns locations to all attributes from the bindings and program locations.
 bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
 {
     const ContextState &data = context->getContextState();
-    auto *vertexShader       = mState.getAttachedVertexShader();
+    Shader *vertexShader     = mState.getAttachedShader(ShaderType::Vertex);
+
+    int shaderVersion = vertexShader->getShaderVersion(context);
 
     unsigned int usedLocations = 0;
-    mState.mAttributes         = vertexShader->getActiveAttributes(context);
+    if (shaderVersion >= 300)
+    {
+        // In GLSL ES 3.00.6, aliasing checks should be done with all declared attributes - see GLSL
+        // ES 3.00.6 section 12.46. Inactive attributes will be pruned after aliasing checks.
+        mState.mAttributes = vertexShader->getAllAttributes(context);
+    }
+    else
+    {
+        // In GLSL ES 1.00.17 we only do aliasing checks for active attributes.
+        mState.mAttributes = vertexShader->getActiveAttributes(context);
+    }
     GLuint maxAttribs          = data.getCaps().maxVertexAttributes;
 
     // TODO(jmadill): handle aliasing robustly
@@ -2519,7 +2687,7 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
 
     std::vector<sh::Attribute *> usedAttribMap(maxAttribs, nullptr);
 
-    // Link attributes that have a binding location
+    // Assign locations to attributes that have a binding location and check for attribute aliasing.
     for (sh::Attribute &attribute : mState.mAttributes)
     {
         // GLSL ES 3.10 January 2016 section 4.3.4: Vertex shader inputs can't be arrays or
@@ -2540,8 +2708,8 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
 
             if (static_cast<GLuint>(regs + attribute.location) > maxAttribs)
             {
-                infoLog << "Active attribute (" << attribute.name << ") at location "
-                        << attribute.location << " is too big to fit";
+                infoLog << "Attribute (" << attribute.name << ") at location " << attribute.location
+                        << " is too big to fit";
 
                 return false;
             }
@@ -2551,12 +2719,13 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
                 const int regLocation               = attribute.location + reg;
                 sh::ShaderVariable *linkedAttribute = usedAttribMap[regLocation];
 
-                // In GLSL 3.00, attribute aliasing produces a link error
-                // In GLSL 1.00, attribute aliasing is allowed, but ANGLE currently has a bug
+                // In GLSL ES 3.00.6 and in WebGL, attribute aliasing produces a link error.
+                // In non-WebGL GLSL ES 1.00.17, attribute aliasing is allowed with some
+                // restrictions - see GLSL ES 1.00.17 section 2.10.4, but ANGLE currently has a bug.
                 if (linkedAttribute)
                 {
                     // TODO(jmadill): fix aliasing on ES2
-                    // if (mProgram->getShaderVersion() >= 300)
+                    // if (shaderVersion >= 300 && !webgl)
                     {
                         infoLog << "Attribute '" << attribute.name << "' aliases attribute '"
                                 << linkedAttribute->name << "' at location " << regLocation;
@@ -2573,7 +2742,7 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
         }
     }
 
-    // Link attributes that don't have a binding location
+    // Assign locations to attributes that don't have a binding location.
     for (sh::Attribute &attribute : mState.mAttributes)
     {
         // Not set by glBindAttribLocation or by location layout qualifier
@@ -2584,7 +2753,7 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
 
             if (availableIndex == -1 || static_cast<GLuint>(availableIndex + regs) > maxAttribs)
             {
-                infoLog << "Too many active attributes (" << attribute.name << ")";
+                infoLog << "Too many attributes (" << attribute.name << ")";
                 return false;
             }
 
@@ -2595,8 +2764,27 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
     ASSERT(mState.mAttributesTypeMask.none());
     ASSERT(mState.mAttributesMask.none());
 
+    // Prune inactive attributes. This step is only needed on shaderVersion >= 300 since on earlier
+    // shader versions we're only processing active attributes to begin with.
+    if (shaderVersion >= 300)
+    {
+        for (auto attributeIter = mState.mAttributes.begin();
+             attributeIter != mState.mAttributes.end();)
+        {
+            if (attributeIter->active)
+            {
+                ++attributeIter;
+            }
+            else
+            {
+                attributeIter = mState.mAttributes.erase(attributeIter);
+            }
+        }
+    }
+
     for (const sh::Attribute &attribute : mState.mAttributes)
     {
+        ASSERT(attribute.active);
         ASSERT(attribute.location != -1);
         unsigned int regs = static_cast<unsigned int>(VariableRegisterCount(attribute.type));
 
@@ -2620,77 +2808,6 @@ bool Program::linkAttributes(const Context *context, InfoLog &infoLog)
     return true;
 }
 
-bool Program::ValidateGraphicsInterfaceBlocks(
-    const std::vector<sh::InterfaceBlock> &vertexInterfaceBlocks,
-    const std::vector<sh::InterfaceBlock> &fragmentInterfaceBlocks,
-    InfoLog &infoLog,
-    bool webglCompatibility,
-    sh::BlockType blockType,
-    GLuint maxCombinedInterfaceBlocks)
-{
-    // Check that interface blocks defined in the vertex and fragment shaders are identical
-    typedef std::map<std::string, const sh::InterfaceBlock *> InterfaceBlockMap;
-    InterfaceBlockMap linkedInterfaceBlocks;
-    GLuint blockCount = 0;
-
-    for (const sh::InterfaceBlock &vertexInterfaceBlock : vertexInterfaceBlocks)
-    {
-        linkedInterfaceBlocks[vertexInterfaceBlock.name] = &vertexInterfaceBlock;
-        if (vertexInterfaceBlock.staticUse || vertexInterfaceBlock.layout != sh::BLOCKLAYOUT_PACKED)
-        {
-            blockCount += std::max(vertexInterfaceBlock.arraySize, 1u);
-        }
-    }
-
-    for (const sh::InterfaceBlock &fragmentInterfaceBlock : fragmentInterfaceBlocks)
-    {
-        auto entry = linkedInterfaceBlocks.find(fragmentInterfaceBlock.name);
-        if (entry != linkedInterfaceBlocks.end())
-        {
-            const sh::InterfaceBlock &vertexInterfaceBlock = *(entry->second);
-            std::string mismatchedBlockFieldName;
-            LinkMismatchError linkError =
-                AreMatchingInterfaceBlocks(vertexInterfaceBlock, fragmentInterfaceBlock,
-                                           webglCompatibility, &mismatchedBlockFieldName);
-            if (linkError != LinkMismatchError::NO_MISMATCH)
-            {
-                LogLinkMismatch(infoLog, fragmentInterfaceBlock.name, "interface block", linkError,
-                                mismatchedBlockFieldName, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER);
-                return false;
-            }
-        }
-        else
-        {
-            if (fragmentInterfaceBlock.staticUse ||
-                fragmentInterfaceBlock.layout != sh::BLOCKLAYOUT_PACKED)
-            {
-                blockCount += std::max(fragmentInterfaceBlock.arraySize, 1u);
-            }
-        }
-    }
-
-    if (blockCount > maxCombinedInterfaceBlocks)
-    {
-        switch (blockType)
-        {
-            case sh::BlockType::BLOCK_UNIFORM:
-                infoLog << "The sum of the number of active uniform blocks exceeds "
-                           "MAX_COMBINED_UNIFORM_BLOCKS ("
-                        << maxCombinedInterfaceBlocks << ").";
-                break;
-            case sh::BlockType::BLOCK_BUFFER:
-                infoLog << "The sum of the number of active shader storage blocks exceeds "
-                           "MAX_COMBINED_SHADER_STORAGE_BLOCKS ("
-                        << maxCombinedInterfaceBlocks << ").";
-                break;
-            default:
-                UNREACHABLE();
-        }
-        return false;
-    }
-    return true;
-}
-
 bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
 {
     const auto &caps = context->getCaps();
@@ -2700,7 +2817,7 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         Shader &computeShader              = *mState.mAttachedComputeShader;
         const auto &computeUniformBlocks   = computeShader.getUniformBlocks(context);
 
-        if (!validateInterfaceBlocksCount(
+        if (!ValidateInterfaceBlocksCount(
                 caps.maxComputeUniformBlocks, computeUniformBlocks,
                 "Compute shader uniform block count exceeds GL_MAX_COMPUTE_UNIFORM_BLOCKS (",
                 infoLog))
@@ -2709,7 +2826,7 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         }
 
         const auto &computeShaderStorageBlocks = computeShader.getShaderStorageBlocks(context);
-        if (!validateInterfaceBlocksCount(caps.maxComputeShaderStorageBlocks,
+        if (!ValidateInterfaceBlocksCount(caps.maxComputeShaderStorageBlocks,
                                           computeShaderStorageBlocks,
                                           "Compute shader shader storage block count exceeds "
                                           "GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS (",
@@ -2726,13 +2843,13 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
     const auto &vertexUniformBlocks   = vertexShader.getUniformBlocks(context);
     const auto &fragmentUniformBlocks = fragmentShader.getUniformBlocks(context);
 
-    if (!validateInterfaceBlocksCount(
+    if (!ValidateInterfaceBlocksCount(
             caps.maxVertexUniformBlocks, vertexUniformBlocks,
             "Vertex shader uniform block count exceeds GL_MAX_VERTEX_UNIFORM_BLOCKS (", infoLog))
     {
         return false;
     }
-    if (!validateInterfaceBlocksCount(
+    if (!ValidateInterfaceBlocksCount(
             caps.maxFragmentUniformBlocks, fragmentUniformBlocks,
             "Fragment shader uniform block count exceeds GL_MAX_FRAGMENT_UNIFORM_BLOCKS (",
             infoLog))
@@ -2741,6 +2858,20 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         return false;
     }
 
+    Shader *geometryShader = mState.mAttachedGeometryShader;
+    if (geometryShader)
+    {
+        const auto &geometryUniformBlocks = geometryShader->getUniformBlocks(context);
+        if (!ValidateInterfaceBlocksCount(
+                caps.maxGeometryUniformBlocks, geometryUniformBlocks,
+                "Geometry shader uniform block count exceeds GL_MAX_GEOMETRY_UNIFORM_BLOCKS_EXT (",
+                infoLog))
+        {
+            return false;
+        }
+    }
+
+    // TODO(jiawei.shao@intel.com): validate geometry shader uniform blocks.
     bool webglCompatibility = context->getExtensions().webglCompatibility;
     if (!ValidateGraphicsInterfaceBlocks(vertexUniformBlocks, fragmentUniformBlocks, infoLog,
                                          webglCompatibility, sh::BlockType::BLOCK_UNIFORM,
@@ -2754,7 +2885,7 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         const auto &vertexShaderStorageBlocks   = vertexShader.getShaderStorageBlocks(context);
         const auto &fragmentShaderStorageBlocks = fragmentShader.getShaderStorageBlocks(context);
 
-        if (!validateInterfaceBlocksCount(caps.maxVertexShaderStorageBlocks,
+        if (!ValidateInterfaceBlocksCount(caps.maxVertexShaderStorageBlocks,
                                           vertexShaderStorageBlocks,
                                           "Vertex shader shader storage block count exceeds "
                                           "GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS (",
@@ -2762,7 +2893,7 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         {
             return false;
         }
-        if (!validateInterfaceBlocksCount(caps.maxFragmentShaderStorageBlocks,
+        if (!ValidateInterfaceBlocksCount(caps.maxFragmentShaderStorageBlocks,
                                           fragmentShaderStorageBlocks,
                                           "Fragment shader shader storage block count exceeds "
                                           "GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS (",
@@ -2772,6 +2903,21 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
             return false;
         }
 
+        if (geometryShader)
+        {
+            const auto &geometryShaderStorageBlocks =
+                geometryShader->getShaderStorageBlocks(context);
+            if (!ValidateInterfaceBlocksCount(caps.maxGeometryShaderStorageBlocks,
+                                              geometryShaderStorageBlocks,
+                                              "Geometry shader shader storage block count exceeds "
+                                              "GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS_EXT (",
+                                              infoLog))
+            {
+                return false;
+            }
+        }
+
+        // TODO(jiawei.shao@intel.com): validate geometry shader shader storage blocks.
         if (!ValidateGraphicsInterfaceBlocks(
                 vertexShaderStorageBlocks, fragmentShaderStorageBlocks, infoLog, webglCompatibility,
                 sh::BlockType::BLOCK_BUFFER, caps.maxCombinedShaderStorageBlocks))
@@ -2780,41 +2926,6 @@ bool Program::linkInterfaceBlocks(const Context *context, InfoLog &infoLog)
         }
     }
     return true;
-}
-
-LinkMismatchError Program::AreMatchingInterfaceBlocks(const sh::InterfaceBlock &interfaceBlock1,
-                                                      const sh::InterfaceBlock &interfaceBlock2,
-                                                      bool webglCompatibility,
-                                                      std::string *mismatchedBlockFieldName)
-{
-    // validate blocks for the same member types
-    if (interfaceBlock1.fields.size() != interfaceBlock2.fields.size())
-    {
-        return LinkMismatchError::FIELD_NUMBER_MISMATCH;
-    }
-    if (interfaceBlock1.arraySize != interfaceBlock2.arraySize)
-    {
-        return LinkMismatchError::ARRAY_SIZE_MISMATCH;
-    }
-    if (interfaceBlock1.layout != interfaceBlock2.layout ||
-        interfaceBlock1.binding != interfaceBlock2.binding)
-    {
-        return LinkMismatchError::LAYOUT_QUALIFIER_MISMATCH;
-    }
-    const unsigned int numBlockMembers = static_cast<unsigned int>(interfaceBlock1.fields.size());
-    for (unsigned int blockMemberIndex = 0; blockMemberIndex < numBlockMembers; blockMemberIndex++)
-    {
-        const sh::InterfaceBlockField &member1 = interfaceBlock1.fields[blockMemberIndex];
-        const sh::InterfaceBlockField &member2 = interfaceBlock2.fields[blockMemberIndex];
-
-        LinkMismatchError linkError = LinkValidateInterfaceBlockFields(
-            member1, member2, webglCompatibility, mismatchedBlockFieldName);
-        if (linkError != LinkMismatchError::NO_MISMATCH)
-        {
-            return linkError;
-        }
-    }
-    return LinkMismatchError::NO_MISMATCH;
 }
 
 LinkMismatchError Program::LinkValidateVariablesBase(const sh::ShaderVariable &variable1,
@@ -3108,6 +3219,9 @@ bool Program::linkValidateGlobalNames(const Context *context, InfoLog &infoLog) 
         mState.mAttachedVertexShader->getUniforms(context);
     const std::vector<sh::Uniform> &fragmentUniforms =
         mState.mAttachedFragmentShader->getUniforms(context);
+    const std::vector<sh::Uniform> *geometryUniforms =
+        (mState.mAttachedGeometryShader) ? &mState.mAttachedGeometryShader->getUniforms(context)
+                                         : nullptr;
     const std::vector<sh::Attribute> &attributes =
         mState.mAttachedVertexShader->getActiveAttributes(context);
     for (const auto &attrib : attributes)
@@ -3126,6 +3240,17 @@ bool Program::linkValidateGlobalNames(const Context *context, InfoLog &infoLog) 
             {
                 infoLog << "Name conflicts between a uniform and an attribute: " << attrib.name;
                 return false;
+            }
+        }
+        if (geometryUniforms)
+        {
+            for (const auto &uniform : *geometryUniforms)
+            {
+                if (uniform.name == attrib.name)
+                {
+                    infoLog << "Name conflicts between a uniform and an attribute: " << attrib.name;
+                    return false;
+                }
             }
         }
     }
@@ -3165,6 +3290,7 @@ void Program::gatherTransformFeedbackVaryings(const ProgramMergedVaryings &varyi
             }
         }
     }
+    mState.updateTransformFeedbackStrides();
 }
 
 ProgramMergedVaryings Program::getMergedVaryings(const Context *context) const
@@ -3428,7 +3554,7 @@ bool Program::samplesFromTexture(const gl::State &state, GLuint textureID) const
 
     for (const auto &binding : mState.mSamplerBindings)
     {
-        GLenum textureType = binding.textureType;
+        TextureType textureType = binding.textureType;
         for (const auto &unit : binding.boundTextureUnits)
         {
             GLenum programTextureID = state.getSamplerTextureId(unit, textureType);

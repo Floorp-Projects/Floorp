@@ -191,6 +191,7 @@ std::string ToString(const T &value)
 #define snprintf _snprintf
 #endif
 
+#define GL_A1RGB5_ANGLEX 0x6AC5
 #define GL_BGRX8_ANGLEX 0x6ABA
 #define GL_BGR565_ANGLEX 0x6ABB
 #define GL_BGRA4_ANGLEX 0x6ABC

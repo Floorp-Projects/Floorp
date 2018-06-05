@@ -2051,7 +2051,7 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitD
   widget->AddRef();
 
 #ifdef XP_WIN
-  if (DeviceManagerDx::Get()->CanUseDComp()) {
+  if (mOptions.UseWebRender() && DeviceManagerDx::Get()->CanUseDComp()) {
     widget->AsWindows()->EnsureCompositorWindow();
   }
 #endif

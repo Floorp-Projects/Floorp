@@ -97,8 +97,8 @@ class FramebufferD3D : public FramebufferImpl
 
     bool checkStatus(const gl::Context *context) const override;
 
-    void syncState(const gl::Context *context,
-                   const gl::Framebuffer::DirtyBits &dirtyBits) override;
+    gl::Error syncState(const gl::Context *context,
+                        const gl::Framebuffer::DirtyBits &dirtyBits) override;
 
     const gl::AttachmentList &getColorAttachmentsForRender(const gl::Context *context);
 

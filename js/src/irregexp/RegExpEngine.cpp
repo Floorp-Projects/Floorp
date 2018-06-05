@@ -30,6 +30,8 @@
 
 #include "irregexp/RegExpEngine.h"
 
+#include <utility>
+
 #include "gc/GC.h"
 #include "irregexp/NativeRegExpMacroAssembler.h"
 #include "irregexp/RegExpCharacters.h"

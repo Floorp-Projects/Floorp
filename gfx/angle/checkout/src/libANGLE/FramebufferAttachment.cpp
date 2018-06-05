@@ -182,32 +182,32 @@ void FramebufferAttachment::attach(const Context *context,
 
 GLuint FramebufferAttachment::getRedSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->redBits;
+    return getFormat().info->redBits;
 }
 
 GLuint FramebufferAttachment::getGreenSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->greenBits;
+    return getFormat().info->greenBits;
 }
 
 GLuint FramebufferAttachment::getBlueSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->blueBits;
+    return getFormat().info->blueBits;
 }
 
 GLuint FramebufferAttachment::getAlphaSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->alphaBits;
+    return getFormat().info->alphaBits;
 }
 
 GLuint FramebufferAttachment::getDepthSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->depthBits;
+    return getFormat().info->depthBits;
 }
 
 GLuint FramebufferAttachment::getStencilSize() const
 {
-    return getSize().empty() ? 0 : getFormat().info->stencilBits;
+    return getFormat().info->stencilBits;
 }
 
 GLenum FramebufferAttachment::getComponentType() const
@@ -231,12 +231,12 @@ const ImageIndex &FramebufferAttachment::getTextureImageIndex() const
     return mTarget.textureIndex();
 }
 
-GLenum FramebufferAttachment::cubeMapFace() const
+TextureTarget FramebufferAttachment::cubeMapFace() const
 {
     ASSERT(mType == GL_TEXTURE);
 
     const auto &index = mTarget.textureIndex();
-    return index.type == GL_TEXTURE_CUBE_MAP ? index.target : GL_NONE;
+    return index.type == TextureType::CubeMap ? index.target : TextureTarget::InvalidEnum;
 }
 
 GLint FramebufferAttachment::mipLevel() const
@@ -353,6 +353,16 @@ Error FramebufferAttachmentObject::getAttachmentRenderTarget(
     return getAttachmentImpl()->getAttachmentRenderTarget(context, binding, imageIndex, rtOut);
 }
 
+void FramebufferAttachmentObject::onStorageChange(const gl::Context *context) const
+{
+    return getAttachmentImpl()->onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
+}
+
+angle::Subject *FramebufferAttachmentObject::getSubject() const
+{
+    return getAttachmentImpl();
+}
+
 Error FramebufferAttachmentObject::initializeContents(const Context *context,
                                                       const ImageIndex &imageIndex)
 {
@@ -360,7 +370,7 @@ Error FramebufferAttachmentObject::initializeContents(const Context *context,
 
     // Because gl::Texture cannot support tracking individual layer dirtiness, we only handle
     // initializing entire mip levels for 2D array textures.
-    if (imageIndex.type == GL_TEXTURE_2D_ARRAY && imageIndex.hasLayer())
+    if (imageIndex.type == TextureType::_2DArray && imageIndex.hasLayer())
     {
         ImageIndex fullMipIndex = imageIndex;
         fullMipIndex.layerIndex = ImageIndex::ENTIRE_LEVEL;

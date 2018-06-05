@@ -38,6 +38,21 @@ VertexBinding &VertexBinding::operator=(VertexBinding &&binding)
     return *this;
 }
 
+void VertexBinding::setBuffer(const gl::Context *context, Buffer *bufferIn, bool containerIsBound)
+{
+    if (mBuffer.get() && containerIsBound)
+        mBuffer->onBindingChanged(false, BufferBinding::Array);
+    mBuffer.set(context, bufferIn);
+    if (mBuffer.get() && containerIsBound)
+        mBuffer->onBindingChanged(true, BufferBinding::Array);
+}
+
+void VertexBinding::onContainerBindingChanged(bool bound)
+{
+    if (mBuffer.get())
+        mBuffer->onBindingChanged(bound, BufferBinding::Array);
+}
+
 VertexAttribute::VertexAttribute(GLuint bindingIndex)
     : enabled(false),
       type(GL_FLOAT),

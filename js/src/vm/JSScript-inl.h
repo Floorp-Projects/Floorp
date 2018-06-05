@@ -9,6 +9,8 @@
 
 #include "vm/JSScript.h"
 
+#include <utility>
+
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
 #include "vm/EnvironmentObject.h"

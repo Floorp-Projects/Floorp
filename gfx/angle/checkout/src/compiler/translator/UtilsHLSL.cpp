@@ -15,6 +15,33 @@
 namespace sh
 {
 
+namespace
+{
+
+void DisambiguateFunctionNameForParameterType(const TType &paramType,
+                                              TString *disambiguatingStringOut)
+{
+    // Parameter types are only added to function names if they are ambiguous according to the
+    // native HLSL compiler. Other parameter types are not added to function names to avoid
+    // making function names longer.
+    if (paramType.getObjectSize() == 4 && paramType.getBasicType() == EbtFloat)
+    {
+        // Disambiguation is needed for float2x2 and float4 parameters. These are the only
+        // built-in types that HLSL thinks are identical. float2x3 and float3x2 are different
+        // types, for example.
+        *disambiguatingStringOut += "_" + TypeString(paramType);
+    }
+    else if (paramType.getBasicType() == EbtStruct)
+    {
+        // Disambiguation is needed for struct parameters, since HLSL thinks that structs with
+        // the same fields but a different name are identical.
+        ASSERT(paramType.getStruct()->symbolType() != SymbolType::Empty);
+        *disambiguatingStringOut += "_" + TypeString(paramType);
+    }
+}
+
+}  // anonymous namespace
+
 const char *SamplerString(const TBasicType type)
 {
     if (IsShadowSampler(type))
@@ -802,8 +829,10 @@ TString Decorate(const ImmutableString &string)
 
 TString DecorateVariableIfNeeded(const TVariable &variable)
 {
-    if (variable.symbolType() == SymbolType::AngleInternal)
+    if (variable.symbolType() == SymbolType::AngleInternal ||
+        variable.symbolType() == SymbolType::Empty)
     {
+        // Besides handling internal variables, we generate names for nameless parameters here.
         const ImmutableString &name = variable.name();
         // The name should not have a prefix reserved for user-defined variables or functions.
         ASSERT(!name.beginsWith("f_"));
@@ -1025,29 +1054,26 @@ const char *QualifierString(TQualifier qualifier)
     return "";
 }
 
-TString DisambiguateFunctionName(const TIntermSequence *parameters)
+TString DisambiguateFunctionName(const TFunction *func)
 {
     TString disambiguatingString;
-    for (auto parameter : *parameters)
+    size_t paramCount = func->getParamCount();
+    for (size_t i = 0; i < paramCount; ++i)
     {
-        const TType &paramType = parameter->getAsTyped()->getType();
-        // Parameter types are only added to function names if they are ambiguous according to the
-        // native HLSL compiler. Other parameter types are not added to function names to avoid
-        // making function names longer.
-        if (paramType.getObjectSize() == 4 && paramType.getBasicType() == EbtFloat)
-        {
-            // Disambiguation is needed for float2x2 and float4 parameters. These are the only
-            // built-in types that HLSL thinks are identical. float2x3 and float3x2 are different
-            // types, for example.
-            disambiguatingString += "_" + TypeString(paramType);
-        }
-        else if (paramType.getBasicType() == EbtStruct)
-        {
-            // Disambiguation is needed for struct parameters, since HLSL thinks that structs with
-            // the same fields but a different name are identical.
-            ASSERT(paramType.getStruct()->symbolType() != SymbolType::Empty);
-            disambiguatingString += "_" + TypeString(paramType);
-        }
+        DisambiguateFunctionNameForParameterType(func->getParam(i)->getType(),
+                                                 &disambiguatingString);
+    }
+    return disambiguatingString;
+}
+
+TString DisambiguateFunctionName(const TIntermSequence *args)
+{
+    TString disambiguatingString;
+    for (TIntermNode *arg : *args)
+    {
+        ASSERT(arg->getAsTyped());
+        DisambiguateFunctionNameForParameterType(arg->getAsTyped()->getType(),
+                                                 &disambiguatingString);
     }
     return disambiguatingString;
 }

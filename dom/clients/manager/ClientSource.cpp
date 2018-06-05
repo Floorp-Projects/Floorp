@@ -640,7 +640,7 @@ ClientSource::Claim(const ClientClaimArgs& aArgs)
   auto holder =
     MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(innerWindow->AsGlobal());
 
-  RefPtr<GenericPromise> p = swm->MaybeClaimClient(doc, swd);
+  RefPtr<GenericPromise> p = swm->MaybeClaimClient(mClientInfo, swd);
   p->Then(mEventTarget, __func__,
     [outerPromise, holder] (bool aResult) {
       holder->Complete();

@@ -1264,7 +1264,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     inUnsafeRegion(0),
     generationalDisabled(0),
     compactingDisabledCount(0),
-    keepAtoms(0),
     suppressProfilerSampling(false),
     tempLifoAlloc_((size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     debuggerMutations(0),

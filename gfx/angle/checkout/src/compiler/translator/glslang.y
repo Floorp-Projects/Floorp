@@ -650,7 +650,7 @@ function_header_with_parameters
         $$ = $1;
         if ($2.type->getBasicType() != EbtVoid)
         {
-            $1->addParameter($2.turnToConst());
+            $1->addParameter($2.createVariable(&context->symbolTable));
         }
     }
     | function_header_with_parameters COMMA parameter_declaration {
@@ -664,7 +664,7 @@ function_header_with_parameters
         }
         else
         {
-            $1->addParameter($3.turnToConst());
+            $1->addParameter($3.createVariable(&context->symbolTable));
         }
     }
     ;
@@ -1304,11 +1304,11 @@ compound_statement_no_new_scope
 statement_list
     : statement {
         $$ = new TIntermBlock();
-        $$->appendStatement($1);
+        context->appendStatement($$, $1);
     }
     | statement_list statement {
         $$ = $1;
-        $$->appendStatement($2);
+        context->appendStatement($$, $2);
     }
     ;
 

@@ -15,6 +15,8 @@
 #include <bitset>
 #include <cstddef>
 
+#include <EGL/egl.h>
+
 #include "common/bitset_utils.h"
 
 namespace angle
@@ -130,5 +132,57 @@ template <typename E>
 using PackedEnumBitSet = BitSetT<EnumSize<E>(), uint32_t, E>;
 
 }  // namespace angle
+
+namespace gl
+{
+
+TextureType TextureTargetToType(TextureTarget target);
+TextureTarget NonCubeTextureTypeToTarget(TextureType type);
+
+TextureTarget CubeFaceIndexToTextureTarget(size_t face);
+size_t CubeMapTextureTargetToFaceIndex(TextureTarget target);
+
+constexpr TextureTarget kCubeMapTextureTargetMin = TextureTarget::CubeMapPositiveX;
+constexpr TextureTarget kCubeMapTextureTargetMax = TextureTarget::CubeMapNegativeZ;
+constexpr TextureTarget kAfterCubeMapTextureTargetMax =
+    static_cast<TextureTarget>(static_cast<uint8_t>(kCubeMapTextureTargetMax) + 1);
+struct AllCubeFaceTextureTargets
+{
+    angle::EnumIterator<TextureTarget> begin() const { return kCubeMapTextureTargetMin; }
+    angle::EnumIterator<TextureTarget> end() const { return kAfterCubeMapTextureTargetMax; }
+};
+
+constexpr ShaderType kGLES2ShaderTypeMin = ShaderType::Vertex;
+constexpr ShaderType kGLES2ShaderTypeMax = ShaderType::Fragment;
+constexpr ShaderType kAfterGLES2ShaderTypeMax =
+    static_cast<ShaderType>(static_cast<uint8_t>(kGLES2ShaderTypeMax) + 1);
+struct AllGLES2ShaderTypes
+{
+    angle::EnumIterator<ShaderType> begin() const { return kGLES2ShaderTypeMin; }
+    angle::EnumIterator<ShaderType> end() const { return kAfterGLES2ShaderTypeMax; }
+};
+
+constexpr ShaderType kShaderTypeMin = ShaderType::Vertex;
+constexpr ShaderType kShaderTypeMax = ShaderType::Compute;
+constexpr ShaderType kAfterShaderTypeMax =
+    static_cast<ShaderType>(static_cast<uint8_t>(kShaderTypeMax) + 1);
+struct AllShaderTypes
+{
+    angle::EnumIterator<ShaderType> begin() const { return kShaderTypeMin; }
+    angle::EnumIterator<ShaderType> end() const { return kAfterShaderTypeMax; }
+};
+
+using ShaderBitSet = angle::PackedEnumBitSet<ShaderType>;
+
+TextureType SamplerTypeToTextureType(GLenum samplerType);
+
+}  // namespace gl
+
+namespace egl_gl
+{
+gl::TextureTarget EGLCubeMapTargetToCubeMapTarget(EGLenum eglTarget);
+gl::TextureTarget EGLImageTargetToTextureTarget(EGLenum eglTarget);
+gl::TextureType EGLTextureTargetToTextureType(EGLenum eglTarget);
+}  // namespace egl_gl
 
 #endif  // LIBANGLE_PACKEDGLENUMS_H_

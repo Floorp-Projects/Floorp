@@ -92,7 +92,7 @@ gl::Error VertexBufferInterface::setBufferSize(unsigned int size)
 gl::ErrorOrResult<unsigned int> VertexBufferInterface::getSpaceRequired(
     const gl::VertexAttribute &attrib,
     const gl::VertexBinding &binding,
-    GLsizei count,
+    size_t count,
     GLsizei instances) const
 {
     unsigned int spaceRequired = 0;
@@ -155,7 +155,7 @@ gl::Error StreamingVertexBufferInterface::storeDynamicAttribute(const gl::Vertex
                                                                 const gl::VertexBinding &binding,
                                                                 GLenum currentValueType,
                                                                 GLint start,
-                                                                GLsizei count,
+                                                                size_t count,
                                                                 GLsizei instances,
                                                                 unsigned int *outStreamOffset,
                                                                 const uint8_t *sourceData)
@@ -190,7 +190,7 @@ gl::Error StreamingVertexBufferInterface::storeDynamicAttribute(const gl::Vertex
 
 gl::Error StreamingVertexBufferInterface::reserveVertexSpace(const gl::VertexAttribute &attrib,
                                                              const gl::VertexBinding &binding,
-                                                             GLsizei count,
+                                                             size_t count,
                                                              GLsizei instances)
 {
     unsigned int requiredSpace = 0;

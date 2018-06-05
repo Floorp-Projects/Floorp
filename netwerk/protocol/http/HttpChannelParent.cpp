@@ -879,8 +879,9 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
 }
 
 mozilla::ipc::IPCResult
-HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
+HttpChannelParent::RecvRedirect2Verify(const nsresult& aResult,
                                        const RequestHeaderTuples& changedHeaders,
+                                       const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
                                        const uint32_t& loadFlags,
                                        const uint32_t& referrerPolicy,
                                        const OptionalURIParams& aReferrerURI,
@@ -889,8 +890,15 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const bool& aChooseAppcache)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
-       this, static_cast<uint32_t>(result)));
+       this, static_cast<uint32_t>(aResult)));
+
+  // Result from the child.  If something fails here, we might overwrite a
+  // success with a further failure.
+  nsresult result = aResult;
+
+  // Local results.
   nsresult rv;
+
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHttpChannel> newHttpChannel =
         do_QueryInterface(mRedirectChannel);
@@ -936,6 +944,13 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         do_QueryInterface(newHttpChannel);
       if (appCacheChannel) {
         appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
+      }
+
+      nsCOMPtr<nsILoadInfo> newLoadInfo;
+      Unused << newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+      rv = MergeChildLoadInfoForwarder(aLoadInfoForwarder, newLoadInfo);
+      if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
+        result = rv;
       }
     }
   }
@@ -1445,21 +1460,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   ParentLoadInfoForwarderArgs loadInfoForwarderArg;
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
 
-  // Maybe pass back the ServiceWorkerDescriptor controller for this channel.
-  // For subresource loads the controller is already known when the channel
-  // is first open and comes down to us via the LoadInfo.  For non-subresource
-  // loads, however, the controller is selected based on the URL by the
-  // ServiceWorkerManager.  In these cases we need to communicate the controller
-  // back to the child process so the resulting window/worker can set its
-  // navigator.serviceWorker.controller correctly immediately.
-  OptionalIPCServiceWorkerDescriptor ipcController = void_t();
-  if (ServiceWorkerParentInterceptEnabled() && loadInfo) {
-    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
-    if (controller.isSome()) {
-      ipcController = controller.ref().ToIPC();
-    }
-  }
-
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
   rv = NS_OK;
@@ -1479,7 +1479,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           cacheKey,
                           altDataType,
                           altDataLen,
-                          ipcController,
                           applyConversion))
   {
     rv = NS_ERROR_UNEXPECTED;

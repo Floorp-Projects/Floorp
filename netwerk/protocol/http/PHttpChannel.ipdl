@@ -44,6 +44,7 @@ parent:
 
   // Reports approval/veto of redirect by child process redirect observers
   async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
+                        ChildLoadInfoForwarderArgs loadInfoForwarder,
                         uint32_t loadFlags, uint32_t referrerPolicy,
                         OptionalURIParams referrerUri,
                         OptionalURIParams apiRedirectTo,
@@ -111,7 +112,6 @@ child:
                        uint32_t            cacheKey,
                        nsCString           altDataType,
                        int64_t             altDataLength,
-                       OptionalIPCServiceWorkerDescriptor controller,
                        bool                applyConversion);
 
   // Used to cancel child channel if we hit errors during creating and

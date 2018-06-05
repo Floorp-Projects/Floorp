@@ -20,15 +20,18 @@ class TSymbolUniqueId
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE();
-    explicit TSymbolUniqueId(TSymbolTable *symbolTable);
     explicit TSymbolUniqueId(const TSymbol &symbol);
     constexpr TSymbolUniqueId(const TSymbolUniqueId &) = default;
     TSymbolUniqueId &operator=(const TSymbolUniqueId &);
     bool operator==(const TSymbolUniqueId &) const;
 
-    int get() const;
+    constexpr int get() const { return mId; }
 
   private:
+    friend class TSymbolTable;
+    explicit TSymbolUniqueId(TSymbolTable *symbolTable);
+
+    friend class BuiltInId;
     constexpr TSymbolUniqueId(int staticId) : mId(staticId) {}
 
     int mId;

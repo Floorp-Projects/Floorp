@@ -29,7 +29,6 @@ void CollectVariables(TIntermBlock *root,
                       std::vector<InterfaceBlock> *inBlocks,
                       ShHashFunction64 hashFunction,
                       TSymbolTable *symbolTable,
-                      int shaderVersion,
                       GLenum shaderType,
                       const TExtensionBehavior &extensionBehavior);
 }

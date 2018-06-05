@@ -15,13 +15,16 @@ namespace angle
 template <typename T>
 struct Color
 {
+    Color();
+    Color(T r, T g, T b, T a);
+
+    const T *data() const { return &red; }
+    T *ptr() { return &red; }
+
     T red;
     T green;
     T blue;
     T alpha;
-
-    Color();
-    Color(T r, T g, T b, T a);
 };
 
 template <typename T>

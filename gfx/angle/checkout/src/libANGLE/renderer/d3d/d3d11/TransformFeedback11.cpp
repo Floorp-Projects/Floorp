@@ -46,10 +46,12 @@ void TransformFeedback11::begin(GLenum primitiveMode)
             mBufferOffsets[bindingIdx] = 0;
         }
     }
+    mRenderer->getStateManager()->invalidateTransformFeedback();
 }
 
 void TransformFeedback11::end()
 {
+    mRenderer->getStateManager()->invalidateTransformFeedback();
     if (mRenderer->getWorkarounds().flushAfterEndingTransformFeedback)
     {
         mRenderer->getDeviceContext()->Flush();
@@ -58,14 +60,17 @@ void TransformFeedback11::end()
 
 void TransformFeedback11::pause()
 {
+    mRenderer->getStateManager()->invalidateTransformFeedback();
 }
 
 void TransformFeedback11::resume()
 {
+    mRenderer->getStateManager()->invalidateTransformFeedback();
 }
 
 void TransformFeedback11::bindGenericBuffer(const gl::BindingPointer<gl::Buffer> &binding)
 {
+    mRenderer->getStateManager()->invalidateTransformFeedback();
 }
 
 void TransformFeedback11::bindIndexedBuffer(size_t index,
@@ -73,6 +78,7 @@ void TransformFeedback11::bindIndexedBuffer(size_t index,
 {
     mIsDirty              = true;
     mBufferOffsets[index] = static_cast<UINT>(binding.getOffset());
+    mRenderer->getStateManager()->invalidateTransformFeedback();
 }
 
 void TransformFeedback11::onApply()

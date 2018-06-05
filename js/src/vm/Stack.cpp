@@ -6,6 +6,8 @@
 
 #include "vm/Stack-inl.h"
 
+#include <utility>
+
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"

@@ -33,6 +33,7 @@
 #include "mozilla/FloatingPoint.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "jsapi.h"
 #include "jsdate.h"

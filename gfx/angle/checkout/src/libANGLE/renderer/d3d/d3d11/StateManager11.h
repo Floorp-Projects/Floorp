@@ -127,11 +127,9 @@ class ShaderConstants11 : angle::NonCopyable
     bool updateSamplerMetadata(SamplerMetadata *data, const gl::Texture &texture);
 
     Vertex mVertex;
-    bool mVertexDirty;
     Pixel mPixel;
-    bool mPixelDirty;
     Compute mCompute;
-    bool mComputeDirty;
+    gl::ShaderBitSet mShaderConstantsDirty;
 
     std::vector<SamplerMetadata> mSamplerMetadataVS;
     int mNumActiveVSSamplers;
@@ -139,35 +137,6 @@ class ShaderConstants11 : angle::NonCopyable
     int mNumActivePSSamplers;
     std::vector<SamplerMetadata> mSamplerMetadataCS;
     int mNumActiveCSSamplers;
-};
-
-class DrawCallVertexParams final : angle::NonCopyable
-{
-  public:
-    // Use when in a drawArrays call.
-    DrawCallVertexParams(GLint firstVertex, GLsizei vertexCount, GLsizei instances);
-
-    // Use when in a drawElements call.
-    DrawCallVertexParams(bool firstVertexDefinitelyZero,
-                         const gl::HasIndexRange &hasIndexRange,
-                         GLint baseVertex,
-                         GLsizei instances);
-
-    // It should be possible to also use an overload to handle the 'slow' indirect draw path.
-    // TODO(jmadill): Indirect draw slow path overload.
-
-    GLint firstVertex() const;
-    GLsizei vertexCount() const;
-    GLsizei instances() const;
-
-  private:
-    void ensureResolved() const;
-
-    mutable const gl::HasIndexRange *mHasIndexRange;
-    mutable Optional<GLint> mFirstVertex;
-    mutable GLsizei mVertexCount;
-    GLsizei mInstances;
-    GLint mBaseVertex;
 };
 
 class StateManager11 final : angle::NonCopyable
@@ -212,11 +181,17 @@ class StateManager11 final : angle::NonCopyable
     // Called by the Framebuffer11 and VertexArray11.
     void invalidateShaders();
 
-    // Called by VertexArray11 to trigger attribute translation.
-    void invalidateVertexAttributeTranslation();
-
     // Called by the Program on Uniform Buffer change. Also called internally.
     void invalidateProgramUniformBuffers();
+
+    // Called by TransformFeedback11.
+    void invalidateTransformFeedback();
+
+    // Called by VertexArray11.
+    void invalidateInputLayout();
+
+    // Called by VertexArray11 element array buffer sync.
+    void invalidateIndexBuffer();
 
     void setRenderTarget(ID3D11RenderTargetView *rtv, ID3D11DepthStencilView *dsv);
     void setRenderTargets(ID3D11RenderTargetView **rtvs, UINT numRtvs, ID3D11DepthStencilView *dsv);
@@ -227,17 +202,9 @@ class StateManager11 final : angle::NonCopyable
 
     void setInputLayout(const d3d11::InputLayout *inputLayout);
 
-    // TODO(jmadill): Migrate to d3d11::Buffer.
-    bool queueVertexBufferChange(size_t bufferIndex,
-                                 ID3D11Buffer *buffer,
-                                 UINT stride,
-                                 UINT offset);
-    bool queueVertexOffsetChange(size_t bufferIndex, UINT offsetOnly);
-    void applyVertexBufferChanges();
-
     void setSingleVertexBuffer(const d3d11::Buffer *buffer, UINT stride, UINT offset);
 
-    gl::Error updateState(const gl::Context *context, GLenum drawMode);
+    gl::Error updateState(const gl::Context *context, const gl::DrawCallParams &drawCallParams);
 
     void setShaderResourceShared(gl::ShaderType shaderType,
                                  UINT resourceSlot,
@@ -266,19 +233,6 @@ class StateManager11 final : angle::NonCopyable
     void setSimpleScissorRect(const gl::Rectangle &glRect);
     void setScissorRectD3D(const D3D11_RECT &d3dRect);
 
-    // Not handled by an internal dirty bit because of the extra draw parameters.
-    gl::Error applyVertexBuffer(const gl::Context *context,
-                                GLenum mode,
-                                const DrawCallVertexParams &vertexParams,
-                                bool isIndexedRendering);
-
-    gl::Error applyIndexBuffer(const gl::Context *context,
-                               const void *indices,
-                               GLsizei count,
-                               GLenum type,
-                               const gl::HasIndexRange &lazyIndexRange,
-                               bool usePrimitiveRestartWorkaround);
-
     void setIndexBuffer(ID3D11Buffer *buffer, DXGI_FORMAT indexFormat, unsigned int offset);
 
     gl::Error updateVertexOffsetsForPointSpritesEmulation(GLint startVertex,
@@ -289,6 +243,9 @@ class StateManager11 final : angle::NonCopyable
 
     // Only used in testing.
     InputLayoutCache *getInputLayoutCache() { return &mInputLayoutCache; }
+
+    GLsizei getCurrentMinimumDrawCount() const { return mCurrentMinimumDrawCount; }
+    VertexDataManager *getVertexDataManager() { return &mVertexDataManager; }
 
   private:
     template <typename SRVType>
@@ -315,7 +272,8 @@ class StateManager11 final : angle::NonCopyable
 
     gl::Error syncDepthStencilState(const gl::State &glState);
 
-    gl::Error syncRasterizerState(const gl::Context *context, bool pointDrawMode);
+    gl::Error syncRasterizerState(const gl::Context *context,
+                                  const gl::DrawCallParams &drawCallParams);
 
     void syncScissorRectangle(const gl::Rectangle &scissor, bool enabled);
 
@@ -372,6 +330,27 @@ class StateManager11 final : angle::NonCopyable
     void processFramebufferInvalidation(const gl::Context *context);
 
     bool syncIndexBuffer(ID3D11Buffer *buffer, DXGI_FORMAT indexFormat, unsigned int offset);
+    gl::Error syncVertexBuffersAndInputLayout(const gl::Context *context,
+                                              const gl::DrawCallParams &vertexParams);
+
+    bool setInputLayoutInternal(const d3d11::InputLayout *inputLayout);
+
+    gl::Error applyVertexBuffers(const gl::Context *context,
+                                 const gl::DrawCallParams &drawCallParams);
+    // TODO(jmadill): Migrate to d3d11::Buffer.
+    bool queueVertexBufferChange(size_t bufferIndex,
+                                 ID3D11Buffer *buffer,
+                                 UINT stride,
+                                 UINT offset);
+    void applyVertexBufferChanges();
+    bool setPrimitiveTopologyInternal(D3D11_PRIMITIVE_TOPOLOGY primitiveTopology);
+    void syncPrimitiveTopology(const gl::State &glState,
+                               ProgramD3D *programD3D,
+                               GLenum currentDrawMode);
+
+    // Not handled by an internal dirty bit because it isn't synced on drawArrays calls.
+    gl::Error applyIndexBuffer(const gl::Context *context,
+                               const gl::DrawCallParams &drawCallParams);
 
     enum DirtyBitType
     {
@@ -387,6 +366,9 @@ class StateManager11 final : angle::NonCopyable
         DIRTY_BIT_PROGRAM_UNIFORM_BUFFERS,
         DIRTY_BIT_SHADERS,
         DIRTY_BIT_CURRENT_VALUE_ATTRIBS,
+        DIRTY_BIT_TRANSFORM_FEEDBACK,
+        DIRTY_BIT_VERTEX_BUFFERS_AND_INPUT_LAYOUT,
+        DIRTY_BIT_PRIMITIVE_TOPOLOGY,
         DIRTY_BIT_INVALID,
         DIRTY_BIT_MAX = DIRTY_BIT_INVALID,
     };
@@ -494,8 +476,6 @@ class StateManager11 final : angle::NonCopyable
 
     // Current applied input layout.
     ResourceSerial mCurrentInputLayout;
-    bool mInputLayoutIsDirty;
-    bool mVertexAttribsNeedTranslation;
 
     // Current applied vertex states.
     // TODO(jmadill): Figure out how to use ResourceSerial here.
@@ -506,6 +486,8 @@ class StateManager11 final : angle::NonCopyable
 
     // Currently applied primitive topology
     D3D11_PRIMITIVE_TOPOLOGY mCurrentPrimitiveTopology;
+    GLenum mLastAppliedDrawMode;
+    GLsizei mCurrentMinimumDrawCount;
 
     // Currently applied shaders
     ResourceSerial mAppliedVertexShader;
@@ -550,6 +532,9 @@ class StateManager11 final : angle::NonCopyable
     ResourceSerial mCurrentComputeConstantBuffer;
     ResourceSerial mCurrentGeometryConstantBuffer;
 
+    d3d11::Buffer mPointSpriteVertexBuffer;
+    d3d11::Buffer mPointSpriteIndexBuffer;
+
     template <typename T>
     using VertexConstantBufferArray =
         std::array<T, gl::IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS>;
@@ -566,11 +551,11 @@ class StateManager11 final : angle::NonCopyable
     FragmentConstantBufferArray<GLintptr> mCurrentConstantBufferPSOffset;
     FragmentConstantBufferArray<GLsizeiptr> mCurrentConstantBufferPSSize;
 
-    class OnConstantBufferDirtyReceiver : public angle::ObserverInterface
+    class ConstantBufferObserver : public angle::ObserverInterface
     {
       public:
-        OnConstantBufferDirtyReceiver();
-        ~OnConstantBufferDirtyReceiver() override;
+        ConstantBufferObserver();
+        ~ConstantBufferObserver() override;
 
         void onSubjectStateChange(const gl::Context *context,
                                   angle::SubjectIndex index,
@@ -584,14 +569,12 @@ class StateManager11 final : angle::NonCopyable
         std::vector<angle::ObserverBinding> mBindingsVS;
         std::vector<angle::ObserverBinding> mBindingsPS;
     };
-    OnConstantBufferDirtyReceiver mOnConstantBufferDirtyReceiver;
+    ConstantBufferObserver mConstantBufferObserver;
 
     // Currently applied transform feedback buffers
     Serial mAppliedTFSerial;
 
     Serial mEmptySerial;
-
-    bool mIsTransformFeedbackCurrentlyActiveUnpaused;
 };
 
 }  // namespace rx

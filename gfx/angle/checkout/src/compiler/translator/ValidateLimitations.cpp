@@ -8,8 +8,8 @@
 
 #include "angle_gl.h"
 #include "compiler/translator/Diagnostics.h"
-#include "compiler/translator/IntermTraverse.h"
 #include "compiler/translator/ParseContext.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 
 namespace sh
 {

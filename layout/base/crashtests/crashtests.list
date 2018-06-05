@@ -359,7 +359,7 @@ load 560447-1.html
 load 564063-1.html
 load 567292-1.xhtml
 load 569018-1.html
-load 570038-1.html
+pref(layout.css.xul-display-values.content.enabled,true) load 570038-1.html
 load 572003.xul
 load 572582-1.xhtml
 load 576649-1.html
@@ -488,6 +488,7 @@ load 1308793.svg
 load 1308848-1.html
 load 1308848-2.html
 load 1338772-1.html
+load 1340571.html
 asserts(0-1) load 1343606.html # bug 1343948
 load 1343937.html
 load 1352380.html
@@ -517,6 +518,7 @@ pref(dom.webcomponents.shadowdom.enabled,true) load 1414303.html
 load 1419762.html
 load 1419802.html
 load 1420533.html
+load 1423216.html
 load 1425893.html
 load 1425959.html
 load 1428353.html

@@ -6,8 +6,8 @@
 
 #include "libANGLE/Caps.h"
 
-#include "common/debug.h"
 #include "common/angleutils.h"
+#include "common/debug.h"
 
 #include "libANGLE/formatutils.h"
 
@@ -16,7 +16,9 @@
 #include <algorithm>
 #include <sstream>
 
-static void InsertExtensionString(const std::string &extension, bool supported, std::vector<std::string> *extensionVector)
+static void InsertExtensionString(const std::string &extension,
+                                  bool supported,
+                                  std::vector<std::string> *extensionVector)
 {
     if (supported)
     {
@@ -27,11 +29,7 @@ static void InsertExtensionString(const std::string &extension, bool supported, 
 namespace gl
 {
 
-TextureCaps::TextureCaps()
-    : texturable(false),
-      filterable(false),
-      renderable(false),
-      sampleCounts()
+TextureCaps::TextureCaps() : texturable(false), filterable(false), renderable(false), sampleCounts()
 {
 }
 
@@ -398,7 +396,9 @@ static bool DetermineRGFloatTextureSupport(const TextureCapsMap &textureCaps)
     return GetFormatSupport(textureCaps, requiredFormats, true, true, false);
 }
 
-static bool DetermineRGTextureSupport(const TextureCapsMap &textureCaps, bool checkHalfFloatFormats, bool checkFloatFormats)
+static bool DetermineRGTextureSupport(const TextureCapsMap &textureCaps,
+                                      bool checkHalfFloatFormats,
+                                      bool checkFloatFormats)
 {
     if (checkHalfFloatFormats && !DetermineRGHalfFloatTextureSupport(textureCaps))
     {
@@ -573,29 +573,29 @@ static bool DetermineTextureNorm16Support(const TextureCapsMap &textureCaps)
 
 void Extensions::setTextureExtensionSupport(const TextureCapsMap &textureCaps)
 {
-    packedDepthStencil = DeterminePackedDepthStencilSupport(textureCaps);
-    rgb8rgba8 = DetermineRGB8AndRGBA8TextureSupport(textureCaps);
-    textureFormatBGRA8888 = DetermineBGRA8TextureSupport(textureCaps);
-    colorBufferHalfFloat      = DetermineColorBufferHalfFloatSupport(textureCaps);
-    textureHalfFloat = DetermineHalfFloatTextureSupport(textureCaps);
+    packedDepthStencil     = DeterminePackedDepthStencilSupport(textureCaps);
+    rgb8rgba8              = DetermineRGB8AndRGBA8TextureSupport(textureCaps);
+    textureFormatBGRA8888  = DetermineBGRA8TextureSupport(textureCaps);
+    colorBufferHalfFloat   = DetermineColorBufferHalfFloatSupport(textureCaps);
+    textureHalfFloat       = DetermineHalfFloatTextureSupport(textureCaps);
     textureHalfFloatLinear = DetermineHalfFloatTextureFilteringSupport(textureCaps);
-    textureFloat = DetermineFloatTextureSupport(textureCaps);
-    textureFloatLinear = DetermineFloatTextureFilteringSupport(textureCaps);
-    textureRG = DetermineRGTextureSupport(textureCaps, textureHalfFloat, textureFloat);
+    textureFloat           = DetermineFloatTextureSupport(textureCaps);
+    textureFloatLinear     = DetermineFloatTextureFilteringSupport(textureCaps);
+    textureRG              = DetermineRGTextureSupport(textureCaps, textureHalfFloat, textureFloat);
     textureCompressionDXT1 = DetermineDXT1TextureSupport(textureCaps);
     textureCompressionDXT3 = DetermineDXT3TextureSupport(textureCaps);
     textureCompressionDXT5 = DetermineDXT5TextureSupport(textureCaps);
     textureCompressionS3TCsRGB = DetermineS3TCsRGBTextureSupport(textureCaps);
-    textureCompressionASTCHDR = DetermineASTCTextureSupport(textureCaps);
-    textureCompressionASTCLDR = textureCompressionASTCHDR;
-    compressedETC1RGB8Texture = DetermineETC1RGB8TextureSupport(textureCaps);
-    sRGB = DetermineSRGBTextureSupport(textureCaps);
-    depthTextures = DetermineDepthTextureSupport(textureCaps);
-    depth32                   = DetermineDepth32Support(textureCaps);
+    textureCompressionASTCHDR  = DetermineASTCTextureSupport(textureCaps);
+    textureCompressionASTCLDR  = textureCompressionASTCHDR;
+    compressedETC1RGB8Texture  = DetermineETC1RGB8TextureSupport(textureCaps);
+    sRGB                       = DetermineSRGBTextureSupport(textureCaps);
+    depthTextures              = DetermineDepthTextureSupport(textureCaps);
+    depth32                    = DetermineDepth32Support(textureCaps);
     colorBufferFloatRGB        = DetermineColorBufferFloatRGBSupport(textureCaps);
     colorBufferFloatRGBA       = DetermineColorBufferFloatRGBASupport(textureCaps);
-    colorBufferFloat = DetermineColorBufferFloatSupport(textureCaps);
-    textureNorm16             = DetermineTextureNorm16Support(textureCaps);
+    colorBufferFloat           = DetermineColorBufferFloatSupport(textureCaps);
+    textureNorm16              = DetermineTextureNorm16Support(textureCaps);
 }
 
 const ExtensionInfoMap &GetExtensionInfoMap()
@@ -869,7 +869,16 @@ Caps::Caps()
 
       // Table 20.46 (GL_EXT_geometry_shader)
       maxGeometryImageUniforms(0),
-      maxCombinedGeometryUniformComponents(0)
+      maxCombinedGeometryUniformComponents(0),
+
+      // GLES1 emulation: Table 6.20 / 6.22 (ES 1.1 spec)
+      maxMultitextureUnits(0),
+      maxClipPlanes(0),
+      maxLights(0),
+      maxModelviewMatrixStackDepth(0),
+      maxProjectionMatrixStackDepth(0),
+      maxTextureMatrixStackDepth(0)
+
 {
     for (size_t i = 0; i < 3; ++i)
     {
@@ -884,6 +893,18 @@ Caps::~Caps()                 = default;
 Caps GenerateMinimumCaps(const Version &clientVersion, const Extensions &extensions)
 {
     Caps caps;
+
+    // GLES1 emulation (Minimums taken from Table 6.20 / 6.22 (ES 1.1 spec))
+    if (clientVersion < Version(2, 0))
+    {
+        caps.maxMultitextureUnits = 2;
+        caps.maxLights            = 8;
+        caps.maxClipPlanes        = 1;
+
+        caps.maxModelviewMatrixStackDepth  = 16;
+        caps.maxProjectionMatrixStackDepth = 2;
+        caps.maxTextureMatrixStackDepth    = 2;
+    }
 
     if (clientVersion >= Version(2, 0))
     {
@@ -1111,8 +1132,7 @@ Caps GenerateMinimumCaps(const Version &clientVersion, const Extensions &extensi
 namespace egl
 {
 
-Caps::Caps()
-    : textureNPOT(false)
+Caps::Caps() : textureNPOT(false)
 {
 }
 
@@ -1153,7 +1173,8 @@ DisplayExtensions::DisplayExtensions()
       createContextClientArrays(false),
       programCacheControl(false),
       robustResourceInitialization(false),
-      iosurfaceClientBuffer(false)
+      iosurfaceClientBuffer(false),
+      createContextExtensionsEnabled(false)
 {
 }
 
@@ -1199,6 +1220,7 @@ std::vector<std::string> DisplayExtensions::getStrings() const
     InsertExtensionString("EGL_ANGLE_program_cache_control",                     programCacheControl,                &extensionStrings);
     InsertExtensionString("EGL_ANGLE_robust_resource_initialization",            robustResourceInitialization,       &extensionStrings);
     InsertExtensionString("EGL_ANGLE_iosurface_client_buffer",                   iosurfaceClientBuffer,              &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_create_context_extensions_enabled",         createContextExtensionsEnabled,     &extensionStrings);
     // TODO(jmadill): Enable this when complete.
     //InsertExtensionString("KHR_create_context_no_error",                       createContextNoError,               &extensionStrings);
     // clang-format on
@@ -1206,8 +1228,7 @@ std::vector<std::string> DisplayExtensions::getStrings() const
     return extensionStrings;
 }
 
-DeviceExtensions::DeviceExtensions()
-    : deviceD3D(false)
+DeviceExtensions::DeviceExtensions() : deviceD3D(false)
 {
 }
 
@@ -1215,8 +1236,10 @@ std::vector<std::string> DeviceExtensions::getStrings() const
 {
     std::vector<std::string> extensionStrings;
 
+    // clang-format off
     //                   | Extension name                                 | Supported flag                | Output vector   |
     InsertExtensionString("EGL_ANGLE_device_d3d",                          deviceD3D,                      &extensionStrings);
+    // clang-format on
 
     return extensionStrings;
 }

@@ -124,9 +124,12 @@ class BindingPointer
     {
         // addRef first in case newObject == mObject and this is the last reference to it.
         if (newObject != nullptr) reinterpret_cast<const RefCountObjectNoID*>(newObject)->addRef();
-        if (mObject != nullptr)
-            reinterpret_cast<RefCountObjectNoID *>(mObject)->release(context);
+        // Store the old pointer in a temporary so we can set the pointer before calling release.
+        // Otherwise the object could still be referenced when its destructor is called.
+        ObjectType *oldObject = mObject;
         mObject = newObject;
+        if (oldObject != nullptr)
+            reinterpret_cast<RefCountObjectNoID *>(oldObject)->release(context);
     }
 
     ObjectType *get() const { return mObject; }

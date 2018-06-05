@@ -149,7 +149,8 @@ class Context11 : public ContextImpl
     gl::Error triggerDrawCallProgramRecompilation(const gl::Context *context, GLenum drawMode);
 
   private:
-    gl::Error prepareForDrawCall(const gl::Context *context, GLenum drawMode);
+    gl::Error prepareForDrawCall(const gl::Context *context,
+                                 const gl::DrawCallParams &drawCallParams);
 
     Renderer11 *mRenderer;
 };

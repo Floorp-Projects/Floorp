@@ -41,8 +41,6 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
-using mozilla::FloatingPoint;
-
 // * How to read/write MacroAssembler method declarations:
 //
 // The following macros are made to avoid #ifdef around each method declarations

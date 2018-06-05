@@ -47,6 +47,8 @@ JS::Zone::Zone(JSRuntime* rt)
     atomCache_(this),
     externalStringCache_(this),
     functionToStringCache_(this),
+    keepAtomsCount(this, 0),
+    purgeAtomsDeferred(this, 0),
     usage(&rt->gc.usage),
     threshold(),
     gcDelayBytes(0),
@@ -418,6 +420,40 @@ Zone::ownedByCurrentHelperThread()
     MOZ_ASSERT(usedByHelperThread());
     MOZ_ASSERT(TlsContext.get());
     return helperThreadOwnerContext_ == TlsContext.get();
+}
+
+void Zone::releaseAtoms()
+{
+    MOZ_ASSERT(hasKeptAtoms());
+
+    keepAtomsCount--;
+
+    if (!hasKeptAtoms() && purgeAtomsDeferred) {
+        atomCache().clearAndShrink();
+        purgeAtomsDeferred = false;
+    }
+}
+
+void
+Zone::purgeAtomCacheOrDefer()
+{
+    if (hasKeptAtoms()) {
+        purgeAtomsDeferred = true;
+        return;
+    }
+
+    atomCache().clearAndShrink();
+}
+
+void
+Zone::traceAtomCache(JSTracer* trc)
+{
+    MOZ_ASSERT(hasKeptAtoms());
+    for (auto r = atomCache().all(); !r.empty(); r.popFront()) {
+        JSAtom* atom = r.front().asPtrUnbarriered();
+        TraceRoot(trc, &atom, "kept atom");
+        MOZ_ASSERT(r.front().asPtrUnbarriered() == atom);
+    }
 }
 
 ZoneList::ZoneList()

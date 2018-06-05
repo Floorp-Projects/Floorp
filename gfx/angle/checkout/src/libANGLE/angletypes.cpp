@@ -151,13 +151,13 @@ SamplerState::SamplerState()
 SamplerState::SamplerState(const SamplerState &other) = default;
 
 // static
-SamplerState SamplerState::CreateDefaultForTarget(GLenum target)
+SamplerState SamplerState::CreateDefaultForTarget(TextureType type)
 {
     SamplerState state;
 
     // According to OES_EGL_image_external and ARB_texture_rectangle: For external textures, the
     // default min filter is GL_LINEAR and the default s and t wrap modes are GL_CLAMP_TO_EDGE.
-    if (target == GL_TEXTURE_EXTERNAL_OES || target == GL_TEXTURE_RECTANGLE_ANGLE)
+    if (type == TextureType::External || type == TextureType::Rectangle)
     {
         state.minFilter = GL_LINEAR;
         state.wrapS     = GL_CLAMP_TO_EDGE;
@@ -311,7 +311,7 @@ unsigned long ComponentTypeMask::to_ulong() const
 
 void ComponentTypeMask::from_ulong(unsigned long mask)
 {
-    mTypeMask = mask;
+    mTypeMask = angle::BitSet<MAX_COMPONENT_TYPE_MASK_INDEX * 2>(mask);
 }
 
 bool ComponentTypeMask::Validate(unsigned long outputTypes,
@@ -340,6 +340,35 @@ bool ComponentTypeMask::Validate(unsigned long outputTypes,
     // 2. Remove any indexes that exist in output, but not in input (& outputMask)
     // 3. Use == to verify equality
     return (outputTypes & inputMask) == ((inputTypes & outputMask) & inputMask);
+}
+
+GLsizeiptr GetBoundBufferAvailableSize(const OffsetBindingPointer<Buffer> &binding)
+{
+    Buffer *buffer = binding.get();
+    if (buffer)
+    {
+        if (binding.getSize() == 0)
+            return static_cast<GLsizeiptr>(buffer->getSize());
+        angle::CheckedNumeric<GLintptr> offset       = binding.getOffset();
+        angle::CheckedNumeric<GLsizeiptr> size       = binding.getSize();
+        angle::CheckedNumeric<GLsizeiptr> bufferSize = buffer->getSize();
+        auto end                                     = offset + size;
+        auto clampedSize                             = size;
+        auto difference                              = end - bufferSize;
+        if (!difference.IsValid())
+        {
+            return 0;
+        }
+        if (difference.ValueOrDie() > 0)
+        {
+            clampedSize = size - difference;
+        }
+        return clampedSize.ValueOrDefault(0);
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 }  // namespace gl

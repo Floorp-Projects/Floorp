@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
 XPIDL_SOURCES += [
-    'nsIDOMGeoGeolocation.idl',
     'nsIDOMGeoPosition.idl',
     'nsIDOMGeoPositionCallback.idl',
     'nsIDOMGeoPositionCoords.idl',

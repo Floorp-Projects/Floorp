@@ -572,6 +572,7 @@ class GCRuntime
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& session);
     void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+    void traceKeptAtoms(JSTracer* trc);
     void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                             AutoTraceSession& session);
     void maybeDoCycleCollection();

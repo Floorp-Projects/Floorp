@@ -61,7 +61,7 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
                                                const gl::VertexBinding &binding,
                                                GLenum currentValueType,
                                                GLint start,
-                                               GLsizei count,
+                                               size_t count,
                                                GLsizei instances,
                                                unsigned int offset,
                                                const uint8_t *sourceData)
@@ -71,8 +71,8 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
         return gl::OutOfMemory() << "Internal vertex buffer is not initialized.";
     }
 
-    int inputStride = static_cast<int>(gl::ComputeVertexAttributeStride(attrib, binding));
-    int elementSize = static_cast<int>(gl::ComputeVertexAttributeTypeSize(attrib));
+    size_t inputStride = gl::ComputeVertexAttributeStride(attrib, binding);
+    size_t elementSize = gl::ComputeVertexAttributeTypeSize(attrib);
 
     DWORD lockFlags = mDynamicUsage ? D3DLOCK_NOOVERWRITE : 0;
 
@@ -105,7 +105,7 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
 
     if (!needsConversion && inputStride == elementSize)
     {
-        size_t copySize = static_cast<size_t>(count) * static_cast<size_t>(inputStride);
+        size_t copySize = count * inputStride;
         memcpy(mapPtr, input, copySize);
     }
     else
