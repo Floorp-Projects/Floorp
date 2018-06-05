@@ -527,8 +527,7 @@ nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
   if (!cols)
     return nullptr;
 
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetFirstColumn(getter_AddRefs(column));
+  RefPtr<nsTreeColumn> column = cols->GetFirstColumn();
   if (column && IsColumnHidden(column))
     return GetNextSensibleColumn(column);
 
@@ -545,16 +544,13 @@ nsCoreUtils::GetSensibleColumnCount(nsITreeBoxObject *aTree)
   if (!cols)
     return count;
 
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetFirstColumn(getter_AddRefs(column));
+  nsTreeColumn* column = cols->GetFirstColumn();
 
   while (column) {
     if (!IsColumnHidden(column))
       count++;
 
-    nsCOMPtr<nsITreeColumn> nextColumn;
-    column->GetNext(getter_AddRefs(nextColumn));
-    column.swap(nextColumn);
+    column = column->GetNext();
   }
 
   return count;
