@@ -45,8 +45,6 @@ using namespace mozilla;
 
 //----------------------------------------------------------------------
 
-#define FIX_BUG_50257
-
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsFloatManager* aFloatManager,
                            const ReflowInput* aOuterReflowInput,
@@ -1336,7 +1334,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     return true;
   }
 
-#ifdef FIX_BUG_50257
   // another special case:  always place a BR
   if (pfd->mFrame->IsBrFrame()) {
 #ifdef NOISY_CAN_PLACE_FRAME
@@ -1344,7 +1341,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #endif
     return true;
   }
-#endif
 
   if (aNotSafeToBreak) {
     // There are no frames on the line that take up width and the line is
