@@ -186,7 +186,8 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         self.repo_path = self.config.get("repo_path")
         self.obj_path = self.config.get("obj_path")
         self.tests = None
-        self.gecko_profile = self.config.get('gecko_profile')
+        self.gecko_profile = self.config.get('gecko_profile') or \
+            "--geckoProfile" in self.config.get("talos_extra_options", [])
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
         self.benchmark_zip = None
