@@ -145,6 +145,19 @@ jobs:
         sha256: ab84e017d1660efd30e9e0593a4c8b976aeda013cefb8c416dd284cc7222c11c
       patch: valgrind-wheezy.diff
 
+  deb7-dh-python:
+    description: "dh-python for Debian wheezy"
+    treeherder:
+      symbol: Deb7(dh-python)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20170125T211752Z/pool/main/d/dh-python/dh-python_2.20170125.dsc
+        sha256: ef4f2951cea36ae4aac29126a1017505f98b595432fb5bdac0f21b4b4d72c1b4
+      packages:
+        - deb7-python3.5
+        - deb7-python3-defaults
+
   deb7-dpkg-1.17:
     description: "dpkg 1.17 for Debian wheezy"
     treeherder:
