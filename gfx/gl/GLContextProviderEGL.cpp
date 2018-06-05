@@ -708,8 +708,9 @@ GLContextEGL::CreateWaylandBufferSurface(EGLConfig config,
     struct wl_egl_window *eglwindow =
         wl_egl_window_create(wlsurface, pbsize.width, pbsize.height);
 
+    auto* egl = gl::GLLibraryEGL::Get();
     EGLSurface surface =
-        sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, eglwindow, 0);
+        egl->fCreateWindowSurface(EGL_DISPLAY(), config, eglwindow, 0);
 
     if (surface) {
         WaylandGLSurface* waylandData =
