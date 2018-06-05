@@ -127,11 +127,13 @@ class EmbeddedExtension {
    *
    * @param {number} reason
    *   The add-on startup bootstrap reason received from the XPIProvider.
+   * @param {object} [addonData]
+   *   Additional data to pass to the Extension constructor.
    *
    * @returns {Promise<LegacyContextAPI>} A promise which resolve to the API exposed to the
    *   legacy context.
    */
-  startup(reason) {
+  startup(reason, addonData = {}) {
     if (this.started) {
       return Promise.reject(new Error("This embedded extension has already been started"));
     }
@@ -140,8 +142,13 @@ class EmbeddedExtension {
     this.startupPromise = new Promise((resolve, reject) => {
       let embeddedExtensionURI = Services.io.newURI("webextension/", null, this.resourceURI);
 
+      let {builtIn, signedState, temporarilyInstalled} = addonData;
+
       // This is the instance of the WebExtension embedded in the hybrid add-on.
       this.extension = new Extension({
+        builtIn,
+        signedState,
+        temporarilyInstalled,
         id: this.addonId,
         resourceURI: embeddedExtensionURI,
         version: this.version,
