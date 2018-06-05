@@ -604,7 +604,7 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 
   MarkNeedsDisplayItemRebuild();
 
-  if (intrinsicSizeChanged && (mState & IMAGE_GOTINITIALREFLOW)) {
+  if (intrinsicSizeChanged && GotInitialReflow()) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
@@ -627,7 +627,7 @@ nsImageFrame::OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect)
 {
   NS_ENSURE_ARG_POINTER(aRect);
 
-  if (!(mState & IMAGE_GOTINITIALREFLOW)) {
+  if (!GotInitialReflow()) {
     // Don't bother to do anything; we have a reflow coming up!
     return NS_OK;
   }
@@ -692,7 +692,7 @@ nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 void
 nsImageFrame::ResponsiveContentDensityChanged()
 {
-  if (!(mState & IMAGE_GOTINITIALREFLOW)) {
+  if (!GotInitialReflow()) {
     return;
   }
 
@@ -733,7 +733,7 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest, nsresult aStatus)
     mIntrinsicRatio.SizeTo(0, 0);
   }
 
-  if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
+  if (GotInitialReflow()) {
     if (intrinsicSizeChanged) {
       if (!(mState & IMAGE_SIZECONSTRAINED)) {
         PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
@@ -976,12 +976,6 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     AddStateBits(IMAGE_SIZECONSTRAINED);
   } else {
     RemoveStateBits(IMAGE_SIZECONSTRAINED);
-  }
-
-  // XXXldb These two bits are almost exact opposites (except in the
-  // middle of the initial reflow); remove IMAGE_GOTINITIALREFLOW.
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    AddStateBits(IMAGE_GOTINITIALREFLOW);
   }
 
   mComputedSize =

@@ -67,6 +67,7 @@
           return;
 
         Services.obs.addObserver(this, "browser-search-engine-modified");
+        Services.obs.addObserver(this, "browser-search-service");
 
         this._initialized = true;
 
@@ -114,6 +115,7 @@
           this._initialized = false;
 
           Services.obs.removeObserver(this, "browser-search-engine-modified");
+          Services.obs.removeObserver(this, "browser-search-service");
         }
 
         // Make sure to break the cycle from _textbox to us. Otherwise we leak
@@ -183,7 +185,8 @@
         <parameter name="aTopic"/>
         <parameter name="aVerb"/>
         <body><![CDATA[
-          if (aTopic == "browser-search-engine-modified") {
+          if (aTopic == "browser-search-engine-modified" ||
+              (aTopic == "browser-search-service" && aVerb == "init-complete")) {
             // Make sure the engine list is refetched next time it's needed
             this._engines = null;
 
@@ -1306,6 +1309,7 @@
         // Add weak referenced observers to invalidate our cached list of engines.
         Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
         Services.obs.addObserver(this, "browser-search-engine-modified", true);
+        Services.obs.addObserver(this, "browser-search-service", true);
 
         // Rebuild the buttons when the theme changes.  See bug 1357800 for
         // details.  Summary: On Linux, switching between themes can cause a row

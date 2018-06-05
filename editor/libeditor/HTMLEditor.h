@@ -287,6 +287,12 @@ public:
   already_AddRefed<Element>
   GetElementOrParentByTagName(const nsAString& aTagName, nsINode* aNode);
 
+  /**
+    * Get an active editor's editing host in DOM window.  If this editor isn't
+    * active in the DOM window, this returns NULL.
+    */
+  Element* GetActiveEditingHost();
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are

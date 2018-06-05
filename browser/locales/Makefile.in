@@ -39,20 +39,6 @@ endif
 
 MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 
-SEARCHPLUGINS_FILENAMES := $(or $(shell $(call py_action,output_searchplugins_list,$(srcdir)/search/list.json $(AB_CD))), $(error Missing search plugins))
-SEARCHPLUGINS_PATH := .deps/generated_$(AB_CD)
-SEARCHPLUGINS_TARGET := libs searchplugins
-SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_FILENAMES)),$(or $(wildcard $(srcdir)/searchplugins/$(plugin)),$(error Missing searchplugin: $(plugin))))
-# Some locale-specific search plugins may have preprocessor directives, but the
-# default en-US ones do not.
-SEARCHPLUGINS_FLAGS := --silence-missing-directive-warnings
-PP_TARGETS += SEARCHPLUGINS
-
-list-json = $(SEARCHPLUGINS_PATH)/list.json
-GARBAGE += $(list-json)
-
-libs:: searchplugins
-
 # Required for l10n.mk - defines a list of app sub dirs that should
 # be included in langpack xpis.
 DIST_SUBDIRS = $(DIST_SUBDIR)
@@ -60,10 +46,6 @@ DIST_SUBDIRS = $(DIST_SUBDIR)
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
-
-$(list-json): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK),FORCE)
-	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(list-json))
-searchplugins:: $(list-json)
 
 libs-%: AB_CD=$*
 libs-%:
@@ -80,7 +62,6 @@ endif
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../devtools/startup/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
-	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*

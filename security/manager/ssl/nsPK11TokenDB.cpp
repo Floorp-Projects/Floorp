@@ -292,29 +292,3 @@ nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPK11TokenDB::FindTokenByName(const nsACString& tokenName,
-                       /*out*/ nsIPK11Token** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  nsresult rv = BlockUntilLoadableRootsLoaded();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (tokenName.IsEmpty()) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  UniquePK11SlotInfo slot(
-    PK11_FindSlotByName(PromiseFlatCString(tokenName).get()));
-  if (!slot) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPK11Token> token = new nsPK11Token(slot.get());
-  token.forget(_retval);
-
-  return NS_OK;
-}

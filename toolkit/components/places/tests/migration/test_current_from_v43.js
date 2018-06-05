@@ -116,14 +116,7 @@ add_task(async function test_tombstones_added() {
 add_task(async function test_annotations_removed() {
   let db = await PlacesUtils.promiseDBConnection();
 
-  for (let anno of EXPECTED_REMOVED_ANNOTATIONS) {
-    let rows = await db.execute(`
-      SELECT id FROM moz_anno_attributes
-      WHERE name = :anno
-    `, {anno});
-
-    Assert.equal(rows.length, 0, `${anno} should not exist in the database`);
-  }
+  await assertAnnotationsRemoved(db, EXPECTED_REMOVED_ANNOTATIONS);
 });
 
 add_task(async function test_check_history_entries() {
@@ -168,21 +161,7 @@ add_task(async function test_check_keyword_removed() {
 add_task(async function test_no_orphan_annotations() {
   let db = await PlacesUtils.promiseDBConnection();
 
-  let rows = await db.execute(`
-    SELECT item_id FROM moz_items_annos
-    WHERE item_id NOT IN (SELECT id from moz_bookmarks)
-  `);
-
-  Assert.equal(rows.length, 0,
-    `Should have no orphan annotations.`);
-
-  rows = await db.execute(`
-    SELECT id FROM moz_anno_attributes
-    WHERE id NOT IN (SELECT id from moz_items_annos)
-  `);
-
-  Assert.equal(rows.length, 0,
-    `Should have no orphan annotation attributes.`);
+  await assertNoOrphanAnnotations(db);
 });
 
 add_task(async function test_no_orphan_keywords() {

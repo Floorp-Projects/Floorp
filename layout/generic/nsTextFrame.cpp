@@ -9455,8 +9455,6 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     IsFloatingFirstLetterChild() || IsInitialLetterChild()
     ? gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS
     : gfxFont::LOOSE_INK_EXTENTS;
-  NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
-               "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
 
   int32_t limitLength = length;
   int32_t forceBreak = aLineLayout.GetForcedBreakPosition(this);

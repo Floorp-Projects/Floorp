@@ -730,7 +730,10 @@ public:
     return mCenter.y + mRadii.height + mShapeMargin;
   }
   bool IsEmpty() const override {
-    return mRadii.IsEmpty();
+    // An EllipseShapeInfo is never empty, because an ellipse or circle with
+    // a zero radius acts like a point, and an ellipse with one zero radius
+    // acts like a line.
+    return false;
   }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override
@@ -866,10 +869,16 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
     // adjust it to compensate for the expansion of the inline dimension.
     // If we're in the expanded region, or if we're using a b that's more
     // than the bEnd of the ellipse, the intercept is nscoord_MIN.
-    const int32_t iIntercept = (bIsInExpandedRegion ||
-                                bIsMoreThanEllipseBEnd) ? nscoord_MIN :
+    // We have one other special case to consider: when the ellipse has no
+    // height. In that case we treat the bInAppUnits == 0 case as
+    // intercepting at the width of the ellipse. All other cases solve
+    // the intersection mathematically.
+    const int32_t iIntercept =
+      (bIsInExpandedRegion || bIsMoreThanEllipseBEnd) ? nscoord_MIN :
       iExpand + NSAppUnitsToIntPixels(
-        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height),
+        (!!mRadii.height || bInAppUnits) ?
+        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height) :
+        mRadii.width,
         aAppUnitsPerDevPixel);
 
     // Set iMax in preparation for this block row.
@@ -886,8 +895,10 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
         // Case 1: Expanded reqion pixel.
         df[index] = MAX_MARGIN_5X;
       } else if ((int32_t)i <= iIntercept) {
-        // Case 2: Pixel within the ellipse.
-        df[index] = 0;
+        // Case 2: Pixel within the ellipse, or just outside the edge of it.
+        // Having a positive height indicates that there's an area we can
+        // be inside of.
+        df[index] = (!!mRadii.height) ? 0 : 5;
       } else {
         // Case 3: Other pixel.
 
@@ -1073,7 +1084,13 @@ public:
                     const nscoord aBEnd) const override;
   nscoord BStart() const override { return mRect.y; }
   nscoord BEnd() const override { return mRect.YMost(); }
-  bool IsEmpty() const override { return mRect.IsEmpty(); }
+  bool IsEmpty() const override {
+    // A RoundedBoxShapeInfo is never empty, because if it is collapsed to
+    // zero area, it acts like a point. If it is collapsed further, to become
+    // inside-out, it acts like a rect in the same shape as the inside-out
+    // rect.
+    return false;
+  }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override
   {
@@ -1260,14 +1277,20 @@ public:
                     const nscoord aBEnd) const override;
   nscoord BStart() const override { return mBStart; }
   nscoord BEnd() const override { return mBEnd; }
-  bool IsEmpty() const override { return mEmpty; }
+  bool IsEmpty() const override {
+    // A PolygonShapeInfo is never empty, because the parser prevents us from
+    // creating a shape with no vertices. If we only have 1 vertex, the
+    // shape acts like a point. With 2 non-coincident vertices, the shape
+    // acts like a line.
+    return false;
+  }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
 
 private:
-  // Helper method for determining if the vertices define a float area at
-  // all, and to set mBStart and mBEnd based on the vertices' y extent.
-  void ComputeEmptinessAndExtent();
+  // Helper method for determining the mBStart and mBEnd based on the
+  // vertices' y extent.
+  void ComputeExtent();
 
   // Helper method for implementing LineLeft() and LineRight().
   nscoord ComputeLineIntercept(
@@ -1295,15 +1318,10 @@ private:
   // The intervals are stored in ascending order on y.
   nsTArray<nsRect> mIntervals;
 
-  // If mEmpty is true, that means the polygon encloses no area.
-  bool mEmpty = false;
-
-  // Computed block start and block end value of the polygon shape.
-  //
-  // If mEmpty is false, their initial values nscoord_MAX and nscoord_MIN
-  // are used as sentinels for computing min() and max() in the
-  // constructor, and mBStart is guaranteed to be less than or equal to
-  // mBEnd. If mEmpty is true, their values do not matter.
+  // Computed block start and block end value of the polygon shape. These
+  // initial values are set to correct values in ComputeExtent(), which is
+  // called from all constructors. Afterwards, mBStart is guaranteed to be
+  // less than or equal to mBEnd.
   nscoord mBStart = nscoord_MAX;
   nscoord mBEnd = nscoord_MIN;
 };
@@ -1311,7 +1329,7 @@ private:
 nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(nsTArray<nsPoint>&& aVertices)
   : mVertices(aVertices)
 {
-  ComputeEmptinessAndExtent();
+  ComputeExtent();
 }
 
 nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
@@ -1324,13 +1342,7 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
   MOZ_ASSERT(aShapeMargin > 0, "This constructor should only be used for a "
                                "polygon with a positive shape-margin.");
 
-  ComputeEmptinessAndExtent();
-
-  // If we're empty, then the float area stays empty, even with a positive
-  // shape-margin.
-  if (mEmpty) {
-    return;
-  }
+  ComputeExtent();
 
   // With a positive aShapeMargin, we have to calculate a distance
   // field from the opaque pixels, then build intervals based on
@@ -1419,7 +1431,7 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
     // converting the app units to dev pixels.
     nscoord bInAppUnitsMarginRect = bInAppUnits + aMarginRect.y;
     bool bIsLessThanPolygonBStart(bInAppUnitsMarginRect < mBStart);
-    bool bIsMoreThanPolygonBEnd(bInAppUnitsMarginRect >= mBEnd);
+    bool bIsMoreThanPolygonBEnd(bInAppUnitsMarginRect > mBEnd);
 
     const int32_t iLeftEdge = (bIsInExpandedRegion ||
                                bIsLessThanPolygonBStart ||
@@ -1450,9 +1462,11 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
           bIsInExpandedRegion) {
         // Case 1: Expanded pixel.
         df[index] = MAX_MARGIN_5X;
-      } else if ((int32_t)i >= iLeftEdge && (int32_t)i < iRightEdge) {
-        // Case 2: Polygon pixel.
-        df[index] = 0;
+      } else if ((int32_t)i >= iLeftEdge && (int32_t)i <= iRightEdge) {
+        // Case 2: Polygon pixel, either inside or just adjacent to the right
+        // edge. We need this special distinction to detect a space between
+        // edges that is less than one dev pixel.
+        df[index] = (int32_t)i < iRightEdge ? 0 : 5;
       } else {
         // Case 3: Other pixel.
 
@@ -1605,8 +1619,6 @@ nscoord
 nsFloatManager::PolygonShapeInfo::LineLeft(const nscoord aBStart,
                                            const nscoord aBEnd) const
 {
-  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
-
   // Use intervals if we have them.
   if (!mIntervals.IsEmpty()) {
     return LineEdge(mIntervals, aBStart, aBEnd, true);
@@ -1628,8 +1640,6 @@ nscoord
 nsFloatManager::PolygonShapeInfo::LineRight(const nscoord aBStart,
                                             const nscoord aBEnd) const
 {
-  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
-
   // Use intervals if we have them.
   if (!mIntervals.IsEmpty()) {
     return LineEdge(mIntervals, aBStart, aBEnd, false);
@@ -1643,44 +1653,8 @@ nsFloatManager::PolygonShapeInfo::LineRight(const nscoord aBStart,
 }
 
 void
-nsFloatManager::PolygonShapeInfo::ComputeEmptinessAndExtent()
+nsFloatManager::PolygonShapeInfo::ComputeExtent()
 {
-  // Polygons with fewer than three vertices result in an empty area.
-  // https://drafts.csswg.org/css-shapes/#funcdef-polygon
-  if (mVertices.Length() < 3) {
-    mEmpty = true;
-    return;
-  }
-
-  auto Determinant = [] (const nsPoint& aP0, const nsPoint& aP1) {
-    // Returns the determinant of the 2x2 matrix [aP0 aP1].
-    // https://en.wikipedia.org/wiki/Determinant#2_.C3.97_2_matrices
-    return aP0.x * aP1.y - aP0.y * aP1.x;
-  };
-
-  // See if we have any vertices that are non-collinear with the first two.
-  // (If a polygon's vertices are all collinear, it encloses no area.)
-  bool isEntirelyCollinear = true;
-  const nsPoint& p0 = mVertices[0];
-  const nsPoint& p1 = mVertices[1];
-  for (size_t i = 2; i < mVertices.Length(); ++i) {
-    const nsPoint& p2 = mVertices[i];
-
-    // If the determinant of the matrix formed by two points is 0, that
-    // means they're collinear with respect to the origin. Here, if it's
-    // nonzero, then p1 and p2 are non-collinear with respect to p0, i.e.
-    // the three points are non-collinear.
-    if (Determinant(p2 - p0, p1 - p0) != 0) {
-      isEntirelyCollinear = false;
-      break;
-    }
-  }
-
-  if (isEntirelyCollinear) {
-    mEmpty = true;
-    return;
-  }
-
   // mBStart and mBEnd are the lower and the upper bounds of all the
   // vertex.y, respectively. The vertex.y is actually on the block-axis of
   // the float manager's writing mode.
@@ -1688,6 +1662,9 @@ nsFloatManager::PolygonShapeInfo::ComputeEmptinessAndExtent()
     mBStart = std::min(mBStart, vertex.y);
     mBEnd = std::max(mBEnd, vertex.y);
   }
+
+  MOZ_ASSERT(mBStart <= mBEnd, "Start of float area should be less than "
+                               "or equal to the end.");
 }
 
 nscoord
@@ -1703,6 +1680,16 @@ nsFloatManager::PolygonShapeInfo::ComputeLineIntercept(
   const size_t len = mVertices.Length();
   nscoord lineIntercept = aLineInterceptInitialValue;
 
+  // We have some special treatment of horizontal lines between vertices.
+  // Generally, we can ignore the impact of the horizontal lines since their
+  // endpoints will be included in the lines preceeding or following them.
+  // However, it's possible the polygon is entirely a horizontal line,
+  // possibly built from more than one horizontal segment. In such a case,
+  // we need to have the horizontal line(s) contribute to the line intercepts.
+  // We do this by accepting horizontal lines until we find a non-horizontal
+  // line, after which all further horizontal lines are ignored.
+  bool canIgnoreHorizontalLines = false;
+
   // Iterate each line segment {p0, p1}, {p1, p2}, ..., {pn, p0}.
   for (size_t i = 0; i < len; ++i) {
     const nsPoint* smallYVertex = &mVertices[i];
@@ -1714,24 +1701,46 @@ nsFloatManager::PolygonShapeInfo::ComputeLineIntercept(
       std::swap(smallYVertex, bigYVertex);
     }
 
-    if (aBStart >= bigYVertex->y || aBEnd <= smallYVertex->y ||
-        smallYVertex->y == bigYVertex->y) {
-      // Skip computing the intercept if a) the band doesn't intersect the
-      // line segment (even if it crosses one of two the vertices); or b)
-      // the line segment is horizontal. It's OK because the two end points
-      // forming this horizontal segment will still be considered if each of
-      // them is forming another non-horizontal segment with other points.
+    // Generally, we need to ignore line segments that either don't intersect
+    // the band, or merely touch it. However, if the polygon has no block extent
+    // (it is a point, or a horizontal line), and the band touches the line
+    // segment, we let that line segment through.
+    if ((aBStart >= bigYVertex->y || aBEnd <= smallYVertex->y) &&
+        !(mBStart == mBEnd && aBStart == bigYVertex->y)) {
+      // Skip computing the intercept if the band doesn't intersect the
+      // line segment.
       continue;
     }
 
-    nscoord bStartLineIntercept =
-      aBStart <= smallYVertex->y
-        ? smallYVertex->x
-        : XInterceptAtY(aBStart, *smallYVertex, *bigYVertex);
-    nscoord bEndLineIntercept =
-      aBEnd >= bigYVertex->y
-        ? bigYVertex->x
-        : XInterceptAtY(aBEnd, *smallYVertex, *bigYVertex);
+    nscoord bStartLineIntercept;
+    nscoord bEndLineIntercept;
+
+    if (smallYVertex->y == bigYVertex->y) {
+      // The line is horizontal; see if we can ignore it.
+      if (canIgnoreHorizontalLines) {
+        continue;
+      }
+
+      // For a horizontal line that we can't ignore, we treat the two x value
+      // ends as the bStartLineIntercept and bEndLineIntercept. It doesn't
+      // matter which is applied to which, because they'll both be applied
+      // to aCompareOp.
+      bStartLineIntercept = smallYVertex->x;
+      bEndLineIntercept = bigYVertex->x;
+    } else {
+      // This is not a horizontal line. We can now ignore all future
+      // horizontal lines.
+      canIgnoreHorizontalLines = true;
+
+      bStartLineIntercept =
+        aBStart <= smallYVertex->y
+          ? smallYVertex->x
+          : XInterceptAtY(aBStart, *smallYVertex, *bigYVertex);
+      bEndLineIntercept =
+        aBEnd >= bigYVertex->y
+          ? bigYVertex->x
+          : XInterceptAtY(aBEnd, *smallYVertex, *bigYVertex);
+    }
 
     // If either new intercept is more extreme than lineIntercept (per
     // aCompareOp), then update lineIntercept to that value.

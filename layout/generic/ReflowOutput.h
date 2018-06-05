@@ -19,9 +19,6 @@ namespace mozilla {
 struct ReflowInput;
 } // namespace mozilla
 
-// Option flags
-#define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
-
 /**
  * When we store overflow areas as an array of scrollable and visual
  * overflow, we use these indices.
@@ -203,21 +200,15 @@ namespace mozilla {
  */
 class ReflowOutput {
 public:
-  // XXXldb Should |aFlags| generally be passed from parent to child?
-  // Some places do it, and some don't.  |aFlags| should perhaps go away
-  // entirely.
-  // XXX width/height/ascent are OUT parameters and so they shouldn't
-  // have to be initialized, but there are some bad frame classes that
-  // aren't properly setting them when returning from Reflow()...
-  explicit ReflowOutput(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
+  explicit ReflowOutput(mozilla::WritingMode aWritingMode)
     : mISize(0)
     , mBSize(0)
     , mBlockStartAscent(ASK_FOR_BASELINE)
-    , mFlags(aFlags)
     , mWritingMode(aWritingMode)
-  {}
+  {
+  }
 
-  explicit ReflowOutput(const ReflowInput& aState, uint32_t aFlags = 0);
+  explicit ReflowOutput(const ReflowInput& aReflowInput);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to
@@ -295,11 +286,6 @@ public:
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
   // Metrics that _exactly_ enclose the text to allow precise MathML placements.
-  // If the NS_REFLOW_CALC_BOUNDING_METRICS flag is set, then the caller is
-  // requesting that you also compute additional details about your inner
-  // bounding box and italic correction. For example, the bounding box of
-  // msup is the smallest rectangle that _exactly_ encloses both the text
-  // of the base and the text of the superscript.
   nsBoundingMetrics mBoundingMetrics;  // [OUT]
 
   // Carried out block-end margin values. This is the collapsed
@@ -336,11 +322,6 @@ public:
 private:
   nscoord mISize, mBSize; // [OUT] desired width and height (border-box)
   nscoord mBlockStartAscent; // [OUT] baseline (in Block direction), or ASK_FOR_BASELINE
-
-public:
-  uint32_t mFlags;
-
-private:
   mozilla::WritingMode mWritingMode;
 };
 

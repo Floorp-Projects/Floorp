@@ -882,8 +882,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   nsReflowStatus childStatus;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    ReflowOutput childDesiredSize(aReflowInput, // ???
-                                         aDesiredSize.mFlags);
+    ReflowOutput childDesiredSize(aReflowInput);
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;

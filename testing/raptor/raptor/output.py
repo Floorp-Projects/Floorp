@@ -47,35 +47,102 @@ class Output(object):
             subtests = []
             suite = {
                 'name': test.name,
+                'type': test.type,
                 'extraOptions': test.extra_options,
-                'subtests': subtests
+                'subtests': subtests,
+                'lowerIsBetter': test.lower_is_better,
+                'alertThreshold': float(test.alert_threshold)
             }
 
             suites.append(suite)
 
-            # each test can report multiple measurements per pageload
-            # each measurement becomes a subtest inside the 'suite'
-            for key, values in test.measurements.iteritems():
-                new_subtest = {}
-                new_subtest['name'] = test.name + "-" + key
-                new_subtest['replicates'] = values
-                new_subtest['lower_is_better'] = test.lower_is_better
-                new_subtest['alert_threshold'] = float(test.alert_threshold)
-                new_subtest['value'] = 0
-                new_subtest['unit'] = test.unit
+            # process results for pageloader type of tests
+            if test.type == "pageload":
+                # each test can report multiple measurements per pageload
+                # each measurement becomes a subtest inside the 'suite'
 
-                filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
-                new_subtest['value'] = filter.median(filtered_values)
-                vals.append(new_subtest['value'])
+                # this is the format we receive the results in from the pageload test
+                # i.e. one test (subtest) in raptor-firefox-tp6:
 
-                subtests.append(new_subtest)
+                # {u'name': u'raptor-firefox-tp6-amazon', u'type': u'pageload', u'measurements':
+                # {u'fnbpaint': [788, 315, 334, 286, 318, 276, 296, 296, 292, 285, 268, 277, 274,
+                # 328, 295, 290, 286, 270, 279, 280, 346, 303, 308, 398, 281]}, u'browser':
+                # u'Firefox 62.0a1 20180528123052', u'lower_is_better': True, u'page':
+                # u'https://www.amazon.com/s/url=search-alias%3Daps&field-keywords=laptop',
+                # u'unit': u'ms', u'alert_threshold': 2}
+
+                for key, values in test.measurements.iteritems():
+                    new_subtest = {}
+                    new_subtest['name'] = test.name + "-" + key
+                    new_subtest['replicates'] = values
+                    new_subtest['lowerIsBetter'] = test.lower_is_better
+                    new_subtest['alertThreshold'] = float(test.alert_threshold)
+                    new_subtest['value'] = 0
+                    new_subtest['unit'] = test.unit
+
+                    filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
+                    new_subtest['value'] = filter.median(filtered_values)
+                    vals.append(new_subtest['value'])
+
+                    subtests.append(new_subtest)
+
+            elif test.type == "benchmark":
+                # each benchmark 'index' becomes a subtest; each pagecycle / iteration
+                # of the test has multiple values per index/subtest
+
+                # this is the format we receive the results in from the benchmark
+                # i.e. this is ONE pagecycle of speedometer:
+
+                # {u'name': u'raptor-speedometer', u'type': u'benchmark', u'measurements':
+                # {u'speedometer': [[{u'AngularJS-TodoMVC/DeletingAllItems': [147.3000000000011,
+                # 149.95999999999913, 143.29999999999927, 150.34000000000378, 257.6999999999971],
+                # u'Inferno-TodoMVC/CompletingAllItems/Sync': [88.03999999999996,#
+                # 85.60000000000036, 94.18000000000029, 95.19999999999709, 86.47999999999593],
+                # u'AngularJS-TodoMVC': [518.2400000000016, 525.8199999999997, 610.5199999999968,
+                # 532.8200000000215, 640.1800000000003], ...(repeated for each index/subtest)}]]},
+                # u'browser': u'Firefox 62.0a1 20180528123052', u'lower_is_better': False, u'page':
+                # u'http://localhost:55019/Speedometer/index.html?raptor', u'unit': u'score',
+                # u'alert_threshold': 2}
+
+                for page_cycle in test.measurements['speedometer']:
+                    page_cycle_results = page_cycle[0]
+
+                    for sub, replicates in page_cycle_results.iteritems():
+                        # for each pagecycle, replicates are appended to each subtest
+                        # so if it doesn't exist the first time create the subtest entry
+                        existing = False
+                        for existing_sub in subtests:
+                            if existing_sub['name'] == sub:
+                                # pagecycle, subtest already there, so append the replicates
+                                existing_sub['replicates'].extend(replicates)
+                                # update the value now that we have more replicates
+                                existing_sub['value'] = filter.median(existing_sub['replicates'])
+                                # now need to update our vals list too since have new subtest value
+                                for existing_val in vals:
+                                    if existing_val[1] == sub:
+                                        existing_val[0] = existing_sub['value']
+                                        break
+                                existing = True
+                                break
+
+                        if not existing:
+                            # subtest not added yet, first pagecycle, so add new one
+                            new_subtest = {}
+                            new_subtest['name'] = sub
+                            new_subtest['replicates'] = replicates
+                            new_subtest['lowerIsBetter'] = test.lower_is_better
+                            new_subtest['alertThreshold'] = float(test.alert_threshold)
+                            new_subtest['value'] = filter.median(replicates)
+                            new_subtest['unit'] = test.unit
+                            subtests.append(new_subtest)
+                            vals.append([new_subtest['value'], sub])
+            else:
+                LOG.error("output.summarize received unsupported test results type")
+                return
 
         # if there is more than one subtest, calculate a summary result
         if len(subtests) > 1:
             suite['value'] = self.construct_results(vals, testname=test.name)
-
-        LOG.info("returning summarized test results:")
-        LOG.info(test_results)
 
         self.summarized_results = test_results
 
@@ -164,17 +231,15 @@ class Output(object):
         return score
 
     def construct_results(self, vals, testname):
-        if testname.startswith('v8_7'):
+        if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
-        elif testname.startswith('kraken'):
+        elif testname.startswith('raptor-kraken'):
             return self.JS_Metric(vals)
-        elif testname.startswith('ares6'):
+        elif testname.startswith('raptor-jetstream'):
             return self.benchmark_score(vals)
-        elif testname.startswith('jetstream'):
-            return self.benchmark_score(vals)
-        elif testname.startswith('speedometer'):
+        elif testname.startswith('raptor-speedometer'):
             return self.speedometer_score(vals)
-        elif testname.startswith('stylebench'):
+        elif testname.startswith('raptor-stylebench'):
             return self.stylebench_score(vals)
         elif len(vals) > 1:
             return filter.geometric_mean([i for i, j in vals])

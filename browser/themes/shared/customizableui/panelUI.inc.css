@@ -27,6 +27,11 @@
 %define appmenuWarningColor black
 %define appmenuWarningBorderColor hsl(45,100%,77%)
 
+%define appmenuWarningBackgroundColorBrightText hsla(55,100%,50%,.1)
+%define appmenuWarningBackgroundColorHoverBrightText hsla(55,100%,50%,.15)
+%define appmenuWarningBackgroundColorActiveBrightText hsla(55,100%,50%,.2)
+%define appmenuWarningColorBrightText #F9F9FA
+
 :root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
@@ -99,7 +104,13 @@
 
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   height: 13px;
-  background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
+  background: url(chrome://browser/skin/warning.svg) no-repeat center;
+}
+
+:root[lwt-popup-brighttext] #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  -moz-context-properties: fill, stroke;
+  fill: #FFE900;
+  stroke: transparent;
 }
 
 panelview {
@@ -444,7 +455,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item::after {
-  background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
+  background: url(chrome://browser/skin/warning.svg) no-repeat center;
+}
+
+:root[lwt-popup-brighttext] .addon-banner-item::after {
+  -moz-context-properties: fill, stroke;
+  fill: #FFE900;
+  stroke: transparent;
 }
 
 .addon-banner-item,
@@ -638,6 +655,39 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   flex: 1;
   padding-inline-start: 15px;
   border-inline-start-style: none;
+}
+
+:root[lwt-popup-brighttext] .addon-banner-item {
+  color: @appmenuWarningColorBrightText@;
+  background: @appmenuWarningBackgroundColorBrightText@;
+  /* override `.addon-banner-item` border-top !important defined above */
+  border: 0 !important;
+}
+
+:root[lwt-popup-brighttext] .addon-banner-item:hover,
+:root[lwt-popup-brighttext] .addon-banner-item:focus {
+  background: @appmenuWarningBackgroundColorHoverBrightText@;
+}
+
+:root[lwt-popup-brighttext] .addon-banner-item:hover:active,
+:root[lwt-popup-brighttext] .addon-banner-item:focus:active {
+  background: @appmenuWarningBackgroundColorActiveBrightText@;
+}
+
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="login-failed"],
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="unverified"] {
+  background-color: @appmenuWarningBackgroundColorBrightText@;
+  color: @appmenuWarningColorBrightText@;
+}
+
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover,
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover {
+  background-color: @appmenuWarningBackgroundColorHoverBrightText@;
+}
+
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover:active,
+:root[lwt-popup-brighttext] #appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover:active {
+  background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
 
 #PanelUI-remotetabs {
@@ -1239,10 +1289,6 @@ toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbar
   color: inherit;
 }
 
-#main-window:not([customizing]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
-  opacity: .25;
-}
-
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
 %ifdef XP_MACOSX
   min-width: 6ch;
@@ -1546,7 +1592,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 .panel-header > label {
   flex: auto;
-  font-size: 13px;
   font-weight: 600;
   margin: 0;
   text-align: center;

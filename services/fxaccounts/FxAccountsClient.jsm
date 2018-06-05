@@ -409,7 +409,6 @@ this.FxAccountsClient.prototype = {
       body.pushPublicKey = options.pushPublicKey;
       body.pushAuthKey = options.pushAuthKey;
     }
-    body.capabilities = options.capabilities;
 
     return this._request(path, "POST", creds, body);
   },

@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
-Cu.importGlobalProperties(["fetch"]);
+Cu.importGlobalProperties(["fetch", "indexedDB"]);
 
 ChromeUtils.defineModuleGetter(this, "Kinto",
                                "resource://services-common/kinto-offline-client.js");
@@ -178,6 +178,21 @@ async function fetchLatestChanges(url, lastEtag) {
   return {changes, currentEtag, serverTimeMillis, backoffSeconds};
 }
 
+/**
+ * Load the the JSON file distributed with the release for this collection.
+ */
+async function loadDumpFile(filename) {
+  // Replace OS specific path separator by / for URI.
+  const { components: folderFile } = OS.Path.split(filename);
+  const fileURI = `resource://app/defaults/settings/${folderFile.join("/")}`;
+  const response = await fetch(fileURI);
+  if (!response.ok) {
+    throw new Error(`Could not read from '${fileURI}'`);
+  }
+  // Will be rejected if JSON is invalid.
+  return response.json();
+}
+
 
 class RemoteSettingsClient {
 
@@ -275,8 +290,8 @@ class RemoteSettingsClient {
     // a packaged JSON dump.
     if (timestamp == null) {
       try {
-         const { data } = await this._loadDumpFile();
-         await c.loadDump(data);
+        const { data } = await loadDumpFile(this.filename);
+        await c.loadDump(data);
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);
@@ -326,7 +341,7 @@ class RemoteSettingsClient {
       // cold start.
       if (!collectionLastModified && loadDump) {
         try {
-          const initialData = await this._loadDumpFile();
+          const initialData = await loadDumpFile(this.filename);
           await collection.loadDump(initialData.data);
           collectionLastModified = await collection.db.getLastModified();
         } catch (e) {
@@ -462,21 +477,6 @@ class RemoteSettingsClient {
     }
   }
 
-  /**
-   * Load the the JSON file distributed with the release for this collection.
-   */
-  async _loadDumpFile() {
-    // Replace OS specific path separator by / for URI.
-    const { components: folderFile } = OS.Path.split(this.filename);
-    const fileURI = `resource://app/defaults/settings/${folderFile.join("/")}`;
-    const response = await fetch(fileURI);
-    if (!response.ok) {
-      throw new Error(`Could not read from '${fileURI}'`);
-    }
-    // Will be rejected if JSON is invalid.
-    return response.json();
-  }
-
   async _validateCollectionSignature(remote, payload, collection, options = {}) {
     const {ignoreLocal} = options;
     // this is a content-signature field from an autograph response.
@@ -536,6 +536,50 @@ class RemoteSettingsClient {
     const dataPromises = data.map(e => this.filterFunc(e, environment));
     const results = await Promise.all(dataPromises);
     return results.filter(v => !!v);
+  }
+}
+
+/**
+ * Check if an IndexedDB database exists for the specified bucket and collection.
+ *
+ * @param {String} bucket
+ * @param {String} collection
+ * @return {bool} Whether it exists or not.
+ */
+async function databaseExists(bucket, collection) {
+  // The dbname is chosen by kinto.js from the bucket and collection names.
+  // https://github.com/Kinto/kinto.js/blob/41aa1526e/src/collection.js#L231
+  const dbname = `${bucket}/${collection}`;
+  try {
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbname, 1);
+      request.onupgradeneeded = event => {
+        event.target.transaction.abort();
+        reject(event.target.error);
+      };
+      request.onerror = event => reject(event.target.error);
+      request.onsuccess = event => resolve(event.target.result);
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Check if we ship a JSON dump for the specified bucket and collection.
+ *
+ * @param {String} bucket
+ * @param {String} collection
+ * @return {bool} Whether it is present or not.
+ */
+async function hasLocalDump(bucket, collection) {
+  const filename = OS.Path.join(bucket, `${collection}.json`);
+  try {
+    await loadDumpFile(filename);
+    return true;
+  } catch (e) {
+    return false;
   }
 }
 
@@ -632,20 +676,44 @@ function remoteSettingsFunction() {
     // on the related remote settings client.
     let firstError;
     for (const change of changes) {
-      const {bucket, collection, last_modified: lastModified} = change;
-      const key = `${bucket}/${collection}`;
-      if (!_clients.has(key)) {
+      const {bucket: bucketName, collection, last_modified: lastModified} = change;
+      const key = `${bucketName}/${collection}`;
+
+      let client;
+      // Check if a client was registered for this bucket/collection. Potentially
+      // with some specific options like bucket, signer, etc.
+      if (_clients.has(key)) {
+        client = _clients.get(key);
+        // If the bucket name was changed manually on the client instance and does not
+        // match, it should be skipped.
+        if (client.bucketName != bucketName) {
+          continue;
+        }
+
+      // There was no client registered for this bucket/collection, but it's the main bucket,
+      // therefore we can instantiate a client with the default options.
+      // So if we have a local database or if we ship a JSON dump, then it means that
+      // this client is known but it was not registered yet (eg. calling module not "imported" yet).
+      } else if (bucketName == mainBucket && (await databaseExists(bucketName, collection) ||
+                                              await hasLocalDump(bucketName, collection))) {
+        client = new RemoteSettingsClient(collection, {bucketName, signerName: defaultSigner});
+
+      // We are not able to synchronize data for clients in specific buckets since we cannot
+      // guess which `signerName` has to be used for example.
+      // And we don't want to synchronize data for collections in the main bucket that are
+      // completely unknown (ie. no database and no JSON dump).
+      } else {
         continue;
       }
-      const client = _clients.get(key);
-      if (client.bucketName != bucket) {
-        continue;
-      }
+
+      // Start synchronization! It will be a no-op if the specified `lastModified` equals
+      // the one in the local database.
       try {
         await client.maybeSync(lastModified, serverTimeMillis, {loadDump});
       } catch (e) {
         if (!firstError) {
           firstError = e;
+          firstError.details = change;
         }
       }
     }

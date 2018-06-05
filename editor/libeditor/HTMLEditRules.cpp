@@ -7823,6 +7823,9 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem)
       return splitEndInlineResult.Rv();
     }
     EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
+    if (NS_WARN_IF(!splitPointAtEnd.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
     aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
     aRangeItem.mEndOffset = splitPointAtEnd.Offset();
   }
@@ -7847,6 +7850,9 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem)
     //     only start point of aRangeItem.  Shouldn't we modify end point here
     //     if it's collapsed?
     EditorRawDOMPoint splitPointAtStart(splitStartInlineResult.SplitPoint());
+    if (NS_WARN_IF(!splitPointAtStart.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
     aRangeItem.mStartContainer = splitPointAtStart.GetContainer();
     aRangeItem.mStartOffset = splitPointAtStart.Offset();
   }

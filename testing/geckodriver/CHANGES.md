@@ -8,7 +8,7 @@ Unreleased
 ----------
 
 Note that with geckodriver 'next' the following versions are recommended:
-- Firefox 56.0 (and greater)
+- Firefox 57.0 (and greater)
 - Selenium 3.11 (and greater)
 
 ### Added
@@ -20,6 +20,9 @@ Note that with geckodriver 'next' the following versions are recommended:
 - Updated mapping of all supported commands to the new prefixed commands
   in Marionette, whereby all WebDriver specific commands make use of the
   `WebDriver:` prefix.
+
+- Overhaul of Firefox preferences. Already deprecated preferences in Firefox
+  versions earlier than 57 got removed.
 
 
 0.20.1 (2018-04-06)

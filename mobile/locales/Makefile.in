@@ -3,24 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#####################################################################################
-# Dependency build overhead:
-#   o always create/update/hard link targets boomkarks.json & searchplugins
-#   o latest symlink will be correct for the current locale / local build.
-#   o logic is essentially FORCE for language packs w/o all the build overhead
-#   o phase 2: replace hard links with a user function able to derive path
-#     based on current locale.
-#####################################################################################
-
 include $(topsrcdir)/config/config.mk
 
 USE_AUTOTARGETS_MK=1
 include $(topsrcdir)/config/makefiles/makeutils.mk
-
-# Separate items of contention
-tgt-gendir = .deps/generated_$(AB_CD)
-
-GENERATED_DIRS += .deps
 
 $(call errorIfEmpty,MOZ_BRANDING_DIRECTORY)
 SUBMAKEFILES += \
@@ -28,117 +14,17 @@ SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
         $(NULL)
 
-###########################################################################
-# Default target, preserve existing functionality for:
-#    gmake -C $obj/mobile/locales
-###########################################################################
-search-jar-default: search-jar
-
-
-###########################################################################
-## Searchlist plugin config
-plugin-file-array = \
-  $(srcdir)/search/list.json \
-  $(NULL)
-
-###########################################################################
-plugin_file    = $(firstword $(plugin-file-array))
-plugin-file-ts = $(tgt-gendir)/$(subst $(topsrcdir)/,$(NULL),$(plugin_file)).ts
-
-GARBAGE += $(plugin-file-ts)
-# ---------------------------------------------------------------------------
-# plugin-file-ts track searchlist file used ($path/list.json)
-# and time when the file was last modified.
-###########################################################################
-plugin-file-ts-preqs = \
-  $(call mkdir_deps,$(dir $(plugin-file-ts))) \
-  $(plugin_file) \
-  $(NULL)
-
-###########################################################################
-# Detect locale changes.  Force stale deps when searchlist file
-# or content has changed.
-$(plugin-file-ts): $(plugin-file-ts-preqs)
-	@touch $@
-
-
-###########################################################################
-search-jar-common = tmp-search.jar.mn
-search-jar        = $(tgt-gendir)/$(search-jar-common)
-search-jar-ts     = $(search-jar).ts
-
-GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
-# ---------------------------------------------------------------------------
-# search-jar contains a list of providers for the search plugin
-###########################################################################
-SEARCH_PLUGINS := $(shell $(call py_action,output_searchplugins_list,$(srcdir)/search/list.json $(AB_CD)))
-$(call errorIfEmpty,SEARCH_PLUGINS)
-
-search-jar-preqs = \
-  $(plugin-file-ts) \
-  $(if $(IS_LANGUAGE_REPACK),FORCE) \
-  $(NULL)
-
-.PHONY: search-jar
-search-jar: $(search-jar)
-$(search-jar): $(search-jar-preqs)
-	@echo '\nGenerating: search-jar'
-	printf '$(AB_CD).jar:' > $@
-	ln -fn $@ .
-	printf '$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))' >>  $@
-	printf '\n locale/$(AB_CD)/browser/searchplugins/list.json (list.json)' >> $@
-	@echo   >> $@
-
-###################
-search-dir-deps = \
-  $(plugin-file) \
-  $(dir-chrome) \
-  $(NULL)
-
-search-preqs =\
-  $(call mkdir_deps,$(dir $(search-jar-ts))) \
-  $(call mkdir_deps,$(FINAL_TARGET)/chrome) \
-  $(search-jar) \
-  $(search-dir-deps) \
-  $(if $(IS_LANGUAGE_REPACK),FORCE) \
-  $(GLOBAL_DEPS) \
-  $(NULL)
-
-.PHONY: searchplugins
-searchplugins: $(search-preqs)
-	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(tgt-gendir)/list.json)
-	$(call py_action,jar_maker,\
-          $(QUIET) -d $(FINAL_TARGET) \
-          -s $(topsrcdir)/$(relativesrcdir)/searchplugins \
-          -s $(tgt-gendir) \
-          $(MAKE_JARS_FLAGS) $(search-jar))
-	$(TOUCH) $@
-
 include $(topsrcdir)/config/rules.mk
 
-
-#############
-libs-preqs =\
-  $(call mkdir-deps,$(DIST)/install) \
-  $(NULL)
-
 libs-%: AB_CD=$*
-libs-%: $(libs-preqs)
-	$(display-deps)
+libs-%:
+	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$*
-	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%: AB_CD=$*
 chrome-%:
-	$(display-deps)
-	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
-
-NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
-
-
-export:: searchplugins

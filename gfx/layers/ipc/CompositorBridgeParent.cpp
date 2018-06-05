@@ -1392,7 +1392,8 @@ CompositorBridgeParent::LeaveTestMode(const LayersId& aId)
 }
 
 void
-CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
+CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
+                                             TransformsToSkip aSkip)
 {
   // NOTE: This should only be used for testing. For example, when mTestTime is
   // non-empty, or when called from test-only methods like
@@ -1405,8 +1406,7 @@ CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
 
     TimeStamp time = mTestTime.valueOr(mCompositorScheduler->GetLastComposeTime());
     bool requestNextFrame =
-      mCompositionManager->TransformShadowTree(time, mVsyncRate,
-        AsyncCompositionManager::TransformsToSkip::APZ);
+      mCompositionManager->TransformShadowTree(time, mVsyncRate, aSkip);
     if (!requestNextFrame) {
       CancelCurrentCompositeTask();
       // Pretend we composited in case someone is waiting for this event.

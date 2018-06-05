@@ -23,9 +23,6 @@ function checkTestModuleNotPresent() {
     ok(!(module.libName && module.libName.includes("pkcs11testmodule")),
        "Non-test module lib name should not include 'pkcs11testmodule'");
   }
-
-  throws(() => gModuleDB.findModuleByName("PKCS11 Test Module"),
-         /NS_ERROR_FAILURE/, "Test module should not be findable by name");
 }
 
 /**
@@ -51,9 +48,6 @@ function checkTestModuleExists() {
   notEqual(testModule.libName, null, "Test module lib name should not be null");
   ok(testModule.libName.includes(ctypes.libraryName("pkcs11testmodule")),
      "Test module lib name should include lib name of 'pkcs11testmodule'");
-
-  notEqual(gModuleDB.findModuleByName("PKCS11 Test Module"), null,
-           "Test module should be findable by name");
 
   return testModule;
 }
@@ -106,13 +100,6 @@ function run_test() {
   const expectedSlotNames = ["Empty PKCS11 Slot", "Test PKCS11 Slot", "Test PKCS11 Slot 二"];
   deepEqual(testModuleSlotNames, expectedSlotNames,
             "Actual and expected slot names should be equal");
-
-  // Check that finding the test slot by name is possible, and that trying to
-  // find a non-present slot fails.
-  notEqual(testModule.findSlotByName("Test PKCS11 Slot"), null,
-           "Test slot should be findable by name");
-  throws(() => testModule.findSlotByName("Not Present"), /NS_ERROR_FAILURE/,
-         "Non-present slot should not be findable by name");
 
   // Check that deleting the test module makes it disappear from the module list.
   let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]

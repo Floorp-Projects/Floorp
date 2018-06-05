@@ -41,27 +41,12 @@ class MachCommands(MachCommandBase):
         """Generate the static css properties database for devtools and write it to file."""
 
         print("Re-generating the css properties database...")
-        preferences = self.get_preferences()
         db = self.get_properties_db_from_xpcshell()
 
         self.output_template({
-            'preferences': stringify(preferences),
+            'preferences': stringify(db['preferences']),
             'cssProperties': stringify(db['cssProperties']),
             'pseudoElements': stringify(db['pseudoElements'])})
-
-    def get_preferences(self):
-        """Get all of the preferences associated with enabling and disabling a property."""
-        # The data takes the following form:
-        # [ (name, prop, id, flags, pref, proptype), ... ]
-        dataPath = resolve_path(self.topobjdir, 'layout/style/ServoCSSPropList.py')
-        data = runpy.run_path(dataPath)['data']
-
-        # Map this list
-        preferences = [
-            (p.name, p.pref) for p in data
-            if 'CSSPropFlags::Internal' not in p.flags and p.pref]
-
-        return preferences
 
     def get_properties_db_from_xpcshell(self):
         """Generate the static css properties db for devtools from an xpcshell script."""

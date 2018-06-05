@@ -1,0 +1,15 @@
+<script>
+function go() {
+  svgvar00002.addEventListener("DOMNodeInserted", () => {
+    svg.appendChild(svgvar00008);
+    document.execCommand("insertOrderedList", false);
+  });
+  svgvar00002.insertAdjacentHTML("afterBegin", table.outerHTML);
+}
+</script>
+<body onload=go()>
+<table id="table"></table>
+<b contenteditable="true">
+<svg id="svg">
+<feConvolveMatrix id="svgvar00002"/>
+<feConvolveMatrix id="svgvar00008"/>

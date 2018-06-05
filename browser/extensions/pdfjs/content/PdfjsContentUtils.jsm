@@ -118,12 +118,12 @@ var PdfjsContentUtils = {
         // Only react to this if we are remote.
         if (Services.appinfo.processType ===
             Services.appinfo.PROCESS_TYPE_CONTENT) {
-          let jsm = "resource://pdf.js/PdfJs.jsm";
-          let pdfjs = ChromeUtils.import(jsm, {}).PdfJs;
+          let jsm = "resource://pdf.js/PdfJsRegistration.jsm";
+          let pdfjsr = ChromeUtils.import(jsm, {}).PdfJsRegistration;
           if (aMsg.data.enabled) {
-            pdfjs.ensureRegistered();
+            pdfjsr.ensureRegistered();
           } else {
-            pdfjs.ensureUnregistered();
+            pdfjsr.ensureUnregistered();
           }
         }
         break;

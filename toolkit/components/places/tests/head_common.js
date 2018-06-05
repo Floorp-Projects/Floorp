@@ -3,9 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 50;
-const FIRST_UPGRADABLE_SCHEMA_VERSION = 30;
-
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
 // Shortcuts to transitions type.
