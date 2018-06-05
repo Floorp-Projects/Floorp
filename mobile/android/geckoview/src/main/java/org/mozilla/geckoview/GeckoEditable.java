@@ -871,11 +871,7 @@ import android.view.inputmethod.EditorInfo;
 
     @Override // SessionTextInput.EditableClient
     public void sendKeyEvent(final @Nullable View view, final int action, @NonNull KeyEvent event) {
-        final Editable editable = getEditable();
-        if (editable == null) {
-            return;
-        }
-
+        final Editable editable = mProxy;
         final KeyListener keyListener = TextKeyListener.getInstance();
         event = translateKey(event.getKeyCode(), event);
 
