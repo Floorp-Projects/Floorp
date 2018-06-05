@@ -27,7 +27,6 @@ config = {
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_UPDATE_CHANNEL": "nightly-maple",
     },
-    "upload_branch": "%s-android-api-16" % BRANCH,
     "platform": "android",
 
     # Balrog
