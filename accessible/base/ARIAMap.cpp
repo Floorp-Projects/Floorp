@@ -88,15 +88,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eLandmark,
     kNoReqStates
   },
-  { // blockquote
-    &nsGkAtoms::blockquote,
-    roles::BLOCKQUOTE,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
-  },
   { // button
     &nsGkAtoms::button,
     roles::PUSHBUTTON,
@@ -107,15 +98,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eButton,
     kNoReqStates
     // eARIAPressed is auto applied on any button
-  },
-  { // caption
-    &nsGkAtoms::caption,
-    roles::CAPTION,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
   },
   { // cell
     &nsGkAtoms::cell,
@@ -914,15 +896,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates,
     eARIASelectable,
     eARIACheckedMixed
-  },
-  { // paragraph
-    &nsGkAtoms::paragraph,
-    roles::PARAGRAPH,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
   },
   { // presentation
     &nsGkAtoms::presentation,
