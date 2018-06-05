@@ -218,10 +218,10 @@ job-template:
       actions:
          by-build-platform:
             default: ['clone-locales', 'list-locales', 'setup', 'repack',
-                      'summary']
+                      'submit-to-balrog', 'summary']
             android-api-16-nightly: ['get-secrets',
                                      'clone-locales', 'list-locales', 'setup', 'repack',
-                                     'upload-repacks', 'summary']
+                                     'upload-repacks', 'submit-to-balrog', 'summary']
       script:
          by-build-platform:
             default: mozharness/scripts/desktop_l10n.py
