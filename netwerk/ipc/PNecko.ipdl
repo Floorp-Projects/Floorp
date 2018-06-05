@@ -27,6 +27,7 @@ include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 include protocol PTrackingDummyChannel;
+include protocol PWebrtcProxyChannel;
 
 include IPCStream;
 include URIParams;
@@ -65,6 +66,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
   manages PTrackingDummyChannel;
+  manages PWebrtcProxyChannel;
 
 parent:
   async __delete__();
@@ -132,6 +134,8 @@ parent:
   async PAltDataOutputStream(nsCString type, int64_t predictedSize, PHttpChannel channel);
 
   async PStunAddrsRequest();
+
+  async PWebrtcProxyChannel(PBrowserOrId browser);
 
   /**
    * WebExtension-specific remote resource loading

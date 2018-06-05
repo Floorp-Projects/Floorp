@@ -237,7 +237,7 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
   }
 
   RefPtr<NrSocketBase> external_socket;
-  r = NrSocketBase::CreateSocket(&nat_external_addr, &external_socket);
+  r = NrSocketBase::CreateSocket(&nat_external_addr, &external_socket, nullptr);
 
   if (r) {
     r_log(LOG_GENERIC,LOG_CRIT, "%s: Failure in NrSocket::create: %d",
@@ -253,7 +253,7 @@ int TestNrSocket::create(nr_transport_addr *addr) {
     tls_ = true;
   }
 
-  return NrSocketBase::CreateSocket(addr, &internal_socket_);
+  return NrSocketBase::CreateSocket(addr, &internal_socket_, nullptr);
 }
 
 int TestNrSocket::getaddr(nr_transport_addr *addrp) {

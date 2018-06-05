@@ -108,6 +108,12 @@ protected:
   virtual bool
     DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor) override;
 
+  virtual PWebrtcProxyChannelParent* AllocPWebrtcProxyChannelParent(
+    const PBrowserOrId& aBrowser) override;
+  virtual bool
+    DeallocPWebrtcProxyChannelParent(PWebrtcProxyChannelParent* aActor)
+    override;
+
   virtual PAltDataOutputStreamParent* AllocPAltDataOutputStreamParent(
     const nsCString& type, const int64_t& predictedSize, PHttpChannelParent* channel) override;
   virtual bool DeallocPAltDataOutputStreamParent(
