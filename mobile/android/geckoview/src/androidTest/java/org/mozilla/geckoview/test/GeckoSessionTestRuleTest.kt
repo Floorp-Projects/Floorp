@@ -1654,6 +1654,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @ReuseSession(false)
     fun contentCrashFails() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false));
 
         sessionRule.session.loadUri(CONTENT_CRASH_URL)
         sessionRule.waitForPageStop()
