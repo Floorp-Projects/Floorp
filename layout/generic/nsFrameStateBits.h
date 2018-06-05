@@ -344,6 +344,12 @@ FRAME_STATE_BIT(GridContainer, 22, NS_STATE_GRID_GENERATE_COMPUTED_VALUES)
 // True if the container has no grid items; may lie if there is a pending reflow
 FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_SYNTHESIZE_BASELINE)
 
+// True if the container is a subgrid in its inline axis
+FRAME_STATE_BIT(GridContainer, 24, NS_STATE_GRID_IS_COL_SUBGRID)
+
+// True if the container is a subgrid in its block axis
+FRAME_STATE_BIT(GridContainer, 25, NS_STATE_GRID_IS_ROW_SUBGRID)
+
 // == Frame state bits that apply to SVG frames ===============================
 
 FRAME_STATE_GROUP(SVG, nsSVGDisplayableFrame)
