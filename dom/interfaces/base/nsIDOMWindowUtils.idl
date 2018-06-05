@@ -1697,6 +1697,15 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getOMTAStyle(in Element aElement, in AString aProperty,
                        [optional] in AString aPseudoElement);
 
+  /*
+   * Returns the value of the transform value on the compositor thread.
+   * Unlike the above getOMTAStyle, the transform value returned by this
+   * includes both of animating and APZ values.
+   * Note: This function doesn't work on WebRender at all.
+   */
+  AString getOMTCTransform(in Element aElement,
+                           [optional] in AString aPseudoElement);
+
   /**
    * Special function that gets a property syncronously from the last composite
    * that occured.
