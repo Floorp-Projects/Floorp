@@ -10,8 +10,8 @@ extern crate proc_macro2;
 extern crate syn;
 
 #[allow(unused_imports)] use std::ascii::AsciiExt;
-use quote::ToTokens;
-use proc_macro2::{TokenNode, TokenStream, TokenTree};
+use std::iter;
+use proc_macro2::{TokenStream, TokenTree};
 
 define_proc_macros! {
     /// Input: the arms of a `match` expression.
@@ -24,12 +24,12 @@ define_proc_macros! {
     pub fn cssparser_internal__assert_ascii_lowercase__max_len(input: &str) -> String {
         let expr = syn::parse_str(&format!("match x {{ {} }}", input)).unwrap();
         let arms = match expr {
-            syn::Expr::Match(syn::ExprMatch { ref arms, .. }) => arms,
+            syn::Expr::Match(syn::ExprMatch { arms, .. }) => arms,
             _ => panic!("expected a match expression, got {:?}", expr)
         };
-        max_len(arms.iter().flat_map(|arm| &arm.pats).filter_map(|pattern| {
-            let expr = match *pattern {
-                syn::Pat::Lit(ref expr) => expr,
+        max_len(arms.into_iter().flat_map(|arm| arm.pats).filter_map(|pattern| {
+            let expr = match pattern {
+                syn::Pat::Lit(expr) => expr,
                 syn::Pat::Wild(_) => return None,
                 _ => panic!("expected string or wildcard pattern, got {:?}", pattern)
             };
@@ -93,6 +93,6 @@ fn max_len<I: Iterator<Item=usize>>(lengths: I) -> String {
 }
 
 fn string_literal(token: &TokenTree) -> String {
-    let lit: syn::LitStr = syn::parse2(token.clone().into()).expect(&format!("expected string literal, got {:?}", token));
+    let lit: syn::LitStr = syn::parse2(iter::once(token.clone()).collect()).expect(&format!("expected string literal, got {:?}", token));
     lit.value()
 }
