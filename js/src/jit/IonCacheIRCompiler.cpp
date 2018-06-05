@@ -13,6 +13,7 @@
 #include "jit/JSJitFrameIter.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
+#include "jit/VMFunctions.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 
@@ -1357,6 +1358,46 @@ IonCacheIRCompiler::emitCallStringSplitResult()
         return false;
 
     masm.storeCallResultValue(output);
+    return true;
+}
+
+bool
+IonCacheIRCompiler::emitCompareStringResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register left = allocator.useRegister(masm, reader.stringOperandId());
+    Register right = allocator.useRegister(masm, reader.stringOperandId());
+    JSOp op = reader.jsop();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label slow, done;
+    masm.compareStrings(op, left, right, scratch, &slow);
+
+    masm.jump(&done);
+    masm.bind(&slow);
+
+    allocator.discardStack(masm);
+    prepareVMCall(masm);
+    masm.Push(right);
+    masm.Push(left);
+
+    if (!callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ) ?
+                            StringsEqualInfo :
+                            StringsNotEqualInfo))
+    {
+        return false;
+    }
+
+    masm.storeCallBoolResult(scratch);
+    masm.bind(&done);
+
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
     return true;
 }
 
