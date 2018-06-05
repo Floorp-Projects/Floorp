@@ -13,9 +13,7 @@
 #include "nsPresContext.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
-#ifdef XP_WIN
 #include "mozilla/LookAndFeel.h"
-#endif
 #include "nsDeviceContext.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
