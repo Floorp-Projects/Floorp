@@ -5,11 +5,12 @@
 package mozilla.components.concept.toolbar
 
 import android.support.annotation.DrawableRes
+import android.support.v7.widget.AppCompatImageButton
+import android.support.v7.widget.AppCompatImageView
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ImageView
 import java.lang.ref.WeakReference
 
 /**
@@ -97,7 +98,7 @@ interface Toolbar {
         @DrawableRes private val background: Int? = null,
         private val listener: () -> Unit
     ) : Action {
-        override fun createView(parent: ViewGroup): View = ImageButton(parent.context).also {
+        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also {
             it.setImageResource(imageResource)
             it.contentDescription = contentDescription
             it.setOnClickListener { listener.invoke() }
@@ -142,7 +143,7 @@ interface Toolbar {
     ) : Action {
         private var view: WeakReference<ImageButton>? = null
 
-        override fun createView(parent: ViewGroup): View = ImageButton(parent.context).also {
+        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also {
             view = WeakReference(it)
 
             it.setOnClickListener { toggle() }
@@ -216,7 +217,7 @@ interface Toolbar {
         @DrawableRes private val imageResource: Int,
         private val contentDescription: String? = null
     ) : Action {
-        override fun createView(parent: ViewGroup): View = ImageView(parent.context).also {
+        override fun createView(parent: ViewGroup): View = AppCompatImageView(parent.context).also {
             val drawable = parent.context.resources.getDrawable(imageResource, parent.context.theme)
             it.minimumWidth = drawable.intrinsicWidth
 
