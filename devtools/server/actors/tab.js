@@ -785,7 +785,10 @@ TabActor.prototype = {
     let parentID = undefined;
     // Ignore the parent of the original document on non-e10s firefox,
     // as we get the xul window as parent and don't care about it.
-    if (window.parent && window != this._originalWindow) {
+    // Furthermore, ignore setting parentID when parent window is same as
+    // current window in order to deal with front end. e.g. toolbox will be fall
+    // into infinite loop due to recursive search with by using parent id.
+    if (window.parent && window.parent != window && window != this._originalWindow) {
       parentID = window.parent
                        .QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils)
