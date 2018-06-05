@@ -12,6 +12,8 @@ function is(a, b, msg) {
                       msg: a + " === " + b + ": " + msg, context: context});
 }
 
+var completeInstall;
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
@@ -44,7 +46,7 @@ addEventListener('message', function workerWrapperOnMessage(e) {
     // Fetch requests from a service worker are not intercepted.
     self.isSWPresent = false;
 
-    e.waitUntil(self.clients.matchAll().then(function(clients) {
+    e.waitUntil(self.clients.matchAll({ includeUncontrolled: true }).then(function(clients) {
       for (var i = 0; i < clients.length; ++i) {
         if (clients[i].url.indexOf("message_receiver.html") > -1) {
           client = clients[i];
@@ -56,10 +58,15 @@ addEventListener('message', function workerWrapperOnMessage(e) {
       }
       context = "ServiceWorker";
       loadTest(e);
+      completeInstall();
     }));
   } else {
     client = self;
     context = "Worker";
     loadTest(e);
   }
+});
+
+addEventListener("install", e => {
+  e.waitUntil(new Promise(resolve => completeInstall = resolve));
 });
