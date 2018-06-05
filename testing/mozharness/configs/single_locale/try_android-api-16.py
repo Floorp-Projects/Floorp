@@ -8,7 +8,6 @@ config = {
     "log_name": "single_locale",
     "objdir": "obj-firefox",
     "is_automation": True,
-    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "tooltool_config": {

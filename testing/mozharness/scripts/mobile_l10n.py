@@ -44,13 +44,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
          "help": "Specify the locale(s) to sign and update"
          }
     ], [
-        ['--locales-file', ],
-        {"action": "store",
-         "dest": "locales_file",
-         "type": "string",
-         "help": "Specify a file to determine which locales to sign and update"
-         }
-    ], [
         ['--tag-override', ],
         {"action": "store",
          "dest": "tag_override",
