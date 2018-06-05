@@ -13,13 +13,13 @@
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
+#include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDocumentRule.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoFontFeatureValuesRule.h"
-#include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoSupportsRule.h"
 #include "mozilla/StyleSheet.h"
 
@@ -108,7 +108,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE_CSS(KEYFRAMES, Keyframes)
       CASE_RULE_CSS(MEDIA, Media)
       CASE_RULE_CSS(NAMESPACE, Namespace)
-      CASE_RULE(PAGE, Page)
+      CASE_RULE_CSS(PAGE, Page)
       CASE_RULE(SUPPORTS, Supports)
       CASE_RULE(DOCUMENT, Document)
       CASE_RULE(IMPORT, Import)
