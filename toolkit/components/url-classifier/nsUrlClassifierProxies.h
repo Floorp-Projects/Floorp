@@ -150,7 +150,7 @@ public:
     DoLocalLookupRunnable(nsUrlClassifierDBServiceWorker* aTarget,
                           const nsACString& spec,
                           const nsACString& tables,
-                          mozilla::safebrowsing::LookupResultArray* results)
+                          mozilla::safebrowsing::LookupResultArray& results)
       : mozilla::Runnable(
           "UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable")
       , mTarget(aTarget)
@@ -164,7 +164,7 @@ public:
     const RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
     const nsCString mSpec;
     const nsCString mTables;
-    mozilla::safebrowsing::LookupResultArray* const mResults;
+    mozilla::safebrowsing::LookupResultArray& mResults;
   };
 
   class ClearLastResultsRunnable : public mozilla::Runnable
@@ -224,7 +224,7 @@ public:
 public:
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,
-                         mozilla::safebrowsing::LookupResultArray* results) const;
+                         mozilla::safebrowsing::LookupResultArray& results) const;
 
   nsresult OpenDb() const;
   nsresult CloseDb() const;
@@ -259,18 +259,18 @@ public:
   public:
     LookupCompleteRunnable(
       const nsMainThreadPtrHandle<nsIUrlClassifierLookupCallback>& aTarget,
-      mozilla::safebrowsing::LookupResultArray* aResults)
+      mozilla::UniquePtr<mozilla::safebrowsing::LookupResultArray> aResults)
       : mozilla::Runnable(
           "UrlClassifierLookupCallbackProxy::LookupCompleteRunnable")
       , mTarget(aTarget)
-      , mResults(aResults)
+      , mResults(std::move(aResults))
     { }
 
     NS_DECL_NSIRUNNABLE
 
   private:
     const nsMainThreadPtrHandle<nsIUrlClassifierLookupCallback> mTarget;
-    mozilla::safebrowsing::LookupResultArray* const mResults;
+    mozilla::UniquePtr<mozilla::safebrowsing::LookupResultArray> mResults;
   };
 
 private:
