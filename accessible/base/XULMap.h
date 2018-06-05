@@ -172,8 +172,7 @@ XULMAP(
       return nullptr;
 
     RefPtr<nsTreeColumns> treeCols = treeFrame->Columns();
-    int32_t count = 0;
-    treeCols->GetCount(&count);
+    uint32_t count = treeCols->Count();
 
     // Outline of list accessible.
     if (count == 1) {

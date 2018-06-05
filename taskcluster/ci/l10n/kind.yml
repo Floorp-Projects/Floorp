@@ -161,8 +161,6 @@ job-template:
       # no default, so we fail on new entries
       options:
          - revision=$GECKO_HEAD_REV
-         - total-chunks=1
-         - this-chunk=1
       actions:
          by-build-platform:
             default: ['clone-locales', 'list-locales', 'setup', 'repack',
@@ -181,6 +179,7 @@ job-template:
          - testing/mozharness/configs/single_locale/**
          - testing/mozharness/mozharness/mozilla/l10n/locales.py
          - testing/mozharness/scripts/desktop_l10n.py
+         - testing/mozharness/scripts/mobile_l10n.py
          - third_party/python/compare-locales/**
          - toolkit/locales/**
          - toolkit/mozapps/installer/**

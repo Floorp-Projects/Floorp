@@ -122,13 +122,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   mStandardFontLoadPrincipal =
     new gfxFontSrcPrincipal(mDocument->NodePrincipal());
 
-  // If the pref is not set, don't create the Promise (which the page wouldn't
-  // be able to get to anyway) as it causes the window.FontFaceSet constructor
-  // to be created.
-  if (aWindow && PrefEnabled()) {
-    mResolveLazilyCreatedReadyPromise = true;
-  }
-
   // Record the state of the "bypass cache" flags from the docshell now,
   // since we want to look at them from style worker threads, and we can
   // only get to the docshell through a weak pointer (which is only
@@ -1698,9 +1691,12 @@ FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise()
         mReady = Promise::Create(GetParentObject(), rv);
       }
     }
-    if (!mReady) {
-      mResolveLazilyCreatedReadyPromise = false;
-    }
+
+    // We may previously have been in a state where all fonts had finished
+    // loading and we'd set mResolveLazilyCreatedReadyPromise to make sure that
+    // if we lazily create mReady for a consumer that we resolve it before
+    // returning it.  We're now loading fonts, so we need to clear that flag.
+    mResolveLazilyCreatedReadyPromise = false;
   }
 }
 

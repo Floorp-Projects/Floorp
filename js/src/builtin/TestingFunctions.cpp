@@ -2387,8 +2387,8 @@ ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
 
     struct InlineFrameInfo
     {
-        InlineFrameInfo(const char* kind, char* label)
-          : kind(kind), label(label) {}
+        InlineFrameInfo(const char* kind, UniqueChars label)
+          : kind(kind), label(std::move(label)) {}
         const char* kind;
         UniqueChars label;
     };
@@ -2422,11 +2422,11 @@ ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
                 frameKindStr = "unknown";
             }
 
-            char* label = JS_strdup(cx, frames[i].label);
+            UniqueChars label = DuplicateString(cx, frames[i].label);
             if (!label)
                 return false;
 
-            if (!frameInfo.back().emplaceBack(frameKindStr, label))
+            if (!frameInfo.back().emplaceBack(frameKindStr, std::move(label)))
                 return false;
         }
     }
@@ -4380,7 +4380,7 @@ GetLcovInfo(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     JSString* str = JS_NewStringCopyN(cx, content, length);
-    free(content);
+    js_free(content);
 
     if (!str)
         return false;

@@ -14,6 +14,7 @@
 #include "Role.h"
 #include "States.h"
 #include "nsQueryObject.h"
+#include "nsTreeColumns.h"
 
 #include "nsIBoxObject.h"
 #include "nsIMutableArray.h"
@@ -211,15 +212,14 @@ XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx)
 role
 XULTreeGridAccessible::NativeRole() const
 {
-  nsCOMPtr<nsITreeColumns> treeColumns;
+  RefPtr<nsTreeColumns> treeColumns;
   mTree->GetColumns(getter_AddRefs(treeColumns));
   if (!treeColumns) {
     NS_ERROR("No treecolumns object for tree!");
     return roles::NOTHING;
   }
 
-  nsCOMPtr<nsITreeColumn> primaryColumn;
-  treeColumns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
+  nsTreeColumn* primaryColumn = treeColumns->GetPrimaryColumn();
 
   return primaryColumn ? roles::TREE_TABLE : roles::TABLE;
 }
@@ -391,15 +391,14 @@ void
 XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
                                          int32_t aEndColIdx)
 {
-  nsCOMPtr<nsITreeColumns> treeColumns;
+  RefPtr<nsTreeColumns> treeColumns;
   mTree->GetColumns(getter_AddRefs(treeColumns));
   if (!treeColumns)
     return;
 
   bool nameChanged = false;
   for (int32_t colIdx = aStartColIdx; colIdx <= aEndColIdx; ++colIdx) {
-    nsCOMPtr<nsITreeColumn> column;
-    treeColumns->GetColumnAt(colIdx, getter_AddRefs(column));
+    nsTreeColumn* column = treeColumns->GetColumnAt(colIdx);
     if (column && !nsCoreUtils::IsColumnHidden(column)) {
       XULTreeGridCellAccessible* cell = GetCellAccessible(column);
       if (cell)

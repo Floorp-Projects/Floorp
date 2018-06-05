@@ -2202,7 +2202,7 @@ RestyleManager::PostRestyleEventForAnimations(
 
   if (!elementToRestyle) {
     // FIXME: Bug 1371107: When reframing happens,
-    // EffectCompositor::mElementsToRestyle still has unbinded old pseudo
+    // EffectCompositor::mElementsToRestyle still has unbound old pseudo
     // element. We should drop it.
     return;
   }
@@ -2216,8 +2216,8 @@ void
 RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-   // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems not
-   // to be needed in my testing.
+  // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems not
+  // to be needed in my testing.
   PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 

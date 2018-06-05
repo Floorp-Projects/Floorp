@@ -15,7 +15,7 @@ use std::path::Path;
 #[cfg(feature = "dummy_match_byte")]
 mod codegen {
     use std::path::Path;
-    pub fn main(_: &Path) {}
+    pub fn main() {}
 }
 
 #[cfg(not(feature = "dummy_match_byte"))]
@@ -27,11 +27,21 @@ mod codegen {
     use match_byte;
     use std::env;
     use std::path::Path;
+    use std::thread::Builder;
 
-    pub fn main(tokenizer_rs: &Path) {
-        match_byte::expand(tokenizer_rs,
-                           &Path::new(&env::var("OUT_DIR").unwrap()).join("tokenizer.rs"));
+    pub fn main() {
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
+        let input = Path::new(&manifest_dir).join("src/tokenizer.rs");
+        let output = Path::new(&env::var("OUT_DIR").unwrap()).join("tokenizer.rs");
+        println!("cargo:rerun-if-changed={}", input.display());
+
+        // We have stack overflows on Servo's CI.
+        let handle = Builder::new().stack_size(128 * 1024 * 1024).spawn(move || {
+            match_byte::expand(&input, &output);
+        }).unwrap();
+
+        handle.join().unwrap();
     }
 }
 
@@ -41,8 +51,5 @@ fn main() {
         println!("cargo:rustc-cfg=rustc_has_pr45225")
     }
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let tokenizer_rs = Path::new(&manifest_dir).join("src/tokenizer.rs");
-    codegen::main(&tokenizer_rs);
-    println!("cargo:rerun-if-changed={}", tokenizer_rs.display());
+    codegen::main();
 }

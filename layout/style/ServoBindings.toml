@@ -67,7 +67,6 @@ headers = [
     "mozilla/Keyframe.h",
     "mozilla/ServoElementSnapshot.h",
     "mozilla/ServoElementSnapshotTable.h",
-    "mozilla/css/ErrorReporter.h",
     "mozilla/dom/Element.h",
     "mozilla/dom/ChildIterator.h",
     "mozilla/dom/NameSpaceConstants.h",
@@ -224,7 +223,6 @@ whitelist-types = [
     "mozilla::ServoStyleSheetInner",
     "mozilla::ServoStyleSetSizes",
     "mozilla::ServoTraversalStatistics",
-    "mozilla::css::ErrorReporter",
     "mozilla::css::LoaderReusableStyleSheets",
     "mozilla::css::SheetLoadData",
     "mozilla::css::SheetLoadDataHolder",
@@ -453,7 +451,6 @@ raw-lines = [
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
 structs-types = [
     "mozilla::css::GridTemplateAreasValue",
-    "mozilla::css::ErrorReporter",
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
     "mozilla::css::URLValueData",

@@ -12,7 +12,6 @@
 #include "nsStubDocumentObserver.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
-#include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
@@ -33,7 +32,6 @@ class TreeBoxObject;
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
 class nsTreeContentView final : public nsITreeView,
-                                public nsITreeContentView,
                                 public nsStubDocumentObserver,
                                 public nsWrapperCache
 {
@@ -118,8 +116,6 @@ class nsTreeContentView final : public nsITreeView,
     int32_t GetIndexOfItem(Element* aItem);
 
     NS_DECL_NSITREEVIEW
-
-    NS_DECL_NSITREECONTENTVIEW
 
     // nsIDocumentObserver
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED

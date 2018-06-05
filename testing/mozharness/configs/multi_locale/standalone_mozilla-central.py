@@ -2,9 +2,6 @@
 import os
 # The name of the directory we'll pull our source into.
 BUILD_DIR = "mozilla-central"
-# This is everything that comes after https://hg.mozilla.org/
-# e.g. "releases/mozilla-aurora"
-REPO_PATH = "mozilla-central"
 # This is where the l10n repos are (everything after https://hg.mozilla.org/)
 # for mozilla-central, that's "l10n-central".
 # For mozilla-aurora, that's "releases/l10n/mozilla-aurora"
@@ -23,11 +20,6 @@ config = {
     "locales_platform": "android-multilocale",
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US", "multi"],
-    "repos": [{
-        "repo": "https://hg.mozilla.org/%s" % REPO_PATH,
-        "branch": "default",
-        "dest": BUILD_DIR,
-    }],
     "vcs_share_base": "/builds/hg-shared",
     "l10n_repos": [],
     "hg_l10n_base": "https://hg.mozilla.org/%s" % L10N_REPO_PATH,

@@ -36,6 +36,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"
@@ -2319,10 +2320,10 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
     }
     if (!fallback) {
         if (v.isUndefined())
-            return UniqueChars(JS_strdup(cx, js_undefined_str)); // Prevent users from seeing "(void 0)"
+            return DuplicateString(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
         fallback = ValueToSource(cx, v);
         if (!fallback)
-            return UniqueChars(nullptr);
+            return nullptr;
     }
 
     return UniqueChars(JS_EncodeString(cx, fallback));
@@ -2397,7 +2398,7 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
     return ed.getOutput(res);
 }
 
-char*
+UniqueChars
 js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
 {
     {
@@ -2406,18 +2407,18 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
             return nullptr;
         if (result) {
             if (strcmp(result, "(intermediate value)"))
-                return result;
+                return UniqueChars(result);
             js_free(result);
         }
     }
     if (v.isUndefined())
-        return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
+        return DuplicateString(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
 
     RootedString fallback(cx, ValueToSource(cx, v));
     if (!fallback)
         return nullptr;
 
-    return JS_EncodeString(cx, fallback);
+    return UniqueChars(JS_EncodeString(cx, fallback));
 }
 
 bool

@@ -517,12 +517,16 @@ SourceBuffer::AppendFromInputStream(nsIInputStream* aInputStream,
   }
 
   if (bytesRead != aCount) {
-    // Only some of the given data was read. We must have failed in
-    // SourceBuffer::Append but ReadSegments swallowed the error.
+    // Only some of the given data was read. We may have failed in
+    // SourceBuffer::Append but ReadSegments swallowed the error. Otherwise the
+    // stream itself failed to yield the data.
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mStatus);
-    MOZ_ASSERT(NS_FAILED(*mStatus));
-    return *mStatus;
+    if (mStatus) {
+      MOZ_ASSERT(NS_FAILED(*mStatus));
+      return *mStatus;
+    }
+
+    MOZ_ASSERT_UNREACHABLE("AppendToSourceBuffer should consume everything");
   }
 
   return rv;

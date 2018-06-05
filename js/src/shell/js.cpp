@@ -17,6 +17,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 
 #include <chrono>
 #ifdef JS_POSIX_NSPR
@@ -43,6 +44,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <thread>
+#include <utility>
 #ifdef XP_UNIX
 # include <sys/mman.h>
 # include <sys/stat.h>
@@ -4970,11 +4972,12 @@ class AutoCStringVector
         for (size_t i = 0; i < argv_.length(); i++)
             js_free(argv_[i]);
     }
-    bool append(char* arg) {
-        if (!argv_.append(arg)) {
-            js_free(arg);
+    bool append(UniqueChars&& arg) {
+        if (!argv_.append(arg.get()))
             return false;
-        }
+
+        // Now owned by this vector.
+        mozilla::Unused << arg.release();
         return true;
     }
     char* const* get() const {
@@ -4986,22 +4989,22 @@ class AutoCStringVector
     char* operator[](size_t i) const {
         return argv_[i];
     }
-    void replace(size_t i, char* arg) {
+    void replace(size_t i, UniqueChars arg) {
         js_free(argv_[i]);
-        argv_[i] = arg;
+        argv_[i] = arg.release();
     }
-    char* back() const {
+    const char* back() const {
         return argv_.back();
     }
-    void replaceBack(char* arg) {
+    void replaceBack(UniqueChars arg) {
         js_free(argv_.back());
-        argv_.back() = arg;
+        argv_.back() = arg.release();
     }
 };
 
 #if defined(XP_WIN)
 static bool
-EscapeForShell(AutoCStringVector& argv)
+EscapeForShell(JSContext* cx, AutoCStringVector& argv)
 {
     // Windows will break arguments in argv by various spaces, so we wrap each
     // argument in quotes and escape quotes within. Even with quotes, \ will be
@@ -5018,12 +5021,12 @@ EscapeForShell(AutoCStringVector& argv)
                 newLen++;
         }
 
-        char* escaped = (char*)js_malloc(newLen);
+        UniqueChars escaped(cx->pod_malloc<char>(newLen));
         if (!escaped)
             return false;
 
         char* src = argv[i];
-        char* dst = escaped;
+        char* dst = escaped.get();
         *dst++ = '\"';
         while (*src) {
             if (*src == '\"' || *src == '\\')
@@ -5032,9 +5035,9 @@ EscapeForShell(AutoCStringVector& argv)
         }
         *dst++ = '\"';
         *dst++ = '\0';
-        MOZ_ASSERT(escaped + newLen == dst);
+        MOZ_ASSERT(escaped.get() + newLen == dst);
 
-        argv.replace(i, escaped);
+        argv.replace(i, std::move(escaped));
     }
     return true;
 }
@@ -5063,13 +5066,14 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
-    if (!argv.append(js_strdup(sArgv[0])))
+    UniqueChars shellPath = DuplicateString(cx, sArgv[0]);
+    if (!shellPath || !argv.append(std::move(shellPath)))
         return false;
 
     // Propagate selected flags from the current shell
     for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-        char* cstr = js_strdup(sPropagatedFlags[i]);
-        if (!cstr || !argv.append(cstr))
+        UniqueChars flags = DuplicateString(cx, sPropagatedFlags[i]);
+        if (!flags || !argv.append(std::move(flags)))
             return false;
     }
 
@@ -5077,16 +5081,22 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
         str = ToString(cx, args[i]);
-        if (!str || !argv.append(JS_EncodeString(cx, str)))
+        if (!str)
+            return false;
+
+        UniqueChars arg(JS_EncodeString(cx, str));
+        if (!arg || !argv.append(std::move(arg)))
             return false;
 
         // As a special case, if the caller passes "--js-cache", replace that
         // with "--js-cache=$(jsCacheDir)"
         if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
             UniqueChars newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
-            if (!newArg)
+            if (!newArg) {
+                JS_ReportOutOfMemory(cx);
                 return false;
-            argv.replaceBack(newArg.release());
+            }
+            argv.replaceBack(std::move(newArg));
         }
     }
 
@@ -5096,7 +5106,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
 
     int status = 0;
 #if defined(XP_WIN)
-    if (!EscapeForShell(argv))
+    if (!EscapeForShell(cx, argv))
         return false;
     status = _spawnv(_P_WAIT, sArgv[0], argv.get());
 #else
@@ -8776,14 +8786,15 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableDisassemblyDumps = op.getBoolOption('D');
     cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
-    jsCacheDir = op.getStringOption("js-cache");
-    if (jsCacheDir) {
+    if (const char* jsCacheOpt = op.getStringOption("js-cache")) {
+        UniqueChars jsCacheChars;
         if (!op.getBoolOption("no-js-cache-per-process"))
-            jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid()).release();
+            jsCacheChars = JS_smprintf("%s/%u", jsCacheOpt, (unsigned)getpid());
         else
-            jsCacheDir = JS_strdup(cx, jsCacheDir);
-        if (!jsCacheDir)
+            jsCacheChars = DuplicateString(jsCacheOpt);
+        if (!jsCacheChars)
             return false;
+        jsCacheDir = jsCacheChars.release();
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir).release();
     }
 
@@ -8915,6 +8926,9 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     return result;
 }
 
+// Used to allocate memory when jemalloc isn't yet initialized.
+JS_DECLARE_NEW_METHODS(SystemAlloc_New, malloc, static)
+
 static void
 SetOutputFile(const char* const envVar,
               RCFile* defaultOut,
@@ -8925,9 +8939,12 @@ SetOutputFile(const char* const envVar,
     const char* outPath = getenv(envVar);
     FILE* newfp;
     if (outPath && *outPath && (newfp = fopen(outPath, "w")))
-        outFile = js_new<RCFile>(newfp);
+        outFile = SystemAlloc_New<RCFile>(newfp);
     else
         outFile = defaultOut;
+
+    if (!outFile)
+        MOZ_CRASH("Failed to allocate output file");
 
     outFile->acquire();
     *outFileP = outFile;

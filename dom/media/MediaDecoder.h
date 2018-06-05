@@ -170,9 +170,12 @@ public:
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
   virtual void AddOutputStream(ProcessedMediaStream* aStream,
+                               TrackID aNextAvailableTrackID,
                                bool aFinishWhenEnded);
   // Remove an output stream added with AddOutputStream.
   virtual void RemoveOutputStream(MediaStream* aStream);
+  // The next TrackID that can be used without risk of a collision.
+  virtual TrackID NextAvailableTrackIDFor(MediaStream* aOutputStream) const;
 
   // Return the duration of the video in seconds.
   virtual double GetDuration();

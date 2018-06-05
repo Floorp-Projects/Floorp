@@ -9,9 +9,10 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsITreeColumns.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/Attributes.h"
+
+class nsITreeColumn;
 
 // This class handles image load observation.
 class nsTreeImageListener final : public imgINotificationObserver

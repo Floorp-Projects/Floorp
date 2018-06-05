@@ -139,7 +139,7 @@
 #include "nsIBoxObject.h"
 #include "nsITreeBoxObject.h"
 #include "nsMenuPopupFrame.h"
-#include "nsITreeColumns.h"
+#include "nsTreeColumns.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -8364,11 +8364,10 @@ PresShell::GetCurrentItemAndPositionForElement(Element* aFocusedElement,
                           (currentIndex - firstVisibleRow + 1) * rowHeight);
           istree = true;
 
-          nsCOMPtr<nsITreeColumns> cols;
+          RefPtr<nsTreeColumns> cols;
           treeBox->GetColumns(getter_AddRefs(cols));
           if (cols) {
-            nsCOMPtr<nsITreeColumn> col;
-            cols->GetFirstColumn(getter_AddRefs(col));
+            nsTreeColumn* col = cols->GetFirstColumn();
             if (col) {
               RefPtr<Element> colElement;
               col->GetElement(getter_AddRefs(colElement));

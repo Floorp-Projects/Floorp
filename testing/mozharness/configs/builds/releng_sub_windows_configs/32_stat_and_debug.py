@@ -24,7 +24,6 @@ releng.manifest",
         'TOOLTOOL_HOME': '/c/builds',
     },
     'mozconfig_variant': 'debug-static-analysis',
-    'purge_minsize': 9,
     'artifact_flag_build_variant_in_try': None,
     #######################
 }

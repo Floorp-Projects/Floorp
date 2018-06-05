@@ -13,6 +13,7 @@
 #include "nsError.h"
 #include "nsIXULSortService.h"
 #include "nsTreeBodyFrame.h"
+#include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
@@ -116,10 +117,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeContentView)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsITreeView)
-  NS_INTERFACE_MAP_ENTRY(nsITreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITreeContentView)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITreeView)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
@@ -875,30 +875,10 @@ nsTreeContentView::GetItemAtIndex(int32_t aIndex, ErrorResult& aError)
   return mRows[aIndex]->mContent;
 }
 
-NS_IMETHODIMP
-nsTreeContentView::GetItemAtIndex(int32_t aIndex, Element** _retval)
-{
-  ErrorResult rv;
-  RefPtr<Element> element = GetItemAtIndex(aIndex, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  element.forget(_retval);
-  return NS_OK;
-}
-
 int32_t
 nsTreeContentView::GetIndexOfItem(Element* aItem)
 {
   return FindContent(aItem);
-}
-
-NS_IMETHODIMP
-nsTreeContentView::GetIndexOfItem(Element* aItem, int32_t* _retval)
-{
-  *_retval = GetIndexOfItem(aItem);
-  return NS_OK;
 }
 
 void
@@ -972,11 +952,10 @@ nsTreeContentView::AttributeChanged(dom::Element* aElement,
   if (aElement->IsXULElement(nsGkAtoms::treecol)) {
     if (aAttribute == nsGkAtoms::properties) {
       if (mBoxObject) {
-        nsCOMPtr<nsITreeColumns> cols;
+        RefPtr<nsTreeColumns> cols;
         mBoxObject->GetColumns(getter_AddRefs(cols));
         if (cols) {
-          nsCOMPtr<nsITreeColumn> col;
-          cols->GetColumnFor(aElement, getter_AddRefs(col));
+          RefPtr<nsTreeColumn> col = cols->GetColumnFor(aElement);
           mBoxObject->InvalidateColumn(col);
         }
       }

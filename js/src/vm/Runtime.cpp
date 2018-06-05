@@ -527,9 +527,14 @@ JSRuntime::setDefaultLocale(const char* locale)
 {
     if (!locale)
         return false;
+
+    char* newLocale = DuplicateString(mainContextFromOwnThread(), locale).release();
+    if (!newLocale)
+        return false;
+
     resetDefaultLocale();
-    defaultLocale = JS_strdup(mainContextFromOwnThread(), locale);
-    return defaultLocale != nullptr;
+    defaultLocale = newLocale;
+    return true;
 }
 
 void
@@ -551,7 +556,7 @@ JSRuntime::getDefaultLocale()
     if (!locale || !strcmp(locale, "C"))
         locale = "und";
 
-    char* lang = JS_strdup(mainContextFromOwnThread(), locale);
+    char* lang = DuplicateString(mainContextFromOwnThread(), locale).release();
     if (!lang)
         return nullptr;
 
