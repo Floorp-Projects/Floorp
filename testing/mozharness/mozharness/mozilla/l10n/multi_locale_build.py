@@ -9,14 +9,12 @@
 This should be a mostly generic multilocale build script.
 """
 
-from copy import deepcopy
 import os
 import sys
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.base.errors import MakefileErrorList, SSHErrorList
-from mozharness.base.log import FATAL
+from mozharness.base.errors import MakefileErrorList
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
 
@@ -76,53 +74,17 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
     def __init__(self, require_config_file=True):
         LocalesMixin.__init__(self)
         MercurialScript.__init__(self, config_options=self.config_options,
-                                 all_actions=['clobber',
-                                              'pull-build-source',
-                                              'pull-locale-source',
-                                              'build',
-                                              'package-en-US',
-                                              'upload-en-US',
-                                              'backup-objdir',
-                                              'restore-objdir',
+                                 all_actions=['pull-locale-source',
                                               'add-locales',
                                               'android-assemble-app',
                                               'package-multi',
-                                              'upload-multi',
                                               'summary'],
                                  require_config_file=require_config_file)
 
     def query_l10n_env(self):
         return self.query_env()
 
-    def clobber(self):
-        c = self.config
-        if c['work_dir'] != '.':
-            path = os.path.join(c['base_work_dir'], c['work_dir'])
-            if os.path.exists(path):
-                self.rmtree(path, error_level=FATAL)
-        else:
-            self.info("work_dir is '.'; skipping for now.")
-
-    def pull_build_source(self):
-        c = self.config
-        repos = c['repos']
-        self.vcs_checkout_repos(repos, tag_override=c.get('tag_override'))
-
     # pull_locale_source() defined in LocalesMixin.
-
-    def build(self):
-        c = self.config
-        dirs = self.query_abs_dirs()
-        self.copyfile(os.path.join(dirs['abs_work_dir'], c['mozconfig']),
-                      os.path.join(dirs['abs_mozilla_dir'], 'mozconfig'),
-                      error_level=FATAL)
-
-        mach = os.path.join(dirs['abs_mozilla_dir'], 'mach')
-        env = self.query_env()
-        if self._process_command(command=[sys.executable, mach, 'build'],
-                                 cwd=dirs['abs_mozilla_dir'],
-                                 env=env, error_list=MakefileErrorList):
-            self.fatal("Erroring out after the build failed.")
 
     def android_assemble_app(self):
         dirs = self.query_abs_dirs()
@@ -135,7 +97,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
             self.fatal("Erroring out after assembling Android APKs failed.")
 
     def add_locales(self):
-        c = self.config
         dirs = self.query_abs_dirs()
         locales = self.query_locales()
 
@@ -150,9 +111,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
                                  level="error")
             else:
                 self.add_summary("Added locale %s successfully." % locale)
-
-    def package_en_US(self):
-        self.package(package_type='en-US')
 
     def preflight_package_multi(self):
         dirs = self.query_abs_dirs()
@@ -191,40 +149,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
                               env=env, error_list=MakefileErrorList,
                               halt_on_failure=True)
         self.additional_packaging(package_type=package_type, env=env)
-
-    def upload_en_US(self):
-        # TODO
-        self.info("Not written yet.")
-
-    def backup_objdir(self):
-        dirs = self.query_abs_dirs()
-        if not os.path.isdir(dirs['abs_objdir']):
-            self.warning("%s doesn't exist! Skipping..." % dirs['abs_objdir'])
-            return
-        rsync = self.query_exe('rsync')
-        backup_dir = '%s-bak' % dirs['abs_objdir']
-        self.rmtree(backup_dir)
-        self.mkdir_p(backup_dir)
-        self.run_command([rsync, '-a', '--delete', '--partial',
-                          '%s/' % dirs['abs_objdir'],
-                          '%s/' % backup_dir],
-                         error_list=SSHErrorList)
-
-    def restore_objdir(self):
-        dirs = self.query_abs_dirs()
-        rsync = self.query_exe('rsync')
-        backup_dir = '%s-bak' % dirs['abs_objdir']
-        if not os.path.isdir(dirs['abs_objdir']) or not os.path.isdir(backup_dir):
-            self.warning("Both %s and %s need to exist to restore the objdir! Skipping..." % (dirs['abs_objdir'], backup_dir))
-            return
-        self.run_command([rsync, '-a', '--delete', '--partial',
-                          '%s/' % backup_dir,
-                          '%s/' % dirs['abs_objdir']],
-                         error_list=SSHErrorList)
-
-    def upload_multi(self):
-        # TODO
-        self.info("Not written yet.")
 
     def _process_command(self, **kwargs):
         """Stub wrapper function that allows us to call scratchbox in
