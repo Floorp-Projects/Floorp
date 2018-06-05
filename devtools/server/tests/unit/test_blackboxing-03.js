@@ -35,9 +35,8 @@ function test_black_box() {
     const source = gThreadClient.source(packet.frame.where.source);
     source.setBreakpoint({
       line: 4
-    }, function({error}, bpClient) {
+    }).then(function([response, bpClient]) {
       gBpClient = bpClient;
-      Assert.ok(!error, "Should not get an error: " + error);
       gThreadClient.resume(test_black_box_dbg_statement);
     });
   });

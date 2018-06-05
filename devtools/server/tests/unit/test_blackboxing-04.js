@@ -42,10 +42,7 @@ function test_black_box() {
       const source = gThreadClient.source(packet.source);
       source.setBreakpoint({
         line: 2
-      }, function(response) {
-        Assert.ok(!response.error, "Should be able to set breakpoint.");
-        test_black_box_paused();
-      });
+      }).then(test_black_box_paused);
     }
   });
 

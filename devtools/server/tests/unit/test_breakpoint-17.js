@@ -62,15 +62,13 @@ function set_breakpoints(event, packet) {
   let first, second;
   const source = gThreadClient.source(packet.frame.where.source);
 
-  source.setBreakpoint(firstLocation, function({ error, actualLocation },
-                                        breakpointClient) {
-    Assert.ok(!error, "Should not get an error setting the breakpoint");
+  source.setBreakpoint(firstLocation).then(function([{ actualLocation },
+                                                     breakpointClient]) {
     Assert.ok(!actualLocation, "Should not get an actualLocation");
     first = breakpointClient;
 
-    source.setBreakpoint(secondLocation, function({ error, actualLocation },
-                                                          breakpointClient) {
-      Assert.ok(!error, "Should not get an error setting the breakpoint");
+    source.setBreakpoint(secondLocation).then(function([{ actualLocation },
+                                                        breakpointClient]) {
       Assert.ok(!actualLocation, "Should not get an actualLocation");
       second = breakpointClient;
 

@@ -32,7 +32,7 @@ function test_simple_breakpoint() {
     source.setBreakpoint({
       line: 3,
       condition: "a === 1"
-    }, function(response, bpClient) {
+    }).then(function([response, bpClient]) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.why.type, "breakpoint");
