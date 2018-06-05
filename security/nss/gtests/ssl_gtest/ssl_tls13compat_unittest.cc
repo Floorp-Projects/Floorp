@@ -344,4 +344,20 @@ TEST_F(TlsConnectDatagram13, CompatModeDtlsServer) {
   EXPECT_EQ(0U, session_id_len);
 }
 
+TEST_F(Tls13CompatTest, ConnectWith12ThenAttemptToResume13CompatMode) {
+  ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_2);
+  Connect();
+
+  Reset();
+  ExpectResumption(RESUME_NONE);
+  version_ = SSL_LIBRARY_VERSION_TLS_1_3;
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  EnableCompatMode();
+  Connect();
+}
+
 }  // namespace nss_test

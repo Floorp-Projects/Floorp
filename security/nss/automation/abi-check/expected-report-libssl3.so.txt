@@ -4,7 +4,7 @@
   [C]'function SECStatus SSL_GetChannelInfo(PRFileDesc*, SSLChannelInfo*, PRUintn)' at sslinfo.c:12:1 has some indirect sub-type changes:
     parameter 2 of type 'SSLChannelInfo*' has sub-type changes:
       in pointed to type 'typedef SSLChannelInfo' at sslt.h:318:1:
-        underlying type 'struct SSLChannelInfoStr' at sslt.h:259:1 changed:
+        underlying type 'struct SSLChannelInfoStr' at sslt.h:251:1 changed:
           type size hasn't changed
           1 data member change:
            type of 'SSLSignatureScheme SSLChannelInfoStr::signatureScheme' changed:
