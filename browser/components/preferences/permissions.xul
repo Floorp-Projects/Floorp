@@ -9,9 +9,9 @@
 
 <window id="PermissionsDialog" class="windowDialog"
         windowtype="Browser:Permissions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
         data-l10n-attrs="title, style"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gPermissionManager.onLoad();"
         onunload="gPermissionManager.uninit();"
         persist="screenX screenY width height"
