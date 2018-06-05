@@ -15,8 +15,6 @@ interface nsIPK11Token : nsISupports
   [must_use]
   readonly attribute AUTF8String tokenName;
   [must_use]
-  readonly attribute AUTF8String tokenLabel;
-  [must_use]
   readonly attribute boolean isInternalKeyToken;
   /**
    * Manufacturer ID of the token.

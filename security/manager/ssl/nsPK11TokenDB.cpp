@@ -27,15 +27,34 @@ nsPK11Token::nsPK11Token(PK11SlotInfo* slot)
 {
   MOZ_ASSERT(slot);
   mSlot.reset(PK11_ReferenceSlot(slot));
+  mIsInternalCryptoToken = PK11_IsInternal(mSlot.get()) &&
+                           !PK11_IsInternalKeySlot(mSlot.get());
+  mIsInternalKeyToken = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
-
   Unused << refreshTokenInfo();
 }
 
 nsresult
 nsPK11Token::refreshTokenInfo()
 {
-  mTokenName = PK11_GetTokenName(mSlot.get());
+  if (mIsInternalCryptoToken) {
+    nsresult rv;
+    if (PK11_IsFIPS()) {
+      rv = GetPIPNSSBundleString("Fips140TokenDescription", mTokenName);
+    } else {
+      rv = GetPIPNSSBundleString("TokenDescription", mTokenName);
+    }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else if (mIsInternalKeyToken) {
+    nsresult rv = GetPIPNSSBundleString("PrivateTokenDescription", mTokenName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    mTokenName.Assign(PK11_GetTokenName(mSlot.get()));
+  }
 
   CK_TOKEN_INFO tokInfo;
   nsresult rv = MapSECStatus(PK11_GetTokenInfo(mSlot.get(), &tokInfo));
@@ -43,18 +62,20 @@ nsPK11Token::refreshTokenInfo()
     return rv;
   }
 
-  // Set the Label field
-  const char* ccLabel = mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.label);
-  mTokenLabel.Assign(ccLabel, strnlen(ccLabel, sizeof(tokInfo.label)));
-  mTokenLabel.Trim(" ", false, true);
-
   // Set the Manufacturer field
-  const char* ccManID =
-    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.manufacturerID);
-  mTokenManufacturerID.Assign(
-    ccManID,
-    strnlen(ccManID, sizeof(tokInfo.manufacturerID)));
-  mTokenManufacturerID.Trim(" ", false, true);
+  if (mIsInternalCryptoToken || mIsInternalKeyToken) {
+    rv = GetPIPNSSBundleString("ManufacturerID", mTokenManufacturerID);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    const char* ccManID =
+      mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.manufacturerID);
+    mTokenManufacturerID.Assign(
+      ccManID,
+      strnlen(ccManID, sizeof(tokInfo.manufacturerID)));
+    mTokenManufacturerID.Trim(" ", false, true);
+  }
 
   // Set the Hardware Version field
   mTokenHWVersion.Truncate();
@@ -101,16 +122,10 @@ nsPK11Token::GetTokenName(/*out*/ nsACString& tokenName)
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenLabel(/*out*/ nsACString& tokenLabel)
-{
-  return GetAttributeHelper(mTokenLabel, tokenLabel);
-}
-
-NS_IMETHODIMP
 nsPK11Token::GetIsInternalKeyToken(/*out*/ bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PK11_IsInternalKeySlot(mSlot.get());
+  *_retval = mIsInternalKeyToken;
   return NS_OK;
 }
 

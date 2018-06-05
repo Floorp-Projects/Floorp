@@ -147,7 +147,6 @@ private:
   void setValidationOptions(bool isInitialSetting,
                             const mozilla::MutexAutoLock& proofOfLock);
   nsresult setEnabledTLSVersions();
-  nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterObservers();
 
   void MaybeEnableFamilySafetyCompatibility();

@@ -18,19 +18,23 @@ function find_slot_by_name(module, name) {
   return null;
 }
 
+function find_module_by_name(moduleDB, name) {
+  for (let slot of XPCOMUtils.IterSimpleEnumerator(moduleDB.listModules(),
+                                                   Ci.nsIPKCS11Module)) {
+    if (slot.name == name) {
+      return slot;
+    }
+  }
+  return null;
+}
+
 function run_test() {
   loadPKCS11TestModule(false);
 
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                    .getService(Ci.nsIPKCS11ModuleDB);
-  let testModule;
-  for (let module of XPCOMUtils.IterSimpleEnumerator(moduleDB.listModules(),
-                                                     Ci.nsIPKCS11Module)) {
-    if (module.name == "PKCS11 Test Module") {
-      testModule = module;
-      break;
-    }
-  }
+  let testModule = find_module_by_name(moduleDB, "PKCS11 Test Module");
+  notEqual(testModule, null, "should be able to find test module");
   let testSlot = find_slot_by_name(testModule, "Test PKCS11 Slot 二");
   notEqual(testSlot, null, "should be able to find 'Test PKCS11 Slot 二'");
 
@@ -51,8 +55,8 @@ function run_test() {
 
   let testToken = testSlot.getToken();
   notEqual(testToken, null, "getToken() should succeed");
-  equal(testToken.tokenLabel, "Test PKCS11 Tokeñ 2 Label",
-        "Spot check: the actual and expected test token labels should be equal");
+  equal(testToken.tokenName, "Test PKCS11 Tokeñ 2 Label",
+        "Spot check: the actual and expected test token names should be equal");
   ok(!testToken.isInternalKeyToken, "This token is not the internal key token");
 
   testSlot = find_slot_by_name(testModule, "Empty PKCS11 Slot");
@@ -60,4 +64,24 @@ function run_test() {
   equal(testSlot.tokenName, null, "Empty slot is empty");
   equal(testSlot.status, Ci.nsIPKCS11Slot.SLOT_NOT_PRESENT,
         "Actual and expected status should match");
+
+  let bundle =
+    Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
+  let internalModule = find_module_by_name(moduleDB,
+                                           "NSS Internal PKCS #11 Module");
+  notEqual(internalModule, null, "should be able to find internal module");
+  let cryptoSlot = find_slot_by_name(
+    internalModule, bundle.GetStringFromName("TokenDescription"));
+  notEqual(cryptoSlot, "should be able to find internal crypto slot");
+  equal(cryptoSlot.desc, bundle.GetStringFromName("SlotDescription"),
+        "crypto slot should have expected 'desc'");
+  equal(cryptoSlot.manID, bundle.GetStringFromName("ManufacturerID"),
+        "crypto slot should have expected 'manID'");
+  let keySlot = find_slot_by_name(
+    internalModule, bundle.GetStringFromName("PrivateTokenDescription"));
+  notEqual(keySlot, "should be able to find internal key slot");
+  equal(keySlot.desc, bundle.GetStringFromName("PrivateSlotDescription"),
+        "key slot should have expected 'desc'");
+  equal(keySlot.manID, bundle.GetStringFromName("ManufacturerID"),
+        "key slot should have expected 'manID'");
 }
