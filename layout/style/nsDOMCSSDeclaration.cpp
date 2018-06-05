@@ -290,7 +290,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetPropertyById(
         decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
-        ParsingMode::Default, env.mCompatMode, env.mLoader);
+        ParsingMode::Default, env.mCompatMode, env.mLoader, /* aClosure = */ { });
     });
 }
 
@@ -308,7 +308,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetProperty(
         decl->Raw(), &property, &value, aIsImportant, env.mUrlExtraData,
-        ParsingMode::Default, env.mCompatMode, env.mLoader);
+        ParsingMode::Default, env.mCompatMode, env.mLoader, /* aClosure = */ { });
     });
 }
 
