@@ -225,3 +225,30 @@ jobs:
         url: http://snapshot.debian.org/archive/debian/20170119T152956Z/pool/main/g/gdb/gdb_7.12-6.dsc
         sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
       patch: gdb-wheezy.diff
+
+  deb7-python-zstandard:
+    description: "python-zstandard for Debian wheezy"
+    treeherder:
+      symbol: Deb7(python-zstandard)
+    run:
+      using: debian-package
+      tarball:
+        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+      patch: python-zstandard-wheezy.diff
+      packages:
+        - deb7-dh-python
+        - deb7-python
+        - deb7-python3.5
+        - deb7-python3-defaults
+
+  deb9-python-zstandard:
+    description: "python-zstandard for Debian stretch"
+    treeherder:
+      symbol: Deb9(python-zstandard)
+    run:
+      using: debian-package
+      dist: stretch
+      tarball:
+        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
