@@ -3769,9 +3769,13 @@ nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
     return NS_OK;
   }
 
-  Layer* layer =
-    FrameLayerBuilder::GetDedicatedLayer(frame,
-                                         DisplayItemType::TYPE_TRANSFORM);
+  DisplayItemType itemType = DisplayItemType::TYPE_TRANSFORM;
+  if (nsLayoutUtils::HasEffectiveAnimation(frame, eCSSProperty_opacity) &&
+      !frame->IsTransformed()) {
+    itemType = DisplayItemType::TYPE_OPACITY;
+  }
+
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, itemType);
   if (!layer) {
     return NS_OK;
   }
