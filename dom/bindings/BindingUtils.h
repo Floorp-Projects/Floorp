@@ -3110,7 +3110,7 @@ class PinnedStringId
     /* This is safe because we have pinned the string. */
     return JS::Handle<jsid>::fromMarkedLocation(&id);
   }
-};
+} JS_HAZ_ROOTED;
 
 namespace binding_detail {
 /**
