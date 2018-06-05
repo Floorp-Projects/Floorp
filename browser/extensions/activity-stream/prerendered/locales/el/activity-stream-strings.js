@@ -99,6 +99,6 @@ window.gActivityStreamStrings = {
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "Terms of Service",
   "firstrun_privacy_notice": "Privacy Notice",
-  "firstrun_continue_to_login": "Continue",
+  "firstrun_continue_to_login": "Συνέχεια",
   "firstrun_skip_login": "Skip this step"
 };

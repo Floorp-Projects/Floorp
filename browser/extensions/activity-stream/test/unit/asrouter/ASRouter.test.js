@@ -188,13 +188,26 @@ describe("ASRouter", () => {
     });
     it("should send a message back to the to the target if there is a bundle, too", async () => {
       // force the only message to be a bundled message so getRandomItemFromArray picks it
-      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
+      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 1, content: {title: "Foo1", body: "Foo123-1"}}]});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
       const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.lastMessageId);
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME);
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].type, "SET_BUNDLED_MESSAGES");
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content, currentMessage.content);
+    });
+    it("should return a null bundle if we do not have enough messages to fill the bundle", async () => {
+      // force the only message to be a bundled message that needs 2 messages in the bundle
+      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
+      const bundle = Router._getBundledMessages(Router.state.messages[0]);
+      assert.equal(bundle, null);
+    });
+    it("should send a CLEAR_ALL message if no bundle available", async () => {
+      // force the only message to be a bundled message that needs 2 messages in the bundle
+      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
+      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
+      await Router.onMessage(msg);
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_ALL"});
     });
     it("should send a CLEAR_ALL message if no messages are available", async () => {
       await Router.setState({messages: []});

@@ -118,10 +118,16 @@ describe("Top Sites Feed", () => {
 
       assert.isAbove(DEFAULT_TOP_SITES.length, 0);
     });
-    it("should add defaults on PREF_CHANGED", () => {
+    it("should add defaults on default.sites PREF_CHANGED", () => {
       feed.onAction({type: at.PREF_CHANGED, data: {name: "default.sites", value: "https://foo.com"}});
 
       assert.isAbove(DEFAULT_TOP_SITES.length, 0);
+    });
+    it("should refresh on topSiteRows PREF_CHANGED", () => {
+      feed.refresh = sinon.spy();
+      feed.onAction({type: at.PREF_CHANGED, data: {name: "topSitesRows"}});
+
+      assert.calledOnce(feed.refresh);
     });
     it("should have default sites with .isDefault = true", () => {
       feed.refreshDefaults("https://foo.com");
