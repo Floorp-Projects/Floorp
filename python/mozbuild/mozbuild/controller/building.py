@@ -757,8 +757,6 @@ class CCacheStats(object):
     STATS_KEYS = [
         # (key, description)
         # Refer to stats.c in ccache project for all the descriptions.
-        ('stats_zero_time', 'stats zero time'),
-        ('stats_updated', 'stats updated'),
         ('cache_hit_direct', 'cache hit (direct)'),
         ('cache_hit_preprocessed', 'cache hit (preprocessed)'),
         ('cache_hit_rate', 'cache hit rate'),
@@ -840,11 +838,6 @@ class CCacheStats(object):
 
     @staticmethod
     def _parse_value(raw_value):
-        if raw_value[0].isalpha():
-            # ccache calls strftime with '%c' (src/stats.c)
-            ts = time.strptime(raw_value, '%c')
-            return int(time.mktime(ts))
-
         value = raw_value.split()
         unit = ''
         if len(value) == 1:
