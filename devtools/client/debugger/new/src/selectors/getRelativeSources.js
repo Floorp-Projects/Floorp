@@ -34,5 +34,5 @@ function formatSource(source, root) {
 
 
 const getRelativeSources = exports.getRelativeSources = (0, _reselect.createSelector)(_selectors.getSources, _selectors.getProjectDirectoryRoot, (sources, root) => {
-  return sources.valueSeq().filter(source => source.url && source.url.includes(root)).map(source => formatSource(source, root));
+  return sources.filter(source => source.url && source.url.includes(root)).map(source => formatSource(source, root));
 });
