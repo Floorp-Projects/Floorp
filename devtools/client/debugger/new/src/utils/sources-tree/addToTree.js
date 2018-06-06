@@ -14,19 +14,6 @@ var _getURL = require("./getURL");
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function isUnderRoot(url, projectRoot) {
-  if (!projectRoot) {
-    return true;
-  }
-
-  return `${url.group}${url.path}`.startsWith(projectRoot);
-}
-
-function removeProjectRoot(parts, projectRoot) {
-  const rootParts = projectRoot.replace("://", "").split("/");
-  return parts.splice(0, rootParts.length - 2);
-}
-
 function createNodeInTree(part, path, tree, index) {
   const node = (0, _utils.createNode)(part, path, []); // we are modifying the tree
 
@@ -72,15 +59,10 @@ function findOrCreateNode(parts, subTree, path, part, index, url, debuggeeHost) 
  */
 
 
-function traverseTree(url, tree, debuggeeHost, projectRoot) {
+function traverseTree(url, tree, debuggeeHost) {
   url.path = decodeURIComponent(url.path);
   const parts = url.path.split("/").filter(p => p !== "");
   parts.unshift(url.group);
-
-  if (projectRoot) {
-    removeProjectRoot(parts, projectRoot);
-  }
-
   let path = "";
   return parts.reduce((subTree, part, index) => {
     path = path ? `${path}/${part}` : part;
@@ -129,13 +111,13 @@ function addSourceToNode(node, url, source) {
 
 
 function addToTree(tree, source, debuggeeUrl, projectRoot) {
-  const url = (0, _getURL.getURL)(source.get ? source.get("url") : source.url, debuggeeUrl);
+  const url = (0, _getURL.getURL)(source.url, debuggeeUrl);
   const debuggeeHost = (0, _treeOrder.getDomain)(debuggeeUrl);
 
-  if ((0, _utils.isInvalidUrl)(url, source) || !isUnderRoot(url, projectRoot)) {
+  if ((0, _utils.isInvalidUrl)(url, source)) {
     return;
   }
 
-  const finalNode = traverseTree(url, tree, debuggeeHost, projectRoot);
+  const finalNode = traverseTree(url, tree, debuggeeHost);
   finalNode.contents = addSourceToNode(finalNode, url, source);
 }
