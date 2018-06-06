@@ -68,4 +68,7 @@
 
     <color name="doorhanger_link">#FF2AA1FE</color>
     <color name="placeholder_active_grey">#222222</color>
+
+    <color name="contextMenuTitleTextColor">#99F9F9FA</color>
+    <color name="contextMenuSeparatorBackground">#1AF9F9FA</color>
 </resources>

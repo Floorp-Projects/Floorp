@@ -10,6 +10,8 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -84,6 +86,7 @@ public class WebContextMenu {
         });
 
         final Dialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         final NavigationView menu = (NavigationView) view.findViewById(R.id.context_menu);
         setupMenuForHitTarget(dialog, menu, callback, hitTarget);

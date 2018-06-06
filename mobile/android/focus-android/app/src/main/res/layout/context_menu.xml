@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -8,14 +7,27 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/photonInk80"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/contextMenuSeparatorBackground" />
+    </LinearLayout>
+
     <android.support.design.widget.NavigationView
         android:theme="@style/AppTheme.ContextMenuItem"
         android:id="@+id/context_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="16dp"
-        android:background="@android:color/transparent"
-        app:itemTextAppearance="@style/ContextMenuTextAppearence"/>
+        android:background="@drawable/context_menu_navigation_view_background"
+        app:itemTextAppearance="@style/ContextMenuTextAppearence"
+        android:paddingTop="8dp"/>
 
     <TextView
         android:id="@+id/warning"
