@@ -124,7 +124,7 @@
         var script = document.querySelector('#cssTest');
         var style = getComputedStyle(script);
         assert_equals(style['display'], 'block');
-        assert_equals(style['background-image'], "url(\"http://web-platform.test:8001/security/resources/abe.png\")");
+        assert_equals(style['background-image'], "url(\"http://{{domains[]}}:{{ports[http][0]}}/security/resources/abe.png\")");
       }));
     }, "Nonces leak via CSS side-channels.");
 </script>
