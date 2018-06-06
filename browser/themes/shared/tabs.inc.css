@@ -784,3 +784,63 @@
 .alltabs-endimage[activemedia-blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
+
+#appMenu-allTabsView {
+  --blue-40: #45a1ff;
+  max-width: 42em;
+}
+
+.all-tabs-item > .all-tabs-secondary-button {
+  padding: 0;
+  padding-inline-start: 6px;
+  opacity: .8;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.all-tabs-secondary-button:hover {
+  opacity: 1;
+}
+
+.all-tabs-item:hover {
+  background-color: var(--arrowpanel-dimmed)
+}
+
+.all-tabs-item > .all-tabs-button > .tab-throbber-fallback {
+  display: block;
+  margin-inline-end: 0;
+}
+
+.all-tabs-item[selected] {
+  box-shadow: inset 4px 0 var(--blue-40);
+}
+
+.all-tabs-item[tabIsVisible] {
+  box-shadow: inset -4px 0 ThreeDShadow;
+}
+
+.all-tabs-item[selected][tabIsVisible] {
+  box-shadow: inset -4px 0 ThreeDShadow, inset 4px 0 var(--blue-40);
+}
+
+.all-tabs-button,
+.all-tabs-secondary-button {
+  background-color: transparent !important;
+}
+
+.all-tabs-secondary-button > label {
+  display: none;
+  margin: 0 5.5px;
+}
+
+.all-tabs-secondary-button[soundplaying] {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-playing.svg);
+}
+
+.all-tabs-secondary-button[muted] {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
+}
+
+.undo-close-tab {
+  list-style-image: url(chrome://browser/skin/undo.svg);
+}
