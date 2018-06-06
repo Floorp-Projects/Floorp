@@ -3,17 +3,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="56dp"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/background_list_item_current_session"
+    android:drawablePadding="16dp"
+    android:ellipsize="end"
     android:gravity="start|center_vertical"
+    android:lines="1"
     android:paddingEnd="16dp"
     android:paddingStart="16dp"
-    tools:text="www.mozilla.org/en-US/firefox/"
-    android:lines="1"
-    android:ellipsize="end"
-    tools:drawableLeft="@drawable/ic_link"
-    android:drawablePadding="16dp"
-    android:textColor="#272727"
-    android:background="@drawable/background_list_item_session"
-    android:textSize="14sp" />
+    android:textColor="@android:color/white"
+    android:textSize="14sp"
+    android:drawableStart="@drawable/ic_link"
+    tools:text="www.mozilla.org/en-US/firefox/" />

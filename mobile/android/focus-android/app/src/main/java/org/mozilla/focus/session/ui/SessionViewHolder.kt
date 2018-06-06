@@ -40,24 +40,17 @@ class SessionViewHolder internal constructor(
         updateUrl(session)
 
         val isCurrentSession = SessionManager.getInstance().isCurrentSession(session)
-        val actionColor = ContextCompat.getColor(textView.context, R.color.colorAction)
-        val darkColor = ContextCompat.getColor(textView.context, R.color.colorSession)
 
-        updateTextColor(isCurrentSession, actionColor, darkColor)
-        updateDrawable(isCurrentSession, actionColor, darkColor)
+        updateTextBackgroundColor(isCurrentSession)
     }
 
-    private fun updateTextColor(isCurrentSession: Boolean, actionColor: Int, darkColor: Int) {
-        textView.setTextColor(if (isCurrentSession) actionColor else darkColor)
-    }
-
-    private fun updateDrawable(isCurrentSession: Boolean, actionColor: Int, darkColor: Int) {
-        val drawable = AppCompatResources.getDrawable(itemView.context, R.drawable.ic_link) ?: return
-
-        val wrapDrawable = DrawableCompat.wrap(drawable.mutate())
-        DrawableCompat.setTint(wrapDrawable, if (isCurrentSession) actionColor else darkColor)
-
-        textView.setCompoundDrawablesWithIntrinsicBounds(wrapDrawable, null, null, null)
+    private fun updateTextBackgroundColor(isCurrentSession: Boolean) {
+        val drawable = if (isCurrentSession) {
+            R.drawable.background_list_item_current_session
+        } else {
+            R.drawable.background_list_item_session
+        }
+        textView.setBackgroundResource(drawable)
     }
 
     private fun updateUrl(session: Session) {

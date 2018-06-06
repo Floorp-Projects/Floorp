@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="#ffededed">
-    <item android:drawable="@color/photonInk80" />
+    <item android:drawable="@color/colorActiveSession" />
 </ripple>
