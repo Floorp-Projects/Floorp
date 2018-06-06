@@ -239,7 +239,3 @@ function run_test() {
   gHttpServV4.start(5555);
   run_next_test();
 }
-
-registerCleanupFunction(function() {
-  stopThrowingOnUpdateErrors();
-});
