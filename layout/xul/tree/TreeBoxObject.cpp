@@ -388,33 +388,6 @@ TreeBoxObject::ScrollByPages(int32_t aNumPages)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TreeBoxObject::ScrollToCell(int32_t aRow, nsTreeColumn* aCol)
-{
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->ScrollToCell(aRow, aCol);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TreeBoxObject::ScrollToColumn(nsTreeColumn* aCol)
-{
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->ScrollToColumn(aCol);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TreeBoxObject::ScrollToHorizontalPosition(int32_t aHorizontalPosition)
-{
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->ScrollToHorizontalPosition(aHorizontalPosition);
-  return NS_OK;
-}
-
 NS_IMETHODIMP TreeBoxObject::Invalidate()
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
@@ -456,15 +429,6 @@ TreeBoxObject::InvalidateRange(int32_t aStart, int32_t aEnd)
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
     return body->InvalidateRange(aStart, aEnd);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TreeBoxObject::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsTreeColumn* aCol)
-{
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->InvalidateColumnRange(aStart, aEnd, aCol);
   return NS_OK;
 }
 
