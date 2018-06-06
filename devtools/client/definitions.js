@@ -462,9 +462,9 @@ Tools.application = {
   visibilityswitch: "devtools.application.enabled",
   icon: "chrome://devtools/skin/images/tool-application.svg",
   url: "chrome://devtools/content/application/index.html",
-  label: "Application",
-  panelLabel: "Application",
-  tooltip: "Application",
+  label: l10n("application.label"),
+  panelLabel: l10n("application.panellabel"),
+  tooltip: l10n("application.tooltip"),
   inMenu: false,
   hiddenInOptions: true,
 

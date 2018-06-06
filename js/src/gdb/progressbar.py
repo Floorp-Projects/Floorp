@@ -4,7 +4,10 @@
 
 # Text progress bar library, like curl or scp.
 
-import sys, datetime, time
+import sys
+import datetime
+import time
+
 
 class ProgressBar(object):
     def __init__(self, label, limit, label_width=12):
@@ -25,7 +28,7 @@ class ProgressBar(object):
         bar = '='*barlen + '>'
         dt = datetime.datetime.now() - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
-        line = self.fmt%(self.label[:self.label_width], pct, bar, dt)
+        line = self.fmt % (self.label[:self.label_width], pct, bar, dt)
         self.fullwidth = len(line)
         sys.stdout.write(line)
         sys.stdout.flush()
@@ -39,6 +42,7 @@ class ProgressBar(object):
     def finish(self):
         self.update(self.limit)
         sys.stdout.write('\n')
+
 
 if __name__ == '__main__':
     pb = ProgressBar('test', 12)

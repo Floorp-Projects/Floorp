@@ -23,7 +23,6 @@ from __future__ import (
 
 from collections import defaultdict
 import os
-import sys
 
 import buildconfig
 
@@ -92,7 +91,8 @@ def _defines():
         DEFINES[var] = CONFIG[var]
 
     # Mangle our package name to avoid Bug 750548.
-    DEFINES['MANGLED_ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME'].replace('fennec', 'f3nn3c')
+    DEFINES['MANGLED_ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME'].replace(
+        'fennec', 'f3nn3c')
     DEFINES['MOZ_APP_ABI'] = CONFIG['TARGET_XPCOM_ABI']
     if not CONFIG['COMPILE_ENVIRONMENT']:
         # These should really come from the included binaries, but that's not easy.
@@ -111,7 +111,8 @@ def _defines():
     if CONFIG['MOZ_ANDROID_POCKET']:
         DEFINES['MOZ_POCKET_API_KEY'] = CONFIG['MOZ_POCKET_API_KEY']
 
-    DEFINES['MOZ_BUILDID'] = open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+    DEFINES['MOZ_BUILDID'] = open(os.path.join(
+        buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 
     # Set the appropriate version code if not set by MOZ_APP_ANDROID_VERSION_CODE.
     if CONFIG.get('MOZ_APP_ANDROID_VERSION_CODE'):
@@ -131,9 +132,9 @@ def _defines():
 
 def generate_java(output_file, input_filename):
     includes = preprocessor.preprocess(includes=[input_filename],
-                                   defines=_defines(),
-                                   output=output_file,
-                                   marker='//#')
+                                       defines=_defines(),
+                                       output=output_file,
+                                       marker='//#')
     includes.add(os.path.join(buildconfig.topobjdir, 'buildid.h'))
     return includes
 

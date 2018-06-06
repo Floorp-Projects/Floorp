@@ -1,9 +1,11 @@
-# produce mozlog-compatible log messages, following the spec at https://mozbase.readthedocs.io/en/latest/mozlog.html
+# produce mozlog-compatible log messages, following the spec at
+# https://mozbase.readthedocs.io/en/latest/mozlog.html
 
 import json
 import os
 
 from time import time
+
 
 class TestLogger(object):
     def __init__(self, source, threadname='main'):

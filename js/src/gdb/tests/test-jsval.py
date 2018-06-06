@@ -1,4 +1,5 @@
 # Basic unit tests for jsval pretty-printer.
+# flake8: noqa: F821
 
 assert_subprinter_registered('SpiderMonkey', 'JS::Value')
 

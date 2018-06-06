@@ -17,9 +17,9 @@ num_hazards = 0
 num_refs = 0
 try:
     with open(args.rootingHazards) as rootingHazards, \
-        open(args.hazards, 'w') as hazards, \
-        open(args.extra, 'w') as extra, \
-        open(args.refs, 'w') as refs:
+            open(args.hazards, 'w') as hazards, \
+            open(args.extra, 'w') as extra, \
+            open(args.refs, 'w') as refs:
         current_gcFunction = None
 
         # Map from a GC function name to the list of hazards resulting from
@@ -50,13 +50,15 @@ try:
                 print >>refs, line
                 continue
 
-            m = re.match(r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)
+            m = re.match(
+                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)  # NOQA: E501
             if m:
                 # Function names are surrounded by single quotes. Field calls
                 # are unquoted.
                 current_gcFunction = m.group(2)
                 hazardousGCFunctions[current_gcFunction].append(line)
-                hazardOrder.append((current_gcFunction, len(hazardousGCFunctions[current_gcFunction]) - 1))
+                hazardOrder.append((current_gcFunction,
+                                    len(hazardousGCFunctions[current_gcFunction]) - 1))
                 num_hazards += 1
                 continue
 
@@ -95,7 +97,7 @@ try:
                 print >>hazards, gcHazards[index]
 
 except IOError as e:
-    print 'Failed: %s' % str(e)
+    print('Failed: %s' % str(e))
 
 print("Wrote %s" % args.hazards)
 print("Wrote %s" % args.extra)

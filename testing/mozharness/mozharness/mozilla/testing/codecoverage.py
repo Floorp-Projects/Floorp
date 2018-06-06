@@ -127,8 +127,9 @@ class CodeCoverageMixin(SingleTestMixin):
             platform = 'macosx64'
             tar_file = 'grcov-osx-x86_64.tar.bz2'
 
-        manifest = os.path.join(dirs.get('abs_test_install_dir', os.path.join(dirs['abs_work_dir'], 'tests')), \
-            'config/tooltool-manifests/%s/ccov.manifest' % platform)
+        manifest = os.path.join(dirs.get('abs_test_install_dir',
+                                         os.path.join(dirs['abs_work_dir'], 'tests')),
+                                'config/tooltool-manifests/%s/ccov.manifest' % platform)
 
         self.tooltool_fetch(
             manifest=manifest,
@@ -169,7 +170,7 @@ class CodeCoverageMixin(SingleTestMixin):
                 'suite': 'plain'
             },
             '.js': {
-                'test': 'testing/mochitest/baselinecoverage/browser_chrome/browser_baselinecoverage.js',
+                'test': 'testing/mochitest/baselinecoverage/browser_chrome/browser_baselinecoverage.js',  # NOQA: E501
                 'suite': 'browser-chrome'
             },
             '.xul': {
@@ -178,7 +179,7 @@ class CodeCoverageMixin(SingleTestMixin):
             }
         }
 
-        wpt_baseline_test = 'tests/web-platform/mozilla/tests/baselinecoverage/wpt_baselinecoverage.html'
+        wpt_baseline_test = 'tests/web-platform/mozilla/tests/baselinecoverage/wpt_baselinecoverage.html'  # NOQA: E501
         if self.config.get('per_test_category') == "web-platform":
             if 'testharness' not in self.suites:
                 self.suites['testharness'] = []
@@ -238,7 +239,12 @@ class CodeCoverageMixin(SingleTestMixin):
 
         self.gcov_dir, self.jsvm_dir = self.set_coverage_env(os.environ)
 
-    def parse_coverage_artifacts(self, gcov_dir, jsvm_dir, merge=False, output_format='lcov', filter_covered=False):
+    def parse_coverage_artifacts(self,
+                                 gcov_dir,
+                                 jsvm_dir,
+                                 merge=False,
+                                 output_format='lcov',
+                                 filter_covered=False):
         jsvm_output_file = 'jsvm_lcov_output.info'
         grcov_output_file = 'grcov_lcov_output.info'
 
@@ -389,8 +395,10 @@ class CodeCoverageMixin(SingleTestMixin):
                             with open(grcov_file, 'r') as f:
                                 report = json.load(f)
 
-                            # Remove uncovered files, as they are unneeded for per-test coverage purposes.
-                            report['source_files'] = [sf for sf in report['source_files'] if self.is_covered(sf)]
+                            # Remove uncovered files, as they are unneeded for per-test
+                            # coverage purposes.
+                            report['source_files'] = [
+                                sf for sf in report['source_files'] if self.is_covered(sf)]
 
                             # Get baseline coverage
                             baseline_coverage = {}
@@ -425,7 +433,8 @@ class CodeCoverageMixin(SingleTestMixin):
         del os.environ['JS_CODE_COVERAGE_OUTPUT_DIR']
 
         if not self.ccov_upload_disabled:
-            grcov_output_file, jsvm_output_file = self.parse_coverage_artifacts(self.gcov_dir, self.jsvm_dir)
+            grcov_output_file, jsvm_output_file = self.parse_coverage_artifacts(self.gcov_dir,
+                                                                                self.jsvm_dir)
 
             # Zip the grcov output and upload it.
             grcov_zip_path = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip')
@@ -470,11 +479,11 @@ def rm_baseline_cov(baseline_coverage, test_coverage):
         # Bug 1460064 was filed for this.
 
         # Get line numbers and the differences
-        file_coverage = {i for i, cov in enumerate(test_files[test_file]['coverage']) \
-                                 if cov is not None and cov > 0}
+        file_coverage = {i for i, cov in enumerate(test_files[test_file]['coverage'])
+                         if cov is not None and cov > 0}
 
-        baseline = {i for i, cov in enumerate(baseline_files[test_file]['coverage']) \
-                            if cov is not None and cov > 0}
+        baseline = {i for i, cov in enumerate(baseline_files[test_file]['coverage'])
+                    if cov is not None and cov > 0}
 
         unique_coverage = file_coverage - baseline
 

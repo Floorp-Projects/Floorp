@@ -5,5 +5,7 @@ max-line-length = 99
 exclude =
     browser/extensions/mortar/ppapi/,
     build/pymake/,
+    security/nss/,
     testing/mochitest/pywebsocket,
     tools/lint/test/files,
+

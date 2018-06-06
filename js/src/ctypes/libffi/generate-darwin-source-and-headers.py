@@ -6,8 +6,10 @@ import collections
 import glob
 import argparse
 
+
 class Platform(object):
     pass
+
 
 class simulator_platform(Platform):
     directory = 'darwin_ios'
@@ -117,27 +119,31 @@ def move_file(src_dir, dst_dir, filename, file_suffix=None, prefix='', suffix=''
 
 
 def list_files(src_dir, pattern=None, filelist=None):
-    if pattern: filelist = glob.iglob(os.path.join(src_dir, pattern))
+    if pattern:
+        filelist = glob.iglob(os.path.join(src_dir, pattern))
     for file in filelist:
         yield os.path.basename(file)
 
 
-def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None, suffix=None):
+def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None,
+               suffix=None):
     for filename in list_files(src_dir, pattern=pattern, filelist=filelist):
-        move_file(src_dir, dst_dir, filename, file_suffix=file_suffix, prefix=prefix, suffix=suffix)
+        move_file(src_dir, dst_dir, filename, file_suffix=file_suffix,
+                  prefix=prefix, suffix=suffix)
 
 
 def copy_src_platform_files(platform):
     src_dir = os.path.join('src', platform.src_dir)
     dst_dir = os.path.join(platform.directory, 'src', platform.src_dir)
-    copy_files(src_dir, dst_dir, filelist=platform.src_files, file_suffix=platform.arch, prefix=platform.prefix, suffix=platform.suffix)
+    copy_files(src_dir, dst_dir, filelist=platform.src_files, file_suffix=platform.arch,
+               prefix=platform.prefix, suffix=platform.suffix)
 
 
 def build_target(platform, platform_headers):
     def xcrun_cmd(cmd):
         return 'xcrun -sdk %s %s -arch %s' % (platform.sdk, cmd, platform.arch)
 
-    tag='%s-%s' % (platform.sdk, platform.arch)
+    tag = '%s-%s' % (platform.sdk, platform.arch)
     build_dir = 'build_%s' % tag
     mkdir_p(build_dir)
     env = dict(CC=xcrun_cmd('clang'),
@@ -198,7 +204,9 @@ def generate_source_and_headers(generate_osx=True, generate_ios=True):
         basename, suffix = os.path.splitext(header_name)
         with open(os.path.join('darwin_common/include', header_name), 'w') as header:
             for tag_tuple in tag_tuples:
-                header.write('%s#include <%s_%s%s>\n%s\n' % (tag_tuple[0], basename, tag_tuple[1], suffix, tag_tuple[2]))
+                header.write('%s#include <%s_%s%s>\n%s\n' %
+                             (tag_tuple[0], basename, tag_tuple[1], suffix, tag_tuple[2]))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

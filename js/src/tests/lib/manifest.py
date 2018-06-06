@@ -4,7 +4,9 @@
 
 from __future__ import print_function
 
-import os, re, sys
+import os
+import re
+import sys
 from subprocess import Popen, PIPE
 
 from tests import RefTestCase
@@ -19,6 +21,7 @@ def split_path_into_dirs(path):
             break
         dirs.append(path)
     return dirs
+
 
 class XULInfo:
     def __init__(self, abi, os, isdebug):
@@ -58,7 +61,7 @@ class XULInfo:
                 path = _path
                 break
 
-        if path == None:
+        if path is None:
             print("Can't find config/autoconf.mk on a directory containing"
                   " the JS shell (searched from {})".format(jsdir))
             sys.exit(1)
@@ -78,6 +81,7 @@ class XULInfo:
                 if key == 'MOZ_DEBUG':
                     kw['isdebug'] = (val == '1')
         return cls(**kw)
+
 
 class XULInfoTester:
     def __init__(self, xulinfo, js_bin):
@@ -112,10 +116,13 @@ class XULInfoTester:
             self.cache[cond] = ans
         return ans
 
+
 class NullXULInfoTester:
     """Can be used to parse manifests without a JS shell."""
+
     def test(self, cond):
         return False
+
 
 def _parse_one(testcase, terms, xul_tester):
     pos = 0
@@ -171,6 +178,7 @@ def _parse_one(testcase, terms, xul_tester):
                 parts[pos]))
             pos += 1
 
+
 def _build_manifest_script_entry(script_name, test):
     line = []
     properties = []
@@ -196,6 +204,7 @@ def _build_manifest_script_entry(script_name, test):
         line.append(test.comment)
     return ' '.join(line)
 
+
 def _map_prefixes_left(test_gen):
     """
     Splits tests into a dictionary keyed on the first component of the test
@@ -210,6 +219,7 @@ def _map_prefixes_left(test_gen):
             t.path = remainder
         byprefix[left].append(t)
     return byprefix
+
 
 def _emit_manifest_at(location, relative, test_gen, depth):
     """
@@ -232,7 +242,8 @@ def _emit_manifest_at(location, relative, test_gen, depth):
         else:
             numTestFiles += 1
             if len(test_list) != 1:
-                import pdb; pdb.set_trace()
+                import pdb
+                pdb.set_trace()
             assert len(test_list) == 1
             line = _build_manifest_script_entry(k, test_list[0])
             manifest.append(line)
@@ -251,8 +262,10 @@ def _emit_manifest_at(location, relative, test_gen, depth):
     finally:
         fp.close()
 
+
 def make_manifests(location, test_gen):
     _emit_manifest_at(location, '', test_gen, 0)
+
 
 def _find_all_js_files(location):
     for root, dirs, files in os.walk(location):
@@ -261,8 +274,10 @@ def _find_all_js_files(location):
             if fn.endswith('.js'):
                 yield root, fn
 
+
 TEST_HEADER_PATTERN_INLINE = re.compile(r'//\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?$')
-TEST_HEADER_PATTERN_MULTI  = re.compile(r'/\*\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?\*/')
+TEST_HEADER_PATTERN_MULTI = re.compile(r'/\*\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?\*/')
+
 
 def _append_terms_and_comment(testcase, terms, comment):
     if testcase.terms is None:
@@ -274,6 +289,7 @@ def _append_terms_and_comment(testcase, terms, comment):
         testcase.comment = comment
     elif comment:
         testcase.comment += "; " + comment
+
 
 def _parse_test_header(fullpath, testcase, xul_tester):
     """
@@ -302,6 +318,7 @@ def _parse_test_header(fullpath, testcase, xul_tester):
     testcase.tag = matches.group(1)
     _append_terms_and_comment(testcase, matches.group(2), matches.group(4))
     _parse_one(testcase, matches.group(2), xul_tester)
+
 
 def _parse_external_manifest(filename, relpath):
     """
@@ -343,6 +360,7 @@ def _parse_external_manifest(filename, relpath):
     entries.sort(key=lambda x: x["path"])
     return entries
 
+
 def _apply_external_manifests(filename, testcase, entries, xul_tester):
     for entry in entries:
         if filename.startswith(entry["path"]):
@@ -358,6 +376,7 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             # use the terms for the most specific path.
             _append_terms_and_comment(testcase, entry["terms"], entry["comment"])
             _parse_one(testcase, entry["terms"], xul_tester)
+
 
 def _is_test_file(path_from_root, basename, filename, path_options):
     # Any file whose basename matches something in this set is ignored.
@@ -407,7 +426,6 @@ def load_reftests(location, path_options, xul_tester):
 
         # Skip empty files.
         fullpath = os.path.join(location, filename)
-        statbuf = os.stat(fullpath)
 
         testcase = RefTestCase(filename)
         _apply_external_manifests(filename, testcase, externalManifestEntries,

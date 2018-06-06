@@ -3,6 +3,7 @@
 # Expected behavior is for the asm.js code in the following fragment to trigger
 # SIGSEGV. The code in js/src/gdb/mozilla/asmjs.py should prevent GDB from
 # handling that signal.
+# flake8: noqa: F821
 
 run_fragment('asmjs.segfault')
 

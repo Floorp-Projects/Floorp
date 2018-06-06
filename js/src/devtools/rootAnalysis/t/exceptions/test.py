@@ -1,3 +1,5 @@
+# flake8: noqa: F821
+
 test.compile("source.cpp", '-fno-exceptions')
 test.run_analysis_script('gcTypes')
 
