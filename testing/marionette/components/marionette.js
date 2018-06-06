@@ -459,14 +459,14 @@ class MarionetteMainProcess {
   }
 
   uninit() {
+    for (let k of this.alteredPrefs) {
+      log.debug(`Resetting recommended pref ${k}`);
+      Preferences.reset(k);
+    }
+    this.alteredPrefs.clear();
+
     if (this.running) {
       this.server.stop();
-      for (let k of this.alteredPrefs) {
-        log.debug(`Resetting recommended pref ${k}`);
-        Preferences.reset(k);
-      }
-      this.alteredPrefs.clear();
-
       Services.obs.notifyObservers(this, NOTIFY_RUNNING);
       log.debug("Remote service is inactive");
     }
