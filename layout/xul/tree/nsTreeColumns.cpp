@@ -240,14 +240,14 @@ nsTreeColumn::GetType(int16_t* aType)
 }
 
 NS_IMETHODIMP
-nsTreeColumn::GetNext(nsITreeColumn** _retval)
+nsTreeColumn::GetNext(nsTreeColumn** _retval)
 {
   NS_IF_ADDREF(*_retval = GetNext());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTreeColumn::GetPrevious(nsITreeColumn** _retval)
+nsTreeColumn::GetPrevious(nsTreeColumn** _retval)
 {
   NS_IF_ADDREF(*_retval = GetPrevious());
   return NS_OK;

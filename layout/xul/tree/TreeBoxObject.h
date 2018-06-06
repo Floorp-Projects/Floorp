@@ -76,9 +76,9 @@ public:
                                                  const nsAString& element,
                                                  ErrorResult& aRv);
 
-  bool IsCellCropped(int32_t row, nsITreeColumn* col, ErrorResult& aRv);
+  bool IsCellCropped(int32_t row, nsTreeColumn* col, ErrorResult& aRv);
 
-  void RemoveImageCacheEntry(int32_t row, nsITreeColumn& col, ErrorResult& aRv);
+  void RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv);
 
   // Deprecated APIs from old IDL
   void GetCellAt(JSContext* cx,
@@ -105,18 +105,18 @@ public:
   // void ClearStyleAndImageCaches();
   // void SetFocused(bool arg);
   // void EnsureRowIsVisible(int32_t index);
-  // void EnsureCellIsVisible(int32_t row, nsITreeColumn* col);
+  // void EnsureCellIsVisible(int32_t row, nsTreeColumn* col);
   // void ScrollToRow(int32_t index);
   // void ScrollByLines(int32_t numLines);
   // void ScrollByPages(int32_t numPages);
-  // void ScrollToCell(int32_t row, nsITreeColumn* col);
-  // void ScrollToColumn(nsITreeColumn* col);
+  // void ScrollToCell(int32_t row, nsTreeColumn* col);
+  // void ScrollToColumn(nsTreeColumn* col);
   // void ScrollToHorizontalPosition(int32_t horizontalPosition);
-  // void InvalidateColumn(nsITreeColumn* col);
+  // void InvalidateColumn(nsTreeColumn* col);
   // void InvalidateRow(int32_t index);
-  // void InvalidateCell(int32_t row, nsITreeColumn* col);
+  // void InvalidateCell(int32_t row, nsTreeColumn* col);
   // void InvalidateRange(int32_t startIndex, int32_t endIndex);
-  // void InvalidateColumnRange(int32_t startIndex, int32_t endIndex, nsITreeColumn* col);
+  // void InvalidateColumnRange(int32_t startIndex, int32_t endIndex, nsTreeColumn* col);
   // void RowCountChanged(int32_t index, int32_t count);
 
 protected:

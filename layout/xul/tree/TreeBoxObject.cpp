@@ -353,7 +353,7 @@ TreeBoxObject::EnsureRowIsVisible(int32_t aRow)
 }
 
 NS_IMETHODIMP
-TreeBoxObject::EnsureCellIsVisible(int32_t aRow, nsITreeColumn* aCol)
+TreeBoxObject::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -389,7 +389,7 @@ TreeBoxObject::ScrollByPages(int32_t aNumPages)
 }
 
 NS_IMETHODIMP
-TreeBoxObject::ScrollToCell(int32_t aRow, nsITreeColumn* aCol)
+TreeBoxObject::ScrollToCell(int32_t aRow, nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -398,7 +398,7 @@ TreeBoxObject::ScrollToCell(int32_t aRow, nsITreeColumn* aCol)
 }
 
 NS_IMETHODIMP
-TreeBoxObject::ScrollToColumn(nsITreeColumn* aCol)
+TreeBoxObject::ScrollToColumn(nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -424,7 +424,7 @@ NS_IMETHODIMP TreeBoxObject::Invalidate()
 }
 
 NS_IMETHODIMP
-TreeBoxObject::InvalidateColumn(nsITreeColumn* aCol)
+TreeBoxObject::InvalidateColumn(nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -442,7 +442,7 @@ TreeBoxObject::InvalidateRow(int32_t aIndex)
 }
 
 NS_IMETHODIMP
-TreeBoxObject::InvalidateCell(int32_t aRow, nsITreeColumn* aCol)
+TreeBoxObject::InvalidateCell(int32_t aRow, nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -460,7 +460,7 @@ TreeBoxObject::InvalidateRange(int32_t aStart, int32_t aEnd)
 }
 
 NS_IMETHODIMP
-TreeBoxObject::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsITreeColumn* aCol)
+TreeBoxObject::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsTreeColumn* aCol)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
@@ -488,7 +488,7 @@ TreeBoxObject::GetRowAt(int32_t x, int32_t y)
 
 NS_IMETHODIMP
 TreeBoxObject::GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
-                         nsITreeColumn** aCol, nsAString& aChildElt)
+                         nsTreeColumn** aCol, nsAString& aChildElt)
 {
   *aRow = 0;
   *aCol = nullptr;
@@ -505,9 +505,8 @@ TreeBoxObject::GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
 void
 TreeBoxObject::GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsITreeColumn> col;
-  GetCellAt(x, y, &aRetVal.mRow, getter_AddRefs(col), aRetVal.mChildElt);
-  aRetVal.mCol = col.forget().downcast<nsTreeColumn>();
+  GetCellAt(x, y, &aRetVal.mRow, getter_AddRefs(aRetVal.mCol),
+            aRetVal.mChildElt);
 }
 
 void
@@ -519,9 +518,9 @@ TreeBoxObject::GetCellAt(JSContext* cx,
                          ErrorResult& aRv)
 {
   int32_t row;
-  nsITreeColumn* col;
+  RefPtr<nsTreeColumn> col;
   nsAutoString childElt;
-  GetCellAt(x, y, &row, &col, childElt);
+  GetCellAt(x, y, &row, getter_AddRefs(col), childElt);
 
   JS::Rooted<JS::Value> v(cx);
 
@@ -543,7 +542,7 @@ TreeBoxObject::GetCellAt(JSContext* cx,
 }
 
 NS_IMETHODIMP
-TreeBoxObject::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const nsAString& aElement,
+TreeBoxObject::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol, const nsAString& aElement,
                                       int32_t *aX, int32_t *aY, int32_t *aWidth, int32_t *aHeight)
 {
   *aX = *aY = *aWidth = *aHeight = 0;
@@ -599,7 +598,7 @@ TreeBoxObject::GetCoordsForCellItem(JSContext* cx,
 }
 
 NS_IMETHODIMP
-TreeBoxObject::IsCellCropped(int32_t aRow, nsITreeColumn* aCol, bool *aIsCropped)
+TreeBoxObject::IsCellCropped(int32_t aRow, nsTreeColumn* aCol, bool *aIsCropped)
 {
   *aIsCropped = false;
   nsTreeBodyFrame* body = GetTreeBodyFrame();
@@ -609,7 +608,7 @@ TreeBoxObject::IsCellCropped(int32_t aRow, nsITreeColumn* aCol, bool *aIsCropped
 }
 
 bool
-TreeBoxObject::IsCellCropped(int32_t row, nsITreeColumn* col, ErrorResult& aRv)
+TreeBoxObject::IsCellCropped(int32_t row, nsTreeColumn* col, ErrorResult& aRv)
 {
   bool ret;
   aRv = IsCellCropped(row, col, &ret);
@@ -653,7 +652,7 @@ TreeBoxObject::ClearStyleAndImageCaches()
 }
 
 NS_IMETHODIMP
-TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol)
+TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
 {
   NS_ENSURE_ARG(aCol);
   NS_ENSURE_TRUE(aRowIndex >= 0, NS_ERROR_INVALID_ARG);
@@ -665,7 +664,7 @@ TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol)
 }
 
 void
-TreeBoxObject::RemoveImageCacheEntry(int32_t row, nsITreeColumn& col, ErrorResult& aRv)
+TreeBoxObject::RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv)
 {
   aRv = RemoveImageCacheEntry(row, &col);
 }

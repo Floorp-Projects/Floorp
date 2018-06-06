@@ -11,7 +11,7 @@
 #include "XULListboxAccessible.h"
 
 class nsTreeBodyFrame;
-class nsITreeColumn;
+class nsTreeColumn;
 
 namespace mozilla {
 namespace a11y {
@@ -177,7 +177,7 @@ public:
    * Return cell accessible for the given column. If XUL tree accessible is not
    * accessible table then return null.
    */
-  virtual XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn) const
+  virtual XULTreeGridCellAccessible* GetCellAccessible(nsTreeColumn* aColumn) const
     { return nullptr; }
 
   /**
@@ -206,7 +206,7 @@ protected:
   /**
    * Return name for cell at the given column.
    */
-  void GetCellName(nsITreeColumn* aColumn, nsAString& aName) const;
+  void GetCellName(nsTreeColumn* aColumn, nsAString& aName) const;
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsITreeView* mTreeView;
@@ -244,7 +244,7 @@ protected:
   virtual ~XULTreeItemAccessible();
 
   // XULTreeItemAccessible
-  nsCOMPtr<nsITreeColumn> mColumn;
+  RefPtr<nsTreeColumn> mColumn;
   nsString mCachedName;
 };
 
