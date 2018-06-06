@@ -6,7 +6,6 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
 Cu.importGlobalProperties(["URLSearchParams"]);
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
-const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const SYNC_PARENT_ANNO = "sync/parent";
 
 var makeGuid = PlacesUtils.history.makeGuid;
@@ -1006,30 +1005,6 @@ add_task(async function test_update_annos() {
       "Should remove description anno");
   }
 
-  info("Add bookmark sidebar anno");
-  {
-    let updatedItem = await PlacesSyncUtils.bookmarks.update({
-      recordId: guids.bmk,
-      loadInSidebar: true,
-    });
-    ok(updatedItem.loadInSidebar, "Should return sidebar anno");
-    let id = await recordIdToId(updatedItem.recordId);
-    ok(PlacesUtils.annotations.itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-      "Should set sidebar anno for existing bookmark");
-  }
-
-  info("Clear bookmark sidebar anno");
-  {
-    let updatedItem = await PlacesSyncUtils.bookmarks.update({
-      recordId: guids.bmk,
-      loadInSidebar: false,
-    });
-    ok(!updatedItem.loadInSidebar, "Should not return cleared sidebar anno");
-    let id = await recordIdToId(updatedItem.recordId);
-    ok(!PlacesUtils.annotations.itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-      "Should clear sidebar anno for existing bookmark");
-  }
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
@@ -1494,37 +1469,6 @@ add_task(async function test_insert_annos() {
       "Folder description", "Should set new folder description");
   }
 
-  info("Bookmark with sidebar anno");
-  let sidebarBmk = await PlacesSyncUtils.bookmarks.insert({
-    kind: "bookmark",
-    url: "https://example.com",
-    recordId: makeGuid(),
-    parentRecordId: "menu",
-    loadInSidebar: true,
-  });
-  {
-    ok(sidebarBmk.loadInSidebar, "Should return sidebar anno for new bookmark");
-    let id = await recordIdToId(sidebarBmk.recordId);
-    ok(PlacesUtils.annotations.itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-      "Should set sidebar anno for new bookmark");
-  }
-
-  info("Bookmark without sidebar anno");
-  let noSidebarBmk = await PlacesSyncUtils.bookmarks.insert({
-    kind: "bookmark",
-    url: "https://example.org",
-    recordId: makeGuid(),
-    parentRecordId: "toolbar",
-    loadInSidebar: false,
-  });
-  {
-    ok(!noSidebarBmk.loadInSidebar,
-      "Should not return sidebar anno for new bookmark");
-    let id = await recordIdToId(noSidebarBmk.recordId);
-    ok(!PlacesUtils.annotations.itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-      "Should not set sidebar anno for new bookmark");
-  }
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
@@ -1823,7 +1767,6 @@ add_task(async function test_fetch() {
     kind: "bookmark",
     url: "https://example.com",
     description: "Bookmark description",
-    loadInSidebar: true,
     tags: ["taggy"],
   });
   let folderBmk = await PlacesSyncUtils.bookmarks.insert({
@@ -1870,29 +1813,27 @@ add_task(async function test_fetch() {
     }, "Should include description, children, title, and parent title in folder");
   }
 
-  info("Fetch bookmark with description, sidebar anno, and tags");
+  info("Fetch bookmark with description and tags");
   {
     let item = await PlacesSyncUtils.bookmarks.fetch(bmk.recordId);
     deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
-      "url", "tags", "description", "loadInSidebar", "parentTitle", "title", "dateAdded"].sort(),
+      "url", "tags", "description", "parentTitle", "title", "dateAdded"].sort(),
       "Should include bookmark-specific properties");
     equal(item.recordId, bmk.recordId, "Sync ID should match");
     equal(item.url.href, "https://example.com/", "Should return URL");
     equal(item.parentRecordId, "menu", "Should return parent sync ID");
     deepEqual(item.tags, ["taggy"], "Should return tags");
     equal(item.description, "Bookmark description", "Should return bookmark description");
-    strictEqual(item.loadInSidebar, true, "Should return sidebar anno");
     equal(item.parentTitle, "menu", "Should return parent title");
     strictEqual(item.title, "", "Should return empty title");
   }
 
-  info("Fetch bookmark with keyword; without parent title or annos");
+  info("Fetch bookmark with keyword; without parent title");
   {
     let item = await PlacesSyncUtils.bookmarks.fetch(folderBmk.recordId);
     deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
-      "url", "keyword", "tags", "loadInSidebar", "parentTitle", "title", "dateAdded"].sort(),
+      "url", "keyword", "tags", "parentTitle", "title", "dateAdded"].sort(),
       "Should omit blank bookmark-specific properties");
-    strictEqual(item.loadInSidebar, false, "Should not load bookmark in sidebar");
     deepEqual(item.tags, [], "Tags should be empty");
     equal(item.keyword, "kw", "Should return keyword");
     strictEqual(item.parentTitle, "", "Should include parent title even if empty");

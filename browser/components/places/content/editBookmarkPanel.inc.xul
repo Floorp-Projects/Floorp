@@ -123,14 +123,6 @@
     </vbox>
   </vbox>
 
-  <checkbox id="editBMPanel_loadInSidebarCheckbox"
-            collapsed="true"
-            label="&editBookmarkOverlay.loadInSidebar.label;"
-            accesskey="&editBookmarkOverlay.loadInSidebar.accesskey;"
-            oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();">
-    <observes element="additionalInfoBroadcaster" attribute="hidden"/>
-  </checkbox>
-
   <!-- If the ids are changing or additional fields are being added, be sure
        to sync the values in places.js -->
   <broadcaster id="additionalInfoBroadcaster"/>

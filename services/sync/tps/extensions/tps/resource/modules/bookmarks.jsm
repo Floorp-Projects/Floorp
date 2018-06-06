@@ -34,7 +34,6 @@ function extend(child, supertype) {
 function PlacesItemProps(props) {
   this.location = null;
   this.uri = null;
-  this.loadInSidebar = null;
   this.keyword = null;
   this.title = null;
   this.description = null;
@@ -444,29 +443,6 @@ Bookmark.prototype = {
   },
 
   /**
-   * SetLoadInSidebar
-   *
-   * Updates this bookmark's loadInSidebar property.
-   *
-   * @param loadInSidebar if true, the loadInSidebar property will be set,
-   *        if false, it will be cleared, and any other value will result
-   *        in no change
-   * @return nothing
-   */
-  async SetLoadInSidebar(loadInSidebar) {
-    let itemId = await PlacesUtils.promiseItemId(this.props.guid);
-    if (loadInSidebar)
-      PlacesUtils.annotations.setItemAnnotation(itemId,
-                                    "bookmarkProperties/loadInSidebar",
-                                    true,
-                                    0,
-                                    PlacesUtils.annotations.EXPIRE_NEVER);
-    else if (!loadInSidebar)
-      PlacesUtils.annotations.removeItemAnnotation(itemId,
-                                       "bookmarkProperties/loadInSidebar");
-  },
-
-  /**
    * SetUri
    *
    * Updates this bookmark's URI.
@@ -520,7 +496,6 @@ Bookmark.prototype = {
     this.props.guid = guid;
     await this.SetKeyword(this.props.keyword);
     await this.SetDescription(this.props.description);
-    await this.SetLoadInSidebar(this.props.loadInSidebar);
     await this.SetTags(this.props.tags);
     return this.props.guid;
   },
@@ -536,7 +511,6 @@ Bookmark.prototype = {
   async Update() {
     Logger.AssertTrue(this.props.guid, "Invalid guid during Update");
     await this.SetDescription(this.updateProps.description);
-    await this.SetLoadInSidebar(this.updateProps.loadInSidebar);
     await this.SetTitle(this.updateProps.title);
     await this.SetUri(this.updateProps.uri);
     await this.SetKeyword(this.updateProps.keyword);
@@ -580,21 +554,6 @@ Bookmark.prototype = {
           " for " + this.toString());
         return null;
       }
-    }
-    let itemId = await PlacesUtils.promiseItemId(this.props.guid);
-    let loadInSidebar = PlacesUtils.annotations.itemHasAnnotation(
-      itemId,
-      "bookmarkProperties/loadInSidebar");
-    if (loadInSidebar)
-      loadInSidebar = PlacesUtils.annotations.getItemAnnotation(
-        itemId,
-        "bookmarkProperties/loadInSidebar");
-    if (this.props.loadInSidebar != null &&
-        loadInSidebar != this.props.loadInSidebar) {
-      Logger.logPotentialError("Incorrect loadInSidebar setting - expected: " +
-        this.props.loadInSidebar + ", actual: " + loadInSidebar +
-        " for " + this.toString());
-      return null;
     }
     if (this.props.tags != null) {
       try {

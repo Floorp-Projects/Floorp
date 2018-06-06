@@ -129,10 +129,6 @@
                  sidebarurl="chrome://browser/content/places/historySidebar.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <broadcaster id="viewWebPanelsSidebar" autoCheck="false"
-                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
-                 oncommand="SidebarUI.toggle('viewWebPanelsSidebar');"/>
-
     <broadcaster id="bookmarkThisPageBroadcaster"
                  label="&bookmarkThisPageCmd.label;"
                  bookmarklabel="&bookmarkThisPageCmd.label;"

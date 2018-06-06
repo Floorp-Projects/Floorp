@@ -354,7 +354,6 @@ add_task(async function test_bookmark_change_during_sync() {
       remoteFxBmk.title         = "Get Firefox!";
       remoteFxBmk.tags          = ["firefox", "awesome", "browser"];
       remoteFxBmk.keyword       = "awesome";
-      remoteFxBmk.loadInSidebar = false;
       remoteFxBmk.parentName    = "Folder 1";
       remoteFxBmk.parentid      = folder1.guid;
       collection.insert(bmk2_guid, encryptPayload(remoteFxBmk.cleartext));

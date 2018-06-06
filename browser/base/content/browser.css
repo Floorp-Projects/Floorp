@@ -1409,16 +1409,6 @@ toolbarpaletteitem:not([place="palette"]) > .toolbarpaletteitem-box {
   visibility: visible;
 }
 
-
-/* Favicon in Open Bookmark in Sidebar */
-#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-  list-style-image: var(--sidebar-webpage-icon, url(chrome://mozapps/skin/places/defaultFavicon.svg) );
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 16px;
-  height: 16px;
-}
-
 /* WebExtension Sidebars */
 #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: var(--webextension-menuitem-image, inherit);

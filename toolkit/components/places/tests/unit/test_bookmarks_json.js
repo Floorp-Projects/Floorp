@@ -4,7 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
-const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
 // An object representing the contents of bookmarks.json.
@@ -56,7 +55,6 @@ var test_bookmarks = {
           dateAdded: 1177375336000000,
           lastModified: 1177375423000000,
           keyword: "test",
-          sidebar: true,
           postData: "hidden1%3Dbar&text1%3D%25s",
           charset: "ISO-8859-1"
         }
@@ -216,10 +214,6 @@ async function checkItem(aExpected, aNode) {
       }
       case "guid":
         Assert.equal(bookmark.guid, aExpected.guid);
-        break;
-      case "sidebar":
-        Assert.equal(PlacesUtils.annotations.itemHasAnnotation(
-                     id, LOAD_IN_SIDEBAR_ANNO), aExpected.sidebar);
         break;
       case "postData": {
         let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });

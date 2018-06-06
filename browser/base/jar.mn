@@ -97,8 +97,6 @@ browser.jar:
         content/browser/tabbrowser.xml                (content/tabbrowser.xml)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
-        content/browser/web-panels.js                 (content/web-panels.js)
-*       content/browser/web-panels.xul                (content/web-panels.xul)
         content/browser/webext-panels.js              (content/webext-panels.js)
 *       content/browser/webext-panels.xul             (content/webext-panels.xul)
         content/browser/nsContextMenu.js              (content/nsContextMenu.js)

@@ -20,11 +20,9 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial = {
   "menu": [
     { uri: "http://www.google.com",
-      loadInSidebar: true,
       tags: ["google", "computers", "internet", "www"],
       changes: {
         title: "Google",
-        loadInSidebar: false,
         tags: ["google", "computers", "misc"],
       }
     },
@@ -92,7 +90,6 @@ var bookmarks_after_first_modify = {
     },
     { uri: "http://www.google.com",
       title: "Google",
-      loadInSidebar: false,
       tags: [ "google", "computers", "misc"]
     },
     { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
@@ -137,7 +134,6 @@ var bookmarks_to_delete = {
   "menu": [
     { uri: "http://www.google.com",
       title: "Google",
-      loadInSidebar: false,
       tags: [ "google", "computers", "misc" ]
     }
   ]
@@ -420,5 +416,3 @@ Phase("phase4", [
   [Passwords.verifyNot, passwords_absent],
   [History.verifyNot, history_absent],
 ]);
-
-

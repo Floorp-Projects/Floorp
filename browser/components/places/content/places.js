@@ -32,7 +32,6 @@ var PlacesOrganizer = {
   // is minimal. IDs should be kept in sync with the IDs of the elements
   // observing additionalInfoBroadcaster.
   _additionalInfoFields: [
-    "editBMPanel_loadInSidebarCheckbox",
     "editBMPanel_keywordRow",
   ],
 
@@ -668,7 +667,6 @@ var PlacesOrganizer = {
         detailsDeck.selectedIndex = 1;
         gEditItemOverlay.initPanel({ uris,
                                      hiddenRows: ["folderPicker",
-                                                  "loadInSidebar",
                                                   "location",
                                                   "keyword",
                                                   "name"]});

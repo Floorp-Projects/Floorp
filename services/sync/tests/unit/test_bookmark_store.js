@@ -61,7 +61,6 @@ add_task(async function test_bookmark_create() {
     fxrecord.title         = "Get Firefox!";
     fxrecord.tags          = ["firefox", "awesome", "browser"];
     fxrecord.keyword       = "awesome";
-    fxrecord.loadInSidebar = false;
     fxrecord.parentName    = BookmarksToolbarTitle;
     fxrecord.parentid      = "toolbar";
     await store.applyIncoming(fxrecord);
