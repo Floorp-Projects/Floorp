@@ -1125,7 +1125,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     break;
                 }
 
-                webView.findNext(true);
+                webView.findNext(false);
                 break;
             }
 
