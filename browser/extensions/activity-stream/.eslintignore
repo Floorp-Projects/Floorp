@@ -1,0 +1,10 @@
+activity-streams-env/
+dist/
+firefox/
+logs/
+stats.json
+prerendered/
+vendor/
+data/
+bin/prerender.js
+bin/prerender.js.map
