@@ -79,8 +79,16 @@ class FontEditor extends PureComponent {
       });
     });
   }
-
-  renderFontFamily(font, onToggleFontHighlight) {
+  /**
+   * Render font family, font name, and metadata for all fonts used on selected node.
+   *
+   * @param {Array} fonts
+   *        Fonts used on selected node.
+   * @param {Function} onToggleFontHighlight
+   *        Callback to trigger in-context highlighting of text that uses a font.
+   * @return {DOMNode}
+   */
+  renderFontFamily(fonts, onToggleFontHighlight) {
     return dom.label(
       {
         className: "font-control font-control-family",
@@ -95,7 +103,9 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-box",
         },
-        FontMeta({ font, onToggleFontHighlight })
+        fonts.map(font => {
+          return FontMeta({ font, onToggleFontHighlight });
+        })
       )
     );
   }
@@ -198,7 +208,7 @@ class FontEditor extends PureComponent {
     return dom.div(
       {},
       // Always render UI for font family, format and font file URL.
-      this.renderFontFamily(font, onToggleFontHighlight),
+      this.renderFontFamily(fonts, onToggleFontHighlight),
       // Render UI for font variation instances if they are defined.
       hasFontInstances && this.renderInstances(font.variationInstances, instance),
       // Always render UI for font size.
