@@ -574,10 +574,9 @@ nsCoreUtils::GetSensibleColumnAt(nsITreeBoxObject *aTree, uint32_t aIndex)
 }
 
 already_AddRefed<nsTreeColumn>
-nsCoreUtils::GetNextSensibleColumn(nsITreeColumn *aColumn)
+nsCoreUtils::GetNextSensibleColumn(nsTreeColumn* aColumn)
 {
-  RefPtr<nsTreeColumn> nextColumn;
-  aColumn->GetNext(getter_AddRefs(nextColumn));
+  RefPtr<nsTreeColumn> nextColumn = aColumn->GetNext();
 
   while (nextColumn && IsColumnHidden(nextColumn)) {
     nextColumn = nextColumn->GetNext();
@@ -587,10 +586,9 @@ nsCoreUtils::GetNextSensibleColumn(nsITreeColumn *aColumn)
 }
 
 already_AddRefed<nsTreeColumn>
-nsCoreUtils::GetPreviousSensibleColumn(nsITreeColumn *aColumn)
+nsCoreUtils::GetPreviousSensibleColumn(nsTreeColumn* aColumn)
 {
-  RefPtr<nsTreeColumn> prevColumn;
-  aColumn->GetPrevious(getter_AddRefs(prevColumn));
+  RefPtr<nsTreeColumn> prevColumn = aColumn->GetPrevious();
 
   while (prevColumn && IsColumnHidden(prevColumn)) {
     prevColumn = prevColumn->GetPrevious();
@@ -600,10 +598,9 @@ nsCoreUtils::GetPreviousSensibleColumn(nsITreeColumn *aColumn)
 }
 
 bool
-nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
+nsCoreUtils::IsColumnHidden(nsTreeColumn* aColumn)
 {
-  RefPtr<Element> element;
-  aColumn->GetElement(getter_AddRefs(element));
+  Element* element = aColumn->Element();
   return element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                               nsGkAtoms::_true, eCaseMatters);
 }
