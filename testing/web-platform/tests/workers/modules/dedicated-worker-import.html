@@ -4,51 +4,40 @@
 <script src="/resources/testharnessreport.js"></script>
 <script>
 
-// Starts a dedicated worker for |scriptURL| and waits until MessageEvents from
-// imported modules up to |expectedNumberOfImportedModules|.
-function import_test(scriptURL, expectedNumberOfImportedModules, description) {
-  promise_test(() => {
-    return new Promise(resolve => {
-      let numberOfImportedModules = 0;
-      const worker = new Worker(scriptURL, { type: 'module' });
-      worker.onmessage = e => {
-        if (e.data === 'LOADED')
-          ++numberOfImportedModules;
-        if (numberOfImportedModules === expectedNumberOfImportedModules)
-          resolve();
-      };
-    });
+// Starts a dedicated worker for |scriptURL| and waits until the list of
+// imported modules is sent from the worker. Passes if the list is equal to
+// |expectedImportedModules|.
+function import_test(scriptURL, expectedImportedModules, description) {
+  promise_test(async () => {
+    const worker = new Worker(scriptURL, { type: 'module' });
+    const msg_event = await new Promise(resolve => worker.onmessage = resolve);
+    assert_array_equals(msg_event.data, expectedImportedModules);
   }, description);
 }
 
-// Expect 2 imports: one for the top-level script, and one for the static
-// import.
-import_test('resources/static-import-worker.js', 2,
+import_test('resources/static-import-worker.js',
+            ['export-on-load-script.js'],
             'Static import.');
 
-// Expect 3 imports: one for the top-level script, and two for the nested static
-// import.
-import_test('resources/nested-static-import-worker.js', 3,
+import_test('resources/nested-static-import-worker.js',
+            ['export-on-static-import-script.js', 'export-on-load-script.js'],
             'Nested static import.');
 
-// Expect 3 imports: one for the top-level script, one for the static import,
-// and one for the dynamic import.
-import_test('resources/static-import-and-then-dynamic-import-worker.js', 3,
+
+import_test('resources/static-import-and-then-dynamic-import-worker.js',
+            ['export-on-dynamic-import-script.js', 'export-on-load-script.js'],
             'Static import and then dynamic import.');
 
-// Expect 2 imports: one for the top-level script, and one for the dynamic
-// import.
-import_test('resources/dynamic-import-worker.js', 2,
+import_test('resources/dynamic-import-worker.js',
+            ['export-on-load-script.js'],
             'Dynamic import.');
 
-// Expect 3 imports: one for the top-level script, and two for the nested
-// dynamic import.
-import_test('resources/nested-dynamic-import-worker.js', 3,
+import_test('resources/nested-dynamic-import-worker.js',
+            ['export-on-dynamic-import-script.js', 'export-on-load-script.js'],
             'Nested dynamic import.');
 
-// Expect 3 imports: one for the top-level script, one for the dynamic import,
-// and one for the static import.
-import_test('resources/dynamic-import-and-then-static-import-worker.js', 3,
+import_test('resources/dynamic-import-and-then-static-import-worker.js',
+            ['export-on-static-import-script.js', 'export-on-load-script.js'],
             'Dynamic import and then static import.');
 
 </script>
