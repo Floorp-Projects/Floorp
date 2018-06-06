@@ -27,7 +27,6 @@ config = {
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_UPDATE_CHANNEL": "nightly-maple",
     },
-    "platform": "android",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",

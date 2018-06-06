@@ -1,5 +1,4 @@
 config = {
-    "platform": "win32",
     "app_name": "browser",
     "mozconfig_platform": "win32",
     "mozconfig_variant": "l10n-mozconfig-devedition",
