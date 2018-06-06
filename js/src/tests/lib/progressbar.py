@@ -31,17 +31,21 @@ class ProgressBar(object):
 
         self.prior = None
         self.atLineStart = True
-        self.counters_fmt = fmt  # [{str:str}] Describtion of how to lay out each
-        #             field in the counters map.
-        self.limit = limit  # int: The value of 'current' equal to 100%.
-        self.limit_digits = int(math.ceil(math.log10(self.limit)))  # int: max digits in limit
-        self.t0 = datetime.now()  # datetime: The start time.
+        # [{str:str}] Describtion of how to lay out each field in the counters map.
+        self.counters_fmt = fmt
+        # int: The value of 'current' equal to 100%.
+        self.limit = limit
+        # int: max digits in limit
+        self.limit_digits = int(math.ceil(math.log10(self.limit)))
+        # datetime: The start time.
+        self.t0 = datetime.now()
 
         # Compute the width of the counters and build the format string.
         self.counters_width = 1  # [
         for layout in self.counters_fmt:
             self.counters_width += self.limit_digits
-            self.counters_width += 1  # | (or ']' for the last one)
+            # | (or ']' for the last one)
+            self.counters_width += 1
 
         self.barlen = 64 - self.counters_width
 
@@ -116,7 +120,7 @@ class ProgressBar(object):
         redirection.
         """
         try:
-            import android
+            import android  # NOQA: F401
             return False
         except ImportError:
             return sys.stdout.isatty()

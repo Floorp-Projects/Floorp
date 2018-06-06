@@ -1,22 +1,23 @@
+# flake8: noqa: F821
+
 import fcntl
 import os
 import select
 import time
 from subprocess import Popen, PIPE
 
-# Run a series of subprocesses. Try to keep up to a certain number going in
-# parallel at any given time. Enforce time limits.
-#
-# This is implemented using non-blocking I/O, and so is Unix-specific.
-#
-# We assume that, if a task closes its standard error, then it's safe to
-# wait for it to terminate. So an ill-behaved task that closes its standard
-# output and then hangs will hang us, as well. However, as it takes special
-# effort to close one's standard output, this seems unlikely to be a
-# problem in practice.
-
 
 class TaskPool(object):
+    # Run a series of subprocesses. Try to keep up to a certain number going in
+    # parallel at any given time. Enforce time limits.
+    #
+    # This is implemented using non-blocking I/O, and so is Unix-specific.
+    #
+    # We assume that, if a task closes its standard error, then it's safe to
+    # wait for it to terminate. So an ill-behaved task that closes its standard
+    # output and then hangs will hang us, as well. However, as it takes special
+    # effort to close one's standard output, this seems unlikely to be a
+    # problem in practice.
 
     # A task we should run in a subprocess. Users should subclass this and
     # fill in the methods as given.
@@ -76,8 +77,8 @@ class TaskPool(object):
         with open(os.devnull, 'r') as devnull:
             while True:
                 while len(running) < self.job_limit and self.next_pending:
-                    t = self.next_pending
-                    p = Popen(t.cmd(), bufsize=16384,
+                    task = self.next_pending
+                    p = Popen(task.cmd(), bufsize=16384,
                               stdin=devnull, stdout=PIPE, stderr=PIPE,
                               cwd=self.cwd)
 
@@ -88,8 +89,8 @@ class TaskPool(object):
                     flags = fcntl.fcntl(p.stderr, fcntl.F_GETFL)
                     fcntl.fcntl(p.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
-                    t.start(p, time.time() + self.timeout)
-                    running.add(t)
+                    task.start(p, time.time() + self.timeout)
+                    running.add(task)
                     self.next_pending = next(self.pending, None)
 
                 # If we have no tasks running, and the above wasn't able to
@@ -104,7 +105,8 @@ class TaskPool(object):
                 # Wait for output or a timeout.
                 stdouts_and_stderrs = ([t.pipe.stdout for t in running]
                                        + [t.pipe.stderr for t in running])
-                (readable, w, x) = select.select(stdouts_and_stderrs, [], [], secs_to_next_deadline)
+                (readable, w, x) = select.select(stdouts_and_stderrs, [], [],
+                                                 secs_to_next_deadline)
                 finished = set()
                 terminate = set()
                 for t in running:

@@ -27,7 +27,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-named-groups",
     "regexp-unicode-property-escapes",
     "numeric-separator-literal",
-    "json-superset",
     "Intl.Locale",
     "String.prototype.matchAll",
     "Symbol.matchAll",
@@ -177,7 +176,8 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
 
     def readIncludeFile(filePath):
         with io.open(filePath, "rb") as includeFile:
-            return b"// file: %s\n%s" % (os.path.basename(filePath).encode("utf-8"), includeFile.read())
+            return b"// file: %s\n%s" % (os.path.basename(filePath).encode("utf-8"),
+                                         includeFile.read())
 
     localIncludes = localIncludesMap[relPath] if relPath in localIncludesMap else []
 
@@ -280,8 +280,10 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
             featureCheckNeeded = [f for f in testRec["features"] if f in FEATURE_CHECK_NEEDED]
             if featureCheckNeeded:
-                refTestSkipIf.append(("||".join([FEATURE_CHECK_NEEDED[f] for f in featureCheckNeeded]),
-                                      "%s is not enabled unconditionally" % ",".join(featureCheckNeeded)))
+                refTestSkipIf.append(("||".join([FEATURE_CHECK_NEEDED[f]
+                                                 for f in featureCheckNeeded]),
+                                      "%s is not enabled unconditionally" % ",".join(
+                                          featureCheckNeeded)))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
@@ -368,7 +370,8 @@ def process_test262(test262Dir, test262OutDir, strictTests):
             continue
 
         # Skip creating a "prs" directory if it already exists
-        if relPath not in ("prs", "local") and not os.path.exists(os.path.join(test262OutDir, relPath)):
+        if relPath not in ("prs", "local") and not os.path.exists(os.path.join(test262OutDir,
+                                                                               relPath)):
             os.makedirs(os.path.join(test262OutDir, relPath))
 
         includeSet = set()
@@ -392,7 +395,8 @@ def process_test262(test262Dir, test262OutDir, strictTests):
             with io.open(filePath, "rb") as testFile:
                 testSource = testFile.read()
 
-            for (newFileName, newSource) in convertTestFile(test262parser, testSource, testName, includeSet, strictTests):
+            for (newFileName, newSource) in convertTestFile(test262parser, testSource, testName,
+                                                            includeSet, strictTests):
                 writeTestFile(test262OutDir, newFileName, newSource)
 
         # Add shell.js and browers.js files for the current directory.
@@ -421,7 +425,8 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
 
     if status.strip():
         raise RuntimeError(
-            "Please commit files and cleanup the local test262 folder before importing files.\nCurrent status: \n%s"
+            "Please commit files and cleanup the local test262 folder before importing files.\n"
+            "Current status: \n%s"
             % status)
 
     # Captures the branch name to be used on the output
@@ -639,11 +644,13 @@ if __name__ == "__main__":
     parser.add_argument("--revision", default="HEAD",
                         help="Git revision (default: %(default)s)")
     parser.add_argument("--out", default="test262",
-                        help="Output directory. Any existing directory will be removed! (default: %(default)s)")
-    parser.add_argument(
-        "--pull", help="Import contents from a Pull Request specified by its number")
-    parser.add_argument(
-        "--local", help="Import new and modified contents from a local folder, a new folder will be created on local/branch_name")
+                        help="Output directory. Any existing directory will be removed!"
+                        "(default: %(default)s)")
+    parser.add_argument("--pull",
+                        help="Import contents from a Pull Request specified by its number")
+    parser.add_argument("--local",
+                        help="Import new and modified contents from a local folder, a new folder "
+                        "will be created on local/branch_name")
     parser.add_argument("--strict", default=False, action="store_true",
                         help="Generate additional strict mode tests. Not enabled by default.")
     parser.set_defaults(func=update_test262)

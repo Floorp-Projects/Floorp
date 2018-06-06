@@ -61,7 +61,7 @@ class XULInfo:
                 path = _path
                 break
 
-        if path == None:
+        if path is None:
             print("Can't find config/autoconf.mk on a directory containing"
                   " the JS shell (searched from {})".format(jsdir))
             sys.exit(1)
@@ -426,7 +426,6 @@ def load_reftests(location, path_options, xul_tester):
 
         # Skip empty files.
         fullpath = os.path.join(location, filename)
-        statbuf = os.stat(fullpath)
 
         testcase = RefTestCase(filename)
         _apply_external_manifests(filename, testcase, externalManifestEntries,

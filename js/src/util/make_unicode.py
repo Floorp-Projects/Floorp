@@ -28,7 +28,7 @@ import os
 import sys
 from contextlib import closing
 from functools import partial
-from itertools import chain, groupby, tee
+from itertools import chain, tee
 from operator import is_not, itemgetter
 from zipfile import ZipFile
 
@@ -830,15 +830,16 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
     def write_AppendUpperCaseSpecialCasing():
         """ Slow case: Special casing character was found, append its mapping characters. """
         println('void')
-        println('js::unicode::AppendUpperCaseSpecialCasing(char16_t ch, char16_t* elements, size_t* index)')
+        println('js::unicode::AppendUpperCaseSpecialCasing(char16_t ch, char16_t* elements, size_t* index)')  # NOQA: E501
         println('{')
 
         println('    switch(ch) {')
         for (code, converted) in sorted(unconditional_toupper.items(), key=itemgetter(0)):
             println('      case {}: // {}'.format(hexlit(code), codepoint_table.name(code)))
             for ch in converted:
-                println('        elements[(*index)++] = {}; // {}'.format(hexlit(ch),
-                                                                          codepoint_table.name(ch)))
+                println('        elements[(*index)++] = {}; // {}'
+                        .format(hexlit(ch),
+                                codepoint_table.name(ch)))
             println('        return;')
         println('    }')
         println('')
@@ -1062,7 +1063,8 @@ function test(code, ...equivs) {
 """)
         for args in folding_tests:
             test_icase.write('test({}); // {}\n'.format(', '.join(map(char_hex, args)),
-                                                        ', '.join(map(codepoint_table.name, args))))
+                                                        ', '.join(map(codepoint_table.name,
+                                                                      args))))
         test_icase.write("""
 if (typeof reportCompare === "function")
     reportCompare(true, true);
@@ -1084,7 +1086,8 @@ def make_unicode_file(version,
 
     same_upper_index1, same_upper_index2, same_upper_shift = splitbins(same_upper_index)
 
-    # Don't forget to update CodepointsWithSameUpperCaseInfo in Unicode.h if you need to change this
+    # Don't forget to update CodepointsWithSameUpperCaseInfo in Unicode.h if you need
+    # to change this
     assert same_upper_shift == 6
 
     folding_index1, folding_index2, folding_shift = splitbins(folding_index)
@@ -1203,11 +1206,11 @@ def make_unicode_file(version,
         println('js::unicode::{}(uint32_t codePoint)'.format(name))
         println('{')
         for (from_code, to_code) in int_ranges(group_set.keys()):
-            println('    if (codePoint >= 0x{:X} && codePoint <= 0x{:X}) // {} .. {}'.format(from_code,
-                                                                                             to_code,
-                                                                                             codepoint_table.name(
-                                                                                                 from_code),
-                                                                                             codepoint_table.name(to_code)))
+            println('    if (codePoint >= 0x{:X} && codePoint <= 0x{:X}) // {} .. {}'
+                    .format(from_code,
+                            to_code,
+                            codepoint_table.name(from_code),
+                            codepoint_table.name(to_code)))
             println('        return true;')
         println('    return false;')
         println('}')
@@ -1493,7 +1496,8 @@ def make_irregexp_tables(version,
 
         # Characters which case-fold to characters in \w.
         ignorecase_word_chars = (word_chars +
-                                 [ch for ch in range(MAX_ASCII + 1, MAX_BMP + 1) if casefolds_to_ascii(ch)])
+                                 [ch for ch in range(MAX_ASCII + 1, MAX_BMP + 1)
+                                  if casefolds_to_ascii(ch)])
 
         # Surrogate characters.
         surrogate_chars = [ch for ch in range(LEAD_SURROGATE_MIN, TRAIL_SURROGATE_MAX + 1)]
@@ -1551,7 +1555,10 @@ def update_unicode(args):
             downloaded_data = io.BytesIO(downloaded_file.read())
 
         with ZipFile(downloaded_data) as zip_file:
-            for fname in ['UnicodeData.txt', 'CaseFolding.txt', 'DerivedCoreProperties.txt', 'SpecialCasing.txt']:
+            for fname in ['UnicodeData.txt',
+                          'CaseFolding.txt',
+                          'DerivedCoreProperties.txt',
+                          'SpecialCasing.txt']:
                 zip_file.extract(fname, path=base_path)
     else:
         print('\tUsing local files.')
@@ -1562,10 +1569,14 @@ def update_unicode(args):
         pat_version = re.compile(r"# %s-(?P<version>\d+\.\d+\.\d+).txt" % fname)
         return pat_version.match(f.readline()).group("version")
 
-    with io.open(os.path.join(base_path, 'UnicodeData.txt'), 'r', encoding='utf-8') as unicode_data, \
-            io.open(os.path.join(base_path, 'CaseFolding.txt'), 'r', encoding='utf-8') as case_folding, \
-            io.open(os.path.join(base_path, 'DerivedCoreProperties.txt'), 'r', encoding='utf-8') as derived_core_properties, \
-            io.open(os.path.join(base_path, 'SpecialCasing.txt'), 'r', encoding='utf-8') as special_casing:
+    with io.open(os.path.join(base_path, 'UnicodeData.txt'),
+                 'r', encoding='utf-8') as unicode_data, \
+            io.open(os.path.join(base_path, 'CaseFolding.txt'),
+                    'r', encoding='utf-8') as case_folding, \
+            io.open(os.path.join(base_path, 'DerivedCoreProperties.txt'),
+                    'r', encoding='utf-8') as derived_core_properties, \
+            io.open(os.path.join(base_path, 'SpecialCasing.txt'),
+                    'r', encoding='utf-8') as special_casing:
         unicode_version = version_from_file(derived_core_properties, 'DerivedCoreProperties')
 
         print('Processing...')

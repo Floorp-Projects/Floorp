@@ -51,14 +51,14 @@ try:
                 continue
 
             m = re.match(
-                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)
+                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)  # NOQA: E501
             if m:
                 # Function names are surrounded by single quotes. Field calls
                 # are unquoted.
                 current_gcFunction = m.group(2)
                 hazardousGCFunctions[current_gcFunction].append(line)
-                hazardOrder.append((current_gcFunction, len(
-                    hazardousGCFunctions[current_gcFunction]) - 1))
+                hazardOrder.append((current_gcFunction,
+                                    len(hazardousGCFunctions[current_gcFunction]) - 1))
                 num_hazards += 1
                 continue
 
@@ -97,7 +97,7 @@ try:
                 print >>hazards, gcHazards[index]
 
 except IOError as e:
-    print 'Failed: %s' % str(e)
+    print('Failed: %s' % str(e))
 
 print("Wrote %s" % args.hazards)
 print("Wrote %s" % args.extra)

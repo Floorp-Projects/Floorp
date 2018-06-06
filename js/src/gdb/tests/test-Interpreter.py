@@ -1,4 +1,7 @@
 # Test printing interpreter internal data structures.
+# Ignore flake8 errors "undefined name 'assert_pretty'"
+# As it caused by the way we instanciate this file
+# flake8: noqa: F821
 
 assert_subprinter_registered('SpiderMonkey', 'js::InterpreterRegs')
 

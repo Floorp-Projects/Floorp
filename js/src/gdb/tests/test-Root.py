@@ -1,4 +1,7 @@
 # Test printing Handles.
+# Ignore flake8 errors "undefined name 'assert_pretty'"
+# As it caused by the way we instanciate this file
+# flake8: noqa: F821
 
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Rooted')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Handle')

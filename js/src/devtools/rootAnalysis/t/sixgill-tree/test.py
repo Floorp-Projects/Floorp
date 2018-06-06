@@ -1,3 +1,4 @@
+# flake8: noqa: F821
 import re
 
 test.compile("source.cpp")

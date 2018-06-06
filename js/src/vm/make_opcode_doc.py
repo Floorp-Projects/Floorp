@@ -11,7 +11,6 @@
 """
 
 from __future__ import print_function
-import re
 import sys
 
 import os
@@ -122,12 +121,13 @@ def print_doc(index):
                                                  id=make_element_id(category_name)))
         for (type_name, opcodes) in types:
             if type_name:
-                print('<h4 id="{id}">{name}</h4>'.format(name=type_name,
-                                                         id=make_element_id(category_name, type_name)))
+                print('<h4 id="{id}">{name}</h4>'.format(
+                    name=type_name,
+                    id=make_element_id(category_name, type_name)))
             print('<dl>')
-            for opcode in sorted(opcodes,
-                                 key=lambda opcode: opcode.sort_key):
-                print_opcode(opcode)
+            for opcode_ in sorted(opcodes,
+                                  key=lambda opcode: opcode.sort_key):
+                print_opcode(opcode_)
             print('</dl>')
 
 

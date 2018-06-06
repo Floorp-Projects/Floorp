@@ -125,7 +125,8 @@ def list_files(src_dir, pattern=None, filelist=None):
         yield os.path.basename(file)
 
 
-def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None, suffix=None):
+def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None,
+               suffix=None):
     for filename in list_files(src_dir, pattern=pattern, filelist=filelist):
         move_file(src_dir, dst_dir, filename, file_suffix=file_suffix,
                   prefix=prefix, suffix=suffix)

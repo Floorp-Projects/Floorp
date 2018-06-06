@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# flake8: noqa: F821
+
 # Generate graph structures for GC statistics recording.
 #
 # Stats phases are nested and form a directed acyclic graph starting
@@ -50,7 +52,6 @@
 #            +---+   +---+
 
 import re
-import sys
 import collections
 
 
@@ -171,12 +172,11 @@ PhaseKindGraphRoots = [
     ])
 ]
 
-# Make a linear list of all unique phases by performing a depth first
-# search on the phase graph starting at the roots.  This will be used to
-# generate the PhaseKind enum.
-
 
 def findAllPhaseKinds():
+    # Make a linear list of all unique phases by performing a depth first
+    # search on the phase graph starting at the roots.  This will be used to
+    # generate the PhaseKind enum.
     phases = []
     seen = set()
 
@@ -195,11 +195,10 @@ def findAllPhaseKinds():
 
 AllPhaseKinds = findAllPhaseKinds()
 
-# Expand the DAG into a tree, duplicating phases which have more than
-# one parent.
-
 
 class Phase:
+    # Expand the DAG into a tree, duplicating phases which have more than
+    # one parent.
     def __init__(self, phaseKind, parent):
         self.phaseKind = phaseKind
         self.parent = parent
@@ -326,7 +325,7 @@ def generateCpp(out):
     for phase in AllPhases:
         firstChild = phase.children[0] if phase.children else None
         phaseKind = phase.phaseKind
-        out.write("    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, \"%s\", \"%s\" },\n" %
+        out.write("    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, \"%s\", \"%s\" },\n" %  # NOQA: E501
                   (name(phase),
                    name(phase.parent),
                    name(firstChild),

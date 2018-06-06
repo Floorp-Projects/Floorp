@@ -3,15 +3,9 @@
 # This contains classes that represent an individual test, including
 # metadata, and know how to run the tests and determine failures.
 
-import datetime
 import os
 import sys
-import time
 from contextlib import contextmanager
-from subprocess import Popen, PIPE
-from threading import Thread
-
-from results import TestOutput
 
 # When run on tbpl, we run each test multiple times with the following
 # arguments.
@@ -152,18 +146,27 @@ class RefTestCase(object):
     """A test case consisting of a test and an expected result."""
 
     def __init__(self, path):
-        self.path = path     # str:  path of JS file relative to tests root dir
-        self.options = []    # [str]: Extra options to pass to the shell
-        self.jitflags = []   # [str]: JIT flags to pass to the shell
-        self.test_reflect_stringify = None  # str or None: path to
-        # reflect-stringify.js file to test
+        # str:  path of JS file relative to tests root dir
+        self.path = path
+        # [str]: Extra options to pass to the shell
+        self.options = []
+        # [str]: JIT flags to pass to the shell
+        self.jitflags = []
+        # str or None: path to reflect-stringify.js file to test
         # instead of actually running tests
-        self.is_module = False  # bool: True => test is module code
-        self.enable = True   # bool: True => run test, False => don't run
-        self.error = None    # str?: Optional error type
-        self.expect = True   # bool: expected result, True => pass
-        self.random = False  # bool: True => ignore output as 'random'
-        self.slow = False    # bool: True => test may run slowly
+        self.test_reflect_stringify = None
+        # bool: True => test is module code
+        self.is_module = False
+        # bool: True => run test, False => don't run
+        self.enable = True
+        # str?: Optional error type
+        self.error = None
+        # bool: expected result, True => pass
+        self.expect = True
+        # bool: True => ignore output as 'random'
+        self.random = False
+        # bool: True => test may run slowly
+        self.slow = False
 
         # The terms parsed to produce the above properties.
         self.terms = None

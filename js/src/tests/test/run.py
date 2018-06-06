@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import contextlib
 import tempfile
-import sys
 import os
 import unittest
 
