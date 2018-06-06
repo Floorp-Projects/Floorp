@@ -110,3 +110,4 @@ fuzzy(101,2263) == shape-outside-polygon-032.html shape-outside-polygon-032-ref.
 fails == float-retry-push-image.html float-retry-push-ref.html
 == float-retry-push-inset.html float-retry-push-ref.html
 fails == float-retry-push-polygon.html float-retry-push-ref.html
+== float-should-push.html float-should-push-ref.html
