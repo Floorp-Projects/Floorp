@@ -306,6 +306,10 @@ let urlbarListener = {
       Services.telemetry
               .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE")
               .add(actionType, idx);
+      if (actionType === "bookmark" || actionType === "history") {
+        Services.telemetry.recordEvent("savant", "follow_urlbar_link", actionType, null,
+                                      { subcategory: "navigation" });
+      }
     } else {
       Cu.reportError("Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " +
                      actionType);
