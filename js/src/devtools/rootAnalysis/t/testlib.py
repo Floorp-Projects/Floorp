@@ -35,7 +35,7 @@ class Test(object):
         return os.path.join(self.cfg.sixgill_bin, prog)
 
     def compile(self, source, options=''):
-        cmd = "{CXX} -c {source} -O3 -std=c++11 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1 {options}".format(
+        cmd = "{CXX} -c {source} -O3 -std=c++11 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1 {options}".format(  # NOQA: E501
             source=self.infile(source),
             CXX=self.cfg.cxx, sixgill=self.cfg.sixgill_plugin,
             options=options)
@@ -57,7 +57,8 @@ class Test(object):
                 raise Exception("multiple entries found")
             pattern = matches[0]
 
-        output = subprocess.check_output([self.binpath("xdbfind"), "-json", dbname + ".xdb", pattern],
+        output = subprocess.check_output([self.binpath("xdbfind"), "-json", dbname + ".xdb",
+                                          pattern],
                                          universal_newlines=True)
         return json.loads(output)
 
@@ -109,7 +110,7 @@ sixgill_bin = '{bindir}'
     def load_hazards(self):
         def grab_hazard(line):
             m = re.match(
-                r"Function '(.*?)' has unrooted '(.*?)' of type '(.*?)' live across GC call '(.*?)' at (.*)", line)
+                r"Function '(.*?)' has unrooted '(.*?)' of type '(.*?)' live across GC call '(.*?)' at (.*)", line)  # NOQA: E501
             if m:
                 info = list(m.groups())
                 info[0] = info[0].split("$")[-1]

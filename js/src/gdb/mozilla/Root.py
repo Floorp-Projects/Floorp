@@ -2,17 +2,17 @@
 # Rooted, Handle, MutableHandle, etc.
 
 import mozilla.prettyprinters
-from mozilla.prettyprinters import pretty_printer, template_pretty_printer
+from mozilla.prettyprinters import template_pretty_printer
 
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
 
-# Common base class for all the rooting template pretty-printers. All these
-# templates have one member holding the referent (or a pointer to it), so
-# there's not much to it.
-
 
 class Common(object):
+    # Common base class for all the rooting template pretty-printers. All these
+    # templates have one member holding the referent (or a pointer to it), so
+    # there's not much to it.
+
     # The name of the template member holding the referent.
     member = 'ptr'
 
@@ -80,10 +80,9 @@ class MutableHandle(Common):
 class BarrieredBase(Common):
     member = 'value'
 
-# Return the referent of a HeapPtr, Rooted, or Handle.
-
 
 def deref(root):
+    # Return the referent of a HeapPtr, Rooted, or Handle.
     tag = root.type.strip_typedefs().tag
     if not tag:
         raise TypeError("Can't dereference type with no structure tag: %s" % (root.type,))

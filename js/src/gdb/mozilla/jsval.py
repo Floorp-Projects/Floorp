@@ -3,7 +3,7 @@
 import gdb
 import gdb.types
 import mozilla.prettyprinters
-from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
+from mozilla.prettyprinters import pretty_printer
 
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
@@ -88,12 +88,11 @@ class Box(object):
 
     def as_address(self): raise NotImplementedError
 
-# Packed non-number boxing --- the format used on x86_64. It would be nice to
-# simply call Value::toInt32, etc. here, but the debugger is likely to see many
-# Values, and doing several inferior calls for each one seems like a bad idea.
-
 
 class Punbox(Box):
+    # Packed non-number boxing --- the format used on x86_64. It would be nice to
+    # simply call Value::toInt32, etc. here, but the debugger is likely to see many
+    # Values, and doing several inferior calls for each one seems like a bad idea.
 
     FULL_WIDTH = 64
     TAG_SHIFT = 47
@@ -130,10 +129,10 @@ class Nunbox(Box):
 
     def as_address(self): return gdb.Value(self.asBits & Nunbox.PAYLOAD_MASK)
 
-# Cache information about the Value type for this objfile.
-
 
 class JSValueTypeCache(object):
+    # Cache information about the Value type for this objfile.
+
     def __init__(self, cache):
         # Capture the tag values.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSValueType'))
@@ -162,7 +161,7 @@ class JSValueTypeCache(object):
             # enabled.
             self.BIGINT = get('JSVAL_TYPE_BIGINT')
             self.enable_bigint = True
-        except:
+        except Exception:
             pass
 
         # Let self.magic_names be an array whose i'th element is the name of

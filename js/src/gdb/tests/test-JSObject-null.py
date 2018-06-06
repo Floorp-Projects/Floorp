@@ -1,3 +1,5 @@
+# flake8: noqa: F821
+
 gdb.execute('set print address on')
 
 run_fragment('JSObject.null')

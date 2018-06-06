@@ -115,7 +115,7 @@ def read_input(tasks, timeout):
     readable = []
     try:
         readable, _, _ = select.select(rlist, [], exlist, timeout)
-    except OverflowError as e:
+    except OverflowError:
         print >> sys.stderr, "timeout value", timeout
         raise
 

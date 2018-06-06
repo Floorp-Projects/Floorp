@@ -2,7 +2,6 @@
 
 import re
 import gdb
-import mozilla.JSString
 import mozilla.prettyprinters as prettyprinters
 from mozilla.prettyprinters import ptr_pretty_printer, ref_pretty_printer
 from mozilla.Root import deref

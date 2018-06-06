@@ -1,3 +1,7 @@
+# Ignore flake8 errors "undefined name 'assert_pretty'"
+# As it caused by the way we instanciate this file
+# flake8: noqa: F821
+
 import mozilla.prettyprinters
 
 run_fragment('prettyprinters.implemented_types')

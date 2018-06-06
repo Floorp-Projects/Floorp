@@ -9,17 +9,15 @@ import os
 import re
 import subprocess
 import sys
-import traceback
-from threading import Thread
 
 # From this directory:
 import progressbar
 from taskpool import TaskPool, get_cpu_count
 
-# Backported from Python 3.1 posixpath.py
-
 
 def _relpath(path, start=None):
+    # Backported from Python 3.1 posixpath.py
+
     """Return a relative version of a path"""
 
     if not path:
@@ -58,10 +56,9 @@ def make_shell_cmd(l):
 
     return ' '.join([quote(_) for _ in l])
 
+
 # An instance of this class collects the lists of passing, failing, and
 # timing-out tests, runs the progress bar, and prints a summary at the end.
-
-
 class Summary(object):
 
     class SummaryBar(progressbar.ProgressBar):
@@ -177,7 +174,8 @@ class Test(TaskPool.Task):
                 '--ex', 'file %s' % (os.path.join(OPTIONS.bindir, 'gdb-tests'),),
                 '--eval-command', 'python testlibdir=%r' % (testlibdir,),
                 '--eval-command', 'python testscript=%r' % (self.test_path,),
-                '--eval-command', 'python exec(open(%r).read())' % os.path.join(testlibdir, 'catcher.py')]
+                '--eval-command', 'python exec(open(%r).read())' % os.path.join(testlibdir,
+                                                                                'catcher.py')]
 
     def start(self, pipe, deadline):
         super(Test, self).start(pipe, deadline)
@@ -279,7 +277,8 @@ def main(argv):
     op.add_option('-w', '--write-failures', dest='write_failures', metavar='FILE',
                   help='Write failing tests to [FILE]')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
-                  help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
+                  help='With --write-failures=FILE, additionally write the output of failed '
+                  'tests to [FILE]')
     op.add_option('--gdb', dest='gdb_executable', metavar='EXECUTABLE', default='gdb',
                   help='Run tests with [EXECUTABLE], rather than plain \'gdb\'.')
     op.add_option('--srcdir', dest='srcdir',

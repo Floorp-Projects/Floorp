@@ -4,17 +4,11 @@
 
 # Works with python2.6
 
-import datetime
 import os
-import re
 import sys
-import traceback
 import math
-import string
-import copy
 import json
-import subprocess
-from subprocess import *
+from subprocess import Popen, PIPE
 from operator import itemgetter
 
 
@@ -93,7 +87,7 @@ def run_tests(tests, test_dir):
             filename_str = '"%s"' % test.name
             TMax, TAvg, MMax, MAvg, SMax, SAvg = run_test(test)
             bench_map[test.name] = [TMax, TAvg, MMax, MAvg, SMax, SAvg]
-            fmt = '%20s: {"TMax": %4.1f, "TAvg": %4.1f, "MMax": %4.1f, "MAvg": %4.1f, "SMax": %4.1f, "SAvg": %4.1f}'
+            fmt = '%20s: {"TMax": %4.1f, "TAvg": %4.1f, "MMax": %4.1f, "MAvg": %4.1f, "SMax": %4.1f, "SAvg": %4.1f}'  # NOQA: E501
             if (i != len(tests) - 1):
                 fmt += ','
             print(fmt % (filename_str, TMax, TAvg, MMax, MAvg, SMax, MAvg))
@@ -110,14 +104,13 @@ def compare(current, baseline):
         try:
             baseline_result = baseline[key]
         except KeyError:
-            print key, 'missing from baseline'
+            print(key, 'missing from baseline')
             continue
 
         val_getter = itemgetter('TMax', 'TAvg', 'MMax', 'MAvg', 'SMax', 'SAvg')
         BTMax, BTAvg, BMMax, BMAvg, BSMax, BSAvg = val_getter(baseline_result)
         CTMax, CTAvg, CMMax, CMAvg, CSMax, CSAvg = val_getter(current_result)
 
-        fmt = '%30s: %s'
         if CTAvg <= BTAvg:
             speedup = (CTAvg / BTAvg - 1) * 100
             result = 'faster: %6.2f < baseline %6.2f (%+6.2f%%)' % \
@@ -128,9 +121,9 @@ def compare(current, baseline):
             result = 'SLOWER: %6.2f > baseline %6.2f (%+6.2f%%) ' % \
                 (CTAvg, BTAvg, slowdown)
             percent_speedups.append(slowdown)
-        print '%30s: %s' % (key, result)
+        print('%30s: %s' % (key, result))
     if percent_speedups:
-        print 'Average speedup: %.2f%%' % avg(percent_speedups)
+        print('Average speedup: %.2f%%' % avg(percent_speedups))
 
 
 if __name__ == '__main__':

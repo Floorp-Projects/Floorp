@@ -48,7 +48,9 @@ parser.add_argument('--dep', action='store_true',
 parser.add_argument('--keep', action='store_true',
                     help='do not delete the sanitizer output directory (for testing)')
 parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
-                    default='', help='build platform, including a suffix ("-debug" or "") used by buildbot to override the variant\'s "debug" setting. The platform can be used to specify 32 vs 64 bits.')
+                    default='', help='build platform, including a suffix ("-debug" or "") used '
+                    'by buildbot to override the variant\'s "debug" setting. The platform can be '
+                    'used to specify 32 vs 64 bits.')
 parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
                     default=10800,
                     help='kill job after TIMEOUT seconds')
@@ -82,7 +84,8 @@ parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     help="comma-separated set of test suites to add to the variant's default set")
 parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
                     default='',
-                    help="comma-separated set of test suites to remove from the variant's default set")
+                    help="comma-separated set of test suites to remove from the variant's default "
+                    "set")
 parser.add_argument('--build-only', '--build',
                     dest='skip_tests', action='store_const', const='all',
                     help="only do a build, do not run any tests")
@@ -400,8 +403,8 @@ if not args.nobuild:
 
     # Run configure
     if not args.noconf:
-        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') +
-                     ' ' + CONFIGURE_ARGS], check=True)
+        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS],
+                    check=True)
 
     # Run make
     run_command('%s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
@@ -521,7 +524,7 @@ if args.variant == 'msan':
     for filename in fullfiles:
         with open(os.path.join(OUTDIR, filename), 'rb') as fh:
             for line in fh:
-                m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',
+                m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',  # NOQA: E501
                              line.strip())
                 if m:
                     # Some reports include file:line:column, some just

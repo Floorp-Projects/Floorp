@@ -51,11 +51,11 @@ SizeOfFramePrefix = {
     'JitFrame_Bailout': 'JitFrameLayout',
 }
 
-# All types and symbols that we need are attached to an object that we
-# can dispose of as needed.
-
 
 class UnwinderTypeCache(object):
+    # All types and symbols that we need are attached to an object that we
+    # can dispose of as needed.
+
     def __init__(self):
         self.d = None
         self.frame_enum_names = {}
@@ -174,7 +174,8 @@ class JitFrameDecorator(FrameDecorator):
         calleetoken = calleetoken ^ tag
         function = None
         script = None
-        if tag == self.cache.CalleeToken_Function or tag == self.cache.CalleeToken_FunctionConstructing:
+        if (tag == self.cache.CalleeToken_Function or
+            tag == self.cache.CalleeToken_FunctionConstructing):
             fptr = gdb.Value(calleetoken).cast(self.cache.JSFunction)
             try:
                 atom = fptr['atom_']
@@ -345,7 +346,7 @@ class UnwinderState(object):
 
     # See whether |pc| is claimed by the Jit.
     def is_jit_address(self, pc):
-        if self.proc_mappings != None:
+        if self.proc_mappings is not None:
             return not self.text_address_claimed(pc)
 
         cx = self.get_tls_context()
@@ -576,7 +577,7 @@ class SpiderMonkeyUnwinder(Unwinder):
         for unwinder in self.UNWINDERS:
             try:
                 pending_frame.read_register(unwinder.SENTINEL_REGISTER)
-            except:
+            except Exception:
                 # Failed to read the register, so let's keep going.
                 # This is more fragile than it might seem, because it
                 # fails if the sentinel register wasn't saved in the
