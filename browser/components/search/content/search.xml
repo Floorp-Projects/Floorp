@@ -1355,8 +1355,6 @@
 
       <method name="showSettings">
         <body><![CDATA[
-          BrowserUITelemetry.countSearchSettingsEvent(this.telemetryOrigin);
-
           openPreferences("paneSearch", {origin: "contentSearch"});
 
           // If the preference tab was already selected, the panel doesn't
