@@ -1,6 +1,8 @@
 "use strict";
 
-add_task(async function test_multiple_pages() {
+ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+
+async function test_multiple_pages() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       function awaitMessage(expectedMsg, api = "test") {
@@ -87,4 +89,14 @@ add_task(async function test_multiple_pages() {
   await extension.startup();
   await extension.awaitFinish("storage-multiple");
   await extension.unload();
+}
+
+add_task(async function test_storage_local_file_backend_from_tab() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
+                      test_multiple_pages);
+});
+
+add_task(async function test_storage_local_idb_backend_from_tab() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
+                      test_multiple_pages);
 });

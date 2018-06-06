@@ -17,7 +17,7 @@ use gpu_types::{ClipScrollNodeData, ZBufferIdGenerator};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveKind, PrimitiveStore};
+use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveStore};
 use prim_store::{BrushKind, DeferredResolve};
 use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -49,7 +49,6 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub use_dual_source_blending: bool,
     pub node_data: &'a [ClipScrollNodeData],
-    pub cached_gradients: &'a [CachedGradient],
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

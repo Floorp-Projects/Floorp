@@ -264,6 +264,42 @@
           "type": "text/x-moz-place",
           "uri": "http://example.tld/tagged",
           "tags": "foo"
+        },
+        {
+          "guid": "lOZGoFR1eXbl",
+          "title": "Bookmarks Toolbar Shortcut",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 16,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=TOOLBAR"
+        },
+        {
+          "guid": "7yJWnBVhjRtP",
+          "title": "Folder Shortcut",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 17,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6"
+        },
+        {
+          "guid": "vm5QXWuWc12l",
+          "title": "Folder Shortcut 2",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 18,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6123443"
+        },
+        {
+          "guid": "Icg1XlIozA1D",
+          "title": "Folder Shortcut 3",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 18,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6&folder=BOOKMARKS_MENU"
         }
       ]
     }

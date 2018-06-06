@@ -13,94 +13,116 @@
 <script type="text/javascript">
 "use strict";
 
-// Test that storage used by a webextension (through localStorage,
-// indexedDB, and browser.storage.local) gets cleaned up when the
-// extension is uninstalled.
-add_task(async function test_uninstall() {
-  function writeData() {
-    localStorage.setItem("hello", "world");
+const {
+  ExtensionStorageIDB,
+} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
-    let idbPromise = new Promise((resolve, reject) => {
-      let req = indexedDB.open("test");
-      req.onerror = e => {
-        reject(new Error(`indexedDB open failed with ${e.errorCode}`));
-      };
-
-      req.onupgradeneeded = e => {
-        let db = e.target.result;
-        db.createObjectStore("store", {keyPath: "name"});
-      };
-
-      req.onsuccess = e => {
-        let db = e.target.result;
-        let transaction = db.transaction("store", "readwrite");
-        let addreq = transaction.objectStore("store")
-                                .add({name: "hello", value: "world"});
-        addreq.onerror = addreqError => {
-          reject(new Error(`add to indexedDB failed with ${addreqError.errorCode}`));
-        };
-        addreq.onsuccess = () => {
-          resolve();
-        };
-      };
-    });
-
-    let browserStoragePromise = browser.storage.local.set({hello: "world"});
-
-    Promise.all([idbPromise, browserStoragePromise]).then(() => {
+const storageTestHelpers = {
+  storageLocal: {
+    async writeData() {
+      await browser.storage.local.set({hello: "world"});
       browser.test.sendMessage("finished");
-    });
-  }
+    },
 
-  function readData() {
-    let matchLocalStorage = (localStorage.getItem("hello") == "world");
+    async readData() {
+      const matchBrowserStorage = await browser.storage.local.get("hello").then(result => {
+        return (Object.keys(result).length == 1 && result.hello == "world");
+      });
 
-    let idbPromise = new Promise((resolve, reject) => {
-      let req = indexedDB.open("test");
-      req.onerror = e => {
-        reject(new Error(`indexedDB open failed with ${e.errorCode}`));
-      };
+      browser.test.sendMessage("results", {matchBrowserStorage});
+    },
 
-      req.onupgradeneeded = e => {
-        // no database, data is not present
-        resolve(false);
-      };
+    assertResults({results, keepOnUninstall}) {
+      if (keepOnUninstall) {
+        is(results.matchBrowserStorage, true, "browser.storage.local data is still present");
+      } else {
+        is(results.matchBrowserStorage, false, "browser.storage.local data was cleared");
+      }
+    },
+  },
+  webAPIs: {
+    async readData() {
+      let matchLocalStorage = (localStorage.getItem("hello") == "world");
 
-      req.onsuccess = e => {
-        let db = e.target.result;
-        let transaction = db.transaction("store", "readwrite");
-        let addreq = transaction.objectStore("store").get("hello");
-        addreq.onerror = addreqError => {
-          reject(new Error(`read from indexedDB failed with ${addreqError.errorCode}`));
+      let idbPromise = new Promise((resolve, reject) => {
+        let req = indexedDB.open("test");
+        req.onerror = e => {
+          reject(new Error(`indexedDB open failed with ${e.errorCode}`));
         };
-        addreq.onsuccess = () => {
-          let match = (addreq.result.value == "world");
-          resolve(match);
+
+        req.onupgradeneeded = e => {
+          // no database, data is not present
+          resolve(false);
         };
-      };
-    });
 
-    let browserStoragePromise = browser.storage.local.get("hello").then(result => {
-      return (Object.keys(result).length == 1 && result.hello == "world");
-    });
+        req.onsuccess = e => {
+          let db = e.target.result;
+          let transaction = db.transaction("store", "readwrite");
+          let addreq = transaction.objectStore("store").get("hello");
+          addreq.onerror = addreqError => {
+            reject(new Error(`read from indexedDB failed with ${addreqError.errorCode}`));
+          };
+          addreq.onsuccess = () => {
+            let match = (addreq.result.value == "world");
+            resolve(match);
+          };
+        };
+      });
 
-    Promise.all([idbPromise, browserStoragePromise])
-           .then(([matchIDB, matchBrowserStorage]) => {
-             let result = {matchLocalStorage, matchIDB, matchBrowserStorage};
-             browser.test.sendMessage("results", result);
-           });
-  }
+      await idbPromise.then(matchIDB => {
+        let result = {matchLocalStorage, matchIDB};
+        browser.test.sendMessage("results", result);
+      });
+    },
 
-  const ID = "storage.cleanup@tests.mozilla.org";
+    async writeData() {
+      localStorage.setItem("hello", "world");
 
-  // Use a test-only pref to leave the addonid->uuid mapping around after
-  // uninstall so that we can re-attach to the same storage.  Also set
-  // the pref to prevent cleaning up storage on uninstall so we can test
-  // that the "keep uuid" logic works correctly.  Do the storage flag in
-  // a separate prefEnv so we can pop it below, leaving the uuid flag set.
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.keepUuidOnUninstall", true]],
-  });
+      let idbPromise = new Promise((resolve, reject) => {
+        let req = indexedDB.open("test");
+        req.onerror = e => {
+          reject(new Error(`indexedDB open failed with ${e.errorCode}`));
+        };
+
+        req.onupgradeneeded = e => {
+          let db = e.target.result;
+          db.createObjectStore("store", {keyPath: "name"});
+        };
+
+        req.onsuccess = e => {
+          let db = e.target.result;
+          let transaction = db.transaction("store", "readwrite");
+          let addreq = transaction.objectStore("store")
+                                  .add({name: "hello", value: "world"});
+          addreq.onerror = addreqError => {
+            reject(new Error(`add to indexedDB failed with ${addreqError.errorCode}`));
+          };
+          addreq.onsuccess = () => {
+            resolve();
+          };
+        };
+      });
+
+      await idbPromise.then(() => {
+        browser.test.sendMessage("finished");
+      });
+    },
+
+    assertResults({results, keepOnUninstall}) {
+      if (keepOnUninstall) {
+        is(results.matchLocalStorage, true, "localStorage data is still present");
+        is(results.matchIDB, true, "indexedDB data is still present");
+      } else {
+        is(results.matchLocalStorage, false, "localStorage data was cleared");
+        is(results.matchIDB, false, "indexedDB data was cleared");
+      }
+    },
+  },
+};
+
+async function test_uninstall({extensionId, writeData, readData, assertResults}) {
+  // Set the pref to prevent cleaning up storage on uninstall in a separate prefEnv
+  // so we can pop it below, leaving flags set in the previous prefEnvs unmodified.
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.keepStorageOnUninstall", true]],
   });
@@ -108,7 +130,7 @@ add_task(async function test_uninstall() {
   let extension = ExtensionTestUtils.loadExtension({
     background: writeData,
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
@@ -119,15 +141,16 @@ add_task(async function test_uninstall() {
   await extension.unload();
 
   // Check that we can still see data we wrote to storage but clear the
-  // "leave storage" flag so our storaged gets cleared on uninstall.
+  // "leave storage" flag so our storaged gets cleared on the next uninstall.
   // This effectively tests the keepUuidOnUninstall logic, which ensures
   // that when we read storage again and check that it is cleared, that
   // it is actually a meaningful test!
   await SpecialPowers.popPrefEnv();
+
   extension = ExtensionTestUtils.loadExtension({
     background: readData,
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
@@ -135,9 +158,8 @@ add_task(async function test_uninstall() {
 
   await extension.startup();
   let results = await extension.awaitMessage("results");
-  is(results.matchLocalStorage, true, "localStorage data is still present");
-  is(results.matchIDB, true, "indexedDB data is still present");
-  is(results.matchBrowserStorage, true, "browser.storage.local data is still present");
+
+  assertResults({results, keepOnUninstall: true});
 
   await extension.unload();
 
@@ -145,7 +167,7 @@ add_task(async function test_uninstall() {
   extension = ExtensionTestUtils.loadExtension({
     background: readData,
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
@@ -153,11 +175,61 @@ add_task(async function test_uninstall() {
 
   await extension.startup();
   results = await extension.awaitMessage("results");
-  is(results.matchLocalStorage, false, "localStorage data was cleared");
-  is(results.matchIDB, false, "indexedDB data was cleared");
-  is(results.matchBrowserStorage, false, "browser.storage.local data was cleared");
+
+  assertResults({results, keepOnUninstall: false});
+
   await extension.unload();
+}
+
+
+add_task(async function test_setup_keep_uuid_on_uninstall() {
+  // Use a test-only pref to leave the addonid->uuid mapping around after
+  // uninstall so that we can re-attach to the same storage (this prefEnv
+  // is kept for this entire file and cleared automatically once all the
+  // tests in this file have been executed).
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextensions.keepUuidOnUninstall", true]],
+  });
 });
+
+// Test extension indexedDB and localStorage storages get cleaned up when the
+// extension is uninstalled.
+add_task(async function test_uninstall_with_webapi_storages() {
+  await test_uninstall({
+    extensionId: "storage.cleanup-WebAPIStorages@tests.mozilla.org",
+    ...(storageTestHelpers.webAPIs),
+  });
+});
+
+// Test browser.storage.local with JSONFile backend gets cleaned up when the
+// extension is uninstalled.
+add_task(async function test_uninistall_with_storage_local_file_backend() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
+  });
+
+  await test_uninstall({
+    extensionId: "storage.cleanup-JSONFileBackend@tests.mozilla.org",
+    ...(storageTestHelpers.storageLocal),
+  });
+
+  await SpecialPowers.pushPrefEnv();
+});
+
+// Repeat the cleanup test when the storage.local IndexedDB backend is enabled.
+add_task(async function test_uninistall_with_storage_local_idb_backend() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
+  });
+
+  await test_uninstall({
+    extensionId: "storage.cleanup-IDBBackend@tests.mozilla.org",
+    ...(storageTestHelpers.storageLocal),
+  });
+
+  await SpecialPowers.pushPrefEnv();
+});
+
 </script>
 
 </body>

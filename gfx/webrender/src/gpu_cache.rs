@@ -495,11 +495,6 @@ impl<'a> GpuDataRequest<'a> {
     pub fn current_used_block_num(&self) -> usize {
         self.texture.pending_blocks.len() - self.start_index
     }
-
-    /// Consume the request and return the number of blocks written
-    pub fn close(self) -> usize {
-        self.texture.pending_blocks.len() - self.start_index
-    }
 }
 
 impl<'a> Drop for GpuDataRequest<'a> {

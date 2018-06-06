@@ -19,6 +19,7 @@ module.exports = {
     "once": false,
     "range": false,
     "runWithMSE": false,
+    "wait": false,
     "waitUntilTime": false
   },
   // Use const/let instead of var for tighter scoping, avoiding redeclaration

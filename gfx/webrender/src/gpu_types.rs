@@ -80,7 +80,7 @@ pub struct BlurInstance {
     pub blur_direction: BlurDirection,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -107,6 +107,7 @@ pub struct BorderInstance {
     pub flags: i32,
     pub widths: DeviceSize,
     pub radius: DeviceSize,
+    pub clip_params: [f32; 8],
 }
 
 /// A clipping primitive drawn into the clipping mask.

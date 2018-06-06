@@ -1,6 +1,7 @@
 "use strict";
 
-/* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv */
+/* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv
+            runWithPrefs */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -109,4 +110,33 @@ function cleanupDir(dir) {
     }
     tryToRemoveDir();
   });
+}
+
+// Run a test with the specified preferences and then clear them
+// right after the test function run (whether it passes or fails).
+async function runWithPrefs(prefsToSet, testFn) {
+  try {
+    for (let [pref, value] of prefsToSet) {
+      info(`Setting pref "${pref}": ${value}`);
+      switch (typeof(value)) {
+        case "boolean":
+          Services.prefs.setBoolPref(pref, value);
+          break;
+        case "number":
+          Services.prefs.setIntPref(pref, value);
+          break;
+        case "string":
+          Services.prefs.setStringPref(pref, value);
+          break;
+        default:
+          throw new Error("runWithPrefs doesn't support this pref type yet");
+      }
+    }
+    await testFn();
+  } finally {
+    for (let [prefName] of prefsToSet) {
+      info(`Clearing pref "${prefName}"`);
+      Services.prefs.clearUserPref(prefName);
+    }
+  }
 }

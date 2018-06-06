@@ -27,6 +27,9 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo* slot)
 {
   MOZ_ASSERT(slot);
   mSlot.reset(PK11_ReferenceSlot(slot));
+  mIsInternalCryptoSlot = PK11_IsInternal(mSlot.get()) &&
+                          !PK11_IsInternalKeySlot(mSlot.get());
+  mIsInternalKeySlot = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
   Unused << refreshSlotInfo();
 }
@@ -41,18 +44,42 @@ nsPKCS11Slot::refreshSlotInfo()
   }
 
   // Set the Description field
-  const char* ccDesc =
-    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.slotDescription);
-  mSlotDesc.Assign(ccDesc, strnlen(ccDesc, sizeof(slotInfo.slotDescription)));
-  mSlotDesc.Trim(" ", false, true);
+  if (mIsInternalCryptoSlot) {
+    nsresult rv;
+    if (PK11_IsFIPS()) {
+      rv = GetPIPNSSBundleString("Fips140SlotDescription", mSlotDesc);
+    } else {
+      rv = GetPIPNSSBundleString("SlotDescription", mSlotDesc);
+    }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else if (mIsInternalKeySlot) {
+    rv = GetPIPNSSBundleString("PrivateSlotDescription", mSlotDesc);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    const char* ccDesc =
+      mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.slotDescription);
+    mSlotDesc.Assign(ccDesc, strnlen(ccDesc, sizeof(slotInfo.slotDescription)));
+    mSlotDesc.Trim(" ", false, true);
+  }
 
   // Set the Manufacturer field
-  const char* ccManID =
-    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.manufacturerID);
-  mSlotManufacturerID.Assign(
-    ccManID,
-    strnlen(ccManID, sizeof(slotInfo.manufacturerID)));
-  mSlotManufacturerID.Trim(" ", false, true);
+  if (mIsInternalCryptoSlot || mIsInternalKeySlot) {
+    rv = GetPIPNSSBundleString("ManufacturerID", mSlotManufacturerID);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    const char* ccManID =
+      mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.manufacturerID);
+    mSlotManufacturerID.Assign(
+      ccManID,
+      strnlen(ccManID, sizeof(slotInfo.manufacturerID)));
+    mSlotManufacturerID.Trim(" ", false, true);
+  }
 
   // Set the Hardware Version field
   mSlotHWVersion.Truncate();
@@ -87,19 +114,16 @@ nsPKCS11Slot::GetAttributeHelper(const nsACString& attribute,
 NS_IMETHODIMP
 nsPKCS11Slot::GetName(/*out*/ nsACString& name)
 {
-  // |csn| is non-owning.
-  char* csn = PK11_GetSlotName(mSlot.get());
-  if (csn && *csn) {
-    name = csn;
-  } else if (PK11_HasRootCerts(mSlot.get())) {
-    // This is a workaround to an Root Module bug - the root certs module has
-    // no slot name.  Not bothering to localize, because this is a workaround
-    // and for now all the slot names returned by NSS are char * anyway.
-    name = NS_LITERAL_CSTRING("Root Certificates");
-  } else {
-    // same as above, this is a catch-all
-    name = NS_LITERAL_CSTRING("Unnamed Slot");
+  if (mIsInternalCryptoSlot) {
+    if (PK11_IsFIPS()) {
+      return GetPIPNSSBundleString("Fips140TokenDescription", name);
+    }
+    return GetPIPNSSBundleString("TokenDescription", name);
   }
+  if (mIsInternalKeySlot) {
+    return GetPIPNSSBundleString("PrivateTokenDescription", name);
+  }
+  name.Assign(PK11_GetSlotName(mSlot.get()));
 
   return NS_OK;
 }
@@ -152,7 +176,17 @@ nsPKCS11Slot::GetTokenName(/*out*/ nsACString& tokenName)
     }
   }
 
-  tokenName = PK11_GetTokenName(mSlot.get());
+  if (mIsInternalCryptoSlot) {
+    if (PK11_IsFIPS()) {
+      return GetPIPNSSBundleString("Fips140TokenDescription", tokenName);
+    }
+    return GetPIPNSSBundleString("TokenDescription", tokenName);
+  }
+  if (mIsInternalKeySlot) {
+    return GetPIPNSSBundleString("PrivateTokenDescription", tokenName);
+  }
+
+  tokenName.Assign(PK11_GetTokenName(mSlot.get()));
   return NS_OK;
 }
 

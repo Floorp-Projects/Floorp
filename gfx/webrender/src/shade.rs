@@ -50,7 +50,6 @@ pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 4] = [
     ImageBufferKind::Texture2DArray,
 ];
 
-const TRANSFORM_FEATURE: &str = "TRANSFORM";
 const ALPHA_FEATURE: &str = "ALPHA_PASS";
 const DITHERING_FEATURE: &str = "DITHERING";
 const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
@@ -261,53 +260,6 @@ impl BrushShader {
     }
 }
 
-struct PrimitiveShader {
-    simple: LazilyCompiledShader,
-    transform: LazilyCompiledShader,
-}
-
-impl PrimitiveShader {
-    fn new(
-        name: &'static str,
-        device: &mut Device,
-        features: &[&'static str],
-        precache: bool,
-    ) -> Result<Self, ShaderError> {
-        let simple = LazilyCompiledShader::new(
-            ShaderKind::Primitive,
-            name,
-            features,
-            device,
-            precache,
-        )?;
-
-        let mut transform_features = features.to_vec();
-        transform_features.push(TRANSFORM_FEATURE);
-
-        let transform = LazilyCompiledShader::new(
-            ShaderKind::Primitive,
-            name,
-            &transform_features,
-            device,
-            precache,
-        )?;
-
-        Ok(PrimitiveShader { simple, transform })
-    }
-
-    fn get(&mut self, transform_kind: TransformedRectKind) -> &mut LazilyCompiledShader {
-        match transform_kind {
-            TransformedRectKind::AxisAligned => &mut self.simple,
-            TransformedRectKind::Complex => &mut self.transform,
-        }
-    }
-
-    fn deinit(self, device: &mut Device) {
-        self.simple.deinit(device);
-        self.transform.deinit(device);
-    }
-}
-
 pub struct TextShader {
     simple: LazilyCompiledShader,
     transform: LazilyCompiledShader,
@@ -400,7 +352,6 @@ fn create_prim_shader(
         VertexArrayKind::Primitive => desc::PRIM_INSTANCES,
         VertexArrayKind::Blur => desc::BLUR,
         VertexArrayKind::Clip => desc::CLIP,
-        VertexArrayKind::DashAndDot => desc::BORDER_CORNER_DASH_AND_DOT,
         VertexArrayKind::VectorStencil => desc::VECTOR_STENCIL,
         VertexArrayKind::VectorCover => desc::VECTOR_COVER,
         VertexArrayKind::Border => desc::BORDER,
@@ -482,7 +433,6 @@ pub struct Shaders {
     pub cs_clip_rectangle: LazilyCompiledShader,
     pub cs_clip_box_shadow: LazilyCompiledShader,
     pub cs_clip_image: LazilyCompiledShader,
-    pub cs_clip_border: LazilyCompiledShader,
     pub cs_clip_line: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
@@ -494,8 +444,6 @@ pub struct Shaders {
     // a cache shader (e.g. blur) to the screen.
     pub ps_text_run: TextShader,
     pub ps_text_run_dual_source: TextShader,
-    ps_border_corner: PrimitiveShader,
-    ps_border_edge: PrimitiveShader,
 
     ps_split_composite: LazilyCompiledShader,
 }
@@ -611,14 +559,6 @@ impl Shaders {
             options.precache_shaders,
         )?;
 
-        let cs_clip_border = LazilyCompiledShader::new(
-            ShaderKind::ClipCache,
-            "cs_clip_border",
-            &[],
-            device,
-            options.precache_shaders,
-        )?;
-
         let ps_text_run = TextShader::new("ps_text_run",
             device,
             &[],
@@ -699,20 +639,6 @@ impl Shaders {
             }
         }
 
-        let ps_border_corner = PrimitiveShader::new(
-            "ps_border_corner",
-             device,
-             &[],
-             options.precache_shaders,
-        )?;
-
-        let ps_border_edge = PrimitiveShader::new(
-            "ps_border_edge",
-             device,
-             &[],
-             options.precache_shaders,
-        )?;
-
         let cs_border_segment = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Border),
             "cs_border_segment",
@@ -746,13 +672,10 @@ impl Shaders {
             brush_linear_gradient,
             cs_clip_rectangle,
             cs_clip_box_shadow,
-            cs_clip_border,
             cs_clip_image,
             cs_clip_line,
             ps_text_run,
             ps_text_run_dual_source,
-            ps_border_corner,
-            ps_border_edge,
             ps_split_composite,
         })
     }
@@ -804,7 +727,7 @@ impl Shaders {
                 brush_shader.get(key.blend_mode)
             }
             BatchKind::Transformable(transform_kind, batch_kind) => {
-                let prim_shader = match batch_kind {
+                match batch_kind {
                     TransformBatchKind::TextRun(glyph_format) => {
                         let text_shader = match key.blend_mode {
                             BlendMode::SubpixelDualSource => {
@@ -816,14 +739,7 @@ impl Shaders {
                         };
                         return text_shader.get(glyph_format, transform_kind);
                     }
-                    TransformBatchKind::BorderCorner => {
-                        &mut self.ps_border_corner
-                    }
-                    TransformBatchKind::BorderEdge => {
-                        &mut self.ps_border_edge
-                    }
-                };
-                prim_shader.get(transform_kind)
+                }
             }
         }
     }
@@ -839,7 +755,6 @@ impl Shaders {
         self.cs_clip_rectangle.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
-        self.cs_clip_border.deinit(device);
         self.cs_clip_line.deinit(device);
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
@@ -853,8 +768,6 @@ impl Shaders {
                 shader.deinit(device);
             }
         }
-        self.ps_border_corner.deinit(device);
-        self.ps_border_edge.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
     }

@@ -125,6 +125,11 @@ function run_test() {
   let emailArray = getCertAsByteArray("test_certDB_import/emailEE.pem");
   gCertDB.importEmailCertificate(emailArray, emailArray.length,
                                  gInterfaceRequestor);
-  notEqual(findCertByEmailAddress(TEST_EMAIL_ADDRESS), null,
-           "E-mail cert should now be found in the database");
+  let emailCert = findCertByEmailAddress(TEST_EMAIL_ADDRESS);
+  notEqual(emailCert, null, "E-mail cert should now be found in the database");
+  let bundle =
+    Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
+  equal(emailCert.tokenName,
+        bundle.GetStringFromName("PrivateTokenDescription"),
+        "cert's tokenName should be the expected localized value");
 }

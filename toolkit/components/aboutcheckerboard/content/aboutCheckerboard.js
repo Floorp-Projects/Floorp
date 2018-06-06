@@ -13,10 +13,11 @@ function onLoad() {
   service = new CheckerboardReportService();
   updateEnabled();
   reports = service.getReports();
-  for (var i = 0; i < reports.length; i++) {
+  for (let i = 0; i < reports.length; i++) {
     let text = "Severity " + reports[i].severity + " at " + new Date(reports[i].timestamp).toString();
     let link = document.createElement("a");
-    link.href = "javascript:showReport(" + i + ")";
+    link.href = "#";
+    link.addEventListener("click", function() { showReport(i); return false; });
     link.textContent = text;
     let bullet = document.createElement("li");
     bullet.appendChild(link);

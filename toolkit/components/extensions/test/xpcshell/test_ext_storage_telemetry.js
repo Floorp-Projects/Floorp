@@ -2,11 +2,13 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+
 const HISTOGRAM_IDS = [
   "WEBEXT_STORAGE_LOCAL_SET_MS", "WEBEXT_STORAGE_LOCAL_GET_MS",
 ];
 
-add_task(async function test_telemetry_background() {
+async function test_telemetry_background() {
   const server = createHttpServer();
   server.registerDirectory("/data/", do_get_file("data"));
 
@@ -101,4 +103,14 @@ add_task(async function test_telemetry_background() {
   }
 
   await extension1.unload();
+}
+
+add_task(function test_telemetry_background_file_backend() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
+                      test_telemetry_background);
+});
+
+add_task(function test_telemetry_background_idb_backend() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
+                      test_telemetry_background);
 });

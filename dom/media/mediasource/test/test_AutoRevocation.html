@@ -17,12 +17,12 @@ runWithMSE(function() {
   const o = URL.createObjectURL(ms);
   const v = document.createElement("video");
 
-  v.addEventListener("error", function(e) {
+  v.addEventListener("error", () => {
     ok(true, "ObjectURL should be auto-revoked");
     SimpleTest.finish();
   });
 
-  v.addEventListener("stalled", function(e) {
+  v.addEventListener("stalled", () => {
     ok(false, "If auto-revocation is gone, please turn on TODOs in browser_mediaSourceURL.js");
     SimpleTest.finish();
   });

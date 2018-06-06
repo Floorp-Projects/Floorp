@@ -36,7 +36,7 @@ runWithMSE(function(ms, el) {
       info("changeType API is not available");
     }
 
-    el.addEventListener("error", function(e) {
+    el.addEventListener("error", e => {
       ok(false, "should not fire '" + e.type + "' event");
       SimpleTest.finish();
     });
