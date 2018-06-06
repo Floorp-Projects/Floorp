@@ -14,7 +14,7 @@
 #!/bin/bash
 set -ex
 
-REMOTE=${1:-https://github.com/w3c/web-platform-tests}
+REMOTE=${1:-https://github.com/web-platform-tests/wpt}
 BRANCH=${2:-master}
 REV=${3:-FETCH_HEAD}
 BROWSER=${4:-all}
