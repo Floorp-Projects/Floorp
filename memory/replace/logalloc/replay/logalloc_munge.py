@@ -25,6 +25,7 @@ from collections import (
     deque,
 )
 
+
 class IdMapping(object):
     """Class to map values to ids.
 
@@ -32,6 +33,7 @@ class IdMapping(object):
     When a value is removed, its id is recycled and will be reused for
     subsequent values.
     """
+
     def __init__(self):
         self.id = 1
         self._values = {}
@@ -56,7 +58,8 @@ class IdMapping(object):
         return value == 0 or value in self._values
 
 
-class Ignored(Exception): pass
+class Ignored(Exception):
+    pass
 
 
 def split_log_line(line):
@@ -79,7 +82,7 @@ def split_log_line(line):
         else:
             tid = pid
         return pid, tid, func, args, result
-    except:
+    except Exception:
         raise Ignored('Malformed input')
 
 
@@ -98,8 +101,8 @@ NUM_ARGUMENTS = {
 
 def main():
     pids = IdMapping()
-    processes = defaultdict(lambda: { 'pointers': IdMapping(),
-                                      'tids': IdMapping() })
+    processes = defaultdict(lambda: {'pointers': IdMapping(),
+                                     'tids': IdMapping()})
     for line in sys.stdin:
         line = line.strip()
 
@@ -137,7 +140,7 @@ def main():
                 result = "#%d" % pointers[result]
 
             print('%d %d %s(%s)%s' % (pid, tid, func, ','.join(args),
-                '=%s' % result if result else ''))
+                                      '=%s' % result if result else ''))
 
         except Exception as e:
             print('Ignored "%s": %s' % (line, e.message), file=sys.stderr)

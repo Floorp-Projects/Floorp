@@ -3,7 +3,7 @@
 import gdb
 import gdb.types
 import mozilla.prettyprinters
-from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
+from mozilla.prettyprinters import pretty_printer
 
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
@@ -68,6 +68,7 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 #
 # See Value.h for full details.
 
+
 class Box(object):
     def __init__(self, asBits, jtc):
         self.asBits = asBits
@@ -82,20 +83,23 @@ class Box(object):
 
     # Return this value as a 32-bit integer, double, or address.
     def as_uint32(self): raise NotImplementedError
+
     def as_double(self): raise NotImplementedError
+
     def as_address(self): raise NotImplementedError
 
-# Packed non-number boxing --- the format used on x86_64. It would be nice to
-# simply call Value::toInt32, etc. here, but the debugger is likely to see many
-# Values, and doing several inferior calls for each one seems like a bad idea.
-class Punbox(Box):
 
-    FULL_WIDTH     = 64
-    TAG_SHIFT      = 47
-    PAYLOAD_MASK   = (1 << TAG_SHIFT) - 1
-    TAG_MASK       = (1 << (FULL_WIDTH - TAG_SHIFT)) - 1
+class Punbox(Box):
+    # Packed non-number boxing --- the format used on x86_64. It would be nice to
+    # simply call Value::toInt32, etc. here, but the debugger is likely to see many
+    # Values, and doing several inferior calls for each one seems like a bad idea.
+
+    FULL_WIDTH = 64
+    TAG_SHIFT = 47
+    PAYLOAD_MASK = (1 << TAG_SHIFT) - 1
+    TAG_MASK = (1 << (FULL_WIDTH - TAG_SHIFT)) - 1
     TAG_MAX_DOUBLE = 0x1fff0
-    TAG_TYPE_MASK  = 0x0000f
+    TAG_TYPE_MASK = 0x0000f
 
     def tag(self):
         tag = self.asBits >> Punbox.TAG_SHIFT
@@ -105,13 +109,15 @@ class Punbox(Box):
             return tag & Punbox.TAG_TYPE_MASK
 
     def as_uint32(self): return int(self.asBits & ((1 << 32) - 1))
+
     def as_address(self): return gdb.Value(self.asBits & Punbox.PAYLOAD_MASK)
 
+
 class Nunbox(Box):
-    TAG_SHIFT      = 32
-    TAG_CLEAR      = 0xffff0000
-    PAYLOAD_MASK   = 0xffffffff
-    TAG_TYPE_MASK  = 0x0000000f
+    TAG_SHIFT = 32
+    TAG_CLEAR = 0xffff0000
+    PAYLOAD_MASK = 0xffffffff
+    TAG_TYPE_MASK = 0x0000000f
 
     def tag(self):
         tag = self.asBits >> Nunbox.TAG_SHIFT
@@ -120,10 +126,13 @@ class Nunbox(Box):
         return tag & Nunbox.TAG_TYPE_MASK
 
     def as_uint32(self): return int(self.asBits & Nunbox.PAYLOAD_MASK)
+
     def as_address(self): return gdb.Value(self.asBits & Nunbox.PAYLOAD_MASK)
 
-# Cache information about the Value type for this objfile.
+
 class JSValueTypeCache(object):
+    # Cache information about the Value type for this objfile.
+
     def __init__(self, cache):
         # Capture the tag values.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSValueType'))
@@ -152,17 +161,19 @@ class JSValueTypeCache(object):
             # enabled.
             self.BIGINT = get('JSVAL_TYPE_BIGINT')
             self.enable_bigint = True
-        except:
+        except Exception:
             pass
 
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSWhyMagic'))
         self.magic_names = list(range(max(d.values()) + 1))
-        for (k,v) in d.items(): self.magic_names[v] = k
+        for (k, v) in d.items():
+            self.magic_names[v] = k
 
         # Choose an unboxing scheme for this architecture.
         self.boxer = Punbox if cache.void_ptr_t.sizeof == 8 else Nunbox
+
 
 @pretty_printer('JS::Value')
 class JSValue(object):

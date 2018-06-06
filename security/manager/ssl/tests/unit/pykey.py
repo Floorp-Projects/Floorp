@@ -48,6 +48,7 @@ HASH_SHA256 = 'hash:sha256'
 HASH_SHA384 = 'hash:sha384'
 HASH_SHA512 = 'hash:sha512'
 
+
 def byteStringToHexifiedBitString(string):
     """Takes a string of bytes and returns a hex string representing
     those bytes for use with pyasn1.type.univ.BitString. It must be of
@@ -55,8 +56,10 @@ def byteStringToHexifiedBitString(string):
     pyasn1 that the input is a hex string."""
     return "'%s'H" % binascii.hexlify(string)
 
+
 class UnknownBaseError(Exception):
     """Base class for handling unexpected input in this module."""
+
     def __init__(self, value):
         super(UnknownBaseError, self).__init__()
         self.value = value
@@ -84,6 +87,7 @@ class UnknownHashAlgorithmError(UnknownBaseError):
 
 class UnsupportedHashAlgorithmError(Exception):
     """Helper exception type for unsupported hash algorithms."""
+
     def __init__(self, value):
         super(UnsupportedHashAlgorithmError, self).__init__()
         self.value = value
@@ -624,46 +628,49 @@ secp256k1Params = (long('fffffffffffffffffffffffffffffffffffffffffffffffffffffff
                    long('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 16),
                    long('483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8', 16))
 
+
 def longToEvenLengthHexString(val):
     h = format(val, 'x')
     if not len(h) % 2 == 0:
         h = '0' + h
     return h
 
+
 def notRandom(n):
     return n * '\x04'
 
+
 class ECCKey(object):
     secp256k1Encoded = str('08fd87b04fba98090100004035ee7c7289d8fef7a8'
-        '6afe5da66d8bc2ebb6a8543fd2fead089f45ce7acd0fa64382a9500c41dad'
-        '770ffd4b511bf4b492eb1238800c32c4f76c73a3f3294e7c5002067cebc20'
-        '8a5fa3df16ec2bb34acc59a42ab4abb0538575ca99b92b6a2149a04f')
+                           '6afe5da66d8bc2ebb6a8543fd2fead089f45ce7acd0fa64382a9500c41dad'
+                           '770ffd4b511bf4b492eb1238800c32c4f76c73a3f3294e7c5002067cebc20'
+                           '8a5fa3df16ec2bb34acc59a42ab4abb0538575ca99b92b6a2149a04f')
 
     secp224r1Encoded = str('0ee5587c4d18526f00e00038668d72cca6fd6a1b35'
-        '57b5366104d84408ecb637f08e8c86bbff82cc00e88f0066d7af63c3298ba'
-        '377348a1202b03b37fd6b1ff415aa311e001c04389459926c3296c242b83e'
-        '10a6cd2011c8fe2dae1b772ea5b21067')
+                           '57b5366104d84408ecb637f08e8c86bbff82cc00e88f0066d7af63c3298ba'
+                           '377348a1202b03b37fd6b1ff415aa311e001c04389459926c3296c242b83e'
+                           '10a6cd2011c8fe2dae1b772ea5b21067')
 
     secp256r1Encoded = str('cb872ac99cd31827010000404fbfbbbb61e0f8f9b1'
-        'a60a59ac8704e2ec050b423e3cf72e923f2c4f794b455c2a69d233456c36c'
-        '4119d0706e00eedc8d19390d7991b7b2d07a304eaa04aa6c000202191403d'
-        '5710bf15a265818cd42ed6fedf09add92d78b18e7a1e9feb95524702')
+                           'a60a59ac8704e2ec050b423e3cf72e923f2c4f794b455c2a69d233456c36c'
+                           '4119d0706e00eedc8d19390d7991b7b2d07a304eaa04aa6c000202191403d'
+                           '5710bf15a265818cd42ed6fedf09add92d78b18e7a1e9feb95524702')
 
     secp384r1Encoded = str('d3103f5ac81741e801800060a1687243362b5c7b18'
-        '89f379154615a1c73fb48dee863e022915db608e252de4b7132da8ce98e83'
-        '1534e6a9c0c0b09c8d639ade83206e5ba813473a11fa330e05da8c96e4383'
-        'fe27873da97103be2888cff002f05af71a1fddcc8374aa6ea9ce0030035c7'
-        'a1b10d9fafe837b64ad92f22f5ced0789186538669b5c6d872cec3d926122'
-        'b393772b57602ff31365efe1393246')
+                           '89f379154615a1c73fb48dee863e022915db608e252de4b7132da8ce98e83'
+                           '1534e6a9c0c0b09c8d639ade83206e5ba813473a11fa330e05da8c96e4383'
+                           'fe27873da97103be2888cff002f05af71a1fddcc8374aa6ea9ce0030035c7'
+                           'a1b10d9fafe837b64ad92f22f5ced0789186538669b5c6d872cec3d926122'
+                           'b393772b57602ff31365efe1393246')
 
     secp521r1Encoded = str('77f4b0ac81948ddc02090084014cdc9cacc4794109'
-        '6bc9cc66752ec27f597734fa66c62b792f88c519d6d37f0d16ea1c483a182'
-        '7a010b9128e3a08070ca33ef5f57835b7c1ba251f6cc3521dc42b01065345'
-        '1981b445d343eed3782a35d6cff0ff484f5a883d209f1b9042b726703568b'
-        '2f326e18b833bdd8aa0734392bcd19501e10d698a79f53e11e0a22bdd2aad'
-        '900042014f3284fa698dd9fe1118dd331851cdfaac5a3829278eb8994839d'
-        'e9471c940b858c69d2d05e8c01788a7d0b6e235aa5e783fc1bee807dcc386'
-        '5f920e12cf8f2d29')
+                           '6bc9cc66752ec27f597734fa66c62b792f88c519d6d37f0d16ea1c483a182'
+                           '7a010b9128e3a08070ca33ef5f57835b7c1ba251f6cc3521dc42b01065345'
+                           '1981b445d343eed3782a35d6cff0ff484f5a883d209f1b9042b726703568b'
+                           '2f326e18b833bdd8aa0734392bcd19501e10d698a79f53e11e0a22bdd2aad'
+                           '900042014f3284fa698dd9fe1118dd331851cdfaac5a3829278eb8994839d'
+                           'e9471c940b858c69d2d05e8c01788a7d0b6e235aa5e783fc1bee807dcc386'
+                           '5f920e12cf8f2d29')
 
     def __init__(self, specification=None):
         if specification == 'secp256k1':
@@ -748,6 +755,8 @@ def keyFromSpecification(specification):
 # The build harness will call this function with an output file-like
 # object and a path to a file containing a specification. This will
 # read the specification and output the key as ASCII-encoded PKCS #8.
+
+
 def main(output, inputPath):
     with open(inputPath) as configStream:
         output.write(keyFromSpecification(configStream.read().strip()).toPEM())

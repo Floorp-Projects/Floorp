@@ -2,23 +2,30 @@
 
 from __future__ import print_function
 import re
-import sys
 from xml.sax.saxutils import escape
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")
 js_pat = re.compile(r"([^A-Za-z0-9]|^)(JS[A-Z0-9_\*]+)")
+
+
 def codify(text):
     text = re.sub(quoted_pat, '\\1<code>\\2</code>', text)
     text = re.sub(js_pat, '\\1<code>\\2</code>', text)
 
     return text
 
+
 space_star_space_pat = re.compile('^\s*\* ?', re.M)
+
+
 def get_comment_body(comment):
     return re.sub(space_star_space_pat, '', comment).split('\n')
 
+
 quote_pat = re.compile('"([^"]+)"')
 str_pat = re.compile('js_([^_]+)_str')
+
+
 def parse_name(s):
     m = quote_pat.search(s)
     if m:
@@ -28,12 +35,16 @@ def parse_name(s):
         return m.group(1)
     return s
 
+
 csv_pat = re.compile(', *')
+
+
 def parse_csv(s):
     a = csv_pat.split(s)
     if len(a) == 1 and a[0] == '':
         return []
     return a
+
 
 def get_stack_count(stack):
     if stack == '':
@@ -41,6 +52,7 @@ def get_stack_count(stack):
     if '...' in stack:
         return -1
     return len(stack.split(','))
+
 
 def parse_index(comment):
     index = []
@@ -73,6 +85,8 @@ def parse_index(comment):
 #    *   nuses: {nuses_override}
 #    *   ndefs: {ndefs_override}
 #    */
+
+
 class CommentInfo:
     def __init__(self):
         self.desc = ''
@@ -89,6 +103,8 @@ class CommentInfo:
 #   macro({name}, {value}, {display_name}, {image}, {length}, {nuses}, {ndefs},
 #         {flags})
 # and the information from CommentInfo.
+
+
 class OpcodeInfo:
     def __init__(self, comment_info):
         self.name = ''
@@ -128,12 +144,14 @@ class OpcodeInfo:
 
         self.sort_key = ''
 
+
 def find_by_name(list, name):
     for (n, body) in list:
         if n == name:
             return body
 
     return None
+
 
 def add_to_index(index, opcode):
     types = find_by_name(index, opcode.category_name)
@@ -150,6 +168,7 @@ def add_to_index(index, opcode):
         return
 
     opcodes.append(opcode)
+
 
 def format_desc(descs):
     current_type = ''
@@ -168,22 +187,26 @@ def format_desc(descs):
 
     return desc
 
+
 tag_pat = re.compile('^\s*[A-Za-z]+:\s*|\s*$')
+
+
 def get_tag_value(line):
     return re.sub(tag_pat, '', line)
+
 
 def get_opcodes(dir):
     iter_pat = re.compile(r"/\*(.*?)\*/"  # either a documentation comment...
                           r"|"
                           r"macro\("      # or a macro(...) call
-                                 r"(?P<name>[^,]+),\s*"
-                                 r"(?P<value>[0-9]+),\s*"
-                                 r"(?P<display_name>[^,]+,)\s*"
-                                 r"(?P<image>[^,]+),\s*"
-                                 r"(?P<length>[0-9\-]+),\s*"
-                                 r"(?P<nuses>[0-9\-]+),\s*"
-                                 r"(?P<ndefs>[0-9\-]+),\s*"
-                                 r"(?P<flags>[^\)]+)"
+                          r"(?P<name>[^,]+),\s*"
+                          r"(?P<value>[0-9]+),\s*"
+                          r"(?P<display_name>[^,]+,)\s*"
+                          r"(?P<image>[^,]+),\s*"
+                          r"(?P<length>[0-9\-]+),\s*"
+                          r"(?P<nuses>[0-9\-]+),\s*"
+                          r"(?P<ndefs>[0-9\-]+),\s*"
+                          r"(?P<flags>[^\)]+)"
                           r"\)", re.S)
     stack_pat = re.compile(r"^(?P<uses>.*?)"
                            r"\s*=>\s*"

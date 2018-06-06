@@ -9,20 +9,24 @@ import re
 # factory, taking both a gdb.Value instance and a TypeCache instance as
 # arguments; see TypeCache, below.
 
-# Check that |fn| hasn't been registered as a pretty-printer under some
-# other name already. (The 'enabled' flags used by GDB's
-# 'enable/disable/info pretty-printer' commands are simply stored as
-# properties of the function objects themselves, so a single function
-# object can't carry the 'enabled' flags for two different printers.)
+
 def check_for_reused_pretty_printer(fn):
+    # Check that |fn| hasn't been registered as a pretty-printer under some
+    # other name already. (The 'enabled' flags used by GDB's
+    # 'enable/disable/info pretty-printer' commands are simply stored as
+    # properties of the function objects themselves, so a single function
+    # object can't carry the 'enabled' flags for two different printers.)
     if hasattr(fn, 'enabled'):
         raise RuntimeError("pretty-printer function %r registered more than once" % fn)
+
 
 # a dictionary mapping gdb.Type tags to pretty-printer functions.
 printers_by_tag = {}
 
 # A decorator: add the decoratee as a pretty-printer lookup function for types
 # named |type_name|.
+
+
 def pretty_printer(type_name):
     def add(fn):
         check_for_reused_pretty_printer(fn)
@@ -31,12 +35,15 @@ def pretty_printer(type_name):
         return fn
     return add
 
+
 # a dictionary mapping gdb.Type tags to pretty-printer functions for pointers to
 # that type.
 ptr_printers_by_tag = {}
 
 # A decorator: add the decoratee as a pretty-printer lookup function for
 # pointers to types named |type_name|.
+
+
 def ptr_pretty_printer(type_name):
     def add(fn):
         check_for_reused_pretty_printer(fn)
@@ -45,12 +52,15 @@ def ptr_pretty_printer(type_name):
         return fn
     return add
 
+
 # a dictionary mapping gdb.Type tags to pretty-printer functions for
 # references to that type.
 ref_printers_by_tag = {}
 
 # A decorator: add the decoratee as a pretty-printer lookup function for
 # references to instances of types named |type_name|.
+
+
 def ref_pretty_printer(type_name):
     def add(fn):
         check_for_reused_pretty_printer(fn)
@@ -59,12 +69,15 @@ def ref_pretty_printer(type_name):
         return fn
     return add
 
+
 # a dictionary mapping the template name portion of gdb.Type tags to
 # pretty-printer functions for instantiations of that template.
 template_printers_by_tag = {}
 
 # A decorator: add the decoratee as a pretty-printer lookup function for
 # instantiations of templates named |template_name|.
+
+
 def template_pretty_printer(template_name):
     def add(fn):
         check_for_reused_pretty_printer(fn)
@@ -72,6 +85,7 @@ def template_pretty_printer(template_name):
         template_printers_by_tag[template_name] = fn
         return fn
     return add
+
 
 # A list of (REGEXP, PRINTER) pairs, such that if REGEXP (a RegexObject)
 # matches the result of converting a gdb.Value's type to a string, then
@@ -82,8 +96,11 @@ printers_by_regexp = []
 # A decorator: add the decoratee as a pretty-printer factory for types
 # that, when converted to a string, match |pattern|. Use |name| as the
 # pretty-printer's name, when listing, enabling and disabling.
+
+
 def pretty_printer_for_regexp(pattern, name):
     compiled = re.compile(pattern)
+
     def add(fn):
         check_for_reused_pretty_printer(fn)
         add_to_subprinter_list(fn, name)
@@ -96,6 +113,8 @@ def pretty_printer_for_regexp(pattern, name):
 # module like this:
 #
 #   clear_module_printers(__name__)
+
+
 def clear_module_printers(module_name):
     global printers_by_tag, ptr_printers_by_tag, ref_printers_by_tag
     global template_printers_by_tag, printers_by_regexp
@@ -128,6 +147,7 @@ def clear_module_printers(module_name):
             new_list.append(p)
     printers_by_regexp = new_list
 
+
 # Our subprinters array. The 'subprinters' attributes of all lookup
 # functions returned by lookup_for_objfile point to this array instance,
 # which we mutate as subprinters are added and removed.
@@ -135,16 +155,22 @@ subprinters = []
 
 # Set up the 'name' and 'enabled' attributes on |subprinter|, and add it to our
 # list of all SpiderMonkey subprinters.
+
+
 def add_to_subprinter_list(subprinter, name):
     subprinter.name = name
     subprinter.enabled = True
     subprinters.append(subprinter)
 
 # Remove |subprinter| from our list of all SpiderMonkey subprinters.
+
+
 def remove_from_subprinter_list(subprinter):
     subprinters.remove(subprinter)
 
 # An exception class meaning, "This objfile has no SpiderMonkey in it."
+
+
 class NotSpiderMonkeyObjfileError(TypeError):
     pass
 
@@ -162,6 +188,8 @@ class NotSpiderMonkeyObjfileError(TypeError):
 # cached values. Such attributes should be named mod_NAME, where the module
 # is named mozilla.NAME; for example, mozilla.JSString should store its
 # metadata in the TypeCache's mod_JSString attribute.
+
+
 class TypeCache(object):
     def __init__(self, objfile):
         self.objfile = objfile
@@ -204,13 +232,16 @@ class TypeCache(object):
 #
 # We may yield a type more than once (say, if it appears more than once in the
 # class hierarchy).
+
+
 def implemented_types(t):
 
     # Yield all types that follow |t|.
     def followers(t):
         if t.code == gdb.TYPE_CODE_TYPEDEF:
             yield t.target()
-            for t2 in followers(t.target()): yield t2
+            for t2 in followers(t.target()):
+                yield t2
         elif is_struct_or_union(t):
             base_classes = []
             for f in t.fields():
@@ -218,12 +249,16 @@ def implemented_types(t):
                     yield f.type
                     base_classes.append(f.type)
             for b in base_classes:
-                for t2 in followers(b): yield t2
+                for t2 in followers(b):
+                    yield t2
 
     yield t
-    for t2 in followers(t): yield t2
+    for t2 in followers(t):
+        yield t2
+
 
 template_regexp = re.compile("([\w_:]+)<")
+
 
 def is_struct_or_union(t):
     return t.code in (gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION)
@@ -231,6 +266,8 @@ def is_struct_or_union(t):
 # Construct and return a pretty-printer lookup function for objfile, or
 # return None if the objfile doesn't contain SpiderMonkey code
 # (specifically, definitions for SpiderMonkey types).
+
+
 def lookup_for_objfile(objfile):
     # Create a type cache for this objfile.
     try:
@@ -265,19 +302,23 @@ def lookup_for_objfile(objfile):
             if t.code == gdb.TYPE_CODE_PTR:
                 for t2 in implemented_types(t.target()):
                     p = check_table_by_type_name(ptr_printers_by_tag, t2)
-                    if p: return p
+                    if p:
+                        return p
             elif t.code == gdb.TYPE_CODE_REF:
                 for t2 in implemented_types(t.target()):
                     p = check_table_by_type_name(ref_printers_by_tag, t2)
-                    if p: return p
+                    if p:
+                        return p
             else:
                 p = check_table_by_type_name(printers_by_tag, t)
-                if p: return p
+                if p:
+                    return p
                 if is_struct_or_union(t) and t.tag:
                     m = template_regexp.match(t.tag)
                     if m:
                         p = check_table(template_printers_by_tag, m.group(1))
-                        if p: return p
+                        if p:
+                            return p
 
         # Failing that, look for a printer in printers_by_regexp. We have
         # to scan the whole list, so regexp printers should be used
@@ -288,7 +329,8 @@ def lookup_for_objfile(objfile):
                 m = r.match(s)
                 if m:
                     p = f(value, cache)
-                    if p: return p
+                    if p:
+                        return p
 
         # No luck.
         return None
@@ -320,6 +362,8 @@ def lookup_for_objfile(objfile):
 #     Note that pretty-printers returning a 'string' display hint must not use
 #     this default 'to_string' method, as GDB will take everything it returns,
 #     including the type name and address, as string contents.
+
+
 class Pointer(object):
     def __new__(cls, value, cache):
         # Don't try to provide pretty-printers for NULL pointers.
@@ -351,6 +395,7 @@ class Pointer(object):
     def summary(self):
         raise NotImplementedError
 
+
 field_enum_value = None
 
 # Given |t|, a gdb.Type instance representing an enum type, return the
@@ -359,13 +404,15 @@ field_enum_value = None
 # Pre-2012-4-18 versions of GDB store the value of an enum member on the
 # gdb.Field's 'bitpos' attribute; later versions store it on the 'enumval'
 # attribute. This function retrieves the value from either.
+
+
 def enum_value(t, name):
     global field_enum_value
     f = t[name]
     # Monkey-patching is a-okay in polyfills! Just because.
     if not field_enum_value:
         if hasattr(f, 'enumval'):
-            field_enum_value = lambda f: f.enumval
+            def field_enum_value(f): return f.enumval
         else:
-            field_enum_value = lambda f: f.bitpos
+            def field_enum_value(f): return f.bitpos
     return field_enum_value(f)

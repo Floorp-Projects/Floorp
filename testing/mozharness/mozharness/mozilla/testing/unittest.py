@@ -5,7 +5,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
-import os
 import re
 
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
@@ -204,7 +203,7 @@ class DesktopUnittestOutputParser(OutputParser):
 
         # Account for the possibility that no test summary was output.
         if self.pass_count <= 0 and self.fail_count <= 0 and \
-            (self.known_fail_count is None or self.known_fail_count <= 0):
+                (self.known_fail_count is None or self.known_fail_count <= 0):
             self.error('No tests run or test summary not found')
             self.worst_log_level = self.worst_level(WARNING,
                                                     self.worst_log_level)

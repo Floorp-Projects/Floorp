@@ -32,15 +32,19 @@ U32_HIGH_BIT = 0x80000000
 # used as the offset basis for indexing into the values table.
 #
 # NOTE: C++ implementation is in xptinfo.cpp
+
+
 def hash(bytes, h=FNV_OFFSET_BASIS):
     for byte in bytes:
         h ^= byte       # xor-in the byte
         h *= FNV_PRIME  # Multiply by the FNV prime
-        h &= 0xffffffff # clamp to 32-bits
+        h &= 0xffffffff  # clamp to 32-bits
     return h
+
 
 IntermediateBucket = namedtuple('IntermediateBucket', ['index', 'entries'])
 HashEntry = namedtuple('HashEntry', ['key', 'value'])
+
 
 class PerfectHash(object):
     """An object representing a perfect hash function"""

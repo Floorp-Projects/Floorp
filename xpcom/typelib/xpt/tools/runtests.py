@@ -45,6 +45,7 @@ def get_output(bin, file):
     stdout, _ = p.communicate()
     return stdout
 
+
 if "MOZILLA_OBJDIR" in os.environ:
     class CheckXPTDump(unittest.TestCase):
         def test_xpt_dump_diffs(self):
@@ -66,9 +67,10 @@ if "MOZILLA_OBJDIR" in os.environ:
                 # now run xpt_dump on it
                 out2 = get_output(xptdump, fullpath)
                 if out != out2:
-                    print "diff %s" % f
-                    for line in difflib.unified_diff(out2.split("\n"), out.split("\n"), lineterm=""):
-                        print line
+                    print("diff %s" % f)
+
+                    for line in difflib.unified_diff(out2.split("\n"), out.split("\n"), lineterm=""):  # NOQA: E501
+                        print(line)
                 self.assert_(out == out2, "xpt_dump output should be identical for %s" % f)
 
 
@@ -270,15 +272,18 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
         i.methods.append(xpt.Method("One", xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                     params=[
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int64)),
-                                        xpt.Param(xpt.SimpleType(xpt.Type.Tags.float, pointer=True))
-                                        ]))
+                                        xpt.Param(xpt.SimpleType(
+                                            xpt.Type.Tags.float, pointer=True))
+        ]))
         self.checkRoundtrip(t)
         # test some other types (should really be more thorough)
         i.methods.append(xpt.Method("Two", xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                     params=[
-                                        xpt.Param(xpt.SimpleType(xpt.Type.Tags.UTF8String, pointer=True)),
-                                        xpt.Param(xpt.SimpleType(xpt.Type.Tags.wchar_t_ptr, pointer=True))
-                                        ]))
+                                        xpt.Param(xpt.SimpleType(
+                                            xpt.Type.Tags.UTF8String, pointer=True)),
+                                        xpt.Param(xpt.SimpleType(
+                                            xpt.Type.Tags.wchar_t_ptr, pointer=True))
+        ]))
         self.checkRoundtrip(t)
         # add a method with an InterfaceType argument
         bar = xpt.Interface("IBar")
@@ -286,7 +291,7 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
         i.methods.append(xpt.Method("IFaceMethod", xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                     params=[
                                         xpt.Param(xpt.InterfaceType(bar))
-                                        ]))
+        ]))
         self.checkRoundtrip(t)
 
         # add a method with an InterfaceIsType argument
@@ -294,7 +299,7 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
                                     params=[
                                         xpt.Param(xpt.InterfaceIsType(1)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.nsIID))
-                                        ]))
+        ]))
         self.checkRoundtrip(t)
 
         # add a method with an ArrayType argument
@@ -305,11 +310,12 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
                                             1, 2)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
-                                        ]))
+        ]))
         self.checkRoundtrip(t)
 
         # add a method with a StringWithSize and WideStringWithSize arguments
-        i.methods.append(xpt.Method("StringWithSizeMethod", xpt.Param(xpt.SimpleType(xpt.Type.Tags.void)),
+        i.methods.append(xpt.Method("StringWithSizeMethod",
+                                    xpt.Param(xpt.SimpleType(xpt.Type.Tags.void)),
                                     params=[
                                         xpt.Param(xpt.StringWithSizeType(
                                             1, 2)),
@@ -319,7 +325,7 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
                                             4, 5)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
-                                        ]))
+                                    ]))
         self.checkRoundtrip(t)
 
 
@@ -406,10 +412,12 @@ class TestXPTLink(unittest.TestCase):
         # Add some IID values
         t1 = xpt.Typelib()
         # add an unresolved interface
-        t1.interfaces.append(xpt.Interface("IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
+        t1.interfaces.append(xpt.Interface(
+            "IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
         t2 = xpt.Typelib()
         # add an unresolved interface
-        t2.interfaces.append(xpt.Interface("IBar", iid="44332211-6655-8877-0099-aabbccddeeff", scriptable=True))
+        t2.interfaces.append(xpt.Interface(
+            "IBar", iid="44332211-6655-8877-0099-aabbccddeeff", scriptable=True))
         t3 = xpt.xpt_link([t1, t2])
 
         self.assertEqual(2, len(t3.interfaces))
@@ -451,7 +459,8 @@ class TestXPTLink(unittest.TestCase):
         # Unresolved in both, but t1 has an IID value
         t1 = xpt.Typelib()
         # add an unresolved interface with a valid IID
-        t1.interfaces.append(xpt.Interface("IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
+        t1.interfaces.append(xpt.Interface(
+            "IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
         t2 = xpt.Typelib()
         # add an unresolved interface, no IID
         t2.interfaces.append(xpt.Interface("IFoo"))
@@ -466,7 +475,8 @@ class TestXPTLink(unittest.TestCase):
         t1.interfaces.append(xpt.Interface("IFoo"))
         t2 = xpt.Typelib()
         # add an unresolved interface with a valid IID
-        t2.interfaces.append(xpt.Interface("IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
+        t2.interfaces.append(xpt.Interface(
+            "IFoo", iid="11223344-5566-7788-9900-aabbccddeeff", scriptable=True))
         t3 = xpt.xpt_link([t1, t2])
 
         self.assertEqual(1, len(t3.interfaces))
@@ -765,6 +775,7 @@ class TestXPTLink(unittest.TestCase):
         self.assert_(t3.interfaces[0].methods[0].params[0].type.element_type.iface.resolved)
         self.assertEqual(t3.interfaces[1],
                          t3.interfaces[0].methods[0].params[0].type.element_type.iface)
+
 
 if __name__ == '__main__':
     mozunit.main()

@@ -11,14 +11,17 @@ See the adjacent README.txt for more details.
 
 from __future__ import print_function
 
-import os, sys, textwrap, platform
+import os
+import sys
+import textwrap
+import platform
 from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
 from subprocess import list2cmdline, call
 
 from lib.tests import RefTestCase, get_jitflags, get_cpu_count, \
-                      get_environment_overlay, change_env
+    get_environment_overlay, change_env
 from lib.results import ResultsSink
 from lib.progressbar import ProgressBar
 
@@ -41,7 +44,8 @@ def changedir(dirname):
 class PathOptions(object):
     def __init__(self, location, requested_paths, excluded_paths):
         self.requested_paths = requested_paths
-        self.excluded_files, self.excluded_dirs = PathOptions._split_files_and_dirs(location, excluded_paths)
+        self.excluded_files, self.excluded_dirs = PathOptions._split_files_and_dirs(
+            location, excluded_paths)
 
     @staticmethod
     def _split_files_and_dirs(location, paths):
@@ -57,7 +61,6 @@ class PathOptions(object):
                 files.add(path)
 
         return files, dirs
-
 
     def should_run(self, filename):
         # If any tests are requested by name, skip tests that do not match.
@@ -193,8 +196,8 @@ def parse_args():
                          const='automation',
                          help='Use automation-parseable output format.')
     output_og.add_option('--format', dest='format', default='none',
-                          type='choice', choices=['automation', 'none'],
-                          help='Output format. Either automation or none'
+                         type='choice', choices=['automation', 'none'],
+                         help='Output format. Either automation or none'
                          ' (default %default).')
     op.add_option_group(output_og)
 
@@ -384,9 +387,9 @@ def main():
         if (platform.system() != 'Windows' or
             isfile(options.js_shell) or not
             isfile(options.js_shell + ".exe") or not
-            os.access(options.js_shell + ".exe", os.X_OK)):
-           print('Could not find executable shell: ' + options.js_shell)
-           return 1
+                os.access(options.js_shell + ".exe", os.X_OK)):
+            print('Could not find executable shell: ' + options.js_shell)
+            return 1
 
     test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
     test_environment = get_environment_overlay(options.js_shell)
@@ -424,6 +427,7 @@ def main():
         return 0 if results.all_passed() else 1
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -9,17 +9,16 @@ import json
 import os
 import re
 import sys
+import subprocess
 
 from shutil import copyfile
 
 import mozharness
 
-from mozharness.base.config import parse_config_file
 from mozharness.base.errors import PythonErrorList
-from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO, WARNING
+from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
 from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -38,8 +37,10 @@ RaptorErrorList = PythonErrorList + [
     {'regex': re.compile(r'''No machine_name called '.*' can be found'''), 'level': CRITICAL},
     {'substr': r"""No such file or directory: 'browser_output.txt'""",
      'level': CRITICAL,
-     'explanation': r"""Most likely the browser failed to launch, or the test was otherwise unsuccessful in even starting."""},
+     'explanation': "Most likely the browser failed to launch, or the test was otherwise "
+     "unsuccessful in even starting."},
 ]
+
 
 class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin):
     """
@@ -95,12 +96,17 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         self.tests = None
         self.gecko_profile = self.config.get('gecko_profile')
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
-        self.mitmproxy_rel_bin = None # some platforms download a mitmproxy release binary
-        self.mitmproxy_pageset = None # zip file found on tooltool that contains all of the mitmproxy recordings
-        self.mitmproxy_recordings_file_list = self.config.get('mitmproxy', None) # files inside the recording set
-        self.mitmdump = None # path to mitmdump tool itself, in py3 venv
+        # some platforms download a mitmproxy release binary
+        self.mitmproxy_rel_bin = None
+        # zip file found on tooltool that contains all of the mitmproxy recordings
+        self.mitmproxy_pageset = None
+        # files inside the recording set
+        self.mitmproxy_recordings_file_list = self.config.get('mitmproxy', None)
+        # path to mitmdump tool itself, in py3 venv
+        self.mitmdump = None
 
-    # We accept some configuration options from the try commit message in the format mozharness: <options>
+    # We accept some configuration options from the try commit message in the
+    # format mozharness: <options>
     # Example try commit message:
     #   mozharness: --geckoProfile try: <stuff>
     def query_gecko_profile_options(self):
@@ -118,7 +124,8 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         if self.abs_dirs:
             return self.abs_dirs
         abs_dirs = super(Raptor, self).query_abs_dirs()
-        abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
+        abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+                                                       'blobber_upload_dir')
         abs_dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -128,7 +135,9 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         # binary path
         binary_path = self.binary_path or self.config.get('binary_path')
         if not binary_path:
-            self.fatal("Raptor requires a path to the binary.  You can specify binary_path or add download-and-extract to your action list.")
+            msg = """Raptor requires a path to the binary. You can specify binary_path or add
+            download-and-extract to your action list."""
+            self.fatal(msg)
         # raptor options
         if binary_path.endswith('.exe'):
             binary_path = binary_path[:-4]
@@ -286,7 +295,7 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         python = self.query_python_path()
         self.run_command([python, "--version"])
         parser = RaptorOutputParser(config=self.config, log_obj=self.log_obj,
-                                   error_list=RaptorErrorList)
+                                    error_list=RaptorErrorList)
         env = {}
         env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
         if not self.run_local:
@@ -338,21 +347,13 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
             raptor_process.wait()
         else:
             self.return_code = self.run_command(command, cwd=self.workdir,
-                                            output_timeout=output_timeout,
-                                            output_parser=parser,
-                                            env=env)
+                                                output_timeout=output_timeout,
+                                                output_parser=parser,
+                                                env=env)
         if parser.minidump_output:
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
                 self.run_command(["ls", "-l", item])
-
-        if self.return_code not in [0]:
-            # update the worst log level
-            log_level = ERROR
-            if self.return_code == 1:
-                log_level = WARNING
-            if self.return_code == 4:
-                log_level = WARNING
 
         elif '--no-upload-results' not in options:
             if not self.gecko_profile:
@@ -383,4 +384,3 @@ class RaptorOutputParser(OutputParser):
         if m:
             self.found_perf_data.append(m.group(1))
         super(RaptorOutputParser, self).parse_single_line(line)
-

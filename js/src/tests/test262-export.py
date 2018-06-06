@@ -7,24 +7,20 @@
 
 from __future__ import print_function
 
-import contextlib
 import os
 import re
-import tempfile
 import shutil
 import sys
 import yaml
 
-from functools import partial
-from itertools import chain, imap
-
 # Skip all common files used to support tests for jstests
 # These files are listed in the README.txt
 SUPPORT_FILES = set(["browser.js", "shell.js", "template.js", "user.js",
-    "js-test-driver-begin.js", "js-test-driver-end.js"])
+                     "js-test-driver-begin.js", "js-test-driver-end.js"])
 
 FRONTMATTER_WRAPPER_PATTERN = re.compile(
     r'/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/', flags=re.DOTALL)
+
 
 def convertTestFile(source, includes):
     """
@@ -36,6 +32,7 @@ def convertTestFile(source, includes):
     source = insertCopyrightLines(source)
 
     return source
+
 
 def convertReportCompare(source):
     """
@@ -64,6 +61,7 @@ def convertReportCompare(source):
     )
 
     return re.sub(r'\breportCompare\b', "assert.sameValue", newSource)
+
 
 def fetchReftestEntries(reftest):
     """
@@ -114,6 +112,7 @@ def fetchReftestEntries(reftest):
         "info": comments
     }
 
+
 def parseHeader(source):
     """
     Parse the source to return it with the extracted the header
@@ -137,6 +136,7 @@ def parseHeader(source):
 
     return (source, {})
 
+
 def extractMeta(source):
     """
     Capture the frontmatter metadata as yaml if it exists.
@@ -152,6 +152,7 @@ def extractMeta(source):
     unindented = re.sub('^%s' % indent, '', frontmatter_lines)
 
     return yaml.safe_load(unindented)
+
 
 def updateMeta(source, includes):
     """
@@ -198,14 +199,15 @@ def cleanupMeta(meta):
     if "negative" in meta:
         # If the negative tag exists, phase needs to be present and set
         if meta["negative"].get("phase") not in ("early", "runtime"):
-            print("Warning: the negative.phase is not properly set.\n" + \
-                "Ref https://github.com/tc39/test262/blob/master/INTERPRETING.md#negative")
+            print("Warning: the negative.phase is not properly set.\n" +
+                  "Ref https://github.com/tc39/test262/blob/master/INTERPRETING.md#negative")
         # If the negative tag exists, type is required
         if "type" not in meta["negative"]:
-            print("Warning: the negative.type is not set.\n" + \
-                "Ref https://github.com/tc39/test262/blob/master/INTERPRETING.md#negative")
+            print("Warning: the negative.type is not set.\n" +
+                  "Ref https://github.com/tc39/test262/blob/master/INTERPRETING.md#negative")
 
     return meta
+
 
 def mergeMeta(reftest, frontmatter, includes):
     """
@@ -247,15 +249,16 @@ def mergeMeta(reftest, frontmatter, includes):
             }
         # Print a warning if the errors don't match
         elif frontmatter["negative"].get("type") != error:
-            print("Warning: The reftest error doesn't match the existing " + \
-                "frontmatter error. %s != %s" % (error,
-                frontmatter["negative"]["type"]))
+            print("Warning: The reftest error doesn't match the existing " +
+                  "frontmatter error. %s != %s" % (error,
+                                                   frontmatter["negative"]["type"]))
 
     # Add the shell specific includes
     if includes:
         frontmatter["includes"] = list(includes)
 
     return frontmatter
+
 
 def insertCopyrightLines(source):
     """
@@ -273,6 +276,7 @@ def insertCopyrightLines(source):
 
     return "\n".join(lines) + source
 
+
 def insertMeta(source, frontmatter):
     """
     Insert the formatted frontmatter into the file, use the current existing
@@ -286,10 +290,10 @@ def insertMeta(source, frontmatter):
         if key in ("description", "info"):
             lines.append("%s: |" % key)
             lines.append("  " + yaml.dump(value, encoding="utf8",
-                ).strip().replace('\n...', ''))
+                                          ).strip().replace('\n...', ''))
         else:
             lines.append(yaml.dump({key: value}, encoding="utf8",
-                default_flow_style=False).strip())
+                                   default_flow_style=False).strip())
 
     lines.append("---*/")
 
@@ -299,7 +303,6 @@ def insertMeta(source, frontmatter):
         return source.replace(match.group(0), "\n".join(lines))
     else:
         return "\n".join(lines) + source
-
 
 
 def findAndCopyIncludes(dirPath, baseDir, includeDir):
@@ -327,7 +330,6 @@ def findAndCopyIncludes(dirPath, baseDir, includeDir):
 
         relPath = os.path.split(relPath)[0]
 
-
     shellFile = os.path.join(baseDir, "shell.js")
     includesPath = os.path.join(includeDir, "shell.js")
     if not os.path.exists(includesPath):
@@ -339,6 +341,7 @@ def findAndCopyIncludes(dirPath, baseDir, includeDir):
         shutil.copyfile(shellFile, includesPath)
 
     return includes
+
 
 def exportTest262(args):
 
@@ -384,11 +387,11 @@ def exportTest262(args):
 
             for fileName in fileNames:
                 # Skip browser.js files
-                if fileName == "browser.js" or fileName == "shell.js" :
+                if fileName == "browser.js" or fileName == "shell.js":
                     continue
 
                 filePath = os.path.join(dirPath, fileName)
-                testName = os.path.join(fullRelPath, fileName) # captures folder(s)+filename
+                testName = os.path.join(fullRelPath, fileName)  # captures folder(s)+filename
 
                 # Copy non-test files as is.
                 (_, fileExt) = os.path.splitext(fileName)
@@ -412,6 +415,7 @@ def exportTest262(args):
 
                 print("SAVED %s" % testName)
 
+
 if __name__ == "__main__":
     import argparse
 
@@ -421,9 +425,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Export tests to match Test262 file compliance.")
     parser.add_argument("--out", default="test262/export",
-                        help="Output directory. Any existing directory will be removed! (default: %(default)s)")
+                        help="Output directory. Any existing directory will be removed! "
+                        "(default: %(default)s)")
     parser.add_argument("--exportshellincludes", action="store_true",
-                         help="Optionally export shell.js files as includes in exported tests. Only use for testing, do not use for exporting to test262 (test262 tests should have as few dependencies as possible).")
+                        help="Optionally export shell.js files as includes in exported tests. "
+                        "Only use for testing, do not use for exporting to test262 (test262 tests "
+                        "should have as few dependencies as possible).")
     parser.add_argument("src", nargs="+", help="Source folder with test files to export")
     parser.set_defaults(func=exportTest262)
     args = parser.parse_args()

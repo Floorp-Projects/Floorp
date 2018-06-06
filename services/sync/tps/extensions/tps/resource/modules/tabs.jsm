@@ -12,6 +12,7 @@ const EXPORTED_SYMBOLS = ["BrowserTabs"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
+ChromeUtils.import("resource://tps/logger.jsm");
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
 // BrowserTestUtils.jsm. Moreover, we can't resolve the URI it loads the content
@@ -80,8 +81,9 @@ var BrowserTabs = {
         if (uri == weaveTabUrl && profile == client.clientName)
           if (title == undefined || title == tab.title)
             return true;
+        }
+        Logger.logInfo(`Dumping tabs for ${client.clientName}...\n` + JSON.stringify(client.tabs));
       }
-    }
     return false;
   },
 };

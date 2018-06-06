@@ -57,6 +57,11 @@ CycleCollectedJSContext::CycleCollectedJSContext()
   , mMicroTaskRecursionDepth(0)
 {
   MOZ_COUNT_CTOR(CycleCollectedJSContext);
+
+  // Reinitialize PerThreadAtomCache because dom/bindings/Codegen.py compares
+  // against zero rather than JSID_VOID to detect uninitialized jsid members.
+  memset(static_cast<PerThreadAtomCache*>(this), 0, sizeof(PerThreadAtomCache));
+
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   mOwningThread = thread.forget().downcast<nsThread>().take();
   MOZ_RELEASE_ASSERT(mOwningThread);
@@ -69,6 +74,8 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
   if (!mJSContext) {
     return;
   }
+
+  JS_SetContextPrivate(mJSContext, nullptr);
 
   mRuntime->RemoveContext(this);
 
@@ -129,6 +136,9 @@ CycleCollectedJSContext::InitializeCommon()
   JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
+
+  // Cast to PerThreadAtomCache for dom::GetAtomCache(JSContext*).
+  JS_SetContextPrivate(mJSContext, static_cast<PerThreadAtomCache*>(this));
 }
 
 nsresult
@@ -173,6 +183,15 @@ CycleCollectedJSContext::InitializeNonPrimary(CycleCollectedJSContext* aPrimaryC
   nsCycleCollector_registerNonPrimaryContext(this);
 
   return NS_OK;
+}
+
+/* static */ CycleCollectedJSContext*
+CycleCollectedJSContext::GetFor(JSContext* aCx)
+{
+  // Cast from void* matching JS_SetContextPrivate.
+  auto atomCache = static_cast<PerThreadAtomCache*>(JS_GetContextPrivate(aCx));
+  // Down cast.
+  return static_cast<CycleCollectedJSContext*>(atomCache);
 }
 
 size_t

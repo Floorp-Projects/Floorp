@@ -8,15 +8,18 @@
 #
 # Remember, errors in this file will cause spurious passes, so keep this as
 # simple as possible!
+# flake8: noqa: F821
 
 import os
 import sys
 import traceback
 
+
 def execfile(filename, globs, locs):
     with open(filename) as f:
         code = compile(f.read(), filename, 'exec')
         exec(code, globs, locs)
+
 
 try:
     # testlibdir is set on the GDB command line, via:

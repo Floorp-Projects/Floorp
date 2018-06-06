@@ -1,4 +1,5 @@
 # Printing JS::Symbols.
+# flake8: noqa: F821
 
 assert_subprinter_registered('SpiderMonkey', 'ptr-to-JS::Symbol')
 

@@ -30,6 +30,7 @@ KID = 4
 ALG = 1
 COSE_Sign = 98
 
+
 def coseAlgorithmToPykeyHash(algorithm):
     """Helper function that takes one of (ES256, ES384, ES512)
     and returns the corresponding pykey.HASH_* identifier."""
@@ -47,6 +48,8 @@ def coseAlgorithmToPykeyHash(algorithm):
 #     unprotected : {},
 #     signature : bstr
 # ]
+
+
 def coseSignature(payload, algorithm, signingKey, signingCertificate,
                   bodyProtected):
     """Returns a COSE_Signature structure.
@@ -78,6 +81,8 @@ def coseSignature(payload, algorithm, signingKey, signingCertificate,
 #     payload : nil,
 #     signatures : [+ COSE_Signature]
 # ]
+
+
 def coseSig(payload, intermediates, signatures):
     """Returns the entire (tagged) COSE_Sign structure.
     payload is a string representing the data to be signed
@@ -96,6 +101,7 @@ def coseSig(payload, intermediates, signatures):
     tagged = CBORTag(COSE_Sign, [protectedEncoded, {}, None, coseSignatures])
     return dumps(tagged)
 
+
 def walkDirectory(directory):
     """Given a relative path to a directory, enumerates the
     files in the tree rooted at that location. Returns a list
@@ -110,6 +116,7 @@ def walkDirectory(directory):
             paths.append((fullPath, internalPath))
     return paths
 
+
 def addManifestEntry(filename, hashes, contents, entries):
     """Helper function to fill out a manifest entry.
     Takes the filename, a list of (hash function, hash function name)
@@ -120,6 +127,7 @@ def addManifestEntry(filename, hashes, contents, entries):
         base64hash = b64encode(hashFunc(contents).digest())
         entry += '%s-Digest: %s\n' % (name, base64hash)
     entries.append(entry)
+
 
 def getCert(subject, keyName, issuerName, ee, issuerKey=""):
     """Helper function to create an X509 cert from a specification.
@@ -141,6 +149,7 @@ def getCert(subject, keyName, issuerName, ee, issuerKey=""):
     certSpecificationStream.seek(0)
     return pycert.Certificate(certSpecificationStream)
 
+
 def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
     """Given a COSE algorithm ('ES256', 'ES384', 'ES512') and an issuer
     name, returns a (algorithm id, pykey.ECCKey, encoded certificate)
@@ -153,14 +162,16 @@ def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
         keyName = 'secp384r1'
         algId = ES384
     elif coseAlgorithm == 'ES512':
-        keyName = 'secp521r1' # COSE uses the hash algorithm; this is the curve
+        keyName = 'secp521r1'  # COSE uses the hash algorithm; this is the curve
         algId = ES512
     else:
         raise UnknownCOSEAlgorithmError(coseAlgorithm)
     key = pykey.ECCKey(keyName)
     # The subject must differ to avoid errors when importing into NSS later.
-    ee = getCert('xpcshell signed app test signer ' + keyName, keyName, issuerName, True, 'default')
+    ee = getCert('xpcshell signed app test signer ' + keyName,
+                 keyName, issuerName, True, 'default')
     return (algId, key, ee.toDER())
+
 
 def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
             signatureHashes, pkcs7Hashes, coseAlgorithms, emptySignerInfos):
@@ -198,8 +209,8 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
                 intermediate = intermediate.toDER()
                 intermediates.append(intermediate)
             signatures = map(lambda coseAlgorithm:
-                coseAlgorithmToSignatureParams(coseAlgorithm, coseIssuerName),
-                coseAlgorithms)
+                             coseAlgorithmToSignatureParams(coseAlgorithm, coseIssuerName),
+                             coseAlgorithms)
             coseSignatureBytes = coseSig(coseManifest, intermediates, signatures)
             outZip.writestr('META-INF/cose.sig', coseSignatureBytes)
             addManifestEntry('META-INF/cose.sig', manifestHashes,
@@ -229,6 +240,7 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
             outZip.writestr('META-INF/A.RSA', p7)
             outZip.writestr('META-INF/A.SF', sfContents)
             outZip.writestr('META-INF/MANIFEST.MF', mfContents)
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -263,6 +275,7 @@ def hashNameToFunctionAndIdentifier(name):
     if name == 'sha256':
         return (sha256, 'SHA256')
     raise UnknownHashAlgorithmError(name)
+
 
 def main(outputFile, appPath, *args):
     """Main entrypoint. Given an already-opened file-like

@@ -189,6 +189,7 @@ EXTRA_JS_MODULES += [
     'ClientID.jsm',
     'Color.jsm',
     'Console.jsm',
+    'CreditCard.jsm',
     'css-selector.js',
     'DateTimePickerHelper.jsm',
     'DeferredTask.jsm',
