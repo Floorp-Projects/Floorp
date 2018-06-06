@@ -110,7 +110,7 @@ WindowDestroyedEvent::Run()
 
         AutoSafeJSContext cx;
         JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
-        if (obj && !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
+        if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
           JSCompartment* cpt = js::GetObjectCompartment(obj);
           nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(cpt));
 

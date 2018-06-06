@@ -1897,7 +1897,7 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 {
     if (hook == TypedObject::construct) {
         Rooted<TypeDescr*> descr(cx, &args.callee().as<TypeDescr>());
-        templateObject.set(TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap));
+        templateObject.set(TypedObject::createZeroed(cx, descr, gc::TenuredHeap));
         return !!templateObject;
     }
 

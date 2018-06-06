@@ -615,11 +615,11 @@ JSObject*
 FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
                                    JS::HandleValue exceptionValue);
 
-// Return a name for the compartment.
+// Return a name for the realm.
 // This function makes reasonable efforts to make this name both mostly human-readable
 // and unique. However, there are no guarantees of either property.
 extern void
-GetCurrentCompartmentName(JSContext*, nsCString& name);
+GetCurrentRealmName(JSContext*, nsCString& name);
 
 void AddGCCallback(xpcGCCallback cb);
 void RemoveGCCallback(xpcGCCallback cb);

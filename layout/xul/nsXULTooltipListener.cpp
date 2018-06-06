@@ -31,6 +31,7 @@
 #include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -351,7 +352,7 @@ nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
     int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
     int32_t row;
-    nsCOMPtr<nsITreeColumn> col;
+    RefPtr<nsTreeColumn> col;
     nsAutoString obj;
 
     // subtract off the documentElement's boxObject
@@ -368,10 +369,10 @@ nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
     mNeedTitletip = false;
     int16_t colType = -1;
     if (col) {
-      col->GetType(&colType);
+      colType = col->Type();
     }
     if (row >= 0 && obj.EqualsLiteral("text") &&
-        colType != nsITreeColumn::TYPE_PASSWORD) {
+        colType != TreeColumnBinding::TYPE_PASSWORD) {
       obx->IsCellCropped(row, col, &mNeedTitletip);
     }
 
@@ -456,7 +457,7 @@ nsXULTooltipListener::ShowTooltip()
 #ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
-                  int32_t aRow, nsITreeColumn* aCol, int32_t* aX, int32_t* aY)
+                  int32_t aRow, nsTreeColumn* aCol, int32_t* aX, int32_t* aY)
 {
   int32_t junk;
   aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
@@ -472,7 +473,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 
 static void
 SetTitletipLabel(nsITreeBoxObject* aTreeBox, Element* aTooltip,
-                 int32_t aRow, nsITreeColumn* aCol)
+                 int32_t aRow, nsTreeColumn* aCol)
 {
   nsCOMPtr<nsITreeView> view;
   aTreeBox->GetView(getter_AddRefs(view));
