@@ -8369,13 +8369,10 @@ PresShell::GetCurrentItemAndPositionForElement(Element* aFocusedElement,
           if (cols) {
             nsTreeColumn* col = cols->GetFirstColumn();
             if (col) {
-              RefPtr<Element> colElement;
-              col->GetElement(getter_AddRefs(colElement));
-              if (colElement) {
-                nsIFrame* frame = colElement->GetPrimaryFrame();
-                if (frame) {
-                  extraTreeY += frame->GetSize().height;
-                }
+              RefPtr<Element> colElement = col->Element();
+              nsIFrame* frame = colElement->GetPrimaryFrame();
+              if (frame) {
+                extraTreeY += frame->GetSize().height;
               }
             }
           }

@@ -711,7 +711,10 @@ struct ZoneStats
     macro(Other,   MallocHeap,  baselineStubsOptimized) \
     macro(Other,   MallocHeap,  cachedCFG) \
     macro(Other,   MallocHeap,  uniqueIdMap) \
-    macro(Other,   MallocHeap,  shapeTables)
+    macro(Other,   MallocHeap,  shapeTables) \
+    macro(Other,   MallocHeap,  compartmentObjects) \
+    macro(Other,   MallocHeap,  crossCompartmentWrappersTables) \
+    macro(Other,   MallocHeap,  compartmentsPrivateData)
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -827,12 +830,10 @@ struct RealmStats
     macro(Other,   MallocHeap, innerViewsTable) \
     macro(Other,   MallocHeap, lazyArrayBuffersTable) \
     macro(Other,   MallocHeap, objectMetadataTable) \
-    macro(Other,   MallocHeap, crossCompartmentWrappersTable) \
     macro(Other,   MallocHeap, savedStacksSet) \
     macro(Other,   MallocHeap, varNamesSet) \
     macro(Other,   MallocHeap, nonSyntacticLexicalScopesTable) \
     macro(Other,   MallocHeap, jitRealm) \
-    macro(Other,   MallocHeap, privateData) \
     macro(Other,   MallocHeap, scriptCountsMap)
 
     RealmStats()

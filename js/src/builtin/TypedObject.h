@@ -582,7 +582,7 @@ class TypedObject : public ShapedObject
     // Creates a new typed object whose memory is freshly allocated and
     // initialized with zeroes (or, in the case of references, an appropriate
     // default value).
-    static TypedObject* createZeroed(JSContext* cx, HandleTypeDescr typeObj, int32_t length,
+    static TypedObject* createZeroed(JSContext* cx, HandleTypeDescr typeObj,
                                      gc::InitialHeap heap = gc::DefaultHeap);
 
     // User-accessible constructor (`new TypeDescriptor(...)`). Note that the
@@ -643,7 +643,6 @@ class OutlineTypedObject : public TypedObject
     static OutlineTypedObject* createUnattachedWithClass(JSContext* cx,
                                                          const Class* clasp,
                                                          HandleTypeDescr type,
-                                                         int32_t length,
                                                          gc::InitialHeap heap = gc::DefaultHeap);
 
     // Creates an unattached typed object or handle (depending on the
@@ -653,9 +652,8 @@ class OutlineTypedObject : public TypedObject
     //
     // Arguments:
     // - type: type object for resulting object
-    // - length: 0 unless this is an array, otherwise the length
     static OutlineTypedObject* createUnattached(JSContext* cx, HandleTypeDescr type,
-                                                int32_t length, gc::InitialHeap heap = gc::DefaultHeap);
+                                                gc::InitialHeap heap = gc::DefaultHeap);
 
     // Creates a typedObj that aliases the memory pointed at by `owner`
     // at the given offset. The typedObj will be a handle iff type is a
@@ -702,15 +700,23 @@ class InlineTypedObject : public TypedObject
     // Start of the inline data, which immediately follows the shape and type.
     uint8_t data_[1];
 
+    static const size_t MaximumSize = JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
+
   protected:
     uint8_t* inlineTypedMem() const {
         return (uint8_t*) &data_;
     }
 
   public:
-    static const size_t MaximumSize = JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
-
     static inline gc::AllocKind allocKindForTypeDescriptor(TypeDescr* descr);
+
+    static bool canAccommodateSize(size_t size) {
+        return size <= MaximumSize;
+    }
+
+    static bool canAccommodateType(TypeDescr* type) {
+        return type->size() <= MaximumSize;
+    }
 
     uint8_t* inlineTypedMem(const JS::AutoRequireNoGC&) const {
         return inlineTypedMem();

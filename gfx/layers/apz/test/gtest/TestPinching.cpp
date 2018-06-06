@@ -270,6 +270,58 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
   DoPinchWithPreventDefaultTest();
 }
 
+TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomDisabled) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  MakeApzcUnzoomable();
+
+  // Perform a two finger pan
+  int touchInputId = 0;
+  uint64_t blockId = 0;
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
+      1, touchInputId, nullptr, nullptr, &blockId);
+
+  // Expect to be in a flinging state
+  apzc->AssertStateIsFling();
+}
+
+TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomEnabled) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  MakeApzcZoomable();
+
+  // Perform a two finger pan
+  int touchInputId = 0;
+  uint64_t blockId = 0;
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
+      1, touchInputId, nullptr, nullptr, &blockId);
+
+  // Expect to NOT be in flinging state
+  apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCPinchGestureDetectorTester, Panning_TwoThenOneFingerFling_ZoomEnabled) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  MakeApzcZoomable();
+
+  // Perform a two finger pan lifting only the first finger
+  int touchInputId = 0;
+  uint64_t blockId = 0;
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
+      1, touchInputId, nullptr, nullptr, &blockId, PinchOptions::LiftFinger2);
+
+  // Lift second finger after a pause
+  mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));
+  TouchUp(apzc, ScreenIntPoint(100, 100), mcc->Time());
+
+  // Expect to NOT be in flinging state
+  apzc->AssertStateIsReset();
+}
+
 TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
   // set up APZ
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());

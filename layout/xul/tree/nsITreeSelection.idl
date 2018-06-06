@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface nsITreeBoxObject;
-interface nsITreeColumn;
+
+webidl TreeColumn;
 
 #include "nsISupports.idl"
 
@@ -109,7 +110,7 @@ interface nsITreeSelection : nsISupports
   /**
    * The current column.
    */
-  attribute nsITreeColumn currentColumn;
+  attribute TreeColumn currentColumn;
 
   /**
    * The selection "pivot".  This is the first item the user selected as

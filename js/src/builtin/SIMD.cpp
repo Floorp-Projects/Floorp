@@ -506,7 +506,7 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
-    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
+    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr));
     if (!result)
         return false;
 
@@ -702,7 +702,7 @@ js::CreateSimd(JSContext* cx, const typename V::Elem* data)
     if (!typeDescr)
         return nullptr;
 
-    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
+    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr));
     if (!result)
         return nullptr;
 
@@ -1492,7 +1492,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
     if (!typeDescr)
         return false;
 
-    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
+    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr));
     if (!result)
         return false;
 

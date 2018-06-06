@@ -43,6 +43,25 @@ using ::testing::MockFunction;
 using ::testing::InSequence;
 typedef mozilla::layers::GeckoContentController::TapType TapType;
 
+// Some helper functions for constructing input event objects suitable to be
+// passed either to an APZC (which expects an transformed point), or to an APZTM
+// (which expects an untransformed point). We handle both cases by setting both
+// the transformed and untransformed fields to the same value.
+SingleTouchData
+CreateSingleTouchData(int32_t aIdentifier, const ScreenIntPoint& aPoint)
+{
+  SingleTouchData touch(aIdentifier, aPoint, ScreenSize(0, 0), 0, 0);
+  touch.mLocalScreenPoint = ParentLayerPoint(aPoint.x, aPoint.y);
+  return touch;
+}
+
+// Convenience wrapper for CreateSingleTouchData() that takes loose coordinates.
+SingleTouchData
+CreateSingleTouchData(int32_t aIdentifier, ScreenIntCoord aX, ScreenIntCoord aY)
+{
+  return CreateSingleTouchData(aIdentifier, ScreenIntPoint(aX, aY));
+}
+
 template<class T>
 class ScopedGfxPref {
 public:
@@ -332,6 +351,19 @@ public:
     ExactCoordinates = 0x2
   };
 
+  enum class PinchOptions {
+    None = 0,
+    LiftFinger1 = 0x1,
+    LiftFinger2 = 0x2,
+    /*
+     * The bitwise OR result of (LiftFinger1 | LiftFinger2).
+     * Defined explicitly here because it is used as the default
+     * argument for PinchWithTouchInput which is defined BEFORE the
+     * definition of operator| for this class.
+     */
+    LiftBothFingers = 0x3
+  };
+
   template<class InputReceiver>
   void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
            TimeDuration aTapLength,
@@ -390,11 +422,38 @@ public:
                                const ScreenIntPoint& aPoint,
                                uint64_t (*aOutInputBlockIds)[2] = nullptr);
 
+  template<class InputReceiver>
+  void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                           const ScreenIntPoint& aFocus, const ScreenIntPoint& aSecondFocus,
+                           float aScale,
+                           int& inputId,
+                           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+                           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+                           uint64_t* aOutInputBlockId = nullptr,
+                           PinchOptions aOptions = PinchOptions::LiftBothFingers);
+
+  // Pinch with one focus point. Zooms in place with no panning
+  template<class InputReceiver>
+  void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                           const ScreenIntPoint& aFocus, float aScale,
+                           int& inputId,
+                           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+                           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+                           uint64_t* aOutInputBlockId = nullptr,
+                           PinchOptions aOptions = PinchOptions::LiftBothFingers);
+
+  template<class InputReceiver>
+  void PinchWithTouchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                                         const ScreenIntPoint& aFocus, float aScale,
+                                         int& inputId, bool aShouldTriggerPinch,
+                                         nsTArray<uint32_t>* aAllowedTouchBehaviors);
+
 protected:
   RefPtr<MockContentControllerDelayed> mcc;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PinchOptions)
 
 template<class InputReceiver>
 void
@@ -632,6 +691,119 @@ APZCTesterBase::DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[2]);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[3]);
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                                    const ScreenIntPoint& aFocus, float aScale,
+                                    int& inputId,
+                                    nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                                    nsEventStatus (*aOutEventStatuses)[4],
+                                    uint64_t* aOutInputBlockId,
+                                    PinchOptions aOptions)
+{
+  //Perform a pinch gesture with the same start & end focus point
+  PinchWithTouchInput(aTarget, aFocus, aFocus, aScale, inputId,
+                      aAllowedTouchBehaviors, aOutEventStatuses,
+                      aOutInputBlockId, aOptions);
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                                    const ScreenIntPoint& aFocus, const ScreenIntPoint& aSecondFocus,
+                                    float aScale,
+                                    int& inputId,
+                                    nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                                    nsEventStatus (*aOutEventStatuses)[4],
+                                    uint64_t* aOutInputBlockId,
+                                    PinchOptions aOptions)
+{
+  // Having pinch coordinates in float type may cause problems with high-precision scale values
+  // since SingleTouchData accepts integer value. But for trivial tests it should be ok.
+  float pinchLength = 100.0;
+  float pinchLengthScaled = pinchLength * aScale;
+
+  // Even if the caller doesn't care about the block id, we need it to set the
+  // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
+  uint64_t blockId;
+  if (!aOutInputBlockId) {
+    aOutInputBlockId = &blockId;
+  }
+
+  const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(50);
+
+  MultiTouchInput mtiStart = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus));
+  nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
+  }
+
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+  if (aAllowedTouchBehaviors) {
+    EXPECT_EQ(2UL, aAllowedTouchBehaviors->Length());
+    aTarget->SetAllowedTouchBehavior(*aOutInputBlockId, *aAllowedTouchBehaviors);
+  } else if (gfxPrefs::TouchActionEnabled()) {
+    SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId, 2);
+  }
+
+  MultiTouchInput mtiMove1 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLength, aFocus.y));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLength, aFocus.y));
+  status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+  MultiTouchInput mtiMove2 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, aSecondFocus.x - pinchLengthScaled, aSecondFocus.y));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aSecondFocus.x + pinchLengthScaled, aSecondFocus.y));
+  status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[2] = status;
+  }
+
+  if (aOptions & (PinchOptions::LiftFinger1 | PinchOptions::LiftFinger2)) {
+    mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+    MultiTouchInput mtiEnd = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
+    if (aOptions & PinchOptions::LiftFinger1) {
+      mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, aSecondFocus.x - pinchLengthScaled, aSecondFocus.y));
+    }
+    if (aOptions & PinchOptions::LiftFinger2) {
+      mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aSecondFocus.x + pinchLengthScaled, aSecondFocus.y));
+    }
+    status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
+    if (aOutEventStatuses) {
+      (*aOutEventStatuses)[3] = status;
+    }
+  }
+
+  inputId += 2;
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::PinchWithTouchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                                                  const ScreenIntPoint& aFocus, float aScale,
+                                                  int& inputId, bool aShouldTriggerPinch,
+                                                  nsTArray<uint32_t>* aAllowedTouchBehaviors)
+{
+  nsEventStatus statuses[4];  // down, move, move, up
+  PinchWithTouchInput(aTarget, aFocus, aScale, inputId, aAllowedTouchBehaviors, &statuses);
+
+  nsEventStatus expectedMoveStatus = aShouldTriggerPinch
+      ? nsEventStatus_eConsumeDoDefault
+      : nsEventStatus_eIgnore;
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(expectedMoveStatus, statuses[1]);
+  EXPECT_EQ(expectedMoveStatus, statuses[2]);
 }
 
 AsyncPanZoomController*

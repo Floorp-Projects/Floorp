@@ -191,8 +191,8 @@ extern JS_FRIEND_API(JSPrincipals*)
 JS_GetScriptPrincipals(JSScript* script);
 
 namespace js {
-extern JS_FRIEND_API(JSCompartment*)
-GetScriptCompartment(JSScript* script);
+extern JS_FRIEND_API(JS::Realm*)
+GetScriptRealm(JSScript* script);
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)
@@ -458,7 +458,7 @@ extern JS_FRIEND_API(void)
 RunJobs(JSContext* cx);
 
 extern JS_FRIEND_API(JS::Zone*)
-GetCompartmentZone(JSCompartment* comp);
+GetRealmZone(JS::Realm* realm);
 
 typedef bool
 (* PreserveWrapperCallback)(JSContext* cx, JSObject* obj);
@@ -479,6 +479,9 @@ DumpHeap(JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour);
 JS_FRIEND_API(bool) obj_defineGetter(JSContext* cx, unsigned argc, JS::Value* vp);
 JS_FRIEND_API(bool) obj_defineSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 #endif
+
+extern JS_FRIEND_API(bool)
+IsSystemRealm(JS::Realm* realm);
 
 extern JS_FRIEND_API(bool)
 IsSystemCompartment(JSCompartment* comp);

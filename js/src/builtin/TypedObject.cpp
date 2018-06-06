@@ -1398,13 +1398,12 @@ TypedObject::GetByteOffset(JSContext* cx, unsigned argc, Value* vp)
 /*static*/ OutlineTypedObject*
 OutlineTypedObject::createUnattached(JSContext* cx,
                                      HandleTypeDescr descr,
-                                     int32_t length,
                                      gc::InitialHeap heap)
 {
     if (descr->opaque())
-        return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length, heap);
+        return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, heap);
     else
-        return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_, descr, length, heap);
+        return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_, descr, heap);
 }
 
 void
@@ -1430,7 +1429,6 @@ OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data)
 OutlineTypedObject::createUnattachedWithClass(JSContext* cx,
                                               const Class* clasp,
                                               HandleTypeDescr descr,
-                                              int32_t length,
                                               gc::InitialHeap heap)
 {
     MOZ_ASSERT(clasp == &OutlineTransparentTypedObject::class_ ||
@@ -1503,24 +1501,6 @@ OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, uint32_t offset
     }
 }
 
-// Returns a suitable JS_TYPEDOBJ_SLOT_LENGTH value for an instance of
-// the type `type`.
-static uint32_t
-TypedObjLengthFromType(TypeDescr& descr)
-{
-    switch (descr.kind()) {
-      case type::Scalar:
-      case type::Reference:
-      case type::Struct:
-      case type::Simd:
-        return 0;
-
-      case type::Array:
-        return descr.as<ArrayTypeDescr>().length();
-    }
-    MOZ_CRASH("Invalid kind");
-}
-
 /*static*/ OutlineTypedObject*
 OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
                                   HandleTypedObject typedObj, uint32_t offset)
@@ -1528,13 +1508,11 @@ OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
     MOZ_ASSERT(offset <= typedObj->size());
     MOZ_ASSERT(offset + type->size() <= typedObj->size());
 
-    int32_t length = TypedObjLengthFromType(*type);
-
     const js::Class* clasp = typedObj->opaque()
                              ? &OutlineOpaqueTypedObject::class_
                              : &OutlineTransparentTypedObject::class_;
     Rooted<OutlineTypedObject*> obj(cx);
-    obj = createUnattachedWithClass(cx, clasp, type, length);
+    obj = createUnattachedWithClass(cx, clasp, type);
     if (!obj)
         return nullptr;
 
@@ -1543,10 +1521,10 @@ OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
 }
 
 /*static*/ TypedObject*
-TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, int32_t length, gc::InitialHeap heap)
+TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, gc::InitialHeap heap)
 {
     // If possible, create an object with inline data.
-    if (descr->size() <= InlineTypedObject::MaximumSize) {
+    if (InlineTypedObject::canAccommodateType(descr)) {
         AutoSetNewObjectMetadata metadata(cx);
 
         InlineTypedObject* obj = InlineTypedObject::create(cx, descr, heap);
@@ -1558,7 +1536,7 @@ TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, int32_t length, 
     }
 
     // Create unattached wrapper object.
-    Rooted<OutlineTypedObject*> obj(cx, OutlineTypedObject::createUnattached(cx, descr, length, heap));
+    Rooted<OutlineTypedObject*> obj(cx, OutlineTypedObject::createUnattached(cx, descr, heap));
     if (!obj)
         return nullptr;
 
@@ -2258,23 +2236,6 @@ DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject,
                       InlineTypedObject::obj_trace,
                       InlineTypedObject::obj_moved);
 
-static int32_t
-LengthForType(TypeDescr& descr)
-{
-    switch (descr.kind()) {
-      case type::Scalar:
-      case type::Reference:
-      case type::Struct:
-      case type::Simd:
-        return 0;
-
-      case type::Array:
-        return descr.as<ArrayTypeDescr>().length();
-    }
-
-    MOZ_CRASH("Invalid kind");
-}
-
 /*static*/ bool
 TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
 {
@@ -2290,8 +2251,7 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
 
     // Zero argument constructor:
     if (args.length() == 0) {
-        int32_t length = LengthForType(*callee);
-        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
+        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee));
         if (!obj)
             return false;
         args.rval().setObject(*obj);
@@ -2301,8 +2261,7 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
     // Data constructor.
     if (args[0].isObject()) {
         // Create the typed object.
-        int32_t length = LengthForType(*callee);
-        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
+        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee));
         if (!obj)
             return false;
 
@@ -2355,9 +2314,8 @@ js::NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
 
     Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
-    int32_t length = TypedObjLengthFromType(*descr);
     Rooted<OutlineTypedObject*> obj(cx);
-    obj = OutlineTypedObject::createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length);
+    obj = OutlineTypedObject::createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -2935,7 +2893,7 @@ CreateTraceList(JSContext* cx, HandleTypeDescr descr)
     // for larger objects, both to limit the size of the trace lists and
     // because tracing outline typed objects is considerably more complicated
     // than inline ones.
-    if (descr->size() > InlineTypedObject::MaximumSize || descr->transparent())
+    if (!InlineTypedObject::canAccommodateType(descr) || descr->transparent())
         return true;
 
     TraceListVisitor visitor;

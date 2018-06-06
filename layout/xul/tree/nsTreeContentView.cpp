@@ -233,14 +233,13 @@ nsTreeContentView::GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetCellProperties(int32_t aRow, nsITreeColumn* aCol,
+nsTreeContentView::GetCellProperties(int32_t aRow, nsTreeColumn* aCol,
                                      nsAString& aProps)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  GetCellProperties(aRow, *col, aProps, rv);
+  GetCellProperties(aRow, *aCol, aProps, rv);
   return rv.StealNSResult();
 }
 
@@ -248,7 +247,7 @@ void
 nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
                                        nsAString& aProperties)
 {
-  RefPtr<Element> element = aColumn.GetElement(IgnoreErrors());
+  RefPtr<Element> element = aColumn.Element();
 
   if (element) {
     element->GetAttribute(NS_LITERAL_STRING("properties"), aProperties);
@@ -256,12 +255,11 @@ nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetColumnProperties(nsITreeColumn* aCol, nsAString& aProps)
+nsTreeContentView::GetColumnProperties(nsTreeColumn* aCol, nsAString& aProps)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
-  GetColumnProperties(*col, aProps);
+  GetColumnProperties(*aCol, aProps);
   return NS_OK;
 }
 
@@ -498,13 +496,12 @@ nsTreeContentView::GetImageSrc(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetImageSrc(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
+nsTreeContentView::GetImageSrc(int32_t aRow, nsTreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  GetImageSrc(aRow, *col, _retval, rv);
+  GetImageSrc(aRow, *aCol, _retval, rv);
   return rv.StealNSResult();
 }
 
@@ -529,13 +526,12 @@ nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetCellValue(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
+nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  GetCellValue(aRow, *col, _retval, rv);
+  GetCellValue(aRow, *aCol, _retval, rv);
   return rv.StealNSResult();
 }
 
@@ -569,13 +565,12 @@ nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetCellText(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
+nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  GetCellText(aRow, *col, _retval, rv);
+  GetCellText(aRow, *aCol, _retval, rv);
   return rv.StealNSResult();
 }
 
@@ -661,44 +656,40 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   if (!mRoot)
     return;
 
-  RefPtr<Element> column;
-  aColumn.GetElement(getter_AddRefs(column));
-  if (column) {
-    nsAutoString sort;
-    column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
-    if (!sort.IsEmpty()) {
-      nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
-      if (xs) {
-        nsAutoString sortdirection;
-        static Element::AttrValuesArray strings[] =
-          {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
-        switch (column->FindAttrValueIn(kNameSpaceID_None,
-                                        nsGkAtoms::sortDirection,
-                                        strings, eCaseMatters)) {
-          case 0: sortdirection.AssignLiteral("descending"); break;
-          case 1: sortdirection.AssignLiteral("natural"); break;
-          default: sortdirection.AssignLiteral("ascending"); break;
-        }
-
-        nsAutoString hints;
-        column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
-        sortdirection.Append(' ');
-        sortdirection += hints;
-
-        xs->Sort(mRoot, sort, sortdirection);
+  RefPtr<Element> column = aColumn.Element();
+  nsAutoString sort;
+  column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
+  if (!sort.IsEmpty()) {
+    nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
+    if (xs) {
+      nsAutoString sortdirection;
+      static Element::AttrValuesArray strings[] =
+        {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
+      switch (column->FindAttrValueIn(kNameSpaceID_None,
+                                      nsGkAtoms::sortDirection,
+                                      strings, eCaseMatters)) {
+        case 0: sortdirection.AssignLiteral("descending"); break;
+        case 1: sortdirection.AssignLiteral("natural"); break;
+        default: sortdirection.AssignLiteral("ascending"); break;
       }
+
+      nsAutoString hints;
+      column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
+      sortdirection.Append(' ');
+      sortdirection += hints;
+
+      xs->Sort(mRoot, sort, sortdirection);
     }
   }
 }
 
 NS_IMETHODIMP
-nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
+nsTreeContentView::CycleHeader(nsTreeColumn* aCol)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  CycleHeader(*col, rv);
+  CycleHeader(*aCol, rv);
   return rv.StealNSResult();
 }
 
@@ -709,7 +700,7 @@ nsTreeContentView::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsTreeContentView::CycleCell(int32_t aRow, nsITreeColumn* aCol)
+nsTreeContentView::CycleCell(int32_t aRow, nsTreeColumn* aCol)
 {
   return NS_OK;
 }
@@ -739,13 +730,12 @@ nsTreeContentView::IsEditable(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::IsEditable(int32_t aRow, nsITreeColumn* aCol, bool* _retval)
+nsTreeContentView::IsEditable(int32_t aRow, nsTreeColumn* aCol, bool* _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  *_retval = IsEditable(aRow, *col, rv);
+  *_retval = IsEditable(aRow, *aCol, rv);
   return rv.StealNSResult();
 }
 
@@ -774,13 +764,12 @@ nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::IsSelectable(int32_t aRow, nsITreeColumn* aCol, bool* _retval)
+nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn* aCol, bool* _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  *_retval = IsSelectable(aRow, *col, rv);
+  *_retval = IsSelectable(aRow, *aCol, rv);
   return rv.StealNSResult();
 }
 
@@ -805,13 +794,12 @@ nsTreeContentView::SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::SetCellValue(int32_t aRow, nsITreeColumn* aCol, const nsAString& aValue)
+nsTreeContentView::SetCellValue(int32_t aRow, nsTreeColumn* aCol, const nsAString& aValue)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  SetCellValue(aRow, *col, aValue, rv);
+  SetCellValue(aRow, *aCol, aValue, rv);
   return rv.StealNSResult();
 }
 
@@ -836,13 +824,12 @@ nsTreeContentView::SetCellText(int32_t aRow, nsTreeColumn& aColumn,
 }
 
 NS_IMETHODIMP
-nsTreeContentView::SetCellText(int32_t aRow, nsITreeColumn* aCol, const nsAString& aValue)
+nsTreeContentView::SetCellText(int32_t aRow, nsTreeColumn* aCol, const nsAString& aValue)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_ARG(aCol);
 
   ErrorResult rv;
-  SetCellText(aRow, *col, aValue, rv);
+  SetCellText(aRow, *aCol, aValue, rv);
   return rv.StealNSResult();
 }
 
@@ -859,7 +846,7 @@ nsTreeContentView::PerformActionOnRow(const char16_t* aAction, int32_t aRow)
 }
 
 NS_IMETHODIMP
-nsTreeContentView::PerformActionOnCell(const char16_t* aAction, int32_t aRow, nsITreeColumn* aCol)
+nsTreeContentView::PerformActionOnCell(const char16_t* aAction, int32_t aRow, nsTreeColumn* aCol)
 {
   return NS_OK;
 }
