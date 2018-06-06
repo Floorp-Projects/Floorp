@@ -8,6 +8,7 @@ ac_add_options --disable-install-strip
 ac_add_options --disable-elf-hack
 ac_add_options --disable-sandbox
 ac_add_options --disable-profiling
+ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
 
 export CFLAGS="--coverage"
