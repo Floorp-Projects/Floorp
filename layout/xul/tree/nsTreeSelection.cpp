@@ -656,13 +656,13 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex)
   return asyncDispatcher->PostDOMEvent();
 }
 
-NS_IMETHODIMP nsTreeSelection::GetCurrentColumn(nsITreeColumn** aCurrentColumn)
+NS_IMETHODIMP nsTreeSelection::GetCurrentColumn(nsTreeColumn** aCurrentColumn)
 {
   NS_IF_ADDREF(*aCurrentColumn = mCurrentColumn);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::SetCurrentColumn(nsITreeColumn* aCurrentColumn)
+NS_IMETHODIMP nsTreeSelection::SetCurrentColumn(nsTreeColumn* aCurrentColumn)
 {
   if (!mTree) {
     return NS_ERROR_UNEXPECTED;

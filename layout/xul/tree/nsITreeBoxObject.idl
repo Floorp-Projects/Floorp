@@ -7,10 +7,10 @@
 
 interface nsITreeView;
 interface nsITreeSelection;
-interface nsITreeColumn;
 interface nsIScriptableRegion;
 
 webidl Element;
+webidl TreeColumn;
 webidl TreeColumns;
 
 /**
@@ -84,7 +84,7 @@ interface nsITreeBoxObject : nsISupports
   /**
    * Ensures that a given cell in the tree is visible.
    */
-  void ensureCellIsVisible(in long row, in nsITreeColumn col);
+  void ensureCellIsVisible(in long row, in TreeColumn col);
 
   /**
    * Scrolls such that the row at index is at the top of the visible view.
@@ -110,13 +110,13 @@ interface nsITreeBoxObject : nsISupports
    * Scrolls such that a given cell is visible (if possible) 
    * at the top left corner of the visible view. 
    */
-  void scrollToCell(in long row, in nsITreeColumn col);
+  void scrollToCell(in long row, in TreeColumn col);
 
   /**
    * Scrolls horizontally so that the specified column is 
    * at the left of the view (if possible).
    */
-  void scrollToColumn(in nsITreeColumn col);
+  void scrollToColumn(in TreeColumn col);
 
   /**
    * Scroll to a specific horizontal pixel position.
@@ -127,12 +127,12 @@ interface nsITreeBoxObject : nsISupports
    * Invalidation methods for fine-grained painting control.
    */
   void invalidate();
-  void invalidateColumn(in nsITreeColumn col);
+  void invalidateColumn(in TreeColumn col);
   void invalidateRow(in long index);
-  void invalidateCell(in long row, in nsITreeColumn col);
+  void invalidateCell(in long row, in TreeColumn col);
   void invalidateRange(in long startIndex, in long endIndex);
   void invalidateColumnRange(in long startIndex, in long endIndex,
-                             in nsITreeColumn col);
+                             in TreeColumn col);
 
   /**
    * A hit test that can tell you what row the mouse is over.
@@ -152,18 +152,18 @@ interface nsITreeBoxObject : nsISupports
    * The coordinate system is the client coordinate system for the
    * document this boxObject lives in, and the units are CSS pixels.
    */
-  void getCellAt(in long x, in long y, out long row, out nsITreeColumn col, out AString childElt);
+  void getCellAt(in long x, in long y, out long row, out TreeColumn col, out AString childElt);
 
   /** 
    * Find the coordinates of an element within a specific cell. 
    */
-  void getCoordsForCellItem(in long row, in nsITreeColumn col, in AString element,
+  void getCoordsForCellItem(in long row, in TreeColumn col, in AString element,
                             out long x, out long y, out long width, out long height);
 
   /** 
    * Determine if the text of a cell is being cropped or not.
    */
-  boolean isCellCropped(in long row, in nsITreeColumn col);
+  boolean isCellCropped(in long row, in TreeColumn col);
 
   /**
    * The view is responsible for calling these notification methods when
@@ -197,5 +197,5 @@ interface nsITreeBoxObject : nsISupports
    * @note This only affects images supplied by the view, not the ones supplied
    *       through the styling context, like twisties or checkboxes.
    */
-  void removeImageCacheEntry(in long row, in nsITreeColumn col);
+  void removeImageCacheEntry(in long row, in TreeColumn col);
 };

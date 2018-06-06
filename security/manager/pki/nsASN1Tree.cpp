@@ -192,13 +192,13 @@ nsNSSASN1Tree::GetRowProperties(int32_t, nsAString&)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetCellProperties(int32_t, nsITreeColumn*, nsAString&)
+nsNSSASN1Tree::GetCellProperties(int32_t, nsTreeColumn*, nsAString&)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetColumnProperties(nsITreeColumn*, nsAString&)
+nsNSSASN1Tree::GetColumnProperties(nsTreeColumn*, nsAString&)
 {
   return NS_OK;
 }
@@ -262,19 +262,19 @@ nsNSSASN1Tree::GetLevel(int32_t index, int32_t* _retval)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetImageSrc(int32_t, nsITreeColumn*, nsAString&)
+nsNSSASN1Tree::GetImageSrc(int32_t, nsTreeColumn*, nsAString&)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetCellValue(int32_t, nsITreeColumn*, nsAString&)
+nsNSSASN1Tree::GetCellValue(int32_t, nsTreeColumn*, nsAString&)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetCellText(int32_t row, nsITreeColumn*, nsAString& _retval)
+nsNSSASN1Tree::GetCellText(int32_t row, nsTreeColumn*, nsAString& _retval)
 {
   NS_ENSURE_ARG_MIN(row, 0);
 
@@ -334,7 +334,7 @@ nsNSSASN1Tree::ToggleOpenState(int32_t index)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::CycleHeader(nsITreeColumn*)
+nsNSSASN1Tree::CycleHeader(nsTreeColumn*)
 {
   return NS_OK;
 }
@@ -346,21 +346,13 @@ nsNSSASN1Tree::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::CycleCell(int32_t, nsITreeColumn*)
+nsNSSASN1Tree::CycleCell(int32_t, nsTreeColumn*)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::IsEditable(int32_t, nsITreeColumn*, bool* _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSASN1Tree::IsSelectable(int32_t, nsITreeColumn*, bool* _retval)
+nsNSSASN1Tree::IsEditable(int32_t, nsTreeColumn*, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
@@ -368,13 +360,21 @@ nsNSSASN1Tree::IsSelectable(int32_t, nsITreeColumn*, bool* _retval)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::SetCellValue(int32_t, nsITreeColumn*, const nsAString&)
+nsNSSASN1Tree::IsSelectable(int32_t, nsTreeColumn*, bool* _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSASN1Tree::SetCellValue(int32_t, nsTreeColumn*, const nsAString&)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::SetCellText(int32_t, nsITreeColumn*, const nsAString&)
+nsNSSASN1Tree::SetCellText(int32_t, nsTreeColumn*, const nsAString&)
 {
   return NS_OK;
 }
@@ -392,7 +392,7 @@ nsNSSASN1Tree::PerformActionOnRow(const char16_t*, int32_t)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::PerformActionOnCell(const char16_t*, int32_t, nsITreeColumn*)
+nsNSSASN1Tree::PerformActionOnCell(const char16_t*, int32_t, nsTreeColumn*)
 {
   return NS_OK;
 }

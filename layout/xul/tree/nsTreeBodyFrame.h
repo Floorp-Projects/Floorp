@@ -107,7 +107,7 @@ public:
                                  nsITreeColumn *aCol);
   nsresult GetRowAt(int32_t aX, int32_t aY, int32_t *aValue);
   nsresult GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
-                     nsITreeColumn **aCol, nsACString &aChildElt);
+                     nsTreeColumn **aCol, nsACString &aChildElt);
   nsresult GetCoordsForCellItem(int32_t aRow, nsITreeColumn *aCol,
                                 const nsACString &aElt,
                                 int32_t *aX, int32_t *aY,
@@ -117,7 +117,7 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
-  nsresult RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol);
+  nsresult RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol);
 
   void CancelImageRequests();
 
