@@ -27,15 +27,15 @@
 
 #include "hb-aat-layout-common-private.hh"
 
+/*
+ * ankr -- Anchor Point
+ * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ankr.html
+ */
 #define HB_AAT_TAG_ankr HB_TAG('a','n','k','r')
 
 
 namespace AAT {
 
-
-/*
- * ankr -- Anchor point
- */
 
 struct Anchor
 {
@@ -58,17 +58,19 @@ struct ankr
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) && version == 0 &&
-		  lookupTable.sanitize (c, this) &&
-		  anchors.sanitize (c, this));
+    return_trace (likely (c->check_struct (this) &&
+			  version == 0 &&
+			  lookupTable.sanitize (c, this) &&
+			  anchors.sanitize (c, this)));
   }
 
   protected:
-  HBUINT16			version; 	/* Version number (set to zero) */
-  HBUINT16			flags;		/* Flags (currently unused; set to zero) */
-  LOffsetTo<Lookup<HBUINT16> >	lookupTable;	/* Offset to the table's lookup table */
-  LOffsetTo<ArrayOf<Anchor, HBUINT32> >
-				anchors;	/* Offset to the glyph data table */
+  HBUINT16	version; 	/* Version number (set to zero) */
+  HBUINT16	flags;		/* Flags (currently unused; set to zero) */
+  LOffsetTo<Lookup<HBUINT16> >
+		lookupTable;	/* Offset to the table's lookup table */
+  LOffsetTo<LArrayOf<Anchor> >
+		anchors;	/* Offset to the glyph data table */
 
   public:
   DEFINE_SIZE_STATIC (12);

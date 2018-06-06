@@ -41,11 +41,7 @@
 #include "hb-ot-hmtx-table.hh"
 #include "hb-ot-maxp-table.hh"
 #include "hb-ot-os2-table.hh"
-
-
-#ifndef HB_NO_VISIBILITY
-const void * const OT::_hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)] = {};
-#endif
+#include "hb-ot-post-table.hh"
 
 
 struct hb_subset_profile_t {
@@ -86,14 +82,18 @@ _subset (hb_subset_plan_t *plan)
   OT::Sanitizer<TableType> sanitizer;
 
   hb_blob_t *source_blob = sanitizer.sanitize (plan->source->reference_table (TableType::tableTag));
-  const TableType *table = OT::Sanitizer<TableType>::lock_instance (source_blob);
+  const TableType *table = source_blob->as<TableType> ();
 
+  hb_tag_t tag = TableType::tableTag;
   hb_bool_t result = false;
-  if (table != &OT::Null(TableType))
+  if (table != &Null(TableType))
+  {
     result = table->subset(plan);
+  } else {
+    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG(tag));
+  }
 
   hb_blob_destroy (source_blob);
-  hb_tag_t tag = TableType::tableTag;
   DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG(tag), result ? "success" : "FAILED!");
   return result;
 }
@@ -118,7 +118,7 @@ struct hb_subset_face_data_t
     hb_blob_t *blob;
   };
 
-  hb_prealloced_array_t<table_entry_t, 32> tables;
+  hb_vector_t<table_entry_t, 32> tables;
 };
 
 static hb_subset_face_data_t *
@@ -127,6 +127,8 @@ _hb_subset_face_data_create (void)
   hb_subset_face_data_t *data = (hb_subset_face_data_t *) calloc (1, sizeof (hb_subset_face_data_t));
   if (unlikely (!data))
     return nullptr;
+
+  data->tables.init ();
 
   return data;
 }
@@ -139,7 +141,7 @@ _hb_subset_face_data_destroy (void *user_data)
   for (unsigned int i = 0; i < data->tables.len; i++)
     hb_blob_destroy (data->tables[i].blob);
 
-  data->tables.finish ();
+  data->tables.fini ();
 
   free (data);
 }
@@ -152,7 +154,7 @@ _hb_subset_face_data_reference_blob (hb_subset_face_data_t *data)
   unsigned int face_length = table_count * 16 + 12;
 
   for (unsigned int i = 0; i < table_count; i++)
-    face_length += _hb_ceil_to_4 (hb_blob_get_length (data->tables.array[i].blob));
+    face_length += _hb_ceil_to_4 (hb_blob_get_length (data->tables.arrayZ[i].blob));
 
   char *buf = (char *) malloc (face_length);
   if (unlikely (!buf))
@@ -214,13 +216,11 @@ hb_subset_face_create (void)
 hb_bool_t
 hb_subset_face_add_table (hb_face_t *face, hb_tag_t tag, hb_blob_t *blob)
 {
-  if (unlikely (face->destroy != _hb_subset_face_data_destroy))
+  if (unlikely (face->destroy != (hb_destroy_func_t) _hb_subset_face_data_destroy))
     return false;
 
   hb_subset_face_data_t *data = (hb_subset_face_data_t *) face->user_data;
   hb_subset_face_data_t::table_entry_t *entry = data->tables.push ();
-  if (unlikely (!entry))
-    return false;
 
   entry->tag = tag;
   entry->blob = hb_blob_reference (blob);
@@ -252,6 +252,12 @@ _subset_table (hb_subset_plan_t *plan,
     case HB_OT_TAG_hmtx:
       result = _subset<const OT::hmtx> (plan);
       break;
+    case HB_OT_TAG_vhea:
+      DEBUG_MSG(SUBSET, nullptr, "skip vhea handled by vmtx");
+      return true;
+    case HB_OT_TAG_vmtx:
+      result = _subset<const OT::vmtx> (plan);
+      break;
     case HB_OT_TAG_maxp:
       result = _subset<const OT::maxp> (plan);
       break;
@@ -264,10 +270,13 @@ _subset_table (hb_subset_plan_t *plan,
     case HB_OT_TAG_os2:
       result = _subset<const OT::os2> (plan);
       break;
+    case HB_OT_TAG_post:
+      result = _subset<const OT::post> (plan);
+      break;
     default:
       hb_blob_t *source_table = hb_face_reference_table(plan->source, tag);
       if (likely (source_table))
-        result = hb_subset_plan_add_table(plan, tag, source_table);
+        result = plan->add_table(tag, source_table);
       else
         result = false;
       hb_blob_destroy (source_table);
@@ -280,21 +289,41 @@ _subset_table (hb_subset_plan_t *plan,
 static bool
 _should_drop_table(hb_subset_plan_t *plan, hb_tag_t tag)
 {
-    switch (tag) {
-      case HB_TAG ('c', 'v', 'a', 'r'): /* hint table, fallthrough */
-      case HB_TAG ('c', 'v', 't', ' '): /* hint table, fallthrough */
-      case HB_TAG ('f', 'p', 'g', 'm'): /* hint table, fallthrough */
-      case HB_TAG ('p', 'r', 'e', 'p'): /* hint table, fallthrough */
-      case HB_TAG ('h', 'd', 'm', 'x'): /* hint table, fallthrough */
-      case HB_TAG ('V', 'D', 'M', 'X'): /* hint table, fallthrough */
-        return plan->drop_hints;
-      case HB_TAG ('G', 'D', 'E', 'F'): /* temporary */
-      case HB_TAG ('G', 'P', 'O', 'S'): /* temporary */
-      case HB_TAG ('G', 'S', 'U', 'B'): /* temporary */
-      case HB_TAG ('D', 'S', 'I', 'G'):
-        return true;
-      default:
-        return false;
+  switch (tag) {
+    case HB_TAG ('c', 'v', 'a', 'r'): /* hint table, fallthrough */
+    case HB_TAG ('c', 'v', 't', ' '): /* hint table, fallthrough */
+    case HB_TAG ('f', 'p', 'g', 'm'): /* hint table, fallthrough */
+    case HB_TAG ('p', 'r', 'e', 'p'): /* hint table, fallthrough */
+    case HB_TAG ('h', 'd', 'm', 'x'): /* hint table, fallthrough */
+    case HB_TAG ('V', 'D', 'M', 'X'): /* hint table, fallthrough */
+      return plan->drop_hints;
+    // Drop Layout Tables if requested.
+    case HB_TAG ('G', 'D', 'E', 'F'): /* temporary */
+    case HB_TAG ('G', 'P', 'O', 'S'): /* temporary */
+    case HB_TAG ('G', 'S', 'U', 'B'): /* temporary */
+      return plan->drop_ot_layout;
+    // Drop these tables below by default, list pulled
+    // from fontTools:
+    case HB_TAG ('B', 'A', 'S', 'E'):
+    case HB_TAG ('J', 'S', 'T', 'F'):
+    case HB_TAG ('D', 'S', 'I', 'G'):
+    case HB_TAG ('E', 'B', 'D', 'T'):
+    case HB_TAG ('E', 'B', 'L', 'C'):
+    case HB_TAG ('E', 'B', 'S', 'C'):
+    case HB_TAG ('S', 'V', 'G', ' '):
+    case HB_TAG ('P', 'C', 'L', 'T'):
+    case HB_TAG ('L', 'T', 'S', 'H'):
+    // Graphite tables:
+    case HB_TAG ('F', 'e', 'a', 't'):
+    case HB_TAG ('G', 'l', 'a', 't'):
+    case HB_TAG ('G', 'l', 'o', 'c'):
+    case HB_TAG ('S', 'i', 'l', 'f'):
+    case HB_TAG ('S', 'i', 'l', 'l'):
+    // Colour
+    case HB_TAG ('s', 'b', 'i', 'x'):
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -331,9 +360,24 @@ hb_subset (hb_face_t *source,
       }
       success = success && _subset_table (plan, tag);
     }
+    offset += count;
   } while (count == ARRAY_LENGTH (table_tags));
 
   hb_face_t *result = success ? hb_face_reference(plan->dest) : hb_face_get_empty();
   hb_subset_plan_destroy (plan);
   return result;
+}
+
+/**
+ * hb_subset_get_all_codepoints:
+ * @source: font face data to load.
+ * @out: set to add the all codepoints covered by font face, source.
+ */
+void
+hb_subset_get_all_codepoints (hb_face_t *source, hb_set_t *out)
+{
+  OT::cmap::accelerator_t cmap;
+  cmap.init (source);
+  cmap.get_all_codepoints (out);
+  cmap.fini();
 }

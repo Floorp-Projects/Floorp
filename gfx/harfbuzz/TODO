@@ -17,8 +17,6 @@ API additions
 
 - Language to/from script.
 
-- blob_from_file?
-
 - Add hb-cairo glue
 
 - Add sanitize API (and a cached version, that saves result on blob user-data)
@@ -28,8 +26,6 @@ API additions
 - Add hb_font_create_unscaled()?
 
 - Add query / enumeration API for aalt-like features?
-
-- SFNT api? get_num_faces?
 
 - Add segmentation API
 
