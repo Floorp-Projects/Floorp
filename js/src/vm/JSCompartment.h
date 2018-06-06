@@ -1289,6 +1289,9 @@ class JS::Realm : public JS::shadow::Realm
 
     void sweepSavedStacks();
 
+    static constexpr size_t offsetOfCompartment() {
+        return offsetof(JS::Realm, compartment_);
+    }
     static constexpr size_t offsetOfRegExps() {
         return offsetof(JS::Realm, regExps);
     }
