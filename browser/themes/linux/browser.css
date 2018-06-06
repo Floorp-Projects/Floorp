@@ -50,7 +50,7 @@
 }
 
 :root[lwt-popup-brighttext] {
-  --panel-separator-color: rgba(249,249,250,.2);
+  --panel-separator-color: rgba(249,249,250,.1);
 
   --arrowpanel-dimmed: rgba(249,249,250,.1);
   --arrowpanel-dimmed-further: rgba(249,249,250,.15);
