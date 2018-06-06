@@ -1080,8 +1080,7 @@ static void
 GetRealmName(JS::Realm* realm, nsCString& name, int* anonymizeID,
              bool replaceSlashes)
 {
-    JSCompartment* c = JS::GetCompartmentForRealm(realm);
-    if (*anonymizeID && !js::IsSystemCompartment(c)) {
+    if (*anonymizeID && !js::IsSystemRealm(realm)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
     } else if (JSPrincipals* principals = JS::GetRealmPrincipals(realm)) {
@@ -2050,8 +2049,7 @@ class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter
         Data* data = static_cast<Data*>(vdata);
         nsCString path;
         GetRealmName(realm, path, &data->anonymizeID, /* replaceSlashes = */ true);
-        JSCompartment* c = JS::GetCompartmentForRealm(realm);
-        path.Insert(js::IsSystemCompartment(c)
+        path.Insert(js::IsSystemRealm(realm)
                     ? NS_LITERAL_CSTRING("js-main-runtime-realms/system/")
                     : NS_LITERAL_CSTRING("js-main-runtime-realms/user/"),
                     0);
