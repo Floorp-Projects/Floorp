@@ -1338,8 +1338,12 @@ GCRuntime::finish()
     if (rt->gcInitialized) {
         AutoSetThreadIsSweeping threadIsSweeping;
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-            for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-                js_delete(JS::GetRealmForCompartment(comp.get()));
+            for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+                for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next())
+                    js_delete(realm.get());
+                comp->realms().clear();
+                js_delete(comp.get());
+            }
             zone->compartments().clear();
             js_delete(zone.get());
         }
@@ -3820,10 +3824,17 @@ Realm::destroy(FreeOp* fop)
     JSRuntime* rt = fop->runtime();
     if (auto callback = rt->destroyRealmCallback)
         callback(fop, this);
-    if (auto callback = rt->destroyCompartmentCallback)
-        callback(fop, this);
     if (principals())
         JS_DropPrincipals(rt->mainContextFromOwnThread(), principals());
+    fop->delete_(this);
+}
+
+void
+JSCompartment::destroy(FreeOp* fop)
+{
+    JSRuntime* rt = fop->runtime();
+    if (auto callback = rt->destroyCompartmentCallback)
+        callback(fop, this);
     fop->delete_(this);
     rt->gc.stats().sweptCompartment();
 }
@@ -3856,22 +3867,53 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
     JSCompartment** write = read;
     while (read < end) {
         JSCompartment* comp = *read++;
-        Realm* realm = JS::GetRealmForCompartment(comp);
 
         /*
          * Don't delete the last compartment and realm if keepAtleastOne is
          * still true, meaning all the other compartments were deleted.
          */
+        bool keepAtleastOneRealm = read == end && keepAtleastOne;
+        comp->sweepRealms(fop, keepAtleastOneRealm, destroyingRuntime);
+
+        if (!comp->realms().empty()) {
+            *write++ = comp;
+            keepAtleastOne = false;
+        } else {
+            comp->destroy(fop);
+        }
+    }
+    compartments().shrinkTo(write - compartments().begin());
+    MOZ_ASSERT_IF(keepAtleastOne, !compartments().empty());
+    MOZ_ASSERT_IF(destroyingRuntime, compartments().empty());
+}
+
+void
+JSCompartment::sweepRealms(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime)
+{
+    MOZ_ASSERT(!realms().empty());
+    MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
+
+    Realm** read = realms().begin();
+    Realm** end = realms().end();
+    Realm** write = read;
+    while (read < end) {
+        Realm* realm = *read++;
+
+        /*
+         * Don't delete the last realm if keepAtleastOne is still true, meaning
+         * all the other realms were deleted.
+         */
         bool dontDelete = read == end && keepAtleastOne;
         if ((realm->marked() || dontDelete) && !destroyingRuntime) {
-            *write++ = comp;
+            *write++ = realm;
             keepAtleastOne = false;
         } else {
             realm->destroy(fop);
         }
     }
-    compartments().shrinkTo(write - compartments().begin());
-    MOZ_ASSERT_IF(keepAtleastOne, !compartments().empty());
+    realms().shrinkTo(write - realms().begin());
+    MOZ_ASSERT_IF(keepAtleastOne, !realms().empty());
+    MOZ_ASSERT_IF(destroyingRuntime, realms().empty());
 }
 
 void
@@ -7952,6 +7994,7 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     JS_AbortIfWrongThread(cx);
 
     UniquePtr<Zone> zoneHolder;
+    UniquePtr<JSCompartment> compHolder;
 
     Zone* zone = nullptr;
     JS::ZoneSpecifier zoneSpec = options.creationOptions().zoneSpecifier();
@@ -7984,14 +8027,18 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         zone = zoneHolder.get();
     }
 
-    UniquePtr<Realm> realm = cx->make_unique<Realm>(zone, options);
+    compHolder = cx->make_unique<JSCompartment>(zone);
+    if (!compHolder || !compHolder->init(cx))
+        return nullptr;
+
+    JSCompartment* comp = compHolder.get();
+    UniquePtr<Realm> realm(cx->new_<Realm>(comp, options));
     if (!realm || !realm->init(cx))
         return nullptr;
 
     // Set up the principals.
     JS::SetRealmPrincipals(realm.get(), principals);
 
-    JSCompartment* comp = realm->compartment();
     if (!comp->realms().append(realm.get())) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -8018,6 +8065,7 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         }
     }
 
+    mozilla::Unused << compHolder.release();
     mozilla::Unused << zoneHolder.release();
     return realm.release();
 }

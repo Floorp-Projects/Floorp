@@ -201,7 +201,10 @@ struct Zone : public JS::shadow::Zone,
                                 size_t* cachedCFG,
                                 size_t* uniqueIdMap,
                                 size_t* shapeTables,
-                                size_t* atomsMarkBitmaps);
+                                size_t* atomsMarkBitmaps,
+                                size_t* compartmentObjects,
+                                size_t* crossCompartmentWrappersTables,
+                                size_t* compartmentsPrivateData);
 
     // Iterate over all cells in the zone. See the definition of ZoneCellIter
     // in gc/GC-inl.h for the possible arguments and documentation.
