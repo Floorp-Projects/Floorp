@@ -140,7 +140,6 @@ EXTRA_JS_MODULES += [
     'AttributionCode.jsm',
     'BlockedSiteContent.jsm',
     'BrowserErrorReporter.jsm',
-    'BrowserUITelemetry.jsm',
     'BrowserUsageTelemetry.jsm',
     'BrowserWindowTracker.jsm',
     'ContentClick.jsm',
