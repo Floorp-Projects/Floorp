@@ -8,6 +8,8 @@
 #define mozilla_image_ImageLogging_h
 
 #include "mozilla/Logging.h"
+#include "Image.h"
+#include "nsIURI.h"
 #include "prinrval.h"
 
 static mozilla::LazyLogModule gImgLog("imgRequest");
@@ -76,6 +78,35 @@ public:
                                 paramName, paramValue));
   }
 
+  /* nsIURI constructor */
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
+           const char* paramName, nsIURI* aURI)
+    : mLog(aLog)
+    , mFrom(from)
+    , mFunc(fn)
+  {
+    if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
+      static const size_t sMaxTruncatedLength = 1024;
+      nsAutoCString spec("<unknown>");
+      if (aURI) {
+        aURI->GetSpec(spec);
+        if (spec.Length() >= sMaxTruncatedLength) {
+          spec.Truncate(sMaxTruncatedLength);
+        }
+      }
+      MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
+                                  GIVE_ME_MS_NOW(), from, fn,
+                                  paramName, spec.get()));
+    }
+  }
+
+  /* Image constructor */
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
+           const char* paramName, mozilla::image::Image* aImage)
+    : LogScope(aLog, from, fn, paramName, aImage ? aImage->GetURI() : nullptr)
+  {
+  }
+
   ~LogScope()
   {
     MOZ_LOG(mLog, LogLevel::Debug, ("%d [this=%p] %s {EXIT}\n",
@@ -119,6 +150,30 @@ public:
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%d\")\n",
                                 GIVE_ME_MS_NOW(), from, fn,
                                 paramName, paramValue));
+  }
+
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn,
+          const char* paramName, nsIURI* aURI)
+  {
+    if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
+      static const size_t sMaxTruncatedLength = 1024;
+      nsAutoCString spec("<unknown>");
+      if (aURI) {
+        aURI->GetSpec(spec);
+        if (spec.Length() >= sMaxTruncatedLength) {
+          spec.Truncate(sMaxTruncatedLength);
+        }
+      }
+      MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%s\")\n",
+                                  GIVE_ME_MS_NOW(), from, fn,
+                                  paramName, spec.get()));
+    }
+  }
+
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn,
+          const char* paramName, mozilla::image::Image* aImage)
+    : LogFunc(aLog, from, fn, paramName, aImage ? aImage->GetURI() : nullptr)
+  {
   }
 
 };
