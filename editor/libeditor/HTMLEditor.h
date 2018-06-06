@@ -157,7 +157,6 @@ public:
   virtual already_AddRefed<nsIContent> FindSelectionRoot(
                                          nsINode *aNode) override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
-  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
   /**
@@ -440,10 +439,10 @@ protected: // May be called by friends.
   nsresult RelativeChangeElementZIndex(Element& aElement, int32_t aChange,
                                        int32_t* aReturn);
 
+  virtual bool IsModifiableNode(nsINode* aNode) override;
+
   virtual bool IsBlockNode(nsINode *aNode) override;
   using EditorBase::IsBlockNode;
-
-  virtual bool IsModifiableNode(nsINode* aNode) override;
 
   /**
    * returns true if aParentTag can contain a child of type aChildTag.
@@ -913,6 +912,8 @@ protected: // Shouldn't be used by friend classes
    *            Otherwise, returns null.
    */
   already_AddRefed<nsINode> GetFocusedNode();
+
+  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
 
   /**
    * Return TRUE if aElement is a table-related elemet and caret was set.
