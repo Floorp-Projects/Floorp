@@ -1207,10 +1207,9 @@ public:
     xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
 
     // This is the |jsPathPrefix|.  Each worker has exactly one realm.
-    JSCompartment* compartment = JS::GetCompartmentForRealm(aRealm);
     extras->jsPathPrefix.Assign(mRtPath);
     extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
-                                            (void *)js::GetCompartmentZone(compartment));
+                                            (void *)js::GetRealmZone(aRealm));
     extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(web-worker)/");
 
     // This should never be used when reporting with workers (hence the "?!").

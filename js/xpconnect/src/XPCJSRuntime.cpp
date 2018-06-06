@@ -2227,10 +2227,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             extras->domPathPrefix.AssignLiteral("explicit/dom/no-global?!/");
         }
 
-        if (needZone) {
-            JSCompartment* c = JS::GetCompartmentForRealm(realm);
-            extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void*)js::GetCompartmentZone(c));
-        }
+        if (needZone)
+            extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void*)js::GetRealmZone(realm));
 
         extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(") + rName + NS_LITERAL_CSTRING(")/");
 
