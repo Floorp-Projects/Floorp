@@ -1041,8 +1041,8 @@ nsTreeBodyFrame::GetRowAt(int32_t aX, int32_t aY, int32_t* _retval)
 }
 
 nsresult
-nsTreeBodyFrame::GetCellAt(int32_t aX, int32_t aY, int32_t* aRow, nsITreeColumn** aCol,
-                           nsACString& aChildElt)
+nsTreeBodyFrame::GetCellAt(int32_t aX, int32_t aY, int32_t* aRow,
+                           nsTreeColumn** aCol, nsACString& aChildElt)
 {
   if (!mView)
     return NS_OK;
@@ -1964,7 +1964,7 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
 
       // active
       if (aCol) {
-        nsCOMPtr<nsITreeColumn> currentColumn;
+        RefPtr<nsTreeColumn> currentColumn;
         selection->GetCurrentColumn(getter_AddRefs(currentColumn));
         if (aCol == currentColumn)
           mScratchArray.AppendElement(nsGkAtoms::active);
@@ -4373,7 +4373,7 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
 }
 
 nsresult
-nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol)
+nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
 {
   nsAutoString imageSrc;
   if (NS_SUCCEEDED(mView->GetImageSrc(aRowIndex, aCol, imageSrc))) {

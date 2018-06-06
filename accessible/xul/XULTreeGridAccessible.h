@@ -90,7 +90,7 @@ public:
   virtual uint32_t ChildCount() const override;
 
   // XULTreeItemAccessibleBase
-  XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn)
+  XULTreeGridCellAccessible* GetCellAccessible(nsTreeColumn* aColumn)
     const final;
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) override;
 
@@ -116,7 +116,7 @@ public:
   XULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                             XULTreeGridRowAccessible* aRowAcc,
                             nsITreeBoxObject* aTree, nsITreeView* aTreeView,
-                            int32_t aRow, nsITreeColumn* aColumn);
+                            int32_t aRow, nsTreeColumn* aColumn);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -179,7 +179,7 @@ protected:
   nsITreeView* mTreeView;
 
   int32_t mRow;
-  nsCOMPtr<nsITreeColumn> mColumn;
+  RefPtr<nsTreeColumn> mColumn;
 
   nsString mCachedTextEquiv;
 };

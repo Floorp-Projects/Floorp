@@ -351,7 +351,7 @@ nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
     int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
     int32_t row;
-    nsCOMPtr<nsITreeColumn> col;
+    RefPtr<nsTreeColumn> col;
     nsAutoString obj;
 
     // subtract off the documentElement's boxObject
@@ -456,7 +456,7 @@ nsXULTooltipListener::ShowTooltip()
 #ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
-                  int32_t aRow, nsITreeColumn* aCol, int32_t* aX, int32_t* aY)
+                  int32_t aRow, nsTreeColumn* aCol, int32_t* aX, int32_t* aY)
 {
   int32_t junk;
   aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
@@ -472,7 +472,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 
 static void
 SetTitletipLabel(nsITreeBoxObject* aTreeBox, Element* aTooltip,
-                 int32_t aRow, nsITreeColumn* aCol)
+                 int32_t aRow, nsTreeColumn* aCol)
 {
   nsCOMPtr<nsITreeView> view;
   aTreeBox->GetView(getter_AddRefs(view));

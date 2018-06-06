@@ -126,7 +126,7 @@ XULTreeGridAccessible::CellAt(uint32_t aRowIndex, uint32_t aColumnIndex)
   if (!row)
     return nullptr;
 
-  nsCOMPtr<nsITreeColumn> column =
+  RefPtr<nsTreeColumn> column =
     nsCoreUtils::GetSensibleColumnAt(mTree, aColumnIndex);
   if (!column)
     return nullptr;
@@ -298,7 +298,7 @@ XULTreeGridRowAccessible::Name(nsString& aName) const
   aName.Truncate();
 
   // XXX: the row name sholdn't be a concatenation of cell names (bug 664384).
-  nsCOMPtr<nsITreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
+  RefPtr<nsTreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
   while (column) {
     if (!aName.IsEmpty())
       aName.Append(' ');
@@ -333,7 +333,7 @@ XULTreeGridRowAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   int32_t clientY = presContext->DevPixelsToIntCSSPixels(aY) - rootRect.Y();
 
   int32_t row = -1;
-  nsCOMPtr<nsITreeColumn> column;
+  RefPtr<nsTreeColumn> column;
   nsAutoString childEltUnused;
   mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
                    childEltUnused);
@@ -351,7 +351,7 @@ XULTreeGridRowAccessible::GetChildAt(uint32_t aIndex) const
   if (IsDefunct())
     return nullptr;
 
-  nsCOMPtr<nsITreeColumn> column =
+  RefPtr<nsTreeColumn> column =
     nsCoreUtils::GetSensibleColumnAt(mTree, aIndex);
   if (!column)
     return nullptr;
@@ -369,7 +369,7 @@ XULTreeGridRowAccessible::ChildCount() const
 // XULTreeGridRowAccessible: XULTreeItemAccessibleBase implementation
 
 XULTreeGridCellAccessible*
-XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn) const
+XULTreeGridRowAccessible::GetCellAccessible(nsTreeColumn* aColumn) const
 {
   MOZ_ASSERT(aColumn, "No tree column!");
 
@@ -420,7 +420,7 @@ XULTreeGridCellAccessible::
   XULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                             XULTreeGridRowAccessible* aRowAcc,
                             nsITreeBoxObject* aTree, nsITreeView* aTreeView,
-                            int32_t aRow, nsITreeColumn* aColumn) :
+                            int32_t aRow, nsTreeColumn* aColumn) :
   LeafAccessible(aContent, aDoc), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
@@ -616,7 +616,7 @@ uint32_t
 XULTreeGridCellAccessible::ColIdx() const
 {
   uint32_t colIdx = 0;
-  nsCOMPtr<nsITreeColumn> column = mColumn;
+  RefPtr<nsTreeColumn> column = mColumn;
   while ((column = nsCoreUtils::GetPreviousSensibleColumn(column)))
     colIdx++;
 
@@ -782,7 +782,7 @@ XULTreeGridCellAccessible::GetSiblingAtOffset(int32_t aOffset,
   if (aError)
     *aError =  NS_OK; // fail peacefully
 
-  nsCOMPtr<nsITreeColumn> columnAtOffset(mColumn), column;
+  RefPtr<nsTreeColumn> columnAtOffset(mColumn), column;
   if (aOffset < 0) {
     for (int32_t index = aOffset; index < 0 && columnAtOffset; index++) {
       column = nsCoreUtils::GetPreviousSensibleColumn(columnAtOffset);

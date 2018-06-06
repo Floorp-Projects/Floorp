@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 
 class nsRange;
+class nsTreeColumn;
 class nsIBoxObject;
 class nsIFrame;
 class nsIDocShell;
@@ -51,7 +52,7 @@ public:
    *                       nsITreeBoxObject for available values
    */
   static void DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
-                                 int32_t aRowIndex, nsITreeColumn *aColumn,
+                                 int32_t aRowIndex, nsTreeColumn *aColumn,
                                  const nsAString& aPseudoElt = EmptyString());
 
   /**
@@ -249,7 +250,7 @@ public:
   /**
    * Return first sensible column for the given tree box object.
    */
-  static already_AddRefed<nsITreeColumn>
+  static already_AddRefed<nsTreeColumn>
     GetFirstSensibleColumn(nsITreeBoxObject *aTree);
 
   /**
@@ -260,19 +261,19 @@ public:
   /**
    * Return sensible column at the given index for the given tree box object.
    */
-  static already_AddRefed<nsITreeColumn>
+  static already_AddRefed<nsTreeColumn>
     GetSensibleColumnAt(nsITreeBoxObject *aTree, uint32_t aIndex);
 
   /**
    * Return next sensible column for the given column.
    */
-  static already_AddRefed<nsITreeColumn>
+  static already_AddRefed<nsTreeColumn>
     GetNextSensibleColumn(nsITreeColumn *aColumn);
 
   /**
    * Return previous sensible column for the given column.
    */
-  static already_AddRefed<nsITreeColumn>
+  static already_AddRefed<nsTreeColumn>
     GetPreviousSensibleColumn(nsITreeColumn *aColumn);
 
   /**

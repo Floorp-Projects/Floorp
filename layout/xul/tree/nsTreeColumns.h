@@ -107,9 +107,8 @@ protected:
 
   void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; }
 
-  const nsAString& GetId() { return mId; }
-
 public:
+  const nsAString& GetId() { return mId; }
   nsAtom* GetAtom() { return mAtom; }
   int32_t GetIndex() { return mIndex; }
 
