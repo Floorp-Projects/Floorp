@@ -90,8 +90,33 @@ VerifyAdvance(AnimationFrameBuffer& aQueue,
               size_t aExpectedFrame,
               bool aExpectedRestartDecoder)
 {
+  RefPtr<imgFrame> oldFrame;
+  size_t totalRecycled;
+  if (aQueue.IsRecycling()) {
+    AnimationFrameRecyclingQueue& queue =
+      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    oldFrame = queue.Get(queue.Displayed(), false);
+    totalRecycled = queue.Recycle().size();
+  }
+
   bool restartDecoder = aQueue.AdvanceTo(aExpectedFrame);
   EXPECT_EQ(aExpectedRestartDecoder, restartDecoder);
+
+  if (aQueue.IsRecycling()) {
+    const AnimationFrameRecyclingQueue& queue =
+      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    if (oldFrame->ShouldRecycle()) {
+      EXPECT_EQ(oldFrame.get(), queue.Recycle().back().mFrame.get());
+      EXPECT_FALSE(queue.Recycle().back().mDirtyRect.IsEmpty());
+      EXPECT_FALSE(queue.Recycle().back().mRecycleRect.IsEmpty());
+      EXPECT_EQ(totalRecycled + 1, queue.Recycle().size());
+    } else {
+      EXPECT_EQ(totalRecycled, queue.Recycle().size());
+      if (!queue.Recycle().empty()) {
+        EXPECT_NE(oldFrame.get(), queue.Recycle().back().mFrame.get());
+      }
+    }
+  }
 }
 
 static void
@@ -118,8 +143,20 @@ VerifyMarkComplete(AnimationFrameBuffer& aQueue,
                    bool aExpectedContinue,
                    const IntRect& aRefreshArea = IntRect(0, 0, 1, 1))
 {
+  if (aQueue.IsRecycling() && !aQueue.SizeKnown()) {
+    const AnimationFrameRecyclingQueue& queue =
+      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    EXPECT_TRUE(queue.FirstFrameRefreshArea().IsEmpty());
+  }
+
   bool keepDecoding = aQueue.MarkComplete(aRefreshArea);
   EXPECT_EQ(aExpectedContinue, keepDecoding);
+
+  if (aQueue.IsRecycling()) {
+    const AnimationFrameRecyclingQueue& queue =
+      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    EXPECT_EQ(aRefreshArea, queue.FirstFrameRefreshArea());
+  }
 }
 
 static void
@@ -156,6 +193,12 @@ VerifyReset(AnimationFrameBuffer& aQueue,
     EXPECT_EQ(size_t(0), queue.Display().size());
     EXPECT_EQ(aFirstFrame, queue.FirstFrame());
     EXPECT_EQ(nullptr, aQueue.Get(0, false));
+  }
+
+  if (aQueue.IsRecycling()) {
+    const AnimationFrameRecyclingQueue& queue =
+      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    EXPECT_EQ(size_t(0), queue.Recycle().size());
   }
 }
 
@@ -515,6 +558,42 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingLoop)
   TestDiscardingQueueLoop(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
+TEST_F(ImageAnimationFrameBuffer, RecyclingLoop)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  const size_t kStartFrame = 0;
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  PrepareForDiscardingQueue(retained);
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  AnimationFrameRecyclingQueue buffer(std::move(retained));
+
+  // We should not start with any recycled frames.
+  ASSERT_TRUE(buffer.Recycle().empty());
+
+  TestDiscardingQueueLoop(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+
+  // All the frames we inserted should have been recycleable.
+  ASSERT_FALSE(buffer.Recycle().empty());
+  while (!buffer.Recycle().empty()) {
+    IntRect expectedRect = buffer.Recycle().front().mRecycleRect;
+    RefPtr<imgFrame> expectedFrame = buffer.Recycle().front().mFrame;
+    EXPECT_FALSE(expectedRect.IsEmpty());
+    EXPECT_TRUE(expectedFrame.get() != nullptr);
+
+    IntRect gotRect;
+    RawAccessFrameRef gotFrame = buffer.RecycleFrame(gotRect);
+    EXPECT_EQ(expectedFrame.get(), gotFrame.get());
+    EXPECT_EQ(expectedRect, gotRect);
+  }
+
+  // Trying to pull a recycled frame when we have nothing should be safe too.
+  IntRect gotRect;
+  RawAccessFrameRef gotFrame = buffer.RecycleFrame(gotRect);
+  EXPECT_TRUE(gotFrame.get() == nullptr);
+  EXPECT_TRUE(gotRect.IsEmpty());
+}
+
 static void TestDiscardingQueueReset(AnimationFrameDiscardingQueue& aQueue,
                                      const imgFrame* aFirstFrame,
                                      size_t aThreshold,
@@ -545,5 +624,17 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
   PrepareForDiscardingQueue(retained);
   const imgFrame* firstFrame = retained.Frames()[0].get();
   AnimationFrameDiscardingQueue buffer(std::move(retained));
+  TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
+{
+  const size_t kThreshold = 8;
+  const size_t kBatch = 3;
+  const size_t kStartFrame = 0;
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  PrepareForDiscardingQueue(retained);
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  AnimationFrameRecyclingQueue buffer(std::move(retained));
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
