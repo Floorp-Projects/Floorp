@@ -10,10 +10,10 @@
 #include <memory>
 #include "cert.h"
 #include "keyhi.h"
+#include "p12.h"
 #include "pk11pub.h"
 #include "pkcs11uri.h"
 #include "sslexp.h"
-#include "p12.h"
 
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }

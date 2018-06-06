@@ -535,10 +535,14 @@ ifeq (,$(filter-out i386 x386 x86 x86_64 aarch64,$(CPU_ARCH)))
     # All intel architectures get the 64 bit version
     # With custom uint128 if necessary (faster than generic 32 bit version).
     ECL_SRCS += curve25519_64.c
-    VERIFIED_SRCS += Hacl_Curve25519.c FStar.c
+    VERIFIED_SRCS += Hacl_Curve25519.c
 else
     # All non intel architectures get the generic 32 bit implementation (slow!)
     ECL_SRCS += curve25519_32.c
+endif
+
+ifndef HAVE_INT128_SUPPORT
+    VERIFIED_SRCS += FStar.c
 endif
 
 #######################################################################
