@@ -371,7 +371,7 @@ NS_IMPL_ISUPPORTS(VectorImage,
 //------------------------------------------------------------------------------
 // Constructor / Destructor
 
-VectorImage::VectorImage(ImageURL* aURI /* = nullptr */) :
+VectorImage::VectorImage(nsIURI* aURI /* = nullptr */) :
   ImageResource(aURI), // invoke superclass's constructor
   mLockCount(0),
   mIsInitialized(false),
@@ -922,8 +922,7 @@ VectorImage::MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
   bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
   bool blockContextPaint = false;
   if (haveContextPaint) {
-    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(imageURI);
+    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(mURI);
   }
 
   if (overridePAR || blockContextPaint) {

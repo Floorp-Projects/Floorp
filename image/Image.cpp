@@ -26,7 +26,7 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
   MOZ_ASSERT(aImage);
 
   // Extract metadata about the image.
-  RefPtr<ImageURL> imageURL(aImage->GetURI());
+  nsCOMPtr<nsIURI> imageURL(aImage->GetURI());
   if (imageURL) {
     imageURL->GetSpec(mURI);
   }
@@ -53,6 +53,20 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
 ///////////////////////////////////////////////////////////////////////////////
 // Image Base Types
 ///////////////////////////////////////////////////////////////////////////////
+
+bool
+ImageResource::GetSpecTruncatedTo1k(nsCString& aSpec) const
+{
+  static const size_t sMaxTruncatedLength = 1024;
+
+  mURI->GetSpec(aSpec);
+  if (sMaxTruncatedLength >= aSpec.Length()) {
+    return true;
+  }
+
+  aSpec.Truncate(sMaxTruncatedLength);
+  return false;
+}
 
 void
 ImageResource::SetCurrentImage(ImageContainer* aContainer,
@@ -269,7 +283,7 @@ ImageResource::ReleaseImageContainer()
 }
 
 // Constructor
-ImageResource::ImageResource(ImageURL* aURI) :
+ImageResource::ImageResource(nsIURI* aURI) :
   mURI(aURI),
   mInnerWindowId(0),
   mAnimationConsumers(0),
@@ -404,7 +418,7 @@ ImageResource::NotifyDrawingObservers()
   }
 
   // Record the image drawing for startup performance testing.
-  nsCOMPtr<nsIURI> uri = mURI->ToIURI();
+  nsCOMPtr<nsIURI> uri = mURI;
   nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
     "image::ImageResource::NotifyDrawingObservers", [uri]() {
       nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
