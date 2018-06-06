@@ -180,7 +180,7 @@ nsresult
 imgRequestProxy::Init(imgRequest* aOwner,
                       nsILoadGroup* aLoadGroup,
                       nsIDocument* aLoadingDocument,
-                      ImageURL* aURI,
+                      nsIURI* aURI,
                       imgINotificationObserver* aObserver)
 {
   MOZ_ASSERT(!GetOwner() && !mListener,
@@ -772,7 +772,7 @@ NS_IMETHODIMP
 imgRequestProxy::GetURI(nsIURI** aURI)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread to convert URI");
-  nsCOMPtr<nsIURI> uri = mURI->ToIURI();
+  nsCOMPtr<nsIURI> uri = mURI;
   uri.forget(aURI);
   return NS_OK;
 }
@@ -785,18 +785,6 @@ imgRequestProxy::GetFinalURI(nsIURI** aURI)
   }
 
   return GetOwner()->GetFinalURI(aURI);
-}
-
-nsresult
-imgRequestProxy::GetURI(ImageURL** aURI)
-{
-  if (!mURI) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ADDREF(*aURI = mURI);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1095,12 +1083,8 @@ imgRequestProxy::Notify(int32_t aType, const mozilla::gfx::IntRect* aRect)
 void
 imgRequestProxy::OnLoadComplete(bool aLastPart)
 {
-  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    nsAutoCString name;
-    GetName(name);
-    LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnLoadComplete",
-                        "name", name.get());
-  }
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnLoadComplete",
+                      "uri", mURI);
 
   // There's all sorts of stuff here that could kill us (the OnStopRequest call
   // on the listener, the removal from the loadgroup, the release of the

@@ -80,10 +80,8 @@ imgRequest::~imgRequest()
     mLoader->RemoveFromUncachedImages(this);
   }
   if (mURI) {
-    nsAutoCString spec;
-    mURI->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()",
-                        "keyuri", spec.get());
+                        "keyuri", mURI);
   } else
     LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
 }
@@ -111,17 +109,11 @@ imgRequest::Init(nsIURI *aURI,
   MOZ_ASSERT(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
-
-  // Use ImageURL to ensure access to URI data off main thread.
-  nsresult rv;
-  mURI = new ImageURL(aURI, rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  mURI = aURI;
   mFinalURI = aFinalURI;
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
-
   mTriggeringPrincipal = aTriggeringPrincipal;
   mCORSMode = aCORSMode;
   mReferrerPolicy = aReferrerPolicy;
@@ -265,12 +257,10 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
       if (mLoader) {
         mLoader->SetHasNoProxies(this, mCacheEntry);
       }
-    } else if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-      nsAutoCString spec;
-      mURI->GetSpec(spec);
+    } else {
       LOG_MSG_WITH_PARAM(gImgLog,
                          "imgRequest::RemoveProxy no cache entry",
-                         "uri", spec.get());
+                         "uri", mURI);
     }
 
     /* If |aStatus| is a failure code, then cancel the load if it is still in
@@ -422,7 +412,7 @@ imgRequest::IsDecodeRequested() const
   return mDecodeRequested;
 }
 
-nsresult imgRequest::GetURI(ImageURL** aURI)
+nsresult imgRequest::GetURI(nsIURI** aURI)
 {
   MOZ_ASSERT(aURI);
 
@@ -988,7 +978,7 @@ struct NewPartResult final
 
 static NewPartResult
 PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
-                  ImageURL* aURI, bool aIsMultipart, image::Image* aExistingImage,
+                  nsIURI* aURI, bool aIsMultipart, image::Image* aExistingImage,
                   ProgressTracker* aProgressTracker, uint32_t aInnerWindowId)
 {
   NewPartResult result(aExistingImage);

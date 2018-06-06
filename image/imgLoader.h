@@ -34,7 +34,6 @@ class imgMemoryReporter;
 
 namespace mozilla {
 namespace image {
-class ImageURL;
 } // namespace image
 } // namespace mozilla
 
@@ -234,7 +233,6 @@ class imgLoader final : public imgILoader,
 
 public:
   typedef mozilla::image::ImageCacheKey ImageCacheKey;
-  typedef mozilla::image::ImageURL ImageURL;
   typedef nsRefPtrHashtable<nsGenericHashKey<ImageCacheKey>,
                             imgCacheEntry> imgCacheTable;
   typedef nsTHashtable<nsPtrHashKey<imgRequest>> imgSet;
