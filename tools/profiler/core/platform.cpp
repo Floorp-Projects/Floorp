@@ -2464,6 +2464,7 @@ profiler_init(void* aStackTop)
                       ProfilerFeature::StackWalk |
 #endif
                       ProfilerFeature::Threads |
+                      ProfilerFeature::Responsiveness |
                       0;
 
   UniquePtr<char[]> filterStorage;
