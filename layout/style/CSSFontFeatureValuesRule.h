@@ -8,35 +8,44 @@
 #define mozilla_dom_CSSFontFeatureValuesRule_h
 
 #include "mozilla/css/Rule.h"
+#include "mozilla/ServoBindingTypes.h"
 
 #include "nsICSSDeclaration.h"
 
 namespace mozilla {
 namespace dom {
 
-class CSSFontFeatureValuesRule : public css::Rule
+class CSSFontFeatureValuesRule final : public css::Rule
 {
 public:
+  CSSFontFeatureValuesRule(RefPtr<RawServoFontFeatureValuesRule> aRawRule,
+                           uint32_t aLine, uint32_t aColumn);
+
   virtual bool IsCCLeaf() const override;
+
+  RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
 
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
-  virtual void GetCssText(nsAString& aCssText) const override = 0;
-  virtual void GetFontFamily(nsAString& aFamily) = 0;
-  virtual void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) = 0;
-  virtual void GetValueText(nsAString& aValueText) = 0;
-  virtual void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) = 0;
+  void GetCssText(nsAString& aCssText) const override;
+  void GetFontFamily(nsAString& aFamily);
+  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);
+  void GetValueText(nsAString& aValueText);
+  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv);
 
-  virtual size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
-  using Rule::Rule;
+private:
+  ~CSSFontFeatureValuesRule() = default;
 
-  virtual ~CSSFontFeatureValuesRule() {};
+  RefPtr<RawServoFontFeatureValuesRule> mRawRule;
 };
 
 } // namespace dom
