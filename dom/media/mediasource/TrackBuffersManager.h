@@ -164,12 +164,6 @@ public:
                                            const media::TimeUnit& aFuzz);
 
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;
-  void AssertHasNextSampleIndex(TrackInfo::TrackType aTrack) const
-  {
-    const auto& trackData = GetTracksData(aTrack);
-    MOZ_DIAGNOSTIC_ASSERT(trackData.mNextGetSampleIndex.isSome(),
-                          "next sample index must be set");
-  }
 
 private:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
