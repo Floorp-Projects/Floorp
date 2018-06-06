@@ -338,11 +338,23 @@ FRAME_STATE_BIT(GridContainer, 20, NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORD
 // actually finding any pushed items when this bit is set.
 FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
 
-// True iff computed grid values should be generated on the next reflow
+// True iff computed grid values should be generated on the next reflow.
 FRAME_STATE_BIT(GridContainer, 22, NS_STATE_GRID_GENERATE_COMPUTED_VALUES)
 
-// True if the container has no grid items; may lie if there is a pending reflow
+// True if the container has no grid items; may lie if there is a pending reflow.
 FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_SYNTHESIZE_BASELINE)
+
+// True if the container is a subgrid in its inline axis.
+FRAME_STATE_BIT(GridContainer, 24, NS_STATE_GRID_IS_COL_SUBGRID)
+
+// True if the container is a subgrid in its block axis.
+FRAME_STATE_BIT(GridContainer, 25, NS_STATE_GRID_IS_ROW_SUBGRID)
+
+// The container contains one or more items subgridded in its inline axis.
+FRAME_STATE_BIT(GridContainer, 26, NS_STATE_GRID_HAS_COL_SUBGRID_ITEM)
+
+// The container contains one or more items subgridded in its block axis.
+FRAME_STATE_BIT(GridContainer, 27, NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM)
 
 // == Frame state bits that apply to SVG frames ===============================
 

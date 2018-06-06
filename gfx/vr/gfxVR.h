@@ -59,7 +59,6 @@ struct VRDisplayInfo
   uint32_t mPresentingGroups;
   uint32_t mGroupMask;
   uint64_t mFrameId;
-  uint32_t mPresentingGeneration;
   VRDisplayState mDisplayState;
 
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
@@ -96,8 +95,7 @@ struct VRDisplayInfo
            memcmp(&mDisplayState, &other.mDisplayState, sizeof(VRDisplayState)) == 0 &&
            mPresentingGroups == other.mPresentingGroups &&
            mGroupMask == other.mGroupMask &&
-           mFrameId == other.mFrameId &&
-           mPresentingGeneration == other.mPresentingGeneration;
+           mFrameId == other.mFrameId;
   }
 
   bool operator!=(const VRDisplayInfo& other) const {

@@ -5,8 +5,8 @@
 
 #include "ImageCacheKey.h"
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
-#include "ImageURL.h"
 #include "nsLayoutUtils.h"
 #include "nsString.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -21,18 +21,8 @@ using namespace dom;
 
 namespace image {
 
-bool
-URISchemeIs(ImageURL* aURI, const char* aScheme)
-{
-  bool schemeMatches = false;
-  if (NS_WARN_IF(NS_FAILED(aURI->SchemeIs(aScheme, &schemeMatches)))) {
-    return false;
-  }
-  return schemeMatches;
-}
-
 static Maybe<uint64_t>
-BlobSerial(ImageURL* aURI)
+BlobSerial(nsIURI* aURI)
 {
   nsAutoCString spec;
   aURI->GetSpec(spec);
@@ -50,42 +40,43 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI,
                              const OriginAttributes& aAttrs,
                              nsIDocument* aDocument,
                              nsresult& aRv)
-  : mURI(new ImageURL(aURI, aRv))
-  , mOriginAttributes(aAttrs)
-  , mControlledDocument(GetControlledDocumentToken(aDocument))
-  , mIsChrome(URISchemeIs(mURI, "chrome"))
-{
-  NS_ENSURE_SUCCESS_VOID(aRv);
-
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (URISchemeIs(mURI, "blob")) {
-    mBlobSerial = BlobSerial(mURI);
-  }
-
-  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument);
-}
-
-ImageCacheKey::ImageCacheKey(ImageURL* aURI,
-                             const OriginAttributes& aAttrs,
-                             nsIDocument* aDocument)
   : mURI(aURI)
   , mOriginAttributes(aAttrs)
   , mControlledDocument(GetControlledDocumentToken(aDocument))
-  , mIsChrome(URISchemeIs(mURI, "chrome"))
+  , mHash(0)
+  , mIsChrome(false)
 {
-  MOZ_ASSERT(aURI);
-
-  if (URISchemeIs(mURI, "blob")) {
+  if (SchemeIs("blob")) {
     mBlobSerial = BlobSerial(mURI);
+  } else if (SchemeIs("chrome")) {
+    mIsChrome = true;
   }
 
-  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument);
+  // Since we frequently call Hash() several times in a row on the same
+  // ImageCacheKey, as an optimization we compute our hash once and store it.
+
+  nsPrintfCString ptr("%p", mControlledDocument);
+  nsAutoCString suffix;
+  mOriginAttributes.CreateSuffix(suffix);
+
+  if (mBlobSerial) {
+    aRv = mURI->GetRef(mBlobRef);
+    NS_ENSURE_SUCCESS_VOID(aRv);
+    mHash = HashGeneric(*mBlobSerial, HashString(mBlobRef));
+  } else {
+    nsAutoCString spec;
+    aRv = mURI->GetSpec(spec);
+    NS_ENSURE_SUCCESS_VOID(aRv);
+    mHash = HashString(spec);
+  }
+
+  mHash = AddToHash(mHash, HashString(suffix), HashString(ptr));
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
   : mURI(aOther.mURI)
   , mBlobSerial(aOther.mBlobSerial)
+  , mBlobRef(aOther.mBlobRef)
   , mOriginAttributes(aOther.mOriginAttributes)
   , mControlledDocument(aOther.mControlledDocument)
   , mHash(aOther.mHash)
@@ -95,6 +86,7 @@ ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
   : mURI(std::move(aOther.mURI))
   , mBlobSerial(std::move(aOther.mBlobSerial))
+  , mBlobRef(std::move(aOther.mBlobRef))
   , mOriginAttributes(aOther.mOriginAttributes)
   , mControlledDocument(aOther.mControlledDocument)
   , mHash(aOther.mHash)
@@ -116,34 +108,20 @@ ImageCacheKey::operator==(const ImageCacheKey& aOther) const
     // If at least one of us has a blob serial, just compare the blob serial and
     // the ref portion of the URIs.
     return mBlobSerial == aOther.mBlobSerial &&
-           mURI->HasSameRef(*aOther.mURI);
+           mBlobRef == aOther.mBlobRef;
   }
 
   // For non-blob URIs, compare the URIs.
-  return *mURI == *aOther.mURI;
+  bool equals = false;
+  nsresult rv = mURI->Equals(aOther.mURI, &equals);
+  return NS_SUCCEEDED(rv) && equals;
 }
 
-const char*
-ImageCacheKey::Spec() const
+bool
+ImageCacheKey::SchemeIs(const char* aScheme)
 {
-  return mURI->Spec();
-}
-
-/* static */ PLDHashNumber
-ImageCacheKey::ComputeHash(ImageURL* aURI,
-                           const Maybe<uint64_t>& aBlobSerial,
-                           const OriginAttributes& aAttrs,
-                           void* aControlledDocument)
-{
-  // Since we frequently call Hash() several times in a row on the same
-  // ImageCacheKey, as an optimization we compute our hash once and store it.
-
-  nsPrintfCString ptr("%p", aControlledDocument);
-  nsAutoCString suffix;
-  aAttrs.CreateSuffix(suffix);
-
-  return AddToHash(0, aURI->ComputeHash(aBlobSerial),
-                   HashString(suffix), HashString(ptr));
+  bool matches = false;
+  return NS_SUCCEEDED(mURI->SchemeIs(aScheme, &matches)) && matches;
 }
 
 /* static */ void*

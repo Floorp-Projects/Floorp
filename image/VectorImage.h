@@ -73,7 +73,7 @@ public:
   virtual void ReportUseCounters() override;
 
 protected:
-  explicit VectorImage(ImageURL* aURI = nullptr);
+  explicit VectorImage(nsIURI* aURI = nullptr);
   virtual ~VectorImage();
 
   virtual nsresult StartAnimation() override;

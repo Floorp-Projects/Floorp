@@ -1158,6 +1158,8 @@ function ArrayFlat(/* depth */) {
     return A;
 }
 
+// https://tc39.github.io/proposal-flatMap/
+// May 23, 2018
 function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
     // Step 1.
     var targetIndex = start;
@@ -1178,24 +1180,30 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
             }
 
             // Step 3.c.iii.
-            var flattenable = IsArray(element);
+            var shouldFlatten = false;
 
             // Step 3.c.iv.
-            if (flattenable && depth > 0) {
+            if (depth > 0) {
                 // Step 3.c.iv.1.
+                shouldFlatten = IsArray(element);
+            }
+
+            // Step 3.c.v.
+            if (shouldFlatten) {
+                // Step 3.c.v.1.
                 var elementLen = ToLength(element.length);
 
-                // Step 3.c.iv.2.
+                // Step 3.c.v.2.
                 targetIndex = FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1);
             } else {
-                // Step 3.c.v.1.
+                // Step 3.c.vi.1.
                 if (targetIndex >= MAX_NUMERIC_INDEX)
                     ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
 
-                // Step 3.c.v.2.
+                // Step 3.c.vi.2.
                 _DefineDataProperty(target, targetIndex, element);
 
-                // Step 3.c.v.3.
+                // Step 3.c.vi.3.
                 targetIndex++;
             }
         }
