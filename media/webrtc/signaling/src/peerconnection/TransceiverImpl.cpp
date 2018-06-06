@@ -363,6 +363,12 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
   MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__
                       << " Syncing with JS transceiver");
 
+  if (!mTransmitPipeline) {
+    // Shutdown_m has already been called, probably due to pc.close(). Just
+    // nod and smile.
+    return;
+  }
+
   // Update stopped, both ways, since either JSEP or JS can stop these
   if (mJsepTransceiver->IsStopped()) {
     // We don't call RTCRtpTransceiver::Stop(), because that causes another sync

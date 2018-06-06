@@ -12,12 +12,10 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function() {
+runWithMSE(async (ms, v) => {
   SimpleTest.doesThrow(() => new SourceBuffer, "new SourceBuffer should fail");
   SimpleTest.doesThrow(() => new SourceBufferList, "new SourceBufferList direct should fail");
 
-  const ms = new MediaSource();
-  ok(ms, "Create a MediaSource object");
   ok(ms instanceof EventTarget, "MediaSource must be an EventTarget");
   is(ms.readyState, "closed", "New MediaSource must be in closed state");
 
@@ -27,13 +25,7 @@ runWithMSE(function() {
   // Set an expando to force wrapper creation, tests for leaks.
   ms.foo = null;
 
-  const o = URL.createObjectURL(ms);
-  ok(o, "Create an objectURL from the MediaSource");
-
-  const v = document.createElement("video");
-  v.preload = "auto";
-  v.src = o;
-  document.body.appendChild(v);
+  ok(URL.createObjectURL(ms), "Create an objectURL from the MediaSource");
 
   let loadedmetadataCount = 0;
   let updatestartCount = 0;
@@ -41,67 +33,57 @@ runWithMSE(function() {
   let updateCount = 0;
 
   ok(MediaSource.isTypeSupported("video/webm; codecs=vp8"), "VP8 MSE is always supported");
-  ok(MediaSource.isTypeSupported("audio/webm", "Audio MSE is always supported"));
+  ok(MediaSource.isTypeSupported("audio/webm"), "Audio MSE is always supported");
 
-  ms.addEventListener("sourceopen", function() {
-    ok(true, "Receive a sourceopen event");
-    is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
-    const sb = ms.addSourceBuffer("video/webm");
-    ok(sb, "Create a SourceBuffer");
-    is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
-    is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
-    is(ms.activeSourceBuffers.length, 0, "MediaSource.activeSourceBuffers is expected length");
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+  ok(sb, "Create a SourceBuffer");
+  is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
+  is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
+  is(ms.activeSourceBuffers.length, 0, "MediaSource.activeSourceBuffers is expected length");
 
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm")));
+  is(sb.updating, true, "SourceBuffer.updating is expected value after appendBuffer");
 
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
-      is(sb.updating, true, "SourceBuffer.updating is expected value after appendBuffer");
-    });
-
-    sb.addEventListener("update", function() {
-      is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
-      updateCount++;
-      /* Ensure that we endOfStream on the first update event only as endOfStream can
-         raise more if the duration of the last buffered range and the intial duration
-         differ. See bug 1065207 */
-      if (updateCount == 1) {
-        ms.endOfStream();
-      }
-    });
-
-    sb.addEventListener("updatestart", function() {
-      updatestartCount++;
-    });
-
-    sb.addEventListener("updateend", function() {
-      is(ms.activeSourceBuffers[0], sb, "SourceBuffer in active list matches our SourceBuffer");
-      is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
-      updateendCount++;
-      v.play();
-    });
+  sb.addEventListener("update", () => {
+    is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
+    updateCount++;
+    /* Ensure that we endOfStream on the first update event only as endOfStream can
+       raise more if the duration of the last buffered range and the intial duration
+       differ. See bug 1065207 */
+    if (updateCount == 1) {
+      ms.endOfStream();
+    }
   });
 
-  ms.addEventListener("sourceended", function() {
+  sb.addEventListener("updatestart", () => updatestartCount++);
+
+  sb.addEventListener("updateend", () => {
+    is(ms.activeSourceBuffers[0], sb, "SourceBuffer in active list matches our SourceBuffer");
+    is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
+    updateendCount++;
+    v.play();
+  });
+
+  ms.addEventListener("sourceended", () => {
     ok(true, "Receive a sourceended event");
     is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
   });
 
-  v.addEventListener("loadedmetadata", function() {
-    loadedmetadataCount++;
-  });
+  v.addEventListener("loadedmetadata", () => loadedmetadataCount++);
 
-  v.addEventListener("ended", function() {
-    // XXX: Duration should be exactly 4.0, see bug 1065207.
-    ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
-    ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
-    // XXX: 2 update events can be received dueto duration differences, see bug 1065207.
-    ok(updateCount == 1 || updateCount == 2, "update event received");
-    ok(updateendCount == 1 || updateendCount == 2, "updateend event received");
-    ok(updatestartCount == 1 || updatestartCount == 2, "updatestart event received");
-    is(loadedmetadataCount, 1, "loadedmetadata event received");
-    v.remove();
-    SimpleTest.finish();
-  });
+  await once(v, "ended");
+  // XXX: Duration should be exactly 4.0, see bug 1065207.
+  ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+  ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
+  // XXX: 2 update events can be received dueto duration differences, see bug 1065207.
+  ok(updateCount == 1 || updateCount == 2, "update event received");
+  ok(updateendCount == 1 || updateendCount == 2, "updateend event received");
+  ok(updatestartCount == 1 || updatestartCount == 2, "updatestart event received");
+  is(loadedmetadataCount, 1, "loadedmetadata event received");
+  SimpleTest.finish();
 });
 
 </script>

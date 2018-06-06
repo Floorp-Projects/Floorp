@@ -14,7 +14,7 @@ use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::PictureSurface;
-use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveRun, PrimitiveStore};
+use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveStore};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -41,15 +41,16 @@ pub struct FrameBuilder {
     screen_rect: DeviceUintRect,
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
+    scene_id: u64,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
     pub config: FrameBuilderConfig,
-    pub cached_gradients: Vec<CachedGradient>,
     pub scrollbar_prims: Vec<ScrollbarPrimitive>,
 }
 
 pub struct FrameBuildingContext<'a> {
+    pub scene_id: u64,
     pub device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
@@ -65,7 +66,6 @@ pub struct FrameBuildingState<'a> {
     pub local_clip_rects: &'a mut Vec<LayoutRect>,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
-    pub cached_gradients: &'a mut [CachedGradient],
     pub special_render_passes: &'a mut SpecialRenderPasses,
 }
 
@@ -83,6 +83,7 @@ pub struct PictureContext<'a> {
 pub struct PictureState {
     pub tasks: Vec<RenderTaskId>,
     pub has_non_root_coord_system: bool,
+    pub local_rect_changed: bool,
 }
 
 impl PictureState {
@@ -90,6 +91,7 @@ impl PictureState {
         PictureState {
             tasks: Vec::new(),
             has_non_root_coord_system: false,
+            local_rect_changed: false,
         }
     }
 }
@@ -118,13 +120,13 @@ impl FrameBuilder {
     pub fn empty() -> Self {
         FrameBuilder {
             hit_testing_runs: Vec::new(),
-            cached_gradients: Vec::new(),
             scrollbar_prims: Vec::new(),
             prim_store: PrimitiveStore::new(),
             clip_store: ClipStore::new(),
             screen_rect: DeviceUintRect::zero(),
             window_size: DeviceUintSize::zero(),
             background_color: None,
+            scene_id: 0,
             config: FrameBuilderConfig {
                 enable_scrollbars: false,
                 default_font_render_mode: FontRenderMode::Mono,
@@ -138,17 +140,18 @@ impl FrameBuilder {
         screen_rect: DeviceUintRect,
         background_color: Option<ColorF>,
         window_size: DeviceUintSize,
+        scene_id: u64,
         flattener: DisplayListFlattener,
     ) -> Self {
         FrameBuilder {
             hit_testing_runs: flattener.hit_testing_runs,
-            cached_gradients: flattener.cached_gradients,
             scrollbar_prims: flattener.scrollbar_prims,
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
             screen_rect,
             background_color,
             window_size,
+            scene_id,
             config: flattener.config,
         }
     }
@@ -185,6 +188,7 @@ impl FrameBuilder {
             .display_list;
 
         let frame_context = FrameBuildingContext {
+            scene_id: self.scene_id,
             device_pixel_scale,
             scene_properties,
             pipelines,
@@ -201,7 +205,6 @@ impl FrameBuilder {
             resource_cache,
             gpu_cache,
             special_render_passes,
-            cached_gradients: &mut self.cached_gradients,
         };
 
         let pic_context = PictureContext {
@@ -377,7 +380,6 @@ impl FrameBuilder {
                 clip_scroll_tree,
                 use_dual_source_blending,
                 node_data: &node_data,
-                cached_gradients: &self.cached_gradients,
             };
 
             pass.build(

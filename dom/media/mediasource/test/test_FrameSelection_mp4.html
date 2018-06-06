@@ -21,7 +21,7 @@ runWithMSE(async (ms, v) => {
   const sb = ms.addSourceBuffer("video/mp4");
   ok(sb, "Create a SourceBuffer");
   logEvents(v);
-  sb.addEventListener("error", function(e) {
+  sb.addEventListener("error", e => {
     ok(false, `should not fire ${e.type} event`);
     SimpleTest.finish();
   });

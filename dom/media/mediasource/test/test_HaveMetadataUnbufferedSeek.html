@@ -12,32 +12,24 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 67833));
-    });
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 67833));
 
-    const target = 2;
+  const target = 2;
 
-    v.addEventListener("loadeddata", function() {
-      ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
-      v.currentTime = target;
-    }, {once: true});
+  await once(v, "loadeddata");
+  ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
+  v.currentTime = target;
 
-    v.addEventListener("seeking", function() {
-      is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");
-      fetchWithXHR("seek.webm", function(arrayBuffer) {
-        sb.appendBuffer(new Uint8Array(arrayBuffer, 67833));
-      });
-    });
-
-    v.addEventListener("seeked", function() {
-      SimpleTest.finish();
-    });
-  });
+  await once(v, "seeking");
+  is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm"), 67833));
+  await once(v, "seeked");
+  SimpleTest.finish();
 });
 
 </script>

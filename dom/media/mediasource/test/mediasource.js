@@ -35,8 +35,8 @@ async function runWithMSE(testFunction) {
   }
 }
 
-async function fetchWithXHR(uri, onLoadFunction) {
-  let result = await new Promise(resolve => {
+async function fetchWithXHR(uri) {
+  return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
@@ -46,11 +46,6 @@ async function fetchWithXHR(uri, onLoadFunction) {
     });
     xhr.send();
   });
-
-  if (onLoadFunction) {
-    result = await onLoadFunction(result);
-  }
-  return result;
 }
 
 function range(start, end) {
@@ -89,15 +84,13 @@ async function must_reject(f, msg, error = true) {
   }
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 const must_not_throw = (f, msg) => must_throw(f, msg, false);
 const must_not_reject = (f, msg) => must_reject(f, msg, false);
 
-async function once(target, name, cb) {
-  let result = await new Promise(r => target.addEventListener(name, r, {once: true}));
-  if (cb) {
-    result = await cb();
-  }
-  return result;
+async function once(target, name) {
+  return new Promise(r => target.addEventListener(name, r, {once: true}));
 }
 
 function timeRangeToString(r) {

@@ -12,31 +12,29 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", async function(arrayBuffer) {
-      // init segment is total 236 bytes.
-      info("- append partial init segment -");
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 100));
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  // init segment is total 236 bytes.
+  info("- append partial init segment -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 100));
 
-      info("- wait for updateend -");
-      await once(sb, "updateend");
+  info("- wait for updateend -");
+  await once(sb, "updateend");
 
-      info("- append remaining init segment -");
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 100, 136));
+  info("- append remaining init segment -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 100, 136));
 
-      info("- wait for metadata -");
-      await once(v, "loadedmetadata");
-      is(v.videoWidth, 320, "videoWidth has correct initial value");
-      is(v.videoHeight, 240, "videoHeight has correct initial value");
+  info("- wait for metadata -");
+  await once(v, "loadedmetadata");
+  is(v.videoWidth, 320, "videoWidth has correct initial value");
+  is(v.videoHeight, 240, "videoHeight has correct initial value");
 
-      info("- wait for updateend -");
-      await once(sb, "updateend");
-      SimpleTest.finish();
-    });
-  });
+  info("- wait for updateend -");
+  await once(sb, "updateend");
+  SimpleTest.finish();
 });
 
 </script>

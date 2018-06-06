@@ -14,12 +14,12 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(async (ms, el) => {
   el.controls = true;
-  el.addEventListener("loadeddata", function() {
+  el.addEventListener("loadeddata", () => {
     ok(el.buffered.length > 0, "data is buffered");
     is(el.buffered.start(0), 0, "must fire loadeddata when data has been loaded");
     is(el.currentTime, 0, "must fire loadeddata at start");
   });
-  el.addEventListener("playing", function() {
+  el.addEventListener("playing", () => {
     ok(el.buffered.length > 0, "data is buffered");
     is(el.buffered.start(0), 0, "must fire playing when data has been loaded");
     ok(el.currentTime >= 0, "must have started playback");

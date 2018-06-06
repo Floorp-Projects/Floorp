@@ -27,12 +27,6 @@
 <!ENTITY firstrun_button_next "Next">
 
 <!ENTITY firstrun_tabqueue_title "Links">
-<!-- Localization note (firstrun_tabqueue_message): 'Tab queue' is a feature that allows users to queue up or save links from outside of Firefox (without switching apps) - these links will be loaded in Firefox the next time Firefox is opened. -->
-<!ENTITY firstrun_tabqueue_message_off "Turn on Tab queue">
-<!ENTITY firstrun_tabqueue_subtext_off "Save links for later in &brandShortName; when tapping them in other apps.">
-
-<!ENTITY firstrun_tabqueue_message_on "Success!">
-<!ENTITY firstrun_tabqueue_subtext_on "You can always turn this off in &settings; under &pref_category_general;.">
 
 <!ENTITY firstrun_readerview_title "Articles">
 <!-- Localization note (firstrun_readerview_message): This is a casual way of describing getting rid of unnecessary things, and is referring to simplifying websites so only the article text and images are visible, removing unnecessary headers or ads. -->

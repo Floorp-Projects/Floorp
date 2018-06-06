@@ -363,7 +363,7 @@ function changePassword() {
 function showTokenInfo() {
   var selected_token = selected_slot.getToken();
   AddInfoRow(bundle.getString("devinfo_label"),
-             selected_token.tokenLabel, "tok_label");
+             selected_token.tokenName, "tok_label");
   AddInfoRow(bundle.getString("devinfo_manID"),
              selected_token.tokenManID, "tok_manID");
   AddInfoRow(bundle.getString("devinfo_serialnum"),

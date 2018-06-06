@@ -15,7 +15,7 @@ runWithMSE(async (ms, el) => {
   el.controls = true;
   await once(ms, "sourceopen");
   ok(true, "Receive a sourceopen event");
-  el.addEventListener("ended", function() {
+  el.addEventListener("ended", () => {
     ok(false, "ended should never fire");
     SimpleTest.finish();
   });

@@ -14,7 +14,7 @@ SimpleTest.waitForExplicitFinish();
 
 // MSE supports setting mode now. make sure it does not throw.
 runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
+  ms.addEventListener("sourceopen", () => {
     const sb = ms.addSourceBuffer("video/webm");
 
     sb.mode = "segments";

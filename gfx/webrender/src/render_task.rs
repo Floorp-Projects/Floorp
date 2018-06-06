@@ -453,8 +453,7 @@ impl RenderTask {
                     ClipSource::Rectangle(..) |
                     ClipSource::RoundedRectangle(..) |
                     ClipSource::Image(..) |
-                    ClipSource::LineDecoration(..) |
-                    ClipSource::BorderCorner(..) => {}
+                    ClipSource::LineDecoration(..) => {}
                 }
             }
         }

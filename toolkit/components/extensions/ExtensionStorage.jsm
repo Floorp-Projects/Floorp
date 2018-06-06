@@ -130,6 +130,18 @@ var ExtensionStorage = {
   },
 
   /**
+   * Clear the cached jsonFilePromise for a given extensionId
+   * (used by ExtensionStorageIDB to free the jsonFile once the data migration
+   * has been completed).
+   *
+   * @param {string} extensionId
+   *        The ID of the extension for which to return a file.
+   */
+  clearCachedFile(extensionId) {
+    this.jsonFilePromises.delete(extensionId);
+  },
+
+  /**
    * Sanitizes the given value, and returns a JSON-compatible
    * representation of it, based on the privileges of the given global.
    *
@@ -239,22 +251,32 @@ var ExtensionStorage = {
    *
    * @param {string} extensionId
    *        The ID of the extension for which to clear storage.
+   * @param {object} options
+   * @param {boolean} [options.shouldNotifyListeners = true]
+   *         Whether or not collect and send the changes to the listeners,
+   *         used when the extension data is being cleared on uninstall.
    * @returns {Promise<void>}
    */
-  async clear(extensionId) {
+  async clear(extensionId, {shouldNotifyListeners = true} = {}) {
     let jsonFile = await this.getFile(extensionId);
 
     let changed = false;
     let changes = {};
 
     for (let [prop, oldValue] of jsonFile.data.entries()) {
-      changes[prop] = {oldValue: serialize(oldValue)};
+      if (shouldNotifyListeners) {
+        changes[prop] = {oldValue: serialize(oldValue)};
+      }
+
       jsonFile.data.delete(prop);
       changed = true;
     }
 
     if (changed) {
-      this.notifyListeners(extensionId, changes);
+      if (shouldNotifyListeners) {
+        this.notifyListeners(extensionId, changes);
+      }
+
       jsonFile.saveSoon();
     }
     return null;
@@ -344,6 +366,62 @@ var ExtensionStorage = {
       }
       this.jsonFilePromises.clear();
     }
+  },
+
+  // Serializes an arbitrary value into a StructuredCloneHolder, if appropriate.
+  serialize,
+
+  /**
+   * Serializes the given storage items for transporting between processes.
+   *
+   * @param {BaseContext} context
+   *        The context to use for the created StructuredCloneHolder
+   *        objects.
+   * @param {Array<string>|object} items
+   *        The items to serialize. If an object is provided, its
+   *        values are serialized to StructuredCloneHolder objects.
+   *        Otherwise, it is returned as-is.
+   * @returns {Array<string>|object}
+   */
+  serializeForContext(context, items) {
+    if (items && typeof items === "object" && !Array.isArray(items)) {
+      let result = {};
+      for (let [key, value] of Object.entries(items)) {
+        try {
+          result[key] = new StructuredCloneHolder(value, context.cloneScope);
+        } catch (e) {
+          throw new ExtensionUtils.ExtensionError(String(e));
+        }
+      }
+      return result;
+    }
+    return items;
+  },
+
+  /**
+   * Deserializes the given storage items into the given extension context.
+   *
+   * @param {BaseContext} context
+   *        The context to use to deserialize the StructuredCloneHolder objects.
+   * @param {object} items
+   *        The items to deserialize. Any property of the object which
+   *        is a StructuredCloneHolder instance is deserialized into
+   *        the extension scope. Any other object is cloned into the
+   *        extension scope directly.
+   * @returns {object}
+   */
+  deserializeForContext(context, items) {
+    let result = new context.cloneScope.Object();
+    for (let [key, value] of Object.entries(items)) {
+      if (value && typeof value === "object" &&
+          Cu.getClassName(value, true) === "StructuredCloneHolder") {
+        value = value.deserialize(context.cloneScope);
+      } else {
+        value = Cu.cloneInto(value, context.cloneScope);
+      }
+      result[key] = value;
+    }
+    return result;
   },
 };
 

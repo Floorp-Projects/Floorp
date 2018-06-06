@@ -561,6 +561,10 @@ pub enum DebugCommand {
     EnableGpuSampleQueries(bool),
     /// Configure if dual-source blending is used, if available.
     EnableDualSourceBlending(bool),
+    /// Show an indicator that moves every time a frame is rendered.
+    EnableNewFrameIndicator(bool),
+    /// Show an indicator that moves every time a scene is built.
+    EnableNewSceneIndicator(bool),
     /// Fetch current documents and display lists.
     FetchDocuments,
     /// Fetch current passes and batches.

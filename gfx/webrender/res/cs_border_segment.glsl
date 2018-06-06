@@ -13,8 +13,8 @@ flat varying vec4 vColor1[2];
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-// x = segment, y = styles, z = edge axes
-flat varying ivec3 vConfig;
+// x = segment, y = styles, z = edge axes, w = clip mode
+flat varying ivec4 vConfig;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
@@ -30,6 +30,10 @@ flat varying vec4 vEdgeReference;
 
 // Stores widths/2 and widths/3 to save doing this in FS.
 flat varying vec4 vPartialWidths;
+
+// Clipping parameters for dot or dash.
+flat varying vec4 vClipParams1;
+flat varying vec4 vClipParams2;
 
 // Local space position
 varying vec2 vPos;
@@ -55,6 +59,10 @@ varying vec2 vPos;
 #define BORDER_STYLE_INSET        8
 #define BORDER_STYLE_OUTSET       9
 
+#define CLIP_NONE   0
+#define CLIP_DASH   1
+#define CLIP_DOT    2
+
 #ifdef WR_VERTEX_SHADER
 
 in vec2 aTaskOrigin;
@@ -64,6 +72,8 @@ in vec4 aColor1;
 in int aFlags;
 in vec2 aWidths;
 in vec2 aRadii;
+in vec4 aClipParams1;
+in vec4 aClipParams2;
 
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;
@@ -120,6 +130,7 @@ void main(void) {
     int segment = aFlags & 0xff;
     int style0 = (aFlags >> 8) & 0xff;
     int style1 = (aFlags >> 16) & 0xff;
+    int clip_mode = (aFlags >> 24) & 0xff;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
     vec2 outer = outer_scale * aRect.zw;
@@ -161,10 +172,11 @@ void main(void) {
             break;
     }
 
-    vConfig = ivec3(
+    vConfig = ivec4(
         segment,
         style0 | (style1 << 16),
-        edge_axis.x | (edge_axis.y << 16)
+        edge_axis.x | (edge_axis.y << 16),
+        clip_mode
     );
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
     vPos = aRect.zw * aPosition.xy;
@@ -175,6 +187,20 @@ void main(void) {
     vClipRadii = vec4(aRadii, max(aRadii - aWidths, 0.0));
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
     vEdgeReference = vec4(edge_reference, edge_reference + aWidths);
+    vClipParams1 = aClipParams1;
+    vClipParams2 = aClipParams2;
+
+    // For the case of dot clips, optimize the number of pixels that
+    // are hit to just include the dot itself.
+    // TODO(gw): We should do something similar in the future for
+    //           dash clips!
+    if (clip_mode == CLIP_DOT) {
+        // Expand by a small amount to allow room for AA around
+        // the dot.
+        float expanded_radius = aClipParams1.z + 2.0;
+        vPos = vClipParams1.xy + expanded_radius * (2.0 * aPosition.xy - 1.0);
+        vPos = clamp(vPos, vec2(0.0), aRect.zw);
+    }
 
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
 }
@@ -276,12 +302,12 @@ vec4 evaluate_color_for_style_in_edge(
 
 void main(void) {
     float aa_range = compute_aa_range(vPos);
-    float d = -1.0;
     vec4 color0, color1;
 
     int segment = vConfig.x;
     ivec2 style = ivec2(vConfig.y & 0xffff, vConfig.y >> 16);
     ivec2 edge_axis = ivec2(vConfig.z & 0xffff, vConfig.z >> 16);
+    int clip_mode = vConfig.w;
 
     float mix_factor = 0.0;
     if (edge_axis.x != edge_axis.y) {
@@ -292,6 +318,30 @@ void main(void) {
     // Check if inside corner clip-region
     vec2 clip_relative_pos = vPos - vClipCenter_Sign.xy;
     bool in_clip_region = all(lessThan(vClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
+    float d = -1.0;
+
+    switch (clip_mode) {
+        case CLIP_DOT: {
+            // Set clip distance based or dot position and radius.
+            d = distance(vClipParams1.xy, vPos) - vClipParams1.z;
+            break;
+        }
+        case CLIP_DASH: {
+            // Get SDF for the two line/tangent clip lines,
+            // do SDF subtract to get clip distance.
+            float d0 = distance_to_line(vClipParams1.xy,
+                                        vClipParams1.zw,
+                                        vPos);
+            float d1 = distance_to_line(vClipParams2.xy,
+                                        vClipParams2.zw,
+                                        vPos);
+            d = max(d0, -d1);
+            break;
+        }
+        case CLIP_NONE:
+        default:
+            break;
+    }
 
     if (in_clip_region) {
         float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy, aa_range);

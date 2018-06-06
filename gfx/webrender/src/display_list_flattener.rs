@@ -20,13 +20,14 @@ use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
 use euclid::{SideOffsets2D, vec2};
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
+use gpu_cache::GpuCacheHandle;
 use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::PictureCompositeMode;
-use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
-use prim_store::{CachedGradientIndex, EdgeAaSegmentMask, ImageSource};
+use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor};
+use prim_store::{EdgeAaSegmentMask, ImageSource};
 use prim_store::{BorderSource, BrushSegment, PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitiveCpu};
 use render_backend::{DocumentView};
@@ -189,9 +190,6 @@ pub struct DisplayListFlattener<'a> {
     /// The configuration to use for the FrameBuilder. We consult this in
     /// order to determine the default font.
     pub config: FrameBuilderConfig,
-
-    /// The gradients collecting during display list flattening.
-    pub cached_gradients: Vec<CachedGradient>,
 }
 
 impl<'a> DisplayListFlattener<'a> {
@@ -204,6 +202,7 @@ impl<'a> DisplayListFlattener<'a> {
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
+        scene_id: u64,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
@@ -224,7 +223,6 @@ impl<'a> DisplayListFlattener<'a> {
             output_pipelines,
             id_to_index_mapper: ClipIdToIndexMapper::default(),
             hit_testing_runs: recycle_vec(old_builder.hit_testing_runs),
-            cached_gradients: recycle_vec(old_builder.cached_gradients),
             scrollbar_prims: recycle_vec(old_builder.scrollbar_prims),
             reference_frame_stack: Vec::new(),
             picture_stack: Vec::new(),
@@ -254,7 +252,8 @@ impl<'a> DisplayListFlattener<'a> {
             view.inner_rect,
             background_color,
             view.window_size,
-            flattener
+            scene_id,
+            flattener,
         )
     }
 
@@ -636,7 +635,6 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.start_point,
                     info.gradient.end_point,
                     item.gradient_stops(),
-                    item.display_list().get(item.gradient_stops()).count(),
                     info.gradient.extend_mode,
                     info.tile_size,
                     info.tile_spacing,
@@ -679,7 +677,6 @@ impl<'a> DisplayListFlattener<'a> {
                     &prim_info,
                     info,
                     item.gradient_stops(),
-                    item.display_list().get(item.gradient_stops()).count(),
                 );
             }
             SpecificDisplayItem::PushStackingContext(ref info) => {
@@ -1494,7 +1491,6 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         border_item: &BorderDisplayItem,
         gradient_stops: ItemRange<GradientStop>,
-        gradient_stops_count: usize,
     ) {
         let rect = info.rect;
         let create_segments = |outset: SideOffsets2D<f32>| {
@@ -1739,7 +1735,6 @@ impl<'a> DisplayListFlattener<'a> {
                     border.gradient.start_point - segment_rel,
                     border.gradient.end_point - segment_rel,
                     gradient_stops,
-                    gradient_stops_count,
                     border.gradient.extend_mode,
                     segment.size,
                     LayoutSize::zero(),
@@ -1775,14 +1770,10 @@ impl<'a> DisplayListFlattener<'a> {
         start_point: LayoutPoint,
         end_point: LayoutPoint,
         stops: ItemRange<GradientStop>,
-        stops_count: usize,
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
     ) {
-        let gradient_index = CachedGradientIndex(self.cached_gradients.len());
-        self.cached_gradients.push(CachedGradient::new());
-
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
         let info = LayoutPrimitiveInfo {
@@ -1811,12 +1802,11 @@ impl<'a> DisplayListFlattener<'a> {
         let prim = BrushPrimitive::new(
             BrushKind::LinearGradient {
                 stops_range: stops,
-                stops_count,
                 extend_mode,
                 reverse_stops,
                 start_point: sp,
                 end_point: ep,
-                gradient_index,
+                stops_handle: GpuCacheHandle::new(),
                 stretch_size,
                 tile_spacing,
                 visible_tiles: Vec::new(),
@@ -1842,9 +1832,6 @@ impl<'a> DisplayListFlattener<'a> {
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
     ) {
-        let gradient_index = CachedGradientIndex(self.cached_gradients.len());
-        self.cached_gradients.push(CachedGradient::new());
-
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
         let info = LayoutPrimitiveInfo {
@@ -1860,7 +1847,7 @@ impl<'a> DisplayListFlattener<'a> {
                 start_radius,
                 end_radius,
                 ratio_xy,
-                gradient_index,
+                stops_handle: GpuCacheHandle::new(),
                 stretch_size,
                 tile_spacing,
                 visible_tiles: Vec::new(),
@@ -2062,7 +2049,8 @@ pub fn build_scene(config: &FrameBuilderConfig, request: SceneRequest) -> BuiltS
         &request.view,
         &request.output_pipelines,
         config,
-        &mut new_scene
+        &mut new_scene,
+        request.scene_id,
     );
 
     BuiltScene {

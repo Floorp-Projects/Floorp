@@ -1,97 +1,53 @@
-# Clipping in WebRender
+# Clipping and Positioning in WebRender
 
-The WebRender display list allows defining clips in two different ways. The
-first is specified directly on each display item and cannot be reused between
-items. The second is specified using the `SpecificDisplayItem::Clip` display item
-and can be reused between items as well as used to define scrollable regions.
+Each non-structural WebRender display list item has
+ * A `ClipId` of a positioning node
+ * A `ClipId` of a clip chain
+ * An item-specific rectangular clip rectangle
 
-## Clips
+The positioning node determines how that item is positioned. It's assumed that the
+positioning node and the item are children of the same reference frame. The clip
+chain determines how that item is clipped. This should be fully independent of
+how the node is positioned and items can be clipped by any `ClipChain` regardless
+of the reference frame of their member clips. Finally, the item-specific
+clipping rectangle is applied directly to the item and should never result in the
+creation of a clip mask itself.
 
-Clips are defined using the ClipRegion in both cases.
+# The `ClipScrollTree`
 
-```rust
-pub struct ClipRegion {
-    pub main: LayoutRect,
-    pub complex: ItemRange<ComplexClip>,
-    pub image_mask: Option<ImageMask>,
-}
-```
+The ClipScrollTree contains two sorts of elements. The first sort are nodes
+that affect the positioning of display primitives and other clips. These
+nodes can currently be reference frames, scroll frames, or sticky frames.
+The second sort of node is a clip node, which specifies some combination of
+a clipping rectangle, a collection of rounded clipping rectangles, and an
+optional image mask. These nodes are created and added to the display list
+during display list flattening.
 
-`main` defines a rectangular clip, while the other members make that rectangle
-smaller. `complex`, if it is not empty, defines the boundaries of a rounded
-rectangle. While `image_mask` defines the positioning, repetition, and data of
-a masking image.
+# `ClipChain`s
 
-## Item Clips
+A `ClipChain` represents some collection of `ClipId`s of clipping nodes in the
+`ClipScrollTree`. The collection defines a clip mask which can be applied
+to a given display item primitive. A `ClipChain` is automatically created
+for every clipping node in the `ClipScrollTree` from the particular node
+and every ancestor clipping node. Additionally, the API exposes functionality
+to create a `ClipChain` given an arbitrary list of clipping nodes and the
+`ClipId` of a parent `ClipChain`. These custom `ClipChain`s will not take
+into account ancestor clipping nodes in the `ClipScrollTree` when clipping
+the item.
 
-Item clips are simply a `ClipRegion` structure defined directly on the
-`DisplayItem`. The important thing to note about these clips is that all the
-coordinate in `ClipRegion` **are in the same coordinate space as the item
-itself**. This different than for clips defined by `SpecificDisplayItem::Clip`.
+Important information about `ClipChain`s:
+ * The `ClipId`s in the list must refer to clipping nodes in the `ClipScrollTree`.
+   The list should not contain `ClipId` of positioning nodes or other `ClipChain`s.
+ * The `ClipId` of a clip node serves at the `ClipId` of that node's automatically
+   generated `ClipChain` as well.
 
-## Clip Display Items
+# The Future
 
-Clip display items allow items to share clips in order to increase performance
-(shared clips are only rasterized once) and to allow for scrolling regions.
-Display items can be assigned a clip display item using the `clip_id`
-field. An item can be assigned any clip that is defined by its parent stacking
-context or any of the ancestors. The behavior of assigning an id outside of
-this hierarchy is undefined, because that situation does not occur in CSS
-
-The clip display item has a `ClipRegion` as well as several other fields:
-
-```rust
-pub struct ClipDisplayItem {
-    pub id: ClipId,
-    pub parent_id: ClipId,
-}
-```
-
-A `ClipDisplayItem` also gets a clip and bounds from the `BaseDisplayItem`. The
-clip is shared among all items that use this `ClipDisplayItem`. Critically,
-**coordinates in this ClipRegion are defined relative to the bounds of the
-ClipDisplayItem itself**. Additionally, WebRender only supports clip rectangles
-that start at the origin of the `BaseDisplayItem` bounds.
-
-The `BaseDisplayItem` bounds are known as the *content rectangle* of the clip. If
-the content rectangle is larger than *main* clipping rectangle, the clip will
-be a scrolling clip and participate in scrolling event capture and
-transformation.
-
-`ClipDisplayItems` are positioned, like all other items, relatively to their
-containing stacking context, yet they also live in a parallel tree defined by
-their `parent_id`. Child clips also include any clipping and scrolling that
-their ancestors do. In this way, a clip is positioned by a stacking context,
-but that position may be adjusted by any scroll offset of its parent clips.
-
-## Clip ids
-
-All clips defined by a `ClipDisplayItem` have an id. It is useful to associate
-an external id with WebRender id in order to allow for tracking and updating
-scroll positions using the WebRender API. In order to make this as cheap as
-possible and to avoid having to create a `HashMap` to map between the two types
-of ids, the WebRender API provides an optional id argument in
-`DisplayListBuilder::define_clip`. The only types of ids that are supported
-here are those created with `ClipId::new(...)`. If this argument is not
-provided `define_clip` will return a uniquely generated id. Thus, the following
-should always be true:
-
-```rust
-let id = ClipId::new(my_internal_id, pipeline_id);
-let generated_id = define_clip(content_rect, clip, id);
-assert!(id == generated_id);
-```
-
-Note that calling `define_clip` multiple times with the same `clip_id` value
-results in undefined behaviour, and should be avoided. There is a debug mode
-assertion to catch this.
-
-## Pending changes
-1. Normalize the way that clipping coordinates are defined. Having them
-   specified in two different ways makes for a confusing API. This should be
-   fixed.  ([github issue](https://github.com/servo/webrender/issues/1090))
-
-1. It should be possible to specify more than one predefined clip for an item.
-   This is necessary for items that live in a scrolling frame, but are also
-   clipped by a clip that lives outside that frame.
-   ([github issue](https://github.com/servo/webrender/issues/840))
+In general, the clipping API is becoming more and more stable as it has become
+more flexible. Some ideas for improving the API further:
+ * Creating a distinction between ids that refer to `ClipScrollTree` nodes and individual
+  `ClipChain`s. This would make it harder to accidentally misuse the API, but require
+   `DisplayListBuilder::define_clip` to return two different types of ids.
+ * Separate out the clipping nodes from the positioning nodes. Perhaps WebRender only
+   needs an API where `ClipChains` are defined individually. This could potentially
+   prevent unnecessary `ClipChain` creation during display list flattening.

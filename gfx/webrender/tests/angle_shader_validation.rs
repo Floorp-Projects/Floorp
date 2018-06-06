@@ -37,10 +37,6 @@ const SHADERS: &[Shader] = &[
         features: CLIP_FEATURES,
     },
     Shader {
-        name: "cs_clip_border",
-        features: CLIP_FEATURES,
-    },
-    Shader {
         name: "cs_clip_line",
         features: CLIP_FEATURES,
     },
@@ -49,15 +45,11 @@ const SHADERS: &[Shader] = &[
         name: "cs_blur",
         features: CACHE_FEATURES,
     },
+    Shader {
+        name: "cs_border_segment",
+        features: CACHE_FEATURES,
+    },
     // Prim shaders
-    Shader {
-        name: "ps_border_corner",
-        features: PRIM_FEATURES,
-    },
-    Shader {
-        name: "ps_border_edge",
-        features: PRIM_FEATURES,
-    },
     Shader {
         name: "ps_split_composite",
         features: PRIM_FEATURES,

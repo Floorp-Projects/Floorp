@@ -12,23 +12,17 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    v.addEventListener("loadedmetadata", function() {
-      ok(true, "Got loadedmetadata event");
-      is(v.videoWidth, 320, "videoWidth has correct initial value");
-      is(v.videoHeight, 240, "videoHeight has correct initial value");
-      SimpleTest.finish();
-    });
-
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      v.play();
-    });
-  });
-
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm"), 0, 318));
+  v.play();
+  await once(v, "loadedmetadata");
+  ok(true, "Got loadedmetadata event");
+  is(v.videoWidth, 320, "videoWidth has correct initial value");
+  is(v.videoHeight, 240, "videoHeight has correct initial value");
+  SimpleTest.finish();
 });
 
 </script>

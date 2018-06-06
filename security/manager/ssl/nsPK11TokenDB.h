@@ -32,12 +32,15 @@ private:
   nsresult refreshTokenInfo();
 
   nsCString mTokenName;
-  nsCString mTokenLabel;
   nsCString mTokenManufacturerID;
   nsCString mTokenHWVersion;
   nsCString mTokenFWVersion;
   nsCString mTokenSerialNum;
   mozilla::UniquePK11SlotInfo mSlot;
+  // True if this is the "PKCS#11 token" that provides cryptographic functions.
+  bool mIsInternalCryptoToken;
+  // True if this is the "PKCS#11 token" where private keys are stored.
+  bool mIsInternalKeyToken;
   int mSeries;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
   nsresult GetAttributeHelper(const nsACString& attribute,

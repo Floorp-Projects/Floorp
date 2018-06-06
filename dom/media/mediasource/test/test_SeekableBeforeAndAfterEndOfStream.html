@@ -12,43 +12,41 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", async function(arrayBuffer) {
-      info("- append buffer -");
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  info("- append first buffer -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer));
 
-      info("- wait for metadata -");
-      await once(v, "loadedmetadata");
+  info("- wait for metadata -");
+  await once(v, "loadedmetadata");
 
-      info("- wait for updateend -");
-      await once(sb, "updateend");
+  info("- wait for updateend -");
+  await once(sb, "updateend");
 
-      info("- check seekable -");
-      const target = 2;
-      ok(v.seekable.length, "Resource is seekable");
-      is(v.seekable.start(0), 0, "Seekable's start point is correct");
-      is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
-      ok(v.seekable.length &&
-         target >= v.seekable.start(0) &&
-         target < v.seekable.end(0), "Target is within seekable range");
+  info("- check seekable -");
+  const target = 2;
+  ok(v.seekable.length, "Resource is seekable");
+  is(v.seekable.start(0), 0, "Seekable's start point is correct");
+  is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
+  ok(v.seekable.length &&
+     target >= v.seekable.start(0) &&
+     target < v.seekable.end(0), "Target is within seekable range");
 
-      info("- call end of stream -");
-      ms.endOfStream();
-      await once(ms, "sourceended");
+  info("- call end of stream -");
+  ms.endOfStream();
+  await once(ms, "sourceended");
 
-      info("- check seekable -");
-      ok(v.seekable.length, "Resource is seekable");
-      is(v.seekable.start(0), 0, "Seekable's start point is correct");
-      is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
-      ok(v.seekable.length &&
-         target >= v.seekable.start(0) &&
-         target < v.seekable.end(0), "Target is within seekable range");
-      SimpleTest.finish();
-    });
-  });
+  info("- check seekable -");
+  ok(v.seekable.length, "Resource is seekable");
+  is(v.seekable.start(0), 0, "Seekable's start point is correct");
+  is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
+  ok(v.seekable.length &&
+     target >= v.seekable.start(0) &&
+     target < v.seekable.end(0), "Target is within seekable range");
+  SimpleTest.finish();
 });
 </script>
 </pre>
