@@ -52,7 +52,7 @@ public:
                                 XULTreeGridRowAccessible* aRowAcc,
                                 nsITreeBoxObject* aTree,
                                 nsITreeView* aTreeView,
-                                int32_t aRow, nsITreeColumn* aColumn) :
+                                int32_t aRow, nsTreeColumn* aColumn) :
     XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView, aRow,
                               aColumn), ia2AccessibleTableCell(this) {}
 

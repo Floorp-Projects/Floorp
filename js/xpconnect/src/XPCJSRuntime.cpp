@@ -206,14 +206,14 @@ RealmPrivate::RealmPrivate(JS::Realm* realm)
 
 static bool
 TryParseLocationURICandidate(const nsACString& uristr,
-                             CompartmentPrivate::LocationHint aLocationHint,
+                             RealmPrivate::LocationHint aLocationHint,
                              nsIURI** aURI)
 {
     static NS_NAMED_LITERAL_CSTRING(kGRE, "resource://gre/");
     static NS_NAMED_LITERAL_CSTRING(kToolkit, "chrome://global/");
     static NS_NAMED_LITERAL_CSTRING(kBrowser, "chrome://browser/");
 
-    if (aLocationHint == CompartmentPrivate::LocationHintAddon) {
+    if (aLocationHint == RealmPrivate::LocationHintAddon) {
         // Blacklist some known locations which are clearly not add-on related.
         if (StringBeginsWith(uristr, kGRE) ||
             StringBeginsWith(uristr, kToolkit) ||
@@ -249,8 +249,9 @@ TryParseLocationURICandidate(const nsACString& uristr,
     return true;
 }
 
-bool CompartmentPrivate::TryParseLocationURI(CompartmentPrivate::LocationHint aLocationHint,
-                                             nsIURI** aURI)
+bool
+RealmPrivate::TryParseLocationURI(RealmPrivate::LocationHint aLocationHint,
+                                  nsIURI** aURI)
 {
     if (!aURI)
         return false;
@@ -576,9 +577,10 @@ NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
     // unscriptable.
     xpc::CompartmentPrivate::Get(compartment)->wasNuked = true;
 
-    // TODO: Loop over all realms in the compartment instead.
-    Realm* realm = GetRealmForCompartment(compartment);
-    xpc::RealmPrivate::Get(realm)->scriptability.Block();
+    auto blockScriptability = [](JSContext*, void*, Handle<Realm*> realm) {
+        xpc::RealmPrivate::Get(realm)->scriptability.Block();
+    };
+    JS::IterateRealmsInCompartment(cx, compartment, nullptr, blockScriptability);
 }
 
 } // namespace xpc
@@ -1073,14 +1075,13 @@ XPCJSRuntime::~XPCJSRuntime()
     MOZ_COUNT_DTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);
 }
 
-// If |*anonymizeID| is non-zero and this is a user compartment, the name will
+// If |*anonymizeID| is non-zero and this is a user realm, the name will
 // be anonymized.
 static void
-GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
-                   bool replaceSlashes)
+GetRealmName(JS::Realm* realm, nsCString& name, int* anonymizeID,
+             bool replaceSlashes)
 {
-    JS::Realm* realm = JS::GetRealmForCompartment(c);
-    if (*anonymizeID && !js::IsSystemCompartment(c)) {
+    if (*anonymizeID && !js::IsSystemRealm(realm)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);
         *anonymizeID += 1;
     } else if (JSPrincipals* principals = JS::GetRealmPrincipals(realm)) {
@@ -1089,13 +1090,13 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
             name.AssignLiteral("(unknown)");
         }
 
-        // If the compartment's location (name) differs from the principal's
-        // script location, append the compartment's location to allow
-        // differentiation of multiple compartments owned by the same principal
-        // (e.g. components owned by the system or null principal).
-        CompartmentPrivate* compartmentPrivate = CompartmentPrivate::Get(c);
-        if (compartmentPrivate) {
-            const nsACString& location = compartmentPrivate->GetLocation();
+        // If the realm's location (name) differs from the principal's script
+        // location, append the realm's location to allow differentiation of
+        // multiple realms owned by the same principal (e.g. components owned
+        // by the system or null principal).
+        RealmPrivate* realmPrivate = RealmPrivate::Get(realm);
+        if (realmPrivate) {
+            const nsACString& location = realmPrivate->GetLocation();
             if (!location.IsEmpty() && !location.Equals(name)) {
                 name.AppendLiteral(", ");
                 name.Append(location);
@@ -1156,7 +1157,7 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
 }
 
 extern void
-xpc::GetCurrentCompartmentName(JSContext* cx, nsCString& name)
+xpc::GetCurrentRealmName(JSContext* cx, nsCString& name)
 {
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     if (!global) {
@@ -1164,9 +1165,9 @@ xpc::GetCurrentCompartmentName(JSContext* cx, nsCString& name)
         return;
     }
 
-    JSCompartment* compartment = GetObjectCompartment(global);
+    JS::Realm* realm = GetNonCCWObjectRealm(global);
     int anonymizeID = 0;
-    GetCompartmentName(compartment, name, &anonymizeID, false);
+    GetRealmName(realm, name, &anonymizeID, false);
 }
 
 void
@@ -1348,6 +1349,19 @@ ReportZoneStats(const JS::ZoneStats& zStats,
     ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shape-tables"),
         zStats.shapeTables,
         "Tables storing shape information.");
+
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/compartment-objects"),
+        zStats.compartmentObjects,
+        "The JSCompartment objects in this zone.");
+
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/cross-compartment-wrapper-tables"),
+        zStats.crossCompartmentWrappersTables,
+        "The cross-compartment wrapper tables.");
+
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/private-data"),
+        zStats.compartmentsPrivateData,
+        "Extra data attached to each compartment by XPConnect, including "
+        "its wrapped-js.");
 
     ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
@@ -1749,7 +1763,7 @@ ReportRealmStats(const JS::RealmStats& realmStats,
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-object"),
         realmStats.realmObject,
-        "The JSCompartment object itself.");
+        "The JS::Realm object itself.");
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-tables"),
         realmStats.realmTables,
@@ -1767,10 +1781,6 @@ ReportRealmStats(const JS::RealmStats& realmStats,
         realmStats.objectMetadataTable,
         "The table used by debugging tools for tracking object metadata");
 
-    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
-        realmStats.crossCompartmentWrappersTable,
-        "The cross-compartment wrapper table.");
-
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
         realmStats.savedStacksSet,
         "The saved stacks set.");
@@ -1782,11 +1792,6 @@ ReportRealmStats(const JS::RealmStats& realmStats,
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("jit-realm"),
         realmStats.jitRealm,
         "The JIT realm.");
-
-    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("private-data"),
-        realmStats.privateData,
-        "Extra data attached to the realm by XPConnect, including "
-        "its wrapped-js.");
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
         realmStats.scriptCountsMap,
@@ -2046,11 +2051,10 @@ class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter
 
     static void RealmCallback(JSContext* cx, void* vdata, Handle<Realm*> realm) {
         // silently ignore OOM errors
-        JSCompartment* c = JS::GetCompartmentForRealm(realm);
         Data* data = static_cast<Data*>(vdata);
         nsCString path;
-        GetCompartmentName(c, path, &data->anonymizeID, /* replaceSlashes = */ true);
-        path.Insert(js::IsSystemCompartment(c)
+        GetRealmName(realm, path, &data->anonymizeID, /* replaceSlashes = */ true);
+        path.Insert(js::IsSystemRealm(realm)
                     ? NS_LITERAL_CSTRING("js-main-runtime-realms/system/")
                     : NS_LITERAL_CSTRING("js-main-runtime-realms/user/"),
                     0);
@@ -2194,10 +2198,9 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     virtual void initExtraRealmStats(Handle<Realm*> realm,
                                      JS::RealmStats* realmStats) override
     {
-        JSCompartment* c = JS::GetCompartmentForRealm(realm);
         xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
-        nsCString cName;
-        GetCompartmentName(c, cName, &mAnonymizeID, /* replaceSlashes = */ true);
+        nsCString rName;
+        GetRealmName(realm, rName, &mAnonymizeID, /* replaceSlashes = */ true);
 
         // Get the realm's global.
         AutoSafeJSContext cx;
@@ -2228,9 +2231,9 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         }
 
         if (needZone)
-            extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void*)js::GetCompartmentZone(c));
+            extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void*)js::GetRealmZone(realm));
 
-        extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(") + cName + NS_LITERAL_CSTRING(")/");
+        extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(") + rName + NS_LITERAL_CSTRING(")/");
 
         // extras->jsPathPrefix is used for almost all the realm-specific
         // reports. At this point it has the form
@@ -2642,14 +2645,14 @@ SetUseCounterCallback(JSObject* obj, JSUseCounter counter)
 }
 
 static void
-CompartmentNameCallback(JSContext* cx, JSCompartment* comp,
-                        char* buf, size_t bufsize)
+GetRealmNameCallback(JSContext* cx, Handle<Realm*> realm,
+                     char* buf, size_t bufsize)
 {
     nsCString name;
     // This is called via the JSAPI and isn't involved in memory reporting, so
-    // we don't need to anonymize compartment names.
+    // we don't need to anonymize realm names.
     int anonymizeID = 0;
-    GetCompartmentName(comp, name, &anonymizeID, /* replaceSlashes = */ false);
+    GetRealmName(realm, name, &anonymizeID, /* replaceSlashes = */ false);
     if (name.Length() >= bufsize)
         name.Truncate(bufsize - 1);
     memcpy(buf, name.get(), name.Length() + 1);
@@ -2662,13 +2665,6 @@ DestroyRealm(JSFreeOp* fop, JS::Realm* realm)
     // cleanup for us), and null out the private field.
     mozilla::UniquePtr<RealmPrivate> priv(RealmPrivate::Get(realm));
     JS::SetRealmPrivate(realm, nullptr);
-}
-
-static void
-GetRealmName(JSContext* cx, Handle<Realm*> realm, char* buf, size_t bufsize)
-{
-    JSCompartment* comp = GetCompartmentForRealm(realm);
-    CompartmentNameCallback(cx, comp, buf, bufsize);
 }
 
 static bool
@@ -2840,9 +2836,8 @@ XPCJSRuntime::Initialize(JSContext* cx)
 
     JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
-    JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
     JS::SetDestroyRealmCallback(cx, DestroyRealm);
-    JS::SetRealmNameCallback(cx, GetRealmName);
+    JS::SetRealmNameCallback(cx, GetRealmNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
     mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
             DoCycleCollectionCallback);

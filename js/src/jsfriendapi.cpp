@@ -157,8 +157,11 @@ JS::GetIsSecureContext(JS::Realm* realm)
 JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment)
 {
-    Realm* realm = JS::GetRealmForCompartment(compartment);
-    return realm->principals();
+    // Note: for now we assume a single realm per compartment. This API will go
+    // away after we remove the remaining callers. See bug 1465700.
+    MOZ_RELEASE_ASSERT(compartment->realms().length() == 1);
+
+    return compartment->realms()[0]->principals();
 }
 
 JS_FRIEND_API(JSPrincipals*)
@@ -206,10 +209,10 @@ JS_GetScriptPrincipals(JSScript* script)
     return script->principals();
 }
 
-JS_FRIEND_API(JSCompartment*)
-js::GetScriptCompartment(JSScript* script)
+JS_FRIEND_API(JS::Realm*)
+js::GetScriptRealm(JSScript* script)
 {
-    return script->compartment();
+    return script->realm();
 }
 
 JS_FRIEND_API(bool)
@@ -338,15 +341,27 @@ js::ObjectClassName(JSContext* cx, HandleObject obj)
 }
 
 JS_FRIEND_API(JS::Zone*)
-js::GetCompartmentZone(JSCompartment* comp)
+js::GetRealmZone(JS::Realm* realm)
 {
-    return comp->zone();
+    return realm->zone();
 }
 
 JS_FRIEND_API(bool)
 js::IsSystemCompartment(JSCompartment* comp)
 {
-    return JS::GetRealmForCompartment(comp)->isSystem();
+    // Note: for now we assume a single realm per compartment. This API will
+    // hopefully go away once Gecko supports same-compartment realms. Another
+    // option is to return comp->zone()->isSystem here, but we'd have to make
+    // sure that's equivalent.
+    MOZ_RELEASE_ASSERT(comp->realms().length() == 1);
+
+    return comp->realms()[0]->isSystem();
+}
+
+JS_FRIEND_API(bool)
+js::IsSystemRealm(JS::Realm* realm)
+{
+    return realm->isSystem();
 }
 
 JS_FRIEND_API(bool)

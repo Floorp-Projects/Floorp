@@ -13,7 +13,7 @@
 #include "mozilla/Attributes.h"
 
 class nsITreeBoxObject;
-class nsITreeColumn;
+class nsTreeColumn;
 struct nsTreeRange;
 
 class nsTreeSelection final : public nsINativeTreeSelection
@@ -45,7 +45,7 @@ protected:
 
   bool mSuppressed; // Whether or not we should be firing onselect events.
   int32_t mCurrentIndex; // The item to draw the rect around. The last one clicked, etc.
-  nsCOMPtr<nsITreeColumn> mCurrentColumn;
+  RefPtr<nsTreeColumn> mCurrentColumn;
   int32_t mShiftSelectPivot; // Used when multiple SHIFT+selects are performed to pivot on.
 
   nsTreeRange* mFirstRange; // Our list of ranges.

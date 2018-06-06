@@ -964,9 +964,6 @@ JS_SetSizeOfIncludingThisCompartmentCallback(JSContext* cx,
                                              JSSizeOfIncludingThisCompartmentCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback);
-
-extern JS_PUBLIC_API(void)
 JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks);
 
 extern JS_PUBLIC_API(void)
@@ -1107,6 +1104,13 @@ using IterateRealmCallback = void (*)(JSContext* cx, void* data, Handle<Realm*> 
  */
 extern JS_PUBLIC_API(void)
 IterateRealms(JSContext* cx, void* data, IterateRealmCallback realmCallback);
+
+/**
+ * Like IterateRealms, but only iterates realms in |compartment|.
+ */
+extern JS_PUBLIC_API(void)
+IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+                           IterateRealmCallback realmCallback);
 
 } // namespace JS
 
@@ -1952,7 +1956,7 @@ class JS_PUBLIC_API(RealmOptions)
 };
 
 JS_PUBLIC_API(const RealmCreationOptions&)
-RealmCreationOptionsRef(JSCompartment* compartment);
+RealmCreationOptionsRef(JS::Realm* realm);
 
 JS_PUBLIC_API(const RealmCreationOptions&)
 RealmCreationOptionsRef(JSContext* cx);
