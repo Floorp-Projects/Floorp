@@ -748,43 +748,6 @@
   min-height: 12px;
 }
 
-.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
-.alltabs-item[tabIsVisible] {
-  /* box-shadow instead of background-color to work around native styling */
-  box-shadow: inset -5px 0 ThreeDShadow;
-}
-
-.alltabs-endimage[soundplaying],
-.alltabs-endimage[muted],
-.alltabs-endimage[activemedia-blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-playing.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.alltabs-endimage[muted] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
-}
-
-.alltabs-endimage[activemedia-blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
-}
-
 #appMenu-allTabsView {
   --blue-40: #45a1ff;
   max-width: 42em;

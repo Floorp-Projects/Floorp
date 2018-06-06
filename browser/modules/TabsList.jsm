@@ -7,7 +7,7 @@
 ChromeUtils.defineModuleGetter(this, "PanelMultiView",
                                "resource:///modules/PanelMultiView.jsm");
 
-var EXPORTED_SYMBOLS = ["TabsPanel", "TabsPopup"];
+var EXPORTED_SYMBOLS = ["TabsPanel"];
 const NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function setAttributes(element, attrs) {
@@ -138,110 +138,6 @@ class TabsListBase {
   _removeItem(item, tab) {
     this.tabToElement.delete(tab);
     item.remove();
-  }
-}
-
-class TabsPopup extends TabsListBase {
-  /*
-   * Generate toolbarbuttons for tabs that meet some criteria.
-   *
-   * @param {object} opts Options for configuring this instance.
-   * @param {function} opts.filterFn
-   *                   A function to filter which tabs are used.
-   * @param {object} opts.view
-   *                 A panel view to listen to events on.
-   * @param {object} opts.containerNode
-   *                 An optional element to append elements to, if ommitted they
-   *                 will be appended to opts.view.firstChild or before
-   *                 opts.insertBefore.
-   * @param {object} opts.insertBefore
-   *                 An optional element to insert the results before, if
-   *                 omitted they will be appended to opts.containerNode.
-   * @param {function} opts.onPopulate
-   *                   An optional function that will be called with the
-   *                   popupshowing event that caused the menu to be populated.
-   */
-  constructor({className, filterFn, insertBefore, onPopulate, popup}) {
-    super({className, filterFn, insertBefore, onPopulate, containerNode: popup});
-    this.containerNode.addEventListener("popupshowing", this);
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "popuphidden":
-        if (event.target == this.containerNode) {
-          this._cleanup();
-        }
-        break;
-      case "popupshowing":
-        if (event.target == this.containerNode) {
-          this._populate(event);
-        }
-        break;
-      default:
-        super.handleEvent(event);
-        break;
-    }
-  }
-
-  _setupListeners() {
-    super._setupListeners();
-    this.containerNode.addEventListener("popuphidden", this);
-  }
-
-  _cleanupListeners() {
-    super._cleanupListeners();
-    this.containerNode.removeEventListener("popuphidden", this);
-  }
-
-  _createRow(tab) {
-    let item = this.doc.createElementNS(NSXUL, "menuitem");
-    item.setAttribute("class", "menuitem-iconic menuitem-with-favicon");
-    this._setRowAttributes(item, tab);
-    return item;
-  }
-
-  _setRowAttributes(item, tab) {
-    item.setAttribute("label", tab.label);
-    item.setAttribute("crop", "end");
-
-    if (tab.hasAttribute("busy")) {
-      item.setAttribute("busy", tab.getAttribute("busy"));
-      item.removeAttribute("iconloadingprincipal");
-      item.removeAttribute("image");
-    } else {
-      item.setAttribute("iconloadingprincipal", tab.getAttribute("iconloadingprincipal"));
-      item.setAttribute("image", tab.getAttribute("image"));
-      item.removeAttribute("busy");
-    }
-
-    if (tab.hasAttribute("pending"))
-      item.setAttribute("pending", tab.getAttribute("pending"));
-    else
-      item.removeAttribute("pending");
-
-    if (tab.selected)
-      item.setAttribute("selected", "true");
-    else
-      item.removeAttribute("selected");
-
-    let addEndImage = () => {
-      let endImage = this.doc.createElement("image");
-      endImage.setAttribute("class", "alltabs-endimage");
-      let endImageContainer = this.doc.createElement("hbox");
-      endImageContainer.setAttribute("align", "center");
-      endImageContainer.setAttribute("pack", "center");
-      endImageContainer.appendChild(endImage);
-      item.appendChild(endImageContainer);
-      return endImage;
-    };
-
-    if (item.firstChild)
-      item.firstChild.remove();
-    if (tab.hasAttribute("muted"))
-      addEndImage().setAttribute("muted", "true");
-    else if (tab.hasAttribute("soundplaying"))
-      addEndImage().setAttribute("soundplaying", "true");
   }
 }
 
