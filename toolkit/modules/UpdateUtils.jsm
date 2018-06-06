@@ -246,16 +246,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
     Cu.reportError("XPCOM ABI unknown");
   }
 
-  if (AppConstants.platform == "macosx") {
-    // Mac universal build should report a different ABI than either macppc
-    // or mactel.
-    let macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
-                   getService(Ci.nsIMacUtils);
-
-    if (macutils.isUniversalBinary) {
-      abi += "-u-" + macutils.architecturesInBinary;
-    }
-  } else if (AppConstants.platform == "win") {
+  if (AppConstants.platform == "win") {
     // Windows build should report the CPU architecture that it's running on.
     abi += "-" + gWinCPUArch;
   }

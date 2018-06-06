@@ -56,6 +56,8 @@ RUN /usr/local/sbin/setup_packages.sh $DOCKER_IMAGE_PACKAGES && \
       python \
       python3.5 \
       python3-minimal \
+      python-zstandard \
+      python3-zstandard \
       xz-utils
 
 # %include testing/mozharness/external_tools/robustcheckout.py

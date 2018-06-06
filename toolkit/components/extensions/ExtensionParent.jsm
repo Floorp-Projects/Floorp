@@ -345,6 +345,11 @@ ProxyMessenger = {
     };
 
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
+
+    if (extension.wakeupBackground) {
+      await extension.wakeupBackground();
+    }
+
     let {
       messageManager: receiverMM,
       xulBrowser: receiverBrowser,
@@ -1729,16 +1734,6 @@ for (let name of StartupCache.STORE_NAMES) {
   StartupCache[name] = new CacheStore(name);
 }
 
-function makeStartupPromise(event) {
-  return ExtensionUtils.promiseObserved(event).then(() => {});
-}
-
-// browserPaintedPromise and browserStartupPromise are promises that
-// resolve after the first browser window is painted and after browser
-// windows have been restored, respectively.
-let browserPaintedPromise = makeStartupPromise("browser-delayed-startup-finished");
-let browserStartupPromise = makeStartupPromise("sessionstore-windows-restored");
-
 var ExtensionParent = {
   GlobalManager,
   HiddenExtensionPage,
@@ -1747,12 +1742,21 @@ var ExtensionParent = {
   StartupCache,
   WebExtensionPolicy,
   apiManager,
-  browserPaintedPromise,
-  browserStartupPromise,
   promiseExtensionViewLoaded,
   watchExtensionProxyContextLoad,
   DebugUtils,
 };
+
+// browserPaintedPromise and browserStartupPromise are promises that
+// resolve after the first browser window is painted and after browser
+// windows have been restored, respectively.
+// _resetStartupPromises should only be called from outside this file in tests.
+ExtensionParent._resetStartupPromises = () => {
+  ExtensionParent.browserPaintedPromise = promiseObserved("browser-delayed-startup-finished").then(() => {});
+  ExtensionParent.browserStartupPromise = promiseObserved("sessionstore-windows-restored").then(() => {});
+};
+ExtensionParent._resetStartupPromises();
+
 
 XPCOMUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
   return Object.freeze({

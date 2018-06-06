@@ -25,6 +25,14 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
     return true;
   }
 
+  // TODO : this old way would be removed when user-gestures-needed becomes
+  // as a default option to block autoplay.
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
+    // If elelement is blessed, it would always be allowed to play().
+    return aElement->IsBlessed() ||
+           EventStateManager::IsHandlingUserInput();
+  }
+
   // Pages which have been granted permission to capture WebRTC camera or
   // microphone are assumed to be trusted, and are allowed to autoplay.
   MediaManager* manager = MediaManager::GetIfExists();
@@ -35,23 +43,8 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
     }
   }
 
-  // TODO : this old way would be removed when user-gestures-needed becomes
-  // as a default option to block autoplay.
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
-    // If elelement is blessed, it would always be allowed to play().
-    return aElement->IsBlessed() ||
-           EventStateManager::IsHandlingUserInput();
-  }
-
   // Muted content
   if (aElement->Volume() == 0.0 || aElement->Muted()) {
-    return true;
-  }
-
-  // Media has already loaded metadata and doesn't contain audio track
-  if (aElement->IsVideo() &&
-      aElement->ReadyState() >= HTMLMediaElementBinding::HAVE_METADATA &&
-      !aElement->HasAudio()) {
     return true;
   }
 

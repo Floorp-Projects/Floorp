@@ -51,8 +51,10 @@
   margin-inline-end: 6px;
 }
 
+.sidebar-placesTreechildren::-moz-tree-twisty(selected),
 .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
   color: #fff;
+  fill-opacity: 1;
   font-weight: bold;
 }
 
@@ -69,61 +71,36 @@
 .sidebar-placesTreechildren::-moz-tree-twisty {
   -moz-appearance: none;
   padding: 0 2px;
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
+  list-style-image: url("chrome://global/skin/tree/arrow-collapsed.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
 }
 
-.sidebar-placesTreechildren::-moz-tree-twisty(closed, selected) {
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
+.sidebar-placesTreechildren::-moz-tree-twisty(selected) {
+  fill: currentColor;
 }
 
 .sidebar-placesTreechildren::-moz-tree-twisty(open) {
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
-}
-
-.sidebar-placesTreechildren::-moz-tree-twisty(open, selected) {
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+  list-style-image: url("chrome://global/skin/tree/arrow-expanded.svg");
 }
 
 .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
-}
-
-.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed, selected) {
-  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl");
+  list-style-image: url("chrome://global/skin/tree/arrow-collapsed-rtl.svg");
 }
 
 @media (-moz-mac-yosemite-theme) {
+  .sidebar-placesTreechildren::-moz-tree-twisty(selected),
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
     color: -moz-dialogtext;
+    fill-opacity: 0.6;
     font-weight: 500;
   }
 
+  .sidebar-placesTreechildren::-moz-tree-twisty(selected, focus),
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected, focus) {
     color: #fff;
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-twisty(closed, selected) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-twisty(closed, selected, focus) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-twisty(open, selected) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-twisty(open, selected, focus) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
-  }
-
-  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed, selected) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
-  }
-
-  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed, selected, focus) {
-    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl")
+    fill-opacity: 1;
   }
 }
 

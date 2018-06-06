@@ -13,12 +13,7 @@ function run_test() {
     OSVersion += " (" + Services.sysinfo.getProperty("secondaryLibrary") + ")";
   } catch (e) {}
   OSVersion = encodeURIComponent(OSVersion);
-  var macutils = null;
-  try {
-    macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
-               getService(Ci.nsIMacUtils);
-  } catch (e) {}
-  var abi = macutils && macutils.isUniversalBinary ? "Universal-gcc3" : Services.appinfo.XPCOMABI;
+  var abi = Services.appinfo.XPCOMABI;
 
   let defaults = Services.prefs.getDefaultBranch(null);
   let channel = defaults.getCharPref("app.update.channel", "default");

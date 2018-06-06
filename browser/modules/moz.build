@@ -167,6 +167,7 @@ EXTRA_JS_MODULES += [
     'ReaderParent.jsm',
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
+    'SavantShieldStudy.jsm',
     'SchedulePressure.jsm',
     'SiteDataManager.jsm',
     'SitePermissions.jsm',
