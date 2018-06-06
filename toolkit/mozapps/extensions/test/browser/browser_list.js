@@ -206,6 +206,7 @@ add_task(async function() {
 
   info("Disabling");
   EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
+  await new Promise(executeSoon);
   is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
 
   is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -345,6 +346,7 @@ add_task(async function() {
 
   info("Enabling");
   EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
+  await new Promise(executeSoon);
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
 
   is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
