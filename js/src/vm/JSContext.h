@@ -256,7 +256,7 @@ struct JSContext : public JS::RootingContext,
 
     JS::Zone* zone() const {
         MOZ_ASSERT_IF(!realm() && zone_, inAtomsZone());
-        MOZ_ASSERT_IF(realm(), js::GetCompartmentZone(GetCompartmentForRealm(realm())) == zone_);
+        MOZ_ASSERT_IF(realm(), js::GetRealmZone(realm()) == zone_);
         return zoneRaw();
     }
 

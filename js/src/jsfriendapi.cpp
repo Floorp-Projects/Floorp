@@ -338,9 +338,9 @@ js::ObjectClassName(JSContext* cx, HandleObject obj)
 }
 
 JS_FRIEND_API(JS::Zone*)
-js::GetCompartmentZone(JSCompartment* comp)
+js::GetRealmZone(JS::Realm* realm)
 {
-    return comp->zone();
+    return realm->zone();
 }
 
 JS_FRIEND_API(bool)
