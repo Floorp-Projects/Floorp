@@ -306,24 +306,12 @@ int32_t TreeBoxObject::HorizontalPosition()
   return 0;
 }
 
-NS_IMETHODIMP TreeBoxObject::GetHorizontalPosition(int32_t *aHorizontalPosition)
-{
-  *aHorizontalPosition = HorizontalPosition();
-  return NS_OK;
-}
-
 int32_t TreeBoxObject::GetPageLength()
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
     return body->PageLength();
   return 0;
-}
-
-NS_IMETHODIMP TreeBoxObject::GetPageLength(int32_t *aPageLength)
-{
-  *aPageLength = GetPageLength();
-  return NS_OK;
 }
 
 NS_IMETHODIMP TreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
