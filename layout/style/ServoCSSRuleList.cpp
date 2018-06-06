@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/CSSCounterStyleRule.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
@@ -19,7 +20,6 @@
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoFontFeatureValuesRule.h"
 #include "mozilla/StyleSheet.h"
 
@@ -111,7 +111,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE_CSS(PAGE, Page)
       CASE_RULE_CSS(SUPPORTS, Supports)
       CASE_RULE_CSS(DOCUMENT, MozDocument)
-      CASE_RULE(IMPORT, Import)
+      CASE_RULE_CSS(IMPORT, Import)
       CASE_RULE(FONT_FEATURE_VALUES, FontFeatureValues)
       CASE_RULE_CSS(FONT_FACE, FontFace)
       CASE_RULE_CSS(COUNTER_STYLE, CounterStyle)
