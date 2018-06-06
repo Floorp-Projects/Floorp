@@ -62,7 +62,7 @@ const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
-const TOPIC_LOCALES_CHANGE       = "intl:app-locales-changed";
+const REQ_LOCALES_CHANGED_TOPIC  = "intl:requested-locales-changed";
 const QUIT_APPLICATION_TOPIC     = "quit-application";
 
 const SEARCH_ENGINE_REMOVED      = "engine-removed";
@@ -3009,9 +3009,9 @@ SearchService.prototype = {
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
-        gInitialized = true;
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
         this._recordEngineTelemetry();
+        gInitialized = true;
       } catch (err) {
         LOG("Reinit failed: " + err);
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
@@ -3406,29 +3406,12 @@ SearchService.prototype = {
   },
 
   _parseListJSON: function SRCH_SVC_parseListJSON(list, uris) {
-    let json;
-    try {
-      json = JSON.parse(list);
-    } catch (e) {
-      Cu.reportError("parseListJSON: Failed to parse list.json: " + e);
-      dump("parseListJSON: Failed to parse list.json: " + e + "\n");
-      return;
-    }
-
     let searchSettings;
-    let locale = Services.locale.getAppLocaleAsBCP47();
-    if ("locales" in json &&
-        locale in json.locales) {
-      searchSettings = json.locales[locale];
-    } else {
-      // No locales were found, so use the JSON as is.
-      // It should have a default section.
-      if (!("default" in json)) {
-        Cu.reportError("parseListJSON: Missing default in list.json");
-        dump("parseListJSON: Missing default in list.json\n");
-        return;
-      }
-      searchSettings = json;
+    try {
+      searchSettings = JSON.parse(list);
+    } catch (e) {
+      LOG("failing to parse list.json: " + e);
+      return;
     }
 
     // Check if we have a useable country specific list of visible default engines.
@@ -3482,7 +3465,7 @@ SearchService.prototype = {
     }
 
     // Remove any engine names that are supposed to be ignored.
-    // This pref is only allowed in a partner distribution.
+    // This pref is only allows in a partner distribution.
     let branch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
     if (isPartnerBuild() &&
         branch.getPrefType("ignoredJAREngines") == branch.PREF_STRING) {
@@ -3492,16 +3475,6 @@ SearchService.prototype = {
       // Don't allow all engines to be hidden
       if (filteredEngineNames.length > 0) {
         engineNames = filteredEngineNames;
-      }
-    }
-
-    if ("regionOverrides" in json &&
-        searchRegion in json.regionOverrides) {
-      for (let engine in json.regionOverrides[searchRegion]) {
-        let index = engineNames.indexOf(engine);
-        if (index > -1) {
-          engineNames[index] = json.regionOverrides[searchRegion][engine];
-        }
       }
     }
 
@@ -3515,14 +3488,8 @@ SearchService.prototype = {
     if (searchRegion && searchRegion in searchSettings &&
         "searchDefault" in searchSettings[searchRegion]) {
       this._searchDefault = searchSettings[searchRegion].searchDefault;
-    } else if ("searchDefault" in searchSettings.default) {
-      this._searchDefault = searchSettings.default.searchDefault;
     } else {
-      this._searchDefault = json.default.searchDefault;
-    }
-
-    if (!this._searchDefault) {
-      Cu.reportError("parseListJSON: No searchDefault");
+      this._searchDefault = searchSettings.default.searchDefault;
     }
 
     if (searchRegion && searchRegion in searchSettings &&
@@ -3530,8 +3497,6 @@ SearchService.prototype = {
       this._searchOrder = searchSettings[searchRegion].searchOrder;
     } else if ("searchOrder" in searchSettings.default) {
       this._searchOrder = searchSettings.default.searchOrder;
-    } else if ("searchOrder" in json.default) {
-      this._searchOrder = json.default.searchOrder;
     }
   },
 
@@ -4456,10 +4421,9 @@ SearchService.prototype = {
         this._removeObservers();
         break;
 
-      case TOPIC_LOCALES_CHANGE:
+      case REQ_LOCALES_CHANGED_TOPIC:
         // Locale changed. Re-init. We rely on observers, because we can't
         // return this promise to anyone.
-        // FYI, This is also used by the search tests to do an async reinit.
         this._asyncReInit();
         break;
     }
@@ -4514,7 +4478,10 @@ SearchService.prototype = {
 
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
-    Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
+
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.obs.addObserver(this, REQ_LOCALES_CHANGED_TOPIC);
+    }
 
     // The current stage of shutdown. Used to help analyze crash
     // signatures in case of shutdown timeout.
@@ -4556,7 +4523,10 @@ SearchService.prototype = {
   _removeObservers: function SRCH_SVC_removeObservers() {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
-    Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
+
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.obs.removeObserver(this, REQ_LOCALES_CHANGED_TOPIC);
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI([

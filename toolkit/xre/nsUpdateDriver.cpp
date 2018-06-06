@@ -606,6 +606,9 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
   int argc = 5;
   if (restart) {
     argc = appArgc + 6;
+    if (gRestartedByOS) {
+      argc += 1;
+    }
   }
   char **argv = new char*[argc + 1];
   if (!argv) {
@@ -622,10 +625,13 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
     for (int i = 1; i < appArgc; ++i) {
       argv[6 + i] = appArgv[i];
     }
-    argv[argc] = nullptr;
-  } else {
-    argv[5] = nullptr;
+    if (gRestartedByOS) {
+      // We haven't truly started up, restore this argument so that we will have
+      // it upon restart.
+      argv[6 + appArgc] = const_cast<char*>("-os-restarted");
+    }
   }
+  argv[argc] = nullptr;
 
   if (restart && gSafeMode) {
     PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");

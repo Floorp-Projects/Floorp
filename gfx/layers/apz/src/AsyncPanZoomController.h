@@ -908,8 +908,10 @@ private:
   // This allows us to transform events into Gecko's coordinate space.
   FrameMetrics mExpectedGeckoMetrics;
 
-  // These variables cache the scroll offset and zoom stored in |mFrameMetrics|
-  // the last time SampleCompositedAsyncTransform() was called.
+  // These variables cache the layout viewport, scroll offset, and zoom stored
+  // in |mFrameMetrics| the last time SampleCompositedAsyncTransform() was
+  // called.
+  CSSRect mCompositedLayoutViewport;
   CSSPoint mCompositedScrollOffset;
   CSSToParentLayerScale2D mCompositedZoom;
 
@@ -992,6 +994,12 @@ public:
   };
 
   /**
+   * Get the current layout viewport of the scrollable frame corresponding to
+   * this APZC.
+   */
+  CSSRect GetCurrentAsyncLayoutViewport(AsyncTransformConsumer aMode) const;
+
+  /**
    * Get the current scroll offset of the scrollable frame corresponding
    * to this APZC, including the effects of any asynchronous panning and
    * zooming, in ParentLayer pixels.
@@ -1041,11 +1049,12 @@ private:
   bool SampleCompositedAsyncTransform();
 
   /*
-   * Helper functions to query the async scroll offset and zoom either
-   * directly from |mFrameMetrics|, or from cached variables that store
-   * the scroll offset and zoom from the last time it was sampled by
-   * calling SampleCompositedAsyncTransform(), depending on who is asking.
+   * Helper functions to query the async layout viewport, scroll offset, and
+   * zoom either directly from |mFrameMetrics|, or from cached variables that
+   * store the required value from the last time it was sampled by calling
+   * SampleCompositedAsyncTransform(), depending on who is asking.
    */
+  CSSRect GetEffectiveLayoutViewport(AsyncTransformConsumer aMode) const;
   CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
   CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
 

@@ -36,6 +36,7 @@ jobs:
       - deb7-python
       - deb7-python3.5
       - deb7-python3-defaults
+      - deb7-python-zstandard
       - deb7-xz-utils
   toolchain-build:
     symbol: I(toolchain)
@@ -78,6 +79,7 @@ jobs:
       SNAPSHOT: '20170830T000511Z'
     packages:
       - deb9-mercurial
+      - deb9-python-zstandard
   android-build:
     symbol: I(agb)
     parent: debian9-base

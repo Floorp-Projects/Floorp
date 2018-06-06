@@ -145,6 +145,19 @@ jobs:
         sha256: ab84e017d1660efd30e9e0593a4c8b976aeda013cefb8c416dd284cc7222c11c
       patch: valgrind-wheezy.diff
 
+  deb7-dh-python:
+    description: "dh-python for Debian wheezy"
+    treeherder:
+      symbol: Deb7(dh-python)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20170125T211752Z/pool/main/d/dh-python/dh-python_2.20170125.dsc
+        sha256: ef4f2951cea36ae4aac29126a1017505f98b595432fb5bdac0f21b4b4d72c1b4
+      packages:
+        - deb7-python3.5
+        - deb7-python3-defaults
+
   deb7-dpkg-1.17:
     description: "dpkg 1.17 for Debian wheezy"
     treeherder:
@@ -212,3 +225,30 @@ jobs:
         url: http://snapshot.debian.org/archive/debian/20170119T152956Z/pool/main/g/gdb/gdb_7.12-6.dsc
         sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
       patch: gdb-wheezy.diff
+
+  deb7-python-zstandard:
+    description: "python-zstandard for Debian wheezy"
+    treeherder:
+      symbol: Deb7(python-zstandard)
+    run:
+      using: debian-package
+      tarball:
+        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+      patch: python-zstandard-wheezy.diff
+      packages:
+        - deb7-dh-python
+        - deb7-python
+        - deb7-python3.5
+        - deb7-python3-defaults
+
+  deb9-python-zstandard:
+    description: "python-zstandard for Debian stretch"
+    treeherder:
+      symbol: Deb9(python-zstandard)
+    run:
+      using: debian-package
+      dist: stretch
+      tarball:
+        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b

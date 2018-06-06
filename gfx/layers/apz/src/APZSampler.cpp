@@ -150,6 +150,16 @@ APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aC
                                               aOutClipTransform);
 }
 
+CSSRect
+APZSampler::GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetCurrentAsyncLayoutViewport(AsyncPanZoomController::eForCompositing);
+}
+
 ParentLayerPoint
 APZSampler::GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer)
 {

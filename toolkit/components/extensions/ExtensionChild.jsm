@@ -467,9 +467,18 @@ class Messenger {
           },
         };
 
+        const childManager = this.context.viewType == "background" ? this.context.childManager : null;
         MessageChannel.addListener(this.messageManagers, "Extension:Message", listener);
+        if (childManager) {
+          childManager.callParentFunctionNoReturn("runtime.addMessagingListener",
+                                                  ["onMessage"]);
+        }
         return () => {
           MessageChannel.removeListener(this.messageManagers, "Extension:Message", listener);
+          if (childManager) {
+            childManager.callParentFunctionNoReturn("runtime.removeMessagingListener",
+                                                    ["onMessage"]);
+          }
         };
       },
     }).api();
@@ -552,9 +561,18 @@ class Messenger {
           },
         };
 
+        const childManager = this.context.viewType == "background" ? this.context.childManager : null;
         MessageChannel.addListener(this.messageManagers, "Extension:Connect", listener);
+        if (childManager) {
+          childManager.callParentFunctionNoReturn("runtime.addMessagingListener",
+                                                  ["onConnect"]);
+        }
         return () => {
           MessageChannel.removeListener(this.messageManagers, "Extension:Connect", listener);
+          if (childManager) {
+            childManager.callParentFunctionNoReturn("runtime.removeMessagingListener",
+                                                    ["onConnect"]);
+          }
         };
       },
     }).api();

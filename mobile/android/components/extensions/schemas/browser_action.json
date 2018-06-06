@@ -32,7 +32,8 @@
               "browser_style": {
                 "type": "boolean",
                 "deprecated": "Unsupported on Android.",
-                "optional": true
+                "optional": true,
+                "default": false
               },
               "default_area": {
                 "description": "Defines the location the browserAction will appear by default.  The default location is navbar.",

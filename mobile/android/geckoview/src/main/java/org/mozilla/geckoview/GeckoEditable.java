@@ -11,10 +11,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
@@ -29,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -43,6 +46,7 @@ import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 
 /**
  * GeckoEditable implements only some functions of Editable
@@ -61,6 +65,7 @@ import android.view.View;
     // Filters to implement Editable's filtering functionality
     private InputFilter[] mFilters;
 
+    /* package */ final GeckoSession mSession;
     private final AsyncText mText;
     private final Editable mProxy;
     private final ConcurrentLinkedQueue<Action> mActions;
@@ -85,7 +90,18 @@ import android.view.View;
     private boolean mNeedUpdateComposition; // Used by IC thread
     private boolean mSuppressKeyUp; // Used by IC thread
 
+    private int mIMEState = // Used by IC thread.
+            SessionTextInput.EditableListener.IME_STATE_DISABLED;
+    private String mIMETypeHint = ""; // Used by IC/UI thread.
+    private String mIMEModeHint = ""; // Used by IC thread.
+    private String mIMEActionHint = ""; // Used by IC thread.
+    private int mIMEFlags; // Used by IC thread.
+
     private boolean mIgnoreSelectionChange; // Used by Gecko thread
+
+    // Prevent showSoftInput and hideSoftInput from being called multiple times in a row,
+    // including reentrant calls on some devices. Used by UI/IC thread.
+    /* package */ final AtomicInteger mSoftInputReentrancyGuard = new AtomicInteger();
 
     private static final int IME_RANGE_CARETPOSITION = 1;
     private static final int IME_RANGE_RAWINPUT = 2;
@@ -607,12 +623,13 @@ import android.view.View;
         }
     }
 
-    public GeckoEditable() {
+    public GeckoEditable(@NonNull final GeckoSession session) {
         if (DEBUG) {
             // Called by SessionTextInput.
             ThreadUtils.assertOnUiThread();
         }
 
+        mSession = session;
         mText = new AsyncText();
         mActions = new ConcurrentLinkedQueue<Action>();
 
@@ -853,13 +870,8 @@ import android.view.View;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void sendKeyEvent(final @Nullable View view, final boolean inputActive, final int action,
-                             @NonNull KeyEvent event) {
-        final Editable editable = getEditable();
-        if (editable == null) {
-            return;
-        }
-
+    public void sendKeyEvent(final @Nullable View view, final int action, @NonNull KeyEvent event) {
+        final Editable editable = mProxy;
         final KeyListener keyListener = TextKeyListener.getInstance();
         event = translateKey(event.getKeyCode(), event);
 
@@ -868,7 +880,7 @@ import android.view.View;
         final int keyCode = event.getKeyCode();
         final boolean handled;
 
-        if (!inputActive || shouldSkipKeyListener(keyCode, event)) {
+        if (shouldSkipKeyListener(keyCode, event)) {
             handled = false;
         } else if (action == KeyEvent.ACTION_DOWN) {
             setSuppressKeyUp(true);
@@ -929,6 +941,10 @@ import android.view.View;
     }
 
     private boolean shouldSkipKeyListener(final int keyCode, final @NonNull KeyEvent event) {
+        if (mIMEState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            return true;
+        }
+
         // Preserve enter and tab keys for the browser
         if (keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_TAB) {
@@ -1174,27 +1190,71 @@ import android.view.View;
         mIcPostHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (type == SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT) {
-                    if (mNeedSync) {
-                        icSyncShadowText();
-                    }
-                    return;
-                }
-
-                if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_FOCUS &&
-                        mListener != null) {
-                    mFocusedChild = child;
-                    mNeedSync = false;
-                    mText.syncShadowText(/* listener */ null);
-                } else if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_BLUR) {
-                    mFocusedChild = null;
-                }
-
-                if (mListener != null) {
-                    mListener.notifyIME(type);
-                }
+                icNotifyIME(child, type);
             }
         });
+    }
+
+    /* package */ void icNotifyIME(final IGeckoEditableChild child, final int type) {
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+
+        if (type == SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT) {
+            if (mNeedSync) {
+                icSyncShadowText();
+            }
+            return;
+        }
+
+        switch (type) {
+            case SessionTextInput.EditableListener.NOTIFY_IME_OF_FOCUS:
+                mFocusedChild = child;
+                mNeedSync = false;
+                mText.syncShadowText(/* listener */ null);
+
+                // Do not reset mIMEState here; see comments in notifyIMEContext
+                if (mIMEState != SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS);
+                }
+                break;
+
+            case SessionTextInput.EditableListener.NOTIFY_IME_OF_BLUR:
+                mFocusedChild = null;
+                break;
+
+            case SessionTextInput.EditableListener.NOTIFY_IME_OPEN_VKB:
+                toggleSoftInput(/* force */ true);
+                return; // Don't notify listener.
+
+            case SessionTextInput.EditableListener.NOTIFY_IME_TO_COMMIT_COMPOSITION: {
+                // Gecko already committed its composition. However, Android keyboards
+                // have trouble dealing with us removing the composition manually on the
+                // Java side. Therefore, we keep the composition intact on the Java side.
+                // The text content should still be in-sync on both sides.
+                //
+                // Nevertheless, if we somehow lost the composition, we must force the
+                // keyboard to reset.
+                final Spanned text = mText.getShadowText();
+                final Object[] spans = text.getSpans(0, text.length(), Object.class);
+                for (final Object span : spans) {
+                    if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                        // Still have composition; no need to reset.
+                        return; // Don't notify listener.
+                    }
+                }
+                // No longer have composition; perform reset.
+                icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
+                return; // Don't notify listener.
+            }
+
+            default:
+                throw new IllegalArgumentException("Invalid notifyIME type: " + type);
+        }
+
+        if (mListener != null) {
+            mListener.notifyIME(type);
+        }
     }
 
     @Override // IGeckoEditableParent
@@ -1217,10 +1277,209 @@ import android.view.View;
         mIcPostHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mListener == null) {
+                icNotifyIMEContext(state, typeHint, modeHint, actionHint, flags);
+            }
+        });
+    }
+
+    /* package */ void icNotifyIMEContext(int state, final String typeHint,
+                                          final String modeHint, final String actionHint,
+                                          final int flags) {
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+
+        // For some input type we will use a widget to display the ui, for those we must not
+        // display the ime. We can display a widget for date and time types and, if the sdk version
+        // is 11 or greater, for datetime/month/week as well.
+        if (typeHint != null && (typeHint.equalsIgnoreCase("date") ||
+                                 typeHint.equalsIgnoreCase("time") ||
+                                 typeHint.equalsIgnoreCase("month") ||
+                                 typeHint.equalsIgnoreCase("week") ||
+                                 typeHint.equalsIgnoreCase("datetime-local"))) {
+            state = SessionTextInput.EditableListener.IME_STATE_DISABLED;
+        }
+
+        final int oldState = mIMEState;
+        mIMEState = state;
+        mIMETypeHint = (typeHint == null) ? "" : typeHint;
+        mIMEModeHint = (modeHint == null) ? "" : modeHint;
+        mIMEActionHint = (actionHint == null) ? "" : actionHint;
+        mIMEFlags = flags;
+
+        if (mListener != null) {
+            mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, flags);
+        }
+
+        // On focus, the notifyIMEContext call comes *before* the
+        // notifyIME(NOTIFY_IME_OF_FOCUS) call, but we need to call restartInput during
+        // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
+        // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
+        // restartInput here.
+
+        // In either case, there is nothing to do here if we were disabled before.
+        if (oldState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            return;
+        }
+        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR);
+        } else if (mFocusedChild != null) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
+        }
+    }
+
+    private void icRestartInput(@GeckoSession.TextInputDelegate.RestartReason final int reason) {
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mSoftInputReentrancyGuard.incrementAndGet();
+                mSession.getTextInput().getDelegate().restartInput(mSession, reason);
+
+                postToInputConnection(new Runnable() {
+                    @Override
+                    public void run() {
+                        toggleSoftInput(/* force */ false);
+                    }
+                });
+            }
+        });
+    }
+
+    public void onCreateInputConnection(final EditorInfo outAttrs) {
+        final int state = mIMEState;
+        final String typeHint = mIMETypeHint;
+        final String modeHint = mIMEModeHint;
+        final String actionHint = mIMEActionHint;
+        final int flags = mIMEFlags;
+
+        // Some keyboards require us to fill out outAttrs even if we return null.
+        outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
+        outAttrs.actionLabel = null;
+
+        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            outAttrs.inputType = InputType.TYPE_NULL;
+            toggleSoftInput(/* force */ false);
+            return;
+        }
+
+        outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
+        if (state == SessionTextInput.EditableListener.IME_STATE_PASSWORD ||
+                "password".equalsIgnoreCase(typeHint)) {
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
+        } else if (typeHint.equalsIgnoreCase("url") ||
+                typeHint.equalsIgnoreCase("mozAwesomebar")) {
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
+        } else if (typeHint.equalsIgnoreCase("email")) {
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+        } else if (typeHint.equalsIgnoreCase("tel")) {
+            outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
+        } else if (typeHint.equalsIgnoreCase("number") ||
+                typeHint.equalsIgnoreCase("range")) {
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER
+                    | InputType.TYPE_NUMBER_FLAG_SIGNED
+                    | InputType.TYPE_NUMBER_FLAG_DECIMAL;
+        } else if (modeHint.equalsIgnoreCase("numeric")) {
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
+                    InputType.TYPE_NUMBER_FLAG_SIGNED |
+                    InputType.TYPE_NUMBER_FLAG_DECIMAL;
+        } else if (modeHint.equalsIgnoreCase("digit")) {
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
+        } else {
+            // TYPE_TEXT_FLAG_IME_MULTI_LINE flag makes the fullscreen IME line wrap
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT |
+                    InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE;
+            if (typeHint.equalsIgnoreCase("textarea") ||
+                    typeHint.length() == 0) {
+                // empty typeHint indicates contentEditable/designMode documents
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+            }
+            if (modeHint.equalsIgnoreCase("uppercase")) {
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+            } else if (modeHint.equalsIgnoreCase("titlecase")) {
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
+            } else if (typeHint.equalsIgnoreCase("text") &&
+                    !modeHint.equalsIgnoreCase("autocapitalized")) {
+                outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_NORMAL;
+            } else if (!modeHint.equalsIgnoreCase("lowercase")) {
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+            }
+            // auto-capitalized mode is the default for types other than text
+        }
+
+        if (actionHint.equalsIgnoreCase("go")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        } else if (actionHint.equalsIgnoreCase("done")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
+        } else if (actionHint.equalsIgnoreCase("next")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
+        } else if (actionHint.equalsIgnoreCase("search") ||
+                typeHint.equalsIgnoreCase("search")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        } else if (actionHint.equalsIgnoreCase("send")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
+        } else if (actionHint.length() > 0) {
+            if (DEBUG)
+                Log.w(LOGTAG, "Unexpected actionHint=\"" + actionHint + "\"");
+            outAttrs.actionLabel = actionHint;
+        }
+
+        if ((flags & SessionTextInput.EditableListener.IME_FLAG_PRIVATE_BROWSING) != 0) {
+            outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
+        }
+
+        toggleSoftInput(/* force */ false);
+    }
+
+    /* package */ void toggleSoftInput(final boolean force) {
+        // Can be called from UI or IC thread.
+        final int state = mIMEState;
+        final int flags = mIMEFlags;
+
+        // There are three paths that toggleSoftInput() can be called:
+        // 1) through calling restartInput(), which then indirectly calls
+        //    onCreateInputConnection() and then toggleSoftInput().
+        // 2) through calling toggleSoftInput() directly from restartInput().
+        //    This path is the fallback in case 1) does not happen.
+        // 3) through a system-generated onCreateInputConnection() call when the activity
+        //    is restored from background, which then calls toggleSoftInput().
+        // mSoftInputReentrancyGuard is needed to ensure that between the different paths,
+        // the soft input is only toggled exactly once.
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final int reentrancyGuard = mSoftInputReentrancyGuard.decrementAndGet();
+                final boolean isReentrant;
+                if (reentrancyGuard < 0) {
+                    mSoftInputReentrancyGuard.incrementAndGet();
+                    isReentrant = false;
+                } else {
+                    isReentrant = reentrancyGuard > 0;
+                }
+
+                // When using Find In Page, we can still receive notifyIMEContext calls due to the
+                // selection changing when highlighting. However in this case we don't want to
+                // show/hide the keyboard because the find box has the focus and is taking input from
+                // the keyboard.
+                final View view = mSession.getTextInput().getView();
+                final boolean isFocused = (view == null) || view.hasFocus();
+
+                final boolean isUserAction = ((flags &
+                        SessionTextInput.EditableListener.IME_FLAG_USER_ACTION) != 0);
+
+                if (!force && (isReentrant || !isFocused || !isUserAction)) {
                     return;
                 }
-                mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, flags);
+                if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                    mSession.getTextInput().getDelegate().hideSoftInput(mSession);
+                    return;
+                }
+                mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
+                mSession.getTextInput().getDelegate().showSoftInput(mSession);
             }
         });
     }
@@ -1704,32 +1963,31 @@ import android.view.View;
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
-    public boolean onKeyPreIme(final @Nullable View view, final boolean inputActive,
-                               final int keyCode, final @NonNull KeyEvent event) {
+    public boolean onKeyPreIme(final @Nullable View view, final int keyCode,
+                               final @NonNull KeyEvent event) {
         return false;
     }
 
-    public boolean onKeyDown(final @Nullable View view, final boolean inputActive,
-                             final int keyCode, final @NonNull KeyEvent event) {
-        return processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event);
+    public boolean onKeyDown(final @Nullable View view, final int keyCode,
+                             final @NonNull KeyEvent event) {
+        return processKey(view, KeyEvent.ACTION_DOWN, keyCode, event);
     }
 
-    public boolean onKeyUp(final @Nullable View view, final boolean inputActive,
-                           final int keyCode, final @NonNull KeyEvent event) {
-        return processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event);
+    public boolean onKeyUp(final @Nullable View view, final int keyCode,
+                           final @NonNull KeyEvent event) {
+        return processKey(view, KeyEvent.ACTION_UP, keyCode, event);
     }
 
-    public boolean onKeyMultiple(final @Nullable View view, final boolean inputActive,
-                                 final int keyCode, int repeatCount,
+    public boolean onKeyMultiple(final @Nullable View view, final int keyCode, int repeatCount,
                                  final @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
             final String str = event.getCharacters();
             for (int i = 0; i < str.length(); i++) {
                 final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
-                if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN,
+                if (!processKey(view, KeyEvent.ACTION_DOWN,
                                 KeyEvent.KEYCODE_UNKNOWN, charEvent) ||
-                    !processKey(view, inputActive, KeyEvent.ACTION_UP,
+                    !processKey(view, KeyEvent.ACTION_UP,
                                 KeyEvent.KEYCODE_UNKNOWN, charEvent)) {
                     return false;
                 }
@@ -1738,16 +1996,16 @@ import android.view.View;
         }
 
         while ((repeatCount--) > 0) {
-            if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event) ||
-                !processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event)) {
+            if (!processKey(view, KeyEvent.ACTION_DOWN, keyCode, event) ||
+                !processKey(view, KeyEvent.ACTION_UP, keyCode, event)) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean onKeyLongPress(final @Nullable View view, final boolean inputActive,
-                                  final int keyCode, final @NonNull KeyEvent event) {
+    public boolean onKeyLongPress(final @Nullable View view, final int keyCode,
+                                  final @NonNull KeyEvent event) {
         return false;
     }
 
@@ -1770,8 +2028,8 @@ import android.view.View;
         };
     }
 
-    private boolean processKey(final @Nullable View view, final boolean inputActive,
-                               final int action, final int keyCode, final @NonNull KeyEvent event) {
+    private boolean processKey(final @Nullable View view, final int action, final int keyCode,
+                               final @NonNull KeyEvent event) {
         if (keyCode > KeyEvent.getMaxKeyCode() || !shouldProcessKey(keyCode, event)) {
             return false;
         }
@@ -1779,7 +2037,7 @@ import android.view.View;
         postToInputConnection(new Runnable() {
             @Override
             public void run() {
-                sendKeyEvent(view, inputActive, action, event);
+                sendKeyEvent(view, action, event);
             }
         });
         return true;

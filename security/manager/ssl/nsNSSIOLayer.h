@@ -322,6 +322,5 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family,
                                  uint32_t tlsFlags);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
-nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo* infoObject, int error);
 
 #endif // nsNSSIOLayer_h
