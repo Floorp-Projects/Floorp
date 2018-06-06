@@ -622,12 +622,6 @@ JS_SetSizeOfIncludingThisCompartmentCallback(JSContext* cx,
     cx->runtime()->sizeOfIncludingThisCompartmentCallback = callback;
 }
 
-JS_PUBLIC_API(void)
-JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback)
-{
-    cx->runtime()->compartmentNameCallback = callback;
-}
-
 #if defined(NIGHTLY_BUILD)
 JS_PUBLIC_API(void)
 JS_SetErrorInterceptorCallback(JSRuntime* rt, JSErrorInterceptor* callback)
