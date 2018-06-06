@@ -106,23 +106,6 @@ interface TreeBoxObject : BoxObject {
   void scrollByPages(long numPages);
 
   /**
-   * Scrolls such that a given cell is visible (if possible)
-   * at the top left corner of the visible view.
-   */
-  void scrollToCell(long row, TreeColumn? col);
-
-  /**
-   * Scrolls horizontally so that the specified column is
-   * at the left of the view (if possible).
-   */
-  void scrollToColumn(TreeColumn? col);
-
-  /**
-   * Scroll to a specific horizontal pixel position.
-   */
-  void scrollToHorizontalPosition(long horizontalPosition);
-
-  /**
    * Invalidation methods for fine-grained painting control.
    */
   void invalidate();
@@ -130,7 +113,6 @@ interface TreeBoxObject : BoxObject {
   void invalidateRow(long index);
   void invalidateCell(long row, TreeColumn? col);
   void invalidateRange(long startIndex, long endIndex);
-  void invalidateColumnRange(long startIndex, long endIndex, TreeColumn? col);
 
   /**
    * A hit test that can tell you what row the mouse is over.

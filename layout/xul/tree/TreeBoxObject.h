@@ -109,14 +109,10 @@ public:
   // void ScrollToRow(int32_t index);
   // void ScrollByLines(int32_t numLines);
   // void ScrollByPages(int32_t numPages);
-  // void ScrollToCell(int32_t row, nsTreeColumn* col);
-  // void ScrollToColumn(nsTreeColumn* col);
-  // void ScrollToHorizontalPosition(int32_t horizontalPosition);
   // void InvalidateColumn(nsTreeColumn* col);
   // void InvalidateRow(int32_t index);
   // void InvalidateCell(int32_t row, nsTreeColumn* col);
   // void InvalidateRange(int32_t startIndex, int32_t endIndex);
-  // void InvalidateColumnRange(int32_t startIndex, int32_t endIndex, nsTreeColumn* col);
   // void RowCountChanged(int32_t index, int32_t count);
 
 protected:
