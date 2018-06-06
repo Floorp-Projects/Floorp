@@ -133,6 +133,21 @@ savant:
     expiry_version: "65"
     extra_keys:
       subcategory: The broad event category for this probe. E.g. navigation
+  addon:
+    objects: ["install_start", "install_finish", "remove_start", "remove_finish",
+              "enable", "disable" ]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time an addon event as listed in the objects field fires.
+      The value field records the addon ID for the event.
+    bug_numbers: [1457226, 1465707]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
