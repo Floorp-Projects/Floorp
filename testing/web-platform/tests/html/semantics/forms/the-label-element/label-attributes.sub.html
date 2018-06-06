@@ -222,7 +222,7 @@
                     "The number of labels should be 2 after the labelable element is moved to iframe.");
     });
 
-    iframe.setAttribute('src', 'http://web-platform.test:8000/html/semantics/forms/the-label-element/iframe-label-attributes.html');
+    iframe.setAttribute('src', 'http://{{domains[]}}:{{ports[http][0]}}/html/semantics/forms/the-label-element/iframe-label-attributes.html');
     document.body.appendChild(iframe);
   }, "A labelable element is moved to iframe.");
 
