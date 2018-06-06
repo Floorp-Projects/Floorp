@@ -16,7 +16,6 @@ const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -4184,17 +4183,6 @@ const BrowserSearch = {
     openTrustedLinkIn(this.searchEnginesURL, where);
   },
 
-  _getSearchEngineId(engine) {
-    if (engine && engine.identifier) {
-      return engine.identifier;
-    }
-
-    if (!engine || (engine.name === undefined))
-      return "other";
-
-    return "other-" + engine.name;
-  },
-
   /**
    * Helper to record a search with Telemetry.
    *
@@ -4213,7 +4201,6 @@ const BrowserSearch = {
    *        selected it: {selection: {index: The selected index, kind: "key" or "mouse"}}
    */
   recordSearchInTelemetry(engine, source, details = {}) {
-    BrowserUITelemetry.countSearchEvent(source, null, details.selection);
     try {
       BrowserUsageTelemetry.recordSearch(engine, source, details);
     } catch (ex) {
@@ -4237,8 +4224,6 @@ const BrowserSearch = {
    *        (string) Where was the search link opened (e.g. new tab, current tab, ..).
    */
   recordOneoffSearchInTelemetry(engine, source, type, where) {
-    let id = this._getSearchEngineId(engine) + "." + source;
-    BrowserUITelemetry.countOneoffSearchEvent(id, type, where);
     try {
       const details = {type, isOneOff: true};
       BrowserUsageTelemetry.recordSearch(engine, source, details);
