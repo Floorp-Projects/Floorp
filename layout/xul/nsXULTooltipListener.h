@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIContent;
-class nsITreeColumn;
+class nsTreeColumn;
 
 namespace mozilla {
 namespace dom {
@@ -99,7 +99,7 @@ protected:
   bool mIsSourceTree;
   bool mNeedTitletip;
   int32_t mLastTreeRow;
-  nsCOMPtr<nsITreeColumn> mLastTreeCol;
+  RefPtr<nsTreeColumn> mLastTreeCol;
 #endif
 };
 

@@ -964,14 +964,14 @@ void
 SetLocationForGlobal(JSObject* global, const nsACString& location)
 {
     MOZ_ASSERT(global);
-    CompartmentPrivate::Get(global)->SetLocation(location);
+    RealmPrivate::Get(global)->SetLocation(location);
 }
 
 void
 SetLocationForGlobal(JSObject* global, nsIURI* locationURI)
 {
     MOZ_ASSERT(global);
-    CompartmentPrivate::Get(global)->SetLocationURI(locationURI);
+    RealmPrivate::Get(global)->SetLocationURI(locationURI);
 }
 
 } // namespace xpc
