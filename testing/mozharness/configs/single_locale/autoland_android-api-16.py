@@ -30,7 +30,6 @@ config = {
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "platform": "android",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",

@@ -1,6 +1,5 @@
 config = {
     # mozconfig file to use, it depends on branch and platform names
-    "platform": "macosx64",
     "app_name": "browser",
     "mozconfig_platform": "macosx64",
     "mozconfig_variant": "l10n-mozconfig",
