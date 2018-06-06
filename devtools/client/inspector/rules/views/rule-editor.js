@@ -389,8 +389,11 @@ RuleEditor.prototype = {
 
   /**
    * Update the rule editor with the contents of the rule.
+   *
+   * @param {Boolean} reset
+   *        True to completely reset the rule editor before populating.
    */
-  populate: function() {
+  populate: function(reset) {
     // Clear out existing viewers.
     while (this.selectorText.hasChildNodes()) {
       this.selectorText.removeChild(this.selectorText.lastChild);
@@ -449,10 +452,20 @@ RuleEditor.prototype = {
       });
     }
 
+    if (reset) {
+      while (this.propertyList.hasChildNodes()) {
+        this.propertyList.removeChild(this.propertyList.lastChild);
+      }
+    }
+
     for (const prop of this.rule.textProps) {
       if (!prop.editor && !prop.invisible) {
         const editor = new TextPropertyEditor(this, prop);
         this.propertyList.appendChild(editor.element);
+      } else if (prop.editor) {
+        // If an editor already existed, append it to the bottom now to make sure the
+        // order of editors in the DOM follow the order of the rule's properties.
+        this.propertyList.appendChild(prop.editor.element);
       }
     }
   },
