@@ -70,7 +70,7 @@ NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties,
 #endif
 
 //******************************************************************************
-RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
+RasterImage::RasterImage(nsIURI* aURI /* = nullptr */) :
   ImageResource(aURI), // invoke superclass's constructor
   mSize(0,0),
   mLockCount(0),
@@ -1817,8 +1817,8 @@ RasterImage::ReportDecoderError()
     nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
     nsAutoString src;
     if (GetURI()) {
-      nsCString uri;
-      if (GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
+      nsAutoCString uri;
+      if (!GetSpecTruncatedTo1k(uri)) {
         msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
       }
       src = NS_ConvertUTF8toUTF16(uri);

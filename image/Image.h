@@ -11,7 +11,6 @@
 #include "mozilla/TimeStamp.h"
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
-#include "ImageURL.h"
 #include "ImageContainer.h"
 #include "LookupResult.h"
 #include "nsStringFwd.h"
@@ -233,7 +232,7 @@ public:
   virtual bool HasError() = 0;
   virtual void SetHasError() = 0;
 
-  virtual ImageURL* GetURI() = 0;
+  virtual nsIURI* GetURI() const = 0;
 
   virtual void ReportUseCounters() { }
 };
@@ -279,11 +278,13 @@ public:
    * Returns a non-AddRefed pointer to the URI associated with this image.
    * Illegal to use off-main-thread.
    */
-  virtual ImageURL* GetURI() override { return mURI.get(); }
+  nsIURI* GetURI() const override { return mURI; }
 
 protected:
-  explicit ImageResource(ImageURL* aURI);
+  explicit ImageResource(nsIURI* aURI);
   ~ImageResource();
+
+  bool GetSpecTruncatedTo1k(nsCString& aSpec) const;
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.
@@ -326,8 +327,8 @@ protected:
 #endif
 
   // Member data shared by all implementations of this abstract class
-  RefPtr<ProgressTracker>     mProgressTracker;
-  RefPtr<ImageURL>            mURI;
+  RefPtr<ProgressTracker>       mProgressTracker;
+  nsCOMPtr<nsIURI>              mURI;
   TimeStamp                     mLastRefreshTime;
   uint64_t                      mInnerWindowId;
   uint32_t                      mAnimationConsumers;
