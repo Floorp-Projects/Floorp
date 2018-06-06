@@ -464,8 +464,7 @@ MediaSourceTrackDemuxer::DoSeek(const TimeUnit& aTime)
     mManager->GetSample(mType,
                         TimeUnit::Zero(),
                         result);
-  mManager->AssertHasNextSampleIndex(mType);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(result) && sample);
+  MOZ_ASSERT(NS_SUCCEEDED(result) && sample);
   mNextSample = Some(sample);
   mReset = false;
   {
@@ -506,7 +505,6 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   if (mNextSample) {
     sample = mNextSample.ref();
     mNextSample.reset();
-    mManager->AssertHasNextSampleIndex(mType);
   } else {
     MediaResult result = NS_OK;
     sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, result);
@@ -520,7 +518,6 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
       }
       return SamplesPromise::CreateAndReject(result, __func__);
     }
-    mManager->AssertHasNextSampleIndex(mType);
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->mSamples.AppendElement(sample);
