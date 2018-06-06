@@ -45,10 +45,8 @@ FAILURE_STR = "Failed"
 
 # mandatory configuration options, without them, this script will not work
 # it's a list of values that are already known before starting a build
-configuration_tokens = ('branch',
-                        'platform',
-                        'update_channel',
-                        )
+configuration_tokens = ('branch', 'update_channel')
+
 # some other values such as "%(version)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
