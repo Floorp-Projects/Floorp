@@ -472,6 +472,17 @@ Rule.prototype = {
     this.matchedSelectors = options.matchedSelectors || [];
     const newTextProps = this._getTextProperties();
 
+    // The element style rule behaves differently on refresh. We basically need to update
+    // it to reflect the new text properties exactly. The order might have changed, some
+    // properties might have been removed, etc. And we don't need to mark anything as
+    // disabled here. The element style rule should always reflect the content of the
+    // style attribute.
+    if (this.domRule.type === ELEMENT_STYLE) {
+      this.textProps = newTextProps;
+      this.editor.populate(true);
+      return;
+    }
+
     // Update current properties for each property present on the style.
     // This will mark any touched properties with _visited so we
     // can detect properties that weren't touched (because they were
