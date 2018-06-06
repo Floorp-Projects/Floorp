@@ -13,7 +13,6 @@ config = {
     "is_automation": True,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
-    "platform": "android",
     "build_target": "Android_arm-eabi-gcc3",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
