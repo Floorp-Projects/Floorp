@@ -148,6 +148,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             'Apache-2.0 / MIT',
             'Apache-2.0/MIT',
             'Apache-2 / MIT',
+            'BSD-2-Clause',
             'CC0-1.0',
             'ISC',
             'ISC/Apache-2.0',
@@ -162,9 +163,6 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         # Licenses for code used at build time (e.g. code generators). Please see the above
         # comments before adding anything to this list.
         BUILDTIME_LICENSE_WHITELIST = {
-            'BSD-2-Clause': [
-                'Inflector',
-            ],
             'BSD-3-Clause': [
                 'adler32',
                 'bindgen',
