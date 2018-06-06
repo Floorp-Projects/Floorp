@@ -132,16 +132,7 @@ impl TextureUpdateList {
 /// Wraps a tiling::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
     pub frame: tiling::Frame,
-}
-
-impl RenderedDocument {
-    pub fn new(
-        frame: tiling::Frame,
-    ) -> Self {
-        RenderedDocument {
-            frame,
-        }
-    }
+    pub is_new_scene: bool,
 }
 
 pub enum DebugOutput {
