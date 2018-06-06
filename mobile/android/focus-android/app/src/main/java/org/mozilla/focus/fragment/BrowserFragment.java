@@ -1312,6 +1312,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private void showFindInPage() {
         findInPageView.setVisibility(View.VISIBLE);
         findInPageQuery.requestFocus();
+
+        int height = findInPageView.getHeight();
+        swipeRefresh.setPadding(0, 0, 0, height);
     }
 
     private void hideFindInPage() {
@@ -1323,9 +1326,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         webView.clearMatches();
         findInPageCoordinator.reset();
-        findInPageView.setVisibility(View.GONE);
+        findInPageView.setVisibility(View.INVISIBLE);
         findInPageQuery.setText("");
         findInPageQuery.clearFocus();
+        swipeRefresh.setPadding(0, 0, 0, 0);
         ViewUtils.hideKeyboard(findInPageQuery);
     }
 
