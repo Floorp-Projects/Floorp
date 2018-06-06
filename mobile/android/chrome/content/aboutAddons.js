@@ -521,9 +521,9 @@ var Addons = {
 
     function setDisabled(addon, value) {
       if (value) {
-        return addon.enable();
+        return addon.disable();
       }
-      return addon.disable();
+      return addon.enable();
     }
 
     let opType;
