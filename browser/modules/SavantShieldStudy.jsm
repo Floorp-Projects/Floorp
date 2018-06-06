@@ -9,6 +9,10 @@ var EXPORTED_SYMBOLS = ["SavantShieldStudy"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm"
+});
+
 // See LOG_LEVELS in Console.jsm. Examples: "all", "info", "warn", & "error".
 const PREF_LOG_LEVEL = "shield.savant.loglevel";
 
@@ -36,6 +40,7 @@ class SavantShieldStudyClass {
 
   init() {
     this.TelemetryEvents = new TelemetryEvents(this.STUDY_TELEMETRY_CATEGORY);
+    this.AddonListener = new AddonListener(this.STUDY_TELEMETRY_CATEGORY);
 
     // check the pref in case Normandy flipped it on before we could add the pref listener
     this.shouldCollect = Services.prefs.getBoolPref(this.STUDY_PREF);
@@ -73,6 +78,8 @@ class SavantShieldStudyClass {
       log.debug("Study expired in between this and the previous session.");
       this.endStudy("expired");
     }
+
+    this.AddonListener.init();
   }
 
   isEligible() {
@@ -149,6 +156,7 @@ class SavantShieldStudyClass {
       return;
     }
 
+    this.AddonListener.uninit();
     Services.prefs.removeObserver(this.ALWAYS_PRIVATE_BROWSING_PREF, this);
     Services.prefs.removeObserver(this.STUDY_PREF, this);
     Services.prefs.removeObserver(this.STUDY_DURATION_OVERRIDE_PREF, this);
@@ -173,6 +181,70 @@ class TelemetryEvents {
   disableCollection() {
     log.debug("Study has been disabled; turning OFF data collection.");
     Services.telemetry.setEventRecordingEnabled(this.STUDY_TELEMETRY_CATEGORY, false);
+  }
+}
+
+class AddonListener {
+  constructor(studyCategory) {
+    this.STUDY_TELEMETRY_CATEGORY = studyCategory;
+    this.METHOD = "addon";
+    this.EXTRA_SUBCATEGORY = "customize";
+  }
+
+  init() {
+    this.listener = {
+      onInstalling: (addon, needsRestart) => {
+        const addon_id = addon.id;
+        this.recordEvent("install_start", addon_id);
+      },
+
+      onInstalled: (addon) => {
+        const addon_id = addon.id;
+        this.recordEvent("install_finish", addon_id);
+      },
+
+      onEnabled: (addon) => {
+        const addon_id = addon.id;
+        this.recordEvent("enable", addon_id);
+      },
+
+      onDisabled: (addon) => {
+        const addon_id = addon.id;
+        this.recordEvent("disable", addon_id);
+      },
+
+      onUninstalling: (addon, needsRestart) => {
+        const addon_id = addon.id;
+        this.recordEvent("remove_start", addon_id);
+      },
+
+      onUninstalled: (addon) => {
+        const addon_id = addon.id;
+        this.recordEvent("remove_finish", addon_id);
+      }
+    };
+    this.addListeners();
+  }
+
+  addListeners() {
+    AddonManager.addAddonListener(this.listener);
+  }
+
+  recordEvent(event, addon_id) {
+    log.debug(`Addon ID: ${addon_id}; event: ${ event }`);
+    Services.telemetry.recordEvent(this.STUDY_TELEMETRY_CATEGORY,
+                                  this.METHOD,
+                                  event,
+                                  addon_id,
+                                  { subcategory: this.EXTRA_SUBCATEGORY });
+  }
+
+  removeListeners() {
+    AddonManager.removeAddonListener(this.listener);
+  }
+
+  uninit() {
+    this.removeListeners();
   }
 }
 
