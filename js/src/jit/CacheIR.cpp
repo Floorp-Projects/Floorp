@@ -1114,7 +1114,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
 
-    // Enter compartment of target since some checks have side-effects
+    // Enter realm of target since some checks have side-effects
     // such as de-lazifying type info.
     {
         AutoRealm ar(cx_, unwrapped);
