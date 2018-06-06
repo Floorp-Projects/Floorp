@@ -26,6 +26,7 @@
 #include "ScreenHelperWin.h"
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
+#include "mozilla/Atomics.h"
 
 #if defined(ACCESSIBILITY)
 #include "mozilla/a11y/Compatibility.h"
@@ -185,13 +186,23 @@ using mozilla::crashreporter::LSPAnnotate;
 
 //-------------------------------------------------------------------------
 
+// Note that since we're on x86-ish processors here, ReleaseAcquire is the
+// semantics that normal loads and stores would use anyway.
+static Atomic<size_t, ReleaseAcquire> sOutstandingNativeEventCallbacks;
+
 /*static*/ LRESULT CALLBACK
 nsAppShell::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if (uMsg == sAppShellGeckoMsgId) {
+    // The app shell might have been destroyed between this message being
+    // posted and being executed, so be extra careful.
+    if (!sOutstandingNativeEventCallbacks) {
+      return TRUE;
+    }
+
     nsAppShell *as = reinterpret_cast<nsAppShell *>(lParam);
     as->NativeEventCallback();
-    NS_RELEASE(as);
+    --sOutstandingNativeEventCallbacks;
     return TRUE;
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -205,6 +216,9 @@ nsAppShell::~nsAppShell()
     // the UI thread.
     SendMessage(mEventWnd, WM_CLOSE, 0, 0);
   }
+
+  // Cancel any outstanding native event callbacks.
+  sOutstandingNativeEventCallbacks = 0;
 }
 
 #if defined(ACCESSIBILITY)
@@ -463,7 +477,7 @@ nsAppShell::ScheduleNativeEventCallback()
              "We should have created mEventWnd in Init, if this is called.");
 
   // Post a message to the hidden message window
-  NS_ADDREF_THIS(); // will be released when the event is processed
+  ++sOutstandingNativeEventCallbacks;
   {
     MutexAutoLock lock(mLastNativeEventScheduledMutex);
     // Time stamp this event so we can detect cases where the event gets
