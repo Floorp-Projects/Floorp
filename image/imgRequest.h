@@ -35,7 +35,6 @@ class nsIURI;
 namespace mozilla {
 namespace image {
 class Image;
-class ImageURL;
 class ProgressTracker;
 } // namespace image
 } // namespace mozilla
@@ -50,7 +49,6 @@ class imgRequest final : public nsIStreamListener,
 {
   typedef mozilla::image::Image Image;
   typedef mozilla::image::ImageCacheKey ImageCacheKey;
-  typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
@@ -151,7 +149,7 @@ public:
   void ResetCacheEntry();
 
   // OK to use on any thread.
-  nsresult GetURI(ImageURL** aURI);
+  nsresult GetURI(nsIURI** aURI);
   nsresult GetFinalURI(nsIURI** aURI);
   bool IsScheme(const char* aScheme) const;
   bool IsChrome() const;
@@ -235,7 +233,7 @@ private:
   // The original URI we were loaded with. This is the same as the URI we are
   // keyed on in the cache. We store a string here to avoid off main thread
   // refcounting issues with nsStandardURL.
-  RefPtr<ImageURL> mURI;
+  nsCOMPtr<nsIURI> mURI;
   // The URI of the resource we ended up loading after all redirects, etc.
   nsCOMPtr<nsIURI> mFinalURI;
   // The principal which triggered the load of this image. Generally either
