@@ -5,7 +5,7 @@
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
 use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, LocalClip};
 use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle};
-use border::{BorderCornerClipSource, ensure_no_corner_overlap};
+use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
 use ellipse::Ellipse;
@@ -87,11 +87,6 @@ pub enum ClipSource {
     Rectangle(LayoutRect, ClipMode),
     RoundedRectangle(LayoutRect, BorderRadius, ClipMode),
     Image(ImageMask),
-    /// TODO(gw): This currently only handles dashed style
-    /// clips, where the border style is dashed for both
-    /// adjacent border edges. Expand to handle dotted style
-    /// and different styles per edge.
-    BorderCorner(BorderCornerClipSource),
     BoxShadow(BoxShadowClipSource),
     LineDecoration(LineDecorationClipSource),
 }
@@ -341,7 +336,6 @@ impl ClipSources {
                         .and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
                 }
                 ClipSource::BoxShadow(..) |
-                ClipSource::BorderCorner { .. } |
                 ClipSource::LineDecoration(..) => {
                     can_calculate_inner_rect = false;
                     break;
@@ -399,9 +393,6 @@ impl ClipSources {
                     ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
                         let data = ClipData::rounded_rect(rect, radius, mode);
                         data.write(&mut request);
-                    }
-                    ClipSource::BorderCorner(ref mut source) => {
-                        source.write(request);
                     }
                     ClipSource::LineDecoration(ref info) => {
                         request.push(info.rect);
