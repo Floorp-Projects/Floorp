@@ -1,3 +1,17 @@
+# 0.9
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.41
+  * Kotlin coroutines 0.22.5
+  * GeckoView Nightly
+    * date: 2018.05.16
+    * version: 62.0.20180516100458
+    * revision: dedd25bfd2794eaba95225361f82c701e49c9339
+
+* **feature-session**, **engine-gecko**, **engine-system**: Added functionality and API to save/restore engine session state and made sure it's persisted by default (using `DefaultSessionStorage`)
+* **concept-toolbar**: Use "AppCompat" versions of ImageButton and ImageView. Add `notifyListener` parameter to `setSelected` and `toggle` to specify whether or not listeners should be invoked.
+
 # 0.8
 
 * Compiled against:
