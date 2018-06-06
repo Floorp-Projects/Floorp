@@ -552,11 +552,10 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-  protected:
+  private:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 
-  private:
     js::WrapperMap crossCompartmentWrappers;
 
     using RealmVector = js::Vector<JS::Realm*, 1, js::SystemAllocPolicy>;
@@ -603,11 +602,11 @@ struct JSCompartment
         MOZ_ASSERT(crossCompartmentWrappers.empty());
     }
 
-  protected:
-    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                size_t* crossCompartmentWrappersArg);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* compartmentObjects,
+                                size_t* crossCompartmentWrappersTables,
+                                size_t* compartmentsPrivateData);
 
-  public:
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
@@ -616,12 +615,12 @@ struct JSCompartment
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
 
-  protected:
+  public:
     explicit JSCompartment(JS::Zone* zone);
 
     MOZ_MUST_USE bool init(JSContext* cx);
+    void destroy(js::FreeOp* fop);
 
-  public:
     MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
     MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandleString strp);
@@ -675,8 +674,8 @@ struct JSCompartment
     void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
     static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
 
+    void sweepRealms(js::FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime);
     void sweepAfterMinorGC(JSTracer* trc);
-
     void sweepCrossCompartmentWrappers();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
@@ -752,8 +751,11 @@ class ObjectRealm
 
 } // namespace js
 
-class JS::Realm : private JSCompartment
+class JS::Realm : public JS::shadow::Realm
 {
+    JS::Zone* zone_;
+    JSRuntime* runtime_;
+
     const JS::RealmCreationOptions creationOptions_;
     JS::RealmBehaviors behaviors_;
 
@@ -885,7 +887,7 @@ class JS::Realm : private JSCompartment
     void operator=(const Realm&) = delete;
 
   public:
-    Realm(JS::Zone* zone, const JS::RealmOptions& options);
+    Realm(JSCompartment* comp, const JS::RealmOptions& options);
     ~Realm();
 
     MOZ_MUST_USE bool init(JSContext* cx);
@@ -901,17 +903,11 @@ class JS::Realm : private JSCompartment
                                 size_t* innerViews,
                                 size_t* lazyArrayBuffers,
                                 size_t* objectMetadataTables,
-                                size_t* crossCompartmentWrappers,
                                 size_t* savedStacksSet,
                                 size_t* varNamesSet,
                                 size_t* nonSyntacticLexicalScopes,
                                 size_t* jitRealm,
-                                size_t* privateData,
                                 size_t* scriptCountsMapArg);
-
-    JSCompartment* compartment() {
-        return this;
-    }
 
     JS::Zone* zone() {
         return zone_;

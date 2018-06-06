@@ -44,21 +44,33 @@ struct GCPolicy<Realm*> : public NonGCPointerPolicy<Realm*>
 extern JS_PUBLIC_API(Realm*)
 GetCurrentRealmOrNull(JSContext* cx);
 
+namespace shadow {
+
+class Realm
+{
+  protected:
+    JSCompartment* compartment_;
+
+    explicit Realm(JSCompartment* comp)
+      : compartment_(comp)
+    {}
+
+  public:
+    JSCompartment* compartment() {
+        return compartment_;
+    }
+    static shadow::Realm* get(JS::Realm* realm) {
+        return reinterpret_cast<shadow::Realm*>(realm);
+    }
+};
+
+}; // namespace shadow
+
 // Return the compartment that contains a given realm.
 inline JSCompartment*
-GetCompartmentForRealm(Realm* realm) {
-    // Implementation note: For now, realms are a fiction; we treat realms and
-    // compartments as being one-to-one, but they are actually identical.
-    return reinterpret_cast<JSCompartment*>(realm);
-}
-
-// Return the realm in a given compartment.
-//
-// Deprecated. There is currently exactly one realm per compartment, but this
-// will change.
-inline Realm*
-GetRealmForCompartment(JSCompartment* compartment) {
-    return reinterpret_cast<Realm*>(compartment);
+GetCompartmentForRealm(Realm* realm)
+{
+    return shadow::Realm::get(realm)->compartment();
 }
 
 // Return an object's realm. All objects except cross-compartment wrappers are

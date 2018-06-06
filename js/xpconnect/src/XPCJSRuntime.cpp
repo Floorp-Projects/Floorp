@@ -1350,6 +1350,19 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.shapeTables,
         "Tables storing shape information.");
 
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/compartment-objects"),
+        zStats.compartmentObjects,
+        "The JSCompartment objects in this zone.");
+
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/cross-compartment-wrapper-tables"),
+        zStats.crossCompartmentWrappersTables,
+        "The cross-compartment wrapper tables.");
+
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("compartments/private-data"),
+        zStats.compartmentsPrivateData,
+        "Extra data attached to each compartment by XPConnect, including "
+        "its wrapped-js.");
+
     ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
         "Scripts that haven't executed yet.");
@@ -1750,7 +1763,7 @@ ReportRealmStats(const JS::RealmStats& realmStats,
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-object"),
         realmStats.realmObject,
-        "The JSCompartment object itself.");
+        "The JS::Realm object itself.");
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-tables"),
         realmStats.realmTables,
@@ -1768,10 +1781,6 @@ ReportRealmStats(const JS::RealmStats& realmStats,
         realmStats.objectMetadataTable,
         "The table used by debugging tools for tracking object metadata");
 
-    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
-        realmStats.crossCompartmentWrappersTable,
-        "The cross-compartment wrapper table.");
-
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
         realmStats.savedStacksSet,
         "The saved stacks set.");
@@ -1783,11 +1792,6 @@ ReportRealmStats(const JS::RealmStats& realmStats,
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("jit-realm"),
         realmStats.jitRealm,
         "The JIT realm.");
-
-    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("private-data"),
-        realmStats.privateData,
-        "Extra data attached to the realm by XPConnect, including "
-        "its wrapped-js.");
 
     ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
         realmStats.scriptCountsMap,
