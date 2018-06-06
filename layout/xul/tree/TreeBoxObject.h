@@ -61,6 +61,14 @@ public:
 
   already_AddRefed<nsIScriptableRegion> SelectionRegion();
 
+  void EnsureCellIsVisible(int32_t row, nsTreeColumn* col, ErrorResult& aRv);
+
+  void ScrollToRow(int32_t aRow);
+
+  void ScrollByLines(int32_t aNumLines);
+
+  void ScrollByPages(int32_t aNumPages);
+
   int32_t GetFirstVisibleRow();
 
   int32_t GetLastVisibleRow();
@@ -105,10 +113,6 @@ public:
   // void ClearStyleAndImageCaches();
   // void SetFocused(bool arg);
   // void EnsureRowIsVisible(int32_t index);
-  // void EnsureCellIsVisible(int32_t row, nsTreeColumn* col);
-  // void ScrollToRow(int32_t index);
-  // void ScrollByLines(int32_t numLines);
-  // void ScrollByPages(int32_t numPages);
   // void InvalidateColumn(nsTreeColumn* col);
   // void InvalidateRow(int32_t index);
   // void InvalidateCell(int32_t row, nsTreeColumn* col);
