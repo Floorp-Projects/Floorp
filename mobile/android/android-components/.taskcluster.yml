@@ -27,7 +27,8 @@ tasks:
         - '--login'
         - '-cx'
         - >-
-          git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
+          export TERM=dumb
+          && git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
           && ./gradlew --no-daemon cleanBuildCache clean assemble test detektCheck ktlint lint
@@ -77,7 +78,8 @@ tasks:
         - '--login'
         - '-cx'
         - >-
-          git fetch origin --tags
+          export TERM=dumb
+          && git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
           && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs
