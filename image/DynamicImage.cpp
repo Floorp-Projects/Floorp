@@ -104,8 +104,8 @@ void
 DynamicImage::SetHasError()
 { }
 
-ImageURL*
-DynamicImage::GetURI()
+nsIURI*
+DynamicImage::GetURI() const
 {
   return nullptr;
 }
