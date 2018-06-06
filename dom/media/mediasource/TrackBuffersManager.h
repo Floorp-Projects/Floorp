@@ -160,6 +160,15 @@ public:
                                            MediaResult& aResult);
   int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
                               const media::TimeUnit& aFuzz) const;
+
+  // Will set the next GetSample index if needed. This information is determined
+  // through the value of mNextSampleTimecode. Return false if the index
+  // couldn't be determined or if there's nothing more that could be demuxed.
+  // This occurs if either the track buffer doesn't contain the required
+  // timecode or is empty.
+  nsresult SetNextGetSampleIndexIfNeeded(TrackInfo::TrackType aTrack,
+                                         const media::TimeUnit& aFuzz);
+
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz);
 
