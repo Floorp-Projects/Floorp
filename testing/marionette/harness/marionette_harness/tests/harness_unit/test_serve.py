@@ -66,4 +66,4 @@ def test_where_is():
 
 
 if __name__ == "__main__":
-    mozunit.main('--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')
