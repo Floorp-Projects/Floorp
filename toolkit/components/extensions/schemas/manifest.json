@@ -146,7 +146,8 @@
               "page": { "$ref": "ExtensionURL" },
               "browser_style": {
                 "type": "boolean",
-                "optional": true
+                "optional": true,
+                "default": true
               },
               "chrome_style": {
                 "type": "boolean",

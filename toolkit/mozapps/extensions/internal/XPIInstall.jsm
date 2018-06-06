@@ -481,11 +481,7 @@ async function loadManifestFromWebManifest(aUri, aPackage) {
     else
       addon.optionsType = AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
 
-    if (manifest.options_ui.browser_style === null)
-      logger.warn("Please specify whether you want browser_style " +
-          "or not in your options_ui options.");
-    else
-      addon.optionsBrowserStyle = manifest.options_ui.browser_style;
+    addon.optionsBrowserStyle = manifest.options_ui.browser_style;
   }
 
   // WebExtensions don't use iconURLs

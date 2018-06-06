@@ -30,7 +30,8 @@
               },
               "browser_style": {
                 "type": "boolean",
-                "optional": true
+                "optional": true,
+                "default": false
               },
               "show_matches": {
                 "type": "array",

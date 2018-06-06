@@ -70,11 +70,7 @@ this.pageAction = class extends ExtensionAPI {
       popup: options.default_popup || "",
     };
 
-    this.browserStyle = options.browser_style || false;
-    if (options.browser_style === null) {
-      this.extension.logger.warn("Please specify whether you want browser_style " +
-                                 "or not in your page_action options.");
-    }
+    this.browserStyle = options.browser_style;
 
     this.tabContext = new TabContext(tab => this.defaults);
 

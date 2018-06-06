@@ -17,6 +17,7 @@ add_task(async function test_keyword_search() {
   let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
   let uri3 = NetUtil.newURI("http://abc/?search=%s&raw=%S");
   let uri4 = NetUtil.newURI("http://abc/?search=%s&raw=%S&mozcharset=ISO-8859-1");
+  let uri5 = NetUtil.newURI("http://def/?search=%s");
   await PlacesTestUtils.addVisits([{ uri: uri1 },
                                    { uri: uri2 },
                                    { uri: uri3 }]);
@@ -26,6 +27,7 @@ add_task(async function test_keyword_search() {
   await addBookmark({ uri: uri4, title: "Charset", keyword: "charset"});
   await addBookmark({ uri: uri2, title: "Noparam", keyword: "noparam"});
   await addBookmark({ uri: uri2, title: "Noparam-Post", keyword: "post_noparam", postData: "noparam=1"});
+  await addBookmark({ uri: uri5, title: "Keyword", keyword: "key2"});
 
   info("Plain keyword query");
   await check_autocomplete({
@@ -77,20 +79,39 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
+  info("Keyword with partial page match");
+  await check_autocomplete({
+    search: "key ThisPage",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPage", input: "key ThisPage"}),
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] },
+               // Only the most recent bookmark for the URL:
+               { value: "http://abc/?search=ThisPageIsInHistory",
+                 title: "Noparam-Post", style: ["bookmark"] },
+    ]
+  });
+
+  // For the keyword with no query terms (with or without space after), the
+  // domain is different from the other tests because otherwise all the other
+  // test bookmarks and history entries would be matches.
   info("Keyword without query (without space)");
   await check_autocomplete({
-    search: "key",
+    search: "key2",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=", input: "key"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2"}),
+                 title: "def", style: [ "action", "keyword", "heuristic" ] },
+               { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
+    ]
   });
 
   info("Keyword without query (with space)");
   await check_autocomplete({
-    search: "key ",
+    search: "key2 ",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=", input: "key "}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2 "}),
+                 title: "def", style: [ "action", "keyword", "heuristic" ] },
+               { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
+    ]
   });
 
   info("POST Keyword");

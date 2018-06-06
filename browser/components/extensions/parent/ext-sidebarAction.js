@@ -42,9 +42,7 @@ this.sidebarAction = class extends ExtensionAPI {
     this.menuId = `menu_${this.id}`;
     this.buttonId = `button_${this.id}`;
 
-    // We default browser_style to true because this is a new API and
-    // we therefore don't need to worry about breaking existing add-ons.
-    this.browserStyle = options.browser_style || options.browser_style === null;
+    this.browserStyle = options.browser_style;
 
     this.defaults = {
       enabled: true,

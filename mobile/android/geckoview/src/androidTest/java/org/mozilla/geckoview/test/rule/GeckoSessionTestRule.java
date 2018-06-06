@@ -12,6 +12,7 @@ import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.Promise;
 import org.mozilla.geckoview.test.rdp.RDPConnection;
@@ -993,14 +994,26 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return sRuntime;
     }
 
-    protected static Method getCallbackSetter(final @NonNull Class<?> cls)
-            throws NoSuchMethodException {
-        return GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls);
+    protected static Object setDelegate(final @NonNull Class<?> cls,
+                                        final @NonNull GeckoSession session,
+                                        final @Nullable Object delegate)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        if (cls == GeckoSession.TextInputDelegate.class) {
+            return SessionTextInput.class.getMethod("setDelegate",
+                                                    cls).invoke(session.getTextInput(), delegate);
+        }
+        return GeckoSession.class.getMethod("set" + cls.getSimpleName(),
+                                            cls).invoke(session, delegate);
     }
 
-    protected static Method getCallbackGetter(final @NonNull Class<?> cls)
-            throws NoSuchMethodException {
-        return GeckoSession.class.getMethod("get" + cls.getSimpleName());
+    protected static Object getDelegate(final @NonNull Class<?> cls,
+                                        final @NonNull GeckoSession session)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        if (cls == GeckoSession.TextInputDelegate.class) {
+            return SessionTextInput.class.getMethod("getDelegate")
+                                         .invoke(session.getTextInput());
+        }
+        return GeckoSession.class.getMethod("get" + cls.getSimpleName()).invoke(session);
     }
 
     @NonNull
@@ -1247,8 +1260,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     protected void prepareSession(final GeckoSession session) throws Throwable {
         for (final Class<?> cls : DEFAULT_DELEGATES) {
-            getCallbackSetter(cls).invoke(
-                    session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
+            setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
         }
     }
 
@@ -1649,7 +1661,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         for (final Class<?> ifce : DEFAULT_DELEGATES) {
             final Object callback;
             try {
-                callback = getCallbackGetter(ifce).invoke(session == null ? mMainSession : session);
+                callback = getDelegate(ifce, session == null ? mMainSession : session);
             } catch (final NoSuchMethodException | IllegalAccessException |
                     InvocationTargetException e) {
                 throw unwrapRuntimeException(e);

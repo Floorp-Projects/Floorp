@@ -439,6 +439,9 @@ let BrowserUsageTelemetry = {
                                       scalarKey, 1);
     Services.telemetry.recordEvent("navigation", "search", source, action,
                                    { engine: getSearchEngineId(engine) });
+    Services.telemetry.recordEvent("savant", "search", source, action,
+                                   { subcategory: "navigation",
+                                   engine: getSearchEngineId(engine) });
   },
 
   _handleSearchAction(engine, source, details) {

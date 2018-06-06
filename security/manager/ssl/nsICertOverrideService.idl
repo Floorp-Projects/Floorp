@@ -103,27 +103,6 @@ interface nsICertOverrideService : nsISupports {
                               out boolean aIsTemporary);
 
   /**
-   *  Retrieve the stored override for the given hostname:port.
-   *
-   *  @param aHostName The host (punycode) whose entry should be tested
-   *  @param aPort The port whose entry should be tested, if it is -1 then it
-   *          is internaly treated as 443
-   *  @param aHashAlg On return value True, the fingerprint hash algorithm
-   *                  as an OID value in dotted notation.
-   *  @param aFingerprint On return value True, the stored fingerprint
-   *  @param aOverrideBits The errors that are currently overriden
-   *  @return whether a matching override entry for aHostNameWithPort
-   *          and aFingerprint is currently on file
-   */
-  [must_use]
-  boolean getValidityOverride(in ACString aHostName,
-                              in int32_t aPort,
-                              out ACString aHashAlg,
-                              out ACString aFingerprint,
-                              out uint32_t aOverrideBits,
-                              out boolean aIsTemporary);
-
-  /**
    *  Remove a override for the given hostname:port.
    *
    *  @param aHostName The host (punycode) whose entry should be cleared.
