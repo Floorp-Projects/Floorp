@@ -98,6 +98,7 @@ var {
 const {
   EventEmitter,
   getUniqueId,
+  promiseTimeout,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -110,6 +111,9 @@ XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
   return ContextualIdentityService.getDefaultPrivateIdentity(
     "userContextIdInternal.webextStorageLocal").userContextId;
 });
+
+// The maximum time to wait for extension child shutdown blockers to complete.
+const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
 
 /**
  * Classify an individual permission from a webextension manifest
@@ -1815,7 +1819,15 @@ class Extension extends ExtensionData {
     Management.emit("shutdown", this);
     this.emit("shutdown");
 
-    await this.broadcast("Extension:Shutdown", {id: this.id});
+    const TIMED_OUT = Symbol();
+
+    let result = await Promise.race([
+      this.broadcast("Extension:Shutdown", {id: this.id}),
+      promiseTimeout(CHILD_SHUTDOWN_TIMEOUT_MS).then(() => TIMED_OUT),
+    ]);
+    if (result === TIMED_OUT) {
+      Cu.reportError(`Timeout while waiting for extension child to shutdown: ${this.policy.debugName}`);
+    }
 
     MessageChannel.abortResponses({extensionId: this.id});
 
