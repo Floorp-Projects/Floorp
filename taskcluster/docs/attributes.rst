@@ -176,6 +176,11 @@ repackage_type
 This is the type of repackage. Can be ``repackage`` or
 ``repackage_signing``.
 
+fetch-artifact
+==============
+
+For fetch jobs, this is the path to the artifact for that fetch operation.
+
 toolchain-artifact
 ==================
 For toolchain jobs, this is the path to the artifact for that toolchain.
