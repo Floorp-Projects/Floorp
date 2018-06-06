@@ -70,8 +70,6 @@ NS_INTERFACE_MAP_END
 nsIFrame*
 nsTreeColumn::GetFrame()
 {
-  NS_ENSURE_TRUE(mContent, nullptr);
-
   return mContent->GetPrimaryFrame();
 }
 
@@ -145,15 +143,10 @@ nsTreeColumn::GetWidthInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 
 
 NS_IMETHODIMP
-nsTreeColumn::GetElement(Element** aElement)
+nsTreeColumn::GetElement(class Element** aElement)
 {
-  if (mContent) {
-    RefPtr<dom::Element> element = mContent;
-    element.forget(aElement);
-    return NS_OK;
-  }
-  *aElement = nullptr;
-  return NS_ERROR_FAILURE;
+  NS_ADDREF(*aElement = Element());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -356,15 +349,10 @@ nsTreeColumn::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return dom::TreeColumnBinding::Wrap(aCx, this, aGivenProto);
 }
 
-mozilla::dom::Element*
-nsTreeColumn::GetElement(mozilla::ErrorResult& aRv)
+Element*
+nsTreeColumn::Element()
 {
-  RefPtr<Element> element;
-  aRv = GetElement(getter_AddRefs(element));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return element;
+  return mContent;
 }
 
 int32_t
@@ -459,8 +447,7 @@ nsTreeColumns::GetSortedColumn()
 {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->mContent &&
-        nsContentUtils::HasNonEmptyAttr(currCol->mContent, kNameSpaceID_None,
+    if (nsContentUtils::HasNonEmptyAttr(currCol->mContent, kNameSpaceID_None,
                                         nsGkAtoms::sortDirection)) {
       return currCol;
     }
@@ -479,8 +466,7 @@ nsTreeColumns::GetKeyColumn()
 
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
     // Skip hidden columns.
-    if (!currCol->mContent ||
-        currCol->mContent->AttrValueIs(kNameSpaceID_None,
+    if (currCol->mContent->AttrValueIs(kNameSpaceID_None,
                                        nsGkAtoms::hidden,
                                        nsGkAtoms::_true,
                                        eCaseMatters))

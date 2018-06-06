@@ -64,7 +64,7 @@ public:
   nsIContent* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  mozilla::dom::Element* GetElement(mozilla::ErrorResult& aRv);
+  mozilla::dom::Element* Element();
 
   nsTreeColumns* GetColumns() const { return mColumns; }
 

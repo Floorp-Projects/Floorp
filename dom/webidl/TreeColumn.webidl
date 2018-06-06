@@ -4,8 +4,7 @@
 
 [Func="IsChromeOrXBL"]
 interface TreeColumn {
-  [Throws]
-  readonly attribute Element? element;
+  readonly attribute Element element;
 
   readonly attribute TreeColumns? columns;
 

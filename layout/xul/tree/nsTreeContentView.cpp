@@ -247,7 +247,7 @@ void
 nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
                                        nsAString& aProperties)
 {
-  RefPtr<Element> element = aColumn.GetElement(IgnoreErrors());
+  RefPtr<Element> element = aColumn.Element();
 
   if (element) {
     element->GetAttribute(NS_LITERAL_STRING("properties"), aProperties);
@@ -656,32 +656,29 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   if (!mRoot)
     return;
 
-  RefPtr<Element> column;
-  aColumn.GetElement(getter_AddRefs(column));
-  if (column) {
-    nsAutoString sort;
-    column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
-    if (!sort.IsEmpty()) {
-      nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
-      if (xs) {
-        nsAutoString sortdirection;
-        static Element::AttrValuesArray strings[] =
-          {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
-        switch (column->FindAttrValueIn(kNameSpaceID_None,
-                                        nsGkAtoms::sortDirection,
-                                        strings, eCaseMatters)) {
-          case 0: sortdirection.AssignLiteral("descending"); break;
-          case 1: sortdirection.AssignLiteral("natural"); break;
-          default: sortdirection.AssignLiteral("ascending"); break;
-        }
-
-        nsAutoString hints;
-        column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
-        sortdirection.Append(' ');
-        sortdirection += hints;
-
-        xs->Sort(mRoot, sort, sortdirection);
+  RefPtr<Element> column = aColumn.Element();
+  nsAutoString sort;
+  column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
+  if (!sort.IsEmpty()) {
+    nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
+    if (xs) {
+      nsAutoString sortdirection;
+      static Element::AttrValuesArray strings[] =
+        {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
+      switch (column->FindAttrValueIn(kNameSpaceID_None,
+                                      nsGkAtoms::sortDirection,
+                                      strings, eCaseMatters)) {
+        case 0: sortdirection.AssignLiteral("descending"); break;
+        case 1: sortdirection.AssignLiteral("natural"); break;
+        default: sortdirection.AssignLiteral("ascending"); break;
       }
+
+      nsAutoString hints;
+      column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
+      sortdirection.Append(' ');
+      sortdirection += hints;
+
+      xs->Sort(mRoot, sort, sortdirection);
     }
   }
 }
