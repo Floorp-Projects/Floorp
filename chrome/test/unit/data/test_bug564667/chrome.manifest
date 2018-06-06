@@ -10,6 +10,3 @@ override chrome://testOverride/content file:///test1/override
 
 # Load external manifest
 manifest loaded.manifest
-
-# Failure Cases
-style     chrome://test1/content/style.xul     chrome://test1/content/test1.css
