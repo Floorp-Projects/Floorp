@@ -21,8 +21,6 @@ class nsIURI;
 namespace mozilla {
 namespace image {
 
-class ImageURL;
-
 /**
  * An ImageLib cache entry key.
  *
@@ -36,8 +34,6 @@ class ImageCacheKey final
 public:
   ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
                 nsIDocument* aDocument, nsresult& aRv);
-  ImageCacheKey(ImageURL* aURI, const OriginAttributes& aAttrs,
-                nsIDocument* aDocument);
 
   ImageCacheKey(const ImageCacheKey& aOther);
   ImageCacheKey(ImageCacheKey&& aOther);
@@ -45,8 +41,8 @@ public:
   bool operator==(const ImageCacheKey& aOther) const;
   PLDHashNumber Hash() const { return mHash; }
 
-  /// A weak pointer to the URI spec for this cache entry. For logging only.
-  const char* Spec() const;
+  /// A weak pointer to the URI. For logging only.
+  nsIURI* URI() const { return mURI; }
 
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }
@@ -56,14 +52,12 @@ public:
   void* ControlledDocument() const { return mControlledDocument; }
 
 private:
-  static PLDHashNumber ComputeHash(ImageURL* aURI,
-                                   const Maybe<uint64_t>& aBlobSerial,
-                                   const OriginAttributes& aAttrs,
-                                   void* aControlledDocument);
+  bool SchemeIs(const char* aScheme);
   static void* GetControlledDocumentToken(nsIDocument* aDocument);
 
-  RefPtr<ImageURL> mURI;
+  nsCOMPtr<nsIURI> mURI;
   Maybe<uint64_t> mBlobSerial;
+  nsCString mBlobRef;
   OriginAttributes mOriginAttributes;
   void* mControlledDocument;
   PLDHashNumber mHash;

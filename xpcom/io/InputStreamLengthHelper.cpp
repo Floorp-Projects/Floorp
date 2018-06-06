@@ -157,8 +157,10 @@ InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
     if (!streamLength && !asyncStreamLength) {
       // We cannot calculate the length of an async stream. We must fix the
       // caller if this happens.
+#ifdef DEBUG
       nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
       MOZ_DIAGNOSTIC_ASSERT(!asyncStream);
+#endif
 
       bool nonBlocking = false;
       if (NS_SUCCEEDED(aStream->IsNonBlocking(&nonBlocking)) && !nonBlocking) {

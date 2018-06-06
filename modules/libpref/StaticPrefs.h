@@ -7,6 +7,11 @@
 #ifndef mozilla_StaticPrefs_h
 #define mozilla_StaticPrefs_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/TypeTraits.h"
+#include "MainThreadUtils.h"
+
 namespace mozilla {
 
 // These typedefs are for use within StaticPrefList.h.
@@ -42,6 +47,12 @@ struct StripAtomicImpl<Atomic<T, Order>>
 template<typename T>
 using StripAtomic = typename StripAtomicImpl<T>::Type;
 
+template<typename T>
+struct IsAtomic : FalseType {};
+
+template<typename T, MemoryOrdering Order>
+struct IsAtomic<Atomic<T, Order>> : TrueType {};
+
 class StaticPrefs
 {
 // For a VarCache pref like this:
@@ -55,12 +66,17 @@ class StaticPrefs
 //   public:
 //     static int32_t my_varcache() { return sVarCache_my_varcache; }
 //
-#define PREF(str, cpp_type, value)
-#define VARCACHE_PREF(str, id, cpp_type, value)                                \
+#define PREF(str, cpp_type, default_value)
+#define VARCACHE_PREF(str, id, cpp_type, default_value)                        \
 private:                                                                       \
   static cpp_type sVarCache_##id;                                              \
 public:                                                                        \
-  static StripAtomic<cpp_type> id() { return sVarCache_##id; }
+  static StripAtomic<cpp_type> id() {                                          \
+    MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),                 \
+               "Non-atomic static pref '" str                                  \
+               "' being accessed on background thread");                       \
+    return sVarCache_##id;                                                     \
+  }
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF

@@ -1418,3 +1418,11 @@ ROLE(EDITCOMBOBOX,
      ROLE_SYSTEM_COMBOBOX,
      ROLE_SYSTEM_COMBOBOX,
      eNameFromValueRule)
+
+ROLE(BLOCKQUOTE,
+     "blockquote",
+     ATK_ROLE_BLOCK_QUOTE,
+     NSAccessibilityGroupRole,
+     ROLE_SYSTEM_GROUPING,
+     IA2_ROLE_SECTION,
+     eNoNameRule)

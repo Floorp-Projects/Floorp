@@ -469,7 +469,7 @@ private: // data
   DrawableSurface RequestDecodeForSizeInternal(const gfx::IntSize& aSize, uint32_t aFlags);
 
 protected:
-  explicit RasterImage(ImageURL* aURI = nullptr);
+  explicit RasterImage(nsIURI* aURI = nullptr);
 
   bool ShouldAnimate() override;
 
