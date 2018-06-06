@@ -80,7 +80,11 @@ pub struct PictureCacheKey {
     //       we relax that, we'll need to consider some
     //       extra parameters, depending on transform.
 
-    // The unique identifier for this picture.
+    // This is a globally unique id of the scene this picture 
+    // is associated with, to avoid picture id collisions.
+    scene_id: u64,
+
+    // The unique (for the scene_id) identifier for this picture.
     // TODO(gw): Currently, these will not be
     //           shared across new display lists,
     //           so will only remain valid during
@@ -374,6 +378,7 @@ impl PicturePrimitive {
                         RenderTaskCacheKey {
                             size: device_rect.size,
                             kind: RenderTaskCacheKeyKind::Picture(PictureCacheKey {
+                                scene_id: frame_context.scene_id,
                                 picture_id: self.id,
                                 unclipped_size: prim_screen_rect.unclipped.size,
                                 pic_relative_render_rect,
@@ -466,6 +471,14 @@ impl PicturePrimitive {
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
                 pic_state.tasks.push(render_task_id);
                 self.surface = Some(PictureSurface::RenderTask(render_task_id));
+
+                // If the local rect of the contents changed, force the cache handle
+                // to be invalidated so that the primitive data below will get
+                // uploaded to the GPU this frame. This can occur during property
+                // animation.
+                if pic_state.local_rect_changed {
+                    frame_state.gpu_cache.invalidate(&mut self.extra_gpu_data_handle);
+                }
 
                 if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
                     // TODO(gw): This is very hacky code below! It stores an extra

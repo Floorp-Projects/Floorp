@@ -71,7 +71,9 @@ class WorkerListEmpty extends Component {
         ),
         Localized({
           id: "serviceworker-empty-suggestions-aboutdebugging",
-          a: a({ className: "link", onClick: () => this.openAboutDebugging() })
+          a: a({
+            className: "link js-trusted-link",
+            onClick: () => this.openAboutDebugging() })
         },
           li({ className: "worker-list-empty__tips__item" })
         ),

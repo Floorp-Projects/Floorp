@@ -12,23 +12,17 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/mp4");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
 
-    v.addEventListener("loadedmetadata", function() {
-      ok(true, "Got loadedmetadata event");
-      is(v.videoWidth, 400, "videoWidth has correct initial value");
-      is(v.videoHeight, 300, "videoHeight has correct initial value");
-      SimpleTest.finish();
-    });
-
-    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
-      v.play();
-    });
-  });
-
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("bipbop/bipbop2s.mp4"), 0, 1395));
+  v.play();
+  await once(v, "loadedmetadata");
+  ok(true, "Got loadedmetadata event");
+  is(v.videoWidth, 400, "videoWidth has correct initial value");
+  is(v.videoHeight, 300, "videoHeight has correct initial value");
+  SimpleTest.finish();
 });
 
 </script>

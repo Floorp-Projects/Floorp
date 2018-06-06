@@ -14,33 +14,31 @@ SimpleTest.waitForExplicitFinish();
 
 addMSEPrefs(["media.mediasource.webm.enabled", true]);
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("tags_before_cluster.webm", async function(arrayBuffer) {
-      info("- append buffer -");
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
+  const arrayBuffer = await fetchWithXHR("tags_before_cluster.webm");
+  info("- append buffer -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer));
 
-      info("- wait for metadata -");
-      await once(v, "loadedmetadata");
+  info("- wait for metadata -");
+  await once(v, "loadedmetadata");
 
-      info("- wait for updateend -");
-      await once(sb, "updateend");
+  info("- wait for updateend -");
+  await once(sb, "updateend");
 
-      info("- call end of stream -");
-      ms.endOfStream();
-      await once(ms, "sourceended");
+  info("- call end of stream -");
+  ms.endOfStream();
+  await once(ms, "sourceended");
 
-      info("- check buffered range -");
-      is(sb.buffered.length, 1, "buffered range is not empty.");
+  info("- check buffered range -");
+  is(sb.buffered.length, 1, "buffered range is not empty.");
 
-      info("- video is playing -");
-      v.play();
-      await once(v, "timeupdate");
-      SimpleTest.finish();
-    });
-  });
+  info("- video is playing -");
+  v.play();
+  await once(v, "timeupdate");
+  SimpleTest.finish();
 });
 
 </script>

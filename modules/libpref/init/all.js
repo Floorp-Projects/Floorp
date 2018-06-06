@@ -4941,6 +4941,9 @@ pref("extensions.webextensions.tabhide.enabled", true);
 
 pref("extensions.webextensions.background-delayed-startup", false);
 
+// Whether or not the installed extensions should be migrated to the storage.local IndexedDB backend.
+pref("extensions.webextensions.ExtensionStorageIDB.enabled", false);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)

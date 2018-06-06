@@ -291,6 +291,15 @@ class WPTManifestUpdater(MozbuildObject):
         manifestupdate.update(logger, wpt_dir, check_clean, rebuild)
 
 
+class WPTManifestDownloader(MozbuildObject):
+    def run_download(self, path=None, tests_root=None, force=False, **kwargs):
+        import manifestdownload
+        from wptrunner import wptlogging
+        logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
+        wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
+        manifestdownload.run(logger, wpt_dir, self.topsrcdir, force)
+
+
 def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
@@ -323,6 +332,10 @@ def create_parser_create():
 def create_parser_manifest_update():
     import manifestupdate
     return manifestupdate.create_parser()
+
+def create_parser_manifest_download():
+    import manifestdownload
+    return manifestdownload.create_parser()
 
 
 @CommandProvider
@@ -407,3 +420,12 @@ class MachCommands(MachCommandBase):
         self.setup()
         wpt_manifest_updater = self._spawn(WPTManifestUpdater)
         return wpt_manifest_updater.run_update(**params)
+
+
+    @Command("wpt-manifest-download",
+             category="testing",
+             parser=create_parser_manifest_download)
+    def wpt_manifest_download(self, **params):
+        self.setup()
+        wpt_manifest_downloader = self._spawn(WPTManifestDownloader)
+        return wpt_manifest_downloader.run_download(**params)

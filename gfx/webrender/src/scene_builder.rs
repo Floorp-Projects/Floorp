@@ -57,6 +57,7 @@ pub struct SceneRequest {
     pub font_instances: FontInstanceMap,
     pub output_pipelines: FastHashSet<PipelineId>,
     pub removed_pipelines: Vec<PipelineId>,
+    pub scene_id: u64,
 }
 
 pub struct BuiltScene {

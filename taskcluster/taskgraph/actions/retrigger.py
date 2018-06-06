@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
     title='Retrigger',
     name='retrigger',
     symbol='rt',
+    kind='hook',
+    generic=True,
     description=(
         'Create a clone of the task.\n\n'
     ),

@@ -9,7 +9,7 @@ use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTr
 use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets};
 use api::{BorderWidths, LayoutToWorldScale, NormalBorder};
 use app_units::Au;
-use border::{BorderCacheKey, BorderCornerInstance, BorderRenderTaskInfo, BorderEdgeKind};
+use border::{BorderCacheKey, BorderRenderTaskInfo};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
@@ -83,21 +83,6 @@ impl PrimitiveOpacity {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct CachedGradientIndex(pub usize);
-
-pub struct CachedGradient {
-    pub handle: GpuCacheHandle,
-}
-
-impl CachedGradient {
-    pub fn new() -> CachedGradient {
-        CachedGradient {
-            handle: GpuCacheHandle::new(),
-        }
-    }
-}
-
 // Represents the local space rect of a list of
 // primitive runs. For most primitive runs, the
 // primitive runs are attached to the parent they
@@ -150,7 +135,6 @@ pub struct PictureIndex(pub usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PrimitiveKind {
     TextRun,
-    Border,
     Brush,
 }
 
@@ -297,7 +281,7 @@ pub enum BrushKind {
         image_rendering: ImageRendering,
     },
     RadialGradient {
-        gradient_index: CachedGradientIndex,
+        stops_handle: GpuCacheHandle,
         stops_range: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
         center: LayoutPoint,
@@ -309,9 +293,8 @@ pub enum BrushKind {
         visible_tiles: Vec<VisibleGradientTile>,
     },
     LinearGradient {
-        gradient_index: CachedGradientIndex,
+        stops_handle: GpuCacheHandle,
         stops_range: ItemRange<GradientStop>,
-        stops_count: usize,
         extend_mode: ExtendMode,
         reverse_stops: bool,
         start_point: LayoutPoint,
@@ -555,19 +538,6 @@ pub enum ImageSource {
         size: DeviceIntSize,
         handle: Option<RenderTaskCacheEntryHandle>,
     },
-}
-
-#[derive(Debug)]
-pub struct BorderPrimitiveCpu {
-    pub corner_instances: [BorderCornerInstance; 4],
-    pub edges: [BorderEdgeKind; 4],
-    pub gpu_blocks: [GpuBlockData; 8],
-}
-
-impl ToGpuBlocks for BorderPrimitiveCpu {
-    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.extend_from_slice(&self.gpu_blocks);
-    }
 }
 
 // The gradient entry index for the first color stop
@@ -1085,7 +1055,6 @@ impl ClipData {
 #[derive(Debug)]
 pub enum PrimitiveContainer {
     TextRun(TextRunPrimitiveCpu),
-    Border(BorderPrimitiveCpu),
     Brush(BrushPrimitive),
 }
 
@@ -1117,9 +1086,6 @@ impl PrimitiveContainer {
                         true
                     }
                 }
-            }
-            PrimitiveContainer::Border(..) => {
-                true
             }
         }
     }
@@ -1166,9 +1132,6 @@ impl PrimitiveContainer {
                     }
                 }
             }
-            PrimitiveContainer::Border(..) => {
-                panic!("bug: other primitive containers not expected here");
-            }
         }
     }
 }
@@ -1178,7 +1141,6 @@ pub struct PrimitiveStore {
     pub cpu_brushes: Vec<BrushPrimitive>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
     pub cpu_metadata: Vec<PrimitiveMetadata>,
-    pub cpu_borders: Vec<BorderPrimitiveCpu>,
 
     pub pictures: Vec<PicturePrimitive>,
     next_picture_id: u64,
@@ -1190,7 +1152,6 @@ impl PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_brushes: Vec::new(),
             cpu_text_runs: Vec::new(),
-            cpu_borders: Vec::new(),
 
             pictures: Vec::new(),
             next_picture_id: 0,
@@ -1202,7 +1163,6 @@ impl PrimitiveStore {
             cpu_metadata: recycle_vec(self.cpu_metadata),
             cpu_brushes: recycle_vec(self.cpu_brushes),
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
-            cpu_borders: recycle_vec(self.cpu_borders),
 
             pictures: recycle_vec(self.pictures),
             next_picture_id: self.next_picture_id,
@@ -1297,17 +1257,6 @@ impl PrimitiveStore {
                 self.cpu_text_runs.push(text_cpu);
                 metadata
             }
-            PrimitiveContainer::Border(border_cpu) => {
-                let metadata = PrimitiveMetadata {
-                    opacity: PrimitiveOpacity::translucent(),
-                    prim_kind: PrimitiveKind::Border,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_borders.len()),
-                    ..base_metadata
-                };
-
-                self.cpu_borders.push(border_cpu);
-                metadata
-            }
         };
 
         self.cpu_metadata.push(metadata);
@@ -1365,8 +1314,7 @@ impl PrimitiveStore {
                     BrushKind::Clear => {}
                 }
             }
-            PrimitiveKind::TextRun |
-            PrimitiveKind::Border => {}
+            PrimitiveKind::TextRun => {}
         }
 
         None
@@ -1415,8 +1363,7 @@ impl PrimitiveStore {
                         }
                     };
                 }
-                PrimitiveKind::TextRun |
-                PrimitiveKind::Border => {
+                PrimitiveKind::TextRun => {
                     unreachable!("bug: invalid prim type for opacity collapse");
                 }
             }
@@ -1445,7 +1392,7 @@ impl PrimitiveStore {
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
     ) {
-        let metadata = &self.cpu_metadata[prim_index.0];
+        let metadata = &mut self.cpu_metadata[prim_index.0];
 
         if metadata.prim_kind != PrimitiveKind::Brush {
             return;
@@ -1513,6 +1460,10 @@ impl PrimitiveStore {
                         segments: new_segments,
                         clip_mask_kind: BrushClipMaskKind::Unknown,
                     });
+
+                    // The segments have changed, so force the GPU cache to
+                    // re-upload the primitive information.
+                    frame_state.gpu_cache.invalidate(&mut metadata.gpu_location);
                 }
             }
         }
@@ -1536,7 +1487,6 @@ impl PrimitiveStore {
         }
 
         match metadata.prim_kind {
-            PrimitiveKind::Border => {}
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 // The transform only makes sense for screen space rasterization
@@ -1806,7 +1756,6 @@ impl PrimitiveStore {
                         }
                     }
                     BrushKind::RadialGradient {
-                        gradient_index,
                         stops_range,
                         center,
                         start_radius,
@@ -1815,11 +1764,12 @@ impl PrimitiveStore {
                         extend_mode,
                         stretch_size,
                         tile_spacing,
+                        ref mut stops_handle,
                         ref mut visible_tiles,
                         ..
                     } => {
                         build_gradient_stops_request(
-                            gradient_index,
+                            stops_handle,
                             stops_range,
                             false,
                             frame_state,
@@ -1858,7 +1808,6 @@ impl PrimitiveStore {
                         }
                     }
                     BrushKind::LinearGradient {
-                        gradient_index,
                         stops_range,
                         reverse_stops,
                         start_point,
@@ -1866,12 +1815,13 @@ impl PrimitiveStore {
                         extend_mode,
                         stretch_size,
                         tile_spacing,
+                        ref mut stops_handle,
                         ref mut visible_tiles,
                         ..
                     } => {
 
                         build_gradient_stops_request(
-                            gradient_index,
+                            stops_handle,
                             stops_range,
                             reverse_stops,
                             frame_state,
@@ -1948,10 +1898,6 @@ impl PrimitiveStore {
             request.push(metadata.local_clip_rect);
 
             match metadata.prim_kind {
-                PrimitiveKind::Border => {
-                    let border = &self.cpu_borders[metadata.cpu_prim_index.0];
-                    border.write_gpu_blocks(request);
-                }
                 PrimitiveKind::TextRun => {
                     let text = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                     text.write_gpu_blocks(&mut request);
@@ -2078,7 +2024,6 @@ impl PrimitiveStore {
 
                         continue;
                     }
-                    ClipSource::BorderCorner(..) |
                     ClipSource::LineDecoration(..) |
                     ClipSource::Image(..) => {
                         rect_clips_only = false;
@@ -2473,6 +2418,7 @@ impl PrimitiveStore {
                 if new_local_rect != metadata.local_rect {
                     metadata.local_rect = new_local_rect;
                     frame_state.gpu_cache.invalidate(&mut metadata.gpu_location);
+                    pic_state.local_rect_changed = true;
                 }
             }
         }
@@ -2672,13 +2618,12 @@ impl PrimitiveStore {
 }
 
 fn build_gradient_stops_request(
-    gradient_index: CachedGradientIndex,
+    stops_handle: &mut GpuCacheHandle,
     stops_range: ItemRange<GradientStop>,
     reverse_stops: bool,
     frame_state: &mut FrameBuildingState,
     pic_context: &PictureContext
 ) {
-    let stops_handle = &mut frame_state.cached_gradients[gradient_index.0].handle;
     if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
         let gradient_builder = GradientGpuBlockBuilder::new(
             stops_range,

@@ -49,6 +49,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_very_large_blob();
         self.test_offscreen_blob();
         self.test_save_restore();
+        self.test_blur_cache();
         self.test_capture();
         self.test_zero_height_window();
     }
@@ -718,6 +719,51 @@ impl<'a> RawtestHarness<'a> {
         let second = do_test(true);
 
         assert_eq!(first, second);
+    }
+
+    // regression test for #2769
+    // "async scene building: cache collisions from reused picture ids"
+    fn test_blur_cache(&mut self) {
+        println!("\tblur cache...");
+        let window_size = self.window.get_inner_size();
+
+        let test_size = DeviceUintSize::new(400, 400);
+
+        let window_rect = DeviceUintRect::new(
+            DeviceUintPoint::new(0, window_size.height - test_size.height),
+            test_size,
+        );
+        let layout_size = LayoutSize::new(400., 400.);
+
+        let mut do_test = |shadow_is_red| {
+            let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+            let shadow_color = if shadow_is_red {
+                ColorF::new(1.0, 0.0, 0.0, 1.0)
+            } else {
+                ColorF::new(0.0, 1.0, 0.0, 1.0)
+            };
+
+            builder.push_shadow(&PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                Shadow {
+                    offset: LayoutVector2D::new(1.0, 1.0),
+                    blur_radius: 1.0,
+                    color: shadow_color,
+                });
+            builder.push_line(&PrimitiveInfo::new(rect(110., 110., 50., 2.)),
+                              0.0, LineOrientation::Horizontal,
+                              &ColorF::new(0.0, 0.0, 0.0, 1.0), LineStyle::Solid);
+            builder.pop_all_shadows();
+
+            let txn = Transaction::new();
+            self.submit_dl(&mut Epoch(0), layout_size, builder, &txn.resource_updates);
+
+            self.render_and_get_pixels(window_rect)
+        };
+
+        let first = do_test(false);
+        let second = do_test(true);
+
+        assert_ne!(first, second);
     }
 
     fn test_capture(&mut self) {

@@ -80,6 +80,7 @@ Developers
  - `DOM Overlays`__ allow for localization of DOM fragments
  - Simplified build system model
  - No need for pre-processing instructions
+ - Support for pseudolocalization
 
 __ https://github.com/projectfluent/fluent/wiki/Get-Started
 __ https://github.com/projectfluent/fluent/wiki/Design-Principles
@@ -612,6 +613,53 @@ always better to scan for a variable:
   Testing against whole values is brittle and will break when we insert Unicode
   bidirectionality marks into the result string or adapt the output in other ways.
 
+
+Pseudolocalization
+==================
+
+When working with a Fluent-backed UI, the developer gets a new tool to test their UI
+against several classes of problems.
+
+Pseudolocalization is a mechanism which transforms messages on-fly, using specific
+logic to help emulate how the UI will look once it gets localized.
+
+The three classes of potential problems that this can help with are:
+
+ - Hardcoded strings.
+
+   Turning on pseudolocalization should expose any string that were left
+   hardcoded in the source, since they won't get transfomed.
+
+
+ - UI space not adapting to longer text.
+
+   Many languages use longer strings than English. For example, German string
+   may be 30% longer. Turning on pseudolocalization is a quick way to test how
+   the layout handles such locales.
+
+
+ - Bidi adaptation.
+
+   For many developers, testing the UI in right-to-left mode is hard. Mozilla
+   offers a pref :js:`intl.uidirection` which switches the direction of the layout,
+   but that doesn't expose problems related to right-to-left text.
+   Pseudolocalization shows how a right-to-left locale will look like.
+
+To turn on pseudolocalization, add a new string pref :js:`intl.l10n.pseudo` and
+select the strategy to be used:
+
+ - :js:`accented` - Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ
+
+   This strategy replaces all Latin characters with their accented equivalents,
+   and duplicates some vovels to create roughly 30% longer strings.
+
+
+ - :js:`bidi` - ɥsıʅƃuƎ ıpıԐ
+
+   This strategy replaces all Latin characters with their 180 degree rotated versions
+   and enforces right to left text flow using Unicode UAX#9 `Explicit Directional Embeddings`__.
+
+__ https://www.unicode.org/reports/tr9/#Explicit_Directional_Embeddings
 
 Inner Structure of Fluent
 =========================
