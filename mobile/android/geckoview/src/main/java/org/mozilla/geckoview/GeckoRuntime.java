@@ -22,6 +22,8 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import java.io.File;
+
 public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
     private static final boolean DEBUG = false;
@@ -229,6 +231,14 @@ public final class GeckoRuntime implements Parcelable {
         }
         return mTelemetry;
 
+    }
+
+    /**
+     * Get the profile directory for this runtime. This is where Gecko stores
+     * internal data.
+     */
+    public File getProfileDir() {
+        return GeckoThread.getActiveProfile().getDir();
     }
 
     @Override // Parcelable
