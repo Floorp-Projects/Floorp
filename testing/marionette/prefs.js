@@ -126,14 +126,6 @@ class Branch {
  * A further complication is that we cannot rely on `Preferences.jsm`
  * in Marionette.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1357517
  * for further details.
- *
- * Usage::
- *
- *     ChromeUtils.import("resource://gre/modules/Log.jsm");
- *     const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
- *
- *     const log = Log.repository.getLogger("Marionette");
- *     log.level = MarionettePrefs.log.level;
  */
 class MarionetteBranch extends Branch {
   constructor(branch = "marionette.") {
