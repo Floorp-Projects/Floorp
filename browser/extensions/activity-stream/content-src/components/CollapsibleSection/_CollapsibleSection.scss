@@ -1,0 +1,166 @@
+.collapsible-section {
+  padding: $section-vertical-padding $section-horizontal-padding;
+  transition-delay: 100ms;
+  transition-duration: 100ms;
+  transition-property: background-color;
+
+  .section-title {
+    font-size: $section-title-font-size;
+    font-weight: bold;
+    margin: 0;
+    text-transform: uppercase;
+
+    span {
+      color: var(--newtab-section-header-text-color);
+      display: inline-block;
+      fill: var(--newtab-section-header-text-color);
+      vertical-align: middle;
+    }
+
+    .click-target {
+      cursor: pointer;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .collapsible-arrow {
+      margin-inline-start: 8px;
+      margin-top: -1px;
+    }
+  }
+
+  .section-top-bar {
+    height: 19px;
+    margin-bottom: 13px;
+    position: relative;
+
+    .context-menu-button {
+      background: url('chrome://browser/skin/page-action.svg') no-repeat right center;
+      border: 0;
+      cursor: pointer;
+      fill: var(--newtab-section-header-text-color);
+      height: 100%;
+      offset-inline-end: 0;
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      transition-duration: 200ms;
+      transition-property: opacity;
+      width: $context-menu-button-size;
+
+      &:-moz-any(:active, :focus, :hover) {
+        fill: $grey-90;
+        opacity: 1;
+      }
+    }
+
+    .context-menu {
+      top: 16px;
+    }
+
+    @media (max-width: $break-point-widest + $card-width * 1.5) {
+      @include context-menu-open-left;
+    }
+  }
+
+  &:hover,
+  &.active {
+    .section-top-bar {
+      .context-menu-button {
+        opacity: 1;
+      }
+    }
+  }
+
+  &.active {
+    background: var(--newtab-element-hover-color);
+    border-radius: 4px;
+
+    .section-top-bar {
+      .context-menu-button {
+        fill: var(--newtab-section-active-contextmenu-color);
+      }
+    }
+  }
+
+  .section-disclaimer {
+    $max-button-width: 130px;
+    $min-button-height: 26px;
+
+    color: var(--newtab-text-conditional-color);
+    font-size: 13px;
+    margin-bottom: 16px;
+    position: relative;
+
+    .section-disclaimer-text {
+      display: inline-block;
+      min-height: $min-button-height;
+      width: calc(100% - #{$max-button-width});
+
+      @media (max-width: $break-point-medium) {
+        width: $card-width;
+      }
+    }
+
+    a {
+      color: var(--newtab-link-primary-color);
+      font-weight: bold;
+      padding-left: 3px;
+    }
+
+    button {
+      background: var(--newtab-button-secondary-color);
+      border: 1px solid $grey-40;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 2px;
+      max-width: $max-button-width;
+      min-height: $min-button-height;
+      offset-inline-end: 0;
+
+      &:hover:not(.dismiss) {
+        box-shadow: $shadow-primary;
+        transition: box-shadow 150ms;
+      }
+
+      @media (min-width: $break-point-small) {
+        position: absolute;
+      }
+    }
+  }
+
+  .section-body-fallback {
+    height: $card-height;
+  }
+
+  .section-body {
+    // This is so the top sites favicon and card dropshadows don't get clipped during animation:
+    $horizontal-padding: 7px;
+    margin: 0 (-$horizontal-padding);
+    padding: 0 $horizontal-padding;
+
+    &.animating {
+      overflow: hidden;
+      pointer-events: none;
+    }
+  }
+
+  &.animation-enabled {
+    .section-title {
+      .collapsible-arrow {
+        transition: transform 0.5s $photon-easing;
+      }
+    }
+
+    .section-body {
+      transition: max-height 0.5s $photon-easing;
+    }
+  }
+
+  &.collapsed {
+    .section-body {
+      max-height: 0;
+      overflow: hidden;
+    }
+  }
+}

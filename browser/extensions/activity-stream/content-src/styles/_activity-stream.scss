@@ -1,0 +1,151 @@
+@import './normalize';
+@import './variables';
+@import './theme';
+@import './icons';
+
+html {
+  height: 100%;
+}
+
+body,
+#root { // sass-lint:disable-line no-ids
+  min-height: 100vh;
+}
+
+body {
+  background-color: var(--newtab-background-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  overflow-y: scroll;
+}
+
+h1,
+h2 {
+  font-weight: normal;
+}
+
+a {
+  text-decoration: none;
+}
+
+// For screen readers
+.sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.inner-border {
+  border: $border-secondary;
+  border-radius: $border-radius;
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.show-on-init {
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+
+  &.on {
+    animation: fadeIn 0.2s;
+    opacity: 1;
+  }
+}
+
+.actions {
+  border-top: $border-secondary;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 15px 25px 0;
+}
+
+// Default button (grey)
+.button,
+.actions button {
+  background-color: var(--newtab-button-secondary-color);
+  border: $border-primary;
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 10px 30px;
+  white-space: nowrap;
+
+  &:hover:not(.dismiss) {
+    box-shadow: $shadow-primary;
+    transition: box-shadow 150ms;
+  }
+
+  &.dismiss {
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  // Blue button
+  &.primary,
+  &.done {
+    background-color: var(--newtab-button-primary-color);
+    border: solid 1px var(--newtab-button-primary-color);
+    color: $white;
+    margin-inline-start: auto;
+  }
+}
+
+input {
+  &[type='text'],
+  &[type='search'] {
+    border-radius: $border-radius;
+  }
+}
+
+// Make sure snippets show up above other UI elements
+#snippets-container { // sass-lint:disable-line no-ids
+  z-index: 1;
+}
+
+// Components
+@import '../components/Base/Base';
+@import '../components/ErrorBoundary/ErrorBoundary';
+@import '../components/TopSites/TopSites';
+@import '../components/Sections/Sections';
+@import '../components/StartupOverlay/StartupOverlay';
+@import '../components/Topics/Topics';
+@import '../components/Search/Search';
+@import '../components/ContextMenu/ContextMenu';
+@import '../components/ConfirmDialog/ConfirmDialog';
+@import '../components/Card/Card';
+@import '../components/ManualMigration/ManualMigration';
+@import '../components/CollapsibleSection/CollapsibleSection';
+@import '../components/ASRouterAdmin/ASRouterAdmin';
+
+// AS Router
+@import '../asrouter/components/Button/Button';
+@import '../asrouter/components/SnippetBase/SnippetBase';
+@import '../asrouter/components/ModalOverlay/ModalOverlay';
+@import '../asrouter/templates/SimpleSnippet/SimpleSnippet';
+@import '../asrouter/templates/OnboardingMessage/OnboardingMessage';

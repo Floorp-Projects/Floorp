@@ -1,0 +1,187 @@
+// Photon colors from http://design.firefox.com/photon/visuals/color.html
+$blue-40: #45A1FF;
+$blue-50: #0A84FF;
+$blue-60: #0060DF;
+$blue-70: #003EAA;
+$blue-80: #002275;
+$grey-10: #F9F9FA;
+$grey-20: #EDEDF0;
+$grey-30: #D7D7DB;
+$grey-40: #B1B1B3;
+$grey-50: #737373;
+$grey-60: #4A4A4F;
+$grey-70: #38383D;
+$grey-80: #2A2A2E;
+$grey-90: #0C0C0D;
+$teal-70: #008EA4;
+$red-60: #D70022;
+$yellow-50: #FFE900;
+
+// Photon opacity from http://design.firefox.com/photon/visuals/color.html#opacity
+$grey-10-10: rgba($grey-10, 0.1);
+$grey-10-20: rgba($grey-10, 0.2);
+$grey-10-40: rgba($grey-10, 0.4);
+$grey-10-60: rgba($grey-10, 0.6);
+$grey-10-80: rgba($grey-10, 0.8);
+$grey-20-60: rgba($grey-20, 0.6);
+$grey-20-80: rgba($grey-20, 0.8);
+$grey-30-60: rgba($grey-30, 0.6);
+$grey-90-10: rgba($grey-90, 0.1);
+$grey-90-20: rgba($grey-90, 0.2);
+$grey-90-30: rgba($grey-90, 0.3);
+$grey-90-40: rgba($grey-90, 0.4);
+$grey-90-50: rgba($grey-90, 0.5);
+$grey-90-60: rgba($grey-90, 0.6);
+$grey-90-70: rgba($grey-90, 0.7);
+$grey-90-80: rgba($grey-90, 0.8);
+$grey-90-90: rgba($grey-90, 0.9);
+
+$black: #000;
+$black-5: rgba($black, 0.05);
+$black-10: rgba($black, 0.1);
+$black-15: rgba($black, 0.15);
+$black-20: rgba($black, 0.2);
+$black-25: rgba($black, 0.25);
+$black-30: rgba($black, 0.3);
+
+// Other colors
+$white: #FFF;
+$white-10: rgba($white, 0.1);
+$pocket-teal: #50BCB6;
+$bookmark-icon-fill: #0A84FF;
+$download-icon-fill: #12BC00;
+$history-icon-fill: #B1B1B3;
+$pocket-icon-fill: #D70022;
+
+// Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
+$photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
+
+$border-radius: 3px;
+
+// Grid related styles
+$base-gutter: 32px;
+$section-horizontal-padding: 25px;
+$section-vertical-padding: 10px;
+$section-spacing: 40px - $section-vertical-padding * 2;
+$grid-unit: 96px; // 1 top site
+
+$icon-size: 16px;
+$smaller-icon-size: 12px;
+$larger-icon-size: 32px;
+
+$wrapper-default-width: $grid-unit * 2 + $base-gutter * 1 + $section-horizontal-padding * 2; // 2 top sites
+$wrapper-max-width-small: $grid-unit * 3 + $base-gutter * 2 + $section-horizontal-padding * 2; // 3 top sites
+$wrapper-max-width-medium: $grid-unit * 4 + $base-gutter * 3 + $section-horizontal-padding * 2; // 4 top sites
+$wrapper-max-width-large: $grid-unit * 6 + $base-gutter * 5 + $section-horizontal-padding * 2; // 6 top sites
+$wrapper-max-width-widest: $grid-unit * 8 + $base-gutter * 7 + $section-horizontal-padding * 2; // 8 top sites
+// For the breakpoints, we need to add space for the scrollbar to avoid weird
+// layout issues when the scrollbar is visible. 16px is wide enough to cover all
+// OSes and keeps it simpler than a per-OS value.
+$scrollbar-width: 16px;
+$break-point-small: $wrapper-max-width-small + $base-gutter * 2 + $scrollbar-width;
+$break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width;
+$break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width;
+$break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width;
+
+$section-title-font-size: 13px;
+
+$card-width: $grid-unit * 2 + $base-gutter;
+$card-height: 266px;
+$card-preview-image-height: 122px;
+$card-title-margin: 2px;
+$card-text-line-height: 19px;
+// Larger cards for wider screens:
+$card-width-large: 309px;
+$card-height-large: 370px;
+$card-preview-image-height-large: 155px;
+// Compact cards for Highlights
+$card-height-compact: 160px;
+$card-preview-image-height-compact: 108px;
+
+$topic-margin-top: 12px;
+
+$context-menu-button-size: 27px;
+$context-menu-button-boxshadow: 0 2px $grey-90-10;
+$context-menu-shadow: 0 5px 10px $black-30, 0 0 0 1px $black-20;
+$context-menu-font-size: 14px;
+$context-menu-border-radius: 5px;
+$context-menu-outer-padding: 5px;
+$context-menu-item-padding: 3px 12px;
+
+$error-fallback-font-size: 12px;
+$error-fallback-line-height: 1.5;
+
+$image-path: '../data/content/assets/';
+
+$snippets-container-height: 120px;
+
+$textbox-shadow-size: 4px;
+
+@mixin fade-in {
+  box-shadow: inset $inner-box-shadow, $shadow-primary;
+  transition: box-shadow 150ms;
+}
+
+@mixin fade-in-card {
+  box-shadow: $shadow-primary;
+  transition: box-shadow 150ms;
+}
+
+@mixin context-menu-button {
+  .context-menu-button {
+    background-clip: padding-box;
+    background-color: var(--newtab-contextmenu-button-color);
+    background-image: url('chrome://browser/skin/page-action.svg');
+    background-position: 55%;
+    border: $border-primary;
+    border-radius: 100%;
+    box-shadow: $context-menu-button-boxshadow;
+    cursor: pointer;
+    fill: var(--newtab-icon-primary-color);
+    height: $context-menu-button-size;
+    offset-inline-end: -($context-menu-button-size / 2);
+    opacity: 0;
+    position: absolute;
+    top: -($context-menu-button-size / 2);
+    transform: scale(0.25);
+    transition-duration: 200ms;
+    transition-property: transform, opacity;
+    width: $context-menu-button-size;
+
+    &:-moz-any(:active, :focus) {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@mixin context-menu-button-hover {
+  .context-menu-button {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@mixin context-menu-open-middle {
+  .context-menu {
+    margin-inline-end: auto;
+    margin-inline-start: auto;
+    offset-inline-end: auto;
+    offset-inline-start: -$base-gutter;
+  }
+}
+
+@mixin context-menu-open-left {
+  .context-menu {
+    margin-inline-end: 5px;
+    margin-inline-start: auto;
+    offset-inline-end: 0;
+    offset-inline-start: auto;
+  }
+}
+
+@mixin flip-icon {
+  &:dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
