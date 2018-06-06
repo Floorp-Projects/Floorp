@@ -45,6 +45,7 @@ extern int    gArgc;
 extern char **gArgv;
 extern int    gRestartArgc;
 extern char **gRestartArgv;
+extern bool gRestartedByOS;
 extern bool gLogConsoleErrors;
 extern nsString gAbsoluteArgv0Path;
 

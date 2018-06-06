@@ -87,3 +87,5 @@ chrome.jar:
 # mobile/locales/jar.mn resources and overrides
 % override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
+% resource search-plugins chrome://browser/locale/searchplugins/
+

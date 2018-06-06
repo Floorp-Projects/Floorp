@@ -12,6 +12,7 @@ var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 
 var gExceptionPaths = [
   "chrome://browser/content/defaultthemes/",
+  "chrome://browser/locale/searchplugins/",
   "resource://app/defaults/settings/blocklists/",
   "resource://app/defaults/settings/main/",
   "resource://app/defaults/settings/pinning/",
@@ -35,9 +36,6 @@ var gExceptionPaths = [
   // Exclude all the metadata paths under the country metadata folder because these
   // paths will be concatenated in FormAutofillUtils.jsm based on different country/region.
   "resource://formautofill/addressmetadata/",
-
-  // Exclude all search-plugins because they aren't referenced by filename
-  "resource://search-plugins/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

@@ -7684,7 +7684,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   AutoFrameConstructionItemList items(this);
   ParentType parentType = GetParentType(frameType);
   FlattenedChildIterator iter(insertion.mContainer);
-  bool haveNoXBLChildren = (!iter.XBLInvolved() || !iter.GetNextChild());
+  bool haveNoXBLChildren = !iter.XBLInvolved() || !iter.GetNextChild();
   if (aStartChild->GetPreviousSibling() &&
       parentType == eTypeBlock && haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the

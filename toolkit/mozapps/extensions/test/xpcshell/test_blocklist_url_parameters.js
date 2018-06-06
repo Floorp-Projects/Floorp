@@ -42,16 +42,6 @@ add_task(async function test_blocklist_disabled() {
 
 add_task(async function test_blocklist_disabled() {
   var ABI = "noarch-spidermonkey";
-  // the blacklist service special-cases ABI for Universal binaries,
-  // so do the same here.
-  const CONTRACT = "@mozilla.org/xpcom/mac-utils;1";
-  if (CONTRACT in Cc) {
-    let macutils = Cc[CONTRACT].getService(Ci.nsIMacUtils);
-    if (macutils.isUniversalBinary) {
-      ABI += "-u-" + macutils.architecturesInBinary;
-    }
-  }
-
   let osVersion;
   try {
     osVersion = Services.sysinfo.getProperty("name") + " " + Services.sysinfo.getProperty("version");

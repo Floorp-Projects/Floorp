@@ -29,6 +29,7 @@ include root.mk
 # Main rules (export, compile, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
 $(TIERS)::
+	$(if $(filter $@,$(MAKECMDGOALS)),$(call BUILDSTATUS,TIERS $@),)
 	$(call BUILDSTATUS,TIER_START $@)
 	+$(MAKE) recurse_$@
 	$(call BUILDSTATUS,TIER_FINISH $@)

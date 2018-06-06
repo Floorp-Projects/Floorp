@@ -891,6 +891,7 @@ function Search(searchString, searchParam, autocompleteListener,
 
   this._searchTokens =
     this.filterTokens(getUnfilteredSearchTokens(this._searchString));
+  this._keywordSubstitute = null;
 
   this._prohibitSearchSuggestions = prohibitSearchSuggestions;
 
@@ -1112,9 +1113,8 @@ Search.prototype = {
     // 8) open pages not supported by history (this._switchToTabQuery)
     // 9) query based on match behavior
     //
-    // (6) only gets ran if we get any filtered tokens, since if there are no
-    // tokens, there is nothing to match. This is the *first* query we check if
-    // we want to run, but it gets queued to be run later.
+    // (6) only gets run if we get any filtered tokens, since if there are no
+    // tokens, there is nothing to match.
     //
     // (1), (4), (5) only get run if actions are enabled. When actions are
     // enabled, the first result is always a special result (resulting from one
@@ -1123,15 +1123,6 @@ Search.prototype = {
     // first result is an inline completion result, that will also be the
     // default result and therefore be autofilled (this also happens if actions
     // are not enabled).
-
-    // Get the final query, based on the tokens found in the search string.
-    let queries = [];
-    // "openpage" behavior is supported by the default query.
-    // _switchToTabQuery instead returns only pages not supported by history.
-    if (this.hasBehavior("openpage")) {
-      queries.push(this._switchToTabQuery);
-    }
-    queries.push(this._searchQuery);
 
     // Check for Preloaded Sites Expiry before Autofill
     await this._checkPreloadedSitesExpiry();
@@ -1208,6 +1199,16 @@ Search.prototype = {
       if (!this.pending)
         return;
     }
+
+    // Get the final query, based on the tokens found in the search string and
+    // the keyword substitution, if any.
+    let queries = [];
+    // "openpage" behavior is supported by the default query.
+    // _switchToTabQuery instead returns only pages not supported by history.
+    if (this.hasBehavior("openpage")) {
+      queries.push(this._switchToTabQuery);
+    }
+    queries.push(this._searchQuery);
 
     // Finally run all the other queries.
     for (let [query, params] of queries) {
@@ -1499,7 +1500,7 @@ Search.prototype = {
   async _matchPlacesKeyword() {
     // The first word could be a keyword, so that's what we'll search.
     let keyword = this._searchTokens[0];
-    let entry = await PlacesUtils.keywords.fetch(this._searchTokens[0]);
+    let entry = await PlacesUtils.keywords.fetch(keyword);
     if (!entry)
       return false;
 
@@ -1538,6 +1539,9 @@ Search.prototype = {
       style,
       frecency: Infinity
     });
+    if (!this._keywordSubstitute) {
+      this._keywordSubstitute = entry.url.host;
+    }
     return true;
   },
 
@@ -1614,6 +1618,9 @@ Search.prototype = {
     let query = this._trimmedOriginalSearchString.substr(alias.length + 1);
 
     this._addSearchEngineMatch(match, query);
+    if (!this._keywordSubstitute) {
+      this._keywordSubstitute = match.resultDomain;
+    }
     return true;
   },
 
@@ -2247,6 +2254,21 @@ Search.prototype = {
   },
 
   /**
+   * Get the search string with the keyword substitution applied.
+   * If the user-provided string starts with a keyword that gave a heuristic
+   * result, it can provide a substitute string (e.g. the domain that keyword
+   * will search) so that the history/bookmark results we show will correspond
+   * to the keyword search rather than searching for the literal keyword.
+   */
+  get _keywordSubstitutedSearchString() {
+    let tokens = this._searchTokens;
+    if (this._keywordSubstitute) {
+      tokens = [this._keywordSubstitute, ...this._searchTokens.slice(1)];
+    }
+    return tokens.join(" ");
+  },
+
+  /**
    * Obtains the search query to be used based on the previously set search
    * preferences (accessed by this.hasBehavior).
    *
@@ -2265,7 +2287,7 @@ Search.prototype = {
         searchBehavior: this._behavior,
         // We only want to search the tokens that we are left with - not the
         // original search string.
-        searchString: this._searchTokens.join(" "),
+        searchString: this._keywordSubstitutedSearchString,
         userContextId: this._userContextId,
         // Limit the query to the the maximum number of desired results.
         // This way we can avoid doing more work than needed.
@@ -2289,7 +2311,7 @@ Search.prototype = {
         searchBehavior: this._behavior,
         // We only want to search the tokens that we are left with - not the
         // original search string.
-        searchString: this._searchTokens.join(" "),
+        searchString: this._keywordSubstitutedSearchString,
         userContextId: this._userContextId,
         maxResults: Prefs.get("maxRichResults")
       }
