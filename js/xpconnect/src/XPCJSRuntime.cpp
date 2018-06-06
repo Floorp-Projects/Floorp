@@ -206,14 +206,14 @@ RealmPrivate::RealmPrivate(JS::Realm* realm)
 
 static bool
 TryParseLocationURICandidate(const nsACString& uristr,
-                             CompartmentPrivate::LocationHint aLocationHint,
+                             RealmPrivate::LocationHint aLocationHint,
                              nsIURI** aURI)
 {
     static NS_NAMED_LITERAL_CSTRING(kGRE, "resource://gre/");
     static NS_NAMED_LITERAL_CSTRING(kToolkit, "chrome://global/");
     static NS_NAMED_LITERAL_CSTRING(kBrowser, "chrome://browser/");
 
-    if (aLocationHint == CompartmentPrivate::LocationHintAddon) {
+    if (aLocationHint == RealmPrivate::LocationHintAddon) {
         // Blacklist some known locations which are clearly not add-on related.
         if (StringBeginsWith(uristr, kGRE) ||
             StringBeginsWith(uristr, kToolkit) ||
@@ -249,8 +249,9 @@ TryParseLocationURICandidate(const nsACString& uristr,
     return true;
 }
 
-bool CompartmentPrivate::TryParseLocationURI(CompartmentPrivate::LocationHint aLocationHint,
-                                             nsIURI** aURI)
+bool
+RealmPrivate::TryParseLocationURI(RealmPrivate::LocationHint aLocationHint,
+                                  nsIURI** aURI)
 {
     if (!aURI)
         return false;
@@ -1089,13 +1090,13 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
             name.AssignLiteral("(unknown)");
         }
 
-        // If the compartment's location (name) differs from the principal's
-        // script location, append the compartment's location to allow
-        // differentiation of multiple compartments owned by the same principal
-        // (e.g. components owned by the system or null principal).
-        CompartmentPrivate* compartmentPrivate = CompartmentPrivate::Get(c);
-        if (compartmentPrivate) {
-            const nsACString& location = compartmentPrivate->GetLocation();
+        // If the realm's location (name) differs from the principal's script
+        // location, append the realm's location to allow differentiation of
+        // multiple realms owned by the same principal (e.g. components owned
+        // by the system or null principal).
+        RealmPrivate* realmPrivate = RealmPrivate::Get(realm);
+        if (realmPrivate) {
+            const nsACString& location = realmPrivate->GetLocation();
             if (!location.IsEmpty() && !location.Equals(name)) {
                 name.AppendLiteral(", ");
                 name.Append(location);

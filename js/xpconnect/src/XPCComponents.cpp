@@ -3021,7 +3021,7 @@ nsXPCComponents_Utils::GetCompartmentLocation(HandleValue val,
     obj = js::CheckedUnwrap(obj);
     MOZ_ASSERT(obj);
 
-    result = xpc::CompartmentPrivate::Get(obj)->GetLocation();
+    result = xpc::RealmPrivate::Get(obj)->GetLocation();
     return NS_OK;
 }
 
