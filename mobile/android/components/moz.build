@@ -51,5 +51,4 @@ DIRS += [
     'extensions',
     'build',
     'geckoview',
-    'search',
 ]

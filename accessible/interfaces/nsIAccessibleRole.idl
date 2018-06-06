@@ -1014,4 +1014,9 @@ interface nsIAccessibleRole : nsISupports
    * choices. It is used for ARIA's combobox role. See also ROLE_COMBOBOX.
    */
   const unsigned long ROLE_EDITCOMBOBOX = 174;
+
+  /**
+   * A section of content that is quoted from another source.
+   */
+  const unsigned long ROLE_BLOCKQUOTE = 175;
 };

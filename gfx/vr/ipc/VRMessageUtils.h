@@ -47,6 +47,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayState>
     WriteParam(aMsg, aParam.mIsMounted);
     WriteParam(aMsg, aParam.mStageSize.width);
     WriteParam(aMsg, aParam.mStageSize.height);
+    WriteParam(aMsg, aParam.mPresentingGeneration);
     for (int i = 0; i < 16; i++) {
       // TODO - Should probably memcpy the whole array or
       // convert Maxtrix4x4 to a POD type and use it
@@ -71,7 +72,8 @@ struct ParamTraits<mozilla::gfx::VRDisplayState>
         !ReadParam(aMsg, aIter, &(aResult->mIsConnected)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsMounted)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize.width)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mStageSize.height))) {
+        !ReadParam(aMsg, aIter, &(aResult->mStageSize.height)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration))) {
       return false;
     }
     for (int i = 0; i < 16; i++) {
@@ -104,7 +106,6 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mPresentingGroups);
     WriteParam(aMsg, aParam.mGroupMask);
     WriteParam(aMsg, aParam.mFrameId);
-    WriteParam(aMsg, aParam.mPresentingGeneration);
     WriteParam(aMsg, aParam.mDisplayState);
     for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
       WriteParam(aMsg, aParam.mLastSensorState[i]);
@@ -118,7 +119,6 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mPresentingGroups)) ||
         !ReadParam(aMsg, aIter, &(aResult->mGroupMask)) ||
         !ReadParam(aMsg, aIter, &(aResult->mFrameId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDisplayState))) {
       return false;
     }

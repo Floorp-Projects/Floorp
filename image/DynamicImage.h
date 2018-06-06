@@ -63,7 +63,7 @@ public:
   virtual bool HasError() override;
   virtual void SetHasError() override;
 
-  virtual ImageURL* GetURI() override;
+  nsIURI* GetURI() const override;
 
 private:
   virtual ~DynamicImage() { }

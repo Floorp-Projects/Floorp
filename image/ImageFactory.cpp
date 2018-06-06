@@ -34,7 +34,7 @@ ImageFactory::Initialize()
 { }
 
 static uint32_t
-ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
+ComputeImageFlags(nsIURI* uri, const nsCString& aMimeType, bool isMultiPart)
 {
   nsresult rv;
 
@@ -88,10 +88,10 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
 
 #ifdef DEBUG
 static void
-NotifyImageLoading(ImageURL* aURI)
+NotifyImageLoading(nsIURI* aURI)
 {
   if (!NS_IsMainThread()) {
-    RefPtr<ImageURL> uri(aURI);
+    nsCOMPtr<nsIURI> uri(aURI);
     nsCOMPtr<nsIRunnable> ev =
       NS_NewRunnableFunction("NotifyImageLoading", [uri] () -> void {
         NotifyImageLoading(uri);
@@ -114,7 +114,7 @@ NotifyImageLoading(ImageURL* aURI)
 ImageFactory::CreateImage(nsIRequest* aRequest,
                           ProgressTracker* aProgressTracker,
                           const nsCString& aMimeType,
-                          ImageURL* aURI,
+                          nsIURI* aURI,
                           bool aIsMultiPart,
                           uint32_t aInnerWindowId)
 {
@@ -240,7 +240,7 @@ GetContentSize(nsIRequest* aRequest)
 ImageFactory::CreateRasterImage(nsIRequest* aRequest,
                                 ProgressTracker* aProgressTracker,
                                 const nsCString& aMimeType,
-                                ImageURL* aURI,
+                                nsIURI* aURI,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {
@@ -271,7 +271,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 ImageFactory::CreateVectorImage(nsIRequest* aRequest,
                                 ProgressTracker* aProgressTracker,
                                 const nsCString& aMimeType,
-                                ImageURL* aURI,
+                                nsIURI* aURI,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {

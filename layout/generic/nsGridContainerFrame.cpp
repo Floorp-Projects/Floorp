@@ -28,6 +28,7 @@
 #include "nsDataHashtable.h"
 #include "nsDisplayList.h"
 #include "nsHashKeys.h"
+#include "nsFieldSetFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
@@ -545,6 +546,7 @@ struct nsGridContainerFrame::GridItemInfo
     eApplyAutoMinSize =      0x20,
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
     eClampMarginBoxMinSize = 0x40,
+    eIsSubgrid =             0x80,
   };
 
   explicit GridItemInfo(nsIFrame* aFrame,
@@ -554,8 +556,32 @@ struct nsGridContainerFrame::GridItemInfo
   {
     mState[eLogicalAxisBlock] = StateBits(0);
     mState[eLogicalAxisInline] = StateBits(0);
+    nsIFrame* innerFrame = InnerFrame(mFrame);
+    if (innerFrame->IsGridContainerFrame()) {
+      const auto* f = static_cast<nsGridContainerFrame*>(innerFrame);
+      auto parentWM = aFrame->GetParent()->GetWritingMode();
+      bool isOrthogonal = parentWM.IsOrthogonalTo(f->GetWritingMode());
+      if (f->IsColSubgrid()) {
+        mState[isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline] =
+          StateBits::eIsSubgrid;
+      }
+      if (f->IsRowSubgrid()) {
+        mState[isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock] =
+          StateBits::eIsSubgrid;
+      }
+    }
     mBaselineOffset[eLogicalAxisBlock] = nscoord(0);
     mBaselineOffset[eLogicalAxisInline] = nscoord(0);
+  }
+
+  // Is this item a subgrid in the given container axis?
+  bool IsSubgrid(LogicalAxis aAxis) const {
+    return mState[aAxis] & StateBits::eIsSubgrid;
+  }
+
+  // Is this item a subgrid in either axis?
+  bool IsSubgrid() const {
+    return IsSubgrid(eLogicalAxisInline) || IsSubgrid(eLogicalAxisBlock);
   }
 
   /**
@@ -611,6 +637,17 @@ struct nsGridContainerFrame::GridItemInfo
     return a->mArea.mRows.mStart < b->mArea.mRows.mStart;
   }
 
+  // Return the inner frame of aFrame that might be a grid container.
+  // This drills down through scroll frames and such.
+  static nsIFrame* InnerFrame(nsIFrame* aFrame)
+  {
+    nsIFrame* inner = aFrame;
+    if (MOZ_UNLIKELY(aFrame->IsFieldSetFrame())) {
+      inner = static_cast<nsFieldSetFrame*>(aFrame)->GetInner();
+    }
+    return inner->GetContentInsertionFrame();
+  }
+
   nsIFrame* const mFrame;
   GridArea mArea;
   // Offset from the margin edge to the baseline (LogicalAxis index).  It's from
@@ -636,6 +673,9 @@ nsGridContainerFrame::GridItemInfo::Dump() const
       return;
     }
     printf("%s", aMsg);
+    if (state & ItemState::eIsSubgrid) {
+      printf("subgrid ");
+    }
     if (state & ItemState::eIsFlexing) {
       printf("flexing ");
     }
@@ -3131,6 +3171,10 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   const nsStylePosition* const gridStyle = aState.mGridStyle;
   MOZ_ASSERT(mCellMap.mCells.IsEmpty(), "unexpected entries in cell map");
 
+  // SubgridPlaceGridItems will set these if we find any subgrid items.
+  aState.mFrame->RemoveStateBits(NS_STATE_GRID_HAS_COL_SUBGRID_ITEM |
+                                 NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM);
+
   // http://dev.w3.org/csswg/css-grid/#grid-definition
   // Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
   // This is determined by the larger of the number of rows/columns defined
@@ -4121,7 +4165,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
                !(state &
                  (ItemState::eSelfBaseline | ItemState::eContentBaseline)),
                "first/last bit requires self/content bit and vice versa");
-    gridItem.mState[mAxis] = state;
+    gridItem.mState[mAxis] |= state;
     gridItem.mBaselineOffset[mAxis] = nscoord(0);
   }
 
@@ -6328,6 +6372,38 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
+}
+
+void
+nsGridContainerFrame::Init(nsIContent*       aContent,
+                           nsContainerFrame* aParent,
+                           nsIFrame*         aPrevInFlow)
+{
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+
+  nsFrameState bits = nsFrameState(0);
+  if (MOZ_LIKELY(!aPrevInFlow)) {
+    // skip our scroll frame and such if we have it
+    auto* parent = aParent;
+    while (parent && parent->GetContent() == aContent) {
+      parent = parent->GetParent();
+    }
+    if (parent && parent->IsGridContainerFrame()) {
+      const auto* pos = StylePosition();
+      if (pos->GridTemplateColumns().mIsSubgrid) {
+        bits |= NS_STATE_GRID_IS_COL_SUBGRID;
+      }
+      if (pos->GridTemplateRows().mIsSubgrid) {
+        bits |= NS_STATE_GRID_IS_ROW_SUBGRID;
+      }
+    }
+  } else {
+    bits = aPrevInFlow->GetStateBits() & (NS_STATE_GRID_IS_COL_SUBGRID |
+                                          NS_STATE_GRID_IS_ROW_SUBGRID |
+                                          NS_STATE_GRID_HAS_COL_SUBGRID_ITEM |
+                                          NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM);
+  }
+  AddStateBits(bits);
 }
 
 nscoord

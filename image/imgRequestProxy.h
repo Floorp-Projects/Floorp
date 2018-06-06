@@ -42,7 +42,6 @@ class TabGroup;
 
 namespace image {
 class Image;
-class ImageURL;
 class ProgressTracker;
 } // namespace image
 } // namespace mozilla
@@ -58,7 +57,6 @@ protected:
 
 public:
   typedef mozilla::image::Image Image;
-  typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(imgRequestProxy)
@@ -76,7 +74,7 @@ public:
   nsresult Init(imgRequest* aOwner,
                 nsILoadGroup* aLoadGroup,
                 nsIDocument* aLoadingDocument,
-                ImageURL* aURI,
+                nsIURI* aURI,
                 imgINotificationObserver* aObserver);
 
   nsresult ChangeOwner(imgRequest* aNewOwner); // this will change mOwner.
@@ -149,8 +147,6 @@ public:
                  imgRequestProxy** aClone);
   nsresult GetStaticRequest(nsIDocument* aLoadingDocument,
                             imgRequestProxy** aReturn);
-
-  nsresult GetURI(ImageURL** aURI);
 
 protected:
   friend class mozilla::image::ProgressTracker;
@@ -230,7 +226,7 @@ private:
   void DispatchWithTarget(already_AddRefed<nsIRunnable> aEvent);
 
   // The URI of our request.
-  RefPtr<ImageURL> mURI;
+  nsCOMPtr<nsIURI> mURI;
 
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our

@@ -31,12 +31,15 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.mozilla.gecko.util.ProxySelector;
 
 /**
  * An {@link HttpDataSource} that uses Android's {@link HttpURLConnection}.
@@ -193,6 +196,8 @@ public class DefaultHttpDataSource implements HttpDataSource {
     } catch (IOException e) {
       throw new HttpDataSourceException("Unable to connect to " + dataSpec.uri.toString(), e,
           dataSpec, HttpDataSourceException.TYPE_OPEN);
+    } catch (URISyntaxException e) {
+      throw new HttpDataSourceException("URI invalid: " + dataSpec.uri.toString(), dataSpec, HttpDataSourceException.TYPE_OPEN);
     }
 
     int responseCode;
@@ -337,7 +342,7 @@ public class DefaultHttpDataSource implements HttpDataSource {
   /**
    * Establishes a connection, following redirects to do so where permitted.
    */
-  private HttpURLConnection makeConnection(DataSpec dataSpec) throws IOException {
+  private HttpURLConnection makeConnection(DataSpec dataSpec) throws IOException, URISyntaxException {
     URL url = new URL(dataSpec.uri.toString());
     byte[] postBody = dataSpec.postBody;
     long position = dataSpec.position;
@@ -389,8 +394,14 @@ public class DefaultHttpDataSource implements HttpDataSource {
    * @param followRedirects Whether to follow redirects.
    */
   private HttpURLConnection makeConnection(URL url, byte[] postBody, long position,
-      long length, boolean allowGzip, boolean followRedirects) throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      long length, boolean allowGzip, boolean followRedirects) throws IOException, URISyntaxException {
+    /**
+     * Tor Project modified the way the connection object was created. For the sake of
+     * simplicity, instead of duplicating the whole file we changed the connection object
+     * to use the ProxySelector.
+     */
+    HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
+
     connection.setConnectTimeout(connectTimeoutMillis);
     connection.setReadTimeout(readTimeoutMillis);
     if (defaultRequestProperties != null) {

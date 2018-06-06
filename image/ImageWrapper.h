@@ -55,7 +55,7 @@ public:
   virtual bool HasError() override;
   virtual void SetHasError() override;
 
-  virtual ImageURL* GetURI() override;
+  nsIURI* GetURI() const override;
 
 protected:
   explicit ImageWrapper(Image* aInnerImage)

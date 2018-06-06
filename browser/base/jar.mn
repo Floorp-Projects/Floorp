@@ -117,3 +117,4 @@ browser.jar:
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
 % override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
+% resource search-plugins chrome://browser/locale/searchplugins/
