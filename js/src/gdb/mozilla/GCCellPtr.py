@@ -9,6 +9,8 @@ from mozilla.prettyprinters import pretty_printer
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 # Cache information about the JS::TraceKind type for this objfile.
+
+
 class GCCellPtrTypeCache(object):
     def __init__(self, cache):
         self.TraceKind_t = gdb.lookup_type('JS::TraceKind')
@@ -16,6 +18,7 @@ class GCCellPtrTypeCache(object):
         # Build a mapping from TraceKind enum values to the types they denote.
         e = gdb.types.make_enum_dict(self.TraceKind_t)
         kind_to_type = {}
+
         def kind(k, t):
             kind_to_type[e['JS::TraceKind::' + k]] = gdb.lookup_type(t)
         kind('Object',      'JSObject')
@@ -31,6 +34,7 @@ class GCCellPtrTypeCache(object):
 
         self.Null = e['JS::TraceKind::Null']
         self.mask = gdb.parse_and_eval('JS::OutOfLineTraceKindMask')
+
 
 @pretty_printer('JS::GCCellPtr')
 class GCCellPtr(object):

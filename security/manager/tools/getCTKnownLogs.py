@@ -188,6 +188,7 @@ def generate_cpp_header_file(json_data, out_file):
         logs="\n".join(log_info_initializers),
         operators="\n".join(operator_info_initializers)))
 
+
 def patch_in_test_logs(json_data):
     """ Insert Mozilla-specific test log data. """
     max_id = 0
@@ -195,15 +196,15 @@ def patch_in_test_logs(json_data):
         if operator["id"] > max_id:
             max_id = operator["id"]
     mozilla_test_operator_1 = {"name": "Mozilla Test Org 1", "id": max_id + 1,
-        "test_only": True}
+                               "test_only": True}
     mozilla_test_operator_2 = {"name": "Mozilla Test Org 2", "id": max_id + 2,
-        "test_only": True}
+                               "test_only": True}
     json_data["operators"].append(mozilla_test_operator_1)
     json_data["operators"].append(mozilla_test_operator_2)
     # The easiest way to get this is
     # `openssl x509 -noout -pubkey -in <path/to/default-ee.pem>`
     mozilla_rsa_log_1 = {"description": "Mozilla Test RSA Log 1",
-        "key": """
+                         "key": """
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuohRqESOFtZB/W62iAY2
             ED08E9nq5DVKtOz1aFdsJHvBxyWo4NgfvbGcBptuGobya+KvWnVramRxCHqlWqdF
             h/cc1SScAn7NQ/weadA4ICmTqyDDSeTbuUzCa2wO7RWCD/F+rWkasdMCOosqQe6n
@@ -212,11 +213,11 @@ def patch_in_test_logs(json_data):
             tIqVYR3uJtYlnauRCE42yxwkBCy/Fosv5fGPmRcxuLP+SSP6clHEMdUDrNoYCjXt
             jQIDAQAB
         """,
-        "operated_by": [max_id + 1]}
+                         "operated_by": [max_id + 1]}
     # Similarly,
     # `openssl x509 -noout -pubkey -in <path/to/other-test-ca.pem>`
     mozilla_rsa_log_2 = {"description": "Mozilla Test RSA Log 2",
-        "key": """
+                         "key": """
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwXXGUmYJn3cIKmeR8bh2
             w39c5TiwbErNIrHL1G+mWtoq3UHIwkmKxKOzwfYUh/QbaYlBvYClHDwSAkTFhKTE
             SDMF5ROMAQbPCL6ahidguuai6PNvI8XZgxO53683g0XazlHU1tzSpss8xwbrzTBw
@@ -225,17 +226,18 @@ def patch_in_test_logs(json_data):
             gys1uJMPdLqQqovHYWckKrH9bWIUDRjEwLjGj8N0hFcyStfehuZVLx0eGR1xIWjT
             uwIDAQAB
         """,
-        "operated_by": [max_id + 2]}
+                         "operated_by": [max_id + 2]}
     # `openssl x509 -noout -pubkey -in <path/to/root_secp256r1_256.pem`
     mozilla_ec_log = {"description": "Mozilla Test EC Log",
-        "key": """
+                      "key": """
             MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET7+7u2Hg+PmxpgpZrIcE4uwFC0I+
             PPcukj8sT3lLRVwqadIzRWw2xBGdBwbgDu3I0ZOQ15kbey0HowTqoEqmwA==
         """,
-        "operated_by": [max_id + 1]}
+                      "operated_by": [max_id + 1]}
     json_data["logs"].append(mozilla_rsa_log_1)
     json_data["logs"].append(mozilla_rsa_log_2)
     json_data["logs"].append(mozilla_ec_log)
+
 
 def run(args):
     """

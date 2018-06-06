@@ -52,7 +52,8 @@ def attlistToIDL(attlist):
     attlist.sort(cmp=lambda a, b: cmp(a[0], b[0]))
 
     return '[%s] ' % ','.join(["%s%s" % (name, value is not None and '(%s)' % value or '')
-                              for name, value, aloc in attlist])
+                               for name, value, aloc in attlist])
+
 
 _paramsHardcode = {
     2: ('array', 'shared', 'iid_is', 'size_is', 'retval'),
@@ -131,7 +132,8 @@ class Builtin(object):
 
     def nativeType(self, calltype, shared=False, const=False):
         if const:
-            print >>sys.stderr, IDLError("[const] doesn't make sense on builtin types.", self.location, warning=True)
+            print >>sys.stderr, IDLError(
+                "[const] doesn't make sense on builtin types.", self.location, warning=True)
             const = 'const '
         elif calltype == 'in' and self.isPointer():
             const = 'const '
@@ -153,6 +155,7 @@ class Builtin(object):
             rustname = self.rustname.replace("*mut", "*const")
 
         return "%s%s" % (calltype != 'in' and '*mut ' or '', rustname)
+
 
 builtinNames = [
     Builtin('boolean', 'bool', 'bool'),
@@ -220,6 +223,7 @@ class Location(object):
 class NameMap(object):
     """Map of name -> object. Each object must have a .name and .location property.
     Setting the same name twice throws an error."""
+
     def __init__(self):
         self._d = {}
 
@@ -236,7 +240,8 @@ class NameMap(object):
 
     def set(self, object):
         if object.name in builtinMap:
-            raise IDLError("name '%s' is a builtin and cannot be redeclared" % (object.name), object.location)
+            raise IDLError("name '%s' is a builtin and cannot be redeclared" %
+                           (object.name), object.location)
         if object.name.startswith("_"):
             object.name = object.name[1:]
         if object.name in self._d:
@@ -248,7 +253,8 @@ class NameMap(object):
             elif isinstance(old, Interface) and isinstance(object, Forward):
                 pass
             else:
-                raise IDLError("name '%s' specified twice. Previous location: %s" % (object.name, self._d[object.name].location), object.location)
+                raise IDLError("name '%s' specified twice. Previous location: %s" %
+                               (object.name, self._d[object.name].location), object.location)
         else:
             self._d[object.name] = object
 
@@ -260,7 +266,11 @@ class NameMap(object):
 
 
 class RustNoncompat(Exception):
-    """Thie exception is raised when a particular type or function cannot be safely exposed to rust code"""
+    """
+    This exception is raised when a particular type or function cannot be safely exposed to
+    rust code
+    """
+
     def __init__(self, reason):
         self.reason = reason
 
@@ -659,7 +669,9 @@ class Interface(object):
             for member in self.members:
                 if member.kind is 'method':
                     if has_method:
-                        raise IDLError("interface '%s' has multiple methods, but marked 'function'" % self.name, self.location)
+                        raise IDLError(
+                            "interface '%s' has multiple methods, but marked 'function'" %
+                            self.name, self.location)
                     else:
                         has_method = True
 
@@ -667,16 +679,22 @@ class Interface(object):
         if self.base is not None:
             realbase = parent.getName(self.base, self.location)
             if realbase.kind != 'interface':
-                raise IDLError("interface '%s' inherits from non-interface type '%s'" % (self.name, self.base), self.location)
+                raise IDLError("interface '%s' inherits from non-interface type '%s'" %
+                               (self.name, self.base), self.location)
 
             if self.attributes.scriptable and not realbase.attributes.scriptable:
-                raise IDLError("interface '%s' is scriptable but derives from non-scriptable '%s'" % (self.name, self.base), self.location, warning=True)
+                raise IDLError("interface '%s' is scriptable but derives from "
+                               "non-scriptable '%s'" %
+                               (self.name, self.base), self.location, warning=True)
 
-            if self.attributes.scriptable and realbase.attributes.builtinclass and not self.attributes.builtinclass:
-                raise IDLError("interface '%s' is not builtinclass but derives from builtinclass '%s'" % (self.name, self.base), self.location)
+            if (self.attributes.scriptable and realbase.attributes.builtinclass and
+                not self.attributes.builtinclass):
+                raise IDLError("interface '%s' is not builtinclass but derives from "
+                               "builtinclass '%s'" %
+                               (self.name, self.base), self.location)
 
             if realbase.implicit_builtinclass:
-                self.implicit_builtinclass = True # Inherit implicit builtinclass from base
+                self.implicit_builtinclass = True  # Inherit implicit builtinclass from base
 
         for member in self.members:
             member.resolve(self)
@@ -789,7 +807,7 @@ class InterfaceAttributes(object):
         'main_process_scriptable_only': (False, setmain_process_scriptable_only),
         'shim':    (True, setshim),
         'shimfile': (True, setshimfile),
-        }
+    }
 
     def __init__(self, attlist, location):
         def badattribute(self):
@@ -849,7 +867,8 @@ class ConstMember(object):
         while isinstance(basetype, Typedef):
             basetype = basetype.realtype
         if not isinstance(basetype, Builtin) or not basetype.maybeConst:
-            raise IDLError("const may only be a short or long type, not %s" % self.type, self.location)
+            raise IDLError("const may only be a short or long type, not %s" %
+                           self.type, self.location)
 
         self.basetype = basetype
 
@@ -940,7 +959,10 @@ class Attribute(object):
                 getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
-        if self.infallible and not self.realtype.kind in ['builtin', 'interface', 'forward', 'webidl']:
+        if self.infallible and self.realtype.kind not in ['builtin',
+                                                          'interface',
+                                                          'forward',
+                                                          'webidl']:
             raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
                            '(numbers, booleans, and raw char types)',
                            self.location)
@@ -1024,16 +1046,19 @@ class Method(object):
             p.resolve(self)
         for p in self.params:
             if p.retval and p != self.params[-1]:
-                raise IDLError("'retval' parameter '%s' is not the last parameter" % p.name, self.location)
+                raise IDLError("'retval' parameter '%s' is not the last parameter" %
+                               p.name, self.location)
             if p.size_is:
                 found_size_param = False
                 for size_param in self.params:
                     if p.size_is == size_param.name:
                         found_size_param = True
                         if getBuiltinOrNativeTypeName(size_param.realtype) != 'unsigned long':
-                            raise IDLError("is_size parameter must have type 'unsigned long'", self.location)
+                            raise IDLError(
+                                "is_size parameter must have type 'unsigned long'", self.location)
                 if not found_size_param:
-                    raise IDLError("could not find is_size parameter '%s'" % p.size_is, self.location)
+                    raise IDLError("could not find is_size parameter '%s'" %
+                                   p.size_is, self.location)
 
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
@@ -1105,7 +1130,8 @@ class Param(object):
                 if value is None:
                     raise IDLError("'Null' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
-                    raise IDLError("'Null' parameter value must be 'Empty', 'Null', or 'Stringify'",
+                    raise IDLError("'Null' parameter value must be 'Empty', 'Null', "
+                                   "or 'Stringify'",
                                    aloc)
                 self.null = value
             elif name == 'Undefined':
@@ -1159,9 +1185,9 @@ class Param(object):
 
         try:
             return self.realtype.nativeType(self.paramtype, **kwargs)
-        except IDLError, e:
+        except IDLError as e:
             raise IDLError(e.message, self.location)
-        except TypeError, e:
+        except TypeError as e:
             raise IDLError("Unexpected parameter attribute", self.location)
 
     def rustType(self):
@@ -1173,9 +1199,9 @@ class Param(object):
 
         try:
             return self.realtype.rustType(self.paramtype, **kwargs)
-        except IDLError, e:
+        except IDLError as e:
             raise IDLError(e.message, self.location)
-        except TypeError, e:
+        except TypeError as e:
             raise IDLError("Unexpected parameter attribute", self.location)
 
     def toIDL(self):
@@ -1214,7 +1240,7 @@ class IDLParser(object):
         'native': 'NATIVE',
         'typedef': 'TYPEDEF',
         'webidl': 'WEBIDL',
-        }
+    }
 
     tokens = [
         'IDENTIFIER',
@@ -1226,7 +1252,7 @@ class IDLParser(object):
         'LSHIFT',
         'RSHIFT',
         'NATIVEID',
-        ]
+    ]
 
     tokens.extend(keywords.values())
 
@@ -1259,7 +1285,7 @@ class IDLParser(object):
     t_IID.__doc__ = r'%(c)s{8}-%(c)s{4}-%(c)s{4}-%(c)s{4}-%(c)s{12}' % {'c': hexchar}
 
     def t_IDENTIFIER(self, t):
-        r'(unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long)(?!_?[A-Za-z][A-Za-z_0-9])|_?[A-Za-z][A-Za-z_0-9]*'
+        r'(unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long)(?!_?[A-Za-z][A-Za-z_0-9])|_?[A-Za-z][A-Za-z_0-9]*'  # NOQA: E501
         t.type = self.keywords.get(t.value, 'IDENTIFIER')
         return t
 
@@ -1401,7 +1427,7 @@ class IDLParser(object):
             doccomments.extend(atts['doccomments'])
         doccomments.extend(p.slice[2].doccomments)
 
-        l = lambda: self.getLocation(p, 2)
+        def loc(): return self.getLocation(p, 2)
 
         if body is None:
             # forward-declared interface... must not have attributes!
@@ -1411,14 +1437,14 @@ class IDLParser(object):
 
             if base is not None:
                 raise IDLError("Forward-declared interface must not have a base",
-                               l())
-            p[0] = Forward(name=name, location=l(), doccomments=doccomments)
+                               loc())
+            p[0] = Forward(name=name, location=loc(), doccomments=doccomments)
         else:
             p[0] = Interface(name=name,
                              attlist=attlist,
                              base=base,
                              members=body,
-                             location=l(),
+                             location=loc(),
                              doccomments=doccomments)
 
     def p_ifacebody(self, p):
@@ -1598,7 +1624,9 @@ class IDLParser(object):
 
     def p_error(self, t):
         if not t:
-            raise IDLError("Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) or both", None)
+            raise IDLError(
+                "Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) "
+                "or both", None)
         else:
             location = Location(self.lexer, t.lineno, t.lexpos)
             raise IDLError("invalid syntax", location)
@@ -1638,8 +1666,9 @@ class IDLParser(object):
     def getLocation(self, p, i):
         return Location(self.lexer, p.lineno(i), p.lexpos(i))
 
+
 if __name__ == '__main__':
     p = IDLParser()
     for f in sys.argv[1:]:
-        print "Parsing %s" % f
+        print("Parsing %s" % f)
         p.parse(open(f).read(), filename=f)

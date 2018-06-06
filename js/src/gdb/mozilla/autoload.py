@@ -21,12 +21,13 @@ import mozilla.unwind
 
 # The user may have personal pretty-printers. Get those, too, if they exist.
 try:
-    import my_mozilla_printers
+    import my_mozilla_printers  # NOQA: F401
 except ImportError:
     pass
 
-# Register our pretty-printers with |objfile|.
+
 def register(objfile):
+    # Register our pretty-printers with |objfile|.
     lookup = mozilla.prettyprinters.lookup_for_objfile(objfile)
     if lookup:
         gdb.printing.register_pretty_printer(objfile, lookup, replace=True)

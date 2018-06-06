@@ -105,6 +105,7 @@ class Error(Exception):
 
 class UnknownBaseError(Error):
     """Base class for handling unexpected input in this module."""
+
     def __init__(self, value):
         super(UnknownBaseError, self).__init__()
         self.value = value
@@ -222,6 +223,7 @@ def getASN1Tag(asn1Type):
     type from the pyasn1 package"""
     return asn1Type.tagSet.baseTag.tagId
 
+
 def stringToAccessDescription(string):
     """Helper function that takes a string representing a URI
     presumably identifying an OCSP authority information access
@@ -233,6 +235,7 @@ def stringToAccessDescription(string):
     sequence.setComponentByPosition(0, accessMethod)
     sequence.setComponentByPosition(1, accessLocation)
     return sequence
+
 
 def stringToDN(string, tag=None):
     """Takes a string representing a distinguished name or directory
@@ -291,6 +294,7 @@ def stringToDN(string, tag=None):
     name.setComponentByPosition(0, rdns)
     return name
 
+
 def stringToAlgorithmIdentifiers(string):
     """Helper function that converts a description of an algorithm
     to a representation usable by the pyasn1 package and a hash
@@ -330,12 +334,14 @@ def stringToAlgorithmIdentifiers(string):
         algorithmIdentifier['parameters'] = univ.Any(nullEncapsulated)
     return (algorithmIdentifier, algorithmType)
 
+
 def datetimeToTime(dt):
     """Takes a datetime object and returns an rfc2459.Time object with
     that time as its value as a GeneralizedTime"""
     time = rfc2459.Time()
     time['generalTime'] = useful.GeneralizedTime(dt.strftime('%Y%m%d%H%M%SZ'))
     return time
+
 
 def serialBytesToString(serialBytes):
     """Takes a list of integers in the interval [0, 255] and returns
@@ -347,12 +353,13 @@ def serialBytesToString(serialBytes):
     stringBytes = [getASN1Tag(univ.Integer), serialBytesLen] + serialBytes
     return ''.join(chr(b) for b in stringBytes)
 
+
 class Certificate(object):
     """Utility class for reading a certificate specification and
     generating a signed x509 certificate"""
 
     def __init__(self, paramStream):
-        self.versionValue = 2 # a value of 2 is X509v3
+        self.versionValue = 2  # a value of 2 is X509v3
         self.signature = 'sha256WithRSAEncryption'
         self.issuer = 'Default Issuer'
         actualNow = datetime.datetime.utcnow()
@@ -753,4 +760,4 @@ def main(output, inputPath):
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
 if __name__ == '__main__':
-    print Certificate(sys.stdin).toPEM()
+    print(Certificate(sys.stdin).toPEM())

@@ -7,8 +7,6 @@
 
 """Generate a json XPT typelib for an IDL file"""
 
-import os
-import sys
 import xpidl
 import json
 import itertools
@@ -58,7 +56,7 @@ def get_type(type, calltype, iid_is=None, size_is=None):
         type = type.realtype
 
     if isinstance(type, xpidl.Builtin):
-        ret = { 'tag': TypeMap[type.name] }
+        ret = {'tag': TypeMap[type.name]}
         if type.name in ['string', 'wstring'] and size_is is not None:
             ret['tag'] += '_SIZE_IS'
             ret['size_is'] = size_is
@@ -98,7 +96,7 @@ def get_type(type, calltype, iid_is=None, size_is=None):
                 'iid_is': iid_is,
             }
         else:
-            return { 'tag': 'TD_VOID' }
+            return {'tag': 'TD_VOID'}
 
     raise Exception("Unknown type!")
 
@@ -156,7 +154,7 @@ def build_interface(iface):
         consts.append({
             'name': c.name,
             'type': get_type(c.basetype, ''),
-            'value': c.getValue(), # All of our consts are numbers
+            'value': c.getValue(),  # All of our consts are numbers
         })
 
     def build_method(m):
@@ -240,6 +238,8 @@ def build_typelib(idl):
     return [build_interface(p) for p in idl.productions if exported(p)]
 
 # Link a list of typelibs together into a single typelib
+
+
 def link(typelibs):
     linked = list(itertools.chain.from_iterable(typelibs))
     assert len(set(iface['name'] for iface in linked)) == len(linked), \
@@ -247,5 +247,7 @@ def link(typelibs):
     return linked
 
 # Write the typelib into the fd file
+
+
 def write(typelib, fd):
     json.dump(typelib, fd, indent=2)

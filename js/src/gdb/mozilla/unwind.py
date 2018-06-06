@@ -30,9 +30,11 @@ except ImportError:
     # will ever be instantiated.
     Unwinder = object
 
+
 def debug(something):
     # print("@@ " + something)
     pass
+
 
 # Maps frametype enum base names to corresponding class.
 SizeOfFramePrefix = {
@@ -49,9 +51,11 @@ SizeOfFramePrefix = {
     'JitFrame_Bailout': 'JitFrameLayout',
 }
 
-# All types and symbols that we need are attached to an object that we
-# can dispose of as needed.
+
 class UnwinderTypeCache(object):
+    # All types and symbols that we need are attached to an object that we
+    # can dispose of as needed.
+
     def __init__(self):
         self.d = None
         self.frame_enum_names = {}
@@ -117,6 +121,8 @@ class UnwinderTypeCache(object):
 # In the interest of not requiring a patched gdb, instead we read
 # /proc/.../maps.  This only works locally, but maybe could work
 # remotely using "remote get".  FIXME.
+
+
 def parse_proc_maps():
     mapfile = '/proc/' + str(gdb.selected_inferior().pid) + '/maps'
     # Note we only examine executable mappings here.
@@ -138,6 +144,8 @@ def parse_proc_maps():
     return mappings
 
 # A symbol/value pair as expected from gdb frame decorators.
+
+
 class FrameSymbol(object):
     def __init__(self, sym, val):
         self.sym = sym
@@ -152,6 +160,8 @@ class FrameSymbol(object):
 # This represents a single JIT frame for the purposes of display.
 # That is, the frame filter creates instances of this when it sees a
 # JIT frame in the stack.
+
+
 class JitFrameDecorator(FrameDecorator):
     def __init__(self, base, info, cache):
         super(JitFrameDecorator, self).__init__(base)
@@ -164,7 +174,8 @@ class JitFrameDecorator(FrameDecorator):
         calleetoken = calleetoken ^ tag
         function = None
         script = None
-        if tag == self.cache.CalleeToken_Function or tag == self.cache.CalleeToken_FunctionConstructing:
+        if (tag == self.cache.CalleeToken_Function or
+            tag == self.cache.CalleeToken_FunctionConstructing):
             fptr = gdb.Value(calleetoken).cast(self.cache.JSFunction)
             try:
                 atom = fptr['atom_']
@@ -204,10 +215,12 @@ class JitFrameDecorator(FrameDecorator):
                     nativeobj = obj.cast(self.cache.NativeObject)
                     # See bug 987069 and despair.  At least this
                     # approach won't give exceptions.
-                    class_name = nativeobj['group_']['value']['clasp_']['name'].string("ISO-8859-1")
+                    class_name = nativeobj['group_']['value']['clasp_']['name'].string(
+                        "ISO-8859-1")
                     if class_name != "ScriptSource":
                         return FrameDecorator.filename(self)
-                    scriptsourceobj = (nativeobj + 1).cast(self.cache.HeapSlot)[self.cache.SOURCE_SLOT]
+                    scriptsourceobj = (
+                        nativeobj + 1).cast(self.cache.HeapSlot)[self.cache.SOURCE_SLOT]
                     scriptsource = scriptsourceobj['value']['data']['asBits'] << 1
                     scriptsource = scriptsource.cast(self.cache.ScriptSource)
                     return scriptsource['filename_']['mTuple']['mFirstA'].string()
@@ -241,6 +254,8 @@ class JitFrameDecorator(FrameDecorator):
         return result
 
 # A frame filter for SpiderMonkey.
+
+
 class SpiderMonkeyFrameFilter(object):
     # |state_holder| is either None, or an instance of
     # SpiderMonkeyUnwinder.  If the latter, then this class will
@@ -266,6 +281,8 @@ class SpiderMonkeyFrameFilter(object):
         return imap(self.maybe_wrap_frame, frame_iter)
 
 # A frame id class, as specified by the gdb unwinder API.
+
+
 class SpiderMonkeyFrameId(object):
     def __init__(self, sp, pc):
         self.sp = sp
@@ -285,6 +302,8 @@ class SpiderMonkeyFrameId(object):
 # Each subclass must define SP_REGISTER, PC_REGISTER, and
 # SENTINEL_REGISTER (see x64UnwinderState for info); and implement
 # unwind_entry_frame_registers.
+
+
 class UnwinderState(object):
     def __init__(self, typecache):
         self.next_sp = None
@@ -314,8 +333,8 @@ class UnwinderState(object):
     # Add information about a frame to the frame map.  This map is
     # queried by |self.get_frame|.  |sp| is the frame's stack pointer,
     # and |name| the frame's type as a string, e.g. "JitFrame_Exit".
-    def add_frame(self, sp, name = None, this_frame = None):
-        self.frame_map[long(sp)] = { "name": name, "this_frame": this_frame }
+    def add_frame(self, sp, name=None, this_frame=None):
+        self.frame_map[long(sp)] = {"name": name, "this_frame": this_frame}
 
     # See whether |pc| is claimed by some text mapping.  See
     # |parse_proc_maps| for details on how the decision is made.
@@ -327,7 +346,7 @@ class UnwinderState(object):
 
     # See whether |pc| is claimed by the Jit.
     def is_jit_address(self, pc):
-        if self.proc_mappings != None:
+        if self.proc_mappings is not None:
             return not self.text_address_claimed(pc)
 
         cx = self.get_tls_context()
@@ -408,7 +427,7 @@ class UnwinderState(object):
         # approach -- you can't get the frame id from a gdb.Frame.
         # https://sourceware.org/bugzilla/show_bug.cgi?id=19800
         frame_name = self.typecache.frame_enum_names[frame_type]
-        self.add_frame(sp, name = frame_name, this_frame = this_frame)
+        self.add_frame(sp, name=frame_name, this_frame=this_frame)
 
         # Update internal state for the next unwind.
         self.next_sp = next_sp
@@ -452,7 +471,7 @@ class UnwinderState(object):
     def unwind_entry_frame(self, pc, pending_frame):
         sp = self.next_sp
         # Notify the frame filter.
-        self.add_frame(sp, name = 'JitFrame_CppToJSJit')
+        self.add_frame(sp, name='JitFrame_CppToJSJit')
         # Make an unwind_info for the per-architecture code to fill in.
         frame_id = SpiderMonkeyFrameId(sp, pc)
         unwind_info = pending_frame.create_unwind_info(frame_id)
@@ -482,6 +501,8 @@ class UnwinderState(object):
         return self.unwind_exit_frame(pc, pending_frame)
 
 # The UnwinderState subclass for x86-64.
+
+
 class x64UnwinderState(UnwinderState):
     SP_REGISTER = 'rsp'
     PC_REGISTER = 'rip'
@@ -511,6 +532,8 @@ class x64UnwinderState(UnwinderState):
 # The unwinder object.  This provides the "user interface" to the JIT
 # unwinder, and also handles constructing or destroying UnwinderState
 # objects as needed.
+
+
 class SpiderMonkeyUnwinder(Unwinder):
     # A list of all the possible unwinders.  See |self.make_unwinder|.
     UNWINDERS = [x64UnwinderState]
@@ -554,7 +577,7 @@ class SpiderMonkeyUnwinder(Unwinder):
         for unwinder in self.UNWINDERS:
             try:
                 pending_frame.read_register(unwinder.SENTINEL_REGISTER)
-            except:
+            except Exception:
                 # Failed to read the register, so let's keep going.
                 # This is more fragile than it might seem, because it
                 # fails if the sentinel register wasn't saved in the
@@ -575,6 +598,8 @@ class SpiderMonkeyUnwinder(Unwinder):
 
 # Register the unwinder and frame filter with |objfile|.  If |objfile|
 # is None, register them globally.
+
+
 def register_unwinder(objfile):
     type_cache = UnwinderTypeCache()
     unwinder = None

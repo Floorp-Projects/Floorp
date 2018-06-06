@@ -4,11 +4,13 @@
 
 # Works with python2.6
 
-import datetime, os, re, sys, traceback
-import math, string, copy, json
-import subprocess
-from subprocess import *
+import os
+import sys
+import math
+import json
+from subprocess import Popen, PIPE
 from operator import itemgetter
+
 
 class Test:
     def __init__(self, path, name):
@@ -19,7 +21,8 @@ class Test:
     def from_file(cls, path, name, options):
         return cls(path, name)
 
-def find_tests(dir, substring = None):
+
+def find_tests(dir, substring=None):
     ans = []
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath == '.':
@@ -32,15 +35,19 @@ def find_tests(dir, substring = None):
                 ans.append([test, filename])
     return ans
 
+
 def get_test_cmd(path):
-    return [ JS, '-f', path ]
+    return [JS, '-f', path]
+
 
 def avg(seq):
     return sum(seq) / len(seq)
 
+
 def stddev(seq, mean):
     diffs = ((float(item) - mean) ** 2 for item in seq)
     return math.sqrt(sum(diffs) / len(seq))
+
 
 def run_test(test):
     env = os.environ.copy()
@@ -55,7 +62,7 @@ def run_test(test):
     out, err = out.decode(), err.decode()
 
     float_array = [float(_) for _ in err.split()]
-    
+
     if len(float_array) == 0:
         print('Error: No data from application. Configured with --enable-gctimer?')
         sys.exit(1)
@@ -71,6 +78,7 @@ def run_test(test):
 
     return max(total), avg(total), max(mark), avg(mark), max(sweep), avg(sweep)
 
+
 def run_tests(tests, test_dir):
     bench_map = {}
 
@@ -79,15 +87,16 @@ def run_tests(tests, test_dir):
             filename_str = '"%s"' % test.name
             TMax, TAvg, MMax, MAvg, SMax, SAvg = run_test(test)
             bench_map[test.name] = [TMax, TAvg, MMax, MAvg, SMax, SAvg]
-            fmt = '%20s: {"TMax": %4.1f, "TAvg": %4.1f, "MMax": %4.1f, "MAvg": %4.1f, "SMax": %4.1f, "SAvg": %4.1f}'
+            fmt = '%20s: {"TMax": %4.1f, "TAvg": %4.1f, "MMax": %4.1f, "MAvg": %4.1f, "SMax": %4.1f, "SAvg": %4.1f}'  # NOQA: E501
             if (i != len(tests) - 1):
                 fmt += ','
-            print(fmt %(filename_str ,TMax, TAvg, MMax, MAvg, SMax, MAvg))
+            print(fmt % (filename_str, TMax, TAvg, MMax, MAvg, SMax, MAvg))
     except KeyboardInterrupt:
         print('fail')
 
     return dict((filename, dict(TMax=TMax, TAvg=TAvg, MMax=MMax, MAvg=MAvg, SMax=SMax, SAvg=SAvg))
-            for filename, (TMax, TAvg, MMax, MAvg, SMax, SAvg) in bench_map.iteritems())
+                for filename, (TMax, TAvg, MMax, MAvg, SMax, SAvg) in bench_map.iteritems())
+
 
 def compare(current, baseline):
     percent_speedups = []
@@ -95,27 +104,27 @@ def compare(current, baseline):
         try:
             baseline_result = baseline[key]
         except KeyError:
-            print key, 'missing from baseline'
+            print(key, 'missing from baseline')
             continue
 
         val_getter = itemgetter('TMax', 'TAvg', 'MMax', 'MAvg', 'SMax', 'SAvg')
         BTMax, BTAvg, BMMax, BMAvg, BSMax, BSAvg = val_getter(baseline_result)
         CTMax, CTAvg, CMMax, CMAvg, CSMax, CSAvg = val_getter(current_result)
 
-        fmt = '%30s: %s'
         if CTAvg <= BTAvg:
             speedup = (CTAvg / BTAvg - 1) * 100
             result = 'faster: %6.2f < baseline %6.2f (%+6.2f%%)' % \
-                    (CTAvg, BTAvg, speedup)
+                (CTAvg, BTAvg, speedup)
             percent_speedups.append(speedup)
         else:
             slowdown = (CTAvg / BTAvg - 1) * 100
             result = 'SLOWER: %6.2f > baseline %6.2f (%+6.2f%%) ' % \
-                    (CTAvg, BTAvg, slowdown)
+                (CTAvg, BTAvg, slowdown)
             percent_speedups.append(slowdown)
-        print '%30s: %s' % (key, result)
+        print('%30s: %s' % (key, result))
     if percent_speedups:
-        print 'Average speedup: %.2f%%' % avg(percent_speedups)
+        print('Average speedup: %.2f%%' % avg(percent_speedups))
+
 
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
@@ -126,8 +135,8 @@ if __name__ == '__main__':
     op = OptionParser(usage='%prog [options] JS_SHELL [TESTS]')
 
     op.add_option('-b', '--baseline', metavar='JSON_PATH',
-            dest='baseline_path', help='json file with baseline values to '
-            'compare against')
+                  dest='baseline_path', help='json file with baseline values to '
+                  'compare against')
 
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
@@ -144,7 +153,7 @@ if __name__ == '__main__':
         print >> sys.stderr, "No tests found matching command line arguments."
         sys.exit(0)
 
-    test_list = [ Test.from_file(tst, name, OPTIONS) for tst, name in test_list ]
+    test_list = [Test.from_file(tst, name, OPTIONS) for tst, name in test_list]
 
     try:
         print("{")
@@ -153,7 +162,7 @@ if __name__ == '__main__':
 
     except OSError:
         if not os.path.exists(JS):
-            print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%JS
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'" % JS
             sys.exit(1)
         else:
             raise

@@ -28,6 +28,7 @@ def directories(pathmodule, cwd, fixup=lambda s: s):
                                           pathmodule.join(source, "..", "..")))
     return Dirs(scripts, js_src, source, tooltool)
 
+
 # Some scripts will be called with sh, which cannot use backslashed
 # paths. So for direct subprocess.* invocation, use normal paths from
 # DIR, but when running under the shell, use POSIX style paths.
@@ -47,7 +48,9 @@ parser.add_argument('--dep', action='store_true',
 parser.add_argument('--keep', action='store_true',
                     help='do not delete the sanitizer output directory (for testing)')
 parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
-                    default='', help='build platform, including a suffix ("-debug" or "") used by buildbot to override the variant\'s "debug" setting. The platform can be used to specify 32 vs 64 bits.')
+                    default='', help='build platform, including a suffix ("-debug" or "") used '
+                    'by buildbot to override the variant\'s "debug" setting. The platform can be '
+                    'used to specify 32 vs 64 bits.')
 parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
                     default=10800,
                     help='kill job after TIMEOUT seconds')
@@ -81,7 +84,8 @@ parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     help="comma-separated set of test suites to add to the variant's default set")
 parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
                     default='',
-                    help="comma-separated set of test suites to remove from the variant's default set")
+                    help="comma-separated set of test suites to remove from the variant's default "
+                    "set")
 parser.add_argument('--build-only', '--build',
                     dest='skip_tests', action='store_const', const='all',
                     help="only do a build, do not run any tests")
@@ -103,6 +107,7 @@ MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 
 for d in ('scripts', 'js_src', 'source', 'tooltool'):
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
+
 
 def set_vars_from_script(script, vars):
     '''Run a shell script, then dump out chosen environment variables. The build
@@ -156,7 +161,8 @@ def ensure_dir_exists(name, clobber=True, creation_marker_filename="CREATED-BY-A
         marker = os.path.join(name, creation_marker_filename)
     if clobber:
         if not AUTOMATION and marker and os.path.exists(name) and not os.path.exists(marker):
-            raise Exception("Refusing to delete objdir %s because it was not created by autospider" % name)
+            raise Exception(
+                "Refusing to delete objdir %s because it was not created by autospider" % name)
         shutil.rmtree(name, ignore_errors=True)
     try:
         os.mkdir(name)
@@ -165,6 +171,7 @@ def ensure_dir_exists(name, clobber=True, creation_marker_filename="CREATED-BY-A
     except OSError:
         if clobber:
             raise
+
 
 with open(os.path.join(DIR.scripts, "variants", args.variant)) as fh:
     variant = json.load(fh)
@@ -301,6 +308,7 @@ def killall():
         proc.kill()
     ACTIVE_PROCESSES.clear()
 
+
 timer = Timer(args.timeout, killall)
 timer.daemon = True
 timer.start()
@@ -329,6 +337,7 @@ def run_command(command, check=False, **kwargs):
     if check and status != 0:
         raise subprocess.CalledProcessError(status, command, output=stderr)
     return stdout, stderr, status
+
 
 # Add in environment variable settings for this variant. Normally used to
 # modify the flags passed to the shell or to set the GC zeal mode.
@@ -381,6 +390,7 @@ def need_updating_configure(configure):
 
     return False
 
+
 if not args.nobuild:
     CONFIGURE_ARGS += ' --enable-nspr-build'
     CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
@@ -393,7 +403,8 @@ if not args.nobuild:
 
     # Run configure
     if not args.noconf:
-        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS],
+                    check=True)
 
     # Run make
     run_command('%s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
@@ -424,6 +435,7 @@ def run_test_command(command, **kwargs):
     _, _, status = run_command(COMMAND_PREFIX + command, check=False, **kwargs)
     return status
 
+
 test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
 
 
@@ -431,6 +443,7 @@ def normalize_tests(tests):
     if 'all' in tests:
         return test_suites
     return tests
+
 
 # Need a platform name to use as a key in variant files.
 if args.platform:
@@ -511,7 +524,7 @@ if args.variant == 'msan':
     for filename in fullfiles:
         with open(os.path.join(OUTDIR, filename), 'rb') as fh:
             for line in fh:
-                m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',
+                m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',  # NOQA: E501
                              line.strip())
                 if m:
                     # Some reports include file:line:column, some just

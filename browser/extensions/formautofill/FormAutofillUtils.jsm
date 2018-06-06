@@ -42,6 +42,8 @@ const MAX_FIELD_VALUE_LENGTH = 200;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "CreditCard",
+  "resource://gre/modules/CreditCard.jsm");
 
 let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
@@ -229,17 +231,9 @@ this.FormAutofillUtils = {
     return this._fieldNameInfo[fieldName] == "creditCard";
   },
 
-  normalizeCCNumber(ccNumber) {
-    ccNumber = ccNumber.replace(/[-\s]/g, "");
-
-    // Based on the information on wiki[1], the shortest valid length should be
-    // 12 digits(Maestro).
-    // [1] https://en.wikipedia.org/wiki/Payment_card_number
-    return ccNumber.match(/^\d{12,}$/) ? ccNumber : null;
-  },
-
   isCCNumber(ccNumber) {
-    return !!this.normalizeCCNumber(ccNumber);
+    let card = new CreditCard({number: ccNumber});
+    return !!card.number;
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -261,42 +255,6 @@ this.FormAutofillUtils = {
     // The separator should be based on the L10N address format, and using a
     // white space is a temporary solution.
     return " ";
-  },
-
-  /**
-   * Get credit card display label. It should display masked numbers and the
-   * cardholder's name, separated by a comma. If `showCreditCards` is set to
-   * true, decrypted credit card numbers are shown instead.
-   *
-   * @param  {object} creditCard
-   * @param  {boolean} showCreditCards [optional]
-   * @returns {string}
-   */
-  getCreditCardLabel(creditCard, showCreditCards = false) {
-    let parts = [];
-    let ccLabel;
-    let ccNumber = creditCard["cc-number"];
-    let decryptedCCNumber = creditCard["cc-number-decrypted"];
-
-    if (showCreditCards && decryptedCCNumber) {
-      ccLabel = decryptedCCNumber;
-    }
-    if (ccNumber && !ccLabel) {
-      if (this.isCCNumber(ccNumber)) {
-        ccLabel = "*".repeat(4) + " " + ccNumber.substr(-4);
-      } else {
-        let {affix, label} = this.fmtMaskedCreditCardLabel(ccNumber);
-        ccLabel = `${affix} ${label}`;
-      }
-    }
-
-    if (ccLabel) {
-      parts.push(ccLabel);
-    }
-    if (creditCard["cc-name"]) {
-      parts.push(creditCard["cc-name"]);
-    }
-    return parts.join(", ");
   },
 
   /**
@@ -377,13 +335,6 @@ this.FormAutofillUtils = {
         delete address[field];
       }
     }
-  },
-
-  fmtMaskedCreditCardLabel(maskedCCNum = "") {
-    return {
-      affix: "****",
-      label: maskedCCNum.replace(/^\**/, ""),
-    };
   },
 
   defineLazyLogGetter(scope, logPrefix) {

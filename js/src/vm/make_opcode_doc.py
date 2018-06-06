@@ -11,7 +11,6 @@
 """
 
 from __future__ import print_function
-import re
 import sys
 
 import os
@@ -22,11 +21,13 @@ from xml.sax.saxutils import escape
 
 SOURCE_BASE = 'http://dxr.mozilla.org/mozilla-central/source'
 
+
 def override(value, override_value):
     if override_value != '':
         return override_value
 
     return value
+
 
 def format_flags(flags):
     flags = filter(lambda x: x != 'JOF_BYTE', flags)
@@ -35,6 +36,7 @@ def format_flags(flags):
 
     flags = map(lambda x: x.replace('JOF_', ''), flags)
     return ' ({flags})'.format(flags=', '.join(flags))
+
 
 def print_opcode(opcode):
     names_template = '{name} [-{nuses}, +{ndefs}]{flags}'
@@ -53,7 +55,7 @@ def print_opcode(opcode):
         values_template = '{name}: {value} (0x{value:02x})'
         values = map(lambda code: values_template.format(name=escape(code.name),
                                                          value=code.value),
-                    opcodes)
+                     opcodes)
 
     print("""<dt id="{id}">{names}</dt>
 <dd>
@@ -77,10 +79,12 @@ def print_opcode(opcode):
                                   opcode.length_override)),
            stack_uses=escape(opcode.stack_uses) or "&nbsp;",
            stack_defs=escape(opcode.stack_defs) or "&nbsp;",
-           desc=opcode.desc)) # desc is already escaped
+           desc=opcode.desc))  # desc is already escaped
+
 
 id_cache = dict()
 id_count = dict()
+
 
 def make_element_id(category, type=''):
     key = '{}:{}'.format(category, type)
@@ -101,6 +105,7 @@ def make_element_id(category, type=''):
     id_cache[key] = id
     return id
 
+
 def print_doc(index):
     print("""<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
 
@@ -116,13 +121,15 @@ def print_doc(index):
                                                  id=make_element_id(category_name)))
         for (type_name, opcodes) in types:
             if type_name:
-                print('<h4 id="{id}">{name}</h4>'.format(name=type_name,
-                                                         id=make_element_id(category_name, type_name)))
+                print('<h4 id="{id}">{name}</h4>'.format(
+                    name=type_name,
+                    id=make_element_id(category_name, type_name)))
             print('<dl>')
-            for opcode in sorted(opcodes,
-                                 key=lambda opcode: opcode.sort_key):
-                print_opcode(opcode)
+            for opcode_ in sorted(opcodes,
+                                  key=lambda opcode: opcode.sort_key):
+                print_opcode(opcode_)
             print('</dl>')
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

@@ -6,6 +6,8 @@
 from collections import defaultdict
 
 # Simplified version of the body info.
+
+
 class Body(dict):
     def __init__(self, body):
         self['BlockIdKind'] = body['BlockId']['Kind']
@@ -15,9 +17,10 @@ class Body(dict):
         self['LineRange'] = (loc[0]['Line'], loc[1]['Line'])
         self['Filename'] = loc[0]['CacheString']
         self['Edges'] = body.get('PEdge', [])
-        self['Points'] = { i: p['Location']['Line'] for i, p in enumerate(body['PPoint'], 1) }
+        self['Points'] = {i: p['Location']['Line'] for i, p in enumerate(body['PPoint'], 1)}
         self['Index'] = body['Index']
-        self['Variables'] = { x['Variable']['Name'][0].split("$")[-1]: x['Type'] for x in body['DefineVariable'] }
+        self['Variables'] = {x['Variable']['Name'][0].split(
+            "$")[-1]: x['Type'] for x in body['DefineVariable']}
 
         # Indexes
         self['Line2Points'] = defaultdict(list)

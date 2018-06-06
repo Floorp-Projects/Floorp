@@ -29,14 +29,14 @@ const TEST_ADDRESS_2 = {
 
 const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4111111111111111",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 };
 
 const TEST_CREDIT_CARD_2 = {
   "cc-name": "Timothy Berners-Lee",
-  "cc-number": "1111222233334444",
+  "cc-number": "4929001587121045",
   "cc-exp-month": 12,
   "cc-exp-year": 2022,
 };

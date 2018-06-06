@@ -106,17 +106,25 @@ function drawBubbleRect(ctx, x, y, width, height, radius, margin, arrowSize, ali
   ctx.translate(-originX, -originY);
   ctx.translate(-width / 2, -height - arrowSize - margin);
 
+  // The contour of the bubble is drawn with a path. The canvas context will have taken
+  // care of transforming the coordinates before calling the function, so we just always
+  // draw with the arrow pointing down. The top edge has rounded corners too.
   ctx.beginPath();
+  // Start at the top/left corner (below the rounded corner).
   ctx.moveTo(x, y + radius);
-  ctx.lineTo(x, y + height - radius);
-  ctx.arcTo(x, y + height, x + radius, y + height, radius);
-  ctx.lineTo(x + width / 2 - arrowSize, y + height);
+  // Go down.
+  ctx.lineTo(x, y + height);
+  // Go down and the right, to draw the first half of the arrow tip.
   ctx.lineTo(x + width / 2, y + height + arrowSize);
-  ctx.lineTo(x + width / 2 + arrowSize, y + height);
-  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+  // Go back up and to the right, to draw the second half of the arrow tip.
+  ctx.lineTo(x + width, y + height);
+  // Go up to just below the top/right rounded corner.
   ctx.lineTo(x + width, y + radius);
+  // Draw the top/right rounded corner.
   ctx.arcTo(x + width, y, x + width - radius, y, radius);
+  // Go to the left.
   ctx.lineTo(x + radius, y);
+  // Draw the top/left rounded corner.
   ctx.arcTo(x, y, x, y + radius, radius);
 
   ctx.stroke();
