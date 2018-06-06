@@ -306,7 +306,7 @@ nsTreeColumn::Invalidate()
                           nsGkAtoms::_true, eCaseMatters);
 
   // Figure out our column type. Default type is text.
-  mType = nsITreeColumn::TYPE_TEXT;
+  mType = TreeColumnBinding::TYPE_TEXT;
   static Element::AttrValuesArray typestrings[] =
     {&nsGkAtoms::checkbox, &nsGkAtoms::password,
      nullptr};
@@ -314,8 +314,8 @@ nsTreeColumn::Invalidate()
                                     nsGkAtoms::type,
                                     typestrings,
                                     eCaseMatters)) {
-    case 0: mType = nsITreeColumn::TYPE_CHECKBOX; break;
-    case 1: mType = nsITreeColumn::TYPE_PASSWORD; break;
+    case 0: mType = TreeColumnBinding::TYPE_CHECKBOX; break;
+    case 1: mType = TreeColumnBinding::TYPE_PASSWORD; break;
   }
 
   // Fetch the crop style.
@@ -473,7 +473,7 @@ nsTreeColumns::GetKeyColumn()
       continue;
 
     // Skip non-text column
-    if (currCol->GetType() != nsITreeColumn::TYPE_TEXT)
+    if (currCol->GetType() != TreeColumnBinding::TYPE_TEXT)
       continue;
 
     if (!first)

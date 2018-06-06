@@ -31,6 +31,7 @@
 #include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -368,10 +369,10 @@ nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
     mNeedTitletip = false;
     int16_t colType = -1;
     if (col) {
-      col->GetType(&colType);
+      colType = col->Type();
     }
     if (row >= 0 && obj.EqualsLiteral("text") &&
-        colType != nsITreeColumn::TYPE_PASSWORD) {
+        colType != TreeColumnBinding::TYPE_PASSWORD) {
       obx->IsCellCropped(row, col, &mNeedTitletip);
     }
 
