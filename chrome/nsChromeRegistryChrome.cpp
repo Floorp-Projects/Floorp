@@ -308,7 +308,6 @@ nsChromeRegistryChrome::CheckForNewChrome()
 {
   mPackagesHash.Clear();
   mOverlayHash.Clear();
-  mStyleHash.Clear();
   mOverrideTable.Clear();
 
   mDynamicRegistration = false;
@@ -577,21 +576,6 @@ nsChromeRegistryChrome::OverlayListHash::GetArray(nsIURI* aBase)
 
 #ifdef MOZ_XUL
 NS_IMETHODIMP
-nsChromeRegistryChrome::GetStyleOverlays(nsIURI *aChromeURL,
-                                         nsISimpleEnumerator **aResult)
-{
-  nsCOMPtr<nsIURI> chromeURLWithoutHash;
-  if (aChromeURL) {
-    aChromeURL->CloneIgnoringRef(getter_AddRefs(chromeURLWithoutHash));
-  }
-  const nsCOMArray<nsIURI>* parray = mStyleHash.GetArray(chromeURLWithoutHash);
-  if (!parray)
-    return NS_NewEmptyEnumerator(aResult);
-
-  return NS_NewArrayEnumerator(aResult, *parray);
-}
-
-NS_IMETHODIMP
 nsChromeRegistryChrome::GetXULOverlays(nsIURI *aChromeURL,
                                        nsISimpleEnumerator **aResult)
 {
@@ -798,33 +782,6 @@ nsChromeRegistryChrome::ManifestOverlay(ManifestProcessingContext& cx, int linen
   baseuri->CloneIgnoringRef(getter_AddRefs(baseuriWithoutHash));
 
   mOverlayHash.Add(baseuriWithoutHash, overlayuri);
-}
-
-void
-nsChromeRegistryChrome::ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                                      char *const * argv, int flags)
-{
-  char* base = argv[0];
-  char* overlay = argv[1];
-
-  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
-  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
-  if (!baseuri || !overlayuri) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI.");
-    return;
-  }
-
-  if (!CanLoadResource(overlayuri)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Cannot register non-local URI '%s' as a style overlay.", overlay);
-    return;
-  }
-
-  nsCOMPtr<nsIURI> baseuriWithoutHash;
-  baseuri->CloneIgnoringRef(getter_AddRefs(baseuriWithoutHash));
-
-  mStyleHash.Add(baseuriWithoutHash, overlayuri);
 }
 
 void
