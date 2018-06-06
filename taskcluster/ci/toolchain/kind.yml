@@ -4,12 +4,8 @@
 
 loader: taskgraph.loader.transform:loader
 
-kind-dependencies:
-   - fetch
-
 transforms:
    - taskgraph.transforms.try_job:transforms
-   - taskgraph.transforms.use_fetches:transforms
    - taskgraph.transforms.use_toolchains:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
