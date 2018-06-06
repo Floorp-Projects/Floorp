@@ -6,9 +6,6 @@ package org.mozilla.focus.session.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
-import android.support.v7.content.res.AppCompatResources
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
