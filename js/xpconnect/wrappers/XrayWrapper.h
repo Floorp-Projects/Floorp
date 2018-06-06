@@ -465,60 +465,6 @@ extern template class SecurityXrayDOM;
 extern template class PermissiveXrayJS;
 extern template class PermissiveXrayOpaque;
 
-class SandboxProxyHandler : public js::Wrapper {
-public:
-    constexpr SandboxProxyHandler() : js::Wrapper(0)
-    {
-    }
-
-    virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                          JS::Handle<jsid> id,
-                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
-
-    // We just forward the high-level methods to the BaseProxyHandler versions
-    // which implement them in terms of lower-level methods.
-    virtual bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                     bool* bp) const override;
-    virtual bool get(JSContext* cx, JS::Handle<JSObject*> proxy, JS::HandleValue receiver,
-                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
-    virtual bool set(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                     JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
-                     JS::ObjectOpResult& result) const override;
-
-    virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                       JS::Handle<jsid> id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
-    virtual bool hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                        bool* bp) const override;
-    virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                              JS::AutoIdVector& props) const override;
-    virtual JSObject* enumerate(JSContext* cx, JS::Handle<JSObject*> proxy) const override;
-};
-
-extern const SandboxProxyHandler sandboxProxyHandler;
-
-// A proxy handler that lets us wrap callables and invoke them with
-// the correct this object, while forwarding all other operations down
-// to them directly.
-class SandboxCallableProxyHandler : public js::Wrapper {
-public:
-    constexpr SandboxCallableProxyHandler() : js::Wrapper(0)
-    {
-    }
-
-    virtual bool call(JSContext* cx, JS::Handle<JSObject*> proxy,
-                      const JS::CallArgs& args) const override;
-
-    static const size_t SandboxProxySlot = 0;
-
-    static inline JSObject* getSandboxProxy(JS::Handle<JSObject*> proxy)
-    {
-        return &js::GetProxyReservedSlot(proxy, SandboxProxySlot).toObject();
-    }
-};
-
-extern const SandboxCallableProxyHandler sandboxCallableProxyHandler;
-
 class AutoSetWrapperNotShadowing;
 
 /*
