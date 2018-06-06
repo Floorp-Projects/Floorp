@@ -164,10 +164,7 @@ async function fetchLatestChanges(url, lastEtag) {
   // The server should always return ETag. But we've had situations where the CDN
   // was interfering.
   const currentEtag = response.headers.has("ETag") ? response.headers.get("ETag") : undefined;
-  let serverTimeMillis = Date.parse(response.headers.get("Date"));
-  // Since the response is served via a CDN, the Date header value could have been cached.
-  const ageSeconds = response.headers.has("Age") ? parseInt(response.headers.get("Age"), 10) : 0;
-  serverTimeMillis += ageSeconds * 1000;
+  const serverTimeMillis = Date.parse(response.headers.get("Date"));
 
   // Check if the server asked the clients to back off.
   let backoffSeconds;
