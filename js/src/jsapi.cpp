@@ -1854,9 +1854,9 @@ JS::RealmCreationOptions::setNewZone()
 }
 
 const JS::RealmCreationOptions&
-JS::RealmCreationOptionsRef(JSCompartment* compartment)
+JS::RealmCreationOptionsRef(Realm* realm)
 {
-    return JS::GetRealmForCompartment(compartment)->creationOptions();
+    return realm->creationOptions();
 }
 
 const JS::RealmCreationOptions&
