@@ -12,7 +12,7 @@ fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref
 == system-numeric-invalid.html    system-common-invalid2-ref.html
 == system-additive-invalid.html   system-common-invalid-ref.html
 == system-extends-invalid.html    system-extends-invalid-ref.html
-== descriptor-negative.html descriptor-negative-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-negative.html descriptor-negative-ref.html # Bug 1392106
 == descriptor-prefix.html   descriptor-prefix-ref.html
 == descriptor-suffix.html   descriptor-suffix-ref.html
 == descriptor-range.html    descriptor-range-ref.html
