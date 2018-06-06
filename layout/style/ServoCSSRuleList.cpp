@@ -90,31 +90,20 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
               mRawRules, aIndex, &line, &column                             \
           ).Consume();                                                      \
         MOZ_ASSERT(rule);                                                   \
-        ruleObj = new Servo##name_##Rule(rule.forget(), line, column);      \
-        break;                                                              \
-      }
-#define CASE_RULE_CSS(const_, name_)                                        \
-      case CSSRuleBinding::const_##_RULE: {                                 \
-        uint32_t line = 0, column = 0;                                      \
-        RefPtr<RawServo##name_##Rule> rule =                                \
-          Servo_CssRules_Get##name_##RuleAt(                                \
-              mRawRules, aIndex, &line, &column                             \
-          ).Consume();                                                      \
-        MOZ_ASSERT(rule);                                                   \
         ruleObj = new CSS##name_##Rule(rule.forget(), line, column);        \
         break;                                                              \
       }
-      CASE_RULE_CSS(STYLE, Style)
-      CASE_RULE_CSS(KEYFRAMES, Keyframes)
-      CASE_RULE_CSS(MEDIA, Media)
-      CASE_RULE_CSS(NAMESPACE, Namespace)
-      CASE_RULE_CSS(PAGE, Page)
-      CASE_RULE_CSS(SUPPORTS, Supports)
-      CASE_RULE_CSS(DOCUMENT, MozDocument)
-      CASE_RULE_CSS(IMPORT, Import)
-      CASE_RULE_CSS(FONT_FEATURE_VALUES, FontFeatureValues)
-      CASE_RULE_CSS(FONT_FACE, FontFace)
-      CASE_RULE_CSS(COUNTER_STYLE, CounterStyle)
+      CASE_RULE(STYLE, Style)
+      CASE_RULE(KEYFRAMES, Keyframes)
+      CASE_RULE(MEDIA, Media)
+      CASE_RULE(NAMESPACE, Namespace)
+      CASE_RULE(PAGE, Page)
+      CASE_RULE(SUPPORTS, Supports)
+      CASE_RULE(DOCUMENT, MozDocument)
+      CASE_RULE(IMPORT, Import)
+      CASE_RULE(FONT_FEATURE_VALUES, FontFeatureValues)
+      CASE_RULE(FONT_FACE, FontFace)
+      CASE_RULE(COUNTER_STYLE, CounterStyle)
 #undef CASE_RULE
       case CSSRuleBinding::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
