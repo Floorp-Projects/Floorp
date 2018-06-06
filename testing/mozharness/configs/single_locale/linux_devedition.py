@@ -1,5 +1,4 @@
 config = {
-    "platform": "linux",
     "app_name": "browser",
     "mozconfig_platform": "linux32",
     "mozconfig_variant": "l10n-mozconfig-devedition",
