@@ -50,12 +50,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
 
-  static already_AddRefed<nsTreeColumn> From(nsITreeColumn* aColumn)
-  {
-    RefPtr<nsTreeColumn> col = do_QueryObject(aColumn);
-    return col.forget();
-  }
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumn)
   NS_DECL_NSITREECOLUMN
