@@ -53,6 +53,7 @@ import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.Surface;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -1406,6 +1407,13 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return session.equals(mMainSession) || mSubSessions.contains(session);
     }
 
+    protected void deleteCrashDumps() {
+        File dumpDir = new File(sRuntime.getProfileDir(), "minidumps");
+        for (final File dump : dumpDir.listFiles()) {
+            dump.delete();
+        }
+    }
+
     protected void cleanupStatement() throws Throwable {
         mWaitScopeDelegates.clear();
         mTestScopeDelegates.clear();
@@ -1423,6 +1431,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             sCachedRDPTab.getPromises().detach();
         } else {
             cleanupSession(mMainSession);
+        }
+
+        if (mIgnoreCrash) {
+            deleteCrashDumps();
         }
 
         if (mDisplay != null) {
