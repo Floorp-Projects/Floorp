@@ -154,9 +154,14 @@ FlattenedChildIterator::ComputeWhetherXBLIsInvolved() const
   MOZ_ASSERT(mXBLInvolved.isNothing());
   // We set mXBLInvolved to true if either the node we're iterating has a
   // binding with content attached to it (in which case it is handled in Init),
-  // or the node is generated XBL content and has an <xbl:children> child.
+  // the node is generated XBL content and has an <xbl:children> child, or the
+  // node is a <slot> element.
   if (!mParent->GetBindingParent()) {
     return false;
+  }
+
+  if (mParentAsSlot) {
+    return true;
   }
 
   for (nsIContent* child = mParent->GetFirstChild();

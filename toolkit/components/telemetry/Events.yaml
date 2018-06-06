@@ -85,6 +85,42 @@ navigation:
     extra_keys:
       engine: The id of the search engine used.
 
+# This category contains event entries used for the Savant Shield study.
+savant:
+  # Mostly a dupe of "search" event from "navigation" category to ensure only Savant
+  # code enables/disables it.
+  search:
+    objects: ["about_home", "about_newtab", "contextmenu", "oneoff",
+              "suggestion", "alias", "enter", "searchbar", "urlbar"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on each search navigation.
+      The value field records the action used to trigger the search:
+        "enter", "oneoff", "suggestion", "alias", null (for contextmenu)
+    bug_numbers: [1316281, 1457226, 1462725]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
+      engine: The id of the search engine used.
+  end_study:
+    objects: ["ineligible", "study_disable", "expired"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time a study ending condition occurs for the Savant
+      Shield study. The object field records the reason that caused the ending.
+    bug_numbers: [1457226, 1462725]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:

@@ -1812,7 +1812,6 @@ HTMLMediaElement::AbortExistingLoads()
   mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
-  mAttemptPlayUponLoadedMetadata = false;
 
   mTags = nullptr;
 
@@ -4044,12 +4043,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   // 4.8.12.8 - Step 1:
   // If the media element is not allowed to play, return a promise rejected
   // with a "NotAllowedError" DOMException and abort these steps.
-  // Note: IsAllowedToPlay() needs to know whether there is an audio track
-  // in the resource, and for that we need to be at readyState HAVE_METADATA
-  // or above. So only reject here if we're at readyState HAVE_METADATA. If
-  // we're below that, we'll we delay fulfilling the play promise until we've
-  // reached readyState >= HAVE_METADATA below.
-  if (mReadyState >= HAVE_METADATA && !IsAllowedToPlay()) {
+  if (!IsAllowedToPlay()) {
     // NOTE: for promise-based-play, will return a rejected promise here.
     LOG(LogLevel::Debug,
         ("%p Play() promise rejected because not allowed to play.", this));
@@ -4103,17 +4097,8 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
       SetCurrentTime(0);
     }
     if (!mPausedForInactiveDocumentOrChannel) {
-      if (mReadyState < HAVE_METADATA) {
-        // We don't know whether the autoplay policy will allow us to play yet,
-        // as we don't yet know whether the media has audio tracks. So delay
-        // starting playback until we've loaded metadata.
-        mAttemptPlayUponLoadedMetadata = true;
-      } else {
-        mDecoder->Play();
-      }
+      mDecoder->Play();
     }
-  } else if (mReadyState < HAVE_METADATA) {
-    mAttemptPlayUponLoadedMetadata = true;
   }
 
   if (mCurrentPlayRangeStart == -1.0) {
@@ -4174,8 +4159,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
         NotifyAboutPlaying();
         break;
     }
-  } else if (mReadyState >= HAVE_FUTURE_DATA &&
-             !mAttemptPlayUponLoadedMetadata) {
+  } else if (mReadyState >= HAVE_FUTURE_DATA) {
     // 7. Otherwise, if the media element's readyState attribute has the value
     //    HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, take pending play promises and
     //    queue a task to resolve pending play promises with the result.
@@ -5007,7 +4991,7 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
     mDecoder->Suspend();
   }
 
-  if (!mPaused && !mAttemptPlayUponLoadedMetadata) {
+  if (!mPaused) {
     SetPlayedOrSeeked(true);
     if (!mPausedForInactiveDocumentOrChannel) {
       mDecoder->Play();
@@ -6054,16 +6038,6 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   UpdateAudioChannelPlayingState();
 
-  if (oldState < HAVE_METADATA && mReadyState >= HAVE_METADATA &&
-      mAttemptPlayUponLoadedMetadata) {
-    mAttemptPlayUponLoadedMetadata = false;
-    if (!mPaused && !IsAllowedToPlay()) {
-      mPaused = true;
-      DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
-      AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-    }
-  }
-
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
   // or
   // 4.8.12.7 Ready states:
@@ -6218,7 +6192,6 @@ HTMLMediaElement::CheckAutoplayDataReady()
     if (mCurrentPlayRangeStart == -1.0) {
       mCurrentPlayRangeStart = CurrentTime();
     }
-    MOZ_ASSERT(!mAttemptPlayUponLoadedMetadata);
     mDecoder->Play();
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);
@@ -6582,7 +6555,6 @@ HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
       if (mDecoder) {
         mDecoder->Resume();
         if (!mPaused && !mDecoder->IsEnded()) {
-          MOZ_ASSERT(!mAttemptPlayUponLoadedMetadata);
           mDecoder->Play();
         }
       }

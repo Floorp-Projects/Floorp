@@ -10,13 +10,14 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
@@ -30,100 +31,26 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 /**
- * SessionTextInput handles text input for GeckoSession through key events or input
- * methods. It is typically used to implement certain methods in View such as {@code
- * onCreateInputConnection()}, by forwarding such calls to corresponding methods in
- * SessionTextInput.
+ * {@code SessionTextInput} handles text input for {@code GeckoSession} through key events or input
+ * methods. It is typically used to implement certain methods in {@link android.view.View}
+ * such as {@link android.view.View#onCreateInputConnection}, by forwarding such calls to
+ * corresponding methods in {@code SessionTextInput}.
+ * <p>
+ * For full functionality, {@code SessionTextInput} requires a {@link android.view.View} to be set
+ * first through {@link #setView}. When a {@link android.view.View} is not set or set to null,
+ * {@code SessionTextInput} will operate in a reduced functionality mode. See {@link
+ * #onCreateInputConnection} and methods in {@link GeckoSession.TextInputDelegate} for changes in
+ * behavior in this viewless mode.
  */
 public final class SessionTextInput {
     /* package */ static final String LOGTAG = "GeckoSessionTextInput";
-
-    /**
-     * Interface that SessionTextInput uses for performing operations such as opening and closing
-     * the software keyboard. If the delegate is not set, these operations are forwarded to the
-     * system InputMethodManager automatically.
-     */
-    public interface Delegate {
-        @Retention(RetentionPolicy.SOURCE)
-        @IntDef({RESTART_REASON_FOCUS, RESTART_REASON_BLUR, RESTART_REASON_CONTENT_CHANGE})
-        @interface RestartReason {}
-        /** Restarting input due to an input field gaining focus. */
-        int RESTART_REASON_FOCUS = 0;
-        /** Restarting input due to an input field losing focus. */
-        int RESTART_REASON_BLUR = 1;
-        /**
-         * Restarting input due to the content of the input field changing. For example, the
-         * input field type may have changed, or the current composition may have been committed
-         * outside of the input method.
-         */
-        int RESTART_REASON_CONTENT_CHANGE = 2;
-
-        /**
-         * Reset the input method, and discard any existing states such as the current composition
-         * or current autocompletion. Because the current focused editor may have changed, as
-         * part of the reset, a custom input method would normally call {@link
-         * #onCreateInputConnection} to update its knowledge of the focused editor. Note that
-         * {@code restartInput} should be used to detect changes in focus, rather than {@link
-         * #showSoftInput} or {@link #hideSoftInput}, because focus changes are not always
-         * accompanied by requests to show or hide the soft input.
-         *
-         * @param reason Reason for the reset.
-         */
-        void restartInput(@RestartReason int reason);
-
-        /**
-         * Display the soft input.
-         *
-         * @see #hideSoftInput
-         * */
-        void showSoftInput();
-
-        /**
-         * Hide the soft input.
-         *
-         * @see #showSoftInput
-         * */
-        void hideSoftInput();
-
-        /**
-         * Update the soft input on the current selection.
-         *
-         * @param selStart Start offset of the selection.
-         * @param selEnd End offset of the selection.
-         * @param compositionStart Composition start offset, or -1 if there is no composition.
-         * @param compositionEnd Composition end offset, or -1 if there is no composition.
-         */
-        void updateSelection(int selStart, int selEnd, int compositionStart, int compositionEnd);
-
-        /**
-         * Update the soft input on the current extracted text as requested through
-         * InputConnection.getExtractText.
-         *
-         * @param request The extract text request.
-         * @param text The extracted text.
-         */
-        void updateExtractedText(@NonNull ExtractedTextRequest request,
-                                 @NonNull ExtractedText text);
-
-        /**
-         * Update the cursor-anchor information as requested through
-         * InputConnection.requestCursorUpdates.
-         *
-         * @param info Cursor-anchor information.
-         */
-        void updateCursorAnchorInfo(@NonNull CursorAnchorInfo info);
-    }
 
     // Interface to access GeckoInputConnection from SessionTextInput.
     /* package */ interface InputConnectionClient {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
-        boolean isInputActive();
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
@@ -138,8 +65,7 @@ public final class SessionTextInput {
         // ENDT_MONITOR stops the monitor for composing character rects.
         @WrapForJNI final int END_MONITOR = 3;
 
-        void sendKeyEvent(@Nullable View view, boolean inputActive, int action,
-                          @NonNull KeyEvent event);
+        void sendKeyEvent(@Nullable View view, int action, @NonNull KeyEvent event);
         Editable getEditable();
         void setBatchMode(boolean isBatchMode);
         Handler setInputConnectionHandler(@NonNull Handler handler);
@@ -176,7 +102,9 @@ public final class SessionTextInput {
         void updateCompositionRects(final RectF[] aRects);
     }
 
-    private final class DefaultDelegate implements Delegate {
+    private static final class DefaultDelegate implements GeckoSession.TextInputDelegate {
+        public static final DefaultDelegate INSTANCE = new DefaultDelegate();
+
         private InputMethodManager getInputMethodManager(@Nullable final View view) {
             if (view == null) {
                 return null;
@@ -186,9 +114,20 @@ public final class SessionTextInput {
         }
 
         @Override
-        public void restartInput(int reason) {
+        public void restartInput(@NonNull final GeckoSession session, final int reason) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
+
+            if (reason == RESTART_REASON_FOCUS) {
+                final Context context = (view != null) ? view.getContext() : null;
+                if ((context instanceof Activity) &&
+                        !ActivityUtils.isFullScreen((Activity) context)) {
+                    // Bug 1293463: show the toolbar to prevent spoofing.
+                    session.getDynamicToolbarAnimator()
+                           .showToolbar(/* immediately */ true);
+                }
+            }
+
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm == null) {
                 return;
@@ -218,9 +157,9 @@ public final class SessionTextInput {
         }
 
         @Override
-        public void showSoftInput() {
+        public void showSoftInput(@NonNull final GeckoSession session) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm != null) {
                 if (view.hasFocus() && !imm.isActive(view)) {
@@ -234,9 +173,9 @@ public final class SessionTextInput {
         }
 
         @Override
-        public void hideSoftInput() {
+        public void hideSoftInput(@NonNull final GeckoSession session) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm != null) {
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -244,10 +183,11 @@ public final class SessionTextInput {
         }
 
         @Override
-        public void updateSelection(final int selStart, final int selEnd,
+        public void updateSelection(@NonNull final GeckoSession session,
+                                    final int selStart, final int selEnd,
                                     final int compositionStart, final int compositionEnd) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm != null) {
                 imm.updateSelection(view, selStart, selEnd, compositionStart, compositionEnd);
@@ -255,10 +195,11 @@ public final class SessionTextInput {
         }
 
         @Override
-        public void updateExtractedText(@NonNull final ExtractedTextRequest request,
+        public void updateExtractedText(@NonNull final GeckoSession session,
+                                        @NonNull final ExtractedTextRequest request,
                                         @NonNull final ExtractedText text) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm != null) {
                 imm.updateExtractedText(view, request.token, text);
@@ -267,9 +208,10 @@ public final class SessionTextInput {
 
         @TargetApi(21)
         @Override
-        public void updateCursorAnchorInfo(@NonNull final CursorAnchorInfo info) {
+        public void updateCursorAnchorInfo(@NonNull final GeckoSession session,
+                                           @NonNull final CursorAnchorInfo info) {
             ThreadUtils.assertOnUiThread();
-            final View view = getView();
+            final View view = session.getTextInput().getView();
             final InputMethodManager imm = getInputMethodManager(view);
             if (imm != null) {
                 imm.updateCursorAnchorInfo(view, info);
@@ -279,15 +221,17 @@ public final class SessionTextInput {
 
     private final GeckoSession mSession;
     private final NativeQueue mQueue;
-    private final GeckoEditable mEditable = new GeckoEditable();
-    private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
+    private final GeckoEditable mEditable;
+    private final GeckoEditableChild mEditableChild;
     private InputConnectionClient mInputConnection;
-    private Delegate mDelegate;
+    private GeckoSession.TextInputDelegate mDelegate;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
                                    final @NonNull NativeQueue queue) {
         mSession = session;
         mQueue = queue;
+        mEditable = new GeckoEditable(session);
+        mEditableChild = new GeckoEditableChild(mEditable);
         mEditable.setDefaultEditableChild(mEditableChild);
     }
 
@@ -328,7 +272,7 @@ public final class SessionTextInput {
     }
 
     /**
-     * Get the current View for text input.
+     * Get the current {@link android.view.View} for text input.
      *
      * @return Current text input View or null if not set.
      * @see #setView(View)
@@ -339,10 +283,13 @@ public final class SessionTextInput {
     }
 
     /**
-     * Set the View for text input. The current View is used to interact with the system
-     * input method manager and to display certain text input UI elements.
+     * Set the current {@link android.view.View} for text input. The {@link android.view.View}
+     * is used to interact with the system input method manager and to display certain text input
+     * UI elements. See the {@code SessionTextInput} class documentation for information on
+     * viewless mode, when the current {@link android.view.View} is not set or set to null.
      *
      * @param view Text input View or null to clear current View.
+     * @see #getView()
      */
     public synchronized void setView(final @Nullable View view) {
         ThreadUtils.assertOnUiThread();
@@ -356,15 +303,19 @@ public final class SessionTextInput {
     }
 
     /**
-     * Get an InputConnection instance. For full functionality, call {@link
-     * #setView(View)} first before calling this method.
+     * Get an {@link android.view.inputmethod.InputConnection} instance. In viewless mode,
+     * this method still fills out the {@link android.view.inputmethod.EditorInfo} object,
+     * but the return value will always be null.
      *
      * @param attrs EditorInfo instance to be filled on return.
-     * @return InputConnection instance or null if input method is not active.
+     * @return InputConnection instance, or null if there is no active input
+     *         (or if in viewless mode).
      */
     public synchronized @Nullable InputConnection onCreateInputConnection(
             final @NonNull EditorInfo attrs) {
         // May be called on any thread.
+        mEditable.onCreateInputConnection(attrs);
+
         if (!mQueue.isReady() || mInputConnection == null) {
             return null;
         }
@@ -380,7 +331,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyPreIme(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyPreIme(getView(), keyCode, event);
     }
 
     /**
@@ -392,7 +343,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyDown(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyDown(getView(), keyCode, event);
     }
 
     /**
@@ -404,7 +355,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyUp(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyUp(getView(), keyCode, event);
     }
 
     /**
@@ -416,7 +367,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyLongPress(getView(), isInputActive(), keyCode, event);
+        return mEditable.onKeyLongPress(getView(), keyCode, event);
     }
 
     /**
@@ -430,26 +381,15 @@ public final class SessionTextInput {
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        return mEditable.onKeyMultiple(getView(), isInputActive(), keyCode, repeatCount, event);
-    }
-
-    /**
-     * Return whether there is an active input connection, usually as a result of a
-     * focused input field.
-     *
-     * @return True if input is active.
-     */
-    public boolean isInputActive() {
-        ThreadUtils.assertOnUiThread();
-        return mInputConnection != null && mInputConnection.isInputActive();
+        return mEditable.onKeyMultiple(getView(), keyCode, repeatCount, event);
     }
 
     /**
      * Set the current text input delegate.
      *
-     * @param delegate Delegate instance or null to restore to default.
+     * @param delegate TextInputDelegate instance or null to restore to default.
      */
-    public void setDelegate(@Nullable final Delegate delegate) {
+    public void setDelegate(@Nullable final GeckoSession.TextInputDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         mDelegate = delegate;
     }
@@ -457,12 +397,12 @@ public final class SessionTextInput {
     /**
      * Get the current text input delegate.
      *
-     * @return Delegate instance or a default instance if no delegate has been set.
+     * @return TextInputDelegate instance or a default instance if no delegate has been set.
      */
-    public Delegate getDelegate() {
+    public GeckoSession.TextInputDelegate getDelegate() {
         ThreadUtils.assertOnUiThread();
         if (mDelegate == null) {
-            mDelegate = new DefaultDelegate();
+            mDelegate = DefaultDelegate.INSTANCE;
         }
         return mDelegate;
     }

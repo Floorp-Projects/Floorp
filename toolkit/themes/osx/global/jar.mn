@@ -73,5 +73,7 @@ toolkit.jar:
   skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
 * skin/classic/global/in-content/common.css                          (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css                      (in-content/info-pages.css)
-  skin/classic/global/tree/arrow-disclosure.svg                      (tree/arrow-disclosure.svg)
+  skin/classic/global/tree/arrow-collapsed.svg                       (tree/arrow-collapsed.svg)
+  skin/classic/global/tree/arrow-collapsed-rtl.svg                   (tree/arrow-collapsed-rtl.svg)
+  skin/classic/global/tree/arrow-expanded.svg                        (tree/arrow-expanded.svg)
   skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)

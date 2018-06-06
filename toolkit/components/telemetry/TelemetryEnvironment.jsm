@@ -1353,14 +1353,6 @@ EnvironmentCache.prototype = {
       updaterAvailable: AppConstants.MOZ_UPDATER,
     };
 
-    // Add |architecturesInBinary| only for Mac Universal builds.
-    if ("@mozilla.org/xpcom/mac-utils;1" in Cc) {
-      let macUtils = Cc["@mozilla.org/xpcom/mac-utils;1"].getService(Ci.nsIMacUtils);
-      if (macUtils && macUtils.isUniversalBinary) {
-        buildData.architecturesInBinary = macUtils.architecturesInBinary;
-      }
-    }
-
     return buildData;
   },
 

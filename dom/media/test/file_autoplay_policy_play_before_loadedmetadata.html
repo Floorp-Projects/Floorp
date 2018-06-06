@@ -27,6 +27,7 @@
 
           let element = document.createElement("video");
           element.preload = "auto";
+          element.muted = testCase.muted;
           element.src = testCase.resource;
           document.body.appendChild(element);
 
@@ -41,19 +42,11 @@
 
           let played = await element.play().then(() => true, () => false);
 
-          // Wait for one round through the event loop. This gives any tasks
-          // inside Gecko enqueued to dispatch events a chance to run.
-          // Specifically the "playing" event, if it's erronously fired.
-          await new Promise((resolve, reject) => {
-            setTimeout(resolve, 0);
-          });
-
-          let playingEventMsg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + " fire playing";
-          is(playingEventFired, testCase.shouldPlay, playingEventMsg);
           let playMsg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + "play";
           is(played, testCase.shouldPlay, playMsg);
-          is(playEventFired, true, testCase.resource + " - we should always get a play event");
-          is(pauseEventFired, !testCase.shouldPlay, testCase.resource + " - if we shouldn't play, we should get a pause event");
+          is(playEventFired, testCase.shouldPlay, testCase.resource + " - should get play event if we played");
+          is(playingEventFired, testCase.shouldPlay, testCase.resource + "- should get playing event if we played");
+          is(pauseEventFired, false, testCase.resource + " - should not get pause event if we played");
           removeNodeAndSource(element);
         }
 

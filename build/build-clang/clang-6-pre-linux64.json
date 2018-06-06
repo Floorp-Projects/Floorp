@@ -6,6 +6,7 @@
     "assertions": false,
     "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
     "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/trunk",
     "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/trunk",

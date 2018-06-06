@@ -2183,6 +2183,14 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   if (offline) {
     SaveToEnv("XRE_START_OFFLINE=1");
   }
+  if (gRestartedByOS) {
+    // Re-add this argument when actually starting the application.
+    char** newArgv = (char**) realloc(gRestartArgv, sizeof(char*) * (gRestartArgc + 2));
+    NS_ENSURE_TRUE(newArgv, NS_ERROR_OUT_OF_MEMORY);
+    gRestartArgv = newArgv;
+    gRestartArgv[gRestartArgc++] = const_cast<char*>("-os-restarted");
+    gRestartArgv[gRestartArgc] = nullptr;
+  }
 
   return LaunchChild(aNative);
 }

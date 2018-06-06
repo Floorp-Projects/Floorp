@@ -1723,3 +1723,7 @@ pref("app.shield.optoutstudies.enabled", true);
 #else
 pref("app.shield.optoutstudies.enabled", false);
 #endif
+
+// Savant Shield study preferences
+pref("shield.savant.enabled", false);
+pref("shield.savant.loglevel", "warn");

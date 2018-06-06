@@ -172,7 +172,7 @@ public:
    * should begin.
    *
    * When the document finishes painting, any pending animations in its table
-   * are marked as being ready to start by calling StartOnNextTick.
+   * are marked as being ready to start by calling TriggerOnNextTick.
    * The moment when the paint completed is also recorded, converted to a
    * timeline time, and passed to StartOnTick. This is so that when these
    * animations do start, they can be timed from the point when painting
@@ -227,8 +227,9 @@ public:
    */
   void TriggerNow();
   /**
-   * When StartOnNextTick is called, we store the ready time but we don't apply
-   * it until the next tick. In the meantime, GetStartTime() will return null.
+   * When TriggerOnNextTick is called, we store the ready time but we don't
+   * apply it until the next tick. In the meantime, GetStartTime() will return
+   * null.
    *
    * However, if we build layer animations again before the next tick, we
    * should initialize them with the start time that GetStartTime() will return
