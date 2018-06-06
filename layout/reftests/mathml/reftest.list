@@ -152,7 +152,7 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html
-== munderover-align-accent-true.html munderover-align-accent-true-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml

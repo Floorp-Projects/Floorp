@@ -67,10 +67,10 @@ fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg
 fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
-== anim-css-font-1.svg  anim-css-font-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-font-1.svg  anim-css-font-1-ref.svg # Bug 1392106
 
 # 'font-size' property, from/by/to with pixel values only
-== anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
 
 # 'font-size' property (accepts unitless values)
