@@ -458,7 +458,7 @@ extern JS_FRIEND_API(void)
 RunJobs(JSContext* cx);
 
 extern JS_FRIEND_API(JS::Zone*)
-GetCompartmentZone(JSCompartment* comp);
+GetRealmZone(JS::Realm* realm);
 
 typedef bool
 (* PreserveWrapperCallback)(JSContext* cx, JSObject* obj);
