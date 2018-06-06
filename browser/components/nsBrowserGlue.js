@@ -1024,8 +1024,6 @@ BrowserGlue.prototype = {
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
-
-    SavantShieldStudy.init();
   },
 
   _sendMediaTelemetry() {
@@ -1235,6 +1233,10 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       Blocklist.loadBlocklistAsync();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      SavantShieldStudy.init();
     });
   },
 
