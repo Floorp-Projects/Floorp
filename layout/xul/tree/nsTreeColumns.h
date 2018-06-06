@@ -7,7 +7,6 @@
 #ifndef nsTreeColumns_h__
 #define nsTreeColumns_h__
 
-#include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
@@ -42,7 +41,7 @@ class TreeBoxObject;
 
 // This class is our column info.  We use it to iterate our columns and to obtain
 // information about each column.
-class nsTreeColumn final : public nsITreeColumn
+class nsTreeColumn final : public nsISupports
                          , public nsWrapperCache
 {
 public:
@@ -52,7 +51,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumn)
-  NS_DECL_NSITREECOLUMN
 
   // WebIDL
   nsIContent* GetParentObject() const;
@@ -65,7 +63,7 @@ public:
   int32_t GetX(mozilla::ErrorResult& aRv);
   int32_t GetWidth(mozilla::ErrorResult& aRv);
 
-  // GetId is fine
+  void GetId(nsAString& aId) const;
   int32_t Index() const { return mIndex; }
 
   bool Primary() const { return mIsPrimary; }
@@ -102,7 +100,7 @@ protected:
   void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; }
 
 public:
-  const nsAString& GetId() { return mId; }
+  const nsAString& GetId() const { return mId; }
   nsAtom* GetAtom() { return mAtom; }
   int32_t GetIndex() { return mIndex; }
 
