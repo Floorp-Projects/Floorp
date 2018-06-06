@@ -133,7 +133,13 @@ MISSING_LOCALES = {
         'local_name': 'ixil',
         'plural_rule': 'de',
         'team': 'anp <LL@li.org>\n'
-    }
+    },
+     'pai': {
+         'name': 'Pai pai',
+         'local_name': 'paa ipai',
+         'plural_rule': 'lo',
+         'team': 'anp <LL@li.org>\n'
+     }
 }
 
 
