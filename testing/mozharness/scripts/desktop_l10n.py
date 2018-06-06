@@ -53,7 +53,7 @@ configuration_tokens = ('branch',
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
 runtime_config_tokens = ('version', 'locale', 'abs_objdir', 'revision',
-                         'en_us_installer_binary_url', 'mar_tools_url')
+                         'en_us_installer_binary_url')
 
 
 # DesktopSingleLocale {{{1
