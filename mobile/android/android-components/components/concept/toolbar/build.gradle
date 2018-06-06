@@ -31,6 +31,9 @@ dependencies {
 
     implementation "com.android.support:support-annotations:${rootProject.ext.dependencies['supportLibraries']}"
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
+
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
 }
 
 archivesBaseName = "abstract-toolbar"

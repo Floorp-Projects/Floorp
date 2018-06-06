@@ -164,13 +164,38 @@ interface Toolbar {
             }
         }
 
-        fun toggle() {
-            selected = !selected
-            updateViewState()
-
-            listener.invoke(selected)
+        /**
+         * Changes the selected state of the action to the inverse of its current state.
+         *
+         * @param notifyListener If true (default) the listener will be notified about the state change.
+         */
+        fun toggle(notifyListener: Boolean = true) {
+            setSelected(!selected, notifyListener)
         }
 
+        /**
+         * Changes the selected state of the action.
+         *
+         * @param selected The new selected state
+         * @param notifyListener If true (default) the listener will be notified about a state change.
+         */
+        fun setSelected(selected: Boolean, notifyListener: Boolean = true) {
+            if (this.selected == selected) {
+                // Nothing to do here.
+                return
+            }
+
+            this.selected = selected
+            updateViewState()
+
+            if (notifyListener) {
+                listener.invoke(selected)
+            }
+        }
+
+        /**
+         * Returns the current selected state of the action.
+         */
         fun isSelected() = selected
 
         private fun updateViewState() {
