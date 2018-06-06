@@ -21,7 +21,6 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial = {
   "menu": [
     { uri: "http://www.google.com",
-      loadInSidebar: true,
       tags: [ "google", "computers", "internet", "www"]
     },
     { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
@@ -61,7 +60,6 @@ var bookmarks_initial = {
 var bookmarks_to_delete = {
   "menu": [
     { uri: "http://www.google.com",
-      loadInSidebar: true,
       tags: [ "google", "computers", "internet", "www"]
     }
   ],

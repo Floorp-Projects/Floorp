@@ -24,7 +24,6 @@
  *   FEEDURL is the URI of the RSS feed if this is a livemark.
  *   LAST_CHARSET is stored as an annotation so that the next time we go to
  *     that page we remember the user's preference.
- *   WEB_PANEL is set to "true" if the bookmark should be loaded in the sidebar.
  *   ICON will be stored in the favicon service
  *   ICON_URI is new for places bookmarks.html, it refers to the original
  *     URI of the favicon so we don't have to make up favicon URLs.
@@ -76,7 +75,6 @@ const Container_Menu = 2;
 const Container_Unfiled = 3;
 const Container_Places = 4;
 
-const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
 const MICROSEC_PER_SEC = 1000000;
@@ -502,7 +500,6 @@ BookmarkImporter.prototype = {
     let lastCharset = this._safeTrim(aElt.getAttribute("last_charset"));
     let keyword = this._safeTrim(aElt.getAttribute("shortcuturl"));
     let postData = this._safeTrim(aElt.getAttribute("post_data"));
-    let webPanel = this._safeTrim(aElt.getAttribute("web_panel"));
     let dateAdded = this._safeTrim(aElt.getAttribute("add_date"));
     let lastModified = this._safeTrim(aElt.getAttribute("last_modified"));
     let tags = this._safeTrim(aElt.getAttribute("tags"));
@@ -568,17 +565,6 @@ BookmarkImporter.prototype = {
       if (!bookmark.tags.length) {
         delete bookmark.tags;
       }
-    }
-
-    if (webPanel && webPanel.toLowerCase() == "true") {
-      if (!bookmark.hasOwnProperty("annos")) {
-        bookmark.annos = [];
-      }
-      bookmark.annos.push({ "name": LOAD_IN_SIDEBAR_ANNO,
-                            "flags": 0,
-                            "expires": 4,
-                            "value": 1
-                          });
     }
 
     if (lastCharset) {
@@ -1035,8 +1021,6 @@ BookmarkExporter.prototype = {
         this._writeAttribute("POST_DATA", escapeHtmlEntities(aItem.postData));
     }
 
-    if (aItem.annos && aItem.annos.some(anno => anno.name == LOAD_IN_SIDEBAR_ANNO))
-      this._writeAttribute("WEB_PANEL", "true");
     if (aItem.charset)
       this._writeAttribute("LAST_CHARSET", escapeHtmlEntities(aItem.charset));
     if (aItem.tags)

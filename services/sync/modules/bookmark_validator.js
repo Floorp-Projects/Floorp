@@ -739,7 +739,7 @@ class BookmarkValidator {
    *       contain any records that could not be found.
    *     - parent (record): The parent to this record.
    *     - Unchanged properties send down from the server: id, title, type,
-   *       parentName, parentid, bmkURI, keyword, tags, pos, queryId, loadInSidebar
+   *       parentName, parentid, bmkURI, keyword, tags, pos, queryId
    * - root: Root of the server-side bookmark tree. Has the same properties as
    *   above.
    * - deletedRecords: As above, but only contains items that the server sent

@@ -273,9 +273,7 @@ PlacesController.prototype = {
       let node = this._view.selectedNode;
       PlacesUIUtils.showBookmarkDialog({ action: "add",
                                          type: "bookmark",
-                                         hiddenRows: [ "keyword",
-                                                       "location",
-                                                       "loadInSidebar" ],
+                                         hiddenRows: [ "keyword", "location" ],
                                          uri: Services.io.newURI(node.uri),
                                          title: node.title
                                        }, window.top);

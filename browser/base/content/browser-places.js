@@ -297,8 +297,7 @@ var StarUI = {
     };
     gEditItemOverlay.initPanel({ node: aNode,
                                  onPanelReady,
-                                 hiddenRows: ["location",
-                                              "loadInSidebar", "keyword"],
+                                 hiddenRows: ["location", "keyword"],
                                  focusedElement: "preferred"});
 
     this.panel.openPopup(aAnchorElement, aPosition);
@@ -536,9 +535,7 @@ var PlacesCommandHook = {
                                        uri: makeURI(url),
                                        title,
                                        defaultInsertionPoint,
-                                       hiddenRows: [ "location",
-                                                     "loadInSidebar",
-                                                     "keyword" ]
+                                       hiddenRows: [ "location", "keyword" ]
                                      }, window.top);
   },
 

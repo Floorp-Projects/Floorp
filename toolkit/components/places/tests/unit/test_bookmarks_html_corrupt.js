@@ -4,7 +4,6 @@
  */
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
-const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 
 const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/central/";
 const TEST_FAVICON_DATA_SIZE = 580;
@@ -82,8 +81,6 @@ var database_check = async function() {
   Assert.equal("test", entry.keyword);
   Assert.equal("hidden1%3Dbar&text1%3D%25s", entry.postData);
 
-  Assert.ok(PlacesUtils.annotations.itemHasAnnotation(bookmarkNode.itemId,
-                                                      LOAD_IN_SIDEBAR_ANNO));
   Assert.equal(bookmarkNode.dateAdded, 1177375336000000);
   Assert.equal(bookmarkNode.lastModified, 1177375423000000);
 

@@ -45,23 +45,6 @@ var ContentClick = {
       return;
     }
 
-    if (json.bookmark) {
-      // This is the Opera convention for a special link that, when clicked,
-      // allows to add a sidebar panel.  The link's title attribute contains
-      // the title that should be used for the sidebar panel.
-      PlacesUIUtils.showBookmarkDialog({ action: "add",
-                                         type: "bookmark",
-                                         uri: Services.io.newURI(json.href),
-                                         title: json.title,
-                                         loadBookmarkInSidebar: true,
-                                         hiddenRows: [ "location",
-                                                       "keyword" ]
-                                       }, window);
-      return;
-    }
-
-    // Note: We don't need the sidebar code here.
-
     // Mark the page as a user followed link.  This is done so that history can
     // distinguish automatic embed visits from user activated ones.  For example
     // pages loaded in frames are embed visits and lost with the session, while
