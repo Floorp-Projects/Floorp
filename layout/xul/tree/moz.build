@@ -9,7 +9,6 @@ with Files('**'):
 
 XPIDL_SOURCES += [
     'nsITreeBoxObject.idl',
-    'nsITreeColumns.idl',
     'nsITreeSelection.idl',
     'nsITreeView.idl',
 ]
