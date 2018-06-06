@@ -66,4 +66,4 @@ def test_parse_opt_args_emulator(mach_parsed_kwargs, arg_name, arg_dest, arg_val
 
 
 if __name__ == '__main__':
-    mozunit.main('--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')
