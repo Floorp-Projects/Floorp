@@ -7,11 +7,11 @@
 #include "mozilla/ServoStyleRuleMap.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ServoImportRule.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsDocument.h"
 #include "nsStyleSheetService.h"
@@ -143,7 +143,7 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
       break;
     }
     case CSSRuleBinding::IMPORT_RULE: {
-      auto& rule = static_cast<ServoImportRule&>(aRule);
+      auto& rule = static_cast<CSSImportRule&>(aRule);
       MOZ_ASSERT(aRule.GetStyleSheet());
       FillTableFromStyleSheet(*rule.GetStyleSheet());
       break;
