@@ -1949,7 +1949,7 @@ class JS_PUBLIC_API(RealmOptions)
 };
 
 JS_PUBLIC_API(const RealmCreationOptions&)
-RealmCreationOptionsRef(JSCompartment* compartment);
+RealmCreationOptionsRef(JS::Realm* realm);
 
 JS_PUBLIC_API(const RealmCreationOptions&)
 RealmCreationOptionsRef(JSContext* cx);
