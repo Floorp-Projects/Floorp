@@ -370,7 +370,12 @@ static hb_unicode_funcs_t *static_glib_funcs = nullptr;
 static
 void free_static_glib_funcs (void)
 {
-  hb_unicode_funcs_destroy (static_glib_funcs);
+retry:
+  hb_unicode_funcs_t *glib_funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_glib_funcs);
+  if (!hb_atomic_ptr_cmpexch (&static_glib_funcs, glib_funcs, nullptr))
+    goto retry;
+
+  hb_unicode_funcs_destroy (glib_funcs);
 }
 #endif
 

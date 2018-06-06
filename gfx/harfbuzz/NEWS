@@ -1,3 +1,53 @@
+Overview of changes leading to 1.8.1
+Tuesday, June 12, 2018
+====================================
+- Fix hb-version.h file generation; last two releases went out with wrong ones.
+- Add correctness bug in hb_set_t operations, introduced in 1.7.7.
+- Remove HB_SUBSET_BUILTIN build option.  Not necessary.
+
+Overview of changes leading to 1.8.0
+Tuesday, June 5, 2018
+====================================
+- Update to Unicode 11.0.0.
+
+
+Overview of changes leading to 1.7.7
+Tuesday, June 5, 2018
+====================================
+- Lots of internal changes, but not yet exposed externally.
+- All HarfBuzz objects are significantly smaller in size now.
+- Sinhala: Position repha on top of post-consonant, not base.
+  This better matches Windows 10 behavior, which was changed
+  from previous Windows versions.
+- New build options:
+  o New cpp macro HB_NO_ATEXIT
+  o New cpp macro HB_SUBSET_BUILTIN
+- Significant libharfbuzz-subset changes. API subject to change.
+- New API in libharfbuzz:
+
++hb_blob_create_from_file()
++hb_face_count()
+
+A hashmap implementation:
++hb-map.h
++HB_MAP_VALUE_INVALID
++hb_map_t
++hb_map_create()
++hb_map_get_empty()
++hb_map_reference()
++hb_map_destroy()
++hb_map_set_user_data()
++hb_map_get_user_data()
++hb_map_allocation_successful()
++hb_map_clear()
++hb_map_is_empty()
++hb_map_get_population()
++hb_map_set()
++hb_map_get()
++hb_map_del()
++hb_map_has()
+
+
 Overview of changes leading to 1.7.6
 Wednesday, March 7, 2018
 ====================================
