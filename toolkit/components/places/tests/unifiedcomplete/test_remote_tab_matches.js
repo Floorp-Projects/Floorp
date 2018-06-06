@@ -28,6 +28,12 @@ let MockClientsEngine = {
   getClientType(guid) {
     Assert.ok(guid.endsWith("desktop") || guid.endsWith("mobile"));
     return guid.endsWith("mobile") ? "phone" : "desktop";
+  },
+  remoteClientExists(id) {
+    return true;
+  },
+  getClientName(id) {
+    return id.endsWith("mobile") ? "My Phone" : "My Desktop";
   }
 };
 
@@ -65,7 +71,7 @@ add_task(async function test_nomatch() {
   // Nothing matches.
   configureEngine({
     guid_desktop: {
-      clientName: "My Desktop",
+      id: "desktop",
       tabs: [{
         urlHistory: ["http://foo.com/"],
       }],
@@ -84,7 +90,7 @@ add_task(async function test_minimal() {
   // The minimal client and tabs info we can get away with.
   configureEngine({
     guid_desktop: {
-      clientName: "My Desktop",
+      id: "desktop",
       tabs: [{
         urlHistory: ["http://example.com/"],
       }],
@@ -103,7 +109,7 @@ add_task(async function test_maximal() {
   // Every field that could possibly exist on a remote record.
   configureEngine({
     guid_mobile: {
-      clientName: "My Phone",
+      id: "mobile",
       tabs: [{
         urlHistory: ["http://example.com/"],
         title: "An Example",
@@ -128,7 +134,7 @@ add_task(async function test_noShowIcons() {
   Services.prefs.setBoolPref("services.sync.syncedTabs.showRemoteIcons", false);
   configureEngine({
     guid_mobile: {
-      clientName: "My Phone",
+      id: "mobile",
       tabs: [{
         urlHistory: ["http://example.com/"],
         title: "An Example",
@@ -155,7 +161,7 @@ add_task(async function test_matches_title() {
   // URL doesn't match search expression, should still match the title.
   configureEngine({
     guid_mobile: {
-      clientName: "My Phone",
+      id: "mobile",
       tabs: [{
         urlHistory: ["http://foo.com/"],
         title: "An Example",
@@ -180,7 +186,7 @@ add_task(async function test_localtab_matches_override() {
   // First setup Sync to have the page as a remote tab.
   configureEngine({
     guid_mobile: {
-      clientName: "My Phone",
+      id: "mobile",
       tabs: [{
         urlHistory: ["http://foo.com/"],
         title: "An Example",
@@ -211,7 +217,7 @@ add_task(async function test_remotetab_matches_override() {
   // First setup Sync to have the page as a remote tab.
   configureEngine({
     guid_mobile: {
-      clientName: "My Phone",
+      id: "mobile",
       tabs: [{
         urlHistory: [url],
         title: "An Example",
@@ -229,5 +235,49 @@ add_task(async function test_remotetab_matches_override() {
                makeRemoteTabMatch("http://foo.remote.com/", "My Phone",
                                   { title: "An Example" }),
              ],
+  });
+});
+
+add_task(async function test_many_remotetab_matches() {
+  await PlacesUtils.history.clear();
+
+  // In case we have many results, the most recent ones should be added on top,
+  // while others should be appended.
+  let url = "http://foo.remote.com/";
+  // First setup Sync to have the page as a remote tab.
+  configureEngine({
+    guid_mobile: {
+      id: "mobile",
+      tabs: Array(5).fill(0).map((e, i) => ({
+        urlHistory: [`${url}${i}`],
+        title: "A title",
+        lastUsed: (Date.now() / 1000) - (i * 86400) // i days ago.
+      })),
+    }
+  });
+
+  // Also add a local history result.
+  let historyUrl = url + "history/";
+  await PlacesTestUtils.addVisits(historyUrl);
+
+  await check_autocomplete({
+    search: "rem",
+    searchParam: "enable-actions",
+    checkSorting: true,
+    matches: [
+      makeSearchMatch("rem", { heuristic: true }),
+      makeRemoteTabMatch("http://foo.remote.com/0", "My Phone",
+                        { title: "A title" }),
+      makeRemoteTabMatch("http://foo.remote.com/1", "My Phone",
+                        { title: "A title" }),
+      makeRemoteTabMatch("http://foo.remote.com/2", "My Phone",
+                        { title: "A title" }),
+      { uri: Services.io.newURI(historyUrl),
+        title: "test visit for " + historyUrl },
+      makeRemoteTabMatch("http://foo.remote.com/3", "My Phone",
+                        { title: "A title" }),
+      makeRemoteTabMatch("http://foo.remote.com/4", "My Phone",
+                        { title: "A title" }),
+    ],
   });
 });
