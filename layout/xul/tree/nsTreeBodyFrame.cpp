@@ -62,6 +62,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TreeBoxObject.h"
+#include "mozilla/dom/TreeColumnBinding.h"
 #include "nsIScriptableRegion.h"
 #include <algorithm>
 #include "ScrollbarActivity.h"
@@ -634,13 +635,12 @@ nsTreeBodyFrame::Invalidate()
 }
 
 nsresult
-nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
+nsTreeBodyFrame::InvalidateColumn(nsTreeColumn* aCol)
 {
   if (mUpdateBatchNest)
     return NS_OK;
 
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
 #ifdef ACCESSIBILITY
@@ -649,7 +649,7 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
 #endif
 
   nsRect columnRect;
-  nsresult rv = col->GetRect(this, mInnerBox.y, mInnerBox.height, &columnRect);
+  nsresult rv = aCol->GetRect(this, mInnerBox.y, mInnerBox.height, &columnRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // When false then column is out of view
@@ -681,7 +681,7 @@ nsTreeBodyFrame::InvalidateRow(int32_t aIndex)
 }
 
 nsresult
-nsTreeBodyFrame::InvalidateCell(int32_t aIndex, nsITreeColumn* aCol)
+nsTreeBodyFrame::InvalidateCell(int32_t aIndex, nsTreeColumn* aCol)
 {
   if (mUpdateBatchNest)
     return NS_OK;
@@ -695,13 +695,12 @@ nsTreeBodyFrame::InvalidateCell(int32_t aIndex, nsITreeColumn* aCol)
   if (aIndex < 0 || aIndex > mPageLength)
     return NS_OK;
 
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
   nsRect cellRect;
-  nsresult rv = col->GetRect(this, mInnerBox.y+mRowHeight*aIndex, mRowHeight,
-                             &cellRect);
+  nsresult rv = aCol->GetRect(this, mInnerBox.y+mRowHeight*aIndex, mRowHeight,
+                              &cellRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (OffsetForHorzScroll(cellRect, true))
@@ -744,17 +743,16 @@ nsTreeBodyFrame::InvalidateRange(int32_t aStart, int32_t aEnd)
 }
 
 nsresult
-nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsITreeColumn* aCol)
+nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsTreeColumn* aCol)
 {
   if (mUpdateBatchNest)
     return NS_OK;
 
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
   if (aStart == aEnd)
-    return InvalidateCell(aStart, col);
+    return InvalidateCell(aStart, aCol);
 
   int32_t last = LastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
@@ -775,10 +773,10 @@ nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsITreeColu
 #endif
 
   nsRect rangeRect;
-  nsresult rv = col->GetRect(this,
-                             mInnerBox.y+mRowHeight*(aStart-mTopRowIndex),
-                             mRowHeight*(aEnd-aStart+1),
-                             &rangeRect);
+  nsresult rv = aCol->GetRect(this,
+                              mInnerBox.y+mRowHeight*(aStart-mTopRowIndex),
+                              mRowHeight*(aEnd-aStart+1),
+                              &rangeRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   InvalidateFrameWithRect(rangeRect);
@@ -1097,7 +1095,7 @@ nsTreeBodyFrame::GetCellAt(int32_t aX, int32_t aY, int32_t* aRow,
 // You need to make sure to add in the image's margins as well.
 //
 nsresult
-nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const nsACString& aElement,
+nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol, const nsACString& aElement,
                                       int32_t *aX, int32_t *aY, int32_t *aWidth, int32_t *aHeight)
 {
   *aX = 0;
@@ -1763,19 +1761,18 @@ nsTreeBodyFrame::GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
 }
 
 nsresult
-nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsITreeColumn* aCol, bool *_retval)
+nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsTreeColumn* aCol, bool *_retval)
 {
   nscoord currentSize, desiredSize;
   nsresult rv;
 
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
   RefPtr<gfxContext> rc =
     PresShell()->CreateReferenceRenderingContext();
 
-  rv = GetCellWidth(aRow, col, rc, desiredSize, currentSize);
+  rv = GetCellWidth(aRow, aCol, rc, desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = desiredSize > currentSize;
@@ -2020,7 +2017,7 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
     if (aCol->IsPrimary())
       mScratchArray.AppendElement(nsGkAtoms::primary);
 
-    if (aCol->GetType() == nsITreeColumn::TYPE_CHECKBOX) {
+    if (aCol->GetType() == TreeColumnBinding::TYPE_CHECKBOX) {
       mScratchArray.AppendElement(nsGkAtoms::checkbox);
 
       if (aRowIndex != -1) {
@@ -3391,12 +3388,12 @@ nsTreeBodyFrame::PaintCell(int32_t               aRowIndex,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
       switch (aColumn->GetType()) {
-        case nsITreeColumn::TYPE_TEXT:
-        case nsITreeColumn::TYPE_PASSWORD:
+        case TreeColumnBinding::TYPE_TEXT:
+        case TreeColumnBinding::TYPE_PASSWORD:
           result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
                               aRenderingContext, aDirtyRect, currX);
           break;
-        case nsITreeColumn::TYPE_CHECKBOX:
+        case TreeColumnBinding::TYPE_CHECKBOX:
           result &= PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext,
                                   aRenderingContext, aDirtyRect);
           break;
@@ -3709,7 +3706,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   nsAutoString text;
   mView->GetCellText(aRowIndex, aColumn, text);
 
-  if (aColumn->Type() == nsITreeColumn::TYPE_PASSWORD) {
+  if (aColumn->Type() == TreeColumnBinding::TYPE_PASSWORD) {
     TextEditRules::FillBufWithPWChars(&text, text.Length());
   }
 
@@ -4065,10 +4062,9 @@ nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, 
 }
 
 nsresult
-nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsITreeColumn* aCol)
+nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol)
 {
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
   ScrollParts parts = GetScrollParts();
@@ -4077,11 +4073,11 @@ nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsITreeColumn* aCol)
   nsresult rv;
 
   nscoord columnPos;
-  rv = col->GetXInTwips(this, &columnPos);
+  rv = aCol->GetXInTwips(this, &columnPos);
   if(NS_FAILED(rv)) return rv;
 
   nscoord columnWidth;
-  rv = col->GetWidthInTwips(this, &columnWidth);
+  rv = aCol->GetWidthInTwips(this, &columnWidth);
   if(NS_FAILED(rv)) return rv;
 
   // If the start of the column is before the
@@ -4105,7 +4101,7 @@ nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsITreeColumn* aCol)
 }
 
 nsresult
-nsTreeBodyFrame::ScrollToCell(int32_t aRow, nsITreeColumn* aCol)
+nsTreeBodyFrame::ScrollToCell(int32_t aRow, nsTreeColumn* aCol)
 {
   ScrollParts parts = GetScrollParts();
   nsresult rv = ScrollToRowInternal(parts, aRow);
@@ -4119,7 +4115,7 @@ nsTreeBodyFrame::ScrollToCell(int32_t aRow, nsITreeColumn* aCol)
 }
 
 nsresult
-nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
+nsTreeBodyFrame::ScrollToColumn(nsTreeColumn* aCol)
 {
   ScrollParts parts = GetScrollParts();
   nsresult rv = ScrollToColumnInternal(parts, aCol);
@@ -4129,14 +4125,13 @@ nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 }
 
 nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
-                                                 nsITreeColumn* aCol)
+                                                 nsTreeColumn* aCol)
 {
-  RefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
-  if (!col)
+  if (!aCol)
     return NS_ERROR_INVALID_ARG;
 
   nscoord x;
-  nsresult rv = col->GetXInTwips(this, &x);
+  nsresult rv = aCol->GetXInTwips(this, &x);
   if (NS_FAILED(rv))
     return rv;
 
@@ -4713,8 +4708,8 @@ nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
 
 void
 nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
-                                     nsITreeColumn *aStartCol,
-                                     nsITreeColumn *aEndCol)
+                                     nsTreeColumn *aStartCol,
+                                     nsTreeColumn *aEndCol)
 {
   nsCOMPtr<nsIContent> content(GetBaseElement());
   if (!content)
@@ -4748,20 +4743,13 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
 
   if (aStartCol && aEndCol) {
     // Set 'startcolumn' data - the start index of invalidated rows.
-    int32_t startColIdx = 0;
-    nsresult rv = aStartCol->GetIndex(&startColIdx);
-    if (NS_FAILED(rv))
-      return;
+    int32_t startColIdx = aStartCol->GetIndex();
 
     propBag->SetPropertyAsInt32(NS_LITERAL_STRING("startcolumn"),
                                 startColIdx);
 
     // Set 'endcolumn' data - the start index of invalidated rows.
-    int32_t endColIdx = 0;
-    rv = aEndCol->GetIndex(&endColIdx);
-    if (NS_FAILED(rv))
-      return;
-
+    int32_t endColIdx = aEndCol->GetIndex();
     propBag->SetPropertyAsInt32(NS_LITERAL_STRING("endcolumn"),
                                 endColIdx);
   }

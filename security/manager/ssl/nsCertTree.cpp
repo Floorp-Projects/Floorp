@@ -1014,8 +1014,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col,
   nsresult rv = NS_OK;
   _retval.Truncate();
 
-  const char16_t* colID;
-  col->GetIdConst(&colID);
+  const nsAString& colID = col->GetId();
 
   treeArrayEl *el = GetThreadDescAtIndex(row);
   if (el) {
@@ -1036,8 +1035,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col,
     cert = certdi->mAddonInfo->mCert;
   }
 
-  int32_t colIndex;
-  col->GetIndex(&colIndex);
+  int32_t colIndex = col->Index();
   uint32_t arrayIndex=absoluteCertOffset+colIndex*(mNumRows-mNumOrgs);
   uint32_t arrayLength=0;
   if (mCellText) {
