@@ -2041,7 +2041,7 @@ bool
 TabChild::SkipRepeatedKeyEvent(const WidgetKeyboardEvent& aEvent)
 {
   if (mRepeatedKeyEventTime.IsNull() ||
-      !aEvent.mIsRepeat ||
+      !aEvent.CanSkipInRemoteProcess() ||
       (aEvent.mMessage != eKeyDown && aEvent.mMessage != eKeyPress)) {
     mRepeatedKeyEventTime = TimeStamp();
     mSkipKeyPress = false;

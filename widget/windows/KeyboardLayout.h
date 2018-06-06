@@ -417,25 +417,31 @@ private:
   uint32_t mShiftedLatinChar;
   uint32_t mUnshiftedLatinChar;
 
-  WORD    mScanCode;
-  bool    mIsExtended;
-  bool    mIsDeadKey;
+  WORD mScanCode;
+  bool mIsExtended;
+  // mIsRepeat is true if the key message is caused by the auto-repeat
+  // feature.
+  bool mIsRepeat;
+  bool mIsDeadKey;
   // mIsPrintableKey is true if the key may be a printable key without
   // any modifier keys.  Otherwise, false.
   // Please note that the event may not cause any text input even if this
   // is true.  E.g., it might be dead key state or Ctrl key may be pressed.
-  bool    mIsPrintableKey;
+  bool mIsPrintableKey;
+  // mIsSkippableInRemoteProcess is false if the key event shouldn't be
+  // skipped in the remote process even if it's too old event.
+  bool mIsSkippableInRemoteProcess;
   // mCharMessageHasGone is true if the message is a keydown message and
   // it's followed by at least one char message but it's gone at removing
   // from the queue.  This could occur if PeekMessage() or something is
   // hooked by odd tool.
-  bool    mCharMessageHasGone;
+  bool mCharMessageHasGone;
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
-  bool    mIsOverridingKeyboardLayout;
+  bool mIsOverridingKeyboardLayout;
   // mCanIgnoreModifierStateAtKeyPress is true if it's allowed to remove
   // Ctrl or Alt modifier state at dispatching eKeyPress.
-  bool    mCanIgnoreModifierStateAtKeyPress;
+  bool mCanIgnoreModifierStateAtKeyPress;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
@@ -451,7 +457,14 @@ private:
   }
 
   void InitWithAppCommand();
-  void InitWithKeyChar();
+  void InitWithKeyOrChar();
+
+  /**
+   * InitIsSkippableForKeyOrChar() initializes mIsSkippableInRemoteProcess with
+   * mIsRepeat and previous key message information.  So, this must be called
+   * after mIsRepeat is initialized.
+   */
+  void InitIsSkippableForKeyOrChar(const MSG& aLastKeyMSG);
 
   /**
    * InitCommittedCharsAndModifiersWithFollowingCharMessages() initializes
@@ -461,40 +474,6 @@ private:
    */
   void InitCommittedCharsAndModifiersWithFollowingCharMessages(
          const ModifierKeyState& aModKeyState);
-
-  /**
-   * Returns true if the key event is caused by auto repeat.
-   */
-  bool IsRepeat() const
-  {
-    switch (mMsg.message) {
-      case WM_KEYDOWN:
-      case WM_SYSKEYDOWN:
-      case WM_CHAR:
-      case WM_SYSCHAR:
-      case WM_DEADCHAR:
-      case WM_SYSDEADCHAR:
-      case MOZ_WM_KEYDOWN:
-        return ((mMsg.lParam & (1 << 30)) != 0);
-      case WM_APPCOMMAND:
-        if (mVirtualKeyCode) {
-          // If we can map the WM_APPCOMMAND to a virtual keycode, we can trust
-          // the result of GetKeyboardState().
-          BYTE kbdState[256];
-          memset(kbdState, 0, sizeof(kbdState));
-          ::GetKeyboardState(kbdState);
-          return !!kbdState[mVirtualKeyCode];
-        }
-        // If there is no virtual keycode for the command, we dispatch both
-        // keydown and keyup events from WM_APPCOMMAND handler.  Therefore,
-        // even if WM_APPCOMMAND is caused by auto key repeat, web apps receive
-        // a pair of DOM keydown and keyup events.  I.e., KeyboardEvent.repeat
-        // should be never true of such keys.
-        return false;
-      default:
-        return false;
-    }
-  }
 
   UINT GetScanCodeWithExtendedFlag() const;
 
@@ -714,6 +693,8 @@ private:
 
   static const MSG sEmptyMSG;
 
+  static MSG sLastKeyOrCharMSG;
+
   static MSG sLastKeyMSG;
 
   static bool IsEmptyMSG(const MSG& aMSG)
@@ -728,10 +709,10 @@ private:
 
 public:
   /**
-   * Returns last key MSG.  If no key MSG has been received yet, the result
+   * Returns last key or char MSG.  If no MSG has been received yet, the result
    * is empty MSG (i.e., .message is WM_NULL).
    */
-  static const MSG& LastKeyMSG() { return sLastKeyMSG; }
+  static const MSG& LastKeyOrCharMSG() { return sLastKeyOrCharMSG; }
 };
 
 class KeyboardLayout
