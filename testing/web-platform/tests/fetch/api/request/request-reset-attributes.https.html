@@ -39,7 +39,7 @@ promise_test(async (t) => {
   }, 'Request.isReloadNavigation is reset with non-empty RequestInit');
 
 promise_test(async (t) => {
-    const scope = '../resources/blank.html?name=isHistoryNavigation';
+    const scope = 'resources/hello.html?name=isHistoryNavigation';
     let frame;
     let reg;
 
@@ -48,13 +48,13 @@ promise_test(async (t) => {
       await wait_for_state(t, reg.installing, 'activated');
       frame = await with_iframe(scope);
       assert_equals(frame.contentDocument.body.textContent,
-                    'original: false, stored: false');
+                    'old: false, new: false');
       // Use step_timeout(0) to ensure the history entry is created for Blink
       // and WebKit. See https://bugs.webkit.org/show_bug.cgi?id=42861.
       await wait(0);
       await new Promise((resolve) => {
         frame.onload = resolve;
-        frame.src = '../resources/blank.html?ignore';
+        frame.src = 'resources/hello.html?ignore';
       });
       await wait(0);
       await new Promise((resolve) => {
@@ -62,7 +62,7 @@ promise_test(async (t) => {
         frame.contentWindow.history.go(-1);
       });
       assert_equals(frame.contentDocument.body.textContent,
-                    'original: true, stored: true');
+                    'old: true, new: false');
     } finally {
       if (frame) {
         frame.remove();
@@ -71,7 +71,7 @@ promise_test(async (t) => {
         await reg.unregister();
       }
     }
-}, 'Request.IsHistoryNavigation should persist.');
+}, 'Request.isHistoryNavigation is reset with non-empty RequestInit');
 
 promise_test(async (t) => {
     const scope = 'resources/hello.txt?name=mode';
