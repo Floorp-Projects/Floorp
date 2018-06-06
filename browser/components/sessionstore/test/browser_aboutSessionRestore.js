@@ -29,9 +29,11 @@ add_task(async function() {
 
   ok(gBrowser.tabs.length > 1, "we have more than one tab");
 
-  let view = browser.contentDocument.getElementById("tabList").view;
+  let tree = browser.contentDocument.getElementById("tabList");
+  let view = tree.view;
   ok(view.isContainer(0), "first entry is the window");
-  is(view.getCellProperties(1, { id: "title" }), "icon",
+  let titleColumn = tree.columns.title;
+  is(view.getCellProperties(1, titleColumn), "icon",
     "second entry is the tab and has a favicon");
 
   browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
