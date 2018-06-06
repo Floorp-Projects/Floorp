@@ -96,6 +96,9 @@ var ReaderMode = {
    * if not, append the about:reader page in the history instead.
    */
   enterReaderMode(docShell, win) {
+    Services.telemetry.recordEvent("savant", "readermode", "on", null,
+                                  { subcategory: "feature" });
+
     let url = win.document.location.href;
     let readerURL = "about:reader?url=" + encodeURIComponent(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -117,6 +120,8 @@ var ReaderMode = {
    * if not, append the original page in the history instead.
    */
   leaveReaderMode(docShell, win) {
+    Services.telemetry.recordEvent("savant", "readermode", "off", null,
+                                  { subcategory: "feature" });
     let url = win.document.location.href;
     let originalURL = this.getOriginalUrl(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);

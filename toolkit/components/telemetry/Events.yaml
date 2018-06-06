@@ -120,6 +120,19 @@ savant:
     expiry_version: "65"
     extra_keys:
       subcategory: The broad event category for this probe. E.g. navigation
+  readermode:
+    objects: ["on", "off"]
+    release_channel_collection: opt-out
+    record_in_processes: ["content"]
+    description: >
+      This is recorded any time Reader Mode is turned on or off.
+    bug_numbers: [1457226, 1465698]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
