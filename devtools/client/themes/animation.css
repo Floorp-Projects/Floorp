@@ -408,6 +408,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animation-detail-close-button::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
