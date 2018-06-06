@@ -15,9 +15,11 @@
 add_task(async function test_keyword_searc() {
   let uri1 = NetUtil.newURI("http://abc/?search=%s");
   let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
+  let uri3 = NetUtil.newURI("http://somedomain.example/key");
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "Generic page title" },
-    { uri: uri2, title: "Generic page title" }
+    { uri: uri2, title: "Generic page title" },
+    { uri: uri3, title: "This page shouldn't be suggested" },
   ]);
   await addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key"});
 
@@ -51,22 +53,39 @@ add_task(async function test_keyword_searc() {
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  info("Keyword that happens to match a page");
+  info("Keyword with query that happens to match a page");
   await check_autocomplete({
     search: "key ThisPageIsInHistory",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
+  info("Keyword with query that partially matches a page");
+  await check_autocomplete({
+    search: "key ThisPage",
+    matches: [
+      { uri: NetUtil.newURI("http://abc/?search=ThisPage"), title: "abc", style: ["keyword", "heuristic"] },
+      { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title" },
+    ],
+  });
+
   info("Keyword without query (without space)");
   await check_autocomplete({
     search: "key",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [
+      { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] },
+      { uri: NetUtil.newURI("http://abc/?search=%s"), title: "Bookmark title", style: ["bookmark"] },
+      { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title" },
+    ]
   });
 
   info("Keyword without query (with space)");
   await check_autocomplete({
     search: "key ",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [
+      { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] },
+      { uri: NetUtil.newURI("http://abc/?search=%s"), title: "Bookmark title", style: ["bookmark"] },
+      { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title" },
+    ]
   });
 
   info("Bug 1228111 - Keyword with a space in front");

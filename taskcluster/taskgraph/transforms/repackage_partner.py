@@ -174,7 +174,7 @@ def make_job_description(config, jobs):
             run['use-magic-mh-args'] = False
         else:
             if build_platform.startswith('macosx'):
-                worker_type = 'aws-provisioner-v1/gecko-%s-b-macosx64' % level
+                worker_type = 'aws-provisioner-v1/gecko-%s-b-linux' % level
             else:
                 raise NotImplementedError(
                     'Unsupported build_platform: "{}"'.format(build_platform)

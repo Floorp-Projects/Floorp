@@ -6,7 +6,7 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
   function sidebarScript() {
     browser.test.onMessage.addListener((msgName, info, assertMessage) => {
       if (msgName !== "check-style") {
-        browser.test.notifyFail("options-ui-browser_style");
+        browser.test.notifyFail("sidebar-browser-style");
       }
 
       let style = window.getComputedStyle(document.getElementById("button"));

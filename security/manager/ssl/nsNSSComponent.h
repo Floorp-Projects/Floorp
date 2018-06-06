@@ -213,11 +213,4 @@ CheckForSmartCardChanges()
 #endif
 }
 
-class nsNSSErrors
-{
-public:
-  static const char* getDefaultErrorStringName(PRErrorCode err);
-  static const char* getOverrideErrorStringName(PRErrorCode aErrorCode);
-};
-
 #endif // _nsNSSComponent_h_

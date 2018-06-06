@@ -135,6 +135,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemotePrompt: "resource:///modules/RemotePrompt.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
+  SavantShieldStudy: "resource:///modules/SavantShieldStudy.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
@@ -1060,6 +1061,8 @@ BrowserGlue.prototype = {
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
+
+    SavantShieldStudy.init();
   },
 
   _sendMediaTelemetry() {
@@ -1112,6 +1115,8 @@ BrowserGlue.prototype = {
     }
 
     Normandy.uninit();
+
+    SavantShieldStudy.uninit();
   },
 
   // All initial windows have opened.

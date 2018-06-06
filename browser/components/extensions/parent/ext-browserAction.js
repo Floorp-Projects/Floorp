@@ -78,11 +78,7 @@ this.browserAction = class extends ExtensionAPI {
     };
     this.globals = Object.create(this.defaults);
 
-    this.browserStyle = options.browser_style || false;
-    if (options.browser_style === null) {
-      this.extension.logger.warn("Please specify whether you want browser_style " +
-                                 "or not in your browser_action options.");
-    }
+    this.browserStyle = options.browser_style;
 
     browserActionMap.set(extension, this);
 

@@ -24,7 +24,8 @@
               },
               "browser_style": {
                 "type": "boolean",
-                "optional": true
+                "optional": true,
+                "default": true
               },
               "default_panel": {
                 "type": "string",

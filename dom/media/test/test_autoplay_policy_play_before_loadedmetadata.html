@@ -29,11 +29,23 @@
         let testCases = [
           {
             resource: "320x240.ogv", // Only video track.
+            shouldPlay: false,
+            muted: false,
+          },
+          {
+            resource: "320x240.ogv", // Only video track.
             shouldPlay: true,
+            muted: true,
           },
           {
             resource: "short.mp4", // Audio and video track.
             shouldPlay: false,
+            muted: false,
+          },
+          {
+            resource: "short.mp4", // Audio and video track.
+            shouldPlay: true,
+            muted: true,
           },
         ];
 

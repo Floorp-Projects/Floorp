@@ -40,54 +40,30 @@
 .item.client .item-twisty-container {
   min-width: 16px;
   height: 16px;
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+  background-image: url("chrome://global/skin/tree/arrow-expanded.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 1;
+}
+
+.item.client.closed .item-twisty-container {
+  background-image: url("chrome://global/skin/tree/arrow-collapsed.svg");
+}
+
+.item.client.closed .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/arrow-collapsed-rtl.svg");
+}
+
+.item.client.selected:focus .item-twisty-container {
+  fill-opacity: 1;
 }
 
 @media (-moz-mac-yosemite-theme: 0) {
   .item.client.selected .item-twisty-container {
-    background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
-  }
-
-  .item.client.selected.closed .item-twisty-container {
-    background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
-  }
-
-  .item.client.selected .item-twisty-container:dir(rtl) {
-    background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
-  }
-
-  .item.client.selected.closed .item-twisty-container:dir(rtl) {
-    background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl");
+    fill-opacity: 1;
   }
 }
 
-.item.client.closed .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
-}
-
-.item.client.selected:focus .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
-}
-
-.item.client.selected.closed:focus .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
-}
-
-.item.client .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
-}
-
-.item.client.closed .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
-}
-
-.item.client.selected:focus .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
-}
-
-.item.client.selected.closed:focus .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl");
-}
 
 @media (-moz-mac-yosemite-theme) {
   .item.selected > .item-title-container {

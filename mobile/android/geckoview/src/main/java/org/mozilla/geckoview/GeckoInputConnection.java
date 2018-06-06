@@ -6,7 +6,6 @@
 package org.mozilla.geckoview;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
@@ -17,10 +16,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableString;
-import android.text.Spanned;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -34,7 +31,6 @@ import android.view.inputmethod.InputConnection;
 
 import org.mozilla.gecko.Clipboard;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.lang.reflect.InvocationHandler;
@@ -59,11 +55,7 @@ import java.lang.reflect.Proxy;
 
     // Managed only by notifyIMEContext; see comments in notifyIMEContext
     private int mIMEState;
-    private String mIMETypeHint = "";
-    private String mIMEModeHint = "";
     private String mIMEActionHint = "";
-    private int mIMEFlags;
-    private boolean mFocused;
     private int mLastSelectionStart;
     private int mLastSelectionEnd;
 
@@ -76,9 +68,6 @@ import java.lang.reflect.Proxy;
     private ExtractedTextRequest mUpdateRequest;
     private final InputConnection mKeyInputConnection;
     private CursorAnchorInfo.Builder mCursorAnchorInfoBuilder;
-
-    // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
-    private volatile boolean mSoftInputReentrancyGuard;
 
     public static SessionTextInput.InputConnectionClient create(
             final GeckoSession session,
@@ -271,51 +260,8 @@ import java.lang.reflect.Proxy;
     }
 
     @NonNull
-    /* package */ SessionTextInput.Delegate getInputDelegate() {
+    /* package */ GeckoSession.TextInputDelegate getInputDelegate() {
         return mSession.getTextInput().getDelegate();
-    }
-
-    private void showSoftInputWithToolbar(final boolean showToolbar) {
-        if (mSoftInputReentrancyGuard) {
-            return;
-        }
-
-        getView().post(new Runnable() {
-            @Override
-            public void run() {
-                if (showToolbar) {
-                    mSession.getDynamicToolbarAnimator().showToolbar(/* immediately */ true);
-                }
-                mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
-
-                mSoftInputReentrancyGuard = true;
-                getInputDelegate().showSoftInput();
-                mSoftInputReentrancyGuard = false;
-            }
-        });
-    }
-
-    private void hideSoftInput() {
-        if (mSoftInputReentrancyGuard) {
-            return;
-        }
-        getView().post(new Runnable() {
-            @Override
-            public void run() {
-                mSoftInputReentrancyGuard = true;
-                getInputDelegate().hideSoftInput();
-                mSoftInputReentrancyGuard = false;
-            }
-        });
-    }
-
-    private void restartInput(final @SessionTextInput.Delegate.RestartReason int reason) {
-        getView().post(new Runnable() {
-            @Override
-            public void run() {
-                getInputDelegate().restartInput(reason);
-            }
-        });
     }
 
     @Override // SessionTextInput.EditableListener
@@ -343,7 +289,7 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateExtractedText(request, extractedText);
+                getInputDelegate().updateExtractedText(mSession, request, extractedText);
             }
         });
     }
@@ -371,7 +317,8 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateSelection(start, end, compositionStart, compositionEnd);
+                getInputDelegate().updateSelection(mSession, start, end,
+                                                   compositionStart, compositionEnd);
             }
         });
     }
@@ -437,7 +384,7 @@ import java.lang.reflect.Proxy;
         getView().post(new Runnable() {
             @Override
             public void run() {
-                getInputDelegate().updateCursorAnchorInfo(info);
+                getInputDelegate().updateCursorAnchorInfo(mSession, info);
             }
         });
     }
@@ -565,81 +512,8 @@ import java.lang.reflect.Proxy;
 
     @Override // SessionTextInput.InputConnectionClient
     public synchronized InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        // Some keyboards require us to fill out outAttrs even if we return null.
-        outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
-        outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
-        outAttrs.actionLabel = null;
-
         if (mIMEState == IME_STATE_DISABLED) {
-            hideSoftInput();
             return null;
-        }
-
-        if (mIMEState == IME_STATE_PASSWORD ||
-            "password".equalsIgnoreCase(mIMETypeHint))
-            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
-        else if (mIMETypeHint.equalsIgnoreCase("url") ||
-                 mIMETypeHint.equalsIgnoreCase("mozAwesomebar"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
-        else if (mIMETypeHint.equalsIgnoreCase("email"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-        else if (mIMETypeHint.equalsIgnoreCase("tel"))
-            outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
-        else if (mIMETypeHint.equalsIgnoreCase("number") ||
-                 mIMETypeHint.equalsIgnoreCase("range"))
-            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER
-                                 | InputType.TYPE_NUMBER_FLAG_SIGNED
-                                 | InputType.TYPE_NUMBER_FLAG_DECIMAL;
-        else if (mIMETypeHint.equalsIgnoreCase("week") ||
-                 mIMETypeHint.equalsIgnoreCase("month"))
-            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
-                                  | InputType.TYPE_DATETIME_VARIATION_DATE;
-        else if (mIMEModeHint.equalsIgnoreCase("numeric"))
-            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
-                                 InputType.TYPE_NUMBER_FLAG_SIGNED |
-                                 InputType.TYPE_NUMBER_FLAG_DECIMAL;
-        else if (mIMEModeHint.equalsIgnoreCase("digit"))
-            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
-        else {
-            // TYPE_TEXT_FLAG_IME_MULTI_LINE flag makes the fullscreen IME line wrap
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT |
-                                  InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE;
-            if (mIMETypeHint.equalsIgnoreCase("textarea") ||
-                    mIMETypeHint.length() == 0) {
-                // empty mIMETypeHint indicates contentEditable/designMode documents
-                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
-            }
-            if (mIMEModeHint.equalsIgnoreCase("uppercase"))
-                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
-            else if (mIMEModeHint.equalsIgnoreCase("titlecase"))
-                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
-            else if (mIMETypeHint.equalsIgnoreCase("text") &&
-                    !mIMEModeHint.equalsIgnoreCase("autocapitalized"))
-                outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_NORMAL;
-            else if (!mIMEModeHint.equalsIgnoreCase("lowercase"))
-                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
-            // auto-capitalized mode is the default for types other than text
-        }
-
-        if (mIMEActionHint.equalsIgnoreCase("go"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
-        else if (mIMEActionHint.equalsIgnoreCase("done"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
-        else if (mIMEActionHint.equalsIgnoreCase("next"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
-        else if (mIMEActionHint.equalsIgnoreCase("search") ||
-                 mIMETypeHint.equalsIgnoreCase("search"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
-        else if (mIMEActionHint.equalsIgnoreCase("send"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
-        else if (mIMEActionHint.length() > 0) {
-            if (DEBUG)
-                Log.w(LOGTAG, "Unexpected mIMEActionHint=\"" + mIMEActionHint + "\"");
-            outAttrs.actionLabel = mIMEActionHint;
-        }
-
-        if ((mIMEFlags & IME_FLAG_PRIVATE_BROWSING) != 0) {
-            outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
         }
 
         Context context = getView().getContext();
@@ -665,15 +539,6 @@ import java.lang.reflect.Proxy;
 
         outAttrs.initialSelStart = mLastSelectionStart;
         outAttrs.initialSelEnd = mLastSelectionEnd;
-
-        if ((mIMEFlags & IME_FLAG_USER_ACTION) != 0) {
-            if ((context instanceof Activity) &&
-                    ActivityUtils.isFullScreen((Activity) context)) {
-                showSoftInputWithToolbar(false);
-            } else {
-                showSoftInputWithToolbar(true);
-            }
-        }
         return this;
     }
 
@@ -725,7 +590,7 @@ import java.lang.reflect.Proxy;
     @Override
     public boolean sendKeyEvent(@NonNull KeyEvent event) {
         event = translateKey(event.getKeyCode(), event);
-        mEditableClient.sendKeyEvent(getView(), isInputActive(), event.getAction(), event);
+        mEditableClient.sendKeyEvent(getView(), event.getAction(), event);
         return false; // seems to always return false
     }
 
@@ -772,59 +637,19 @@ import java.lang.reflect.Proxy;
         }
     }
 
-    @Override // SessionTextInput.InputConnectionClient
-    public synchronized boolean isInputActive() {
-        // Make sure this picks up PASSWORD state as well.
-        return mIMEState != IME_STATE_DISABLED;
-    }
-
     @Override // SessionTextInput.EditableListener
-    public void notifyIME(int type) {
+    public void notifyIME(final int type) {
         switch (type) {
-
             case NOTIFY_IME_OF_FOCUS:
                 // Showing/hiding vkb is done in notifyIMEContext
-                mFocused = true;
                 if (mBatchEditCount != 0) {
                     Log.w(LOGTAG, "resetting with mBatchEditCount = " + mBatchEditCount);
                     mBatchEditCount = 0;
                 }
-                // Do not reset mIMEState here; see comments in notifyIMEContext
-                restartInput(SessionTextInput.Delegate.RESTART_REASON_FOCUS);
                 break;
 
             case NOTIFY_IME_OF_BLUR:
-                // Showing/hiding vkb is done in notifyIMEContext
-                mFocused = false;
                 break;
-
-            case NOTIFY_IME_OPEN_VKB:
-                showSoftInputWithToolbar(false);
-                break;
-
-            case NOTIFY_IME_TO_COMMIT_COMPOSITION: {
-                // Gecko already committed its composition. However, Android keyboards
-                // have trouble dealing with us removing the composition manually on the
-                // Java side. Therefore, we keep the composition intact on the Java side.
-                // The text content should still be in-sync on both sides.
-                //
-                // Nevertheless, if we somehow lost the composition, we must force the
-                // keyboard to reset.
-                final Editable editable = getEditable();
-                if (editable == null) {
-                    break;
-                }
-                final Object[] spans = editable.getSpans(0, editable.length(), Object.class);
-                for (final Object span : spans) {
-                    if ((editable.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                        // Still have composition; no need to reset.
-                        return;
-                    }
-                }
-                // No longer have composition; perform reset.
-                restartInput(SessionTextInput.Delegate.RESTART_REASON_CONTENT_CHANGE);
-                break;
-            }
 
             default:
                 if (DEBUG) {
@@ -835,22 +660,9 @@ import java.lang.reflect.Proxy;
     }
 
     @Override // SessionTextInput.EditableListener
-    public synchronized void notifyIMEContext(int state, final String typeHint,
+    public synchronized void notifyIMEContext(final int state, final String typeHint,
                                               final String modeHint, final String actionHint,
                                               final int flags) {
-        // For some input type we will use a widget to display the ui, for those we must not
-        // display the ime. We can display a widget for date and time types and, if the sdk version
-        // is 11 or greater, for datetime/month/week as well.
-        if (typeHint != null &&
-            (typeHint.equalsIgnoreCase("date") ||
-             typeHint.equalsIgnoreCase("time") ||
-             typeHint.equalsIgnoreCase("datetime") ||
-             typeHint.equalsIgnoreCase("month") ||
-             typeHint.equalsIgnoreCase("week") ||
-             typeHint.equalsIgnoreCase("datetime-local"))) {
-            state = IME_STATE_DISABLED;
-        }
-
         // mIMEState and the mIME*Hint fields should only be changed by notifyIMEContext,
         // and not reset anywhere else. Usually, notifyIMEContext is called right after a
         // focus or blur, so resetting mIMEState during the focus or blur seems harmless.
@@ -861,33 +673,10 @@ import java.lang.reflect.Proxy;
         /* When IME is 'disabled', IME processing is disabled.
            In addition, the IME UI is hidden */
         mIMEState = state;
-        mIMETypeHint = (typeHint == null) ? "" : typeHint;
-        mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
-        mIMEFlags = flags;
 
         // These fields are reset here and will be updated when restartInput is called below
         mUpdateRequest = null;
         mCurrentInputMethod = "";
-
-        View v = getView();
-        if (v == null || !v.hasFocus()) {
-            // When using Find In Page, we can still receive notifyIMEContext calls due to the
-            // selection changing when highlighting. However in this case we don't want to reset/
-            // show/hide the keyboard because the find box has the focus and is taking input from
-            // the keyboard.
-            return;
-        }
-
-        // On focus, the notifyIMEContext call comes *before* the
-        // notifyIME(NOTIFY_IME_OF_FOCUS) call, but we need to call restartInput during
-        // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
-        // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
-        // restartInput here.
-        if (mIMEState == IME_STATE_DISABLED || mFocused) {
-            restartInput(mIMEState == IME_STATE_DISABLED ?
-                         SessionTextInput.Delegate.RESTART_REASON_BLUR :
-                         SessionTextInput.Delegate.RESTART_REASON_CONTENT_CHANGE);
-        }
     }
 }
