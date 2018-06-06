@@ -39,6 +39,9 @@ class SavantShieldStudyClass {
     // ms = 'x' weeks * 7 days/week * 24 hours/day * 60 minutes/hour
     // * 60 seconds/minute * 1000 milliseconds/second
     this.DEFAULT_STUDY_DURATION_MS = 4 * 7 * 24 * 60 * 60 * 1000;
+    // If on startupStudy(), user is ineligible or study has expired,
+    // no probe listeners from this module have been added yet
+    this.shouldRemoveListeners = true;
   }
 
   init() {
@@ -73,6 +76,7 @@ class SavantShieldStudyClass {
     this.telemetryEvents.enableCollection();
 
     if (!this.isEligible()) {
+      this.shouldRemoveListeners = false;
       this.endStudy("ineligible");
       return;
     }
@@ -81,6 +85,7 @@ class SavantShieldStudyClass {
 
     if (this.isStudyExpired()) {
       log.debug("Study expired in between this and the previous session.");
+      this.shouldRemoveListeners = false;
       this.endStudy("expired");
     }
 
@@ -254,7 +259,9 @@ class AddonListener {
   }
 
   uninit() {
-    this.removeListeners();
+    if (SavantShieldStudy.shouldRemoveListeners) {
+      this.removeListeners();
+    }
   }
 }
 
@@ -280,11 +287,11 @@ class BookmarkObserver {
   }
 
   onItemAdded(itemID, parentID, index, itemType, uri, title, dateAdded, guid, parentGUID, source) {
-    this.handleBookmarkSaveRemove(itemType, uri, source, "save");
+    this.handleItemAddRemove(itemType, uri, source, "save");
   }
 
   onItemRemoved(itemID, parentID, index, itemType, uri, guid, parentGUID, source) {
-    this.handleBookmarkSaveRemove(itemType, uri, source, "remove");
+    this.handleItemAddRemove(itemType, uri, source, "remove");
   }
 
   handleItemAddRemove(itemType, uri, source, event) {
@@ -319,7 +326,9 @@ class BookmarkObserver {
   }
 
   uninit() {
-    this.removeObservers();
+    if (SavantShieldStudy.shouldRemoveListeners) {
+      this.removeObservers();
+    }
   }
 }
 
@@ -418,7 +427,9 @@ class MenuListener {
   }
 
   uninit() {
-    this.windowWatcher.uninit();
+    if (SavantShieldStudy.shouldRemoveListeners) {
+      this.windowWatcher.uninit();
+    }
   }
 }
 
