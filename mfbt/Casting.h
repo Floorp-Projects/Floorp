@@ -12,7 +12,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
+#include <cstring>
 #include <limits.h>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -43,13 +45,19 @@ BitwiseCast(const From aFrom, To* aResult)
 {
   static_assert(sizeof(From) == sizeof(To),
                 "To and From must have the same size");
-  union
-  {
-    From mFrom;
-    To mTo;
-  } u;
-  u.mFrom = aFrom;
-  *aResult = u.mTo;
+
+  // We could maybe downgrade these to std::is_trivially_copyable, but the
+  // various STLs we use don't all provide it.
+  static_assert(std::is_trivial<From>::value,
+                "shouldn't bitwise-copy a type having non-trivial "
+                "initialization");
+  static_assert(std::is_trivial<To>::value,
+                "shouldn't bitwise-copy a type having non-trivial "
+                "initialization");
+
+  std::memcpy(static_cast<void*>(aResult),
+              static_cast<const void*>(&aFrom),
+              sizeof(From));
 }
 
 template<typename To, typename From>
