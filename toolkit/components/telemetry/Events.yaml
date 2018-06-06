@@ -271,6 +271,19 @@ savant:
       subcategory: The broad event category for this probe. E.g. navigation
       flow_id: A tab identifier to associate events occuring in the same tab
       canRecordSubmit: True if a login form loads in a non-private window with Password Manager enabled.
+  tab:
+    objects: ["open", "close", "select"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time a tab is opened, closed or selected.
+    bug_numbers: [1457226, 1465694]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
