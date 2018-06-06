@@ -2777,7 +2777,10 @@ var AddonManagerInternal = {
         throw new Error(`No such addon ${id}`);
       }
 
-      addon.userDisabled = !value;
+      if (value)
+        await addon.enable();
+      else
+        await addon.disable();
     },
 
     addonInstallDoInstall(target, id) {
