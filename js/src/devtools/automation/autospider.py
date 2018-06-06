@@ -486,6 +486,19 @@ if use_minidump:
     for v in ('JSTESTS_EXTRA_ARGS', 'JITTEST_EXTRA_ARGS'):
         env[v] = "--args='--dll %s' %s" % (injector_lib, env.get(v, ''))
 
+# Store all failure output to an uploaded log file. This could be done in each
+# individual variant, but it's verbose and we want it across the board.
+if AUTOMATION:
+    env['JSTESTS_EXTRA_ARGS'] = " ".join(
+        "--show-output",
+        "--show-cmd",
+        "--failed-only",
+        "--output-file={}/jstests.fail.txt".format(env.get('MOZ_UPLOAD_DIR', '/tmp'))
+        env.get('JSTESTS_EXTRA_ARGS', ''))
+    env['JITTEST_EXTRA_ARGS'] = " ".join(
+        "--write-failures={}/jit-tests.fail.txt".format(env.get('MOZ_UPLOAD_DIR', '/tmp')),
+        env.get('JITTEST_EXTRA_ARGS', ''))
+
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
 results = []
