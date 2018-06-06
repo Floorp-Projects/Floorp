@@ -1055,7 +1055,8 @@ pub unsafe fn get_object_class(obj: *mut JSObject) -> *const JSClass {
 
 #[inline]
 pub unsafe fn get_object_compartment(obj: *mut JSObject) -> *mut JSCompartment {
-    (*get_object_group(obj)).realm as *mut JSCompartment
+    let realm = (*get_object_group(obj)).realm as *const JS::shadow::Realm;
+    (*realm).compartment_
 }
 
 #[inline]

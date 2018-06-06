@@ -107,7 +107,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     allowRelazificationForTesting(false),
     destroyCompartmentCallback(nullptr),
     sizeOfIncludingThisCompartmentCallback(nullptr),
-    compartmentNameCallback(nullptr),
     destroyRealmCallback(nullptr),
     realmNameCallback(nullptr),
     externalStringSizeofCallback(nullptr),

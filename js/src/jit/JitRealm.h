@@ -516,7 +516,7 @@ class JitRealm
     JSObject* getSimdTemplateObjectFor(JSContext* cx, Handle<SimdTypeDescr*> descr) {
         ReadBarrieredObject& tpl = simdTemplateObjects_[descr->type()];
         if (!tpl)
-            tpl.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
+            tpl.set(TypedObject::createZeroed(cx, descr, gc::TenuredHeap));
         return tpl.get();
     }
 

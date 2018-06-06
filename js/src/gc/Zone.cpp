@@ -402,7 +402,9 @@ Zone::deleteEmptyCompartment(JSCompartment* comp)
     MOZ_ASSERT(comp->realms().length() == 1);
 
     Realm* realm = comp->realms()[0];
-    realm->destroy(runtimeFromMainThread()->defaultFreeOp());
+    FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
+    realm->destroy(fop);
+    comp->destroy(fop);
 
     compartments().clear();
 }

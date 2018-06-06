@@ -28,25 +28,6 @@
  * code to dispatch input events.
  */
 
-// Some helper functions for constructing input event objects suitable to be
-// passed either to an APZC (which expects an transformed point), or to an APZTM
-// (which expects an untransformed point). We handle both cases by setting both
-// the transformed and untransformed fields to the same value.
-SingleTouchData
-CreateSingleTouchData(int32_t aIdentifier, const ScreenIntPoint& aPoint)
-{
-  SingleTouchData touch(aIdentifier, aPoint, ScreenSize(0, 0), 0, 0);
-  touch.mLocalScreenPoint = ParentLayerPoint(aPoint.x, aPoint.y);
-  return touch;
-}
-
-// Convenience wrapper for CreateSingleTouchData() that takes loose coordinates.
-SingleTouchData
-CreateSingleTouchData(int32_t aIdentifier, ScreenIntCoord aX, ScreenIntCoord aY)
-{
-  return CreateSingleTouchData(aIdentifier, ScreenIntPoint(aX, aY));
-}
-
 PinchGestureInput
 CreatePinchGestureInput(PinchGestureInput::PinchGestureType aType,
                         const ScreenPoint& aFocus,
@@ -158,87 +139,6 @@ PinchWithPinchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
       : nsEventStatus_eIgnore;
   EXPECT_EQ(expectedStatus, statuses[0]);
   EXPECT_EQ(expectedStatus, statuses[1]);
-}
-
-template<class InputReceiver>
-void
-PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
-                    const ScreenIntPoint& aFocus, float aScale,
-                    int& inputId,
-                    nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
-                    nsEventStatus (*aOutEventStatuses)[4] = nullptr,
-                    uint64_t* aOutInputBlockId = nullptr)
-{
-  // Having pinch coordinates in float type may cause problems with high-precision scale values
-  // since SingleTouchData accepts integer value. But for trivial tests it should be ok.
-  float pinchLength = 100.0;
-  float pinchLengthScaled = pinchLength * aScale;
-
-  // Even if the caller doesn't care about the block id, we need it to set the
-  // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
-  uint64_t blockId;
-  if (!aOutInputBlockId) {
-    aOutInputBlockId = &blockId;
-  }
-
-  MultiTouchInput mtiStart = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
-  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus));
-  nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = status;
-  }
-
-  if (aAllowedTouchBehaviors) {
-    EXPECT_EQ(2UL, aAllowedTouchBehaviors->Length());
-    aTarget->SetAllowedTouchBehavior(*aOutInputBlockId, *aAllowedTouchBehaviors);
-  } else if (gfxPrefs::TouchActionEnabled()) {
-    SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId, 2);
-  }
-
-  MultiTouchInput mtiMove1 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLength, aFocus.y));
-  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLength, aFocus.y));
-  status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = status;
-  }
-
-  MultiTouchInput mtiMove2 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLengthScaled, aFocus.y));
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLengthScaled, aFocus.y));
-  status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = status;
-  }
-
-  MultiTouchInput mtiEnd = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
-  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLengthScaled, aFocus.y));
-  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLengthScaled, aFocus.y));
-  status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[3] = status;
-  }
-
-  inputId += 2;
-}
-
-template<class InputReceiver>
-void
-PinchWithTouchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
-                                  const ScreenIntPoint& aFocus, float aScale,
-                                  int& inputId, bool aShouldTriggerPinch,
-                                  nsTArray<uint32_t>* aAllowedTouchBehaviors)
-{
-  nsEventStatus statuses[4];  // down, move, move, up
-  PinchWithTouchInput(aTarget, aFocus, aScale, inputId, aAllowedTouchBehaviors, &statuses);
-
-  nsEventStatus expectedMoveStatus = aShouldTriggerPinch
-      ? nsEventStatus_eConsumeDoDefault
-      : nsEventStatus_eIgnore;
-  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
-  EXPECT_EQ(expectedMoveStatus, statuses[1]);
-  EXPECT_EQ(expectedMoveStatus, statuses[2]);
 }
 
 template<class InputReceiver>

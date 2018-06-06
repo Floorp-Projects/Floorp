@@ -70,7 +70,7 @@ nsCoreUtils::HasClickListener(nsIContent *aContent)
 
 void
 nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
-                                int32_t aRowIndex, nsITreeColumn *aColumn,
+                                int32_t aRowIndex, nsTreeColumn *aColumn,
                                 const nsAString& aPseudoElt)
 {
   RefPtr<dom::Element> tcElm;
@@ -519,7 +519,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
   return nullptr;
 }
 
-already_AddRefed<nsITreeColumn>
+already_AddRefed<nsTreeColumn>
 nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
 {
   RefPtr<nsTreeColumns> cols;
@@ -556,12 +556,12 @@ nsCoreUtils::GetSensibleColumnCount(nsITreeBoxObject *aTree)
   return count;
 }
 
-already_AddRefed<nsITreeColumn>
+already_AddRefed<nsTreeColumn>
 nsCoreUtils::GetSensibleColumnAt(nsITreeBoxObject *aTree, uint32_t aIndex)
 {
   uint32_t idx = aIndex;
 
-  nsCOMPtr<nsITreeColumn> column = GetFirstSensibleColumn(aTree);
+  nsCOMPtr<nsTreeColumn> column = GetFirstSensibleColumn(aTree);
   while (column) {
     if (idx == 0)
       return column.forget();
@@ -573,41 +573,34 @@ nsCoreUtils::GetSensibleColumnAt(nsITreeBoxObject *aTree, uint32_t aIndex)
   return nullptr;
 }
 
-already_AddRefed<nsITreeColumn>
-nsCoreUtils::GetNextSensibleColumn(nsITreeColumn *aColumn)
+already_AddRefed<nsTreeColumn>
+nsCoreUtils::GetNextSensibleColumn(nsTreeColumn* aColumn)
 {
-  nsCOMPtr<nsITreeColumn> nextColumn;
-  aColumn->GetNext(getter_AddRefs(nextColumn));
+  RefPtr<nsTreeColumn> nextColumn = aColumn->GetNext();
 
   while (nextColumn && IsColumnHidden(nextColumn)) {
-    nsCOMPtr<nsITreeColumn> tempColumn;
-    nextColumn->GetNext(getter_AddRefs(tempColumn));
-    nextColumn.swap(tempColumn);
+    nextColumn = nextColumn->GetNext();
   }
 
   return nextColumn.forget();
 }
 
-already_AddRefed<nsITreeColumn>
-nsCoreUtils::GetPreviousSensibleColumn(nsITreeColumn *aColumn)
+already_AddRefed<nsTreeColumn>
+nsCoreUtils::GetPreviousSensibleColumn(nsTreeColumn* aColumn)
 {
-  nsCOMPtr<nsITreeColumn> prevColumn;
-  aColumn->GetPrevious(getter_AddRefs(prevColumn));
+  RefPtr<nsTreeColumn> prevColumn = aColumn->GetPrevious();
 
   while (prevColumn && IsColumnHidden(prevColumn)) {
-    nsCOMPtr<nsITreeColumn> tempColumn;
-    prevColumn->GetPrevious(getter_AddRefs(tempColumn));
-    prevColumn.swap(tempColumn);
+    prevColumn = prevColumn->GetPrevious();
   }
 
   return prevColumn.forget();
 }
 
 bool
-nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
+nsCoreUtils::IsColumnHidden(nsTreeColumn* aColumn)
 {
-  RefPtr<Element> element;
-  aColumn->GetElement(getter_AddRefs(element));
+  Element* element = aColumn->Element();
   return element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                               nsGkAtoms::_true, eCaseMatters);
 }
