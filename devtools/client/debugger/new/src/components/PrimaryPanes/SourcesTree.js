@@ -160,21 +160,12 @@ class SourcesTree extends _react.Component {
     const {
       projectRoot
     } = this.props;
-    const {
-      sourceTree
-    } = this.state;
 
     if (!projectRoot) {
       return null;
     }
 
-    const sourceContents = sourceTree.contents[0];
-    let rootLabel = projectRoot.split("/").pop();
-
-    if (sourceContents && sourceContents.name !== rootLabel) {
-      rootLabel = sourceContents.contents[0].name;
-    }
-
+    const rootLabel = projectRoot.split("/").pop();
     return _react2.default.createElement("div", {
       key: "root",
       className: "sources-clear-root-container"
@@ -452,7 +443,7 @@ const mapStateToProps = state => {
     debuggeeUrl: (0, _selectors.getDebuggeeUrl)(state),
     expanded: (0, _selectors.getExpandedState)(state),
     projectRoot: (0, _selectors.getProjectDirectoryRoot)(state),
-    sources: (0, _selectors.getSources)(state)
+    sources: (0, _selectors.getRelativeSources)(state)
   };
 };
 
