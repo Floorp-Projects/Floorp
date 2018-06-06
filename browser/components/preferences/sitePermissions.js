@@ -107,6 +107,10 @@ var gSitePermissionsManager = {
       this._checkbox.checked = false;
     }
 
+    if (Services.prefs.prefIsLocked(this._defaultPermissionStatePrefName)) {
+      this._checkbox.disabled = true;
+    }
+
     this._loadPermissions();
     await this.buildPermissionsList();
 
