@@ -92,15 +92,15 @@ public:
   int32_t PageLength() const { return mPageLength; }
   nsresult EnsureRowIsVisible(int32_t aRow);
   nsresult EnsureCellIsVisible(int32_t aRow, nsTreeColumn *aCol);
-  nsresult ScrollToRow(int32_t aRow);
-  nsresult ScrollByLines(int32_t aNumLines);
-  nsresult ScrollByPages(int32_t aNumPages);
+  void ScrollToRow(int32_t aRow);
+  void ScrollByLines(int32_t aNumLines);
+  void ScrollByPages(int32_t aNumPages);
   nsresult Invalidate();
   nsresult InvalidateColumn(nsTreeColumn *aCol);
   nsresult InvalidateRow(int32_t aRow);
   nsresult InvalidateCell(int32_t aRow, nsTreeColumn *aCol);
   nsresult InvalidateRange(int32_t aStart, int32_t aEnd);
-  nsresult GetRowAt(int32_t aX, int32_t aY, int32_t *aValue);
+  int32_t GetRowAt(int32_t aX, int32_t aY);
   nsresult GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
                      nsTreeColumn **aCol, nsACString &aChildElt);
   nsresult GetCoordsForCellItem(int32_t aRow, nsTreeColumn *aCol,
@@ -112,7 +112,7 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
-  nsresult RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol);
+  void RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol);
 
   void CancelImageRequests();
 
@@ -290,7 +290,7 @@ protected:
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.
-  int32_t GetRowAt(nscoord aX, nscoord aY);
+  int32_t GetRowAtInternal(nscoord aX, nscoord aY);
 
   // Check for bidi characters in the text, and if there are any, ensure
   // that the prescontext is in bidi mode.

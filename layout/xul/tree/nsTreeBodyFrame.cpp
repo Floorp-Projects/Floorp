@@ -591,6 +591,8 @@ nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
   mView->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_TRUE(selection, NS_OK);
 
+  // XXXbz should we just construct as |new ScriptableRegion()|
+  // instead, and make this method return void?
   nsCOMPtr<nsIScriptableRegion> region = do_CreateInstance("@mozilla.org/gfx/region;1");
   NS_ENSURE_TRUE(region, NS_ERROR_FAILURE);
   region->Init();
@@ -977,23 +979,21 @@ nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(int32_t aX, int32_t aY)
   return point;
 } // AdjustClientCoordsToBoxCoordSpace
 
-nsresult
-nsTreeBodyFrame::GetRowAt(int32_t aX, int32_t aY, int32_t* _retval)
+int32_t
+nsTreeBodyFrame::GetRowAt(int32_t aX, int32_t aY)
 {
-  if (!mView)
-    return NS_OK;
+  if (!mView) {
+    return 0;
+  }
 
   nsPoint point = AdjustClientCoordsToBoxCoordSpace(aX, aY);
 
   // Check if the coordinates are above our visible space.
   if (point.y < 0) {
-    *_retval = -1;
-    return NS_OK;
+    return -1;
   }
 
-  *_retval = GetRowAt(point.x, point.y);
-
-  return NS_OK;
+  return GetRowAtInternal(point.x, point.y);
 }
 
 nsresult
@@ -1241,7 +1241,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol, const ns
 }
 
 int32_t
-nsTreeBodyFrame::GetRowAt(int32_t aX, int32_t aY)
+nsTreeBodyFrame::GetRowAtInternal(nscoord aX, nscoord aY)
 {
   if (mRowHeight <= 0)
     return -1;
@@ -1598,7 +1598,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, int32_t* aRow,
   *aCol = nullptr;
   *aChildElt = nullptr;
 
-  *aRow = GetRowAt(aX, aY);
+  *aRow = GetRowAtInternal(aX, aY);
   if (*aRow < 0)
     return;
 
@@ -2514,7 +2514,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
     int32_t xTwips = pt.x - mInnerBox.x;
     int32_t yTwips = pt.y - mInnerBox.y;
-    int32_t newrow = GetRowAt(xTwips, yTwips);
+    int32_t newrow = GetRowAtInternal(xTwips, yTwips);
     if (mMouseOverRow != newrow) {
       // redraw the old and the new row
       if (mMouseOverRow != -1)
@@ -4058,13 +4058,12 @@ nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol)
   return rv;
 }
 
-nsresult
+void
 nsTreeBodyFrame::ScrollToRow(int32_t aRow)
 {
   ScrollParts parts = GetScrollParts();
   ScrollToRowInternal(parts, aRow);
   UpdateScrollbars(parts);
-  return NS_OK;
 }
 
 nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, int32_t aRow)
@@ -4074,26 +4073,24 @@ nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, int32_t
   return NS_OK;
 }
 
-nsresult
+void
 nsTreeBodyFrame::ScrollByLines(int32_t aNumLines)
 {
   if (!mView) {
-    return NS_OK;
+    return;
   }
   int32_t newIndex = mTopRowIndex + aNumLines;
   ScrollToRow(newIndex);
-  return NS_OK;
 }
 
-nsresult
+void
 nsTreeBodyFrame::ScrollByPages(int32_t aNumPages)
 {
   if (!mView) {
-    return NS_OK;
+    return;
   }
   int32_t newIndex = mTopRowIndex + aNumPages * mPageLength;
   ScrollToRow(newIndex);
-  return NS_OK;
 }
 
 nsresult
@@ -4276,7 +4273,7 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   return NS_OK;
 }
 
-nsresult
+void
 nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
 {
   nsAutoString imageSrc;
@@ -4289,7 +4286,6 @@ nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
       mImageCache.Remove(imageSrc);
     }
   }
-  return NS_OK;
 }
 
 /* virtual */ void
@@ -4374,7 +4370,7 @@ nsTreeBodyFrame::ComputeDropPosition(WidgetGUIEvent* aEvent,
   int32_t xTwips = pt.x - mInnerBox.x;
   int32_t yTwips = pt.y - mInnerBox.y;
 
-  *aRow = GetRowAt(xTwips, yTwips);
+  *aRow = GetRowAtInternal(xTwips, yTwips);
   if (*aRow >=0) {
     // Compute the top/bottom of the row in question.
     int32_t yOffset = yTwips - mRowHeight * (*aRow - mTopRowIndex);

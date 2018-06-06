@@ -314,20 +314,16 @@ int32_t TreeBoxObject::GetPageLength()
   return 0;
 }
 
-NS_IMETHODIMP TreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
-{
-  *aRegion = nullptr;
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->GetSelectionRegion(aRegion);
-  return NS_OK;
-}
-
 already_AddRefed<nsIScriptableRegion>
 TreeBoxObject::SelectionRegion()
 {
+  nsTreeBodyFrame* body = GetTreeBodyFrame();
+  if (!body) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIScriptableRegion> region;
-  GetSelectionRegion(getter_AddRefs(region));
+  body->GetSelectionRegion(getter_AddRefs(region));
   return region.forget();
 }
 
@@ -340,40 +336,45 @@ TreeBoxObject::EnsureRowIsVisible(int32_t aRow)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TreeBoxObject::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol)
+void
+TreeBoxObject::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol, ErrorResult& aRv)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->EnsureCellIsVisible(aRow, aCol);
-  return NS_OK;
+  if (body) {
+    nsresult rv = body->EnsureCellIsVisible(aRow, aCol);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+    }
+  }
 }
 
-NS_IMETHODIMP
+void
 TreeBoxObject::ScrollToRow(int32_t aRow)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame(true);
-  if (body)
-    return body->ScrollToRow(aRow);
-  return NS_OK;
+  if (!body) {
+    return;
+  }
+    
+  body->ScrollToRow(aRow);
 }
 
-NS_IMETHODIMP
+void
 TreeBoxObject::ScrollByLines(int32_t aNumLines)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->ScrollByLines(aNumLines);
-  return NS_OK;
+  if (!body) {
+    return;
+  }
+  body->ScrollByLines(aNumLines);
 }
 
-NS_IMETHODIMP
+void
 TreeBoxObject::ScrollByPages(int32_t aNumPages)
 {
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
-    return body->ScrollByPages(aNumPages);
-  return NS_OK;
+    body->ScrollByPages(aNumPages);
 }
 
 NS_IMETHODIMP TreeBoxObject::Invalidate()
@@ -420,22 +421,14 @@ TreeBoxObject::InvalidateRange(int32_t aStart, int32_t aEnd)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TreeBoxObject::GetRowAt(int32_t x, int32_t y, int32_t *aRow)
-{
-  *aRow = 0;
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (body)
-    return body->GetRowAt(x, y, aRow);
-  return NS_OK;
-}
-
 int32_t
 TreeBoxObject::GetRowAt(int32_t x, int32_t y)
 {
-  int32_t row;
-  GetRowAt(x, y, &row);
-  return row;
+  nsTreeBodyFrame* body = GetTreeBodyFrame();
+  if (!body) {
+    return 0;
+  }
+  return body->GetRowAt(x, y);
 }
 
 NS_IMETHODIMP
@@ -603,22 +596,17 @@ TreeBoxObject::ClearStyleAndImageCaches()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
+void
+TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn& aCol, ErrorResult& aRv)
 {
-  NS_ENSURE_ARG(aCol);
-  NS_ENSURE_TRUE(aRowIndex >= 0, NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(aRowIndex < 0)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body) {
-    return body->RemoveImageCacheEntry(aRowIndex, aCol);
+    body->RemoveImageCacheEntry(aRowIndex, &aCol);
   }
-  return NS_OK;
-}
-
-void
-TreeBoxObject::RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv)
-{
-  aRv = RemoveImageCacheEntry(row, &col);
 }
 
 void

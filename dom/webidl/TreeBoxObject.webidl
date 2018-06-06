@@ -83,6 +83,7 @@ interface TreeBoxObject : BoxObject {
   /**
    * Ensures that a given cell in the tree is visible.
    */
+  [Throws]
   void ensureCellIsVisible(long row, TreeColumn? col);
 
   /**
