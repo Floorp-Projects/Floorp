@@ -107,7 +107,6 @@ var ContentSearch = {
 
   init() {
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    Services.obs.addObserver(this, "browser-search-service");
     Services.obs.addObserver(this, "shutdown-leaks-before-check");
     Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
     this._stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
@@ -134,7 +133,6 @@ var ContentSearch = {
     }
 
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    Services.obs.removeObserver(this, "browser-search-service");
     Services.obs.removeObserver(this, "shutdown-leaks-before-check");
 
     this._eventQueue.length = 0;
@@ -186,10 +184,6 @@ var ContentSearch = {
 
   observe(subj, topic, data) {
     switch (topic) {
-    case "browser-search-service":
-      if (data != "init-complete") {
-        break;
-      }
     case "nsPref:changed":
     case "browser-search-engine-modified":
       this._eventQueue.push({

@@ -178,16 +178,8 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
-    if (image && image->GetURI()) {
-      RefPtr<ImageURL> uri(image->GetURI());
-      nsAutoCString spec;
-      uri->GetSpec(spec);
-      LOG_FUNC_WITH_PARAM(gImgLog,
-                          "ProgressTracker::Notify async", "uri", spec.get());
-    } else {
-      LOG_FUNC_WITH_PARAM(gImgLog,
-                          "ProgressTracker::Notify async", "uri", "<unknown>");
-    }
+    LOG_FUNC_WITH_PARAM(gImgLog,
+                        "ProgressTracker::Notify async", "uri", image);
   }
 
   aObserver->MarkPendingNotify();
@@ -253,12 +245,8 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
-    nsAutoCString spec;
-    if (image && image->GetURI()) {
-      image->GetURI()->GetSpec(spec);
-    }
     LOG_FUNC_WITH_PARAM(gImgLog,
-                        "ProgressTracker::NotifyCurrentState", "uri", spec.get());
+                        "ProgressTracker::NotifyCurrentState", "uri", image);
   }
 
   aObserver->MarkPendingNotify();
@@ -401,13 +389,8 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Image> image = GetImage();
-
-  nsAutoCString spec;
-  if (image && image->GetURI()) {
-    image->GetURI()->GetSpec(spec);
-  }
   LOG_SCOPE_WITH_PARAM(gImgLog,
-                       "ProgressTracker::SyncNotify", "uri", spec.get());
+                       "ProgressTracker::SyncNotify", "uri", image);
 
   nsIntRect rect;
   if (image) {
@@ -596,11 +579,7 @@ ProgressTracker::FireFailureNotification()
   RefPtr<Image> image = GetImage();
   if (image) {
     // Should be on main thread, so ok to create a new nsIURI.
-    nsCOMPtr<nsIURI> uri;
-    {
-      RefPtr<ImageURL> threadsafeUriData = image->GetURI();
-      uri = threadsafeUriData ? threadsafeUriData->ToIURI() : nullptr;
-    }
+    nsCOMPtr<nsIURI> uri = image->GetURI();
     if (uri) {
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {

@@ -12,12 +12,12 @@
 #include "nsStringFwd.h"
 
 class nsIRequest;
+class nsIURI;
 
 namespace mozilla {
 namespace image {
 
 class Image;
-class ImageURL;
 class MultipartImage;
 class ProgressTracker;
 
@@ -43,7 +43,7 @@ public:
   static already_AddRefed<Image> CreateImage(nsIRequest* aRequest,
                                              ProgressTracker* aProgressTracker,
                                              const nsCString& aMimeType,
-                                             ImageURL* aURI,
+                                             nsIURI* aURI,
                                              bool aIsMultiPart,
                                              uint32_t aInnerWindowId);
   /**
@@ -74,7 +74,7 @@ private:
   CreateRasterImage(nsIRequest* aRequest,
                     ProgressTracker* aProgressTracker,
                     const nsCString& aMimeType,
-                    ImageURL* aURI,
+                    nsIURI* aURI,
                     uint32_t aImageFlags,
                     uint32_t aInnerWindowId);
 
@@ -82,7 +82,7 @@ private:
   CreateVectorImage(nsIRequest* aRequest,
                     ProgressTracker* aProgressTracker,
                     const nsCString& aMimeType,
-                    ImageURL* aURI,
+                    nsIURI* aURI,
                     uint32_t aImageFlags,
                     uint32_t aInnerWindowId);
 
