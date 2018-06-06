@@ -1,4 +1,3 @@
-const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
 var tagData = [
@@ -105,8 +104,6 @@ async function testMenuBookmarks() {
   let bookmarkNode = folderNode.getChild(0);
   Assert.equal("http://test/post", bookmarkNode.uri);
   Assert.equal("test post keyword", bookmarkNode.title);
-  Assert.ok(PlacesUtils.annotations.itemHasAnnotation(bookmarkNode.itemId,
-                                                      LOAD_IN_SIDEBAR_ANNO));
   Assert.equal(bookmarkNode.dateAdded, 1177375336000000);
 
   let entry = await PlacesUtils.keywords.fetch({ url: bookmarkNode.uri });

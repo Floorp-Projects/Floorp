@@ -10,8 +10,6 @@
  *     - "add" - for adding a new item.
  *       @ type (String). Possible values:
  *         - "bookmark"
- *           @ loadBookmarkInSidebar - optional, the default state for the
- *             "Load this bookmark in the sidebar" field.
  *         - "folder"
  *           @ URIList (Array of nsIURI objects) - optional, list of uris to
  *             be bookmarked under the new folder.
@@ -47,7 +45,6 @@
  *     - "location"
  *     - "keyword"
  *     - "tags"
- *     - "loadInSidebar"
  *     - "folderPicker" - hides both the tree and the menu.
  *
  * window.arguments[0].bookmarkGuid is set to the guid of the item, if the
@@ -84,7 +81,6 @@ var BookmarkPropertiesPanel = {
   _action: null,
   _itemType: null,
   _uri: null,
-  _loadInSidebar: false,
   _title: "",
   _URIs: [],
   _keyword: "",
@@ -108,7 +104,7 @@ var BookmarkPropertiesPanel = {
       if (this._itemType == LIVEMARK_CONTAINER)
         return this._strings.getString("dialogAcceptLabelAddLivemark");
 
-      if (this._dummyItem || this._loadInSidebar)
+      if (this._dummyItem)
         return this._strings.getString("dialogAcceptLabelAddItem");
 
       return this._strings.getString("dialogAcceptLabelSaveItem");
@@ -181,9 +177,6 @@ var BookmarkPropertiesPanel = {
             this._title = this._strings.getString("newBookmarkDefault");
             this._dummyItem = true;
           }
-
-          if ("loadBookmarkInSidebar" in dialogInfo)
-            this._loadInSidebar = dialogInfo.loadBookmarkInSidebar;
 
           if ("keyword" in dialogInfo) {
             this._keyword = dialogInfo.keyword;
@@ -453,14 +446,9 @@ var BookmarkPropertiesPanel = {
 
   async _promiseNewItem() {
     let [containerId, index, parentGuid] = await this._getInsertionPointDetails();
-    let annotations = [];
-    if (this._loadInSidebar) {
-      annotations.push({ name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
-                         value: true });
-    }
 
     let itemGuid;
-    let info = { parentGuid, index, title: this._title, annotations };
+    let info = { parentGuid, index, title: this._title };
     if (this._itemType == BOOKMARK_ITEM) {
       info.url = this._uri;
       if (this._keyword)
