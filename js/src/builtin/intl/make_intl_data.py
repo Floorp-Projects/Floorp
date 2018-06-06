@@ -231,7 +231,8 @@ def writeMappingsVar(println, mapping, name, description, fileDate, url):
     println(u"};")
 
 
-def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMappings, description, fileDate, url):
+def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMappings,
+                          description, fileDate, url):
     """ Writes a function definition which performs language tag mapping.
 
         Processes the contents of dictionaries |variantMappings| and
@@ -270,7 +271,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
                 kind = Subtag.Variant
 
             else:
-                assert False, "unexpected language tag '{}'".format(key)
+                assert False, "unexpected language tag '{}'".format(subtag)
 
             yield (kind, subtag)
 
@@ -316,10 +317,11 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
                 assert kind == Subtag.Variant
                 if lastVariant is None:
                     cond.append("tag.variants.length >= {}".format(len(variants(tag))))
-                    cond.append('callFunction(ArrayIndexOf, tag.variants, "{}") > -1'.format(subtag))
+                    cond.append('callFunction(ArrayIndexOf, tag.variants, "{}") > -1'.format(
+                        subtag))
                 else:
                     cond.append(
-                        'callFunction(ArrayIndexOf, tag.variants, "{}", callFunction(ArrayIndexOf, tag.variants, "{}") + 1) > -1'.format(subtag, lastVariant))
+                        'callFunction(ArrayIndexOf, tag.variants, "{}", callFunction(ArrayIndexOf, tag.variants, "{}") + 1) > -1'.format(subtag, lastVariant))  # NOQA: E501
                 lastVariant = subtag
 
         # Require exact matches for redundant language tags.
@@ -434,7 +436,8 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
 
             # Add the new variants, unless already present.
             while preferred_kind == Subtag.Variant:
-                println3(u'if (callFunction(ArrayIndexOf, newVariants, "{}") < 0)'.format(preferred_subtag))
+                println3(u'if (callFunction(ArrayIndexOf, newVariants, "{}") < 0)'.format(
+                    preferred_subtag))
                 println3(u'    _DefineDataProperty(newVariants, newVariants.length, "{}");'.format(
                     preferred_subtag))
                 (preferred_kind, preferred_subtag) = preferred_next()
@@ -477,7 +480,8 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
         # mapping table contains an equivalent entry and any trailing elements,
         # if present, are the same.
         return (tag_kind == Subtag.ExtLang and
-                (tag_extlang, {"preferred": preferred_lang, "prefix": tag_lang}) in extlangMappings.items() and
+                (tag_extlang, {"preferred": preferred_lang, "prefix": tag_lang}) in
+                extlangMappings.items() and
                 list(tag_it) == list(preferred_it))
 
     # Create a single mapping for variant and redundant tags, ignoring the
@@ -662,7 +666,8 @@ def partition(iterable, *predicates):
 def listIANAFiles(tzdataDir):
     def isTzFile(d, m, f):
         return m(f) and d.isfile(d.resolve(f))
-    return filter(partial(isTzFile, tzdataDir, re.compile("^[a-z0-9]+$").match), tzdataDir.listdir())
+    return filter(partial(isTzFile, tzdataDir, re.compile("^[a-z0-9]+$").match),
+                  tzdataDir.listdir())
 
 
 def readIANAFiles(tzdataDir, files):
@@ -901,8 +906,8 @@ def readICUTimeZones(icuDir, icuTzDir, ignoreFactory):
     # Remove legacy ICU time zones from zoneinfo64 data.
     (legacyZones, legacyLinks) = readICULegacyZones(icuDir)
     zoneinfoZones = {zone for zone in zoneinfoZones if zone not in legacyZones}
-    zoneinfoLinks = {zone: target for (
-        zone, target) in zoneinfoLinks.items() if zone not in legacyLinks}
+    zoneinfoLinks = {zone: target for (zone, target) in zoneinfoLinks.items()
+                     if zone not in legacyLinks}
 
     notFoundInZoneInfo64 = [zone for zone in typesZones if not inZoneInfo64(zone)]
     if notFoundInZoneInfo64:
@@ -1022,8 +1027,8 @@ def findIncorrectICULinks(ianaZones, ianaLinks, icuZones, icuLinks):
 
     result = chain(
         # IANA links which have a different target in ICU.
-        ((zone, target, icuLinks[zone]) for (zone, target)
-         in ianaLinks.items() if isICULink(zone) and target != icuLinks[zone]),
+        ((zone, target, icuLinks[zone]) for (zone, target) in ianaLinks.items()
+         if isICULink(zone) and target != icuLinks[zone]),
 
         # IANA links which are zones in ICU.
         ((zone, target, zone.name) for (zone, target) in ianaLinks.items() if isICUZone(zone))
@@ -1100,7 +1105,7 @@ def processTimeZones(tzdataDir, icuDir, icuTzDir, version, ignoreBackzone, ignor
 
         println(u"// Legacy ICU time zones, these are not valid IANA time zone names. We also")
         println(u"// disallow the old and deprecated System V time zones.")
-        println(u"// https://ssl.icu-project.org/repos/icu/trunk/icu4c/source/tools/tzcode/icuzones")
+        println(u"// https://ssl.icu-project.org/repos/icu/trunk/icu4c/source/tools/tzcode/icuzones")  # NOQA: E501
         println(u"const char* const legacyICUTimeZones[] = {")
         for zone in chain(sorted(legacyLinks.keys()), sorted(legacyZones)):
             println(u'    "%s",' % zone)
@@ -1411,7 +1416,8 @@ def updateCurrency(topsrcdir, args):
         print("Downloading currency & funds code list...")
         request = UrlRequest(url)
         request.add_header(
-            "User-agent", "Mozilla/5.0 (Mobile; rv:{0}.0) Gecko/{0}.0 Firefox/{0}.0".format(randint(1, 999)))
+            "User-agent", "Mozilla/5.0 (Mobile; rv:{0}.0) Gecko/{0}.0 Firefox/{0}.0".format(
+                randint(1, 999)))
         with closing(urlopen(request)) as currencyFile:
             fname = urlsplit(currencyFile.geturl()).path.split("/")[-1]
             with tempfile.NamedTemporaryFile(suffix=fname) as currencyTmpFile:
@@ -1445,7 +1451,8 @@ if __name__ == "__main__":
                              metavar="URL",
                              default="https://www.iana.org/assignments/language-subtag-registry",
                              type=EnsureHttps,
-                             help="Download url for language-subtag-registry.txt (default: %(default)s)")
+                             help="Download url for language-subtag-registry.txt "
+                             "(default: %(default)s)")
     parser_tags.add_argument("--out",
                              default="LangTagMappingsGenerated.js",
                              help="Output file (default: %(default)s)")
@@ -1475,7 +1482,7 @@ if __name__ == "__main__":
     parser_currency = subparsers.add_parser("currency", help="Update currency digits mapping")
     parser_currency.add_argument("--url",
                                  metavar="URL",
-                                 default="https://www.currency-iso.org/dam/downloads/lists/list_one.xml",
+                                 default="https://www.currency-iso.org/dam/downloads/lists/list_one.xml",  # NOQA: E501
                                  type=EnsureHttps,
                                  help="Download url for the currency & funds code list (default: "
                                       "%(default)s)")

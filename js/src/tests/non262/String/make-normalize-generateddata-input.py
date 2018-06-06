@@ -37,7 +37,7 @@ def convert(dir):
                     if not_empty:
                         outf.write(',')
                     outf.write('\n')
-                    pat = '{{ source: {source}, NFC: {NFC}, NFD: {NFD}, NFKC: {NFKC}, NFKD: {NFKD} }}'
+                    pat = '{{ source: {source}, NFC: {NFC}, NFD: {NFD}, NFKC: {NFKC}, NFKD: {NFKD} }}'  # NOQA: E501
                     outf.write(pat.format(source=to_code_list(m.group(1)),
                                           NFC=to_code_list(m.group(2)),
                                           NFD=to_code_list(m.group(3)),
@@ -71,6 +71,7 @@ def convert(dir):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: make-normalize-generateddata-input.py PATH_TO_MOZILLA_CENTRAL", file=sys.stderr)
+        print("Usage: make-normalize-generateddata-input.py PATH_TO_MOZILLA_CENTRAL",
+              file=sys.stderr)
         sys.exit(1)
     convert(sys.argv[1])

@@ -2,7 +2,7 @@
 
 import gdb
 import mozilla.prettyprinters
-from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
+from mozilla.prettyprinters import ptr_pretty_printer
 
 try:
     chr(10000)  # UPPER RIGHT PENCIL
@@ -12,10 +12,9 @@ except ValueError as exc:  # yuck, we are in Python 2.x, so chr() is 8-bit
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
 
-# Cache information about the JSString type for this objfile.
-
 
 class JSStringTypeCache(object):
+    # Cache information about the JSString type for this objfile.
     def __init__(self, cache):
         dummy = gdb.Value(0).cast(cache.JSString_ptr_t)
         self.NON_ATOM_BIT = dummy['NON_ATOM_BIT']

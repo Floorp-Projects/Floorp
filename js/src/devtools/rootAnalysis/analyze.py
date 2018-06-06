@@ -22,7 +22,7 @@ anystring_t = str if sys.version_info[0] > 2 else basestring
 
 try:
     execfile
-except:
+except Exception:
     def execfile(thefile, globals):
         exec(compile(open(thefile).read(), filename=thefile, mode="exec"), globals)
 
@@ -30,7 +30,8 @@ except:
 def env(config):
     e = dict(os.environ)
     e['PATH'] = ':'.join(p for p in (config.get('gcc_bin'),
-                                     config.get('sixgill_bin'), e['PATH']) if p)
+                                     config.get('sixgill_bin'),
+                                     e['PATH']) if p)
     e['XDB'] = '%(sixgill_bin)s/xdb.so' % config
     e['SOURCE'] = config['source']
     e['ANALYZED_OBJDIR'] = config['objdir']
@@ -42,13 +43,13 @@ def env(config):
 def fill(command, config):
     try:
         return tuple(s % config for s in command)
-    except:
+    except Exception:
         print("Substitution failed:")
         problems = []
         for fragment in command:
             try:
                 fragment % config
-            except:
+            except Exception:
                 problems.append(fragment)
         raise Exception("\n".join(["Substitution failed:"] + ["  %s" % s for s in problems]))
 
@@ -241,7 +242,8 @@ parser.add_argument('--buildcommand', '--build', '-b', type=str, nargs='?',
 parser.add_argument('--tag', '-t', type=str, nargs='?',
                     help='name of job, also sets build command to "build.<tag>"')
 parser.add_argument('--expect-file', type=str, nargs='?',
-                    help='deprecated option, temporarily still present for backwards compatibility')
+                    help='deprecated option, temporarily still present for backwards '
+                    'compatibility')
 parser.add_argument('--verbose', '-v', action='count', default=1,
                     help='Display cut & paste commands to run individual steps')
 parser.add_argument('--quiet', '-q', action='count', default=0,
@@ -255,7 +257,7 @@ for default in defaults:
         execfile(default, config)
         if args.verbose:
             print("Loaded %s" % default)
-    except:
+    except Exception:
         pass
 
 data = config.copy()
@@ -288,7 +290,8 @@ if 'SOURCE' in os.environ:
 if data.get('sixgill_bin'):
     if not data.get('source'):
         path = subprocess.check_output(
-            ['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp']).decode()
+            ['sh', '-c',
+             data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp']).decode()
         data['source'] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
     if not data.get('objdir'):
         path = subprocess.check_output(
@@ -322,7 +325,7 @@ for step in steps:
         for (i, name) in out_indexes(command):
             data[name] = outfiles[outfile]
             outfile += 1
-        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files (%d) and params (%d)' % (
+        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files (%d) and params (%d)' % (  # NOQA: E501
             step, outfile, len(outfiles))
 
 if args.step:

@@ -7,16 +7,11 @@
 
 from __future__ import print_function
 
-import contextlib
 import os
 import re
-import tempfile
 import shutil
 import sys
 import yaml
-
-from functools import partial
-from itertools import chain, imap
 
 # Skip all common files used to support tests for jstests
 # These files are listed in the README.txt
@@ -430,9 +425,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Export tests to match Test262 file compliance.")
     parser.add_argument("--out", default="test262/export",
-                        help="Output directory. Any existing directory will be removed! (default: %(default)s)")
+                        help="Output directory. Any existing directory will be removed! "
+                        "(default: %(default)s)")
     parser.add_argument("--exportshellincludes", action="store_true",
-                        help="Optionally export shell.js files as includes in exported tests. Only use for testing, do not use for exporting to test262 (test262 tests should have as few dependencies as possible).")
+                        help="Optionally export shell.js files as includes in exported tests. "
+                        "Only use for testing, do not use for exporting to test262 (test262 tests "
+                        "should have as few dependencies as possible).")
     parser.add_argument("src", nargs="+", help="Source folder with test files to export")
     parser.set_defaults(func=exportTest262)
     args = parser.parse_args()

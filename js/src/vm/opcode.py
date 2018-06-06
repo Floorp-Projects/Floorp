@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 import re
-import sys
 from xml.sax.saxutils import escape
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")

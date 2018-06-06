@@ -114,27 +114,40 @@ class JitTest:
         # Path relative to mozilla/js/src/jit-test/tests/.
         self.relpath_tests = os.path.relpath(path, TEST_DIR)
 
-        self.jitflags = []     # jit flags to enable
-        self.slow = False      # True means the test is slow-running
-        self.allow_oom = False  # True means that OOM is not considered a failure
-        self.allow_unhandlable_oom = False  # True means CrashAtUnhandlableOOM
-        # is not considered a failure
-        self.allow_overrecursed = False  # True means that hitting recursion the
-        # limits is not considered a failure.
-        self.valgrind = False  # True means run under valgrind
-        self.tz_pacific = False  # True means force Pacific time for the test
-        self.test_also_noasmjs = False  # True means run with and without asm.js
+        # jit flags to enable
+        self.jitflags = []
+        # True means the test is slow-running
+        self.slow = False
+        # True means that OOM is not considered a failure
+        self.allow_oom = False
+        # True means CrashAtUnhandlableOOM is not considered a failure
+        self.allow_unhandlable_oom = False
+        # True means that hitting recursion the limits is not considered a failure.
+        self.allow_overrecursed = False
+        # True means run under valgrind
+        self.valgrind = False
+        # True means force Pacific time for the test
+        self.tz_pacific = False
+        # True means run with and without asm.js
+        self.test_also_noasmjs = False
         # enabled.
-        self.test_also_wasm_baseline = False  # True means run with and and without
-        # wasm baseline compiler enabled.
-        self.other_includes = []  # Additional files to include, in addition to prologue.js
-        self.test_also = []  # List of other configurations to test with.
-        self.test_join = []  # List of other configurations to test with all existing variants.
-        self.expect_error = ''  # Errors to expect and consider passing
-        self.expect_status = 0  # Exit status to expect from shell
-        self.expect_crash = False  # Exit status or error output.
+        # True means run with and and without wasm baseline compiler enabled.
+        self.test_also_wasm_baseline = False
+        # Additional files to include, in addition to prologue.js
+        self.other_includes = []
+        # List of other configurations to test with.
+        self.test_also = []
+        # List of other configurations to test with all existing variants.
+        self.test_join = []
+        # Errors to expect and consider passing
+        self.expect_error = ''
+        # Exit status to expect from shell
+        self.expect_status = 0
+        # Exit status or error output.
+        self.expect_crash = False
         self.is_module = False
-        self.test_reflect_stringify = None  # Reflect.stringify implementation to test
+        # Reflect.stringify implementation to test
+        self.test_reflect_stringify = None
 
         # Expected by the test runner. Always true for jit-tests.
         self.enable = True
@@ -783,7 +796,7 @@ def platform_might_be_android():
         # If that module is present, we're likely in SL4A-python on
         # device.  False positives and negatives are possible,
         # however.
-        import android
+        import android  # NOQA: F401
         return True
     except ImportError:
         return False

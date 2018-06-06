@@ -12,6 +12,7 @@
 #
 # This test ensures that the JS::Rooted pretty-printer doesn't make that
 # mistake.
+# flake8: noqa: F821
 
 gdb.execute('set print address on')
 

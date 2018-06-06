@@ -57,12 +57,11 @@ class jsid(object):
             body = "<unrecognized>"
         return '$jsid(%s)' % (body,)
 
-# Hard-code the referent type pretty-printer for jsid roots and handles.
-# See the comment for mozilla.Root.Common.__init__.
-
 
 @pretty_printer('JS::Rooted<long>')
 def RootedJSID(value, cache):
+    # Hard-code the referent type pretty-printer for jsid roots and handles.
+    # See the comment for mozilla.Root.Common.__init__.
     return mozilla.Root.Rooted(value, cache, jsid)
 
 

@@ -1,5 +1,6 @@
+# flake8: noqa: F821
+
 import gdb
-import os
 import re
 import sys
 import traceback
@@ -40,7 +41,7 @@ actual:   %r""" % (expected, actual))
 
 
 def assert_match(actual, expected):
-    if re.match(expected, actual, re.MULTILINE) == None:
+    if re.match(expected, actual, re.MULTILINE) is None:
         raise AssertionError("""Unexpected result:
 expected pattern: %r
 actual:           %r""" % (expected, actual))
@@ -86,7 +87,7 @@ enable_bigint = False
 try:
     if gdb.lookup_type('JS::BigInt'):
         enable_bigint = True
-except:
+except Exception:
     pass
 
 # Request full stack traces for Python errors.

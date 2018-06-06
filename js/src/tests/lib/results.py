@@ -22,8 +22,8 @@ class TestOutput:
         self.err = err     # str:   stderr
         self.rc = rc       # int:   return code
         self.dt = dt       # float: run time
-        self.timed_out = timed_out # bool: did the test time out
-        self.extra = extra # includes the pid on some platforms
+        self.timed_out = timed_out  # bool: did the test time out
+        self.extra = extra  # includes the pid on some platforms
 
     def describe_failure(self):
         if self.timed_out:
@@ -97,7 +97,7 @@ class TestResult:
                 failures += 1
                 results.append((cls.FAIL, "Expected uncaught error: {}".format(test.error)))
 
-        if rc and not rc in expected_rcs:
+        if rc and rc not in expected_rcs:
             if rc == 3:
                 result = cls.FAIL
             else:
@@ -222,7 +222,10 @@ class ResultsSink:
                             label, result.test, time=output.dt,
                             message=msg)
                 tup = (result.result, result.test.expect, result.test.random)
-                self.print_automation_result(self.LABELS[tup][0], result.test, time=output.dt, extra=getattr(output, 'extra', None))
+                self.print_automation_result(self.LABELS[tup][0],
+                                             result.test,
+                                             time=output.dt,
+                                             extra=getattr(output, 'extra', None))
                 return
 
             if dev_label:
@@ -319,7 +322,7 @@ class ResultsSink:
         result += ' [{:.1f} s]'.format(time)
         print(result)
 
-        details = { 'extra': extra.copy() if extra else {} }
+        details = {'extra': extra.copy() if extra else {}}
         if self.options.shell_args:
             details['extra']['shell_args'] = self.options.shell_args
         details['extra']['jitflags'] = test.jitflags

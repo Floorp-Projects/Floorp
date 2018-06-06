@@ -9,14 +9,13 @@ import re
 # factory, taking both a gdb.Value instance and a TypeCache instance as
 # arguments; see TypeCache, below.
 
-# Check that |fn| hasn't been registered as a pretty-printer under some
-# other name already. (The 'enabled' flags used by GDB's
-# 'enable/disable/info pretty-printer' commands are simply stored as
-# properties of the function objects themselves, so a single function
-# object can't carry the 'enabled' flags for two different printers.)
-
 
 def check_for_reused_pretty_printer(fn):
+    # Check that |fn| hasn't been registered as a pretty-printer under some
+    # other name already. (The 'enabled' flags used by GDB's
+    # 'enable/disable/info pretty-printer' commands are simply stored as
+    # properties of the function objects themselves, so a single function
+    # object can't carry the 'enabled' flags for two different printers.)
     if hasattr(fn, 'enabled'):
         raise RuntimeError("pretty-printer function %r registered more than once" % fn)
 

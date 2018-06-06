@@ -7,10 +7,9 @@ prettyprinters.clear_module_printers(__name__)
 
 from mozilla.prettyprinters import pretty_printer
 
-# Cache information about the Interpreter types for this objfile.
-
 
 class InterpreterTypeCache(object):
+    # Cache information about the Interpreter types for this objfile.
     def __init__(self):
         self.tValue = gdb.lookup_type('JS::Value')
         self.tJSOp = gdb.lookup_type('JSOp')
@@ -40,7 +39,7 @@ class InterpreterRegs(object):
         pc = self.value['pc']
         try:
             opcode = pc.dereference().cast(self.itc.tJSOp)
-        except:
+        except Exception:
             opcode = 'bad pc'
         pc = 'pc = {} ({})'.format(pc.cast(self.cache.void_ptr_t), opcode)
         return '{{ {}, {}, {} }}'.format(fp_, sp, pc)

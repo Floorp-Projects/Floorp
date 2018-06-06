@@ -9,7 +9,6 @@ provided with SpiderMonkey.
 
 import gdb
 import os
-import io
 import subprocess
 import tempfile
 import time
@@ -122,7 +121,7 @@ class PngViewerBinParameter(gdb.Parameter):
         return "Path to a png viewer binary changed to: %s" % self.value
 
     def get_show_string(self):
-        return "Path to a png viewer binary set to: %s" % value
+        return "Path to a png viewer binary set to: %s" % self.value
 
     def __init__(self):
         super(PngViewerBinParameter, self).__init__(
@@ -201,7 +200,8 @@ class IonGraphCommand(gdb.Command):
         # start all processes in a shell-like equivalent of:
         #   iongraph < json | dot > tmp.png; xdg-open tmp.png
         i = subprocess.Popen([iongraph.value, '--funcnum', '0', '--passnum', '0',
-                              '--out-mir', '-', '-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                              '--out-mir', '-', '-'], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
         d = subprocess.Popen([dot.value, '-Tpng'], stdin=i.stdout, stdout=png)
 
         # Write the json file as the input of the iongraph command.
@@ -212,7 +212,7 @@ class IonGraphCommand(gdb.Command):
         # Wait for iongraph and dot, such that the png file contains all the
         # bits needed to by the png viewer.
         i.wait()
-        output = d.communicate()[0]
+        d.communicate()[0]
 
         # Spawn & detach the png viewer, to which we give the name of the
         # temporary file.  Note, as we do not want to wait on the image viewer,
@@ -220,7 +220,7 @@ class IonGraphCommand(gdb.Command):
         # would happen at the next garbage collection cycle, and the start of
         # the png viewer.  We could use a pipe, but unfortunately, this does not
         # seems to be supported by xdg-open.
-        v = subprocess.Popen([pngviewer.value, png.name], stdin=None, stdout=None)
+        subprocess.Popen([pngviewer.value, png.name], stdin=None, stdout=None)
         time.sleep(1)
 
 

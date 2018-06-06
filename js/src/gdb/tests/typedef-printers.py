@@ -1,5 +1,6 @@
 # Test that we can find pretty-printers for typedef names, not just for
 # struct types and templates.
+# flake8: noqa: F821
 
 import mozilla.prettyprinters
 

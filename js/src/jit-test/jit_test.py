@@ -272,9 +272,9 @@ def main(argv):
     if options.exclude_from:
         with open(options.exclude_from) as fh:
             for line in fh:
-                line = line.strip()
-                if not line.startswith("#") and len(line):
-                    options.exclude.append(line)
+                line_exclude = line.strip()
+                if not line_exclude.startswith("#") and len(line_exclude):
+                    options.exclude.append(line_exclude)
 
     if options.exclude:
         exclude_list = []
