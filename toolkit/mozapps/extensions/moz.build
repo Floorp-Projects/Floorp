@@ -25,6 +25,24 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'extensions'
 
+built_in_addons = 'built_in_addons.json'
+GENERATED_FILES += [built_in_addons]
+manifest = GENERATED_FILES[built_in_addons]
+manifest.script = 'gen_built_in_addons.py'
+
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    manifest.flags = ['--features=browser/features']
+
+    FINAL_TARGET_FILES.browser.chrome.browser.content.browser += [
+        '!%s' % built_in_addons,
+    ]
+elif CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
+    manifest.flags = ['--features=features']
+
+    FINAL_TARGET_FILES.chrome.chrome.content += [
+        '!%s' % built_in_addons,
+    ]
+
 EXTRA_COMPONENTS += [
     'addonManager.js',
     'amContentHandler.js',
