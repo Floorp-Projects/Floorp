@@ -8,6 +8,8 @@
      (potentially) of the push feature. -->
 #include GcmAndroidManifest_permissions.xml.in
 
+#include SamsungAppStoreManifest_permissions.xml.in
+
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
