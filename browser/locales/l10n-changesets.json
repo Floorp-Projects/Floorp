@@ -282,7 +282,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "86226e3844b6"
+        "revision": "854be781b82c"
     }, 
     "dsb": {
         "platforms": [
@@ -747,7 +747,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "141173523450"
+        "revision": "58132d496385"
     }, 
     "ja": {
         "platforms": [
