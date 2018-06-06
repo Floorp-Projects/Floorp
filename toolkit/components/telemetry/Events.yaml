@@ -148,6 +148,32 @@ savant:
     expiry_version: "65"
     extra_keys:
       subcategory: The broad event category for this probe. E.g. navigation
+  bookmark:
+    objects: ["save", "remove"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time a bookmark is saved or removed.
+    bug_numbers: [1457226, 1465703]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
+  follow_bookmark:
+    objects: ["open"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded any time a bookmark is visited.
+    bug_numbers: [1457226, 1465703]
+    notification_emails:
+      - "bdanforth@mozilla.com"
+      - "shong@mozilla.com"
+    expiry_version: "65"
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
