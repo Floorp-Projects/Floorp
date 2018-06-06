@@ -345,7 +345,7 @@ function isRootedGCPointerTypeName(name)
     if (name.startsWith('MaybeRooted<'))
         return /\(js::AllowGC\)1u>::RootType/.test(name);
 
-    return name.startsWith('Rooted') || name.startsWith('PersistentRooted');
+    return false;
 }
 
 function isUnsafeStorage(typeName)
