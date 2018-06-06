@@ -316,3 +316,71 @@ TEST_F(TelemetryTestFixture, ScalarEventSummary_Dynamic) {
   // which all end up in the same place.
   CheckKeyedUintScalar(kScalarName, kLongestEvent, cx.GetJSContext(), scalarsSnapshot, 2);
 }
+
+// Test that we can properly handle too long key.
+TEST_F(TelemetryTestFixture, TooLongKey) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       NS_LITERAL_STRING("1234567890123456789012345678901234567890123456789012345678901234567890morethanseventy"), kKey1Value);
+
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Check the too long key is not present.
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 0);
+}
+
+// Test that we can properly handle empty key
+TEST_F(TelemetryTestFixture, EmptyKey) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       NS_LITERAL_STRING(""), kKey1Value);
+
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Check the empty key is not present.
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 0);
+}
+
+// Test that we can properly handle too many keys
+TEST_F(TelemetryTestFixture, TooManyKeys) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  for (int i = 0; i < 150; i++) {
+    std::u16string key = u"key";
+    char16_t n = i + '0';
+    key.push_back(n);
+    Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                         nsString(key.c_str()), kKey1Value);
+  }
+
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Check 100 keys are present.
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 100);
+}
