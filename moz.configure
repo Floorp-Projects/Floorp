@@ -442,6 +442,15 @@ def tup_and_sccache(tup, using_sccache):
         die('Cannot use sccache with tup yet. Please disable sccache or use '
             'the make backend until it is supported.')
 
+option('--upload-tup-db', help= 'Upload the tup database from an automated build.')
+
+@depends('--upload-tup-db')
+def upload_tdb(value):
+    if value:
+        return True
+
+set_config('UPLOAD_TUP_DB', upload_tdb)
+
 # watchman detection
 # ==============================================================
 
