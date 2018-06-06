@@ -1,0 +1,195 @@
+binutils-2.25.1:
+  description: binutils 2.25.1 source code
+  treeherder:
+    symbol: binutils2.25.1
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.25.1.tar.bz2
+    sha256: b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22
+    size: 24163561
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
+
+binutils-2.27:
+  description: binutils 2.27 source code
+  treeherder:
+    symbol: binutils2.27
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.27.tar.bz2
+    sha256: 369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88
+    size: 26099568
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
+
+binutils-2.28.1:
+  description: binutils 2.28.1 source code
+  treeherder:
+    symbol: binutils2.28.1
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.28.1.tar.xz
+    sha256: 16328a906e55a3c633854beec8e9e255a639b366436470b4f6245eb0d2fde942
+    size: 19440112
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
+
+cloog-0.18.1:
+  description: cloog source code
+  treeherder:
+    symbol: cloog0.18.1
+  run:
+    using: fetch-url
+    url: ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-0.18.1.tar.gz
+    sha256: 02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196
+    size: 3857324
+
+gcc-4.9.4:
+  description: GCC 4.9.4 source code
+  treeherder:
+    symbol: gcc4.9.4
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/gcc/gcc-4.9.4/gcc-4.9.4.tar.bz2
+    sha256: 6c11d292cd01b294f9f84c9a59c230d80e9e4a47e5c6355f046bb36d4f358092
+    size: 90097606
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
+
+gcc-6.4.0:
+  description: GCC 6.4.0 source code
+  treeherder:
+    symbol: gcc6.4.0
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/gcc/gcc-6.4.0/gcc-6.4.0.tar.xz
+    sha256: 850bf21eafdfe5cd5f6827148184c08c4a0852a37ccf36ce69855334d2c914d4
+    size: 76156220
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
+
+gcc-7.3.0:
+  description: GCC 7.3.0 source code
+  treeherder:
+    symbol: gcc7.3.0
+  run:
+    using: fetch-url
+    url: ftp://ftp.gnu.org/gnu/gcc/gcc-7.3.0/gcc-7.3.0.tar.xz
+    sha256: 832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c
+    size: 62462388
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
+
+gmp-5.1.3:
+  description: GMP 5.1.3 source code
+  treeherder:
+    symbol: gmp5.1.3
+  run:
+    using: fetch-url
+    url: https://ftp.gnu.org/gnu/gmp/gmp-5.1.3.tar.bz2
+    sha256: 752079520b4690531171d0f4532e40f08600215feefede70b24fabdc6f1ab160
+    size: 2196480
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
+
+gmp-6.1.0:
+  description: GMP 6.1.0 source code
+  treeherder:
+    symbol: gmp6.1.0
+  run:
+    using: fetch-url
+    url: https://ftp.gnu.org/gnu/gmp/gmp-6.1.0.tar.bz2
+    sha256: 498449a994efeba527885c10405993427995d3f86b8768d8cdf8d9dd7c6b73e8
+    size: 2383840
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
+
+isl-0.12.2:
+  description: ISL 0.12.2 source code
+  treeherder:
+    symbol: isl0.12.2
+  run:
+    using: fetch-url
+    url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.12.2.tar.bz2
+    sha256: f4b3dbee9712850006e44f0db2103441ab3d13b406f77996d1df19ee89d11fb4
+    size: 1319434
+
+isl-0.15:
+  description: ISL 0.15 source code
+  treeherder:
+    symbol: isl0.15
+  run:
+    using: fetch-url
+    url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.15.tar.bz2
+    sha256: 8ceebbf4d9a81afa2b4449113cee4b7cb14a687d7a549a963deb5e2a41458b6b
+    size: 1574964
+
+isl-0.16.1:
+  description: ISL 0.16.1 source code
+  treeherder:
+    symbol: isl0.16.1
+  run:
+    using: fetch-url
+    url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.16.1.tar.bz2
+    sha256: 412538bb65c799ac98e17e8cfcdacbb257a57362acfaaff254b0fcae970126d2
+    size: 1626446
+
+mpc-0.8.2:
+  description: mpc 0.8.2 source code
+  treeherder:
+    symbol: mpc0.8.2
+  run:
+    using: fetch-url
+    url: http://www.multiprecision.org/downloads/mpc-0.8.2.tar.gz
+    sha256: ae79f8d41d8a86456b68607e9ca398d00f8b7342d1d83bcf4428178ac45380c7
+    size: 548401
+    gpg-signature:
+      sig-url: "{url}.asc"
+      key-path: build/unix/build-gcc/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
+
+mpc-1.0.3:
+  description: mpc 1.0.3 source code
+  treeherder:
+    symbol: mpc1.0.3
+  run:
+    using: fetch-url
+    url: http://www.multiprecision.org/downloads/mpc-1.0.3.tar.gz
+    sha256: 617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3
+    size: 669925
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-gcc/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
+
+mpfr-3.1.4:
+  description: mpfr 3.1.4 source code
+  treeherder:
+    symbol: mpfr3.1.4
+  run:
+    using: fetch-url
+    url: http://www.mpfr.org/mpfr-3.1.4/mpfr-3.1.4.tar.bz2
+    sha256: d3103a80cdad2407ed581f3618c4bed04e0c92d1cf771a65ead662cc397f7775
+    size: 1279284
+    gpg-signature:
+      sig-url: "{url}.asc"
+      key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
+
+mpfr-3.1.5:
+  description: mpfr 3.1.5 source code
+  treeherder:
+    symbol: mpfr3.1.5
+  run:
+    using: fetch-url
+    url: http://www.mpfr.org/mpfr-3.1.5/mpfr-3.1.5.tar.bz2
+    sha256: ca498c1c7a74dd37a576f353312d1e68d490978de4395fa28f1cbd46a364e658
+    size: 1279489
+    gpg-signature:
+      sig-url: "{url}.asc"
+      key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
