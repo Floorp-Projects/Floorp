@@ -17,7 +17,7 @@
 
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor,triggeringprincipal=iconloadingprincipal"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
