@@ -436,24 +436,14 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
   });
 }
 
-var gUpdateFinishedObserverEnabled = false;
-var gUpdateFinishedObserver = function (aSubject, aTopic, aData) {
-  info("[" + aTopic + "] " + aData);
-  if (aData != "success") {
-    updateError(aData);
-  }
-};
-
 function throwOnUpdateErrors() {
-  Services.obs.addObserver(gUpdateFinishedObserver, "safebrowsing-update-finished");
-  gUpdateFinishedObserverEnabled = true;
-}
-
-function stopThrowingOnUpdateErrors() {
-  if (gUpdateFinishedObserverEnabled) {
-    Services.obs.removeObserver(gUpdateFinishedObserver, "safebrowsing-update-finished");
-    gUpdateFinishedObserverEnabled = false;
-  }
+  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    info("[" + aTopic + "] " + aData);
+    if (aData != "success") {
+      Services.obs.removeObserver(observer, aTopic);
+      updateError(aData);
+    }
+  }, "safebrowsing-update-finished");
 }
 
 cleanUp();
