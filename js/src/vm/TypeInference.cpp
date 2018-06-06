@@ -4595,7 +4595,10 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* cachedCFG,
                              size_t* uniqueIdMap,
                              size_t* shapeTables,
-                             size_t* atomsMarkBitmaps)
+                             size_t* atomsMarkBitmaps,
+                             size_t* compartmentObjects,
+                             size_t* crossCompartmentWrappersTables,
+                             size_t* compartmentsPrivateData)
 {
     *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
     *regexpZone += regExps.sizeOfExcludingThis(mallocSizeOf);
@@ -4605,6 +4608,13 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *shapeTables += baseShapes().sizeOfExcludingThis(mallocSizeOf)
                   + initialShapes().sizeOfExcludingThis(mallocSizeOf);
     *atomsMarkBitmaps += markedAtoms().sizeOfExcludingThis(mallocSizeOf);
+
+    for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+        comp->addSizeOfIncludingThis(mallocSizeOf,
+                                     compartmentObjects,
+                                     crossCompartmentWrappersTables,
+                                     compartmentsPrivateData);
+    }
 }
 
 TypeZone::TypeZone(Zone* zone)

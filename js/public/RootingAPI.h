@@ -1063,7 +1063,9 @@ GetContextRealm(const JSContext* cx)
 inline JSCompartment*
 GetContextCompartment(const JSContext* cx)
 {
-    return GetCompartmentForRealm(GetContextRealm(cx));
+    if (JS::Realm* realm = GetContextRealm(cx))
+        return GetCompartmentForRealm(realm);
+    return nullptr;
 }
 
 inline JS::Zone*

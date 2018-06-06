@@ -3770,7 +3770,7 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
         return InliningStatus_NotInlined;
     }
 
-    if (size_t(descr->size()) > InlineTypedObject::MaximumSize)
+    if (!InlineTypedObject::canAccommodateType(descr))
         return InliningStatus_NotInlined;
 
     JSObject* obj = inspector->getTemplateObjectForClassHook(pc, descr->getClass());
@@ -3996,7 +3996,7 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
-    MOZ_ASSERT(size_t(descr->size(descr->type())) < InlineTypedObject::MaximumSize);
+    MOZ_ASSERT(InlineTypedObject::canAccommodateType(descr));
     MOZ_ASSERT(descr->getClass() == &SimdTypeDescr::class_,
                "getTemplateObjectForSimdCtor needs an update");
 

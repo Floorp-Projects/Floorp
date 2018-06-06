@@ -651,7 +651,7 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /*
      * Gets the URI or identifier string associated with an object's
-     * compartment (the same one used by the memory reporter machinery).
+     * realm (the same one used by the memory reporter machinery).
      *
      * Unwraps cross-compartment wrappers first.
      *
@@ -659,7 +659,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * this from addon code.
      */
     [implicit_jscontext]
-    ACString getCompartmentLocation(in jsval obj);
+    ACString getRealmLocation(in jsval obj);
 
     /*
      * Return a fractional number of milliseconds from process

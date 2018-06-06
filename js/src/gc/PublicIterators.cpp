@@ -155,3 +155,16 @@ JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallb
         (*realmCallback)(cx, data, realm);
     }
 }
+
+JS_PUBLIC_API(void)
+JS::IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+                               JS::IterateRealmCallback realmCallback)
+{
+    AutoTraceSession session(cx->runtime());
+
+    Rooted<Realm*> realm(cx);
+    for (RealmsInCompartmentIter r(compartment); !r.done(); r.next()) {
+        realm = r;
+        (*realmCallback)(cx, data, realm);
+    }
+}

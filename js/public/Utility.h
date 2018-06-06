@@ -438,16 +438,28 @@ static inline void js_free(void* p)
  *   (that is, finalizing the GC-thing will free the allocation), call one of
  *   the following functions:
  *
- *     JSContext::{malloc_,realloc_,calloc_,new_}
- *     JSRuntime::{malloc_,realloc_,calloc_,new_}
+ *     JSContext::{pod_malloc,pod_calloc,pod_realloc}
+ *     Zone::{pod_malloc,pod_calloc,pod_realloc}
  *
  *   These functions accumulate the number of bytes allocated which is used as
- *   part of the GC-triggering heuristic.
+ *   part of the GC-triggering heuristics.
  *
- *   The difference between the JSContext and JSRuntime versions is that the
- *   cx version reports an out-of-memory error on OOM. (This follows from the
+ *   The difference between the JSContext and Zone versions is that the
+ *   cx version report an out-of-memory error on OOM. (This follows from the
  *   general SpiderMonkey idiom that a JSContext-taking function reports its
  *   own errors.)
+ *
+ *   If you don't want to report an error on failure, there are maybe_ versions
+ *   of these methods available too, e.g. maybe_pod_malloc.
+ *
+ *   The methods above use templates to allow allocating memory suitable for an
+ *   array of a given type and number of elements. There are _with_extra
+ *   versions to allow allocating an area of memory which is larger by a
+ *   specified number of bytes, e.g. pod_malloc_with_extra.
+ *
+ *   These methods are available on a JSRuntime, but calling them is
+ *   discouraged. Memory attributed to a runtime can only be reclaimed by full
+ *   GCs, and we try to avoid those where possible.
  *
  * - Otherwise, use js_malloc/js_realloc/js_calloc/js_new
  *
@@ -459,9 +471,6 @@ static inline void js_free(void* p)
  *   operations on the FreeOp provided to the finalizer:
  *
  *     FreeOp::{free_,delete_}
- *
- *   The advantage of these operations is that the memory is batched and freed
- *   on another thread.
  */
 
 /*

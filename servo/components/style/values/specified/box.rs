@@ -53,9 +53,9 @@ pub enum Display {
     TableCaption,
     ListItem,
     None,
-    #[css(aliases = "-webkit-flex")]
+    #[parse(aliases = "-webkit-flex")]
     Flex,
-    #[css(aliases = "-webkit-inline-flex")]
+    #[parse(aliases = "-webkit-inline-flex")]
     InlineFlex,
     #[cfg(feature = "gecko")]
     Grid,
@@ -84,31 +84,31 @@ pub enum Display {
     #[cfg(feature = "gecko")]
     MozInlineBox,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozGrid,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozInlineGrid,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozGridGroup,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozGridLine,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozStack,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozInlineStack,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozDeck,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozPopup,
     #[cfg(feature = "gecko")]
-    #[css(parse_condition = "moz_display_values_enabled")]
+    #[parse(condition = "moz_display_values_enabled")]
     MozGroupbox,
 }
 
@@ -756,13 +756,13 @@ impl ToCss for TransitionProperty {
     where
         W: Write,
     {
-        use values::serialize_atom_identifier;
+        use values::serialize_atom_name;
         match *self {
             TransitionProperty::Shorthand(ref s) => s.to_css(dest),
             TransitionProperty::Longhand(ref l) => l.to_css(dest),
             TransitionProperty::Custom(ref name) => {
                 dest.write_str("--")?;
-                serialize_atom_identifier(name, dest)
+                serialize_atom_name(name, dest)
             }
             TransitionProperty::Unsupported(ref i) => i.to_css(dest),
         }

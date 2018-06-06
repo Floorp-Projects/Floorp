@@ -236,6 +236,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::TransferableOwnership",
     "JS::Value",
     "JS::WarningReporter",
+    "JS::shadow::Realm",
     "JS::shadow::Zone",
     "JS::Zone",
 ];
