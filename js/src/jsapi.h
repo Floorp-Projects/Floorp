@@ -1105,6 +1105,13 @@ using IterateRealmCallback = void (*)(JSContext* cx, void* data, Handle<Realm*> 
 extern JS_PUBLIC_API(void)
 IterateRealms(JSContext* cx, void* data, IterateRealmCallback realmCallback);
 
+/**
+ * Like IterateRealms, but only iterates realms in |compartment|.
+ */
+extern JS_PUBLIC_API(void)
+IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+                           IterateRealmCallback realmCallback);
+
 } // namespace JS
 
 typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
