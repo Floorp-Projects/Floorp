@@ -742,48 +742,6 @@ nsTreeBodyFrame::InvalidateRange(int32_t aStart, int32_t aEnd)
   return NS_OK;
 }
 
-nsresult
-nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsTreeColumn* aCol)
-{
-  if (mUpdateBatchNest)
-    return NS_OK;
-
-  if (!aCol)
-    return NS_ERROR_INVALID_ARG;
-
-  if (aStart == aEnd)
-    return InvalidateCell(aStart, aCol);
-
-  int32_t last = LastVisibleRow();
-  if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
-    return NS_OK;
-
-  if (aStart < mTopRowIndex)
-    aStart = mTopRowIndex;
-
-  if (aEnd > last)
-    aEnd = last;
-
-#ifdef ACCESSIBILITY
-  if (nsIPresShell::IsAccessibilityActive()) {
-    int32_t end =
-      mRowCount > 0 ? ((mRowCount <= aEnd) ? mRowCount - 1 : aEnd) : 0;
-    FireInvalidateEvent(aStart, end, aCol, aCol);
-  }
-#endif
-
-  nsRect rangeRect;
-  nsresult rv = aCol->GetRect(this,
-                              mInnerBox.y+mRowHeight*(aStart-mTopRowIndex),
-                              mRowHeight*(aEnd-aStart+1),
-                              &rangeRect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  InvalidateFrameWithRect(rangeRect);
-
-  return NS_OK;
-}
-
 static void
 FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 {
@@ -4095,55 +4053,6 @@ nsTreeBodyFrame::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol)
   }
 
   rv = EnsureRowIsVisibleInternal(parts, aRow);
-  NS_ENSURE_SUCCESS(rv, rv);
-  UpdateScrollbars(parts);
-  return rv;
-}
-
-nsresult
-nsTreeBodyFrame::ScrollToCell(int32_t aRow, nsTreeColumn* aCol)
-{
-  ScrollParts parts = GetScrollParts();
-  nsresult rv = ScrollToRowInternal(parts, aRow);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ScrollToColumnInternal(parts, aCol);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  UpdateScrollbars(parts);
-  return rv;
-}
-
-nsresult
-nsTreeBodyFrame::ScrollToColumn(nsTreeColumn* aCol)
-{
-  ScrollParts parts = GetScrollParts();
-  nsresult rv = ScrollToColumnInternal(parts, aCol);
-  NS_ENSURE_SUCCESS(rv, rv);
-  UpdateScrollbars(parts);
-  return rv;
-}
-
-nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
-                                                 nsTreeColumn* aCol)
-{
-  if (!aCol)
-    return NS_ERROR_INVALID_ARG;
-
-  nscoord x;
-  nsresult rv = aCol->GetXInTwips(this, &x);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return ScrollHorzInternal(aParts, x);
-}
-
-nsresult
-nsTreeBodyFrame::ScrollToHorizontalPosition(int32_t aHorizontalPosition)
-{
-  ScrollParts parts = GetScrollParts();
-  int32_t position = nsPresContext::CSSPixelsToAppUnits(aHorizontalPosition);
-  nsresult rv = ScrollHorzInternal(parts, position);
   NS_ENSURE_SUCCESS(rv, rv);
   UpdateScrollbars(parts);
   return rv;

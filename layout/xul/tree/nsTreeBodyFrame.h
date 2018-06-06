@@ -95,16 +95,11 @@ public:
   nsresult ScrollToRow(int32_t aRow);
   nsresult ScrollByLines(int32_t aNumLines);
   nsresult ScrollByPages(int32_t aNumPages);
-  nsresult ScrollToCell(int32_t aRow, nsTreeColumn *aCol);
-  nsresult ScrollToColumn(nsTreeColumn *aCol);
-  nsresult ScrollToHorizontalPosition(int32_t aValue);
   nsresult Invalidate();
   nsresult InvalidateColumn(nsTreeColumn *aCol);
   nsresult InvalidateRow(int32_t aRow);
   nsresult InvalidateCell(int32_t aRow, nsTreeColumn *aCol);
   nsresult InvalidateRange(int32_t aStart, int32_t aEnd);
-  nsresult InvalidateColumnRange(int32_t aStart, int32_t aEnd,
-                                 nsTreeColumn *aCol);
   nsresult GetRowAt(int32_t aX, int32_t aY, int32_t *aValue);
   nsresult GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
                      nsTreeColumn **aCol, nsACString &aChildElt);
@@ -385,7 +380,6 @@ protected:
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(const ScrollParts& aParts, int32_t aRow);
   nsresult ScrollToRowInternal(const ScrollParts& aParts, int32_t aRow);
-  nsresult ScrollToColumnInternal(const ScrollParts& aParts, nsTreeColumn* aCol);
   nsresult ScrollHorzInternal(const ScrollParts& aParts, int32_t aPosition);
   nsresult EnsureRowIsVisibleInternal(const ScrollParts& aParts, int32_t aRow);
 
