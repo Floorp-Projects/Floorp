@@ -278,7 +278,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.css.font-variations.enabled",
    layout_css_font_variations_enabled,
-  bool, true
+  RelaxedAtomicBool, true
 )
 
 // Are we emulating -moz-{inline}-box layout using CSS flexbox?
