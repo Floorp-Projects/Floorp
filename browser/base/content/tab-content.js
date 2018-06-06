@@ -24,21 +24,6 @@ ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
   "resource:///modules/PageStyleHandler.jsm");
-XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
-  let ssdp = ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
-  // Register targets
-  ssdp.registerDevice({
-    id: "roku:ecp",
-    target: "roku:ecp",
-    factory(aService) {
-      ChromeUtils.import("resource://gre/modules/RokuApp.jsm");
-      return new RokuApp(aService);
-    },
-    types: ["video/mp4"],
-    extensions: ["mp4"]
-  });
-  return ssdp;
-});
 
 // TabChildGlobal
 var global = this;
