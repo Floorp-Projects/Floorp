@@ -994,10 +994,10 @@ imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     if (hasNoProxies) {
       LOG_FUNC_WITH_PARAM(gImgLog, "imgCacheEntry::SetHasNoProxies true",
-                          "uri", mRequest->CacheKey().Spec());
+                          "uri", mRequest->CacheKey().URI());
     } else {
       LOG_FUNC_WITH_PARAM(gImgLog, "imgCacheEntry::SetHasNoProxies false",
-                          "uri", mRequest->CacheKey().Spec());
+                          "uri", mRequest->CacheKey().URI());
     }
   }
 
@@ -1172,7 +1172,7 @@ imgLoader::CreateNewProxyForRequest(imgRequest* aRequest,
    */
   proxyRequest->SetLoadFlags(aLoadFlags);
 
-  RefPtr<ImageURL> uri;
+  nsCOMPtr<nsIURI> uri;
   aRequest->GetURI(getter_AddRefs(uri));
 
   // init adds itself to imgRequest's list of observers
@@ -1215,7 +1215,7 @@ imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry)
     if (req) {
       LOG_FUNC_WITH_PARAM(gImgLog,
                          "imgCacheExpirationTracker::NotifyExpired",
-                         "entry", req->CacheKey().Spec());
+                         "entry", req->CacheKey().URI());
     }
   }
 
@@ -1580,7 +1580,7 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
   imgCacheTable& cache = GetCache(aKey);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
-                             "imgLoader::PutIntoCache", "uri", aKey.Spec());
+                             "imgLoader::PutIntoCache", "uri", aKey.URI());
 
   // Check to see if this request already exists in the cache. If so, we'll
   // replace the old version.
@@ -1638,7 +1638,7 @@ imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 {
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                              "imgLoader::SetHasNoProxies", "uri",
-                             aRequest->CacheKey().Spec());
+                             aRequest->CacheKey().URI());
 
   aEntry->SetHasNoProxies(true);
 
@@ -1673,7 +1673,7 @@ imgLoader::SetHasProxies(imgRequest* aRequest)
   imgCacheTable& cache = GetCache(key);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
-                             "imgLoader::SetHasProxies", "uri", key.Spec());
+                             "imgLoader::SetHasProxies", "uri", key.URI());
 
   RefPtr<imgCacheEntry> entry;
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
@@ -1729,7 +1729,7 @@ imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue)
       if (req) {
         LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                                    "imgLoader::CheckCacheLimits",
-                                   "entry", req->CacheKey().Spec());
+                                   "entry", req->CacheKey().URI());
       }
     }
 
@@ -2004,7 +2004,7 @@ bool
 imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 {
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
-                             "imgLoader::RemoveFromCache", "uri", aKey.Spec());
+                             "imgLoader::RemoveFromCache", "uri", aKey.URI());
 
   imgCacheTable& cache = GetCache(aKey);
   imgCacheQueue& queue = GetCacheQueue(aKey);
@@ -2046,7 +2046,7 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry, QueueState aQueueState)
 
     LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                                "imgLoader::RemoveFromCache", "entry's uri",
-                               key.Spec());
+                               key.URI());
 
     cache.Remove(key);
 
@@ -2214,8 +2214,7 @@ imgLoader::LoadImage(nsIURI* aURI,
     return NS_ERROR_NULL_POINTER;
   }
 
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI",
-                       aURI->GetSpecOrDefault().get());
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", aURI);
 
   *_retval = nullptr;
 
@@ -2310,7 +2309,7 @@ imgLoader::LoadImage(nsIURI* aURI,
       // entry.
       if (entry->HasNoProxies()) {
         LOG_FUNC_WITH_PARAM(gImgLog,
-          "imgLoader::LoadImage() adding proxyless entry", "uri", key.Spec());
+          "imgLoader::LoadImage() adding proxyless entry", "uri", key.URI());
         MOZ_ASSERT(!request->HasCacheEntry(),
           "Proxyless entry's request has cache entry!");
         request->SetCacheEntry(entry);
@@ -2598,7 +2597,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
         if (entry->HasNoProxies()) {
           LOG_FUNC_WITH_PARAM(gImgLog,
             "imgLoader::LoadImageWithChannel() adding proxyless entry",
-            "uri", key.Spec());
+            "uri", key.URI());
           MOZ_ASSERT(!request->HasCacheEntry(),
             "Proxyless entry's request has cache entry!");
           request->SetCacheEntry(entry);
@@ -3067,17 +3066,11 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // We can't load out of cache. We have to create a whole new request for the
   // data that's coming in off the channel.
   nsCOMPtr<nsIURI> uri;
-  {
-    RefPtr<ImageURL> imageURL;
-    mRequest->GetURI(getter_AddRefs(imageURL));
-    uri = imageURL->ToIURI();
-  }
+  mRequest->GetURI(getter_AddRefs(uri));
 
-  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    LOG_MSG_WITH_PARAM(gImgLog,
-                       "imgCacheValidator::OnStartRequest creating new request",
-                       "uri", uri->GetSpecOrDefault().get());
-  }
+  LOG_MSG_WITH_PARAM(gImgLog,
+                     "imgCacheValidator::OnStartRequest creating new request",
+                     "uri", uri);
 
   int32_t corsmode = mRequest->GetCORSMode();
   ReferrerPolicy refpol = mRequest->GetReferrerPolicy();
