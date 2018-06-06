@@ -1,0 +1,65 @@
+#!/usr/bin/env bash -x -e
+#
+# -e means "exit on error", so that we don't have to constantly
+# check exit codes
+#
+# Forked from https://github.com/devtools-html/debugger.html/blob/master/bin/prepare-mochitests-dev
+#
+# This sets up a mozilla-central build for local mochitest development with an
+# exported activity-stream tree and test directory.
+
+# If AS_GIT_BIN_REPO (the git repo from which prepare-mochitests-dev and
+# friends will be executed) isn't set in the environment, just use the repo
+#  we're running from.
+if [ -z ${AS_GIT_BIN_REPO+x} ]; then
+  ROOT=`dirname $0`
+  AS_GIT_BIN_REPO="../activity-stream" # as seen from mozilla-central
+else
+  ROOT=${AS_GIT_BIN_REPO}/bin
+fi
+
+# Compute the mozilla-central path based on whether AS_PINE_TEST_DIR is set
+# (i.e. whether this script has been called from test-merges.js)
+if [ -z ${AS_PINE_TEST_DIR+x} ]; then
+  FIREFOX_PATH="$ROOT/../../mozilla-central"
+else
+  FIREFOX_PATH=${AS_PINE_TEST_DIR}/mozilla-central
+fi
+
+MC_MODULE_PATH="$FIREFOX_PATH/browser/extensions/activity-stream"
+
+# By default, just use mozilla-central + the export.  If ENABLE_MC_AS is set to
+# 1, patch on top of mozilla-central + the export to turn on the AS pref and
+# turn on the tests.  Once AS is on by default in mozilla-central, stuff
+# related to ENABLE_MC_AS can go away entirely.
+ENABLE_MC_AS=${ENABLE_MC_AS-0}
+
+# This will either download or update the local Firefox repo
+"$ROOT/download-firefox-artifact"
+
+# blow away any old bits in order to workaround bug 1335976 for users
+# who are using the default objdir-frontend
+rm -f ${FIREFOX_PATH}/objdir-frontend/dist/bin/browser/features/@activity-streams/*
+
+# Clean, package, and copy the activity stream files.
+npm run buildmc
+
+# Patch mozilla-central (on top of the export) so that AS is preffed on, and
+# the mochitests are turned on.
+shopt -s nullglob # don't explode if there are no patches right now
+if [ $ENABLE_MC_AS ]; then
+  PATCHES=$AS_GIT_BIN_REPO/mozilla-central-patches/*.diff
+  for p in $PATCHES
+  do
+    patch --directory="$FIREFOX_PATH" -p1 --force --no-backup-if-mismatch \
+    --input=$p
+  done
+fi
+shopt -u nullglob
+
+# Be sure that we've built, and that the test glop in the objdir has been
+# created.
+#
+cd "$FIREFOX_PATH"
+./mach build
+exit $?

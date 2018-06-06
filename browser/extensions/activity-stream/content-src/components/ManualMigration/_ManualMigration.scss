@@ -1,0 +1,52 @@
+.manual-migration-container {
+  color: var(--newtab-text-conditional-color);
+  font-size: 13px;
+  line-height: 15px;
+  margin-bottom: $section-spacing;
+  text-align: center;
+
+  @media (min-width: $break-point-medium) {
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  p {
+    margin: 0;
+    @media (min-width: $break-point-medium) {
+      align-self: center;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  .icon {
+    display: none;
+    @media (min-width: $break-point-medium) {
+      align-self: center;
+      display: block;
+      fill: var(--newtab-icon-secondary-color);
+      margin-inline-end: 6px;
+    }
+  }
+}
+
+.manual-migration-actions {
+  border: 0;
+  display: block;
+  flex-wrap: nowrap;
+
+  @media (min-width: $break-point-medium) {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+  }
+
+  button {
+    align-self: center;
+    height: 26px;
+    margin: 0;
+    margin-inline-start: 20px;
+    padding: 0 12px;
+  }
+}

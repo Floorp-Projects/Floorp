@@ -1,0 +1,29 @@
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+*::-moz-focus-inner {
+  border: 0;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  background-color: inherit;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+[hidden] {
+  display: none !important; // sass-lint:disable-line no-important
+}
