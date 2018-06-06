@@ -97,6 +97,8 @@ public:
               ReflowOutput&     aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus&          aStatus) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
@@ -215,6 +217,32 @@ public:
                                       ExplicitNamedAreas)
   ExplicitNamedAreas* GetExplicitNamedAreas() const {
     return GetProperty(ExplicitNamedAreasProperty());
+  }
+
+  /** Return true if this frame is subgridded in its aAxis. */
+  bool IsSubgrid(mozilla::LogicalAxis aAxis) const {
+    return HasAnyStateBits(
+      aAxis == mozilla::eLogicalAxisBlock ? NS_STATE_GRID_IS_ROW_SUBGRID
+                                          : NS_STATE_GRID_IS_COL_SUBGRID);
+  }
+  bool IsColSubgrid() const { return IsSubgrid(mozilla::eLogicalAxisInline); }
+  bool IsRowSubgrid() const { return IsSubgrid(mozilla::eLogicalAxisBlock); }
+  /** Return true if this frame is subgridded in any axis. */
+  bool IsSubgrid() const {
+    return HasAnyStateBits(NS_STATE_GRID_IS_ROW_SUBGRID |
+                           NS_STATE_GRID_IS_COL_SUBGRID);
+  }
+
+  /** Return true if this frame has an item that is subgridded in our aAxis. */
+  bool HasSubgridItems(mozilla::LogicalAxis aAxis) const {
+    return HasAnyStateBits(
+      aAxis == mozilla::eLogicalAxisBlock ? NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM
+                                          : NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
+  }
+  /** Return true if this frame has any subgrid items. */
+  bool HasSubgridItems() const {
+    return HasAnyStateBits(NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM |
+                           NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
   }
 
   /**
