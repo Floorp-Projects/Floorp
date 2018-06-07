@@ -347,7 +347,9 @@ class PropertyUpdate(object):
             update_default, new_default_value = self.update_default()
             if update_default:
                 if new_default_value != self.default_value:
-                    self.node.set(self.property_name, self.update_value(None, new_default_value), condition=None)
+                    self.node.set(self.property_name,
+                                  self.update_value(unconditional_value, new_default_value),
+                                  condition=None)
             else:
                 self.add_new(unconditional_value, stability)
 
@@ -429,12 +431,13 @@ class MaxAssertsUpdate(PropertyUpdate):
     value_type = int
 
     def update_value(self, old_value, new_value):
+        new_value = self.value_type(new_value)
         if old_value is not None:
             old_value = self.value_type(old_value)
-        if old_value and old_value < new_value:
-            return new_value
+        if old_value is not None and old_value < new_value:
+            return new_value + 1
         if old_value is None:
-            return new_value
+            return new_value + 1
         return old_value
 
     def update_default(self):
@@ -450,8 +453,8 @@ class MaxAssertsUpdate(PropertyUpdate):
                                if item.condition_node is None]
             if current_default:
                 values.append(int(current_default[0].value))
-        values.extend(item.value + 1 for item in self.new)
-        values.extend(item.value + 1 for item in
+        values.extend(item.value for item in self.new)
+        values.extend(item.value for item in
                       itertools.chain.from_iterable(results for _, results in self.updated))
         new_value = max(values)
         return True, new_value
@@ -463,13 +466,14 @@ class MinAssertsUpdate(PropertyUpdate):
     value_type = int
 
     def update_value(self, old_value, new_value):
+        new_value = self.value_type(new_value)
         if old_value is not None:
             old_value = self.value_type(old_value)
-        if old_value and new_value < old_value:
+        if old_value is not None and new_value < old_value:
             return 0
         if old_value is None:
             # If we are getting some asserts for the first time, set the minimum to 0
-            return 0
+            return new_value
         return old_value
 
     def update_default(self):
@@ -484,8 +488,8 @@ class MinAssertsUpdate(PropertyUpdate):
                                if item.condition_node is None]
         if current_default:
             values.append(current_default[0].value_as(self.value_type))
-        values.extend(max(0, item.value - 1) for item in self.new)
-        values.extend(max(0, item.value - 1) for item in
+        values.extend(max(0, item.value) for item in self.new)
+        values.extend(max(0, item.value) for item in
                       itertools.chain.from_iterable(results for _, results in self.updated))
         new_value = min(values)
         return True, new_value
@@ -496,7 +500,7 @@ class LsanUpdate(PropertyUpdate):
     cls_default_value = None
 
     def get_value(self, result):
-        # IF we have an allowed_match that matched, return None
+        # If we have an allowed_match that matched, return None
         # This value is ignored later (because it matches the default)
         # We do that because then if we allow a failure in foo/__dir__.ini
         # we don't want to update foo/bar/__dir__.ini with the same rule

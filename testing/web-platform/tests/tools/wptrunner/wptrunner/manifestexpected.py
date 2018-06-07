@@ -302,6 +302,7 @@ def get_manifest(metadata_root, test_path, url_base, run_info):
     except IOError:
         return None
 
+
 def get_dir_manifest(path, run_info):
     """Get the ExpectedManifest for a particular test path, or None if there is no
     metadata stored for that test path.
