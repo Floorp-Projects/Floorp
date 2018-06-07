@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Ensure layout viewport responds to panning while pinched</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #content {
+      height: 5000px;
+      width: 5000px;
+      background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <script type="application/javascript">
+    const RESOLUTION = 4;
+    const OFFSET_SCREEN_PX = 50;
+    const OFFSET_CSS_PX = OFFSET_SCREEN_PX / RESOLUTION;
+
+    function computeDelta(visual) {
+      // Compute the distance from the right/bottom edge of the visual
+      // viewport to the same edge of the layout viewport and add the desired
+      // offset to that.
+      const layout = visual * RESOLUTION;
+      return layout - visual + OFFSET_SCREEN_PX;
+    }
+
+    function* test(testDriver) {
+      const target = document.getElementById("content");
+      const cases = [
+        {
+          x: 0,
+          y: 0,
+          dx: (width) => -computeDelta(width),
+          dy: (height) => 0,
+          expected: {
+            x: [OFFSET_CSS_PX, "x-offset was adjusted"],
+            y: [0, "y-offset was not affected"],
+          },
+        },
+        {
+          x: OFFSET_SCREEN_PX,
+          y: 0,
+          dx: (width) => 0,
+          dy: (height) => -computeDelta(height),
+          expected: {
+            x: [OFFSET_CSS_PX, "x-offset was not affected"],
+            y: [OFFSET_CSS_PX, "y-offset was adjusted"],
+          },
+        },
+      ];
+
+      for (let c of cases) {
+        yield synthesizeNativeTouchDrag(target,
+                                        c.x,
+                                        c.y,
+                                        c.dx(document.documentElement.clientWidth),
+                                        c.dy(document.documentElement.clientHeight),
+                                        testDriver);
+        yield waitForApzFlushedRepaints(testDriver);
+        is(window.scrollX, c.expected.x[0], c.expected.x[1]);
+        is(window.scrollY, c.expected.y[0], c.expected.y[1]);
+      }
+    }
+
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(RESOLUTION);
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  </script>
+</body>
+</html>
+
