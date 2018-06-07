@@ -327,7 +327,7 @@ var PingPicker = {
       pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
       pingNameSpan.textContent = pingName;
       let explanation = bundle.GetStringFromName("pingDetails");
-      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan, pingTypeText);
+      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan);
     } else {
       // Change sidebar heading text.
       controls.classList.add("hidden");
