@@ -11,7 +11,7 @@
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup"
-                         onpopupshowing="updateUserContextUIVisibility();">
+                         onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');">
                 <menuitem id="menu_newNavigatorTab"
                           label="&tabCmd.label;"
                           command="cmd_newNavigatorTab"
