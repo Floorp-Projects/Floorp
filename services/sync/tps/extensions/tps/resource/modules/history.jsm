@@ -86,8 +86,10 @@ var HistoryEntry = {
       for (let itemvisit of item.visits) {
         // Note: in microseconds.
         let expectedDate = itemvisit.date * 60 * 60 * 1000 * 1000 + msSinceEpoch * 1000;
-        if (visit.type == itemvisit.type && visit.date == expectedDate) {
-          itemvisit.found = true;
+        if (visit.type == itemvisit.type) {
+          if (itemvisit.date === undefined || visit.date == expectedDate) {
+            itemvisit.found = true;
+          }
         }
       }
     }
