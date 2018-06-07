@@ -15,10 +15,10 @@
 #include "nsWindowDefs.h"
 #include "KeyboardLayout.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/HangMonitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
@@ -764,7 +764,7 @@ WinUtils::WaitForMessage(DWORD aTimeoutMs)
         // We executed an APC that would have woken up the hang monitor. Since
         // there are no more APCs pending and we are now going to sleep again,
         // we should notify the hang monitor.
-        mozilla::BackgroundHangMonitor().NotifyWait();
+        mozilla::HangMonitor::Suspend();
       }
       continue;
     }

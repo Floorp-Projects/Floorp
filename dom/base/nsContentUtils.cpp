@@ -33,7 +33,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AutoTimelineMarker.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -564,7 +563,7 @@ NS_IMPL_ISUPPORTS(nsContentUtils::nsContentUtilsReporter, nsIMemoryReporter)
  * user interaction status.
  */
 class nsContentUtils::UserInteractionObserver final : public nsIObserver
-                                                    , public BackgroundHangAnnotator
+                                                    , public HangMonitor::Annotator
 {
 public:
   NS_DECL_ISUPPORTS
@@ -572,7 +571,7 @@ public:
 
   void Init();
   void Shutdown();
-  void AnnotateHang(BackgroundHangAnnotations& aAnnotations) override;
+  void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) override;
 
   static Atomic<bool> sUserActive;
 
@@ -10742,13 +10741,13 @@ nsContentUtils::UserInteractionObserver::Init()
   obs->AddObserver(this, kUserInteractionInactive, false);
   obs->AddObserver(this, kUserInteractionActive, false);
 
-  // We can't register ourselves as an annotator yet, as the
-  // BackgroundHangMonitor hasn't started yet. It will have started by the
-  // time we have the chance to spin the event loop.
+  // We can't register ourselves as an annotator yet, as the HangMonitor hasn't
+  // started yet. It will have started by the time we have the chance to spin
+  // the event loop.
   RefPtr<UserInteractionObserver> self = this;
   NS_DispatchToMainThread(
     NS_NewRunnableFunction("nsContentUtils::UserInteractionObserver::Init",
-                           [=]() { BackgroundHangMonitor::RegisterAnnotator(*self); }));
+                           [=]() { HangMonitor::RegisterAnnotator(*self); }));
 }
 
 void
@@ -10760,15 +10759,15 @@ nsContentUtils::UserInteractionObserver::Shutdown()
     obs->RemoveObserver(this, kUserInteractionActive);
   }
 
-  BackgroundHangMonitor::UnregisterAnnotator(*this);
+  HangMonitor::UnregisterAnnotator(*this);
 }
 
 /**
- * NB: This function is always called by the BackgroundHangMonitor thread.
+ * NB: This function is always called by the HangMonitor thread.
  *     Plan accordingly
  */
 void
-nsContentUtils::UserInteractionObserver::AnnotateHang(BackgroundHangAnnotations& aAnnotations)
+nsContentUtils::UserInteractionObserver::AnnotateHang(HangMonitor::HangAnnotations& aAnnotations)
 {
   // NOTE: Only annotate the hang report if the user is known to be interacting.
   if (sUserActive) {

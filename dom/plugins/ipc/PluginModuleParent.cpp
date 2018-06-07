@@ -9,7 +9,6 @@
 #include "base/process_util.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -657,7 +656,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     mSandboxLevel = aSandboxLevel;
     mRunID = GeckoChildProcessHost::GetUniqueID();
 
-    mozilla::BackgroundHangMonitor::RegisterAnnotator(*this);
+    mozilla::HangMonitor::RegisterAnnotator(*this);
 }
 
 PluginModuleChromeParent::~PluginModuleChromeParent()
@@ -710,7 +709,7 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
     }
 #endif
 
-    mozilla::BackgroundHangMonitor::UnregisterAnnotator(*this);
+    mozilla::HangMonitor::UnregisterAnnotator(*this);
 }
 
 void
@@ -989,16 +988,16 @@ PluginModuleChromeParent::ExitedCxxStack()
 }
 
 /**
- * This function is always called by the BackgroundHangMonitor thread.
+ * This function is always called by the HangMonitor thread.
  */
 void
-PluginModuleChromeParent::AnnotateHang(mozilla::BackgroundHangAnnotations& aAnnotations)
+PluginModuleChromeParent::AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations)
 {
     uint32_t flags = mHangAnnotationFlags;
     if (flags) {
         /* We don't actually annotate anything specifically for kInPluginCall;
            we use it to determine whether to annotate other things. It will
-           be pretty obvious from the hang stack that we're in a plugin
+           be pretty obvious from the ChromeHang stack that we're in a plugin
            call when the hang occurred. */
         if (flags & kHangUIShown) {
             aAnnotations.AddAnnotation(NS_LITERAL_STRING("HangUIShown"),
