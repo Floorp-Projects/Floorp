@@ -27,7 +27,7 @@ import org.mozilla.focus.R;
 
         final boolean isLoading = browserFragment.getSession().getLoading().getValue();
 
-        if (menuItem.getId() == R.id.add_to_homescreen && isLoading) {
+        if ((menuItem.getId() == R.id.add_to_homescreen || menuItem.getId() == R.id.find_in_page) && isLoading) {
             menuItemView.setTextColor(browserFragment.getResources().getColor(R.color.colorTextInactive));
             menuItemView.setClickable(false);
         } else {
