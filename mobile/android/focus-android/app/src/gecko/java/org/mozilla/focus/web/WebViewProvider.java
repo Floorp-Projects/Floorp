@@ -509,9 +509,7 @@ public class WebViewProvider {
         public void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL) {
             geckoSession.loadData(data.getBytes(Charsets.UTF_8), mimeType, baseURL);
             currentUrl = baseURL;
-            if (currentUrl.equals(LocalizedContent.URL_RIGHTS) || currentUrl.equals(LocalizedContent.URL_ABOUT)) {
-                isLoadingInternalUrl = true;
-            }
+            isLoadingInternalUrl = currentUrl.equals(LocalizedContent.URL_RIGHTS) || currentUrl.equals(LocalizedContent.URL_ABOUT);
         }
 
         private void sendTelemetrySnapshots() {
