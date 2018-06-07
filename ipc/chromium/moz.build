@@ -151,6 +151,3 @@ DIRS += [
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
-
-# Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
