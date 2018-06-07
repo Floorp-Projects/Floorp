@@ -9121,8 +9121,12 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     nsLayoutUtils::CalculateScrollableRectForFrame(scrollableFrame, aForFrame)));
 
   if (scrollableFrame) {
-    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
-    metrics.SetScrollOffset(CSSPoint::FromAppUnits(scrollPosition));
+    CSSPoint scrollPosition = CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
+    metrics.SetScrollOffset(scrollPosition);
+
+    CSSRect viewport = metrics.GetViewport();
+    viewport.MoveTo(scrollPosition);
+    metrics.SetViewport(viewport);
 
     nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
     metrics.SetSmoothScrollOffset(CSSPoint::FromAppUnits(smoothScrollPosition));

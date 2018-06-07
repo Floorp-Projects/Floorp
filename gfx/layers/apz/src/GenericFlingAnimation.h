@@ -155,7 +155,7 @@ public:
     mApzc.mX.AdjustDisplacement(offset.x, adjustedOffset.x, overscroll.x);
     mApzc.mY.AdjustDisplacement(offset.y, adjustedOffset.y, overscroll.y);
 
-    aFrameMetrics.ScrollBy(adjustedOffset / aFrameMetrics.GetZoom());
+    mApzc.ScrollBy(adjustedOffset / aFrameMetrics.GetZoom());
 
     // The fling may have caused us to reach the end of our scroll range.
     if (!IsZero(overscroll)) {
