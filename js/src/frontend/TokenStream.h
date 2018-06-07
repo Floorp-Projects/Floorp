@@ -1016,7 +1016,7 @@ template<typename CharT>
 class TokenStreamCharsBase
 {
   protected:
-    void ungetCharIgnoreEOL(int32_t c);
+    void ungetCodeUnit(int32_t c);
 
   public:
     using CharBuffer = Vector<CharT, 32>;
@@ -1190,10 +1190,10 @@ class GeneralTokenStreamChars
 
     int32_t getCodeUnit();
 
-    void ungetCharIgnoreEOL(int32_t c) {
+    void ungetCodeUnit(int32_t c) {
         MOZ_ASSERT_IF(c == EOF, anyCharsAccess().flags.isEOF);
 
-        CharsSharedBase::ungetCharIgnoreEOL(c);
+        CharsSharedBase::ungetCodeUnit(c);
     }
 
     void ungetChar(int32_t c);
@@ -1230,7 +1230,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
     using GeneralCharsBase::sourceUnits;
-    using CharsSharedBase::ungetCharIgnoreEOL;
+    using CharsSharedBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
 
     using GeneralCharsBase::GeneralCharsBase;
@@ -1360,8 +1360,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::sourceUnits;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
-    using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsBase::ungetCodePointIgnoreEOL;
+    using CharsSharedBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
 
     template<typename CharU> friend class TokenStreamPosition;
