@@ -7339,10 +7339,12 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
                                                nsDisplayList* aList,
-                                               const ActiveScrolledRoot* aActiveScrolledRoot)
+                                               const ActiveScrolledRoot* aActiveScrolledRoot,
+                                               const ActiveScrolledRoot* aContainerASR)
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot)
   , mIndex(0)
   , mIsFixedBackground(false)
+  , mContainerASR(aContainerASR)
 {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7355,6 +7357,7 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aBuilder->CurrentActiveScrolledRoot())
   , mIndex(aIndex)
   , mIsFixedBackground(true)
+  , mContainerASR(nullptr) // XXX maybe this should be something?
 {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7427,6 +7430,15 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+ViewID
+nsDisplayFixedPosition::GetScrollTargetId()
+{
+  if (mContainerASR && !nsLayoutUtils::IsReallyFixedPos(mFrame)) {
+    return mContainerASR->GetViewId();
+  }
+  return nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext());
+}
+
 bool
 nsDisplayFixedPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                 mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -7441,7 +7453,7 @@ nsDisplayFixedPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder&
   mozilla::wr::DisplayListBuilder::FixedPosScrollTargetTracker tracker(
       aBuilder,
       GetActiveScrolledRoot(),
-      nsLayoutUtils::ScrollIdForRootScrollFrame(Frame()->PresContext()));
+      GetScrollTargetId());
   return nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
       aManager, aDisplayListBuilder);
 }
@@ -7451,11 +7463,17 @@ nsDisplayFixedPosition::UpdateScrollData(mozilla::layers::WebRenderScrollData* a
                                          mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
   if (aLayerData) {
-    FrameMetrics::ViewID id = nsLayoutUtils::ScrollIdForRootScrollFrame(
-        Frame()->PresContext());
-    aLayerData->SetFixedPositionScrollContainerId(id);
+    aLayerData->SetFixedPositionScrollContainerId(GetScrollTargetId());
   }
   return nsDisplayOwnLayer::UpdateScrollData(aData, aLayerData) | true;
+}
+
+void
+nsDisplayFixedPosition::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << nsPrintfCString(" (containerASR %s) (scrolltarget %" PRIu64 ")",
+      ActiveScrolledRoot::ToString(mContainerASR).get(),
+      GetScrollTargetId()).get();
 }
 
 TableType

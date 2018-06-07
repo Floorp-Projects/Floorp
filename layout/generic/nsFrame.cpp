@@ -3399,10 +3399,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // which has been set as the builder's current ASR, unless this frame is
     // invisible and we hadn't saved display item data for it. In that case,
     // we need to take the containerItemASR since we might have fixed children.
+    // For WebRender, we want to the know what |containerItemASR| is for the
+    // case where the fixed-pos item is not a "real" fixed-pos item (e.g. it's
+    // nested inside a scrolling transform), so we stash that on the display
+    // item as well.
     const ActiveScrolledRoot* fixedASR =
       ActiveScrolledRoot::PickAncestor(containerItemASR, aBuilder->CurrentActiveScrolledRoot());
     resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, this, &resultList, fixedASR));
+        MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, this, &resultList,
+          fixedASR, containerItemASR));
     if (aCreatedContainerItem) {
       *aCreatedContainerItem = true;
     }
