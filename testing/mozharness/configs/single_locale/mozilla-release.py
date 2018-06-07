@@ -3,7 +3,6 @@ import os
 config = {
     "nightly_build": True,
     "branch": "mozilla-release",
-    "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-release/",
     "update_channel": "release",
 
     # l10n
