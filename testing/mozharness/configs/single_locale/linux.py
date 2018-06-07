@@ -1,4 +1,5 @@
 config = {
+    "platform": "linux",
     "app_name": "browser",
     "mozconfig_platform": "linux32",
     "mozconfig_variant": "l10n-mozconfig",
@@ -13,6 +14,7 @@ config = {
     "hg_l10n_tag": "default",
 
     # MAR
+    "application_ini": "application.ini",
     "local_mar_tool_dir": "dist/host/bin",
     "mar": "mar",
     "mbsdiff": "mbsdiff",
