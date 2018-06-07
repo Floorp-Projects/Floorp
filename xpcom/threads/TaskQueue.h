@@ -95,7 +95,6 @@ public:
   void AwaitShutdownAndIdle();
 
   bool IsEmpty();
-  uint32_t ImpreciseLengthForHeuristics();
 
   // Returns true if the current thread is currently running a Runnable in
   // the task queue.
