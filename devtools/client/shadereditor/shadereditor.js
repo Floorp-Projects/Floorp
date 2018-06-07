@@ -126,7 +126,7 @@ var EventsHandler = {
    * Handles a host change event on the parent toolbox.
    */
   _onHostChanged: function() {
-    if (gToolbox.hostType == "side") {
+    if (gToolbox.hostType == "right" || gToolbox.hostType == "left") {
       $("#shaders-pane").removeAttribute("height");
     }
   },
@@ -265,7 +265,8 @@ var ShadersListView = extend(WidgetMethods, {
 
     // Prevent this container from growing indefinitely in height when the
     // toolbox is docked to the side.
-    if (gToolbox.hostType == "side" && this.itemCount == SHADERS_AUTOGROW_ITEMS) {
+    if ((gToolbox.hostType == "left" || gToolbox.hostType == "right") &&
+        this.itemCount == SHADERS_AUTOGROW_ITEMS) {
       this._pane.setAttribute("height", this._pane.getBoundingClientRect().height);
     }
   },

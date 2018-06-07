@@ -27,7 +27,7 @@ add_task(async function() {
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, nboxHeight - 25, "The iframe fits within the available space");
 
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  await toolbox.switchHost(Toolbox.HostType.RIGHT);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, nboxWidth - 25, "The iframe fits within the available space");
@@ -52,7 +52,7 @@ add_task(async function() {
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, 100, "The iframe is resized properly");
 
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  await toolbox.switchHost(Toolbox.HostType.RIGHT);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, 100, "The iframe is resized properly");
