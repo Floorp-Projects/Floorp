@@ -50,6 +50,11 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("tt", "татарча");
         languageCodeToNameMap.put("wo", "Wolof");
         languageCodeToNameMap.put("anp", "अंगिका");
+        languageCodeToNameMap.put("ixl", "Ixil");
+        languageCodeToNameMap.put("pai", "Paa ipai");
+        languageCodeToNameMap.put("quy", "Chanka Qhichwa");
+        languageCodeToNameMap.put("ay", "Aimara");
+        languageCodeToNameMap.put("quc", "K'iche'");
     }
 
     /**
