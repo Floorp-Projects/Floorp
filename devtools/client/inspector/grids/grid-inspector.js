@@ -179,8 +179,7 @@ class GridInspector {
    *         The color to use.
    */
   getInitialGridColor(nodeFront, customColor, fallbackColor) {
-    const highlighted = this._highlighters &&
-      nodeFront == this.highlighters.gridHighlighterShown;
+    const highlighted = nodeFront == this.highlighters.gridHighlighterShown;
 
     let color;
     if (customColor) {
@@ -318,8 +317,7 @@ class GridInspector {
       const colorForHost = customColors[hostname] ? customColors[hostname][i] : null;
       const fallbackColor = GRID_COLORS[i % GRID_COLORS.length];
       const color = this.getInitialGridColor(nodeFront, colorForHost, fallbackColor);
-      const highlighted = this._highlighters &&
-        nodeFront == this.highlighters.gridHighlighterShown;
+      const highlighted = nodeFront == this.highlighters.gridHighlighterShown;
 
       grids.push({
         id: i,
@@ -452,8 +450,7 @@ class GridInspector {
         oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",")) {
       // Same list of containers, but let's check if the geometry of the current grid has
       // changed, if it hasn't we can safely abort.
-      if (!this._highlighters ||
-          !this.highlighters.gridHighlighterShown ||
+      if (!this.highlighters.gridHighlighterShown ||
           (this.highlighters.gridHighlighterShown &&
            !this.haveCurrentFragmentsChanged(newGridFronts))) {
         return;
