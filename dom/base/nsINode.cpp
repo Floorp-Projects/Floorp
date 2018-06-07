@@ -1234,11 +1234,13 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
       }
     }
 
+#ifdef ACCESSIBILITY
     AccessibleNode* anode =
       static_cast<AccessibleNode*>(tmp->GetProperty(nsGkAtoms::accessiblenode));
     if (anode) {
       cb.NoteXPCOMChild(anode);
     }
+#endif
   }
 
   if (tmp->NodeType() != DOCUMENT_NODE &&
