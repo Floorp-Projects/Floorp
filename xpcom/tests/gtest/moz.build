@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'TestEventTargetQI.cpp',
     'TestExpirationTracker.cpp',
     'TestFile.cpp',
+    'TestFilePreferencesWin.cpp',
     'TestGCPostBarriers.cpp',
     'TestID.cpp',
     'TestInputStreamLengthHelper.cpp',
