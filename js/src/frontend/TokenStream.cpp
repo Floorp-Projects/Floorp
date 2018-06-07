@@ -650,6 +650,21 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
         ungetCodeUnit(units[numUnits]);
 }
 
+template<class AnyCharsAccess>
+void
+TokenStreamChars<char16_t, AnyCharsAccess>::ungetLineTerminator()
+{
+    sourceUnits.ungetCodeUnit();
+
+    char16_t last = sourceUnits.peekCodeUnit();
+    MOZ_ASSERT(SourceUnits::isRawEOLChar(last));
+
+    if (last == '\n')
+        sourceUnits.ungetOptionalCRBeforeLF();
+
+    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+}
+
 // Return true iff |n| raw characters can be read from this without reading past
 // EOF, and copy those characters into |cp| if so.  The characters are not
 // consumed: use skipChars(n) to do so after checking that the consumed
@@ -2137,34 +2152,72 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (modifier == Operand) {
                 tokenbuf.clear();
 
+                auto ProcessNonAsciiCodePoint = [this](CharT lead) {
+                    int32_t codePoint;
+                    if (!this->getNonAsciiCodePoint(lead, &codePoint))
+                        return false;
+
+                    if (codePoint == '\n') {
+                        this->ungetLineTerminator();
+                        this->reportError(JSMSG_UNTERMINATED_REGEXP);
+                        return false;
+                    }
+
+                    return this->appendCodePointToTokenbuf(codePoint);
+                };
+
+                auto ReportUnterminatedRegExp = [this](CharT unit) {
+                    this->ungetCodeUnit(unit);
+                    this->error(JSMSG_UNTERMINATED_REGEXP);
+                };
+
                 bool inCharClass = false;
                 do {
-                    if (!getChar(&c))
-                        return badToken();
-
-                    if (c == '\\') {
-                        if (!tokenbuf.append(c))
-                            return badToken();
-
-                        if (!getChar(&c))
-                            return badToken();
-                    } else if (c == '[') {
-                        inCharClass = true;
-                    } else if (c == ']') {
-                        inCharClass = false;
-                    } else if (c == '/' && !inCharClass) {
-                        // For IE compat, allow unescaped / in char classes.
-                        break;
-                    }
-
-                    if (c == '\n' || c == EOF) {
-                        ungetChar(c);
-                        reportError(JSMSG_UNTERMINATED_REGEXP);
+                    int32_t unit = getCodeUnit();
+                    if (unit == EOF) {
+                        ReportUnterminatedRegExp(unit);
                         return badToken();
                     }
 
-                    if (!tokenbuf.append(c))
-                        return badToken();
+                    if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+                        if (unit == '\\')  {
+                            if (!tokenbuf.append(unit))
+                                return badToken();
+
+                            unit = getCodeUnit();
+                            if (unit == EOF) {
+                                ReportUnterminatedRegExp(unit);
+                                return badToken();
+                            }
+
+                            // Fallthrough only handles ASCII code points, so
+                            // deal with non-ASCII and skip everything else.
+                            if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
+                                if (!ProcessNonAsciiCodePoint(unit))
+                                    return badToken();
+
+                                continue;
+                            }
+                        } else if (unit == '[') {
+                            inCharClass = true;
+                        } else if (unit == ']') {
+                            inCharClass = false;
+                        } else if (unit == '/' && !inCharClass) {
+                            // For IE compat, allow unescaped / in char classes.
+                            break;
+                        }
+
+                        if (unit == '\r' || unit == '\n') {
+                            ReportUnterminatedRegExp(unit);
+                            return badToken();
+                        }
+
+                        if (!tokenbuf.append(unit))
+                            return badToken();
+                    } else {
+                        if (!ProcessNonAsciiCodePoint(unit))
+                            return badToken();
+                    }
                 } while (true);
 
                 RegExpFlag reflags = NoFlags;
