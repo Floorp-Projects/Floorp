@@ -61,36 +61,45 @@ ForbidUnsafeBrowserCPOWs()
 bool
 JavaScriptParent::allowMessage(JSContext* cx)
 {
-    // If we're running browser code, then we allow all safe CPOWs and forbid
-    // unsafe CPOWs based on a pref (which defaults to forbidden). We also allow
-    // CPOWs unconditionally in selected globals (based on
+    MOZ_ASSERT(cx);
+
+    // If we're running browser code while running tests (in automation),
+    // then we allow all safe CPOWs and forbid unsafe CPOWs
+    // based on a pref (which defaults to forbidden).
+    // We also allow CPOWs unconditionally in selected globals (based on
     // Cu.permitCPOWsInScope).
+    // A normal (release) browser build will never allow CPOWs,
+    // excecpt as a token to pass round.
+
+    if (!xpc::IsInAutomation()) {
+        JS_ReportErrorASCII(cx, "CPOW usage forbidden");
+        return false;
+    }
 
     MessageChannel* channel = GetIPCChannel();
     bool isSafe = channel->IsInTransaction();
 
-    bool warn = !isSafe;
+    if (isSafe)
+        return true;
+
     nsIGlobalObject* global = dom::GetIncumbentGlobal();
     JS::Rooted<JSObject*> jsGlobal(cx, global ? global->GetGlobalJSObject() : nullptr);
     if (jsGlobal) {
         JSAutoRealm ar(cx, jsGlobal);
 
-        if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
-            if (ForbidUnsafeBrowserCPOWs() && !isSafe) {
-                Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
-                JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
-                return false;
-            }
+        if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs &&
+            ForbidUnsafeBrowserCPOWs())
+        {
+            Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
+            JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
+            return false;
         }
     }
-
-    if (!warn)
-        return true;
 
     static bool disableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
     if (!disableUnsafeCPOWWarnings) {
         nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-        if (console && cx) {
+        if (console) {
             nsAutoString filename;
             uint32_t lineno = 0, column = 0;
             nsJSUtils::GetCallingLocation(cx, filename, &lineno, &column);
