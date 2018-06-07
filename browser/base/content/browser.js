@@ -1314,7 +1314,6 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     FeedHandler.init();
-    AboutCapabilitiesListener.init();
     TrackingProtection.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
@@ -1874,8 +1873,6 @@ var gBrowserInit = {
     BrowserOnClick.uninit();
 
     FeedHandler.uninit();
-
-    AboutCapabilitiesListener.uninit();
 
     TrackingProtection.uninit();
 
@@ -8358,39 +8355,6 @@ var PanicButtonNotifier = {
   close() {
     let popup = document.getElementById("panic-button-success-notification");
     popup.hidePopup();
-  },
-};
-
-var AboutCapabilitiesListener = {
-  _topics: [
-    "AboutCapabilities:OpenPrivateWindow",
-    "AboutCapabilities:DontShowIntroPanelAgain",
-  ],
-
-  init() {
-    let mm = window.messageManager;
-    for (let topic of this._topics) {
-      mm.addMessageListener(topic, this);
-    }
-  },
-
-  uninit() {
-    let mm = window.messageManager;
-    for (let topic of this._topics) {
-      mm.removeMessageListener(topic, this);
-    }
-  },
-
-  receiveMessage(aMsg) {
-    switch (aMsg.name) {
-      case "AboutCapabilities:OpenPrivateWindow":
-        OpenBrowserWindow({private: true});
-        break;
-
-      case "AboutCapabilities:DontShowIntroPanelAgain":
-        TrackingProtection.dontShowIntroPanelAgain();
-        break;
-    }
   },
 };
 
