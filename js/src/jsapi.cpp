@@ -732,13 +732,13 @@ JSAutoNullableRealm::~JSAutoNullableRealm()
 }
 
 JS_PUBLIC_API(void)
-JS_SetCompartmentPrivate(JSCompartment* compartment, void* data)
+JS_SetCompartmentPrivate(JS::Compartment* compartment, void* data)
 {
     compartment->data = data;
 }
 
 JS_PUBLIC_API(void*)
-JS_GetCompartmentPrivate(JSCompartment* compartment)
+JS_GetCompartmentPrivate(JS::Compartment* compartment)
 {
     return compartment->data;
 }
@@ -877,7 +877,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
 
     AutoDisableProxyCheck adpc;
 
-    JSCompartment* destination = target->compartment();
+    JS::Compartment* destination = target->compartment();
 
     if (origobj->compartment() == destination) {
         // If the original object is in the same compartment as the

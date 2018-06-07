@@ -210,7 +210,7 @@ private:
                        const Sequence<JS::Value>& aData,
                        MethodName aMethodName, const nsAString& aMethodString);
 
-  // This method must receive aCx and aArguments in the same JSCompartment.
+  // This method must receive aCx and aArguments in the same JS::Compartment.
   void
   ProcessCallData(JSContext* aCx,
                   ConsoleCallData* aData,

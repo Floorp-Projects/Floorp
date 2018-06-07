@@ -105,7 +105,7 @@ WrapperFactory::WaiveXray(JSContext* cx, JSObject* objArg)
 }
 
 /* static */ bool
-WrapperFactory::AllowWaiver(JSCompartment* target, JSCompartment* origin)
+WrapperFactory::AllowWaiver(JS::Compartment* target, JS::Compartment* origin)
 {
     return CompartmentPrivate::Get(target)->allowWaivers &&
            AccessCheck::subsumes(target, origin);
@@ -137,8 +137,8 @@ ShouldWaiveXray(JSContext* cx, JSObject* originalObj)
     // Otherwise, this is a case of explicitly passing a wrapper across a
     // compartment boundary. In that case, we only want to preserve waivers
     // in transactions between same-origin compartments.
-    JSCompartment* oldCompartment = js::GetObjectCompartment(originalObj);
-    JSCompartment* newCompartment = js::GetContextCompartment(cx);
+    JS::Compartment* oldCompartment = js::GetObjectCompartment(originalObj);
+    JS::Compartment* newCompartment = js::GetContextCompartment(cx);
     bool sameOrigin = false;
     if (OriginAttributes::IsRestrictOpenerAccessForFPI()) {
         sameOrigin =
@@ -192,8 +192,8 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     // However, we always need to provide live wrappers for ScriptSourceObjects,
     // since they're used for cross-compartment cloned scripts, and need to
     // remain accessible even after the original compartment has been nuked.
-    JSCompartment* origin = js::GetObjectCompartment(obj);
-    JSCompartment* target = js::GetObjectCompartment(scope);
+    JS::Compartment* origin = js::GetObjectCompartment(obj);
+    JS::Compartment* target = js::GetObjectCompartment(scope);
     if (!JS_IsScriptSourceObject(obj) &&
         (CompartmentPrivate::Get(origin)->wasNuked ||
          CompartmentPrivate::Get(target)->wasNuked)) {
@@ -352,7 +352,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
 #ifdef DEBUG
 static void
 DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
-                        JSCompartment* origin, JSCompartment* target)
+                        JS::Compartment* origin, JS::Compartment* target)
 {
     if (!JS_IsScriptSourceObject(obj) &&
         (CompartmentPrivate::Get(origin)->wasNuked || CompartmentPrivate::Get(target)->wasNuked)) {
@@ -437,8 +437,8 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
     MOZ_ASSERT(dom::IsJSAPIActive());
 
     // Compute the information we need to select the right wrapper.
-    JSCompartment* origin = js::GetObjectCompartment(obj);
-    JSCompartment* target = js::GetContextCompartment(cx);
+    JS::Compartment* origin = js::GetObjectCompartment(obj);
+    JS::Compartment* target = js::GetContextCompartment(cx);
     bool originIsChrome = AccessCheck::isChrome(origin);
     bool targetIsChrome = AccessCheck::isChrome(target);
     bool originSubsumesTarget = OriginAttributes::IsRestrictOpenerAccessForFPI() ?
@@ -589,8 +589,8 @@ WrapperFactory::WaiveXrayAndWrap(JSContext* cx, MutableHandleObject argObj)
     // with the function. So if we find ourselves trying to create a waiver for
     // |cx|, we should check whether the caller has any business with waivers
     // to things in |obj|'s compartment.
-    JSCompartment* target = js::GetContextCompartment(cx);
-    JSCompartment* origin = js::GetObjectCompartment(obj);
+    JS::Compartment* target = js::GetContextCompartment(cx);
+    JS::Compartment* origin = js::GetObjectCompartment(obj);
     obj = AllowWaiver(target, origin) ? WaiveXray(cx, obj) : obj;
     if (!obj)
         return false;

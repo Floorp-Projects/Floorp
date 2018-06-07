@@ -30,7 +30,7 @@ using namespace testing;
 struct DevTools : public ::testing::Test {
   bool                       _initialized;
   JSContext*                 cx;
-  JSCompartment*             compartment;
+  JS::Compartment*           compartment;
   JS::Zone*                  zone;
   JS::PersistentRootedObject global;
 
@@ -130,7 +130,7 @@ class MOZ_STACK_CLASS FakeNode
 {
 public:
   JS::ubi::EdgeVector edges;
-  JSCompartment*      compartment;
+  JS::Compartment*    compartment;
   JS::Zone*           zone;
   size_t              size;
 
@@ -164,7 +164,7 @@ class Concrete<FakeNode> : public Base
     return get().zone;
   }
 
-  JSCompartment* compartment() const override {
+  JS::Compartment* compartment() const override {
     return get().compartment;
   }
 

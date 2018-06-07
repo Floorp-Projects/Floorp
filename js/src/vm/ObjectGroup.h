@@ -233,8 +233,8 @@ class ObjectGroup : public gc::TenuredCell
         return res;
     }
 
-    JSCompartment* compartment() const { return JS::GetCompartmentForRealm(realm_); }
-    JSCompartment* maybeCompartment() const { return compartment(); }
+    JS::Compartment* compartment() const { return JS::GetCompartmentForRealm(realm_); }
+    JS::Compartment* maybeCompartment() const { return compartment(); }
     JS::Realm* realm() const { return realm_; }
 
   public:

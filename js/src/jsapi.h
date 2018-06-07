@@ -309,15 +309,11 @@ struct JSWrapObjectCallbacks
 };
 
 typedef void
-(* JSDestroyCompartmentCallback)(JSFreeOp* fop, JSCompartment* compartment);
+(* JSDestroyCompartmentCallback)(JSFreeOp* fop, JS::Compartment* compartment);
 
 typedef size_t
 (* JSSizeOfIncludingThisCompartmentCallback)(mozilla::MallocSizeOf mallocSizeOf,
-                                             JSCompartment* compartment);
-
-typedef void
-(* JSCompartmentNameCallback)(JSContext* cx, JSCompartment* compartment,
-                              char* buf, size_t bufsize);
+                                             JS::Compartment* compartment);
 
 /**
  * Callback used by memory reporting to ask the embedder how much memory an
@@ -997,10 +993,10 @@ JS_GetErrorType(const JS::Value& val);
 #endif // defined(NIGHTLY_BUILD)
 
 extern JS_PUBLIC_API(void)
-JS_SetCompartmentPrivate(JSCompartment* compartment, void* data);
+JS_SetCompartmentPrivate(JS::Compartment* compartment, void* data);
 
 extern JS_PUBLIC_API(void*)
-JS_GetCompartmentPrivate(JSCompartment* compartment);
+JS_GetCompartmentPrivate(JS::Compartment* compartment);
 
 extern JS_PUBLIC_API(void)
 JS_SetZoneUserData(JS::Zone* zone, void* data);
@@ -1109,12 +1105,12 @@ IterateRealms(JSContext* cx, void* data, IterateRealmCallback realmCallback);
  * Like IterateRealms, but only iterates realms in |compartment|.
  */
 extern JS_PUBLIC_API(void)
-IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+IterateRealmsInCompartment(JSContext* cx, JS::Compartment* compartment, void* data,
                            IterateRealmCallback realmCallback);
 
 } // namespace JS
 
-typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
+typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JS::Compartment* compartment);
 
 /**
  * This function calls |compartmentCallback| on every compartment. Beware that
@@ -1768,7 +1764,7 @@ class JS_PUBLIC_API(RealmCreationOptions)
         MOZ_ASSERT(compSpec_ == CompartmentSpecifier::NewCompartmentInExistingZone);
         return zone_;
     }
-    JSCompartment* compartment() const {
+    JS::Compartment* compartment() const {
         MOZ_ASSERT(compSpec_ == CompartmentSpecifier::ExistingCompartment);
         return comp_;
     }
@@ -1837,7 +1833,7 @@ class JS_PUBLIC_API(RealmCreationOptions)
     JSTraceOp traceGlobal_;
     CompartmentSpecifier compSpec_;
     union {
-        JSCompartment* comp_;
+        JS::Compartment* comp_;
         JS::Zone* zone_;
     };
     bool invisibleToDebugger_;

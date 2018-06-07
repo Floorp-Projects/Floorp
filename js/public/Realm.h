@@ -49,14 +49,14 @@ namespace shadow {
 class Realm
 {
   protected:
-    JSCompartment* compartment_;
+    JS::Compartment* compartment_;
 
-    explicit Realm(JSCompartment* comp)
+    explicit Realm(JS::Compartment* comp)
       : compartment_(comp)
     {}
 
   public:
-    JSCompartment* compartment() {
+    JS::Compartment* compartment() {
         return compartment_;
     }
     static shadow::Realm* get(JS::Realm* realm) {
@@ -67,7 +67,7 @@ class Realm
 }; // namespace shadow
 
 // Return the compartment that contains a given realm.
-inline JSCompartment*
+inline JS::Compartment*
 GetCompartmentForRealm(Realm* realm)
 {
     return shadow::Realm::get(realm)->compartment();

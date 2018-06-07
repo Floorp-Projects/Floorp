@@ -283,7 +283,7 @@ class TypeSet
 
         ObjectGroup* maybeGroup();
 
-        JSCompartment* maybeCompartment();
+        JS::Compartment* maybeCompartment();
     } JS_HAZ_GC_POINTER;
 
     // Information about a single concrete type. We pack this into one word,
@@ -369,7 +369,7 @@ class TypeSet
 
         inline void trace(JSTracer* trc);
 
-        JSCompartment* maybeCompartment();
+        JS::Compartment* maybeCompartment();
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
@@ -538,7 +538,7 @@ class TypeSet
     TemporaryTypeSet* cloneObjectsOnly(LifoAlloc* alloc);
     TemporaryTypeSet* cloneWithoutObjects(LifoAlloc* alloc);
 
-    JSCompartment* maybeCompartment();
+    JS::Compartment* maybeCompartment();
 
     // Trigger a read barrier on all the contents of a type set.
     static void readBarrier(const TypeSet* types);
@@ -649,7 +649,7 @@ class TypeConstraint
     virtual bool sweep(TypeZone& zone, TypeConstraint** res) = 0;
 
     /* The associated compartment, if any. */
-    virtual JSCompartment* maybeCompartment() = 0;
+    virtual JS::Compartment* maybeCompartment() = 0;
 };
 
 // If there is an OOM while sweeping types, the type information is deoptimized
@@ -1501,7 +1501,7 @@ inline const char * InferSpewColor(TypeSet* types) { return nullptr; }
 
 // Prints type information for a context if spew is enabled or force is set.
 void
-PrintTypes(JSContext* cx, JSCompartment* comp, bool force);
+PrintTypes(JSContext* cx, JS::Compartment* comp, bool force);
 
 } /* namespace js */
 

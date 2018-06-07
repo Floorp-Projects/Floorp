@@ -414,7 +414,7 @@ extern JS_PUBLIC_API(void)
 TraceChildren(JSTracer* trc, GCCellPtr thing);
 
 using ZoneSet = js::HashSet<Zone*, js::DefaultHasher<Zone*>, js::SystemAllocPolicy>;
-using CompartmentSet = js::HashSet<JSCompartment*, js::DefaultHasher<JSCompartment*>,
+using CompartmentSet = js::HashSet<JS::Compartment*, js::DefaultHasher<JS::Compartment*>,
                                    js::SystemAllocPolicy>;
 
 /**

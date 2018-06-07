@@ -22,7 +22,7 @@ namespace js {
 
 class CompartmentChecker
 {
-    JSCompartment* compartment;
+    JS::Compartment* compartment;
 
   public:
     explicit CompartmentChecker(JSContext* cx)
@@ -34,7 +34,7 @@ class CompartmentChecker
      * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
      * compartment mismatches.
      */
-    static void fail(JSCompartment* c1, JSCompartment* c2) {
+    static void fail(JS::Compartment* c1, JS::Compartment* c2) {
         printf("*** Compartment mismatch %p vs. %p\n", (void*) c1, (void*) c2);
         MOZ_CRASH();
     }
@@ -44,12 +44,12 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    static void check(JSCompartment* c1, JSCompartment* c2) {
+    static void check(JS::Compartment* c1, JS::Compartment* c2) {
         if (c1 != c2)
             fail(c1, c2);
     }
 
-    void check(JSCompartment* c) {
+    void check(JS::Compartment* c) {
         if (c && c != compartment)
             fail(compartment, c);
     }

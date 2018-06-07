@@ -39,7 +39,7 @@ class WrapperFactory {
 
     // Computes whether we should allow the creation of an Xray waiver from
     // |target| to |origin|.
-    static bool AllowWaiver(JSCompartment* target, JSCompartment* origin);
+    static bool AllowWaiver(JS::Compartment* target, JS::Compartment* origin);
 
     // Convenience method for the above, operating on a wrapper.
     static bool AllowWaiver(JSObject* wrapper);

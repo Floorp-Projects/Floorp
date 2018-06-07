@@ -1124,10 +1124,10 @@ class JSScript : public js::gc::TenuredCell
         // Lexical check did fail and bail out.
         bool failedLexicalCheck_ : 1;
 
-        // Script has an entry in JSCompartment::scriptCountsMap.
+        // Script has an entry in Realm::scriptCountsMap.
         bool hasScriptCounts_ : 1;
 
-        // Script has an entry in JSCompartment::debugScriptMap.
+        // Script has an entry in Realm::debugScriptMap.
         bool hasDebugScript_ : 1;
 
         // Freeze constraints for stack type sets have been generated.
@@ -1250,8 +1250,8 @@ class JSScript : public js::gc::TenuredCell
   public:
     inline JSPrincipals* principals();
 
-    JSCompartment* compartment() const { return JS::GetCompartmentForRealm(realm_); }
-    JSCompartment* maybeCompartment() const { return compartment(); }
+    JS::Compartment* compartment() const { return JS::GetCompartmentForRealm(realm_); }
+    JS::Compartment* maybeCompartment() const { return compartment(); }
     JS::Realm* realm() const { return realm_; }
 
     js::SharedScriptData* scriptData() {

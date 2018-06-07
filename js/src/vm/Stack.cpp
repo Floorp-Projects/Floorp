@@ -931,7 +931,7 @@ FrameIter::rawFramePtr() const
     MOZ_CRASH("Unexpected state");
 }
 
-JSCompartment*
+JS::Compartment*
 FrameIter::compartment() const
 {
     switch (data_.state_) {

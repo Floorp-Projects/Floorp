@@ -167,7 +167,7 @@ JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
         if (compartments.has(comp))
             continue;
 
-        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
+        for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             mozilla::DebugOnly<const CrossCompartmentKey> prior = e.front().key();
             e.front().mutableKey().applyToWrapped(TraceIncomingFunctor(trc, compartments));
             MOZ_ASSERT(e.front().key() == prior);
