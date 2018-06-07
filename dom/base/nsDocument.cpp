@@ -52,7 +52,6 @@
 #include "nsScreen.h"
 #include "ChildIterator.h"
 
-#include "mozilla/dom/AboutCapabilitiesBinding.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventListenerManager.h"
@@ -1860,7 +1859,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadyForIdle)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAboutCapabilities)
 
   // Traverse all nsDocument nsCOMPtrs.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParser)
@@ -2015,7 +2013,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAboutCapabilities)
 
   tmp->mParentDocument = nullptr;
 
@@ -3295,62 +3292,6 @@ nsIDocument::GetAllowPlugins()
   }
 
   return true;
-}
-
-bool
-nsDocument::CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject)
-{
-  /*
-   * If you want an about: page to have access to AboutCapabilities,
-   * please add it to the list of trusted about: pages underneath.
-   */
-  static const char* kTrustedAboutPages[] = {
-    "about:privatebrowsing",
-  };
-
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  if (!principal) {
-    return false;
-  }
-  nsCOMPtr<nsIURI> uri;
-  principal->GetURI(getter_AddRefs(uri));
-  if (!uri) {
-    return false;
-  }
-  // getSpec is an expensive operation, hence we first check the scheme
-  // to see if the caller is actually an about: page.
-  bool isAboutScheme = false;
-  uri->SchemeIs("about", &isAboutScheme);
-  if (!isAboutScheme) {
-    return false;
-  }
-
-  nsAutoCString aboutSpec;
-  uri->GetSpec(aboutSpec);
-  for (auto & aboutPageEntry : kTrustedAboutPages) {
-    if (aboutSpec.EqualsIgnoreCase(aboutPageEntry)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-already_AddRefed<AboutCapabilities>
-nsIDocument::GetAboutCapabilities(ErrorResult& aRv)
-{
-  if (!mAboutCapabilities) {
-    AutoJSContext cx;
-    JS::Rooted<JSObject*> jsImplObj(cx);
-    nsIGlobalObject* sgo = GetScopeObject();
-    ConstructJSImplementation("@mozilla.org/aboutcapabilities;1", sgo, &jsImplObj, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    mAboutCapabilities = new AboutCapabilities(jsImplObj, sgo);
-  }
-  RefPtr<AboutCapabilities> aboutCapabilities =
-    static_cast<AboutCapabilities*>(mAboutCapabilities.get());
-  return aboutCapabilities.forget();
 }
 
 bool
