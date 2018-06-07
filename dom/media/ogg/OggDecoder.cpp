@@ -52,4 +52,34 @@ OggDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   return true;
 }
 
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+OggDecoder::GetTracksInfo(const MediaContainerType& aType)
+{
+  nsTArray<UniquePtr<TrackInfo>> tracks;
+  if (!IsSupportedType(aType)) {
+    return tracks;
+  }
+
+  const MediaCodecs& codecs = aType.ExtendedType().Codecs();
+  if (codecs.IsEmpty()) {
+    // Codecs must be specified for ogg as it can't be implied.
+    return tracks;
+  }
+
+  for (const auto& codec : codecs.Range()) {
+    if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("vorbis") ||
+        codec.EqualsLiteral("flac")) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec), aType));
+    } else {
+      MOZ_ASSERT(codec.EqualsLiteral("theora"));
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("video/") + NS_ConvertUTF16toUTF8(codec), aType));
+    }
+  }
+  return tracks;
+}
+
 } // namespace mozilla

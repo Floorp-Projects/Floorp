@@ -49,6 +49,88 @@ MP4Decoder::IsSupportedTypeWithoutDiagnostics(
   return IsSupportedType(aContainerType, nullptr);
 }
 
+static bool IsTypeValid(const MediaContainerType& aType)
+{
+  // Whitelist MP4 types, so they explicitly match what we encounter on
+  // the web, as opposed to what we use internally (i.e. what our demuxers
+  // etc output).
+  return aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
+         aType.Type() == MEDIAMIMETYPE("audio/x-m4a") ||
+         aType.Type() == MEDIAMIMETYPE("video/mp4") ||
+         aType.Type() == MEDIAMIMETYPE("video/quicktime") ||
+         aType.Type() == MEDIAMIMETYPE("video/x-m4v");
+}
+
+/* statis */ nsTArray<UniquePtr<TrackInfo>>
+MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
+{
+  nsTArray<UniquePtr<TrackInfo>> tracks;
+
+  if (!IsTypeValid(aType)) {
+    aError = MediaResult(
+      NS_ERROR_DOM_MEDIA_FATAL_ERR,
+      RESULT_DETAIL("Invalid type:%s", aType.Type().AsString().get()));
+    return tracks;
+  }
+
+  aError = NS_OK;
+
+  const MediaCodecs& codecs = aType.ExtendedType().Codecs();
+  if (codecs.IsEmpty()) {
+    return tracks;
+  }
+
+  const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4") ||
+                       aType.Type() == MEDIAMIMETYPE("video/quicktime") ||
+                       aType.Type() == MEDIAMIMETYPE("video/x-m4v");
+
+  for (const auto& codec : codecs.Range()) {
+    if (IsAACCodecString(codec)) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+      continue;
+    }
+    if (codec.EqualsLiteral("mp3")) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/mpeg"), aType));
+      continue;
+    }
+    if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("flac")) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec), aType));
+      continue;
+    }
+    if (IsVP9CodecString(codec)) {
+      auto trackInfo =
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("video/vp9"), aType);
+      uint8_t profile = 0;
+      uint8_t level = 0;
+      uint8_t bitDepth = 0;
+      if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
+        trackInfo->GetAsVideoInfo()->mBitDepth = bitDepth;
+      }
+      tracks.AppendElement(std::move(trackInfo));
+      continue;
+    }
+    if (isVideo && IsWhitelistedH264Codec(codec)) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("video/avc"), aType));
+      continue;
+    }
+    // Unknown codec
+    aError =
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Unknown codec:%s",
+                                NS_ConvertUTF16toUTF8(codec).get()));
+  }
+  return tracks;
+}
+
 /* static */
 bool
 MP4Decoder::IsSupportedType(const MediaContainerType& aType,
@@ -58,90 +140,30 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
     return false;
   }
 
-  // Whitelist MP4 types, so they explicitly match what we encounter on
-  // the web, as opposed to what we use internally (i.e. what our demuxers
-  // etc output).
-  const bool isAudio = aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
-                       aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
-  const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4") ||
-                       aType.Type() == MEDIAMIMETYPE("video/quicktime") ||
-                       aType.Type() == MEDIAMIMETYPE("video/x-m4v");
-
-  if (!isAudio && !isVideo) {
+  MediaResult rv = NS_OK;
+  auto tracks = GetTracksInfo(aType, rv);
+  if (NS_FAILED(rv)) {
     return false;
   }
 
-  nsTArray<UniquePtr<TrackInfo>> trackInfos;
-  if (aType.ExtendedType().Codecs().IsEmpty()) {
-    // No codecs specified. Assume H.264
-    if (isAudio) {
-      trackInfos.AppendElement(
+  if (tracks.IsEmpty()) {
+    // No codecs specified. Assume H.264 or AAC
+    if (aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
+        aType.Type() == MEDIAMIMETYPE("audio/x-m4a")) {
+      tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
           NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
     } else {
-      MOZ_ASSERT(isVideo);
-      trackInfos.AppendElement(
+      tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
           NS_LITERAL_CSTRING("video/avc"), aType));
-    }
-  } else {
-    // Verify that all the codecs specified are ones that we expect that
-    // we can play.
-    for (const auto& codec : aType.ExtendedType().Codecs().Range()) {
-      if (IsAACCodecString(codec)) {
-        trackInfos.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
-        continue;
-      }
-      if (codec.EqualsLiteral("mp3")) {
-        trackInfos.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("audio/mpeg"), aType));
-        continue;
-      }
-      if (codec.EqualsLiteral("opus")) {
-        trackInfos.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("audio/opus"), aType));
-        continue;
-      }
-      if (codec.EqualsLiteral("flac")) {
-        trackInfos.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("audio/flac"), aType));
-        continue;
-      }
-      if (IsVP9CodecString(codec)) {
-        auto trackInfo =
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("video/vp9"), aType);
-        uint8_t profile = 0;
-        uint8_t level = 0;
-        uint8_t bitDepth = 0;
-        if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
-          trackInfo->GetAsVideoInfo()->mBitDepth = bitDepth;
-        }
-        trackInfos.AppendElement(std::move(trackInfo));
-        continue;
-      }
-      // Note: Only accept H.264 in a video content type, not in an audio
-      // content type.
-      if (IsWhitelistedH264Codec(codec) && isVideo) {
-        trackInfos.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("video/avc"), aType));
-        continue;
-      }
-      // Some unsupported codec.
-      return false;
     }
   }
 
   // Verify that we have a PDM that supports the whitelisted types.
   RefPtr<PDMFactory> platform = new PDMFactory();
-  for (const auto& trackInfo : trackInfos) {
-    if (!trackInfo || !platform->Supports(*trackInfo, aDiagnostics)) {
+  for (const auto& track : tracks) {
+    if (!track || !platform->Supports(*track, aDiagnostics)) {
       return false;
     }
   }
@@ -169,6 +191,13 @@ bool
 MP4Decoder::IsEnabled()
 {
   return StaticPrefs::mediaMp4Enabled();
+}
+
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+MP4Decoder::GetTracksInfo(const MediaContainerType& aType)
+{
+  MediaResult rv = NS_OK;
+  return GetTracksInfo(aType, rv);
 }
 
 } // namespace mozilla
