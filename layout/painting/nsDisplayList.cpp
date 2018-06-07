@@ -5105,7 +5105,13 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   // this display item).
   FrameMetrics::ViewID scrollId = mScrollTarget.valueOrFrom(
       [&]() -> FrameMetrics::ViewID {
-          if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
+          const ActiveScrolledRoot* asr = GetActiveScrolledRoot();
+          Maybe<FrameMetrics::ViewID> fixedTarget =
+              aBuilder.GetContainingFixedPosScrollTarget(asr);
+          if (fixedTarget) {
+            return *fixedTarget;
+          }
+          if (asr) {
             return asr->GetViewId();
           }
           return FrameMetrics::NULL_SCROLL_ID;
@@ -7419,6 +7425,25 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
       viewportFrame, anchorRect, fixedFrame, presContext, aContainerParameters);
 
   return layer.forget();
+}
+
+bool
+nsDisplayFixedPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                const StackingContextHelper& aSc,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // We install this RAII scrolltarget tracker so that any
+  // nsDisplayCompositorHitTestInfo items inside this fixed-pos item (and that
+  // share the same ASR as this item) use the correct scroll target. That way
+  // attempts to scroll on those items will scroll the root scroll frame.
+  mozilla::wr::DisplayListBuilder::FixedPosScrollTargetTracker tracker(
+      aBuilder,
+      GetActiveScrolledRoot(),
+      nsLayoutUtils::ScrollIdForRootScrollFrame(Frame()->PresContext()));
+  return nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
+      aManager, aDisplayListBuilder);
 }
 
 bool
