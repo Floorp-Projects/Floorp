@@ -7996,19 +7996,24 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     UniquePtr<Zone> zoneHolder;
     UniquePtr<JSCompartment> compHolder;
 
+    JSCompartment* comp = nullptr;
     Zone* zone = nullptr;
-    JS::ZoneSpecifier zoneSpec = options.creationOptions().zoneSpecifier();
-    switch (zoneSpec) {
-      case JS::SystemZone:
+    JS::CompartmentSpecifier compSpec = options.creationOptions().compartmentSpecifier();
+    switch (compSpec) {
+      case JS::CompartmentSpecifier::NewCompartmentInSystemZone:
         // systemZone might be null here, in which case we'll make a zone and
         // set this field below.
         zone = rt->gc.systemZone;
         break;
-      case JS::ExistingZone:
+      case JS::CompartmentSpecifier::NewCompartmentInExistingZone:
         zone = options.creationOptions().zone();
         MOZ_ASSERT(zone);
         break;
-      case JS::NewZone:
+      case JS::CompartmentSpecifier::ExistingCompartment:
+        comp = options.creationOptions().compartment();
+        zone = comp->zone();
+        break;
+      case JS::CompartmentSpecifier::NewCompartmentAndZone:
         break;
     }
 
@@ -8027,11 +8032,14 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         zone = zoneHolder.get();
     }
 
-    compHolder = cx->make_unique<JSCompartment>(zone);
-    if (!compHolder || !compHolder->init(cx))
-        return nullptr;
+    if (!comp) {
+        compHolder = cx->make_unique<JSCompartment>(zone);
+        if (!compHolder || !compHolder->init(cx))
+            return nullptr;
 
-    JSCompartment* comp = compHolder.get();
+        comp = compHolder.get();
+    }
+
     UniquePtr<Realm> realm(cx->new_<Realm>(comp, options));
     if (!realm || !realm->init(cx))
         return nullptr;
@@ -8039,34 +8047,35 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     // Set up the principals.
     JS::SetRealmPrincipals(realm.get(), principals);
 
-    if (!comp->realms().append(realm.get())) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
     AutoLockGC lock(rt);
 
-    if (!zone->compartments().append(comp)) {
+    // Reserve space in the Vectors before we start mutating them.
+    if (!comp->realms().reserve(comp->realms().length() + 1) ||
+        (compHolder && !zone->compartments().reserve(zone->compartments().length() + 1)) ||
+        (zoneHolder && !rt->gc.zones().reserve(rt->gc.zones().length() + 1)))
+    {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
+    // After this everything must be infallible.
+
+    comp->realms().infallibleAppend(realm.get());
+
+    if (compHolder)
+        zone->compartments().infallibleAppend(compHolder.release());
+
     if (zoneHolder) {
-        if (!rt->gc.zones().append(zone)) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
+        rt->gc.zones().infallibleAppend(zoneHolder.release());
 
         // Lazily set the runtime's sytem zone.
-        if (zoneSpec == JS::SystemZone) {
+        if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSystemZone) {
             MOZ_RELEASE_ASSERT(!rt->gc.systemZone);
             rt->gc.systemZone = zone;
             zone->isSystem = true;
         }
     }
 
-    mozilla::Unused << compHolder.release();
-    mozilla::Unused << zoneHolder.release();
     return realm.release();
 }
 

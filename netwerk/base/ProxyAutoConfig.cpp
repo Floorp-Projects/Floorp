@@ -654,7 +654,7 @@ private:
     JSAutoRequest areq(mContext);
 
     JS::RealmOptions options;
-    options.creationOptions().setSystemZone();
+    options.creationOptions().setNewCompartmentInSystemZone();
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
                                  JS::DontFireOnNewGlobalHook, options);
     if (!mGlobal) {
