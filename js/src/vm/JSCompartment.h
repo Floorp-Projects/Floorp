@@ -550,9 +550,8 @@ class ObjectWeakMap;
 class WeakMapBase;
 } // namespace js
 
-struct JS::Compartment
+class JS::Compartment
 {
-  private:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 

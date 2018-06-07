@@ -45,10 +45,10 @@ class BigInt;
 #endif
 union Value;
 
-struct Compartment;
+class Compartment;
 class Realm;
 struct Runtime;
-struct Zone;
+class Zone;
 
 template <typename T> class Handle;
 template <typename T> class MutableHandle;
