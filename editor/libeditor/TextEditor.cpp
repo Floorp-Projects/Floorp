@@ -1956,7 +1956,8 @@ TextEditor::Rewrap(bool aRespectNewlines)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isCollapsed) {
-    SelectAll();
+    DebugOnly<nsresult> rv = SelectAllInternal();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),  "Failed to select all text");
   }
 
   return InsertTextWithQuotations(wrapped);
@@ -1976,8 +1977,10 @@ TextEditor::StripCites()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isCollapsed) {
-    rv = SelectAll();
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SelectAllInternal();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = InsertTextAsAction(stripped);

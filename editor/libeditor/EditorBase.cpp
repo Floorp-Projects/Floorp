@@ -1019,11 +1019,37 @@ EditorBase::SelectAll()
   if (!IsInitialized()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  ForceCompositionEnd();
+
+  nsresult rv = SelectAllInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+EditorBase::SelectAllInternal()
+{
+  MOZ_ASSERT(IsInitialized());
+
+  CommitComposition();
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
+  // XXX Do we need to keep handling after committing composition causes moving
+  //     focus to different element?  Although TextEditor has independent
+  //     selection, so, we may not see any odd behavior even in such case.
 
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
-  return SelectEntireDocument(selection);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SelectEntireDocument(selection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
