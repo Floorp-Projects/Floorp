@@ -2136,7 +2136,7 @@ class BaseScript(ScriptMixin, LogMixin, object):
         return self.abs_dirs
 
     def dump_config(self, file_path=None, config=None,
-                    console_output=False, exit_on_finish=False):
+                    console_output=True, exit_on_finish=False):
         """Dump self.config to localconfig.json
         """
         config = config or self.config

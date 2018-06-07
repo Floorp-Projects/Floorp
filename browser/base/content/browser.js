@@ -1314,7 +1314,6 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     FeedHandler.init();
-    AboutCapabilitiesListener.init();
     TrackingProtection.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
@@ -1874,8 +1873,6 @@ var gBrowserInit = {
     BrowserOnClick.uninit();
 
     FeedHandler.uninit();
-
-    AboutCapabilitiesListener.uninit();
 
     TrackingProtection.uninit();
 
@@ -4550,15 +4547,22 @@ function openNewUserContextTab(event) {
 }
 
 /**
- * Updates File Menu User Context UI visibility depending on
+ * Updates User Context Menu Item UI visibility depending on
  * privacy.userContext.enabled pref state.
  */
-function updateUserContextUIVisibility() {
-  let menu = document.getElementById("menu_newUserContext");
-  menu.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled");
+function updateFileMenuUserContextUIVisibility(id) {
+  let menu = document.getElementById(id);
+  menu.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled", false);
+  // Visibility of File menu item shouldn't change frequently.
   if (PrivateBrowsingUtils.isWindowPrivate(window)) {
     menu.setAttribute("disabled", "true");
   }
+}
+function updateTabMenuUserContextUIVisibility(id) {
+  let menu = document.getElementById(id);
+  // Visibility of Tab menu item can change frequently.
+  menu.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||
+                PrivateBrowsingUtils.isWindowPrivate(window);
 }
 
 /**
@@ -4590,6 +4594,44 @@ function updateUserContextUIIndicator() {
   indicator.setAttribute("data-identity-icon", identity.icon);
 
   hbox.hidden = false;
+}
+
+/**
+ * Fill 'Reopen in Container' menu.
+ */
+function createReopenInContainerMenu(event) {
+  let currentid = TabContextMenu.contextTab.getAttribute("usercontextid");
+
+  return createUserContextMenu(event, {
+    isContextMenu: true,
+    excludeUserContextId: currentid,
+  });
+}
+
+/**
+ * Reopen the tab in another container.
+ */
+function reopenInContainer(event) {
+  let userContextId = parseInt(event.target.getAttribute("data-usercontextid"));
+  let currentTab = TabContextMenu.contextTab;
+  let isSelected = (gBrowser.selectedTab == currentTab);
+  let uri = currentTab.linkedBrowser.currentURI.spec;
+
+  let newTab = gBrowser.addTab(uri, {
+    userContextId,
+    pinned: currentTab.pinned,
+    index: currentTab._tPos + 1,
+  });
+
+  // Carry over some configuration.
+  if (isSelected) {
+    gBrowser.selectedTab = newTab;
+  }
+  if (currentTab.muted) {
+    if (!newTab.muted) {
+      newTab.toggleMuteAudio(currentTab.muteReason);
+    }
+  }
 }
 
 /**
@@ -7930,6 +7972,8 @@ var TabContextMenu = {
     aPopupMenu.addEventListener("popuphiding", this);
 
     gSync.updateTabContextMenu(aPopupMenu, this.contextTab);
+
+    updateTabMenuUserContextUIVisibility("context_reopenInContainer");
   },
   handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -8311,39 +8355,6 @@ var PanicButtonNotifier = {
   close() {
     let popup = document.getElementById("panic-button-success-notification");
     popup.hidePopup();
-  },
-};
-
-var AboutCapabilitiesListener = {
-  _topics: [
-    "AboutCapabilities:OpenPrivateWindow",
-    "AboutCapabilities:DontShowIntroPanelAgain",
-  ],
-
-  init() {
-    let mm = window.messageManager;
-    for (let topic of this._topics) {
-      mm.addMessageListener(topic, this);
-    }
-  },
-
-  uninit() {
-    let mm = window.messageManager;
-    for (let topic of this._topics) {
-      mm.removeMessageListener(topic, this);
-    }
-  },
-
-  receiveMessage(aMsg) {
-    switch (aMsg.name) {
-      case "AboutCapabilities:OpenPrivateWindow":
-        OpenBrowserWindow({private: true});
-        break;
-
-      case "AboutCapabilities:DontShowIntroPanelAgain":
-        TrackingProtection.dontShowIntroPanelAgain();
-        break;
-    }
   },
 };
 

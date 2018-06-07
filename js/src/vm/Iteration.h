@@ -91,7 +91,7 @@ struct NativeIterator
                    Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
                    uint32_t numGuards, uint32_t guardKey, bool* hadError);
 
-    /** Initialize a |JSCompartment::enumerators| sentinel. */
+    /** Initialize an |ObjectRealm::enumerators| sentinel. */
     NativeIterator();
 
     JSObject* objectBeingIterated() const {

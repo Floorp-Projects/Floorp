@@ -64,6 +64,34 @@ MOZ_END_EXTERN_C
 namespace mozilla {
 
 /**
+ * A version of CorruptionCanary that is suitable as a member of objects that
+ * are statically allocated.
+ */
+class CorruptionCanaryForStatics {
+public:
+  constexpr CorruptionCanaryForStatics()
+    : mValue(kCanarySet)
+  {
+  }
+
+  // This is required to avoid static constructor bloat.
+  ~CorruptionCanaryForStatics() = default;
+
+  void Check() const {
+    if (mValue != kCanarySet) {
+      MOZ_CRASH("Canary check failed, check lifetime");
+    }
+  }
+
+protected:
+  uintptr_t mValue;
+
+private:
+  static const uintptr_t kCanarySet = 0x0f0b0f0b;
+};
+
+
+/**
  * This class is designed to cause crashes when various kinds of memory
  * corruption are observed. For instance, let's say we have a class C where we
  * suspect out-of-bounds writes to some members.  We can insert a member of type
@@ -79,27 +107,14 @@ namespace mozilla {
  * consolidated at the point of a Check(), rather than scattered about at
  * various uses of the corrupted memory.
  */
-class CorruptionCanary {
+class CorruptionCanary : public CorruptionCanaryForStatics {
 public:
-  constexpr CorruptionCanary()
-    : mValue(kCanarySet)
-  {
-  }
+  constexpr CorruptionCanary() = default;
 
   ~CorruptionCanary() {
     Check();
     mValue = mozPoisonValue();
   }
-
-  void Check() const {
-    if (mValue != kCanarySet) {
-      MOZ_CRASH("Canary check failed, check lifetime");
-    }
-  }
-
-private:
-  static const uintptr_t kCanarySet = 0x0f0b0f0b;
-  uintptr_t mValue;
 };
 
 } // mozilla

@@ -28,19 +28,6 @@ class Rule;
 
 class DeclarationBlock final
 {
-public:
-  explicit DeclarationBlock(
-    already_AddRefed<RawServoDeclarationBlock> aRaw)
-    : mRaw(aRaw)
-    , mImmutable(false)
-    , mIsDirty(false)
-  {
-    mContainer.mRaw = 0;
-  }
-
-  DeclarationBlock()
-    : DeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
-
   DeclarationBlock(const DeclarationBlock& aCopy)
     : mRaw(Servo_DeclarationBlock_Clone(aCopy.mRaw).Consume())
     , mImmutable(false)
@@ -49,9 +36,22 @@ public:
     mContainer.mRaw = 0;
   }
 
+public:
+  explicit DeclarationBlock(already_AddRefed<RawServoDeclarationBlock> aRaw)
+    : mRaw(aRaw)
+    , mImmutable(false)
+    , mIsDirty(false)
+  {
+    mContainer.mRaw = 0;
+  }
+
+  DeclarationBlock()
+    : DeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume())
+  { }
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeclarationBlock)
 
-  inline already_AddRefed<DeclarationBlock> Clone() const
+  already_AddRefed<DeclarationBlock> Clone() const
   {
     return do_AddRef(new DeclarationBlock(*this));
   }
@@ -59,20 +59,18 @@ public:
   /**
    * Return whether |this| may be modified.
    */
-  bool IsMutable() const {
-    return !mImmutable;
-  }
+  bool IsMutable() const { return !mImmutable; }
 
   /**
-   * Crash if |this| cannot be modified.
+   * Crash in debug builds if |this| cannot be modified.
    */
-  void AssertMutable() const {
+  void AssertMutable() const
+  {
     MOZ_ASSERT(IsMutable(), "someone forgot to call EnsureMutable");
   }
 
   /**
-   * Mark this declaration as unmodifiable.  It's 'const' so it can
-   * be called from ToString.
+   * Mark this declaration as unmodifiable.
    */
   void SetImmutable() { mImmutable = true; }
 
@@ -94,8 +92,7 @@ public:
   /**
    * Copy |this|, if necessary to ensure that it can be modified.
    */
-  inline already_AddRefed<DeclarationBlock>
-  EnsureMutable()
+  already_AddRefed<DeclarationBlock> EnsureMutable()
   {
     if (!IsDirty()) {
       // In stylo, the old DeclarationBlock is stored in element's rule node tree
@@ -103,29 +100,37 @@ public:
       // directly, we need to copy the old one here if we haven't yet copied.
       // As a result the new value does not replace rule node tree until traversal
       // happens.
+      //
+      // FIXME(emilio): This is a hack for ::first-line and transitions starting
+      // due to CSSOM changes when other transitions are already running. Try
+      // to simplify this setup.
       return Clone();
     }
 
     if (!IsMutable()) {
       return Clone();
     }
+
     return do_AddRef(this);
   }
 
-  void SetOwningRule(css::Rule* aRule) {
+  void SetOwningRule(css::Rule* aRule)
+  {
     MOZ_ASSERT(!mContainer.mOwningRule || !aRule,
                "should never overwrite one rule with another");
     mContainer.mOwningRule = aRule;
   }
 
-  css::Rule* GetOwningRule() const {
+  css::Rule* GetOwningRule() const
+  {
     if (mContainer.mRaw & 0x1) {
       return nullptr;
     }
     return mContainer.mOwningRule;
   }
 
-  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet) {
+  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet)
+  {
     MOZ_ASSERT(!mContainer.mHTMLCSSStyleSheet || !aHTMLCSSStyleSheet,
                "should never overwrite one sheet with another");
     mContainer.mHTMLCSSStyleSheet = aHTMLCSSStyleSheet;
@@ -134,7 +139,8 @@ public:
     }
   }
 
-  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const {
+  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const
+  {
     if (!(mContainer.mRaw & 0x1)) {
       return nullptr;
     }
@@ -167,28 +173,55 @@ public:
     return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&mRaw);
   }
 
-  void ToString(nsAString& aResult) const {
+  void ToString(nsAString& aResult) const
+  {
     Servo_DeclarationBlock_GetCssText(mRaw, &aResult);
   }
 
-  uint32_t Count() const {
+  uint32_t Count() const
+  {
     return Servo_DeclarationBlock_Count(mRaw);
   }
 
-  bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const {
+  bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
+  {
     aReturn.Truncate();
     return Servo_DeclarationBlock_GetNthProperty(mRaw, aIndex, &aReturn);
   }
 
-  void GetPropertyValue(const nsAString& aProperty,
-                        nsAString& aValue) const;
-  void GetPropertyValueByID(nsCSSPropertyID aPropID,
-                            nsAString& aValue) const;
-  bool GetPropertyIsImportant(const nsAString& aProperty) const;
+  void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const
+  {
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    Servo_DeclarationBlock_GetPropertyValue(mRaw, &property, &aValue);
+  }
+
+  void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const
+  {
+    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropID, &aValue);
+  }
+
+  bool GetPropertyIsImportant(const nsAString& aProperty) const
+  {
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    return Servo_DeclarationBlock_GetPropertyIsImportant(mRaw, &property);
+  }
+
   // Returns whether the property was removed.
-  bool RemoveProperty(const nsAString& aProperty);
+  bool RemoveProperty(const nsAString& aProperty,
+                      DeclarationBlockMutationClosure aClosure = { })
+  {
+    AssertMutable();
+    NS_ConvertUTF16toUTF8 property(aProperty);
+    return Servo_DeclarationBlock_RemoveProperty(mRaw, &property, aClosure);
+  }
+
   // Returns whether the property was removed.
-  bool RemovePropertyByID(nsCSSPropertyID aProperty);
+  bool RemovePropertyByID(nsCSSPropertyID aProperty,
+                          DeclarationBlockMutationClosure aClosure = { })
+  {
+    AssertMutable();
+    return Servo_DeclarationBlock_RemovePropertyById(mRaw, aProperty, aClosure);
+  }
 
 private:
   ~DeclarationBlock() = default;

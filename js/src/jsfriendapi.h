@@ -185,7 +185,7 @@ extern JS_FRIEND_API(void)
 JS_SetSetUseCounterCallback(JSContext* cx, JSSetUseCounterCallback callback);
 
 extern JS_FRIEND_API(JSPrincipals*)
-JS_GetCompartmentPrincipals(JSCompartment* compartment);
+JS_GetCompartmentPrincipals(JS::Compartment* compartment);
 
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetScriptPrincipals(JSScript* script);
@@ -484,7 +484,7 @@ extern JS_FRIEND_API(bool)
 IsSystemRealm(JS::Realm* realm);
 
 extern JS_FRIEND_API(bool)
-IsSystemCompartment(JSCompartment* comp);
+IsSystemCompartment(JS::Compartment* comp);
 
 extern JS_FRIEND_API(bool)
 IsSystemZone(JS::Zone* zone);
@@ -677,7 +677,7 @@ IsFunctionObject(JSObject* obj);
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(JSObject* obj);
 
-static MOZ_ALWAYS_INLINE JSCompartment*
+static MOZ_ALWAYS_INLINE JS::Compartment*
 GetObjectCompartment(JSObject* obj)
 {
     JS::Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
@@ -1217,11 +1217,6 @@ CastToJSFreeOp(FreeOp* fop)
 extern JS_FRIEND_API(JSFlatString*)
 GetErrorTypeName(JSContext* cx, int16_t exnType);
 
-#ifdef JS_DEBUG
-extern JS_FRIEND_API(unsigned)
-GetEnterRealmDepth(JSContext* cx);
-#endif
-
 extern JS_FRIEND_API(RegExpShared*)
 RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp);
 
@@ -1241,35 +1236,35 @@ typedef enum NukeReferencesFromTarget {
  * do any rooting or holding of their members.
  */
 struct CompartmentFilter {
-    virtual bool match(JSCompartment* c) const = 0;
+    virtual bool match(JS::Compartment* c) const = 0;
 };
 
 struct AllCompartments : public CompartmentFilter {
-    virtual bool match(JSCompartment* c) const override { return true; }
+    virtual bool match(JS::Compartment* c) const override { return true; }
 };
 
 struct ContentCompartmentsOnly : public CompartmentFilter {
-    virtual bool match(JSCompartment* c) const override {
+    virtual bool match(JS::Compartment* c) const override {
         return !IsSystemCompartment(c);
     }
 };
 
 struct ChromeCompartmentsOnly : public CompartmentFilter {
-    virtual bool match(JSCompartment* c) const override {
+    virtual bool match(JS::Compartment* c) const override {
         return IsSystemCompartment(c);
     }
 };
 
 struct SingleCompartment : public CompartmentFilter {
-    JSCompartment* ours;
-    explicit SingleCompartment(JSCompartment* c) : ours(c) {}
-    virtual bool match(JSCompartment* c) const override { return c == ours; }
+    JS::Compartment* ours;
+    explicit SingleCompartment(JS::Compartment* c) : ours(c) {}
+    virtual bool match(JS::Compartment* c) const override { return c == ours; }
 };
 
 struct CompartmentsWithPrincipals : public CompartmentFilter {
     JSPrincipals* principals;
     explicit CompartmentsWithPrincipals(JSPrincipals* p) : principals(p) {}
-    virtual bool match(JSCompartment* c) const override {
+    virtual bool match(JS::Compartment* c) const override {
         return JS_GetCompartmentPrincipals(c) == principals;
     }
 };
@@ -1277,7 +1272,7 @@ struct CompartmentsWithPrincipals : public CompartmentFilter {
 extern JS_FRIEND_API(bool)
 NukeCrossCompartmentWrappers(JSContext* cx,
                              const CompartmentFilter& sourceFilter,
-                             JSCompartment* target,
+                             JS::Compartment* target,
                              NukeReferencesToWindow nukeReferencesToWindow,
                              NukeReferencesFromTarget nukeReferencesFromTarget);
 

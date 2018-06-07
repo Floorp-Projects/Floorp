@@ -21,8 +21,6 @@
 #include "vm/RegExpShared.h"
 #include "vm/Shape.h"
 
-namespace JS { struct Zone; }
-
 /*
  * JavaScript Regular Expressions
  *

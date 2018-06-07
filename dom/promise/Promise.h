@@ -150,7 +150,7 @@ public:
 
   JSObject* GlobalJSObject() const;
 
-  JSCompartment* Compartment() const;
+  JS::Compartment* Compartment() const;
 
   // Create a dom::Promise from a given SpiderMonkey Promise object.
   // aPromiseObj MUST be in the compartment of aGlobal's global JS object.

@@ -16,7 +16,7 @@ DEF_TEST(DoesCrossCompartmentBoundaries, {
                                                       JS::FireOnNewGlobalHook,
                                                       options));
     ASSERT_TRUE(newGlobal);
-    JSCompartment* newCompartment = nullptr;
+    JS::Compartment* newCompartment = nullptr;
     {
       JSAutoRealm ar(cx, newGlobal);
       ASSERT_TRUE(JS_InitStandardClasses(cx, newGlobal));

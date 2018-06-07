@@ -1679,10 +1679,14 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     if (!hasScript() || !u.scripted.s.script_)
         return;
 
-    // Don't relazify functions in realms that are active.
+    // Don't relazify functions in compartments that are active.
     Realm* realm = this->realm();
-    if (realm->hasBeenEntered() && !rt->allowRelazificationForTesting)
-        return;
+    if (!rt->allowRelazificationForTesting) {
+        if (realm->compartment()->gcState.hasEnteredRealm)
+            return;
+
+        MOZ_ASSERT(!realm->hasBeenEnteredIgnoringJit());
+    }
 
     // The caller should have checked we're not in the self-hosting zone (it's
     // shared with worker runtimes so relazifying functions in it will race).
@@ -2098,7 +2102,7 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
 }
 
 bool
-js::CanReuseScriptForClone(JSCompartment* compartment, HandleFunction fun,
+js::CanReuseScriptForClone(JS::Compartment* compartment, HandleFunction fun,
                            HandleObject newParent)
 {
     MOZ_ASSERT(fun->isInterpreted());

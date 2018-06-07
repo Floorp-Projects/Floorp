@@ -69,3 +69,7 @@ else:
 
     else:
         DEFINES['OS_LINUX'] = 1
+
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

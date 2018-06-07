@@ -23,6 +23,25 @@ enum class Orient
   FLIP_VERTICALLY
 };
 
+static void
+InitializeRowBuffer(uint32_t* aBuffer,
+                    size_t aSize,
+                    size_t aStartPixel,
+                    size_t aEndPixel,
+                    uint32_t aSetPixel)
+{
+  uint32_t transparentPixel = BGRAColor::Transparent().AsPixel();
+  for (size_t i = 0; i < aStartPixel && i < aSize; ++i) {
+    aBuffer[i] = transparentPixel;
+  }
+  for (size_t i = aStartPixel; i < aEndPixel && i < aSize; ++i) {
+    aBuffer[i] = aSetPixel;
+  }
+  for (size_t i = aEndPixel; i < aSize; ++i) {
+    aBuffer[i] = transparentPixel;
+  }
+}
+
 template <Orient Orientation, typename Func> void
 WithSurfaceSink(Func aFunc)
 {
@@ -384,10 +403,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBuffer)
     // containing 60 pixels of green in the middle and 20 transparent pixels on
     // either side.
     uint32_t buffer[100];
-    for (int i = 0; i < 100; ++i) {
-      buffer[i] = 20 <= i && i < 80 ? BGRAColor::Green().AsPixel()
-                                    : BGRAColor::Transparent().AsPixel();
-    }
+    InitializeRowBuffer(buffer, 100, 20, 80, BGRAColor::Green().AsPixel());
 
     // Write the buffer to every row of the surface and check that the generated
     // image is correct.
@@ -609,10 +625,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocks)
     // containing 60 pixels of green in the middle and 20 transparent pixels on
     // either side.
     uint32_t buffer[100];
-    for (int i = 0; i < 100; ++i) {
-      buffer[i] = 20 <= i && i < 80 ? BGRAColor::Green().AsPixel()
-                                    : BGRAColor::Transparent().AsPixel();
-    }
+    InitializeRowBuffer(buffer, 100, 20, 80, BGRAColor::Green().AsPixel());
 
     uint32_t count = 0;
     WriteState result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
@@ -660,10 +673,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocksPartialRow)
     // containing 60 pixels of green in the middle and 20 transparent pixels on
     // either side.
     uint32_t buffer[100];
-    for (int i = 0; i < 100; ++i) {
-      buffer[i] = 20 <= i && i < 80 ? BGRAColor::Green().AsPixel()
-                                    : BGRAColor::Transparent().AsPixel();
-    }
+    InitializeRowBuffer(buffer, 100, 20, 80, BGRAColor::Green().AsPixel());
 
     // Write the first 99 rows of our 100x100 surface and verify that even
     // though our lambda will yield pixels forever, only one row is written per

@@ -355,6 +355,9 @@ function getMode(source, symbols) {
   }, {
     ext: ".rs",
     mode: "text/x-rustsrc"
+  }, {
+    ext: ".hx",
+    mode: "text/x-haxe"
   }]; // check for C and other non JS languages
 
   if (url) {

@@ -789,13 +789,13 @@ MockProvider.prototype = {
           continue;
         if (prop == "applyBackgroundUpdates") {
           addon._applyBackgroundUpdates = addonProp[prop];
-          continue;
-        }
-        if (prop == "appDisabled") {
+        } else if (prop == "appDisabled") {
           addon._appDisabled = addonProp[prop];
-          continue;
+        } else if (prop == "userDisabled") {
+          addon.setUserDisabled(addonProp[prop]);
+        } else {
+          addon[prop] = addonProp[prop];
         }
-        addon[prop] = addonProp[prop];
       }
       if (!addon.optionsType && !!addon.optionsURL)
         addon.optionsType = AddonManager.OPTIONS_TYPE_DIALOG;
@@ -1080,22 +1080,28 @@ MockAddon.prototype = {
   },
 
   set userDisabled(val) {
+    throw new Error("No. Bad.");
+  },
+
+  setUserDisabled(val) {
     if (val == this._userDisabled)
-      return val;
+      return;
 
     var currentActive = this.shouldBeActive;
     this._userDisabled = val;
     var newActive = this.shouldBeActive;
     this._updateActiveState(currentActive, newActive);
-
-    return val;
   },
 
   async enable() {
-    this.userDisabled = false;
+    await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+
+    this.setUserDisabled(false);
   },
   async disable() {
-    this.userDisabled = true;
+    await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+
+    this.setUserDisabled(true);
   },
 
   get permissions() {

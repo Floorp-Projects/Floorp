@@ -17,9 +17,8 @@ SOURCES += [
     'AboutRedirector.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'aboutcapabilities.manifest',
-    'nsAboutCapabilities.js',
+EXTRA_JS_MODULES.aboutpages = [
+    'AboutPrivateBrowsingHandler.jsm',
 ]
 
 FINAL_LIBRARY = 'browsercomps'

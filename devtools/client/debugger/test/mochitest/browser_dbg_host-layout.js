@@ -17,12 +17,12 @@ function test() {
   requestLongerTimeout(3);
 
   (async function() {
-    await testHosts(["bottom", "side", "window:big"], ["horizontal", "vertical", "horizontal"]);
-    await testHosts(["side", "bottom", "side"], ["vertical", "horizontal", "vertical"]);
-    await testHosts(["bottom", "side", "bottom"], ["horizontal", "vertical", "horizontal"]);
-    await testHosts(["side", "window:big", "side"], ["vertical", "horizontal", "vertical"]);
-    await testHosts(["window:big", "side", "window:big"], ["horizontal", "vertical", "horizontal"]);
-    await testHosts(["window:small", "bottom", "side"], ["vertical", "horizontal", "vertical"]);
+    await testHosts(["bottom", "right", "window:big"], ["horizontal", "vertical", "horizontal"]);
+    await testHosts(["right", "bottom", "right"], ["vertical", "horizontal", "vertical"]);
+    await testHosts(["bottom", "right", "bottom"], ["horizontal", "vertical", "horizontal"]);
+    await testHosts(["right", "window:big", "right"], ["vertical", "horizontal", "vertical"]);
+    await testHosts(["window:big", "right", "window:big"], ["horizontal", "vertical", "horizontal"]);
+    await testHosts(["window:small", "bottom", "right"], ["vertical", "horizontal", "vertical"]);
     await testHosts(["window:small", "window:big", "window:small"], ["vertical", "horizontal", "vertical"]);
     finish();
   })();

@@ -89,7 +89,7 @@ use style::gecko_bindings::bindings::nsTimingFunctionBorrowed;
 use style::gecko_bindings::bindings::nsTimingFunctionBorrowedMut;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{CallerType, CSSPseudoElementType, CompositeOperation};
-use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
+use style::gecko_bindings::structs::{DeclarationBlockMutationClosure, Loader, LoaderReusableStyleSheets};
 use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong, RustString};
 use style::gecko_bindings::structs::{SheetParsingMode, nsAtom, nsCSSPropertyID};
 use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
@@ -165,6 +165,21 @@ use style::values::specified::source_size_list::SourceSizeList;
 use style_traits::{CssType, CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
+
+trait ClosureHelper {
+    fn invoke(&self, decls: &PropertyDeclarationBlock);
+}
+
+impl ClosureHelper for DeclarationBlockMutationClosure {
+    #[inline]
+    fn invoke(&self, decls: &PropertyDeclarationBlock) {
+        if let Some(function) = self.function.as_ref() {
+            unsafe {
+                function(decls as *const _ as *const _, self.data);
+            }
+        }
+    }
+}
 
 /*
  * For Gecko->Servo function calls, we need to redeclare the same signature that was declared in
@@ -3394,12 +3409,24 @@ pub extern "C" fn Servo_DeclarationBlock_Equals(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_DeclarationBlock_GetCssText(declarations: RawServoDeclarationBlockBorrowed,
-                                                    result: *mut nsAString) {
+pub unsafe extern "C" fn Servo_DeclarationBlock_GetCssText(
+    declarations: RawServoDeclarationBlockBorrowed,
+    result: *mut nsAString,
+) {
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
-        decls.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        decls.to_css(&mut *result).unwrap()
     })
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UnlockedDeclarationBlock_GetCssText(
+    declarations: *const structs::RawServoUnlockedDeclarationBlock,
+    result: *mut nsAString,
+) {
+    let decls = &*(declarations as *const PropertyDeclarationBlock);
+    decls.to_css(&mut *result).unwrap()
+}
+
 
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
@@ -3529,24 +3556,34 @@ fn set_property(
     data: *mut URLExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
-    loader: *mut Loader
+    loader: *mut Loader,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     let mut source_declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
-    match parse_property_into(&mut source_declarations, property_id, value, data,
-                              parsing_mode, quirks_mode, &reporter) {
-        Ok(()) => {
-            let importance = if is_important { Importance::Important } else { Importance::Normal };
-            write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-                decls.extend(
-                    source_declarations.drain(),
-                    importance,
-                    DeclarationSource::CssOm
-                )
-            })
-        },
-        Err(_) => false,
+    let result = parse_property_into(
+        &mut source_declarations,
+        property_id,
+        value,
+        data,
+        parsing_mode,
+        quirks_mode,
+        &reporter,
+    );
+
+    if result.is_err() {
+        return false;
     }
+
+    let importance = if is_important { Importance::Important } else { Importance::Normal };
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        before_change_closure.invoke(&*decls);
+        decls.extend(
+            source_declarations.drain(),
+            importance,
+            DeclarationSource::CssOm
+        )
+    })
 }
 
 #[no_mangle]
@@ -3559,6 +3596,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
         declarations,
@@ -3569,6 +3607,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
         parsing_mode,
         quirks_mode.into(),
         loader,
+        before_change_closure,
     )
 }
 
@@ -3596,6 +3635,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
         declarations,
@@ -3606,15 +3646,19 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
         parsing_mode,
         quirks_mode.into(),
         loader,
+        before_change_closure,
     )
 }
 
 fn remove_property(
     declarations: RawServoDeclarationBlockBorrowed,
-    property_id: PropertyId
+    property_id: PropertyId,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.remove_property(&property_id)
+        decls.remove_property(&property_id, |decls| {
+            before_change_closure.invoke(decls)
+        })
     })
 }
 
@@ -3622,16 +3666,26 @@ fn remove_property(
 pub unsafe extern "C" fn Servo_DeclarationBlock_RemoveProperty(
     declarations: RawServoDeclarationBlockBorrowed,
     property: *const nsACString,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    remove_property(declarations, get_property_id_from_property!(property, false))
+    remove_property(
+        declarations,
+        get_property_id_from_property!(property, false),
+        before_change_closure,
+    )
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_RemovePropertyById(
     declarations: RawServoDeclarationBlockBorrowed,
-    property: nsCSSPropertyID
+    property: nsCSSPropertyID,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    remove_property(declarations, get_property_id_from_nscsspropertyid!(property, false))
+    remove_property(
+        declarations,
+        get_property_id_from_nscsspropertyid!(property, false),
+        before_change_closure,
+    )
 }
 
 #[no_mangle]

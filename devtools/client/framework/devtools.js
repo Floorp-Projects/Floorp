@@ -441,7 +441,7 @@ DevTools.prototype = {
    * @param {string} toolId
    *        The id of the tool to show
    * @param {Toolbox.HostType} hostType
-   *        The type of host (bottom, window, side)
+   *        The type of host (bottom, window, left, right)
    * @param {object} hostOptions
    *        Options for host specifically
    * @param {Number} startTime

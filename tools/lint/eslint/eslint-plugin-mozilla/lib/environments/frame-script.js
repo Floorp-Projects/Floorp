@@ -23,6 +23,10 @@ module.exports = {
     sendAsyncMessage: false,
     sendSyncMessage: false,
     sendRpcMessage: false,
-    tabEventTarget: false
+    tabEventTarget: false,
+    RPMGetBoolPref: false,
+    RPMSetBoolPref: false,
+    RPMGetFormatURLPref: false,
+    RPMIsWindowPrivate: false
   }
 };

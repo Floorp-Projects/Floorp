@@ -645,7 +645,8 @@ struct nsGridContainerFrame::GridItemInfo
     if (MOZ_UNLIKELY(aFrame->IsFieldSetFrame())) {
       inner = static_cast<nsFieldSetFrame*>(aFrame)->GetInner();
     }
-    return inner->GetContentInsertionFrame();
+    inner = inner->GetContentInsertionFrame();
+    return inner ? inner : aFrame;
   }
 
   nsIFrame* const mFrame;

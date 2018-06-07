@@ -196,30 +196,14 @@ struct JSContext : public JS::RootingContext,
      * they may have been called through the JSAPI via JS_CallFunction) and thus
      * cannot expect there is a scripted caller.
      *
-     * Realms should be entered/left in a LIFO fasion. The depth of this
-     * enter/leave stack is maintained by enterRealmDepth_ and queried by
-     * hasEnteredRealm.
+     * Realms should be entered/left in a LIFO fasion. To enter a realm, code
+     * should prefer using AutoRealm over JS::EnterRealm/JS::LeaveRealm.
      *
-     * To enter a realm, code should prefer using AutoRealm over
-     * manually calling cx->enterRealm/leaveRealm.
+     * Also note that the JIT can enter (same-compartment) realms without going
+     * through these methods - it will update cx->realm_ directly.
      */
-  protected:
-#ifdef DEBUG
-    js::ThreadData<unsigned> enterRealmDepth_;
-#endif
-
-    inline void setRealm(JS::Realm* realm);
-  public:
-#ifdef DEBUG
-    bool hasEnteredRealm() const {
-        return enterRealmDepth_ > 0;
-    }
-    unsigned getEnterRealmDepth() const {
-        return enterRealmDepth_;
-    }
-#endif
-
   private:
+    inline void setRealm(JS::Realm* realm);
     inline void enterRealm(JS::Realm* realm);
     inline void enterAtomsZone(const js::AutoLockForExclusiveAccess& lock);
 
@@ -243,7 +227,7 @@ struct JSContext : public JS::RootingContext,
     }
 
     // Threads may freely access any data in their realm, compartment and zone.
-    JSCompartment* compartment() const {
+    JS::Compartment* compartment() const {
         return realm_ ? JS::GetCompartmentForRealm(realm_) : nullptr;
     }
 

@@ -78,6 +78,9 @@ class OptionalURIParams;
 class PFileDescriptorSetParent;
 class URIParams;
 class TestShellParent;
+#ifdef FUZZING
+class ProtocolFuzzerHelper;
+#endif
 } // namespace ipc
 
 namespace jsipc {
@@ -123,6 +126,9 @@ class ContentParent final : public PContentParent
 
   friend class ContentProcessHost;
   friend class mozilla::PreallocatedProcessManagerImpl;
+#ifdef FUZZING
+  friend class mozilla::ipc::ProtocolFuzzerHelper;
+#endif
 
 public:
 
