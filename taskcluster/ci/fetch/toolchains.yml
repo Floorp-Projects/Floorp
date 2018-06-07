@@ -1,6 +1,5 @@
 binutils-2.25.1:
   description: binutils 2.25.1 source code
-  symbol: binutils2.25.1
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.25.1.tar.bz2
@@ -12,7 +11,6 @@ binutils-2.25.1:
 
 binutils-2.27:
   description: binutils 2.27 source code
-  symbol: binutils2.27
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.27.tar.bz2
@@ -24,7 +22,6 @@ binutils-2.27:
 
 binutils-2.28.1:
   description: binutils 2.28.1 source code
-  symbol: binutils2.28.1
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.28.1.tar.xz
@@ -36,7 +33,6 @@ binutils-2.28.1:
 
 cloog-0.18.1:
   description: cloog source code
-  symbol: cloog0.18.1
   fetch:
     type: static-url
     url: ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-0.18.1.tar.gz
@@ -45,7 +41,6 @@ cloog-0.18.1:
 
 gcc-4.9.4:
   description: GCC 4.9.4 source code
-  symbol: gcc4.9.4
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/gcc/gcc-4.9.4/gcc-4.9.4.tar.bz2
@@ -57,7 +52,6 @@ gcc-4.9.4:
 
 gcc-6.4.0:
   description: GCC 6.4.0 source code
-  symbol: gcc6.4.0
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/gcc/gcc-6.4.0/gcc-6.4.0.tar.xz
@@ -69,7 +63,6 @@ gcc-6.4.0:
 
 gcc-7.3.0:
   description: GCC 7.3.0 source code
-  symbol: gcc7.3.0
   fetch:
     type: static-url
     url: ftp://ftp.gnu.org/gnu/gcc/gcc-7.3.0/gcc-7.3.0.tar.xz
@@ -81,7 +74,6 @@ gcc-7.3.0:
 
 gmp-5.1.3:
   description: GMP 5.1.3 source code
-  symbol: gmp5.1.3
   fetch:
     type: static-url
     url: https://ftp.gnu.org/gnu/gmp/gmp-5.1.3.tar.bz2
@@ -93,7 +85,6 @@ gmp-5.1.3:
 
 gmp-6.1.0:
   description: GMP 6.1.0 source code
-  symbol: gmp6.1.0
   fetch:
     type: static-url
     url: https://ftp.gnu.org/gnu/gmp/gmp-6.1.0.tar.bz2
@@ -105,7 +96,6 @@ gmp-6.1.0:
 
 isl-0.12.2:
   description: ISL 0.12.2 source code
-  symbol: isl0.12.2
   fetch:
     type: static-url
     url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.12.2.tar.bz2
@@ -114,7 +104,6 @@ isl-0.12.2:
 
 isl-0.15:
   description: ISL 0.15 source code
-  symbol: isl0.15
   fetch:
     type: static-url
     url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.15.tar.bz2
@@ -123,7 +112,6 @@ isl-0.15:
 
 isl-0.16.1:
   description: ISL 0.16.1 source code
-  symbol: isl0.16.1
   fetch:
     type: static-url
     url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.16.1.tar.bz2
@@ -132,7 +120,6 @@ isl-0.16.1:
 
 mpc-0.8.2:
   description: mpc 0.8.2 source code
-  symbol: mpc0.8.2
   fetch:
     type: static-url
     url: http://www.multiprecision.org/downloads/mpc-0.8.2.tar.gz
@@ -144,7 +131,6 @@ mpc-0.8.2:
 
 mpc-1.0.3:
   description: mpc 1.0.3 source code
-  symbol: mpc1.0.3
   fetch:
     type: static-url
     url: http://www.multiprecision.org/downloads/mpc-1.0.3.tar.gz
@@ -156,7 +142,6 @@ mpc-1.0.3:
 
 mpfr-3.1.4:
   description: mpfr 3.1.4 source code
-  symbol: mpfr3.1.4
   fetch:
     type: static-url
     url: http://www.mpfr.org/mpfr-3.1.4/mpfr-3.1.4.tar.bz2
@@ -168,7 +153,6 @@ mpfr-3.1.4:
 
 mpfr-3.1.5:
   description: mpfr 3.1.5 source code
-  symbol: mpfr3.1.5
   fetch:
     type: static-url
     url: http://www.mpfr.org/mpfr-3.1.5/mpfr-3.1.5.tar.bz2
@@ -180,7 +164,6 @@ mpfr-3.1.5:
 
 grcov-linux-x86_64:
   description: grcov binary release
-  symbol: grcov-linux-x86_64
   fetch:
     type: static-url
     url: https://github.com/mozilla/grcov/releases/download/v0.2.3/grcov-linux-x86_64.tar.bz2
@@ -189,7 +172,6 @@ grcov-linux-x86_64:
 
 grcov-osx-x86_64:
   description: grcov binary release
-  symbol: grcov-osx-x86_64
   fetch:
     type: static-url
     url: https://github.com/mozilla/grcov/releases/download/v0.2.3/grcov-osx-x86_64.tar.bz2
@@ -198,7 +180,6 @@ grcov-osx-x86_64:
 
 grcov-win-x86_64:
   description: grcov binary release
-  symbol: grcov-win-x86_64
   fetch:
     type: static-url
     url: https://github.com/mozilla/grcov/releases/download/v0.2.3/grcov-win-x86_64.tar.bz2
