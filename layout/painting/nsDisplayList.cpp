@@ -5443,8 +5443,8 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
     {
       RefPtr<nsStyleGradient> gradientData = mBorderImageRenderer->mImageRenderer.GetGradientData();
       nsCSSGradientRenderer renderer =
-        nsCSSGradientRenderer::Create(mFrame->PresContext(), gradientData,
-                                      mBorderImageRenderer->mImageSize);
+        nsCSSGradientRenderer::Create(mFrame->PresContext(), mFrame->Style(),
+                                      gradientData, mBorderImageRenderer->mImageSize);
 
       wr::ExtendMode extendMode;
       nsTArray<wr::GradientStop> stops;
