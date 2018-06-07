@@ -732,13 +732,13 @@ JSAutoNullableRealm::~JSAutoNullableRealm()
 }
 
 JS_PUBLIC_API(void)
-JS_SetCompartmentPrivate(JSCompartment* compartment, void* data)
+JS_SetCompartmentPrivate(JS::Compartment* compartment, void* data)
 {
     compartment->data = data;
 }
 
 JS_PUBLIC_API(void*)
-JS_GetCompartmentPrivate(JSCompartment* compartment)
+JS_GetCompartmentPrivate(JS::Compartment* compartment)
 {
     return compartment->data;
 }
@@ -877,7 +877,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
 
     AutoDisableProxyCheck adpc;
 
-    JSCompartment* destination = target->compartment();
+    JS::Compartment* destination = target->compartment();
 
     if (origobj->compartment() == destination) {
         // If the original object is in the same compartment as the
@@ -1830,26 +1830,34 @@ JS::RealmBehaviors::extraWarnings(JSContext* cx) const
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setSystemZone()
+JS::RealmCreationOptions::setNewCompartmentInSystemZone()
 {
-    zoneSpec_ = JS::SystemZone;
-    zone_ = nullptr;
+    compSpec_ = CompartmentSpecifier::NewCompartmentInSystemZone;
+    comp_ = nullptr;
     return *this;
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setExistingZone(JSObject* obj)
+JS::RealmCreationOptions::setNewCompartmentInExistingZone(JSObject* obj)
 {
-    zoneSpec_ = JS::ExistingZone;
+    compSpec_ = CompartmentSpecifier::NewCompartmentInExistingZone;
     zone_ = obj->zone();
     return *this;
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setNewZone()
+JS::RealmCreationOptions::setExistingCompartment(JSObject* obj)
 {
-    zoneSpec_ = JS::NewZone;
-    zone_ = nullptr;
+    compSpec_ = CompartmentSpecifier::ExistingCompartment;
+    comp_ = obj->compartment();
+    return *this;
+}
+
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setNewCompartmentAndZone()
+{
+    compSpec_ = CompartmentSpecifier::NewCompartmentAndZone;
+    comp_ = nullptr;
     return *this;
 }
 

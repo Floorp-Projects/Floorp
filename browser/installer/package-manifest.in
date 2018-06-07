@@ -189,8 +189,6 @@
 @RESPATH@/browser/components/aboutdevtools.manifest
 @RESPATH@/browser/components/aboutdevtoolstoolbox-registration.js
 @RESPATH@/browser/components/aboutdevtoolstoolbox.manifest
-@RESPATH@/browser/components/nsAboutCapabilities.js
-@RESPATH@/browser/components/aboutcapabilities.manifest
 @RESPATH@/browser/components/aboutNewTabService.js
 @RESPATH@/browser/components/NewTabComponents.manifest
 @RESPATH@/browser/components/EnterprisePolicies.js

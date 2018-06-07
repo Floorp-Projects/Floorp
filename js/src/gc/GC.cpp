@@ -1867,7 +1867,7 @@ GCRuntime::removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback
 }
 
 void
-GCRuntime::callWeakPointerCompartmentCallbacks(JSCompartment* comp) const
+GCRuntime::callWeakPointerCompartmentCallbacks(JS::Compartment* comp) const
 {
     JSContext* cx = rt->mainContextFromOwnThread();
     for (auto const& p : updateWeakPointerCompartmentCallbacks.ref())
@@ -2975,7 +2975,7 @@ GCRuntime::updateRuntimePointersToRelocatedCells(AutoTraceSession& session)
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::COMPACT_UPDATE);
     MovingTracer trc(rt);
 
-    JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
+    Compartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
 
     rt->geckoProfiler().fixupStringsMapAfterMovingGC();
 
@@ -3830,7 +3830,7 @@ Realm::destroy(FreeOp* fop)
 }
 
 void
-JSCompartment::destroy(FreeOp* fop)
+Compartment::destroy(FreeOp* fop)
 {
     JSRuntime* rt = fop->runtime();
     if (auto callback = rt->destroyCompartmentCallback)
@@ -3862,11 +3862,11 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
     MOZ_ASSERT(!compartments().empty());
     MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
 
-    JSCompartment** read = compartments().begin();
-    JSCompartment** end = compartments().end();
-    JSCompartment** write = read;
+    Compartment** read = compartments().begin();
+    Compartment** end = compartments().end();
+    Compartment** write = read;
     while (read < end) {
-        JSCompartment* comp = *read++;
+        Compartment* comp = *read++;
 
         /*
          * Don't delete the last compartment and realm if keepAtleastOne is
@@ -3888,7 +3888,7 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
 }
 
 void
-JSCompartment::sweepRealms(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime)
+Compartment::sweepRealms(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime)
 {
     MOZ_ASSERT(!realms().empty());
     MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
@@ -4123,7 +4123,7 @@ class CompartmentCheckTracer : public JS::CallbackTracer
     Cell* src;
     JS::TraceKind srcKind;
     Zone* zone;
-    JSCompartment* compartment;
+    Compartment* compartment;
 };
 
 namespace {
@@ -4138,7 +4138,7 @@ struct IsDestComparatorFunctor {
 static bool
 InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst)
 {
-    JSCompartment* srccomp = src->compartment();
+    Compartment* srccomp = src->compartment();
 
     if (dst.is<JSObject>()) {
         Value key = ObjectValue(dst.as<JSObject>());
@@ -4152,7 +4152,7 @@ InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst)
      * If the cross-compartment edge is caused by the debugger, then we don't
      * know the right hashtable key, so we have to iterate.
      */
-    for (JSCompartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
+    for (Compartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
         if (e.front().mutableKey().applyToWrapped(IsDestComparatorFunctor(dst)) &&
             ToMarkable(e.front().value().unbarrieredGet()) == src)
         {
@@ -4164,13 +4164,13 @@ InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst)
 }
 
 struct MaybeCompartmentFunctor {
-    template <typename T> JSCompartment* operator()(T* t) { return t->maybeCompartment(); }
+    template <typename T> JS::Compartment* operator()(T* t) { return t->maybeCompartment(); }
 };
 
 void
 CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing)
 {
-    JSCompartment* comp = DispatchTyped(MaybeCompartmentFunctor(), thing);
+    Compartment* comp = DispatchTyped(MaybeCompartmentFunctor(), thing);
     if (comp && compartment) {
         MOZ_ASSERT(comp == compartment ||
                    (srcKind == JS::TraceKind::Object &&
@@ -4229,7 +4229,7 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
     // been collected, then only collect zones containing those compartments.
     if (reason == JS::gcreason::COMPARTMENT_REVIVED) {
         for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-            if (comp->scheduledForDestruction)
+            if (comp->gcState.scheduledForDestruction)
                 return true;
         }
 
@@ -4298,14 +4298,17 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        c->scheduledForDestruction = false;
-        c->maybeAlive = false;
+        c->gcState.scheduledForDestruction = false;
+        c->gcState.maybeAlive = false;
+        c->gcState.hasEnteredRealm = false;
         for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
             r->unmark();
             if (r->shouldTraceGlobal() || !r->zone()->isGCScheduled())
-                c->maybeAlive = true;
+                c->gcState.maybeAlive = true;
             if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
                 r->zone()->setPreservingCode(true);
+            if (r->hasBeenEnteredIgnoringJit())
+                c->gcState.hasEnteredRealm = true;
         }
     }
 
@@ -4522,21 +4525,21 @@ GCRuntime::markCompartments()
 
     /* Propagate the maybeAlive flag via cross-compartment edges. */
 
-    Vector<JSCompartment*, 0, js::SystemAllocPolicy> workList;
+    Vector<Compartment*, 0, js::SystemAllocPolicy> workList;
 
     for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
-        if (comp->maybeAlive) {
+        if (comp->gcState.maybeAlive) {
             if (!workList.append(comp))
                 return;
         }
     }
 
     while (!workList.empty()) {
-        JSCompartment* comp = workList.popCopy();
-        for (JSCompartment::NonStringWrapperEnum e(comp); !e.empty(); e.popFront()) {
-            JSCompartment* dest = e.front().mutableKey().compartment();
-            if (dest && !dest->maybeAlive) {
-                dest->maybeAlive = true;
+        Compartment* comp = workList.popCopy();
+        for (Compartment::NonStringWrapperEnum e(comp); !e.empty(); e.popFront()) {
+            Compartment* dest = e.front().mutableKey().compartment();
+            if (dest && !dest->gcState.maybeAlive) {
+                dest->gcState.maybeAlive = true;
                 if (!workList.append(dest))
                     return;
             }
@@ -4546,9 +4549,9 @@ GCRuntime::markCompartments()
     /* Set scheduleForDestruction based on maybeAlive. */
 
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
-        MOZ_ASSERT(!comp->scheduledForDestruction);
-        if (!comp->maybeAlive && !comp->zone()->isAtomsZone())
-            comp->scheduledForDestruction = true;
+        MOZ_ASSERT(!comp->gcState.scheduledForDestruction);
+        if (!comp->gcState.maybeAlive)
+            comp->gcState.scheduledForDestruction = true;
     }
 }
 
@@ -4945,7 +4948,7 @@ DropStringWrappers(JSRuntime* rt)
      * compartment group.
      */
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        for (JSCompartment::StringWrapperEnum e(c); !e.empty(); e.popFront()) {
+        for (Compartment::StringWrapperEnum e(c); !e.empty(); e.popFront()) {
             MOZ_ASSERT(e.front().key().is<JSString*>());
             e.removeFront();
         }
@@ -4994,7 +4997,7 @@ struct AddOutgoingEdgeFunctor {
 } // namespace (anonymous)
 
 void
-JSCompartment::findOutgoingEdges(ZoneComponentFinder& finder)
+Compartment::findOutgoingEdges(ZoneComponentFinder& finder)
 {
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey& key = e.front().mutableKey();
@@ -5096,7 +5099,7 @@ GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason)
 }
 
 static void
-ResetGrayList(JSCompartment* comp);
+ResetGrayList(Compartment* comp);
 
 void
 GCRuntime::getNextSweepGroup()
@@ -5146,7 +5149,7 @@ GCRuntime::getNextSweepGroup()
  * singly-linked list of incoming gray pointers that is stored with each
  * compartment.
  *
- * The list head is stored in JSCompartment::gcIncomingGrayPointers and contains
+ * The list head is stored in Compartment::gcIncomingGrayPointers and contains
  * cross compartment wrapper objects. The next pointer is stored in the second
  * extra slot of the cross compartment wrapper.
  *
@@ -5188,7 +5191,7 @@ AssertNoWrappersInGrayList(JSRuntime* rt)
 #ifdef DEBUG
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         MOZ_ASSERT(!c->gcIncomingGrayPointers);
-        for (JSCompartment::NonStringWrapperEnum e(c); !e.empty(); e.popFront())
+        for (Compartment::NonStringWrapperEnum e(c); !e.empty(); e.popFront())
             AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
     }
 #endif
@@ -5225,7 +5228,7 @@ js::gc::DelayCrossCompartmentGrayMarking(JSObject* src)
     /* Called from MarkCrossCompartmentXXX functions. */
     unsigned slot = ProxyObject::grayLinkReservedSlot(src);
     JSObject* dest = CrossCompartmentPointerReferent(src);
-    JSCompartment* comp = dest->compartment();
+    Compartment* comp = dest->compartment();
 
     if (GetProxyReservedSlot(src, slot).isUndefined()) {
         SetProxyReservedSlot(src, slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
@@ -5309,7 +5312,7 @@ RemoveFromGrayList(JSObject* wrapper)
     JSObject* tail = GetProxyReservedSlot(wrapper, slot).toObjectOrNull();
     SetProxyReservedSlot(wrapper, slot, UndefinedValue());
 
-    JSCompartment* comp = CrossCompartmentPointerReferent(wrapper)->compartment();
+    Compartment* comp = CrossCompartmentPointerReferent(wrapper)->compartment();
     JSObject* obj = comp->gcIncomingGrayPointers;
     if (obj == wrapper) {
         comp->gcIncomingGrayPointers = tail;
@@ -5330,7 +5333,7 @@ RemoveFromGrayList(JSObject* wrapper)
 }
 
 static void
-ResetGrayList(JSCompartment* comp)
+ResetGrayList(Compartment* comp)
 {
     JSObject* src = comp->gcIncomingGrayPointers;
     while (src)
@@ -6940,7 +6943,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
         marker.reset();
 
         for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->scheduledForDestruction = false;
+            c->gcState.scheduledForDestruction = false;
 
         /* Finish sweeping the current sweep group, then abort. */
         abortSweepAfterCurrentGroup = true;
@@ -7668,7 +7671,7 @@ GCRuntime::shouldRepeatForDeadZone(JS::gcreason::Reason reason)
         return false;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->scheduledForDestruction)
+        if (c->gcState.scheduledForDestruction)
             return true;
     }
 
@@ -7994,21 +7997,26 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     JS_AbortIfWrongThread(cx);
 
     UniquePtr<Zone> zoneHolder;
-    UniquePtr<JSCompartment> compHolder;
+    UniquePtr<Compartment> compHolder;
 
+    Compartment* comp = nullptr;
     Zone* zone = nullptr;
-    JS::ZoneSpecifier zoneSpec = options.creationOptions().zoneSpecifier();
-    switch (zoneSpec) {
-      case JS::SystemZone:
+    JS::CompartmentSpecifier compSpec = options.creationOptions().compartmentSpecifier();
+    switch (compSpec) {
+      case JS::CompartmentSpecifier::NewCompartmentInSystemZone:
         // systemZone might be null here, in which case we'll make a zone and
         // set this field below.
         zone = rt->gc.systemZone;
         break;
-      case JS::ExistingZone:
+      case JS::CompartmentSpecifier::NewCompartmentInExistingZone:
         zone = options.creationOptions().zone();
         MOZ_ASSERT(zone);
         break;
-      case JS::NewZone:
+      case JS::CompartmentSpecifier::ExistingCompartment:
+        comp = options.creationOptions().compartment();
+        zone = comp->zone();
+        break;
+      case JS::CompartmentSpecifier::NewCompartmentAndZone:
         break;
     }
 
@@ -8027,11 +8035,14 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
         zone = zoneHolder.get();
     }
 
-    compHolder = cx->make_unique<JSCompartment>(zone);
-    if (!compHolder || !compHolder->init(cx))
-        return nullptr;
+    if (!comp) {
+        compHolder = cx->make_unique<JS::Compartment>(zone);
+        if (!compHolder || !compHolder->init(cx))
+            return nullptr;
 
-    JSCompartment* comp = compHolder.get();
+        comp = compHolder.get();
+    }
+
     UniquePtr<Realm> realm(cx->new_<Realm>(comp, options));
     if (!realm || !realm->init(cx))
         return nullptr;
@@ -8039,34 +8050,35 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     // Set up the principals.
     JS::SetRealmPrincipals(realm.get(), principals);
 
-    if (!comp->realms().append(realm.get())) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
     AutoLockGC lock(rt);
 
-    if (!zone->compartments().append(comp)) {
+    // Reserve space in the Vectors before we start mutating them.
+    if (!comp->realms().reserve(comp->realms().length() + 1) ||
+        (compHolder && !zone->compartments().reserve(zone->compartments().length() + 1)) ||
+        (zoneHolder && !rt->gc.zones().reserve(rt->gc.zones().length() + 1)))
+    {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
+    // After this everything must be infallible.
+
+    comp->realms().infallibleAppend(realm.get());
+
+    if (compHolder)
+        zone->compartments().infallibleAppend(compHolder.release());
+
     if (zoneHolder) {
-        if (!rt->gc.zones().append(zone)) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
+        rt->gc.zones().infallibleAppend(zoneHolder.release());
 
         // Lazily set the runtime's sytem zone.
-        if (zoneSpec == JS::SystemZone) {
+        if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSystemZone) {
             MOZ_RELEASE_ASSERT(!rt->gc.systemZone);
             rt->gc.systemZone = zone;
             zone->isSystem = true;
         }
     }
 
-    mozilla::Unused << compHolder.release();
-    mozilla::Unused << zoneHolder.release();
     return realm.release();
 }
 
@@ -8088,7 +8100,7 @@ GCRuntime::mergeRealms(Realm* source, Realm* target)
     MOZ_ASSERT(source->creationOptions().mergeable());
     MOZ_ASSERT(source->creationOptions().invisibleToDebugger());
 
-    MOZ_ASSERT(!source->hasBeenEntered());
+    MOZ_ASSERT(!source->hasBeenEnteredIgnoringJit());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
 
     JSContext* cx = rt->mainContextFromOwnThread();

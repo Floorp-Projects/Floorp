@@ -646,7 +646,7 @@ class GCRuntime
 
     void callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const;
     void callWeakPointerZonesCallbacks() const;
-    void callWeakPointerCompartmentCallbacks(JSCompartment* comp) const;
+    void callWeakPointerCompartmentCallbacks(JS::Compartment* comp) const;
 
   public:
     JSRuntime* const rt;

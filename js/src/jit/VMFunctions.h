@@ -953,6 +953,9 @@ CloseIteratorFromIon(JSContext* cx, JSObject* obj);
 
 extern const VMFunction SetObjectElementInfo;
 
+extern const VMFunction StringsEqualInfo;
+extern const VMFunction StringsNotEqualInfo;
+
 } // namespace jit
 } // namespace js
 

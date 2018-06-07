@@ -160,8 +160,8 @@ class JSObject : public js::gc::Cell
         return group_->lazy();
     }
 
-    JSCompartment* compartment() const { return group_->compartment(); }
-    JSCompartment* maybeCompartment() const { return compartment(); }
+    JS::Compartment* compartment() const { return group_->compartment(); }
+    JS::Compartment* maybeCompartment() const { return compartment(); }
     JS::Realm* realm() const { return group_->realm(); }
 
     inline js::Shape* maybeShape() const;
@@ -1328,7 +1328,7 @@ GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
 
 #ifdef DEBUG
 inline bool
-IsObjectValueInCompartment(const Value& v, JSCompartment* comp)
+IsObjectValueInCompartment(const Value& v, JS::Compartment* comp)
 {
     if (!v.isObject())
         return true;

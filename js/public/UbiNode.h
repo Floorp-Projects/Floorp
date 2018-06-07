@@ -597,10 +597,10 @@ class JS_PUBLIC_API(Base) {
     virtual JS::Zone* zone() const { return nullptr; }
 
     // Return the compartment for this node. Some ubi::Node referents are not
-    // associated with JSCompartments, such as JSStrings (which are associated
+    // associated with Compartments, such as JSStrings (which are associated
     // with Zones). When the referent is not associated with a compartment,
     // nullptr is returned.
-    virtual JSCompartment* compartment() const { return nullptr; }
+    virtual JS::Compartment* compartment() const { return nullptr; }
 
     // Return the realm for this node. Some ubi::Node referents are not
     // associated with Realms, such as JSStrings (which are associated
@@ -781,7 +781,7 @@ class Node {
     CoarseType coarseType()         const { return base()->coarseType(); }
     const char16_t* typeName()      const { return base()->typeName(); }
     JS::Zone* zone()                const { return base()->zone(); }
-    JSCompartment* compartment()    const { return base()->compartment(); }
+    JS::Compartment* compartment()  const { return base()->compartment(); }
     JS::Realm* realm()              const { return base()->realm(); }
     const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
     MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
@@ -988,7 +988,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(RootList) {
 
     // Find all GC roots.
     MOZ_MUST_USE bool init();
-    // Find only GC roots in the provided set of |JSCompartment|s. Note: it's
+    // Find only GC roots in the provided set of |JS::Compartment|s. Note: it's
     // important to take a CompartmentSet and not a RealmSet: objects in
     // same-compartment realms can reference each other directly, without going
     // through CCWs, so if we used a RealmSet here we would miss edges.
@@ -1042,7 +1042,7 @@ class JS_PUBLIC_API(TracerConcrete) : public Base {
 template<typename Referent>
 class JS_PUBLIC_API(TracerConcreteWithRealm) : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
-    JSCompartment* compartment() const override;
+    JS::Compartment* compartment() const override;
     JS::Realm* realm() const override;
 
   protected:
@@ -1112,7 +1112,7 @@ class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcrete<JSObject> {
         new (storage) Concrete(ptr);
     }
 
-    JSCompartment* compartment() const override;
+    JS::Compartment* compartment() const override;
     JS::Realm* realm() const override;
 
     const char* jsObjectClassName() const override;
@@ -1153,7 +1153,7 @@ class JS_PUBLIC_API(Concrete<void>) : public Base {
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
     js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     JS::Zone* zone() const override;
-    JSCompartment* compartment() const override;
+    JS::Compartment* compartment() const override;
     JS::Realm* realm() const override;
     CoarseType coarseType() const final;
 

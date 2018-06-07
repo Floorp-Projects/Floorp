@@ -2788,7 +2788,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     MOZ_ASSERT(!cx->realm());
 
     JS::RealmOptions options;
-    options.creationOptions().setNewZone();
+    options.creationOptions().setNewCompartmentAndZone();
     options.behaviors().setDiscardSource(true);
 
     Realm* realm = NewRealm(cx, nullptr, options);
