@@ -551,6 +551,7 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "application-background", true);
         obsService->AddObserver(this, "psm:user-certificate-added", true);
         obsService->AddObserver(this, "psm:user-certificate-deleted", true);
+        obsService->AddObserver(this, "intl:app-locales-changed", true);
 
         if (!IsNeckoChild()) {
             obsService->AddObserver(this,
@@ -2449,6 +2450,9 @@ nsHttpHandler::Observe(nsISupports *subject,
         // If a user certificate has been removed, we need to check if there
         // are others installed
         mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
+    } else if (!strcmp(topic, "intl:app-locales-changed")) {
+        // If the locale changed, there's a chance the accept language did too
+        mAcceptLanguagesIsDirty = true;
     }
 
     return NS_OK;
