@@ -42,6 +42,7 @@
 #include "prproces.h"
 #include "prlink.h"
 
+#include "mozilla/FilePreferences.h"
 #include "mozilla/Mutex.h"
 #include "SpecialSystemDirectory.h"
 
@@ -1049,6 +1050,10 @@ nsLocalFile::InitWithPath(const nsAString& aFilePath)
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
   }
 
+  if (FilePreferences::IsBlockedUNCPath(aFilePath)) {
+    return NS_ERROR_FILE_ACCESS_DENIED;
+  }
+
   if (secondChar != L':' && (secondChar != L'\\' || firstChar != L'\\')) {
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
   }
@@ -1801,6 +1806,10 @@ nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
       !IsRemoteFilePath(destPath.get(), path2Remote) ||
       path1Remote || path2Remote) {
     dwCopyFlags |= COPY_FILE_NO_BUFFERING;
+  }
+
+  if (FilePreferences::IsBlockedUNCPath(destPath)) {
+    return NS_ERROR_FILE_ACCESS_DENIED;
   }
 
   if (!move) {
