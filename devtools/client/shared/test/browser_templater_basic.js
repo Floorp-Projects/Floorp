@@ -157,7 +157,7 @@ var tests = [
     data: { name: "pass 8" },
     result: "<p>pass 8</p>",
     also: function(options) {
-      ok(options.data.element.innerHTML, "pass 9", "saveElement saved");
+      is(options.data.element.innerHTML, "pass 8", "saveElement saved");
       delete options.data.element;
     }
   }),

@@ -84,9 +84,9 @@ add_task(async function() {
   info("Check autocomplete suggestions can be cycled using UP/DOWN arrows.");
 
   await synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
-  ok(editor.popup.selectedIndex, 1, "Using DOWN cycles autocomplete values.");
+  is(editor.popup.selectedIndex, 1, "Using DOWN cycles autocomplete values.");
   await synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
-  ok(editor.popup.selectedIndex, 2, "Using DOWN cycles autocomplete values.");
+  is(editor.popup.selectedIndex, 2, "Using DOWN cycles autocomplete values.");
   await synthesizeKeyForAutocomplete("VK_UP", editor, view.styleWindow);
   is(editor.popup.selectedIndex, 1, "Using UP cycles autocomplete values.");
   item = editor.popup.getItemAtIndex(editor.popup.selectedIndex);

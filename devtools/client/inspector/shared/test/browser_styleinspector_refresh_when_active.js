@@ -26,13 +26,13 @@ add_task(async function() {
   await onComputedViewReady;
   const cView = inspector.getPanel("computedview").computedView;
 
-  ok(getComputedViewPropertyValue(cView, "color"), "#F00",
+  is(getComputedViewPropertyValue(cView, "color"), "rgb(255, 0, 0)",
     "The computed-view shows the properties for test node one");
 
   info("Selecting test node two");
   await selectNode("#two", inspector);
 
-  ok(getComputedViewPropertyValue(cView, "color"), "#00F",
+  is(getComputedViewPropertyValue(cView, "color"), "rgb(0, 0, 255)",
     "The computed-view shows the properties for test node two");
   is(getRuleViewPropertyValue(view, "element", "color"), "blue",
     "The rule-view shows the properties for test node two");
