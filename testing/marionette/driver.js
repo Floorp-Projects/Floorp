@@ -1620,10 +1620,12 @@ GeckoDriver.prototype.setWindowHandle = async function(
     }
 
   } else {
-    // Otherwise switch to the known chrome window, and activate the tab
-    // if it's a content browser.
+    // Otherwise switch to the known chrome window
     this.curBrowser = this.browsers[winProperties.outerId];
+    this.mainFrame = this.curBrowser.window;
+    this.curFrame = null;
 
+    // .. and activate the tab if it's a content browser.
     if ("tabIndex" in winProperties) {
       this.curBrowser.switchToTab(
           winProperties.tabIndex, winProperties.win, focus);
