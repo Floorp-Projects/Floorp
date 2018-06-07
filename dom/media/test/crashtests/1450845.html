@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1450845: Avoid seek to next frame when already seeking</title>
+  <script>
+    async function boom() {
+      let video = document.getElementById('video');
+
+      // Internally play causes a seek, make sure we don't crash during this
+      video.play();
+      try {
+        await document.getElementById('video').seekToNextFrame();
+      } catch (e) {
+        // We don't mind if the promise was rejected so long as we don't crash
+      }
+      // Didn't crash
+
+      // Stop playback and cause a seek to 0
+      video.pause();
+      video.currentTime = 0;
+      try {
+        await document.getElementById('video').seekToNextFrame();
+      } finally {
+        // Didn't crash
+        document.documentElement.removeAttribute("class");
+      }
+    }
+    window.addEventListener('load', boom)
+  </script>
+</head>
+<body>
+  <video id='video' src='data:video/webm;base64,GkXfowEAAAAAAAAfQoaBAUL3gQFC8oEEQvOBQoWBAhhTgGcBAAAAAAAB6BFNm3RALE27i1OrhBVJqWZTrIHfTbuMU6uEFlSua1OsggEwTbuMU6uEHFO7a1OsggHL7AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmAQAAAAAAAEUqTYCNTGF2ZjU3LjI5LjEwMVdBjUxhdmY1Ny4yOS4xMDFzpJBAb17Yv2oNAF1ZEESuco33RImIQFCAAAAAAAAWVK5rAQAAAAAAADyuAQAAAAAAADPXgQFzxYEBnIEAIrWcg3VuZIaFVl9WUDmDgQEj44OEAfygVeABAAAAAAAAB7CCAUC6gfAfQ7Z1AQAAAAAAAEfngQCjqYEAAICCSYNCABPwDvYAOCQcGFQAAFBh9jAAABML7AAATEnjdRwIJ+gAo5eBACEAhgBAkpwATEAABCasAABekcXgAB'>
+</body>
+</html>
