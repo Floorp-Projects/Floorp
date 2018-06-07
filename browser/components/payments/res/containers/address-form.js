@@ -38,14 +38,16 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.persistCheckbox.className = "persist-checkbox";
 
     this._errorFieldMap = {
-      addressLine: "#street-address-container",
-      city: "#address-level2-container",
-      country: "#country-container",
-      organization: "#organization-container",
-      phone: "#tel-container",
-      postalCode: "#postal-code-container",
-      recipient: "#name-container",
-      region: "#address-level1-container",
+      addressLine: "#street-address",
+      city: "#address-level2",
+      country: "#country",
+      organization: "#organization",
+      phone: "#tel",
+      postalCode: "#postal-code",
+      // Bug 1472283 is on file to support
+      // additional-name and family-name.
+      recipient: "#given-name",
+      region: "#address-level1",
     };
 
     // The markup is shared with form autofill preferences.
@@ -143,17 +145,27 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
 
     this.formHandler.loadRecord(record);
 
+    // Add validation to some address fields
+    let postalCodeInput = this.form.querySelector("#postal-code");
+    let addressLevel1Input = this.form.querySelector("#address-level1");
+    for (let element of [postalCodeInput, addressLevel1Input]) {
+      element.required = element.closest(`#${element.id}-container`).style.display != "none";
+    }
+
     let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
     for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
-      let container = document.querySelector(errorSelector);
+      let container = document.querySelector(errorSelector + "-container");
+      let field = document.querySelector(errorSelector);
+      let errorText = (shippingAddressErrors && shippingAddressErrors[errorName]) || "";
+      container.classList.toggle("error", !!errorText);
+      field.setCustomValidity(errorText);
       let span = container.querySelector(".error-text");
       if (!span) {
         span = document.createElement("span");
         span.className = "error-text";
         container.appendChild(span);
       }
-      span.textContent = shippingAddressErrors[errorName];
-      container.classList.toggle("error", !!shippingAddressErrors[errorName]);
+      span.textContent = errorText;
     }
   }
 

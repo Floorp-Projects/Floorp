@@ -131,7 +131,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       let errorFieldMap =
         Cu.waiveXrays(content.document.querySelector("address-form"))._errorFieldMap;
       for (let [errorName, errorValue] of Object.entries(shippingAddressErrors)) {
-        let field = content.document.querySelector(errorFieldMap[errorName]);
+        let field = content.document.querySelector(errorFieldMap[errorName] + "-container");
         try {
           is(field.querySelector(".error-text").textContent, errorValue,
              "Field specific error should be associated with " + errorName);

@@ -30,7 +30,7 @@ Test the address-form element
 <script type="module">
 /** Test the address-form element **/
 
-/* global sinon */
+/* global sinon, PaymentDialogUtils */
 
 import AddressForm from "../../res/containers/address-form.js";
 
@@ -55,6 +55,16 @@ function checkAddressForm(customEl, expectedAddress) {
        expectedVal.toString(),
        `Check ${propName}`);
   }
+}
+
+function sendStringAndCheckValidity(element, string, isValid) {
+  element.focus();
+  while (element.value) {
+    sendKey("BACK_SPACE");
+  }
+  sendString(string);
+  ok(element.checkValidity() == isValid,
+     `${element.id} should be ${isValid ? "valid" : "invalid"}`);
 }
 
 add_task(async function test_initialState() {
@@ -272,6 +282,124 @@ add_task(async function test_restricted_address_fields() {
      "email should be visible");
   ok(!isHidden(form.form.querySelector("#tel")),
      "tel should be visible");
+
+  form.remove();
+});
+
+add_task(async function test_field_validation() {
+  let form = new AddressForm();
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let postalCodeInput = form.form.querySelector("#postal-code");
+  let addressLevel1Input = form.form.querySelector("#address-level1");
+  ok(!postalCodeInput.value, "postal-code should be empty by default");
+  ok(!addressLevel1Input.value, "address-level1 should be empty by default");
+  ok(!postalCodeInput.checkValidity(), "postal-code should be invalid by default");
+  ok(!addressLevel1Input.checkValidity(), "address-level1 should be invalid by default");
+
+  sendStringAndCheckValidity(postalCodeInput, "00001", true);
+  sendStringAndCheckValidity(addressLevel1Input, "CA", true);
+  sendStringAndCheckValidity(postalCodeInput, "94043", true);
+  sendStringAndCheckValidity(addressLevel1Input, "", false);
+  sendStringAndCheckValidity(postalCodeInput, "B4N4N4", true);
+  sendStringAndCheckValidity(addressLevel1Input, "MI", true);
+  sendStringAndCheckValidity(postalCodeInput, "R3J 3C7", true);
+  sendStringAndCheckValidity(addressLevel1Input, "", false);
+  sendStringAndCheckValidity(postalCodeInput, "11109", true);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
+  sendStringAndCheckValidity(postalCodeInput, "06390-0001", true);
+
+  form.remove();
+});
+
+add_task(async function test_customValidity() {
+  let form = new AddressForm();
+  await form.promiseReady;
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      title: "Sample page title",
+    },
+    request: {
+      paymentDetails: {
+        shippingAddressErrors: {
+          addressLine: "Street address needs to start with a D",
+          city: "City needs to start with a B",
+          country: "Country needs to start with a C",
+          organization: "organization needs to start with an A",
+          phone: "Telephone needs to start with a 9",
+          postalCode: "Postal code needs to start with a 0",
+          recipient: "Name needs to start with a Z",
+          region: "Region needs to start with a Y",
+        },
+      },
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  function checkValidationMessage(selector, property) {
+    is(form.form.querySelector(selector).validationMessage,
+       state.request.paymentDetails.shippingAddressErrors[property],
+       "Validation message should match for " + selector);
+  }
+
+  checkValidationMessage("#street-address", "addressLine");
+  checkValidationMessage("#address-level2", "city");
+  checkValidationMessage("#country", "country");
+  checkValidationMessage("#organization", "organization");
+  checkValidationMessage("#tel", "phone");
+  checkValidationMessage("#postal-code", "postalCode");
+  checkValidationMessage("#given-name", "recipient");
+  checkValidationMessage("#address-level1", "region");
+
+  form.remove();
+});
+
+add_task(async function test_field_validation() {
+  sinon.stub(PaymentDialogUtils, "getFormFormat").returns({
+    addressLevel1Label: "state",
+    postalCodeLabel: "US",
+    fieldsOrder: [
+      {fieldId: "name", newLine: true},
+      {fieldId: "organization", newLine: true},
+      {fieldId: "street-address", newLine: true},
+      {fieldId: "address-level2"},
+    ],
+  });
+
+  let form = new AddressForm();
+  await form.promiseReady;
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      title: "Sample page title",
+    },
+    request: {
+      paymentDetails: {
+        shippingAddressErrors: {},
+      },
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let postalCodeInput = form.form.querySelector("#postal-code");
+  let addressLevel1Input = form.form.querySelector("#address-level1");
+  ok(!postalCodeInput.value, "postal-code should be empty by default");
+  ok(!addressLevel1Input.value, "address-level1 should be empty by default");
+  ok(postalCodeInput.checkValidity(),
+     "postal-code should be valid by default when it is not visible");
+  ok(addressLevel1Input.checkValidity(),
+     "address-level1 should be valid by default when it is not visible");
 
   form.remove();
 });
