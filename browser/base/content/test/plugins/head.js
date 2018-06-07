@@ -174,6 +174,7 @@ function promiseReloadPlugin(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
   return ContentTask.spawn(browser, aId, async function(contentId) {
     let plugin = content.document.getElementById(contentId);
+    // eslint-disable-next-line no-self-assign
     plugin.src = plugin.src;
   });
 }

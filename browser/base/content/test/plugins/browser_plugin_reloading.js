@@ -66,6 +66,7 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
     let npobj1 = Cu.waiveXrays(plugin).getObjectValue();
+    // eslint-disable-next-line no-self-assign
     plugin.src = plugin.src;
     let pluginsDiffer = false;
     try {
