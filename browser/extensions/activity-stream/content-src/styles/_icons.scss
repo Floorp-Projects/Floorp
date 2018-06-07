@@ -1,0 +1,180 @@
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: $icon-size;
+  -moz-context-properties: fill;
+  display: inline-block;
+  fill: var(--newtab-icon-primary-color);
+  height: $icon-size;
+  vertical-align: middle;
+  width: $icon-size;
+
+  &.icon-spacer {
+    margin-inline-end: 8px;
+  }
+
+  &.icon-small-spacer {
+    margin-inline-end: 6px;
+  }
+
+  &.icon-bookmark-added {
+    background-image: url('chrome://browser/skin/bookmark.svg');
+  }
+
+  &.icon-bookmark-hollow {
+    background-image: url('chrome://browser/skin/bookmark-hollow.svg');
+  }
+
+  &.icon-clear-input {
+    fill: var(--newtab-icon-secondary-color);
+    background-image: url('#{$image-path}glyph-cancel-16.svg');
+  }
+
+  &.icon-delete {
+    background-image: url('#{$image-path}glyph-delete-16.svg');
+  }
+
+  &.icon-search {
+    background-image: url('chrome://browser/skin/search-glass.svg');
+  }
+
+  &.icon-modal-delete {
+    flex-shrink: 0;
+    background-image: url('#{$image-path}glyph-modal-delete-32.svg');
+    background-size: $larger-icon-size;
+    height: $larger-icon-size;
+    width: $larger-icon-size;
+  }
+
+  &.icon-dismiss {
+    background-image: url('#{$image-path}glyph-dismiss-16.svg');
+  }
+
+  &.icon-info {
+    background-image: url('#{$image-path}glyph-info-16.svg');
+  }
+
+  &.icon-import {
+    background-image: url('#{$image-path}glyph-import-16.svg');
+  }
+
+  &.icon-new-window {
+    @include flip-icon;
+    background-image: url('#{$image-path}glyph-newWindow-16.svg');
+  }
+
+  &.icon-new-window-private {
+    background-image: url('chrome://browser/skin/privateBrowsing.svg');
+  }
+
+  &.icon-settings {
+    background-image: url('chrome://browser/skin/settings.svg');
+  }
+
+  &.icon-pin {
+    @include flip-icon;
+    background-image: url('#{$image-path}glyph-pin-16.svg');
+  }
+
+  &.icon-unpin {
+    @include flip-icon;
+    background-image: url('#{$image-path}glyph-unpin-16.svg');
+  }
+
+  &.icon-edit {
+    background-image: url('#{$image-path}glyph-edit-16.svg');
+  }
+
+  &.icon-pocket {
+    background-image: url('#{$image-path}glyph-pocket-16.svg');
+  }
+
+  &.icon-history-item {
+    background-image: url('chrome://browser/skin/history.svg');
+  }
+
+  &.icon-trending {
+    background-image: url('#{$image-path}glyph-trending-16.svg');
+    transform: translateY(2px); // trending bolt is visually top heavy
+  }
+
+  &.icon-now {
+    background-image: url('chrome://browser/skin/history.svg');
+  }
+
+  &.icon-topsites {
+    background-image: url('#{$image-path}glyph-topsites-16.svg');
+  }
+
+  &.icon-pin-small {
+    @include flip-icon;
+    background-image: url('#{$image-path}glyph-pin-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    width: $smaller-icon-size;
+  }
+
+  &.icon-check {
+    background-image: url('chrome://browser/skin/check.svg');
+  }
+
+  &.icon-download {
+    background-image: url('chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar');
+  }
+
+  &.icon-copy {
+    background-image: url('chrome://browser/skin/edit-copy.svg');
+  }
+
+  &.icon-open-file {
+    background-image: url('#{$image-path}glyph-open-file-16.svg');
+  }
+
+  &.icon-webextension {
+    background-image: url('#{$image-path}glyph-webextension-16.svg');
+  }
+
+  &.icon-highlights {
+    background-image: url('#{$image-path}glyph-highlights-16.svg');
+  }
+
+  &.icon-arrowhead-down {
+    background-image: url('#{$image-path}glyph-arrowhead-down-16.svg');
+  }
+
+  &.icon-arrowhead-down-small {
+    background-image: url('#{$image-path}glyph-arrowhead-down-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    width: $smaller-icon-size;
+  }
+
+  &.icon-arrowhead-forward-small {
+    background-image: url('#{$image-path}glyph-arrowhead-down-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    transform: rotate(-90deg);
+    width: $smaller-icon-size;
+
+    &:dir(rtl) {
+      transform: rotate(90deg);
+    }
+  }
+
+  &.icon-arrowhead-up {
+    background-image: url('#{$image-path}glyph-arrowhead-down-16.svg');
+    transform: rotate(180deg);
+  }
+
+  &.icon-add {
+    background-image: url('#{$image-path}glyph-add-16.svg');
+  }
+
+  &.icon-minimize {
+    background-image: url('#{$image-path}glyph-minimize-16.svg');
+  }
+
+  &.icon-maximize {
+    background-image: url('#{$image-path}glyph-maximize-16.svg');
+  }
+}

@@ -29,10 +29,12 @@ Test swapFrameLoaders with different frame types and remoteness
     ["xul", "html"],
     ["html", "xul"],
     ["html", "html"],
-    ["xul", "xul", "remote"],
-    ["xul", "html", "remote"],
-    ["html", "xul", "remote"],
-    ["html", "html", "remote"],
+    ["xul", "xul", { remote: true }],
+    ["xul", "html", { remote: true }],
+    ["html", "xul", { remote: true }],
+    ["html", "html", { remote: true }],
+    ["xul", "html", { userContextId: 2 }],
+    ["xul", "html", { userContextId: 2, remote: true }],
   ];
 
   const HEIGHTS = [
@@ -69,11 +71,16 @@ Test swapFrameLoaders with different frame types and remoteness
     });
   }
 
-  async function addFrame(type, remote, height) {
+  async function addFrame(type, options, height) {
+    let remote = options && options.remote;
+    let userContextId = options && options.userContextId;
     let frame = document.createElementNS(NS[type], TAG[type]);
     frame.setAttribute("remote", remote);
     if (remote && type == "xul") {
       frame.setAttribute("style", "-moz-binding: none;");
+    }
+    if (userContextId) {
+      frame.setAttribute("usercontextid", userContextId);
     }
     if (type == "html") {
       frame.setAttribute("mozbrowser", "true");
@@ -99,15 +106,14 @@ Test swapFrameLoaders with different frame types and remoteness
 
   add_task(async function() {
     for (let scenario of SCENARIOS) {
-      let [ typeA, typeB, remote ] = scenario;
-      remote = !!remote;
+      let [ typeA, typeB, options ] = scenario;
       let heightA = HEIGHTS[0];
-      info(`Adding frame A, type ${typeA}, remote ${remote}, height ${heightA}`);
-      let frameA = await addFrame(typeA, remote, heightA);
+      info(`Adding frame A, type ${typeA}, options ${JSON.stringify(options)}, height ${heightA}`);
+      let frameA = await addFrame(typeA, options, heightA);
 
       let heightB = HEIGHTS[1];
-      info(`Adding frame B, type ${typeB}, remote ${remote}, height ${heightB}`);
-      let frameB = await addFrame(typeB, remote, heightB);
+      info(`Adding frame B, type ${typeB}, options ${JSON.stringify(options)}, height ${heightB}`);
+      let frameB = await addFrame(typeB, options, heightB);
 
       let frameScriptFactory = function(name) {
         return `function() {

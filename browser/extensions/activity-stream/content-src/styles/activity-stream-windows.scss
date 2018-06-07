@@ -1,0 +1,7 @@
+/* This is the windows variant */ // sass-lint:disable-line no-css-comments
+
+$os-infopanel-arrow-height: 10px;
+$os-infopanel-arrow-offset-end: 6px;
+$os-infopanel-arrow-width: 20px;
+
+@import './activity-stream';

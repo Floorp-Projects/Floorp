@@ -1,0 +1,485 @@
+$top-sites-size: $grid-unit;
+$top-sites-border-radius: 6px;
+$top-sites-title-height: 30px;
+$top-sites-vertical-space: 8px;
+$screenshot-size: cover;
+$rich-icon-size: 96px;
+$default-icon-wrapper-size: 42px;
+$default-icon-size: 32px;
+$default-icon-offset: 6px;
+$half-base-gutter: $base-gutter / 2;
+
+.top-sites {
+  // Take back the margin from the bottom row of vertical spacing as well as the
+  // extra whitespace below the title text as it's vertically centered.
+  margin-bottom: $section-spacing - ($top-sites-vertical-space + $top-sites-title-height / 3);
+}
+
+.top-sites-list {
+  list-style: none;
+  margin: 0 (-$half-base-gutter);
+  padding: 0;
+
+  // Two columns
+  @media (max-width: $break-point-small) {
+    :nth-child(2n+1) {
+      @include context-menu-open-middle;
+    }
+
+    :nth-child(2n) {
+      @include context-menu-open-left;
+    }
+  }
+
+  // Three columns
+  @media (min-width: $break-point-small) and (max-width: $break-point-medium) {
+    :nth-child(3n+2),
+    :nth-child(3n) {
+      @include context-menu-open-left;
+    }
+  }
+
+  // Four columns
+  @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
+    :nth-child(4n) {
+      @include context-menu-open-left;
+    }
+  }
+  @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width) {
+    :nth-child(4n+3) {
+      @include context-menu-open-left;
+    }
+  }
+
+  // Six columns
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width) {
+    :nth-child(6n) {
+      @include context-menu-open-left;
+    }
+  }
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width) {
+    :nth-child(6n+5) {
+      @include context-menu-open-left;
+    }
+  }
+
+  // Eight columns
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
+    :nth-child(8n) {
+      @include context-menu-open-left;
+    }
+  }
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width) {
+    :nth-child(8n+7) {
+      @include context-menu-open-left;
+    }
+  }
+
+  @media not all and (min-width: $break-point-widest) {
+    .hide-for-narrow {
+      display: none;
+    }
+  }
+
+  li {
+    margin: 0 0 $top-sites-vertical-space;
+  }
+
+  &:not(.dnd-active) {
+    .top-site-outer:-moz-any(.active, :focus, :hover) {
+      .tile {
+        @include fade-in;
+      }
+
+      @include context-menu-button-hover;
+    }
+  }
+}
+
+// container for drop zone
+.top-site-outer {
+  padding: 0 $half-base-gutter;
+  display: inline-block;
+
+  // container for context menu
+  .top-site-inner {
+    position: relative;
+
+    > a {
+      color: inherit;
+      display: block;
+      outline: none;
+
+      &:-moz-any(.active, :focus) {
+        .tile {
+          @include fade-in;
+        }
+      }
+    }
+  }
+
+  @include context-menu-button;
+
+  .tile { // sass-lint:disable-block property-sort-order
+    border-radius: $top-sites-border-radius;
+    box-shadow: inset $inner-box-shadow, var(--newtab-card-shadow);
+    height: $top-sites-size;
+    position: relative;
+    width: $top-sites-size;
+
+    // For letter fallback
+    align-items: center;
+    color: var(--newtab-text-secondary-color);
+    display: flex;
+    font-size: 32px;
+    font-weight: 200;
+    justify-content: center;
+    text-transform: uppercase;
+
+    &::before {
+      content: attr(data-fallback);
+    }
+  }
+
+  .screenshot {
+    background-color: $white;
+    background-position: top left;
+    background-size: $screenshot-size;
+    border-radius: $top-sites-border-radius;
+    box-shadow: inset $inner-box-shadow;
+    height: 100%;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    transition: opacity 1s;
+    width: 100%;
+
+    &.active {
+      opacity: 1;
+    }
+  }
+
+  // Some common styles for all icons (rich and default) in top sites
+  .top-site-icon {
+    background-color: var(--newtab-topsites-background-color);
+    background-position: center center;
+    background-repeat: no-repeat;
+    border-radius: $top-sites-border-radius;
+    box-shadow: var(--newtab-topsites-icon-shadow);
+    position: absolute;
+  }
+
+  .rich-icon {
+    background-size: cover;
+    height: 100%;
+    offset-inline-start: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .default-icon { // sass-lint:disable block property-sort-order
+    background-size: $default-icon-size;
+    bottom: -$default-icon-offset;
+    height: $default-icon-wrapper-size;
+    offset-inline-end: -$default-icon-offset;
+    width: $default-icon-wrapper-size;
+
+    // for corner letter fallback
+    align-items: center;
+    display: flex;
+    font-size: 20px;
+    justify-content: center;
+
+    &[data-fallback]::before {
+      content: attr(data-fallback);
+    }
+  }
+
+  .title {
+    color: var(--newtab-topsites-label-color);
+    font: message-box;
+    height: $top-sites-title-height;
+    line-height: $top-sites-title-height;
+    text-align: center;
+    width: $top-sites-size;
+    position: relative;
+
+    .icon {
+      fill: var(--newtab-icon-tertiary-color);
+      offset-inline-start: 0;
+      position: absolute;
+      top: 10px;
+    }
+
+    span {
+      height: $top-sites-title-height;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &.pinned {
+      span {
+        padding: 0 13px;
+      }
+    }
+  }
+
+  .edit-button {
+    background-image: url('#{$image-path}glyph-edit-16.svg');
+  }
+
+  &.placeholder {
+    .tile {
+      box-shadow: inset $inner-box-shadow;
+    }
+
+    .screenshot {
+      display: none;
+    }
+  }
+
+  &.dragged {
+    .tile {
+      background: $grey-20;
+      box-shadow: none;
+
+      *,
+      &::before {
+        display: none;
+      }
+    }
+
+    .title {
+      visibility: hidden;
+    }
+  }
+}
+
+.edit-topsites-wrapper {
+  .modal {
+    box-shadow: $shadow-secondary;
+    left: 0;
+    margin: 0 auto;
+    position: fixed;
+    right: 0;
+    top: 40px;
+    width: $wrapper-default-width;
+
+    @media (min-width: $break-point-small) {
+      width: $wrapper-max-width-small;
+    }
+
+    @media (min-width: $break-point-medium) {
+      width: $wrapper-max-width-medium;
+    }
+
+    @media (min-width: $break-point-large) {
+      width: $wrapper-max-width-large;
+    }
+  }
+}
+
+.topsite-form {
+  $form-width: 300px;
+  $form-spacing: 32px;
+
+  .form-input-container {
+    max-width: $form-width + 3 * $form-spacing + $rich-icon-size;
+    margin: 0 auto;
+    padding: $form-spacing;
+
+    .top-site-outer {
+      padding: 0;
+      margin: 24px 0 0;
+      margin-inline-start: $form-spacing;
+      pointer-events: none;
+    }
+
+    .section-title {
+      text-transform: none;
+      font-size: 16px;
+      margin: 0 0 16px;
+    }
+  }
+
+  .fields-and-preview {
+    display: flex;
+  }
+
+  label {
+    font-size: $section-title-font-size;
+  }
+
+  .form-wrapper {
+    width: 100%;
+
+    .field {
+      position: relative;
+
+      .icon-clear-input {
+        position: absolute;
+        transform: translateY(-50%);
+        top: 50%;
+        offset-inline-end: 8px;
+      }
+    }
+
+    .url {
+      input:dir(ltr) {
+        padding-right: 32px;
+      }
+
+      input:dir(rtl) {
+        padding-left: 32px;
+
+        &:not(:placeholder-shown) {
+          direction: ltr;
+          text-align: right;
+        }
+      }
+    }
+
+    .enable-custom-image-input {
+      display: inline-block;
+      font-size: 13px;
+      margin-top: 4px;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .custom-image-input-container {
+      margin-top: 4px;
+
+      .loading-container {
+        width: 16px;
+        height: 16px;
+        overflow: hidden;
+        position: absolute;
+        transform: translateY(-50%);
+        top: 50%;
+        offset-inline-end: 8px;
+      }
+
+      // This animation is derived from Firefox's tab loading animation
+      // See https://searchfox.org/mozilla-central/rev/b29daa46443b30612415c35be0a3c9c13b9dc5f6/browser/themes/shared/tabs.inc.css#208-216
+      .loading-animation {
+        @keyframes tab-throbber-animation {
+          100% { transform: translateX(-960px); }
+        }
+
+        @keyframes tab-throbber-animation-rtl {
+          100% { transform: translateX(960px); }
+        }
+
+        width: 960px;
+        height: 16px;
+        -moz-context-properties: fill;
+        fill: $blue-50;
+        background-image: url('chrome://browser/skin/tabbrowser/loading.svg');
+        animation: tab-throbber-animation 1.05s steps(60) infinite;
+
+        &:dir(rtl) {
+          animation-name: tab-throbber-animation-rtl;
+        }
+      }
+    }
+
+    input {
+      &[type='text'] {
+        background-color: var(--newtab-textbox-background-color);
+        border: $input-border;
+        margin: 8px 0;
+        padding: 0 8px;
+        height: 32px;
+        width: 100%;
+        font-size: 15px;
+
+        &:focus {
+          border: $input-border-active;
+          box-shadow: var(--newtab-textbox-focus-boxshadow);
+        }
+
+        &[disabled] {
+          border: $input-border;
+          box-shadow: none;
+          opacity: 0.4;
+        }
+      }
+    }
+
+    .invalid {
+      input {
+        &[type='text'] {
+          border: $input-error-border;
+          box-shadow: $input-error-boxshadow;
+        }
+      }
+    }
+
+    .error-tooltip {
+      animation: fade-up-tt 450ms;
+      background: $red-60;
+      border-radius: 2px;
+      color: $white;
+      offset-inline-start: 3px;
+      padding: 5px 12px;
+      position: absolute;
+      top: 44px;
+      z-index: 1;
+
+      // tooltip caret
+      &::before {
+        background: $red-60;
+        bottom: -8px;
+        content: '.';
+        height: 16px;
+        offset-inline-start: 12px;
+        position: absolute;
+        text-indent: -999px;
+        top: -7px;
+        transform: rotate(45deg);
+        white-space: nowrap;
+        width: 16px;
+        z-index: -1;
+      }
+    }
+  }
+
+  .actions {
+    justify-content: flex-end;
+
+    button {
+      margin-inline-start: 10px;
+      margin-inline-end: 0;
+    }
+  }
+
+  @media (max-width: $break-point-small) {
+    .fields-and-preview {
+      flex-direction: column;
+
+      .top-site-outer {
+        margin-inline-start: 0;
+      }
+    }
+  }
+}
+
+//used for tooltips below form element
+@keyframes fade-up-tt {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

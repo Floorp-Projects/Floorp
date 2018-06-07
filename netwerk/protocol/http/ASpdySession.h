@@ -28,9 +28,9 @@ public:
   virtual PRIntervalTime IdleTime() = 0;
   virtual uint32_t ReadTimeoutTick(PRIntervalTime now) = 0;
   virtual void DontReuse() = 0;
-  virtual uint32_t SpdyVersion() = 0;
+  virtual enum SpdyVersion SpdyVersion() = 0;
 
-  static ASpdySession *NewSpdySession(uint32_t version, nsISocketTransport *, bool);
+  static ASpdySession *NewSpdySession(net::SpdyVersion version, nsISocketTransport *, bool);
 
   virtual bool TestJoinConnection(const nsACString &hostname, int32_t port) = 0;
   virtual bool JoinConnection(const nsACString &hostname, int32_t port) = 0;
@@ -108,7 +108,7 @@ public:
   // determine if a version of the protocol is enabled for index < kCount
   bool ProtocolEnabled(uint32_t index) const;
 
-  uint8_t   Version[kCount]; // telemetry enum e.g. SPDY_VERSION_31
+  SpdyVersion Version[kCount]; // telemetry enum e.g. SPDY_VERSION_31
   nsCString VersionString[kCount]; // npn string e.g. "spdy/3.1"
 
   // the ALPNCallback function allows the protocol stack to decide whether or

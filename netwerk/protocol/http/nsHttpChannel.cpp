@@ -1050,7 +1050,7 @@ nsHttpChannel::SetupTransaction()
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
         // no-cache'
-        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1) {
+        if (mRequestHead.Version() >= HttpVersion::v1_1) {
             rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "no-cache", true);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
@@ -1061,7 +1061,7 @@ nsHttpChannel::SetupTransaction()
         // with the next cache or server.  See bug #84847.
         //
         // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
-        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
+        if (mRequestHead.Version() >= HttpVersion::v1_1)
             rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0", true);
         else
             rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
@@ -1469,7 +1469,7 @@ nsHttpChannel::CallOnStartRequest()
         MOZ_ASSERT(mConnectionInfo, "Should have connection info here");
         if (!mContentTypeHint.IsEmpty())
             mResponseHead->SetContentType(mContentTypeHint);
-        else if (mResponseHead->Version() == NS_HTTP_VERSION_0_9 &&
+        else if (mResponseHead->Version() == HttpVersion::v0_9 &&
                  mConnectionInfo->OriginPort() != mConnectionInfo->DefaultPort())
             mResponseHead->SetContentType(NS_LITERAL_CSTRING(TEXT_PLAIN));
         else {
@@ -2488,9 +2488,9 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
         AccumulateCacheHitTelemetry(cacheDisposition);
 
         Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_VERSION,
-                              mResponseHead->Version());
+                              static_cast<uint32_t>(mResponseHead->Version()));
 
-        if (mResponseHead->Version() == NS_HTTP_VERSION_0_9) {
+        if (mResponseHead->Version() == HttpVersion::v0_9) {
             // DefaultPortTopLevel = 0, DefaultPortSubResource = 1,
             // NonDefaultPortTopLevel = 2, NonDefaultPortSubResource = 3
             uint32_t v09Info = 0;
@@ -7269,7 +7269,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::disk;
     } else if (NS_SUCCEEDED(status) &&
                mResponseHead &&
-               mResponseHead->Version() != NS_HTTP_VERSION_0_9) {
+               mResponseHead->Version() != HttpVersion::v0_9) {
         chanDisposition = kHttpNetOK;
         upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::netOk;
     } else if (!mTransferSize) {
