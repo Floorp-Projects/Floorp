@@ -194,13 +194,6 @@ TaskQueue::IsEmpty()
   return mTasks.empty();
 }
 
-uint32_t
-TaskQueue::ImpreciseLengthForHeuristics()
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  return mTasks.size();
-}
-
 bool
 TaskQueue::IsCurrentThreadIn()
 {
