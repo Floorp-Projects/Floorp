@@ -23,7 +23,6 @@ UNIFIED_SOURCES += [
     'TestEventTargetQI.cpp',
     'TestExpirationTracker.cpp',
     'TestFile.cpp',
-    'TestFilePreferencesWin.cpp',
     'TestGCPostBarriers.cpp',
     'TestID.cpp',
     'TestInputStreamLengthHelper.cpp',
@@ -71,6 +70,11 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TAR
     UNIFIED_SOURCES += [
         'TestDeadlockDetector.cpp',
         'TestDeadlockDetectorScalability.cpp',
+    ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'TestFilePreferencesWin.cpp',
     ]
 
 if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl':
