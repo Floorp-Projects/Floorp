@@ -488,10 +488,12 @@ TokenStreamAnyChars::updateFlagsForEOL()
     flags.isDirtyLine = false;
 }
 
-// This gets the next char, normalizing all EOL sequences to '\n' as it goes.
+// This gets a full code point, starting from an already-consumed leading code
+// unit, normalizing EOL sequences to '\n', also updating line/column info as
+// needed.
 template<class AnyCharsAccess>
 bool
-TokenStreamChars<char16_t, AnyCharsAccess>::getChar(int32_t* cp)
+TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
 {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
@@ -653,7 +655,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
     const CharT* end = sourceUnits.codeUnitPtrAt(position);
     while (sourceUnits.addressOfNextCodeUnit() < end) {
         int32_t c;
-        if (!getChar(&c))
+        if (!getCodePoint(&c))
             return false;
     }
 

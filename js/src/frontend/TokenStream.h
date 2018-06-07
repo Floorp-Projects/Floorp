@@ -1260,11 +1260,17 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         return true;
     }
 
-    // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
-    // '\n'.  Also updates internal line-counter state.  Return true on success
-    // and store the character in |*c|.  Return false and leave |*c| undefined
-    // on failure.
-    MOZ_MUST_USE bool getChar(int32_t* cp);
+    // Try to get the next code point, normalizing '\r', '\r\n', '\n', and the
+    // Unicode line/paragraph separators into '\n'.  Also updates internal
+    // line-counter state.  Return true on success and store the character in
+    // |*c|.  Return false and leave |*c| undefined on failure.
+    MOZ_MUST_USE bool getCodePoint(int32_t* cp);
+
+    // A deprecated alias for |getCodePoint|: most code using this is being
+    // replaced with different approaches.
+    MOZ_MUST_USE bool getChar(int32_t* cp) {
+        return getCodePoint(cp);
+    }
 
     void ungetCodePointIgnoreEOL(uint32_t codePoint);
 };
@@ -1350,6 +1356,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::copyTokenbufTo;
     using CharsSharedBase::fillWithTemplateStringContents;
     using CharsBase::getChar;
+    using CharsBase::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
     using CharsBase::matchMultiUnitCodePoint;
     using GeneralCharsBase::newAtomToken;
