@@ -24,8 +24,8 @@ add_task(async function() {
   const target = TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
-  const {SIDE, BOTTOM} = Toolbox.HostType;
-  for (const type of [SIDE, BOTTOM, SIDE]) {
+  const {RIGHT, BOTTOM} = Toolbox.HostType;
+  for (const type of [RIGHT, BOTTOM, RIGHT]) {
     info("Switch to host type " + type);
     await toolbox.switchHost(type);
 
