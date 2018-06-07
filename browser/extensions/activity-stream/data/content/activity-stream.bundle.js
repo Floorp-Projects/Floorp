@@ -968,16 +968,15 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.Pu
       throw new Error(`You must provide a message_id for bundled messages`);
     }
     const eventType = `${message.provider || bundle.provider}_user_event`;
-
     ASRouterUtils.sendTelemetry(Object.assign({
       message_id: message.id || extraProps.message_id,
-      source: this.props.id,
+      source: extraProps.id,
       action: eventType
     }, extraProps));
   }
 
-  sendImpression() {
-    this.sendUserActionTelemetry({ event: "IMPRESSION" });
+  sendImpression(extraProps) {
+    this.sendUserActionTelemetry(Object.assign({ event: "IMPRESSION" }, extraProps));
   }
 
   onBlockById(id) {
@@ -1024,6 +1023,7 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.Pu
     return __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
       __WEBPACK_IMPORTED_MODULE_2__components_ImpressionsWrapper_ImpressionsWrapper__["a" /* ImpressionsWrapper */],
       {
+        id: "NEWTAB_FOOTER_BAR",
         message: this.state.message,
         sendImpression: this.sendImpression,
         shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate
@@ -1754,7 +1754,7 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(15);
 
 
@@ -2866,7 +2866,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(40);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
@@ -3363,7 +3363,7 @@ class ImpressionsWrapper extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.P
   // only send the event if the page becomes visible again.
   sendImpressionOrAddListener() {
     if (this.props.document.visibilityState === VISIBLE) {
-      this.props.sendImpression();
+      this.props.sendImpression({ id: this.props.id });
     } else {
       // We should only ever send the latest impression stats ping, so remove any
       // older listeners.
@@ -3374,7 +3374,7 @@ class ImpressionsWrapper extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.P
       // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
       this._onVisibilityChange = () => {
         if (this.props.document.visibilityState === VISIBLE) {
-          this.props.sendImpression();
+          this.props.sendImpression({ id: this.props.id });
           this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
         }
       };
@@ -3484,7 +3484,7 @@ class OnboardingMessage_OnboardingCard extends external__React__default.a.PureCo
 
   onClick() {
     const { props } = this;
-    props.sendUserActionTelemetry({ event: "CLICK_BUTTON", message_id: props.id });
+    props.sendUserActionTelemetry({ event: "CLICK_BUTTON", message_id: props.id, id: props.UISurface });
     props.onAction(props.content);
   }
 
@@ -3540,7 +3540,11 @@ class OnboardingMessage_OnboardingMessage extends external__React__default.a.Pur
       external__React__default.a.createElement(
         "div",
         { className: "onboardingMessageContainer" },
-        props.bundle.map(message => external__React__default.a.createElement(OnboardingMessage_OnboardingCard, _extends({ key: message.id, sendUserActionTelemetry: props.sendUserActionTelemetry, onAction: props.onAction }, message)))
+        props.bundle.map(message => external__React__default.a.createElement(OnboardingMessage_OnboardingCard, _extends({ key: message.id,
+          sendUserActionTelemetry: props.sendUserActionTelemetry,
+          onAction: props.onAction,
+          UISurface: props.UISurface
+        }, message)))
       )
     );
   }
@@ -3574,13 +3578,31 @@ function safeURI(url) {
 
 
 
-const Button = props => external__React__default.a.createElement(
-  "a",
-  { href: safeURI(props.url),
-    onClick: props.onClick,
-    className: props.className || "ASRouterButton" },
-  props.children
-);
+const ALLOWED_STYLE_TAGS = ["color", "backgroundColor"];
+
+const Button = props => {
+  const style = {};
+
+  // Add allowed style tags from props, e.g. props.color becomes style={color: props.color}
+  for (const tag of ALLOWED_STYLE_TAGS) {
+    if (typeof props[tag] !== "undefined") {
+      style[tag] = props[tag];
+    }
+  }
+  // remove border if bg is set to something custom
+  if (style.backgroundColor) {
+    style.border = "0";
+  }
+
+  return external__React__default.a.createElement(
+    "a",
+    { href: safeURI(props.url),
+      onClick: props.onClick,
+      className: props.className || "ASRouterButton",
+      style: style },
+    props.children
+  );
+};
 // CONCATENATED MODULE: ./system-addon/content-src/asrouter/components/SnippetBase/SnippetBase.jsx
 
 
@@ -3591,7 +3613,7 @@ class SnippetBase_SnippetBase extends external__React__default.a.PureComponent {
   }
 
   onBlockClicked() {
-    this.props.sendUserActionTelemetry({ event: "BLOCK" });
+    this.props.sendUserActionTelemetry({ event: "BLOCK", id: this.props.UISurface });
     this.props.onBlock();
   }
 
@@ -3629,7 +3651,7 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
   }
 
   onButtonClick() {
-    this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON" });
+    this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
   }
 
   renderTitle() {
@@ -3641,6 +3663,11 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
     ) : null;
   }
 
+  renderTitleIcon() {
+    const titleIcon = safeURI(this.props.content.title_icon);
+    return titleIcon ? external__React__default.a.createElement("span", { className: "titleIcon", style: { backgroundImage: `url("${titleIcon}")` } }) : null;
+  }
+
   renderButton(className) {
     const { props } = this;
     return external__React__default.a.createElement(
@@ -3648,7 +3675,9 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
       {
         className: className,
         onClick: this.onButtonClick,
-        url: props.content.button_url },
+        url: props.content.button_url,
+        color: props.content.button_color,
+        backgroundColor: props.content.button_background_color },
       props.content.button_label
     );
   }
@@ -3657,13 +3686,16 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
     const { props } = this;
     const hasLink = props.content.button_url && props.content.button_type === "anchor";
     const hasButton = props.content.button_url && !props.content.button_type;
+    const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
     return external__React__default.a.createElement(
       SnippetBase_SnippetBase,
-      _extends({}, props, { className: "SimpleSnippet" }),
+      _extends({}, props, { className: className }),
       external__React__default.a.createElement("img", { src: safeURI(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
       external__React__default.a.createElement(
         "div",
         null,
+        this.renderTitleIcon(),
+        " ",
         this.renderTitle(),
         " ",
         external__React__default.a.createElement(
@@ -3704,7 +3736,7 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_content_src_components_StartupOverlay_StartupOverlay__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_content_src_components_StartupOverlay_StartupOverlay__ = __webpack_require__(39);
 
 
 
@@ -4488,8 +4520,8 @@ const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Ob
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(37);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -4766,11 +4798,366 @@ const Sections = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(st
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 
-// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
-var Actions = __webpack_require__(1);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/Card/types.js
+
+
+
+
+
+
+// Keep track of pending image loads to only request once
+const gImageLoading = new Map();
+
+/**
+ * Card component.
+ * Cards are found within a Section component and contain information about a link such
+ * as preview image, page title, page description, and some context about if the page
+ * was visited, bookmarked, trending etc...
+ * Each Section can make an unordered list of Cards which will create one instane of
+ * this class. Each card will then get a context menu which reflects the actions that
+ * can be done on this Card.
+ */
+class _Card extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeCard: null,
+      imageLoaded: false,
+      showContextMenu: false,
+      cardImage: null
+    };
+    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
+    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  /**
+   * Helper to conditionally load an image and update state when it loads.
+   */
+  async maybeLoadImage() {
+    // No need to load if it's already loaded or no image
+    const { cardImage } = this.state;
+    if (!cardImage) {
+      return;
+    }
+
+    const imageUrl = cardImage.url;
+    if (!this.state.imageLoaded) {
+      // Initialize a promise to share a load across multiple card updates
+      if (!gImageLoading.has(imageUrl)) {
+        const loaderPromise = new Promise((resolve, reject) => {
+          const loader = new Image();
+          loader.addEventListener("load", resolve);
+          loader.addEventListener("error", reject);
+          loader.src = imageUrl;
+        });
+
+        // Save and remove the promise only while it's pending
+        gImageLoading.set(imageUrl, loaderPromise);
+        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(imageUrl)).catch();
+      }
+
+      // Wait for the image whether just started loading or reused promise
+      await gImageLoading.get(imageUrl);
+
+      // Only update state if we're still waiting to load the original image
+      if (_Card.isImageInState(this.state, this.props.link.image) && !this.state.imageLoaded) {
+        this.setState({ imageLoaded: true });
+      }
+    }
+  }
+
+  /**
+   * Checks if `.image` property on link object is a local image with blob data.
+   * This function only works for props since state has `.url` and not `.data`.
+   *
+   * @param {obj|string} image
+   * @returns {bool} true if image is a local image object, otherwise false
+   *                 (otherwise, image will be a URL as a string)
+   */
+  static isLocalImageObject(image) {
+    return image && image.data && image.path;
+  }
+
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+  static getNextStateFromProps(nextProps, prevState) {
+    const { image } = nextProps.link;
+    const imageInState = _Card.isImageInState(prevState, image);
+    let nextState = null;
+
+    // Image is updating.
+    if (!imageInState && nextProps.link) {
+      nextState = { imageLoaded: false };
+    }
+
+    if (imageInState) {
+      return nextState;
+    }
+
+    nextState = nextState || {};
+
+    // Since image was updated, attempt to revoke old image blob URL, if it exists.
+    _Card.maybeRevokeImageBlob(prevState);
+
+    if (!image) {
+      nextState.cardImage = null;
+    } else if (_Card.isLocalImageObject(image)) {
+      nextState.cardImage = { url: global.URL.createObjectURL(image.data), path: image.path };
+    } else {
+      nextState.cardImage = { url: image };
+    }
+
+    return nextState;
+  }
+
+  /**
+   * Helper to conditionally revoke the previous card image if it is a blob.
+   */
+  static maybeRevokeImageBlob(prevState) {
+    if (prevState.cardImage && prevState.cardImage.path) {
+      global.URL.revokeObjectURL(prevState.cardImage.url);
+    }
+  }
+
+  /**
+   * Helper to check if an image is already in state.
+   */
+  static isImageInState(state, image) {
+    const { cardImage } = state;
+
+    // Both image and cardImage are present.
+    if (image && cardImage) {
+      return _Card.isLocalImageObject(image) ? cardImage.path === image.path : cardImage.url === image;
+    }
+
+    // This will only handle the remaining three possible outcomes.
+    // (i.e. everything except when both image and cardImage are present)
+    return !image && !cardImage;
+  }
+
+  onMenuButtonClick(event) {
+    event.preventDefault();
+    this.setState({
+      activeCard: this.props.index,
+      showContextMenu: true
+    });
+  }
+
+  /**
+   * Report to telemetry additional information about the item.
+   */
+  _getTelemetryInfo() {
+    // Filter out "history" type for being the default
+    if (this.props.link.type !== "history") {
+      return { value: { card_type: this.props.link.type } };
+    }
+
+    return null;
+  }
+
+  onLinkClick(event) {
+    event.preventDefault();
+    if (this.props.link.type === "download") {
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].OnlyToMain({
+        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].SHOW_DOWNLOAD_FILE,
+        data: this.props.link
+      }));
+    } else {
+      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].OnlyToMain({
+        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].OPEN_LINK,
+        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
+      }));
+    }
+    if (this.props.isWebExtension) {
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].WebExtEvent(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].WEBEXT_CLICK, {
+        source: this.props.eventSource,
+        url: this.props.link.url,
+        action_position: this.props.index
+      }));
+    } else {
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].UserEvent(Object.assign({
+        event: "CLICK",
+        source: this.props.eventSource,
+        action_position: this.props.index
+      }, this._getTelemetryInfo())));
+
+      if (this.props.shouldSendImpressionStats) {
+        this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].ImpressionStats({
+          source: this.props.eventSource,
+          click: 0,
+          tiles: [{ id: this.props.link.guid, pos: this.props.index }]
+        }));
+      }
+    }
+  }
+
+  onMenuUpdate(showContextMenu) {
+    this.setState({ showContextMenu });
+  }
+
+  componentDidMount() {
+    this.maybeLoadImage();
+  }
+
+  componentDidUpdate() {
+    this.maybeLoadImage();
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillMount() {
+    const nextState = _Card.getNextStateFromProps(this.props, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillReceiveProps(nextProps) {
+    const nextState = _Card.getNextStateFromProps(nextProps, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  componentWillUnmount() {
+    _Card.maybeRevokeImageBlob(this.state);
+  }
+
+  render() {
+    const { index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
+    const { props } = this;
+    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
+    // Display "now" as "trending" until we have new strings #3402
+    const { icon, intlID } = __WEBPACK_IMPORTED_MODULE_1__types__["a" /* cardContextTypes */][link.type === "now" ? "trending" : link.type] || {};
+    const hasImage = this.state.cardImage || link.hasImage;
+    const imageStyle = { backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none" };
+    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
+
+    return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+      "li",
+      { className: outerClassName },
+      __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+        "a",
+        { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+          "div",
+          { className: "card" },
+          __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+            "div",
+            { className: "card-preview-image-outer" },
+            hasImage && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
+          ),
+          __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+            "div",
+            { className: "card-details" },
+            link.type === "download" && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+              "div",
+              { className: "card-host-name alternate" },
+              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_react_intl__["FormattedMessage"], { id: Object(__WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__["a" /* GetPlatformString */])(this.props.platform) })
+            ),
+            link.hostname && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+              "div",
+              { className: "card-host-name" },
+              link.hostname.slice(0, 100),
+              link.type === "download" && `  \u2014 ${link.description}`
+            ),
+            __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+              "div",
+              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ") },
+              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+                "h4",
+                { className: "card-title", dir: "auto" },
+                link.title
+              ),
+              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+                "p",
+                { className: "card-description", dir: "auto" },
+                link.description
+              )
+            ),
+            __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+              "div",
+              { className: "card-context" },
+              icon && !link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
+              link.icon && link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("span", { className: "card-context-icon icon", style: { backgroundImage: `url('${link.icon}')` } }),
+              intlID && !link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+                "div",
+                { className: "card-context-label" },
+                __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_react_intl__["FormattedMessage"], { id: intlID, defaultMessage: "Visited" })
+              ),
+              link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+                "div",
+                { className: "card-context-label" },
+                link.context
+              )
+            )
+          )
+        )
+      ),
+      !props.placeholder && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+        "button",
+        { className: "context-menu-button icon",
+          onClick: this.onMenuButtonClick },
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+          "span",
+          { className: "sr-only" },
+          `Open context menu for ${link.title}`
+        )
+      ),
+      isContextMenuOpen && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_5_content_src_components_LinkMenu_LinkMenu__["a" /* LinkMenu */], {
+        dispatch: dispatch,
+        index: index,
+        source: eventSource,
+        onUpdate: this.onMenuUpdate,
+        options: link.contextMenuOptions || contextMenuOptions,
+        site: link,
+        siteInfo: this._getTelemetryInfo(),
+        shouldSendImpressionStats: shouldSendImpressionStats })
+    );
+  }
+}
+/* unused harmony export _Card */
+
+_Card.defaultProps = { link: {} };
+const Card = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])(state => ({ platform: state.Prefs.values.platform }))(_Card);
+/* harmony export (immutable) */ __webpack_exports__["a"] = Card;
+
+const PlaceholderCard = props => __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(Card, { placeholder: true, className: props.className });
+/* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+
+/***/ }),
+/* 34 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 const cardContextTypes = {
   history: {
     intlID: "type_label_visited",
@@ -4797,270 +5184,11 @@ const cardContextTypes = {
     icon: "download"
   }
 };
-// EXTERNAL MODULE: external "ReactRedux"
-var external__ReactRedux_ = __webpack_require__(4);
-var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
-
-// EXTERNAL MODULE: external "ReactIntl"
-var external__ReactIntl_ = __webpack_require__(2);
-var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__ReactIntl_);
-
-// EXTERNAL MODULE: ./system-addon/content-src/lib/link-menu-options.js
-var link_menu_options = __webpack_require__(11);
-
-// EXTERNAL MODULE: ./system-addon/content-src/components/LinkMenu/LinkMenu.jsx
-var LinkMenu = __webpack_require__(12);
-
-// EXTERNAL MODULE: external "React"
-var external__React_ = __webpack_require__(0);
-var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
-
-// CONCATENATED MODULE: ./system-addon/content-src/components/Card/Card.jsx
-
-
-
-
-
-
-
-
-// Keep track of pending image loads to only request once
-const gImageLoading = new Map();
-
-/**
- * Card component.
- * Cards are found within a Section component and contain information about a link such
- * as preview image, page title, page description, and some context about if the page
- * was visited, bookmarked, trending etc...
- * Each Section can make an unordered list of Cards which will create one instane of
- * this class. Each card will then get a context menu which reflects the actions that
- * can be done on this Card.
- */
-class Card__Card extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      activeCard: null,
-      imageLoaded: false,
-      showContextMenu: false
-    };
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
-    this.onMenuUpdate = this.onMenuUpdate.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
-  }
-
-  /**
-   * Helper to conditionally load an image and update state when it loads.
-   */
-  async maybeLoadImage() {
-    // No need to load if it's already loaded or no image
-    const { image } = this.props.link;
-    if (!this.state.imageLoaded && image) {
-      // Initialize a promise to share a load across multiple card updates
-      if (!gImageLoading.has(image)) {
-        const loaderPromise = new Promise((resolve, reject) => {
-          const loader = new Image();
-          loader.addEventListener("load", resolve);
-          loader.addEventListener("error", reject);
-          loader.src = image;
-        });
-
-        // Save and remove the promise only while it's pending
-        gImageLoading.set(image, loaderPromise);
-        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(image)).catch();
-      }
-
-      // Wait for the image whether just started loading or reused promise
-      await gImageLoading.get(image);
-
-      // Only update state if we're still waiting to load the original image
-      if (this.props.link.image === image && !this.state.imageLoaded) {
-        this.setState({ imageLoaded: true });
-      }
-    }
-  }
-
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.setState({
-      activeCard: this.props.index,
-      showContextMenu: true
-    });
-  }
-
-  /**
-   * Report to telemetry additional information about the item.
-   */
-  _getTelemetryInfo() {
-    // Filter out "history" type for being the default
-    if (this.props.link.type !== "history") {
-      return { value: { card_type: this.props.link.type } };
-    }
-
-    return null;
-  }
-
-  onLinkClick(event) {
-    event.preventDefault();
-    if (this.props.link.type === "download") {
-      this.props.dispatch(Actions["b" /* actionCreators */].OnlyToMain({
-        type: Actions["c" /* actionTypes */].SHOW_DOWNLOAD_FILE,
-        data: this.props.link
-      }));
-    } else {
-      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
-      this.props.dispatch(Actions["b" /* actionCreators */].OnlyToMain({
-        type: Actions["c" /* actionTypes */].OPEN_LINK,
-        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
-      }));
-    }
-    if (this.props.isWebExtension) {
-      this.props.dispatch(Actions["b" /* actionCreators */].WebExtEvent(Actions["c" /* actionTypes */].WEBEXT_CLICK, {
-        source: this.props.eventSource,
-        url: this.props.link.url,
-        action_position: this.props.index
-      }));
-    } else {
-      this.props.dispatch(Actions["b" /* actionCreators */].UserEvent(Object.assign({
-        event: "CLICK",
-        source: this.props.eventSource,
-        action_position: this.props.index
-      }, this._getTelemetryInfo())));
-
-      if (this.props.shouldSendImpressionStats) {
-        this.props.dispatch(Actions["b" /* actionCreators */].ImpressionStats({
-          source: this.props.eventSource,
-          click: 0,
-          tiles: [{ id: this.props.link.guid, pos: this.props.index }]
-        }));
-      }
-    }
-  }
-
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
-  }
-
-  componentDidMount() {
-    this.maybeLoadImage();
-  }
-
-  componentDidUpdate() {
-    this.maybeLoadImage();
-  }
-
-  componentWillReceiveProps(nextProps) {
-    // Clear the image state if changing images
-    if (nextProps.link.image !== this.props.link.image) {
-      this.setState({ imageLoaded: false });
-    }
-  }
-
-  render() {
-    const { index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
-    const { props } = this;
-    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-    // Display "now" as "trending" until we have new strings #3402
-    const { icon, intlID } = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
-    const hasImage = link.image || link.hasImage;
-    const imageStyle = { backgroundImage: link.image ? `url(${link.image})` : "none" };
-    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
-
-    return external__React__default.a.createElement(
-      "li",
-      { className: outerClassName },
-      external__React__default.a.createElement(
-        "a",
-        { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
-        external__React__default.a.createElement(
-          "div",
-          { className: "card" },
-          external__React__default.a.createElement(
-            "div",
-            { className: "card-preview-image-outer" },
-            hasImage && external__React__default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
-          ),
-          external__React__default.a.createElement(
-            "div",
-            { className: "card-details" },
-            link.type === "download" && external__React__default.a.createElement(
-              "div",
-              { className: "card-host-name alternate" },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: Object(link_menu_options["a" /* GetPlatformString */])(this.props.platform) })
-            ),
-            link.hostname && external__React__default.a.createElement(
-              "div",
-              { className: "card-host-name" },
-              link.hostname.slice(0, 100),
-              link.type === "download" && `  \u2014 ${link.description}`
-            ),
-            external__React__default.a.createElement(
-              "div",
-              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ") },
-              external__React__default.a.createElement(
-                "h4",
-                { className: "card-title", dir: "auto" },
-                link.title
-              ),
-              external__React__default.a.createElement(
-                "p",
-                { className: "card-description", dir: "auto" },
-                link.description
-              )
-            ),
-            external__React__default.a.createElement(
-              "div",
-              { className: "card-context" },
-              icon && !link.context && external__React__default.a.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
-              link.icon && link.context && external__React__default.a.createElement("span", { className: "card-context-icon icon", style: { backgroundImage: `url('${link.icon}')` } }),
-              intlID && !link.context && external__React__default.a.createElement(
-                "div",
-                { className: "card-context-label" },
-                external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: intlID, defaultMessage: "Visited" })
-              ),
-              link.context && external__React__default.a.createElement(
-                "div",
-                { className: "card-context-label" },
-                link.context
-              )
-            )
-          )
-        )
-      ),
-      !props.placeholder && external__React__default.a.createElement(
-        "button",
-        { className: "context-menu-button icon",
-          onClick: this.onMenuButtonClick },
-        external__React__default.a.createElement(
-          "span",
-          { className: "sr-only" },
-          `Open context menu for ${link.title}`
-        )
-      ),
-      isContextMenuOpen && external__React__default.a.createElement(LinkMenu["a" /* LinkMenu */], {
-        dispatch: dispatch,
-        index: index,
-        source: eventSource,
-        onUpdate: this.onMenuUpdate,
-        options: link.contextMenuOptions || contextMenuOptions,
-        site: link,
-        siteInfo: this._getTelemetryInfo(),
-        shouldSendImpressionStats: shouldSendImpressionStats })
-    );
-  }
-}
-/* unused harmony export _Card */
-
-Card__Card.defaultProps = { link: {} };
-const Card = Object(external__ReactRedux_["connect"])(state => ({ platform: state.Prefs.values.platform }))(Card__Card);
-/* harmony export (immutable) */ __webpack_exports__["a"] = Card;
-
-const PlaceholderCard = props => external__React__default.a.createElement(Card, { placeholder: true, className: props.className });
-/* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
+/* harmony export (immutable) */ __webpack_exports__["a"] = cardContextTypes;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5133,7 +5261,7 @@ const SectionMenu = Object(__WEBPACK_IMPORTED_MODULE_2_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5189,7 +5317,7 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5204,7 +5332,7 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_Reducers_jsm__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(18);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -5366,7 +5494,7 @@ const TopSites = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5736,7 +5864,7 @@ TopSiteForm_TopSiteForm.defaultProps = {
 };
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5891,7 +6019,7 @@ const StartupOverlay = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

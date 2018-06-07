@@ -48,6 +48,8 @@ add_task(async function test_query_highlighted() {
         browser.test.assertEq(1, active.length, "should have one active tab");
         browser.test.assertEq(1, highlighted.length, "should have one highlighted tab");
         browser.test.assertEq(active[0].id, highlighted[0].id, "the active and highlighted tabs are the same one");
+        browser.test.assertEq(true, active[0].active, "the tab should be considered to be active");
+        browser.test.assertEq(true, active[0].highlighted, "the tab should be considered to be highlighted");
 
         browser.test.sendMessage("tabs.query.popup");
       },

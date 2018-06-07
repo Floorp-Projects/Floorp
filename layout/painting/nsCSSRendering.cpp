@@ -655,7 +655,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->
       GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
   }
   return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, aBorderArea, newStyleBorder,
@@ -689,7 +689,7 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->
       GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
   }
   return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                              aForFrame, aDirtyRect, aBorderArea,
@@ -858,7 +858,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   // pull out styles, colors
   NS_FOR_CSS_SIDES (i) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    borderColors[i] = aStyleBorder.mBorderColor[i].CalcColor(aComputedStyle);
+    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(aComputedStyle);
   }
 
   PrintAsFormatString(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
@@ -2162,13 +2162,10 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
   if (aBorder.mBorderImageSource.GetType() != eStyleImageType_Null)
     return false;
 
-  StyleComplexColor color = aBorder.mBorderColor[aSide];
+  StyleComplexColor color = aBorder.BorderColorFor(aSide);
   // We don't know the foreground color here, so if it's being used
   // we must assume it might be transparent.
-  if (!color.IsNumericColor()) {
-    return false;
-  }
-  return NS_GET_A(color.mColor) == 255;
+  return !color.MaybeTransparent();
 }
 
 /**

@@ -7,7 +7,7 @@ export const baseKeys = {
   addon_version: Joi.string().required(),
   locale: Joi.string().required(),
   session_id: Joi.string(),
-  page: Joi.valid(["about:home", "about:newtab", "unknown"]),
+  page: Joi.valid(["about:home", "about:newtab", "about:welcome", "unknown"]),
   user_prefs: Joi.number().integer().required()
 };
 

@@ -91,7 +91,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_move_down": "ย้ายลง",
   "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว",
   "firstrun_title": "นำ Firefox ไปกับคุณ",
-  "firstrun_content": "Get your bookmarks, history, passwords and other settings on all your devices.",
+  "firstrun_content": "รับที่คั่นหน้า, ประวัติ, รหัสผ่าน และการตั้งค่าอื่น ๆ ของคุณในอุปกรณ์ทั้งหมดของคุณ",
   "firstrun_learn_more_link": "เรียนรู้เพิ่มเติมเกี่ยวกับบัญชี Firefox",
   "firstrun_form_header": "ป้อนอีเมลของคุณ",
   "firstrun_form_sub_header": "เพื่อดำเนินการต่อไปยัง Firefox Sync",

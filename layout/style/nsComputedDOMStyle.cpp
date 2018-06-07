@@ -1185,7 +1185,7 @@ nsComputedDOMStyle::SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
                                            const StyleComplexColor& aColor,
                                            uint8_t aWidgetType)
 {
-  if (!aColor.mIsAuto) {
+  if (!aColor.IsAuto()) {
     SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
     return;
   }
@@ -5757,7 +5757,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetBorderColorFor(mozilla::Side aSide)
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleBorder()->mBorderColor[aSide]);
+  SetValueFromComplexColor(val, StyleBorder()->BorderColorFor(aSide));
   return val.forget();
 }
 
