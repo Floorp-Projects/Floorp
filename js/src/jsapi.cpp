@@ -1830,26 +1830,34 @@ JS::RealmBehaviors::extraWarnings(JSContext* cx) const
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setSystemZone()
+JS::RealmCreationOptions::setNewCompartmentInSystemZone()
 {
-    zoneSpec_ = JS::SystemZone;
-    zone_ = nullptr;
+    compSpec_ = CompartmentSpecifier::NewCompartmentInSystemZone;
+    comp_ = nullptr;
     return *this;
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setExistingZone(JSObject* obj)
+JS::RealmCreationOptions::setNewCompartmentInExistingZone(JSObject* obj)
 {
-    zoneSpec_ = JS::ExistingZone;
+    compSpec_ = CompartmentSpecifier::NewCompartmentInExistingZone;
     zone_ = obj->zone();
     return *this;
 }
 
 JS::RealmCreationOptions&
-JS::RealmCreationOptions::setNewZone()
+JS::RealmCreationOptions::setExistingCompartment(JSObject* obj)
 {
-    zoneSpec_ = JS::NewZone;
-    zone_ = nullptr;
+    compSpec_ = CompartmentSpecifier::ExistingCompartment;
+    comp_ = obj->compartment();
+    return *this;
+}
+
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setNewCompartmentAndZone()
+{
+    compSpec_ = CompartmentSpecifier::NewCompartmentAndZone;
+    comp_ = nullptr;
     return *this;
 }
 

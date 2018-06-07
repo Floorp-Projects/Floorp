@@ -1040,11 +1040,11 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         creationOptions.setSharedMemoryAndAtomicsEnabled(true);
 
     if (options.sameZoneAs)
-        creationOptions.setExistingZone(js::UncheckedUnwrap(options.sameZoneAs));
+        creationOptions.setNewCompartmentInExistingZone(js::UncheckedUnwrap(options.sameZoneAs));
     else if (options.freshZone)
-        creationOptions.setNewZone();
+        creationOptions.setNewCompartmentAndZone();
     else
-        creationOptions.setSystemZone();
+        creationOptions.setNewCompartmentInSystemZone();
 
     creationOptions.setInvisibleToDebugger(options.invisibleToDebugger)
                    .setTrace(TraceXPCGlobal);

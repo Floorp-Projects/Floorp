@@ -5235,7 +5235,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
     JS::RealmBehaviors& behaviors = options.behaviors();
 
     SetStandardRealmOptions(options);
-    options.creationOptions().setNewZone();
+    options.creationOptions().setNewCompartmentAndZone();
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 1 && args[0].isObject()) {
@@ -5255,7 +5255,12 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
         if (!JS_GetProperty(cx, opts, "sameZoneAs", &v))
             return false;
         if (v.isObject())
-            creationOptions.setExistingZone(UncheckedUnwrap(&v.toObject()));
+            creationOptions.setNewCompartmentInExistingZone(UncheckedUnwrap(&v.toObject()));
+
+        if (!JS_GetProperty(cx, opts, "sameCompartmentAs", &v))
+            return false;
+        if (v.isObject() && !fuzzingSafe)
+            creationOptions.setExistingCompartment(UncheckedUnwrap(&v.toObject()));
 
         if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v))
             return false;
