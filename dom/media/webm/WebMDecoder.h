@@ -6,9 +6,13 @@
 #if !defined(WebMDecoder_h_)
 #define WebMDecoder_h_
 
+#include "mozilla/UniquePtr.h"
+#include "nsTArray.h"
+
 namespace mozilla {
 
 class MediaContainerType;
+class TrackInfo;
 
 class WebMDecoder
 {
@@ -19,6 +23,12 @@ public:
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
 
+  static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const MediaContainerType& aType);
+private:
+  static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const MediaContainerType& aType,
+    MediaResult& aError);
 };
 
 } // namespace mozilla
