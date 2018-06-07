@@ -27,20 +27,21 @@ const size_t kMaxBufferSize = sandbox::kIPCChannelSize;
 
 namespace sandbox {
 
+// The template types are used to calculate the maximum expected size.
+typedef ActualCallParams<0, kMaxBufferSize> ActualCP0;
+typedef ActualCallParams<1, kMaxBufferSize> ActualCP1;
+typedef ActualCallParams<2, kMaxBufferSize> ActualCP2;
+typedef ActualCallParams<3, kMaxBufferSize> ActualCP3;
+typedef ActualCallParams<4, kMaxBufferSize> ActualCP4;
+typedef ActualCallParams<5, kMaxBufferSize> ActualCP5;
+typedef ActualCallParams<6, kMaxBufferSize> ActualCP6;
+typedef ActualCallParams<7, kMaxBufferSize> ActualCP7;
+typedef ActualCallParams<8, kMaxBufferSize> ActualCP8;
+typedef ActualCallParams<9, kMaxBufferSize> ActualCP9;
+
 // Returns the actual size for the parameters in an IPC buffer. Returns
 // zero if the |param_count| is zero or too big.
 uint32_t GetActualBufferSize(uint32_t param_count, void* buffer_base) {
-  // The template types are used to calculate the maximum expected size.
-  typedef ActualCallParams<1, kMaxBufferSize> ActualCP1;
-  typedef ActualCallParams<2, kMaxBufferSize> ActualCP2;
-  typedef ActualCallParams<3, kMaxBufferSize> ActualCP3;
-  typedef ActualCallParams<4, kMaxBufferSize> ActualCP4;
-  typedef ActualCallParams<5, kMaxBufferSize> ActualCP5;
-  typedef ActualCallParams<6, kMaxBufferSize> ActualCP6;
-  typedef ActualCallParams<7, kMaxBufferSize> ActualCP7;
-  typedef ActualCallParams<8, kMaxBufferSize> ActualCP8;
-  typedef ActualCallParams<9, kMaxBufferSize> ActualCP9;
-
   // Retrieve the actual size and the maximum size of the params buffer.
   switch (param_count) {
     case 0:
@@ -63,6 +64,35 @@ uint32_t GetActualBufferSize(uint32_t param_count, void* buffer_base) {
       return reinterpret_cast<ActualCP8*>(buffer_base)->GetSize();
     case 9:
       return reinterpret_cast<ActualCP9*>(buffer_base)->GetSize();
+    default:
+      return 0;
+  }
+}
+
+// Returns the minimum size for the parameters in an IPC buffer. Returns
+// zero if the |param_count| is less than zero or too big.
+uint32_t GetMinDeclaredActualCallParamsSize(uint32_t param_count) {
+  switch (param_count) {
+    case 0:
+      return offsetof(ActualCP0, parameters_);
+    case 1:
+      return offsetof(ActualCP1, parameters_);
+    case 2:
+      return offsetof(ActualCP2, parameters_);
+    case 3:
+      return offsetof(ActualCP3, parameters_);
+    case 4:
+      return offsetof(ActualCP4, parameters_);
+    case 5:
+      return offsetof(ActualCP5, parameters_);
+    case 6:
+      return offsetof(ActualCP6, parameters_);
+    case 7:
+      return offsetof(ActualCP7, parameters_);
+    case 8:
+      return offsetof(ActualCP8, parameters_);
+    case 9:
+      return offsetof(ActualCP9, parameters_);
     default:
       return 0;
   }
@@ -137,8 +167,7 @@ CrossCallParamsEx* CrossCallParamsEx::CreateFromBuffer(void* buffer_base,
     // Check against the minimum size given the number of stated params
     // if too small we bail out.
     param_count = call_params->GetParamsCount();
-    min_declared_size = sizeof(CrossCallParams) +
-                        ((param_count + 1) * sizeof(ParamInfo));
+    min_declared_size = GetMinDeclaredActualCallParamsSize(param_count);
 
     // Retrieve the declared size which if it fails returns 0.
     declared_size = GetActualBufferSize(param_count, buffer_base);
@@ -157,8 +186,7 @@ CrossCallParamsEx* CrossCallParamsEx::CreateFromBuffer(void* buffer_base,
     // should be actually read.
     _ReadWriteBarrier();
 
-    min_declared_size = sizeof(CrossCallParams) +
-                        ((param_count + 1) * sizeof(ParamInfo));
+    min_declared_size = GetMinDeclaredActualCallParamsSize(param_count);
 
     // Check that the copied buffer is still valid.
     if (copied_params->GetParamsCount() != param_count ||
