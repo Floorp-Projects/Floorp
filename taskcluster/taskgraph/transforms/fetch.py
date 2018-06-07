@@ -27,6 +27,9 @@ from ..util.schema import (
     Schema,
     validate_schema,
 )
+from ..util.treeherder import (
+    join_symbol,
+)
 
 
 CACHE_TYPE = 'content.v1'
@@ -43,9 +46,6 @@ FETCH_SCHEMA = Schema({
 
     # Description of the task.
     Required('description'): basestring,
-
-    # Treeherder symbol.
-    Required('symbol'): basestring,
 
     Required('fetch'): Any({
         'type': 'static-url',
@@ -172,7 +172,7 @@ def create_fetch_url_task(config, job):
     ])
 
     task = make_base_task(config, name, job['description'], args)
-    task['treeherder']['symbol'] = job['symbol']
+    task['treeherder']['symbol'] = join_symbol('Fetch-URL', name)
     task['worker']['artifacts'] = [{
         'type': 'directory',
         'name': 'public',
