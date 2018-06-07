@@ -3753,8 +3753,8 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
     {
       RefPtr<nsStyleGradient> gradientData = mImageRenderer.GetGradientData();
       nsCSSGradientRenderer renderer =
-        nsCSSGradientRenderer::Create(aForFrame->PresContext(), gradientData,
-                                      mImageSize);
+        nsCSSGradientRenderer::Create(aForFrame->PresContext(), aForFrame->Style(),
+                                      gradientData, mImageSize);
 
       wr::ExtendMode extendMode;
       nsTArray<wr::GradientStop> stops;

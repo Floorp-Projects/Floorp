@@ -41,6 +41,7 @@ public:
    * aIntrinsicSize - the size of the source gradient.
    */
   static nsCSSGradientRenderer Create(nsPresContext* aPresContext,
+                                      ComputedStyle* aComputedStyle,
                                       nsStyleGradient* aGradient,
                                       const nsSize& aIntrinsiceSize);
 
