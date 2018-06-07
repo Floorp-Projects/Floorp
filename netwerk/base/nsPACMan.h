@@ -7,23 +7,24 @@
 #ifndef nsPACMan_h__
 #define nsPACMan_h__
 
-#include "nsIStreamLoader.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIChannelEventSink.h"
-#include "ProxyAutoConfig.h"
-#include "nsThreadUtils.h"
-#include "nsIURI.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
-#include "nsAutoPtr.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/net/NeckoTargetHolder.h"
+#include "mozilla/TimeStamp.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIStreamLoader.h"
+#include "nsThreadUtils.h"
+#include "nsIURI.h"
+#include "nsString.h"
+#include "ProxyAutoConfig.h"
 
 class nsISystemProxySettings;
+class nsIDHCPClient;
 class nsIThread;
 
 namespace mozilla {
@@ -52,8 +53,8 @@ public:
    *        newPACURL should be 0 length.
    */
   virtual void OnQueryComplete(nsresult status,
-                               const nsCString &pacString,
-                               const nsCString &newPACURL) = 0;
+                               const nsACString &pacString,
+                               const nsACString &newPACURL) = 0;
 };
 
 class PendingPACQuery final : public Runnable,
@@ -65,8 +66,8 @@ public:
                   bool mainThreadResponse);
 
   // can be called from either thread
-  void Complete(nsresult status, const nsCString &pacString);
-  void UseAlternatePACFile(const nsCString &pacURL);
+  void Complete(nsresult status, const nsACString &pacString);
+  void UseAlternatePACFile(const nsACString &pacURL);
 
   nsCString                  mSpec;
   nsCString                  mScheme;
@@ -127,11 +128,11 @@ public:
    * the PAC file, any asynchronous PAC queries will be queued up to be
    * processed once the PAC file finishes loading.
    *
-   * @param pacSpec
+   * @param aSpec
    *        The non normalized uri spec of this URI used for comparison with
    *        system proxy settings to determine if the PAC uri has changed.
    */
-  nsresult LoadPACFromURI(const nsCString &pacSpec);
+  nsresult LoadPACFromURI(const nsACString &aSpec);
 
   /**
    * Returns true if we are currently loading the PAC file.
@@ -166,12 +167,18 @@ public:
     return IsPACURI(tmp);
   }
 
+  bool IsUsingWPAD() {
+    return mAutoDetect;
+  }
+
   nsresult Init(nsISystemProxySettings *);
   static nsPACMan *sInstance;
 
   // PAC thread operations only
   void ProcessPendingQ();
   void CancelPendingQ(nsresult);
+
+  void SetWPADOverDHCPEnabled(bool aValue) { mWPADOverDHCPEnabled = aValue; }
 
 private:
   NS_DECL_NSISTREAMLOADEROBSERVER
@@ -180,8 +187,10 @@ private:
 
   friend class PendingPACQuery;
   friend class PACLoadComplete;
+  friend class ConfigureWPADComplete;
   friend class ExecutePACThreadAction;
   friend class WaitForThreadShutdown;
+  friend class TestPACMan;
 
   ~nsPACMan();
 
@@ -194,6 +203,11 @@ private:
    * Start loading the PAC file.
    */
   void StartLoading();
+
+  /**
+   * Continue loading the PAC file.
+   */
+  void ContinueLoadingAfterPACUriKnown();
 
   /**
    * Reload the PAC file if there is reason to.
@@ -212,15 +226,22 @@ private:
    */
   nsresult PostQuery(PendingPACQuery *query);
 
+  // Having found the PAC URI on the PAC thread, copy it to a string which
+  // can be altered on the main thread.
+  void AssignPACURISpec(const nsACString &aSpec);
+
   // PAC thread operations only
   void PostProcessPendingQ();
   void PostCancelPendingQ(nsresult);
   bool ProcessPending();
+  nsresult GetPACFromDHCP(nsACString &aSpec);
+  nsresult ConfigureWPAD(nsACString &aSpec);
 
 private:
   ProxyAutoConfig mPAC;
   nsCOMPtr<nsIThread>           mPACThread;
   nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
+  nsCOMPtr<nsIDHCPClient> mDHCPClient;
 
   LinkedList<PendingPACQuery> mPendingQ; /* pac thread only */
 
@@ -239,6 +260,9 @@ private:
 
   bool                         mInProgress;
   bool                         mIncludePath;
+  bool                         mAutoDetect;
+  bool                         mWPADOverDHCPEnabled;
+  int32_t                      mProxyConfigType;
 };
 
 extern LazyLogModule gProxyLog;
