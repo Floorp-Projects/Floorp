@@ -520,7 +520,7 @@ Promise::GlobalJSObject() const
   return mGlobal->GetGlobalJSObject();
 }
 
-JSCompartment*
+JS::Compartment*
 Promise::Compartment() const
 {
   return js::GetObjectCompartment(GlobalJSObject());

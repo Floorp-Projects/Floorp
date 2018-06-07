@@ -20,7 +20,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/EventTarget.h"
 
-struct JSCompartment;
 class nsIDocument;
 
 namespace mozilla {

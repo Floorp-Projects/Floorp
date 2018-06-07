@@ -67,7 +67,7 @@ struct Cell
     inline JSRuntime* runtimeFromAnyThread() const;
 
     // May be overridden by GC thing kinds that have a compartment pointer.
-    inline JSCompartment* maybeCompartment() const { return nullptr; }
+    inline JS::Compartment* maybeCompartment() const { return nullptr; }
 
     // The StoreBuffer used to record incoming pointers from the tenured heap.
     // This will return nullptr for a tenured cell.

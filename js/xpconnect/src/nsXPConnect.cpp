@@ -1174,7 +1174,7 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     MOZ_ASSERT(NS_IsMainThread());
     JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
     MOZ_ASSERT(realm);
-    JSCompartment* c = JS::GetCompartmentForRealm(realm);
+    JS::Compartment* c = JS::GetCompartmentForRealm(realm);
 
     // For remote XUL, we run XBL in the XUL scope. Given that we care about
     // compat and not security for remote XUL, we just always claim to be XBL.

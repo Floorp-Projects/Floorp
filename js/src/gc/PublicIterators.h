@@ -74,7 +74,7 @@ class ZonesIter
 
 struct CompartmentsInZoneIter
 {
-    using ItemType = JSCompartment;
+    using ItemType = JS::Compartment;
 
     explicit CompartmentsInZoneIter(JS::Zone* zone) : zone(zone) {
         it = zone->compartments().begin();
@@ -90,26 +90,26 @@ struct CompartmentsInZoneIter
         it++;
     }
 
-    JSCompartment* get() const {
+    JS::Compartment* get() const {
         MOZ_ASSERT(it);
         return *it;
     }
 
-    operator JSCompartment*() const { return get(); }
-    JSCompartment* operator->() const { return get(); }
+    operator JS::Compartment*() const { return get(); }
+    JS::Compartment* operator->() const { return get(); }
 
   private:
     JS::Zone* zone;
-    JSCompartment** it;
+    JS::Compartment** it;
 };
 
 class RealmsInCompartmentIter
 {
-    JSCompartment* comp;
+    JS::Compartment* comp;
     JS::Realm** it;
 
   public:
-    explicit RealmsInCompartmentIter(JSCompartment* comp)
+    explicit RealmsInCompartmentIter(JS::Compartment* comp)
       : comp(comp)
     {
         it = comp->realms().begin();

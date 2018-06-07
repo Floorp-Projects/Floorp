@@ -2102,7 +2102,7 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
 }
 
 bool
-js::CanReuseScriptForClone(JSCompartment* compartment, HandleFunction fun,
+js::CanReuseScriptForClone(JS::Compartment* compartment, HandleFunction fun,
                            HandleObject newParent)
 {
     MOZ_ASSERT(fun->isInterpreted());

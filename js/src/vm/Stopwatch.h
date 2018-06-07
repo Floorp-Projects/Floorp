@@ -28,8 +28,8 @@ namespace js {
  * webpage and/or a frame and/or a module and/or an add-on and/or a
  * sandbox and/or a process etc.
  *
- * A PerformanceGroupHolder is owned y a JSCompartment and maps that
- * compartment to all the components to which it belongs.
+ * A PerformanceGroupHolder is owned by a JS::Realm and maps that realm
+ * to all the components to which it belongs.
  */
 struct PerformanceGroupHolder {
 
@@ -195,7 +195,7 @@ struct PerformanceMonitoring {
     }
 
     /**
-     * Callback called to associate a JSCompartment to the set of
+     * Callback called to associate a JS::Realm to the set of
      * `PerformanceGroup`s that represent the components to which
      * it belongs.
      */

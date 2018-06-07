@@ -276,7 +276,7 @@ js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& sessi
     if (atomsZone->isCollecting())
         traceRuntimeAtoms(trc, session.lock());
     traceKeptAtoms(trc);
-    JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
+    Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     traceRuntimeCommon(trc, MarkRuntime, session);
 }
 

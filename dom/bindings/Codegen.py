@@ -15050,7 +15050,7 @@ class CGJSImplMethod(CGJSImplMember):
 
     def getArgs(self, returnType, argList):
         if self.isConstructor:
-            # Skip the JSCompartment bits for constructors; it's handled
+            # Skip the JS::Compartment bits for constructors; it's handled
             # manually in getImpl.  But we do need our aGivenProto argument.  We
             # allow it to be omitted if the default proto is desired.
             return (CGNativeMember.getArgs(self, returnType, argList) +

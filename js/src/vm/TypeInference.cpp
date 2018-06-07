@@ -520,7 +520,7 @@ TypeSet::addTypesToConstraint(JSContext* cx, TypeConstraint* constraint)
 
 #ifdef DEBUG
 static inline bool
-CompartmentsMatch(JSCompartment* a, JSCompartment* b)
+CompartmentsMatch(Compartment* a, Compartment* b)
 {
     return !a || !b || a == b;
 }
@@ -560,7 +560,7 @@ TypeSet::clearObjects()
     objectSet = nullptr;
 }
 
-JSCompartment*
+Compartment*
 TypeSet::maybeCompartment()
 {
     if (unknownObject())
@@ -572,7 +572,7 @@ TypeSet::maybeCompartment()
         if (!key)
             continue;
 
-        JSCompartment* comp = key->maybeCompartment();
+        Compartment* comp = key->maybeCompartment();
         if (comp)
             return comp;
     }
@@ -1247,7 +1247,7 @@ class TypeCompilerConstraint : public TypeConstraint
         return true;
     }
 
-    JSCompartment* maybeCompartment() override {
+    Compartment* maybeCompartment() override {
         return data.maybeCompartment();
     }
 };
@@ -1454,7 +1454,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
         return true;
     }
 
-    JSCompartment* maybeCompartment() override {
+    Compartment* maybeCompartment() override {
         return script_->compartment();
     }
 };
@@ -1641,7 +1641,7 @@ class ConstraintDataFreeze
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 } /* anonymous namespace */
@@ -1847,7 +1847,7 @@ class ConstraintDataFreezeObjectFlags
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 } /* anonymous namespace */
@@ -1964,7 +1964,7 @@ class ConstraintDataFreezeObjectForTypedArrayData
         return IsAboutToBeFinalizedUnbarriered(&obj);
     }
 
-    JSCompartment* maybeCompartment() {
+    Compartment* maybeCompartment() {
         return obj->compartment();
     }
 };
@@ -1993,7 +1993,7 @@ class ConstraintDataFreezeObjectForUnboxedConvertedToNative
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 } /* anonymous namespace */
@@ -2082,7 +2082,7 @@ class ConstraintDataFreezePropertyState
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 } /* anonymous namespace */
@@ -2138,7 +2138,7 @@ class ConstraintDataConstantProperty
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 } /* anonymous namespace */
@@ -2200,7 +2200,7 @@ class ConstraintDataInert
 
     bool shouldSweep() { return false; }
 
-    JSCompartment* maybeCompartment() { return nullptr; }
+    Compartment* maybeCompartment() { return nullptr; }
 };
 
 bool
@@ -2622,7 +2622,7 @@ js::ReportMagicWordFailure(uintptr_t actual, uintptr_t expected, uintptr_t flags
 #endif
 
 void
-js::PrintTypes(JSContext* cx, JSCompartment* comp, bool force)
+js::PrintTypes(JSContext* cx, Compartment* comp, bool force)
 {
 #ifdef DEBUG
     gc::AutoSuppressGC suppressGC(cx);
@@ -3210,7 +3210,7 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
         return true;
     }
 
-    JSCompartment* maybeCompartment() override {
+    Compartment* maybeCompartment() override {
         return group->compartment();
     }
 };
@@ -3270,7 +3270,7 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint
         return true;
     }
 
-    JSCompartment* maybeCompartment() override {
+    Compartment* maybeCompartment() override {
         return group->compartment();
     }
 };
@@ -4241,7 +4241,7 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
                 CheckGCThingAfterMovingGC(key->groupNoBarrier());
             else
                 CheckGCThingAfterMovingGC(key->singletonNoBarrier());
-            JSCompartment* compartment = key->maybeCompartment();
+            Compartment* compartment = key->maybeCompartment();
             MOZ_ASSERT_IF(compartment, compartment->zone() == zone);
         }
     } else if (objectCount == 1) {
@@ -4250,7 +4250,7 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
             CheckGCThingAfterMovingGC(key->groupNoBarrier());
         else
             CheckGCThingAfterMovingGC(key->singletonNoBarrier());
-        JSCompartment* compartment = key->maybeCompartment();
+        Compartment* compartment = key->maybeCompartment();
         MOZ_ASSERT_IF(compartment, compartment->zone() == zone);
     }
 #endif
