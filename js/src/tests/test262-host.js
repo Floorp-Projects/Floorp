@@ -13,6 +13,7 @@
     var setSharedArrayBuffer = global.setSharedArrayBuffer;
     var getSharedArrayBuffer = global.getSharedArrayBuffer;
     var evalInWorker = global.evalInWorker;
+    var monotonicNow = global.monotonicNow;
 
     var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
@@ -128,7 +129,9 @@ $262.agent = (function () {
             Atomics.wait(_ia, ${_SLEEP_LOC}, 0, s);
         },
 
-        leaving() {}
+        leaving() {},
+
+        monotonicNow,
     };
     Atomics.add(_ia, ${_RDY_LOC}, 1);
     return agent;
@@ -190,6 +193,8 @@ $262.agent = (function () {
                     this._bailIfNotAvailable();
                     Atomics.wait(_ia, _SLEEP_LOC, 0, s);
                 },
+
+                monotonicNow,
             };
         })()
     };
