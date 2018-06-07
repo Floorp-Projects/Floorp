@@ -4550,7 +4550,7 @@ GCRuntime::markCompartments()
 
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
         MOZ_ASSERT(!comp->gcState.scheduledForDestruction);
-        if (!comp->gcState.maybeAlive && !comp->zone()->isAtomsZone())
+        if (!comp->gcState.maybeAlive)
             comp->gcState.scheduledForDestruction = true;
     }
 }
