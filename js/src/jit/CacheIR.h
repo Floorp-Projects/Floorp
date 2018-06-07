@@ -686,7 +686,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardCompartment(ObjOperandId obj, JSObject* global, JSCompartment* compartment) {
         assertSameCompartment(global);
         writeOpWithOperandId(CacheOp::GuardCompartment, obj);
-        // Add a reference to the compartment's global to keep it alive.
+        // Add a reference to a global in the compartment to keep it alive.
         addStubField(uintptr_t(global), StubField::Type::JSObject);
         // Use RawWord, because compartments never move and it can't be GCed.
         addStubField(uintptr_t(compartment), StubField::Type::RawWord);

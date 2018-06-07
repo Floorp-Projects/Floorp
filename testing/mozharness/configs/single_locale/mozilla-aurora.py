@@ -3,7 +3,6 @@ import os
 config = {
     "nightly_build": True,
     "branch": "mozilla-aurora",
-    "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/",
     "update_channel": "aurora",
 
     # l10n

@@ -6,6 +6,7 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -43,6 +44,40 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("URI should match", uri, endsWith("trackertest.org/tracker.js"))
             }
         })
+    }
+
+    @WithDevToolsAPI
+    @Test fun desktopMode() {
+        sessionRule.session.loadUri("https://example.com")
+        sessionRule.waitForPageStop()
+
+        val userAgentJs = "window.navigator.userAgent"
+        val mobileSubStr = "Mobile"
+        val desktopSubStr = "X11"
+
+        assertThat("User agent should be set to mobile",
+                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   containsString(mobileSubStr))
+
+        sessionRule.session.settings.setBoolean(
+            GeckoSessionSettings.USE_DESKTOP_MODE, true)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("User agent should be set to desktop",
+                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   containsString(desktopSubStr))
+
+        sessionRule.session.settings.setBoolean(
+            GeckoSessionSettings.USE_DESKTOP_MODE, false)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("User agent should be set to mobile",
+                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   containsString(mobileSubStr))
     }
 
     @Test fun load() {

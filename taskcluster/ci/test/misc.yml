@@ -101,6 +101,7 @@ test-verify:
             # do not run on ccov or jsdcov
             .*-ccov/.*: []
             .*-jsdcov/.*: []
+            .*-asan/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier: 2
@@ -141,6 +142,7 @@ test-verify-gpu:
             # do not run on ccov or jsdcov
             .*-ccov/.*: []
             .*-jsdcov/.*: []
+            .*-asan/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier: 2
