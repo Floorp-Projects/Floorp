@@ -576,7 +576,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     RealmOptions options;
 
     options.creationOptions()
-           .setSystemZone();
+           .setNewCompartmentInSystemZone();
 
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);

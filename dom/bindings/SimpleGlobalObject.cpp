@@ -115,7 +115,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
            // lots of zones for what are probably very short-lived
            // compartments.  This should help them be GCed quicker and take up
            // less memory before they're GCed.
-           .setSystemZone();
+           .setNewCompartmentInSystemZone();
 
     if (NS_IsMainThread()) {
       nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
