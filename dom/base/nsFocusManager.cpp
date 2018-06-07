@@ -735,9 +735,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow)
       return NS_ERROR_FAILURE;
     }
 
-    if (!sTestMode) {
-      baseWindow->SetVisibility(true);
-    }
+    baseWindow->SetVisibility(true);
   }
 
   // If this is a parent or single process window, send the activate event.
