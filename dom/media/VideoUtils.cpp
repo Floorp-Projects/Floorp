@@ -731,6 +731,18 @@ CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
       if (maybeHeight && *maybeHeight > 0) {
         videoInfo->mImage.height = *maybeHeight;
       }
+    } else if (trackInfo->GetAsAudioInfo()) {
+      AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
+      Maybe<int32_t> maybeChannels =
+        aContainerType.ExtendedType().GetChannels();
+      if (maybeChannels && *maybeChannels > 0) {
+        audioInfo->mChannels = *maybeChannels;
+      }
+      Maybe<int32_t> maybeSamplerate =
+        aContainerType.ExtendedType().GetSamplerate();
+      if (maybeSamplerate && *maybeSamplerate > 0) {
+        audioInfo->mRate = *maybeSamplerate;
+      }
     }
   }
   return trackInfo;

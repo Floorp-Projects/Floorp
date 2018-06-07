@@ -6,12 +6,15 @@
 #if !defined(MP4Decoder_h_)
 #define MP4Decoder_h_
 
+#include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
 class MediaContainerType;
 class DecoderDoctorDiagnostics;
+class TrackInfo;
 
 // Decoder that uses a bundled MP4 demuxer and platform decoders to play MP4.
 class MP4Decoder
@@ -39,6 +42,13 @@ public:
   // Returns true if the MP4 backend is preffed on.
   static bool IsEnabled();
 
+  static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const MediaContainerType& aType);
+
+private:
+  static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const MediaContainerType& aType,
+    MediaResult& aError);
 };
 
 } // namespace mozilla

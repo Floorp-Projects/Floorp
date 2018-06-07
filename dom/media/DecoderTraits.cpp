@@ -324,4 +324,36 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     false;
 }
 
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+DecoderTraits::GetTracksInfo(const MediaContainerType& aType)
+{
+  // Container type with just the MIME type/subtype, no codecs.
+  const MediaContainerType mimeType(aType.Type());
+
+  if (OggDecoder::IsSupportedType(mimeType)) {
+    return OggDecoder::GetTracksInfo(aType);
+  }
+  if (WaveDecoder::IsSupportedType(mimeType)) {
+    return WaveDecoder::GetTracksInfo(aType);
+  }
+#ifdef MOZ_FMP4
+  if (MP4Decoder::IsSupportedType(mimeType, nullptr)) {
+    return MP4Decoder::GetTracksInfo(aType);
+  }
+#endif
+  if (WebMDecoder::IsSupportedType(mimeType)) {
+    return WebMDecoder::GetTracksInfo(aType);
+  }
+  if (MP3Decoder::IsSupportedType(mimeType)) {
+    return MP3Decoder::GetTracksInfo(aType);
+  }
+  if (ADTSDecoder::IsSupportedType(mimeType)) {
+    return ADTSDecoder::GetTracksInfo(aType);
+  }
+  if (FlacDecoder::IsSupportedType(mimeType)) {
+    return FlacDecoder::GetTracksInfo(aType);
+  }
+  return nsTArray<UniquePtr<TrackInfo>>();
+}
+
 } // namespace mozilla
