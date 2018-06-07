@@ -188,4 +188,10 @@
   <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
   <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
   <string name="preference_autocomplete_duplicate_url_error">URL artıq mövcuddur</string>
+  <string name="find_in_page">Səhifədə Tap</string>
+  <string name="http_auth_dialog_title">Təsdiqləmə tələb edilir</string>
+  <string name="http_auth_dialog_username">İstifadəçi adı</string>
+  <string name="http_auth_dialog_password">Parol</string>
+  <string name="preference_performance_request_desktop_site">Masaüstü saytını istə</string>
+  <string name="custom_tab_copy_url_action">URL köçürüldü</string>
 </resources>

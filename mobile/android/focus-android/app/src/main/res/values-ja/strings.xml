@@ -193,4 +193,5 @@
   <string name="http_auth_dialog_username">ユーザー名</string>
   <string name="http_auth_dialog_password">パスワード</string>
   <string name="preference_performance_request_desktop_site">デスクトップサイトを見る</string>
+  <string name="custom_tab_copy_url_action">URL をコピーしました</string>
 </resources>

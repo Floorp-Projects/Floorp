@@ -28,8 +28,14 @@
   <string name="text_selection_search_action">Mencari Secara Pribadi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
+  <string name="preference_privacy_and_security_summary">Pelacakan, kuki, pilihan data</string>
+  <string name="preference_search_summary">Atur baku, lengkapi otomatis</string>
+  <string name="preference_mozilla_summary">Tentang %1$s, bantuan</string>
   <string name="preference_category_tracking_protection">Perlindungan Pelacakan</string>
+  <string name="preference_category_web_content">Konten Web</string>
+  <string name="preference_category_switching_apps">Mengganti Aplikasi</string>
   <string name="preference_category_general">Umum</string>
+  <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_state_on">Aktif</string>
@@ -44,6 +50,7 @@
   <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
   <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
   <string name="preference_category_cookies">Kuki dan Data Situs</string>
+  <string name="preference_category_data_choices">Pilihan Data</string>
   <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
   <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
   <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
@@ -181,4 +188,10 @@
   <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
   <string name="site_security_icon_content_description">Keamanan Situs</string>
   <string name="preference_autocomplete_duplicate_url_error">URL sudah tersedia</string>
+  <string name="find_in_page">Temukan di Laman</string>
+  <string name="http_auth_dialog_title">Membutuhkan autentikasi</string>
+  <string name="http_auth_dialog_username">Nama pengguna</string>
+  <string name="http_auth_dialog_password">Sandi</string>
+  <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
+  <string name="custom_tab_copy_url_action">URL tersalin</string>
 </resources>

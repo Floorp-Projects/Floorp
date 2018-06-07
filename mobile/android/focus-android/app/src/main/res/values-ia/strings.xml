@@ -89,7 +89,7 @@
   <string name="preference_mozilla_telemetry2">Inviar datos de uso</string>
   <string name="preference_mozilla_telemetry_summary">Saper plus</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla se effortia a colliger solmente le informationes necessari pro fornir e meliorar %1$s pro totes.</string>
-  <string name="preference_privacy_notice">Advertentia de confidentialitate</string>
+  <string name="preference_privacy_notice">Notification de confidentialitate</string>
   <string name="preference_about">A proposito de %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de recerca installate</string>
   <string name="preference_search_restore">Restaurar le motores de recerca predefinite</string>
@@ -193,4 +193,5 @@
   <string name="http_auth_dialog_username">Nomine de usator</string>
   <string name="http_auth_dialog_password">Contrasigno</string>
   <string name="preference_performance_request_desktop_site">Requirer le sito del scriptorio</string>
+  <string name="custom_tab_copy_url_action">URL copiate</string>
 </resources>

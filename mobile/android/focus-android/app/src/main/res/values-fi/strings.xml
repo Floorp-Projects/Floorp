@@ -26,6 +26,7 @@
   <string name="shortcut_erase_long_label">Tyhjennä selaushistoria</string>
   <string name="text_selection_search_action">Yksityinen haku</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s asettaa sinut ohjaimiin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"K&#228;yt&#228; sit&#228; yksityiseen selaamiseen:\n  "<ul>"\n    "<li>Hae ja selaa suoraan ohjelmassa</li>"\n    "<li>"Est&#228; seuranta (tai muokkaa  asetuksia salliaksesi sen)"</li>"\n    "<li>Poista ev&#228;steet, haku ja selaushistoria napin painalluksella</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s on Mozillan kehitt&#228;m&#228; ohjelmisto. Teht&#228;v&#228;mme on edesauttaa tervett&#228;, avointa Internetti&#228;.<br/>\n<a href="%2$s">Lue lis&#228;&#228;</a></p>]]></string>
+  <string name="preference_category_tracking_protection">Seurannan suojaus</string>
   <string name="preference_category_search">Haku</string>
   <string name="preference_search_engine_default">Oletus</string>
   <string name="preference_state_on">Päällä</string>
@@ -39,11 +40,14 @@
   <string name="preference_autocomplete_action_add">+ Lisää mukautettu osoite</string>
   <string name="preference_autocomplete_title_add">Lisää mukautettu osoite</string>
   <string name="custom_autocomplete_quick_add">Lisää mukautettu osoite</string>
+  <string name="preference_category_cookies">Evästeet ja sivustotiedot</string>
+  <string name="preference_category_data_choices">Kerätyt tiedot</string>
   <string name="preference_autocomplete_title_remove">Poista mukautettu osoite</string>
   <string name="preference_autocomplete_learn_more">Lue lisää</string>
   <string name="preference_autocomplete_custom_summary">Lisää ja hallitse mukautettuja osoitteita.</string>
   <string name="preference_autocomplete_add_title">Lisättävä osoite</string>
   <string name="preference_autocomplete_add_hint">Liitä tai kirjoita osoite</string>
+  <string name="preference_autocomplete_add_example2">Esimerkki: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Esimerkki: esimerkki.fi</string>
   <string name="preference_autocomplete_add_confirmation">Uusi mukautettu osoite lisätty.</string>
   <string name="preference_autocomplete_menu_remove">Poista</string>
@@ -175,4 +179,9 @@
   <string name="security_popup_security_verified">Todentaja: %1$s</string>
   <string name="site_security_icon_content_description">Sivuston tietoturva</string>
   <string name="preference_autocomplete_duplicate_url_error">Osoite on jo olemassa</string>
+  <string name="find_in_page">Etsi sivulta</string>
+  <string name="http_auth_dialog_username">Käyttäjätunnus</string>
+  <string name="http_auth_dialog_password">Salasana</string>
+  <string name="preference_performance_request_desktop_site">Sivuston työpöytäversio</string>
+  <string name="custom_tab_copy_url_action">Osoite kopioitu</string>
 </resources>

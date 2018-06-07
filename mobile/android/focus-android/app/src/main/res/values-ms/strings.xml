@@ -193,4 +193,5 @@
   <string name="http_auth_dialog_username">Nama pengguna</string>
   <string name="http_auth_dialog_password">Kata laluan</string>
   <string name="preference_performance_request_desktop_site">Pinta laman desktop</string>
+  <string name="custom_tab_copy_url_action">URL disalin</string>
 </resources>

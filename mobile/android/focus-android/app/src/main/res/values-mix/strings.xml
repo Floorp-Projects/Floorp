@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Verificado por: %1$s</string>
   <string name="site_security_icon_content_description">Vaa sitio yoo</string>
   <string name="preference_autocomplete_duplicate_url_error">Tsa inka URL</string>
+  <string name="find_in_page">Ndaduku yo\'o</string>
+  <string name="http_auth_dialog_username">Sivìi</string>
+  <string name="http_auth_dialog_password">Tu\'un seè</string>
+  <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>
+  <string name="custom_tab_copy_url_action">Ndatava URL</string>
 </resources>

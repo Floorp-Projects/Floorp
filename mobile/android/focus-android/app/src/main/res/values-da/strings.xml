@@ -8,6 +8,7 @@
   <string name="feedback_erase">Din browser-historik er blevet slettet.</string>
   <string name="search_hint">Søg efter %1$s</string>
   <string name="menu_share">Del…</string>
+  <string name="menu_report_site_issue">Rapportér problem med websted</string>
   <string name="menu_open_with_default_browser2">Åbn i %1$s</string>
   <string name="menu_open_with_a_browser2">Åbn i…</string>
   <string name="menu_add_to_home_screen">Føj til startskærmen</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Slet browser-historik</string>
   <string name="text_selection_search_action">Søg privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s giver dig fuld kontrol.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anvend den som privat browser:\n  "<ul>"\n    "<li>S&#248;g og surf direkte i appen</li>"\n    "<li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>"\n    "<li>Slet fjerner cookies samt s&#248;ge- og browser-historik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er udviklet af Mozilla. Vores form&#229;l er at fremme et sundt, &#229;bent internet.<br/>\n<a href="%2$s">L&#230;s mere</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privatliv &amp; sikkerhed</string>
+  <string name="preference_privacy_and_security_summary">Sporing, cookies, datadeling</string>
+  <string name="preference_search_summary">Angiv standard, autofuldførelse</string>
+  <string name="preference_mozilla_summary">Om %1$s, hjælp</string>
+  <string name="preference_category_tracking_protection">Beskyttelse mod sporing</string>
+  <string name="preference_category_web_content">Webindhold</string>
+  <string name="preference_category_switching_apps">Skifte mellem apps</string>
+  <string name="preference_category_general">Generelt</string>
+  <string name="preference_category_data_collection_use">Dataindsamling &amp; brug</string>
   <string name="preference_category_search">Søgning</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">Aktiveret</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Tilføj brugerdefineret URL</string>
   <string name="preference_autocomplete_title_add">Tilføj brugerdefineret URL</string>
   <string name="custom_autocomplete_quick_add">Tilføj brugerdefineret URL</string>
+  <string name="preference_category_cookies">Cookies og websteds-data</string>
+  <string name="preference_category_data_choices">Datadeling</string>
   <string name="preference_autocomplete_title_remove">Fjern brugerdefinerede URL\'er</string>
   <string name="preference_autocomplete_learn_more">Læs mere</string>
   <string name="preference_autocomplete_custom_summary">Tilføj og håndter brugerdefineret autofuldførelse af URL\'er.</string>
   <string name="preference_autocomplete_add_title">URL der skal tilføjes</string>
   <string name="preference_autocomplete_add_hint">Indsæt eller skriv URL</string>
+  <string name="preference_autocomplete_add_example2">Eksempel: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Eksempel: eksempel.dk</string>
   <string name="preference_autocomplete_add_confirmation">Ny brugerdefineret URL tilføjet.</string>
   <string name="preference_autocomplete_menu_remove">Fjern</string>
@@ -175,4 +188,9 @@
   <string name="security_popup_security_verified">Bekræftet af: %1$s</string>
   <string name="site_security_icon_content_description">Sikkerhed for webstedet</string>
   <string name="preference_autocomplete_duplicate_url_error">URL\'en findes allerede</string>
+  <string name="find_in_page">Find på side</string>
+  <string name="http_auth_dialog_title">Godkendelse påkrævet</string>
+  <string name="http_auth_dialog_username">Brugernavn</string>
+  <string name="http_auth_dialog_password">Adgangskode</string>
+  <string name="preference_performance_request_desktop_site">Anmod om desktopversion</string>
 </resources>

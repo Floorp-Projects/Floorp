@@ -17,7 +17,7 @@
   <string name="menu_about">O nás</string>
   <string name="menu_help">Nápověda</string>
   <string name="menu_rights">Vaše práva</string>
-  <string name="menu_trackers_blocked_title">Zablokováno sledujících prvků</string>
+  <string name="menu_trackers_blocked_title">Zablokováno sledovacích prvků</string>
   <string name="menu_custom_tab_branding">Pohání %1$s</string>
   <string name="share_dialog_title">Sdílet přes</string>
   <string name="notification_erase_text">Vymazat historii prohlížení</string>
@@ -33,10 +33,10 @@
   <string name="preference_search_engine_default">Výchozí</string>
   <string name="preference_state_on">Zapnuto</string>
   <string name="preference_state_off">Vypnuto</string>
-  <string name="preference_subitem_autocomplete">Automatické doplňování URL adresy</string>
-  <string name="preference_switch_autocomplete">Automatické doplňování</string>
+  <string name="preference_subitem_autocomplete">Automatické doplňování URL adres</string>
+  <string name="preference_switch_autocomplete">Doplňovat automaticky</string>
   <string name="preference_category_autocomplete_preinstalled">Výchozí seznam URL adres</string>
-  <string name="preference_autocomplete_preinstalled_summary">Povolením této možnosti umožníte aplikaci %1$s automaticky doplňovat více než 450 populárních URL adres.</string>
+  <string name="preference_autocomplete_preinstalled_summary">Po zapnutí bude %1$s našeptávat více než 450 populárních URL adres.</string>
   <string name="preference_category_autocomplete_custom_urls">Vlastní URL adresy</string>
   <string name="preference_autocomplete_subitem_customlist">Vlastní URL adresy</string>
   <string name="preference_autocomplete_action_add">+ Přidat vlastní URL adresu</string>
@@ -59,9 +59,9 @@
   <string name="preference_privacy_block_ads_summary">Některé reklamy sledují návštěvy stránek i v případě, že na reklamy nekliknete</string>
   <string name="preference_privacy_block_analytics">Blokovat analytické prvky</string>
   <string name="preference_privacy_block_analytics_summary">Slouží k shromážďování, analýze a měření aktivit jako je klepnutí nebo posouvání</string>
-  <string name="preference_privacy_block_social">Blokovat sledující prvky sociálních sítí</string>
+  <string name="preference_privacy_block_social">Blokovat sledovací prvky sociálních sítí</string>
   <string name="preference_privacy_block_social_summary">Vloženo do stránek pro sledování vašich návštěv a zobrazování funkcí jako tlačítka pro sdílení</string>
-  <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
+  <string name="preference_privacy_block_content">Blokovat ostatní sledovací prvky</string>
   <string name="preference_privacy_block_content_summary2">Zapnutí může způsobit, že se některé stránky budou chovat neočekávaně</string>
   <string name="preference_privacy_category_cookies">Blokovat cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
@@ -79,7 +79,7 @@
   <string name="preference_mozilla_telemetry2">Odesílat údaje o používání</string>
   <string name="preference_mozilla_telemetry_summary">Zjistit více</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla sbírá jenom ty informace, které potřebuje pro další vylepšování aplikace %1$s.</string>
-  <string name="preference_privacy_notice">Zásady ochrany soukromí</string>
+  <string name="preference_privacy_notice">Zásady ochrany osobních údajů</string>
   <string name="preference_about">O aplikaci %1$s</string>
   <string name="preference_search_installed_search_engines">Nainstalované vyhledávací moduly</string>
   <string name="preference_search_restore">Obnovit výchozí vyhledávací moduly</string>
@@ -109,7 +109,7 @@
   <string name="content_description_back">Návrat zpět</string>
   <string name="content_description_stop">Zastavit načítání stránky</string>
   <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
-  <string name="content_description_blocking_switch">Blokovat sledující prvky</string>
+  <string name="content_description_blocking_switch">Blokovat sledovací prvky</string>
   <string name="your_rights">Vaše práva</string>
   <string name="external_app_prompt_title">Otevřít odkaz v jiné aplikaci</string>
   <string name="external_app_prompt">Můžete opustit aplikaci %1$s a otevřít tento odkaz v aplikaci %2$s.</string>

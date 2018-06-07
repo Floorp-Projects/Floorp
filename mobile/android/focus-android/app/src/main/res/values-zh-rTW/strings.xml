@@ -193,4 +193,5 @@
   <string name="http_auth_dialog_username">使用者名稱</string>
   <string name="http_auth_dialog_password">密碼</string>
   <string name="preference_performance_request_desktop_site">開啟桌面版網站</string>
+  <string name="custom_tab_copy_url_action">已複製網址</string>
 </resources>

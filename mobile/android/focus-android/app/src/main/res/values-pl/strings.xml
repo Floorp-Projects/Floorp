@@ -161,7 +161,7 @@
   <string name="firstrun_search_title">Wyszukuj po swojemu</string>
   <string name="firstrun_search_text">Szukasz czegoś innego? Wybierz inną domyślną wyszukiwarkę w ustawieniach.</string>
   <string name="firstrun_shortcut_title">Dodawaj skróty do ekranu głównego</string>
-  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu.</string>
+  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu %1$s.</string>
   <string name="firstrun_privacy_title">Prywatność na co dzień</string>
   <string name="firstrun_privacy_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas otwierania stron z innych aplikacji.</string>
   <string name="firstrun_close_button">OK!</string>
@@ -193,4 +193,5 @@
   <string name="http_auth_dialog_username">Nazwa użytkownika</string>
   <string name="http_auth_dialog_password">Hasło</string>
   <string name="preference_performance_request_desktop_site">Wersja na komputery</string>
+  <string name="custom_tab_copy_url_action">Skopiowano adres</string>
 </resources>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">Istoricul de navigare a fost șters.</string>
   <string name="search_hint">Caută %1$s</string>
   <string name="menu_share">Partajează…</string>
+  <string name="menu_report_site_issue">Raportează problemă cu site-ul</string>
   <string name="menu_open_with_default_browser2">Deschide în %1$s</string>
   <string name="menu_open_with_a_browser2">Deschide în…</string>
   <string name="menu_add_to_home_screen">Adaugă la ecranul principal</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Șterge istoricul de navigare</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a &#238;ndep&#259;rta cookie-urile precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Intimitate şi securitate</string>
+  <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
+  <string name="preference_search_summary">Setează motorul implicit, completare automată</string>
+  <string name="preference_mozilla_summary">Despre %1$s, ajutor</string>
+  <string name="preference_category_tracking_protection">Protecție față de urmărire</string>
+  <string name="preference_category_web_content">Conținut web</string>
+  <string name="preference_category_switching_apps">Comutare de aplicații</string>
+  <string name="preference_category_general">General</string>
+  <string name="preference_category_data_collection_use">Colectare de date și utilizare</string>
   <string name="preference_category_search">Căutare</string>
   <string name="preference_search_engine_default">Implicit</string>
   <string name="preference_state_on">Activat</string>
@@ -36,14 +46,17 @@
   <string name="preference_autocomplete_preinstalled_summary">Activează pentru a avea autocompletare %1$s pentru mai mult de 450 de URL-uri populare din bara de adrese.</string>
   <string name="preference_category_autocomplete_custom_urls">URL-uri personalizate</string>
   <string name="preference_autocomplete_subitem_customlist">URL-uri personalizate</string>
-  <string name="preference_autocomplete_action_add">+ adaugă URL personalizat</string>
+  <string name="preference_autocomplete_action_add">+ Adaugă URL personalizat</string>
   <string name="preference_autocomplete_title_add">Adaugă URL personalizat</string>
   <string name="custom_autocomplete_quick_add">Adaugă URL personalizat</string>
+  <string name="preference_category_cookies">Cookie-uri și date ale site-urilor</string>
+  <string name="preference_category_data_choices">Împărtășire de date</string>
   <string name="preference_autocomplete_title_remove">Elimină URL-uri personalizate</string>
   <string name="preference_autocomplete_learn_more">Află mai multe</string>
   <string name="preference_autocomplete_custom_summary">Adaugă și gestionează URL-uri autocompletate personalizate.</string>
   <string name="preference_autocomplete_add_title">URL de adăugat</string>
   <string name="preference_autocomplete_add_hint">Lipește sau introdu un URL</string>
+  <string name="preference_autocomplete_add_example2">Exemplu: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemplu: example.com</string>
   <string name="preference_autocomplete_add_confirmation">URL personalizat nou adăugat.</string>
   <string name="preference_autocomplete_menu_remove">Elimină</string>
@@ -175,4 +188,9 @@
   <string name="security_popup_security_verified">Verificat de: %1$s</string>
   <string name="site_security_icon_content_description">Securitatea site-ului</string>
   <string name="preference_autocomplete_duplicate_url_error">URL-ul există deja</string>
+  <string name="find_in_page">Caută în pagină</string>
+  <string name="http_auth_dialog_title">Autentificare necesară</string>
+  <string name="http_auth_dialog_username">Nume de utilizator</string>
+  <string name="http_auth_dialog_password">Parolă</string>
+  <string name="preference_performance_request_desktop_site">Cere versiune de desktop</string>
 </resources>

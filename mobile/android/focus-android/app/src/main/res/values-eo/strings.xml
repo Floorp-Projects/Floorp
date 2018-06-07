@@ -8,6 +8,7 @@
   <string name="feedback_erase">Via retuma historio estis viŝita.</string>
   <string name="search_hint">Serĉi %1$s</string>
   <string name="menu_share">Dividi…</string>
+  <string name="menu_report_site_issue">Raporti problemon en retejo</string>
   <string name="menu_open_with_default_browser2">Malfermi per %1$s</string>
   <string name="menu_open_with_a_browser2">Malfermi per…</string>
   <string name="menu_add_to_home_screen">Aldoni al hejmekrano</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
   <string name="text_selection_search_action">Serĉi private</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privateco kaj sekureco</string>
+  <string name="preference_privacy_and_security_summary">Spurado, kuketoj, elekto de datumoj</string>
+  <string name="preference_search_summary">Difini kiel norman, aŭtomata kompletigo</string>
+  <string name="preference_mozilla_summary">Pri %1$s, helpo</string>
+  <string name="preference_category_tracking_protection">Protekto kontraŭ spurado</string>
+  <string name="preference_category_web_content">Teksaĵa enhavo</string>
+  <string name="preference_category_switching_apps">Ŝanĝo de programoj</string>
+  <string name="preference_category_general">Ĝenerala</string>
+  <string name="preference_category_data_collection_use">Kolekto kaj uzo de datumoj</string>
   <string name="preference_category_search">Serĉi</string>
   <string name="preference_search_engine_default">Norma</string>
   <string name="preference_state_on">Ŝaltita</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
   <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
   <string name="custom_autocomplete_quick_add">Aldoni personecigitan adreson</string>
+  <string name="preference_category_cookies">Kuketoj kaj retejaj datumoj</string>
+  <string name="preference_category_data_choices">Elekto de datumoj</string>
   <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
   <string name="preference_autocomplete_learn_more">Pli da informo</string>
   <string name="preference_autocomplete_custom_summary">Aldoni kaj administri aŭtomatan kompletigon de personecigitaj adresoj.</string>
   <string name="preference_autocomplete_add_title">Aldonota adreso</string>
   <string name="preference_autocomplete_add_hint">Alglui aŭ tajpi adreson</string>
+  <string name="preference_autocomplete_add_example2">Ekzemplo: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Ekzemplo: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nova personecigita adreso aldonita.</string>
   <string name="preference_autocomplete_menu_remove">Forigi</string>
@@ -175,4 +188,9 @@
   <string name="security_popup_security_verified">Kontrolita de: %1$s</string>
   <string name="site_security_icon_content_description">Sekureco de retejo</string>
   <string name="preference_autocomplete_duplicate_url_error">Retadreso jam ekzistas</string>
+  <string name="find_in_page">Serĉi en paĝo</string>
+  <string name="http_auth_dialog_title">Aŭtentikigo postulata</string>
+  <string name="http_auth_dialog_username">Nomo de uzanto</string>
+  <string name="http_auth_dialog_password">Pasvorto</string>
+  <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
 </resources>

@@ -188,4 +188,10 @@
   <string name="security_popup_security_verified">Overil ju %1$s</string>
   <string name="site_security_icon_content_description">Zabezpečenie stránky</string>
   <string name="preference_autocomplete_duplicate_url_error">URL adresa už existuje</string>
+  <string name="find_in_page">Hľadať na stránke</string>
+  <string name="http_auth_dialog_title">Vyžaduje sa overenie</string>
+  <string name="http_auth_dialog_username">Používateľské meno</string>
+  <string name="http_auth_dialog_password">Heslo</string>
+  <string name="preference_performance_request_desktop_site">Verzia stránky pre počítače</string>
+  <string name="custom_tab_copy_url_action">Adresa bola skopírovaná</string>
 </resources>

@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Vérifié par : %1$s</string>
   <string name="site_security_icon_content_description">Sécurité du site</string>
   <string name="preference_autocomplete_duplicate_url_error">L’adresse existe déjà</string>
+  <string name="find_in_page">Rechercher dans la page</string>
+  <string name="http_auth_dialog_title">Authentification requise</string>
+  <string name="http_auth_dialog_username">Nom d’utilisateur</string>
+  <string name="http_auth_dialog_password">Mot de passe</string>
+  <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
 </resources>
