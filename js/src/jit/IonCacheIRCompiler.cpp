@@ -1376,13 +1376,14 @@ IonCacheIRCompiler::emitCompareStringResult()
     if (!addFailurePath(&failure))
         return false;
 
+    allocator.discardStack(masm);
+
     Label slow, done;
     masm.compareStrings(op, left, right, scratch, &slow);
 
     masm.jump(&done);
     masm.bind(&slow);
 
-    allocator.discardStack(masm);
     prepareVMCall(masm);
     masm.Push(right);
     masm.Push(left);
