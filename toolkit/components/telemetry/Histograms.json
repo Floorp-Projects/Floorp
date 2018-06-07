@@ -13804,5 +13804,25 @@
     "kind": "boolean",
     "keyed": true,
     "description": "Permission requests (showing a permission prompt) by whether they were requested from code handling a user input event."
+  },
+  "ACTIVE_DOCGROUPS_PER_TABGROUP": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1441972],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "high": 50,
+    "n_buckets": 20,
+    "description": "Number of active doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
+  },
+  "TOTAL_DOCGROUPS_PER_TABGROUP": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1441972],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "high": 50,
+    "n_buckets": 20,
+    "description": "Total number of doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
   }
 }
