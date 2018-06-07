@@ -4,6 +4,7 @@ BRANCH = "mozilla-aurora"
 MOZ_UPDATE_CHANNEL = "aurora"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-firefox"
+EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-16/en-US" % BRANCH
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -11,6 +12,7 @@ config = {
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
+    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "nightly_build": True,
@@ -27,9 +29,11 @@ config = {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "MOZ_OBJDIR": OBJDIR,
-        "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
+        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
+    "upload_branch": "%s-android-api-16" % BRANCH,
+    "platform": "android",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",
