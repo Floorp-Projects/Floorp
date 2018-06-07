@@ -1219,9 +1219,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
-#ifdef DEBUG
-    enterRealmDepth_(0),
-#endif
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),
