@@ -41,33 +41,31 @@ class TestSwitchWindowChrome(TestSwitchToWindowContent):
             link = self.marionette.find_element(By.ID, "new-window")
             link.click()
 
-    @skipIf(sys.platform.startswith("linux"),
-            "Bug 1335457 - Fails to open a background window on Linux")
+    @skipIf(sys.platform.startswith("linux") or sys.platform == "darwin",
+            "Bug 1335457 - Fails to open a background window on Linux / MacOS")
     def test_switch_tabs_for_new_background_window_without_focus_change(self):
-        # Bug 1334981 - with testmode enabled getMostRecentWindow detects the wrong window
-        with self.marionette.using_prefs({"focusmanager.testmode": False}):
-            # Open an addition tab in the original window so we can better check
-            # the selected index in thew new window to be opened.
-            second_tab = self.open_tab(trigger=self.open_tab_in_foreground)
-            self.marionette.switch_to_window(second_tab, focus=True)
-            second_tab_index = self.get_selected_tab_index()
-            self.assertNotEqual(second_tab_index, self.selected_tab_index)
+        # Open an addition tab in the original window so we can better check
+        # the selected index in thew new window to be opened.
+        second_tab = self.open_tab(trigger=self.open_tab_in_foreground)
+        self.marionette.switch_to_window(second_tab, focus=True)
+        second_tab_index = self.get_selected_tab_index()
+        self.assertNotEqual(second_tab_index, self.selected_tab_index)
 
-            # Opens a new background window, but we are interested in the tab
-            tab_in_new_window = self.open_tab(trigger=self.open_window_in_background)
-            self.assertEqual(self.marionette.current_window_handle, second_tab)
-            self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
-            self.assertEqual(self.get_selected_tab_index(), second_tab_index)
-            with self.marionette.using_context("content"):
-                self.assertEqual(self.marionette.get_url(), self.empty_page)
+        # Opens a new background window, but we are interested in the tab
+        tab_in_new_window = self.open_tab(trigger=self.open_window_in_background)
+        self.assertEqual(self.marionette.current_window_handle, second_tab)
+        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(self.get_selected_tab_index(), second_tab_index)
+        with self.marionette.using_context("content"):
+            self.assertEqual(self.marionette.get_url(), self.empty_page)
 
-            # Switch to the tab in the new window but don't focus it
-            self.marionette.switch_to_window(tab_in_new_window, focus=False)
-            self.assertEqual(self.marionette.current_window_handle, tab_in_new_window)
-            self.assertNotEqual(self.marionette.current_chrome_window_handle, self.start_window)
-            self.assertEqual(self.get_selected_tab_index(), second_tab_index)
-            with self.marionette.using_context("content"):
-                self.assertEqual(self.marionette.get_url(), "about:blank")
+        # Switch to the tab in the new window but don't focus it
+        self.marionette.switch_to_window(tab_in_new_window, focus=False)
+        self.assertEqual(self.marionette.current_window_handle, tab_in_new_window)
+        self.assertNotEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(self.get_selected_tab_index(), second_tab_index)
+        with self.marionette.using_context("content"):
+            self.assertEqual(self.marionette.get_url(), "about:blank")
 
     def test_switch_tabs_for_new_foreground_window_with_focus_change(self):
         # Open an addition tab in the original window so we can better check
