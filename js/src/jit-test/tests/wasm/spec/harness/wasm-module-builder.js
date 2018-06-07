@@ -69,12 +69,14 @@ class Binary extends Array {
     // Emit section name.
     this.emit_u8(section_code);
     // Emit the section to a temporary buffer: its full length isn't know yet.
-    let section = new Binary;
+    const section = new Binary;
     content_generator(section);
     // Emit section length.
     this.emit_u32v(section.length);
     // Copy the temporary buffer.
-    this.push(...section);
+    for (const b of section) {
+      this.push(b);
+    }
   }
 }
 
@@ -238,11 +240,22 @@ class WasmModuleBuilder {
   }
 
   appendToTable(array) {
+    for (let n of array) {
+      if (typeof n != 'number')
+        throw new Error('invalid table (entries have to be numbers): ' + array);
+    }
     return this.addFunctionTableInit(this.function_table.length, false, array);
   }
 
+  setFunctionTableBounds(min, max) {
+    this.function_table_length_min = min;
+    this.function_table_length_max = max;
+    return this;
+  }
+
   setFunctionTableLength(length) {
-    this.function_table_length = length;
+    this.function_table_length_min = length;
+    this.function_table_length_max = length;
     return this;
   }
 
@@ -320,25 +333,29 @@ class WasmModuleBuilder {
     }
 
     // Add function_table.
-    if (wasm.function_table_length > 0) {
+    if (wasm.function_table_length_min > 0) {
       if (debug) print("emitting table @ " + binary.length);
       binary.emit_section(kTableSectionCode, section => {
         section.emit_u8(1);  // one table entry
         section.emit_u8(kWasmAnyFunctionTypeForm);
-        section.emit_u8(1);
-        section.emit_u32v(wasm.function_table_length);
-        section.emit_u32v(wasm.function_table_length);
+        const max = wasm.function_table_length_max;
+        const has_max = max !== undefined;
+        section.emit_u8(has_max ? kResizableMaximumFlag : 0);
+        section.emit_u32v(wasm.function_table_length_min);
+        if (has_max) section.emit_u32v(max);
       });
     }
 
     // Add memory section
-    if (wasm.memory != undefined) {
+    if (wasm.memory !== undefined) {
       if (debug) print("emitting memory @ " + binary.length);
       binary.emit_section(kMemorySectionCode, section => {
         section.emit_u8(1);  // one memory entry
-        section.emit_u32v(kResizableMaximumFlag);
+        const max = wasm.memory.max;
+        const has_max = max !== undefined;
+        section.emit_u32v(has_max ? kResizableMaximumFlag : 0);
         section.emit_u32v(wasm.memory.min);
-        section.emit_u32v(wasm.memory.max);
+        if (has_max) section.emit_u32v(max);
       });
     }
 
@@ -426,9 +443,9 @@ class WasmModuleBuilder {
       binary.emit_section(kElementSectionCode, section => {
         var inits = wasm.function_table_inits;
         section.emit_u32v(inits.length);
-        section.emit_u8(0); // table index
 
         for (let init of inits) {
+          section.emit_u8(0); // table index
           if (init.is_global) {
             section.emit_u8(kExprGetGlobal);
           } else {
