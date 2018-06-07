@@ -109,7 +109,10 @@ ADDITIONAL_SCREENSHOT_LOCALES = [
 	"lt",
 	"en-CA",
 	"af",
-	"pai"
+	"pai",
+	"quy",
+	"ay",
+	"quc"
 ]
 
 # Those are locales that we take automated screenshots of.

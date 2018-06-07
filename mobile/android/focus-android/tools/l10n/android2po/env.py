@@ -134,12 +134,30 @@ MISSING_LOCALES = {
         'plural_rule': 'de',
         'team': 'anp <LL@li.org>\n'
     },
-     'pai': {
-         'name': 'Pai pai',
-         'local_name': 'paa ipai',
-         'plural_rule': 'lo',
-         'team': 'anp <LL@li.org>\n'
-     }
+    'pai': {
+        'name': 'Pai pai',
+        'local_name': 'paa ipai',
+        'plural_rule': 'lo',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'quy': {
+        'name': 'Quechua Chanka',
+        'local_name': 'Chanka Qhichwa',
+        'plural_rule': 'pt',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'ay': {
+        'name': 'Aymara',
+        'local_name': 'Aimara',
+        'plural_rule': 'gn',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'quc': {
+        'name': 'K\'iche\'',
+        'local_name': 'K\'iche\'',
+        'plural_rule': 'gn',
+        'team': 'anp <LL@li.org>\n'
+    }
 }
 
 
