@@ -1601,6 +1601,12 @@ var BookmarkingUI = {
       let isBookmarked = this._itemGuids.size > 0;
       if (!isBookmarked) {
         BrowserUtils.setToolbarButtonHeightProperty(this.star);
+        // there are no other animations on this element, so we can simply
+        // listen for animationend with the "once" option to clean up
+        let animatableBox = document.getElementById("star-button-animatable-box");
+        animatableBox.addEventListener("animationend", event => {
+          this.star.removeAttribute("animate");
+        }, { once: true });
         this.star.setAttribute("animate", "true");
       }
       PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, true);

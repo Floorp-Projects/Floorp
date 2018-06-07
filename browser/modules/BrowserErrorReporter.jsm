@@ -198,13 +198,13 @@ class BrowserErrorReporter {
     return "FILTERED";
   }
 
-  async observe(message) {
-    try {
-      message.QueryInterface(Ci.nsIScriptError);
-    } catch (err) {
-      return; // Not an error
+  observe(message) {
+    if (message instanceof Ci.nsIScriptError) {
+      ChromeUtils.idleDispatch(() => this.handleMessage(message));
     }
+  }
 
+  async handleMessage(message) {
     const isWarning = message.flags & message.warningFlag;
     const isFromChrome = REPORTED_CATEGORIES.has(message.category);
     if ((this.chromeOnly && !isFromChrome) || isWarning) {

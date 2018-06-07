@@ -25,7 +25,6 @@ Structure:
         applicationId: <string>, // nsIXULAppInfo.ID
         applicationName: <string>, // "Firefox"
         architecture: <string>, // e.g. "x86", build architecture for the active build
-        architecturesInBinary: <string>, // e.g. "i386-x86_64", from nsIMacUtils.architecturesInBinary, only present for mac universal builds
         buildId: <string>, // e.g. "20141126041045"
         version: <string>, // e.g. "35.0"
         vendor: <string>, // e.g. "Mozilla"

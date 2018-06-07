@@ -40,11 +40,12 @@
 
     /* Because we're forcing the tabs toolbar to be [brighttext] to
      * get white toolbar button icons, we need to manually set the
-     * correct color for the tab hover state for the light theme. */
-    .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):-moz-lwtheme-darktext {
+     * correct color for the tab hover and multiselect state for the light theme. */
+    .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):-moz-lwtheme-darktext,
+    .tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]):-moz-lwtheme-darktext {
       background-color: rgba(0,0,0,.1) !important;
     }
-    .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):-moz-lwtheme-darktext {
+    .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]):-moz-lwtheme-darktext {
       background-color: rgba(0,0,0,.2) !important;
     }
   }

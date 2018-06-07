@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.tests;
-
 import android.util.Log;
 import com.robotium.solo.Condition;
 import org.mozilla.gecko.R;
@@ -45,7 +44,7 @@ public class testActivityStreamPocketReferrer extends JavascriptBridgeTest {
 
         // Override the default placeholder URL so we don't access the network during testing.
         // Note: this actually only seems to take effect after we load a page and go back to about:home.
-        PocketStoriesLoader.configureForTesting(getAbsoluteHostnameUrl(StringHelper.get().ROBOCOP_BLANK_PAGE_01_URL));
+        PocketStoriesLoader.configureForTesting(getAbsoluteHostnameUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL));
     }
 
     public void testActivityStreamPocketReferrer() throws Exception {
@@ -87,11 +86,11 @@ public class testActivityStreamPocketReferrer extends JavascriptBridgeTest {
         Log.d(LOGTAG, "testReferrerInTopStoriesContextMenu");
 
         mSolo.clickLongOnText(PocketStoriesLoader.PLACEHOLDER_TITLE); // Open Top Story context menu.
-        mSolo.clickOnText(StringHelper.get().CONTEXT_MENU_OPEN_IN_NEW_TAB);
+        mSolo.clickOnText(mStringHelper.CONTEXT_MENU_OPEN_IN_NEW_TAB);
         WaitHelper.waitFor("context menu to close after item selection.", new Condition() {
             @Override
             public boolean isSatisfied() {
-                return !mSolo.searchText(StringHelper.get().CONTEXT_MENU_OPEN_IN_NEW_TAB);
+                return !mSolo.searchText(mStringHelper.CONTEXT_MENU_OPEN_IN_NEW_TAB);
             }
         }, 5000);
 

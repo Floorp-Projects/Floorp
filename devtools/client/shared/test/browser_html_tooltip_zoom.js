@@ -42,9 +42,12 @@ add_task(async function() {
   tooltip.show(doc.getElementById("box1"));
   await onShown;
 
-  const menuRect =
-      doc.querySelector(".tooltip-xul-wrapper").getBoxQuads({relativeTo: doc})[0].bounds;
-  const anchorRect = doc.getElementById("box1").getBoxQuads({relativeTo: doc})[0].bounds;
+  const menuRect = doc.querySelector(".tooltip-xul-wrapper")
+                      .getBoxQuads({relativeTo: doc})[0]
+                      .getBounds();
+  const anchorRect = doc.getElementById("box1")
+                        .getBoxQuads({relativeTo: doc})[0]
+                        .getBounds();
   const xDelta = Math.abs(menuRect.left - anchorRect.left);
   const yDelta = Math.abs(menuRect.top - anchorRect.bottom);
 

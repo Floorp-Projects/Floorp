@@ -107,4 +107,4 @@ def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
 
 
 if __name__ == '__main__':
-    mozunit.main('--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')

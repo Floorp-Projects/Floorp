@@ -146,6 +146,7 @@ class TestTsBase(object):
         'xperf_stackwalk',
         'tpmozafterpaint',
         'fnbpaint',
+        'tphero',
         'profile',
         'firstpaint',
         'userready',

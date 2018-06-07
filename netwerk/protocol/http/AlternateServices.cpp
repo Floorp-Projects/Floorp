@@ -491,9 +491,9 @@ private:
     }
 
     // insist on >= http/2
-    uint32_t version = mConnection->Version();
-    LOG(("AltSvcTransaction::MaybeValidate() %p version %d\n", this, version));
-    if (version != HTTP_VERSION_2) {
+    HttpVersion version = mConnection->Version();
+    LOG(("AltSvcTransaction::MaybeValidate() %p version %d\n", this, static_cast<int32_t>(version)));
+    if (version != HttpVersion::v2_0) {
       LOG(("AltSvcTransaction::MaybeValidate %p Failed due to protocol version", this));
       return;
     }
@@ -737,15 +737,15 @@ TransactionObserver::Complete(nsHttpTransaction *aTrans, nsresult reason)
   if (!conn) {
     return;
   }
-  uint32_t version = conn->Version();
+  HttpVersion version = conn->Version();
   mVersionOK = (((reason == NS_BASE_STREAM_CLOSED) || (reason == NS_OK)) &&
-                conn->Version() == HTTP_VERSION_2);
+                conn->Version() == HttpVersion::v2_0);
 
   nsCOMPtr<nsISupports> secInfo;
   conn->GetSecurityInfo(getter_AddRefs(secInfo));
   nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
   LOG(("TransactionObserver::Complete version %u socketControl %p\n",
-       version, socketControl.get()));
+       static_cast<int32_t>(version), socketControl.get()));
   if (!socketControl) {
     return;
   }

@@ -248,6 +248,29 @@ add_task(async function test_check_clockskew_is_updated() {
 add_task(clear_state);
 
 
+add_task(async function test_check_clockskew_takes_age_into_account() {
+  const currentTime = Date.now();
+  const skewSeconds = 5;
+  const ageCDNSeconds = 3600;
+  const serverTime = currentTime - (skewSeconds * 1000) - (ageCDNSeconds * 1000);
+
+  function serverResponse(request, response) {
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.setHeader("Date", (new Date(serverTime)).toUTCString());
+    response.setHeader("Age", `${ageCDNSeconds}`);
+    response.write(JSON.stringify({data: []}));
+    response.setStatusLine(null, 200, "OK");
+  }
+  server.registerPathHandler(CHANGES_PATH, serverResponse);
+
+  await RemoteSettings.pollChanges();
+
+  const clockSkew = Services.prefs.getIntPref(PREF_CLOCK_SKEW_SECONDS);
+  Assert.ok(clockSkew >= skewSeconds, `clockSkew is ${clockSkew}`);
+});
+add_task(clear_state);
+
+
 add_task(async function test_backoff() {
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
