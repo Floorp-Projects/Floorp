@@ -4850,6 +4850,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     }
 
     ctx->SetColor(mColor);
+    ctx->NewPath();
     ctx->Rectangle(bounds, true);
     ctx->Fill();
     ctx->PopGroupAndBlend();
