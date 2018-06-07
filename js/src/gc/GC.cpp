@@ -4229,7 +4229,7 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
     // been collected, then only collect zones containing those compartments.
     if (reason == JS::gcreason::COMPARTMENT_REVIVED) {
         for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-            if (comp->scheduledForDestruction)
+            if (comp->gcState.scheduledForDestruction)
                 return true;
         }
 
@@ -4298,14 +4298,17 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        c->scheduledForDestruction = false;
-        c->maybeAlive = false;
+        c->gcState.scheduledForDestruction = false;
+        c->gcState.maybeAlive = false;
+        c->gcState.hasEnteredRealm = false;
         for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
             r->unmark();
             if (r->shouldTraceGlobal() || !r->zone()->isGCScheduled())
-                c->maybeAlive = true;
+                c->gcState.maybeAlive = true;
             if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
                 r->zone()->setPreservingCode(true);
+            if (r->hasBeenEnteredIgnoringJit())
+                c->gcState.hasEnteredRealm = true;
         }
     }
 
@@ -4525,7 +4528,7 @@ GCRuntime::markCompartments()
     Vector<JSCompartment*, 0, js::SystemAllocPolicy> workList;
 
     for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
-        if (comp->maybeAlive) {
+        if (comp->gcState.maybeAlive) {
             if (!workList.append(comp))
                 return;
         }
@@ -4535,8 +4538,8 @@ GCRuntime::markCompartments()
         JSCompartment* comp = workList.popCopy();
         for (JSCompartment::NonStringWrapperEnum e(comp); !e.empty(); e.popFront()) {
             JSCompartment* dest = e.front().mutableKey().compartment();
-            if (dest && !dest->maybeAlive) {
-                dest->maybeAlive = true;
+            if (dest && !dest->gcState.maybeAlive) {
+                dest->gcState.maybeAlive = true;
                 if (!workList.append(dest))
                     return;
             }
@@ -4546,9 +4549,9 @@ GCRuntime::markCompartments()
     /* Set scheduleForDestruction based on maybeAlive. */
 
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
-        MOZ_ASSERT(!comp->scheduledForDestruction);
-        if (!comp->maybeAlive && !comp->zone()->isAtomsZone())
-            comp->scheduledForDestruction = true;
+        MOZ_ASSERT(!comp->gcState.scheduledForDestruction);
+        if (!comp->gcState.maybeAlive && !comp->zone()->isAtomsZone())
+            comp->gcState.scheduledForDestruction = true;
     }
 }
 
@@ -6940,7 +6943,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
         marker.reset();
 
         for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->scheduledForDestruction = false;
+            c->gcState.scheduledForDestruction = false;
 
         /* Finish sweeping the current sweep group, then abort. */
         abortSweepAfterCurrentGroup = true;
@@ -7668,7 +7671,7 @@ GCRuntime::shouldRepeatForDeadZone(JS::gcreason::Reason reason)
         return false;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->scheduledForDestruction)
+        if (c->gcState.scheduledForDestruction)
             return true;
     }
 
@@ -8097,7 +8100,7 @@ GCRuntime::mergeRealms(Realm* source, Realm* target)
     MOZ_ASSERT(source->creationOptions().mergeable());
     MOZ_ASSERT(source->creationOptions().invisibleToDebugger());
 
-    MOZ_ASSERT(!source->hasBeenEntered());
+    MOZ_ASSERT(!source->hasBeenEnteredIgnoringJit());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
 
     JSContext* cx = rt->mainContextFromOwnThread();

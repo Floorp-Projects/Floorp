@@ -237,7 +237,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     JSCompartment* compartment = cx_->compartment();
-    if (MOZ_UNLIKELY(compartment->scheduledForDestruction))
+    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction))
         return;
 
     JSRuntime* runtime = cx_->runtime();
@@ -276,7 +276,7 @@ AutoStopwatch::~AutoStopwatch()
     }
 
     JSCompartment* compartment = cx_->compartment();
-    if (MOZ_UNLIKELY(compartment->scheduledForDestruction))
+    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction))
         return;
 
     JSRuntime* runtime = cx_->runtime();
