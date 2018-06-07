@@ -340,6 +340,7 @@ var PingPicker = {
     }
 
     let pingExplanation = document.getElementById("ping-explanation");
+    removeAllChildNodes(pingExplanation);
     pingExplanation.appendChild(fragment);
     pingExplanation.querySelector(".change-ping").addEventListener("click", (ev) => {
       document.getElementById("ping-picker").classList.remove("hidden");
