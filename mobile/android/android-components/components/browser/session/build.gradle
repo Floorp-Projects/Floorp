@@ -27,7 +27,10 @@ android {
 }
 
 dependencies {
+    implementation project(':support-utils')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+    implementation "com.android.support:customtabs:${rootProject.ext.dependencies['supportLibraries']}"
 
     // We expose this as API because we are using Observable in our public API and do not want every
     // consumer to have to manually import "utils".

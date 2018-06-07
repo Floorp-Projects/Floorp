@@ -4,8 +4,10 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.tab.CustomTabConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -149,6 +151,23 @@ class SessionTest {
 
         assertEquals(Session.SecurityInfo(true, "mozilla.org", "issuer"), session.securityInfo)
         verify(observer, times(1)).onSecurityChanged()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when custom tab config is set`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        assertNull(session.customTabConfig)
+
+        val customTabConfig = CustomTabConfig("id", null, null, true, null, true, listOf(), listOf())
+        session.customTabConfig = customTabConfig
+
+        assertEquals(customTabConfig, session.customTabConfig)
+        verify(observer, times(1)).onCustomTabConfigChanged()
         verifyNoMoreInteractions(observer)
     }
 

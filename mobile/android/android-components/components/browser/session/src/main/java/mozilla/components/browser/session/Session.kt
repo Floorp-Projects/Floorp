@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import mozilla.components.support.utils.observer.Observable
 import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.browser.session.tab.CustomTabConfig
 import java.util.UUID
 import kotlin.properties.Delegates
 
@@ -26,6 +27,7 @@ class Session(
         fun onNavigationStateChanged()
         fun onSearch()
         fun onSecurityChanged()
+        fun onCustomTabConfigChanged() { }
     }
 
     /**
@@ -86,6 +88,13 @@ class Session(
      */
     var securityInfo: SecurityInfo by Delegates.observable(SecurityInfo()) {
         _, old, new -> notifyObservers (old, new, { onSecurityChanged() })
+    }
+
+    /**
+     * Configuration data in case this session is used for a Custom Tab.
+     */
+    var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) {
+        _, _, _ -> notifyObservers ({ onCustomTabConfigChanged() })
     }
 
     /**
