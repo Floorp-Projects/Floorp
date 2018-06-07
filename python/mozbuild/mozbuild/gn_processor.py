@@ -439,7 +439,10 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
             # for every configuration, then factor by other potentially useful
             # combinations.
             for attrs in ((),
-                          ('MOZ_DEBUG',), ('OS_TARGET',), ('MOZ_DEBUG', 'OS_TARGET',),
+                          ('MOZ_DEBUG',), ('OS_TARGET',), ('CPU_ARCH',),
+                          ('MOZ_DEBUG', 'OS_TARGET',),
+                          ('OS_TARGET', 'CPU_ARCH'),
+                          ('OS_TARGET', 'CPU_ARCH', 'MOZ_DEBUG'),
                           ('MOZ_DEBUG', 'OS_TARGET', 'CPU_ARCH', 'HOST_CPU_ARCH')):
                 conditions = set()
                 for args in all_args:
