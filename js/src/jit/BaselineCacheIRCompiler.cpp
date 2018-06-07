@@ -996,12 +996,13 @@ BaselineCacheIRCompiler::emitCompareStringResult()
     if (!addFailurePath(&failure))
         return false;
 
+    allocator.discardStack(masm);
+
     Label slow, done;
     masm.compareStrings(op, left, right, scratch, &slow);
     masm.jump(&done);
     masm.bind(&slow);
     {
-        allocator.discardStack(masm);
         AutoStubFrame stubFrame(*this);
         stubFrame.enter(masm, scratch);
 
