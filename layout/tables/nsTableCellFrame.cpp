@@ -441,7 +441,7 @@ nsDisplayTableCellBackground::GetBounds(nsDisplayListBuilder* aBuilder,
 void nsTableCellFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
   nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
-  if (GetTableFrame()->IsBorderCollapse() && StyleBorder()->HasBorder()) {
+  if (GetTableFrame()->IsBorderCollapse()) {
     GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey, false);
   }
 }
