@@ -7,12 +7,12 @@
 #ifndef mozilla_MediaUtils_h
 #define mozilla_MediaUtils_h
 
-#include "AutoTaskQueue.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncShutdown.h"
@@ -438,10 +438,9 @@ Await(
   ResolveFunction&& aResolveFunction,
   RejectFunction&& aRejectFunction)
 {
-  RefPtr<AutoTaskQueue> taskQueue =
-    new AutoTaskQueue(std::move(aPool), "MozPromiseAwait");
-  // We can't use a Monitor allocated on the stack (see bug 1426067)
-  Monitor& mon = taskQueue->Monitor();
+  RefPtr<TaskQueue> taskQueue =
+    new TaskQueue(std::move(aPool), "MozPromiseAwait");
+  Monitor mon(__func__);
   bool done = false;
 
   aPromise->Then(taskQueue,
@@ -471,10 +470,9 @@ typename MozPromise<ResolveValueType, RejectValueType, Excl>::
 Await(already_AddRefed<nsIEventTarget> aPool,
       RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
 {
-  RefPtr<AutoTaskQueue> taskQueue =
-    new AutoTaskQueue(std::move(aPool), "MozPromiseAwait");
-  // We can't use a Monitor allocated on the stack (see bug 1426067)
-  Monitor& mon = taskQueue->Monitor();
+  RefPtr<TaskQueue> taskQueue =
+    new TaskQueue(std::move(aPool), "MozPromiseAwait");
+  Monitor mon(__func__);
   bool done = false;
 
   typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;
@@ -518,10 +516,12 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
-  RefPtr<AutoTaskQueue> taskQueue =
-    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
-  RefPtr<typename Promise::AllPromiseType> p = Promise::All(taskQueue, aPromises);
-  Await(pool.forget(), p, std::move(aResolveFunction), std::move(aRejectFunction));
+  RefPtr<TaskQueue> taskQueue =
+    new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+  RefPtr<typename Promise::AllPromiseType> p =
+    Promise::All(taskQueue, aPromises);
+  Await(
+    pool.forget(), p, std::move(aResolveFunction), std::move(aRejectFunction));
 }
 
 // Note: only works with exclusive MozPromise, as Promise::All would attempt
@@ -536,8 +536,8 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
-  RefPtr<AutoTaskQueue> taskQueue =
-    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+  RefPtr<TaskQueue> taskQueue =
+    new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
     Promise::All(taskQueue, aPromises);
   return Await(pool.forget(), p);
