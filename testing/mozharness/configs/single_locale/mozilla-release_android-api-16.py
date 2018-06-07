@@ -3,6 +3,7 @@ BRANCH = "mozilla-release"
 MOZ_UPDATE_CHANNEL = "release"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-firefox"
+EN_US_BINARY_URL = None
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -10,8 +11,11 @@ config = {
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
+    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
+    "locales_platform": "android-api-16",
     "ignore_locales": ["en-US"],
+    "platform": "android",
     "build_target": "Android_arm-eabi-gcc3",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
@@ -25,8 +29,9 @@ config = {
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
-        "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
+        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "MOZ_OBJDIR": OBJDIR,
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
+    "upload_branch": "%s-android-api-16" % BRANCH,
 }
