@@ -1560,10 +1560,8 @@ ContentParent::ProcessingError(Result aCode, const char* aReason)
   if (MsgDropped == aCode) {
     return;
   }
-#ifndef FUZZING
   // Other errors are big deals.
   KillHard(aReason);
-#endif
 }
 
 /* static */

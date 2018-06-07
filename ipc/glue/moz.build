@@ -231,6 +231,3 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ASYNC_CONTENTPROC_LAUNCH'] = True
-
-# Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
