@@ -74,6 +74,13 @@ public:
                                             const nsAString& aNewValue,
                                             nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
+   * Notify that a frame needs to be repainted. This is important for layering
+   * decisions where, say, aFrame's transform is updated from JS, but we need
+   * to repaint aFrame anyway, so we get no benefit from giving it its own
+   * layer.
+   */
+  static void NotifyNeedsRepaint(nsIFrame* aFrame);
+  /**
    * Return true if aFrame's aProperty style should be considered as being animated
    * for pre-rendering.
    */
