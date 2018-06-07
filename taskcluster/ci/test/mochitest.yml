@@ -351,6 +351,7 @@ mochitest-webgl:
     chunks:
         by-test-platform:
             android.*: 10
+            android-7.0-x86/opt: 1
             windows.*: 8
             default: 3
     e10s:

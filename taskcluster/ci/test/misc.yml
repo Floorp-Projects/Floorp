@@ -115,6 +115,9 @@ test-verify:
                 android.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -156,6 +159,9 @@ test-verify-gpu:
                 android.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py

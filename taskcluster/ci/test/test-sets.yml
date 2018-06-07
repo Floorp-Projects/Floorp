@@ -346,11 +346,13 @@ android-x86-kvm-tests:
     - geckoview-junit
     - jsreftest
     - mochitest
-    - mochitest-chrome
+    # - mochitest-chrome
     - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
+    # - mochitest-webgl
     - reftest
+    - test-verify
 
 devtools-tests:
     - mochitest-devtools-chrome
