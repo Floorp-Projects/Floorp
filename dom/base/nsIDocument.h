@@ -137,7 +137,6 @@ class Rule;
 } // namespace css
 
 namespace dom {
-class AboutCapabilities;
 class Animation;
 class AnonymousContent;
 class Attr;
@@ -3142,9 +3141,6 @@ public:
   void GetLastModified(nsAString& aLastModified) const;
   void GetReadyState(nsAString& aReadyState) const;
 
-  already_AddRefed<mozilla::dom::AboutCapabilities> GetAboutCapabilities(
-    ErrorResult& aRv);
-
   void GetTitle(nsAString& aTitle);
   void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv);
   void GetDir(nsAString& aDirection) const;
@@ -3816,8 +3812,6 @@ protected:
   mozilla::EventStates mDocumentState;
 
   RefPtr<mozilla::dom::Promise> mReadyForIdle;
-
-  RefPtr<mozilla::dom::AboutCapabilities> mAboutCapabilities;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
