@@ -88,7 +88,7 @@ this.ProfileAge.prototype = {
     }
     return this.readTimes(file).then(
       times => {
-        return this.times = times || {};
+        return this._times = times || {};
       }
     );
   },
