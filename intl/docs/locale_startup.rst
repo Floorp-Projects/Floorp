@@ -15,7 +15,7 @@ Data Types
 There are two primary data types involved in negotiating locales during startup:
 `requested` and `available`.
 Throughout the startup different sources for this lists become available, and
-in result the values for those lists changes.
+in result the values for those lists change.
 
 Data Sources
 ------------
@@ -34,8 +34,8 @@ Bootstrap
 1) Packaged Data
 ^^^^^^^^^^^^^^^^
 
-In the `server` mode Gecko starts with no knowledge of available locales, nor of
-`requested`.
+In the `server` mode Gecko starts with no knowledge of `available` or `requested`
+locales.
 
 Initially, all fields are resolved lazily, so no data for available, requested,
 default or resolved locales is retrieved.
@@ -44,10 +44,10 @@ If any code queries any of the APIs, it triggers the initial data fetching
 and language negotiation.
 
 The initial request comes from the XPCLocale which is initializing
-the first JS context and needs to know what locale the JS context should use as
+the first JS context and needs to know which locale the JS context should use as
 the default.
 
-At that moment :js:`LocaleService` fetches the list of available locales using
+At that moment :js:`LocaleService` fetches the list of available locales, using
 packaged locales which are retrieved via :js:`multilocale.txt` file in the toolkit's
 package.
 This gives LocaleService information about which locales are initially available.
@@ -78,15 +78,15 @@ ones. In that case, :js:`intl:app-locales-changed` will be broadcasted.
 3) Language Packs Registered
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Finally, the AddonManager registers all the language packs and they get added to
-:js:`L10nRegistry` and in result update LocaleService's available locales.
+Finally, the AddonManager registers all the language packs, they get added to
+:js:`L10nRegistry` and in result LocaleService's available locales get updated.
 
-That triggers language negotiation and if the language from the language pack
+That triggers language negotiation and, if the language from the language pack
 is used in the requested list, final list of locales is being set.
 
 All of that happens before any UI is being built, but there's no guarantee of this
-order being preserved, so it is important to understand that depending on where the
-code is used during the startup it may receive different list of locales.
+order being preserved, so it is important to understand that, depending on where the
+code is used during the startup, it may receive different list of locales.
 
 In order to maintain the correct locale settings it is important to set an observer
 on :js:`intl:app-locales-changed` and update the code when the locale list changes.
@@ -94,4 +94,3 @@ on :js:`intl:app-locales-changed` and update the code when the locale list chang
 That ensures the code always uses the best possible locale selection during startup,
 but also during runtime in case user changes their requested locale list, or
 language packs are updated/removed on the fly.
-
