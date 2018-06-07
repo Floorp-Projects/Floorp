@@ -163,6 +163,33 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
+    ]
+
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -191,34 +218,7 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CFLAGS += [
         "-msse2"
@@ -229,34 +229,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not C
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CFLAGS += [
         "-msse2"
@@ -267,41 +240,14 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     UNIFIED_SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 
     CFLAGS += [
         "-msse2"
@@ -312,41 +258,14 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     UNIFIED_SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CFLAGS += [
         "-msse2"
@@ -357,180 +276,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    CFLAGS += [
-        "-mfpu=neon"
-    ]
-
-    DEFINES["WEBRTC_ARCH_ARM"] = True
-    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_HAS_NEON"] = True
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
