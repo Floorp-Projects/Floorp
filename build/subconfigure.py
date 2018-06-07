@@ -283,7 +283,7 @@ def run(objdir):
 
     # Only run configure if one of the following is true:
     # - config.status doesn't exist
-    # - config.status is older than configure
+    # - config.status is older than an input to configure
     # - the configure arguments changed
     # - the environment changed in a way that requires a cache clear.
     configure = mozpath.join(data['srcdir'], 'old-configure')
@@ -294,10 +294,17 @@ def run(objdir):
         config_status = None
     else:
         config_status = File(config_status_path)
-        if config_status.mtime < os.path.getmtime(configure) or \
-                data.get('previous-args', data['args']) != data['args'] or \
-                cleared_cache:
+        config_status_deps = mozpath.join(objdir, 'config_status_deps.in')
+        if not os.path.exists(config_status_deps):
             skip_configure = False
+        else:
+            with open(config_status_deps, 'r') as fh:
+                dep_files = fh.read().splitlines() + [configure]
+            if (any(not os.path.exists(f) or (config_status.mtime < os.path.getmtime(f))
+                    for f in dep_files) or
+                data.get('previous-args', data['args']) != data['args'] or
+                cleared_cache):
+                skip_configure = False
 
     if not skip_configure:
         if mozpath.normsep(relobjdir) == 'js/src':
@@ -334,11 +341,6 @@ def run(objdir):
                                         prefix=relobjdir)
         if returncode:
             return returncode
-
-        # Leave config.status with a new timestamp if configure is newer than
-        # its original mtime.
-        if config_status and os.path.getmtime(configure) <= config_status.mtime:
-            config_status.update_time()
 
     # Only run config.status if one of the following is true:
     # - config.status changed or did not exist
