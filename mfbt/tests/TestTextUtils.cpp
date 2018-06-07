@@ -8,11 +8,100 @@
 #include "mozilla/TextUtils.h"
 
 using mozilla::AsciiAlphanumericToNumber;
+using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiAlphanumeric;
 using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiLowercaseAlpha;
 using mozilla::IsAsciiUppercaseAlpha;
+
+static void
+TestIsAscii()
+{
+  // char
+
+  static_assert(!IsAscii(char(-1)), "char(-1) isn't ASCII");
+
+  static_assert(IsAscii('\0'), "nul is ASCII");
+
+  static_assert(IsAscii('A'), "'A' is ASCII");
+  static_assert(IsAscii('B'), "'B' is ASCII");
+  static_assert(IsAscii('M'), "'M' is ASCII");
+  static_assert(IsAscii('Y'), "'Y' is ASCII");
+  static_assert(IsAscii('Z'), "'Z' is ASCII");
+
+  static_assert(IsAscii('['), "'[' is ASCII");
+  static_assert(IsAscii('`'), "'`' is ASCII");
+
+  static_assert(IsAscii('a'), "'a' is ASCII");
+  static_assert(IsAscii('b'), "'b' is ASCII");
+  static_assert(IsAscii('m'), "'m' is ASCII");
+  static_assert(IsAscii('y'), "'y' is ASCII");
+  static_assert(IsAscii('z'), "'z' is ASCII");
+
+  static_assert(IsAscii('{'), "'{' is ASCII");
+
+  static_assert(IsAscii('5'), "'5' is ASCII");
+
+  static_assert(IsAscii('\x7F'), "'\\x7F' is ASCII");
+  static_assert(!IsAscii('\x80'), "'\\x80' isn't ASCII");
+
+  // char16_t
+
+  static_assert(!IsAscii(char16_t(-1)), "char16_t(-1) isn't ASCII");
+
+  static_assert(IsAscii(u'\0'), "nul is ASCII");
+
+  static_assert(IsAscii(u'A'), "u'A' is ASCII");
+  static_assert(IsAscii(u'B'), "u'B' is ASCII");
+  static_assert(IsAscii(u'M'), "u'M' is ASCII");
+  static_assert(IsAscii(u'Y'), "u'Y' is ASCII");
+  static_assert(IsAscii(u'Z'), "u'Z' is ASCII");
+
+  static_assert(IsAscii(u'['), "u'[' is ASCII");
+  static_assert(IsAscii(u'`'), "u'`' is ASCII");
+
+  static_assert(IsAscii(u'a'), "u'a' is ASCII");
+  static_assert(IsAscii(u'b'), "u'b' is ASCII");
+  static_assert(IsAscii(u'm'), "u'm' is ASCII");
+  static_assert(IsAscii(u'y'), "u'y' is ASCII");
+  static_assert(IsAscii(u'z'), "u'z' is ASCII");
+
+  static_assert(IsAscii(u'{'), "u'{' is ASCII");
+
+  static_assert(IsAscii(u'5'), "u'5' is ASCII");
+
+  static_assert(IsAscii(u'\x7F'), "u'\\x7F' is ASCII");
+  static_assert(!IsAscii(u'\x80'), "u'\\x80' isn't ASCII");
+
+  // char32_t
+
+  static_assert(!IsAscii(char32_t(-1)), "char32_t(-1) isn't ASCII");
+
+  static_assert(IsAscii(U'\0'), "nul is ASCII");
+
+  static_assert(IsAscii(U'A'), "U'A' is ASCII");
+  static_assert(IsAscii(U'B'), "U'B' is ASCII");
+  static_assert(IsAscii(U'M'), "U'M' is ASCII");
+  static_assert(IsAscii(U'Y'), "U'Y' is ASCII");
+  static_assert(IsAscii(U'Z'), "U'Z' is ASCII");
+
+  static_assert(IsAscii(U'['), "U'[' is ASCII");
+  static_assert(IsAscii(U'`'), "U'`' is ASCII");
+
+  static_assert(IsAscii(U'a'), "U'a' is ASCII");
+  static_assert(IsAscii(U'b'), "U'b' is ASCII");
+  static_assert(IsAscii(U'm'), "U'm' is ASCII");
+  static_assert(IsAscii(U'y'), "U'y' is ASCII");
+  static_assert(IsAscii(U'z'), "U'z' is ASCII");
+
+  static_assert(IsAscii(U'{'), "U'{' is ASCII");
+
+  static_assert(IsAscii(U'5'), "U'5' is ASCII");
+
+  static_assert(IsAscii(U'\x7F'), "U'\\x7F' is ASCII");
+  static_assert(!IsAscii(U'\x80'), "U'\\x80' isn't ASCII");
+}
 
 static void
 TestIsAsciiAlpha()
@@ -709,6 +798,7 @@ TestIsAsciiDigit()
 int
 main()
 {
+  TestIsAscii();
   TestIsAsciiAlpha();
   TestIsAsciiUppercaseAlpha();
   TestIsAsciiLowercaseAlpha();
