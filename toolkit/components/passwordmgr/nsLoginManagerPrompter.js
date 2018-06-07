@@ -822,6 +822,14 @@ LoginManagerPrompter.prototype = {
     let histogram = Services.telemetry.getHistogramById(histogramName);
     histogram.add(PROMPT_DISPLAYED);
 
+    const promptType = type == "password-save" ? "save" : "update";
+    const flow_id = browser.ownerGlobal.gBrowser.getTabForBrowser(browser).linkedPanel;
+    Services.telemetry.recordEvent("savant", "pwmgr", "ask", promptType,
+                                  {
+                                    subcategory: "prompt",
+                                    flow_id,
+                                  });
+
     let chromeDoc = browser.ownerDocument;
 
     let currentNotification;
@@ -949,8 +957,20 @@ LoginManagerPrompter.prototype = {
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
       callback: () => {
         histogram.add(PROMPT_ADD_OR_UPDATE);
+        const flow_id = browser.ownerGlobal.gBrowser.getTabForBrowser(browser).linkedPanel;
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
           Services.obs.notifyObservers(null, "LoginStats:NewSavedPassword");
+          Services.telemetry.recordEvent("savant", "pwmgr", "save", null,
+                                        {
+                                          subcategory: "prompt",
+                                          flow_id,
+                                        });
+        } else if (histogramName == "PWMGR_PROMPT_UPDATE_ACTION") {
+          Services.telemetry.recordEvent("savant", "pwmgr", "update", null,
+                                        {
+                                          subcategory: "prompt",
+                                          flow_id,
+                                        });
         }
         readDataFromUI();
         persistData();
