@@ -21,7 +21,6 @@
 #include <windows.h>
 #include <processthreadsapi.h>
 
-#include "DllBlocklistWin.h"
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
@@ -35,7 +34,7 @@ static bool
 PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
                   const bool aIsSafeMode)
 {
-  return mozilla::InitializeDllBlocklistOOP(aChildProcess);
+  return true;
 }
 
 #if !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)

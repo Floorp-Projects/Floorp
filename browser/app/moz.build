@@ -62,14 +62,17 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
     DEFINES['MOZ_PHOENIX'] = True
-    DIRS += [
-        'winlauncher',
+    SOURCES += [
+        'LauncherProcessWin.cpp',
+        'LaunchUnelevated.cpp',
     ]
-    USE_LIBS += [
-        'winlauncher',
+    DELAYLOAD_DLLS += [
+        'oleaut32.dll',
+        'ole32.dll',
     ]
-    LOCAL_INCLUDES += [
-        '/browser/app/winlauncher',
+    OS_LIBS += [
+        'oleaut32',
+        'ole32',
     ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
