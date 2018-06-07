@@ -5133,6 +5133,25 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_GetPropertyValue(
+    computed_values: ComputedStyleBorrowed,
+    prop: nsCSSPropertyID,
+    value: *mut nsAString,
+) {
+    use style::properties::PropertyFlags;
+
+    let longhand = LonghandId::from_nscsspropertyid(prop).expect("Not a longhand?");
+    debug_assert!(
+        !longhand.flags().contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
+        "We're not supposed to serialize layout-dependent properties"
+    );
+    computed_values.get_longhand_property_value(
+        longhand,
+        &mut CssWriter::new(&mut *value),
+    ).unwrap();
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     computed_values: ComputedStyleBorrowed,
     name: *const nsAString,
