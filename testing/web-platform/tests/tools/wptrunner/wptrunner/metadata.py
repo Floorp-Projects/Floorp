@@ -2,19 +2,23 @@ import os
 import shutil
 import tempfile
 import uuid
+from collections import defaultdict, namedtuple
 
 from mozlog import structuredlog
 
-import expected
 import manifestupdate
 import testloader
 import wptmanifest
 import wpttest
+from expected import expected_path
 from vcs import git
 manifest = None  # Module that will be imported relative to test_root
 manifestitem = None
 
 logger = structuredlog.StructuredLogger("web-platform-tests")
+
+
+TestItem = namedtuple("TestItem", ["test_manifest", "expected"])
 
 try:
     import ujson as json
@@ -40,39 +44,33 @@ def update_expected(test_paths, serve_root, log_file_names,
 
     manifests = load_test_manifests(serve_root, test_paths)
 
-    change_data = {}
+    id_test_map = update_from_logs(manifests,
+                                   *log_file_names,
+                                   ignore_existing=ignore_existing,
+                                   property_order=property_order,
+                                   boolean_properties=boolean_properties,
+                                   stability=stability)
 
-    if sync_root is not None:
-        if rev_old is not None:
-            rev_old = git("rev-parse", rev_old, repo=sync_root).strip()
-        rev_new = git("rev-parse", rev_new, repo=sync_root).strip()
+    by_test_manifest = defaultdict(list)
+    while id_test_map:
+        item = id_test_map.popitem()[1]
+        by_test_manifest[item.test_manifest].append(item.expected)
 
-        if rev_old is not None:
-            change_data = load_change_data(rev_old, rev_new, repo=sync_root)
-
-    expected_map_by_manifest = update_from_logs(manifests,
-                                                *log_file_names,
-                                                ignore_existing=ignore_existing,
-                                                property_order=property_order,
-                                                boolean_properties=boolean_properties,
-                                                stability=stability)
-
-    for test_manifest, expected_map in expected_map_by_manifest.iteritems():
-        url_base = manifests[test_manifest]["url_base"]
-        metadata_path = test_paths[url_base]["metadata_path"]
-        write_changes(metadata_path, expected_map)
+    for test_manifest, expected in by_test_manifest.iteritems():
+        metadata_path = manifests[test_manifest]["metadata_path"]
+        write_changes(metadata_path, expected)
         if stability is not None:
-            for tree in expected_map.itervalues():
-                for test in tree.iterchildren():
+            for tree in expected:
+                if not tree.modified:
+                    continue
+                for test in expected.iterchildren():
                     for subtest in test.iterchildren():
                         if subtest.new_disabled:
                             print "disabled: %s" % os.path.dirname(subtest.root.test_path) + "/" + subtest.name
-                    if test.new_disabled:
-                        print "disabled: %s" % test.root.test_path
+                        if test.new_disabled:
+                            print "disabled: %s" % test.root.test_path
 
-    results_changed = [item.test_path for item in expected_map.itervalues() if item.modified]
-
-    return unexpected_changes(manifests, change_data, results_changed)
+    return by_test_manifest
 
 
 def do_delayed_imports(serve_root):
@@ -144,33 +142,35 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
     boolean_properties = kwargs.get("boolean_properties")
     stability = kwargs.get("stability")
 
-    expected_map = {}
     id_test_map = {}
 
     for test_manifest, paths in manifests.iteritems():
-        expected_map_manifest, id_path_map_manifest = create_test_tree(
+        id_test_map.update(create_test_tree(
             paths["metadata_path"],
             test_manifest,
             property_order=property_order,
-            boolean_properties=boolean_properties)
-        expected_map[test_manifest] = expected_map_manifest
-        id_test_map.update(id_path_map_manifest)
+            boolean_properties=boolean_properties))
 
-    updater = ExpectedUpdater(manifests, expected_map, id_test_map,
+    updater = ExpectedUpdater(manifests,
+                              id_test_map,
                               ignore_existing=ignore_existing)
     for log_filename in log_filenames:
         with open(log_filename) as f:
             updater.update_from_log(f)
+    return coalesce_results(id_test_map, stability)
 
-    for manifest_expected in expected_map.itervalues():
-        for tree in manifest_expected.itervalues():
-            tree.coalesce_properties(stability=stability)
-            for test in tree.iterchildren():
-                for subtest in test.iterchildren():
-                    subtest.coalesce_properties(stability=stability)
-                test.coalesce_properties(stability=stability)
 
-    return expected_map
+def coalesce_results(id_test_map, stability):
+    for _, expected in id_test_map.itervalues():
+        if not expected.modified:
+            continue
+        expected.coalesce_properties(stability=stability)
+        for test in expected.iterchildren():
+            for subtest in test.iterchildren():
+                subtest.coalesce_properties(stability=stability)
+            test.coalesce_properties(stability=stability)
+
+    return id_test_map
 
 
 def directory_manifests(metadata_path):
@@ -182,19 +182,15 @@ def directory_manifests(metadata_path):
     return rv
 
 
-def write_changes(metadata_path, expected_map):
+def write_changes(metadata_path, expected):
     # First write the new manifest files to a temporary directory
     temp_path = tempfile.mkdtemp(dir=os.path.split(metadata_path)[0])
-    write_new_expected(temp_path, expected_map)
-
-    # Keep all __dir__.ini files (these are not in expected_map because they
-    # aren't associated with a specific test)
-    keep_files = directory_manifests(metadata_path)
+    write_new_expected(temp_path, expected)
 
     # Copy all files in the root to the temporary location since
     # these cannot be ini files
-    keep_files.extend(item for item in os.listdir(metadata_path) if
-                      not os.path.isdir(os.path.join(metadata_path, item)))
+    keep_files = [item for item in os.listdir(metadata_path) if
+                  not os.path.isdir(os.path.join(metadata_path, item))]
 
     for item in keep_files:
         dest_dir = os.path.dirname(os.path.join(temp_path, item))
@@ -211,13 +207,13 @@ def write_changes(metadata_path, expected_map):
     shutil.rmtree(temp_path_2)
 
 
-def write_new_expected(metadata_path, expected_map):
+def write_new_expected(metadata_path, expected):
     # Serialize the data back to a file
-    for tree in expected_map.itervalues():
+    for tree in expected:
         if not tree.is_empty:
             manifest_str = wptmanifest.serialize(tree.node, skip_empty_data=True)
             assert manifest_str != ""
-            path = expected.expected_path(metadata_path, tree.test_path)
+            path = expected_path(metadata_path, tree.test_path)
             dir = os.path.split(path)[0]
             if not os.path.exists(dir):
                 os.makedirs(dir)
@@ -226,10 +222,8 @@ def write_new_expected(metadata_path, expected_map):
 
 
 class ExpectedUpdater(object):
-    def __init__(self, test_manifests, expected_tree, id_path_map, ignore_existing=False):
-        self.test_manifests = test_manifests
-        self.expected_tree = expected_tree
-        self.id_path_map = id_path_map
+    def __init__(self, test_manifests, id_test_map, ignore_existing=False):
+        self.id_test_map = id_test_map
         self.ignore_existing = ignore_existing
         self.run_info = None
         self.action_map = {"suite_start": self.suite_start,
@@ -243,7 +237,7 @@ class ExpectedUpdater(object):
         self.test_cache = {}
 
         self.types_by_path = {}
-        for manifest in self.test_manifests.iterkeys():
+        for manifest in test_manifests.iterkeys():
             for test_type, path, _ in manifest:
                 if test_type in wpttest.manifest_test_cls:
                     self.types_by_path[path] = wpttest.manifest_test_cls[test_type]
@@ -263,8 +257,7 @@ class ExpectedUpdater(object):
     def test_start(self, data):
         test_id = data["test"]
         try:
-            test_manifest, test = self.id_path_map[test_id]
-            expected_node = self.expected_tree[test_manifest][test].get_test(test_id)
+            expected_node = self.id_test_map[test_id].expected.get_test(test_id)
         except KeyError:
             print "Test not found %s, skipping" % test_id
             return
@@ -322,15 +315,18 @@ class ExpectedUpdater(object):
         dir_id = os.path.join(dir_path, "__dir__").replace(os.path.sep, "/")
         if dir_id.startswith("/"):
             dir_id = dir_id[1:]
-        test_manifest, obj = self.id_path_map[dir_id]
-        expected_node = self.expected_tree[test_manifest][obj]
+        expected_node = self.id_test_map[dir_id].expected
 
         expected_node.set_lsan(self.run_info, (data["frames"], data.get("allowed_match")))
 
 
 def create_test_tree(metadata_path, test_manifest, property_order=None,
                      boolean_properties=None):
-    expected_map = {}
+    """Create a map of expectation manifests for all tests in test_manifest,
+    reading existing manifests under manifest_path
+
+    :returns: A map of test_id to (manifest, test, expectation_data)
+    """
     id_test_map = {}
     exclude_types = frozenset(["stub", "helper", "manual", "support", "conformancechecker"])
     all_types = [item.item_type for item in manifestitem.__dict__.itervalues()
@@ -342,8 +338,7 @@ def create_test_tree(metadata_path, test_manifest, property_order=None,
         expected_data = load_or_create_expected(test_manifest, metadata_path, test_path, tests,
                                                 property_order, boolean_properties)
         for test in tests:
-            id_test_map[test.id] = (test_manifest, test)
-            expected_map[test] = expected_data
+            id_test_map[test.id] = TestItem(test_manifest, expected_data)
 
         dir_path = os.path.split(test_path)[0].replace(os.path.sep, "/")
         while True:
@@ -361,13 +356,12 @@ def create_test_tree(metadata_path, test_manifest, property_order=None,
                                                         property_order,
                                                         boolean_properties)
 
-                id_test_map[dir_id] = (test_manifest, dir_object)
-                expected_map[dir_object] = expected_data
+                id_test_map[dir_id] = TestItem(test_manifest, expected_data)
             if not dir_path:
                 break
             dir_path = dir_path.rsplit("/", 1)[0] if "/" in dir_path else ""
 
-    return expected_map, id_test_map
+    return id_test_map
 
 
 class DirObject(object):

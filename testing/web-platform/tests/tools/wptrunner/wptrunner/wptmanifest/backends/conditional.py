@@ -341,7 +341,10 @@ class ManifestItem(object):
             yield item
 
     def remove_value(self, key, value):
-        self._data[key].remove(value)
+        try:
+            self._data[key].remove(value)
+        except ValueError:
+            return
         if not self._data[key]:
             del self._data[key]
         value.remove()

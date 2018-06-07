@@ -36,6 +36,10 @@ class ConditionError(Exception):
         self.cond = cond
 
 
+class UpdateError(Exception):
+    pass
+
+
 Value = namedtuple("Value", ["run_info", "value"])
 
 
@@ -351,7 +355,11 @@ class PropertyUpdate(object):
                                   self.update_value(unconditional_value, new_default_value),
                                   condition=None)
             else:
-                self.add_new(unconditional_value, stability)
+                try:
+                    self.add_new(unconditional_value, stability)
+                except UpdateError as e:
+                    print("%s for %s, cannot update %s" % (e, self.node.root.test_path,
+                                                           self.property_name))
 
         # Remove cases where the value matches the default
         if (self.property_name in self.node._data and
@@ -375,7 +383,7 @@ class PropertyUpdate(object):
                   should be updated, and new_default_value is the value to set if it should."""
         raise NotImplementedError
 
-    def add_new(self, unconditional_value, stability=False):
+    def add_new(self, unconditional_value, stability):
         """Add new conditional values for the property.
 
         Subclasses need not implement this if they only ever update the default value."""
@@ -407,7 +415,7 @@ class ExpectedUpdate(PropertyUpdate):
         new_value = self.new[0].value
         return update_default, new_value
 
-    def add_new(self, unconditional_value, stability=False):
+    def add_new(self, unconditional_value, stability):
         try:
             conditionals = group_conditionals(
                 self.new,
@@ -418,8 +426,7 @@ class ExpectedUpdate(PropertyUpdate):
                 self.node.set("disabled", stability or "unstable", e.cond.children[0])
                 self.node.new_disabled = True
             else:
-                print "Conflicting metadata values for %s, cannot update" % self.root.test_path
-                return
+                raise UpdateError("Conflicting metadata values")
         for conditional_node, value in conditionals:
             if value != unconditional_value:
                 self.node.set(self.property_name, value, condition=conditional_node.children[0])
