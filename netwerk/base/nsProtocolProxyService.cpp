@@ -62,7 +62,6 @@ namespace net {
 #define PROXY_PREF_BRANCH  "network.proxy"
 #define PROXY_PREF(x)      PROXY_PREF_BRANCH "." x
 
-#define WPAD_URL "http://wpad/wpad.dat"
 
 //----------------------------------------------------------------------------
 
@@ -311,8 +310,8 @@ private:
     // Called asynchronously, so we do not need to post another PLEvent
     // before calling DoCallback.
     void OnQueryComplete(nsresult status,
-                         const nsCString &pacString,
-                         const nsCString &newPACURL) override
+                         const nsACString &pacString,
+                         const nsACString &newPACURL) override
     {
         // If we've already called DoCallback then, nothing more to do.
         if (!mCallback)
@@ -821,6 +820,7 @@ nsProtocolProxyService::nsProtocolProxyService()
     , mSOCKSProxyVersion(4)
     , mSOCKSProxyRemoteDNS(false)
     , mProxyOverTLS(true)
+    , mWPADOverDHCPEnabled(false)
     , mPACMan(nullptr)
     , mSessionStart(PR_Now())
     , mFailedProxyTimeout(30 * 60) // 30 minute default
@@ -1087,6 +1087,12 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                           mProxyOverTLS);
     }
 
+    if (!pref || !strcmp(pref, PROXY_PREF("enable_wpad_over_dhcp"))) {
+        proxy_GetBoolPref(prefBranch, PROXY_PREF("enable_wpad_over_dhcp"),
+                          mWPADOverDHCPEnabled);
+        reloadPAC = reloadPAC || mProxyConfig == PROXYCONFIG_WPAD;
+    }
+
     if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout")))
         proxy_GetIntPref(prefBranch, PROXY_PREF("failover_timeout"),
                          mFailedProxyTimeout);
@@ -1119,19 +1125,15 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                 ResetPACThread();
             }
         } else if (mProxyConfig == PROXYCONFIG_WPAD) {
-            // We diverge from the WPAD spec here in that we don't walk the
-            // hosts's FQDN, stripping components until we hit a TLD.  Doing so
-            // is dangerous in the face of an incomplete list of TLDs, and TLDs
-            // get added over time.  We could consider doing only a single
-            // substitution of the first component, if that proves to help
-            // compatibility.
-            tempString.AssignLiteral(WPAD_URL);
+            LOG(("Auto-detecting proxy - Reset Pac Thread"));
+            ResetPACThread();
         } else if (mSystemProxySettings) {
             // Get System Proxy settings if available
             AsyncConfigureFromPAC(false, false);
         }
-        if (!tempString.IsEmpty())
+        if (!tempString.IsEmpty() || mProxyConfig == PROXYCONFIG_WPAD) {
             ConfigureFromPAC(tempString, false);
+        }
     }
 }
 
@@ -1482,7 +1484,6 @@ nsProtocolProxyService::SetupPACThread(nsIEventTarget *mainThreadEventTarget)
     else {
         rv = mPACMan->Init(nullptr);
     }
-
     if (NS_FAILED(rv)) {
         mPACMan->Shutdown();
         mPACMan = nullptr;
@@ -1508,11 +1509,15 @@ nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
     nsresult rv = SetupPACThread();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mPACMan->IsPACURI(spec) && !forceReload)
+    bool autodetect = spec.IsEmpty();
+    if (!forceReload && ((!autodetect && mPACMan->IsPACURI(spec)) ||
+                         (autodetect && mPACMan->IsUsingWPAD()))) {
         return NS_OK;
+    }
 
     mFailedProxies.Clear();
 
+    mPACMan->SetWPADOverDHCPEnabled(mWPADOverDHCPEnabled);
     return mPACMan->LoadPACFromURI(spec);
 }
 
@@ -1565,8 +1570,6 @@ nsProtocolProxyService::ReloadPAC()
     nsAutoCString pacSpec;
     if (type == PROXYCONFIG_PAC)
         prefs->GetCharPref(PROXY_PREF("autoconfig_url"), pacSpec);
-    else if (type == PROXYCONFIG_WPAD)
-        pacSpec.AssignLiteral(WPAD_URL);
     else if (type == PROXYCONFIG_SYSTEM) {
         if (mSystemProxySettings) {
             AsyncConfigureFromPAC(true, true);
@@ -1575,7 +1578,7 @@ nsProtocolProxyService::ReloadPAC()
         }
     }
 
-    if (!pacSpec.IsEmpty())
+    if (!pacSpec.IsEmpty() || type == PROXYCONFIG_WPAD)
         ConfigureFromPAC(pacSpec, true);
     return NS_OK;
 }
@@ -1599,8 +1602,8 @@ class nsAsyncBridgeRequest final  : public nsPACManCallback
     }
 
     void OnQueryComplete(nsresult status,
-                         const nsCString &pacString,
-                         const nsCString &newPACURL) override
+                          const nsACString &pacString,
+                          const nsACString &newPACURL) override
     {
         MutexAutoLock lock(mMutex);
         mCompleted = true;
