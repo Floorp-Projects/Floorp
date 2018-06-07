@@ -37,6 +37,7 @@
 #include "vm/JSContext.h"
 
 using mozilla::ArrayLength;
+using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
@@ -532,6 +533,55 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
     return true;
 }
 
+template<class AnyCharsAccess>
+bool
+TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, int32_t* codePoint)
+{
+    MOZ_ASSERT(!isAsciiCodePoint(lead),
+               "ASCII code unit/point must be handled separately");
+    MOZ_ASSERT(lead == sourceUnits.previousCodeUnit(),
+               "getNonAsciiCodePoint called incorrectly");
+
+    // The code point is usually |lead|: overwrite later if needed.
+    *codePoint = lead;
+
+    // Dispense with single-unit code points ("code points", when a lone
+    // trailing surrogate is encountered).
+    if (MOZ_LIKELY(!unicode::IsLeadSurrogate(lead))) {
+        if (MOZ_UNLIKELY(lead == unicode::LINE_SEPARATOR ||
+                         lead == unicode::PARA_SEPARATOR))
+        {
+            if (!updateLineInfoForEOL()) {
+#ifdef DEBUG
+                *codePoint = EOF; // sentinel value to hopefully cause errors
+#endif
+                MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
+                return false;
+            }
+
+            *codePoint = '\n';
+        } else {
+            MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+        }
+
+        return true;
+    }
+
+    // If there are no more units, or the next unit isn't a trailing surrogate,
+    // it's also a "code point".
+    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars() ||
+                     !unicode::IsTrailSurrogate(sourceUnits.peekCodeUnit())))
+    {
+        MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+        return true;
+    }
+
+    // Otherwise we have a multi-unit code point.
+    *codePoint = unicode::UTF16Decode(lead, sourceUnits.getCodeUnit());
+    MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+    return true;
+}
+
 // This gets the next code unit -- the next numeric sub-unit of source text,
 // possibly smaller than a full code point.  It is simple and stupid, and it
 // doesn't understand EOL, update line counters, or anything like that.  If you
@@ -559,7 +609,6 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     if (c == EOF)
         return;
 
-    MOZ_ASSERT(!sourceUnits.atStart());
     sourceUnits.ungetCodeUnit();
     if (c == '\n') {
         int32_t c2 = sourceUnits.peekCodeUnit();
@@ -582,7 +631,6 @@ TokenStreamCharsBase<CharT>::ungetCodeUnit(int32_t c)
     if (c == EOF)
         return;
 
-    MOZ_ASSERT(!sourceUnits.atStart());
     sourceUnits.ungetCodeUnit();
 }
 
@@ -2055,21 +2103,27 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 unsigned linenoBefore = anyChars.lineno;
 
                 do {
-                    if (!getChar(&c))
-                        return badToken();
-
-                    if (c == EOF) {
+                    int32_t unit = getCodeUnit();
+                    if (unit == EOF) {
                         reportError(JSMSG_UNTERMINATED_COMMENT);
                         return badToken();
                     }
 
-                    if (c == '*' && matchCodeUnit('/'))
+                    if (unit == '*' && matchCodeUnit('/'))
                         break;
 
-                    if (c == '@' || c == '#') {
-                        bool shouldWarn = c == '@';
+                    if (unit == '@' || unit == '#') {
+                        bool shouldWarn = unit == '@';
                         if (!getDirectives(true, shouldWarn))
-                            return false;
+                            return badToken();
+                    } else if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+                        int32_t codePoint;
+                        if (!getFullAsciiCodePoint(unit, &codePoint))
+                            return badToken();
+                    } else {
+                        int32_t codePoint;
+                        if (!getNonAsciiCodePoint(unit, &codePoint))
+                            return badToken();
                     }
                 } while (true);
 
