@@ -1195,10 +1195,9 @@ function start() {
       animation.effect.target.style = 'width: 100px; height: 100px';
       return waitForFrame();
     }).then(() => {
-      // FIXME: Bug 1253164: the animation should get back on compositor.
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
-        [ { property: 'transform', runningOnCompositor: false } ]);
+        [ { property: 'transform', runningOnCompositor: true } ]);
     });
   }, 'transform on too big element - area');
 
@@ -1231,10 +1230,9 @@ function start() {
       animation.effect.target.style = 'width: 100px; height: 100px';
       return waitForFrame();
     }).then(() => {
-      // FIXME: Bug 1253164: the animation should get back on compositor.
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
-        [ { property: 'transform', runningOnCompositor: false } ]);
+        [ { property: 'transform', runningOnCompositor: true } ]);
     });
   }, 'transform on too big element - dimensions');
 
