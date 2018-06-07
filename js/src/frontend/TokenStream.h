@@ -1347,6 +1347,13 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     MOZ_MUST_USE bool getNonAsciiCodePoint(char16_t lead, int32_t* cp);
 
     void ungetCodePointIgnoreEOL(uint32_t codePoint);
+
+    /**
+     * Unget a just-gotten LineTerminator sequence: '\r', '\n', '\r\n', or
+     * a Unicode line/paragraph separator, also undoing line/column information
+     * changes reflecting that LineTerminator.
+     */
+    void ungetLineTerminator();
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
