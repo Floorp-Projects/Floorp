@@ -3820,7 +3820,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432936
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3903,6 +3902,28 @@ TEST_P(NewSdpTest, CheckMediaLevelDtlsMessage) {
         SdpAttribute::kDtlsMessageAttribute));
 }
 
+TEST_P(NewSdpTest, CheckSetPort) {
+  // Parse any valid sdp with a media section
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendonly" CRLF,
+           false);
+
+   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+
+   constexpr unsigned int expectedParesPort = 56436;
+   unsigned int currentPort = mSdp->GetMediaSection(0).GetPort();
+   ASSERT_EQ(expectedParesPort, currentPort);
+
+   mSdp->GetMediaSection(0).SetPort(currentPort+1);
+   ASSERT_EQ(currentPort+1,mSdp->GetMediaSection(0).GetPort());
+}
 
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
   for (auto a = static_cast<size_t>(SdpAttribute::kFirstAttribute);

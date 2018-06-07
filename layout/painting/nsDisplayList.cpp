@@ -8724,6 +8724,10 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     container->SetContentFlags(container->GetContentFlags() & ~Layer::CONTENT_EXTEND_3D_CONTEXT);
   }
 
+  if (mAllowAsyncAnimation) {
+    mFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), false);
+  }
+
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                                            this, mFrame,
                                                            eCSSProperty_transform);

@@ -235,8 +235,6 @@ EXTRA_JS_MODULES += [
     'RemoteWebProgress.jsm',
     'ResetProfile.jsm',
     'ResponsivenessMonitor.jsm',
-    'secondscreen/RokuApp.jsm',
-    'secondscreen/SimpleServiceDiscovery.jsm',
     'SelectContentHelper.jsm',
     'SelectParentHelper.jsm',
     'ServiceRequest.jsm',
@@ -287,6 +285,10 @@ if 'Android' != CONFIG['OS_TARGET']:
     ]
 else:
     DEFINES['ANDROID'] = True
+    EXTRA_JS_MODULES += [
+        'secondscreen/RokuApp.jsm',
+        'secondscreen/SimpleServiceDiscovery.jsm',
+    ]
 
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':

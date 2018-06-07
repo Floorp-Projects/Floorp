@@ -114,7 +114,7 @@ is exposed to localization tools, like Pontoon, and build automation.
 From that moment localizers will work on providing translations for the new feature
 either while the new strings are only in Nightly or after they are merged to Beta.
 The goal is to have as much of the UI ready in as many locales as early as possible,
-but the process is continous and we're capable of releasing Firefox with incomplete
+but the process is continuous and we're capable of releasing Firefox with incomplete
 translations falling back on a backup locale in case of a missing string.
 
 While Nightly products use the latest version of localization available in repositories,
@@ -204,7 +204,7 @@ and limitations of the previous systems.
 It's well suited for modern web development cycle, provides a number of localization
 features including good internationalization model and strong bidirectionality support.
 
-Fluent strictly superseeds the old systems and is currently being slowly introduced to
+Fluent strictly supersedes the old systems and is currently being slowly introduced to
 Firefox and all other Mozilla products with the goal to become the only
 unified localization system at Mozilla and a foundation of the future localization
 standard.
@@ -214,4 +214,4 @@ To learn more about Fluent, follow the `Fluent for Firefox Developers`_ guide.
 .. _Pontoon: https://pontoon.mozilla.org/
 .. _hg.mozilla.org/l10n-central: https://hg.mozilla.org/l10n-central/
 .. _L10n Drivers Team: https://wiki.mozilla.org/L10n:Mozilla_Team
-.. _Fluent For Firefox Developers: ./l10n/docs/l10n/index.html 
+.. _Fluent For Firefox Developers: ./l10n/docs/l10n/index.html

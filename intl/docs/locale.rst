@@ -30,7 +30,7 @@ Locale data structure consists of four primary fields.
 
 `BCP 47`_ specifies the syntax for each of those fields (called subtags) when
 represented as a string. The syntax defines the allowed selection of characters,
-their capitalization and order in which the fields should be defined.
+their capitalization, and the order in which the fields should be defined.
 
 Most of the base subtags are valid ISO codes, such as `ISO 639`_ for
 language subtag, or `ISO 3166-1`_ for region.
@@ -38,7 +38,7 @@ language subtag, or `ISO 3166-1`_ for region.
 The examples above present language tags with several fields omitted, which is allowed
 by the standard.
 
-On top of that a locale may contain:
+On top of that, a locale may contain:
 
  - extensions and private fields
      These fields can be used to carry additional information about a locale.
@@ -97,10 +97,10 @@ Language Negotiation
 ====================
 
 Due to the imperfections in data matching, all operations on locales should always
-use a language negotiation algorithm to resolve the best available set of locales
+use a language negotiation algorithm to resolve the best available set of locales,
 based on the list of all available locales and an ordered list of requested locales.
 
-Such algorithms may vary in sophistication and number of used strategies. Mozilla's
+Such algorithms may vary in sophistication and number of strategies. Mozilla's
 solution is based on modified logic from `RFC 5656`_.
 
 The three lists of locales used in negotiation:
@@ -109,8 +109,9 @@ The three lists of locales used in negotiation:
  - **Requested** - locales that the user selected in decreasing order of preference
  - **Resolved** - result of the negotiation
 
-The result of a negotiation is an ordered list of locales that are available to the system
-and it is expected for the consumer to attempt using the locales in the resolved order.
+The result of a negotiation is an ordered list of locales that are available to
+the system, and the consumer is expected to attempt using the locales in the
+resolved order.
 
 Negotiation should be used in all scenarios like selecting language resources,
 calendar, number formatting, etc.
@@ -166,8 +167,8 @@ offers three language negotiation strategies:
 Filtering
 ^^^^^^^^^
 
-This is the most common scenario, where there is a benefit to creating a maximal
-possible list of locales that the user may benefit from.
+This is the most common scenario, where there is an advantage in creating a
+maximal possible list of locales that the user may benefit from.
 
 An example of a scenario:
 
@@ -218,7 +219,7 @@ Lookup
 ^^^^^^
 
 The third strategy should be used in cases where no matter what, only one locale
-can be every used. Some third-party APIs don't support fallback and it doesn't make
+can be ever used. Some third-party APIs don't support fallback and it doesn't make
 sense to continue resolving after finding the first locale.
 
 It is still advised to continue using this API as a fallback chain list, just in
@@ -241,7 +242,7 @@ Default Locale
 --------------
 
 Besides *Available*, *Requested* and *Resolved* locale lists, there's also a concept
-of *DefaultLocale* which is a single locale out of the list of available ones that
+of *DefaultLocale*, which is a single locale out of the list of available ones that
 should be used in case there is no match to be found between available and
 requested locales.
 
@@ -268,7 +269,7 @@ In some cases the user may want to link a language selection to another componen
 For example, a Firefox extension may come with its own list of available locales, which
 may have locales that Firefox doesn't.
 
-In that case, negotiation between user requested locales and the addon's list may result
+In that case, negotiation between user requested locales and the add-on's list may result
 in a selection of locales superseding that of Firefox itself.
 
 
@@ -284,36 +285,36 @@ in a selection of locales superseding that of Firefox itself.
             Requested |
      +----------------+
      | es, fr, pl, ar |
-     +----------------+                 Addon Locales
+     +----------------+                 Add-on Locales
                       |                +------------+
                       +--------------> | es, fr, ar |
-      Addon Available |                +------------+
+      Add-on Available |               +------------+
     +-----------------+
     |  de, es, fr, ar |
     +-----------------+
 
 
-In that case, an addon may end up being displayed in Spanish, while Firefox UI will
-use French. In most cases this is a bad UX.
+In that case, an add-on may end up being displayed in Spanish, while Firefox UI will
+use French. In most cases this results in a bad UX.
 
-In order to avoid that, one can chain the addon negotiation and take Firefox's resolved
-locales as a `requested` and negotiate that against the addons' `available` list.
+In order to avoid that, one can chain the add-on negotiation and take Firefox's resolved
+locales as a `requested`, and negotiate that against the add-ons' `available` list.
 
 .. code-block:: none
 
         Fx Available
        +-------------+
        |  it, ar, fr |
-       +-------------+                Fx Locales (as Addon Requested)
+       +-------------+                Fx Locales (as Add-on Requested)
                      |                +--------+
                      +--------------> | fr, ar |
                      |                +--------+
-           Requested |                         |                Addon Locales
+           Requested |                         |                Add-on Locales
     +----------------+                         |                +--------+
     | es, fr, pl, ar |                         +------------->  | fr, ar |
     +----------------+                         |                +--------+
                                                |
-                               Addon Available |
+                              Add-on Available |
                              +-----------------+
                              |  de, es, ar, fr |
                              +-----------------+
@@ -396,8 +397,8 @@ UI Direction
 Since the UI direction is so tightly coupled with the locale selection, the
 main method of testing the directionality of the Gecko app lives in LocaleService.
 
-:js:`LocaleService::IsAppLocaleRTL` returns a boolean indicating the current
-direction of the app UI.
+:js:`LocaleService::IsAppLocaleRTL` returns a boolean indicating if the current
+direction of the app UI is right-to-left.
 
 Default and Last Fallback Locales
 =================================
@@ -408,11 +409,11 @@ as the default locale in case language negotiation cannot find any match, and al
 as the last locale to look for in a fallback chain.
 
 If all else fails, Gecko also support a notion of last fallback locale, which is
-currently hardcoded to *"en-US"* and is the very final locale to try in case
+currently hardcoded to *"en-US"*, and is the very final locale to try in case
 nothing else (including the default locale) works.
 Notice that Unicode and ICU use *"en-GB"* in that role because more English speaking
 people around the World recognize British regional preferences than American (metric vs.
-imperial, fahrenheit vs celsius etc.).
+imperial, Fahrenheit vs Celsius etc.).
 Mozilla may switch to *"en-GB"* in the future.
 
 Packaged Locales
@@ -484,7 +485,7 @@ First, it is necessary to add a new locale to the available ones, then change
 the requested, and only that will result in a new negotiation and language
 change happening.
 
-There are two primary ways to add locale to available ones.
+There are two primary ways to add a locale to available ones.
 
 Testing Localization
 --------------------
@@ -533,7 +534,7 @@ but it is also simpler:
     let appLocales = Services.locale.getAppLocalesAsBCP47();
     assert(appLocales[0], "ko-KR");
 
-In the future, Mozilla plans to add a third way for addons (`bug 1440969`_)
+In the future, Mozilla plans to add a third way for add-ons (`bug 1440969`_)
 to allow for either manual or automated testing purposes disconnecting its locales
 from the main application ones.
 

@@ -154,6 +154,7 @@ rusty-enums = [
     "mozilla::StyleOrient",
     "mozilla::StyleBoxSizing",
     "mozilla::StyleClear",
+    "mozilla::StyleComplexColor_Tag",
     "mozilla::StyleFloat",
     "mozilla::StyleUserModify",
     "mozilla::StyleUserInput",
