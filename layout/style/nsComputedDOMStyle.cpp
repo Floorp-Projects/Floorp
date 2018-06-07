@@ -2514,7 +2514,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
 
     const auto& stop = aGradient->mStops[i];
     if (!stop.mIsInterpolationHint) {
-      SetToRGBAColor(tmpVal, stop.mColor);
+      SetValueFromComplexColor(tmpVal, stop.mColor);
       tmpVal->GetCssText(tokenString);
       aString.Append(tokenString);
     }
