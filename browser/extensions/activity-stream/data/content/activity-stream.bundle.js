@@ -446,10 +446,10 @@ const MIN_CORNER_FAVICON_SIZE = 16;
 
 "use strict";
 
-// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
+// EXTERNAL MODULE: ./common/Actions.jsm
 var Actions = __webpack_require__(1);
 
-// CONCATENATED MODULE: ./system-addon/common/Dedupe.jsm
+// CONCATENATED MODULE: ./common/Dedupe.jsm
 class Dedupe {
   constructor(createKey) {
     this.createKey = createKey || this.defaultCreateKey;
@@ -482,7 +482,7 @@ class Dedupe {
     return result.map(m => Array.from(m.values()));
   }
 }
-// CONCATENATED MODULE: ./system-addon/common/Reducers.jsm
+// CONCATENATED MODULE: ./common/Reducers.jsm
 /* unused harmony export insertPinned */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return reducers; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -3423,7 +3423,7 @@ ImpressionsWrapper.defaultProps = {
 var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/components/ModalOverlay/ModalOverlay.jsx
+// CONCATENATED MODULE: ./content-src/asrouter/components/ModalOverlay/ModalOverlay.jsx
 
 
 class ModalOverlay_ModalOverlay extends external__React__default.a.PureComponent {
@@ -3470,7 +3470,7 @@ class ModalOverlay_ModalOverlay extends external__React__default.a.PureComponent
     );
   }
 }
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/templates/OnboardingMessage/OnboardingMessage.jsx
+// CONCATENATED MODULE: ./content-src/asrouter/templates/OnboardingMessage/OnboardingMessage.jsx
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -3562,7 +3562,7 @@ class OnboardingMessage_OnboardingMessage extends external__React__default.a.Pur
 var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/template-utils.js
+// CONCATENATED MODULE: ./content-src/asrouter/template-utils.js
 function safeURI(url) {
   if (!url) {
     return "";
@@ -3574,7 +3574,7 @@ function safeURI(url) {
   }
   return isAllowed ? url : "";
 }
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/components/Button/Button.jsx
+// CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
 
 
 
@@ -3603,7 +3603,7 @@ const Button = props => {
     props.children
   );
 };
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/components/SnippetBase/SnippetBase.jsx
+// CONCATENATED MODULE: ./content-src/asrouter/components/SnippetBase/SnippetBase.jsx
 
 
 class SnippetBase_SnippetBase extends external__React__default.a.PureComponent {
@@ -3634,7 +3634,7 @@ class SnippetBase_SnippetBase extends external__React__default.a.PureComponent {
     );
   }
 }
-// CONCATENATED MODULE: ./system-addon/content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx
+// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -5499,7 +5499,7 @@ const TopSites = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(st
 
 "use strict";
 
-// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
+// EXTERNAL MODULE: ./common/Actions.jsm
 var Actions = __webpack_require__(1);
 
 // EXTERNAL MODULE: external "ReactIntl"
@@ -5510,10 +5510,10 @@ var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__
 var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
-// EXTERNAL MODULE: ./system-addon/content-src/components/TopSites/TopSitesConstants.js
+// EXTERNAL MODULE: ./content-src/components/TopSites/TopSitesConstants.js
 var TopSitesConstants = __webpack_require__(5);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteFormInput.jsx
+// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteFormInput.jsx
 
 
 
@@ -5588,10 +5588,10 @@ TopSiteFormInput_TopSiteFormInput.defaultProps = {
   value: "",
   validationError: false
 };
-// EXTERNAL MODULE: ./system-addon/content-src/components/TopSites/TopSite.jsx
+// EXTERNAL MODULE: ./content-src/components/TopSites/TopSite.jsx
 var TopSite = __webpack_require__(18);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteForm.jsx
+// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteForm.jsx
 
 
 

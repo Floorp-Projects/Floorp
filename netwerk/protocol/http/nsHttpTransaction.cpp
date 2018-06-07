@@ -101,7 +101,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPriority(0)
     , mRestartCount(0)
     , mCaps(0)
-    , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
+    , mHttpVersion(HttpVersion::UNKNOWN)
     , mHttpResponseCode(0)
     , mCurrentHttpResponseHeaderSize(0)
     , mThrottlingReadAllowance(THROTTLE_NO_LIMIT)
@@ -536,7 +536,7 @@ nsHttpTransaction::OnActivated()
         return;
     }
 
-    if (mConnection && mRequestHead) {
+    if (mConnection && mRequestHead && mConnection->Version() >= HttpVersion::v2_0) {
         // So this is fun. On http/2, we want to send TE: Trailers, to be
         // spec-compliant. So we add it to the request head here. The fun part
         // is that adding a header to the request head at this point has no
@@ -545,16 +545,7 @@ nsHttpTransaction::OnActivated()
         // of the header happens in the h2 compression code. We still have to
         // add the header to the request head here, though, so that devtools can
         // show that we sent the header. FUN!
-        // Oh, and we can't just check for version >= NS_HTTP_VERSION_2_0 because
-        // right now, mConnection->Version() returns HTTP_VERSION_2 (=5) instead
-        // of NS_HTTP_VERSION_2_0 (=20) for... reasons.
-        bool isOldHttp = (mConnection->Version() == NS_HTTP_VERSION_0_9 ||
-                          mConnection->Version() == NS_HTTP_VERSION_1_0 ||
-                          mConnection->Version() == NS_HTTP_VERSION_1_1 ||
-                          mConnection->Version() == NS_HTTP_VERSION_UNKNOWN);
-        if (!isOldHttp) {
-            Unused << mRequestHead->SetHeader(nsHttp::TE, NS_LITERAL_CSTRING("Trailers"));
-        }
+        Unused << mRequestHead->SetHeader(nsHttp::TE, NS_LITERAL_CSTRING("Trailers"));
     }
 
     mActivated = true;
@@ -1152,7 +1143,7 @@ nsHttpTransaction::Close(nsresult reason)
         NS_WARNING("Partial transfer, incomplete HTTP response received");
 
         if ((mHttpResponseCode / 100 == 2) &&
-            (mHttpVersion >= NS_HTTP_VERSION_1_1)) {
+            (mHttpVersion >= HttpVersion::v1_1)) {
             FrameCheckLevel clevel = gHttpHandler->GetEnforceH1Framing();
             if (clevel >= FRAMECHECK_BARELY) {
                 if ((clevel == FRAMECHECK_STRICT) ||
@@ -1184,7 +1175,7 @@ nsHttpTransaction::Close(nsresult reason)
             uint32_t unused;
             Unused << ParseHead(&data, 1, &unused);
 
-            if (mResponseHead->Version() == NS_HTTP_VERSION_0_9) {
+            if (mResponseHead->Version() == HttpVersion::v0_9) {
                 // Reject 0 byte HTTP/0.9 Responses - bug 423506
                 LOG(("nsHttpTransaction::Close %p 0 Byte 0.9 Response", this));
                 reason = NS_ERROR_NET_RESET;
@@ -1403,7 +1394,7 @@ nsHttpTransaction::ParseLine(nsACString &line)
         mResponseHead->ParseStatusLine(line);
         mHaveStatusLine = true;
         // XXX this should probably never happen
-        if (mResponseHead->Version() == NS_HTTP_VERSION_0_9)
+        if (mResponseHead->Version() == HttpVersion::v0_9)
             mHaveAllHeaders = true;
     }
     else {
@@ -1675,7 +1666,7 @@ nsHttpTransaction::HandleContentStart()
             if ((mEarlyDataDisposition == EARLY_425) && !mDoNotTryEarlyData) {
                 mDoNotTryEarlyData = true;
                 mForceRestart = true; // force restart has built in loop protection
-                if (mConnection->Version() == HTTP_VERSION_2) {
+                if (mConnection->Version() == HttpVersion::v2_0) {
                     mReuseOnRestart = true;
                 }
                 return NS_ERROR_NET_RESET;
@@ -1700,7 +1691,7 @@ nsHttpTransaction::HandleContentStart()
             // we're done with the socket.  please note that _all_ other
             // decoding is done when the channel receives the content data
             // so as not to block the socket transport thread too much.
-            if (mResponseHead->Version() >= NS_HTTP_VERSION_1_0 &&
+            if (mResponseHead->Version() >= HttpVersion::v1_0 &&
                 mResponseHead->HasHeaderValue(nsHttp::Transfer_Encoding, "chunked")) {
                 // we only support the "chunked" transfer encoding right now.
                 mChunkedDecoder = new nsHttpChunkedDecoder();
@@ -1759,7 +1750,7 @@ nsHttpTransaction::HandleContent(char *buf,
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent() || mPreserveStream ||
-            mHttpVersion >= NS_HTTP_VERSION_1_1) {
+            mHttpVersion >= HttpVersion::v1_1) {
             int64_t remaining = mContentLength - mContentRead;
             *contentRead = uint32_t(std::min<int64_t>(count, remaining));
             *contentRemaining = count - *contentRead;

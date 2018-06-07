@@ -174,8 +174,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         // Set up Robotium.solo and Driver objects
         Activity tempActivity = getActivity();
 
-        StringHelper.initialize(tempActivity.getResources());
-        mStringHelper = StringHelper.get();
+        mStringHelper = StringHelper.initialize(tempActivity.getResources());
 
         mSolo = new Solo(getInstrumentation(), tempActivity);
         mDriver = new FennecNativeDriver(tempActivity, mSolo, mRootPath);

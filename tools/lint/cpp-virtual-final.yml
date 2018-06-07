@@ -6,6 +6,7 @@ cpp-virtual-final:
     include: ['.']
     exclude:
         # Third-party code with cpp-virtual-final warnings:
+        - '**/node_modules'
         - gfx/angle
         - gfx/skia
         - media/webrtc/trunk
