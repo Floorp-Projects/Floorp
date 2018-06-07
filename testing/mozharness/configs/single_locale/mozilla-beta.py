@@ -3,7 +3,6 @@ import os
 config = {
     "nightly_build": True,
     "branch": "mozilla-beta",
-    "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-beta/",
     "update_channel": "beta",
 
     # l10n
