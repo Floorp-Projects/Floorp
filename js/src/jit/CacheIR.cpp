@@ -772,12 +772,17 @@ ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
         bool guardProto = obj->hasUncacheableProto();
 
         obj = obj->staticPrototype();
-        if (!obj)
+        if (!obj && !guardProto)
             return;
 
         objId = writer.loadProto(objId);
+
         if (guardProto)
             writer.guardSpecificObject(objId, obj);
+
+        if (!obj)
+            return;
+
         writer.guardShape(objId, obj->as<NativeObject>().shape());
     }
 }
@@ -1114,7 +1119,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
 
-    // Enter compartment of target since some checks have side-effects
+    // Enter realm of target since some checks have side-effects
     // such as de-lazifying type info.
     {
         AutoRealm ar(cx_, unwrapped);
