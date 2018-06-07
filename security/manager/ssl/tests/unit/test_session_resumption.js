@@ -44,6 +44,8 @@ function add_resume_non_ev_with_override_test() {
       let sslStatus = transportSecurityInfo
                         .QueryInterface(Ci.nsISSLStatusProvider)
                         .SSLStatus;
+      ok(!sslStatus.succeededCertChain,
+         "ev-test.example.com should not have succeededCertChain set");
       ok(!sslStatus.isDomainMismatch,
          "expired.example.com should not have isDomainMismatch set");
       ok(sslStatus.isNotValidAtThisTime,
@@ -69,6 +71,8 @@ function add_one_ev_test() {
       let sslStatus = transportSecurityInfo
                         .QueryInterface(Ci.nsISSLStatusProvider)
                         .SSLStatus;
+      ok(sslStatus.succeededCertChain,
+         "ev-test.example.com should have succeededCertChain set");
       ok(!sslStatus.isDomainMismatch,
          "ev-test.example.com should not have isDomainMismatch set");
       ok(!sslStatus.isNotValidAtThisTime,
@@ -92,10 +96,16 @@ function add_resume_ev_test() {
                                          : [ "ev-test" ];
   let responseTypes = gEVExpected ? [ "good", "good" ] : [ "good" ];
   // Since we cache OCSP responses, we only ever actually serve one set.
-  let ocspResponder = startOCSPResponder(SERVER_PORT, "localhost", "bad_certs",
-                                         expectedRequestPaths,
-                                         expectedRequestPaths.slice(),
-                                         null, responseTypes);
+  let ocspResponder;
+  // If we don't wrap this in an `add_test`, the OCSP responder will be running
+  // while we are actually running unrelated testcases, which can disrupt them.
+  add_test(() => {
+    ocspResponder = startOCSPResponder(SERVER_PORT, "localhost", "bad_certs",
+                                       expectedRequestPaths,
+                                       expectedRequestPaths.slice(),
+                                       null, responseTypes);
+    run_next_test();
+  });
   // We should be able to connect and verify the certificate as EV (in debug
   // builds).
   add_one_ev_test();
@@ -109,9 +119,46 @@ function add_resume_ev_test() {
   });
 }
 
+const GOOD_DOMAIN = "good.include-subdomains.pinning.example.com";
+
+// Helper function that adds a test that connects to a domain that should
+// succeed (but isn't EV) and verifies that its succeededCertChain gets set
+// appropriately.
+function add_one_non_ev_test() {
+  add_connection_test(GOOD_DOMAIN, PRErrorCodeSuccess, null,
+    (transportSecurityInfo) => {
+      ok(!(transportSecurityInfo.securityState &
+           Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN),
+         `${GOOD_DOMAIN} should not have STATE_CERT_USER_OVERRIDDEN flag`);
+      let sslStatus = transportSecurityInfo
+                        .QueryInterface(Ci.nsISSLStatusProvider)
+                        .SSLStatus;
+      ok(sslStatus.succeededCertChain,
+         `${GOOD_DOMAIN} should have succeededCertChain set`);
+      ok(!sslStatus.isDomainMismatch,
+         `${GOOD_DOMAIN} should not have isDomainMismatch set`);
+      ok(!sslStatus.isNotValidAtThisTime,
+         `${GOOD_DOMAIN} should not have isNotValidAtThisTime set`);
+      ok(!sslStatus.isUntrusted,
+         `${GOOD_DOMAIN} should not have isUntrusted set`);
+      ok(!sslStatus.isExtendedValidation,
+         `${GOOD_DOMAIN} should not have isExtendedValidation set`);
+    }
+  );
+}
+
+// This test is similar, except with non-extended validation. We should connect
+// successfully, and the certificate should not be EV. Without clearing the
+// session cache, we should connect successfully again, this time with session
+// resumption. In this case, though, we want to ensure the succeededCertChain is
+// set.
+function add_resume_non_ev_test() {
+  add_one_non_ev_test();
+  add_one_non_ev_test();
+}
+
 const statsPtr = getSSLStatistics();
 const toInt32 = ctypes.Int64.lo;
-const GOOD_DOMAIN = "good.include-subdomains.pinning.example.com";
 
 // Connect to the same domain with two origin attributes and check if any ssl
 // session is resumed.
@@ -146,8 +193,9 @@ function add_origin_attributes_test(originAttributes1, originAttributes2,
 
 function run_test() {
   add_tls_server_setup("BadCertServer", "bad_certs");
-  add_resume_non_ev_with_override_test();
   add_resume_ev_test();
+  add_resume_non_ev_test();
+  add_resume_non_ev_with_override_test();
   add_origin_attributes_test({}, {}, true);
   add_origin_attributes_test({ userContextId: 1 }, { userContextId: 2 }, false);
   add_origin_attributes_test({ userContextId: 3 }, { userContextId: 3 }, true);
