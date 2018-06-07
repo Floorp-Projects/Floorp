@@ -2229,6 +2229,7 @@ pref("network.proxy.autoconfig_url.include_path", false);
 // until we reach interval_max or the PAC file is successfully loaded).
 pref("network.proxy.autoconfig_retry_interval_min", 5);    // 5 seconds
 pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
+pref("network.proxy.enable_wpad_over_dhcp", true);
 
 // Use the HSTS preload list by default
 pref("network.stricttransportsecurity.preloadlist", true);
