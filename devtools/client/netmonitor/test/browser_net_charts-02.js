@@ -44,7 +44,7 @@ add_task(async function() {
     "The first slice should be the largest one.");
   ok(slices[0].hasAttribute("smallest"),
     "The first slice should also be the smallest one.");
-  ok(slices[0].getAttribute("name"), L10N.getStr("pieChart.loading"),
+  is(slices[0].getAttribute("name"), L10N.getStr("pieChart.loading"),
     "The first slice's name is correct.");
 
   is(labels.length, 1, "There should be 1 pie chart label created.");
