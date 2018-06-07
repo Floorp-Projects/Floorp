@@ -94,6 +94,13 @@ var LoginManagerParent = {
                           data.oldPasswordField,
                           msg.objects.openerTopWindow,
                           msg.target);
+
+        const flow_id = msg.target.ownerGlobal.gBrowser.getTabForBrowser(msg.target).linkedPanel;
+        Services.telemetry.recordEvent("savant", "login_form", "submit", null,
+                                      {
+                                        subcategory: "encounter",
+                                        flow_id,
+                                      });
         break;
       }
 
@@ -119,6 +126,18 @@ var LoginManagerParent = {
                                       {
                                         subcategory: "feature",
                                         flow_id,
+                                      });
+        break;
+      }
+
+      case "LoginStats:LoginEncountered": {
+        const canRecordSubmit = (!data.isPrivateWindow && data.isPwmgrEnabled).toString();
+        const flow_id = msg.target.ownerGlobal.gBrowser.getTabForBrowser(msg.target).linkedPanel;
+        Services.telemetry.recordEvent("savant", "login_form", "load", null,
+                                      {
+                                        subcategory: "encounter",
+                                        flow_id,
+                                        canRecordSubmit,
                                       });
         break;
       }

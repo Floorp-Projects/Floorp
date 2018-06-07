@@ -230,6 +230,7 @@ const listeners = {
     "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
     // For Savant Shield study, bug 1465685. Study on desktop only.
     "LoginStats:LoginFillSuccessful": ["LoginManagerParent"],
+    "LoginStats:LoginEncountered": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "WCCR:registerProtocolHandler": ["Feeds"],
     "WCCR:registerContentHandler": ["Feeds"],
