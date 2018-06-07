@@ -12,6 +12,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ConsoleAPI",
                                "resource://gre/modules/Console.jsm");
+ChromeUtils.defineModuleGetter(this, "setTimeout",
+                               "resource://gre/modules/Timer.jsm");
 
 function getConsole() {
   return new ConsoleAPI({
@@ -46,6 +48,9 @@ function getUniqueId() {
   return processIDMask + nextId++;
 }
 
+function promiseTimeout(delay) {
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
 
 /**
  * An Error subclass for which complete error messages are always passed
@@ -689,6 +694,7 @@ var ExtensionUtils = {
   promiseDocumentReady,
   promiseEvent,
   promiseObserved,
+  promiseTimeout,
   runSafeSyncWithoutClone,
   withHandlingUserInput,
   DefaultMap,

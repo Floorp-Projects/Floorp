@@ -175,7 +175,7 @@ public:
 
 private:
   const char* const mLogName;
-  CorruptionCanary mCanary;
+  const CorruptionCanaryForStatics mCanary;
   Atomic<LogModule*, ReleaseAcquire> mLog;
 };
 

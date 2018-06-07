@@ -213,10 +213,10 @@ add_task(async function() {
   async function testSide() {
     await restartNetMonitorAndSetupEnv();
 
-    info("Moving toolbox to the side...");
+    info("Moving toolbox to the right...");
 
-    await monitor.toolbox.switchHost("side");
-    info("Testing prefs reload for a side host.");
+    await monitor.toolbox.switchHost("right");
+    info("Testing prefs reload for a right host.");
     storeFirstPrefValues();
 
     // Validate and modify frontend while toolbox is on the side.

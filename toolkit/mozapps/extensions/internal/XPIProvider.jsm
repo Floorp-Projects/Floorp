@@ -106,7 +106,7 @@ const XPI_PERMISSION                  = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-const DB_SCHEMA = 26;
+const DB_SCHEMA = 27;
 
 const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
@@ -381,6 +381,7 @@ const JSON_FIELDS = Object.freeze([
   "lastModifiedTime",
   "path",
   "runInSafeMode",
+  "signedState",
   "startupData",
   "telemetryKey",
   "type",
@@ -455,19 +456,19 @@ class XPIState {
    */
   toJSON() {
     let json = {
+      dependencies: this.dependencies,
       enabled: this.enabled,
+      hasEmbeddedWebExtension: this.hasEmbeddedWebExtension,
       lastModifiedTime: this.lastModifiedTime,
       path: this.relativePath,
-      version: this.version,
+      runInSafeMode: this.runInSafeMode,
+      signedState: this.signedState,
       telemetryKey: this.telemetryKey,
+      version: this.version,
     };
     if (this.type != "extension") {
       json.type = this.type;
     }
-    json.dependencies = this.dependencies;
-    json.runInSafeMode = this.runInSafeMode;
-    json.hasEmbeddedWebExtension = this.hasEmbeddedWebExtension;
-
     if (this.startupData) {
       json.startupData = this.startupData;
     }
@@ -540,6 +541,7 @@ class XPIState {
     this.hasEmbeddedWebExtension = aDBAddon.hasEmbeddedWebExtension;
     this.dependencies = aDBAddon.dependencies;
     this.runInSafeMode = canRunInSafeMode(aDBAddon);
+    this.signedState = aDBAddon.signedState;
 
     if (aUpdated || mustGetMod) {
       this.getModTime(this.file);

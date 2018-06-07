@@ -3066,7 +3066,6 @@ html .breakpoints-list .breakpoint.paused {
   color: var(--theme-comment);
   min-width: 16px;
   text-align: right;
-  margin-top: -1px;
 }
 
 html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
@@ -3089,7 +3088,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   flex-grow: 1;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-top: 3px;
+  padding-top: 2px;
   font-size: 11px;
 }
 

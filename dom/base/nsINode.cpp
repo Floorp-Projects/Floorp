@@ -1233,6 +1233,14 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
          cb.NoteXPCOMChild(objects->ObjectAt(i));
       }
     }
+
+#ifdef ACCESSIBILITY
+    AccessibleNode* anode =
+      static_cast<AccessibleNode*>(tmp->GetProperty(nsGkAtoms::accessiblenode));
+    if (anode) {
+      cb.NoteXPCOMChild(anode);
+    }
+#endif
   }
 
   if (tmp->NodeType() != DOCUMENT_NODE &&
@@ -1262,6 +1270,7 @@ nsINode::Unlink(nsINode* tmp)
 
   if (tmp->HasProperties()) {
     tmp->DeleteProperty(nsGkAtoms::keepobjectsalive);
+    tmp->DeleteProperty(nsGkAtoms::accessiblenode);
   }
 }
 
@@ -2297,7 +2306,20 @@ already_AddRefed<AccessibleNode>
 nsINode::GetAccessibleNode()
 {
 #ifdef ACCESSIBILITY
-  RefPtr<AccessibleNode> anode = new AccessibleNode(this);
+  nsresult rv = NS_OK;
+
+  RefPtr<AccessibleNode> anode =
+    static_cast<AccessibleNode*>(GetProperty(nsGkAtoms::accessiblenode, &rv));
+  if (NS_FAILED(rv)) {
+    anode = new AccessibleNode(this);
+    RefPtr<AccessibleNode> temp = anode;
+    rv = SetProperty(nsGkAtoms::accessiblenode, temp.forget().take(),
+                     nsPropertyTable::SupportsDtorFunc, true);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SetProperty failed");
+      return nullptr;
+    }
+  }
   return anode.forget();
 #else
   return nullptr;

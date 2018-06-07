@@ -9,7 +9,7 @@ pref("devtools.webide.enabled", true);
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);
 pref("devtools.toolbox.host", "bottom");
-pref("devtools.toolbox.previousHost", "side");
+pref("devtools.toolbox.previousHost", "right");
 pref("devtools.toolbox.selectedTool", "webconsole");
 pref("devtools.toolbox.sideEnabled", true);
 pref("devtools.toolbox.zoomValue", "1");

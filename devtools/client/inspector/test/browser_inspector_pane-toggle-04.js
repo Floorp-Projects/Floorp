@@ -14,8 +14,8 @@ add_task(async function() {
   const { inspector, toolbox } = await openInspectorForURL("about:blank");
   const { panelDoc: doc } = inspector;
 
-  info("Switch the host to side type");
-  await toolbox.switchHost("side");
+  info("Switch the host to the right");
+  await toolbox.switchHost("right");
 
   const button = doc.querySelector(".sidebar-toggle");
   const toolboxWidth = doc.getElementById("inspector-splitter-box").clientWidth;

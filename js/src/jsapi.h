@@ -309,15 +309,11 @@ struct JSWrapObjectCallbacks
 };
 
 typedef void
-(* JSDestroyCompartmentCallback)(JSFreeOp* fop, JSCompartment* compartment);
+(* JSDestroyCompartmentCallback)(JSFreeOp* fop, JS::Compartment* compartment);
 
 typedef size_t
 (* JSSizeOfIncludingThisCompartmentCallback)(mozilla::MallocSizeOf mallocSizeOf,
-                                             JSCompartment* compartment);
-
-typedef void
-(* JSCompartmentNameCallback)(JSContext* cx, JSCompartment* compartment,
-                              char* buf, size_t bufsize);
+                                             JS::Compartment* compartment);
 
 /**
  * Callback used by memory reporting to ask the embedder how much memory an
@@ -997,10 +993,10 @@ JS_GetErrorType(const JS::Value& val);
 #endif // defined(NIGHTLY_BUILD)
 
 extern JS_PUBLIC_API(void)
-JS_SetCompartmentPrivate(JSCompartment* compartment, void* data);
+JS_SetCompartmentPrivate(JS::Compartment* compartment, void* data);
 
 extern JS_PUBLIC_API(void*)
-JS_GetCompartmentPrivate(JSCompartment* compartment);
+JS_GetCompartmentPrivate(JS::Compartment* compartment);
 
 extern JS_PUBLIC_API(void)
 JS_SetZoneUserData(JS::Zone* zone, void* data);
@@ -1109,12 +1105,12 @@ IterateRealms(JSContext* cx, void* data, IterateRealmCallback realmCallback);
  * Like IterateRealms, but only iterates realms in |compartment|.
  */
 extern JS_PUBLIC_API(void)
-IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+IterateRealmsInCompartment(JSContext* cx, JS::Compartment* compartment, void* data,
                            IterateRealmCallback realmCallback);
 
 } // namespace JS
 
-typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
+typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JS::Compartment* compartment);
 
 /**
  * This function calls |compartmentCallback| on every compartment. Beware that
@@ -1716,17 +1712,20 @@ JS_GetConstructor(JSContext* cx, JS::Handle<JSObject*> proto);
 
 namespace JS {
 
-// Specification for which zone a newly created compartment should use.
-enum ZoneSpecifier {
-    // Use the single runtime wide system zone. The meaning of this zone is
-    // left to the embedder.
-    SystemZone,
+// Specification for which compartment/zone a newly created realm should use.
+enum class CompartmentSpecifier {
+    // Create a new realm and compartment in the single runtime wide system
+    // zone. The meaning of this zone is left to the embedder.
+    NewCompartmentInSystemZone,
 
-    // Use a particular existing zone.
-    ExistingZone,
+    // Create a new realm and compartment in a particular existing zone.
+    NewCompartmentInExistingZone,
 
-    // Create a new zone.
-    NewZone
+    // Create a new zone/compartment.
+    NewCompartmentAndZone,
+
+    // Create a new realm in an existing compartment.
+    ExistingCompartment,
 };
 
 /**
@@ -1742,8 +1741,8 @@ class JS_PUBLIC_API(RealmCreationOptions)
   public:
     RealmCreationOptions()
       : traceGlobal_(nullptr),
-        zoneSpec_(NewZone),
-        zone_(nullptr),
+        compSpec_(CompartmentSpecifier::NewCompartmentAndZone),
+        comp_(nullptr),
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
@@ -1761,13 +1760,21 @@ class JS_PUBLIC_API(RealmCreationOptions)
         return *this;
     }
 
-    JS::Zone* zone() const { return zone_; }
-    ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
+    JS::Zone* zone() const {
+        MOZ_ASSERT(compSpec_ == CompartmentSpecifier::NewCompartmentInExistingZone);
+        return zone_;
+    }
+    JS::Compartment* compartment() const {
+        MOZ_ASSERT(compSpec_ == CompartmentSpecifier::ExistingCompartment);
+        return comp_;
+    }
+    CompartmentSpecifier compartmentSpecifier() const { return compSpec_; }
 
-    // Set the zone to use for the realm. See ZoneSpecifier above.
-    RealmCreationOptions& setSystemZone();
-    RealmCreationOptions& setExistingZone(JSObject* obj);
-    RealmCreationOptions& setNewZone();
+    // Set the compartment/zone to use for the realm. See CompartmentSpecifier above.
+    RealmCreationOptions& setNewCompartmentInSystemZone();
+    RealmCreationOptions& setNewCompartmentInExistingZone(JSObject* obj);
+    RealmCreationOptions& setNewCompartmentAndZone();
+    RealmCreationOptions& setExistingCompartment(JSObject* obj);
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
@@ -1824,8 +1831,11 @@ class JS_PUBLIC_API(RealmCreationOptions)
 
   private:
     JSTraceOp traceGlobal_;
-    ZoneSpecifier zoneSpec_;
-    JS::Zone* zone_;
+    CompartmentSpecifier compSpec_;
+    union {
+        JS::Compartment* comp_;
+        JS::Zone* zone_;
+    };
     bool invisibleToDebugger_;
     bool mergeable_;
     bool preserveJitCode_;

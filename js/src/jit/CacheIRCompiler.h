@@ -73,7 +73,6 @@ namespace jit {
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
     _(LoadObjectTruthyResult)             \
-    _(CompareStringResult)                \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
     _(ArrayJoinResult)                    \
@@ -728,9 +727,9 @@ class MOZ_RAII CacheIRCompiler
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
         return (ObjectGroup*)readStubWord(offset, StubField::Type::ObjectGroup);
     }
-    JSCompartment* compartmentStubField(uint32_t offset) {
+    JS::Compartment* compartmentStubField(uint32_t offset) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
-        return (JSCompartment*)readStubWord(offset, StubField::Type::RawWord);
+        return (JS::Compartment*)readStubWord(offset, StubField::Type::RawWord);
     }
     const Class* classStubField(uintptr_t offset) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

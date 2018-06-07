@@ -16,7 +16,7 @@ config = {
         }
         ] """,
     "emulator_process_name": "emulator64-x86",
-    "emulator_extra_args": "-gpu swiftshader -skip-adb-auth -verbose -show-kernel -use-system-libs -ranchu -selinux permissive -memory 3072 -cores 4",
+    "emulator_extra_args": "-gpu swiftshader_indirect -skip-adb-auth -verbose -show-kernel -use-system-libs -ranchu -selinux permissive -memory 3072 -cores 4",
     "exes": {
         'adb': '%(abs_work_dir)s/android-sdk-linux/platform-tools/adb',
     },

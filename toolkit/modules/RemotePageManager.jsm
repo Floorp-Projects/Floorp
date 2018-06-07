@@ -6,8 +6,80 @@
 
 var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager", "PageListener"];
 
+/*
+ * Using the RemotePageManager:
+ * * Create a new page listener by calling 'new RemotePages(URI)' which
+ *   then injects functions like RPMGetBoolPref() into the registered page.
+ *   One can then use those exported functions to communicate between
+ *   child and parent.
+ *
+ * * When adding a new consumer of RPM that relies on other functionality
+ *   then simple message passing provided by the RPM, then one has to
+ *   whitelist permissions for the new URI within the RPMAccessManager.
+ *
+ * Please note that prefs that one wants to update need to be whitelisted
+ * within AsyncPrefs.jsm.
+ */
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "AsyncPrefs",
+  "resource://gre/modules/AsyncPrefs.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+/*
+ * Used for all kinds of permissions checks which requires explicit
+ * whitelisting of specific permissions granted through RPM.
+ */
+let RPMAccessManager = {
+  accessMap: {
+    "about:privatebrowsing": {
+      // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
+      // "setBoolPref": handled within AsyncPrefs.jsm and uses the pref
+      //                ["privacy.trackingprotection.pbmode.enabled"],
+      "getBoolPref": ["privacy.trackingprotection.enabled",
+                      "privacy.trackingprotection.pbmode.enabled"],
+      "getFormatURLPref": ["privacy.trackingprotection.introURL",
+                           "app.support.baseURL"],
+      "isWindowPrivate": ["yes"],
+    },
+  },
+
+  checkAllowAccess(aPrincipal, aFeature, aValue) {
+    // if there is no content principal; deny access
+    if (!aPrincipal || !aPrincipal.URI) {
+      return false;
+    }
+    let uri = aPrincipal.URI.asciiSpec;
+
+    // check if there is an entry for that requestying URI in the accessMap;
+    // if not, deny access.
+    let accessMapForURI = this.accessMap[uri];
+    if (!accessMapForURI) {
+      Cu.reportError("RPMAccessManager does not allow access to Feature: " + aFeature + " for: " + uri);
+      return false;
+    }
+
+    // check if the feature is allowed to be accessed for that URI;
+    // if not, deny access.
+    let accessMapForFeature = accessMapForURI[aFeature];
+    if (!accessMapForFeature) {
+      Cu.reportError("RPMAccessManager does not allow access to Feature: " + aFeature + " for: " + uri);
+      return false;
+    }
+
+    // if the actual value is in the whitelist for that feature;
+    // allow access
+    if (accessMapForFeature.includes(aValue)) {
+      return true;
+    }
+
+    // otherwise deny access
+    Cu.reportError("RPMAccessManager does not allow access to Feature: " + aFeature + " for: " + uri);
+    return false;
+  },
+};
 
 function MessageListener() {
   this.listeners = new Map();
@@ -304,6 +376,38 @@ MessagePort.prototype = {
     this.portID = null;
     this.listener = null;
   },
+
+  getBoolPref(aPref) {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getBoolPref", aPref)) {
+      throw new Error("RPMAccessManager does not allow access to getBoolPref");
+    }
+    return Services.prefs.getBoolPref(aPref);
+  },
+
+  setBoolPref(aPref, aVal) {
+    return new this.window.Promise(function(resolve) {
+      AsyncPrefs.set(aPref, aVal).then(function() {
+        resolve();
+      });
+    });
+  },
+
+  getFormatURLPref(aFormatURL) {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getFormatURLPref", aFormatURL)) {
+      throw new Error("RPMAccessManager does not allow access to getFormatURLPref");
+    }
+    return Services.urlFormatter.formatURLPref(aFormatURL);
+  },
+
+  isWindowPrivate() {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "isWindowPrivate", "yes")) {
+      throw new Error("RPMAccessManager does not allow access to isWindowPrivate");
+    }
+    return PrivateBrowsingUtils.isContentWindowPrivate(this.window);
+  },
 };
 
 
@@ -417,6 +521,18 @@ function ChildMessagePort(contentFrame, window) {
   Cu.exportFunction(this.removeMessageListener.bind(this), window, {
     defineAs: "removeMessageListener",
     allowCallbacks: true,
+  });
+  Cu.exportFunction(this.getBoolPref.bind(this), window, {
+    defineAs: "RPMGetBoolPref",
+  });
+  Cu.exportFunction(this.setBoolPref.bind(this), window, {
+    defineAs: "RPMSetBoolPref",
+  });
+  Cu.exportFunction(this.getFormatURLPref.bind(this), window, {
+    defineAs: "RPMGetFormatURLPref",
+  });
+  Cu.exportFunction(this.isWindowPrivate.bind(this), window, {
+    defineAs: "RPMIsWindowPrivate",
   });
 
   // Send a message for load events

@@ -188,11 +188,11 @@ class CrossCompartmentKey
         return wrapped.match(matcher);
     }
 
-    JSCompartment* compartment() {
+    JS::Compartment* compartment() {
         struct GetCompartmentFunctor {
-            JSCompartment* operator()(JSObject** tp) const { return (*tp)->compartment(); }
-            JSCompartment* operator()(JSScript** tp) const { return (*tp)->compartment(); }
-            JSCompartment* operator()(JSString** tp) const { return nullptr; }
+            JS::Compartment* operator()(JSObject** tp) const { return (*tp)->compartment(); }
+            JS::Compartment* operator()(JSScript** tp) const { return (*tp)->compartment(); }
+            JS::Compartment* operator()(JSString** tp) const { return nullptr; }
         };
         return applyToWrapped(GetCompartmentFunctor());
     }
@@ -250,9 +250,9 @@ class WrapperMap
                                          JS::Value,
                                          CrossCompartmentKey::Hasher,
                                          SystemAllocPolicy>;
-    using OuterMap = GCHashMap<JSCompartment*,
+    using OuterMap = GCHashMap<JS::Compartment*,
                                InnerMap,
-                               DefaultHasher<JSCompartment*>,
+                               DefaultHasher<JS::Compartment*>,
                                SystemAllocPolicy>;
 
     OuterMap map;
@@ -274,7 +274,7 @@ class WrapperMap
             if (outer.isNothing())
                 return;
             for (; !outer->empty(); outer->popFront()) {
-                JSCompartment* c = outer->front().key();
+                JS::Compartment* c = outer->front().key();
                 // Need to skip string at first, because the filter may not be
                 // happy with a nullptr.
                 if (!c && skipStrings)
@@ -310,7 +310,7 @@ class WrapperMap
             goToNext();
         }
 
-        Enum(WrapperMap& m, JSCompartment* target) {
+        Enum(WrapperMap& m, JS::Compartment* target) {
             // Leave the outer map as nothing and only iterate the inner map we
             // find here.
             auto p = m.map.lookup(target);
@@ -382,7 +382,7 @@ class WrapperMap
     }
 
     MOZ_MUST_USE bool put(const CrossCompartmentKey& k, const JS::Value& v) {
-        JSCompartment* c = const_cast<CrossCompartmentKey&>(k).compartment();
+        JS::Compartment* c = const_cast<CrossCompartmentKey&>(k).compartment();
         MOZ_ASSERT(k.is<JSString*>() == !c);
         auto p = map.lookupForAdd(c);
         if (!p) {
@@ -408,7 +408,7 @@ class WrapperMap
 
     bool hasNurseryAllocatedWrapperEntries(const CompartmentFilter& f) {
         for (OuterMap::Enum e(map); !e.empty(); e.popFront()) {
-            JSCompartment* c = e.front().key();
+            JS::Compartment* c = e.front().key();
             if (c && !f.match(c))
                 continue;
             InnerMap& m = e.front().value();
@@ -550,9 +550,8 @@ class ObjectWeakMap;
 class WeakMapBase;
 } // namespace js
 
-struct JSCompartment
+class JS::Compartment
 {
-  private:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 
@@ -573,12 +572,23 @@ struct JSCompartment
 
     void* data = nullptr;
 
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC. Note that these flags have to be on the
-    // compartment, not the realm, because same-compartment realms can have
-    // cross-realm pointers without wrappers.
-    bool scheduledForDestruction = false;
-    bool maybeAlive = true;
+    // Fields set and used by the GC. Be careful, may be stale after we return
+    // to the mutator.
+    struct {
+        // These flags help us to discover if a compartment that shouldn't be
+        // alive manages to outlive a GC. Note that these flags have to be on
+        // the compartment, not the realm, because same-compartment realms can
+        // have cross-realm pointers without wrappers.
+        bool scheduledForDestruction = false;
+        bool maybeAlive = true;
+
+        // During GC, we may set this to |true| if we entered a realm in this
+        // compartment. Note that (without a stack walk) we don't know exactly
+        // *which* realms, because Realm::enterRealmDepthIgnoringJit_ does not
+        // account for cross-Realm calls in JIT code updating cx->realm_. See
+        // also the enterRealmDepthIgnoringJit_ comment.
+        bool hasEnteredRealm = false;
+    } gcState;
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
@@ -616,7 +626,7 @@ struct JSCompartment
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
 
   public:
-    explicit JSCompartment(JS::Zone* zone);
+    explicit Compartment(JS::Zone* zone);
 
     MOZ_MUST_USE bool init(JSContext* cx);
     void destroy(js::FreeOp* fop);
@@ -652,17 +662,29 @@ struct JSCompartment
     }
 
     struct WrapperEnum : public js::WrapperMap::Enum {
-        explicit WrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
+        explicit WrapperEnum(JS::Compartment* c)
+          : js::WrapperMap::Enum(c->crossCompartmentWrappers)
+        {}
     };
 
     struct NonStringWrapperEnum : public js::WrapperMap::Enum {
-        explicit NonStringWrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers, WithoutStrings) {}
-        explicit NonStringWrapperEnum(JSCompartment* c, const js::CompartmentFilter& f) : js::WrapperMap::Enum(c->crossCompartmentWrappers, f, WithoutStrings) {}
-        explicit NonStringWrapperEnum(JSCompartment* c, JSCompartment* target) : js::WrapperMap::Enum(c->crossCompartmentWrappers, target) { MOZ_ASSERT(target); }
+        explicit NonStringWrapperEnum(JS::Compartment* c)
+          : js::WrapperMap::Enum(c->crossCompartmentWrappers, WithoutStrings)
+        {}
+        explicit NonStringWrapperEnum(JS::Compartment* c, const js::CompartmentFilter& f)
+          : js::WrapperMap::Enum(c->crossCompartmentWrappers, f, WithoutStrings)
+        {}
+        explicit NonStringWrapperEnum(JS::Compartment* c, JS::Compartment* target)
+          : js::WrapperMap::Enum(c->crossCompartmentWrappers, target)
+        {
+            MOZ_ASSERT(target);
+        }
     };
 
     struct StringWrapperEnum : public js::WrapperMap::Enum {
-        explicit StringWrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers, nullptr) {}
+        explicit StringWrapperEnum(JS::Compartment* c)
+          : js::WrapperMap::Enum(c->crossCompartmentWrappers, nullptr)
+        {}
     };
 
     /*
@@ -815,7 +837,21 @@ class JS::Realm : public JS::shadow::Realm
     js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
 
-    unsigned enterRealmDepth_ = 0;
+    // There are two ways to enter a realm:
+    //
+    // (1) AutoRealm (and JSAutoRealm, JS::EnterRealm)
+    // (2) When calling a cross-realm (but same-compartment) function in JIT
+    //     code.
+    //
+    // This field only accounts for (1), to keep the JIT code as simple as
+    // possible.
+    //
+    // An important invariant is that the JIT can only switch to a different
+    // realm within the same compartment, so whenever that happens there must
+    // always be a same-compartment realm with enterRealmDepthIgnoringJit_ > 0.
+    // This lets us set Compartment::hasEnteredRealm without walking the
+    // stack.
+    unsigned enterRealmDepthIgnoringJit_ = 0;
 
     enum {
         IsDebuggee = 1 << 0,
@@ -887,7 +923,7 @@ class JS::Realm : public JS::shadow::Realm
     void operator=(const Realm&) = delete;
 
   public:
-    Realm(JSCompartment* comp, const JS::RealmOptions& options);
+    Realm(JS::Compartment* comp, const JS::RealmOptions& options);
     ~Realm();
 
     MOZ_MUST_USE bool init(JSContext* cx);
@@ -1019,16 +1055,20 @@ class JS::Realm : public JS::shadow::Realm
     }
 
     void enter() {
-        enterRealmDepth_++;
+        enterRealmDepthIgnoringJit_++;
     }
     void leave() {
-        enterRealmDepth_--;
+        MOZ_ASSERT(enterRealmDepthIgnoringJit_ > 0);
+        enterRealmDepthIgnoringJit_--;
     }
-    bool hasBeenEntered() const {
-        return enterRealmDepth_ > 0;
+    bool hasBeenEnteredIgnoringJit() const {
+        return enterRealmDepthIgnoringJit_ > 0;
     }
     bool shouldTraceGlobal() const {
-        return hasBeenEntered();
+        // If we entered this realm in JIT code, there must be a script and
+        // function on the stack for this realm, so the global will definitely
+        // be traced and it's safe to return false here.
+        return hasBeenEnteredIgnoringJit();
     }
 
     bool hasAllocationMetadataBuilder() const {
@@ -1305,8 +1345,18 @@ namespace js {
 // scheduledForDestruction will be set on the compartment, which will cause
 // some extra GC activity to try to free the compartment.
 template<typename T> inline void SetMaybeAliveFlag(T* thing) {}
-template<> inline void SetMaybeAliveFlag(JSObject* thing) {thing->compartment()->maybeAlive = true;}
-template<> inline void SetMaybeAliveFlag(JSScript* thing) {thing->compartment()->maybeAlive = true;}
+
+template<> inline void
+SetMaybeAliveFlag(JSObject* thing)
+{
+    thing->compartment()->gcState.maybeAlive = true;
+}
+
+template<> inline void
+SetMaybeAliveFlag(JSScript* thing)
+{
+    thing->compartment()->gcState.maybeAlive = true;
+}
 
 } // namespace js
 

@@ -136,10 +136,10 @@ BEGIN_TEST(testTracingIncomingCCWs)
 END_TEST(testTracingIncomingCCWs)
 
 static size_t
-countWrappers(JSCompartment* comp)
+countWrappers(JS::Compartment* comp)
 {
     size_t count = 0;
-    for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront())
+    for (JS::Compartment::WrapperEnum e(comp); !e.empty(); e.popFront())
         ++count;
     return count;
 }
