@@ -99,6 +99,14 @@ js::SetFakeCPUCount(size_t count)
     HelperThreadState().threadCount = ThreadCountForCPUCount(count);
 }
 
+void
+JS::SetProfilingThreadCallbacks(JS::RegisterThreadCallback registerThread,
+                                JS::UnregisterThreadCallback unregisterThread)
+{
+    HelperThreadState().registerThread = registerThread;
+    HelperThreadState().unregisterThread = unregisterThread;
+}
+
 bool
 js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
 {
@@ -995,6 +1003,8 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
+   registerThread(nullptr),
+   unregisterThread(nullptr),
    wasmTier2GeneratorsFinished_(0),
    helperLock(mutexid::GlobalHelperThreadState)
 {
@@ -1864,6 +1874,32 @@ HelperThread::destroy()
     }
 }
 
+void
+HelperThread::ensureRegisteredWithProfiler()
+{
+    if (registered)
+        return;
+
+    JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
+    if (callback) {
+        callback("JS Helper", reinterpret_cast<void*>(GetNativeStackBase()));
+        registered = true;
+    }
+}
+
+void
+HelperThread::unregisterWithProfilerIfNeeded()
+{
+    if (!registered)
+        return;
+
+    JS::UnregisterThreadCallback callback = HelperThreadState().unregisterThread;
+    if (callback) {
+        callback();
+        registered = false;
+    }
+}
+
 /* static */
 void
 HelperThread::ThreadMain(void* arg)
@@ -2361,6 +2397,8 @@ HelperThread::threadLoop()
     JS::AutoSuppressGCAnalysis nogc;
     AutoLockHelperThreadState lock;
 
+    ensureRegisteredWithProfiler();
+
     JSContext cx(nullptr, JS::ContextOptions());
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -2389,6 +2427,8 @@ HelperThread::threadLoop()
         (this->*(task->handleWorkload))(lock);
         js::oom::SetThreadType(js::THREAD_TYPE_NONE);
     }
+
+    unregisterWithProfilerIfNeeded();
 }
 
 const HelperThread::TaskSpec*

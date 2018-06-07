@@ -104,6 +104,9 @@ class GlobalHelperThreadState
     using HelperThreadVector = Vector<HelperThread, 0, SystemAllocPolicy>;
     UniquePtr<HelperThreadVector> threads;
 
+    WriteOnceData<JS::RegisterThreadCallback> registerThread;
+    WriteOnceData<JS::UnregisterThreadCallback> unregisterThread;
+
   private:
     // The lists below are all protected by |lock|.
 
@@ -375,6 +378,12 @@ struct HelperThread
      */
     bool terminate;
 
+    /*
+     * Indicate that this thread has been registered and needs to be
+     * unregistered at shutdown.
+     */
+    bool registered;
+
     /* The current task being executed by this thread, if any. */
     mozilla::Maybe<HelperTaskUnion> currentTask;
 
@@ -420,6 +429,9 @@ struct HelperThread
 
     static void ThreadMain(void* arg);
     void threadLoop();
+
+    void ensureRegisteredWithProfiler();
+    void unregisterWithProfilerIfNeeded();
 
   private:
     struct TaskSpec
