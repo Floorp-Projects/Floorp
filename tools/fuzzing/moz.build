@@ -7,7 +7,6 @@
 DIRS += [
   'interface',
   'registry',
-  'ipc',
 ]
 
 if not CONFIG['JS_STANDALONE']:
