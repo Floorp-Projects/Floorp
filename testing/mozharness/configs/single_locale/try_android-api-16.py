@@ -2,15 +2,12 @@ import os
 
 BRANCH = "try"
 MOZILLA_DIR = BRANCH
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/" \
-                   "mobile/nightly/latest-mozilla-central-android-api-16/en-US"
 
 config = {
     "branch": "try",
     "log_name": "single_locale",
     "objdir": "obj-firefox",
     "is_automation": True,
-    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "tooltool_config": {
@@ -27,11 +24,9 @@ config = {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "MOZ_OBJDIR": "obj-firefox",
-        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
+        "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_UPDATE_CHANNEL": "try", # XXX Invalid
     },
-    "upload_branch": "%s-android-api-16" % BRANCH,
-    "platform": "android", # XXX Validate
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",
