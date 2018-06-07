@@ -149,6 +149,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private View stopButton;
 
     private View findInPageView;
+    private int findInPageViewHeight;
     private TextView findInPageQuery;
     private TextView findInPageResultTextView;
 
@@ -397,6 +398,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         } else {
             initialiseNormalBrowserUi(view);
         }
+
+        // Pre-calculate the height of the find in page UI so that we can accurately add padding
+        // to the WebView when we present it.
+        findInPageView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        findInPageViewHeight = findInPageView.getMeasuredHeight();
 
         return view;
     }
@@ -1313,8 +1319,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         findInPageView.setVisibility(View.VISIBLE);
         findInPageQuery.requestFocus();
 
-        final int height = findInPageView.getHeight();
-        swipeRefresh.setPadding(0, 0, 0, height);
+        swipeRefresh.setPadding(0, 0, 0, findInPageViewHeight);
     }
 
     private void hideFindInPage() {
@@ -1325,7 +1330,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         webView.clearMatches();
         findInPageCoordinator.reset();
-        findInPageView.setVisibility(View.INVISIBLE);
+        findInPageView.setVisibility(View.GONE);
         findInPageQuery.setText("");
         findInPageQuery.clearFocus();
         swipeRefresh.setPadding(0, 0, 0, 0);

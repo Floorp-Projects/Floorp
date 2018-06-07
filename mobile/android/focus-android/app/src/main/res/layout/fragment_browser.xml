@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:layout_gravity="bottom"
-                android:visibility="invisible"
+                android:visibility="gone"
                 app:layout_insetEdge="bottom"/>
         </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
     </LinearLayout>
