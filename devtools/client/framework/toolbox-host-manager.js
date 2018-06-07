@@ -158,10 +158,10 @@ ToolboxHostManager.prototype = {
       hostType = Services.prefs.getCharPref(PREVIOUS_HOST);
 
       // Handle the case where the previous host happens to match the current
-      // host. If so, switch to bottom if it's not already used, and side if not.
+      // host. If so, switch to bottom if it's not already used, and right side if not.
       if (hostType === this.hostType) {
         if (hostType === Toolbox.HostType.BOTTOM) {
-          hostType = Toolbox.HostType.SIDE;
+          hostType = Toolbox.HostType.RIGHT;
         } else {
           hostType = Toolbox.HostType.BOTTOM;
         }

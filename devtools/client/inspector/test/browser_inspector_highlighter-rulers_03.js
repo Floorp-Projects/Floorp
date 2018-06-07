@@ -58,5 +58,5 @@ async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
 async function resizeInspector(highlighterFront, inspector, testActor) {
   info("Docking the toolbox to the side of the browser to change the window size");
   const toolbox = inspector.toolbox;
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  await toolbox.switchHost(Toolbox.HostType.RIGHT);
 }

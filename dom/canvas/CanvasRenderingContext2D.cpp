@@ -2663,7 +2663,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                                            data,
                                            ParsingMode::Default,
                                            aDocument->GetCompatibilityMode(),
-                                           aDocument->CSSLoader());
+                                           aDocument->CSSLoader(),
+                                           { });
   }
 
   return servoDeclarations.forget();

@@ -118,7 +118,7 @@ TypeSet::ObjectKey::singleton()
     return res;
 }
 
-inline JSCompartment*
+inline JS::Compartment*
 TypeSet::ObjectKey::maybeCompartment()
 {
     if (isSingleton())
@@ -936,7 +936,7 @@ TypeSet::Type::trace(JSTracer* trc)
     }
 }
 
-inline JSCompartment*
+inline JS::Compartment*
 TypeSet::Type::maybeCompartment()
 {
     if (isSingletonUnchecked())

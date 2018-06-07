@@ -20,7 +20,7 @@ add_task(async function(pickerEnable, commandsEnable) {
   const tab = await addTab("about:blank");
 
   info("Open devtools on the Inspector in a side dock");
-  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.SIDE);
+  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.RIGHT);
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
 
   const menuPopup = await openChevronMenu(toolbox);

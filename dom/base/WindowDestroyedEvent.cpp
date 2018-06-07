@@ -15,7 +15,7 @@ namespace mozilla {
 // with principals that are either the system principal or an expanded principal.
 // This may not return true for all non-web-content compartments.
 struct BrowserCompartmentMatcher : public js::CompartmentFilter {
-  bool match(JSCompartment* aC) const override
+  bool match(JS::Compartment* aC) const override
   {
     nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(aC));
     return nsContentUtils::IsSystemOrExpandedPrincipal(pc);
@@ -111,7 +111,7 @@ WindowDestroyedEvent::Run()
         AutoSafeJSContext cx;
         JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
         if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
-          JSCompartment* cpt = js::GetObjectCompartment(obj);
+          JS::Compartment* cpt = js::GetObjectCompartment(obj);
           nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(cpt));
 
           if (BasePrincipal::Cast(pc)->AddonPolicy()) {

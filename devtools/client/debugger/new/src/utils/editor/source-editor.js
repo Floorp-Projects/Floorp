@@ -28,6 +28,8 @@ require("codemirror/mode/elm/elm/index");
 
 require("codemirror/mode/clojure/clojure/index");
 
+require("codemirror/mode/haxe/haxe/index");
+
 require("codemirror/addon/search/searchcursor/index");
 
 require("codemirror/addon/fold/foldcode/index");

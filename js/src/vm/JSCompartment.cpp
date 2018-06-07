@@ -41,7 +41,7 @@ using namespace js::jit;
 
 using mozilla::PodArrayZero;
 
-JSCompartment::JSCompartment(Zone* zone)
+Compartment::Compartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread())
 {}
@@ -55,7 +55,7 @@ ObjectRealm::~ObjectRealm()
     MOZ_ASSERT(enumerators == iteratorSentinel_.get());
 }
 
-Realm::Realm(JSCompartment* comp, const JS::RealmOptions& options)
+Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
   : JS::shadow::Realm(comp),
     zone_(comp->zone()),
     runtime_(comp->runtimeFromMainThread()),
@@ -75,6 +75,8 @@ Realm::Realm(JSCompartment* comp, const JS::RealmOptions& options)
 
 Realm::~Realm()
 {
+    MOZ_ASSERT(!hasBeenEnteredIgnoringJit());
+
     // Write the code coverage information in a file.
     JSRuntime* rt = runtimeFromMainThread();
     if (rt->lcovOutput().isEnabled())
@@ -92,7 +94,7 @@ Realm::~Realm()
 }
 
 bool
-JSCompartment::init(JSContext* cx)
+Compartment::init(JSContext* cx)
 {
     if (!crossCompartmentWrappers.init(0)) {
         ReportOutOfMemory(cx);
@@ -213,7 +215,7 @@ struct CheckGCThingAfterMovingGCFunctor {
 } // namespace (anonymous)
 
 void
-JSCompartment::checkWrapperMapAfterMovingGC()
+Compartment::checkWrapperMapAfterMovingGC()
 {
     /*
      * Assert that the postbarriers have worked and that nothing is left in
@@ -232,8 +234,8 @@ JSCompartment::checkWrapperMapAfterMovingGC()
 #endif // JSGC_HASH_TABLE_CHECKS
 
 bool
-JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
-                          const js::Value& wrapper)
+Compartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
+                        const js::Value& wrapper)
 {
     MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
     MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
@@ -294,7 +296,7 @@ CopyStringPure(JSContext* cx, JSString* str)
 }
 
 bool
-JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
+Compartment::wrap(JSContext* cx, MutableHandleString strp)
 {
     MOZ_ASSERT(cx->compartment() == this);
 
@@ -332,7 +334,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
 
 #ifdef ENABLE_BIGINT
 bool
-JSCompartment::wrap(JSContext* cx, MutableHandleBigInt bi)
+Compartment::wrap(JSContext* cx, MutableHandleBigInt bi)
 {
     MOZ_ASSERT(cx->compartment() == this);
 
@@ -348,7 +350,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleBigInt bi)
 #endif
 
 bool
-JSCompartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHandleObject obj)
+Compartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHandleObject obj)
 {
     // Ensure that we have entered a compartment.
     MOZ_ASSERT(cx->global());
@@ -400,7 +402,7 @@ JSCompartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHa
 }
 
 bool
-JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHandleObject obj)
+Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHandleObject obj)
 {
     // If we already have a wrapper for this value, use it.
     RootedValue key(cx, ObjectValue(*obj));
@@ -440,7 +442,7 @@ JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableH
 }
 
 bool
-JSCompartment::wrap(JSContext* cx, MutableHandleObject obj)
+Compartment::wrap(JSContext* cx, MutableHandleObject obj)
 {
     MOZ_ASSERT(cx->compartment() == this);
 
@@ -471,7 +473,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj)
 }
 
 bool
-JSCompartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existingArg)
+Compartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existingArg)
 {
     MOZ_ASSERT(cx->compartment() == this);
     MOZ_ASSERT(obj);
@@ -507,7 +509,7 @@ JSCompartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject exist
 }
 
 bool
-JSCompartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
+Compartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
 {
     if (!wrap(cx, desc.object()))
         return false;
@@ -525,7 +527,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
 }
 
 bool
-JSCompartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec)
+Compartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec)
 {
     for (size_t i = 0; i < vec.length(); ++i) {
         if (!wrap(cx, vec[i]))
@@ -610,7 +612,7 @@ Realm::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 }
 
 void
-JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
+Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
     MOZ_ASSERT(!zone()->isCollectingFromAnyThread() || trc->runtime()->gc.isHeapCompacting());
@@ -630,7 +632,7 @@ JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 }
 
 /* static */ void
-JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
+Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 {
     gcstats::AutoPhase ap(trc->runtime()->gc.stats(), gcstats::PhaseKind::MARK_CCWS);
     MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
@@ -765,7 +767,7 @@ Realm::sweepAfterMinorGC()
 }
 
 void
-JSCompartment::sweepAfterMinorGC(JSTracer* trc)
+Compartment::sweepAfterMinorGC(JSTracer* trc)
 {
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 
@@ -849,7 +851,7 @@ Realm::sweepObjectRealm()
  * markCrossCompartmentWrappers.
  */
 void
-JSCompartment::sweepCrossCompartmentWrappers()
+Compartment::sweepCrossCompartmentWrappers()
 {
     crossCompartmentWrappers.sweep();
 }
@@ -900,7 +902,7 @@ Realm::sweepTemplateObjects()
 }
 
 /* static */ void
-JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
+Compartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
 {
     MOZ_ASSERT(trc->runtime()->gc.isHeapCompacting());
 
@@ -924,7 +926,7 @@ Realm::fixupAfterMovingGC()
 }
 
 void
-JSCompartment::fixupAfterMovingGC()
+Compartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
@@ -1308,10 +1310,10 @@ Realm::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg, HandleObject handler)
 }
 
 void
-JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                      size_t* compartmentObjects,
-                                      size_t* crossCompartmentWrappersTables,
-                                      size_t* compartmentsPrivateData)
+Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                    size_t* compartmentObjects,
+                                    size_t* crossCompartmentWrappersTables,
+                                    size_t* compartmentsPrivateData)
 {
     *compartmentObjects += mallocSizeOf(this);
     *crossCompartmentWrappersTables += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);

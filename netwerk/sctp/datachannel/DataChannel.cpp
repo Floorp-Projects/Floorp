@@ -318,6 +318,9 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
   mPendingType = PENDING_NONE;
   LOG(("Constructor DataChannelConnection=%p, listener=%p", this, mListener.get()));
   mInternalIOThread = nullptr;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  mShutdown = false;
+#endif
 }
 
 DataChannelConnection::~DataChannelConnection()
@@ -395,6 +398,9 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
 
   usrsctp_deregister_address(static_cast<void *>(this));
   LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  mShutdown = true;
+#endif
 
   disconnect_all();
 
@@ -831,7 +837,10 @@ int
 DataChannelConnection::SendPacket(unsigned char data[], size_t len, bool release)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  int res = mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  int res = 0;
+  if (mTransportFlow) {
+    res = mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  }
   if (release)
     delete [] data;
   return res;
@@ -844,6 +853,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
 {
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
   int res;
+  MOZ_DIAGNOSTIC_ASSERT(!peer->mShutdown);
 
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char *buf;

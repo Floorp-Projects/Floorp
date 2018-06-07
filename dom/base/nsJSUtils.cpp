@@ -101,7 +101,7 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
                            JSObject** aFunctionObject)
 {
   JSContext* cx = jsapi.cx();
-  MOZ_ASSERT(js::GetEnterRealmDepth(cx) > 0);
+  MOZ_ASSERT(js::GetContextRealm(cx));
   MOZ_ASSERT_IF(aScopeChain.length() != 0,
                 js::IsObjectInContextCompartment(aScopeChain[0], cx));
 

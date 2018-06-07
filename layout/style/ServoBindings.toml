@@ -211,6 +211,7 @@ whitelist-vars = [
 ]
 whitelist-types = [
     "RawGecko.*",
+    "DeclarationBlockMutationClosure",
     "mozilla::AnimationPropertySegment",
     "mozilla::AnonymousCounterStyle",
     "mozilla::AtomArray",
@@ -466,6 +467,8 @@ structs-types = [
     "mozilla::OriginFlags",
     "mozilla::UniquePtr",
     "ServoRawOffsetArc",
+    "DeclarationBlockMutationClosure",
+    "RawServoUnlockedDeclarationBlock",
     "nsIContent",
     "nsINode",
     "nsIDocument",

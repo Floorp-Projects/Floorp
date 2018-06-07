@@ -3283,7 +3283,7 @@ MacroAssembler::branchTestObjCompartment(Condition cond, Register obj, const Add
 
 void
 MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
-                                         const JSCompartment* compartment, Register scratch,
+                                         const JS::Compartment* compartment, Register scratch,
                                          Label* label)
 {
     MOZ_ASSERT(obj != scratch);

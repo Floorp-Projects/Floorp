@@ -19,48 +19,10 @@ DeclarationBlock::FromCssText(const nsAString& aCssText,
                               css::Loader* aLoader)
 {
   NS_ConvertUTF16toUTF8 value(aCssText);
-  RefPtr<RawServoDeclarationBlock>
-      raw = Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
+  RefPtr<RawServoDeclarationBlock> raw =
+      Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
   RefPtr<DeclarationBlock> decl = new DeclarationBlock(raw.forget());
   return decl.forget();
-}
-
-// TODO: We can make them inline.
-void
-DeclarationBlock::GetPropertyValue(const nsAString& aProperty,
-                                   nsAString& aValue) const
-{
-  NS_ConvertUTF16toUTF8 property(aProperty);
-  Servo_DeclarationBlock_GetPropertyValue(mRaw, &property, &aValue);
-}
-
-void
-DeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
-                                       nsAString& aValue) const
-{
-  Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropID, &aValue);
-}
-
-bool
-DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
-{
-  NS_ConvertUTF16toUTF8 property(aProperty);
-  return Servo_DeclarationBlock_GetPropertyIsImportant(mRaw, &property);
-}
-
-bool
-DeclarationBlock::RemoveProperty(const nsAString& aProperty)
-{
-  AssertMutable();
-  NS_ConvertUTF16toUTF8 property(aProperty);
-  return Servo_DeclarationBlock_RemoveProperty(mRaw, &property);
-}
-
-bool
-DeclarationBlock::RemovePropertyByID(nsCSSPropertyID aPropID)
-{
-  AssertMutable();
-  return Servo_DeclarationBlock_RemovePropertyById(mRaw, aPropID);
 }
 
 } // namespace mozilla

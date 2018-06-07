@@ -1145,7 +1145,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchTestObjCompartment(Condition cond, Register obj, const Address& compartment,
                                   Register scratch, Label* label);
-    void branchTestObjCompartment(Condition cond, Register obj, const JSCompartment* compartment,
+    void branchTestObjCompartment(Condition cond, Register obj, const JS::Compartment* compartment,
                                   Register scratch, Label* label);
     void branchIfObjGroupHasNoAddendum(Register obj, Register scratch, Label* label);
     void branchIfPretenuredGroup(const ObjectGroup* group, Register scratch, Label* label);

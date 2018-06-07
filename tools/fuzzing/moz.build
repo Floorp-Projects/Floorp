@@ -15,6 +15,7 @@ if not CONFIG['JS_STANDALONE']:
     'faulty',
     'messagemanager',
     'shmem',
+    'ipc',
   ]
 
 if CONFIG['LIBFUZZER']:

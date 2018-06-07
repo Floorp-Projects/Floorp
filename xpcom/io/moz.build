@@ -84,6 +84,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'Base64.h',
+    'FilePreferences.h',
     'InputStreamLengthHelper.h',
     'InputStreamLengthWrapper.h',
     'NonBlockingAsyncInputStream.h',
@@ -97,6 +98,7 @@ UNIFIED_SOURCES += [
     'Base64.cpp',
     'crc32c.c',
     'FileDescriptorFile.cpp',
+    'FilePreferences.cpp',
     'InputStreamLengthHelper.cpp',
     'InputStreamLengthWrapper.cpp',
     'NonBlockingAsyncInputStream.cpp',

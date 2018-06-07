@@ -396,12 +396,14 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
     }
     while (line->GetChildCount() > 0) {
       nsIFrame* child = aFrames->RemoveFirstChild();
-      MOZ_ASSERT(child == line->mFirstChild, "Lines out of sync");
+      MOZ_DIAGNOSTIC_ASSERT(child->PresContext() == aPresContext);
+      MOZ_DIAGNOSTIC_ASSERT(child == line->mFirstChild, "Lines out of sync");
       line->mFirstChild = aFrames->FirstChild();
       line->NoteFrameRemoved(child);
       child->DestroyFrom(aDestructRoot, aPostDestroyData);
     }
-
+    MOZ_DIAGNOSTIC_ASSERT(line == aLines.front(),
+                          "destroying child frames messed up our lines!");
     aLines.pop_front();
     line->Destroy(shell);
   }

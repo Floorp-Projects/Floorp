@@ -38,7 +38,7 @@ public:
   // WebIDL method that implements RTCPeerConnection.generateCertificate.
   static already_AddRefed<Promise> GenerateCertificate(
       const GlobalObject& aGlobal, const ObjectOrString& aOptions,
-      ErrorResult& aRv, JSCompartment* aCompartment = nullptr);
+      ErrorResult& aRv, JS::Compartment* aCompartment = nullptr);
 
   explicit RTCCertificate(nsIGlobalObject* aGlobal);
   RTCCertificate(nsIGlobalObject* aGlobal, SECKEYPrivateKey* aPrivateKey,

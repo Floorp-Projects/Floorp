@@ -392,7 +392,7 @@ Zone::addTypeDescrObject(JSContext* cx, HandleObject obj)
 }
 
 void
-Zone::deleteEmptyCompartment(JSCompartment* comp)
+Zone::deleteEmptyCompartment(JS::Compartment* comp)
 {
     MOZ_ASSERT(comp->zone() == this);
     MOZ_ASSERT(arenas.checkEmptyArenaLists());

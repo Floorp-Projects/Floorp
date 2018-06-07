@@ -25,7 +25,7 @@ add_task(async function() {
   await testToolSelectEvent("styleeditor");
   await toolbox.destroy();
 
-  toolbox = await openToolboxForTab(tab, "webconsole", "side");
+  toolbox = await openToolboxForTab(tab, "webconsole", "right");
   await testSelectEvent("inspector");
   await testSelectEvent("webconsole");
   await testSelectEvent("styleeditor");

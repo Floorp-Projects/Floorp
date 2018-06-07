@@ -22,7 +22,7 @@ const TOOLTIP_HEIGHT = 30;
 add_task(async function() {
   await pushPref("devtools.toolbox.sidebar.width", TOOLBOX_WIDTH);
 
-  const [,, doc] = await createHost("side", TEST_URI);
+  const [,, doc] = await createHost("right", TEST_URI);
 
   info("Test a tooltip is not closed when clicking inside itself");
 
