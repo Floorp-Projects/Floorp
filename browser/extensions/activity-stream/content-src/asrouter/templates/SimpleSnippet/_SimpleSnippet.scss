@@ -1,0 +1,42 @@
+.SimpleSnippet {
+  &.tall {
+    padding: 27px 0;
+  }
+
+  .title {
+    display: inline;
+    font-size: inherit;
+    margin: 0;
+  }
+
+  .titleIcon {
+    background-repeat: no-repeat;
+    background-size: 14px;
+    height: 16px;
+    width: 16px;
+    margin-top: 2px;
+    margin-inline-end: 2px;
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .body {
+    display: inline;
+    margin: 0;
+  }
+
+  .icon {
+    height: 42px;
+    width: 42px;
+    margin-inline-end: 12px;
+    flex-shrink: 0;
+  }
+  &.tall .icon {
+    margin-inline-end: 20px;
+  }
+
+  .ASRouterAnchor {
+    color: inherit;
+    text-decoration: underline;
+  }
+}

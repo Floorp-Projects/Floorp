@@ -1,0 +1,142 @@
+.onboardingMessageContainer {
+  display: grid;
+  grid-column-gap: 21px;
+  grid-template-columns: auto auto auto;
+  padding-left: 30px;
+  padding-right: 30px;
+
+  // at 850px, the cards go from vertical layout to horizontal layout
+  @media(max-width: 850px) {
+    grid-template-columns: none;
+    grid-template-rows: auto auto auto;
+    padding-left: 110px;
+    padding-right: 110px;
+  }
+}
+
+.onboardingMessage {
+  height: 340px;
+  text-align: center;
+  padding: 13px;
+  font-weight: 200;
+
+  // at 850px, img floats left, content floats right next to it
+  @media(max-width: 850px) {
+    height: 170px;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #D8D8D8;
+    display: flex;
+    margin-bottom: 11px;
+
+    &:last-child {
+      border: none;
+    }
+
+    .onboardingContent {
+      padding-left: 10px;
+      height: 100%;
+
+      > span > h3 {
+        margin-top: 0;
+        margin-bottom: 4px;
+        font-weight: 400;
+      }
+
+      > span > p {
+        margin-top: 0;
+        line-height: 22px;
+        font-size: 15px;
+      }
+    }
+  }
+
+  .onboardingMessageImage {
+    height: 100px;
+    width: 120px;
+    background-size: 120px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    display: inline-block;
+    vertical-align: middle;
+
+
+    @media(max-width: 850px) {
+      height: 75px;
+      min-width: 80px;
+      background-size: 80px;
+    }
+
+    &.addons {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-addons@2x.png");
+    }
+
+    &.privatebrowsing {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png");
+    }
+
+    &.screenshots {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png");
+    }
+
+    &.gift {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-gift@2x.png");
+    }
+  }
+
+  .onboardingContent {
+    height: 175px;
+
+    > span > h3 {
+      color: $grey-90;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
+    > span > p {
+      color: $grey-60;
+      margin-top: 0;
+      height: 130px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 22px;
+    }
+  }
+
+  .onboardingButton {
+    background-color: $grey-90-10;
+    border: none;
+    width: 150px;
+    height: 30px;
+    margin-bottom: 23px;
+    padding: 4px 0 6px 0;
+    font-size: 15px;
+
+    // at 850px, the button shimmies down and to the right
+    @media(max-width: 850px) {
+      float: right;
+      margin-top: -60px;
+      margin-right: -10px;
+    }
+  }
+
+
+  &::before {
+    content: '';
+    height: 220px;
+    width: 1px;
+    position: absolute;
+    background-color: #D8D8D8;
+    margin-top: 40px;
+    margin-left: 215px;
+
+    // at 850px, the line goes from vertical to horizontal
+    @media(max-width: 850px) {
+      content: none;
+    }
+  }
+
+  &:last-child::before {
+    content: none;
+  }
+}

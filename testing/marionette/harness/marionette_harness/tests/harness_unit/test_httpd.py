@@ -89,4 +89,4 @@ def test_handler(server):
 
 
 if __name__ == "__main__":
-    mozunit.main('--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')

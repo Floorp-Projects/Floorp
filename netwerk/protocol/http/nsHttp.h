@@ -16,13 +16,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
-// http version codes
-#define NS_HTTP_VERSION_UNKNOWN  0
-#define NS_HTTP_VERSION_0_9      9
-#define NS_HTTP_VERSION_1_0     10
-#define NS_HTTP_VERSION_1_1     11
-#define NS_HTTP_VERSION_2_0     20
-
 class nsICacheEntry;
 
 namespace mozilla {
@@ -34,11 +27,20 @@ namespace net {
     class nsHttpRequestHead;
     class CacheControlParser;
 
-    enum {
+    enum class HttpVersion {
+        UNKNOWN = 0,
+        v0_9 = 9,
+        v1_0 = 10,
+        v1_1 = 11,
+        v2_0 = 20
+    };
+
+    enum class SpdyVersion {
+        NONE = 0,
         // SPDY_VERSION_2 = 2, REMOVED
         // SPDY_VERSION_3 = 3, REMOVED
         // SPDY_VERSION_31 = 4, REMOVED
-        HTTP_VERSION_2 = 5
+        HTTP_2 = 5
 
         // leave room for official versions. telem goes to 48
         // 24 was a internal spdy/3.1
@@ -50,8 +52,6 @@ namespace net {
         // 30 was h2-14 and h2-15
         // 31 was h2-16
     };
-
-typedef uint8_t nsHttpVersion;
 
 //-----------------------------------------------------------------------------
 // http connection capabilities
@@ -197,7 +197,7 @@ namespace nsHttp
     bool IsPermanentRedirect(uint32_t httpStatus);
 
     // Returns the APLN token which represents the used protocol version.
-    const char* GetProtocolVersion(uint32_t pv);
+    const char* GetProtocolVersion(HttpVersion pv);
 
     bool ValidationRequired(bool isForcedValid, nsHttpResponseHead *cachedResponseHead,
                    uint32_t loadFlags, bool allowStaleCacheContent,
@@ -224,6 +224,8 @@ namespace nsHttp
     TimeStamp const GetLastActiveTabLoadOptimizationHit();
     void SetLastActiveTabLoadOptimizationHit(TimeStamp const &when);
     bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when);
+
+    HttpVersion GetHttpVersionFromSpdy(SpdyVersion sv);
 
     // Declare all atoms
     //

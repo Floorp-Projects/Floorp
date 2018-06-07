@@ -34,6 +34,12 @@ public:
   {
   }
 
+  static already_AddRefed<DOMPointReadOnly>
+  FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams);
+  static already_AddRefed<DOMPointReadOnly>
+  Constructor(const GlobalObject& aGlobal, double aX, double aY,
+              double aZ, double aW, ErrorResult& aRV);
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMPointReadOnly)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMPointReadOnly)
 
@@ -41,6 +47,9 @@ public:
   double Y() const { return mY; }
   double Z() const { return mZ; }
   double W() const { return mW; }
+
+  nsISupports* GetParentObject() const { return mParent; }
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   virtual ~DOMPointReadOnly() {}
@@ -58,13 +67,11 @@ public:
   {}
 
   static already_AddRefed<DOMPoint>
-  Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,
-              ErrorResult& aRV);
+  FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams);
   static already_AddRefed<DOMPoint>
   Constructor(const GlobalObject& aGlobal, double aX, double aY,
               double aZ, double aW, ErrorResult& aRV);
 
-  nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void SetX(double aX) { mX = aX; }

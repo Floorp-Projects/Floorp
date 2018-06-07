@@ -1,0 +1,52 @@
+.context-menu {
+  background: var(--newtab-contextmenu-background-color);
+  border-radius: $context-menu-border-radius;
+  box-shadow: $context-menu-shadow;
+  display: block;
+  font-size: $context-menu-font-size;
+  margin-inline-start: 5px;
+  offset-inline-start: 100%;
+  position: absolute;
+  top: ($context-menu-button-size / 4);
+  z-index: 10000;
+
+  > ul {
+    list-style: none;
+    margin: 0;
+    padding: $context-menu-outer-padding 0;
+
+    > li {
+      margin: 0;
+      width: 100%;
+
+      &.separator {
+        border-bottom: $border-secondary;
+        margin: $context-menu-outer-padding 0;
+      }
+
+      > a {
+        align-items: center;
+        color: inherit;
+        cursor: pointer;
+        display: flex;
+        line-height: 16px;
+        outline: none;
+        padding: $context-menu-item-padding;
+        white-space: nowrap;
+
+        &:-moz-any(:focus, :hover) {
+          background: var(--newtab-element-hover-color);
+        }
+
+        &:active {
+          background: var(--newtab-element-active-color);
+        }
+
+        &.disabled {
+          opacity: 0.4;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+}

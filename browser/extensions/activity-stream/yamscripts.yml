@@ -1,0 +1,70 @@
+# This file compiles to package.json scripts.
+# When you add or modify anything, you *MUST* run:
+#      npm run yamscripts
+# to compile your changes.
+
+scripts:
+  # Run the activity-stream mochitests
+  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest )
+
+  # Run the activity-stream mochitests with the browser toolbox debugger.
+  # Often handy in combination with adding a "debugger" statement in your
+  # mochitest somewhere.
+  mochitest-debug: (cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/extensions/activity-stream/test/functional/mochitest)
+
+# bundle: Build all assets for activity stream
+  bundle:
+    locales: pontoon-to-json --src locales --dest data
+    webpack: webpack --config webpack.system-addon.config.js --display-optimization-bailout
+    css: node-sass --source-map true --source-map-contents content-src/styles -o css
+    html: rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js
+
+# buildmc: Export the bootstraped add-on to mozilla central
+  buildmc:
+    pre: rimraf $npm_package_config_mc_dir/browser/extensions/activity-stream/
+    bundle: => bundle
+    copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/extensions/activity-stream/
+    version: node ./bin/update-version.js $npm_package_config_mc_dir/browser/extensions/activity-stream
+    stringsExport: cp locales/en-US/strings.properties $npm_package_config_mc_dir/browser/locales/en-US/chrome/browser/activity-stream/newtab.properties
+    copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
+
+# startmc: Start developing the bootstrapped add-on
+  startmc:
+    _parallel: true
+    pre: =>buildmc
+    # This copies only the system addon sub-folder; changing anything outside of it will need a full rebuild.
+    copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/extensions/activity-stream/ -w
+    copyPingCentre: =>buildmc:copyPingCentre -- -w
+    webpack: =>bundle:webpack -- -w
+    css: =>bundle:css && =>bundle:css -- -w
+
+  # importmc: Import changes from mc to github repo
+  importmc: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/extensions/activity-stream/ .
+
+  testmc:
+    lint: =>lint
+    build: =>bundle:webpack && =>bundle:locales
+    unit: karma start karma.mc.config.js || (cat logs/coverage/text.txt && exit 2)
+    post: cat logs/coverage/text-summary.txt
+
+  tddmc: karma start karma.mc.config.js --tdd
+
+  debugcoverage: open logs/coverage/report-html/index.html
+
+# lint: Run eslint and sass-lint
+  lint:
+    eslint: esw --ext=.js,.jsm,.json,.jsx .
+    sasslint: sass-lint -v -q
+
+# strings-import: Replace local strings with those from l10n-central
+  strings-import: node ./bin/strings-import.js
+
+# test: Run all tests once
+  test: =>testmc
+
+# tdd: Run content tests continuously
+  tdd: =>tddmc
+
+  # This is just to make sure we don't make commits with failing tests
+  # or uncompiled yamscripts.yml. Run automatically with husky.
+  prepush: =>lint && =>yamscripts

@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 import mozfile
-import xtalos
+from . import xtalos
 
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2

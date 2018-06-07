@@ -109,5 +109,5 @@ const runAutocompletionTest = async function(editor) {
  */
 function getPopupOffset({popup, input}) {
   const popupQuads = popup._panel.getBoxQuads({relativeTo: input});
-  return popupQuads[0].bounds.left;
+  return popupQuads[0].getBounds().left;
 }
