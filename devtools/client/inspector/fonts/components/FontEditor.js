@@ -89,6 +89,18 @@ class FontEditor extends PureComponent {
    * @return {DOMNode}
    */
   renderFontFamily(fonts, onToggleFontHighlight) {
+    const fontList = dom.ul(
+      {
+        className: "fonts-list"
+      },
+      fonts.map(font => {
+        return dom.li(
+          {},
+          FontMeta({ font, onToggleFontHighlight })
+        );
+      })
+    );
+
     return dom.label(
       {
         className: "font-control font-control-family",
@@ -103,9 +115,7 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-box",
         },
-        fonts.map(font => {
-          return FontMeta({ font, onToggleFontHighlight });
-        })
+        fontList
       )
     );
   }
@@ -206,7 +216,9 @@ class FontEditor extends PureComponent {
     });
 
     return dom.div(
-      {},
+      {
+        id: "font-editor"
+      },
       // Always render UI for font family, format and font file URL.
       this.renderFontFamily(fonts, onToggleFontHighlight),
       // Render UI for font variation instances if they are defined.
