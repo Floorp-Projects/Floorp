@@ -66,6 +66,9 @@
       <div class="category" value="slow-sql-section">
         <span class="category-name">&aboutTelemetry.slowSqlSection;</span>
       </div>
+      <div class="category" value="chrome-hangs-section">
+        <span class="category-name">&aboutTelemetry.chromeHangsSection;</span>
+      </div>
       <div class="category" value="addon-details-section">
         <span class="category-name">&aboutTelemetry.addonDetailsSection;</span>
       </div>
@@ -189,6 +192,12 @@
       <section id="slow-sql-section">
         <p id="sql-warning">&aboutTelemetry.fullSqlWarning;</p>
         <div id="slow-sql-tables" class="data"></div>
+      </section>
+
+      <section id="chrome-hangs-section">
+        <a id="chrome-hangs-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
+        <a id="chrome-hangs-hide-symbols" href="">&aboutTelemetry.hideStackSymbols;</a>
+        <div id="chrome-hangs" class="data"></div>
       </section>
 
       <section id="late-writes-section">

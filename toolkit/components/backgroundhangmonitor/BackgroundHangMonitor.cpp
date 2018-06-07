@@ -202,9 +202,9 @@ public:
   // Stack of current hang
   HangStack mHangStack;
   // Annotations for the current hang
-  BackgroundHangAnnotations mAnnotations;
+  HangMonitor::HangAnnotations mAnnotations;
   // Annotators registered for this thread
-  BackgroundHangAnnotators mAnnotators;
+  HangMonitor::Observer::Annotators mAnnotators;
   // The name of the runnable which is hanging the current process
   nsCString mRunnableName;
   // The name of the thread which is being monitored
@@ -488,6 +488,12 @@ BackgroundHangThread::ReportHang(TimeDuration aHangTime)
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
+  nsTArray<HangAnnotation> annotations;
+  for (auto& annotation : mAnnotations) {
+    HangAnnotation annot(annotation.mName, annotation.mValue);
+    annotations.AppendElement(std::move(annot));
+  }
+
   HangDetails hangDetails(
     aHangTime,
     nsDependentCString(XRE_ChildProcessTypeToString(XRE_GetProcessType())),
@@ -495,7 +501,7 @@ BackgroundHangThread::ReportHang(TimeDuration aHangTime)
     mThreadName,
     mRunnableName,
     std::move(mHangStack),
-    std::move(mAnnotations)
+    std::move(annotations)
   );
 
   // If the hang processing thread exists, we can process the native stack
@@ -761,7 +767,7 @@ BackgroundHangMonitor::NotifyWait()
 }
 
 bool
-BackgroundHangMonitor::RegisterAnnotator(BackgroundHangAnnotator& aAnnotator)
+BackgroundHangMonitor::RegisterAnnotator(HangMonitor::Annotator& aAnnotator)
 {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   BackgroundHangThread* thisThread = BackgroundHangThread::FindThread();
@@ -775,7 +781,7 @@ BackgroundHangMonitor::RegisterAnnotator(BackgroundHangAnnotator& aAnnotator)
 }
 
 bool
-BackgroundHangMonitor::UnregisterAnnotator(BackgroundHangAnnotator& aAnnotator)
+BackgroundHangMonitor::UnregisterAnnotator(HangMonitor::Annotator& aAnnotator)
 {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   BackgroundHangThread* thisThread = BackgroundHangThread::FindThread();

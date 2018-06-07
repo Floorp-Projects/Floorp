@@ -353,9 +353,9 @@ class nsWindow::NPZCSupport final
             return mLambda(window);
         }
 
-        bool IsUIEvent() const override
+        nsAppShell::Event::Type ActivityType() const override
         {
-            return true;
+            return nsAppShell::Event::Type::kUIActivity;
         }
     };
 

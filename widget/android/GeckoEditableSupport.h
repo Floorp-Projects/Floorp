@@ -145,15 +145,15 @@ public:
         {
             explicit IMEEvent(Functor&& l) : nsAppShell::LambdaEvent<Functor>(std::move(l)) {}
 
-            bool IsUiEvent() const override
+            nsAppShell::Event::Type ActivityType() const override
             {
                 using GES = GeckoEditableSupport;
                 if (this->lambda.IsTarget(&GES::OnKeyEvent) ||
                         this->lambda.IsTarget(&GES::OnImeReplaceText) ||
                         this->lambda.IsTarget(&GES::OnImeUpdateComposition)) {
-                    return true;
+                    return nsAppShell::Event::Type::kUIActivity;
                 }
-                return false;
+                return nsAppShell::Event::Type::kGeneralActivity;
             }
 
             void Run() override

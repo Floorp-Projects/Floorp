@@ -187,7 +187,7 @@ CPUUsageWatcher::Init()
   CPUUsageWatcher* self = this;
   NS_DispatchToMainThread(
     NS_NewRunnableFunction("CPUUsageWatcher::Init",
-                           [=]() { BackgroundHangMonitor::RegisterAnnotator(*self); }));
+                           [=]() { HangMonitor::RegisterAnnotator(*self); }));
 
   return Ok();
 }
@@ -196,7 +196,7 @@ void
 CPUUsageWatcher::Uninit()
 {
   if (mInitialized) {
-    BackgroundHangMonitor::UnregisterAnnotator(*this);
+    HangMonitor::UnregisterAnnotator(*this);
   }
   mInitialized = false;
 }
@@ -239,7 +239,7 @@ CPUUsageWatcher::CollectCPUUsage()
 }
 
 void
-CPUUsageWatcher::AnnotateHang(BackgroundHangAnnotations& aAnnotations) {
+CPUUsageWatcher::AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) {
   if (!mInitialized) {
     return;
   }
@@ -265,7 +265,7 @@ CPUUsageWatcher::CollectCPUUsage()
   return Ok();
 }
 
-void CPUUsageWatcher::AnnotateHang(BackgroundHangAnnotations& aAnnotations) {}
+void CPUUsageWatcher::AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) {}
 
 #endif // CPU_USAGE_WATCHER_ACTIVE
 

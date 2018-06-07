@@ -726,7 +726,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
             AUTO_PROFILER_LABEL("nsAppShell::ProcessNextNativeEvent:Wait",
                                 IDLE);
-            mozilla::BackgroundHangMonitor().NotifyWait();
+            mozilla::HangMonitor::Suspend();
 
             curEvent = mEventQueue.Pop(/* mayWait */ true);
         }
@@ -735,7 +735,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     if (!curEvent)
         return false;
 
-    mozilla::BackgroundHangMonitor().NotifyActivity();
+    mozilla::HangMonitor::NotifyActivity(curEvent->ActivityType());
 
     curEvent->Run();
     return true;
