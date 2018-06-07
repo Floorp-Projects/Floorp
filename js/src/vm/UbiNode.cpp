@@ -160,7 +160,7 @@ StackFrame::functionDisplayNameLength()
 CoarseType Concrete<void>::coarseType() const      { MOZ_CRASH("null ubi::Node"); }
 const char16_t* Concrete<void>::typeName() const   { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const             { MOZ_CRASH("null ubi::Node"); }
-JSCompartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
+JS::Compartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
 JS::Realm* Concrete<void>::realm() const           { MOZ_CRASH("null ubi::Node"); }
 
 UniquePtr<EdgeRange>
@@ -357,7 +357,7 @@ template UniquePtr<EdgeRange> TracerConcrete<BigInt>::edges(JSContext* cx, bool 
 template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSContext* cx, bool wantNames) const;
 
 template<typename Referent>
-JSCompartment*
+JS::Compartment*
 TracerConcreteWithRealm<Referent>::compartment() const
 {
     return TracerBase::get().compartment();
@@ -371,7 +371,7 @@ TracerConcreteWithRealm<Referent>::realm() const
 }
 
 template Realm* TracerConcreteWithRealm<JSScript>::realm() const;
-template JSCompartment* TracerConcreteWithRealm<JSScript>::compartment() const;
+template JS::Compartment* TracerConcreteWithRealm<JSScript>::compartment() const;
 
 bool
 Concrete<JSObject>::hasAllocationStack() const
@@ -416,7 +416,7 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
     return true;
 }
 
-JSCompartment*
+JS::Compartment*
 Concrete<JSObject>::compartment() const
 {
     return Concrete::get().compartment();
@@ -489,7 +489,7 @@ RootList::init(CompartmentSet& debuggees)
     for (EdgeVector::Range r = allRootEdges.all(); !r.empty(); r.popFront()) {
         Edge& edge = r.front();
 
-        JSCompartment* compartment = edge.referent.compartment();
+        JS::Compartment* compartment = edge.referent.compartment();
         if (compartment && !debuggees.has(compartment))
             continue;
 

@@ -1060,7 +1060,7 @@ GetContextRealm(const JSContext* cx)
     return JS::RootingContext::get(cx)->realm_;
 }
 
-inline JSCompartment*
+inline JS::Compartment*
 GetContextCompartment(const JSContext* cx)
 {
     if (JS::Realm* realm = GetContextRealm(cx))

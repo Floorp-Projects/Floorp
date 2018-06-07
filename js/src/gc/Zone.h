@@ -344,7 +344,7 @@ struct Zone : public JS::shadow::Zone,
   public:
     mozilla::LinkedList<js::WeakMapBase>& gcWeakMapList() { return gcWeakMapList_.ref(); }
 
-    typedef js::Vector<JSCompartment*, 1, js::SystemAllocPolicy> CompartmentVector;
+    typedef js::Vector<JS::Compartment*, 1, js::SystemAllocPolicy> CompartmentVector;
 
   private:
     // The set of compartments in this zone.
@@ -704,7 +704,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Delete an empty compartment after its contents have been merged.
-    void deleteEmptyCompartment(JSCompartment* comp);
+    void deleteEmptyCompartment(JS::Compartment* comp);
 
     /*
      * This variation of calloc will call the large-allocation-failure callback

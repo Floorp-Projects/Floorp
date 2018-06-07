@@ -25,7 +25,6 @@
 typedef uint8_t jsbytecode;
 
 class JSAtom;
-struct JSCompartment;
 struct JSContext;
 class JSFunction;
 class JSObject;
@@ -45,6 +44,8 @@ class Symbol;
 class BigInt;
 #endif
 union Value;
+
+struct Compartment;
 class Realm;
 struct Runtime;
 struct Zone;

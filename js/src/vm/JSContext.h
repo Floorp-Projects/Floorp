@@ -227,7 +227,7 @@ struct JSContext : public JS::RootingContext,
     }
 
     // Threads may freely access any data in their realm, compartment and zone.
-    JSCompartment* compartment() const {
+    JS::Compartment* compartment() const {
         return realm_ ? JS::GetCompartmentForRealm(realm_) : nullptr;
     }
 

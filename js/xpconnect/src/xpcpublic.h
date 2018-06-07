@@ -79,7 +79,7 @@ TransplantObject(JSContext* cx, JS::HandleObject origobj, JS::HandleObject targe
 JSObject*
 TransplantObjectRetainingXrayExpandos(JSContext* cx, JS::HandleObject origobj, JS::HandleObject target);
 
-bool IsContentXBLCompartment(JSCompartment* compartment);
+bool IsContentXBLCompartment(JS::Compartment* compartment);
 bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
 
@@ -381,10 +381,10 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
     return NonVoidStringToJsval(cx, str, rval);
 }
 
-nsIPrincipal* GetCompartmentPrincipal(JSCompartment* compartment);
+nsIPrincipal* GetCompartmentPrincipal(JS::Compartment* compartment);
 nsIPrincipal* GetRealmPrincipal(JS::Realm* realm);
 
-void NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
+void NukeAllWrappersForCompartment(JSContext* cx, JS::Compartment* compartment,
                                    js::NukeReferencesToWindow nukeReferencesToWindow = js::NukeWindowReferences);
 
 void SetLocationForGlobal(JSObject* global, const nsACString& location);

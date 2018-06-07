@@ -35,7 +35,7 @@ using mozilla::BinarySearchIf;
 // Whenever a new CodeSegment is ready to use, it has to be registered so that
 // we can have fast lookups from pc to CodeSegments in numerous places. Since
 // wasm compilation may be tiered, and the second tier doesn't have access to
-// any JSContext/JSCompartment/etc lying around, we have to use a process-wide
+// any JSContext/JS::Compartment/etc lying around, we have to use a process-wide
 // map instead.
 
 typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;

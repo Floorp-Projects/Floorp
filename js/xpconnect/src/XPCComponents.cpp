@@ -2607,9 +2607,9 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext* cx)
 {
     // Determine the compartment of the given object, if any.
-    JSCompartment* c = vobj.isObject()
-                       ? js::GetObjectCompartment(js::UncheckedUnwrap(&vobj.toObject()))
-                       : nullptr;
+    JS::Compartment* c = vobj.isObject()
+                         ? js::GetObjectCompartment(js::UncheckedUnwrap(&vobj.toObject()))
+                         : nullptr;
 
     // If no compartment was given, recompute all.
     if (!c)
@@ -2630,7 +2630,7 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx)
     JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
                           "Don't call Cu.setWantXrays() in a JSM that shares its global");
-    JSCompartment* compartment = js::GetObjectCompartment(scopeObj);
+    JS::Compartment* compartment = js::GetObjectCompartment(scopeObj);
     CompartmentPrivate::Get(scopeObj)->wantXrays = true;
     bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
                                     js::AllCompartments());

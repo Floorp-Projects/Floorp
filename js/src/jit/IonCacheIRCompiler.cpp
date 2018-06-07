@@ -681,7 +681,7 @@ IonCacheIRCompiler::emitGuardCompartment()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     JSObject* globalWrapper = objectStubField(reader.stubOffset());
-    JSCompartment* compartment = compartmentStubField(reader.stubOffset());
+    JS::Compartment* compartment = compartmentStubField(reader.stubOffset());
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
