@@ -1,36 +1,14 @@
 function initializeBrowser(win) {
   Services.scriptloader.loadSubScript("chrome://damp/content/damp.js", win);
 
-  const PREFIX = "damp@mozilla.org:";
+  const MESSAGE = "damp@mozilla.org:html-loaded";
 
-  // "services" which the framescript can execute at the chrome process
-  var proxiedServices = {
-    runTest(config, callback) {
-      (new win.Damp()).startTest(callback, config);
-    },
-  };
-
-  var groupMM = win.getGroupMessageManager("browsers");
+  const groupMM = win.getGroupMessageManager("browsers");
   groupMM.loadFrameScript("chrome://damp/content/framescript.js", true);
 
-  // listener/executor on the chrome process for damp.html
-  groupMM.addMessageListener(PREFIX + "chrome-exec-message", function listener(m) {
-    function sendResult(result) {
-      groupMM.broadcastAsyncMessage(PREFIX + "chrome-exec-reply", {
-        id: m.data.id,
-        result
-      });
-    }
-
-    var command = m.data.command;
-    if (!proxiedServices.hasOwnProperty(command.name))
-      throw new Error("DAMP: service doesn't exist: '" + command.name + "'");
-
-    var service = proxiedServices[command.name];
-    if (command.name == "runTest") // Needs async execution
-      service(command.data, sendResult);
-    else
-      sendResult(service(command.data));
-
+  // Listen for damp.html load event before starting tests.
+  // Each tppagecycles is going to reload damp.html and re-run DAMP entirely.
+  groupMM.addMessageListener(MESSAGE, function onMessage(m) {
+    (new win.Damp()).startTest();
   });
 }

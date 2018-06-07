@@ -11,14 +11,6 @@ XPCOMUtils.defineLazyGetter(this, "require", function() {
     ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   return require;
 });
-XPCOMUtils.defineLazyGetter(this, "gDevTools", function() {
-  let { gDevTools } = require("devtools/client/framework/devtools");
-  return gDevTools;
-});
-XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
-  let { TargetFactory } = require("devtools/client/framework/target");
-  return TargetFactory;
-});
 
 // Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
 // "normal". Print allocation sites to stdout if DEBUG_DEVTOOLS_ALLOCATIONS is set to
@@ -30,10 +22,6 @@ const TEST_TIMEOUT = 5 * 60000;
 
 function getMostRecentBrowserWindow() {
   return Services.wm.getMostRecentWindow("navigator:browser");
-}
-
-function getActiveTab(window) {
-  return window.gBrowser.selectedTab;
 }
 
 let gmm = window.getGroupMessageManager("browsers");
@@ -312,8 +300,6 @@ Damp.prototype = {
     }
   },
 
-  _onTestComplete: null,
-
   _doneInternal() {
     // Ignore any duplicated call to this method
     if (this._done) {
@@ -332,9 +318,7 @@ Damp.prototype = {
       this._reportAllResults();
     }
 
-    if (this._onTestComplete) {
-      this._onTestComplete(JSON.parse(JSON.stringify(this._results))); // Clone results
-    }
+    TalosParentProfiler.pause("DAMP - end");
   },
 
   startAllocationTracker() {
@@ -399,16 +383,11 @@ Damp.prototype = {
     await this.garbageCollect();
   },
 
-  startTest(doneCallback) {
+  startTest() {
     try {
       dump("Initialize the head file with a reference to this DAMP instance\n");
       let head = require("chrome://damp/content/tests/head.js");
       head.initialize(this);
-
-      this._onTestComplete = function(results) {
-        TalosParentProfiler.pause("DAMP - end");
-        doneCallback(results);
-      };
 
       this._win = Services.wm.getMostRecentWindow("navigator:browser");
       this._dampTab = this._win.gBrowser.selectedTab;
