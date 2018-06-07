@@ -573,12 +573,23 @@ struct JSCompartment
 
     void* data = nullptr;
 
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC. Note that these flags have to be on the
-    // compartment, not the realm, because same-compartment realms can have
-    // cross-realm pointers without wrappers.
-    bool scheduledForDestruction = false;
-    bool maybeAlive = true;
+    // Fields set and used by the GC. Be careful, may be stale after we return
+    // to the mutator.
+    struct {
+        // These flags help us to discover if a compartment that shouldn't be
+        // alive manages to outlive a GC. Note that these flags have to be on
+        // the compartment, not the realm, because same-compartment realms can
+        // have cross-realm pointers without wrappers.
+        bool scheduledForDestruction = false;
+        bool maybeAlive = true;
+
+        // During GC, we may set this to |true| if we entered a realm in this
+        // compartment. Note that (without a stack walk) we don't know exactly
+        // *which* realms, because Realm::enterRealmDepthIgnoringJit_ does not
+        // account for cross-Realm calls in JIT code updating cx->realm_. See
+        // also the enterRealmDepthIgnoringJit_ comment.
+        bool hasEnteredRealm = false;
+    } gcState;
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
@@ -815,7 +826,21 @@ class JS::Realm : public JS::shadow::Realm
     js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
 
-    unsigned enterRealmDepth_ = 0;
+    // There are two ways to enter a realm:
+    //
+    // (1) AutoRealm (and JSAutoRealm, JS::EnterRealm)
+    // (2) When calling a cross-realm (but same-compartment) function in JIT
+    //     code.
+    //
+    // This field only accounts for (1), to keep the JIT code as simple as
+    // possible.
+    //
+    // An important invariant is that the JIT can only switch to a different
+    // realm within the same compartment, so whenever that happens there must
+    // always be a same-compartment realm with enterRealmDepthIgnoringJit_ > 0.
+    // This lets us set JSCompartment::hasEnteredRealm without walking the
+    // stack.
+    unsigned enterRealmDepthIgnoringJit_ = 0;
 
     enum {
         IsDebuggee = 1 << 0,
@@ -1019,16 +1044,20 @@ class JS::Realm : public JS::shadow::Realm
     }
 
     void enter() {
-        enterRealmDepth_++;
+        enterRealmDepthIgnoringJit_++;
     }
     void leave() {
-        enterRealmDepth_--;
+        MOZ_ASSERT(enterRealmDepthIgnoringJit_ > 0);
+        enterRealmDepthIgnoringJit_--;
     }
-    bool hasBeenEntered() const {
-        return enterRealmDepth_ > 0;
+    bool hasBeenEnteredIgnoringJit() const {
+        return enterRealmDepthIgnoringJit_ > 0;
     }
     bool shouldTraceGlobal() const {
-        return hasBeenEntered();
+        // If we entered this realm in JIT code, there must be a script and
+        // function on the stack for this realm, so the global will definitely
+        // be traced and it's safe to return false here.
+        return hasBeenEnteredIgnoringJit();
     }
 
     bool hasAllocationMetadataBuilder() const {
@@ -1305,8 +1334,18 @@ namespace js {
 // scheduledForDestruction will be set on the compartment, which will cause
 // some extra GC activity to try to free the compartment.
 template<typename T> inline void SetMaybeAliveFlag(T* thing) {}
-template<> inline void SetMaybeAliveFlag(JSObject* thing) {thing->compartment()->maybeAlive = true;}
-template<> inline void SetMaybeAliveFlag(JSScript* thing) {thing->compartment()->maybeAlive = true;}
+
+template<> inline void
+SetMaybeAliveFlag(JSObject* thing)
+{
+    thing->compartment()->gcState.maybeAlive = true;
+}
+
+template<> inline void
+SetMaybeAliveFlag(JSScript* thing)
+{
+    thing->compartment()->gcState.maybeAlive = true;
+}
 
 } // namespace js
 

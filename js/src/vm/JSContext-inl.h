@@ -517,8 +517,8 @@ JSContext::setRealm(JS::Realm* realm)
 {
     // Both the current and the new realm should be properly marked as
     // entered at this point.
-    MOZ_ASSERT_IF(realm_, realm_->hasBeenEntered());
-    MOZ_ASSERT_IF(realm, realm->hasBeenEntered());
+    MOZ_ASSERT_IF(realm_, realm_->hasBeenEnteredIgnoringJit());
+    MOZ_ASSERT_IF(realm, realm->hasBeenEnteredIgnoringJit());
 
     // This thread must have exclusive access to the zone.
     MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));

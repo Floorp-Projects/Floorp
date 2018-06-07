@@ -3752,7 +3752,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
         for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
             if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            r->compartment()->scheduledForDestruction = false;
+            r->compartment()->gcState.scheduledForDestruction = false;
             GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -4991,7 +4991,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            r->compartment()->scheduledForDestruction = false;
+            r->compartment()->gcState.scheduledForDestruction = false;
 
             GlobalObject* global = r->maybeGlobal();
 
