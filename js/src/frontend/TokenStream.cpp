@@ -40,7 +40,6 @@ using mozilla::ArrayLength;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
-using mozilla::PodArrayZero;
 using mozilla::PodCopy;
 
 struct ReservedWordInfo
@@ -420,18 +419,13 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
     mutedErrors(options.mutedErrors()),
     strictModeGetter(smg)
 {
-    // Nb: the following tables could be static, but initializing them here is
-    // much easier.  Don't worry, the time to initialize them for each
-    // TokenStream is trivial.  See bug 639420.
-
-    // See Parser::assignExpr() for an explanation of isExprEnding[].
-    PodArrayZero(isExprEnding);
-    isExprEnding[size_t(TokenKind::Comma)] = 1;
-    isExprEnding[size_t(TokenKind::Semi)] = 1;
-    isExprEnding[size_t(TokenKind::Colon)] = 1;
-    isExprEnding[size_t(TokenKind::Rp)] = 1;
-    isExprEnding[size_t(TokenKind::Rb)] = 1;
-    isExprEnding[size_t(TokenKind::Rc)] = 1;
+    // |isExprEnding| was initially zeroed: overwrite the true entries here.
+    isExprEnding[size_t(TokenKind::Comma)] = true;
+    isExprEnding[size_t(TokenKind::Semi)] = true;
+    isExprEnding[size_t(TokenKind::Colon)] = true;
+    isExprEnding[size_t(TokenKind::Rp)] = true;
+    isExprEnding[size_t(TokenKind::Rb)] = true;
+    isExprEnding[size_t(TokenKind::Rc)] = true;
 }
 
 template<typename CharT>

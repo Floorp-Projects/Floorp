@@ -855,7 +855,30 @@ class TokenStreamAnyChars
     const char*         filename_;          // input filename or null
     UniqueTwoByteChars  displayURL_;        // the user's requested source URL or null
     UniqueTwoByteChars  sourceMapURL_;      // source map's filename or null
-    uint8_t             isExprEnding[size_t(TokenKind::Limit)];// which tokens definitely terminate exprs?
+
+    /**
+     * An array storing whether a TokenKind observed while attempting to extend
+     * a valid AssignmentExpression into an even longer AssignmentExpression
+     * (e.g., extending '3' to '3 + 5') will terminate it without error.
+     *
+     * For example, ';' always ends an AssignmentExpression because it ends a
+     * Statement or declaration.  '}' always ends an AssignmentExpression
+     * because it terminates BlockStatement, FunctionBody, and embedded
+     * expressions in TemplateLiterals.  Therefore both entries are set to true
+     * in TokenStreamAnyChars construction.
+     *
+     * But e.g. '+' *could* extend an AssignmentExpression, so its entry here
+     * is false.  Meanwhile 'this' can't extend an AssignmentExpression, but
+     * it's only valid after a line break, so its entry here must be false.
+     *
+     * NOTE: This array could be static, but without C99's designated
+     *       initializers it's easier zeroing here and setting the true entries
+     *       in the constructor body.  (Having this per-instance might also aid
+     *       locality.)  Don't worry!  Initialization time for each TokenStream
+     *       is trivial.  See bug 639420.
+     */
+    bool isExprEnding[size_t(TokenKind::Limit)] = {}; // all-false initially
+
     JSContext* const    cx;
     bool                mutedErrors;
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
