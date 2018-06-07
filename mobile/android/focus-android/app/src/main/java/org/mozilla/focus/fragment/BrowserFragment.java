@@ -293,13 +293,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 }
         );
 
-        ImageButton findInPagePrevious = view.findViewById(R.id.previousResult);
+        final ImageButton findInPagePrevious = view.findViewById(R.id.previousResult);
         findInPagePrevious.setOnClickListener(this);
 
-        ImageButton findInPageNext = view.findViewById(R.id.nextResult);
+        final ImageButton findInPageNext = view.findViewById(R.id.nextResult);
         findInPageNext.setOnClickListener(this);
 
-        ImageButton closeFindInPage = view.findViewById(R.id.close_find_in_page);
+        final ImageButton closeFindInPage = view.findViewById(R.id.close_find_in_page);
         closeFindInPage.setOnClickListener(this);
 
         setBlockingEnabled(session.isBlockingEnabled());
@@ -1313,7 +1313,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         findInPageView.setVisibility(View.VISIBLE);
         findInPageQuery.requestFocus();
 
-        int height = findInPageView.getHeight();
+        final int height = findInPageView.getHeight();
         swipeRefresh.setPadding(0, 0, 0, height);
     }
 
@@ -1322,7 +1322,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if (webView == null) {
             return;
         }
-
 
         webView.clearMatches();
         findInPageCoordinator.reset();
