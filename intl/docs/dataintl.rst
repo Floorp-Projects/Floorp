@@ -61,7 +61,7 @@ It will do a good job at formatting the date to the user locale, but it will
 only be able to use the customization bits that are exposed to the Web, based on
 the locale the user broadcasts to the Web and any additional settings.
 
-But that leaves out a lot of bits of information that could inform the formatting.
+But that ignores bits of information that could inform the formatting.
 
 Public API such as :js:`Intl.*` will not be able to look into the Operating System for
 regional preferences. It will also respect settings such as `Resist Fingerprinting`
@@ -93,7 +93,7 @@ to use the :js:`Services.intl` wrapper.
 Additional APIs
 ================
 
-On top of wrapping up `Intl` API, `mozIntl` provides a number of additional features
+On top of wrapping up `Intl` API, `mozIntl` provides a number of features
 in form of additional options to existing APIs as well as completely new APIs.
 
 Many of those extensions are in the process of being standardized, but are
@@ -105,19 +105,20 @@ mozIntl.DateTimeFormat
 ----------------------
 
 `DateTimeFormat` in `mozIntl` gets additional options that provide greater
-simplicy and consistency to the API.
+simplicity and consistency to the API.
 
 * :js:`timeStyle` and :js:`dateStyle` can take values :js:`short`, :js:`medium`,
   :js:`long` and :js:`full`.
-  Those options can replace the manual listing of tokens like :js:`year`, :js:`day`, :js:`hour` etc.
+  These options can replace the manual listing of tokens like :js:`year`, :js:`day`, :js:`hour` etc.
   and will compose the most natural date or time format of a given style for the selected
   locale.
 
 Using :js:`timeStyle` and :js:`dateStyle` is highly recommended over listing the tokens,
 because different locales may use different default styles for displaying the same tokens.
 
-Additional value is that using those styles allows `mozIntl` to look into Operating
-System patterns which allow the user to customize those patterns to their liking.
+Additional value is that using those styles allows `mozIntl` to look into
+Operating System patterns, which gives users the ability to customize those
+patterns to their liking.
 
 Example use:
 
@@ -130,7 +131,7 @@ Example use:
     let value = dtf.format(new Date());
 
 This will select the best locale to match the current Gecko application locale,
-then potentially check for Operating System regional preferneces customizations,
+then potentially check for Operating System regional preferences customizations,
 produce the correct pattern for short date+time style and format the date into it.
 
 
@@ -178,7 +179,7 @@ mozIntl.getDisplayNames(locales, options)
 -----------------------------------------
 
 :js:`getDisplayNames` API is useful to retrieve various terms available in the
-internationalization API. 
+internationalization API.
 
 The API takes a locale fallback chain list, and an options object which can contain
 two keys:
@@ -240,10 +241,10 @@ mozIntl.RelativeTimeFormat(locales, options)
 --------------------------------------------
 
 API which can be used to format an interval or a date into a textual
-representation of a relative time such as **5 minutes ago** or **in 2 days**.
+representation of a relative time, such as **5 minutes ago** or **in 2 days**.
 
 This API is in the process of standardization and in its raw form will not handle
-any calculations to select the best unit. It is inteded to just offer a way
+any calculations to select the best unit. It is intended to just offer a way
 to format a value.
 
 `mozIntl` wrapper extends the functionality providing the calculations and
