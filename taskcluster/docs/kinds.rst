@@ -461,6 +461,13 @@ post-langpack-dummy
 ------------------------------
 Dummy tasks to consolidate language pack beetmover dependencies to avoid taskcluster limits on number of dependencies per task.
 
+fetch
+-----
+
+Tasks that obtain something from a remote service and re-expose it as a
+task artifact. These tasks are used to effectively cache and re-host
+remote content so it is reliably and deterministically available.
+
 packages
 --------
 Tasks used to build packages for use in docker images.

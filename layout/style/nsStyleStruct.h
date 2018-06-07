@@ -1092,15 +1092,34 @@ protected:
 public:
   // [reset] the colors to use for a simple border.
   // not used for -moz-border-colors
-  union {
-    struct {
-      mozilla::StyleComplexColor mBorderTopColor;
-      mozilla::StyleComplexColor mBorderRightColor;
-      mozilla::StyleComplexColor mBorderBottomColor;
-      mozilla::StyleComplexColor mBorderLeftColor;
-    };
-    mozilla::StyleComplexColor mBorderColor[4];
-  };
+  mozilla::StyleComplexColor mBorderTopColor;
+  mozilla::StyleComplexColor mBorderRightColor;
+  mozilla::StyleComplexColor mBorderBottomColor;
+  mozilla::StyleComplexColor mBorderLeftColor;
+
+  mozilla::StyleComplexColor&
+  BorderColorFor(mozilla::Side aSide) {
+    switch (aSide) {
+    case mozilla::eSideTop:    return mBorderTopColor;
+    case mozilla::eSideRight:  return mBorderRightColor;
+    case mozilla::eSideBottom: return mBorderBottomColor;
+    case mozilla::eSideLeft:   return mBorderLeftColor;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unknown side");
+    return mBorderTopColor;
+  }
+
+  const mozilla::StyleComplexColor&
+  BorderColorFor(mozilla::Side aSide) const {
+    switch (aSide) {
+    case mozilla::eSideTop:    return mBorderTopColor;
+    case mozilla::eSideRight:  return mBorderRightColor;
+    case mozilla::eSideBottom: return mBorderBottomColor;
+    case mozilla::eSideLeft:   return mBorderLeftColor;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unknown side");
+    return mBorderTopColor;
+  }
 
   static mozilla::StyleComplexColor nsStyleBorder::*
   BorderColorFieldFor(mozilla::Side aSide) {
@@ -1145,20 +1164,6 @@ private:
 
   nsStyleBorder& operator=(const nsStyleBorder& aOther) = delete;
 };
-
-#define ASSERT_BORDER_COLOR_FIELD(side_)                          \
-  static_assert(offsetof(nsStyleBorder, mBorder##side_##Color) == \
-                  offsetof(nsStyleBorder, mBorderColor) +         \
-                    size_t(mozilla::eSide##side_) *               \
-                    sizeof(mozilla::StyleComplexColor),           \
-                "mBorder" #side_ "Color must be at same offset "  \
-                "as mBorderColor[mozilla::eSide" #side_ "]")
-ASSERT_BORDER_COLOR_FIELD(Top);
-ASSERT_BORDER_COLOR_FIELD(Right);
-ASSERT_BORDER_COLOR_FIELD(Bottom);
-ASSERT_BORDER_COLOR_FIELD(Left);
-#undef ASSERT_BORDER_COLOR_FIELD
-
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
 {
@@ -2861,7 +2866,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
 
   bool HasCustomScrollbars() const
   {
-    return !mScrollbarFaceColor.mIsAuto || !mScrollbarTrackColor.mIsAuto;
+    return !mScrollbarFaceColor.IsAuto() || !mScrollbarTrackColor.IsAuto();
   }
 };
 

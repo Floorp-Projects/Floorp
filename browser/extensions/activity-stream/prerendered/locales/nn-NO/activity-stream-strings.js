@@ -91,7 +91,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_move_down": "Flytt ned",
   "section_menu_action_privacy_notice": "Personvernmerknad",
   "firstrun_title": "Ta med deg Firefox",
-  "firstrun_content": "Get your bookmarks, history, passwords and other settings on all your devices.",
+  "firstrun_content": "Få bokmerke, historikk, passord, og andre innstillingar på alle einingane dine.",
   "firstrun_learn_more_link": "Les meir om Firefox-kontoen",
   "firstrun_form_header": "Skriv inn e-postadressa di",
   "firstrun_form_sub_header": "for å fortsetje til Firefox Sync.",

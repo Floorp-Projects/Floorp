@@ -9,13 +9,15 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
+<!-- minwidth=50 is sum width of chevron and meatball menu button. -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-toolbox-window"
         macanimationtype="document"
         fullscreenbutton="true"
         windowtype="devtools:toolbox"
         width="900" height="600"
-        persist="screenX screenY width height sizemode">
+        persist="screenX screenY width height sizemode"
+        minwidth="50">
 
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript" src="toolbox-process-window.js"/>

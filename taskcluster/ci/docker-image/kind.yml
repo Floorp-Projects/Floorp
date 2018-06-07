@@ -83,6 +83,9 @@ jobs:
   android-build:
     symbol: I(agb)
     parent: debian9-base
+  fetch:
+    symbol: I(fetch)
+    parent: debian9-base
   mingw32-build:
     symbol: I(mingw)
     parent: debian9-base

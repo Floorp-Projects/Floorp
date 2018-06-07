@@ -8,6 +8,9 @@ Cu.importGlobalProperties(["fetch"]);
 const {ASRouterActions: ra} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {OnboardingMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/OnboardingMessageProvider.jsm", {});
 
+ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm");
+
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
@@ -101,17 +104,6 @@ const MessageLoaderUtils = {
 };
 
 this.MessageLoaderUtils = MessageLoaderUtils;
-
-/**
- * getRandomItemFromArray
- *
- * @param {Array} arr An array of items
- * @returns one of the items in the array
- */
-function getRandomItemFromArray(arr) {
-  const index = Math.floor(Math.random() * arr.length);
-  return arr[index];
-}
 
 /**
  * @class _ASRouter - Keeps track of all messages, UI surfaces, and
@@ -238,29 +230,40 @@ class _ASRouter {
     bundledMessages.push({content: originalMessage.content, id: originalMessage.id});
     for (const msg of this.state.messages) {
       if (msg.bundled && msg.template === originalMessage.template && msg.id !== originalMessage.id && !this.state.blockList.includes(msg.id)) {
-        // only copy the content - that's what the UI cares about
+        // Only copy the content - that's what the UI cares about
         bundledMessages.push({content: msg.content, id: msg.id});
       }
+
+      // Stop once we have enough messages to fill a bundle
       if (bundledMessages.length === originalMessage.bundled) {
         break;
       }
     }
+
+    // If we did not find enough messages to fill the bundle, do not send the bundle down
+    if (bundledMessages.length < originalMessage.bundled) {
+      return null;
+    }
+
     return {bundle: bundledMessages, provider: originalMessage.provider, template: originalMessage.template};
   }
 
-  async sendNextMessage(target) {
-    let message;
-    let bundledMessages;
+  _getUnblockedMessages() {
+    let {state} = this;
+    return state.messages.filter(item => !state.blockList.includes(item.id));
+  }
 
-    await this.setState(state => {
-      message = getRandomItemFromArray(state.messages.filter(item => item.id !== state.lastMessageId && !state.blockList.includes(item.id)));
-      return {lastMessageId: message ? message.id : null};
-    });
+  async sendNextMessage(target) {
+    let bundledMessages;
+    const msgs = this._getUnblockedMessages();
+    let message = await ASRouterTargeting.findMatchingMessage(msgs);
+    await this.setState({lastMessageId: message ? message.id : null});
+
     // If this message needs to be bundled with other messages of the same template, find them and bundle them together
     if (message && message.bundled) {
       bundledMessages = this._getBundledMessages(message);
     }
-    if (message && !bundledMessages) {
+    if (message && !message.bundled) {
       // If we only need to send 1 message, send the message
       target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
     } else if (bundledMessages) {

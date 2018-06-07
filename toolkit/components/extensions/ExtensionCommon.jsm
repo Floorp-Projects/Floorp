@@ -1804,10 +1804,11 @@ class EventManager {
           let primed = {pendingEvents: []};
           listener.primed = primed;
 
-          let wakeup = () => new Promise(resolve => {
-            extension.once("startup", resolve);
+          let bgStartupPromise = new Promise(r => extension.once("startup", r));
+          let wakeup = () => {
             extension.emit("background-page-event");
-          });
+            return bgStartupPromise;
+          };
 
           let fireEvent = (...args) => new Promise((resolve, reject) => {
             primed.pendingEvents.push({args, resolve, reject});

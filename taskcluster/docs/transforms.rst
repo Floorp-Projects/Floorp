@@ -146,6 +146,7 @@ following ``run-using`` are available
   * ``debian-package``
   * ``toolchain-script``
   * ``always-optimized``
+  * ``fetch-url``
 
 
 Task Descriptions

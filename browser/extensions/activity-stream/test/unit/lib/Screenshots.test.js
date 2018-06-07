@@ -27,14 +27,12 @@ describe("Screenshots", () => {
     globals.set("BackgroundPageThumbs", {captureIfMissing: sandbox.spy(() => Promise.resolve())});
     globals.set("PageThumbs", {
       _store: sandbox.stub(),
-      getThumbnailPath: sandbox.spy(() => Promise.resolve(FAKE_THUMBNAIL_PATH))
+      getThumbnailPath: sandbox.spy(() => FAKE_THUMBNAIL_PATH)
     });
     globals.set("PrivateBrowsingUtils", {isWindowPrivate: sandbox.spy(() => false)});
-    testFile = [0];
-    globals.set("OS", {File: {open: sandbox.spy(() => Promise.resolve({read: () => testFile, close: () => {}}))}});
-    globals.set("FileUtils", {File: sandbox.spy(() => {})});
-    globals.set("MIMEService", {getTypeFromFile: sandbox.spy(() => {})});
+    testFile = {size: 1};
     globals.set("Services", fakeServices);
+    globals.set("fetch", sandbox.spy(() => Promise.resolve({blob: () => Promise.resolve(testFile)})));
   });
   afterEach(() => {
     globals.restore();
@@ -49,20 +47,18 @@ describe("Screenshots", () => {
       await Screenshots.getScreenshotForURL(URL);
       assert.calledWith(global.PageThumbs.getThumbnailPath, URL);
     });
-    it("should call OS.File.open with the correct params", async () => {
+    it("should call fetch", async () => {
       await Screenshots.getScreenshotForURL(URL);
-      assert.calledOnce(global.OS.File.open);
+      assert.calledOnce(global.fetch);
     });
-    it("should call FileUtils.File", async () => {
-      await Screenshots.getScreenshotForURL(URL);
-      assert.calledOnce(global.FileUtils.File);
-    });
-    it("should call MIMEService.getTypeFromFile", async () => {
-      await Screenshots.getScreenshotForURL(URL);
-      assert.calledOnce(global.MIMEService.getTypeFromFile);
+    it("should have the necessary keys in the response object", async () => {
+      const screenshot = await Screenshots.getScreenshotForURL(URL);
+
+      assert.notEqual(screenshot.path, undefined);
+      assert.notEqual(screenshot.data, undefined);
     });
     it("should get null if something goes wrong", async () => {
-      globals.set("BackgroundPageThumbs", {captureIfMissing: () => new Error("Cannot capture tumbnail")});
+      globals.set("BackgroundPageThumbs", {captureIfMissing: () => Promise.reject(new Error("Cannot capture thumbnail"))});
 
       const screenshot = await Screenshots.getScreenshotForURL(URL);
 
@@ -70,7 +66,7 @@ describe("Screenshots", () => {
       assert.equal(screenshot, null);
     });
     it("should get null without storing if existing thumbnail is empty", async () => {
-      testFile.length = 0;
+      testFile.size = 0;
 
       const screenshot = await Screenshots.getScreenshotForURL(URL);
 
@@ -122,29 +118,6 @@ describe("Screenshots", () => {
       await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
 
       assert.notCalled(Screenshots.getScreenshotForURL);
-    });
-  });
-
-  describe("#_bytesToString", () => {
-    it("should convert no bytes to empty string", () => {
-      assert.equal(Screenshots._bytesToString([]), "");
-    });
-    it("should convert bytes to a string", () => {
-      const str = Screenshots._bytesToString([104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]);
-
-      assert.equal(str, "hello world");
-    });
-    it("should convert very many bytes to a long string", () => {
-      const bytes = [];
-      for (let i = 0; i < 1000 * 1000; i++) {
-        bytes.push(9);
-      }
-
-      const str = Screenshots._bytesToString(bytes);
-
-      assert.propertyVal(str, 0, "\t");
-      assert.propertyVal(str, "length", 1000000);
-      assert.propertyVal(str, 999999, "\u0009");
     });
   });
 

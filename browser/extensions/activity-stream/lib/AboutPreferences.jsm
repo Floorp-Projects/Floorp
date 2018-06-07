@@ -30,7 +30,7 @@ const PREFS_BEFORE_SECTIONS = [
       descString: "prefs_topsites_description"
     },
     icon: "topsites",
-    maxRows: 2,
+    maxRows: 4,
     rowsPref: "topSitesRows"
   }
 ];

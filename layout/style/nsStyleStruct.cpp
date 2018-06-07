@@ -306,6 +306,10 @@ nsStyleBorder::nsStyleBorder(const nsPresContext* aContext)
   , mBorderImageRepeatV(StyleBorderImageRepeat::Stretch)
   , mFloatEdge(StyleFloatEdge::ContentBox)
   , mBoxDecorationBreak(StyleBoxDecorationBreak::Slice)
+  , mBorderTopColor(StyleComplexColor::CurrentColor())
+  , mBorderRightColor(StyleComplexColor::CurrentColor())
+  , mBorderBottomColor(StyleComplexColor::CurrentColor())
+  , mBorderLeftColor(StyleComplexColor::CurrentColor())
   , mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -323,7 +327,6 @@ nsStyleBorder::nsStyleBorder(const nsPresContext* aContext)
 
     mBorder.Side(side) = medium;
     mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE;
-    mBorderColor[side] = StyleComplexColor::CurrentColor();
   }
 
   mTwipsPerPixel = aContext->DevPixelsToAppUnits(1);
@@ -340,6 +343,10 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   , mBorderImageRepeatV(aSrc.mBorderImageRepeatV)
   , mFloatEdge(aSrc.mFloatEdge)
   , mBoxDecorationBreak(aSrc.mBoxDecorationBreak)
+  , mBorderTopColor(aSrc.mBorderTopColor)
+  , mBorderRightColor(aSrc.mBorderRightColor)
+  , mBorderBottomColor(aSrc.mBorderBottomColor)
+  , mBorderLeftColor(aSrc.mBorderLeftColor)
   , mComputedBorder(aSrc.mComputedBorder)
   , mBorder(aSrc.mBorder)
   , mTwipsPerPixel(aSrc.mTwipsPerPixel)
@@ -347,7 +354,6 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   MOZ_COUNT_CTOR(nsStyleBorder);
   NS_FOR_CSS_SIDES(side) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
-    mBorderColor[side] = aSrc.mBorderColor[side];
   }
 }
 
@@ -429,7 +435,7 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
   // style or the color flags differ we want to repaint.
   NS_FOR_CSS_SIDES(ix) {
     if (mBorderStyle[ix] != aNewData.mBorderStyle[ix] ||
-        mBorderColor[ix] != aNewData.mBorderColor[ix]) {
+        BorderColorFor(ix) != aNewData.BorderColorFor(ix)) {
       return nsChangeHint_RepaintFrame;
     }
   }
@@ -4261,7 +4267,8 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
 //
 
 nsStyleTextReset::nsStyleTextReset(const nsPresContext* aContext)
-  : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  : mTextOverflow()
+  , mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
   , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID)
   , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
   , mInitialLetterSink(0)
@@ -4272,9 +4279,15 @@ nsStyleTextReset::nsStyleTextReset(const nsPresContext* aContext)
 }
 
 nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
+  : mTextOverflow(aSource.mTextOverflow)
+  , mTextDecorationLine(aSource.mTextDecorationLine)
+  , mTextDecorationStyle(aSource.mTextDecorationStyle)
+  , mUnicodeBidi(aSource.mUnicodeBidi)
+  , mInitialLetterSink(aSource.mInitialLetterSink)
+  , mInitialLetterSize(aSource.mInitialLetterSize)
+  , mTextDecorationColor(aSource.mTextDecorationColor)
 {
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  *this = aSource;
 }
 
 nsStyleTextReset::~nsStyleTextReset()
