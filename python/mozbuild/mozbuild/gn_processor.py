@@ -359,8 +359,8 @@ def find_common_attrs(config_attributes):
             common_value = reference.get(k)
             if common_value:
                 if isinstance(input_value, list):
-                    input_value = set(input_value)
-                    reference[k] = [i for i in common_value if i in input_value]
+                    reference[k] = [i for i in common_value
+                                    if input_value.count(i) == common_value.count(i)]
                 elif isinstance(input_value, dict):
                     reference[k] = {key: value for key, value in common_value.items()
                                     if key in input_value and value == input_value[key]}
@@ -381,8 +381,8 @@ def find_common_attrs(config_attributes):
             common_value = reference.get(k)
             if common_value:
                 if isinstance(input_value, list):
-                    common_value = set(common_value)
-                    input_attrs[k] = [i for i in input_value if i not in common_value]
+                    input_attrs[k] = [i for i in input_value
+                                      if common_value.count(i) != input_value.count(i)]
                 elif isinstance(input_value, dict):
                     input_attrs[k] = {key: value for key, value in input_value.items()
                                       if key not in common_value}
