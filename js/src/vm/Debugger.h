@@ -127,7 +127,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
                     ZoneAllocPolicy> CountMap;
 
     CountMap zoneCounts;
-    JSCompartment* compartment;
+    JS::Compartment* compartment;
 
   public:
     typedef WeakMap<Key, Value, MovableCellHasher<Key>> Base;
@@ -990,7 +990,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * debugger's compartment.
      *
      * If *vp is an object, this produces a (new or existing) Debugger.Object
-     * wrapper for it. Otherwise this is the same as JSCompartment::wrap.
+     * wrapper for it. Otherwise this is the same as Compartment::wrap.
      *
      * If *vp is a magic JS_OPTIMIZED_OUT value, this produces a plain object
      * of the form { optimizedOut: true }.
@@ -1592,7 +1592,6 @@ class WasmBreakpointSite;
 
 class BreakpointSite {
     friend class Breakpoint;
-    friend struct ::JSCompartment;
     friend class ::JSScript;
     friend class Debugger;
 
@@ -1655,7 +1654,6 @@ class BreakpointSite {
  * Zone::sweepBreakpoints.
  */
 class Breakpoint {
-    friend struct ::JSCompartment;
     friend class Debugger;
     friend class BreakpointSite;
 

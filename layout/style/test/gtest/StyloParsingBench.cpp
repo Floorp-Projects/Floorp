@@ -62,7 +62,8 @@ static void ServoSetPropertyByIdBench(const nsACString& css) {
       data,
       ParsingMode::Default,
       eCompatibility_FullStandards,
-      nullptr
+      nullptr,
+      { }
     );
   }
 }
@@ -81,7 +82,8 @@ static void ServoGetPropertyValueById() {
     data,
     ParsingMode::Default,
     eCompatibility_FullStandards,
-    nullptr
+    nullptr,
+    { }
   );
 
   for (int i = 0; i < GETPROPERTY_REPETITIONS; i++) {

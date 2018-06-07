@@ -62,7 +62,7 @@ function isNotJavaScript(source) {
 }
 
 function isInvalidUrl(url, source) {
-  return IGNORED_URLS.indexOf(url) != -1 || !(source.get ? source.get("url") : source.url) || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
+  return IGNORED_URLS.indexOf(url) != -1 || !source.url || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
 }
 
 function partIsFile(index, parts, url) {

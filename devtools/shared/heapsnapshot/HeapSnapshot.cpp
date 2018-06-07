@@ -1069,7 +1069,7 @@ ShouldIncludeEdge(JS::CompartmentSet* compartments,
   // Shape's getter/setter JSObjects). However, we do not serialize nodes in other
   // compartments that are reachable from these non-compartment nodes.
 
-  JSCompartment* compartment = edge.referent.compartment();
+  JS::Compartment* compartment = edge.referent.compartment();
 
   if (!compartment || compartments->has(compartment)) {
     return true;

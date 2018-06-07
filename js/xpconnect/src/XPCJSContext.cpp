@@ -645,7 +645,7 @@ XPCJSContext::InterruptCallback(JSContext* cx)
         JS::Rooted<JSObject*> proto(cx);
         if (!JS_GetPrototype(cx, global, &proto))
             return false;
-        if (proto && IsSandboxPrototypeProxy(proto) &&
+        if (proto && xpc::IsSandboxPrototypeProxy(proto) &&
             (proto = js::CheckedUnwrap(proto, /* stopAtWindowProxy = */ false)))
         {
             win = WindowGlobalOrNull(proto);

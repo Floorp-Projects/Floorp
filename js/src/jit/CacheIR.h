@@ -683,7 +683,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardMagicValue, val);
         buffer_.writeByte(uint32_t(magic));
     }
-    void guardCompartment(ObjOperandId obj, JSObject* global, JSCompartment* compartment) {
+    void guardCompartment(ObjOperandId obj, JSObject* global, JS::Compartment* compartment) {
         assertSameCompartment(global);
         writeOpWithOperandId(CacheOp::GuardCompartment, obj);
         // Add a reference to a global in the compartment to keep it alive.

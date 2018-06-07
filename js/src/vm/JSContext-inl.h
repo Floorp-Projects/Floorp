@@ -22,7 +22,7 @@ namespace js {
 
 class CompartmentChecker
 {
-    JSCompartment* compartment;
+    JS::Compartment* compartment;
 
   public:
     explicit CompartmentChecker(JSContext* cx)
@@ -34,7 +34,7 @@ class CompartmentChecker
      * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
      * compartment mismatches.
      */
-    static void fail(JSCompartment* c1, JSCompartment* c2) {
+    static void fail(JS::Compartment* c1, JS::Compartment* c2) {
         printf("*** Compartment mismatch %p vs. %p\n", (void*) c1, (void*) c2);
         MOZ_CRASH();
     }
@@ -44,12 +44,12 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    static void check(JSCompartment* c1, JSCompartment* c2) {
+    static void check(JS::Compartment* c1, JS::Compartment* c2) {
         if (c1 != c2)
             fail(c1, c2);
     }
 
-    void check(JSCompartment* c) {
+    void check(JS::Compartment* c) {
         if (c && c != compartment)
             fail(compartment, c);
     }
@@ -463,9 +463,6 @@ JSContext::enterRealm(JS::Realm* realm)
     // We should never enter a realm while in the atoms zone.
     MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
 
-#ifdef DEBUG
-    enterRealmDepth_++;
-#endif
     realm->enter();
     setRealm(realm);
 }
@@ -495,20 +492,12 @@ JSContext::enterNullRealm()
     // We should never enter a realm while in the atoms zone.
     MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
 
-#ifdef DEBUG
-    enterRealmDepth_++;
-#endif
     setRealm(nullptr);
 }
 
 inline void
 JSContext::leaveRealm(JS::Realm* oldRealm)
 {
-    MOZ_ASSERT(hasEnteredRealm());
-#ifdef DEBUG
-    enterRealmDepth_--;
-#endif
-
     // Only call leave() after we've setRealm()-ed away from the current realm.
     JS::Realm* startingRealm = realm_;
     setRealm(oldRealm);
@@ -528,8 +517,8 @@ JSContext::setRealm(JS::Realm* realm)
 {
     // Both the current and the new realm should be properly marked as
     // entered at this point.
-    MOZ_ASSERT_IF(realm_, realm_->hasBeenEntered());
-    MOZ_ASSERT_IF(realm, realm->hasBeenEntered());
+    MOZ_ASSERT_IF(realm_, realm_->hasBeenEnteredIgnoringJit());
+    MOZ_ASSERT_IF(realm, realm->hasBeenEnteredIgnoringJit());
 
     // This thread must have exclusive access to the zone.
     MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));

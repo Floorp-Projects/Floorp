@@ -560,7 +560,7 @@ public:
                                  JSFinalizeStatus status,
                                  void* data);
     static void WeakPointerZonesCallback(JSContext* cx, void* data);
-    static void WeakPointerCompartmentCallback(JSContext* cx, JSCompartment* comp, void* data);
+    static void WeakPointerCompartmentCallback(JSContext* cx, JS::Compartment* comp, void* data);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -837,7 +837,7 @@ public:
 
     nsIPrincipal*
     GetPrincipal() const {
-        JSCompartment* c = js::GetObjectCompartment(mGlobalJSObject);
+        JS::Compartment* c = js::GetObjectCompartment(mGlobalJSObject);
         return nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
     }
 
@@ -919,7 +919,7 @@ public:
 
     nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
-    JSCompartment* Compartment() const { return js::GetObjectCompartment(mGlobalJSObject); }
+    JS::Compartment* Compartment() const { return js::GetObjectCompartment(mGlobalJSObject); }
 
     bool IsContentXBLScope() { return xpc::IsContentXBLCompartment(Compartment()); }
     bool AllowContentXBLScope();
@@ -1870,7 +1870,7 @@ protected:
     void Unlink();
 
 private:
-    JSCompartment* Compartment() const {
+    JS::Compartment* Compartment() const {
         return js::GetObjectCompartment(mJSObj.unbarrieredGet());
     }
 
@@ -2834,11 +2834,11 @@ class CompartmentPrivate
     CompartmentPrivate(const CompartmentPrivate&) = delete;
 
 public:
-    explicit CompartmentPrivate(JSCompartment* c);
+    explicit CompartmentPrivate(JS::Compartment* c);
 
     ~CompartmentPrivate();
 
-    static CompartmentPrivate* Get(JSCompartment* compartment)
+    static CompartmentPrivate* Get(JS::Compartment* compartment)
     {
         MOZ_ASSERT(compartment);
         void* priv = JS_GetCompartmentPrivate(compartment);
@@ -2847,7 +2847,7 @@ public:
 
     static CompartmentPrivate* Get(JSObject* object)
     {
-        JSCompartment* compartment = js::GetObjectCompartment(object);
+        JS::Compartment* compartment = js::GetObjectCompartment(object);
         return Get(compartment);
     }
 
@@ -2917,7 +2917,7 @@ private:
     JSObject2WrappedJSMap* mWrappedJSMap;
 };
 
-bool IsUniversalXPConnectEnabled(JSCompartment* compartment);
+bool IsUniversalXPConnectEnabled(JS::Compartment* compartment);
 bool IsUniversalXPConnectEnabled(JSContext* cx);
 bool EnableUniversalXPConnect(JSContext* cx);
 

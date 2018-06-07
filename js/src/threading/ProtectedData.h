@@ -9,7 +9,7 @@
 
 #include "threading/Thread.h"
 
-namespace JS { struct Zone; }
+namespace JS { class Zone; }
 
 namespace js {
 

@@ -31,7 +31,7 @@ using namespace js;
 namespace xpc {
 
 nsIPrincipal*
-GetCompartmentPrincipal(JSCompartment* compartment)
+GetCompartmentPrincipal(JS::Compartment* compartment)
 {
     return nsJSPrincipals::get(JS_GetCompartmentPrincipals(compartment));
 }
@@ -50,7 +50,7 @@ GetObjectPrincipal(JSObject* obj)
 
 // Does the principal of compartment a subsume the principal of compartment b?
 bool
-AccessCheck::subsumes(JSCompartment* a, JSCompartment* b)
+AccessCheck::subsumes(JS::Compartment* a, JS::Compartment* b)
 {
     nsIPrincipal* aprin = GetCompartmentPrincipal(a);
     nsIPrincipal* bprin = GetCompartmentPrincipal(b);
@@ -65,7 +65,7 @@ AccessCheck::subsumes(JSObject* a, JSObject* b)
 
 // Same as above, but considering document.domain.
 bool
-AccessCheck::subsumesConsideringDomain(JSCompartment* a, JSCompartment* b)
+AccessCheck::subsumesConsideringDomain(JS::Compartment* a, JS::Compartment* b)
 {
     MOZ_ASSERT(OriginAttributes::IsRestrictOpenerAccessForFPI());
     nsIPrincipal* aprin = GetCompartmentPrincipal(a);
@@ -74,8 +74,8 @@ AccessCheck::subsumesConsideringDomain(JSCompartment* a, JSCompartment* b)
 }
 
 bool
-AccessCheck::subsumesConsideringDomainIgnoringFPD(JSCompartment* a,
-                                                  JSCompartment* b)
+AccessCheck::subsumesConsideringDomainIgnoringFPD(JS::Compartment* a,
+                                                  JS::Compartment* b)
 {
     MOZ_ASSERT(!OriginAttributes::IsRestrictOpenerAccessForFPI());
     nsIPrincipal* aprin = GetCompartmentPrincipal(a);
@@ -94,7 +94,7 @@ AccessCheck::wrapperSubsumes(JSObject* wrapper)
 }
 
 bool
-AccessCheck::isChrome(JSCompartment* compartment)
+AccessCheck::isChrome(JS::Compartment* compartment)
 {
     nsIPrincipal* principal = GetCompartmentPrincipal(compartment);
     return nsXPConnect::SystemPrincipal() == principal;
@@ -107,7 +107,7 @@ AccessCheck::isChrome(JSObject* obj)
 }
 
 nsIPrincipal*
-AccessCheck::getPrincipal(JSCompartment* compartment)
+AccessCheck::getPrincipal(JS::Compartment* compartment)
 {
     return GetCompartmentPrincipal(compartment);
 }
@@ -164,7 +164,6 @@ IdentifyCrossOriginObject(JSObject* obj)
 {
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     const js::Class* clasp = js::GetObjectClass(obj);
-    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(Jsvalify(clasp)), "shouldn't have a holder here");
 
     if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location"))
         return CrossOriginLocation;

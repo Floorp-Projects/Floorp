@@ -506,8 +506,8 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
 
   const originalToolboxHostType = toolbox.hostType;
 
-  info("Switch the toolbox from docked on bottom to docked on side");
-  toolbox.switchHost("side");
+  info("Switch the toolbox from docked on bottom to docked on right");
+  toolbox.switchHost("right");
 
   info("Wait for the panel to emit hide, show and load messages once docked on side");
   await extension.awaitMessage("devtools_panel_hidden");

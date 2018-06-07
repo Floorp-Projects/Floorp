@@ -17,15 +17,15 @@ namespace xpc {
 
 class AccessCheck {
   public:
-    static bool subsumes(JSCompartment* a, JSCompartment* b);
+    static bool subsumes(JS::Compartment* a, JS::Compartment* b);
     static bool subsumes(JSObject* a, JSObject* b);
     static bool wrapperSubsumes(JSObject* wrapper);
-    static bool subsumesConsideringDomain(JSCompartment* a, JSCompartment* b);
-    static bool subsumesConsideringDomainIgnoringFPD(JSCompartment* a,
-                                                     JSCompartment* b);
-    static bool isChrome(JSCompartment* compartment);
+    static bool subsumesConsideringDomain(JS::Compartment* a, JS::Compartment* b);
+    static bool subsumesConsideringDomainIgnoringFPD(JS::Compartment* a,
+                                                     JS::Compartment* b);
+    static bool isChrome(JS::Compartment* compartment);
     static bool isChrome(JSObject* obj);
-    static nsIPrincipal* getPrincipal(JSCompartment* compartment);
+    static nsIPrincipal* getPrincipal(JS::Compartment* compartment);
     static bool isCrossOriginAccessPermitted(JSContext* cx, JS::HandleObject obj,
                                              JS::HandleId id, js::Wrapper::Action act);
     static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,

@@ -89,6 +89,7 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutPrivateBrowsingHandler: "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
@@ -1054,6 +1055,8 @@ BrowserGlue.prototype = {
 
     NewTabUtils.init();
 
+    AboutPrivateBrowsingHandler.init();
+
     PageActions.init();
 
     this._firstWindowTelemetry(aWindow);
@@ -1106,6 +1109,7 @@ BrowserGlue.prototype = {
 
     PageThumbs.uninit();
     NewTabUtils.uninit();
+    AboutPrivateBrowsingHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerHelper.uninit();
 

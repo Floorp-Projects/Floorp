@@ -51,7 +51,7 @@ var DevTools = {
     sideToolbox: {
       selectors: [selectToolbox],
       async applyConfig() {
-        await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "side");
+        await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "right");
         await new Promise(resolve => setTimeout(resolve, 500));
       },
     },

@@ -137,7 +137,7 @@ class Breakpoint extends _react.PureComponent {
   }
 
   highlightText() {
-    const text = this.getBreakpointText();
+    const text = this.getBreakpointText() || "";
     const editor = (0, _editor.getEditor)();
 
     if (!editor.CodeMirror) {

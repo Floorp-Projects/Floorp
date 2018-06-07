@@ -336,6 +336,12 @@ StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs, bool* res)
 template bool StringsEqual<true>(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 template bool StringsEqual<false>(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
+typedef bool (*StringCompareFn)(JSContext*, HandleString, HandleString, bool*);
+const VMFunction StringsEqualInfo =
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>, "StringsEqual");
+const VMFunction StringsNotEqualInfo =
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>, "StringsEqual");
+
 bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
                        HandleObjectGroup group, uint32_t limit,
                        MutableHandleValue result)
@@ -778,7 +784,7 @@ WrapObjectPure(JSContext* cx, JSObject* obj)
     MOZ_ASSERT(obj);
     MOZ_ASSERT(cx->compartment() != obj->compartment());
 
-    // From: JSCompartment::getNonWrapperObjectForCurrentCompartment
+    // From: Compartment::getNonWrapperObjectForCurrentCompartment
     // Note that if the object is same-compartment, but has been wrapped into a
     // different compartment, we need to unwrap it and return the bare same-
     // compartment object. Note again that windows are always wrapped by a

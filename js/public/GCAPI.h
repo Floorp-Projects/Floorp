@@ -319,7 +319,7 @@ typedef void
 (* JSWeakPointerZonesCallback)(JSContext* cx, void* data);
 
 typedef void
-(* JSWeakPointerCompartmentCallback)(JSContext* cx, JSCompartment* comp, void* data);
+(* JSWeakPointerCompartmentCallback)(JSContext* cx, JS::Compartment* comp, void* data);
 
 /**
  * Finalizes external strings created by JS_NewExternalString. The finalizer

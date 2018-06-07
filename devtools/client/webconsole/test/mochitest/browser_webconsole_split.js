@@ -25,8 +25,8 @@ add_task(async function() {
   info("Testing host types");
   checkHostType(Toolbox.HostType.BOTTOM);
   await checkToolboxUI();
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
-  checkHostType(Toolbox.HostType.SIDE);
+  await toolbox.switchHost(Toolbox.HostType.RIGHT);
+  checkHostType(Toolbox.HostType.RIGHT);
   await checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
 

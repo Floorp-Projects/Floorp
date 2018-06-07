@@ -155,7 +155,7 @@ JS::GetIsSecureContext(JS::Realm* realm)
 }
 
 JS_FRIEND_API(JSPrincipals*)
-JS_GetCompartmentPrincipals(JSCompartment* compartment)
+JS_GetCompartmentPrincipals(JS::Compartment* compartment)
 {
     // Note: for now we assume a single realm per compartment. This API will go
     // away after we remove the remaining callers. See bug 1465700.
@@ -347,7 +347,7 @@ js::GetRealmZone(JS::Realm* realm)
 }
 
 JS_FRIEND_API(bool)
-js::IsSystemCompartment(JSCompartment* comp)
+js::IsSystemCompartment(JS::Compartment* comp)
 {
     // Note: for now we assume a single realm per compartment. This API will
     // hopefully go away once Gecko supports same-compartment realms. Another
@@ -629,7 +629,7 @@ JS_FRIEND_API(void)
 js::VisitGrayWrapperTargets(Zone* zone, GCThingCallback callback, void* closure)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront())
+        for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront())
             e.front().mutableKey().applyToWrapped(VisitGrayCallbackFunctor(callback, closure));
     }
 }
@@ -1335,14 +1335,6 @@ js::GetTestingFunctions(JSContext* cx)
 
     return obj;
 }
-
-#ifdef DEBUG
-JS_FRIEND_API(unsigned)
-js::GetEnterRealmDepth(JSContext* cx)
-{
-  return cx->getEnterRealmDepth();
-}
-#endif
 
 JS_FRIEND_API(void)
 js::SetDOMCallbacks(JSContext* cx, const DOMCallbacks* callbacks)

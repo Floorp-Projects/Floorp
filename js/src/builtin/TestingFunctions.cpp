@@ -5083,6 +5083,49 @@ SetTimeResolution(JSContext* cx, unsigned argc, Value* vp)
    return true;
 }
 
+static bool
+ScriptedCallerGlobal(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject obj(cx, JS::GetScriptedCallerGlobal(cx));
+    if (!obj) {
+        args.rval().setNull();
+        return true;
+    }
+
+    obj = ToWindowProxyIfWindow(obj);
+
+    if (!cx->compartment()->wrap(cx, &obj))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+ObjectGlobal(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (!args.get(0).isObject()) {
+        ReportUsageErrorASCII(cx, callee, "Argument must be an object");
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+    if (IsWrapper(obj)) {
+        args.rval().setNull();
+        return true;
+    }
+
+    obj = ToWindowProxyIfWindow(&obj->global());
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
 JSScript*
 js::TestingFunctionArgumentToScript(JSContext* cx,
                                     HandleValue v,
@@ -5873,6 +5916,14 @@ gc::ZealModeHelpText),
 "setTimeResolution(resolution, jitter)",
 "  Enables time clamping and jittering. Specify a time resolution in\n"
 "  microseconds and whether or not to jitter\n"),
+
+    JS_FN_HELP("scriptedCallerGlobal", ScriptedCallerGlobal, 0, 0,
+"scriptedCallerGlobal()",
+"  Get the caller's global (or null). See JS::GetScriptedCallerGlobal.\n"),
+
+    JS_FN_HELP("objectGlobal", ObjectGlobal, 1, 0,
+"objectGlobal(obj)",
+"  Returns the object's global object or null if the object is a wrapper.\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",
