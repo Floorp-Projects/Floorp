@@ -463,9 +463,6 @@ JSContext::enterRealm(JS::Realm* realm)
     // We should never enter a realm while in the atoms zone.
     MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
 
-#ifdef DEBUG
-    enterRealmDepth_++;
-#endif
     realm->enter();
     setRealm(realm);
 }
@@ -495,20 +492,12 @@ JSContext::enterNullRealm()
     // We should never enter a realm while in the atoms zone.
     MOZ_ASSERT_IF(zone(), !zone()->isAtomsZone());
 
-#ifdef DEBUG
-    enterRealmDepth_++;
-#endif
     setRealm(nullptr);
 }
 
 inline void
 JSContext::leaveRealm(JS::Realm* oldRealm)
 {
-    MOZ_ASSERT(hasEnteredRealm());
-#ifdef DEBUG
-    enterRealmDepth_--;
-#endif
-
     // Only call leave() after we've setRealm()-ed away from the current realm.
     JS::Realm* startingRealm = realm_;
     setRealm(oldRealm);

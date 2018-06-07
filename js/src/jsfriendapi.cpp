@@ -1336,14 +1336,6 @@ js::GetTestingFunctions(JSContext* cx)
     return obj;
 }
 
-#ifdef DEBUG
-JS_FRIEND_API(unsigned)
-js::GetEnterRealmDepth(JSContext* cx)
-{
-  return cx->getEnterRealmDepth();
-}
-#endif
-
 JS_FRIEND_API(void)
 js::SetDOMCallbacks(JSContext* cx, const DOMCallbacks* callbacks)
 {

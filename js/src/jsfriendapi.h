@@ -1217,11 +1217,6 @@ CastToJSFreeOp(FreeOp* fop)
 extern JS_FRIEND_API(JSFlatString*)
 GetErrorTypeName(JSContext* cx, int16_t exnType);
 
-#ifdef JS_DEBUG
-extern JS_FRIEND_API(unsigned)
-GetEnterRealmDepth(JSContext* cx);
-#endif
-
 extern JS_FRIEND_API(RegExpShared*)
 RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp);
 
