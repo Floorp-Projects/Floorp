@@ -530,14 +530,18 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getChar(int32_t* cp)
     return true;
 }
 
-// This gets the next char. It does nothing special with EOL sequences, not
-// even updating the line counters.  It can be used safely if (a) the
-// resulting char is guaranteed to be ungotten (by ungetCharIgnoreEOL()) if
-// it's an EOL, and (b) the line-related state (lineno, linebase) is not used
-// before it's ungotten.
+// This gets the next code unit -- the next numeric sub-unit of source text,
+// possibly smaller than a full code point.  It is simple and stupid, and it
+// doesn't understand EOL, update line counters, or anything like that.  If you
+// use it to consume an EOL sequence, line counters *will not* be correct for
+// subsequent code.
+//
+// Only use this if (a) the resulting code unit is guaranteed to be ungotten
+// (by ungetCharIgnoreEOL()) if it's an EOL, and (b) the line-related state
+// (lineno, linebase) is not used before it's ungotten.
 template<typename CharT, class AnyCharsAccess>
 int32_t
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCharIgnoreEOL()
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCodeUnit()
 {
     if (MOZ_LIKELY(sourceUnits.hasRawChars()))
         return sourceUnits.getCodeUnit();
@@ -606,7 +610,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekChars(int n, CharT* cp)
 {
     int i;
     for (i = 0; i < n; i++) {
-        int32_t c = getCharIgnoreEOL();
+        int32_t c = getCodeUnit();
         if (c == EOF)
             break;
 
@@ -1003,7 +1007,7 @@ template<typename CharT, class AnyCharsAccess>
 uint32_t
 TokenStreamSpecific<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoint)
 {
-    int32_t c = getCharIgnoreEOL();
+    int32_t c = getCodeUnit();
     if (c != 'u') {
         ungetCharIgnoreEOL(c);
         return 0;
@@ -1011,7 +1015,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoin
 
     CharT cp[3];
     uint32_t length;
-    c = getCharIgnoreEOL();
+    c = getCodeUnit();
     if (JS7_ISHEX(c) && peekChars(3, cp) &&
         JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
     {
@@ -1036,13 +1040,13 @@ uint32_t
 TokenStreamSpecific<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* codePoint)
 {
     // The opening brace character was already read.
-    int32_t c = getCharIgnoreEOL();
+    int32_t c = getCodeUnit();
 
     // Skip leading zeros.
     uint32_t leadingZeros = 0;
     while (c == '0') {
         leadingZeros++;
-        c = getCharIgnoreEOL();
+        c = getCodeUnit();
     }
 
     CharT cp[6];
@@ -1051,7 +1055,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* 
     while (JS7_ISHEX(c) && i < 6) {
         cp[i++] = c;
         code = code << 4 | JS7_UNHEX(c);
-        c = getCharIgnoreEOL();
+        c = getCodeUnit();
     }
 
     uint32_t length;
@@ -1313,7 +1317,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::matchMultiUnitCodePointSlow(char16_t
                "matchMultiUnitCodepoint should have ensured |lead| is a lead "
                "surrogate");
 
-    int32_t maybeTrail = getCharIgnoreEOL();
+    int32_t maybeTrail = getCodeUnit();
     if (MOZ_LIKELY(unicode::IsTrailSurrogate(maybeTrail))) {
         *codePoint = unicode::UTF16Decode(lead, maybeTrail);
     } else {
@@ -1336,7 +1340,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
 
     tokenbuf.clear();
     for (;;) {
-        int32_t c = getCharIgnoreEOL();
+        int32_t c = getCodeUnit();
 
         uint32_t codePoint;
         if (!matchMultiUnitCodePoint(c, &codePoint))
@@ -1375,7 +1379,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
 
     int c;
     while (true) {
-        c = getCharIgnoreEOL();
+        c = getCodeUnit();
         if (c == EOF)
             break;
 
@@ -1519,7 +1523,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::consumeRestOfSingleLineComment()
 {
     int32_t c;
     do {
-        c = getCharIgnoreEOL();
+        c = getCodeUnit();
     } while (c != EOF && !SourceUnits::isRawEOLChar(c));
 
     ungetCharIgnoreEOL(c);
@@ -1539,7 +1543,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
 
     // Consume integral component digits.
     while (IsAsciiDigit(c))
-        c = getCharIgnoreEOL();
+        c = getCodeUnit();
 
     // Numbers contain no escapes, so we can read directly from |sourceUnits|.
     double dval;
@@ -1559,15 +1563,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
         if (c == '.') {
             decimalPoint = HasDecimal;
             do {
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
             } while (IsAsciiDigit(c));
         }
 
         // Consume any exponential notation.
         if (c == 'e' || c == 'E') {
-            c = getCharIgnoreEOL();
+            c = getCodeUnit();
             if (c == '+' || c == '-')
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
 
             // Exponential notation must contain at least one digit.
             if (!IsAsciiDigit(c)) {
@@ -1578,7 +1582,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
 
             // Consume exponential digits.
             do {
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
             } while (IsAsciiDigit(c));
         }
 
@@ -1779,10 +1783,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
             int radix;
             const CharT* numStart;
-            c = getCharIgnoreEOL();
+            c = getCodeUnit();
             if (c == 'x' || c == 'X') {
                 radix = 16;
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
                 if (!JS7_ISHEX(c)) {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_HEXDIGITS);
@@ -1793,10 +1797,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
                 while (JS7_ISHEX(c))
-                    c = getCharIgnoreEOL();
+                    c = getCodeUnit();
             } else if (c == 'b' || c == 'B') {
                 radix = 2;
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
                 if (c != '0' && c != '1') {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_BINARY_DIGITS);
@@ -1807,10 +1811,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
                 while (c == '0' || c == '1')
-                    c = getCharIgnoreEOL();
+                    c = getCodeUnit();
             } else if (c == 'o' || c == 'O') {
                 radix = 8;
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
                 if (c < '0' || c > '7') {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_OCTAL_DIGITS);
@@ -1821,7 +1825,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
                 while ('0' <= c && c <= '7')
-                    c = getCharIgnoreEOL();
+                    c = getCodeUnit();
             } else if (IsAsciiDigit(c)) {
                 radix = 8;
                 // one past the '0'
@@ -1845,7 +1849,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                         return decimalNumber(c, start, numStart, modifier, ttp);
                     }
 
-                    c = getCharIgnoreEOL();
+                    c = getCodeUnit();
                 } while (IsAsciiDigit(c));
             } else {
                 // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
@@ -1910,7 +1914,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 #endif
         switch (c) {
           case '.':
-            c = getCharIgnoreEOL();
+            c = getCodeUnit();
             if (IsAsciiDigit(c)) {
                 return decimalNumber('.', start, sourceUnits.addressOfNextCodeUnit() - 2, modifier,
                                      ttp);
@@ -2030,7 +2034,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
           case '/':
             // Look for a single-line comment.
             if (matchChar('/')) {
-                c = getCharIgnoreEOL();
+                c = getCodeUnit();
                 if (c == '@' || c == '#') {
                     bool shouldWarn = c == '@';
                     if (!getDirectives(false, shouldWarn))
@@ -2110,7 +2114,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 RegExpFlag reflags = NoFlags;
                 while (true) {
                     RegExpFlag flag;
-                    c = getCharIgnoreEOL();
+                    c = getCodeUnit();
                     if (c == 'g')
                         flag = GlobalFlag;
                     else if (c == 'i')
@@ -2207,8 +2211,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
     // We need to detect any of these chars:  " or ', \n (or its
     // equivalents), \\, EOF.  Because we detect EOL sequences here and
-    // put them back immediately, we can use getCharIgnoreEOL().
-    while ((c = getCharIgnoreEOL()) != untilChar) {
+    // put them back immediately, we can use getCodeUnit().
+    while ((c = getCodeUnit()) != untilChar) {
         if (c == EOF) {
             ungetCharIgnoreEOL(c);
             const char delimiters[] = { untilChar, untilChar, '\0' };
@@ -2245,14 +2249,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
               // Unicode character specification.
               case 'u': {
-                int32_t c2 = getCharIgnoreEOL();
+                int32_t c2 = getCodeUnit();
                 if (c2 == '{') {
                     uint32_t start = sourceUnits.offset() - 3;
                     uint32_t code = 0;
                     bool first = true;
                     bool valid = true;
                     do {
-                        int32_t c = getCharIgnoreEOL();
+                        int32_t c = getCodeUnit();
                         if (c == EOF) {
                             if (parsingTemplate) {
                                 TokenStreamAnyChars& anyChars = anyCharsAccess();
