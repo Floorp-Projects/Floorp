@@ -306,5 +306,22 @@ TabGroup::IsBackground() const
   return mForegroundCount == 0;
 }
 
+uint32_t
+TabGroup::Count(bool aActiveOnly) const
+{
+  if (!aActiveOnly) {
+    return mDocGroups.Count();
+  }
+
+  uint32_t count = 0;
+  for (auto iter = mDocGroups.ConstIter(); !iter.Done(); iter.Next()) {
+    if (iter.Get()->mDocGroup->IsActive()) {
+      ++count;
+    }
+  }
+
+  return count;
+}
+
 } // namespace dom
 } // namespace mozilla

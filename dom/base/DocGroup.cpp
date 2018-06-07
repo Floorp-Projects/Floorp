@@ -176,5 +176,17 @@ DocGroup::SignalSlotChange(const HTMLSlotElement* aSlot)
   sPendingDocGroups->AppendElement(this);
 }
 
+bool
+DocGroup::IsActive() const
+{
+  for (nsIDocument* doc : mDocuments) {
+    if (doc->IsCurrentActiveDocument()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }
 }
