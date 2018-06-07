@@ -638,6 +638,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".sht", // HTML
     //".sldm", // MS PowerPoint
     //".sldx", // MS PowerPoint
+    ".slk", // MS Excel
     ".slp", // Linux package
     ".smi", // Mac disk image
     ".sparsebundle", // Mac disk image
