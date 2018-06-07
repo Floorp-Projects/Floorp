@@ -1636,6 +1636,13 @@ protected: // Shouldn't be used by friend classes
    */
   virtual ~EditorBase();
 
+  /**
+   * SelectAllInternal() should be used instead of SelectAll() in editor
+   * because SelectAll() creates AutoEditActionSetter but we should avoid
+   * to create it as far as possible.
+   */
+  virtual nsresult SelectAllInternal();
+
   nsresult DetermineCurrentDirection();
   void FireInputEvent();
 

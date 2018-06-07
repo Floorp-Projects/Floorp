@@ -3588,13 +3588,24 @@ HTMLEditor::SelectEntireDocument(Selection* aSelection)
   return EditorBase::SelectEntireDocument(aSelection);
 }
 
-NS_IMETHODIMP
-HTMLEditor::SelectAll()
+nsresult
+HTMLEditor::SelectAllInternal()
 {
   CommitComposition();
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
+  // XXX Perhaps, we should check whether we still have focus since composition
+  //     event listener may have already moved focus to different editing
+  //     host or other element.  So, perhaps, we need to retrieve anchor node
+  //     before committing composition and check if selection is still in
+  //     same editing host.
 
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsINode* anchorNode = selection->GetAnchorNode();
   if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent())) {
@@ -3611,7 +3622,9 @@ HTMLEditor::SelectAll()
     rootContent = anchorContent->GetSelectionRootContent(ps);
   }
 
-  NS_ENSURE_TRUE(rootContent, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!rootContent)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   Maybe<mozilla::dom::Selection::AutoUserInitiated> userSelection;
   if (!rootContent->IsEditable()) {
@@ -3619,6 +3632,7 @@ HTMLEditor::SelectAll()
   }
   ErrorResult errorResult;
   selection->SelectAllChildren(*rootContent, errorResult);
+  NS_WARNING_ASSERTION(!errorResult.Failed(), "SelectAllChildren() failed");
   return errorResult.StealNSResult();
 }
 

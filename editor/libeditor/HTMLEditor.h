@@ -143,8 +143,6 @@ public:
 
   NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
-  NS_IMETHOD SelectAll() override;
-
   NS_IMETHOD DebugUnitTests(int32_t* outNumTests,
                             int32_t* outNumTestsFailed) override;
 
@@ -750,6 +748,8 @@ protected: // Called by helper classes.
 
 protected: // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
+
+  virtual nsresult SelectAllInternal() override;
 
   /**
    * InsertNodeIntoProperAncestorWithTransaction() attempts to insert aNode
