@@ -18,15 +18,29 @@ ChromeUtils.defineModuleGetter(this, "FindContent",
   "resource://gre/modules/FindContent.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteFinder",
   "resource://gre/modules/RemoteFinder.jsm");
+ChromeUtils.defineModuleGetter(this, "AutoScrollController",
+  "resource://gre/modules/AutoScrollController.jsm");
 
 var global = this;
-
 
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function() {
   let {RemoteFinderListener} = ChromeUtils.import("resource://gre/modules/RemoteFinder.jsm", {});
   new RemoteFinderListener(global);
 });
+
+var AutoScrollListener = {
+  handleEvent(event) {
+    if (event.isTrusted &
+        !event.defaultPrevented) {
+      if (!this._controller) {
+        this._controller = new AutoScrollController(global);
+      }
+      this._controller.handleEvent(event);
+    }
+  }
+};
+Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
 var PopupBlocking = {
   popupData: null,
