@@ -63,6 +63,7 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     'CombinedStacks.cpp',
+    'HangReports.cpp',
     'ipc/TelemetryIPC.cpp',
     'ipc/TelemetryIPCAccumulator.cpp',
     'ProcessedStack.cpp',
