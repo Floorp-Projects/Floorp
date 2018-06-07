@@ -9,6 +9,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 
 #include <stddef.h>
@@ -18,6 +19,7 @@ using mozilla::IsSame;
 using mozilla::MakeUnique;
 using mozilla::Swap;
 using mozilla::UniquePtr;
+using mozilla::UniqueFreePtr;
 using mozilla::Vector;
 
 #define CHECK(c) \
@@ -562,6 +564,36 @@ TestMakeUnique()
   return true;
 }
 
+static bool
+TestVoid()
+{
+  // UniquePtr<void> supports all operations except operator*() and
+  // operator->().
+  UniqueFreePtr<void> p1(malloc(1));
+  UniqueFreePtr<void> p2;
+
+  auto x = p1.get();
+  CHECK(x != nullptr);
+  CHECK((IsSame<decltype(x), void*>::value));
+
+  p2.reset(p1.release());
+  CHECK(p1.get() == nullptr);
+  CHECK(p2.get() != nullptr);
+
+  p1 = std::move(p2);
+  CHECK(p1);
+  CHECK(!p2);
+
+  p1.swap(p2);
+  CHECK(!p1);
+  CHECK(p2);
+
+  p2 = nullptr;
+  CHECK(!p2);
+
+  return true;
+}
+
 int
 main()
 {
@@ -586,6 +618,9 @@ main()
     return 1;
   }
   if (!TestMakeUnique()) {
+    return 1;
+  }
+  if (!TestVoid()) {
     return 1;
   }
   return 0;
