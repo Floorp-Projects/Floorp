@@ -194,7 +194,6 @@ class UrlInputFragment :
             backgroundView?.setBackgroundResource(R.drawable.background_gradient)
 
             dismissView?.visibility = View.GONE
-            toolbarBackgroundView?.visibility = View.GONE
 
             menuView?.visibility = View.VISIBLE
             menuView?.setOnClickListener(this)
@@ -440,31 +439,21 @@ class UrlInputFragment :
         }
 
         if (!reverse) {
-            toolbarBackgroundView?.alpha = 0f
             clearView?.alpha = 0f
         }
 
         if (toolbarBackgroundView != null) {
-            // The darker background appears with an alpha animation
-            toolbarBackgroundView.animate()
-                .setDuration(ANIMATION_DURATION.toLong())
-                .alpha((if (reverse) 0 else 1).toFloat())
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationStart(animation: Animator) {
-                        toolbarBackgroundView?.visibility = View.VISIBLE
-                    }
-
-                    override fun onAnimationEnd(animation: Animator) {
-                        if (reverse) {
-                            toolbarBackgroundView?.visibility = View.GONE
-
-                            if (!isOverlay) {
-                                dismissView?.visibility = View.GONE
-                                menuView?.visibility = View.VISIBLE
-                            }
-                        }
-                    }
-                })
+            if (reverse) {
+                toolbarBackgroundView.setBackgroundResource(R.drawable.background_inactive)
+                toolbarBottomBorder.visibility = View.VISIBLE
+                if (!isOverlay) {
+                    dismissView?.visibility = View.GONE
+                    menuView?.visibility = View.VISIBLE
+                }
+            } else {
+                toolbarBackgroundView.setBackgroundResource(R.drawable.background_active)
+                toolbarBottomBorder.visibility = View.GONE
+            }
         }
     }
 
