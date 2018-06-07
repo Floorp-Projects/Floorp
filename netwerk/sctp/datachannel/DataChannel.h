@@ -139,8 +139,8 @@ public:
     virtual void NotifyDataChannel(already_AddRefed<DataChannel> channel) = 0;
   };
 
-  explicit DataChannelConnection(DataConnectionListener *listener,
-                                 nsIEventTarget *aTarget);
+  DataChannelConnection(DataConnectionListener *listener,
+                        nsIEventTarget *aTarget);
 
   bool Init(unsigned short aPort, uint16_t aNumStreams, bool aMaxMessageSizeSet,
             uint64_t aMaxMessageSize);
@@ -342,6 +342,10 @@ private:
   nsCOMPtr<nsIThread> mInternalIOThread;
   uint8_t mPendingType;
   nsCString mRecvBuffer;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool mShutdown;
+#endif
 };
 
 #define ENSURE_DATACONNECTION \
