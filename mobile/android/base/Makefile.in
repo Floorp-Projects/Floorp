@@ -47,7 +47,7 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
 .PHONY: features
-tools features::
+features::
 	$(call py_action,generate_builtin_addons,--features=features chrome/chrome/content/built_in_addons.json)
 
 ifndef MOZILLA_OFFICIAL
