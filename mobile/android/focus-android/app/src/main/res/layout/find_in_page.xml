@@ -77,7 +77,7 @@
         app:layout_constraintStart_toEndOf="@+id/nextResult"
         app:layout_constraintTop_toTopOf="parent"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/accessibility_close_find_in_page"
+        android:contentDescription="@string/accessibility_dismiss_find_in_page"
         android:src="@drawable/ic_close" />
 
 </android.support.constraint.ConstraintLayout>
