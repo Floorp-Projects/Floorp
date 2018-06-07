@@ -24,13 +24,6 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
-    "/media/webrtc/trunk/",
     "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
     "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
     "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
@@ -118,6 +111,13 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -130,6 +130,13 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -150,6 +157,13 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -199,6 +213,13 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -241,6 +262,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and n
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -255,6 +283,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not C
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
@@ -264,6 +301,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not C
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -274,6 +318,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -288,6 +339,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONF
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
@@ -297,6 +357,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -305,6 +372,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and no
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -315,6 +389,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -329,6 +410,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONF
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
 
     CXXFLAGS += [
@@ -338,6 +428,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -346,6 +443,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and no
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -356,6 +460,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -370,6 +481,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONF
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
@@ -379,6 +499,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONF
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -387,6 +514,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and no
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -397,6 +531,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and C
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -411,6 +552,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFI
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
@@ -420,6 +570,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFI
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -430,6 +587,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -444,6 +608,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
@@ -453,6 +626,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -461,6 +641,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CO
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -471,6 +658,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -485,6 +679,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
 
     CXXFLAGS += [
@@ -494,6 +697,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -502,6 +712,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CO
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -512,6 +729,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -526,6 +750,15 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
@@ -535,6 +768,13 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
@@ -543,6 +783,13 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CO
     DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
