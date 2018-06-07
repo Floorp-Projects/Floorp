@@ -3,7 +3,6 @@ import os
 config = {
     "nightly_build": False,
     "branch": "try",
-    "en_us_binary_url": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central",
     "update_channel": "nightly-try",
 
     # l10n

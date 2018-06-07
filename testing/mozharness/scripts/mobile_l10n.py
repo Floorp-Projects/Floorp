@@ -22,7 +22,7 @@ except ImportError:
     import json
 
 # load modules from parent dir
-sys.path.insert(1, os.path.dirname(sys.path[0]))
+sys.path.insert(1, os.path.dirname(sys.path[0]))  # noqa
 
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
@@ -42,13 +42,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
          "dest": "locales",
          "type": "string",
          "help": "Specify the locale(s) to sign and update"
-         }
-    ], [
-        ['--locales-file', ],
-        {"action": "store",
-         "dest": "locales_file",
-         "type": "string",
-         "help": "Specify a file to determine which locales to sign and update"
          }
     ], [
         ['--tag-override', ],
