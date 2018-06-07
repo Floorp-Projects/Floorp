@@ -348,7 +348,21 @@ public:
    */
   nsresult CommitComposition();
 
-  void SwitchTextDirectionTo(uint32_t aDirection);
+  /**
+   * ToggleTextDirection() toggles text-direction of the root element.
+   */
+  nsresult ToggleTextDirection();
+
+  /**
+   * SwitchTextDirectionTo() sets the text-direction of the root element to
+   * LTR or RTL.
+   */
+  enum class TextDirection
+  {
+    eLTR,
+    eRTL,
+  };
+  void SwitchTextDirectionTo(TextDirection aTextDirection);
 
   /**
    * Finalizes selection and caret for the editor.
@@ -1824,6 +1838,13 @@ private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   nsCOMPtr<nsIDocument> mDocument;
 
+
+  /**
+   * SetTextDirectionTo() sets text-direction of the root element.
+   * Should use SwitchTextDirectionTo() or ToggleTextDirection() instead.
+   * This is a helper class of them.
+   */
+  nsresult SetTextDirectionTo(TextDirection aTextDirection);
 protected:
   enum Tristate
   {
