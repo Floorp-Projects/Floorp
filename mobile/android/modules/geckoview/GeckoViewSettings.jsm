@@ -89,11 +89,13 @@ class GeckoViewSettings extends GeckoViewModule {
       return;
     }
     if (aUse) {
-      Services.obs.addObserver(this.onUserAgentRequest.bind(this),
+      this._userAgentObserver = this.onUserAgentRequest.bind(this);
+      Services.obs.addObserver(this._userAgentObserver,
                                "http-on-useragent-request");
-    } else {
-      Services.obs.removeObserver(this.onUserAgentRequest.bind(this),
+    } else if (this._userAgentObserver) {
+      Services.obs.removeObserver(this._userAgentObserver,
                                   "http-on-useragent-request");
+      this._userAgentObserver = undefined;
     }
     this._useDesktopMode = aUse;
   }
