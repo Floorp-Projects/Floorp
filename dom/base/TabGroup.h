@@ -100,6 +100,10 @@ public:
     return mDocGroups.Iter();
   }
 
+  // Returns the size of the set of "similar-origin" DocGroups. To
+  // only consider DocGroups with at least one active document, call
+  // Count with 'aActiveOnly' = true
+  uint32_t Count(bool aActiveOnly = false) const;
 
   // Returns the nsIDocShellTreeItem with the given name, searching each of the
   // docShell trees which are within this TabGroup. It will pass itself as
