@@ -2461,6 +2461,12 @@ function BrowserCloseTabOrWindow(event) {
     return;
   }
 
+  // In a multi-select context, close all selected tabs
+  if (gBrowser.multiSelectedTabsCount) {
+    gBrowser.removeMultiSelectedTabs();
+    return;
+  }
+
   // Keyboard shortcuts that would close a tab that is pinned select the first
   // unpinned tab instead.
   if (event &&

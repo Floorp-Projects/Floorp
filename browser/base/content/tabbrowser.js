@@ -3773,9 +3773,12 @@ window._gBrowser = {
 
     if (AppConstants.platform != "macosx") {
       if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
-          aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-          !this.selectedTab.pinned) {
-        this.removeCurrentTab({ animate: true });
+          aEvent.keyCode == KeyEvent.DOM_VK_F4) {
+        if (gBrowser.multiSelectedTabsCount) {
+          gBrowser.removeMultiSelectedTabs();
+        } else if (!this.selectedTab.pinned) {
+          this.removeCurrentTab({ animate: true });
+        }
         aEvent.preventDefault();
       }
     }
