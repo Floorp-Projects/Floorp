@@ -476,7 +476,7 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
                 cond = tuple(((k, dict(args).get(k)) for k in attrs))
                 conditions.add(cond)
 
-            for cond in conditions:
+            for cond in sorted(conditions):
                 common_dirs = None
                 for args, dir_set in dirs_by_config.items():
                     if all(dict(args).get(k) == v for k, v in cond):
