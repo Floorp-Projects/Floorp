@@ -1194,7 +1194,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
         // Debugging directives can occur in both single- and multi-line
         // comments. If we're currently inside a multi-line comment, we also
         // need to recognize multi-line comment terminators.
-        if (isMultiline && c == '*' && matchChar('/')) {
+        if (isMultiline && c == '*' && matchCodeUnit('/')) {
             ungetCodeUnit('/');
             ungetCodeUnit('*');
             break;
@@ -1923,7 +1923,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             if (c == '.') {
-                if (matchChar('.')) {
+                if (matchCodeUnit('.')) {
                     simpleKind = TokenKind::TripleDot;
                     break;
                 }
@@ -1934,19 +1934,19 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             break;
 
           case '=':
-            if (matchChar('='))
-                simpleKind = matchChar('=') ? TokenKind::StrictEq : TokenKind::Eq;
-            else if (matchChar('>'))
+            if (matchCodeUnit('='))
+                simpleKind = matchCodeUnit('=') ? TokenKind::StrictEq : TokenKind::Eq;
+            else if (matchCodeUnit('>'))
                 simpleKind = TokenKind::Arrow;
             else
                 simpleKind = TokenKind::Assign;
             break;
 
           case '+':
-            if (matchChar('+'))
+            if (matchCodeUnit('+'))
                 simpleKind = TokenKind::Inc;
             else
-                simpleKind = matchChar('=') ? TokenKind::AddAssign : TokenKind::Add;
+                simpleKind = matchCodeUnit('=') ? TokenKind::AddAssign : TokenKind::Add;
             break;
 
           case '\\': {
@@ -1967,30 +1967,30 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
           }
 
           case '|':
-            if (matchChar('|'))
+            if (matchCodeUnit('|'))
                 simpleKind = TokenKind::Or;
 #ifdef ENABLE_PIPELINE_OPERATOR
-            else if (matchChar('>'))
+            else if (matchCodeUnit('>'))
                 simpleKind = TokenKind::Pipeline;
 #endif
             else
-                simpleKind = matchChar('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
+                simpleKind = matchCodeUnit('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
             break;
 
           case '^':
-            simpleKind = matchChar('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
+            simpleKind = matchCodeUnit('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
             break;
 
           case '&':
-            if (matchChar('&'))
+            if (matchCodeUnit('&'))
                 simpleKind = TokenKind::And;
             else
-                simpleKind = matchChar('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
+                simpleKind = matchCodeUnit('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
             break;
 
           case '!':
-            if (matchChar('='))
-                simpleKind = matchChar('=') ? TokenKind::StrictNe : TokenKind::Ne;
+            if (matchCodeUnit('='))
+                simpleKind = matchCodeUnit('=') ? TokenKind::StrictNe : TokenKind::Ne;
             else
                 simpleKind = TokenKind::Not;
             break;
@@ -1998,9 +1998,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
           case '<':
             if (anyCharsAccess().options().allowHTMLComments) {
                 // Treat HTML begin-comment as comment-till-end-of-line.
-                if (matchChar('!')) {
-                    if (matchChar('-')) {
-                        if (matchChar('-')) {
+                if (matchCodeUnit('!')) {
+                    if (matchCodeUnit('-')) {
+                        if (matchCodeUnit('-')) {
                             consumeRestOfSingleLineComment();
                             continue;
                         }
@@ -2009,33 +2009,33 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     ungetCodeUnit('!');
                 }
             }
-            if (matchChar('<'))
-                simpleKind = matchChar('=') ? TokenKind::LshAssign : TokenKind::Lsh;
+            if (matchCodeUnit('<'))
+                simpleKind = matchCodeUnit('=') ? TokenKind::LshAssign : TokenKind::Lsh;
             else
-                simpleKind = matchChar('=') ? TokenKind::Le : TokenKind::Lt;
+                simpleKind = matchCodeUnit('=') ? TokenKind::Le : TokenKind::Lt;
             break;
 
           case '>':
-            if (matchChar('>')) {
-                if (matchChar('>'))
-                    simpleKind = matchChar('=') ? TokenKind::UrshAssign : TokenKind::Ursh;
+            if (matchCodeUnit('>')) {
+                if (matchCodeUnit('>'))
+                    simpleKind = matchCodeUnit('=') ? TokenKind::UrshAssign : TokenKind::Ursh;
                 else
-                    simpleKind = matchChar('=') ? TokenKind::RshAssign : TokenKind::Rsh;
+                    simpleKind = matchCodeUnit('=') ? TokenKind::RshAssign : TokenKind::Rsh;
             } else {
-                simpleKind = matchChar('=') ? TokenKind::Ge : TokenKind::Gt;
+                simpleKind = matchCodeUnit('=') ? TokenKind::Ge : TokenKind::Gt;
             }
             break;
 
           case '*':
-            if (matchChar('*'))
-                simpleKind = matchChar('=') ? TokenKind::PowAssign : TokenKind::Pow;
+            if (matchCodeUnit('*'))
+                simpleKind = matchCodeUnit('=') ? TokenKind::PowAssign : TokenKind::Pow;
             else
-                simpleKind = matchChar('=') ? TokenKind::MulAssign : TokenKind::Mul;
+                simpleKind = matchCodeUnit('=') ? TokenKind::MulAssign : TokenKind::Mul;
             break;
 
           case '/':
             // Look for a single-line comment.
-            if (matchChar('/')) {
+            if (matchCodeUnit('/')) {
                 c = getCodeUnit();
                 if (c == '@' || c == '#') {
                     bool shouldWarn = c == '@';
@@ -2050,7 +2050,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             // Look for a multi-line comment.
-            if (matchChar('*')) {
+            if (matchCodeUnit('*')) {
                 TokenStreamAnyChars& anyChars = anyCharsAccess();
                 unsigned linenoBefore = anyChars.lineno;
 
@@ -2063,7 +2063,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                         return badToken();
                     }
 
-                    if (c == '*' && matchChar('/'))
+                    if (c == '*' && matchCodeUnit('/'))
                         break;
 
                     if (c == '@' || c == '#') {
@@ -2147,19 +2147,19 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 return true;
             }
 
-            simpleKind = matchChar('=') ? TokenKind::DivAssign : TokenKind::Div;
+            simpleKind = matchCodeUnit('=') ? TokenKind::DivAssign : TokenKind::Div;
             break;
 
           case '%':
-            simpleKind = matchChar('=') ? TokenKind::ModAssign : TokenKind::Mod;
+            simpleKind = matchCodeUnit('=') ? TokenKind::ModAssign : TokenKind::Mod;
             break;
 
           case '-':
-            if (matchChar('-')) {
+            if (matchCodeUnit('-')) {
                 if (anyCharsAccess().options().allowHTMLComments &&
                     !anyCharsAccess().flags.isDirtyLine)
                 {
-                    if (matchChar('>')) {
+                    if (matchCodeUnit('>')) {
                         consumeRestOfSingleLineComment();
                         continue;
                     }
@@ -2167,7 +2167,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                 simpleKind = TokenKind::Dec;
             } else {
-                simpleKind = matchChar('=') ? TokenKind::SubAssign : TokenKind::Sub;
+                simpleKind = matchCodeUnit('=') ? TokenKind::SubAssign : TokenKind::Sub;
             }
             break;
 
@@ -2444,7 +2444,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 return false;
 
             anyCharsAccess().updateFlagsForEOL();
-        } else if (parsingTemplate && c == '$' && matchChar('{')) {
+        } else if (parsingTemplate && c == '$' && matchCodeUnit('{')) {
             templateHead = true;
             break;
         }

@@ -1035,6 +1035,13 @@ class TokenStreamCharsBase
 
     MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
+    // |expect| cannot be an EOL char.
+    bool matchCodeUnit(int32_t expect) {
+        MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
+        MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
+        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchCodeUnit(expect);
+    }
+
   protected:
     MOZ_MUST_USE bool
     fillWithTemplateStringContents(CharBuffer& charbuf, const CharT* cur, const CharT* end) {
@@ -1358,6 +1365,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsBase::getChar;
     using CharsBase::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
+    using CharsSharedBase::matchCodeUnit;
     using CharsBase::matchMultiUnitCodePoint;
     using GeneralCharsBase::newAtomToken;
     using GeneralCharsBase::newNameToken;
@@ -1726,12 +1734,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                                    UniquePtr<char16_t[], JS::FreePolicy>* destination);
     MOZ_MUST_USE bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
-
-    // |expect| cannot be an EOL char.
-    bool matchChar(int32_t expect) {
-        MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchCodeUnit(expect);
-    }
 
     void consumeKnownChar(int32_t expect) {
         int32_t c;
