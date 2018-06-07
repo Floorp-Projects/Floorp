@@ -1,0 +1,18 @@
+npm-debug.log
+.DS_Store
+*.sw[po]
+*.xpi
+*.pyc
+*.update.rdf
+.gitignore
+
+/.git/
+/bin/prerender.js
+/bin/prerender.js.map
+/data/locales.json
+/dist/
+/logs/
+/node_modules/
+
+# also ignores ping centre tests
+ping-centre/

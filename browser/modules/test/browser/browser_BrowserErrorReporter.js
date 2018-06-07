@@ -166,13 +166,13 @@ add_task(async function testNonErrorLogs() {
     [PREF_SAMPLE_RATE, "1.0"],
   ]});
 
-  reporter.observe({message: "Not a scripterror instance."});
+  await reporter.handleMessage({message: "Not a scripterror instance."});
   ok(
     !fetchPassedError(fetchSpy, "Not a scripterror instance."),
     "Reporter does not collect normal log messages or warnings.",
   );
 
-  await reporter.observe(createScriptError({
+  await reporter.handleMessage(createScriptError({
     message: "Warning message",
     flags: Ci.nsIScriptError.warningFlag,
   }));
@@ -181,7 +181,7 @@ add_task(async function testNonErrorLogs() {
     "Reporter does not collect normal log messages or warnings.",
   );
 
-  await reporter.observe(createScriptError({
+  await reporter.handleMessage(createScriptError({
     message: "Non-chrome category",
     category: "totally from a website",
   }));
@@ -190,7 +190,7 @@ add_task(async function testNonErrorLogs() {
     "Reporter does not collect normal log messages or warnings.",
   );
 
-  await reporter.observe(createScriptError({message: "Is error"}));
+  await reporter.handleMessage(createScriptError({message: "Is error"}));
   ok(
     fetchPassedError(fetchSpy, "Is error"),
     "Reporter collects error messages.",
@@ -205,13 +205,13 @@ add_task(async function testSampling() {
     [PREF_SAMPLE_RATE, "1.0"],
   ]});
 
-  await reporter.observe(createScriptError({message: "Should log"}));
+  await reporter.handleMessage(createScriptError({message: "Should log"}));
   ok(
     fetchPassedError(fetchSpy, "Should log"),
     "A 1.0 sample rate will cause the reporter to always collect errors.",
   );
 
-  await reporter.observe(createScriptError({message: "undefined", sourceName: undefined}));
+  await reporter.handleMessage(createScriptError({message: "undefined", sourceName: undefined}));
   ok(
     fetchPassedError(fetchSpy, "undefined"),
     "A missing sourceName doesn't break reporting.",
@@ -220,13 +220,13 @@ add_task(async function testSampling() {
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_SAMPLE_RATE, "0.0"],
   ]});
-  await reporter.observe(createScriptError({message: "Shouldn't log"}));
+  await reporter.handleMessage(createScriptError({message: "Shouldn't log"}));
   ok(
     !fetchPassedError(fetchSpy, "Shouldn't log"),
     "A 0.0 sample rate will cause the reporter to never collect errors.",
   );
 
-  await reporter.observe(createScriptError({
+  await reporter.handleMessage(createScriptError({
     message: "chromedevtools",
     sourceName: "chrome://devtools/Foo.jsm",
   }));
@@ -235,7 +235,7 @@ add_task(async function testSampling() {
     "chrome://devtools/ paths are sampled at 100% even if the default rate is 0.0.",
   );
 
-  await reporter.observe(createScriptError({
+  await reporter.handleMessage(createScriptError({
     message: "resourcedevtools",
     sourceName: "resource://devtools/Foo.jsm",
   }));
@@ -247,7 +247,7 @@ add_task(async function testSampling() {
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_SAMPLE_RATE, ")fasdf"],
   ]});
-  await reporter.observe(createScriptError({message: "Also shouldn't log"}));
+  await reporter.handleMessage(createScriptError({message: "Also shouldn't log"}));
   ok(
     !fetchPassedError(fetchSpy, "Also shouldn't log"),
     "An invalid sample rate will cause the reporter to never collect errors.",
@@ -262,7 +262,7 @@ add_task(async function testNameMessage() {
     [PREF_SAMPLE_RATE, "1.0"],
   ]});
 
-  await reporter.observe(createScriptError({message: "No name"}));
+  await reporter.handleMessage(createScriptError({message: "No name"}));
   let call = fetchCallForMessage(fetchSpy, "No name");
   let body = JSON.parse(call.args[1].body);
   is(
@@ -276,7 +276,7 @@ add_task(async function testNameMessage() {
     "Reporter uses error message as the exception value.",
   );
 
-  await reporter.observe(createScriptError({message: "FooError: Has name"}));
+  await reporter.handleMessage(createScriptError({message: "FooError: Has name"}));
   call = fetchCallForMessage(fetchSpy, "Has name");
   body = JSON.parse(call.args[1].body);
   is(
@@ -290,7 +290,7 @@ add_task(async function testNameMessage() {
     "Reporter uses error message as the value parameter.",
   );
 
-  await reporter.observe(createScriptError({message: "FooError: Has :extra: colons"}));
+  await reporter.handleMessage(createScriptError({message: "FooError: Has :extra: colons"}));
   call = fetchCallForMessage(fetchSpy, "Has :extra: colons");
   body = JSON.parse(call.args[1].body);
   is(
@@ -480,7 +480,7 @@ add_task(async function testExtensionTag() {
   await extension.unload();
   reporter.uninit();
 
-  await reporter.observe(createScriptError({message: "testExtensionTag not from extension"}));
+  await reporter.handleMessage(createScriptError({message: "testExtensionTag not from extension"}));
   call = fetchCallForMessage(fetchSpy, "testExtensionTag not from extension");
   body = JSON.parse(call.args[1].body);
   is(body.tags.isExtensionError, false, "Normal errors have an isExtensionError=false tag.");
@@ -517,15 +517,15 @@ add_task(async function testScalars() {
 
   // Use observe to avoid errors from other code messing up our counts.
   for (const message of messages) {
-    await reporter.observe(message);
+    await reporter.handleMessage(message);
   }
 
   await SpecialPowers.pushPrefEnv({set: [[PREF_SAMPLE_RATE, "0.0"]]});
-  await reporter.observe(createScriptError({message: "Additionally no name"}));
+  await reporter.handleMessage(createScriptError({message: "Additionally no name"}));
 
   await SpecialPowers.pushPrefEnv({set: [[PREF_SAMPLE_RATE, "1.0"]]});
   fetchStub.rejects(new Error("Could not report"));
-  await reporter.observe(createScriptError({message: "Maybe name?"}));
+  await reporter.handleMessage(createScriptError({message: "Maybe name?"}));
 
   const optin = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
   const scalars = Services.telemetry.snapshotScalars(optin, false).parent;
@@ -596,7 +596,7 @@ add_task(async function testCollectedFilenameScalar() {
     Services.telemetry.clearScalars();
 
     // Use observe to avoid errors from other code messing up our counts.
-    await reporter.observe(createScriptError({
+    await reporter.handleMessage(createScriptError({
       message: "Fine",
       sourceName: filename,
     }));

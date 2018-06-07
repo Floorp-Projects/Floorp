@@ -1,0 +1,247 @@
+.activity-stream {
+  &.welcome {
+    overflow: hidden;
+  }
+
+  &:not(.welcome) {
+    .overlay-wrapper {
+      display: none;
+    }
+  }
+}
+
+.overlay-wrapper {
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  font-weight: 200;
+  transition: opacity 0.4s;
+  opacity: 0;
+
+  &.show {
+    transition: none;
+    opacity: 1;
+
+    .firstrun-sign-in {
+      transition: opacity 1.5s, transform 1.5s;
+      transition-delay: 0.2s;
+      transform: translateY(-50%) scale(1);
+      opacity: 1;
+    }
+
+    .firstrun-firefox-logo {
+      transition: opacity 2.3s;
+      opacity: 1;
+    }
+
+    .firstrun-title,
+    .firstrun-content,
+    .firstrun-link {
+      transition: transform 0.5s, opacity 0.8s;
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .firstrun-title {
+      transition-delay: 0.2s;
+    }
+
+    .firstrun-content {
+      transition-delay: 0.4s;
+    }
+
+    .firstrun-link {
+      transition-delay: 0.6s;
+    }
+
+    .fxaccounts-container {
+      transition: none;
+      opacity: 1;
+    }
+  }
+}
+
+.background {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: url('#{$image-path}fox-tail.png') top -200px center no-repeat,
+  linear-gradient(to bottom, $blue-70 40%, #004EC2 60%, $blue-60 80%, #0080FF 90%, #00C7FF 100%) top center no-repeat,
+  $blue-70;
+  background-size: cover;
+}
+
+.firstrun-sign-in {
+  transform: translateY(-50%) scale(0.8);
+  position: relative;
+  top: 50%;
+  width: 358px;
+  opacity: 0;
+  background-color: $white;
+  float: inline-end;
+  color: $grey-90;
+  text-align: center;
+  padding: 10px;
+
+  .extra-links {
+    font-size: 12px;
+    max-width: 340px;
+    margin: 14px 50px;
+    color: #676F7E;
+    cursor: default;
+
+    a {
+      color: $grey-50;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    a:hover,
+    a:active,
+    a:focus {
+      color: $blue-50;
+    }
+  }
+
+  .email-input {
+    box-shadow: none;
+    margin: auto;
+    width: 244px;
+    display: block;
+    height: 40px;
+    padding-inline-start: 20px;
+    border: 1px solid $grey-50;
+    border-radius: 2px;
+    font-size: 16px;
+
+    &:hover {
+      border-color: $grey-90;
+    }
+  }
+
+  .form-header {
+    font-size: 18px;
+    margin: 15px auto;
+  }
+
+  .form-header span {
+    font-size: 14px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  button {
+    border-radius: 2px;
+    display: block;
+    cursor: pointer;
+    margin: 10px auto 0;
+  }
+
+  .continue-button {
+    font-size: 18px;
+    height: 43px;
+    width: 250px;
+    padding: 8px 0;
+    border: 1px solid $blue-60;
+    color: $white;
+    background-color: $blue-50;
+    transition-duration: 150ms;
+    transition-property: background-color;
+
+    &:not([disabled]):active {
+      background: $blue-70;
+      border-color: $blue-80;
+    }
+  }
+
+  .skip-button {
+    font-size: 13px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    background-color: #FCFCFC;
+    color: $blue-50;
+    border: 1px solid $blue-50;
+    min-height: 24px;
+    padding: 5px 10px;
+    transition: background-color 150ms, color 150ms, border-color 150ms;
+
+    &[disabled] {
+      background-color: #EBEBEB;
+      border-color: #B1B1B1;
+      color: #6A6A6A;
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    &:not([disabled]):hover {
+      background-color: $blue-50;
+      border-color: $blue-60;
+      color: $white;
+    }
+  }
+}
+
+.firstrun-left-divider {
+  position: relative;
+  float: inline-start;
+  clear: both;
+  width: 435px;
+}
+
+.firstrun-content {
+  line-height: 1.5;
+  margin-bottom: 48px;
+  max-width: 352px;
+  background: url('#{$image-path}sync-devices.svg') bottom center no-repeat;
+  padding-bottom: 210px;
+}
+
+.firstrun-link {
+  color: $white;
+  display: block;
+  text-decoration: underline;
+
+  &:hover,
+  &:active,
+  &:focus {
+    color: $white;
+  }
+}
+
+.firstrun-title {
+  background: url('chrome://branding/content/about-logo.png') top left no-repeat;
+  background-size: 90px 90px;
+  margin: 40px 0 10px;
+  padding-top: 110px;
+  font-weight: 200;
+}
+
+[dir='rtl'] {
+  .firstrun-title {
+    background-position: top right;
+  }
+}
+
+.fxaccounts-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  left: 0;
+  color: $white;
+  height: 515px;
+  margin: auto;
+  width: 819px;
+  z-index: 10;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.firstrun-title,
+.firstrun-content,
+.firstrun-link {
+  opacity: 0;
+  transform: translateY(-5px);
+}

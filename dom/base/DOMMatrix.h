@@ -23,6 +23,7 @@ namespace dom {
 class GlobalObject;
 class DOMMatrix;
 class DOMPoint;
+class StringOrUnrestrictedDoubleSequence;
 struct DOMPointInit;
 
 class DOMMatrixReadOnly : public nsWrapperCache
@@ -52,6 +53,14 @@ public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMMatrixReadOnly)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMMatrixReadOnly)
+
+  nsISupports* GetParentObject() const { return mParent; }
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DOMMatrixReadOnly> Constructor(
+    const GlobalObject& aGlobal,
+    const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
+    ErrorResult& aRv);
 
 #define GetMatrixMember(entry2D, entry3D, default) \
 { \
@@ -95,6 +104,52 @@ public:
 
 #undef GetMatrixMember
 #undef Get3DMatrixMember
+
+  // Defined here so we can construct DOMMatrixReadOnly objects.
+#define Set2DMatrixMember(entry2D, entry3D) \
+{ \
+  if (mMatrix3D) { \
+    mMatrix3D->entry3D = v; \
+  } else { \
+    mMatrix2D->entry2D = v; \
+  } \
+}
+
+#define Set3DMatrixMember(entry3D, default) \
+{ \
+  if (mMatrix3D || (v != default)) { \
+    Ensure3DMatrix(); \
+    mMatrix3D->entry3D = v; \
+  } \
+}
+
+  void SetA(double v) Set2DMatrixMember(_11, _11)
+  void SetB(double v) Set2DMatrixMember(_12, _12)
+  void SetC(double v) Set2DMatrixMember(_21, _21)
+  void SetD(double v) Set2DMatrixMember(_22, _22)
+  void SetE(double v) Set2DMatrixMember(_31, _41)
+  void SetF(double v) Set2DMatrixMember(_32, _42)
+
+  void SetM11(double v) Set2DMatrixMember(_11, _11)
+  void SetM12(double v) Set2DMatrixMember(_12, _12)
+  void SetM13(double v) Set3DMatrixMember(_13, 0)
+  void SetM14(double v) Set3DMatrixMember(_14, 0)
+  void SetM21(double v) Set2DMatrixMember(_21, _21)
+  void SetM22(double v) Set2DMatrixMember(_22, _22)
+  void SetM23(double v) Set3DMatrixMember(_23, 0)
+  void SetM24(double v) Set3DMatrixMember(_24, 0)
+  void SetM31(double v) Set3DMatrixMember(_31, 0)
+  void SetM32(double v) Set3DMatrixMember(_32, 0)
+  void SetM33(double v) Set3DMatrixMember(_33, 1.0)
+  void SetM34(double v) Set3DMatrixMember(_34, 0)
+  void SetM41(double v) Set2DMatrixMember(_31, _41)
+  void SetM42(double v) Set2DMatrixMember(_32, _42)
+  void SetM43(double v) Set3DMatrixMember(_43, 0)
+  void SetM44(double v) Set3DMatrixMember(_44, 1.0)
+
+#undef Set2DMatrixMember
+#undef Set3DMatrixMember
+
 
   already_AddRefed<DOMMatrix> Translate(double aTx,
                                         double aTy,
@@ -145,6 +200,9 @@ protected:
 
   virtual ~DOMMatrixReadOnly() {}
 
+  DOMMatrixReadOnly* SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv);
+  void Ensure3DMatrix();
+
 private:
   DOMMatrixReadOnly() = delete;
   DOMMatrixReadOnly(const DOMMatrixReadOnly&) = delete;
@@ -179,52 +237,7 @@ public:
   static already_AddRefed<DOMMatrix>
   Constructor(const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence, ErrorResult& aRv);
 
-  nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-#define Set2DMatrixMember(entry2D, entry3D) \
-{ \
-  if (mMatrix3D) { \
-    mMatrix3D->entry3D = v; \
-  } else { \
-    mMatrix2D->entry2D = v; \
-  } \
-}
-
-#define Set3DMatrixMember(entry3D, default) \
-{ \
-  if (mMatrix3D || (v != default)) { \
-    Ensure3DMatrix(); \
-    mMatrix3D->entry3D = v; \
-  } \
-}
-
-  void SetA(double v) Set2DMatrixMember(_11, _11)
-  void SetB(double v) Set2DMatrixMember(_12, _12)
-  void SetC(double v) Set2DMatrixMember(_21, _21)
-  void SetD(double v) Set2DMatrixMember(_22, _22)
-  void SetE(double v) Set2DMatrixMember(_31, _41)
-  void SetF(double v) Set2DMatrixMember(_32, _42)
-
-  void SetM11(double v) Set2DMatrixMember(_11, _11)
-  void SetM12(double v) Set2DMatrixMember(_12, _12)
-  void SetM13(double v) Set3DMatrixMember(_13, 0)
-  void SetM14(double v) Set3DMatrixMember(_14, 0)
-  void SetM21(double v) Set2DMatrixMember(_21, _21)
-  void SetM22(double v) Set2DMatrixMember(_22, _22)
-  void SetM23(double v) Set3DMatrixMember(_23, 0)
-  void SetM24(double v) Set3DMatrixMember(_24, 0)
-  void SetM31(double v) Set3DMatrixMember(_31, 0)
-  void SetM32(double v) Set3DMatrixMember(_32, 0)
-  void SetM33(double v) Set3DMatrixMember(_33, 1.0)
-  void SetM34(double v) Set3DMatrixMember(_34, 0)
-  void SetM41(double v) Set2DMatrixMember(_31, _41)
-  void SetM42(double v) Set2DMatrixMember(_32, _42)
-  void SetM43(double v) Set3DMatrixMember(_43, 0)
-  void SetM44(double v) Set3DMatrixMember(_44, 1.0)
-
-#undef Set2DMatrixMember
-#undef Set3DMatrixMember
 
   DOMMatrix* MultiplySelf(const DOMMatrix& aOther);
   DOMMatrix* PreMultiplySelf(const DOMMatrix& aOther);
@@ -257,8 +270,6 @@ public:
   DOMMatrix* SkewYSelf(double aSy);
   DOMMatrix* InvertSelf();
   DOMMatrix* SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv);
-protected:
-  void Ensure3DMatrix();
 
   virtual ~DOMMatrix() {}
 };

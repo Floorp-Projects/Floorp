@@ -120,7 +120,10 @@ function nodeHasSize(node) {
   }
 
   const quads = node.getBoxQuads();
-  return quads.length && quads.some(quad => quad.bounds.width && quad.bounds.height);
+  return quads.some(quad => {
+    const bounds = quad.getBounds();
+    return bounds.width && bounds.height;
+  });
 }
 
 /**

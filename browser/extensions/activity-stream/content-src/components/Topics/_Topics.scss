@@ -1,0 +1,77 @@
+.topic {
+  color: var(--newtab-section-navigation-text-color);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: $topic-margin-top;
+
+  @media (min-width: $break-point-large) {
+    line-height: 16px;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    @media (min-width: $break-point-large) {
+      display: inline;
+      padding-inline-start: 12px;
+    }
+  }
+
+
+  ul li {
+    display: inline-block;
+
+    &::after {
+      content: '•';
+      padding: 8px;
+    }
+
+    &:last-child::after {
+      content: none;
+    }
+  }
+
+  .topic-link {
+    color: var(--newtab-link-secondary-color);
+    font-weight: bold;
+  }
+
+  .topic-read-more {
+    color: var(--newtab-link-secondary-color);
+    font-weight: bold;
+
+    @media (min-width: $break-point-large) {
+      // This is floating to accomodate a very large number of topics and/or
+      // very long topic names due to l10n.
+      float: right;
+
+      &:dir(rtl) {
+        float: left;
+      }
+    }
+
+    &::after {
+      background: url('#{$image-path}topic-show-more-12.svg') no-repeat center center;
+      content: '';
+      -moz-context-properties: fill;
+      display: inline-block;
+      fill: var(--newtab-link-secondary-color);
+      height: 16px;
+      margin-inline-start: 5px;
+      vertical-align: top;
+      width: 12px;
+    }
+
+    &:dir(rtl)::after  {
+      transform: scaleX(-1);
+    }
+  }
+
+  // This is a clearfix to for the topics-read-more link which is floating and causes
+  // some jank when we set overflow:hidden for the animation.
+  &::after {
+    clear: both;
+    content: '';
+    display: table;
+  }
+}

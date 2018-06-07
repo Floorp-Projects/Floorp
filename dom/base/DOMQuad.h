@@ -21,6 +21,7 @@ namespace dom {
 
 class DOMRectReadOnly;
 class DOMPoint;
+struct DOMQuadJSON;
 struct DOMPointInit;
 
 class DOMQuad final : public nsWrapperCache
@@ -48,20 +49,24 @@ public:
   Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
               ErrorResult& aRV);
 
-  DOMRectReadOnly* Bounds() const;
+  DOMRectReadOnly* Bounds();
+  already_AddRefed<DOMRectReadOnly> GetBounds() const;
   DOMPoint* P1() const { return mPoints[0]; }
   DOMPoint* P2() const { return mPoints[1]; }
   DOMPoint* P3() const { return mPoints[2]; }
   DOMPoint* P4() const { return mPoints[3]; }
 
-  DOMPoint* Point(uint32_t aIndex) { return mPoints[aIndex]; }
+  DOMPoint* Point(uint32_t aIndex) const { return mPoints[aIndex]; }
+
+  void ToJSON(DOMQuadJSON& aInit);
 
 protected:
-  class QuadBounds;
+  void GetHorizontalMinMax(double* aX1, double* aX2) const;
+  void GetVerticalMinMax(double* aY1, double* aY2) const;
 
   nsCOMPtr<nsISupports> mParent;
   RefPtr<DOMPoint> mPoints[4];
-  mutable RefPtr<QuadBounds> mBounds; // allocated lazily
+  RefPtr<DOMRectReadOnly> mBounds;
 };
 
 } // namespace dom

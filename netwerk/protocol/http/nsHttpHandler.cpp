@@ -189,8 +189,8 @@ nsHttpHandler::GetInstance()
 }
 
 nsHttpHandler::nsHttpHandler()
-    : mHttpVersion(NS_HTTP_VERSION_1_1)
-    , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
+    : mHttpVersion(HttpVersion::v1_1)
+    , mProxyHttpVersion(HttpVersion::v1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mSpoofReferrerSource(false)
@@ -551,6 +551,7 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "application-background", true);
         obsService->AddObserver(this, "psm:user-certificate-added", true);
         obsService->AddObserver(this, "psm:user-certificate-deleted", true);
+        obsService->AddObserver(this, "intl:app-locales-changed", true);
 
         if (!IsNeckoChild()) {
             obsService->AddObserver(this,
@@ -1387,11 +1388,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         prefs->GetCharPref(HTTP_PREF("version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
-                mHttpVersion = NS_HTTP_VERSION_1_1;
+                mHttpVersion = HttpVersion::v1_1;
             else if (httpVersion.EqualsLiteral("0.9"))
-                mHttpVersion = NS_HTTP_VERSION_0_9;
+                mHttpVersion = HttpVersion::v0_9;
             else
-                mHttpVersion = NS_HTTP_VERSION_1_0;
+                mHttpVersion = HttpVersion::v1_0;
         }
     }
 
@@ -1400,9 +1401,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         prefs->GetCharPref(HTTP_PREF("proxy.version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
-                mProxyHttpVersion = NS_HTTP_VERSION_1_1;
+                mProxyHttpVersion = HttpVersion::v1_1;
             else
-                mProxyHttpVersion = NS_HTTP_VERSION_1_0;
+                mProxyHttpVersion = HttpVersion::v1_0;
             // it does not make sense to issue a HTTP/0.9 request to a proxy server
         }
     }
@@ -2449,6 +2450,9 @@ nsHttpHandler::Observe(nsISupports *subject,
         // If a user certificate has been removed, we need to check if there
         // are others installed
         mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
+    } else if (!strcmp(topic, "intl:app-locales-changed")) {
+        // If the locale changed, there's a chance the accept language did too
+        mAcceptLanguagesIsDirty = true;
     }
 
     return NS_OK;

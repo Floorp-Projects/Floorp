@@ -1,0 +1,153 @@
+.search-wrapper {
+  $search-height: 35px;
+  $search-icon-size: 18px;
+  $search-icon-padding: 8px;
+  $search-icon-width: 2 * $search-icon-padding + $search-icon-size;
+  $search-input-left-label-width: 35px;
+  $search-button-width: 36px;
+  $glyph-forward: url('chrome://browser/skin/forward.svg');
+
+  cursor: default;
+  display: flex;
+  height: $search-height;
+  margin-bottom: $section-spacing;
+  position: relative;
+  width: 100%;
+
+  input {
+    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center / $search-icon-size no-repeat;
+    border: solid 1px var(--newtab-search-border-color);
+    box-shadow: $shadow-secondary, 0 0 0 1px $black-15;
+    font-size: 15px;
+    -moz-context-properties: fill;
+    fill: var(--newtab-search-icon-color);
+    padding: 0;
+    padding-inline-end: $search-button-width;
+    padding-inline-start: $search-icon-width;
+    width: 100%;
+
+    &:dir(rtl) {
+      background-position-x: right $search-icon-padding;
+    }
+  }
+
+  &:hover input {
+    box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
+  }
+
+  &:active input,
+  input:focus {
+    border: $input-border-active;
+    box-shadow: var(--newtab-textbox-focus-boxshadow);
+  }
+
+  .search-button {
+    background: $glyph-forward no-repeat center center;
+    background-size: 16px 16px;
+    border: 0;
+    border-radius: 0 $border-radius $border-radius 0;
+    -moz-context-properties: fill;
+    fill: var(--newtab-search-icon-color);
+    height: 100%;
+    offset-inline-end: 0;
+    position: absolute;
+    width: $search-button-width;
+
+    &:focus,
+    &:hover {
+      background-color: $grey-90-10;
+      cursor: pointer;
+    }
+
+    &:active {
+      background-color: $grey-90-20;
+    }
+
+    &:dir(rtl) {
+      transform: scaleX(-1);
+    }
+  }
+}
+
+@at-root {
+  // Adjust the style of the contentSearchUI-generated table
+  .contentSearchSuggestionTable {
+    background-color: var(--newtab-search-dropdown-color);
+    border: 0;
+    box-shadow: $context-menu-shadow;
+    transform: translateY($textbox-shadow-size);
+
+    .contentSearchHeader {
+      background-color: var(--newtab-search-dropdown-header-color);
+      color: var(--newtab-text-secondary-color);
+    }
+
+    .contentSearchHeader,
+    .contentSearchSettingsButton {
+      border-color: var(--newtab-border-secondary-color);
+    }
+
+    .contentSearchSuggestionsList {
+      border: 0;
+    }
+
+    .contentSearchOneOffsTable {
+      background-color: var(--newtab-search-dropdown-header-color);
+      border-top: solid 1px var(--newtab-border-secondary-color);
+    }
+
+    .contentSearchSearchWithHeaderSearchText {
+      color: var(--newtab-text-primary-color);
+    }
+
+    .contentSearchSuggestionsContainer {
+      background-color: var(--newtab-search-dropdown-color);
+    }
+
+    .contentSearchSuggestionRow {
+      &.selected {
+        background: var(--newtab-element-hover-color);
+        color: var(--newtab-text-primary-color);
+
+        &:active {
+          background: var(--newtab-element-active-color);
+        }
+
+        .historyIcon {
+          fill: var(--newtab-icon-secondary-color);
+        }
+      }
+    }
+
+    .contentSearchOneOffsTable {
+      .contentSearchSuggestionsContainer {
+        background-color: var(--newtab-search-dropdown-header-color);
+      }
+    }
+
+    .contentSearchOneOffItem {
+      // Make the border slightly shorter by offsetting from the top and bottom
+      $border-offset: 18%;
+
+      background-image: none;
+      border-image: linear-gradient(transparent $border-offset, var(--newtab-border-secondary-color) $border-offset, var(--newtab-border-secondary-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
+      border-inline-end: 1px solid;
+      position: relative;
+
+      &.selected {
+        background: var(--newtab-element-hover-color);
+      }
+
+      &:active {
+        background: var(--newtab-element-active-color);
+      }
+    }
+
+    .contentSearchSettingsButton {
+      &:hover {
+        background: var(--newtab-element-hover-color);
+        color: var(--newtab-text-primary-color);
+      }
+    }
+  }
+}

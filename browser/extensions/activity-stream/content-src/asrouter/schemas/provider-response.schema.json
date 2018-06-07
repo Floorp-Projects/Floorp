@@ -1,0 +1,37 @@
+{
+  "title": "ProviderResponse",
+  "description": "A response object for remote providers of AS Router",
+  "type": "object",
+  "properties": {
+    "messages": {
+      "type": "array",
+      "description": "An array of router messages",
+      "items": {
+        "title": "RouterMessage",
+        "description": "A definition of an individual message",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the message that should not conflict with any other previous message"
+          },
+          "template": {
+            "type": "string",
+            "description": "An id matching an existing Activity Stream Router template",
+            "enum": ["simple_snippet"]
+          },
+          "content": {
+            "type": "object",
+            "description": "An object containing all variables/props to be rendered in the template. See individual template schemas for details."
+          },
+          "targeting": {
+            "type": "string",
+            "description": "a JEXL expression representing targeting information"
+          }
+        },
+        "required": ["id", "template", "content"]
+      }
+    }
+  },
+  "required": ["messages"]
+}

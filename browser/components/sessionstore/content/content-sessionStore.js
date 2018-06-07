@@ -734,10 +734,10 @@ var MessageQueue = {
   _timeoutDisabled: false,
 
   /**
-   * The idle callback ID referencing an active idle callback. When no idle
-   * callback is pending, this is null.
-   * */
-  _idleCallbackID: null,
+   * True if there is already a send pending idle dispatch, set to prevent
+   * scheduling more than one. If false there may or may not be one scheduled.
+   */
+  _idleScheduled: false,
 
   /**
    * True if batched messages are not being fired on a timer. This should only
@@ -782,10 +782,7 @@ var MessageQueue = {
    * Cleanup pending idle callback and timer.
    */
   cleanupTimers() {
-    if (this._idleCallbackID) {
-      content.cancelIdleCallback(this._idleCallbackID);
-      this._idleCallbackID = null;
-    }
+    this._idleScheduled = false;
     if (this._timeout) {
       clearTimeout(this._timeout);
       this._timeout = null;
@@ -837,7 +834,7 @@ var MessageQueue = {
    * given, this function is going to schedule the first request.
    *
    * @param deadline (object)
-   *        An IdleDeadline object passed by requestIdleCallback().
+   *        An IdleDeadline object passed by idleDispatch().
    */
   sendWhenIdle(deadline) {
     if (!content) {
@@ -850,13 +847,13 @@ var MessageQueue = {
         MessageQueue.send();
         return;
       }
-    } else if (MessageQueue._idleCallbackID) {
+    } else if (MessageQueue._idleScheduled) {
       // Bail out if there's a pending run.
       return;
     }
-    MessageQueue._idleCallbackID =
-      content.requestIdleCallback(MessageQueue.sendWhenIdle, {timeout: MessageQueue._timeoutWaitIdlePeriodMs});
-   },
+    ChromeUtils.idleDispatch(MessageQueue.sendWhenIdle, {timeout: MessageQueue._timeoutWaitIdlePeriodMs});
+    MessageQueue._idleScheduled = true;
+  },
 
   /**
    * Sends queued data to the chrome process.

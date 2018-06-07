@@ -1,0 +1,78 @@
+
+.asrouter-admin {
+  $border-color: var(--newtab-border-secondary-color);
+  $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+  max-width: 996px;
+  margin: 0 auto;
+  font-size: 14px;
+  // Reset .outer-wrapper styles
+  display: inherit;
+  padding: 0 0 92px;
+
+  h1 {
+    font-weight: 200;
+    font-size: 32px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .message-item {
+    &:first-child td {
+      border-top: 1px solid $border-color;
+    }
+
+    td {
+      vertical-align: top;
+      border-bottom: 1px solid $border-color;
+      padding: 8px;
+
+      &:first-child {
+        border-left: 1px solid $border-color;
+      }
+
+      &:last-child {
+        border-right: 1px solid $border-color;
+      }
+    }
+
+    &.current {
+      .message-id span {
+        background: $yellow-50;
+        padding: 2px 5px;
+
+        .dark-theme & {
+          color: $black;
+        }
+      }
+    }
+
+    &.blocked {
+      .message-id,
+      .message-summary {
+        opacity: 0.5;
+      }
+
+      .message-id {
+        opacity: 0.5;
+      }
+    }
+
+    .message-id {
+      font-family: $monospace;
+      font-size: 12px;
+    }
+  }
+
+  pre {
+    background: var(--newtab-textbox-background-color);
+    margin: 0;
+    padding: 8px;
+    font-size: 12px;
+    max-width: 750px;
+    overflow: auto;
+    font-family: $monospace;
+  }
+}

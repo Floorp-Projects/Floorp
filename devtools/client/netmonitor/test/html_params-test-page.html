@@ -18,53 +18,42 @@
       /* exported performRequests */
       "use strict";
 
-      function get(address, query) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address + query, true);
-        xhr.send();
+      async function get(address, query) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address + query, true);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send();
+        });
       }
 
-      function post(address, query, contentType, postBody) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address + query, true);
-        xhr.setRequestHeader("content-type", contentType);
-        xhr.send(postBody);
+      async function post(address, query, contentType, postBody) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address + query, true);
+          xhr.setRequestHeader("content-type", contentType);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(postBody);
+        });
       }
 
-      function performRequests() {
+      async function performRequests() {
         const urlencoded = "application/x-www-form-urlencoded";
-
-        /* eslint-disable max-nested-callbacks */
-        setTimeout(function() {
-          post("baz", "?a", urlencoded, '{ "foo": "bar" }');
-
-          setTimeout(function() {
-            post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
-
-            setTimeout(function() {
-              post("baz", "?a=b", urlencoded, "?foo=bar");
-
-              setTimeout(function() {
-                post("baz", "?a", undefined, '{ "foo": "bar" }');
-
-                setTimeout(function() {
-                  post("baz", "?a=b", undefined, '{ "foo": "bar" }');
-
-                  setTimeout(function() {
-                    post("baz", "?a=b", undefined, "?foo=bar");
-
-                    setTimeout(function() {
-                      get("baz", "");
-
-                      // Done.
-                    }, 10);
-                  }, 10);
-                }, 10);
-              }, 10);
-            }, 10);
-          }, 10);
-        }, 10);
-        /* eslint-enable max-nested-callbacks */
+        await post("baz", "?a", urlencoded, '{ "foo": "bar" }');
+        await post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+        await post("baz", "?a=b", urlencoded, "?foo=bar");
+        await post("baz", "?a", undefined, '{ "foo": "bar" }');
+        await post("baz", "?a=b", undefined, '{ "foo": "bar" }');
+        await post("baz", "?a=b", undefined, "?foo=bar");
+        await get("baz", "");
       }
     </script>
   </body>

@@ -16,11 +16,12 @@ public class GeckoClickHelper {
     private static Solo sSolo;
     private static Activity sActivity;
     private static Driver sDriver;
-
+    private static StringHelper sStringHelper;
     protected static void init(final UITestContext context) {
         sSolo = context.getSolo();
         sActivity = context.getActivity();
         sDriver = context.getDriver();
+        sStringHelper = context.getStringHelper();
     }
 
     private GeckoClickHelper() { /* To disallow instantiation. */ }
@@ -35,7 +36,7 @@ public class GeckoClickHelper {
         openLinkContextMenu();
 
         // Click on "Open Link in New Tab"
-        sSolo.clickOnText(StringHelper.get().CONTEXT_MENU_ITEMS_IN_NORMAL_TAB[0]);
+        sSolo.clickOnText(sStringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB[0]);
     }
 
     /**
@@ -48,7 +49,7 @@ public class GeckoClickHelper {
         openLinkContextMenu();
 
         // Click on "Open Link in New Private Tab"
-        sSolo.clickOnText(StringHelper.get().CONTEXT_MENU_ITEMS_IN_NORMAL_TAB[1]);
+        sSolo.clickOnText(sStringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB[1]);
     }
 
     private static void openLinkContextMenu() {
