@@ -7,7 +7,8 @@ package org.mozilla.telemetry.ping;
 import org.json.JSONObject;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.ArchMeasurement;
-import org.mozilla.telemetry.measurement.CreatedTimestampMeasurement;
+import org.mozilla.telemetry.measurement.CreatedDateMeasurementNew;
+import org.mozilla.telemetry.measurement.CreatedTimestampMeasurementNew;
 import org.mozilla.telemetry.measurement.DeviceMeasurement;
 import org.mozilla.telemetry.measurement.FirstRunProfileDateMeasurement;
 import org.mozilla.telemetry.measurement.LocaleMeasurement;
@@ -39,7 +40,8 @@ public class TelemetryMobileMetricsPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new FirstRunProfileDateMeasurement(configuration));
         addMeasurement(new OperatingSystemMeasurement());
         addMeasurement(new OperatingSystemVersionMeasurement());
-        addMeasurement(new CreatedTimestampMeasurement());
+        addMeasurement(new CreatedDateMeasurementNew());
+        addMeasurement(new CreatedTimestampMeasurementNew());
         addMeasurement(new TimezoneOffsetMeasurement());
         addMeasurement(new MetricsMeasurement(snapshots));
     }

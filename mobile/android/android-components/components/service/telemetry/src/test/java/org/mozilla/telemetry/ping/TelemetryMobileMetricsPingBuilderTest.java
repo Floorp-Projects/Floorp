@@ -52,7 +52,9 @@ public class TelemetryMobileMetricsPingBuilderTest {
         assertTrue(results.containsKey("device"));
         assertFalse(TextUtils.isEmpty((String) results.get("device")));
 
-        assertTrue(results.containsKey("created")); // createdTimestamp and createdDate have the same key?
+        assertTrue(results.containsKey("createdDate"));
+
+        assertTrue(results.containsKey("createdTimestamp"));
 
         assertTrue(results.containsKey("tz"));
 
