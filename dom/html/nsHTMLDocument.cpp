@@ -1019,7 +1019,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
   }
 
   if (aDomain.IsEmpty()) {
-    rv.Throw(NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN);
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
@@ -1036,7 +1036,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
   nsCOMPtr<nsIURI> newURI = RegistrableDomainSuffixOfInternal(aDomain, uri);
   if (!newURI) {
     // Error: illegal domain
-    rv.Throw(NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN);
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
