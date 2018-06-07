@@ -890,7 +890,7 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
   nsCOMPtr<nsIURI> uri = GetDomainURI();
 
   if (!uri) {
-    SetDOMStringToNull(aDomain);
+    aDomain.Truncate();
     return;
   }
 
@@ -900,8 +900,8 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
     CopyUTF8toUTF16(hostName, aDomain);
   } else {
     // If we can't get the host from the URI (e.g. about:, javascript:,
-    // etc), just return an null string.
-    SetDOMStringToNull(aDomain);
+    // etc), just return an empty string.
+    aDomain.Truncate();
   }
 }
 

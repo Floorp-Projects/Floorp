@@ -7,7 +7,7 @@
 [OverrideBuiltins]
 interface HTMLDocument : Document {
            [SetterThrows]
-           attribute DOMString? domain;
+           attribute DOMString domain;
            [Throws]
            attribute DOMString cookie;
   // DOM tree accessors
