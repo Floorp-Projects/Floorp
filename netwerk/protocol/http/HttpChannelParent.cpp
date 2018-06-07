@@ -1383,8 +1383,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  nsHttpResponseHead *responseHead = chan->GetResponseHead();
-  nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   bool isFromCache = false;
   uint64_t cacheEntryId = 0;
   int32_t fetchCount = 0;
@@ -1460,14 +1458,37 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   ParentLoadInfoForwarderArgs loadInfoForwarderArg;
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
 
+  nsHttpResponseHead *responseHead = chan->GetResponseHead();
+  bool useResponseHead = !!responseHead;
+  nsHttpResponseHead cleanedUpResponseHead;
+  if (responseHead && responseHead->HasHeader(nsHttp::Set_Cookie)) {
+    cleanedUpResponseHead = *responseHead;
+    cleanedUpResponseHead.ClearHeader(nsHttp::Set_Cookie);
+    responseHead = &cleanedUpResponseHead;
+  }
+
+  if (!responseHead) {
+    responseHead = &cleanedUpResponseHead;
+  }
+
+  nsHttpRequestHead *requestHead = chan->GetRequestHead();
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
+
+  nsHttpHeaderArray cleanedUpRequestHeaders;
+  bool cleanedUpRequest = false;
+  if (requestHead->HasHeader(nsHttp::Cookie)) {
+    cleanedUpRequestHeaders = requestHead->Headers();
+    cleanedUpRequestHeaders.ClearHeader(nsHttp::Cookie);
+    cleanedUpRequest = true;
+  }
+
   rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(channelStatus,
-                          responseHead ? *responseHead : nsHttpResponseHead(),
-                          !!responseHead,
-                          requestHead->Headers(),
+                          *responseHead,
+                          useResponseHead,
+                          cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
                           loadInfoForwarderArg,
                           isFromCache,
                           mCacheEntry ? true : false,
@@ -1840,12 +1861,23 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
 
   nsHttpResponseHead *responseHead = mChannel->GetResponseHead();
+
+  nsHttpResponseHead cleanedUpResponseHead;
+  if (responseHead && responseHead->HasHeader(nsHttp::Set_Cookie)) {
+    cleanedUpResponseHead = *responseHead;
+    cleanedUpResponseHead.ClearHeader(nsHttp::Set_Cookie);
+    responseHead = &cleanedUpResponseHead;
+  }
+
+  if (!responseHead) {
+    responseHead = &cleanedUpResponseHead;
+  }
+
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(registrarId, uriParams, redirectFlags,
                                 loadInfoForwarderArg,
-                                responseHead ? *responseHead
-                                             : nsHttpResponseHead(),
+                                *responseHead,
                                 secInfoSerialization,
                                 channelId,
                                 mChannel->GetPeerAddr());
