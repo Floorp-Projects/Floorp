@@ -1127,7 +1127,6 @@ class GeneralTokenStreamChars
     using typename CharsSharedBase::SourceUnits;
 
     using CharsSharedBase::sourceUnits;
-    using CharsSharedBase::ungetCharIgnoreEOL;
 
   public:
     using CharsSharedBase::CharsSharedBase;
@@ -1190,6 +1189,12 @@ class GeneralTokenStreamChars
     MOZ_COLD bool badToken();
 
     int32_t getCharIgnoreEOL();
+
+    void ungetCharIgnoreEOL(int32_t c) {
+        MOZ_ASSERT_IF(c == EOF, anyCharsAccess().flags.isEOF);
+
+        CharsSharedBase::ungetCharIgnoreEOL(c);
+    }
 
     void ungetChar(int32_t c);
 
