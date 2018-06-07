@@ -117,7 +117,7 @@ this.GeckoDriver = function(appId, server) {
   this.browsers = {};
   // points to current browser
   this.curBrowser = null;
-  // topmost chrome frame
+  // top-most chrome window
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
@@ -755,6 +755,10 @@ GeckoDriver.prototype.newSession = async function(cmd) {
 
   await registerBrowsers;
   await browserListening;
+
+  if (this.mainFrame) {
+    this.mainFrame.focus();
+  }
 
   if (this.curBrowser.tab) {
     this.curBrowser.contentBrowser.focus();
@@ -2822,15 +2826,9 @@ GeckoDriver.prototype.deleteSession = function() {
     }
   }
 
-  // reset frame to the top-most frame
+  // reset frame to the top-most frame, and clear reference to chrome window
   this.curFrame = null;
-  if (this.mainFrame) {
-    try {
-      this.mainFrame.focus();
-    } catch (e) {
-      this.mainFrame = null;
-    }
-  }
+  this.mainFrame = null;
 
   if (this.observing !== null) {
     for (let topic in this.observing) {
