@@ -682,6 +682,7 @@ class FontInspector {
     });
 
     this.store.dispatch(updateFontEditor(fontsUsed, families, properties));
+    this.inspector.emit("fonteditor-updated");
   }
 
   /**
