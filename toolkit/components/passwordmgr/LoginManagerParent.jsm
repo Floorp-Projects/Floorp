@@ -112,6 +112,16 @@ var LoginManagerParent = {
         AutoCompletePopup.removeLogin(login);
         break;
       }
+
+      case "LoginStats:LoginFillSuccessful": {
+        const flow_id = msg.target.ownerGlobal.gBrowser.getTabForBrowser(msg.target).linkedPanel;
+        Services.telemetry.recordEvent("savant", "pwmgr_use", "use", null,
+                                      {
+                                        subcategory: "feature",
+                                        flow_id,
+                                      });
+        break;
+      }
     }
 
     return undefined;
