@@ -36,7 +36,7 @@ public:
     void SetHeaders(const nsHttpHeaderArray& aHeaders);
 
     void SetMethod(const nsACString &method);
-    void SetVersion(nsHttpVersion version);
+    void SetVersion(HttpVersion version);
     void SetRequestURI(const nsACString& s);
     void SetPath(const nsACString& s);
     uint32_t HeaderCount();
@@ -48,7 +48,7 @@ public:
                  nsHttpHeaderArray::VisitorFilter filter =
                      nsHttpHeaderArray::eFilterAll);
     void Method(nsACString &aMethod);
-    nsHttpVersion Version();
+    HttpVersion Version();
     void RequestURI(nsACString &RequestURI);
     void Path(nsACString &aPath);
     void SetHTTPS(bool val);
@@ -108,7 +108,7 @@ private:
     // All members must be copy-constructable and assignable
     nsHttpHeaderArray mHeaders;
     nsCString         mMethod;
-    nsHttpVersion     mVersion;
+    HttpVersion       mVersion;
 
     // mRequestURI and mPath are strings instead of an nsIURI
     // because this is used off the main thread

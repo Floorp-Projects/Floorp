@@ -117,7 +117,7 @@ class Test_get_test(object):
 
 
 class Test_get_browser_config(object):
-    required = ('preferences', 'extensions', 'browser_path', 'browser_wait',
+    required = ('extensions', 'browser_path', 'browser_wait',
                 'extra_args', 'buildid', 'env', 'init_url', 'webserver')
     optional = ['bcontroller_config',
                 'branch_name',
@@ -137,7 +137,8 @@ class Test_get_browser_config(object):
                 'error_filename',
                 'no_upload_results',
                 'stylothreads',
-                'subtests']
+                'subtests',
+                'preferences']
 
     def test_that_contains_title(self):
         config_no_optionals = dict.fromkeys(self.required, '')
@@ -155,7 +156,7 @@ class Test_get_browser_config(object):
     def test_raises_keyerror_for_required_keys(self):
         config_missing_required = dict.fromkeys(self.required, '')
         config_missing_required.update(title='is_mandatory')
-        del config_missing_required['preferences']
+        del config_missing_required['extensions']
 
         with pytest.raises(KeyError):
             get_browser_config(config_missing_required)
@@ -168,16 +169,6 @@ class Test_get_browser_config(object):
             get_browser_config(config_missing_optionals)
         except KeyError:
             pytest.fail('Must not raise exception on missing optional')
-
-    def test_browser_keys_are_subset_from_config(self):
-        config_extensive = dict.fromkeys(self.required, '')
-        config_extensive.update(dict.fromkeys(self.optional, ''))
-        config_extensive['title'] = 'is_mandatory'
-        config_extensive['extra_custom_key'] = 'value'
-
-        browser_config = get_browser_config(config_extensive)
-        assert browser_config != config_extensive
-        assert set(browser_config).issubset(set(config_extensive))
 
 
 class Test_get_config(object):
@@ -433,6 +424,7 @@ class Test_get_config(object):
         assert test_config['tploadnocache'] is True
         assert test_config['unit'] == 'ms'
         assert test_config['preferences'] == {
+            'addon.test.cpstartup.webserver': '${webserver}',
             'browser.link.open_newwindow': 3,
             'browser.link.open_newwindow.restriction': 2,
         }
@@ -658,7 +650,7 @@ class Test_get_config(object):
         assert test_config['filters'] is not None
         assert test_config['timeout'] == 1800
         assert test_config['unit'] == 'ms'
-        assert test_config['webextensions'] == '${talos}/webextensions/dummy/dummy-signed.xpi'
+        assert test_config['webextensions'] == '${talos}/webextensions/dummy/dummy.xpi'
         assert test_config['preferences'] == {'xpinstall.signatures.required': False}
 
     @mock.patch('talos.config.build_manifest', conftest.patched_build_manifest)
@@ -937,7 +929,7 @@ class Test_get_config(object):
         assert test_config['filters'] is not None
         assert test_config['unit'] == 'ms'
         assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
+        assert test_config['fnbpaint'] is False
         assert test_config['tpmanifest'] != \
             '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
 
@@ -953,7 +945,7 @@ class Test_get_config(object):
         assert test_config['filters'] is not None
         assert test_config['unit'] == 'ms'
         assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
+        assert test_config['fnbpaint'] is False
         assert test_config['profile'] == 'simple'
 
     def test_tp6_youtube_has_expected_attributes(self):

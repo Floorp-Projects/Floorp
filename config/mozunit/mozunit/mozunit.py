@@ -12,6 +12,8 @@ from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
 import pytest
 import six
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 StringIO = six.StringIO
 
 '''Helper to make python unit tests report the way that the Mozilla
@@ -232,6 +234,7 @@ def main(*args, **kwargs):
 
         module = __import__('__main__')
         args.extend([
+            '-c', os.path.join(here, 'pytest.ini'),
             '-vv',
             '-p', 'mozlog.pytest_mozlog.plugin',
             '-p', 'no:cacheprovider',

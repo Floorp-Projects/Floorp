@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="layout.css.DOMMatrix.enabled"]
+[Pref="layout.css.DOMMatrix.enabled",
+ Constructor(optional (DOMString or sequence<unrestricted double>) init)]
 interface DOMMatrixReadOnly {
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -77,6 +78,7 @@ interface DOMMatrixReadOnly {
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();
                                stringifier;
+    [Default] object           toJSON();
 };
 
 [Pref="layout.css.DOMMatrix.enabled",

@@ -19,5 +19,23 @@ interface DOMQuad {
     [SameObject] readonly attribute DOMPoint p2;
     [SameObject] readonly attribute DOMPoint p3;
     [SameObject] readonly attribute DOMPoint p4;
-    [SameObject] readonly attribute DOMRectReadOnly bounds;
+    [NewObject] DOMRectReadOnly getBounds();
+
+    [SameObject, Deprecated=DOMQuadBoundsAttr] readonly attribute DOMRectReadOnly bounds;
+
+    DOMQuadJSON toJSON();
+};
+
+dictionary DOMQuadJSON {
+    DOMPoint p1;
+    DOMPoint p2;
+    DOMPoint p3;
+    DOMPoint p4;
+};
+
+dictionary DOMQuadInit {
+    DOMPointInit p1;
+    DOMPointInit p2;
+    DOMPointInit p3;
+    DOMPointInit p4;
 };

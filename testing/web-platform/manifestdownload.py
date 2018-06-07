@@ -2,14 +2,12 @@ from __future__ import absolute_import
 
 import argparse
 import json
-import io
 import os
 from datetime import datetime, timedelta
-import gzip
+import tarfile
 from vcs import Mercurial
 import requests
-
-from six.moves.urllib.request import urlopen
+from cStringIO import StringIO
 
 def abs_path(path):
     return os.path.abspath(os.path.expanduser(path))
@@ -48,7 +46,7 @@ def taskcluster_url(logger, commits):
 
         result = req.json()
         [cset] = result['pushes'].values()[0]['changesets']
-        resp = requests.get(tc_url.format(changeset=cset))
+        req = requests.get(tc_url.format(changeset=cset))
 
         if req.status_code == 200:
             return tc_url.format(changeset=cset)
@@ -65,48 +63,35 @@ def download_manifest(logger, wpt_dir, commits_func, url_func, force=False):
         return False
 
     commits = commits_func()
-    url = url_func(logger, commits) + "/artifacts/public/"
+    url = url_func(logger, commits) + "/artifacts/public/manifests.tar.gz"
 
-    man_url= url + "manifest.json.gz"
-    moz_man_url= url + "moz_manifest.json.gz"
-
-    return ( _download(logger, os.path.join(wpt_dir, "meta", "MANIFEST.json"), man_url) and
-             _download(logger, os.path.join(wpt_dir,"mozilla", "meta", "MANIFEST.json"), moz_man_url))
-
-
-def _download(logger, manifest_path, url):
     if not url:
         logger.warning("No generated manifest found")
         return False
 
     logger.info("Downloading manifest from %s" % url)
     try:
-        resp = urlopen(url)
+        req = requests.get(url)
     except Exception:
         logger.warning("Downloading pregenerated manifest failed")
         return False
 
-    if resp.code != 200:
+    if req.status_code != 200:
         logger.warning("Downloading pregenerated manifest failed; got"
-                        "HTTP status %d" % resp.code)
+                        "HTTP status %d" % req.status_code)
         return False
 
-    gzf = gzip.GzipFile(fileobj=io.BytesIO(resp.read()))
-
+    tar = tarfile.open(mode="r:gz", fileobj=StringIO(req.content))
     try:
-        decompressed = gzf.read()
+        tar.extractall(path=wpt_dir)
     except IOError:
         logger.warning("Failed to decompress downloaded file")
         return False
 
-    try:
-        with open(manifest_path, 'wb') as f:
-            f.write(decompressed)
-    except Exception as e:
-        logger.warning("Failed to write manifest at %s" % manifest_path)
-        return False
+    os.utime(os.path.join(wpt_dir, "meta", "MANIFEST.json"), None)
+    os.utime(os.path.join(wpt_dir, "mozilla", "meta", "MANIFEST.json"), None)
 
-    logger.info("Manifest at %s downloaded" % manifest_path)
+    logger.info("Manifest downloaded")
     return True
 
 

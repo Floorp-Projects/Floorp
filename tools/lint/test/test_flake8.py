@@ -67,14 +67,13 @@ foo = ['A list of strings', 'that go over 80 characters', 'to test if autopep8 f
         assert fh.read() == contents
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Bug 1277851 - custom configs are ignored if specifying a parent path")
+@pytest.mark.xfail(reason="Bug 1277851 - custom configs are ignored if specifying a parent path")
 def test_lint_custom_config_from_parent_path(lint, paths):
     results = lint(paths(), collapse_results=True)
     assert paths('custom/good.py')[0] not in results
 
 
-@pytest.mark.xfail(strict=True, reason="Bug 1277851 - 'exclude' argument is ignored")
+@pytest.mark.xfail(reason="Bug 1277851 - 'exclude' argument is ignored")
 def test_lint_excluded_file(lint, paths):
     paths = paths('bad.py')
     results = lint(paths, exclude=paths)

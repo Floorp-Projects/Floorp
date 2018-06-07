@@ -159,16 +159,6 @@ class ToolboxTabsOrderManager {
 
 function sortPanelDefinitions(definitions) {
   const pref = Services.prefs.getCharPref(PREFERENCE_NAME, "");
-
-  if (!pref) {
-    definitions.sort(definition => {
-      return -1 * (definition.ordinal == undefined || definition.ordinal < 0
-        ? Number.MAX_VALUE
-        : definition.ordinal
-      );
-    });
-  }
-
   const toolIds = pref.split(",");
 
   return definitions.sort((a, b) => {

@@ -1,0 +1,96 @@
+.outer-wrapper {
+  color: var(--newtab-text-primary-color);
+  display: flex;
+  flex-grow: 1;
+  min-height: 100vh;
+  padding: ($section-spacing + $section-vertical-padding) $base-gutter $base-gutter;
+
+  &.fixed-to-top {
+    display: block;
+  }
+
+  a {
+    color: var(--newtab-link-primary-color);
+  }
+}
+
+main {
+  margin: auto;
+  // Offset the snippets container so things at the bottom of the page are still
+  // visible when snippets / onboarding are visible. Adjust for other spacing.
+  padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
+  width: $wrapper-default-width;
+
+  @media (min-width: $break-point-small) {
+    width: $wrapper-max-width-small;
+  }
+
+  @media (min-width: $break-point-medium) {
+    width: $wrapper-max-width-medium;
+  }
+
+  @media (min-width: $break-point-large) {
+    width: $wrapper-max-width-large;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: $wrapper-max-width-widest;
+  }
+
+  section {
+    margin-bottom: $section-spacing;
+    position: relative;
+  }
+}
+
+.base-content-fallback {
+  // Make the error message be centered against the viewport
+  height: 100vh;
+}
+
+.body-wrapper {
+  // Hide certain elements so the page structure is fixed, e.g., placeholders,
+  // while avoiding flashes of changing content, e.g., icons and text
+  $selectors-to-hide: '
+    .section-title,
+    .sections-list .section:last-of-type,
+    .topic
+  ';
+
+  #{$selectors-to-hide} {
+    opacity: 0;
+  }
+
+  &.on {
+    #{$selectors-to-hide} {
+      opacity: 1;
+    }
+  }
+}
+
+.non-collapsible-section {
+  padding: 0 $section-horizontal-padding;
+}
+
+.prefs-button {
+  button {
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+    fill: var(--newtab-icon-primary-color);
+    offset-inline-end: 15px;
+    padding: 15px;
+    position: fixed;
+    top: 15px;
+    z-index: 12001;
+
+    &:hover,
+    &:focus {
+      background-color: var(--newtab-element-hover-color);
+    }
+
+    &:active {
+      background-color: var(--newtab-element-active-color);
+    }
+  }
+}

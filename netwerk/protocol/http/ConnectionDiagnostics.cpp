@@ -136,7 +136,7 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
                    mNPNComplete, mSetupSSLCalled);
 
   log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
-                   mUsingSpdyVersion, mReportedSpdy, mEverUsedSpdy);
+                   static_cast<int32_t>(mUsingSpdyVersion), mReportedSpdy, mEverUsedSpdy);
 
   log.AppendPrintf("    iskeepalive = %d  dontReuse = %d isReused = %d\n",
                    IsKeepAlive(), mDontReuse, mIsReused);

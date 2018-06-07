@@ -15,20 +15,19 @@ upload:
     index:
         product: source
         job-name: manifest-upload
+        rank: build_date
     run:
         using: run-task
         command: >
             cd /builds/worker/checkouts/gecko
             && ./mach wpt-manifest-update
-            && gzip testing/web-platform/meta/MANIFEST.json testing/web-platform/mozilla/meta/MANIFEST.json
+            && tar -cvzf manifests.tar.gz -C testing/web-platform/ meta/MANIFEST.json mozilla/meta/MANIFEST.json
     worker:
         artifacts:
             - type: file
-              path: /builds/worker/checkouts/gecko/testing/web-platform/meta/MANIFEST.json.gz
-              name: public/manifest.json.gz
-            - type: file
-              path: /builds/worker/checkouts/gecko/testing/web-platform/mozilla/meta/MANIFEST.json.gz
-              name: public/moz_manifest.json.gz
+              path: /builds/worker/checkouts/gecko/manifests.tar.gz
+              name: public/manifests.tar.gz
+
         max-run-time: 3600
     when:
         files-changed:

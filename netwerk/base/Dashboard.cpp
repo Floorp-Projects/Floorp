@@ -849,19 +849,19 @@ Dashboard::GetRcwnData(RcwnData *aData)
 }
 
 void
-HttpConnInfo::SetHTTP1ProtocolVersion(uint8_t pv)
+HttpConnInfo::SetHTTP1ProtocolVersion(HttpVersion pv)
 {
     switch (pv) {
-    case NS_HTTP_VERSION_0_9:
+    case HttpVersion::v0_9:
         protocolVersion.AssignLiteral(u"http/0.9");
         break;
-    case NS_HTTP_VERSION_1_0:
+    case HttpVersion::v1_0:
         protocolVersion.AssignLiteral(u"http/1.0");
         break;
-    case NS_HTTP_VERSION_1_1:
+    case HttpVersion::v1_1:
         protocolVersion.AssignLiteral(u"http/1.1");
         break;
-    case NS_HTTP_VERSION_2_0:
+    case HttpVersion::v2_0:
         protocolVersion.AssignLiteral(u"http/2.0");
         break;
     default:
@@ -870,9 +870,9 @@ HttpConnInfo::SetHTTP1ProtocolVersion(uint8_t pv)
 }
 
 void
-HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
+HttpConnInfo::SetHTTP2ProtocolVersion(SpdyVersion pv)
 {
-    MOZ_ASSERT(pv == HTTP_VERSION_2);
+    MOZ_ASSERT(pv == SpdyVersion::HTTP_2);
     protocolVersion.AssignLiteral(u"h2");
 }
 

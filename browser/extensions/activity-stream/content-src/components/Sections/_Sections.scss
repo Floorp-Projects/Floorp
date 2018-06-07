@@ -1,0 +1,77 @@
+.sections-list {
+  .section-list {
+    display: grid;
+    grid-gap: $base-gutter;
+    grid-template-columns: repeat(auto-fit, $card-width);
+    margin: 0;
+
+    @media (max-width: $break-point-medium) {
+      @include context-menu-open-left;
+    }
+
+    @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
+      :nth-child(2n) {
+        @include context-menu-open-left;
+      }
+    }
+
+    @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width) {
+      :nth-child(3n) {
+        @include context-menu-open-left;
+      }
+    }
+
+    @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
+      :nth-child(3n) {
+        @include context-menu-open-left;
+      }
+    }
+  }
+
+  .section-empty-state {
+    border: $border-secondary;
+    border-radius: $border-radius;
+    display: flex;
+    height: $card-height;
+    width: 100%;
+
+    .empty-state {
+      margin: auto;
+      max-width: 350px;
+
+      .empty-state-icon {
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 50px 50px;
+        -moz-context-properties: fill;
+        display: block;
+        fill: var(--newtab-icon-secondary-color);
+        height: 50px;
+        margin: 0 auto;
+        width: 50px;
+      }
+
+      .empty-state-message {
+        color: var(--newtab-text-primary-color);
+        font-size: 13px;
+        margin-bottom: 0;
+        text-align: center;
+      }
+    }
+
+    @media (min-width: $break-point-widest) {
+      height: $card-height-large;
+    }
+  }
+}
+
+@media (min-width: $break-point-widest) {
+  .sections-list {
+    // Compact cards stay the same size but normal cards get bigger.
+    .normal-cards {
+      .section-list {
+        grid-template-columns: repeat(auto-fit, $card-width-large);
+      }
+    }
+  }
+}

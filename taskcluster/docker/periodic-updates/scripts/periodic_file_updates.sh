@@ -36,12 +36,12 @@ HGHOST="hg.mozilla.org"
 STAGEHOST="archive.mozilla.org"
 WGET="wget -nv"
 UNZIP="unzip -q"
-DIFF="$(which diff) -u"
+DIFF="$(command -v diff) -u"
 BASEDIR="${HOME}"
 TOOLSDIR="${HOME}/tools"
 
 SCRIPTDIR="$(realpath "$(dirname "$0")")"
-HG="$(which hg)"
+HG="$(command -v hg)"
 DATADIR="${BASEDIR}/data"
 mkdir -p "${DATADIR}"
 
@@ -49,7 +49,7 @@ VERSION=''
 MCVERSION=''
 USE_MC=false
 USE_TC=true
-JQ="$(which jq)"
+JQ="$(command -v jq)"
 
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="${SCRIPTDIR}/getHSTSPreloadList.js"
@@ -266,7 +266,7 @@ function compare_hpkp_files {
 
 function is_valid_xml {
   xmlfile=$1
-  XMLLINT=$(which xmllint 2>/dev/null | head -n1)
+  XMLLINT=$(command -v xmllint 2>/dev/null | head -n1)
 
   if [ ! -x "${XMLLINT}" ]; then
     echo "ERROR: xmllint not found in PATH"
@@ -312,28 +312,28 @@ function compare_remote_settings_files {
   # 1. List remote settings collections from server.
   echo "INFO: fetch remote settings list from server"
   ${WGET} -qO- "${REMOTE_SETTINGS_SERVER}/buckets/monitor/collections/changes/records" |\
-      ${JQ} -r '.data[] | .bucket+"/"+.collection' |\
-      # 2. For each entry ${bucket, collection}
-      while IFS="/" read -r bucket collection; do
+    ${JQ} -r '.data[] | .bucket+"/"+.collection' |\
+    # 2. For each entry ${bucket, collection}
+  while IFS="/" read -r bucket collection; do
 
-        # 3. Download the dump from HG into REMOTE_SETTINGS_INPUT folder
-        hg_dump_url="${HGREPO}/raw-file/default${REMOTE_SETTINGS_DIR}/${bucket}/${collection}.json"
-        local_location_input="$REMOTE_SETTINGS_INPUT/${bucket}/${collection}.json"
-        mkdir -p "$REMOTE_SETTINGS_INPUT/${bucket}"
-        ${WGET} -qO "$local_location_input" "$hg_dump_url"
-        if [ $? -eq 8 ]; then
-          # We don't keep any dump for this collection, skip it.
-          # Try to clean up in case no collection in this bucket has dump.
-          rmdir "$REMOTE_SETTINGS_INPUT/${bucket}" --ignore-fail-on-non-empty
-          continue
-        fi
+    # 3. Download the dump from HG into REMOTE_SETTINGS_INPUT folder
+    hg_dump_url="${HGREPO}/raw-file/default${REMOTE_SETTINGS_DIR}/${bucket}/${collection}.json"
+    local_location_input="$REMOTE_SETTINGS_INPUT/${bucket}/${collection}.json"
+    mkdir -p "$REMOTE_SETTINGS_INPUT/${bucket}"
+    ${WGET} -qO "$local_location_input" "$hg_dump_url"
+    if [ $? -eq 8 ]; then
+      # We don't keep any dump for this collection, skip it.
+      # Try to clean up in case no collection in this bucket has dump.
+      rmdir "$REMOTE_SETTINGS_INPUT/${bucket}" --ignore-fail-on-non-empty
+      continue
+    fi
 
-        # 4. Download server version into REMOTE_SETTINGS_OUTPUT folder
-        remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/records"
-        local_location_output="$REMOTE_SETTINGS_OUTPUT/${bucket}/${collection}.json"
-        mkdir -p "$REMOTE_SETTINGS_OUTPUT/${bucket}"
-        ${WGET} -qO "$local_location_output" "$remote_records_url"
-      done
+    # 4. Download server version into REMOTE_SETTINGS_OUTPUT folder
+    remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/records"
+    local_location_output="$REMOTE_SETTINGS_OUTPUT/${bucket}/${collection}.json"
+    mkdir -p "$REMOTE_SETTINGS_OUTPUT/${bucket}"
+    ${WGET} -qO "$local_location_output" "$remote_records_url"
+  done
 
   echo "INFO: diffing old/new remote settings dumps..."
   ${DIFF} -r "${REMOTE_SETTINGS_INPUT}" "${REMOTE_SETTINGS_OUTPUT}" > "${REMOTE_SETTINGS_DIFF_ARTIFACT}"
@@ -345,9 +345,9 @@ function compare_remote_settings_files {
 }
 
 function clone_build_tools {
-    rm -fr "${TOOLSDIR}"
-    CLONE_CMD="${HG} clone https://hg.mozilla.org/build/tools ${TOOLSDIR}"
-    ${CLONE_CMD}
+  rm -fr "${TOOLSDIR}"
+  CLONE_CMD="${HG} clone https://hg.mozilla.org/build/tools ${TOOLSDIR}"
+  ${CLONE_CMD}
 }
 
 # Clones an hg repo
@@ -363,92 +363,24 @@ function clone_repo {
 }
 
 # Copies new HSTS files in place, and commits them.
-function commit_hsts_files {
+function stage_hsts_files {
   cd "${BASEDIR}"
-
   cp -f "${BASEDIR}/${PRODUCT}/$(basename "${HSTS_PRELOAD_INC}")" "${REPODIR}/security/manager/ssl/"
-
-  COMMIT_MESSAGE="No bug, Automated HSTS preload list update"
-  if [ -n "${TASK_ID}" ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} from task ${TASK_ID}"
-  fi
-  if [ ${DONTBUILD} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
-  fi
-  if [ ${CLOSED_TREE} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
-  fi
-  if [ ${APPROVAL} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=hsts-update"
-  fi
-  echo "INFO: committing HSTS changes"
-  ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 }
 
-# Copies new HPKP files in place, and commits them.
-function commit_hpkp_files {
+function stage_hpkp_files {
   cd "${BASEDIR}"
-
   cp -f "${HPKP_PRELOAD_OUTPUT}" "${REPODIR}/security/manager/ssl/${HPKP_PRELOAD_INC}"
-
-  COMMIT_MESSAGE="No bug, Automated HPKP preload list update"
-  if [ -n "${TASK_ID}" ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} from task ${TASK_ID}"
-  fi
-  if [ ${DONTBUILD} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
-  fi
-  if [ ${CLOSED_TREE} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
-  fi
-  if [ ${APPROVAL} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=hpkp-update"
-  fi
-  echo "INFO: committing HPKP changes"
-  ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 }
 
-# Copies new blocklist file in place, and commits it.
-function commit_blocklist_files {
+function stage_blocklist_files {
   cd "${BASEDIR}"
   cp -f ${BLOCKLIST_LOCAL_AMO} ${REPODIR}/${APP_DIR}/app/blocklist.xml
-  COMMIT_MESSAGE="No bug, Automated blocklist update"
-  if [ -n "${TASK_ID}" ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} from task ${TASK_ID}"
-  fi
-  if [ ${DONTBUILD} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
-  fi
-  if [ ${CLOSED_TREE} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
-  fi
-  if [ ${APPROVAL} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=blocklist-update"
-  fi
-  echo "INFO: committing blocklist changes"
-  ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 }
 
-# Copies new remote settings dump files in place, and commits them.
-function commit_remote_settings_files {
+function stage_remote_settings_files {
   cd "${BASEDIR}"
   cp -a "${REMOTE_SETTINGS_OUTPUT}"/* "${REPODIR}${REMOTE_SETTINGS_DIR}"
-
-  COMMIT_MESSAGE="No bug, Automated remote settings update"
-  if [ -n "${TASK_ID}" ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} from task ${TASK_ID}"
-  fi
-  if [ ${DONTBUILD} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
-  fi
-  if [ ${CLOSED_TREE} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
-  fi
-  if [ ${APPROVAL} == true ]; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=remote-settings-update"
-  fi
-  echo "INFO: committing remote settings changes"
-  ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 }
 
 # Push all pending commits to Phabricator
@@ -458,7 +390,7 @@ function push_repo {
   then
     return 1
   fi
-  if ! ARC=$(which arc)
+  if ! ARC=$(command -v arc)
   then
     return 1
   fi
@@ -466,7 +398,6 @@ function push_repo {
   then
     return 1
   fi
-
   # Clean up older review requests
   # Turn  Needs Review D624: No bug, Automated HSTS ...
   # into D624
@@ -547,7 +478,13 @@ if [ "${REPODIR}" == "" ]; then
   REPODIR="$(basename "${BRANCH}")"
 fi
 
-HGREPO="https://${HGHOST}/${BRANCH}"
+if [ "${BRANCH}" == "mozilla-central" ]; then
+  HGREPO="https://${HGHOST}/${BRANCH}"
+elif [[ "${BRANCH}" == mozilla-* ]]; then
+  HGREPO="https://${HGHOST}/releases/${BRANCH}"
+else
+  HGREPO="https://${HGHOST}/projects/${BRANCH}"
+fi
 MCREPO="https://${HGHOST}/mozilla-central"
 
 # Remove once 52esr is off support
@@ -563,13 +500,13 @@ fi
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
 TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.common.tests.zip"
 if [ "${USE_MC}" == "true" ]; then
-    BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-    TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
+  BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
+  TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
 fi
 # Simple name builds on >=53.0.0
 if [ "${MAJOR_VERSION}" -ge 53 ] ; then
-    BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
-    TESTS_ARCHIVE="target.common.tests.zip"
+  BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
+  TESTS_ARCHIVE="target.common.tests.zip"
 fi
 # End 'remove once 52esr is off support'
 
@@ -624,32 +561,43 @@ fi
 
 clone_repo
 
-MUST_PUSH=false
+COMMIT_MESSAGE="No Bug, ${BRANCH} repo-update"
 if [ "${HSTS_UPDATED}" == "true" ]
 then
-  commit_hsts_files
-  MUST_PUSH=true
+  stage_hsts_files
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} HSTS"
 fi
 
 if [ "${HPKP_UPDATED}" == "true" ]
 then
-  commit_hpkp_files
-  MUST_PUSH=true
+  stage_hpkp_files
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} HPKP"
 fi
 
 if [ "${BLOCKLIST_UPDATED}" == "true" ]
 then
-  commit_blocklist_files
-  MUST_PUSH=true
+  stage_blocklist_files
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} blocklist"
 fi
 
 if [ "${REMOTE_SETTINGS_UPDATED}" == "true" ]
 then
-  commit_remote_settings_files
-  MUST_PUSH=true
+  stage_remote_settings_files
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} remote-settings"
 fi
 
-if [ -n "${MUST_PUSH}" ]
+if [ ${DONTBUILD} == true ]; then
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
+fi
+if [ ${CLOSED_TREE} == true ]; then
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
+fi
+if [ ${APPROVAL} == true ]; then
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=repo-update"
+fi
+
+
+if ${HG} -R "${REPODIR}" commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 then
   push_repo
 fi

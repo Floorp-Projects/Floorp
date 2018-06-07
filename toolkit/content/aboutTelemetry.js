@@ -327,7 +327,7 @@ var PingPicker = {
       pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
       pingNameSpan.textContent = pingName;
       let explanation = bundle.GetStringFromName("pingDetails");
-      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan, pingTypeText);
+      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan);
     } else {
       // Change sidebar heading text.
       controls.classList.add("hidden");
@@ -340,6 +340,7 @@ var PingPicker = {
     }
 
     let pingExplanation = document.getElementById("ping-explanation");
+    removeAllChildNodes(pingExplanation);
     pingExplanation.appendChild(fragment);
     pingExplanation.querySelector(".change-ping").addEventListener("click", (ev) => {
       document.getElementById("ping-picker").classList.remove("hidden");

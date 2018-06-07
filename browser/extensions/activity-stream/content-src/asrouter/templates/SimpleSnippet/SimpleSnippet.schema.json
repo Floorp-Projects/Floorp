@@ -1,0 +1,66 @@
+{
+  "title": "SimpleSnippet",
+  "description": "A simple template with an icon, text, and optional button.",
+  "version": "0.2.0",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Snippet title displayed before snippet text"
+    },
+    "text": {
+      "type": "string",
+      "description": "Main body text of snippet"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Snippet icon. 64x64px. SVG or PNG preferred."
+    },
+    "title_icon": {
+      "type": "string",
+      "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
+    },
+    "button_url": {
+      "type": "string",
+      "description": "A url, button_label links to this"
+    },
+    "button_label": {
+      "type": "string",
+      "description": "Text for a button next to main snippet text that links to button_url. Requires button_url."
+    },
+    "button_color": {
+      "type": "string",
+      "description": "The text color of the button. Valid CSS color."
+    },
+    "button_background_color": {
+      "type": "string",
+      "description": "The background color of the button. Valid CSS color."
+    },
+    "button_type": {
+      "type": "string",
+      "enum": ["anchor", "button"],
+      "description": "(**temporary**, until we get html support in text field Bug 1457233) Style for button, either a regular button or a text link."
+    },
+    "tall": {
+      "type": "boolean",
+      "description": "To be used by fundraising only, increases height to roughly 120px. Defaults to false."
+    },
+    "links": {
+      "additionalProperties": {
+        "url": {
+          "type": "string",
+          "description": "The url where the link points to."
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["text"],
+  "dependencies": {
+    "button_url": ["button_label"],
+    "button_label": ["button_url"],
+    "button_type": ["button_url"],
+    "button_color": ["button_url"],
+    "button_background_color": ["button_url"]
+  }
+}

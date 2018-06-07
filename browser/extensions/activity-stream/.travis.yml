@@ -1,0 +1,33 @@
+language: node_js
+
+node_js:
+  # when changing this, be sure to edit .nvrmc and package.json too
+  - 7
+
+python:
+  - "2.7"
+
+cache:
+  directories:
+    - node_modules
+
+before_install:
+  # see https://docs.travis-ci.com/user/gui-and-headless-browsers/#Using-xvfb-to-Run-Tests-That-Require-a-GUI
+  - "export DISPLAY=:99.0"
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16 -extension RANDR"
+  - export PATH="$PATH:$HOME/.rvm/bin"
+  - sleep 3
+
+install:
+  - npm config set spin false
+  - npm install
+
+before_script:
+  - bash bin/download-firefox-travis.sh release-linux64-add-on-devel
+  - export FIREFOX_BIN=./firefox/firefox
+
+script:
+  - npm test
+
+notifications:
+  email: false
