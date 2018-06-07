@@ -509,7 +509,9 @@ Inspector.prototype = {
     }
 
     const { clientWidth } = this.panelDoc.getElementById("inspector-splitter-box");
-    return this.is3PaneModeEnabled && this.toolbox.hostType == Toolbox.HostType.SIDE ?
+    return this.is3PaneModeEnabled &&
+           (this.toolbox.hostType == Toolbox.HostType.LEFT ||
+            this.toolbox.hostType == Toolbox.HostType.RIGHT) ?
       clientWidth > SIDE_PORTAIT_MODE_WIDTH_THRESHOLD :
       clientWidth > PORTRAIT_MODE_WIDTH_THRESHOLD;
   },

@@ -208,7 +208,7 @@ interface Node : EventTarget {
   Promise<void> localize(L10nCallback l10nCallback);
 
 #ifdef ACCESSIBILITY
-  [Func="mozilla::dom::AccessibleNode::IsAOMEnabled"]
+  [Func="mozilla::dom::AccessibleNode::IsAOMEnabled", SameObject]
   readonly attribute AccessibleNode? accessibleNode;
 #endif
 };

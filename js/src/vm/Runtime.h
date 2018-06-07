@@ -923,7 +923,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::RuntimeCaches& caches() { return caches_.ref(); }
 
     // List of all the live wasm::Instances in the runtime. Equal to the union
-    // of all instances registered in all JSCompartments. Accessed from watchdog
+    // of all instances registered in all JS::Realms. Accessed from watchdog
     // threads for purposes of wasm::InterruptRunningCode().
     js::ExclusiveData<js::wasm::InstanceVector> wasmInstances;
 

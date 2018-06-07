@@ -931,7 +931,7 @@ class FunctionExtended : public JSFunction
 };
 
 extern bool
-CanReuseScriptForClone(JSCompartment* compartment, HandleFunction fun, HandleObject newParent);
+CanReuseScriptForClone(JS::Compartment* compartment, HandleFunction fun, HandleObject newParent);
 
 extern JSFunction*
 CloneFunctionReuseScript(JSContext* cx, HandleFunction fun, HandleObject parent,

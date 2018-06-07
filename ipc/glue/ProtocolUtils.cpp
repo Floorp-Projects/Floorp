@@ -311,7 +311,9 @@ LogicError(const char* aMsg)
 void
 ActorIdReadError(const char* aActorDescription)
 {
+#ifndef FUZZING
   MOZ_CRASH_UNSAFE_PRINTF("Error deserializing id for %s", aActorDescription);
+#endif
 }
 
 void

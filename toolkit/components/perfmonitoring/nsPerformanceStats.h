@@ -197,7 +197,7 @@ protected:
    * we Dispose() of the service.
    *
    * A `nsPerformanceGroup` is typically kept alive (as a
-   * `js::PerformanceGroup`) by the JSCompartment to which it is
+   * `js::PerformanceGroup`) by the JS::Compartment to which it is
    * associated. It may also temporarily be kept alive by the JS
    * stack, in particular in case of nested event loops.
    */

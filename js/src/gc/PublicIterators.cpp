@@ -157,7 +157,7 @@ JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallb
 }
 
 JS_PUBLIC_API(void)
-JS::IterateRealmsInCompartment(JSContext* cx, JSCompartment* compartment, void* data,
+JS::IterateRealmsInCompartment(JSContext* cx, JS::Compartment* compartment, void* data,
                                JS::IterateRealmCallback realmCallback)
 {
     AutoTraceSession session(cx->runtime());

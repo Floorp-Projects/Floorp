@@ -741,7 +741,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 
     creationOptions.setInvisibleToDebugger(true)
                    .setMergeable(true)
-                   .setNewZone();
+                   .setNewCompartmentAndZone();
 
     // Don't falsely inherit the host's global trace hook.
     creationOptions.setTrace(nullptr);

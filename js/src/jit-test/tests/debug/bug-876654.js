@@ -1,6 +1,6 @@
 // |jit-test| 
 // Exercise finding a DebuggerSource cross compartment wrapper in
-// JSCompartment::findOutgoingEdges()
+// Compartment::findOutgoingEdges()
 
 let g = newGlobal();
 let dbg = new Debugger(g);

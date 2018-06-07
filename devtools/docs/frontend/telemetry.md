@@ -348,7 +348,7 @@ const DATA = [
     object: "tools",
     value: null,
     extra: {
-      host: "side",
+      host: "right",
       width: "1440"
     }
   },

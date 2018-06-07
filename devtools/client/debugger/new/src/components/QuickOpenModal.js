@@ -468,7 +468,7 @@ function mapStateToProps(state) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   return {
     enabled: (0, _selectors.getQuickOpenEnabled)(state),
-    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state).toArray(), (0, _selectors.getTabs)(state).toArray()),
+    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state), (0, _selectors.getTabs)(state).toArray()),
     selectedSource,
     symbols: (0, _quickOpen.formatSymbols)((0, _selectors.getSymbols)(state, selectedSource)),
     symbolsLoading: (0, _selectors.isSymbolsLoading)(state, selectedSource),

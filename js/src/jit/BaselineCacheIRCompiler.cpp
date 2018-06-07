@@ -9,6 +9,7 @@
 #include "jit/CacheIR.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
+#include "jit/VMFunctions.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 
@@ -977,6 +978,48 @@ BaselineCacheIRCompiler::emitCallStringSplitResult()
         return false;
 
     stubFrame.leave(masm);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitCompareStringResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register left = allocator.useRegister(masm, reader.stringOperandId());
+    Register right = allocator.useRegister(masm, reader.stringOperandId());
+    JSOp op = reader.jsop();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    allocator.discardStack(masm);
+
+    Label slow, done;
+    masm.compareStrings(op, left, right, scratch, &slow);
+    masm.jump(&done);
+    masm.bind(&slow);
+    {
+        AutoStubFrame stubFrame(*this);
+        stubFrame.enter(masm, scratch);
+
+        masm.Push(right);
+        masm.Push(left);
+
+        if (!callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ) ?
+                             StringsEqualInfo :
+                             StringsNotEqualInfo))
+        {
+            return false;
+        }
+        stubFrame.leave(masm);
+        masm.mov(ReturnReg, scratch);
+    }
+    masm.bind(&done);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
     return true;
 }
 

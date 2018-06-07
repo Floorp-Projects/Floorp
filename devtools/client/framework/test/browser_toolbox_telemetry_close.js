@@ -7,7 +7,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const URL = "data:text/html;charset=utf8,browser_toolbox_telemetry_close.js";
 const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
-const { SIDE, BOTTOM } = Toolbox.HostType;
+const { RIGHT, BOTTOM } = Toolbox.HostType;
 const DATA = [
   {
     timestamp: null,
@@ -16,7 +16,7 @@ const DATA = [
     object: "tools",
     value: null,
     extra: {
-      host: "side",
+      host: "right",
       width: "1440"
     }
   },
@@ -41,7 +41,7 @@ add_task(async function() {
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
-  await openAndCloseToolbox("webconsole", SIDE);
+  await openAndCloseToolbox("webconsole", RIGHT);
   await openAndCloseToolbox("webconsole", BOTTOM);
 
   checkResults();

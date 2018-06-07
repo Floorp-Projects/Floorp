@@ -16,7 +16,7 @@ add_task(async function() {
   const layouts = [
     ["vertical", "window:small"],
     ["horizontal", "bottom"],
-    ["vertical", "side"],
+    ["vertical", "right"],
     ["horizontal", "window:big"]
   ];
 

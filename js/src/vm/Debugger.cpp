@@ -2221,7 +2221,7 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
     mozilla::DebugOnly<ReadBarriered<Debugger*>*> begin = dbgs.begin();
 
     // Root all the Debuggers while we're iterating over them;
-    // appendAllocationSite calls JSCompartment::wrap, and thus can GC.
+    // appendAllocationSite calls Compartment::wrap, and thus can GC.
     //
     // SpiderMonkey protocol is generally for the caller to prove that it has
     // rooted the stuff it's asking you to operate on (i.e. by passing a
@@ -3276,7 +3276,7 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
             /*
              * For debugger cross compartment wrappers, add edges in the
              * opposite direction to those already added by
-             * JSCompartment::findOutgoingEdges and above.  This ensure that
+             * Compartment::findOutgoingEdges and above.  This ensure that
              * debuggers and their debuggees are finalized in the same group.
              */
             if (dbg->debuggeeZones.has(zone) ||
@@ -3752,7 +3752,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
         for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
             if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            r->compartment()->scheduledForDestruction = false;
+            r->compartment()->gcState.scheduledForDestruction = false;
             GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -4872,7 +4872,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
          * therefore we don't need to follow edges to or from this non-debuggee
          * node.
          */
-        JSCompartment* comp = referent.compartment();
+        JS::Compartment* comp = referent.compartment();
         if (comp && !debuggeeCompartments.has(comp)) {
             traversal.abandonReferent();
             return true;
@@ -4991,7 +4991,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            r->compartment()->scheduledForDestruction = false;
+            r->compartment()->gcState.scheduledForDestruction = false;
 
             GlobalObject* global = r->maybeGlobal();
 

@@ -1412,7 +1412,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(const nsACString& aID)
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
   JS::RealmOptions options;
-  options.creationOptions().setSystemZone();
+  options.creationOptions().setNewCompartmentInSystemZone();
 
   xpc::InitGlobalObjectOptions(options, mPrincipal);
   JS::Rooted<JSObject*> global(cx);

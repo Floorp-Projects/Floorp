@@ -35,7 +35,7 @@ add_task(async function() {
     await ContentTask.spawn(browser, null, async function() {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
-        .then(addon => { addon.setEnabled(false); });
+        .then(addon => addon.setEnabled(false));
     });
 
     let events = await getListenerEvents(browser);
@@ -49,7 +49,7 @@ add_task(async function() {
     await ContentTask.spawn(browser, null, async function() {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
-        .then(addon => { addon.setEnabled(true); });
+        .then(addon => addon.setEnabled(true));
     });
 
     events = await getListenerEvents(browser);

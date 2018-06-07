@@ -72,6 +72,11 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TAR
         'TestDeadlockDetectorScalability.cpp',
     ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'TestFilePreferencesWin.cpp',
+    ]
+
 if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl':
     UNIFIED_SOURCES += [
         'TestSTLWrappers.cpp',
