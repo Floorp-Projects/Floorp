@@ -500,7 +500,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
 {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
+    if (MOZ_UNLIKELY(sourceUnits.atEnd())) {
         anyChars.flags.isEOF = true;
         *cp = EOF;
         return true;
@@ -515,7 +515,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
 
         if (MOZ_UNLIKELY(c == '\r')) {
             // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-            if (MOZ_LIKELY(sourceUnits.hasRawChars()))
+            if (MOZ_LIKELY(!sourceUnits.atEnd()))
                 sourceUnits.matchCodeUnit('\n');
 
             break;
@@ -571,7 +571,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, 
 
     // If there are no more units, or the next unit isn't a trailing surrogate,
     // it's also a "code point".
-    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars() ||
+    if (MOZ_UNLIKELY(sourceUnits.atEnd() ||
                      !unicode::IsTrailSurrogate(sourceUnits.peekCodeUnit())))
     {
         MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
@@ -597,7 +597,7 @@ template<typename CharT, class AnyCharsAccess>
 int32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCodeUnit()
 {
-    if (MOZ_LIKELY(sourceUnits.hasRawChars()))
+    if (MOZ_LIKELY(!sourceUnits.atEnd()))
         return sourceUnits.getCodeUnit();
 
     anyCharsAccess().flags.isEOF = true;
@@ -1806,7 +1806,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // This loop runs more than once only when whitespace or comments are
     // encountered.
     do {
-        if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
+        if (MOZ_UNLIKELY(sourceUnits.atEnd())) {
             anyCharsAccess().flags.isEOF = true;
             TokenStart start(sourceUnits, 0);
             newSimpleToken(TokenKind::Eof, start, modifier, ttp);
@@ -1919,7 +1919,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         //
         if (c1kind == EOL) {
             // If it's a \r\n sequence, consume it as a single EOL.
-            if (c == '\r' && sourceUnits.hasRawChars())
+            if (c == '\r' && !sourceUnits.atEnd())
                 sourceUnits.matchCodeUnit('\n');
 
             if (!updateLineInfoForEOL())
@@ -2307,7 +2307,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     auto ReportPrematureEndOfLiteral = [this, untilChar](unsigned errnum) {
         // Unicode separators aren't end-of-line in template or (as of
         // recently) string literals, so this assertion doesn't allow them.
-        MOZ_ASSERT(!this->sourceUnits.hasRawChars() ||
+        MOZ_ASSERT(this->sourceUnits.atEnd() ||
                    this->sourceUnits.peekCodeUnit() == '\r' ||
                    this->sourceUnits.peekCodeUnit() == '\n',
                    "must be parked at EOF or EOL to call this function");
@@ -2616,7 +2616,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 unit = '\n';
 
                 // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-                if (sourceUnits.hasRawChars())
+                if (!sourceUnits.atEnd())
                     sourceUnits.matchCodeUnit('\n');
             }
 

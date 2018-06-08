@@ -909,8 +909,9 @@ class SourceUnits
         ptr(buf)
     { }
 
-    bool hasRawChars() const {
-        return ptr < limit_;
+    bool atEnd() const {
+        MOZ_ASSERT(ptr <= limit_, "shouldn't have overrun");
+        return ptr >= limit_;
     }
 
     bool atStart() const {
@@ -1057,17 +1058,17 @@ class TokenStreamCharsBase
     bool matchCodeUnit(int32_t expect) {
         MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
         MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchCodeUnit(expect);
+        return MOZ_LIKELY(!sourceUnits.atEnd()) && sourceUnits.matchCodeUnit(expect);
     }
 
   protected:
     int32_t peekCodeUnit() {
-        return MOZ_LIKELY(sourceUnits.hasRawChars()) ? sourceUnits.peekCodeUnit() : EOF;
+        return MOZ_LIKELY(!sourceUnits.atEnd()) ? sourceUnits.peekCodeUnit() : EOF;
     }
 
     void consumeKnownCodeUnit(int32_t unit) {
         MOZ_ASSERT(unit != EOF, "shouldn't be matching EOF");
-        MOZ_ASSERT(sourceUnits.hasRawChars(), "must have units to consume");
+        MOZ_ASSERT(!sourceUnits.atEnd(), "must have units to consume");
 #ifdef DEBUG
         CharT next =
 #endif
@@ -1339,7 +1340,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
                    "getFullAsciiCodePoint called incorrectly");
 
         if (MOZ_UNLIKELY(lead == '\r')) {
-            if (MOZ_LIKELY(sourceUnits.hasRawChars()))
+            if (MOZ_LIKELY(!sourceUnits.atEnd()))
                 sourceUnits.matchCodeUnit('\n');
         } else if (MOZ_LIKELY(lead != '\n')) {
             *codePoint = lead;
@@ -1862,7 +1863,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     void skipChars(uint32_t n) {
         while (n-- > 0) {
-            MOZ_ASSERT(sourceUnits.hasRawChars());
+            MOZ_ASSERT(!sourceUnits.atEnd());
             mozilla::DebugOnly<int32_t> c = getCodeUnit();
             MOZ_ASSERT(!SourceUnits::isRawEOLChar(c));
         }
