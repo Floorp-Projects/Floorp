@@ -61,8 +61,10 @@ function run_test() {
     }
   }
   const configPath = "/v1/";
+  const changesPath = "/v1/buckets/monitor/collections/changes/records";
   const recordsPath  = "/v1/buckets/main/collections/password-fields/records";
   server.registerPathHandler(configPath, handleResponse);
+  server.registerPathHandler(changesPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
   run_next_test();
@@ -142,6 +144,29 @@ add_task(async function test_sync_event_provides_information_about_records() {
   equal(eventData.updated.length, 0);
   equal(eventData.deleted.length, 1);
   equal(eventData.deleted[0].website, "https://www.other.org/signin");
+});
+add_task(clear_state);
+
+add_task(async function test_inspect_method() {
+  const serverTime = Date.now();
+
+  // Synchronize the `password-fields` collection.
+  await client.maybeSync(Infinity, serverTime);
+
+  const inspected = await RemoteSettings.inspect();
+
+  const { mainBucket, serverURL, defaultSigner, collections } = inspected;
+  const rsSigner = "remote-settings.content-signature.mozilla.org";
+  equal(mainBucket, "main");
+  equal(serverURL, `http://localhost:${server.identity.primaryPort}/v1`);
+  equal(defaultSigner, rsSigner);
+
+  equal(inspected.serverTimestamp, '"4000"');
+  equal(collections.length, 1);
+  // password-fields was synchronized and has local data.
+  equal(collections[0].collection, "password-fields");
+  equal(collections[0].serverTimestamp, 3000);
+  equal(collections[0].localTimestamp, 3000);
 });
 add_task(clear_state);
 
@@ -273,6 +298,30 @@ function getSampleResponse(req, port) {
         "version": "1.5.1",
         "commit": "cbc6f58",
         "hello": "kinto"
+      }
+    },
+    "GET:/v1/buckets/monitor/collections/changes/records": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        `Date: ${new Date().toUTCString()}`,
+        "Etag: \"4000\""
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": {
+        "data": [{
+          "id": "4676f0c7-9757-4796-a0e8-b40a5a37a9c9",
+          "bucket": "main",
+          "collection": "unknown",
+          "last_modified": 4000
+        }, {
+          "id": "0af8da0b-3e03-48fb-8d0d-2d8e4cb7514d",
+          "bucket": "main",
+          "collection": "password-fields",
+          "last_modified": 3000
+        }]
       }
     },
     "GET:/v1/buckets/main/collections/password-fields/records?_sort=-last_modified": {
