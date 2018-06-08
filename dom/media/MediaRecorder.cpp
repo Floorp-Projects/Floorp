@@ -752,31 +752,31 @@ private:
     mMediaStream = aStream;
     aStream->RegisterTrackListener(this);
 
-    uint8_t trackTypes = 0;
-    nsTArray<RefPtr<mozilla::dom::AudioStreamTrack>> audioTracks;
-    aStream->GetAudioTracks(audioTracks);
-    if (!audioTracks.IsEmpty()) {
-      trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
-    }
-
-    nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
-    aStream->GetVideoTracks(videoTracks);
-    if (!videoTracks.IsEmpty()) {
-      trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
-    }
-
     nsTArray<RefPtr<mozilla::dom::MediaStreamTrack>> tracks;
     aStream->GetTracks(tracks);
+    uint8_t trackTypes = 0;
+    int32_t audioTracks = 0;
+    int32_t videoTracks = 0;
     for (auto& track : tracks) {
       if (track->Ended()) {
         continue;
       }
 
       ConnectMediaStreamTrack(*track);
+
+      if (track->AsAudioStreamTrack()) {
+        ++audioTracks;
+        trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
+      } else if (track->AsVideoStreamTrack()) {
+        ++videoTracks;
+        trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
+      } else {
+        MOZ_CRASH("Unexpected track type");
+      }
     }
 
-    if (audioTracks.Length() > 1 ||
-        videoTracks.Length() > 1) {
+    if (audioTracks > 1 ||
+        videoTracks > 1) {
       // When MediaRecorder supports multiple tracks, we should set up a single
       // MediaInputPort from the input stream, and let main thread check
       // track principals async later.
