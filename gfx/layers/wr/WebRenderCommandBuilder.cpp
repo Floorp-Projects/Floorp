@@ -1231,22 +1231,15 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
   mClipManager.BeginList(aSc);
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
-  EventRegions eventRegions;
 
   FlattenedDisplayItemIterator iter(aDisplayListBuilder, aDisplayList);
   while (nsDisplayItem* i = iter.GetNext()) {
     nsDisplayItem* item = i;
     DisplayItemType itemType = item->GetType();
 
-    // If the item is a event regions item, but is empty (has no regions in it)
-    // then we should just throw it out
-    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-      nsDisplayLayerEventRegions* eventRegions =
-        static_cast<nsDisplayLayerEventRegions*>(item);
-      if (eventRegions->IsEmpty()) {
-        continue;
-      }
-    }
+    // We should never get event regions items in WR now that we always have
+    // WR hit-testing enabled.
+    MOZ_ASSERT(itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
 
     // Peek ahead to the next item and try merging with it or swapping with it
     // if necessary.
@@ -1286,45 +1279,6 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
         forceNewLayerData = true;
       }
 
-      // If we're creating a new layer data then flush whatever event regions
-      // we've collected onto the old layer.
-      if (forceNewLayerData && !eventRegions.IsEmpty()) {
-        // If eventRegions is non-empty then we must have a layer data already,
-        // because we (below) force one if we encounter an event regions item
-        // with an empty layer data list. Additionally, the most recently
-        // created layer data must have been created from an item whose ASR
-        // is the same as the ASR on the event region items that were collapsed
-        // into |eventRegions|. This is because any ASR change causes us to force
-        // a new layer data which flushes the eventRegions.
-        MOZ_ASSERT(!mLayerScrollData.empty());
-        mLayerScrollData.back().AddEventRegions(eventRegions);
-        eventRegions.SetEmpty();
-      }
-
-      // Collapse event region data into |eventRegions|, which will either be
-      // empty, or filled with stuff from previous display items with the same
-      // ASR.
-      if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-        nsDisplayLayerEventRegions* regionsItem =
-            static_cast<nsDisplayLayerEventRegions*>(item);
-        int32_t auPerDevPixel = item->Frame()->PresContext()->AppUnitsPerDevPixel();
-        EventRegions regions(
-            regionsItem->HitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            regionsItem->MaybeHitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            regionsItem->DispatchToContentHitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            regionsItem->NoActionRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            regionsItem->HorizontalPanRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            regionsItem->VerticalPanRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
-            /* mDTCRequiresTargetConfirmation = */ false);
-
-        eventRegions.OrWith(regions);
-        if (mLayerScrollData.empty()) {
-          // If we don't have a layer data yet then create one because we will
-          // need it to store this event region information.
-          forceNewLayerData = true;
-        }
-      }
-
       // If we're going to create a new layer data for this item, stash the
       // ASR so that if we recurse into a sublist they will know where to stop
       // walking up their ASR chain when building scroll metadata.
@@ -1335,7 +1289,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
 
     mClipManager.BeginItem(item, aSc);
 
-    if (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
+    { // scope restoreDoGrouping
       AutoRestore<bool> restoreDoGrouping(mDoGrouping);
       if (itemType == DisplayItemType::TYPE_SVG_WRAPPER) {
         // Inside an <svg>, all display items that are not LAYER_ACTIVE wrapper
@@ -1417,29 +1371,8 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
           mLayerScrollData.back().Initialize(mManager->GetScrollData(), item,
               descendants, stopAtAsr, deferred ? Some((*deferred)->GetTransform().GetMatrix()) : Nothing());
         }
-      } else if (mLayerScrollData.size() != layerCountBeforeRecursing &&
-                 !eventRegions.IsEmpty()) {
-        // We are not forcing a new layer for |item|, but we did create some
-        // layers while recursing. In this case, we need to make sure any
-        // event regions that we were carrying end up on the right layer. So we
-        // do an event region "flush" but retroactively; i.e. the event regions
-        // end up on the layer that was mLayerScrollData.back() prior to the
-        // recursion.
-        MOZ_ASSERT(layerCountBeforeRecursing > 0);
-        mLayerScrollData[layerCountBeforeRecursing - 1].AddEventRegions(eventRegions);
-        eventRegions.SetEmpty();
       }
     }
-  }
-
-  // If we have any event region info left over we need to flush it before we
-  // return. Again, at this point the layer data list must be non-empty, and
-  // the most recently created layer data will have been created by an item
-  // with matching ASRs.
-  if (!eventRegions.IsEmpty()) {
-    MOZ_ASSERT(apzEnabled);
-    MOZ_ASSERT(!mLayerScrollData.empty());
-    mLayerScrollData.back().AddEventRegions(eventRegions);
   }
 
   mClipManager.EndList(aSc);
