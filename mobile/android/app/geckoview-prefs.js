@@ -13,3 +13,7 @@ pref("dom.ipc.processPrelaunch.enabled", false);
 
 // Tell Telemetry that we're in GeckoView mode.
 pref("toolkit.telemetry.isGeckoViewMode", true);
+
+// Disable Web Push until we get it working
+pref("dom.push.enabled", false);
+
