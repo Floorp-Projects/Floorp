@@ -1606,35 +1606,35 @@ or run without that action (ie: --no-{action})"
         """
         from StringIO import StringIO
 
-        # Check for binutils' `size` program
-        size_names = ('size', 'gsize')
-        size_prog = None
-        for name in size_names:
-            size_prog = self.which(name)
-            if size_prog:
-                break
-
+        # Check for `rust_size`, our cross platform version of size. It should
+        # be installed by tooltool in $abs_src_dir/rust-size/rust-size
+        rust_size = os.path.join(self.query_abs_dirs()['abs_src_dir'],
+                                 'rust-size', 'rust-size')
+        size_prog = self.which(rust_size)
         if not size_prog:
-            self.info("Couldn't find `size` program")
+            self.info("Couldn't find `rust-size` program")
             return {}
 
-        # Call `size` and output with SysV format in decimal radix
-        cmd = [size_prog, '-A', '-d', file]
+        self.info("Using %s" % size_prog)
+        cmd = [size_prog, file]
         output = self.get_output_from_command(cmd)
         if not output:
+            self.info("`rust-size` failed")
             return {}
 
-        # Format is:
-        # <section-name> <size> <address>, ie:
-        # .data                  302160   101053344
-        size_section_re = re.compile(r"([\w\.]+)\s+(\d+)\s+(\d+)")
+        # Format is JSON:
+        # {
+        #   "section_type": {
+        #     "section_name": size, ....
+        #   },
+        #   ...
+        # }
+        parsed = json.loads(output)
         sections = {}
-        for line in output.splitlines():
-            m = size_section_re.match(line)
-            if m:
-                name = m.group(1)
+        for sec_type in parsed.itervalues():
+            for name, size in sec_type.iteritems():
                 if not filter or name in filter:
-                    sections[name] = int(m.group(2))
+                    sections[name] = size
 
         return sections
 
@@ -1650,9 +1650,8 @@ or run without that action (ie: --no-{action})"
             'avcodec': ('libmozavcodec.so', 'mozavcodec.dll', 'libmozavcodec.dylib'),
             'avutil': ('libmozavutil.so', 'mozavutil.dll', 'libmozavutil.dylib')
         }
-        # TODO(erahm): update for windows and osx. As-is we only have support
-        # for `size` on debian which gives us linux and android.
-        section_interests = ('.text', '.data', '.rodata', '.data.rel.ro', '.bss')
+        section_interests = ('.text', '.data', '.rodata', '.rdata',
+                             '.cstring', '.data.rel.ro', '.bss')
         lib_details = []
 
         dirs = self.query_abs_dirs()
@@ -1667,6 +1666,18 @@ or run without that action (ie: --no-{action})"
                     section_details = self._get_sections(lib, section_interests)
                     section_measurements = []
                     # Build up the subtests
+
+                    # Lump rodata sections together
+                    # - Mach-O separates out read-only string data as .cstring
+                    # - PE really uses .rdata, but XUL at least has a .rodata as well
+                    for ro_alias in ('.cstring', '.rdata'):
+                        if ro_alias in section_details:
+                            if '.rodata' in section_details:
+                                section_details['.rodata'] += section_details[ro_alias]
+                            else:
+                                section_details['.rodata'] = section_details[ro_alias]
+                            del section_details[ro_alias]
+
                     for k, v in section_details.iteritems():
                         section_measurements.append({'name': k, 'value': v})
                         lib_size += v
