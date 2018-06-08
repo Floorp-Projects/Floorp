@@ -5953,7 +5953,8 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList,
-                         const ActiveScrolledRoot* aActiveScrolledRoot);
+                         const ActiveScrolledRoot* aActiveScrolledRoot,
+                         const ActiveScrolledRoot* aContainerASR);
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                          const nsDisplayFixedPosition& aOther)
     : nsDisplayOwnLayer(aBuilder, aOther)
@@ -6009,18 +6010,27 @@ public:
     return mAnimatedGeometryRootForScrollMetadata;
   }
 
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                       const StackingContextHelper& aSc,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                 mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+
+  virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
 protected:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList, uint32_t aIndex);
   void Init(nsDisplayListBuilder* aBuilder);
+  ViewID GetScrollTargetId();
 
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   uint32_t mIndex;
   bool mIsFixedBackground;
+  const ActiveScrolledRoot* mContainerASR;
 };
 
 class nsDisplayTableFixedPosition : public nsDisplayFixedPosition

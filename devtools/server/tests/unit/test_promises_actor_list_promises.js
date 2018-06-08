@@ -13,11 +13,11 @@ const SECRET = "MyLittleSecret";
 
 add_task(async function() {
   const client = await startTestDebuggerServer("promises-actor-test");
-  const chromeActors = await getChromeActors(client);
+  const parentProcessActors = await getParentProcessActors(client);
 
-  // We have to attach the chrome TabActor before playing with the PromiseActor
-  await attachTab(client, chromeActors);
-  await testListPromises(client, chromeActors, v =>
+  // We have to attach the chrome target actor before playing with the PromiseActor
+  await attachTab(client, parentProcessActors);
+  await testListPromises(client, parentProcessActors, v =>
     new Promise(resolve => resolve(v)));
 
   const response = await listTabs(client);

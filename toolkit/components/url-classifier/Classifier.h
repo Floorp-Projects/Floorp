@@ -52,7 +52,7 @@ public:
   /*
    * Get all tables that we know about.
    */
-  nsresult ActiveTables(nsTArray<nsCString>& aTables);
+  nsresult ActiveTables(nsTArray<nsCString>& aTables) const;
 
   /**
    * Check a URL against the specified tables.
@@ -64,12 +64,10 @@ public:
   /**
    * Asynchronously apply updates to the in-use databases. When the
    * update is complete, the caller can be notified by |aCallback|, which
-   * will occur on the caller thread. Note that the ownership of
-   * |aUpdates| will be transferred. This design is inherited from the
-   * previous sync update function (ApplyUpdates) which has been removed.
+   * will occur on the caller thread.
    */
   using AsyncUpdateCallback = std::function<void(nsresult)>;
-  nsresult AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
+  nsresult AsyncApplyUpdates(const TableUpdateArray& aUpdates,
                              const AsyncUpdateCallback& aCallback);
 
   /**
@@ -82,10 +80,8 @@ public:
   /**
    * Apply full hashes retrived from gethash to cache.
    */
-  nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
+  nsresult ApplyFullHashes(ConstTableUpdateArray& aUpdates);
 
-  nsresult CacheCompletions(const CacheResultArray& aResults);
-  uint32_t GetHashKey(void) { return mHashKey; }
   /*
    * Get a bunch of extra prefixes to query for completion
    * and mask the real entry being requested
@@ -93,7 +89,7 @@ public:
   nsresult ReadNoiseEntries(const Prefix& aPrefix,
                             const nsACString& aTableName,
                             uint32_t aCount,
-                            PrefixArray* aNoiseEntries);
+                            PrefixArray& aNoiseEntries);
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   nsresult DumpRawTableUpdates(const nsACString& aRawUpdates);
@@ -120,8 +116,8 @@ public:
   // update intermediaries.
   nsresult SwapInNewTablesAndCleanup();
 
-  LookupCache *GetLookupCache(const nsACString& aTable,
-                              bool aForUpdate = false);
+  RefPtr<LookupCache> GetLookupCache(const nsACString& aTable,
+                                     bool aForUpdate = false);
 
   void GetCacheInfo(const nsACString& aTable,
                     nsIUrlClassifierCacheInfo** aCache);
@@ -152,29 +148,29 @@ private:
 
   nsresult ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables);
 
-  nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
+  nsresult UpdateHashStore(TableUpdateArray& aUpdates,
                            const nsACString& aTable);
 
-  nsresult UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
+  nsresult UpdateTableV4(TableUpdateArray& aUpdates,
                          const nsACString& aTable);
 
-  nsresult UpdateCache(TableUpdate* aUpdates);
+  nsresult UpdateCache(RefPtr<const TableUpdate> aUpdates);
 
-  LookupCache *GetLookupCacheForUpdate(const nsACString& aTable) {
+  RefPtr<LookupCache> GetLookupCacheForUpdate(const nsACString& aTable) {
     return GetLookupCache(aTable, true);
   }
 
-  LookupCache *GetLookupCacheFrom(const nsACString& aTable,
-                                  nsTArray<LookupCache*>& aLookupCaches,
-                                  nsIFile* aRootStoreDirectory);
+  RefPtr<LookupCache> GetLookupCacheFrom(const nsACString& aTable,
+                                         LookupCacheArray& aLookupCaches,
+                                         nsIFile* aRootStoreDirectory);
 
 
-  bool CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
+  bool CheckValidUpdate(TableUpdateArray& aUpdates,
                         const nsACString& aTable);
 
   nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
 
-  nsCString GetProvider(const nsACString& aTableName);
+  static nsCString GetProvider(const nsACString& aTableName);
 
   /**
    * The "background" part of ApplyUpdates. Once the background update
@@ -182,7 +178,7 @@ private:
    * background result no matter whether the background update is
    * successful or not.
    */
-  nsresult ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+  nsresult ApplyUpdatesBackground(TableUpdateArray& aUpdates,
                                   nsACString& aFailedTableName);
 
   /**
@@ -206,7 +202,7 @@ private:
   nsCOMPtr<nsIFile> mBackupDirectory;
   nsCOMPtr<nsIFile> mUpdatingDirectory; // For update only.
   nsCOMPtr<nsIFile> mToDeleteDirectory;
-  nsTArray<LookupCache*> mLookupCaches; // For query only.
+  LookupCacheArray mLookupCaches; // For query only.
   nsTArray<nsCString> mActiveTablesCache;
   uint32_t mHashKey;
 
@@ -219,7 +215,7 @@ private:
   bool mIsTableRequestResultOutdated;
 
   // The copy of mLookupCaches for update only.
-  nsTArray<LookupCache*> mNewLookupCaches;
+  LookupCacheArray mNewLookupCaches;
 
   bool mUpdateInterrupted;
 

@@ -357,7 +357,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       parentStyleSheet = parentStyleSheet.parentStyleSheet;
     }
     // When the style is injected via nsIDOMWindowUtils.loadSheet, even
-    // the parent style sheet has no owner, so default back to tab actor
+    // the parent style sheet has no owner, so default back to target actor
     // document
     if (parentStyleSheet.ownerNode) {
       this.ownerDocument = parentStyleSheet.ownerNode.ownerDocument;
@@ -513,7 +513,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Try to locate the console actor if it exists via our parent actor (the tab).
    *
-   * Keep this in sync with the TabActor version.
+   * Keep this in sync with the BrowsingContextTargetActor version.
    */
   get _consoleActor() {
     if (this.parentActor.exited) {
@@ -642,10 +642,10 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return { actor: this.actorID };
   },
 
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
-    this.parentActor = tabActor;
+    this.parentActor = targetActor;
 
     this._onNewStyleSheetActor = this._onNewStyleSheetActor.bind(this);
     this._onSheetAdded = this._onSheetAdded.bind(this);
@@ -686,7 +686,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   /**
-   * Event handler that is called when a the tab actor emits window-ready.
+   * Event handler that is called when a the target actor emits window-ready.
    *
    * @param {Event} evt
    *        The triggering event.
@@ -696,7 +696,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   /**
-   * Event handler that is called when a the tab actor emits stylesheet-added.
+   * Event handler that is called when a the target actor emits stylesheet-added.
    *
    * @param {StyleSheetActor} actor
    *        The new style sheet actor.

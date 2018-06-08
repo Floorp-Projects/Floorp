@@ -175,9 +175,9 @@ function getAddonActorForId(aClient, aAddonId) {
   let deferred = promise.defer();
 
   aClient.listAddons(aResponse => {
-    let addonActor = aResponse.addons.filter(aGrip => aGrip.id == aAddonId).pop();
+    let addonTargetActor = aResponse.addons.filter(aGrip => aGrip.id == aAddonId).pop();
     info("got addon actor for ID: " + aAddonId);
-    deferred.resolve(addonActor);
+    deferred.resolve(addonTargetActor);
   });
 
   return deferred.promise;
@@ -645,13 +645,13 @@ AddonDebugger.prototype = {
 
     yield this.client.connect();
 
-    let addonActor = yield getAddonActorForId(this.client, aAddonId);
+    let addonTargetActor = yield getAddonActorForId(this.client, aAddonId);
 
     let targetOptions = {
-      form: addonActor,
+      form: addonTargetActor,
       client: this.client,
       chrome: true,
-      isTabActor: false
+      isBrowsingContext: false
     };
 
     let toolboxOptions = {

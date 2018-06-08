@@ -324,7 +324,7 @@ types.addActorType = function(name) {
       const actorID = typeof (v) === "string" ? v : v.actor;
       let front = ctx.conn.getActor(actorID);
       if (!front) {
-        // If front isn't instanciated yet, create one.
+        // If front isn't instantiated yet, create one.
 
         // Try lazy loading front if not already loaded.
         // The front module will synchronously call `FrontClassWithSpec` and
@@ -1249,7 +1249,7 @@ var Front = function(conn = null, form = null, detail = null, context = null) {
 
   // protocol.js no longer uses this data in the constructor, only external
   // uses do.  External usage of manually-constructed fronts will be
-  // drastically reduced if we convert the root and tab actors to
+  // drastically reduced if we convert the root and target actors to
   // protocol.js, in which case this can probably go away.
   if (form) {
     this.actorID = form.actor;

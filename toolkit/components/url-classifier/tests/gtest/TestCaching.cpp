@@ -75,11 +75,11 @@ TestCache(const Completion aCompletion,
                            GeneratePrefix(_Fragment("small.com/"), 4)
                          };
 
-    UniquePtr<T> cache = SetupLookupCache<T>(array);
+    RefPtr<T> cache = SetupLookupCache<T>(array);
 
     // Create an expired entry and a non-expired entry
-    SetupCacheEntry(cache.get(), _Fragment("cache.notexpired.com/"));
-    SetupCacheEntry(cache.get(), _Fragment("cache.expired.com/"), true, true);
+    SetupCacheEntry(cache, _Fragment("cache.notexpired.com/"));
+    SetupCacheEntry(cache, _Fragment("cache.expired.com/"), true, true);
 
     cache->Has(aCompletion, &has, &matchLength, &confirmed);
     inCache = cache->IsInCache(aCompletion.ToUint32());
@@ -198,12 +198,12 @@ void TestInvalidateExpiredCacheEntry()
                          GeneratePrefix(POS_CACHE_EXPIRED_URL, 5),
                          GeneratePrefix(BOTH_CACHE_EXPIRED_URL, 4)
                        };
-  UniquePtr<T> cache = SetupLookupCache<T>(array);
+  RefPtr<T> cache = SetupLookupCache<T>(array);
 
-  SetupCacheEntry(cache.get(), CACHED_URL, false, false);
-  SetupCacheEntry(cache.get(), NEG_CACHE_EXPIRED_URL, true, false);
-  SetupCacheEntry(cache.get(), POS_CACHE_EXPIRED_URL, false, true);
-  SetupCacheEntry(cache.get(), BOTH_CACHE_EXPIRED_URL, true, true);
+  SetupCacheEntry(cache, CACHED_URL, false, false);
+  SetupCacheEntry(cache, NEG_CACHE_EXPIRED_URL, true, false);
+  SetupCacheEntry(cache, POS_CACHE_EXPIRED_URL, false, true);
+  SetupCacheEntry(cache, BOTH_CACHE_EXPIRED_URL, true, true);
 
   // Before invalidate
   TestCache<T>(CACHED_URL, true, true, true, cache.get());
@@ -241,7 +241,7 @@ TEST(UrlClassifierCaching, InvalidateExpiredCacheEntryV4)
 TEST(UrlClassifierCaching, NegativeCacheExpireV2)
 {
   _PrefixArray array = { GeneratePrefix(NEG_CACHE_EXPIRED_URL, 8) };
-  UniquePtr<LookupCacheV2> cache = SetupLookupCache<LookupCacheV2>(array);
+  RefPtr<LookupCacheV2> cache = SetupLookupCache<LookupCacheV2>(array);
 
   nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
 
@@ -262,7 +262,7 @@ TEST(UrlClassifierCaching, NegativeCacheExpireV2)
 TEST(UrlClassifierCaching, NegativeCacheExpireV4)
 {
   _PrefixArray array = { GeneratePrefix(NEG_CACHE_EXPIRED_URL, 8) };
-  UniquePtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
+  RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
 
   FullHashResponseMap map;
   Prefix prefix;

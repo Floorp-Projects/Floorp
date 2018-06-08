@@ -14,7 +14,7 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
                        };
 
   RunTestInNewThread([&] () -> void {
-    UniquePtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
+    RefPtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
 
     Completion lookupHash;
     lookupHash.FromPlaintext(aFragment);

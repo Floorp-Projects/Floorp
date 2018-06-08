@@ -6,4 +6,6 @@
 
 DevToolsModules(
     'service-worker-process.js',
+    'service-worker.js',
+    'worker-list.js',
 )

@@ -40,7 +40,7 @@
     return sandbox.exports;
   };
 
-  // Ensure fetching a live TabActor form for the targeted app
+  // Ensure fetching a live target actor form
   // (helps fetching the test actor registered dynamically)
   const getUpdatedForm = function(client, tab) {
     return client.getTab({tab: tab})

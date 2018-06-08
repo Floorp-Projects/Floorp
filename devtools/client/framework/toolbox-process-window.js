@@ -82,9 +82,9 @@ var connect = async function() {
   appendStatusMessage("Get root form for toolbox");
   if (addonID) {
     const { addons } = await gClient.listAddons();
-    const addonActor = addons.filter(addon => addon.id === addonID).pop();
-    const isTabActor = addonActor.isWebExtension;
-    await openToolbox({form: addonActor, chrome: true, isTabActor});
+    const addonTargetActor = addons.filter(addon => addon.id === addonID).pop();
+    const isBrowsingContext = addonTargetActor.isWebExtension;
+    await openToolbox({form: addonTargetActor, chrome: true, isBrowsingContext});
   } else {
     const response = await gClient.getProcess();
     await openToolbox({form: response.form, chrome: true});
@@ -130,12 +130,12 @@ function onCloseCommand(event) {
   window.close();
 }
 
-async function openToolbox({ form, chrome, isTabActor }) {
+async function openToolbox({ form, chrome, isBrowsingContext }) {
   let options = {
     form: form,
     client: gClient,
     chrome: chrome,
-    isTabActor: isTabActor
+    isBrowsingContext: isBrowsingContext
   };
   appendStatusMessage(`Create toolbox target: ${JSON.stringify(arguments, null, 2)}`);
   const target = await TargetFactory.forRemoteTab(options);

@@ -21,7 +21,7 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
  *      {Number} the tab outerWindowID
  * - chrome: Optional
  *      {Boolean} Force the creation of a chrome target. Gives more privileges to
- *      the tab actor. Allows chrome execution in the webconsole and see chrome
+ *      the target actor. Allows chrome execution in the webconsole and see chrome
  *      files in the debugger. (handy when contributing to firefox)
  *
  * If type == "process":
@@ -48,10 +48,10 @@ exports.targetFromURL = async function targetFromURL(url) {
   }
   let id = params.get("id");
   // Allows to spawn a chrome enabled target for any context
-  // (handy to debug chrome stuff in a child process)
+  // (handy to debug chrome stuff in a content process)
   let chrome = params.has("chrome");
 
-  let form, isTabActor;
+  let form, isBrowsingContext;
   if (type === "tab") {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
@@ -79,8 +79,10 @@ exports.targetFromURL = async function targetFromURL(url) {
       form = response.form;
       chrome = true;
       if (id != 0) {
-        // Child process are not exposing tab actors and only support debugger+console
-        isTabActor = false;
+        // Content processes are not exposing browsing context target actors with the full
+        // set of tab-scoped actors we would get from a browser tab. Instead, they only
+        // support debugger and console.
+        isBrowsingContext = false;
       }
     } catch (ex) {
       if (ex.error == "noProcess") {
@@ -111,7 +113,7 @@ exports.targetFromURL = async function targetFromURL(url) {
     throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }
 
-  return TargetFactory.forRemoteTab({ client, form, chrome, isTabActor });
+  return TargetFactory.forRemoteTab({ client, form, chrome, isBrowsingContext });
 };
 
 /**

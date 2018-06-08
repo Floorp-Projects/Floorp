@@ -420,26 +420,10 @@ function shouldWaitForExplicitPaintWaiters() {
     return gExplicitPendingPaintCount > 0;
 }
 
-function shouldWaitForPendingPaints(contentRootElement) {
+function shouldWaitForPendingPaints() {
     // if gHaveCanvasSnapshot is false, we're not taking snapshots so
     // there is no need to wait for pending paints to be flushed.
-    return gHaveCanvasSnapshot &&
-           !shouldIgnorePendingMozAfterPaints(contentRootElement) &&
-           windowUtils().isMozAfterPaintPending;
-}
-
-function shouldIgnorePendingMozAfterPaints(contentRootElement) {
-    // use getAttribute because className works differently in HTML and SVG
-    var ignore = contentRootElement &&
-           contentRootElement.hasAttribute('class') &&
-           contentRootElement.getAttribute('class').split(/\s+/)
-                             .includes("reftest-ignore-pending-paints");
-    // getAnimations is nightly-only, so check it exists before calling it
-    if (ignore && contentRootElement.ownerDocument.getAnimations
-               && contentRootElement.ownerDocument.getAnimations().length == 0) {
-      LogError("reftest-ignore-pending-paints should only be used on documents with animations!");
-    }
-    return ignore;
+    return gHaveCanvasSnapshot && windowUtils().isMozAfterPaintPending;
 }
 
 function shouldWaitForReftestWaitRemoval(contentRootElement) {
@@ -625,13 +609,13 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
         switch (state) {
         case STATE_WAITING_TO_FIRE_INVALIDATE_EVENT: {
             LogInfo("MakeProgress: STATE_WAITING_TO_FIRE_INVALIDATE_EVENT");
-            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints(contentRootElement)) {
+            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints()) {
                 gFailureReason = "timed out waiting for pending paint count to reach zero";
                 if (shouldWaitForExplicitPaintWaiters()) {
                     gFailureReason += " (waiting for MozPaintWaitFinished)";
                     LogInfo("MakeProgress: waiting for MozPaintWaitFinished");
                 }
-                if (shouldWaitForPendingPaints(contentRootElement)) {
+                if (shouldWaitForPendingPaints()) {
                     gFailureReason += " (waiting for MozAfterPaint)";
                     LogInfo("MakeProgress: waiting for MozAfterPaint");
                 }
@@ -669,7 +653,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                 // MozReftestInvalidate handler removed reftest-wait.
                 // We expect something to have been invalidated...
                 FlushRendering(FlushMode.ALL);
-                if (!shouldWaitForPendingPaints(contentRootElement) && !shouldWaitForExplicitPaintWaiters()) {
+                if (!shouldWaitForPendingPaints() && !shouldWaitForExplicitPaintWaiters()) {
                     LogWarning("MozInvalidateEvent didn't invalidate");
                 }
             }
@@ -734,14 +718,14 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
 
         case STATE_WAITING_TO_FINISH:
             LogInfo("MakeProgress: STATE_WAITING_TO_FINISH");
-            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints(contentRootElement)) {
+            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints()) {
                 gFailureReason = "timed out waiting for pending paint count to " +
                     "reach zero (after reftest-wait removed and switch to print mode)";
                 if (shouldWaitForExplicitPaintWaiters()) {
                     gFailureReason += " (waiting for MozPaintWaitFinished)";
                     LogInfo("MakeProgress: waiting for MozPaintWaitFinished");
                 }
-                if (shouldWaitForPendingPaints(contentRootElement)) {
+                if (shouldWaitForPendingPaints()) {
                     gFailureReason += " (waiting for MozAfterPaint)";
                     LogInfo("MakeProgress: waiting for MozAfterPaint");
                 }
@@ -1092,15 +1076,6 @@ function LoadURI(uri)
 {
     var flags = webNavigation().LOAD_FLAGS_NONE;
     webNavigation().loadURI(uri, flags, null, null, null);
-}
-
-function LogError(str)
-{
-    if (gVerbose) {
-        sendSyncMessage("reftest:Log", { type: "error", msg: str });
-    } else {
-        sendAsyncMessage("reftest:Log", { type: "error", msg: str });
-    }
 }
 
 function LogWarning(str)

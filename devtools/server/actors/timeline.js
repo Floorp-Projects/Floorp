@@ -27,12 +27,12 @@ const { timelineSpec } = require("devtools/shared/specs/timeline");
  */
 exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   /**
-   * Initializes this actor with the provided connection and tab actor.
+   * Initializes this actor with the provided connection and target actor.
    */
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
-    this.bridge = new Timeline(tabActor);
+    this.targetActor = targetActor;
+    this.bridge = new Timeline(targetActor);
 
     this._onTimelineDocLoading = this._onTimelineDocLoading.bind(this);
     this._onTimelineMarkers = this._onTimelineMarkers.bind(this);
@@ -58,7 +58,7 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
     this.bridge.off("frames", this._onTimelineFrames);
     this.bridge.destroy();
     this.bridge = null;
-    this.tabActor = null;
+    this.targetActor = null;
     protocol.Actor.prototype.destroy.call(this);
   },
 

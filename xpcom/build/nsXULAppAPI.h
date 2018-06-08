@@ -281,7 +281,7 @@ XRE_API(nsresult,
  * manifest instructions.
  *
  * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
- * which are only allowed to register only skin packages and style overlays.
+ * which are only allowed to register skin packages.
  */
 enum NSLocationType
 {
@@ -310,7 +310,7 @@ XRE_API(nsresult,
  * components as well as component/chrome manifest files.
  *
  * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
- * which are only allowed to register only skin packages and style overlays.
+ * which are only allowed to register skin packages.
  */
 XRE_API(nsresult,
         XRE_AddJarManifestLocation, (NSLocationType aType,

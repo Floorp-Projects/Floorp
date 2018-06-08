@@ -120,7 +120,7 @@ function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
         type: { global: true }
       });
 
-      getChromeActors(client).then(function(form) {
+      getParentProcessActors(client).then(function(form) {
         if (!form) {
           ok(false, "Could not attach to chrome actors");
           return;
@@ -424,9 +424,9 @@ function finishClient(client) {
   });
 }
 
-// Create a server, connect to it and fetch tab actors for the parent process;
-// pass |callback| the debugger client and tab actor form with all actor IDs.
-function get_chrome_actors(callback) {
+// Create a server, connect to it and fetch actors targeting the parent process;
+// pass |callback| the debugger client and target actor form with all actor IDs.
+function get_parent_process_actors(callback) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
@@ -439,7 +439,7 @@ function get_chrome_actors(callback) {
     });
 }
 
-function getChromeActors(client, server = DebuggerServer) {
+function getParentProcessActors(client, server = DebuggerServer) {
   server.allowChromeProcess = true;
   return client.getProcess().then(response => response.form);
 }

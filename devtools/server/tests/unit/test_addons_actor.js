@@ -4,13 +4,13 @@
 
 "use strict";
 
-const {AddonsFront} = require("devtools/shared/fronts/addons");
+const {AddonsFront} = require("devtools/shared/fronts/addon/addons");
 
 startupAddonsManager();
 
 async function connect() {
   const client = await new Promise(resolve => {
-    get_chrome_actors(client => resolve(client));
+    get_parent_process_actors(client => resolve(client));
   });
   const root = await listTabs(client);
   const addonsActor = root.addonsActor;

@@ -37,10 +37,10 @@ const DEFAULT_TIMELINE_DATA_PULL_TIMEOUT = 200;
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.
  */
-function Timeline(tabActor) {
+function Timeline(targetActor) {
   EventEmitter.decorate(this);
 
-  this.tabActor = tabActor;
+  this.targetActor = targetActor;
 
   this._isRecording = false;
   this._stackFrames = null;
@@ -50,7 +50,7 @@ function Timeline(tabActor) {
   // Make sure to get markers from new windows as they become available
   this._onWindowReady = this._onWindowReady.bind(this);
   this._onGarbageCollection = this._onGarbageCollection.bind(this);
-  this.tabActor.on("window-ready", this._onWindowReady);
+  this.targetActor.on("window-ready", this._onWindowReady);
 }
 
 Timeline.prototype = {
@@ -60,16 +60,16 @@ Timeline.prototype = {
   destroy: function() {
     this.stop();
 
-    this.tabActor.off("window-ready", this._onWindowReady);
-    this.tabActor = null;
+    this.targetActor.off("window-ready", this._onWindowReady);
+    this.targetActor = null;
   },
 
   /**
-   * Get the list of docShells in the currently attached tabActor. Note that we
-   * always list the docShells included in the real root docShell, even if the
-   * tabActor was switched to a child frame. This is because for now, paint
-   * markers are only recorded at parent frame level so switching the timeline
-   * to a child frame would hide all paint markers.
+   * Get the list of docShells in the currently attached targetActor. Note that
+   * we always list the docShells included in the real root docShell, even if
+   * the targetActor was switched to a child frame. This is because for now,
+   * paint markers are only recorded at parent frame level so switching the
+   * timeline to a child frame would hide all paint markers.
    * See https://bugzilla.mozilla.org/show_bug.cgi?id=1050773#c14
    * @return {Array}
    */
@@ -77,10 +77,10 @@ Timeline.prototype = {
     let originalDocShell;
     const docShells = [];
 
-    if (this.tabActor.isRootActor) {
-      originalDocShell = this.tabActor.docShell;
+    if (this.targetActor.isRootActor) {
+      originalDocShell = this.targetActor.docShell;
     } else {
-      originalDocShell = this.tabActor.originalDocShell;
+      originalDocShell = this.targetActor.originalDocShell;
     }
 
     if (!originalDocShell) {
@@ -236,12 +236,12 @@ Timeline.prototype = {
     }
 
     if (this._withTicks) {
-      this._framerate = new Framerate(this.tabActor);
+      this._framerate = new Framerate(this.targetActor);
       this._framerate.startRecording();
     }
 
     if (this._withMemory || this._withGCEvents) {
-      this._memory = new Memory(this.tabActor, this._stackFrames);
+      this._memory = new Memory(this.targetActor, this._stackFrames);
       this._memory.attach();
     }
 
@@ -310,7 +310,7 @@ Timeline.prototype = {
   },
 
   /**
-   * When a new window becomes available in the tabActor, start recording its
+   * When a new window becomes available in the targetActor, start recording its
    * markers if we were recording.
    */
   _onWindowReady: function({ window }) {

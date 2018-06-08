@@ -25,6 +25,7 @@ public class AppConstants {
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
 
     public static final String MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "@ANDROID_PACKAGE_NAME@_fxaccount";
+    public static final String MOZ_FILE_PROVIDER_AUTHORITY = "@ANDROID_PACKAGE_NAME@.fileprovider";
 
     /**
      * Encapsulates access to compile-time version definitions, allowing

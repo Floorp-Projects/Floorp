@@ -32,6 +32,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
@@ -294,8 +295,14 @@ public final class NotificationHelper implements BundleEventListener {
         // scheme to prevent Fennec from popping up.
         final Intent viewFileIntent = createIntentIfDownloadCompleted(message);
         if (builder != null && viewFileIntent != null && mContext != null) {
+            // Bug 1450449 - Downloaded files already are already in a public directory and aren't
+            // really owned exclusively by Firefox, so there's no real benefit to using
+            // content:// URIs here.
+            StrictMode.VmPolicy prevPolicy = StrictMode.getVmPolicy();
+            StrictMode.setVmPolicy(StrictMode.VmPolicy.LAX);
             final PendingIntent pIntent = PendingIntent.getActivity(
                     mContext, 0, viewFileIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            StrictMode.setVmPolicy(prevPolicy);
             builder.setAutoCancel(true);
             builder.setContentIntent(pIntent);
 

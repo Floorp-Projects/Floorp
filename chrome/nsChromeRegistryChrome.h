@@ -44,8 +44,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 #ifdef MOZ_XUL
   NS_IMETHOD GetXULOverlays(nsIURI *aURI,
                             nsISimpleEnumerator **_retval) override;
-  NS_IMETHOD GetStyleOverlays(nsIURI *aURI,
-                              nsISimpleEnumerator **_retval) override;
 #endif
 
   // If aChild is non-null then it is a new child to notify. If aChild is
@@ -147,9 +145,8 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   };
 
   // Hashes on the file to be overlaid (chrome://browser/content/browser.xul)
-  // to a list of overlays/stylesheets
+  // to a list of overlays
   OverlayListHash mOverlayHash;
-  OverlayListHash mStyleHash;
 
   bool mProfileLoaded;
   bool mDynamicRegistration;
@@ -167,8 +164,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                             char *const * argv, int flags) override;
   virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, int flags) override;
-  virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                             char *const * argv, int flags) override;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, int flags) override;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,

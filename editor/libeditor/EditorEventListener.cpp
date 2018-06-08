@@ -898,8 +898,8 @@ EditorEventListener::Drop(DragEvent* aDragEvent)
 
   aDragEvent->StopPropagation();
   aDragEvent->PreventDefault();
-  RefPtr<EditorBase> editorBase(mEditorBase);
-  return editorBase->InsertFromDrop(aDragEvent);
+  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
+  return textEditor->OnDrop(aDragEvent);
 }
 
 bool

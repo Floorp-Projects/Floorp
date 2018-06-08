@@ -1510,9 +1510,6 @@ function RecvLog(type, msg)
         TestBuffer(msg);
     } else if (type == "warning") {
         logger.warning(msg);
-    } else if (type == "error") {
-        logger.error("REFTEST TEST-UNEXPECTED-FAIL | " + g.currentURL + " | " + msg + "\n");
-        ++g.testResults.Exception;
     } else {
         logger.error("REFTEST TEST-UNEXPECTED-FAIL | " + g.currentURL + " | unknown log type " + type + "\n");
         ++g.testResults.Exception;
