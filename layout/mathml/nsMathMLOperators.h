@@ -57,7 +57,7 @@ enum {
   NS_MATHML_OPERATOR_RSPACE_ATTR    = 1<<16
 };
 
-#define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
+#define NS_MATHML_OPERATOR_SIZE_INFINITY (mozilla::PositiveInfinity<float>())
 
 class nsMathMLOperators {
 public:

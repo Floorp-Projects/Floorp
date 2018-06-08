@@ -13,7 +13,9 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 function downloadRoots() {
   let req = new XMLHttpRequest();
