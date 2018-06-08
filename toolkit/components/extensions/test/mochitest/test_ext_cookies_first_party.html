@@ -83,28 +83,31 @@ async function background() {
     assertExpectedCookies([null], [cookie], "get: FPI off, w/ undefined firstPartyDomain, no cookie");
 
     // getAll
-    cookies = await browser.cookies.getAll({});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-    ], cookies, "getAll: FPI off, w/o firstPartyDomain, non-FP cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain: ""});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-    ], cookies, "getAll: FPI off, w/ empty firstPartyDomain, non-FP cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain: null});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-      {name: "foo2", value: "bar2", firstPartyDomain},
-    ], cookies, "getAll: FPI off, w/ null firstPartyDomain, all cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain: undefined});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-      {name: "foo2", value: "bar2", firstPartyDomain},
-    ], cookies, "getAll: FPI off, w/ undefined firstPartyDomain, all cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain});
-    assertExpectedCookies([
-      {name: "foo2", value: "bar2", firstPartyDomain},
-    ], cookies, "getAll: FPI off, w/ firstPartyDomain, FP cookies");
+    for (let extra of [{}, {url}, {domain: firstPartyDomain}]) {
+      const prefix = `getAll(${JSON.stringify(extra)})`;
+      cookies = await browser.cookies.getAll({...extra});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI off, w/o firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: ""});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI off, w/ empty firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: null});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ null firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: undefined});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ undefined firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain});
+      assertExpectedCookies([
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ firstPartyDomain, FP cookies`);
+    }
 
     // remove
     cookie = await browser.cookies.remove({url, name: "foo1"});
@@ -164,31 +167,34 @@ async function background() {
     ], [cookie], "get: FPI on, w/ firstPartyDomain, FP cookie (set when FPI off)");
 
     // getAll
-    await browser.test.assertRejects(
-      browser.cookies.getAll({}),
-      expectedError,
-      "getAll: FPI on, w/o firstPartyDomain, rejection");
-    cookies = await browser.cookies.getAll({firstPartyDomain: ""});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-    ], cookies, "getAll: FPI on, w/ empty firstPartyDomain, non-FP cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain: null});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-      {name: "foo2", value: "bar2", firstPartyDomain},
-      {name: "foo4", value: "bar4", firstPartyDomain},
-    ], cookies, "getAll: FPI on, w/ null firstPartyDomain, all cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain: undefined});
-    assertExpectedCookies([
-      {name: "foo1", value: "bar1", firstPartyDomain: ""},
-      {name: "foo2", value: "bar2", firstPartyDomain},
-      {name: "foo4", value: "bar4", firstPartyDomain},
-    ], cookies, "getAll: FPI on, w/ undefined firstPartyDomain, all cookies");
-    cookies = await browser.cookies.getAll({firstPartyDomain});
-    assertExpectedCookies([
-      {name: "foo2", value: "bar2", firstPartyDomain},
-      {name: "foo4", value: "bar4", firstPartyDomain},
-    ], cookies, "getAll: FPI on, w/ firstPartyDomain, FP cookies");
+    for (let extra of [{}, {url}, {domain: firstPartyDomain}]) {
+      const prefix = `getAll(${JSON.stringify(extra)})`;
+      await browser.test.assertRejects(
+        browser.cookies.getAll({...extra}),
+        expectedError,
+        `${prefix}: FPI on, w/o firstPartyDomain, rejection`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: ""});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI on, w/ empty firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: null});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ null firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: undefined});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ undefined firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain});
+      assertExpectedCookies([
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ firstPartyDomain, FP cookies`);
+    }
 
     // remove
     await browser.test.assertRejects(
