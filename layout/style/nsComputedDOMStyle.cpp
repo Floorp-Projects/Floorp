@@ -464,13 +464,18 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
-  if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
-    ErrorResult rv;
-    nsString text;
-    value->GetCssText(text, rv);
-    aReturn.Assign(text);
-    return rv.StealNSResult();
+  if (!nsCSSProps::PropHasFlags(prop, CSSPropFlags::SerializedByServo)) {
+    if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
+      ErrorResult rv;
+      nsString text;
+      value->GetCssText(text, rv);
+      aReturn.Assign(text);
+      return rv.StealNSResult();
+    }
+    return NS_OK;
   }
+
+  Servo_GetPropertyValue(mComputedStyle, prop, &aReturn);
   return NS_OK;
 }
 
