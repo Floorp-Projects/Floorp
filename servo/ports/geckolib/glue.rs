@@ -174,9 +174,7 @@ impl ClosureHelper for DeclarationBlockMutationClosure {
     #[inline]
     fn invoke(&self, decls: &PropertyDeclarationBlock) {
         if let Some(function) = self.function.as_ref() {
-            unsafe {
-                function(decls as *const _ as *const _, self.data);
-            }
+            unsafe { function(decls, self.data) };
         }
     }
 }
@@ -3423,8 +3421,7 @@ pub unsafe extern "C" fn Servo_UnlockedDeclarationBlock_GetCssText(
     declarations: *const structs::RawServoUnlockedDeclarationBlock,
     result: *mut nsAString,
 ) {
-    let decls = &*(declarations as *const PropertyDeclarationBlock);
-    decls.to_css(&mut *result).unwrap()
+    (*declarations).to_css(&mut *result).unwrap()
 }
 
 
@@ -5133,6 +5130,25 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
 
     data.stylist.has_document_state_dependency(state)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_GetPropertyValue(
+    computed_values: ComputedStyleBorrowed,
+    prop: nsCSSPropertyID,
+    value: *mut nsAString,
+) {
+    use style::properties::PropertyFlags;
+
+    let longhand = LonghandId::from_nscsspropertyid(prop).expect("Not a longhand?");
+    debug_assert!(
+        !longhand.flags().contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
+        "We're not supposed to serialize layout-dependent properties"
+    );
+    computed_values.get_longhand_property_value(
+        longhand,
+        &mut CssWriter::new(&mut *value),
+    ).unwrap();
 }
 
 #[no_mangle]
