@@ -93,15 +93,20 @@ const GeckoViewTelemetryController = {
     // (iff canRecordRelease == true) if they are being recorded.
     const dataset = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
 
+    const rawHistograms = Services.telemetry.snapshotHistograms(dataset,
+                                                                /* subsession */ false,
+                                                                /* clear */ false);
+    const rawKeyedHistograms =
+      Services.telemetry.snapshotKeyedHistograms(dataset, /* subsession */ false,
+                                                 /* clear */ false);
+    const scalars = Services.telemetry.snapshotScalars(dataset, /* clear */ false);
+    const keyedScalars = Services.telemetry.snapshotKeyedScalars(dataset, /* clear */ false);
+
     const snapshots = {
-      histograms: Services.telemetry.snapshotHistograms(
-                      dataset, /* subsession */ false, /* clear */ false),
-      keyedHistograms: Services.telemetry.snapshotKeyedHistograms(
-                           dataset, /* subsession */ false, /* clear */ false),
-      scalars: Services.telemetry.snapshotScalars(
-                   dataset, /* clear */ false),
-      keyedScalars: Services.telemetry.snapshotKeyedScalars(
-                        dataset, /* clear */ false),
+      histograms: TelemetryUtils.packHistograms(rawHistograms),
+      keyedHistograms: TelemetryUtils.packKeyedHistograms(rawKeyedHistograms),
+      scalars,
+      keyedScalars,
     };
 
     if (!snapshots.histograms || !snapshots.keyedHistograms ||
