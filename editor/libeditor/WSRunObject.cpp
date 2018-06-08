@@ -22,6 +22,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
 #include "nsString.h"
