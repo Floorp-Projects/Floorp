@@ -574,32 +574,30 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
       // For completeSelectedIndex autocomplete fields, if the popup shouldn't
       // close when the caret is moved, don't adjust the text value or caret
       // position.
+      bool completeSelection;
+      input->GetCompleteSelectedIndex(&completeSelection);
       if (isOpen) {
         bool noRollup;
         input->GetNoRollupOnCaretMove(&noRollup);
         if (noRollup) {
-          bool completeSelection;
-          input->GetCompleteSelectedIndex(&completeSelection);
           if (completeSelection) {
             return NS_OK;
           }
         }
       }
 
+      int32_t selectionEnd;
+      input->GetSelectionEnd(&selectionEnd);
+      int32_t selectionStart;
+      input->GetSelectionStart(&selectionStart);
+      bool shouldCompleteSelection =
+        (uint32_t)selectionEnd == mPlaceholderCompletionString.Length() &&
+        selectionStart < selectionEnd;
       int32_t selectedIndex;
       popup->GetSelectedIndex(&selectedIndex);
-      bool shouldComplete;
-      input->GetCompleteDefaultIndex(&shouldComplete);
-      if (selectedIndex >= 0) {
-        // The pop-up is open and has a selection, take its value
-        nsAutoString value;
-        if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, false, value))) {
-          SetValueOfInputTo(
-            value, nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETESELECTED);
-          input->SelectTextRange(value.Length(), value.Length());
-        }
-      }
-      else if (shouldComplete) {
+      bool completeDefaultIndex;
+      input->GetCompleteDefaultIndex(&completeDefaultIndex);
+      if (completeDefaultIndex && shouldCompleteSelection) {
         // We usually try to preserve the casing of what user has typed, but
         // if he wants to autocomplete, we will replace the value with the
         // actual autocomplete result. Note that the autocomplete input can also
@@ -624,6 +622,15 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
               value, nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
             input->SelectTextRange(value.Length(), value.Length());
           }
+        }
+      } else if (!completeDefaultIndex && !completeSelection &&
+                 selectedIndex >= 0) {
+        // The pop-up is open and has a selection, take its value
+        nsAutoString value;
+        if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, false, value))) {
+          SetValueOfInputTo(
+            value, nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETESELECTED);
+          input->SelectTextRange(value.Length(), value.Length());
         }
       }
 
