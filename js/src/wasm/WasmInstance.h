@@ -198,7 +198,7 @@ class Instance
 #ifdef ENABLE_WASM_GC
     static void postBarrier(Instance* instance, gc::Cell** location);
 #endif
-    static void* structNew(Instance* instance, uint32_t cookie);
+    static void* structNew(Instance* instance, uint32_t typeIndex);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;

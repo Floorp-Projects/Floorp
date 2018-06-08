@@ -942,6 +942,20 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                 ValidatingOpIter::ValueVector unusedArgs;
                 CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
               }
+              case uint16_t(MiscOp::StructGet): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                uint32_t unusedUint1, unusedUint2;
+                CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
+              }
+              case uint16_t(MiscOp::StructSet): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                uint32_t unusedUint1, unusedUint2;
+                CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing, &nothing));
+              }
 #endif
               default:
                 return iter.unrecognizedOpcode(&op);

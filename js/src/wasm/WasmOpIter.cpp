@@ -271,6 +271,10 @@ wasm::Classify(OpBytes op)
 #ifdef ENABLE_WASM_GC
             case MiscOp::StructNew:
               return OpKind::StructNew;
+            case MiscOp::StructGet:
+              return OpKind::StructGet;
+            case MiscOp::StructSet:
+              return OpKind::StructSet;
 #endif
             default:
               break;

@@ -500,6 +500,8 @@ enum class AstExprKind
 #endif
 #ifdef ENABLE_WASM_GC
     StructNew,
+    StructGet,
+    StructSet,
 #endif
     Nop,
     Pop,
@@ -1059,16 +1061,57 @@ class AstMemOrTableInit : public AstExpr
 #ifdef ENABLE_WASM_GC
 class AstStructNew : public AstExpr
 {
-    AstRef struct_;
+    AstRef structType_;
     AstExprVector fieldValues_;
 
   public:
     static const AstExprKind Kind = AstExprKind::StructNew;
-    AstStructNew(AstRef strukt, AstExprType type, AstExprVector&& fieldVals)
-      : AstExpr(Kind, type), struct_(strukt), fieldValues_(std::move(fieldVals))
+    AstStructNew(AstRef structType, AstExprType type, AstExprVector&& fieldVals)
+      : AstExpr(Kind, type), structType_(structType), fieldValues_(std::move(fieldVals))
     {}
-    AstRef& strukt() { return struct_; }
+    AstRef& structType() { return structType_; }
     const AstExprVector& fieldValues() const { return fieldValues_; }
+};
+
+class AstStructGet : public AstExpr
+{
+    AstRef   structType_;
+    uint32_t index_;
+    AstExpr* ptr_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::StructGet;
+    AstStructGet(AstRef structType, uint32_t index, AstExprType type, AstExpr* ptr)
+      : AstExpr(Kind, type),
+        structType_(structType),
+        index_(index),
+        ptr_(ptr)
+    {}
+    AstRef& structType() { return structType_; }
+    uint32_t index() { return index_; }
+    AstExpr& ptr() const { return *ptr_; }
+};
+
+class AstStructSet : public AstExpr
+{
+    AstRef   structType_;
+    uint32_t index_;
+    AstExpr* ptr_;
+    AstExpr* value_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::StructSet;
+    AstStructSet(AstRef structType, uint32_t index, AstExpr* ptr, AstExpr* value)
+      : AstExpr(Kind, ExprType::Void),
+        structType_(structType),
+        index_(index),
+        ptr_(ptr),
+        value_(value)
+    {}
+    AstRef& structType() { return structType_; }
+    uint32_t index() { return index_; }
+    AstExpr& ptr() const { return *ptr_; }
+    AstExpr& value() const { return *value_; }
 };
 #endif
 
