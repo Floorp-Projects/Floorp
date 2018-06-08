@@ -177,7 +177,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "25f5c2e929ef"
+        "revision": "7432fbe9c5dc"
     }, 
     "bs": {
         "platforms": [
@@ -1217,7 +1217,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ba47cb9fb59b"
+        "revision": "af0c18fa399b"
     }, 
     "sl": {
         "platforms": [
@@ -1367,7 +1367,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "388c2a3400b6"
+        "revision": "52fec63f40e2"
     }, 
     "ur": {
         "platforms": [
