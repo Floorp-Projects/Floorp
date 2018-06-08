@@ -16,6 +16,7 @@ module.exports = [{
     "./codemirror/mode/javascript/javascript.js",
     "./codemirror/mode/xml/xml.js",
     "./codemirror/mode/css/css.js",
+    "./codemirror/mode/haxe/haxe.js",
     "./codemirror/mode/htmlmixed/htmlmixed.js",
     "./codemirror/mode/jsx/jsx.js",
     "./codemirror/mode/coffeescript/coffeescript.js",
