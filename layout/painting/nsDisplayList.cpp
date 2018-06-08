@@ -981,7 +981,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     nsDisplayListBuilderMode aMode, bool aBuildCaret, bool aRetainingDisplayList)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
-      mLayerEventRegions(nullptr),
       mCompositorHitTestInfo(nullptr),
       mCurrentTableItem(nullptr),
       mCurrentActiveScrolledRoot(nullptr),
@@ -1076,7 +1075,6 @@ nsDisplayListBuilder::EndFrame()
   FreeTemporaryItems();
   nsCSSRendering::EndFrameTreesLocked();
 
-  MOZ_ASSERT(!mLayerEventRegions);
   MOZ_ASSERT(!mCompositorHitTestInfo);
 }
 
@@ -1375,7 +1373,6 @@ DisplayListIsNonBlank(nsDisplayList* aList)
 {
   for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
     switch (i->GetType()) {
-      case DisplayItemType::TYPE_LAYER_EVENT_REGIONS:
       case DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO:
       case DisplayItemType::TYPE_CANVAS_BACKGROUND_COLOR:
       case DisplayItemType::TYPE_CANVAS_BACKGROUND_IMAGE:
@@ -2291,21 +2288,6 @@ nsDisplayListBuilder::ShouldBuildCompositorHitTestInfo(const nsIFrame* aFrame,
   return !mCompositorHitTestInfo->Area().Contains(GetFrameArea(this, aFrame));
 }
 
-bool
-nsDisplayListBuilder::IsBuildingLayerEventRegions()
-{
-  if (mBuildCompositorHitTestInfo) {
-    // If we have webrender hit-testing enabled, then we will build the
-    // nsDisplayCompositorHitTestInfo items and use those instead of event
-    // regions, so we don't need to build the event regions.
-    return false;
-  }
-  if (IsPaintingToWindow()) {
-    return mAsyncPanZoomEnabled;
-  }
-  return false;
-}
-
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
 {
   aDestination.BorderBackground()->AppendToTop(BorderBackground());
@@ -2382,7 +2364,6 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry() &&
-      aItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
       aItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO)
   {
     // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
@@ -5139,203 +5120,6 @@ nsDisplayCompositorHitTestInfo::SetOverrideZIndex(int32_t aZIndex)
   mOverrideZIndex = Some(aZIndex);
 }
 
-void
-nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame)
-{
-  NS_ASSERTION(aBuilder->FindReferenceFrameFor(aFrame) == aBuilder->FindReferenceFrameFor(mFrame),
-               "Reference frame mismatch");
-  CompositorHitTestInfo hitInfo =
-      aFrame->GetCompositorHitTestInfo(aBuilder);
-  if (hitInfo == CompositorHitTestInfo::eInvisibleToHitTest) {
-    return;
-  }
-
-  // XXX handle other pointerEvents values for SVG
-
-  // XXX Do something clever here for the common case where the border box
-  // is obviously entirely inside mHitRegion.
-  nsRect borderBox = GetFrameArea(aBuilder, aFrame);
-
-  if (aFrame != mFrame &&
-      aBuilder->IsRetainingDisplayList()) {
-    aFrame->AddDisplayItem(this);
-  }
-
-  bool borderBoxHasRoundedCorners = false;
-
-  // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
-  // expensive HasNonZeroCorner function if we know from a previous run that
-  // the frame has zero corners.
-  bool simpleRegions = aFrame->HasAnyStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
-  if (!simpleRegions) {
-    if (nsLayoutUtils::HasNonZeroCorner(aFrame->StyleBorder()->mBorderRadius)) {
-      borderBoxHasRoundedCorners = true;
-    } else {
-      aFrame->AddStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
-    }
-  }
-
-  const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(
-    aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder),
-    aBuilder->CurrentActiveScrolledRoot());
-  if (clip) {
-    borderBox = clip->ApplyNonRoundedIntersection(borderBox);
-    if (clip->GetRoundedRectCount() > 0) {
-      borderBoxHasRoundedCorners = true;
-    }
-  }
-
-  if (borderBoxHasRoundedCorners ||
-      (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
-    mMaybeHitRegion.Add(aFrame, borderBox);
-  } else {
-    mHitRegion.Add(aFrame, borderBox);
-  }
-
-  if (hitInfo & CompositorHitTestInfo::eDispatchToContent) {
-    mDispatchToContentHitRegion.Add(aFrame, borderBox);
-  }
-
-  // Touch action region
-
-  auto touchFlags = hitInfo & CompositorHitTestInfo::eTouchActionMask;
-  if (touchFlags) {
-    // something was disabled
-    if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
-      // everything was disabled, so touch-action:none
-      mNoActionRegion.Add(aFrame, borderBox);
-    } else {
-      // The event regions code does not store enough information to actually
-      // represent all the different states. Prior to the introduction of
-      // CompositorHitTestInfo here in bug 1389149, the following two cases
-      // were effectively getting collapsed:
-      //   (1) touch-action: auto
-      //   (2) touch-action: manipulation
-      // In both of these cases, none of {mNoActionRegion, mHorizontalPanRegion,
-      // mVerticalPanRegion} were modified, and so the fact that case (2) should
-      // have prevented double-tap-zooming was getting lost.
-      // With CompositorHitTestInfo we can now represent that case correctly,
-      // but only if we use CompositorHitTestInfo all the way to the compositor
-      // (i.e. in the WebRender-enabled case). In the non-WebRender case where
-      // we still use the event regions, we must collapse these two cases back
-      // together. Or add another region to the event regions to fix this
-      // properly.
-      if (touchFlags == CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled) {
-        // the touch-action: manipulation case described above. To preserve the
-        // existing behaviour, don't touch either mHorizontalPanRegion or
-        // mVerticalPanRegion
-      } else {
-        if (!(hitInfo & CompositorHitTestInfo::eTouchActionPanXDisabled)) {
-          // pan-x is allowed
-          mHorizontalPanRegion.Add(aFrame, borderBox);
-        }
-        if (!(hitInfo & CompositorHitTestInfo::eTouchActionPanYDisabled)) {
-          // pan-y is allowed
-          mVerticalPanRegion.Add(aFrame, borderBox);
-        }
-      }
-    }
-  }
-}
-
-static void
-RemoveFrameFromFrameRects(nsDisplayLayerEventRegions::FrameRects& aFrameRects, nsIFrame* aFrame)
-{
-  uint32_t i = 0;
-  uint32_t length = aFrameRects.mFrames.Length();
-  while (i < length) {
-    if (aFrameRects.mFrames[i] == aFrame) {
-      aFrameRects.mFrames[i] = aFrameRects.mFrames[length - 1];
-      aFrameRects.mBoxes[i] = aFrameRects.mBoxes[length - 1];
-      length--;
-    } else {
-      i++;
-    }
-  }
-  aFrameRects.mFrames.SetLength(length);
-  aFrameRects.mBoxes.SetLength(length);
-}
-
-void
-nsDisplayLayerEventRegions::RemoveFrame(nsIFrame* aFrame)
-{
-  RemoveFrameFromFrameRects(mHitRegion, aFrame);
-  RemoveFrameFromFrameRects(mMaybeHitRegion, aFrame);
-  RemoveFrameFromFrameRects(mDispatchToContentHitRegion, aFrame);
-  RemoveFrameFromFrameRects(mNoActionRegion, aFrame);
-  RemoveFrameFromFrameRects(mHorizontalPanRegion, aFrame);
-  RemoveFrameFromFrameRects(mVerticalPanRegion, aFrame);
-
-  nsDisplayItem::RemoveFrame(aFrame);
-}
-
-void
-nsDisplayLayerEventRegions::AddInactiveScrollPort(nsIFrame* aFrame, const nsRect& aRect)
-{
-  mHitRegion.Add(aFrame, aRect);
-  mDispatchToContentHitRegion.Add(aFrame, aRect);
-}
-
-bool
-nsDisplayLayerEventRegions::IsEmpty() const
-{
-  // If the hit region and maybe-hit region are empty, then the rest
-  // must be empty too.
-  if (mHitRegion.IsEmpty() && mMaybeHitRegion.IsEmpty()) {
-    MOZ_ASSERT(mDispatchToContentHitRegion.IsEmpty());
-    MOZ_ASSERT(mNoActionRegion.IsEmpty());
-    MOZ_ASSERT(mHorizontalPanRegion.IsEmpty());
-    MOZ_ASSERT(mVerticalPanRegion.IsEmpty());
-    return true;
-  }
-  return false;
-}
-
-nsRegion
-nsDisplayLayerEventRegions::CombinedTouchActionRegion()
-{
-  nsRegion result;
-  result.Or(HorizontalPanRegion(), VerticalPanRegion());
-  result.OrWith(NoActionRegion());
-  return result;
-}
-
-int32_t
-nsDisplayLayerEventRegions::ZIndex() const
-{
-  return mOverrideZIndex ? *mOverrideZIndex : nsDisplayItem::ZIndex();
-}
-
-void
-nsDisplayLayerEventRegions::SetOverrideZIndex(int32_t aZIndex)
-{
-  mOverrideZIndex = Some(aZIndex);
-}
-
-void
-nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
-{
-  if (!mHitRegion.IsEmpty()) {
-    AppendToString(aStream, HitRegion(), " (hitRegion ", ")");
-  }
-  if (!mMaybeHitRegion.IsEmpty()) {
-    AppendToString(aStream, MaybeHitRegion(), " (maybeHitRegion ", ")");
-  }
-  if (!mDispatchToContentHitRegion.IsEmpty()) {
-    AppendToString(aStream, DispatchToContentHitRegion(), " (dispatchToContentRegion ", ")");
-  }
-  if (!mNoActionRegion.IsEmpty()) {
-    AppendToString(aStream, NoActionRegion(), " (noActionRegion ", ")");
-  }
-  if (!mHorizontalPanRegion.IsEmpty()) {
-    AppendToString(aStream, HorizontalPanRegion(), " (horizPanRegion ", ")");
-  }
-  if (!mVerticalPanRegion.IsEmpty()) {
-    AppendToString(aStream, VerticalPanRegion(), " (vertPanRegion ", ")");
-  }
-}
-
 nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
                                nsIFrame* aCaretFrame)
   : nsDisplayItem(aBuilder, aCaretFrame)
@@ -6579,8 +6363,7 @@ CollectItemsWithOpacity(nsDisplayList* aList,
       }
     }
 
-    if (type == DisplayItemType::TYPE_LAYER_EVENT_REGIONS ||
-        type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
+    if (type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
         type == DisplayItemType::TYPE_WRAP_LIST) {
       continue;
     }

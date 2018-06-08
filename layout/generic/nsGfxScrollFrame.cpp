@@ -3721,12 +3721,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                 Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));
         AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
       }
-      if (aBuilder->IsBuildingLayerEventRegions()) {
-        nsDisplayLayerEventRegions* inactiveRegionItem =
-            MakeDisplayItem<nsDisplayLayerEventRegions>(aBuilder, mScrolledFrame, 1);
-        inactiveRegionItem->AddInactiveScrollPort(mScrolledFrame, mScrollPort + aBuilder->ToReferenceFrame(mOuter));
-        AppendInternalItemToTop(scrolledContent, inactiveRegionItem, Some(INT32_MAX));
-      }
     }
 
     if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {
