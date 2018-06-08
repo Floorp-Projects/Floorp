@@ -99,11 +99,8 @@ class MachCommands(MachCommandBase):
                          jobs=1,
                          three=False,
                          **kwargs):
-        if three:
-            # use pipenv to run tests against Python 3
-            self.activate_pipenv(os.path.join(here, 'Pipfile'), ['--three'])
-        else:
-            self._activate_virtualenv()
+        pipenv_args = ['--three' if three else '--two']
+        self.activate_pipenv(pipfile=None, args=pipenv_args, populate=True)
 
         if test_objects is None:
             from moztest.resolve import TestResolver
