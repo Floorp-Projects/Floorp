@@ -313,9 +313,7 @@ protected:
   {
     Separator();
     if (aMaybePropertyName) {
-      mWriter->Write("\"");
-      mWriter->Write(aMaybePropertyName);
-      mWriter->Write("\": ");
+      PropertyNameAndColon(aMaybePropertyName);
     }
     mWriter->Write(aStartChar);
     mNeedComma[mDepth] = true;
