@@ -6,6 +6,13 @@ use SdpType;
 use error::SdpParserInternalError;
 use network::{parse_nettype, parse_addrtype, parse_unicast_addr};
 
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
+pub enum SdpSingleDirection{
+    // This is explicitly 1 and 2 to match the defines in the C++ glue code.
+    Send = 1,
+    Recv = 2,
+}
 
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
@@ -123,7 +130,7 @@ pub struct SdpAttributeSimulcastId {
 }
 
 impl SdpAttributeSimulcastId {
-    pub fn new(idstr: String) -> SdpAttributeSimulcastId {
+    pub fn new(idstr: &str) -> SdpAttributeSimulcastId {
         if idstr.starts_with('~') {
             SdpAttributeSimulcastId {
                 id: idstr[1..].to_string(),
@@ -131,25 +138,25 @@ impl SdpAttributeSimulcastId {
             }
         } else {
             SdpAttributeSimulcastId {
-                id: idstr,
+                id: idstr.to_string(),
                 paused: false,
             }
         }
     }
 }
 
+#[repr(C)]
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
-pub struct SdpAttributeSimulcastAlternatives {
+pub struct SdpAttributeSimulcastVersion {
     pub ids: Vec<SdpAttributeSimulcastId>,
 }
 
-impl SdpAttributeSimulcastAlternatives {
-    pub fn new(idlist: String) -> SdpAttributeSimulcastAlternatives {
-        SdpAttributeSimulcastAlternatives {
+impl SdpAttributeSimulcastVersion {
+    pub fn new(idlist: &str) -> SdpAttributeSimulcastVersion {
+        SdpAttributeSimulcastVersion {
             ids: idlist
                 .split(',')
-                .map(|x| x.to_string())
                 .map(SdpAttributeSimulcastId::new)
                 .collect(),
         }
@@ -159,24 +166,8 @@ impl SdpAttributeSimulcastAlternatives {
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSimulcast {
-    pub send: Vec<SdpAttributeSimulcastAlternatives>,
-    pub receive: Vec<SdpAttributeSimulcastAlternatives>,
-}
-
-impl SdpAttributeSimulcast {
-    fn parse_ids(&mut self, direction: SdpAttributeDirection, idlist: String) {
-        let list = idlist
-            .split(';')
-            .map(|x| x.to_string())
-            .map(SdpAttributeSimulcastAlternatives::new)
-            .collect();
-        // TODO prevent over-writing existing values
-        match direction {
-            SdpAttributeDirection::Recvonly => self.receive = list,
-            SdpAttributeDirection::Sendonly => self.send = list,
-            _ => (),
-        }
-    }
+    pub send: Vec<SdpAttributeSimulcastVersion>,
+    pub receive: Vec<SdpAttributeSimulcastVersion>,
 }
 
 #[derive(Clone)]
@@ -333,6 +324,29 @@ pub struct SdpAttributeMsidSemantic {
 
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
+pub struct SdpAttributeRidParameters{
+    pub max_width: u32,
+    pub max_height: u32,
+    pub max_fps: u32,
+    pub max_fs: u32,
+    pub max_br: u32,
+    pub max_pps: u32,
+
+    pub unknown: Vec<String>
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
+pub struct SdpAttributeRid {
+    pub id: String,
+    pub direction: SdpSingleDirection,
+    pub formats: Vec<u16>,
+    pub params: SdpAttributeRidParameters,
+    pub depends: Vec<String>
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRtpmap {
     pub payload_type: u8,
     pub codec_name: String,
@@ -417,7 +431,7 @@ pub enum SdpAttribute {
     Msid(SdpAttributeMsid),
     MsidSemantic(SdpAttributeMsidSemantic),
     Ptime(u64),
-    Rid(String),
+    Rid(SdpAttributeRid),
     Recvonly,
     RemoteCandidate(SdpAttributeRemoteCandidate),
     Rtpmap(SdpAttributeRtpmap),
@@ -614,7 +628,7 @@ impl FromStr for SdpAttribute {
             "mid" => Ok(SdpAttribute::Mid(string_or_empty(val)?)),
             "msid-semantic" => parse_msid_semantic(val),
             "ptime" => Ok(SdpAttribute::Ptime(val.parse()?)),
-            "rid" => Ok(SdpAttribute::Rid(string_or_empty(val)?)),
+            "rid" =>  parse_rid(val),
             "recvonly" => Ok(SdpAttribute::Recvonly),
             "rtcp-mux" => Ok(SdpAttribute::RtcpMux),
             "rtcp-rsize" => Ok(SdpAttribute::RtcpRsize),
@@ -748,6 +762,17 @@ fn parse_payload_type(to_parse: &str) -> Result<SdpAttributePayloadType, SdpPars
              _ => SdpAttributePayloadType::PayloadType(to_parse.parse::<u8>()?)
          })
 }
+
+fn parse_single_direction(to_parse: &str) -> Result<SdpSingleDirection, SdpParserInternalError> {
+    match to_parse {
+        "send" => Ok(SdpSingleDirection::Send),
+        "recv" => Ok(SdpSingleDirection::Recv),
+        x @ _ => Err(SdpParserInternalError::Generic(
+            format!("Unknown direction description found: '{:}'",x).to_string()
+        ))
+    }
+}
+
 
 fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let port = to_parse.parse()?;
@@ -1145,6 +1170,78 @@ fn parse_msid_semantic(to_parse: &str) -> Result<SdpAttribute, SdpParserInternal
     Ok(SdpAttribute::MsidSemantic(semantic))
 }
 
+fn parse_rid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
+    let tokens: Vec<&str> = to_parse.splitn(3, " ").collect();
+
+    if tokens.len() < 2 {
+        return Err(SdpParserInternalError::Generic(
+                "A rid attribute must at least have an id and a direction token.".to_string()
+        ));
+    }
+
+    // Default initilize
+    let mut params = SdpAttributeRidParameters {
+        max_width: 0,
+        max_height: 0,
+        max_fps: 0,
+        max_fs: 0,
+        max_br: 0,
+        max_pps: 0,
+        unknown: Vec::new(),
+    };
+    let mut formats: Vec<u16> = Vec::new();
+    let mut depends: Vec<String> = Vec::new();
+
+
+    if let Some(param_token) = tokens.get(2) {
+        let mut parameters = param_token.split(";").peekable();
+
+        // The 'pt' parameter must be the first parameter if present, so it
+        // cannot be checked along with the other parameters below
+        if let Some(maybe_fmt_parameter) = parameters.clone().peek() {
+            if maybe_fmt_parameter.starts_with("pt=") {
+                let fmt_list = maybe_fmt_parameter[3..].split(",");
+                for fmt in fmt_list {
+                    formats.push(fmt.trim().parse::<u16>()?);
+                }
+
+                parameters.next();
+            }
+        }
+
+        for param in parameters {
+            // TODO: Bug 1225877. Add support for params without '='
+            let param_value_pair: Vec<&str> = param.splitn(2,"=").collect();
+            if param_value_pair.len() != 2 {
+                return Err(SdpParserInternalError::Generic(
+                    "A rid parameter needs to be of form 'param=value'".to_string()
+                ));
+            }
+
+            match param_value_pair[0] {
+                "max-width" => params.max_width = param_value_pair[1].parse::<u32>()?,
+                "max-height" => params.max_height = param_value_pair[1].parse::<u32>()?,
+                "max-fps" => params.max_fps = param_value_pair[1].parse::<u32>()?,
+                "max-fs" => params.max_fs = param_value_pair[1].parse::<u32>()?,
+                "max-br" => params.max_br = param_value_pair[1].parse::<u32>()?,
+                "max-pps" => params.max_pps = param_value_pair[1].parse::<u32>()?,
+                "depends" => {
+                    depends.extend(param_value_pair[1].split(",").map(|x| x.to_string()));
+                },
+                _ => params.unknown.push(param.to_string()),
+            }
+        }
+    }
+
+    Ok(SdpAttribute::Rid(SdpAttributeRid{
+        id: tokens[0].to_string(),
+        direction: parse_single_direction(tokens[1])?,
+        formats: formats,
+        params: params,
+        depends: depends,
+    }))
+}
+
 fn parse_remote_candidates(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let component = match tokens.next() {
@@ -1421,46 +1518,86 @@ fn parse_setup(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                            }))
 }
 
+fn parse_simulcast_version_list(to_parse: &str) -> Result<Vec<SdpAttributeSimulcastVersion>,
+                                                          SdpParserInternalError> {
+    let make_version_list = |to_parse: &str| {
+       to_parse.split(';').map(SdpAttributeSimulcastVersion::new).collect()
+    };
+    if to_parse.contains("=") {
+       let mut descriptor_versionlist_pair = to_parse.splitn(2,"=");
+       match descriptor_versionlist_pair.next().unwrap() {
+           // TODO Bug 1470568
+           "rid" => Ok(make_version_list(descriptor_versionlist_pair.next().unwrap())),
+           descriptor @ _ => {
+               return Err(SdpParserInternalError::Generic(
+                   format!("Simulcast attribute has unknown list descriptor '{:?}'",
+                           descriptor)
+                   .to_string()
+               ))
+           }
+       }
+    } else {
+       Ok(make_version_list(to_parse))
+    }
+}
+
 fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
-    let mut tokens = to_parse.split_whitespace();
-    let mut token = match tokens.next() {
+    // TODO: Bug 1225877: Stop accepting all kinds of whitespace here, and only accept SP
+    let mut tokens = to_parse.trim().split_whitespace();
+    let first_direction = match tokens.next() {
+        Some(x) => parse_single_direction(x)?,
         None => {
             return Err(SdpParserInternalError::Generic(
                            "Simulcast attribute is missing send/recv value".to_string(),
                        ))
         }
-        Some(x) => x,
     };
-    let mut sc = SdpAttributeSimulcast {
-        send: Vec::new(),
-        receive: Vec::new(),
+
+    let first_version_list = match tokens.next() {
+        Some(x) => {
+            parse_simulcast_version_list(x)?
+        },
+        None => {
+            return Err(SdpParserInternalError::Generic(
+                    "Simulcast attribute must have an alternatives list after the direction token"
+                    .to_string(),
+            ));
+        }
     };
-    loop {
-        let sendrecv = match token.to_lowercase().as_ref() {
-            "send" => SdpAttributeDirection::Sendonly,
-            "recv" => SdpAttributeDirection::Recvonly,
-            _ => {
+
+    let mut second_version_list = Vec::new();
+    if let Some(x) = tokens.next() {
+        if parse_single_direction(x)? == first_direction {
+            return Err(SdpParserInternalError::Generic(
+                "Simulcast attribute has defined two times the same direction".to_string()
+            ));
+        }
+
+        second_version_list = match tokens.next() {
+            Some(x) => {
+                parse_simulcast_version_list(x)?
+            },
+            None => {
                 return Err(SdpParserInternalError::Generic(
-                               "Unsupported send/recv value in simulcast attribute"
-                                   .to_string(),
-                           ))
+                    format!("{:?}{:?}",
+                            "Simulcast has defined a second direction but",
+                            "no second list of simulcast stream versions")
+                    .to_string()
+                ));
             }
-        };
-        match tokens.next() {
-            None => {
-                return Err(SdpParserInternalError::Generic("Simulcast attribute is missing id list"
-                                                               .to_string()))
-            }
-            Some(x) => sc.parse_ids(sendrecv, x.to_string()),
-        };
-        token = match tokens.next() {
-            None => {
-                break;
-            }
-            Some(x) => x,
-        };
+        }
     }
-    Ok(SdpAttribute::Simulcast(sc))
+
+    Ok(SdpAttribute::Simulcast(match first_direction {
+        SdpSingleDirection::Send => SdpAttributeSimulcast {
+            send: first_version_list,
+            receive: second_version_list,
+        },
+        SdpSingleDirection::Recv => SdpAttributeSimulcast {
+            send: second_version_list,
+            receive: first_version_list,
+        },
+    }))
 }
 
 fn parse_ssrc(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
@@ -1741,10 +1878,64 @@ fn test_parse_attribute_ptime() {
 
 #[test]
 fn test_parse_attribute_rid() {
-    assert!(parse_attribute("rid:foo send").is_ok());
-    assert!(parse_attribute("rid:foo").is_ok());
+
+    let check_parse = |x| -> SdpAttributeRid {
+        if let Ok(SdpType::Attribute(SdpAttribute::Rid(x))) = parse_attribute(x) {
+            x
+        } else {
+            unreachable!();
+        }
+    };
+
+    // assert!(parse_attribute("rid:foo send").is_ok());
+    let mut rid = check_parse("rid:foo send");
+    assert_eq!(rid.id, "foo");
+    assert_eq!(rid.direction, SdpSingleDirection::Send);
+
+
+    // assert!(parse_attribute("rid:110 send pt=9").is_ok());
+    rid = check_parse("rid:110 send pt=9");
+    assert_eq!(rid.id, "110");
+    assert_eq!(rid.direction, SdpSingleDirection::Send);
+    assert_eq!(rid.formats, vec![9]);
+
+    assert!(parse_attribute("rid:foo send pt=10").is_ok());
+    assert!(parse_attribute("rid:110 send pt=9,10").is_ok());
+    assert!(parse_attribute("rid:110 send pt=9,10;max-fs=10").is_ok());
+    assert!(parse_attribute("rid:110 send pt=9,10;max-width=10;depends=1,2,3").is_ok());
+
+    // assert!(parse_attribute("rid:110 send pt=9,10;max-fs=10;UNKNOWN=100;depends=1,2,3").is_ok());
+    rid = check_parse("rid:110 send pt=9,10;max-fs=10;UNKNOWN=100;depends=1,2,3");
+    assert_eq!(rid.id, "110");
+    assert_eq!(rid.direction, SdpSingleDirection::Send);
+    assert_eq!(rid.formats, vec![9,10]);
+    assert_eq!(rid.params.max_fs, 10);
+    assert_eq!(rid.params.unknown, vec!["UNKNOWN=100"]);
+    assert_eq!(rid.depends, vec!["1","2","3"]);
+
+    assert!(parse_attribute("rid:110 send pt=9, 10;max-fs=10;UNKNOWN=100; depends=1, 2, 3").is_ok());
+    assert!(parse_attribute("rid:110 send max-fs=10").is_ok());
+    assert!(parse_attribute("rid:110 recv max-width=1920;max-height=1080").is_ok());
+
+    // assert!(parse_attribute("rid:110 recv max-fps=42;max-fs=10;max-br=3;max-pps=1000").is_ok());
+    rid = check_parse("rid:110 recv max-fps=42;max-fs=10;max-br=3;max-pps=1000");
+    assert_eq!(rid.id, "110");
+    assert_eq!(rid.direction, SdpSingleDirection::Recv);
+    assert_eq!(rid.params.max_fps, 42);
+    assert_eq!(rid.params.max_fs, 10);
+    assert_eq!(rid.params.max_br, 3);
+    assert_eq!(rid.params.max_pps, 1000);
+
+    assert!(parse_attribute("rid:110 recv max-mbps=420;max-cpb=3;max-dpb=3").is_ok());
+    assert!(parse_attribute("rid:110 recv scale-down-by=1.35;depends=1,2,3").is_ok());
+    assert!(parse_attribute("rid:110 recv max-width=10;depends=1,2,3").is_ok());
+    assert!(parse_attribute("rid:110 recv max-fs=10;UNKNOWN=100;depends=1,2,3").is_ok());
 
     assert!(parse_attribute("rid:").is_err());
+    assert!(parse_attribute("rid:120 send pt=").is_err());
+    assert!(parse_attribute("rid:120 send pt=;max-width=10").is_err());
+    assert!(parse_attribute("rid:120 send pt=9;max-width=").is_err());
+    assert!(parse_attribute("rid:120 send pt=9;max-width=;max-width=10").is_err());
 }
 
 #[test]
@@ -1873,6 +2064,8 @@ fn test_parse_attribute_simulcast() {
     assert!(parse_attribute("simulcast:send").is_err());
     assert!(parse_attribute("simulcast:foobar 1").is_err());
     assert!(parse_attribute("simulcast:send 1 foobar 2").is_err());
+    // old draft 03 notation used by Firefox 55
+    assert!(parse_attribute("simulcast: send foo=8;10").is_err());
 }
 
 #[test]
