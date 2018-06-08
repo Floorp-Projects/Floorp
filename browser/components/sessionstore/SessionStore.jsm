@@ -1626,7 +1626,13 @@ var SessionStoreInternal = {
           const observeTopic = topic => {
             let deferred = PromiseUtils.defer();
             const cleanup = () => Services.obs.removeObserver(deferred.resolve, topic);
-            Services.obs.addObserver(deferred.resolve, topic);
+            Services.obs.addObserver(subject => {
+              // Skip abort on ipc:content-shutdown if not abnormal/crashed
+              subject.QueryInterface(Ci.nsIPropertyBag2);
+              if (!(topic == "ipc:content-shutdown" && !subject.get("abnormal"))) {
+                deferred.resolve();
+              }
+            }, topic);
             deferred.promise.then(cleanup, cleanup);
             return deferred;
           };
@@ -1727,8 +1733,12 @@ var SessionStoreInternal = {
    *        String type of quitting
    */
   onQuitApplication: function ssi_onQuitApplication(aData) {
-    if (aData == "restart") {
+    if (aData == "restart" || aData == "os-restart") {
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        if (aData == "os-restart" &&
+            !this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
+          this._prefBranch.setBoolPref("sessionstore.resuming_after_os_restart", true);
+        }
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
       }
 

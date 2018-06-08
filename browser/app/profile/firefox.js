@@ -859,6 +859,7 @@ pref("browser.rights.override", true);
 
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
+pref("browser.sessionstore.resuming_after_os_restart", false);
 
 // Minimal interval between two save operations in milliseconds (while the user is active).
 pref("browser.sessionstore.interval", 15000); // 15 seconds

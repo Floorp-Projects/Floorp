@@ -1338,7 +1338,7 @@ BrowserGlue.prototype = {
     // "the last window is closing but we're not quitting (a non-browser window is open)"
     // and also "we're quitting by closing the last window".
 
-    if (aQuitType == "restart")
+    if (aQuitType == "restart" || aQuitType == "os-restart")
       return;
 
     var windowcount = 0;
