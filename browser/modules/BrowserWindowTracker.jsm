@@ -211,7 +211,9 @@ this.BrowserWindowTracker = {
    */
   orderedWindows: {
     * [Symbol.iterator]() {
-      for (let window of _trackedWindows)
+      // Clone the windows array immediately as it may change during iteration,
+      // we'd rather have an outdated order than skip/revisit windows.
+      for (let window of [..._trackedWindows])
         yield window;
     }
   },
