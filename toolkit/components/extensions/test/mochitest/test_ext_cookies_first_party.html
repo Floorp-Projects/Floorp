@@ -98,18 +98,20 @@ async function background() {
     let cookie, cookies;
 
     // set
-    browser.test.assertRejects(browser.cookies.set({url, name: "foo3", value: "bar3"}),
-                               expectedError,
-                               "set: FPI on, w/o firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.set({url, name: "foo3", value: "bar3"}),
+      expectedError,
+      "set: FPI on, w/o firstPartyDomain, rejection");
     cookie = await browser.cookies.set({url, name: "foo4", value: "bar4", firstPartyDomain});
     assertExpectedCookies([
       {name: "foo4", value: "bar4", firstPartyDomain},
     ], [cookie], "set: FPI on, w/ firstPartyDomain, FP cookie");
 
     // get
-    browser.test.assertRejects(browser.cookies.get({url, name: "foo3"}),
-                               expectedError,
-                               "get: FPI on, w/o firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.get({url, name: "foo3"}),
+      expectedError,
+      "get: FPI on, w/o firstPartyDomain, rejection");
     cookie = await browser.cookies.get({url, name: "foo4", firstPartyDomain});
     assertExpectedCookies([
       {name: "foo4", value: "bar4", firstPartyDomain},
@@ -120,9 +122,10 @@ async function background() {
     ], [cookie], "get: FPI on, w/ firstPartyDomain, FP cookie (set when FPI off)");
 
     // getAll
-    browser.test.assertRejects(browser.cookies.getAll({}),
-                               expectedError,
-                               "getAll: FPI on, w/o firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.getAll({}),
+      expectedError,
+      "getAll: FPI on, w/o firstPartyDomain, rejection");
     cookies = await browser.cookies.getAll({firstPartyDomain: null});
     assertExpectedCookies([
       {name: "foo1", value: "bar1", firstPartyDomain: ""},
@@ -136,9 +139,10 @@ async function background() {
     ], cookies, "getAll: FPI on, w/ firstPartyDomain, FP cookies");
 
     // remove
-    browser.test.assertRejects(browser.cookies.remove({url, name: "foo3"}),
-                               expectedError,
-                               "remove: FPI on, w/o firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.remove({url, name: "foo3"}),
+      expectedError,
+      "remove: FPI on, w/o firstPartyDomain, rejection");
     cookie = await browser.cookies.remove({url, name: "foo4", firstPartyDomain});
     assertExpectedCookies([
       {url, name: "foo4", firstPartyDomain},
