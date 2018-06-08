@@ -1,2 +1,1 @@
-fn_call_style = "Block"
 error_on_line_overflow = false

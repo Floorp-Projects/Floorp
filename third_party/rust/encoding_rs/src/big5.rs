@@ -7,10 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use handles::*;
-use data::*;
-use variant::*;
 use super::*;
+use data::*;
+use handles::*;
+use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range32;
 
@@ -24,12 +24,10 @@ impl Big5Decoder {
     }
 
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
-        byte_length.checked_add(
-            match self.lead {
-                None => 0,
-                Some(_) => 1,
-            }
-        )
+        byte_length.checked_add(match self.lead {
+            None => 0,
+            Some(_) => 1,
+        })
     }
 
     pub fn max_utf16_buffer_length(&self, byte_length: usize) -> Option<usize> {
@@ -169,18 +167,20 @@ impl Big5Encoder {
         Encoder::new(encoding, VariantEncoder::Big5(Big5Encoder))
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         // Astral: 2 to 2
         // ASCII: 1 to 1
         // Other: 1 to 2
         u16_length.checked_mul(2)
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         // Astral: 4 to 2
         // Upper BMP: 3 to 2
         // Lower BMP: 2 to 2
@@ -201,9 +201,11 @@ impl Big5Encoder {
                 } else if let Some(pointer) = big5_other_encode(bmp) {
                     pointer
                 } else {
-                    return (EncoderResult::unmappable_from_bmp(bmp),
-                            source.consumed(),
-                            handle.written());
+                    return (
+                        EncoderResult::unmappable_from_bmp(bmp),
+                        source.consumed(),
+                        handle.written(),
+                    );
                 };
                 let lead = pointer / 157 + 0x81;
                 let remainder = pointer % 157;
@@ -229,10 +231,18 @@ impl Big5Encoder {
                     };
                     handle.write_two(lead as u8, trail as u8)
                 } else {
-                    return (EncoderResult::Unmappable(astral), source.consumed(), handle.written());
+                    return (
+                        EncoderResult::Unmappable(astral),
+                        source.consumed(),
+                        handle.written(),
+                    );
                 }
             } else {
-                return (EncoderResult::Unmappable(astral), source.consumed(), handle.written());
+                return (
+                    EncoderResult::Unmappable(astral),
+                    source.consumed(),
+                    handle.written(),
+                );
             }
         },
         bmp,

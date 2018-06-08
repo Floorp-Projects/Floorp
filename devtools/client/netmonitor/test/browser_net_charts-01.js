@@ -59,11 +59,11 @@ add_task(async function() {
   ok(slices[2].hasAttribute("smallest"),
     "The third slice should be the smallest one.");
 
-  ok(slices[0].getAttribute("name"), "baz",
+  is(slices[0].getAttribute("name"), "baz",
     "The first slice's name is correct.");
-  ok(slices[1].getAttribute("name"), "bar",
+  is(slices[1].getAttribute("name"), "bar",
     "The first slice's name is correct.");
-  ok(slices[2].getAttribute("name"), "foo",
+  is(slices[2].getAttribute("name"), "foo",
     "The first slice's name is correct.");
 
   is(labels.length, 3,

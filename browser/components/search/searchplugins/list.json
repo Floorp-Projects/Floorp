@@ -447,7 +447,7 @@
         ]
       }
     },
-    "ja-JP-mac": {
+    "ja-JP-macos": {
       "default": {
         "searchOrder": ["Google", "Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [

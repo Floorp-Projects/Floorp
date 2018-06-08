@@ -7,10 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use handles::*;
-use data::*;
-use variant::*;
 use super::*;
+use data::*;
+use handles::*;
+use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range16;
 
@@ -33,9 +33,9 @@ impl EucJpPending {
     fn count(&self) -> usize {
         match *self {
             EucJpPending::None => 0,
-            EucJpPending::Jis0208Lead(_) |
-            EucJpPending::Jis0212Shift |
-            EucJpPending::HalfWidthKatakana => 1,
+            EucJpPending::Jis0208Lead(_)
+            | EucJpPending::Jis0212Shift
+            | EucJpPending::HalfWidthKatakana => 1,
             EucJpPending::Jis0212Lead(_) => 2,
         }
     }
@@ -47,7 +47,9 @@ pub struct EucJpDecoder {
 
 impl EucJpDecoder {
     pub fn new() -> VariantDecoder {
-        VariantDecoder::EucJp(EucJpDecoder { pending: EucJpPending::None })
+        VariantDecoder::EucJp(EucJpDecoder {
+            pending: EucJpPending::None,
+        })
     }
 
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
@@ -81,13 +83,17 @@ impl EucJpDecoder {
                 handle.write_upper_bmp(0x30A1 + trail_minus_offset as u16)
             } else if trail_minus_offset > (0xFE - 0xA1) {
                 if byte < 0x80 {
-                    return (DecoderResult::Malformed(1, 0),
-                            unread_handle_trail.unread(),
-                            handle.written());
+                    return (
+                        DecoderResult::Malformed(1, 0),
+                        unread_handle_trail.unread(),
+                        handle.written(),
+                    );
                 }
-                return (DecoderResult::Malformed(2, 0),
-                        unread_handle_trail.consumed(),
-                        handle.written());
+                return (
+                    DecoderResult::Malformed(2, 0),
+                    unread_handle_trail.consumed(),
+                    handle.written(),
+                );
             } else {
                 let pointer = mul_94(jis0208_lead_minus_offset) + trail_minus_offset as usize;
                 let level1_pointer = pointer.wrapping_sub(1410);
@@ -106,9 +112,11 @@ impl EucJpDecoder {
                         } else if let Some(bmp) = jis0208_range_decode(pointer) {
                             handle.write_bmp_excl_ascii(bmp)
                         } else {
-                            return (DecoderResult::Malformed(2, 0),
-                                    unread_handle_trail.consumed(),
-                                    handle.written());
+                            return (
+                                DecoderResult::Malformed(2, 0),
+                                unread_handle_trail.consumed(),
+                                handle.written(),
+                            );
                         }
                     }
                 }
@@ -120,13 +128,17 @@ impl EucJpDecoder {
             let jis0212_lead_minus_offset = lead.wrapping_sub(0xA1);
             if jis0212_lead_minus_offset > (0xFE - 0xA1) {
                 if lead < 0x80 {
-                    return (DecoderResult::Malformed(1, 0),
-                            unread_handle_jis0212.unread(),
-                            handle.written());
+                    return (
+                        DecoderResult::Malformed(1, 0),
+                        unread_handle_jis0212.unread(),
+                        handle.written(),
+                    );
                 }
-                return (DecoderResult::Malformed(2, 0),
-                        unread_handle_jis0212.consumed(),
-                        handle.written());
+                return (
+                    DecoderResult::Malformed(2, 0),
+                    unread_handle_jis0212.consumed(),
+                    handle.written(),
+                );
             }
             jis0212_lead_minus_offset
         },
@@ -136,13 +148,17 @@ impl EucJpDecoder {
             let trail_minus_offset = byte.wrapping_sub(0xA1);
             if trail_minus_offset > (0xFE - 0xA1) {
                 if byte < 0x80 {
-                    return (DecoderResult::Malformed(2, 0),
-                            unread_handle_trail.unread(),
-                            handle.written());
+                    return (
+                        DecoderResult::Malformed(2, 0),
+                        unread_handle_trail.unread(),
+                        handle.written(),
+                    );
                 }
-                return (DecoderResult::Malformed(3, 0),
-                        unread_handle_trail.consumed(),
-                        handle.written());
+                return (
+                    DecoderResult::Malformed(3, 0),
+                    unread_handle_trail.consumed(),
+                    handle.written(),
+                );
             }
             let pointer = mul_94(jis0212_lead_minus_offset) + trail_minus_offset as usize;
             let pointer_minus_kanji = pointer.wrapping_sub(1410);
@@ -159,9 +175,11 @@ impl EucJpDecoder {
                     if pointer_minus_lower_cyrillic <= (655 - 645) {
                         handle.write_mid_bmp(0x0452 + pointer_minus_lower_cyrillic as u16)
                     } else {
-                        return (DecoderResult::Malformed(3, 0),
-                                unread_handle_trail.consumed(),
-                                handle.written());
+                        return (
+                            DecoderResult::Malformed(3, 0),
+                            unread_handle_trail.consumed(),
+                            handle.written(),
+                        );
                     }
                 }
             }
@@ -172,13 +190,17 @@ impl EucJpDecoder {
             let trail_minus_offset = byte.wrapping_sub(0xA1);
             if trail_minus_offset > (0xDF - 0xA1) {
                 if byte < 0x80 {
-                    return (DecoderResult::Malformed(1, 0),
-                            unread_handle_trail.unread(),
-                            handle.written());
+                    return (
+                        DecoderResult::Malformed(1, 0),
+                        unread_handle_trail.unread(),
+                        handle.written(),
+                    );
                 }
-                return (DecoderResult::Malformed(2, 0),
-                        unread_handle_trail.consumed(),
-                        handle.written());
+                return (
+                    DecoderResult::Malformed(2, 0),
+                    unread_handle_trail.consumed(),
+                    handle.written(),
+                );
             }
             handle.write_upper_bmp(0xFF61 + trail_minus_offset as u16)
         },
@@ -202,15 +224,17 @@ impl EucJpEncoder {
         Encoder::new(encoding, VariantEncoder::EucJp(EucJpEncoder))
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         u16_length.checked_mul(2)
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         byte_length.checked_add(1)
     }
 
@@ -235,9 +259,11 @@ impl EucJpEncoder {
                     let trail = (pos % 94) + 0xA1;
                     handle.write_two(lead as u8, trail as u8)
                 } else {
-                    return (EncoderResult::unmappable_from_bmp(bmp),
-                            source.consumed(),
-                            handle.written());
+                    return (
+                        EncoderResult::unmappable_from_bmp(bmp),
+                        source.consumed(),
+                        handle.written(),
+                    );
                 }
             } else {
                 let bmp_minus_katakana = bmp.wrapping_sub(0x30A1);
@@ -260,8 +286,10 @@ impl EucJpEncoder {
                         let lead = (pointer / 94) + 0xA1;
                         let trail = (pointer % 94) + 0xA1;
                         handle.write_two(lead as u8, trail as u8)
-                    } else if in_inclusive_range16(bmp, 0xFA0E, 0xFA2D) || bmp == 0xF929 ||
-                              bmp == 0xF9DC {
+                    } else if in_inclusive_range16(bmp, 0xFA0E, 0xFA2D)
+                        || bmp == 0xF929
+                        || bmp == 0xF9DC
+                    {
                         // Guaranteed to be found in IBM_KANJI
                         let pos = position(&IBM_KANJI[..], bmp).unwrap();
                         let lead = (pos / 94) + 0xF9;
@@ -276,9 +304,11 @@ impl EucJpEncoder {
                         let trail = (pointer % 94) + 0xA1;
                         handle.write_two(lead as u8, trail as u8)
                     } else {
-                        return (EncoderResult::unmappable_from_bmp(bmp),
-                                source.consumed(),
-                                handle.written());
+                        return (
+                            EncoderResult::unmappable_from_bmp(bmp),
+                            source.consumed(),
+                            handle.written(),
+                        );
                     }
                 }
             }

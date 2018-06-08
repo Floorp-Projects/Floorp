@@ -24,7 +24,7 @@ add_task(async function() {
   const destroyed = await waitUntilDestroyed;
 
   destroyed.forEach((node, i) => {
-    ok(node.type, "AudioBufferSourceNode", "Only buffer nodes are destroyed");
+    is(node.type, "AudioBufferSourceNode", "Only buffer nodes are destroyed");
     ok(actorIsInList(created, destroyed[i]),
       "`destroy-node` called only on AudioNodes in current document.");
   });

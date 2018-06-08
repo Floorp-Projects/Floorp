@@ -24,8 +24,7 @@ class PreferenceRollbackAction extends BaseAction {
     const rollout = await PreferenceRollouts.get(rolloutSlug);
 
     if (!rollout) {
-      TelemetryEvents.sendEvent("unenrollFailed", "preference_rollback", rolloutSlug, {"reason": "rollout missing"});
-      this.log.info(`Cannot rollback ${rolloutSlug}: no rollout found with that slug`);
+      this.log.debug(`Rollback ${rolloutSlug} not applicable, skipping`);
       return;
     }
 

@@ -33,6 +33,13 @@ class Label:
   def __cmp__(self, other):
     return cmp_from_end(self.label, other.label)
 
+class CodePage:
+  def __init__(self, code_page, preferred):
+    self.code_page = code_page
+    self.preferred = preferred
+  def __cmp__(self, other):
+    return self.code_page, other.code_page
+
 def static_u16_table(name, data):
   data_file.write('''pub static %s: [u16; %d] = [
   ''' % (name, len(data)))
@@ -44,10 +51,10 @@ def static_u16_table(name, data):
 
   ''')
 
-def static_u16_table_from_indexable(name, data, item):
-  data_file.write('''#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+def static_u16_table_from_indexable(name, data, item, feature):
+  data_file.write('''#[cfg(feature = "%s")]
 static %s: [u16; %d] = [
-  ''' % (name, len(data)))
+  ''' % (feature, name, len(data)))
 
   for i in xrange(len(data)):
     data_file.write('0x%04X,\n' % data[i][item])
@@ -56,10 +63,10 @@ static %s: [u16; %d] = [
 
   ''')
 
-def static_u8_pair_table_from_indexable(name, data, item):
-  data_file.write('''#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+def static_u8_pair_table_from_indexable(name, data, item, feature):
+  data_file.write('''#[cfg(feature = "%s")]
 static %s: [[u8; 2]; %d] = [
-  ''' % (name, len(data)))
+  ''' % (feature, name, len(data)))
 
   for i in xrange(len(data)):
     data_file.write('[0x%02X, 0x%02X],\n' % data[i][item])
@@ -82,6 +89,8 @@ single_byte = []
 
 multi_byte = []
 
+code_pages = []
+
 def to_camel_name(name):
   if name == u"iso-8859-8-i":
     return u"Iso8I"
@@ -97,6 +106,66 @@ def to_snake_name(name):
 
 def to_dom_name(name):
   return name
+
+encodings_by_code_page = {
+  932: "Shift_JIS",
+  936: "GBK",
+  949: "EUC-KR",
+  950: "Big5",
+  866: "IBM866",
+  874: "windows-874",
+  1200: "UTF-16LE",
+  1201: "UTF-16BE",
+  1250: "windows-1250",
+  1251: "windows-1251",
+  1252: "windows-1252",
+  1253: "windows-1253",
+  1254: "windows-1254",
+  1255: "windows-1255",
+  1256: "windows-1256",
+  1257: "windows-1257",
+  1258: "windows-1258",
+  10000: "macintosh",
+  10017: "x-mac-cyrillic",
+  20866: "KOI8-R",
+  20932: "EUC-JP",
+  21866: "KOI8-U",
+  28592: "ISO-8859-2",
+  28593: "ISO-8859-3",
+  28594: "ISO-8859-4",
+  28595: "ISO-8859-5",
+  28596: "ISO-8859-6",
+  28597: "ISO-8859-7",
+  28598: "ISO-8859-8",
+  28600: "ISO-8859-10",
+  28603: "ISO-8859-13",
+  28604: "ISO-8859-14",
+  28605: "ISO-8859-15",
+  28606: "ISO-8859-16",
+  38598: "ISO-8859-8-I",
+  50221: "ISO-2022-JP",
+  54936: "gb18030",
+  65001: "UTF-8",
+}
+
+code_pages_by_encoding = {}
+
+for code_page, encoding in encodings_by_code_page.iteritems():
+  code_pages_by_encoding[encoding] = code_page
+
+encoding_by_alias_code_page = {
+  951: "Big5",
+  20936: "GBK",
+  20949: "EUC-KR",
+  28591: "windows-1252",
+  28599: "windows-1254",
+  28601: "windows-847",
+  50220: "ISO-2022-JP",
+  50222: "ISO-2022-JP",
+  51949: "EUC-JP",
+  51936: "GBK",
+  51949: "EUC-KR",
+}
 
 #
 
@@ -177,7 +246,11 @@ for name in preferred:
   else:
     variant = to_camel_name(name)
 
-  label_file.write('''/// The initializer for the %s encoding.
+  docfile = open("doc/%s.txt" % name, "r")
+  doctext = docfile.read()
+  docfile.close()
+
+  label_file.write('''/// The initializer for the [%s](static.%s.html) encoding.
 ///
 /// For use only for taking the address of this form when
 /// Rust prohibits the use of the non-`_INIT` form directly,
@@ -196,13 +269,14 @@ pub static %s_INIT: Encoding = Encoding {
 
 /// The %s encoding.
 ///
+%s///
 /// This will change from `static` to `const` if Rust changes
 /// to make the referent of `pub const FOO: &'static Encoding`
 /// unique cross-crate, so don't take the address of this
 /// `static`.
 pub static %s: &'static Encoding = &%s_INIT;
 
-''' % (to_dom_name(name), to_constant_name(name), to_dom_name(name), variant, to_dom_name(name), to_constant_name(name), to_constant_name(name)))
+''' % (to_dom_name(name), to_constant_name(name), to_constant_name(name), to_dom_name(name), variant, to_dom_name(name), doctext, to_constant_name(name), to_constant_name(name)))
 
 label_file.write("""static LABELS_SORTED: [&'static str; %d] = [
 """ % len(labels))
@@ -334,8 +408,8 @@ level1_hanzi_pairs.append((0x5188, (0xC8, 0xA2)))
 level1_hanzi_pairs.append((0x9FB1, (0xC8, 0xA3)))
 level1_hanzi_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("BIG5_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0)
-static_u8_pair_table_from_indexable("BIG5_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1)
+static_u16_table_from_indexable("BIG5_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "less-slow-big5-hanzi-encode")
+static_u8_pair_table_from_indexable("BIG5_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "less-slow-big5-hanzi-encode")
 
 # JIS0208
 
@@ -476,8 +550,8 @@ for i in xrange(len(level1_kanji_index)):
   level1_kanji_pairs.append((level1_kanji_index[i], (lead, trail)))
 level1_kanji_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("JIS0208_LEVEL1_KANJI_CODE_POINTS", level1_kanji_pairs, 0)
-static_u8_pair_table_from_indexable("JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES", level1_kanji_pairs, 1)
+static_u16_table_from_indexable("JIS0208_LEVEL1_KANJI_CODE_POINTS", level1_kanji_pairs, 0, "less-slow-kanji-encode")
+static_u8_pair_table_from_indexable("JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES", level1_kanji_pairs, 1, "less-slow-kanji-encode")
 
 # ISO-2022-JP half-width katakana
 
@@ -853,8 +927,8 @@ for i in xrange(len(level1_hanzi_index)):
   level1_hanzi_pairs.append((level1_hanzi_index[i], (hanzi_lead, hanzi_trail)))
 level1_hanzi_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("GB2312_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0)
-static_u8_pair_table_from_indexable("GB2312_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1)
+static_u16_table_from_indexable("GB2312_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "less-slow-gb-hanzi-encode")
+static_u8_pair_table_from_indexable("GB2312_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "less-slow-gb-hanzi-encode")
 
 data_file.write('''#[inline(always)]
 fn map_with_ranges(haystack: &[u16], other: &[u16], needle: u16) -> u16 {
@@ -984,7 +1058,7 @@ pub fn gb2312_other_encode(bmp: u16) -> Option<u16> {
                              bmp)
 }
 
-#[cfg(feature = "no-static-ideograph-encoder-tables")]
+#[cfg(not(feature = "less-slow-gb-hanzi-encode"))]
 #[inline(always)]
 pub fn gb2312_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&GB2312_HANZI[..(94 * (0xD8 - 0xB0) - 5)], bmp).map(|hanzi_pointer| {
@@ -994,7 +1068,7 @@ pub fn gb2312_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+#[cfg(feature = "less-slow-gb-hanzi-encode")]
 #[inline(always)]
 pub fn gb2312_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     match GB2312_LEVEL1_HANZI_CODE_POINTS.binary_search(&bmp) {
@@ -1026,7 +1100,7 @@ pub fn ksx1001_other_encode(bmp: u16) -> Option<u16> {
                              bmp)
 }
 
-#[cfg(feature = "no-static-ideograph-encoder-tables")]
+#[cfg(not(feature = "less-slow-kanji-encode"))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -1047,7 +1121,7 @@ pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+#[cfg(feature = "less-slow-kanji-encode")]
 #[inline(always)]
 pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     match JIS0208_LEVEL1_KANJI_CODE_POINTS.binary_search(&bmp) {
@@ -1059,7 +1133,7 @@ pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     }
 }
 
-#[cfg(feature = "no-static-ideograph-encoder-tables")]
+#[cfg(not(feature = "less-slow-kanji-encode"))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -1069,7 +1143,7 @@ pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+#[cfg(feature = "less-slow-kanji-encode")]
 #[inline(always)]
 pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     jis0208_level1_kanji_shift_jis_encode(bmp).map(|(shift_jis_lead, shift_jis_trail)| {
@@ -1094,7 +1168,7 @@ pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(feature = "no-static-ideograph-encoder-tables")]
+#[cfg(not(feature = "less-slow-kanji-encode"))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -1104,7 +1178,7 @@ pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+#[cfg(feature = "less-slow-kanji-encode")]
 #[inline(always)]
 pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     jis0208_level1_kanji_shift_jis_encode(bmp).map(|(shift_jis_lead, shift_jis_trail)| {
@@ -1261,7 +1335,7 @@ pub fn big5_astral_encode(low_bits: u16) -> Option<usize> {
     }
 }
 
-#[cfg(feature = "no-static-ideograph-encoder-tables")]
+#[cfg(not(feature = "less-slow-big5-hanzi-encode"))]
 #[inline(always)]
 pub fn big5_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     if super::in_inclusive_range16(bmp, 0x4E00, 0x9FB1) {
@@ -1299,7 +1373,7 @@ pub fn big5_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     None
 }
 
-#[cfg(not(feature = "no-static-ideograph-encoder-tables"))]
+#[cfg(feature = "less-slow-big5-hanzi-encode")]
 #[inline(always)]
 pub fn big5_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
     if super::in_inclusive_range16(bmp, 0x4E00, 0x9FB1) {
@@ -1675,7 +1749,7 @@ utf_8_file.write("""
 // Instead, please regenerate using generate-encoding-data.py
 
 /// Bit is 1 if the trail is invalid.
-static UTF8_TRAIL_INVALID: [u8; 256] = [""")
+pub static UTF8_TRAIL_INVALID: [u8; 256] = [""")
 
 for i in range(256):
   combined = 0

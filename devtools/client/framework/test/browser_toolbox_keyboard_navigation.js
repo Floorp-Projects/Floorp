@@ -107,7 +107,8 @@ add_task(async function() {
   let onceSelected = toolbox.once("webconsole-selected");
   EventUtils.synthesizeKey("Enter");
   await onceSelected;
-  ok(doc.activeElement.id, tabButtons[1].id, "Changed tab button is focused.");
+  is(doc.activeElement.id, "toolbox-panel-iframe-" + toolbox.currentToolId,
+    "Selected tool frame is now focused.");
 
   // Webconsole steal the focus from button after sending "webconsole-selected"
   // event.
@@ -122,5 +123,6 @@ add_task(async function() {
   EventUtils.synthesizeKey(" ");
   await onceSelected;
 
-  ok(doc.activeElement.id, tabButtons[0].id, "Changed tab button is focused.");
+  is(doc.activeElement.id, "toolbox-panel-iframe-" + toolbox.currentToolId,
+    "Selected tool frame is now focused.");
 });

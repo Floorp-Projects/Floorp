@@ -7,9 +7,8 @@ license = "MIT/Apache-2.0"
 
 [features]
 simd-accel = ["encoding_rs/simd-accel"]
-no-static-ideograph-encoder-tables = ["encoding_rs/no-static-ideograph-encoder-tables"]
 
 [dependencies]
-encoding_rs = "0.7.0"
+encoding_rs = "0.8.0"
 nsstring = { path = "../../servo/support/gecko/nsstring" }
 nserror = { path = "../../xpcom/rust/nserror" }
