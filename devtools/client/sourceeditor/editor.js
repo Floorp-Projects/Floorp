@@ -79,13 +79,14 @@ const CM_MAPPING = [
 const editors = new WeakMap();
 
 Editor.modes = {
-  text: { name: "text" },
-  html: { name: "htmlmixed" },
   css: { name: "css" },
-  wasm: { name: "wasm" },
+  fs: { name: "x-shader/x-fragment" },
+  haxe: { name: "haxe" },
+  html: { name: "htmlmixed" },
   js: { name: "javascript" },
+  text: { name: "text" },
   vs: { name: "x-shader/x-vertex" },
-  fs: { name: "x-shader/x-fragment" }
+  wasm: { name: "wasm" },
 };
 
 /**
