@@ -30,8 +30,8 @@
 #include "js/Class.h"
 #include "util/Windows.h"
 #include "vm/JSAtom.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/Time.h"
 
 #include "vm/JSObject-inl.h"

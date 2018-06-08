@@ -14,7 +14,7 @@
 #include "builtin/Boolean-inl.h"
 
 #include "jit/MacroAssembler-inl.h"
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;

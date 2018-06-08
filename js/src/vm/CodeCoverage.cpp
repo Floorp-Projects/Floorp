@@ -20,8 +20,8 @@
 
 #include "util/Text.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSScript.h"
+#include "vm/Realm.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 

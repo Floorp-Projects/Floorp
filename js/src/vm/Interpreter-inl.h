@@ -14,7 +14,7 @@
 #include "builtin/String.h"
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSAtom-inl.h"

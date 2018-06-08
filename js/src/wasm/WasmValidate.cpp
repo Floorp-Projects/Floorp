@@ -23,8 +23,8 @@
 
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "wasm/WasmOpIter.h"
 
 using namespace js;

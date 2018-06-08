@@ -22,8 +22,8 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -17,7 +17,7 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "jit/x86/SharedICHelpers-x86.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vtune/VTuneWrapper.h"
 
 #include "jit/MacroAssembler-inl.h"

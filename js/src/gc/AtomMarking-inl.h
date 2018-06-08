@@ -6,7 +6,7 @@
 
 #include "gc/AtomMarking.h"
 
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "gc/Heap-inl.h"
 

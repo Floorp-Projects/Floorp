@@ -10,7 +10,7 @@
 #include "builtin/TestingFunctions.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayObject.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vm/SavedStacks.h"
 
 BEGIN_TEST(testSavedStacks_withNoStack)
