@@ -172,6 +172,12 @@ public:
    */
   void OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent);
 
+  /**
+   * OnDrop() is called from EditorEventListener::Drop that is handler of drop
+   * event.
+   */
+  nsresult OnDrop(dom::DragEvent* aDropEvent);
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -193,8 +199,6 @@ protected: // May be called by friends.
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
-
-  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) override;
 
   /**
    * DeleteSelectionWithTransaction() removes selected content or content
