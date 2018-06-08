@@ -3102,6 +3102,51 @@ CacheIRCompiler::emitMegamorphicLoadSlotResult()
 }
 
 bool
+CacheIRCompiler::emitMegamorphicStoreSlot()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    StubFieldOffset name(reader.stubOffset(), StubField::Type::String);
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool needsTypeBarrier = reader.readBool();
+
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.Push(val);
+    masm.moveStackPtrTo(val.scratchReg());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch1);
+    volatileRegs.takeUnchecked(scratch2);
+    volatileRegs.takeUnchecked(val);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch1);
+    masm.loadJSContext(scratch1);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(obj);
+    emitLoadStubField(name, scratch2);
+    masm.passABIArg(scratch2);
+    masm.passABIArg(val.scratchReg());
+    if (needsTypeBarrier)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<false>)));
+    masm.mov(ReturnReg, scratch1);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.loadValue(Address(masm.getStackPointer(), 0), val);
+    masm.adjustStack(sizeof(Value));
+
+    masm.branchIfFalseBool(scratch1, failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript()
 {
     StubFieldOffset group(reader.stubOffset(), StubField::Type::ObjectGroup);
