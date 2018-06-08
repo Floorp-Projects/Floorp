@@ -4,9 +4,11 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
-Cu.importGlobalProperties(["crypto"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 this.EXPORTED_SYMBOLS = ["capture"];
 
