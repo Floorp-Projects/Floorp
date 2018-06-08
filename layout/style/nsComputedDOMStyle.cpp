@@ -68,12 +68,13 @@ using namespace mozilla::dom;
  */
 
 already_AddRefed<nsComputedDOMStyle>
-NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell,
+NS_NewComputedDOMStyle(dom::Element* aElement,
+                       const nsAString& aPseudoElt,
+                       nsIDocument* aDocument,
                        nsComputedDOMStyle::StyleType aStyleType)
 {
   RefPtr<nsComputedDOMStyle> computedStyle =
-    new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell, aStyleType);
+    new nsComputedDOMStyle(aElement, aPseudoElt, aDocument, aStyleType);
   return computedStyle.forget();
 }
 
@@ -312,7 +313,7 @@ ComputedStyleMap::Update()
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
-                                       nsIPresShell* aPresShell,
+                                       nsIDocument* aDocument,
                                        StyleType aStyleType)
   : mDocumentWeak(nullptr)
   , mOuterFrame(nullptr)
@@ -326,10 +327,11 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   , mFlushedPendingReflows(false)
 #endif
 {
-  MOZ_ASSERT(aElement && aPresShell);
-  MOZ_ASSERT(aPresShell->GetPresContext());
-
-  mDocumentWeak = do_GetWeakReference(aPresShell->GetDocument());
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aDocument);
+  // TODO(emilio, bug 548397, https://github.com/w3c/csswg-drafts/issues/2403):
+  // Should use aElement->OwnerDoc() instead.
+  mDocumentWeak = do_GetWeakReference(aDocument);
   mContent = aElement;
   mPseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElt);
 }
