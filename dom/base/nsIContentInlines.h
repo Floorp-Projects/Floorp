@@ -167,6 +167,20 @@ nsINode::NodeOrAncestorHasDirAuto() const
 }
 
 inline bool
+nsINode::IsEditable() const
+{
+  if (HasFlag(NODE_IS_EDITABLE)) {
+    // The node is in an editable contentEditable subtree.
+    return true;
+  }
+
+  nsIDocument* doc = GetUncomposedDoc();
+
+  // Check if the node is in a document and the document is in designMode.
+  return doc && doc->HasFlag(NODE_IS_EDITABLE);
+}
+
+inline bool
 nsIContent::IsActiveChildrenElement() const
 {
   if (!mNodeInfo->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
