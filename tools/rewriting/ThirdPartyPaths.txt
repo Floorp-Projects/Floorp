@@ -66,7 +66,6 @@ mobile/android/thirdparty/
 modules/brotli/
 modules/fdlibm/
 modules/freetype2/
-modules/libmar/
 modules/pdfium/
 modules/woff2/
 modules/xz-embedded/
