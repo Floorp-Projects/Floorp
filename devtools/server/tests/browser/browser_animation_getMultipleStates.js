@@ -21,22 +21,22 @@ async function playerHasAnInitialState(walker, animations) {
   let state = await getAnimationStateForNode(walker, animations,
     ".delayed-multiple-animations", 0);
 
-  ok(state.duration, 50000,
+  is(state.duration, 500,
      "The duration of the first animation is correct");
-  ok(state.iterationCount, 10,
+  is(state.iterationCount, 10,
      "The iterationCount of the first animation is correct");
-  ok(state.delay, 1000,
+  is(state.delay, 1000,
      "The delay of the first animation is correct");
 
   state = await getAnimationStateForNode(walker, animations,
     ".delayed-multiple-animations", 1);
 
-  ok(state.duration, 100000,
-     "The duration of the secon animation is correct");
-  ok(state.iterationCount, 30,
-     "The iterationCount of the secon animation is correct");
-  ok(state.delay, 750,
-     "The delay of the secon animation is correct");
+  is(state.duration, 1000,
+     "The duration of the second animation is correct");
+  is(state.iterationCount, 30,
+     "The iterationCount of the second animation is correct");
+  is(state.delay, 750,
+     "The delay of the second animation is correct");
 }
 
 async function getAnimationStateForNode(walker, animations, selector, playerIndex) {

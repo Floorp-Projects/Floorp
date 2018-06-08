@@ -1,7 +1,7 @@
 language: rust
 rust:
-  - 1.15.0 # Earliest that's known to work
-  - 1.19.0 # Firefox requirement
+  - 1.21.0 # Earliest that's known to work
+  - 1.25.0 # Firefox requirement
   - stable
   - beta
   - nightly
@@ -9,7 +9,7 @@ env:
   - RUST_BACKTRACE=1
   - RUST_BACKTRACE=1 RUSTC_BOOTSTRAP=1
 script:
-  - if [[ $RUSTC_BOOTSTRAP ]]; then cargo test --verbose --features 'simd-accel no-static-ideograph-encoder-tables serde'; fi
+  - if [[ $RUSTC_BOOTSTRAP ]]; then cargo test --verbose --features 'simd-accel less-slow-kanji-encode less-slow-big5-hanzi-encode less-slow-gb-hanzi-encode serde'; fi
   - if [[ -z $RUSTC_BOOTSTRAP ]]; then cargo test --verbose; fi
 #matrix:
 #  allow_failures:

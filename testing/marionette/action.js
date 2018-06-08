@@ -1320,7 +1320,7 @@ function dispatchPointerMove(a, inputState, tickDuration, window) {
   // interval between pointermove increments in ms, based on common vsync
   const fps60 = 17;
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const start = Date.now();
     const [startX, startY] = [inputState.x, inputState.y];
 
@@ -1370,8 +1370,9 @@ function dispatchPointerMove(a, inputState, tickDuration, window) {
     intermediatePointerEvents.then(() => {
       performOnePointerMove(inputState, targetX, targetY, window);
       resolve();
+    }).catch(err => {
+      reject(err);
     });
-
   });
 }
 
