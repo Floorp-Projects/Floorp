@@ -71,7 +71,7 @@
 #include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::dir
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
-#include "nsAtom.h"                    // for nsAtom
+#include "nsAtom.h"                     // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
