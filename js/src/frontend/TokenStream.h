@@ -1203,10 +1203,9 @@ class GeneralTokenStreamChars
         token->setName(name);
     }
 
-    void newRegExpToken(RegExpFlag reflags, TokenStart start,
-                        TokenStreamShared::Modifier modifier, TokenKind* out)
+    void newRegExpToken(RegExpFlag reflags, TokenStart start, TokenKind* out)
     {
-        Token* token = newToken(TokenKind::RegExp, start, modifier, out);
+        Token* token = newToken(TokenKind::RegExp, start, TokenStreamShared::Operand, out);
         token->setRegExpFlags(reflags);
     }
 
@@ -1630,6 +1629,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
      */
     MOZ_MUST_USE bool decimalNumber(int c, TokenStart start, const CharT* numStart,
                                     Modifier modifier, TokenKind* out);
+
+    /** Tokenize a regular expression literal beginning at |start|. */
+    MOZ_MUST_USE bool regexpLiteral(TokenStart start, TokenKind* out);
 
   public:
     // Advance to the next token.  If the token stream encountered an error,
