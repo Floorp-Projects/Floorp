@@ -174,9 +174,7 @@ impl ClosureHelper for DeclarationBlockMutationClosure {
     #[inline]
     fn invoke(&self, decls: &PropertyDeclarationBlock) {
         if let Some(function) = self.function.as_ref() {
-            unsafe {
-                function(decls as *const _ as *const _, self.data);
-            }
+            unsafe { function(decls, self.data) };
         }
     }
 }
@@ -3423,8 +3421,7 @@ pub unsafe extern "C" fn Servo_UnlockedDeclarationBlock_GetCssText(
     declarations: *const structs::RawServoUnlockedDeclarationBlock,
     result: *mut nsAString,
 ) {
-    let decls = &*(declarations as *const PropertyDeclarationBlock);
-    decls.to_css(&mut *result).unwrap()
+    (*declarations).to_css(&mut *result).unwrap()
 }
 
 
