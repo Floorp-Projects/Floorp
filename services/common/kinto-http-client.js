@@ -63,7 +63,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
 const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
 
 let KintoHttpClient = class KintoHttpClient extends _base2.default {
