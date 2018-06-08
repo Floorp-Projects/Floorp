@@ -95,6 +95,7 @@ add_task(async function() {
 
   let defaultTheme = header.nextSibling;
   defaultTheme.doCommand();
+  await new Promise(SimpleTest.executeSoon);
   is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"),
      DEFAULT_THEME_ID, "Default theme should be selected");
 
