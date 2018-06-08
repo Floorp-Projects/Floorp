@@ -126,7 +126,7 @@ BottomHost.prototype = {
 class SidebarHost {
   constructor(hostTab, hostType) {
     this.hostTab = hostTab;
-    this.hostType = hostType;
+    this.type = hostType;
     this.widthPref = "devtools.toolbox.sidebar.width";
 
     EventEmitter.decorate(this);
