@@ -198,6 +198,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return parentNode && !!parentNode.openOrClosedShadowRoot;
   },
 
+  get isTemplateElement() {
+    return this.rawNode instanceof this.rawNode.ownerGlobal.HTMLTemplateElement;
+  },
+
   // Estimate the number of children that the walker will return without making
   // a call to children() if possible.
   get numChildren() {
