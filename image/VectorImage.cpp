@@ -1213,7 +1213,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.region,
                              SurfaceFormat::B8G8R8A8,
                              aParams.samplingFilter,
-                             aParams.flags, aParams.opacity);
+                             aParams.flags, aParams.opacity, false);
 
 #ifdef DEBUG
   NotifyDrawingObservers();
