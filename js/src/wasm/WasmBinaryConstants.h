@@ -600,20 +600,16 @@ static const unsigned MaxExports             =   100000;
 static const unsigned MaxGlobals             =  1000000;
 static const unsigned MaxDataSegments        =   100000;
 static const unsigned MaxElemSegments        = 10000000;
-static const unsigned MaxTableMaximumLength  = 10000000;
+static const unsigned MaxTableInitialLength  = 10000000;
+static const unsigned MaxStringBytes         =   100000;
 static const unsigned MaxLocals              =    50000;
 static const unsigned MaxParams              =     1000;
-static const unsigned MaxMemoryMaximumPages  =    65536;
-static const unsigned MaxStringBytes         =   100000;
-static const unsigned MaxModuleBytes         = 1024 * 1024 * 1024;
-static const unsigned MaxFunctionBytes       =  7654321;
-
-// These limits pertain to our WebAssembly implementation only.
-
-static const unsigned MaxTableInitialLength  = 10000000;
 static const unsigned MaxBrTableElems        =  1000000;
-static const unsigned MaxMemoryInitialPages  =    16384;
-static const unsigned MaxCodeSectionBytes    = MaxModuleBytes;
+static const unsigned MaxMemoryInitialPages  = 16384;
+static const unsigned MaxMemoryMaximumPages  = 65536;
+static const unsigned MaxCodeSectionBytes    = 1024 * 1024 * 1024;
+static const unsigned MaxModuleBytes         = MaxCodeSectionBytes;
+static const unsigned MaxFunctionBytes       =  7654321;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
