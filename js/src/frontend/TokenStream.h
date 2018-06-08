@@ -1051,6 +1051,20 @@ class TokenStreamCharsBase
     }
 
   protected:
+    int32_t peekCodeUnit() {
+        return MOZ_LIKELY(sourceUnits.hasRawChars()) ? sourceUnits.peekCodeUnit() : EOF;
+    }
+
+    void consumeKnownCodeUnit(int32_t unit) {
+        MOZ_ASSERT(unit != EOF, "shouldn't be matching EOF");
+        MOZ_ASSERT(sourceUnits.hasRawChars(), "must have units to consume");
+#ifdef DEBUG
+        CharT next =
+#endif
+            sourceUnits.getCodeUnit();
+        MOZ_ASSERT(next == unit, "must be consuming the correct unit");
+    }
+
     MOZ_MUST_USE bool
     fillWithTemplateStringContents(CharBuffer& charbuf, const CharT* cur, const CharT* end) {
         while (cur < end) {
@@ -1432,6 +1446,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::appendCodePointToTokenbuf;
     using CharsSharedBase::atomizeChars;
     using GeneralCharsBase::badToken;
+    using CharsSharedBase::consumeKnownCodeUnit;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
     using CharsSharedBase::fillWithTemplateStringContents;
@@ -1448,6 +1463,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newNumberToken;
     using GeneralCharsBase::newRegExpToken;
     using GeneralCharsBase::newSimpleToken;
+    using CharsSharedBase::peekCodeUnit;
     using CharsSharedBase::sourceUnits;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
