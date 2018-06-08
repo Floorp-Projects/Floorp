@@ -11,7 +11,7 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
                                "resource://gre/modules/DeferredTask.jsm");
 
-Cu.importGlobalProperties(["InspectorUtils"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 const kStateActive = 0x00000001; // NS_EVENT_STATE_ACTIVE
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER

@@ -5,7 +5,7 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["fetch", "URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm", {});

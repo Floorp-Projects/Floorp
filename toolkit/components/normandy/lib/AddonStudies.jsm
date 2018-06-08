@@ -40,7 +40,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://normandy/lib/TelemetryEvents.jsm");
 
-Cu.importGlobalProperties(["fetch"]); /* globals fetch */
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]); /* globals fetch */
 
 var EXPORTED_SYMBOLS = ["AddonStudies"];
 

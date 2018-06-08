@@ -27,7 +27,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-Cu.importGlobalProperties(["CSS"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);
 
 ChromeUtils.defineModuleGetter(this, "DragPositionManager",
                                "resource:///modules/DragPositionManager.jsm");

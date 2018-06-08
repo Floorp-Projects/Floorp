@@ -42,7 +42,7 @@ ChromeUtils.defineModuleGetter(this, "PdfJsTelemetry",
 ChromeUtils.defineModuleGetter(this, "PdfjsContentUtils",
   "resource://pdf.js/PdfjsContentUtils.jsm");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, "mime",

@@ -6,7 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 

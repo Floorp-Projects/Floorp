@@ -37,6 +37,16 @@ public:
 
 } // namespace detail
 
+/** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
+template<typename Char>
+constexpr bool
+IsAscii(Char aChar)
+{
+  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
+  auto uc = static_cast<UnsignedChar>(aChar);
+  return uc < 0x80;
+}
+
 /**
  * Returns true iff |aChar| matches [a-z].
  *

@@ -4509,6 +4509,6 @@ var Microformats; // jshint ignore:line
 }));
 try {
     // mozilla jsm support
-    Cu.importGlobalProperties(["DOMParser", "URL"]);
+    XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "URL"]);
 } catch (e) {}
 var EXPORTED_SYMBOLS = ["Microformats"];

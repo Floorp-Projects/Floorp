@@ -7,6 +7,8 @@
 #ifndef NSCOORD_H
 #define NSCOORD_H
 
+#include "mozilla/FloatingPoint.h"
+
 #include "nsAlgorithm.h"
 #include "nscore.h"
 #include "nsMathUtils.h"
@@ -30,21 +32,9 @@
 // want to eventually use floats.
 //#define NS_COORD_IS_FLOAT
 
-inline float NS_IEEEPositiveInfinity() {
-  union { uint32_t mPRUint32; float mFloat; } pun;
-  pun.mPRUint32 = 0x7F800000;
-  return pun.mFloat;
-}
-inline bool NS_IEEEIsNan(float aF) {
-  union { uint32_t mBits; float mFloat; } pun;
-  pun.mFloat = aF;
-  return (pun.mBits & 0x7F800000) == 0x7F800000 &&
-    (pun.mBits & 0x007FFFFF) != 0;
-}
-
 #ifdef NS_COORD_IS_FLOAT
 typedef float nscoord;
-#define nscoord_MAX NS_IEEEPositiveInfinity()
+#define nscoord_MAX (mozilla::PositiveInfinity<float>())
 #else
 typedef int32_t nscoord;
 #define nscoord_MAX nscoord((1 << 30) - 1)
@@ -238,7 +228,7 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
 inline float NSCoordToFloat(nscoord aCoord) {
   VERIFY_COORD(aCoord);
 #ifdef NS_COORD_IS_FLOAT
-  NS_ASSERTION(!NS_IEEEIsNan(aCoord), "NaN encountered in float conversion");
+  NS_ASSERTION(!mozilla::IsNaN(aCoord), "NaN encountered in float conversion");
 #endif
   return (float)aCoord;
 }

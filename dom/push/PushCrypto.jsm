@@ -11,7 +11,7 @@ ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyGetter(this, 'gDOMBundle', () =>
   Services.strings.createBundle('chrome://global/locale/dom/dom.properties'));
 
-Cu.importGlobalProperties(['crypto']);
+XPCOMUtils.defineLazyGlobalGetters(this, ['crypto']);
 
 var EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray'];
 

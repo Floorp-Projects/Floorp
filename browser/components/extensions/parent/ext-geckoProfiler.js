@@ -3,7 +3,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-Cu.importGlobalProperties(["TextEncoder", "TextDecoder"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder", "TextDecoder"]);
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
