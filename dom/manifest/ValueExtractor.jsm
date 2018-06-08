@@ -13,7 +13,9 @@ const {
   utils: Cu
 } = Components;
 
-Cu.importGlobalProperties(["InspectorUtils"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 function ValueExtractor(aConsole, aBundle) {
   this.console = aConsole;

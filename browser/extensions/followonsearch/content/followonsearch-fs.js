@@ -7,7 +7,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["URLSearchParams"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URLSearchParams"]);
 
 const kExtensionID = "followonsearch@mozilla.com";
 const kSaveTelemetryMsg = `${kExtensionID}:save-telemetry`;

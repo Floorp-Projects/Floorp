@@ -543,10 +543,9 @@ class AndroidEmulatorCommands(MachCommandBase):
              conditions=[],
              description='Run the Android emulator with an AVD from test automation.')
     @CommandArgument('--version', metavar='VERSION',
-                     choices=['4.3', '6.0', '7.0', 'x86', 'x86-6.0', 'x86-7.0'],
+                     choices=['4.3', '7.0', 'x86', 'x86-7.0'],
                      help='Specify Android version to run in emulator. '
-                     'One of "4.3", "6.0", "7.0", "x86", "x86-6.0", or "x86-7.0".',
-                     default='4.3')
+                     'One of "4.3", "7.0", "x86", or "x86-7.0".')
     @CommandArgument('--wait', action='store_true',
                      help='Wait for emulator to be closed.')
     @CommandArgument('--force-update', action='store_true',

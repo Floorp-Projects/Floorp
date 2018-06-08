@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 
-Cu.importGlobalProperties(["NodeFilter"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["NodeFilter"]);
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";

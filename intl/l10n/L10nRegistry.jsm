@@ -1,7 +1,8 @@
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
-Cu.importGlobalProperties(["fetch"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 /**
  * L10nRegistry is a localization resource management system for Gecko.

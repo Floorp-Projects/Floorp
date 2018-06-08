@@ -76,7 +76,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
   TelemetryTimestamps.add("blankWindowShown");
 })();
 
-Cu.importGlobalProperties(["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],

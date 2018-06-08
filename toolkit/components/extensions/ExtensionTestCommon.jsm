@@ -14,10 +14,10 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionTestCommon", "MockExtension"];
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder"]);
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");

@@ -169,6 +169,6 @@ sm-fuzzing-linux64/opt:
     run:
         spidermonkey-variant: fuzzing
     toolchains:
-        - linux64-clang-6-pre
+        - linux64-clang-6
         - linux64-gcc
         - linux64-rust

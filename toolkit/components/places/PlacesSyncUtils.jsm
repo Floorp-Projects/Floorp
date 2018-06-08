@@ -6,10 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["PlacesSyncUtils"];
 
-Cu.importGlobalProperties(["URL", "URLSearchParams"]);
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "URLSearchParams"]);
 
 ChromeUtils.defineModuleGetter(this, "Log",
                                "resource://gre/modules/Log.jsm");

@@ -8,8 +8,9 @@
 
 ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://ppapi.js/opengles2-utils.jsm");
-Cu.importGlobalProperties(['URL']);
+XPCOMUtils.defineLazyGlobalGetters(this, ['URL']);
 
 const PP_OK = 0;
 const PP_OK_COMPLETIONPENDING = -1;

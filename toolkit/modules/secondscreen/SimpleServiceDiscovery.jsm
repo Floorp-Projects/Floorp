@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var log = Cu.reportError;
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyGetter(this, "converter", function() {
   let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);

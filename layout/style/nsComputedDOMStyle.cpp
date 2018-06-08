@@ -9,6 +9,7 @@
 #include "nsComputedDOMStyle.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 
@@ -7152,15 +7153,7 @@ nsComputedDOMStyle::DoGetAnimationIterationCount()
     RefPtr<nsROCSSPrimitiveValue> iterationCount = new nsROCSSPrimitiveValue;
 
     float f = animation->GetIterationCount();
-    /* Need a nasty hack here to work around an optimizer bug in gcc
-       4.2 on Mac, which somehow gets confused when directly comparing
-       a float to the return value of NS_IEEEPositiveInfinity when
-       building 32-bit builds. */
-#ifdef XP_MACOSX
-    volatile
-#endif
-      float inf = NS_IEEEPositiveInfinity();
-    if (f == inf) {
+    if (f == PositiveInfinity<float>()) {
       iterationCount->SetIdent(eCSSKeyword_infinite);
     } else {
       iterationCount->SetNumber(f);

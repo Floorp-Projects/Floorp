@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "redirectDomain",
 
 let CryptoHash = CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
 
-Cu.importGlobalProperties(["URL", "TextEncoder"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "TextEncoder"]);
 
 const computeHash = str => {
   let byteArr = new TextEncoder().encode(str);

@@ -12,8 +12,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
-Cu.importGlobalProperties(["URL"]);
-
 var BrowserUtils = {
 
   /**

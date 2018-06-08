@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 
-Cu.importGlobalProperties(["fetch", "URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
 
 var EXPORTED_SYMBOLS = ["BrowserErrorReporter"];
 

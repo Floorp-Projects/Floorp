@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
 });
 
-Cu.importGlobalProperties(["fetch"]);
-
 var EXPORTED_SYMBOLS = ["RecipeRunner"];
 
 const log = LogManager.getLogger("recipe-runner");

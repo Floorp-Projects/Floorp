@@ -19,7 +19,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 const SOURCE = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
 const OUTPUT = "nsSTSPreloadList.inc";
