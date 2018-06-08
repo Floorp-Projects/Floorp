@@ -18,6 +18,15 @@ function dummy(id) {
   };
 }
 
+function tick() {
+  return new Promise(executeSoon);
+}
+
+function setTheme(theme) {
+  LightweightThemeManager.currentTheme = theme;
+  return tick();
+}
+
 function hasPermission(aAddon, aPerm) {
   var perm = AddonManager["PERM_CAN_" + aPerm.toUpperCase()];
   return !!(aAddon.permissions & perm);
@@ -29,7 +38,8 @@ add_task(async function run_test() {
 
   Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
-  let {LightweightThemeManager: ltm} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+  ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+  let ltm = LightweightThemeManager;
 
   Assert.equal(typeof ltm, "object");
   Assert.equal(typeof ltm.usedThemes, "object");
@@ -45,7 +55,7 @@ add_task(async function run_test() {
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
   ltm.resetPreview();
 
-  ltm.currentTheme = dummy("x0");
+  await setTheme(dummy("x0"));
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.id, "x0");
   Assert.equal(ltm.usedThemes[0].id, "x0");
@@ -59,12 +69,12 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.id, "x0");
 
-  ltm.currentTheme = dummy("x1");
+  await setTheme(dummy("x1"));
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.currentTheme.id, "x1");
   Assert.equal(ltm.usedThemes[1].id, "x0");
 
-  ltm.currentTheme = dummy("x2");
+  await setTheme(dummy("x2"));
   Assert.equal(ltm.usedThemes.length, 4);
   Assert.equal(ltm.currentTheme.id, "x2");
   Assert.equal(ltm.usedThemes[1].id, "x1");
@@ -75,12 +85,13 @@ add_task(async function run_test() {
   ltm.currentTheme = dummy("x5");
   ltm.currentTheme = dummy("x6");
   ltm.currentTheme = dummy("x7");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 9);
   Assert.equal(ltm.currentTheme.id, "x7");
   Assert.equal(ltm.usedThemes[1].id, "x6");
   Assert.equal(ltm.usedThemes[7].id, "x0");
 
-  ltm.currentTheme = dummy("x8");
+  await setTheme(dummy("x8"));
   Assert.equal(ltm.usedThemes.length, 9);
   Assert.equal(ltm.currentTheme.id, "x8");
   Assert.equal(ltm.usedThemes[1].id, "x7");
@@ -92,6 +103,7 @@ add_task(async function run_test() {
   Assert.notEqual(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
   ltm.forgetUsedTheme("x8");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 8);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
   Assert.equal(ltm.usedThemes[0].id, "x7");
@@ -107,19 +119,19 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes[0].id, "x2");
   Assert.equal(ltm.usedThemes[1].id, "x1");
 
-  ltm.currentTheme = dummy("x1");
+  await setTheme(dummy("x1"));
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.currentTheme.id, "x1");
   Assert.equal(ltm.usedThemes[0].id, "x1");
   Assert.equal(ltm.usedThemes[1].id, "x2");
 
-  ltm.currentTheme = dummy("x2");
+  await setTheme(dummy("x2"));
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.currentTheme.id, "x2");
   Assert.equal(ltm.usedThemes[0].id, "x2");
   Assert.equal(ltm.usedThemes[1].id, "x1");
 
-  ltm.currentTheme = ltm.getUsedTheme("x1");
+  await setTheme(ltm.getUsedTheme("x1"));
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.currentTheme.id, "x1");
   Assert.equal(ltm.usedThemes[0].id, "x1");
@@ -127,6 +139,7 @@ add_task(async function run_test() {
 
   ltm.forgetUsedTheme("x1");
   ltm.forgetUsedTheme("x2");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
@@ -134,7 +147,7 @@ add_task(async function run_test() {
   var chineseTheme = dummy("chinese0");
   chineseTheme.name = "笢恅0";
   chineseTheme.description = "笢恅1";
-  ltm.currentTheme = chineseTheme;
+  await setTheme(chineseTheme);
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.name, "笢恅0");
   Assert.equal(ltm.currentTheme.description, "笢恅1");
@@ -147,7 +160,7 @@ add_task(async function run_test() {
   var chineseTheme1 = dummy("chinese1");
   chineseTheme1.name = "眵昜湮桵蔗坌~郔乾";
   chineseTheme1.description = "眵昜湮桵蔗坌~郔乾";
-  ltm.currentTheme = chineseTheme1;
+  await setTheme(chineseTheme1);
   Assert.notEqual(ltm.currentTheme.id, DEFAULT_THEME_ID);
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.currentTheme.name, "眵昜湮桵蔗坌~郔乾");
@@ -158,10 +171,12 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes[0].description, "眵昜湮桵蔗坌~郔乾");
 
   ltm.forgetUsedTheme("chinese0");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.notEqual(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
   ltm.forgetUsedTheme("chinese1");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
@@ -317,52 +332,61 @@ add_task(async function run_test() {
   // Sanitize themes with a bad headerURL
   data = dummy();
   data.headerURL = "foo";
-  ltm.currentTheme = data;
+  await setTheme(data);
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.headerURL, undefined);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   // Sanitize themes with a non-http(s) headerURL
   data = dummy();
   data.headerURL = "ftp://lwtest.invalid/test.png";
-  ltm.currentTheme = data;
+  await setTheme(data);
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.headerURL, undefined);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   // Sanitize themes with a non-http(s) headerURL
   data = dummy();
   data.headerURL = "file:///test.png";
-  ltm.currentTheme = data;
+  await setTheme(data);
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.headerURL, undefined);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   data = dummy();
   data.updateURL = "file:///test.json";
   ltm.setLocalTheme(data);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.updateURL, undefined);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   data = dummy();
   data.headerURL = "file:///test.png";
   ltm.setLocalTheme(data);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.headerURL, "file:///test.png");
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   data = dummy();
   data.headerURL = "ftp://lwtest.invalid/test.png";
   ltm.setLocalTheme(data);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.equal(ltm.currentTheme.updateURL, undefined);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
 
   data = dummy();
@@ -383,9 +407,10 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes.length, 2);
 
   // This should silently drop the bad theme.
-  ltm.currentTheme = dummy();
+  await setTheme(dummy());
   Assert.equal(ltm.usedThemes.length, 2);
   ltm.forgetUsedTheme(ltm.currentTheme.id);
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
@@ -395,10 +420,11 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes.length, 4);
 
   // Switching to an existing theme should drop the bad theme.
-  ltm.currentTheme = ltm.getUsedTheme("x1");
+  await setTheme(ltm.getUsedTheme("x1"));
   Assert.equal(ltm.usedThemes.length, 3);
   ltm.forgetUsedTheme("x1");
   ltm.forgetUsedTheme("x2");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
@@ -407,14 +433,17 @@ add_task(async function run_test() {
 
   // Forgetting an existing theme should drop the bad theme.
   ltm.forgetUsedTheme("x1");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   ltm.forgetUsedTheme("x2");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
   // Test whether a JSON set with setCharPref can be retrieved with usedThemes
   ltm.currentTheme = dummy("x0");
   ltm.currentTheme = dummy("x1");
+  await tick();
   Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(ltm.usedThemes));
   Assert.equal(ltm.usedThemes.length, 4);
   Assert.equal(ltm.currentTheme.id, "x1");
@@ -422,10 +451,12 @@ add_task(async function run_test() {
   Assert.equal(ltm.usedThemes[0].id, "x1");
 
   ltm.forgetUsedTheme("x0");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 2);
   Assert.notEqual(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
   ltm.forgetUsedTheme("x1");
+  await tick();
   Assert.equal(ltm.usedThemes.length, 1);
   Assert.equal(ltm.currentTheme.id, DEFAULT_THEME_ID);
 
@@ -461,10 +492,12 @@ add_task(async function run_test() {
   ltm.currentTheme = dummy("x28");
   ltm.currentTheme = dummy("x29");
   ltm.currentTheme = dummy("x30");
+  await tick();
 
   Assert.equal(ltm.usedThemes.length, 31);
 
   ltm.currentTheme = dummy("x31");
+  await tick();
 
   Assert.equal(ltm.usedThemes.length, 31);
   Assert.equal(ltm.getUsedTheme("x1"), null);
@@ -493,10 +526,12 @@ add_task(async function run_test() {
   ltm.currentTheme = dummy("x16");
 
   ltm.currentTheme = dummy("x32");
+  await tick();
 
   Assert.equal(ltm.usedThemes.length, 33);
 
   ltm.currentTheme = dummy("x33");
+  await tick();
 
   Assert.equal(ltm.usedThemes.length, 33);
 
@@ -539,7 +574,7 @@ add_task(async function run_test() {
   Assert.equal(hasPermission(builtInThemeAddon, "disable"), false);
   Assert.equal(hasPermission(builtInThemeAddon, "enable"), true);
 
-  ltm.currentTheme = dummy("x0");
+  await setTheme(dummy("x0"));
   Assert.equal([...ltm._builtInThemes].length, 2);
   Assert.equal(ltm.usedThemes.length, 3);
   Assert.equal(ltm.usedThemes[0].id, "x0");
@@ -560,10 +595,11 @@ add_task(async function run_test() {
   Assert.equal(hasPermission(x0Addon, "enable"), false);
 
   ltm.forgetUsedTheme("x0");
+  await tick();
   Assert.equal(ltm.currentTheme, null);
 
   // Removing the currently applied app specific theme should unapply it
-  ltm.currentTheme = ltm.getUsedTheme("builtInTheme0");
+  await setTheme(ltm.getUsedTheme("builtInTheme0"));
   Assert.equal(ltm.currentTheme.id, "builtInTheme0");
   Assert.ok(ltm.forgetBuiltInTheme("builtInTheme0"));
   Assert.equal(ltm.currentTheme, null);
