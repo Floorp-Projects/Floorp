@@ -452,7 +452,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  auto cleanup = mozilla::MakeScopeExit([this] {
+  auto cleanup = mozilla::MakeScopeExit([&] {
     ClearCurrentStyleSources();
   });
 
