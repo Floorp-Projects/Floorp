@@ -1497,7 +1497,6 @@ nsIDocument::nsIDocument()
     mStackRefCnt(0),
     mUpdateNestLevel(0),
     mViewportType(Unknown),
-    mViewportOverflowType(ViewportOverflowType::NoOverflow),
     mSubDocuments(nullptr),
     mHeaderData(nullptr),
     mFlashClassification(FlashClassification::Unclassified),
@@ -3691,7 +3690,6 @@ nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
       aHeaderField == nsGkAtoms::viewport_width ||
       aHeaderField ==  nsGkAtoms::viewport_user_scalable) {
     mViewportType = Unknown;
-    mViewportOverflowType = ViewportOverflowType::NoOverflow;
   }
 
   // Referrer policy spec says to ignore any empty referrer policies.
@@ -7239,7 +7237,6 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     mValidMaxScale = !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
 
     mViewportType = Specified;
-    mViewportOverflowType = ViewportOverflowType::NoOverflow;
     MOZ_FALLTHROUGH;
   }
   case Specified:
@@ -7318,54 +7315,6 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
                           mAutoSize, effectiveAllowZoom);
-  }
-}
-
-void
-nsIDocument::UpdateViewportOverflowType(nscoord aScrolledWidth,
-                                        nscoord aScrollportWidth)
-{
-#ifdef DEBUG
-  MOZ_ASSERT(mPresShell);
-  nsPresContext* pc = GetPresContext();
-  MOZ_ASSERT(pc->GetViewportScrollbarStylesOverride().mHorizontal ==
-             NS_STYLE_OVERFLOW_HIDDEN,
-             "Should only be called when viewport has overflow-x: hidden");
-  MOZ_ASSERT(aScrolledWidth > aScrollportWidth,
-             "Should only be called when viewport is overflowed");
-  MOZ_ASSERT(IsTopLevelContentDocument(),
-             "Should only be called for top-level content document");
-#endif // DEBUG
-
-  if (!gfxPrefs::MetaViewportEnabled() ||
-      (GetWindow() && GetWindow()->IsDesktopModeViewport())) {
-    mViewportOverflowType = ViewportOverflowType::Desktop;
-    return;
-  }
-
-  static const LayoutDeviceToScreenScale
-    kBlinkDefaultMinScale = LayoutDeviceToScreenScale(0.25f);
-  LayoutDeviceToScreenScale minScale;
-  if (mViewportType == DisplayWidthHeight) {
-    minScale = kBlinkDefaultMinScale;
-  } else {
-    MOZ_ASSERT(mViewportType == Specified,
-               "Viewport information should have been initialized");
-    if (mScaleMinFloat == kViewportMinScale) {
-      minScale = kBlinkDefaultMinScale;
-    } else {
-      minScale = mScaleMinFloat;
-    }
-  }
-
-  // If the content has overflowed with minimum scale applied, don't
-  // change it, otherwise update the overflow type.
-  if (mViewportOverflowType != ViewportOverflowType::MinScaleSize) {
-    if (aScrolledWidth * minScale.scale < aScrollportWidth) {
-      mViewportOverflowType = ViewportOverflowType::ButNotMinScaleSize;
-    } else {
-      mViewportOverflowType = ViewportOverflowType::MinScaleSize;
-    }
   }
 }
 
@@ -12182,23 +12131,6 @@ nsIDocument::ReportUseCounters(UseCounterReportKind aKind)
         }
       }
     }
-  }
-
-  if (IsTopLevelContentDocument() && !IsResourceDoc()) {
-    using mozilla::Telemetry::LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE;
-    LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE label;
-    switch (mViewportOverflowType) {
-#define CASE_OVERFLOW_TYPE(t_)                            \
-      case ViewportOverflowType::t_:                      \
-        label = LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE::t_; \
-        break;
-      CASE_OVERFLOW_TYPE(NoOverflow)
-      CASE_OVERFLOW_TYPE(Desktop)
-      CASE_OVERFLOW_TYPE(ButNotMinScaleSize)
-      CASE_OVERFLOW_TYPE(MinScaleSize)
-#undef CASE_OVERFLOW_TYPE
-    }
-    Telemetry::AccumulateCategorical(label);
   }
 }
 
