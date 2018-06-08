@@ -6165,6 +6165,8 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif
 #ifdef ENABLE_WASM_GC
     MOZ_MUST_USE bool emitStructNew();
+    MOZ_MUST_USE bool emitStructGet();
+    MOZ_MUST_USE bool emitStructSet();
 #endif
 };
 
@@ -9890,6 +9892,180 @@ BaseCompiler::emitStructNew()
 
     return true;
 }
+
+bool
+BaseCompiler::emitStructGet()
+{
+    uint32_t typeIndex;
+    uint32_t fieldIndex;
+    Nothing nothing;
+    if (!iter_.readStructGet(&typeIndex, &fieldIndex, &nothing)) {
+        return false;
+    }
+
+    if (deadCode_) {
+        return true;
+    }
+
+    const StructType& structType = env_.types[typeIndex].structType();
+
+    RegPtr rp = popRef();
+
+    Label ok;
+    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &ok);
+    trap(Trap::NullPointerDereference);
+    masm.bind(&ok);
+
+    if (!structType.isInline_) {
+        masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+    }
+
+    uint32_t offs = structType.fields_[fieldIndex].offset;
+    switch (structType.fields_[fieldIndex].type.code()) {
+      case ValType::I32: {
+          RegI32 r = needI32();
+          masm.load32(Address(rp, offs), r);
+          pushI32(r);
+          break;
+      }
+      case ValType::I64: {
+          RegI64 r = needI64();
+          masm.load64(Address(rp, offs), r);
+          pushI64(r);
+          break;
+      }
+      case ValType::F32: {
+          RegF32 r = needF32();
+          masm.loadFloat32(Address(rp, offs), r);
+          pushF32(r);
+          break;
+      }
+      case ValType::F64: {
+          RegF64 r = needF64();
+          masm.loadDouble(Address(rp, offs), r);
+          pushF64(r);
+          break;
+      }
+      case ValType::Ref:
+      case ValType::AnyRef: {
+          RegPtr r = needRef();
+          masm.loadPtr(Address(rp, offs), r);
+          pushRef(r);
+          break;
+      }
+      default: {
+          MOZ_CRASH("Unexpected field type");
+      }
+    }
+
+    freeRef(rp);
+
+    return true;
+}
+
+bool
+BaseCompiler::emitStructSet()
+{
+    uint32_t typeIndex;
+    uint32_t fieldIndex;
+    Nothing nothing;
+    if (!iter_.readStructSet(&typeIndex, &fieldIndex, &nothing, &nothing)) {
+        return false;
+    }
+
+    if (deadCode_) {
+        return true;
+    }
+
+    const StructType& structType = env_.types[typeIndex].structType();
+
+    RegI32 ri;
+    RegI64 rl;
+    RegF32 rf;
+    RegF64 rd;
+    RegPtr rr;
+
+#ifdef ENABLE_WASM_GC
+    // Reserve this register early if we will need it so that it is not taken by
+    // rr or rp.
+    RegPtr valueAddr;
+    if (structType.fields_[fieldIndex].type.isRefOrAnyRef()) {
+        valueAddr = RegPtr(PreBarrierReg);
+        needRef(valueAddr);
+    }
+#endif
+
+    switch (structType.fields_[fieldIndex].type.code()) {
+      case ValType::I32:
+        ri = popI32();
+        break;
+      case ValType::I64:
+        rl = popI64();
+        break;
+      case ValType::F32:
+        rf = popF32();
+        break;
+      case ValType::F64:
+        rd = popF64();
+        break;
+      case ValType::Ref:
+      case ValType::AnyRef:
+        rr = popRef();
+        break;
+      default:
+        MOZ_CRASH("Unexpected field type");
+    }
+
+    RegPtr rp = popRef();
+
+    Label ok;
+    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &ok);
+    trap(Trap::NullPointerDereference);
+    masm.bind(&ok);
+
+    if (!structType.isInline_) {
+        masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+    }
+
+    uint32_t offs = structType.fields_[fieldIndex].offset;
+    switch (structType.fields_[fieldIndex].type.code()) {
+      case ValType::I32: {
+        masm.store32(ri, Address(rp, offs));
+        freeI32(ri);
+        break;
+      }
+      case ValType::I64: {
+        masm.store64(rl, Address(rp, offs));
+        freeI64(rl);
+        break;
+      }
+      case ValType::F32: {
+        masm.storeFloat32(rf, Address(rp, offs));
+        freeF32(rf);
+        break;
+      }
+      case ValType::F64: {
+        masm.storeDouble(rd, Address(rp, offs));
+        freeF64(rd);
+        break;
+      }
+#ifdef ENABLE_WASM_GC
+      case ValType::Ref:
+      case ValType::AnyRef:
+        masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
+        emitBarrieredStore(Some(rp), valueAddr, rr);// Consumes valueAddr
+        freeRef(rr);
+        break;
+#endif
+      default: {
+        MOZ_CRASH("Unexpected field type");
+      }
+    }
+
+    freeRef(rp);
+
+    return true;
+}
 #endif
 
 bool
@@ -10551,6 +10727,16 @@ BaseCompiler::emitBody()
                   return iter_.unrecognizedOpcode(&op);
                 }
                 CHECK_NEXT(emitStructNew());
+              case uint16_t(MiscOp::StructGet):
+                if (env_.gcTypesEnabled() == HasGcTypes::False) {
+                  return iter_.unrecognizedOpcode(&op);
+                }
+                CHECK_NEXT(emitStructGet());
+              case uint16_t(MiscOp::StructSet):
+                if (env_.gcTypesEnabled() == HasGcTypes::False) {
+                  return iter_.unrecognizedOpcode(&op);
+                }
+                CHECK_NEXT(emitStructSet());
 #endif
               default:
                 break;

@@ -247,6 +247,9 @@ for (let i=1; i <= stressLevel; i++) {
 }
 assertEq(the_list, null);
 
+// Fields and their exposure in JS.  We can't export types yet so hide them
+// inside the module with globals.
+
 // i64 fields.
 
 {
@@ -276,6 +279,120 @@ assertEq(the_list, null);
     v._2 = 0x4ddddddd;
     assertEq(v._1_low, 0x01020337);
 }
+
+{
+    let txt =
+        `(module
+          (gc_feature_opt_in 1)
+
+          (type $big (struct
+                      (field (mut i32))
+                      (field (mut i64))
+                      (field (mut i32))))
+
+          (global $g (mut (ref $big)) (ref.null (ref $big)))
+
+          (func (export "make") (result anyref)
+           (set_global $g
+            (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
+           (get_global $g))
+
+          (func (export "update0") (param $x i32)
+           (struct.set $big 0 (get_global $g) (get_local $x)))
+
+          (func (export "get0") (result i32)
+           (struct.get $big 0 (get_global $g)))
+
+          (func (export "update1") (param $hi i32) (param $lo i32)
+           (struct.set $big 1 (get_global $g)
+            (i64.or
+             (i64.shl (i64.extend_u/i32 (get_local $hi)) (i64.const 32))
+             (i64.extend_u/i32 (get_local $lo)))))
+
+          (func (export "get1_low") (result i32)
+           (i32.wrap/i64 (struct.get $big 1 (get_global $g))))
+
+          (func (export "get1_high") (result i32)
+           (i32.wrap/i64
+            (i64.shr_u (struct.get $big 1 (get_global $g)) (i64.const 32))))
+
+          (func (export "update2") (param $x i32)
+           (struct.set $big 2 (get_global $g) (get_local $x)))
+
+          (func (export "get2") (result i32)
+           (struct.get $big 2 (get_global $g)))
+
+         )`;
+
+    let ins = wasmEvalText(txt).exports;
+
+    let v = ins.make();
+    assertEq(v._0, 0x7aaaaaaa);
+    assertEq(v._1_low, 0x01020337);
+    assertEq(v._1_high, 0x42);
+    assertEq(v._2, 0x6bbbbbbb);
+
+    ins.update0(0x45367101);
+    assertEq(v._0, 0x45367101);
+    assertEq(ins.get0(), 0x45367101);
+    assertEq(v._1_low, 0x01020337);
+    assertEq(v._1_high, 0x42);
+    assertEq(v._2, 0x6bbbbbbb);
+
+    ins.update2(0x62345123);
+    assertEq(v._0, 0x45367101);
+    assertEq(v._1_low, 0x01020337);
+    assertEq(v._1_high, 0x42);
+    assertEq(ins.get2(), 0x62345123);
+    assertEq(v._2, 0x62345123);
+
+    ins.update1(0x77777777, 0x22222222);
+    assertEq(v._0, 0x45367101);
+    assertEq(ins.get1_low(), 0x22222222);
+    assertEq(v._1_low, 0x22222222);
+    assertEq(ins.get1_high(), 0x77777777);
+    assertEq(v._1_high, 0x77777777);
+    assertEq(v._2, 0x62345123);
+}
+
+
+var bin = wasmTextToBinary(
+    `(module
+      (gc_feature_opt_in 1)
+
+      (type $cons (struct (field i32) (field (ref $cons))))
+
+      (global $g (mut (ref $cons)) (ref.null (ref $cons)))
+
+      (func (export "push") (param i32)
+       (set_global $g (struct.new $cons (get_local 0) (get_global $g))))
+
+      (func (export "top") (result i32)
+       (struct.get $cons 0 (get_global $g)))
+
+      (func (export "pop")
+       (set_global $g (struct.get $cons 1 (get_global $g))))
+
+      (func (export "is_empty") (result i32)
+       (ref.is_null (get_global $g)))
+
+      )`);
+
+var mod = new WebAssembly.Module(bin);
+var ins = new WebAssembly.Instance(mod).exports;
+ins.push(37);
+ins.push(42);
+ins.push(86);
+assertEq(ins.top(), 86);
+ins.pop();
+assertEq(ins.top(), 42);
+ins.pop();
+assertEq(ins.top(), 37);
+ins.pop();
+assertEq(ins.is_empty(), 1);
+assertErrorMessage(() => ins.pop(),
+                   WebAssembly.RuntimeError,
+                   /dereferencing null pointer/);
 
 // negative tests
 

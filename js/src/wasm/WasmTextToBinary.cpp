@@ -123,6 +123,8 @@ class WasmToken
         Name,
 #ifdef ENABLE_WASM_GC
         StructNew,
+        StructGet,
+        StructSet,
 #endif
         Nop,
         Offset,
@@ -365,6 +367,8 @@ class WasmToken
 #endif
 #ifdef ENABLE_WASM_GC
           case StructNew:
+          case StructGet:
+          case StructSet:
 #endif
           case Nop:
           case RefNull:
@@ -2096,6 +2100,12 @@ WasmTokenStream::next()
             if (consume(u".new")) {
                 return WasmToken(WasmToken::StructNew, begin, cur_);
             }
+            if (consume(u".get")) {
+                return WasmToken(WasmToken::StructGet, begin, cur_);
+            }
+            if (consume(u".set")) {
+                return WasmToken(WasmToken::StructSet, begin, cur_);
+            }
 #endif
             return WasmToken(WasmToken::Struct, begin, cur_);
         }
@@ -3620,6 +3630,66 @@ ParseStructNew(WasmParseContext& c, bool inParens)
                                     AstExprType(AstValType(typeDef)),
                                     std::move(args));
 }
+
+static AstExpr*
+ParseStructGet(WasmParseContext& c, bool inParens)
+{
+    AstRef typeDef;
+    if (!c.ts.matchRef(&typeDef, c.error)) {
+        return nullptr;
+    }
+
+    AstRef fieldDef;
+    if (!c.ts.matchRef(&fieldDef, c.error)) {
+        return nullptr;
+    }
+
+    if (!fieldDef.name().empty()) {
+        c.ts.generateError(c.ts.peek(), "constant field index required at this time", c.error);
+        return nullptr;
+    }
+
+    AstExpr* ptr = ParseExpr(c, inParens);
+    if (!ptr) {
+        return nullptr;
+    }
+
+    // The field type is not available here, we must first resolve the type.
+    // Fortunately, we don't need to inspect the result type of this operation.
+
+    return new(c.lifo) AstStructGet(typeDef, fieldDef.index(), ExprType(), ptr);
+}
+
+static AstExpr*
+ParseStructSet(WasmParseContext& c, bool inParens)
+{
+    AstRef typeDef;
+    if (!c.ts.matchRef(&typeDef, c.error)) {
+        return nullptr;
+    }
+
+    AstRef fieldDef;
+    if (!c.ts.matchRef(&fieldDef, c.error)) {
+        return nullptr;
+    }
+
+    if (!fieldDef.name().empty()) {
+        c.ts.generateError(c.ts.peek(), "constant field index required at this time", c.error);
+        return nullptr;
+    }
+
+    AstExpr* ptr = ParseExpr(c, inParens);
+    if (!ptr) {
+        return nullptr;
+    }
+
+    AstExpr* value = ParseExpr(c, inParens);
+    if (!value) {
+        return nullptr;
+    }
+
+    return new(c.lifo) AstStructSet(typeDef, fieldDef.index(), ptr, value);
+}
 #endif
 
 static AstExpr*
@@ -3736,6 +3806,10 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
 #ifdef ENABLE_WASM_GC
       case WasmToken::StructNew:
         return ParseStructNew(c, inParens);
+      case WasmToken::StructGet:
+        return ParseStructGet(c, inParens);
+      case WasmToken::StructSet:
+        return ParseStructSet(c, inParens);
 #endif
       case WasmToken::RefNull:
         return ParseRefNull(c);
@@ -5382,11 +5456,31 @@ ResolveStructNew(Resolver& r, AstStructNew& s)
         return false;
     }
 
-    if (!r.resolveType(s.strukt())) {
+    if (!r.resolveType(s.structType())) {
         return false;
     }
 
     return true;
+}
+
+static bool
+ResolveStructGet(Resolver& r, AstStructGet& s)
+{
+    if (!r.resolveType(s.structType())) {
+        return false;
+    }
+
+    return ResolveExpr(r, s.ptr());
+}
+
+static bool
+ResolveStructSet(Resolver& r, AstStructSet& s)
+{
+    if (!r.resolveType(s.structType())) {
+        return false;
+    }
+
+    return ResolveExpr(r, s.ptr()) && ResolveExpr(r, s.value());
 }
 #endif
 
@@ -5482,6 +5576,10 @@ ResolveExpr(Resolver& r, AstExpr& expr)
 #ifdef ENABLE_WASM_GC
       case AstExprKind::StructNew:
         return ResolveStructNew(r, expr.as<AstStructNew>());
+      case AstExprKind::StructGet:
+        return ResolveStructGet(r, expr.as<AstStructGet>());
+      case AstExprKind::StructSet:
+        return ResolveStructSet(r, expr.as<AstStructSet>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
@@ -6192,10 +6290,49 @@ EncodeStructNew(Encoder& e, AstStructNew& s)
         return false;
     }
 
-    if (!e.writeVarU32(s.strukt().index())) {
+    if (!e.writeVarU32(s.structType().index())) {
         return false;
     }
 
+    return true;
+}
+
+static bool
+EncodeStructGet(Encoder& e, AstStructGet& s)
+{
+    if (!EncodeExpr(e, s.ptr())) {
+        return false;
+    }
+    if (!e.writeOp(MiscOp::StructGet)) {
+        return false;
+    }
+    if (!e.writeVarU32(s.structType().index())) {
+        return false;
+    }
+    if (!e.writeVarU32(s.index())) {
+        return false;
+    }
+    return true;
+}
+
+static bool
+EncodeStructSet(Encoder& e, AstStructSet& s)
+{
+    if (!EncodeExpr(e, s.ptr())) {
+        return false;
+    }
+    if (!EncodeExpr(e, s.value())) {
+        return false;
+    }
+    if (!e.writeOp(MiscOp::StructSet)) {
+        return false;
+    }
+    if (!e.writeVarU32(s.structType().index())) {
+        return false;
+    }
+    if (!e.writeVarU32(s.index())) {
+        return false;
+    }
     return true;
 }
 #endif
@@ -6296,6 +6433,10 @@ EncodeExpr(Encoder& e, AstExpr& expr)
 #ifdef ENABLE_WASM_GC
       case AstExprKind::StructNew:
         return EncodeStructNew(e, expr.as<AstStructNew>());
+      case AstExprKind::StructGet:
+        return EncodeStructGet(e, expr.as<AstStructGet>());
+      case AstExprKind::StructSet:
+        return EncodeStructSet(e, expr.as<AstStructSet>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
