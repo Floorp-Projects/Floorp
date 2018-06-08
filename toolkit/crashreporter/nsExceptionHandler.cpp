@@ -2234,6 +2234,7 @@ GetAnnotation(const nsACString& key, nsACString& data)
   if (!gExceptionHandler)
     return false;
 
+  MutexAutoLock lock(*crashReporterAPILock);
   nsAutoCString entry;
   if (!crashReporterAPIData_Hash->Get(key, &entry))
     return false;
@@ -2946,6 +2947,10 @@ WriteLiteral(PRFileDesc* fd, const char (&str)[N])
   PR_Write(fd, str, N - 1);
 }
 
+/*
+ * If accessing the AnnotationTable |data| argument requires locks, the
+ * caller should ensure the required locks are already held.
+ */
 static bool
 WriteExtraData(nsIFile* extraFile,
                const AnnotationTable& data,
@@ -3070,11 +3075,14 @@ WriteExtraForMinidump(nsIFile* minidump,
     return false;
   }
 
-  if (!WriteExtraData(extra, *crashReporterAPIData_Hash,
-                      blacklist,
-                      true /*write crash time*/,
-                      true /*truncate*/)) {
-    return false;
+  {
+    MutexAutoLock lock(*crashReporterAPILock);
+    if (!WriteExtraData(extra, *crashReporterAPIData_Hash,
+                        blacklist,
+                        true /*write crash time*/,
+                        true /*truncate*/)) {
+      return false;
+    }
   }
 
   if (pid && processToCrashFd.count(pid)) {
