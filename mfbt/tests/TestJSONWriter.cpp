@@ -527,6 +527,47 @@ void TestDeepNesting()
   Check(w.WriteFunc(), expected);
 }
 
+void TestEscapedPropertyNames()
+{
+  const char* expected = "\
+{\"i\\t\": 1, \"array\\t\": [null, [{}], {\"o\\t\": {}}, \"s\"], \"d\\t\": 3.33}\n\
+";
+
+  JSONWriter w(MakeUnique<StringWriteFunc>());
+
+  w.Start(w.SingleLineStyle);
+
+  w.IntProperty("i\t", 1);
+
+  w.StartArrayProperty("array\t");
+  {
+    w.NullElement();
+
+    w.StartArrayElement(w.MultiLineStyle);  // style overridden from above
+    {
+      w.StartObjectElement();
+      w.EndObject();
+    }
+    w.EndArray();
+
+    w.StartObjectElement();
+    {
+      w.StartObjectProperty("o\t");
+      w.EndObject();
+    }
+    w.EndObject();
+
+    w.StringElement("s");
+  }
+  w.EndArray();
+
+  w.DoubleProperty("d\t", 3.33);
+
+  w.End();
+
+  Check(w.WriteFunc(), expected);
+}
+
 int main(void)
 {
   TestBasicProperties();
@@ -534,6 +575,7 @@ int main(void)
   TestOneLineObject();
   TestStringEscaping();
   TestDeepNesting();
+  TestEscapedPropertyNames();
 
   return 0;
 }
