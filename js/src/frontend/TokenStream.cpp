@@ -1126,7 +1126,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32_t* 
 {
     uint32_t length = peekUnicodeEscape(codePoint);
     if (length > 0 && unicode::IsIdentifierStart(*codePoint)) {
-        skipChars(length);
+        sourceUnits.skipCodeUnits(length);
         return length;
     }
     return 0;
@@ -1138,7 +1138,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t* co
 {
     uint32_t length = peekUnicodeEscape(codePoint);
     if (length > 0 && unicode::IsIdentifierPart(*codePoint)) {
-        skipChars(length);
+        sourceUnits.skipCodeUnits(length);
         return true;
     }
     return false;
@@ -1221,7 +1221,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
             return false;
     }
 
-    skipChars(directiveLength);
+    sourceUnits.skipCodeUnits(directiveLength);
     tokenbuf.clear();
 
     do {
@@ -2510,7 +2510,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                            (JS7_UNHEX(cp[0]) << 8) |
                            (JS7_UNHEX(cp[1]) << 4) |
                            JS7_UNHEX(cp[2]);
-                    skipChars(3);
+                    sourceUnits.skipCodeUnits(3);
                 } else {
                     // Beware: |c2| may not be an ASCII code point here!
                     ungetCodeUnit(c2);
@@ -2533,7 +2533,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]))
                 {
                     unit = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
-                    skipChars(2);
+                    sourceUnits.skipCodeUnits(2);
                 } else {
                     uint32_t start = sourceUnits.offset() - 2;
                     if (parsingTemplate) {

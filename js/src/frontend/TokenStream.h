@@ -960,6 +960,13 @@ class SourceUnits
         return true;
     }
 
+    void skipCodeUnits(uint32_t n) {
+        MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
+        MOZ_ASSERT(n <= mozilla::PointerRangeSize(ptr, limit_),
+                   "shouldn't skip beyond end of SourceUnits");
+        ptr += n;
+    }
+
     bool matchCodeUnit(CharT c) {
         if (*ptr == c) {    // this will nullptr-crash if poisoned
             ptr++;
@@ -1860,14 +1867,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
             return false;
         ungetChar(*c);
         return true;
-    }
-
-    void skipChars(uint32_t n) {
-        while (n-- > 0) {
-            MOZ_ASSERT(!sourceUnits.atEnd());
-            mozilla::DebugOnly<int32_t> c = getCodeUnit();
-            MOZ_ASSERT(!SourceUnits::isRawEOLChar(c));
-        }
     }
 };
 
