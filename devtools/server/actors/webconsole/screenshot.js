@@ -6,7 +6,7 @@
 
 const { Ci, Cu } = require("chrome");
 const { getRect } = require("devtools/shared/layout/utils");
-const { LocalizationHelper } = require("devtools/shared/L10N");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const CONTAINER_FLASHING_DURATION = 500;
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
