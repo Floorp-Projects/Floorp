@@ -5,7 +5,7 @@
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
-Cu.importGlobalProperties(["URL", "XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "XMLHttpRequest"]);
 
 var {
   promiseDocumentLoaded,

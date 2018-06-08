@@ -4,7 +4,8 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["crypto", "TextEncoder"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 
 var EXPORTED_SYMBOLS = ["Sampling"];
 

@@ -1,8 +1,6 @@
 "use strict";
 
-/* exported gProfD, promiseMigration, registerFakePath */
-
-Cu.importGlobalProperties([ "URL" ]);
+/* exported gProfD, promiseMigration, registerFakePath, URL */
 
 ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
@@ -14,6 +12,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, [ "URL" ]);
 
 // eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "FileUtils",

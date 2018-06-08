@@ -10,7 +10,8 @@
   */
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 var EXPORTED_SYMBOLS = [ "ServiceRequest" ];
 

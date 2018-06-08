@@ -24,7 +24,8 @@
 const {
   utils: Cu
 } = Components;
-Cu.importGlobalProperties(['URL']);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ['URL']);
 const displayModes = new Set(['fullscreen', 'standalone', 'minimal-ui',
   'browser'
 ]);

@@ -90,6 +90,23 @@
 
 var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
+let global = Cu.getGlobalForObject({});
+
+/**
+ * Redefines the given property on the given object with the given
+ * value. This can be used to redefine getter properties which do not
+ * implement setters.
+ */
+function redefine(object, prop, value) {
+  Object.defineProperty(object, prop, {
+    configurable: true,
+    enumerable: true,
+    value,
+    writable: true,
+  });
+  return value;
+}
+
 var XPCOMUtils = {
   /**
    * Generate a QueryInterface implementation. The returned function must be
@@ -173,21 +190,15 @@ var XPCOMUtils = {
    */
   defineLazyGetter: function XPCU_defineLazyGetter(aObject, aName, aLambda)
   {
+    let redefining = false;
     Object.defineProperty(aObject, aName, {
       get: function () {
-        // Redefine this accessor property as a data property.
-        // Delete it first, to rule out "too much recursion" in case aObject is
-        // a proxy whose defineProperty handler might unwittingly trigger this
-        // getter again.
-        delete aObject[aName];
-        let value = aLambda.apply(aObject);
-        Object.defineProperty(aObject, aName, {
-          value,
-          writable: true,
-          configurable: true,
-          enumerable: true
-        });
-        return value;
+        if (!redefining) {
+          // Make sure we don't get into an infinite recursion loop if
+          // the getter lambda does something shady.
+          redefining = true;
+          return redefine(aObject, aName, aLambda.apply(aObject));
+        }
       },
       configurable: true,
       enumerable: true
@@ -217,14 +228,37 @@ var XPCOMUtils = {
     for (let name of aNames) {
       Object.defineProperty(aObject, name, {
         get: function() {
-          for (let n of aNames) {
-            delete aObject[n];
-          }
           Services.scriptloader.loadSubScript(aResource, aObject);
           return aObject[name];
         },
+        set(value) {
+          redefine(aObject, name, value);
+        },
         configurable: true,
         enumerable: true
+      });
+    }
+  },
+
+  /**
+   * Defines a getter property on the given object for each of the given
+   * global names as accepted by Cu.importGlobalProperties. These
+   * properties are imported into the shared JSM module global, and then
+   * copied onto the given object, no matter which global the object
+   * belongs to.
+   *
+   * @param {object} aObject
+   *        The object on which to define the properties.
+   * @param {string[]} aNames
+   *        The list of global properties to define.
+   */
+  defineLazyGlobalGetters(aObject, aNames) {
+    for (let name of aNames) {
+      this.defineLazyGetter(aObject, name, () => {
+        if (!(name in global)) {
+          Cu.importGlobalProperties([name]);
+        }
+        return global[name];
       });
     }
   },
