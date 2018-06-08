@@ -5,6 +5,7 @@ import {FormattedMessage} from "react-intl";
 import {GetPlatformString} from "content-src/lib/link-menu-options";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
+import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
 
 // Keep track of pending image loads to only request once
 const gImageLoading = new Map();
@@ -62,22 +63,11 @@ export class _Card extends React.PureComponent {
       await gImageLoading.get(imageUrl);
 
       // Only update state if we're still waiting to load the original image
-      if (_Card.isImageInState(this.state, this.props.link.image) && !this.state.imageLoaded) {
+      if (ScreenshotUtils.isRemoteImageLocal(this.state.cardImage, this.props.link.image) &&
+          !this.state.imageLoaded) {
         this.setState({imageLoaded: true});
       }
     }
-  }
-
-  /**
-   * Checks if `.image` property on link object is a local image with blob data.
-   * This function only works for props since state has `.url` and not `.data`.
-   *
-   * @param {obj|string} image
-   * @returns {bool} true if image is a local image object, otherwise false
-   *                 (otherwise, image will be a URL as a string)
-   */
-  static isLocalImageObject(image) {
-    return image && image.data && image.path;
   }
 
   /**
@@ -93,7 +83,7 @@ export class _Card extends React.PureComponent {
    */
   static getNextStateFromProps(nextProps, prevState) {
     const {image} = nextProps.link;
-    const imageInState = _Card.isImageInState(prevState, image);
+    const imageInState = ScreenshotUtils.isRemoteImageLocal(prevState.cardImage, image);
     let nextState = null;
 
     // Image is updating.
@@ -105,47 +95,13 @@ export class _Card extends React.PureComponent {
       return nextState;
     }
 
-    nextState = nextState || {};
-
     // Since image was updated, attempt to revoke old image blob URL, if it exists.
-    _Card.maybeRevokeImageBlob(prevState);
+    ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.cardImage);
 
-    if (!image) {
-      nextState.cardImage = null;
-    } else if (_Card.isLocalImageObject(image)) {
-      nextState.cardImage = {url: global.URL.createObjectURL(image.data), path: image.path};
-    } else {
-      nextState.cardImage = {url: image};
-    }
+    nextState = nextState || {};
+    nextState.cardImage = ScreenshotUtils.createLocalImageObject(image);
 
     return nextState;
-  }
-
-  /**
-   * Helper to conditionally revoke the previous card image if it is a blob.
-   */
-  static maybeRevokeImageBlob(prevState) {
-    if (prevState.cardImage && prevState.cardImage.path) {
-      global.URL.revokeObjectURL(prevState.cardImage.url);
-    }
-  }
-
-  /**
-   * Helper to check if an image is already in state.
-   */
-  static isImageInState(state, image) {
-    const {cardImage} = state;
-
-    // Both image and cardImage are present.
-    if (image && cardImage) {
-      return _Card.isLocalImageObject(image) ?
-             cardImage.path === image.path :
-             cardImage.url === image;
-    }
-
-    // This will only handle the remaining three possible outcomes.
-    // (i.e. everything except when both image and cardImage are present)
-    return !image && !cardImage;
   }
 
   onMenuButtonClick(event) {
@@ -238,7 +194,7 @@ export class _Card extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    _Card.maybeRevokeImageBlob(this.state);
+    ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.cardImage);
   }
 
   render() {

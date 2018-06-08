@@ -10,7 +10,7 @@
     },
     "text": {
       "type": "string",
-      "description": "Main body text of snippet"
+      "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
     },
     "icon": {
       "type": "string",
