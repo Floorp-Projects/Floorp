@@ -37,6 +37,7 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
+#include "vm/Compartment-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ReceiverGuard-inl.h"

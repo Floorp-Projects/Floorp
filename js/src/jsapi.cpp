@@ -94,6 +94,7 @@
 #include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
+#include "vm/Compartment-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
