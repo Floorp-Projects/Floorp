@@ -752,7 +752,6 @@ public:
                                           const bool aBuildNew);
 
   bool IsBuildingLayerEventRegions();
-  static bool LayerEventRegionsEnabled();
   bool IsInsidePointerEventsNoneDoc()
   {
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;

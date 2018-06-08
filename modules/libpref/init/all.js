@@ -605,9 +605,6 @@ pref("layers.amd-switchable-gfx.enabled", true);
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", true);
 
-// Whether to enable event region building during painting
-pref("layout.event-regions.enabled", false);
-
 // Whether to enable arbitrary layer geometry for OpenGL compositor
 pref("layers.geometry.opengl.enabled", true);
 
