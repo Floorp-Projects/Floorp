@@ -660,8 +660,6 @@ public:
    */
   void OnFocus(dom::EventTarget* aFocusEventTarget);
 
-  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) = 0;
-
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
     * when anything that affects spellchecking state changes, such as the
     * spellcheck attribute value.
