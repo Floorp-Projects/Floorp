@@ -414,14 +414,16 @@ nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
 uint32_t
 nsComputedDOMStyle::Length()
 {
-  uint32_t length = GetComputedStyleMap()->Length();
-
   // Make sure we have up to date style so that we can include custom
   // properties.
   UpdateCurrentStyleSources(false);
-  if (mComputedStyle) {
-    length += Servo_GetCustomPropertiesCount(mComputedStyle);
+  if (!mComputedStyle) {
+    return 0;
   }
+
+  uint32_t length =
+    GetComputedStyleMap()->Length() +
+    Servo_GetCustomPropertiesCount(mComputedStyle);
 
   ClearCurrentStyleSources();
 
@@ -454,7 +456,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   const bool layoutFlushIsNeeded = entry && entry->IsLayoutFlushNeeded();
   UpdateCurrentStyleSources(layoutFlushIsNeeded);
   if (!mComputedStyle) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;
   }
 
   auto cleanup = mozilla::MakeScopeExit([&] {
@@ -761,7 +763,6 @@ nsComputedDOMStyle::GetCSSImageURLs(const nsAString& aPropertyName,
   UpdateCurrentStyleSources(false);
 
   if (!mComputedStyle) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }
 
