@@ -373,7 +373,6 @@ UNIFIED_SOURCES += [
     'vm/Printer.cpp',
     'vm/Probes.cpp',
     'vm/ProxyObject.cpp',
-    'vm/Realm.cpp',
     'vm/ReceiverGuard.cpp',
     'vm/RegExpObject.cpp',
     'vm/RegExpStatics.cpp',
