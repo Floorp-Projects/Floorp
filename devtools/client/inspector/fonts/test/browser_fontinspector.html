@@ -21,7 +21,8 @@
     src: url(ostrich-black.ttf);
   }
   body{
-    font-family:Arial;
+    /* Arial doesn't exist on Linux. Liberation Sans is the default sans-serif there. */
+    font-family:Arial, "Liberation Sans";
     font-size: 36px;
   }
   div {
