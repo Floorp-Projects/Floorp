@@ -21,10 +21,7 @@ add_task(async function() {
     }],
   });
 
-  let folder1Id = await PlacesUtils.promiseItemId(items[0].guid);
-  let folder2Id = await PlacesUtils.promiseItemId(items[1].guid);
-
-  hierarchy.push(folder1Id, folder2Id);
+  hierarchy.push(items[0].guid, items[1].guid);
 
   let library = await promiseLibrary();
 
