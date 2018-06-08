@@ -4,6 +4,9 @@
 
 package org.mozilla.telemetry.measurement;
 
+/**
+ * The field 'created' from CreatedTimestampMeasurement will be deprecated for the `createdTimestamp` field
+ */
 public class CreatedTimestampMeasurementNew extends TelemetryMeasurement {
     private static final String FIELD_NAME = "createdTimestamp";
 

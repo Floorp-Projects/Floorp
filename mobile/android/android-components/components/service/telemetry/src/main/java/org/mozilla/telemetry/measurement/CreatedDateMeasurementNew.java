@@ -9,6 +9,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+/**
+ * The field 'created' from CreatedDateMeasurement will be deprecated for the `createdDate` field
+ */
 public class CreatedDateMeasurementNew extends TelemetryMeasurement {
     private static final String FIELD_NAME = "createdDate";
 
