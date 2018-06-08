@@ -605,7 +605,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       maxNodes = Number.MAX_VALUE;
     }
 
-    const { isShadowHost, isShadowRoot, isDirectShadowHostChild } = node;
+    const {
+      isDirectShadowHostChild,
+      isShadowHost,
+      isShadowRoot,
+      isTemplateElement,
+    } = node;
+
+    if (isTemplateElement) {
+      // <template> tags should have a single child pointing to the element's template
+      // content.
+      const documentFragment = node.rawNode.content;
+      const nodes = [this._ref(documentFragment)];
+      return { hasFirst: true, hasLast: true, nodes };
+    }
 
     // Detect special case of unslotted shadow host children that cannot rely on a
     // regular anonymous walker.
