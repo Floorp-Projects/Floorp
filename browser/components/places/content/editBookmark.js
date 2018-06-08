@@ -858,14 +858,16 @@ var gEditItemOverlay = {
 
     // XXXmano: add a separate "New Folder" string at some point...
     let title = this._element("newFolderButton").label;
-    await PlacesTransactions.NewFolder({ parentGuid: ip.guid, title,
-                                         index: await ip.getIndex() })
-                            .transact().catch(Cu.reportError);
+    let guid = await PlacesTransactions.NewFolder({
+      parentGuid: ip.guid,
+      title,
+      index: await ip.getIndex()
+    }).transact().catch(Cu.reportError);
 
     this._folderTree.focus();
-    this._folderTree.selectItems([ip.itemId]);
+    this._folderTree.selectItems([ip.guid]);
     PlacesUtils.asContainer(this._folderTree.selectedNode).containerOpen = true;
-    this._folderTree.selectItems([this._lastNewItem]);
+    this._folderTree.selectItems([guid]);
     this._folderTree.startEditing(this._folderTree.view.selection.currentIndex,
                                   this._folderTree.columns.getFirstColumn());
   },
@@ -1034,10 +1036,7 @@ var gEditItemOverlay = {
     });
   },
 
-  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
-    this._lastNewItem = aItemId;
-  },
-
+  onItemAdded() {},
   onItemRemoved() { },
   onBeginUpdateBatch() { },
   onEndUpdateBatch() { },

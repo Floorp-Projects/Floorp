@@ -15,7 +15,6 @@ import buildconfig
 # localized.
 NON_CHROME = set([
     '**/crashreporter*.ini',
-    'searchplugins',
     'dictionaries',
     'defaults/profile',
     'defaults/pref*/*-l10n.js',
@@ -23,7 +22,6 @@ NON_CHROME = set([
     'updater.ini',
     'extensions/langpack-*@*',
     'distribution/extensions/langpack-*@*',
-    'chrome/**/searchplugins/*.xml',
     '**/multilocale.txt'
 ])
 

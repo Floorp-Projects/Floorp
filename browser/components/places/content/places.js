@@ -105,24 +105,19 @@ var PlacesOrganizer = {
       this._places.view.selection.selectEventsSuppressed = true;
     try {
       for (let container of hierarchy) {
-        switch (typeof container) {
-          case "number":
+        if (typeof container != "string") {
+          throw new Error("Invalid container type found: " + container);
+        }
+
+        try {
+          this.selectLeftPaneBuiltIn(container);
+        } catch (ex) {
+          if (container.substr(0, 6) == "place:") {
+            this._places.selectPlaceURI(container);
+          } else {
+            // Must be a guid.
             this._places.selectItems([container], false);
-            break;
-          case "string":
-            try {
-              this.selectLeftPaneBuiltIn(container);
-            } catch (ex) {
-              if (container.substr(0, 6) == "place:") {
-                this._places.selectPlaceURI(container);
-              } else {
-                // May be a guid.
-                this._places.selectItems([container], false);
-              }
-            }
-            break;
-          default:
-            throw new Error("Invalid container type found: " + container);
+          }
         }
         PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
       }
@@ -377,7 +372,7 @@ var PlacesOrganizer = {
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
     if (aContainer.itemId != -1) {
       PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
-      this._places.selectItems([aContainer.itemId], false);
+      this._places.selectItems([aContainer.bookmarkGuid], false);
     } else if (PlacesUtils.nodeIsQuery(aContainer)) {
       this._places.selectPlaceURI(aContainer.uri);
     }

@@ -81,8 +81,8 @@ const checkCorrectButton = async function(inspector, frameSelector) {
   const {walker} = inspector;
   const node = inspector.selection.nodeFront;
 
-  ok(node.id, "b1", "The selected node is #b1");
-  ok(node.tagName.toLowerCase(), "button",
+  is(node.id, "b1", "The selected node is #b1");
+  is(node.tagName.toLowerCase(), "button",
     "The selected node is <button>");
 
   const selectedNodeDoc = await walker.document(node);

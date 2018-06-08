@@ -150,7 +150,7 @@ async function testSubmenu(toolbox) {
 
   is(menus[1].getAttribute("accesskey"), "A", "Correct accesskey");
   ok(menus[1].hasAttribute("disabled"), "Correct disabled state");
-  ok(menus[1].id, "submenu-parent-with-attrs", "Correct id");
+  is(menus[1].id, "submenu-parent-with-attrs", "Correct id");
 
   const subMenuItems = menus[0].querySelectorAll("menupopup > menuitem");
   is(subMenuItems.length, 1, "Correct number of submenu items");

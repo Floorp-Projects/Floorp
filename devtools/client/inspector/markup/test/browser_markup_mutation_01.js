@@ -169,7 +169,7 @@ const TEST_DATA = [
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
-      ok(container.editor.elt.querySelector(".text").textContent.trim(),
+      is(container.editor.elt.querySelector(".text").textContent.trim(),
          "newtext", "Single text child editor updated.");
     },
   },
@@ -196,7 +196,7 @@ const TEST_DATA = [
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
-      ok(container.editor.elt.querySelector(".text").textContent.trim(),
+      is(container.editor.elt.querySelector(".text").textContent.trim(),
          "newtext", "Single text child editor updated.");
     },
   },

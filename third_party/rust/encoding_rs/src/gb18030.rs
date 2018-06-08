@@ -7,10 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use handles::*;
-use data::*;
-use variant::*;
 use super::*;
+use data::*;
+use handles::*;
+use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range16;
 use super::in_range16;
@@ -50,36 +50,30 @@ pub struct Gb18030Decoder {
 
 impl Gb18030Decoder {
     pub fn new() -> VariantDecoder {
-        VariantDecoder::Gb18030(
-            Gb18030Decoder {
-                first: None,
-                second: None,
-                third: None,
-                pending: Gb18030Pending::None,
-                pending_ascii: None,
-            }
-        )
+        VariantDecoder::Gb18030(Gb18030Decoder {
+            first: None,
+            second: None,
+            third: None,
+            pending: Gb18030Pending::None,
+            pending_ascii: None,
+        })
     }
 
     fn extra_from_state(&self, byte_length: usize) -> Option<usize> {
         byte_length.checked_add(
-            self.pending.count() +
-            match self.first {
+            self.pending.count() + match self.first {
                 None => 0,
                 Some(_) => 1,
-            } +
-            match self.second {
+            } + match self.second {
                 None => 0,
                 Some(_) => 1,
-            } +
-            match self.third {
+            } + match self.third {
                 None => 0,
                 Some(_) => 1,
-            } +
-            match self.pending_ascii {
+            } + match self.pending_ascii {
                 None => 0,
                 Some(_) => 1,
-            }
+            },
         )
     }
 
@@ -301,31 +295,28 @@ fn gbk_encode_non_unified(bmp: u16) -> Option<(usize, usize)> {
     }
     // Ext A
     if in_range16(bmp, 0x3400, 0x4E00) {
-        return position(&GBK_BOTTOM[21..100], bmp).map(
-            |pos| {
-                (0xFE,
-                 pos +
-                 if pos < (0x3F - 16) {
-                     0x40 + 16
-                 } else {
-                     0x41 + 16
-                 })
-            }
-        );
+        return position(&GBK_BOTTOM[21..100], bmp).map(|pos| {
+            (
+                0xFE,
+                pos + if pos < (0x3F - 16) {
+                    0x40 + 16
+                } else {
+                    0x41 + 16
+                },
+            )
+        });
     }
     // Compatibility ideographs
     if in_range16(bmp, 0xF900, 0xFB00) {
-        return position(&GBK_BOTTOM[0..21], bmp).map(
-            |pos| {
-                if pos < 5 {
-                    // end of second to last row
-                    (0xFD, pos + (190 - 94 - 5 + 0x41))
-                } else {
-                    // last row
-                    (0xFE, pos + (0x40 - 5))
-                }
+        return position(&GBK_BOTTOM[0..21], bmp).map(|pos| {
+            if pos < 5 {
+                // end of second to last row
+                (0xFD, pos + (190 - 94 - 5 + 0x41))
+            } else {
+                // last row
+                (0xFE, pos + (0x40 - 5))
             }
-        );
+        });
     }
     // Handle everything below U+02CA, which is in GBK_OTHER.
     if bmp < 0x02CA {
@@ -334,8 +325,9 @@ fn gbk_encode_non_unified(bmp: u16) -> Option<(usize, usize)> {
             if let Some(pos) = position(&GB2312_PINYIN[..], bmp) {
                 return Some((0xA8, pos + 0xA1));
             }
-        } else if in_inclusive_range16(bmp, 0x00A4, 0x00F7) ||
-                  in_inclusive_range16(bmp, 0x02C7, 0x02C9) {
+        } else if in_inclusive_range16(bmp, 0x00A4, 0x00F7)
+            || in_inclusive_range16(bmp, 0x02C7, 0x02C9)
+        {
             // Diacritics and Latin 1 symbols
             if let Some(pos) = position(&GB2312_SYMBOLS[3..(0xAC - 0x60)], bmp) {
                 return Some((0xA1, pos + 0xA1 + 3));
@@ -407,13 +399,16 @@ impl Gb18030Encoder {
     pub fn new(encoding: &'static Encoding, extended_range: bool) -> Encoder {
         Encoder::new(
             encoding,
-            VariantEncoder::Gb18030(Gb18030Encoder { extended: extended_range }),
+            VariantEncoder::Gb18030(Gb18030Encoder {
+                extended: extended_range,
+            }),
         )
     }
 
-    pub fn max_buffer_length_from_utf16_without_replacement(&self,
-                                                            u16_length: usize)
-                                                            -> Option<usize> {
+    pub fn max_buffer_length_from_utf16_without_replacement(
+        &self,
+        u16_length: usize,
+    ) -> Option<usize> {
         if self.extended {
             u16_length.checked_mul(4)
         } else {
@@ -423,9 +418,10 @@ impl Gb18030Encoder {
         }
     }
 
-    pub fn max_buffer_length_from_utf8_without_replacement(&self,
-                                                           byte_length: usize)
-                                                           -> Option<usize> {
+    pub fn max_buffer_length_from_utf8_without_replacement(
+        &self,
+        byte_length: usize,
+    ) -> Option<usize> {
         if self.extended {
             // 1 to 1
             // 2 to 2
@@ -483,9 +479,11 @@ impl Gb18030Encoder {
                 // and for euro at this stage, but getting
                 // the out of the way makes the rest of the
                 // code less messy.
-                return (EncoderResult::unmappable_from_bmp(bmp),
-                        source.consumed(),
-                        handle.written());
+                return (
+                    EncoderResult::unmappable_from_bmp(bmp),
+                    source.consumed(),
+                    handle.written(),
+                );
             } else if bmp == 0x20AC && !self.extended {
                 handle.write_one(0x80u8)
             } else {
@@ -493,9 +491,11 @@ impl Gb18030Encoder {
                     Some((lead, trail)) => handle.write_two(lead as u8, trail as u8),
                     None => {
                         if !self.extended {
-                            return (EncoderResult::unmappable_from_bmp(bmp),
-                                    source.consumed(),
-                                    handle.written());
+                            return (
+                                EncoderResult::unmappable_from_bmp(bmp),
+                                source.consumed(),
+                                handle.written(),
+                            );
                         }
                         let range_pointer = gb18030_range_encode(bmp);
                         let first = range_pointer / (10 * 126 * 10);
@@ -516,7 +516,11 @@ impl Gb18030Encoder {
         },
         {
             if !self.extended {
-                return (EncoderResult::Unmappable(astral), source.consumed(), handle.written());
+                return (
+                    EncoderResult::Unmappable(astral),
+                    source.consumed(),
+                    handle.written(),
+                );
             }
             let range_pointer = astral as usize + (189000usize - 0x10000usize);
             let first = range_pointer / (10 * 126 * 10);
@@ -713,15 +717,16 @@ mod tests {
             let needed = encoder
                 .max_buffer_length_from_utf16_without_replacement(1)
                 .unwrap();
-            let (result, read, written) =
-                encoder
-                    .encode_from_utf16_without_replacement(&[0x3000], &mut output[..needed], true);
+            let (result, read, written) = encoder.encode_from_utf16_without_replacement(
+                &[0x3000],
+                &mut output[..needed],
+                true,
+            );
             assert_eq!(result, EncoderResult::InputEmpty);
             assert_eq!(read, 1);
             assert_eq!(written, 2);
             assert_eq!(output[0], 0xA1);
             assert_eq!(output[1], 0xA1);
         }
-
     }
 }

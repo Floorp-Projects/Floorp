@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use simd::u8x16;
 use simd::u16x8;
+use simd::u8x16;
 use simd::Simd;
 
 // TODO: Migrate unaligned access to stdlib code if/when the RFC
@@ -66,6 +66,35 @@ extern "platform-intrinsic" {
     fn simd_shuffle16<T: Simd, U: Simd<Elem = T::Elem>>(x: T, y: T, idx: [u32; 16]) -> U;
 }
 
+// #[inline(always)]
+// fn simd_byte_swap_u8(s: u8x16) -> u8x16 {
+//     unsafe {
+//         simd_shuffle16(s, s, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14])
+//     }
+// }
+
+// #[inline(always)]
+// pub fn simd_byte_swap(s: u16x8) -> u16x8 {
+//     to_u16_lanes(simd_byte_swap_u8(to_u8_lanes(s)))
+// }
+
+#[inline(always)]
+pub fn simd_byte_swap(s: u16x8) -> u16x8 {
+    let left = s << 8;
+    let right = s >> 8;
+    left | right
+}
+
+#[inline(always)]
+pub fn to_u16_lanes(s: u8x16) -> u16x8 {
+    unsafe { ::std::mem::transmute(s) }
+}
+
+// #[inline(always)]
+// pub fn to_u8_lanes(s: u16x8) -> u8x16 {
+//     unsafe { ::std::mem::transmute(s) }
+// }
+
 cfg_if! {
     if #[cfg(target_feature = "sse2")] {
 
@@ -113,8 +142,10 @@ cfg_if! {
     } else {
         #[inline(always)]
         pub fn simd_is_ascii(s: u8x16) -> bool {
-            let above_ascii = u8x16::splat(0x80);
-            s.lt(above_ascii).all()
+            // This optimizes better on ARM than
+            // the lt formulation.
+            let highest_ascii = u8x16::splat(0x7F);
+            !s.gt(highest_ascii).any()
         }
     }
 }
@@ -220,10 +251,10 @@ cfg_if! {
 }
 
 macro_rules! in_range16x8 {
-    ($s:ident, $start:expr, $end:expr) => ({
+    ($s:ident, $start:expr, $end:expr) => {{
         // SIMD sub is wrapping
         ($s - u16x8::splat($start)).lt(u16x8::splat($end - $start))
-    })
+    }};
 }
 
 #[inline(always)]
@@ -246,11 +277,16 @@ pub fn is_u16x8_bidi(s: u16x8) -> bool {
 
     // Quick refutation failed. Let's do the full check.
 
-    (in_range16x8!(s, 0x0590, 0x0900) | in_range16x8!(s, 0xFB50, 0xFE00) |
-     in_range16x8!(s, 0xFE70, 0xFF00) | in_range16x8!(s, 0xD802, 0xD804) |
-     in_range16x8!(s, 0xD83A, 0xD83C) | s.eq(u16x8::splat(0x200F)) |
-     s.eq(u16x8::splat(0x202B)) | s.eq(u16x8::splat(0x202E)) | s.eq(u16x8::splat(0x2067)))
-            .any()
+    (in_range16x8!(s, 0x0590, 0x0900)
+        | in_range16x8!(s, 0xFB50, 0xFE00)
+        | in_range16x8!(s, 0xFE70, 0xFF00)
+        | in_range16x8!(s, 0xD802, 0xD804)
+        | in_range16x8!(s, 0xD83A, 0xD83C)
+        | s.eq(u16x8::splat(0x200F))
+        | s.eq(u16x8::splat(0x202B))
+        | s.eq(u16x8::splat(0x202E))
+        | s.eq(u16x8::splat(0x2067)))
+        .any()
 }
 
 #[inline(always)]
@@ -266,7 +302,10 @@ pub fn simd_unpack(s: u8x16) -> (u16x8, u16x8) {
             u8x16::splat(0),
             [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
         );
-        (::std::mem::transmute_copy(&first), ::std::mem::transmute_copy(&second))
+        (
+            ::std::mem::transmute_copy(&first),
+            ::std::mem::transmute_copy(&second),
+        )
     }
 }
 
@@ -306,10 +345,14 @@ mod tests {
 
     #[test]
     fn test_unpack() {
-        let ascii: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
-        let basic_latin: [u16; 16] = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70,
-                                      0x71, 0x72, 0x73, 0x74, 0x75, 0x76];
+        let ascii: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
+        let basic_latin: [u16; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let simd = unsafe { load16_unaligned(ascii.as_ptr()) };
         let mut vec = Vec::with_capacity(16);
         vec.resize(16, 0u16);
@@ -324,10 +367,14 @@ mod tests {
 
     #[test]
     fn test_simd_is_basic_latin_success() {
-        let ascii: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
-        let basic_latin: [u16; 16] = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70,
-                                      0x71, 0x72, 0x73, 0x74, 0x75, 0x76];
+        let ascii: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
+        let basic_latin: [u16; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let first = unsafe { load8_unaligned(basic_latin.as_ptr()) };
         let second = unsafe { load8_unaligned(basic_latin.as_ptr().offset(8)) };
         let mut vec = Vec::with_capacity(16);
@@ -342,8 +389,10 @@ mod tests {
 
     #[test]
     fn test_simd_is_basic_latin_c0() {
-        let input: [u16; 16] = [0x61, 0x62, 0x63, 0x81, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                                0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u16; 16] = [
+            0x61, 0x62, 0x63, 0x81, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let first = unsafe { load8_unaligned(input.as_ptr()) };
         let second = unsafe { load8_unaligned(input.as_ptr().offset(8)) };
         assert!(!simd_is_basic_latin(first | second));
@@ -351,8 +400,10 @@ mod tests {
 
     #[test]
     fn test_simd_is_basic_latin_0fff() {
-        let input: [u16; 16] = [0x61, 0x62, 0x63, 0x0FFF, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70,
-                                0x71, 0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u16; 16] = [
+            0x61, 0x62, 0x63, 0x0FFF, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let first = unsafe { load8_unaligned(input.as_ptr()) };
         let second = unsafe { load8_unaligned(input.as_ptr().offset(8)) };
         assert!(!simd_is_basic_latin(first | second));
@@ -360,8 +411,10 @@ mod tests {
 
     #[test]
     fn test_simd_is_basic_latin_ffff() {
-        let input: [u16; 16] = [0x61, 0x62, 0x63, 0xFFFF, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70,
-                                0x71, 0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u16; 16] = [
+            0x61, 0x62, 0x63, 0xFFFF, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let first = unsafe { load8_unaligned(input.as_ptr()) };
         let second = unsafe { load8_unaligned(input.as_ptr().offset(8)) };
         assert!(!simd_is_basic_latin(first | second));
@@ -369,16 +422,20 @@ mod tests {
 
     #[test]
     fn test_simd_is_ascii_success() {
-        let ascii: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
+        let ascii: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let simd = unsafe { load16_unaligned(ascii.as_ptr()) };
         assert!(simd_is_ascii(simd));
     }
 
     #[test]
     fn test_simd_is_ascii_failure() {
-        let input: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let simd = unsafe { load16_unaligned(input.as_ptr()) };
         assert!(!simd_is_ascii(simd));
     }
@@ -386,8 +443,10 @@ mod tests {
     #[cfg(target_feature = "sse2")]
     #[test]
     fn test_check_ascii() {
-        let input: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let simd = unsafe { load16_unaligned(input.as_ptr()) };
         let mask = mask_ascii(simd);
         assert_ne!(mask, 0);
@@ -396,8 +455,10 @@ mod tests {
 
     #[test]
     fn test_alu() {
-        let input: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
-                               0x72, 0x73, 0x74, 0x75, 0x76];
+        let input: [u8; 16] = [
+            0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72, 0x73, 0x74,
+            0x75, 0x76,
+        ];
         let mut alu = 0u64;
         unsafe {
             ::std::ptr::copy_nonoverlapping(input.as_ptr(), &mut alu as *mut u64 as *mut u8, 8);
