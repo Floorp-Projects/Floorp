@@ -83,6 +83,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'Base64.h',
+    'FilePreferences.h',
     'NonBlockingAsyncInputStream.h',
     'SlicedInputStream.h',
     'SnappyCompressOutputStream.h',
@@ -94,6 +95,7 @@ UNIFIED_SOURCES += [
     'Base64.cpp',
     'crc32c.c',
     'FileDescriptorFile.cpp',
+    'FilePreferences.cpp',
     'NonBlockingAsyncInputStream.cpp',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
