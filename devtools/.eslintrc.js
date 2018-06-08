@@ -149,7 +149,40 @@ module.exports = {
     "rules": {
       "no-unused-vars": ["error", {"args": "none", "vars": "local"}],
     }
-  }],
+  }, {
+    // Cu, Cc etc... are not available in most devtools modules loaded by require.
+    "files": [
+      "**"
+    ],
+    "excludedFiles": [
+      // Enable the rule on JSM, test head files and some specific files.
+      "**/*.jsm",
+      "**/test/**/head.js",
+      "**/test/**/shared-head.js",
+      "client/debugger/test/mochitest/code_frame-script.js",
+      "client/inspector/animation-old/test/doc_frame_script.js",
+      "client/inspector/animation/test/doc_frame_script.js",
+      "client/inspector/rules/test/doc_frame_script.js",
+      "client/inspector/shared/test/doc_frame_script.js",
+      "client/jsonview/converter-observer.js",
+      "client/jsonview/test/doc_frame_script.js",
+      "client/responsive.html/browser/content.js",
+      "client/shared/browser-loader.js",
+      "server/actors/webconsole/content-process-forward.js",
+      "server/actors/worker/service-worker-process.js",
+      "server/startup/content-process.js",
+      "server/startup/frame.js",
+      "shared/base-loader.js",
+      "shared/worker/loader.js",
+      "startup/aboutdebugging-registration.js",
+      "startup/aboutdevtools/aboutdevtools-registration.js",
+      "startup/aboutdevtoolstoolbox-registration.js",
+      "startup/devtools-startup.js",
+    ],
+    "rules": {
+      "mozilla/no-define-cc-etc": "off",
+    }
+  }, ],
   "rules": {
     // These are the rules that have been configured so far to match the
     // devtools coding style.
