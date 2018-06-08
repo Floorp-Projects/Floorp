@@ -149,7 +149,7 @@ impl SdpMedia {
     pub fn get_attribute(&self, t: SdpAttributeType) -> Option<&SdpAttribute> {
         self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).next()
     }
-    
+
     pub fn remove_codecs(&mut self) {
         match self.media.formats{
             SdpFormatList::Integers(_) => self.media.formats = SdpFormatList::Integers(Vec::new()),
@@ -175,7 +175,11 @@ impl SdpMedia {
 
         self.add_attribute(&SdpAttribute::Rtpmap(rtpmap))?;
         Ok(())
-    }    
+    }
+
+    pub fn get_attributes_of_type(&self, t: SdpAttributeType) -> Vec<&SdpAttribute> {
+        self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).collect()
+    }
 
     pub fn has_connection(&self) -> bool {
         self.connection.is_some()
