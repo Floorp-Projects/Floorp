@@ -6,7 +6,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 
-add_task(async function() {
+add_task(async function test_loading_withHash() {
   await BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html#foo", async function(browser) {
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady");
     let readerButton = document.getElementById("reader-mode-button");
@@ -23,7 +23,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function test_loading_withoutHash() {
   await BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html", async function(browser) {
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady");
     let readerButton = document.getElementById("reader-mode-button");
