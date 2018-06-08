@@ -57,19 +57,19 @@ function getURL(sourceUrl, debuggeeUrl = "") {
       // Ignore `javascript:` URLs for now
       return def;
 
-    case "webpack:":
-      // A Webpack source is a special case
+    case "moz-extension:":
+    case "resource:":
       return (0, _lodash.merge)(def, {
-        path: path,
-        group: "webpack://",
-        filename: filename
+        path,
+        group: `${protocol}//${host || ""}`,
+        filename
       });
 
+    case "webpack:":
     case "ng:":
-      // An Angular source is a special case
       return (0, _lodash.merge)(def, {
         path: path,
-        group: "ng://",
+        group: `${protocol}//`,
         filename: filename
       });
 
@@ -90,16 +90,14 @@ function getURL(sourceUrl, debuggeeUrl = "") {
 
     case null:
       if (pathname && pathname.startsWith("/")) {
-        // If it's just a URL like "/foo/bar.js", resolve it to the file
-        // protocol
+        // use file protocol for a URL like "/foo/bar.js"
         return (0, _lodash.merge)(def, {
           path: path,
           group: "file://",
           filename: filename
         });
       } else if (host === null) {
-        // We don't know what group to put this under, and it's a script
-        // with a weird URL. Just group them all under an anonymous group.
+        // use anonymous group for weird URLs
         return (0, _lodash.merge)(def, {
           path: url,
           group: defaultDomain,

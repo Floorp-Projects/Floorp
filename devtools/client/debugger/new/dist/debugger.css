@@ -1045,11 +1045,12 @@ html .toggle-button.end.vertical svg {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .search-shadow {
-  margin: 1px;
+  border: 1px solid transparent;
 }
 
 .search-shadow.focused {
-  box-shadow: var(--theme-focus-box-shadow-textbox);
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
 }
 
 .search-field {
@@ -2661,7 +2662,7 @@ button.jump-definition {
 }
 
 .theme-dark .editor-wrapper {
-  --debug-expression-background: #54617e;
+  --debug-expression-background: rgba(202, 227, 255, 0.3);
   --debug-line-border: #7786a2;
 }
 
@@ -2710,7 +2711,7 @@ html[dir="rtl"] .editor-mount {
 :not(.empty-line):not(.new-breakpoint) > .CodeMirror-gutter-wrapper:hover {
   width: 60px;
   height: 13px;
-  left: -55px !important;
+  margin-left: -25px;
   background-color: var(--gutter-hover-background-color) !important;
   mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
   mask-size: 100%;
@@ -3860,8 +3861,6 @@ html[dir="rtl"] .object-node {
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
-  -moz-user-select: none;
-  user-select: none;
   --breakpoint-expression-right-clear-space: 36px;
   --breakpoint-expression-height: 2.4em;
 }

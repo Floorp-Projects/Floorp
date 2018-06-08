@@ -66,7 +66,8 @@ class Scopes extends _react.PureComponent {
   render() {
     const {
       isPaused,
-      isLoading
+      isLoading,
+      openLink
     } = this.props;
     const {
       originalScopes,
@@ -85,6 +86,7 @@ class Scopes extends _react.PureComponent {
         disableWrap: true,
         focusable: false,
         dimTopLevelWindow: true,
+        openLink: openLink,
         createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
       }), originalScopes ? _react2.default.createElement("div", {
         className: "scope-type-toggle"
