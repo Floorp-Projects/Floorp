@@ -170,6 +170,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -946,6 +947,15 @@ class SourceUnits
 
     CharT peekCodeUnit() const {
         return *ptr;        // this will nullptr-crash if poisoned
+    }
+
+    bool peekCodeUnits(uint8_t n, CharT* out) const {
+        MOZ_ASSERT(ptr, "shouldn't peek into poisoned SourceUnits");
+        if (n > mozilla::PointerRangeSize(ptr, limit_))
+            return false;
+
+        std::copy_n(ptr, n, out);
+        return true;
     }
 
     bool matchCodeUnit(CharT c) {
@@ -1820,7 +1830,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
-    bool peekChars(int n, CharT* cp);
 
     MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
