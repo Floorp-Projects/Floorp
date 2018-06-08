@@ -15,6 +15,7 @@ import android.widget.PopupWindow
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
     var onUrlAdded: (() -> Unit)? = null
@@ -27,7 +28,11 @@ class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
 
         val button = view.findViewById<Button>(R.id.quick_add_autocomplete_button)
         button.setOnClickListener {
-            val job = launch { CustomDomains.add(context, url) }
+            val job = launch {
+                CustomDomains.add(context, url)
+
+                TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.QUICK_ADD)
+            }
             job.invokeOnCompletion { onUrlAdded?.invoke() }
         }
 

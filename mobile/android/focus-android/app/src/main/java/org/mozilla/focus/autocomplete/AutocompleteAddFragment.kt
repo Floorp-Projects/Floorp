@@ -90,7 +90,7 @@ class AutocompleteAddFragment : Fragment() {
         launch(CommonPool) {
             CustomDomains.add(context, domain)
 
-            TelemetryWrapper.saveAutocompleteDomainEvent()
+            TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.SETTINGS)
         }
 
         ViewUtils.showBrandedSnackbar(view, R.string.preference_autocomplete_add_confirmation, 0)
