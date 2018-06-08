@@ -4,6 +4,7 @@ use attribute_type::{SdpAttribute, SdpAttributeType, SdpAttributeRtpmap};
 use error::{SdpParserError, SdpParserInternalError};
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpMediaLine {
     pub media: SdpMediaValue,
     pub port: u32,
@@ -13,6 +14,7 @@ pub struct SdpMediaLine {
 }
 
 #[derive(Clone,Debug,PartialEq)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpMediaValue {
     Audio,
     Video,
@@ -31,6 +33,7 @@ impl fmt::Display for SdpMediaValue {
 }
 
 #[derive(Clone,Debug,PartialEq)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpProtocolValue {
     RtpSavpf,
     UdpTlsRtpSavpf,
@@ -55,6 +58,7 @@ impl fmt::Display for SdpProtocolValue {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpFormatList {
     Integers(Vec<u32>),
     Strings(Vec<String>),
@@ -69,6 +73,7 @@ impl fmt::Display for SdpFormatList {
     }
 }
 
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpMedia {
     media: SdpMediaLine,
     connection: Option<SdpConnection>,
@@ -191,6 +196,7 @@ impl SdpMedia {
 }
 
 #[cfg(test)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub fn create_dummy_media_section() -> SdpMedia {
     let media_line = SdpMediaLine {
         media: SdpMediaValue::Audio,

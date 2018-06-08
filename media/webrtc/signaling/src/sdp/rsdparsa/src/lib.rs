@@ -1,5 +1,11 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 
+#[cfg(feature="serialize")]
+#[macro_use]
+extern crate serde_derive;
+#[cfg(feature="serialize")]
+extern crate serde;
+
 use std::net::IpAddr;
 use std::fmt;
 
@@ -17,6 +23,7 @@ use unsupported_types::{parse_email, parse_information, parse_key, parse_phone, 
                         parse_uri, parse_zone};
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpBandwidth {
     As(u32),
     Ct(u32),
@@ -25,6 +32,7 @@ pub enum SdpBandwidth {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpConnection {
     pub addr: IpAddr,
     pub ttl: Option<u8>,
@@ -32,6 +40,7 @@ pub struct SdpConnection {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpOrigin {
     pub username: String,
     pub session_id: u64,
@@ -51,11 +60,13 @@ impl fmt::Display for SdpOrigin {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpTiming {
     pub start: u64,
     pub stop: u64,
 }
 
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpType {
     Attribute(SdpAttribute),
     Bandwidth(SdpBandwidth),
@@ -74,11 +85,13 @@ pub enum SdpType {
     Zone(String),
 }
 
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpLine {
     pub line_number: usize,
     pub sdp_type: SdpType,
 }
 
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpSession {
     pub version: u64,
     pub origin: SdpOrigin,
