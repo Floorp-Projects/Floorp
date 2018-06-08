@@ -189,8 +189,15 @@
   <string name="site_security_icon_content_description">Sécurité du site</string>
   <string name="preference_autocomplete_duplicate_url_error">L’adresse existe déjà</string>
   <string name="find_in_page">Rechercher dans la page</string>
+  <string name="find_in_page_input">Rechercher dans la page</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d sur %2$d</string>
+  <string name="accessibility_next_result">Trouver le résultat suivant</string>
+  <string name="accessibility_previous_result">Trouver le résultat précédent</string>
+  <string name="accessibility_dismiss_find_in_page">Fermer la recherche dans la page</string>
   <string name="http_auth_dialog_title">Authentification requise</string>
   <string name="http_auth_dialog_username">Nom d’utilisateur</string>
   <string name="http_auth_dialog_password">Mot de passe</string>
   <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
+  <string name="custom_tab_copy_url_action">Adresse web copiée</string>
 </resources>

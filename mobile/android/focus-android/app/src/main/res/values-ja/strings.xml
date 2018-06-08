@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">サイトセキュリティ</string>
   <string name="preference_autocomplete_duplicate_url_error">URL は既に存在します</string>
   <string name="find_in_page">ページ内検索</string>
+  <string name="find_in_page_input">ページ内検索</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d 件中 %1$d 件目</string>
+  <string name="accessibility_next_result">次の結果を検索</string>
+  <string name="accessibility_previous_result">前の結果を検索</string>
+  <string name="accessibility_dismiss_find_in_page">ページ内検索を閉じる</string>
   <string name="http_auth_dialog_title">認証が必要です</string>
   <string name="http_auth_dialog_username">ユーザー名</string>
   <string name="http_auth_dialog_password">パスワード</string>

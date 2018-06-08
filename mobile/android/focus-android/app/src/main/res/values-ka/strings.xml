@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">საიტის უსაფრთხოება</string>
   <string name="preference_autocomplete_duplicate_url_error">URL უკვე არსებობს</string>
   <string name="find_in_page">პოვნა გვერდზე</string>
+  <string name="find_in_page_input">პოვნა გვერდზე</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d, %2$d-დან</string>
+  <string name="accessibility_next_result">მომდევნო შედეგი</string>
+  <string name="accessibility_previous_result">წინა შედეგი</string>
+  <string name="accessibility_dismiss_find_in_page">ძიების გაუქმება</string>
   <string name="http_auth_dialog_title">საჭიროებს ანგარიშის მონაცემებს</string>
   <string name="http_auth_dialog_username">მომხმარებლის სახელი</string>
   <string name="http_auth_dialog_password">პაროლი</string>

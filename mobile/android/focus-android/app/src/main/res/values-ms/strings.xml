@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Keselamatan Laman</string>
   <string name="preference_autocomplete_duplicate_url_error">URL sudah wujud</string>
   <string name="find_in_page">Cari dalam Halaman</string>
+  <string name="find_in_page_input">Cari dalam halaman</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d daripada %2$d</string>
+  <string name="accessibility_next_result">Cari hasil seterusnya</string>
+  <string name="accessibility_previous_result">Cari hasil dahulu</string>
+  <string name="accessibility_dismiss_find_in_page">Batal cari dalam halaman</string>
   <string name="http_auth_dialog_title">Pengesahan diperlukan</string>
   <string name="http_auth_dialog_username">Nama pengguna</string>
   <string name="http_auth_dialog_password">Kata laluan</string>

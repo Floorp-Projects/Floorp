@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Sidefeilichheid</string>
   <string name="preference_autocomplete_duplicate_url_error">URL bestiet al</string>
   <string name="find_in_page">Sykje op side</string>
+  <string name="find_in_page_input">Sykje op side</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d fan %2$d</string>
+  <string name="accessibility_next_result">Folgjende resultaat fine</string>
+  <string name="accessibility_previous_result">Foarige resultaat fine</string>
+  <string name="accessibility_dismiss_find_in_page">Sykje op side slute</string>
   <string name="http_auth_dialog_title">Autentikaasje fereaske</string>
   <string name="http_auth_dialog_username">Brûkersnamme</string>
   <string name="http_auth_dialog_password">Wachtwurd</string>

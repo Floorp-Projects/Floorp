@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Webbplatssäkerhet</string>
   <string name="preference_autocomplete_duplicate_url_error">URL finns redan</string>
   <string name="find_in_page">Hitta på sidan</string>
+  <string name="find_in_page_input">Hitta på sidan</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d av %2$d</string>
+  <string name="accessibility_next_result">Hitta nästa resultat</string>
+  <string name="accessibility_previous_result">Hitta föregående resultat</string>
+  <string name="accessibility_dismiss_find_in_page">Avvisa hitta på sidan</string>
   <string name="http_auth_dialog_title">Autentisering krävs</string>
   <string name="http_auth_dialog_username">Användarnamn</string>
   <string name="http_auth_dialog_password">Lösenord</string>
