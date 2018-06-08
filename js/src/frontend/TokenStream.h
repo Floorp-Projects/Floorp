@@ -909,13 +909,14 @@ class SourceUnits
         ptr(buf)
     { }
 
+    bool atStart() const {
+        MOZ_ASSERT(ptr, "shouldn't be using if poisoned");
+        return ptr == base_;
+    }
+
     bool atEnd() const {
         MOZ_ASSERT(ptr <= limit_, "shouldn't have overrun");
         return ptr >= limit_;
-    }
-
-    bool atStart() const {
-        return offset() == 0;
     }
 
     size_t startOffset() const {
