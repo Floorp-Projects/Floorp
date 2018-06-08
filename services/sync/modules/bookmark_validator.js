@@ -18,7 +18,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
                                "resource://gre/modules/PlacesSyncUtils.jsm");
 
-Cu.importGlobalProperties(["URLSearchParams"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URLSearchParams"]);
 
 var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 

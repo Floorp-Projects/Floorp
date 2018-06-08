@@ -45,7 +45,7 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle(kBrandBundle);
 });
 
-Cu.importGlobalProperties(["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyGetter(this, "kUndoStateFullPath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "initialMigrationMetadata.jsonlz4");

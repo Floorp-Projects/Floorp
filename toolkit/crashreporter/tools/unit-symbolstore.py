@@ -535,9 +535,9 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         # Check that nsBrowserApp.cpp is listed as a FILE line, and that
         # it was properly mapped to the source repo.
         check_hg_path(file_lines, 'nsBrowserApp.cpp')
-        # Also check Assertions.h to verify that files from dist/include
+        # Also check Sprintf.h to verify that files from dist/include
         # are properly mapped.
-        check_hg_path(file_lines, 'mfbt/Assertions.h')
+        check_hg_path(file_lines, 'mfbt/Sprintf.h')
 
 
 if __name__ == '__main__':

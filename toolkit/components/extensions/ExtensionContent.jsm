@@ -34,7 +34,7 @@ ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
-Cu.importGlobalProperties(["crypto", "TextEncoder"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 
 const {
   DefaultMap,

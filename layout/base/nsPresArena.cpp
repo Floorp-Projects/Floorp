@@ -86,6 +86,7 @@ nsPresArena::ClearArenaRefPtrs(ArenaObjectID aObjectID)
 void*
 nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSize > 0, "PresArena cannot allocate zero bytes");
   MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
 
@@ -150,6 +151,7 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 void
 nsPresArena::Free(uint32_t aCode, void* aPtr)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
 
   // Try to recycle this entry.

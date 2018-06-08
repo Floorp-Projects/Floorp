@@ -4,7 +4,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");

@@ -134,7 +134,9 @@ const USE_RDFNS_ATTR = false;
 var EXPORTED_SYMBOLS = ["RDFLiteral", "RDFIntLiteral", "RDFDateLiteral",
                         "RDFBlankNode", "RDFResource", "RDFDataSource"];
 
-Cu.importGlobalProperties(["DOMParser", "Element", "XMLSerializer", "fetch"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "Element", "XMLSerializer", "fetch"]);
 
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
