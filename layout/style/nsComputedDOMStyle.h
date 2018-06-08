@@ -83,9 +83,9 @@ public:
                      nsIDocument* aDocument,
                      StyleType aStyleType);
 
-  virtual nsINode *GetParentObject() override
+  nsINode* GetParentObject() override
   {
-    return mContent;
+    return mElement;
   }
 
   static already_AddRefed<mozilla::ComputedStyle>
@@ -718,9 +718,9 @@ private:
 
   // We don't really have a good immutable representation of "presentation".
   // Given the way GetComputedStyle is currently used, we should just grab the
-  // 0th presshell, if any, from the document.
+  // presshell, if any, from the document.
   nsWeakPtr mDocumentWeak;
-  nsCOMPtr<nsIContent> mContent;
+  RefPtr<mozilla::dom::Element> mElement;
 
   /**
    * Strong reference to the ComputedStyle we access data from.  This can be

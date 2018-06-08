@@ -118,7 +118,7 @@ DocumentNeedsRestyle(
   nsPresContext* presContext = shell->GetPresContext();
   MOZ_ASSERT(presContext);
 
-  // Unfortunately we don't know if the sheet change affects mContent or not, so
+  // Unfortunately we don't know if the sheet change affects mElement or not, so
   // just assume it will and that we need to flush normally.
   ServoStyleSet* styleSet = shell->StyleSet();
   if (styleSet->StyleSheetsHaveChanged()) {
@@ -332,7 +332,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   // TODO(emilio, bug 548397, https://github.com/w3c/csswg-drafts/issues/2403):
   // Should use aElement->OwnerDoc() instead.
   mDocumentWeak = do_GetWeakReference(aDocument);
-  mContent = aElement;
+  mElement = aElement;
   mPseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElt);
 }
 
@@ -344,13 +344,13 @@ nsComputedDOMStyle::~nsComputedDOMStyle()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsComputedDOMStyle)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsComputedDOMStyle)
-  tmp->ClearComputedStyle();  // remove observer before clearing mContent
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContent)
+  tmp->ClearComputedStyle();  // remove observer before clearing mElement
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsComputedDOMStyle)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsComputedDOMStyle)
@@ -802,7 +802,7 @@ nsComputedDOMStyle::ClearComputedStyle()
 {
   if (mResolvedComputedStyle) {
     mResolvedComputedStyle = false;
-    mContent->RemoveMutationObserver(this);
+    mElement->RemoveMutationObserver(this);
   }
   mComputedStyle = nullptr;
 }
@@ -813,7 +813,7 @@ nsComputedDOMStyle::SetResolvedComputedStyle(RefPtr<ComputedStyle>&& aContext,
 {
   if (!mResolvedComputedStyle) {
     mResolvedComputedStyle = true;
-    mContent->AddMutationObserver(this);
+    mElement->AddMutationObserver(this);
   }
   mComputedStyle = aContext;
   mComputedStyleGeneration = aGeneration;
@@ -831,7 +831,7 @@ nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
 bool
 nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const
 {
-  // If mContent is not in the same document, we could do some checks to know if
+  // If mElement is not in the same document, we could do some checks to know if
   // there are some pending restyles can be ignored across documents (since we
   // will use the caller document's style), but it can be complicated and should
   // be an edge case, so we just don't bother to do the optimization in this
@@ -839,10 +839,10 @@ nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const
   //
   // FIXME(emilio): This is likely to want GetComposedDoc() instead of
   // OwnerDoc().
-  if (aDocument != mContent->OwnerDoc()) {
+  if (aDocument != mElement->OwnerDoc()) {
     return true;
   }
-  if (DocumentNeedsRestyle(aDocument, mContent->AsElement(), mPseudo)) {
+  if (DocumentNeedsRestyle(aDocument, mElement, mPseudo)) {
     return true;
   }
   // If parent document is there, also needs to check if there is some change
@@ -877,7 +877,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   if (needsToFlush) {
     // Flush _before_ getting the presshell, since that could create a new
     // presshell.  Also note that we want to flush the style on the document
-    // we're computing style in, not on the document mContent is in -- the two
+    // we're computing style in, not on the document mElement is in -- the two
     // may be different.
     document->FlushPendingNotifications(
       aNeedsLayoutFlush ? FlushType::Layout : FlushType::Style);
@@ -888,7 +888,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 #endif
 
   nsCOMPtr<nsIPresShell> presShellForContent =
-    nsContentUtils::GetPresShellForContent(mContent);
+    nsContentUtils::GetPresShellForContent(mElement);
   if (presShellForContent && presShellForContent->GetDocument() != document) {
     presShellForContent->GetDocument()->FlushPendingNotifications(FlushType::Style);
     if (presShellForContent->IsDestroying()) {
@@ -915,13 +915,13 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration();
 
   if (mComputedStyle) {
-    // We can't rely on the undisplayed restyle generation if mContent is
+    // We can't rely on the undisplayed restyle generation if mElement is
     // out-of-document, since that generation is not incremented for DOM changes
     // on out-of-document elements.
     //
     // So we always need to update the style to ensure it it up-to-date.
-    if (mComputedStyleGeneration == currentGeneration
-        && mContent->IsInComposedDoc()) {
+    if (mComputedStyleGeneration == currentGeneration &&
+        mElement->IsInComposedDoc()) {
       // Our cached style is still valid.
       return;
     }
@@ -929,21 +929,21 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     mComputedStyle = nullptr;
   }
 
-  // XXX the !mContent->IsHTMLElement(nsGkAtoms::area)
+  // XXX the !mElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (mStyleType == eAll && !mContent->IsHTMLElement(nsGkAtoms::area)) {
+  if (mStyleType == eAll && !mElement->IsHTMLElement(nsGkAtoms::area)) {
     mOuterFrame = nullptr;
 
     if (!mPseudo) {
-      mOuterFrame = mContent->GetPrimaryFrame();
+      mOuterFrame = mElement->GetPrimaryFrame();
     } else if (mPseudo == nsCSSPseudoElements::before ||
                mPseudo == nsCSSPseudoElements::after) {
       nsAtom* property = mPseudo == nsCSSPseudoElements::before
                             ? nsGkAtoms::beforePseudoProperty
                             : nsGkAtoms::afterPseudoProperty;
 
-      auto* pseudo = static_cast<Element*>(mContent->GetProperty(property));
+      auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
       mOuterFrame = pseudo ? pseudo->GetPrimaryFrame() : nullptr;
     }
 
@@ -969,7 +969,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     // Need to resolve a style.
     RefPtr<ComputedStyle> resolvedComputedStyle =
       DoGetComputedStyleNoFlush(
-          mContent->AsElement(),
+          mElement,
           mPseudo,
           presShellForContent ? presShellForContent.get() : mPresShell,
           mStyleType);
@@ -5697,7 +5697,7 @@ nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 
   // lie about font size inflation since we lie about font size (since
   // the inflation only applies to text)
-  aCoord = ReflowInput::CalcLineHeight(mContent,
+  aCoord = ReflowInput::CalcLineHeight(mElement,
                                        mComputedStyle,
                                        presContext,
                                        blockHeight, 1.0f);
@@ -7176,7 +7176,7 @@ MarkComputedStyleMapDirty(const char* aPref, void* aData)
 void
 nsComputedDOMStyle::ParentChainChanged(nsIContent* aContent)
 {
-  NS_ASSERTION(mContent == aContent, "didn't we register mContent?");
+  NS_ASSERTION(mElement == aContent, "didn't we register mElement?");
   NS_ASSERTION(mResolvedComputedStyle,
                "should have only registered an observer when "
                "mResolvedComputedStyle is true");
