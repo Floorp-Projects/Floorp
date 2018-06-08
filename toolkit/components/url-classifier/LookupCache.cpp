@@ -243,7 +243,7 @@ LookupCache::ClearAll()
 }
 
 void
-LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache)
+LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const
 {
   MOZ_ASSERT(aCache);
 
@@ -508,7 +508,7 @@ nsCString GetFormattedTimeString(int64_t aCurTimeSec)
 }
 
 void
-LookupCache::DumpCache()
+LookupCache::DumpCache() const
 {
   if (!LOG_ENABLED()) {
     return;
@@ -600,7 +600,7 @@ LookupCacheV2::Has(const Completion& aCompletion,
 }
 
 bool
-LookupCacheV2::IsEmpty()
+LookupCacheV2::IsEmpty() const
 {
   bool isEmpty;
   mPrefixSet->IsEmpty(&isEmpty);
@@ -646,8 +646,8 @@ LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
 }
 
 void
-LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
-                                       MissPrefixArray& aMissPrefixes,
+LookupCacheV2::AddGethashResultToCache(const AddCompleteArray& aAddCompletes,
+                                       const MissPrefixArray& aMissPrefixes,
                                        int64_t aExpirySec)
 {
   int64_t defaultExpirySec = PR_Now() / PR_USEC_PER_SEC + V2_CACHE_DURATION_SEC;
@@ -716,7 +716,7 @@ LookupCacheV2::LoadFromFile(nsIFile* aFile)
 }
 
 size_t
-LookupCacheV2::SizeOfPrefixSet()
+LookupCacheV2::SizeOfPrefixSet() const
 {
   return mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }
@@ -778,7 +778,7 @@ LookupCacheV2::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 
 #if defined(DEBUG)
 void
-LookupCacheV2::DumpCompletions()
+LookupCacheV2::DumpCompletions() const
 {
   if (!LOG_ENABLED())
     return;

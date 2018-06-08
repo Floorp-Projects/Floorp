@@ -105,13 +105,14 @@ var _attachConsole = async function(
     await waitForMessage(worker);
 
     const { workers } = await tabClient.listWorkers();
-    const workerActor = workers.filter(w => w.url == workerName)[0].actor;
-    if (!workerActor) {
+    const workerTargetActor = workers.filter(w => w.url == workerName)[0].actor;
+    if (!workerTargetActor) {
       console.error("listWorkers failed. Unable to find the " +
                     "worker actor\n");
       return;
     }
-    const [workerResponse, workerClient] = await tabClient.attachWorker(workerActor);
+    const [workerResponse, workerClient] =
+      await tabClient.attachWorker(workerTargetActor);
     if (!workerClient || workerResponse.error) {
       console.error("attachWorker failed. No worker client or " +
                     " error: " + workerResponse.error);

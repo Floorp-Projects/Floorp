@@ -373,6 +373,14 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.searchhistory"
                   android:exported="false"/>
 
+        <provider android:name="android.support.v4.content.FileProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.fileprovider"
+                  android:exported="false"
+                  android:grantUriPermissions="true">
+                  <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                             android:resource="@xml/provider_paths" />
+        </provider>
+
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdateService"

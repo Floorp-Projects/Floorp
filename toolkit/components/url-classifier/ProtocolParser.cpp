@@ -78,16 +78,6 @@ ProtocolParser::ProtocolParser()
 
 ProtocolParser::~ProtocolParser()
 {
-  CleanupUpdates();
-}
-
-void
-ProtocolParser::CleanupUpdates()
-{
-  for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
-    delete mTableUpdates[i];
-  }
-  mTableUpdates.Clear();
 }
 
 nsresult
@@ -109,7 +99,7 @@ ProtocolParser::Begin(const nsACString& aTable,
   return NS_OK;
 }
 
-TableUpdate *
+RefPtr<TableUpdate>
 ProtocolParser::GetTableUpdate(const nsACString& aTable)
 {
   for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
@@ -122,7 +112,7 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
   // updates can be transferred to DBServiceWorker, which passes
   // them back to Classifier when doing the updates, and that
   // will free them.
-  TableUpdate *update = CreateTableUpdate(aTable);
+  RefPtr<TableUpdate> update = CreateTableUpdate(aTable);
   mTableUpdates.AppendElement(update);
   return update;
 }
@@ -143,7 +133,7 @@ ProtocolParserV2::~ProtocolParserV2()
 void
 ProtocolParserV2::SetCurrentTable(const nsACString& aTable)
 {
-  auto update = GetTableUpdate(aTable);
+  RefPtr<TableUpdate> update = GetTableUpdate(aTable);
   mTableUpdate = TableUpdate::Cast<TableUpdateV2>(update);
 }
 
@@ -185,6 +175,7 @@ void
 ProtocolParserV2::End()
 {
   // Inbound data has already been processed in every AppendStream() call.
+  mTableUpdate = nullptr;
 }
 
 nsresult
@@ -523,6 +514,7 @@ ProtocolParserV2::ProcessDigestChunk(const nsACString& aChunk)
 nsresult
 ProtocolParserV2::ProcessDigestAdd(const nsACString& aChunk)
 {
+  MOZ_ASSERT(mTableUpdate);
   // The ABNF format for add chunks is (HASH)+, where HASH is 32 bytes.
   MOZ_ASSERT(aChunk.Length() % 32 == 0,
              "Chunk length in bytes must be divisible by 4");
@@ -542,6 +534,7 @@ ProtocolParserV2::ProcessDigestAdd(const nsACString& aChunk)
 nsresult
 ProtocolParserV2::ProcessDigestSub(const nsACString& aChunk)
 {
+  MOZ_ASSERT(mTableUpdate);
   // The ABNF format for sub chunks is (ADDCHUNKNUM HASH)+, where ADDCHUNKNUM
   // is a 4 byte chunk number, and HASH is 32 bytes.
   MOZ_ASSERT(aChunk.Length() % 36 == 0,
@@ -573,6 +566,7 @@ nsresult
 ProtocolParserV2::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
                                const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostAdd should only be called for prefix hashes.");
 
@@ -607,6 +601,7 @@ nsresult
 ProtocolParserV2::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
                                const nsACString& aChunk, uint32_t *aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostSub should only be called for prefix hashes.");
 
@@ -662,6 +657,7 @@ nsresult
 ProtocolParserV2::ProcessHostAddComplete(uint8_t aNumEntries,
                                        const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostAddComplete should only be called for complete hashes.");
 
@@ -692,8 +688,9 @@ ProtocolParserV2::ProcessHostAddComplete(uint8_t aNumEntries,
 
 nsresult
 ProtocolParserV2::ProcessHostSubComplete(uint8_t aNumEntries,
-                                       const nsACString& aChunk, uint32_t* aStart)
+                                         const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostSubComplete should only be called for complete hashes.");
 
@@ -741,7 +738,7 @@ ProtocolParserV2::NextLine(nsACString& aLine)
   return true;
 }
 
-TableUpdate*
+RefPtr<TableUpdate>
 ProtocolParserV2::CreateTableUpdate(const nsACString& aTableName) const
 {
   return new TableUpdateV2(aTableName);
@@ -766,7 +763,7 @@ ProtocolParserProtobuf::SetCurrentTable(const nsACString& aTable)
 }
 
 
-TableUpdate*
+RefPtr<TableUpdate>
 ProtocolParserProtobuf::CreateTableUpdate(const nsACString& aTableName) const
 {
   return new TableUpdateV4(aTableName);

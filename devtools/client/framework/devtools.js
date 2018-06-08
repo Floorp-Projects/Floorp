@@ -18,7 +18,7 @@ loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scrat
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 
 loader.lazyRequireGetter(this, "WebExtensionInspectedWindowFront",
-      "devtools/shared/fronts/webextension-inspected-window", true);
+      "devtools/shared/fronts/addon/webextension-inspected-window", true);
 
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");

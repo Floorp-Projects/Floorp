@@ -15,6 +15,7 @@ import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragmen
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -24,6 +25,7 @@ import android.provider.Browser;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -243,10 +245,21 @@ public final class IntentHelper implements BundleEventListener {
         return new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
     }
 
-    public static Intent getImageCaptureIntent(final File destinationFile) {
+    public static Intent getImageCaptureIntent(final Context context, final File destinationFile) {
         final Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT,
-                Uri.fromFile(destinationFile));
+        Uri destination = FileProvider.getUriForFile(context,
+                AppConstants.MOZ_FILE_PROVIDER_AUTHORITY, destinationFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, destination);
+
+        if (AppConstants.Versions.preLollipop) {
+            // As per https://github.com/commonsguy/cw-omnibus/blob/master/Camera/FileProvider/
+            // app/src/main/java/com/commonsware/android/camcon/MainActivity.java - at least we
+            // don't have to support anything below Jelly Bean.
+            ClipData clip =
+                    ClipData.newUri(context.getContentResolver(), null, destination);
+            intent.setClipData(clip);
+        }
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         return intent;
     }
 

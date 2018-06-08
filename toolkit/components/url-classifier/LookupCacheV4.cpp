@@ -36,7 +36,7 @@ public:
   void Merge(PrefixStringMap& aPrefixMap);
 
   // Find the smallest string from the map in VLPrefixSet.
-  bool GetSmallestPrefix(nsACString& aOutString);
+  bool GetSmallestPrefix(nsACString& aOutString) const;
 
   // Return the number of prefixes in the map
   uint32_t Count() const { return mCount; }
@@ -136,7 +136,7 @@ LookupCacheV4::Has(const Completion& aCompletion,
 }
 
 bool
-LookupCacheV4::IsEmpty()
+LookupCacheV4::IsEmpty() const
 {
   bool isEmpty;
   mVLPrefixSet->IsEmpty(&isEmpty);
@@ -210,7 +210,7 @@ LookupCacheV4::LoadFromFile(nsIFile* aFile)
 }
 
 size_t
-LookupCacheV4::SizeOfPrefixSet()
+LookupCacheV4::SizeOfPrefixSet() const
 {
   return mVLPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }
@@ -232,6 +232,21 @@ AppendPrefixToMap(PrefixStringMap& prefixes, const nsACString& prefix)
   return NS_OK;
 }
 
+static nsresult
+InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
+{
+  nsresult rv;
+  aCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aCrypto->Init(nsICryptoHash::SHA256);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitCrypto failed");
+
+  return rv;
+}
+
 // Read prefix into a buffer and also update the hash which
 // keeps track of the checksum
 static void
@@ -246,7 +261,7 @@ UpdateChecksum(nsICryptoHash* aCrypto, const nsACString& aPrefix)
 // Please see https://bug1287058.bmoattachments.org/attachment.cgi?id=8795366
 // for detail about partial update algorithm.
 nsresult
-LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
+LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
                            PrefixStringMap& aInputMap,
                            PrefixStringMap& aOutputMap)
 {
@@ -267,7 +282,7 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
   // remove from the old prefix set(according to lexigraphic order).
   // |removalIndex| is the current index of RemovalIndiceArray.
   // |numOldPrefixPicked| is used to record how many prefixes we picked from the old map.
-  TableUpdateV4::RemovalIndiceArray& removalArray = aTableUpdate->RemovalIndices();
+  const TableUpdateV4::RemovalIndiceArray& removalArray = aTableUpdate->RemovalIndices();
   uint32_t removalIndex = 0;
   int32_t numOldPrefixPicked = -1;
 
@@ -377,21 +392,6 @@ LookupCacheV4::AddFullHashResponseToCache(const FullHashResponseMap& aResponseMa
   CopyClassHashTable<FullHashResponseMap>(aResponseMap, mFullHashCache);
 
   return NS_OK;
-}
-
-nsresult
-LookupCacheV4::InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
-{
-  nsresult rv;
-  aCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aCrypto->Init(nsICryptoHash::SHA256);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitCrypto failed");
-
-  return rv;
 }
 
 nsresult
@@ -525,7 +525,7 @@ ReadValue(nsIInputStream* aInputStream, T& aValue)
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-LookupCacheV4::WriteMetadata(TableUpdateV4* aTableUpdate)
+LookupCacheV4::WriteMetadata(RefPtr<const TableUpdateV4> aTableUpdate)
 {
   NS_ENSURE_ARG_POINTER(aTableUpdate);
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
@@ -618,7 +618,7 @@ VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
 }
 
 bool
-VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) {
+VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
   PrefixString* pick = nullptr;
   for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
     PrefixString* str = iter.Data();

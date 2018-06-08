@@ -34,6 +34,11 @@ def use_fetches(config, jobs):
     for job in jobs:
         fetches = job.pop('fetches', [])
 
+        # Hack added for `mach artifact toolchain` to support reading toolchain
+        # kinds in isolation.
+        if config.params.get('ignore_fetches'):
+            fetches[:] = []
+
         for fetch in fetches:
             if fetch not in artifacts:
                 raise Exception('Missing fetch job for %s-%s: %s' % (

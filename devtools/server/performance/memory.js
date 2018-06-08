@@ -14,10 +14,8 @@ loader.lazyRequireGetter(this, "DeferredTask",
 loader.lazyRequireGetter(this, "StackFrameCache",
   "devtools/server/actors/utils/stack", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
-loader.lazyRequireGetter(this, "ChromeActor", "devtools/server/actors/chrome",
-                         true);
-loader.lazyRequireGetter(this, "ChildProcessActor",
-                         "devtools/server/actors/child-process", true);
+loader.lazyRequireGetter(this, "ParentProcessTargetActor", "devtools/server/actors/targets/parent-process", true);
+loader.lazyRequireGetter(this, "ContentProcessTargetActor", "devtools/server/actors/targets/content-process", true);
 
 /**
  * A class that returns memory data for a parent actor's window.
@@ -144,8 +142,8 @@ Memory.prototype = {
     // If we are observing the whole process, then scope the snapshot
     // accordingly. Otherwise, use the debugger's debuggees.
     if (!boundaries) {
-      if (this.parent instanceof ChromeActor ||
-          this.parent instanceof ChildProcessActor) {
+      if (this.parent instanceof ParentProcessTargetActor ||
+          this.parent instanceof ContentProcessTargetActor) {
         boundaries = { runtime: true };
       } else {
         boundaries = { debugger: this.dbg };

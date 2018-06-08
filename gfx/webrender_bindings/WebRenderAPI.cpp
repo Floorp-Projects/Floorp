@@ -720,6 +720,7 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        const wr::LayoutSize& aContentSize,
                                        size_t aCapacity)
+  : mActiveFixedPosTracker(nullptr)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
@@ -1214,6 +1215,14 @@ DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
                         aClipMode);
 }
 
+Maybe<layers::FrameMetrics::ViewID>
+DisplayListBuilder::GetContainingFixedPosScrollTarget(const ActiveScrolledRoot* aAsr)
+{
+  return mActiveFixedPosTracker
+      ? mActiveFixedPosTracker->GetScrollTargetForASR(aAsr)
+      : Nothing();
+}
+
 void
 DisplayListBuilder::SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
                                    gfx::CompositorHitTestInfo aHitInfo)
@@ -1227,6 +1236,29 @@ void
 DisplayListBuilder::ClearHitTestInfo()
 {
   wr_clear_item_tag(mWrState);
+}
+
+DisplayListBuilder::FixedPosScrollTargetTracker::FixedPosScrollTargetTracker(
+    DisplayListBuilder& aBuilder,
+    const ActiveScrolledRoot* aAsr,
+    layers::FrameMetrics::ViewID aScrollId)
+  : mParentTracker(aBuilder.mActiveFixedPosTracker)
+  , mBuilder(aBuilder)
+  , mAsr(aAsr)
+  , mScrollId(aScrollId)
+{
+  aBuilder.mActiveFixedPosTracker = this;
+}
+
+DisplayListBuilder::FixedPosScrollTargetTracker::~FixedPosScrollTargetTracker()
+{
+  mBuilder.mActiveFixedPosTracker = mParentTracker;
+}
+
+Maybe<layers::FrameMetrics::ViewID>
+DisplayListBuilder::FixedPosScrollTargetTracker::GetScrollTargetForASR(const ActiveScrolledRoot* aAsr)
+{
+  return aAsr == mAsr ? Some(mScrollId) : Nothing();
 }
 
 } // namespace wr

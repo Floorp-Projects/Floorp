@@ -28,5 +28,8 @@ ErrorActor.prototype.requestTypes = {
   "error": ErrorActor.prototype.onError
 };
 
-DebuggerServer.removeGlobalActor(ErrorActor);
-DebuggerServer.addGlobalActor(ErrorActor, "errorActor");
+DebuggerServer.removeGlobalActor("errorActor");
+DebuggerServer.addGlobalActor({
+  constructorName: "ErrorActor",
+  constructorFun: ErrorActor,
+}, "errorActor");

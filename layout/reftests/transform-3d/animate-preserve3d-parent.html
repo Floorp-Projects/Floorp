@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html class="reftest-wait reftest-no-flush">
+<html class="reftest-wait">
 <title>Testcase, bug 1176969</title>
 <style>
 
@@ -48,14 +48,11 @@ function StartListener(event) {
 }
 
 function IterationListener(event) {
-  window.addEventListener("MozAfterPaint", () => {
-    requestAnimationFrame(RemoveReftestWait);
-  }, { once: true });
+  setTimeout(RemoveReftestWait, 0);
 }
 
 function RemoveReftestWait() {
   document.documentElement.classList.remove("reftest-wait");
-  document.documentElement.classList.add("reftest-ignore-pending-paints");
 }
 
 </script>

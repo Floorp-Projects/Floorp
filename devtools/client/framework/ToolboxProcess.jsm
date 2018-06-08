@@ -113,7 +113,7 @@ BrowserToolboxProcess.getBrowserToolboxSessionState = function() {
 };
 
 /**
- * Passes a set of options to the BrowserAddonActors for the given ID.
+ * Passes a set of options to the AddonTargetActors for the given ID.
  *
  * @param id string
  *        The ID of the add-on to pass the options to
@@ -158,7 +158,7 @@ BrowserToolboxProcess.prototype = {
     this.debuggerServer.on("connectionchange", this._onConnectionChange);
 
     this.debuggerServer.init();
-    // We mainly need a root actor and tab actors for opening a toolbox, even
+    // We mainly need a root actor and target actors for opening a toolbox, even
     // against chrome/content/addon. But the "no auto hide" button uses the
     // preference actor, so also register the browser actors.
     this.debuggerServer.registerAllActors();

@@ -14,15 +14,15 @@ const WebGLPrimitivesType = {
 };
 
 /**
- * A utility for monitoring WebGL primitive draws. Takes a `tabActor`
+ * A utility for monitoring WebGL primitive draws. Takes a `targetActor`
  * and monitors primitive draws over time.
  */
 const WebGLDrawArrays = "drawArrays";
 const WebGLDrawElements = "drawElements";
 
 exports.WebGLPrimitiveCounter = class WebGLPrimitiveCounter {
-  constructor(tabActor) {
-    this.tabActor = tabActor;
+  constructor(targetActor) {
+    this.targetActor = targetActor;
   }
 
   destroy() {}
@@ -35,7 +35,7 @@ exports.WebGLPrimitiveCounter = class WebGLPrimitiveCounter {
     this._vertices = 0;
     this._points = 0;
     this._lines = 0;
-    this._startTime = this.tabActor.docShell.now();
+    this._startTime = this.targetActor.docShell.now();
   }
 
   /**

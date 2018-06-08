@@ -12,13 +12,13 @@ var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
-loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
-loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/webextension-parent", true);
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
-loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker-list", true);
+loader.lazyRequireGetter(this, "FrameTargetActorProxy", "devtools/server/actors/targets/frame-proxy", true);
+loader.lazyRequireGetter(this, "AddonTargetActor", "devtools/server/actors/targets/addon", true);
+loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/addon/webextension-parent", true);
+loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
+loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-loader.lazyImporter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
 
 /**
  * Browser-specific actors.
@@ -74,7 +74,7 @@ function createRootActor(connection) {
   return new RootActor(connection, {
     tabList: new BrowserTabList(connection),
     addonList: new BrowserAddonList(connection),
-    workerList: new WorkerActorList(connection, {}),
+    workerList: new WorkerTargetActorList(connection, {}),
     serviceWorkerRegistrationList:
       new ServiceWorkerRegistrationActorList(connection),
     processList: new ProcessActorList(),
@@ -84,11 +84,11 @@ function createRootActor(connection) {
 }
 
 /**
- * A live list of BrowserTabActors representing the current browser tabs,
+ * A live list of FrameTargetActorProxys representing the current browser tabs,
  * to be provided to the root actor to answer 'listTabs' requests.
  *
  * This object also takes care of listening for TabClose events and
- * onCloseWindow notifications, and exiting the BrowserTabActors concerned.
+ * onCloseWindow notifications, and exiting the target actors concerned.
  *
  * (See the documentation for RootActor for the definition of the "live
  * list" interface.)
@@ -230,9 +230,7 @@ BrowserTabList.prototype._getBrowsers = function* () {
   // Iterate over all navigator:browser XUL windows.
   for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
     // For each tab in this XUL window, ensure that we have an actor for
-    // it, reusing existing actors where possible. We actually iterate
-    // over 'browser' XUL elements, and BrowserTabActor uses
-    // browser.contentWindow as the debuggee global.
+    // it, reusing existing actors where possible.
     for (const browser of this._getChildren(win)) {
       yield browser;
     }
@@ -309,7 +307,7 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
 };
 
 /**
- * @param browserActorOptions see options argument of BrowserTabActor constructor.
+ * @param browserActorOptions see options argument of FrameTargetActorProxy constructor.
  */
 BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOptions) {
   // Do we have an existing actor for this browser? If not, create one.
@@ -319,7 +317,7 @@ BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOpt
     return actor.update(browserActorOptions);
   }
 
-  actor = new BrowserTabActor(this._connection, browser, browserActorOptions);
+  actor = new FrameTargetActorProxy(this._connection, browser, browserActorOptions);
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
   return actor.connect();
@@ -419,7 +417,7 @@ BrowserTabList.prototype._notifyListChanged = function() {
 BrowserTabList.prototype._handleActorClose = function(actor, browser) {
   if (this._testing) {
     if (this._actorByBrowser.get(browser) !== actor) {
-      throw new Error("BrowserTabActor not stored in map under given browser");
+      throw new Error("FrameTargetActorProxy not stored in map under given browser");
     }
     if (actor.browser !== browser) {
       throw new Error("actor's browser and map key don't match");
@@ -689,173 +687,6 @@ DevToolsUtils.makeInfallible(function(window) {
 
 exports.BrowserTabList = BrowserTabList;
 
-/**
- * Creates a tab actor for handling requests to a single browser frame.
- * Both <xul:browser> and <iframe mozbrowser> are supported.
- * This actor is a shim that connects to a ContentActor in a remote browser process.
- * All RDP packets get forwarded using the message manager.
- *
- * @param connection The main RDP connection.
- * @param browser <xul:browser> or <iframe mozbrowser> element to connect to.
- * @param options
- *        - {Boolean} favicons: true if the form should include the favicon for the tab.
- */
-function BrowserTabActor(connection, browser, options = {}) {
-  this._conn = connection;
-  this._browser = browser;
-  this._form = null;
-  this.exited = false;
-  this.options = options;
-}
-
-BrowserTabActor.prototype = {
-  async connect() {
-    const onDestroy = () => {
-      if (this._deferredUpdate) {
-        // Reject the update promise if the tab was destroyed while requesting an update
-        this._deferredUpdate.reject({
-          error: "tabDestroyed",
-          message: "Tab destroyed while performing a BrowserTabActor update"
-        });
-      }
-      this.exit();
-    };
-    const connect = DebuggerServer.connectToFrame(this._conn, this._browser, onDestroy);
-    const form = await connect;
-
-    this._form = form;
-    if (this.options.favicons) {
-      this._form.favicon = await this.getFaviconData();
-    }
-
-    return this;
-  },
-
-  get _tabbrowser() {
-    if (this._browser && typeof this._browser.getTabBrowser == "function") {
-      return this._browser.getTabBrowser();
-    }
-    return null;
-  },
-
-  get _mm() {
-    // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-    // or else fallback to asking the frameLoader itself.
-    return this._browser.messageManager ||
-           this._browser.frameLoader.messageManager;
-  },
-
-  async getFaviconData() {
-    try {
-      const { data } = await PlacesUtils.promiseFaviconData(this._form.url);
-      return data;
-    } catch (e) {
-      // Favicon unavailable for this url.
-      return null;
-    }
-  },
-
-  /**
-   * @param {Object} options
-   *        See BrowserTabActor constructor.
-   */
-  async update(options = {}) {
-    // Update the BrowserTabActor options.
-    this.options = options;
-
-    // If the child happens to be crashed/close/detach, it won't have _form set,
-    // so only request form update if some code is still listening on the other
-    // side.
-    if (this.exited) {
-      return this.connect();
-    }
-
-    const form = await new Promise(resolve => {
-      const onFormUpdate = msg => {
-        // There may be more than just one content.js (ContentActor) up and running
-        if (this._form.actor != msg.json.actor) {
-          return;
-        }
-        this._mm.removeMessageListener("debug:form", onFormUpdate);
-
-        resolve(msg.json);
-      };
-
-      this._mm.addMessageListener("debug:form", onFormUpdate);
-      this._mm.sendAsyncMessage("debug:form");
-    });
-
-    this._form = form;
-    if (this.options.favicons) {
-      this._form.favicon = await this.getFaviconData();
-    }
-
-    return this;
-  },
-
-  /**
-   * If we don't have a title from the content side because it's a zombie tab, try to find
-   * it on the chrome side.
-   */
-  get title() {
-    // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser && this._browser.__SS_restore) {
-      const sessionStore = this._browser.__SS_data;
-      // Get the last selected entry
-      const entry = sessionStore.entries[sessionStore.index - 1];
-      return entry.title;
-    }
-    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
-    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
-    // as the title.
-    if (this._tabbrowser) {
-      const tab = this._tabbrowser.getTabForBrowser(this._browser);
-      if (tab) {
-        return tab.label;
-      }
-    }
-    return "";
-  },
-
-  /**
-   * If we don't have a url from the content side because it's a zombie tab, try to find
-   * it on the chrome side.
-   */
-  get url() {
-    // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser && this._browser.__SS_restore) {
-      const sessionStore = this._browser.__SS_data;
-      // Get the last selected entry
-      const entry = sessionStore.entries[sessionStore.index - 1];
-      return entry.url;
-    }
-    return null;
-  },
-
-  form() {
-    const form = Object.assign({}, this._form);
-    // In some cases, the title and url fields might be empty.  Zombie tabs (not yet
-    // restored) are a good example.  In such cases, try to look up values for these
-    // fields using other data in the parent process.
-    if (!form.title) {
-      form.title = this.title;
-    }
-    if (!form.url) {
-      form.url = this.url;
-    }
-
-    return form;
-  },
-
-  exit() {
-    this._browser = null;
-    this._form = null;
-    this.exited = true;
-  },
-};
-
-exports.BrowserTabActor = BrowserTabActor;
-
 function BrowserAddonList(connection) {
   this._connection = connection;
   this._actorByAddonId = new Map();
@@ -870,7 +701,7 @@ BrowserAddonList.prototype.getList = async function() {
       if (addon.isWebExtension) {
         actor = new WebExtensionParentActor(this._connection, addon);
       } else {
-        actor = new BrowserAddonActor(this._connection, addon);
+        actor = new AddonTargetActor(this._connection, addon);
       }
 
       this._actorByAddonId.set(addon.id, actor);

@@ -317,7 +317,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
                 form: response.form,
                 client: client,
                 chrome: true,
-                isTabActor: false
+                isBrowsingContext: false
               };
               return TargetFactory.forRemoteTab(options);
             })
@@ -372,11 +372,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * worker actor.
    *
    * @param  {DebuggerClient} client
-   * @param  {Object} workerActor
+   * @param  {Object} workerTargetActor
    *         worker actor form to debug
    */
-  openWorkerToolbox(client, workerActor) {
-    client.attachWorker(workerActor, (response, workerClient) => {
+  openWorkerToolbox(client, workerTargetActor) {
+    client.attachWorker(workerTargetActor, (response, workerClient) => {
       const workerTarget = TargetFactory.forWorker(workerClient);
       gDevTools.showToolbox(workerTarget, null, Toolbox.HostType.WINDOW)
         .then(toolbox => {

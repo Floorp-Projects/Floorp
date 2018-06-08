@@ -7,8 +7,7 @@ const UNPACKAGED_ADDON = do_get_file("data/test_bug564667");
 const PACKAGED_ADDON = do_get_file("data/test_bug564667.xpi");
 
 var gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
-          getService(Ci.nsIChromeRegistry).
-          QueryInterface(Ci.nsIXULOverlayProvider);
+          getService(Ci.nsIChromeRegistry);
 
 /*
  * Checks that a mapping was added
@@ -37,20 +36,6 @@ function test_removed_mapping(chromeURL, target) {
   }
 }
 
-/*
- * Checks if any style overlays were added after loading
- * the manifest files
- */
-function test_no_overlays(chromeURL, target) {
-  var uri = Services.io.newURI(chromeURL);
-  var overlays = gCR.getStyleOverlays(uri);
-
-  // We shouldn't be allowed to register styles
-  if (overlays.hasMoreElements()) {
-    do_throw("Style Registered: " + chromeURL);
-  }
-}
-
 function testManifest(manifestPath, baseURI) {
 
   // ------------------  Add manifest file ------------------------
@@ -71,10 +56,6 @@ function testManifest(manifestPath, baseURI) {
 
   // Test Adding Override
   test_mapping("chrome://testOverride/content", "file:///test1/override");
-
-  // Test Not-Adding Styles
-  test_no_overlays("chrome://test1/content/style.xul",
-                   "chrome://test1/content/test1.css", "styles");
 
   // ------------------  Remove manifest file ------------------------
   Components.manager.removeBootstrappedManifestLocation(manifestPath);

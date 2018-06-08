@@ -1374,7 +1374,9 @@ class PackageFrontend(MachCommandBase):
             from taskgraph.parameters import Parameters
             params = Parameters(
                 level=os.environ.get('MOZ_SCM_LEVEL', '3'),
-                strict=False)
+                strict=False,
+                ignore_fetches=True,
+            )
 
             # TODO: move to the taskcluster package
             def tasks(kind_name):

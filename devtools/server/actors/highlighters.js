@@ -86,15 +86,15 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     this._autohide = autohide;
     this._inspector = inspector;
     this._walker = this._inspector.walker;
-    this._tabActor = this._inspector.tabActor;
+    this._targetActor = this._inspector.targetActor;
     this._highlighterEnv = new HighlighterEnvironment();
-    this._highlighterEnv.initFromTabActor(this._tabActor);
+    this._highlighterEnv.initFromTargetActor(this._targetActor);
 
     this._highlighterReady = this._highlighterReady.bind(this);
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
-    const doc = this._tabActor.window.document;
+    const doc = this._targetActor.window.document;
     // Only try to create the highlighter when the document is loaded,
     // otherwise, wait for the navigate event to fire.
     if (doc.documentElement && doc.readyState != "uninitialized") {
@@ -103,7 +103,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
     // SimpleOutlineHighlighter, and back, if the top level window changes.
-    this._tabActor.on("navigate", this._onNavigate);
+    this._targetActor.on("navigate", this._onNavigate);
   },
 
   get conn() {
@@ -120,7 +120,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   },
 
   _createHighlighter: function() {
-    this._isPreviousWindowXUL = isXUL(this._tabActor.window);
+    this._isPreviousWindowXUL = isXUL(this._targetActor.window);
 
     if (!this._isPreviousWindowXUL) {
       this._highlighter = new BoxModelHighlighter(this._highlighterEnv,
@@ -146,12 +146,12 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   _onNavigate: function({isTopLevel}) {
     // Skip navigation events for non top-level windows, or if the document
     // doesn't exist anymore.
-    if (!isTopLevel || !this._tabActor.window.document.documentElement) {
+    if (!isTopLevel || !this._targetActor.window.document.documentElement) {
       return;
     }
 
     // Only rebuild the highlighter if the window type changed.
-    if (isXUL(this._tabActor.window) !== this._isPreviousWindowXUL) {
+    if (isXUL(this._targetActor.window) !== this._isPreviousWindowXUL) {
       this._destroyHighlighter();
       this._createHighlighter();
     }
@@ -162,7 +162,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
 
     this.hideBoxModel();
     this._destroyHighlighter();
-    this._tabActor.off("navigate", this._onNavigate);
+    this._targetActor.off("navigate", this._onNavigate);
 
     this._highlighterEnv.destroy();
     this._highlighterEnv = null;
@@ -170,7 +170,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     this._autohide = null;
     this._inspector = null;
     this._walker = null;
-    this._tabActor = null;
+    this._targetActor = null;
   },
 
   /**
@@ -260,7 +260,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       this._stopPickerListeners();
       this._isPicking = false;
       if (this._autohide) {
-        this._tabActor.window.setTimeout(() => {
+        this._targetActor.window.setTimeout(() => {
           this._highlighter.hide();
         }, HIGHLIGHTER_PICKED_TIMER);
       }
@@ -436,7 +436,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
-   * implement constructor(tabActor), show(node), hide(), destroy()
+   * implement constructor(targetActor), show(node), hide(), destroy()
    */
   initialize: function(parent, typeName) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -455,9 +455,9 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
     // container to append their elements and thus a non-XUL window or they have
     // to define a static XULSupported flag that indicates that the highlighter
     // supports XUL windows. Otherwise, bail out.
-    if (!isXUL(this._parent.tabActor.window) || constructor.XULSupported) {
+    if (!isXUL(this._parent.targetActor.window) || constructor.XULSupported) {
       this._highlighterEnv = new HighlighterEnvironment();
-      this._highlighterEnv.initFromTabActor(parent.tabActor);
+      this._highlighterEnv.initFromTargetActor(parent.targetActor);
       this._highlighter = new constructor(this._highlighterEnv);
       if (this._highlighter.on) {
         this._highlighter.on("highlighter-event", this._onHighlighterEvent.bind(this));
@@ -545,19 +545,19 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
  * The HighlighterEnvironment is an object that holds all the required data for
  * highlighters to work: the window, docShell, event listener target, ...
  * It also emits "will-navigate", "navigate" and "window-ready" events,
- * similarly to the TabActor.
+ * similarly to the BrowsingContextTargetActor.
  *
- * It can be initialized either from a TabActor (which is the most frequent way
- * of using it, since highlighters are usually initialized by the
- * HighlighterActor or CustomHighlighterActor, which have a tabActor reference).
- * It can also be initialized just with a window object (which is useful for
- * when a highlighter is used outside of the debugger server context, for
- * instance from a gcli command).
+ * It can be initialized either from a BrowsingContextTargetActor (which is the
+ * most frequent way of using it, since highlighters are usually initialized by
+ * the HighlighterActor or CustomHighlighterActor, which have a targetActor
+ * reference). It can also be initialized just with a window object (which is
+ * useful for when a highlighter is used outside of the debugger server context,
+ * for instance from a gcli command).
  */
 function HighlighterEnvironment() {
-  this.relayTabActorWindowReady = this.relayTabActorWindowReady.bind(this);
-  this.relayTabActorNavigate = this.relayTabActorNavigate.bind(this);
-  this.relayTabActorWillNavigate = this.relayTabActorWillNavigate.bind(this);
+  this.relayTargetActorWindowReady = this.relayTargetActorWindowReady.bind(this);
+  this.relayTargetActorNavigate = this.relayTargetActorNavigate.bind(this);
+  this.relayTargetActorWillNavigate = this.relayTargetActorWillNavigate.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -565,11 +565,11 @@ function HighlighterEnvironment() {
 exports.HighlighterEnvironment = HighlighterEnvironment;
 
 HighlighterEnvironment.prototype = {
-  initFromTabActor: function(tabActor) {
-    this._tabActor = tabActor;
-    this._tabActor.on("window-ready", this.relayTabActorWindowReady);
-    this._tabActor.on("navigate", this.relayTabActorNavigate);
-    this._tabActor.on("will-navigate", this.relayTabActorWillNavigate);
+  initFromTargetActor: function(targetActor) {
+    this._targetActor = targetActor;
+    this._targetActor.on("window-ready", this.relayTargetActorWindowReady);
+    this._targetActor.on("navigate", this.relayTargetActorNavigate);
+    this._targetActor.on("will-navigate", this.relayTargetActorWillNavigate);
   },
 
   initFromWindow: function(win) {
@@ -617,7 +617,7 @@ HighlighterEnvironment.prototype = {
   },
 
   get isInitialized() {
-    return this._win || this._tabActor;
+    return this._win || this._targetActor;
   },
 
   get isXUL() {
@@ -626,10 +626,10 @@ HighlighterEnvironment.prototype = {
 
   get window() {
     if (!this.isInitialized) {
-      throw new Error("Initialize HighlighterEnvironment with a tabActor " +
+      throw new Error("Initialize HighlighterEnvironment with a targetActor " +
         "or window first");
     }
-    const win = this._tabActor ? this._tabActor.window : this._win;
+    const win = this._targetActor ? this._targetActor.window : this._win;
 
     return Cu.isDeadWrapper(win) ? null : win;
   },
@@ -653,41 +653,40 @@ HighlighterEnvironment.prototype = {
 
   /**
    * Get the right target for listening to events on the page.
-   * - If the environment was initialized from a TabActor *and* if we're in the
-   *   Browser Toolbox (to inspect firefox desktop): the tabActor is the
-   *   RootActor, in which case, the window property can be used to listen to
-   *   events.
-   * - With firefox desktop, that tabActor is a BrowserTabActor, and with B2G,
-   *   a ContentActor (which overrides BrowserTabActor). In both cases we use
+   * - If the environment was initialized from a BrowsingContextTargetActor
+   *   *and* if we're in the Browser Toolbox (to inspect Firefox Desktop): the
+   *   targetActor is the RootActor, in which case, the window property can be
+   *   used to listen to events.
+   * - With Firefox Desktop, the targetActor is a FrameTargetActor, and we use
    *   the chromeEventHandler which gives us a target we can use to listen to
    *   events, even from nested iframes.
    * - If the environment was initialized from a window, we also use the
    *   chromeEventHandler.
    */
   get pageListenerTarget() {
-    if (this._tabActor && this._tabActor.isRootActor) {
+    if (this._targetActor && this._targetActor.isRootActor) {
       return this.window;
     }
     return this.docShell && this.docShell.chromeEventHandler;
   },
 
-  relayTabActorWindowReady: function(data) {
+  relayTargetActorWindowReady: function(data) {
     this.emit("window-ready", data);
   },
 
-  relayTabActorNavigate: function(data) {
+  relayTargetActorNavigate: function(data) {
     this.emit("navigate", data);
   },
 
-  relayTabActorWillNavigate: function(data) {
+  relayTargetActorWillNavigate: function(data) {
     this.emit("will-navigate", data);
   },
 
   destroy: function() {
-    if (this._tabActor) {
-      this._tabActor.off("window-ready", this.relayTabActorWindowReady);
-      this._tabActor.off("navigate", this.relayTabActorNavigate);
-      this._tabActor.off("will-navigate", this.relayTabActorWillNavigate);
+    if (this._targetActor) {
+      this._targetActor.off("window-ready", this.relayTargetActorWindowReady);
+      this._targetActor.off("navigate", this.relayTargetActorNavigate);
+      this._targetActor.off("will-navigate", this.relayTargetActorWillNavigate);
     }
 
     // In case the environment was initialized from a window, we need to remove
@@ -700,7 +699,7 @@ HighlighterEnvironment.prototype = {
       }
     }
 
-    this._tabActor = null;
+    this._targetActor = null;
     this._win = null;
   }
 };

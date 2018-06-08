@@ -220,7 +220,7 @@ TableUpdateV4::NewChecksum(const std::string& aChecksum)
 
 nsresult
 TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
-                                   CachedFullHashResponse& aResponse)
+                                   const CachedFullHashResponse& aResponse)
 {
   CachedFullHashResponse* response =
     mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
@@ -374,7 +374,7 @@ HashStore::ReadHeader()
 }
 
 nsresult
-HashStore::SanityCheck()
+HashStore::SanityCheck() const
 {
   if (mHeader.magic != STORE_MAGIC || mHeader.version != CURRENT_VERSION) {
     NS_WARNING("Unexpected header data in the store.");
@@ -571,7 +571,7 @@ template<class T>
 static nsresult
 Merge(ChunkSet* aStoreChunks,
       FallibleTArray<T>* aStorePrefixes,
-      ChunkSet& aUpdateChunks,
+      const ChunkSet& aUpdateChunks,
       FallibleTArray<T>& aUpdatePrefixes,
       bool aAllowMerging = false)
 {
@@ -619,36 +619,33 @@ Merge(ChunkSet* aStoreChunks,
 }
 
 nsresult
-HashStore::ApplyUpdate(TableUpdate &aUpdate)
+HashStore::ApplyUpdate(RefPtr<TableUpdateV2> aUpdate)
 {
-  auto updateV2 = TableUpdate::Cast<TableUpdateV2>(&aUpdate);
-  NS_ENSURE_TRUE(updateV2, NS_ERROR_FAILURE);
+  MOZ_ASSERT(mTableName.Equals(aUpdate->TableName()));
 
-  TableUpdateV2& update = *updateV2;
-
-  nsresult rv = mAddExpirations.Merge(update.AddExpirations());
+  nsresult rv = mAddExpirations.Merge(aUpdate->AddExpirations());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mSubExpirations.Merge(update.SubExpirations());
+  rv = mSubExpirations.Merge(aUpdate->SubExpirations());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Expire();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mAddChunks, &mAddPrefixes,
-             update.AddChunks(), update.AddPrefixes());
+             aUpdate->AddChunks(), aUpdate->AddPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mAddChunks, &mAddCompletes,
-             update.AddChunks(), update.AddCompletes(), true);
+             aUpdate->AddChunks(), aUpdate->AddCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubPrefixes,
-             update.SubChunks(), update.SubPrefixes());
+             aUpdate->SubChunks(), aUpdate->SubPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubCompletes,
-             update.SubChunks(), update.SubCompletes(), true);
+             aUpdate->SubChunks(), aUpdate->SubCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1245,7 +1242,7 @@ HashStore::SubCompletes()
 }
 
 bool
-HashStore::AlreadyReadChunkNumbers()
+HashStore::AlreadyReadChunkNumbers() const
 {
   // If there are chunks but chunk set not yet contains any data
   // Then we haven't read chunk numbers.
@@ -1257,7 +1254,7 @@ HashStore::AlreadyReadChunkNumbers()
 }
 
 bool
-HashStore::AlreadyReadCompletions()
+HashStore::AlreadyReadCompletions() const
 {
   // If there are completions but completion set not yet contains any data
   // Then we haven't read completions.

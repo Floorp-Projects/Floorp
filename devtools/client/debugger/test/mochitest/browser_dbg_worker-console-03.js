@@ -1,8 +1,8 @@
 // Check to make sure that a worker can be attached to a toolbox
 // and that the console works.
 
-var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
-var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
+var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
+var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 // Test to see if creating the pause from the console works.
 add_task(async function testPausedByConsole() {

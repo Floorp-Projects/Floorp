@@ -8,11 +8,11 @@
 #include "Entries.h"
 #include "ChunkSet.h"
 
-#include "chromium/safebrowsing.pb.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
+#include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include <string>
@@ -30,7 +30,7 @@ public:
   {
   }
 
-  virtual ~TableUpdate() {}
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TableUpdate);
 
   // To be overriden.
   virtual bool Empty() const = 0;
@@ -42,12 +42,22 @@ public:
   static T* Cast(TableUpdate* aThat) {
     return (T::TAG == aThat->Tag() ? reinterpret_cast<T*>(aThat) : nullptr);
   }
+  template<typename T>
+  static const T* Cast(const TableUpdate* aThat) {
+    return (T::TAG == aThat->Tag() ? reinterpret_cast<const T*>(aThat) : nullptr);
+  }
+
+protected:
+  virtual ~TableUpdate() {}
 
 private:
   virtual int Tag() const = 0;
 
-  nsCString mTable;
+  const nsCString mTable;
 };
+
+typedef nsTArray<RefPtr<TableUpdate>> TableUpdateArray;
+typedef nsTArray<RefPtr<const TableUpdate>> ConstTableUpdateArray;
 
 // A table update is built from a single update chunk from the server. As the
 // protocol parser processes each chunk, it constructs a table update with the
@@ -94,21 +104,22 @@ public:
                                        uint32_t aSubChunk);
   MOZ_MUST_USE nsresult NewMissPrefix(const Prefix& aPrefix);
 
-  ChunkSet& AddChunks() { return mAddChunks; }
-  ChunkSet& SubChunks() { return mSubChunks; }
+  const ChunkSet& AddChunks() const { return mAddChunks; }
+  const ChunkSet& SubChunks() const { return mSubChunks; }
 
   // Expirations for chunks.
-  ChunkSet& AddExpirations() { return mAddExpirations; }
-  ChunkSet& SubExpirations() { return mSubExpirations; }
+  const ChunkSet& AddExpirations() const { return mAddExpirations; }
+  const ChunkSet& SubExpirations() const { return mSubExpirations; }
 
   // Hashes associated with this chunk.
   AddPrefixArray& AddPrefixes() { return mAddPrefixes; }
   SubPrefixArray& SubPrefixes() { return mSubPrefixes; }
+  const AddCompleteArray& AddCompletes() const { return mAddCompletes; }
   AddCompleteArray& AddCompletes() { return mAddCompletes; }
   SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
   // Entries that cannot be completed.
-  MissPrefixArray& MissPrefixes() { return mMissPrefixes; }
+  const MissPrefixArray& MissPrefixes() const { return mMissPrefixes; }
 
   // For downcasting.
   static const int TAG = 2;
@@ -157,8 +168,8 @@ public:
   }
 
   bool IsFullUpdate() const { return mFullUpdate; }
-  const PrefixStringMap& Prefixes() { return mPrefixesMap; }
-  RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
+  const PrefixStringMap& Prefixes() const { return mPrefixesMap; }
+  const RemovalIndiceArray& RemovalIndices() const { return mRemovalIndiceArray; }
   const nsACString& ClientState() const { return mClientState; }
   const nsACString& Checksum() const { return mChecksum; }
   const FullHashResponseMap& FullHashResponse() const { return mFullHashResponseMap; }
@@ -173,7 +184,7 @@ public:
 
   nsresult NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   nsresult NewFullHashResponse(const Prefix& aPrefix,
-                               CachedFullHashResponse& aResponse);
+                               const CachedFullHashResponse& aResponse);
 
 private:
   virtual int Tag() const override { return TAG; }
@@ -220,7 +231,7 @@ public:
   nsresult BeginUpdate();
 
   // Imports the data from a TableUpdate.
-  nsresult ApplyUpdate(TableUpdate &aUpdate);
+  nsresult ApplyUpdate(RefPtr<TableUpdateV2> aUpdate);
 
   // Process expired chunks
   nsresult Expire();
@@ -240,7 +251,7 @@ private:
   nsresult Reset();
 
   nsresult ReadHeader();
-  nsresult SanityCheck();
+  nsresult SanityCheck() const;
   nsresult CalculateChecksum(nsAutoCString& aChecksum, uint32_t aFileSize,
                              bool aChecksumPresent);
   nsresult CheckChecksum(uint32_t aFileSize);
@@ -260,8 +271,8 @@ private:
 
   nsresult PrepareForUpdate();
 
-  bool AlreadyReadChunkNumbers();
-  bool AlreadyReadCompletions();
+  bool AlreadyReadChunkNumbers() const;
+  bool AlreadyReadCompletions() const;
 
  // This is used for checking that the database is correct and for figuring out
  // the number of chunks, etc. to read from disk on restart.
@@ -280,7 +291,7 @@ private:
 
   // The name of the table (must end in -shavar or -digest256, or evidently
   // -simple for unittesting.
-  nsCString mTableName;
+  const nsCString mTableName;
   nsCOMPtr<nsIFile> mStoreDirectory;
 
   bool mInUpdate;

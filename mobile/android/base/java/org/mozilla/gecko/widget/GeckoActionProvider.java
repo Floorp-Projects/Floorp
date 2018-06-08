@@ -8,9 +8,11 @@ package org.mozilla.gecko.widget;
 import android.app.Activity;
 import android.net.Uri;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.FileProvider;
 import android.util.Base64;
 import android.view.Menu;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
@@ -328,7 +330,7 @@ public class GeckoActionProvider {
                 os.write(buf);
 
                 // Only alter the intent when we're sure everything has worked
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+                addFileExtra(intent, imageFile);
             } else {
                 InputStream is = null;
                 try {
@@ -346,7 +348,7 @@ public class GeckoActionProvider {
                     }
 
                     // Only alter the intent when we're sure everything has worked
-                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+                    addFileExtra(intent, imageFile);
                 } finally {
                     IOUtils.safeStreamClose(is);
                 }
@@ -355,6 +357,17 @@ public class GeckoActionProvider {
             // If something went wrong, we'll just leave the intent un-changed
         } finally {
             IOUtils.safeStreamClose(os);
+        }
+    }
+
+    private void addFileExtra(final Intent intent, final File file) {
+        if (AppConstants.Versions.preN) {
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+        } else {
+            Uri contentUri = FileProvider.getUriForFile(mContext,
+                    AppConstants.MOZ_FILE_PROVIDER_AUTHORITY, file);
+            intent.putExtra(Intent.EXTRA_STREAM, contentUri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
     }
 }

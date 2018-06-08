@@ -4,7 +4,7 @@
 "use strict";
 
 // Test that we can save full runtime heap snapshots when attached to the
-// ChromeActor or a ChildProcessActor.
+// ParentProcessTargetActor or a ContentProcessTargetActor.
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 

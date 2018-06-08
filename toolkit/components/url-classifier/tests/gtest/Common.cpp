@@ -25,7 +25,7 @@ void RunTestInNewThread(Function&& aFunction) {
 }
 
 nsresult SyncApplyUpdates(Classifier* aClassifier,
-                          nsTArray<TableUpdate*>* aUpdates)
+                          TableUpdateArray& aUpdates)
 {
   // We need to spin a new thread specifically because the callback
   // will be on the caller thread. If we call Classifier::AsyncApplyUpdates
@@ -84,7 +84,7 @@ GetFile(const nsTArray<nsString>& path)
   return file.forget();
 }
 
-void ApplyUpdate(nsTArray<TableUpdate*>& updates)
+void ApplyUpdate(TableUpdateArray& updates)
 {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
@@ -102,12 +102,12 @@ void ApplyUpdate(nsTArray<TableUpdate*>& updates)
       ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
-  SyncApplyUpdates(classifier.get(), &updates);
+  SyncApplyUpdates(classifier.get(), updates);
 }
 
 void ApplyUpdate(TableUpdate* update)
 {
-  nsTArray<TableUpdate*> updates = { update };
+  TableUpdateArray updates = { update };
   ApplyUpdate(updates);
 }
 
@@ -182,7 +182,7 @@ BuildCache(LookupCacheV4* cache, const _PrefixArray& prefixArray)
 }
 
 template<typename T>
-UniquePtr<T>
+RefPtr<T>
 SetupLookupCache(const _PrefixArray& prefixArray)
 {
   nsCOMPtr<nsIFile> file;
@@ -190,12 +190,12 @@ SetupLookupCache(const _PrefixArray& prefixArray)
 
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
-  UniquePtr<T> cache = MakeUnique<T>(GTEST_TABLE, EmptyCString(), file);
+  RefPtr<T> cache = new T(GTEST_TABLE, EmptyCString(), file);
   nsresult rv = cache->Init();
   EXPECT_EQ(rv, NS_OK);
 
-  rv = BuildCache(cache.get(), prefixArray);
+  rv = BuildCache(cache, prefixArray);
   EXPECT_EQ(rv, NS_OK);
 
-  return std::move(cache);
+  return cache;
 }
