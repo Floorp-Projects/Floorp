@@ -606,12 +606,12 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 
   RefPtr<nsUrlClassifierDBServiceWorker> self = this;
   nsresult rv = mClassifier->AsyncApplyUpdates(mTableUpdates,
-                                               [=] (nsresult aRv) -> void {
+                                               [self] (nsresult aRv) -> void {
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
     if (NS_FAILED(aRv) &&
         NS_ERROR_OUT_OF_MEMORY != aRv &&
         NS_ERROR_UC_UPDATE_SHUTDOWNING != aRv) {
-      self->mClassifier->DumpRawTableUpdates(mRawTableUpdates);
+      self->mClassifier->DumpRawTableUpdates(self->mRawTableUpdates);
     }
     // Invalidate the raw table updates.
     self->mRawTableUpdates = EmptyCString();
@@ -963,7 +963,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   }
 
   nsresult rv;
-  nsAutoPtr<Classifier> classifier(new (fallible) Classifier());
+  RefPtr<Classifier> classifier= new (fallible) Classifier();
   if (!classifier) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
