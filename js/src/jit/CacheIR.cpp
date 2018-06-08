@@ -4939,6 +4939,12 @@ CompareIRGenerator::tryAttachStub()
 
     AutoAssertNoPendingException aanpe(cx_);
 
+    constexpr uint8_t lhsIndex = 0;
+    constexpr uint8_t rhsIndex = 1;
+
+    static_assert(lhsIndex == 0 && rhsIndex == 1,
+        "Indexes relied upon by baseline inspector");
+
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
 
