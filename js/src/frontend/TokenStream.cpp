@@ -1699,6 +1699,116 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
 
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
+TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, TokenKind* out)
+{
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '/');
+    tokenbuf.clear();
+
+    auto ProcessNonAsciiCodePoint = [this](CharT lead) {
+        int32_t codePoint;
+        if (!this->getNonAsciiCodePoint(lead, &codePoint))
+            return false;
+
+        if (codePoint == '\n') {
+            this->ungetLineTerminator();
+            this->reportError(JSMSG_UNTERMINATED_REGEXP);
+            return false;
+        }
+
+        return this->appendCodePointToTokenbuf(codePoint);
+    };
+
+    auto ReportUnterminatedRegExp = [this](CharT unit) {
+        this->ungetCodeUnit(unit);
+        this->error(JSMSG_UNTERMINATED_REGEXP);
+    };
+
+    bool inCharClass = false;
+    do {
+        int32_t unit = getCodeUnit();
+        if (unit == EOF) {
+            ReportUnterminatedRegExp(unit);
+            return badToken();
+        }
+
+        if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+            if (unit == '\\')  {
+                if (!tokenbuf.append(unit))
+                    return badToken();
+
+                unit = getCodeUnit();
+                if (unit == EOF) {
+                    ReportUnterminatedRegExp(unit);
+                    return badToken();
+                }
+
+                // Fallthrough only handles ASCII code points, so
+                // deal with non-ASCII and skip everything else.
+                if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
+                    if (!ProcessNonAsciiCodePoint(unit))
+                        return badToken();
+
+                    continue;
+                }
+            } else if (unit == '[') {
+                inCharClass = true;
+            } else if (unit == ']') {
+                inCharClass = false;
+            } else if (unit == '/' && !inCharClass) {
+                // For IE compat, allow unescaped / in char classes.
+                break;
+            }
+
+            if (unit == '\r' || unit == '\n') {
+                ReportUnterminatedRegExp(unit);
+                return badToken();
+            }
+
+            if (!tokenbuf.append(unit))
+                return badToken();
+        } else {
+            if (!ProcessNonAsciiCodePoint(unit))
+                return badToken();
+        }
+    } while (true);
+
+    int32_t unit;
+    RegExpFlag reflags = NoFlags;
+    while (true) {
+        RegExpFlag flag;
+        unit = getCodeUnit();
+        if (unit == 'g')
+            flag = GlobalFlag;
+        else if (unit == 'i')
+            flag = IgnoreCaseFlag;
+        else if (unit == 'm')
+            flag = MultilineFlag;
+        else if (unit == 'y')
+            flag = StickyFlag;
+        else if (unit == 'u')
+            flag = UnicodeFlag;
+        else if (IsAsciiAlpha(unit))
+            flag = NoFlags;
+        else
+            break;
+
+        if ((reflags & flag) || flag == NoFlags) {
+            ungetCodeUnit(unit);
+            char buf[2] = { char(unit), '\0' };
+            error(JSMSG_BAD_REGEXP_FLAG, buf);
+            return badToken();
+        }
+
+        reflags = RegExpFlag(reflags | flag);
+    }
+    ungetCodeUnit(unit);
+
+    newRegExpToken(reflags, start, out);
+    return true;
+}
+
+template<typename CharT, class AnyCharsAccess>
+MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp,
                                                              const Modifier modifier)
 {
@@ -2149,110 +2259,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             // Look for a regexp.
-            if (modifier == Operand) {
-                tokenbuf.clear();
-
-                auto ProcessNonAsciiCodePoint = [this](CharT lead) {
-                    int32_t codePoint;
-                    if (!this->getNonAsciiCodePoint(lead, &codePoint))
-                        return false;
-
-                    if (codePoint == '\n') {
-                        this->ungetLineTerminator();
-                        this->reportError(JSMSG_UNTERMINATED_REGEXP);
-                        return false;
-                    }
-
-                    return this->appendCodePointToTokenbuf(codePoint);
-                };
-
-                auto ReportUnterminatedRegExp = [this](CharT unit) {
-                    this->ungetCodeUnit(unit);
-                    this->error(JSMSG_UNTERMINATED_REGEXP);
-                };
-
-                bool inCharClass = false;
-                do {
-                    int32_t unit = getCodeUnit();
-                    if (unit == EOF) {
-                        ReportUnterminatedRegExp(unit);
-                        return badToken();
-                    }
-
-                    if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-                        if (unit == '\\')  {
-                            if (!tokenbuf.append(unit))
-                                return badToken();
-
-                            unit = getCodeUnit();
-                            if (unit == EOF) {
-                                ReportUnterminatedRegExp(unit);
-                                return badToken();
-                            }
-
-                            // Fallthrough only handles ASCII code points, so
-                            // deal with non-ASCII and skip everything else.
-                            if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
-                                if (!ProcessNonAsciiCodePoint(unit))
-                                    return badToken();
-
-                                continue;
-                            }
-                        } else if (unit == '[') {
-                            inCharClass = true;
-                        } else if (unit == ']') {
-                            inCharClass = false;
-                        } else if (unit == '/' && !inCharClass) {
-                            // For IE compat, allow unescaped / in char classes.
-                            break;
-                        }
-
-                        if (unit == '\r' || unit == '\n') {
-                            ReportUnterminatedRegExp(unit);
-                            return badToken();
-                        }
-
-                        if (!tokenbuf.append(unit))
-                            return badToken();
-                    } else {
-                        if (!ProcessNonAsciiCodePoint(unit))
-                            return badToken();
-                    }
-                } while (true);
-
-                RegExpFlag reflags = NoFlags;
-                while (true) {
-                    RegExpFlag flag;
-                    c = getCodeUnit();
-                    if (c == 'g')
-                        flag = GlobalFlag;
-                    else if (c == 'i')
-                        flag = IgnoreCaseFlag;
-                    else if (c == 'm')
-                        flag = MultilineFlag;
-                    else if (c == 'y')
-                        flag = StickyFlag;
-                    else if (c == 'u')
-                        flag = UnicodeFlag;
-                    else if (IsAsciiAlpha(c))
-                        flag = NoFlags;
-                    else
-                        break;
-
-                    if ((reflags & flag) || flag == NoFlags) {
-                        MOZ_ASSERT(sourceUnits.offset() > 0);
-                        char buf[2] = { char(c), '\0' };
-                        errorAt(sourceUnits.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
-                        return badToken();
-                    }
-
-                    reflags = RegExpFlag(reflags | flag);
-                }
-                ungetCodeUnit(c);
-
-                newRegExpToken(reflags, start, modifier, ttp);
-                return true;
-            }
+            if (modifier == Operand)
+                return regexpLiteral(start, ttp);
 
             simpleKind = matchCodeUnit('=') ? TokenKind::DivAssign : TokenKind::Div;
             break;
