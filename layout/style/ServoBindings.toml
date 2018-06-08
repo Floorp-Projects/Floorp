@@ -425,6 +425,7 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
     { generic = false, gecko = "ComputedStyleStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
+    { generic = false, gecko = "RawServoUnlockedDeclarationBlock", servo = "::properties::PropertyDeclarationBlock" },
 ]
 fixups = [
     { pat = "\\broot\\s*::\\s*nsString\\b", rep = "::nsstring::nsStringRepr" },
