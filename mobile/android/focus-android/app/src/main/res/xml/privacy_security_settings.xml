@@ -12,28 +12,24 @@
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_ads"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_privacy_block_ads_summary"
             android:title="@string/preference_privacy_block_ads" />
 
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_analytics"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_privacy_block_analytics_summary"
             android:title="@string/preference_privacy_block_analytics" />
 
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_social"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_privacy_block_social_summary"
             android:title="@string/preference_privacy_block_social" />
 
         <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_privacy_block_other"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_privacy_block_content_summary2"
             android:title="@string/preference_privacy_block_content" />
 
@@ -44,14 +40,12 @@
         <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_performance_block_webfonts"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_performance_block_webfonts_summary"
             android:title="@string/preference_performance_block_webfonts" />
 
         <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_performance_block_javascript"
-            android:layout="@layout/focus_preference"
             android:summary="@string/preference_performance_block_javascript_summary"
             android:title="@string/preference_performance_block_javascript" />
 

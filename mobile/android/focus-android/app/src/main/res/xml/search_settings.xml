@@ -7,12 +7,10 @@
 
     <org.mozilla.focus.search.SearchEnginePreference
         android:key="@string/pref_key_search_engine"
-        android:layout="@layout/focus_preference"
         android:summary="@string/preference_search_engine_default" />
 
     <org.mozilla.focus.autocomplete.AutocompletePreference
         android:key="@string/pref_key_screen_autocomplete"
-        android:layout="@layout/focus_preference"
         android:summary="WHAT?"
         android:title="@string/preference_subitem_autocomplete" />
 

@@ -5,18 +5,21 @@
     <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
     <!--suppress AndroidDomInspection -->
     <org.mozilla.focus.widget.LocaleListPreference
+        android:icon="@drawable/ic_language"
         android:defaultValue=""
         android:key="@string/pref_key_locale"
         android:layout="@layout/focus_preference"
         android:title="@string/preference_language" />
 
     <Preference
+        android:icon="@drawable/ic_lock"
         android:key="@string/pref_key_privacy_security_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_privacy_and_security_summary"
         android:title="@string/preference_privacy_and_security_header" />
 
     <Preference
+        android:icon="@drawable/ic_search"
         android:key="@string/pref_key_search_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_search_summary"
@@ -34,6 +37,7 @@
         android:title="@string/preference_default_browser2" />
 
     <org.mozilla.focus.widget.MozillaPreference
+        android:icon="@drawable/ic_mozilla"
         android:key="@string/pref_key_mozilla_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_mozilla_summary"

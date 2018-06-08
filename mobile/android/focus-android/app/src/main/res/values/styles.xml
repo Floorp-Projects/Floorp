@@ -32,7 +32,7 @@
     </style>
 
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorAccent">@color/colorAccentSettings</item>
+        <item name="colorAccent">@color/colorAccent</item>
         <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
     </style>
 

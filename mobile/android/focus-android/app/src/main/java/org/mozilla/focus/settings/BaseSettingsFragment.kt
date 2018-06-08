@@ -6,7 +6,10 @@ package org.mozilla.focus.settings
 
 import android.app.Fragment
 import android.content.Context
+import android.os.Bundle
 import android.preference.PreferenceFragment
+import android.view.View
+import android.widget.ListView
 import org.mozilla.focus.R
 
 abstract class BaseSettingsFragment : PreferenceFragment() {
@@ -16,6 +19,11 @@ abstract class BaseSettingsFragment : PreferenceFragment() {
         fun updateIcon(iconResId: Int)
     }
 
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val list = view?.findViewById<View>(android.R.id.list) as ListView
+        list.setDivider(null)
+    }
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         if (activity !is ActionBarUpdater) {

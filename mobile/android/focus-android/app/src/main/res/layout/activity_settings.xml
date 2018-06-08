@@ -8,13 +8,14 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="@color/photonInk90"
         android:elevation="4dp"/>
 
     <FrameLayout
         android:id="@+id/container"
-        android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/photonInk80"/>
 
 </LinearLayout>
