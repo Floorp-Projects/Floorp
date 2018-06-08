@@ -364,11 +364,17 @@ this.ExtensionStorageIDB = {
       let promise;
 
       if (context.childManager) {
-        // Ask the parent process if the new backend is enabled for the
-        // running extension.
-        promise = context.childManager.callParentAsyncFunction(
-          "storage.local.IDBBackend.selectBackend", []
-        ).then(result => {
+        // Create a promise object that is not tied to the current extension context, because
+        // we are caching it for the entire life of the extension in the current process (and
+        // the promise returned by context.childManager.callParentAsyncFunction would become
+        // a dead object when the context.cloneScope has been destroyed).
+        promise = (async () => {
+          // Ask the parent process if the new backend is enabled for the
+          // running extension.
+          let result = await context.childManager.callParentAsyncFunction(
+            "storage.local.IDBBackend.selectBackend", []
+          );
+
           if (!result.backendEnabled) {
             return {backendEnabled: false};
           }
@@ -379,7 +385,7 @@ this.ExtensionStorageIDB = {
             // from the StructuredCloneHolder used to send it across the processes.
             storagePrincipal: result.storagePrincipal.deserialize(this),
           };
-        });
+        })();
       } else {
         // If migrating to the IDB backend is not enabled by the preference, then we
         // don't need to migrate any data and the new backend is not enabled.
