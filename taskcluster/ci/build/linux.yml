@@ -23,6 +23,7 @@ linux64/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-plain/opt:
@@ -82,6 +83,7 @@ linux64-dmd/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64/pgo:
@@ -110,6 +112,7 @@ linux64/pgo:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-fuzzing/debug:
@@ -141,6 +144,7 @@ linux64-fuzzing/debug:
         - linux64-gcc
         - linux64-sccache
         - linux64-rust
+        - linux64-rust-size
 
 linux64/debug:
     description: "Linux64 Debug"
@@ -169,6 +173,7 @@ linux64/debug:
         - linux64-gcc
         - linux64-sccache
         - linux64-rust
+        - linux64-rust-size
 
 linux64-plain/debug:
     description: "Linux64 Debug Plain"
@@ -231,6 +236,7 @@ linux64-devedition-nightly/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-base-toolchains/opt:
@@ -318,6 +324,7 @@ linux/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux/debug:
@@ -347,6 +354,7 @@ linux/debug:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux/pgo:
@@ -376,6 +384,7 @@ linux/pgo:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux-rusttests/opt:
@@ -480,6 +489,7 @@ linux-devedition-nightly/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux-nightly/opt:
@@ -514,6 +524,7 @@ linux-nightly/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 
@@ -545,6 +556,7 @@ linux64-asan/opt:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 
@@ -576,6 +588,7 @@ linux64-asan-fuzzing/opt:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-asan-reporter-nightly/opt:
@@ -610,6 +623,7 @@ linux64-asan-reporter-nightly/opt:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-asan/debug:
@@ -640,6 +654,7 @@ linux64-asan/debug:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-lto/opt:
@@ -671,6 +686,7 @@ linux64-lto/opt:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-lto/debug:
@@ -702,6 +718,7 @@ linux64-lto/debug:
         - linux64-clang-6
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-nightly/opt:
@@ -735,6 +752,7 @@ linux64-nightly/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-noopt/debug:
@@ -766,6 +784,7 @@ linux64-noopt/debug:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
 
 linux64-rusttests/opt:
@@ -981,4 +1000,5 @@ linux64-add-on-devel/opt:
         - linux64-clang
         - linux64-gcc
         - linux64-rust
+        - linux64-rust-size
         - linux64-sccache
