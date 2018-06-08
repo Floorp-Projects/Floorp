@@ -19,4 +19,7 @@ PostInitTabActor.prototype.requestTypes = {
   "ping": PostInitTabActor.prototype.onPing,
 };
 
-DebuggerServer.addGlobalActor(PostInitTabActor, "postInitTabActor");
+DebuggerServer.addTabActor({
+  constructorName: "PostInitTabActor",
+  constructorFun: PostInitTabActor,
+}, "postInitTabActor");

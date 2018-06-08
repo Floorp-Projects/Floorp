@@ -147,7 +147,7 @@ var DebuggerServer = {
 
   /**
    * We run a special server in child process whose main actor is an instance
-   * of ContentActor, but that isn't a root actor. Instead there is no root
+   * of FrameTargetActor, but that isn't a root actor. Instead there is no root
    * actor registered on DebuggerServer.
    */
   get rootlessServer() {
@@ -399,7 +399,7 @@ var DebuggerServer = {
       constructor: "ActorRegistryActor",
       type: { global: true }
     });
-    this.registerModule("devtools/server/actors/addons", {
+    this.registerModule("devtools/server/actors/addon/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
       type: { global: true }
@@ -527,7 +527,7 @@ var DebuggerServer = {
       constructor: "EmulationActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/webextension-inspected-window", {
+    this.registerModule("devtools/server/actors/addon/webextension-inspected-window", {
       prefix: "webExtensionInspectedWindow",
       constructor: "WebExtensionInspectedWindowActor",
       type: { tab: true }
@@ -540,7 +540,7 @@ var DebuggerServer = {
   },
 
   /**
-   * Passes a set of options to the BrowserAddonActors for the given ID.
+   * Passes a set of options to the AddonTargetActors for the given ID.
    *
    * @param id string
    *        The ID of the add-on to pass the options to
@@ -974,12 +974,10 @@ var DebuggerServer = {
    * @param Element frame
    *        The frame element with remote content to connect to.
    * @param function [onDestroy]
-   *        Optional function to invoke when the child process closes
-   *        or the connection shuts down. (Need to forget about the
-   *        related TabActor)
+   *        Optional function to invoke when the child process closes or the connection
+   *        shuts down. (Need to forget about the related target actor.)
    * @return object
-   *         A promise object that is resolved once the connection is
-   *         established.
+   *         A promise object that is resolved once the connection is established.
    */
   connectToFrame(connection, frame, onDestroy, {addonId} = {}) {
     return new Promise(resolve => {
@@ -1129,7 +1127,7 @@ var DebuggerServer = {
           resolve(null);
         }
         if (actor) {
-          // The ContentActor within the child process doesn't necessary
+          // The FrameTargetActor within the child process doesn't necessary
           // have time to uninitialize itself when the frame is closed/killed.
           // So ensure telling the client that the related actor is detached.
           connection.send({ from: actor.actor, type: "tabDetached" });
@@ -1227,22 +1225,21 @@ var DebuggerServer = {
    * to clash with existing protocol packet properties, like 'title', 'url' or
    * 'actor', since that would break the protocol.
    *
-   * @param actor function, object
-   *      In case of function:
-   *        The constructor function for this request type. This expects to be
-   *        called as a constructor (i.e. with 'new'), and passed two
-   *        arguments: the DebuggerServerConnection, and the BrowserTabActor
-   *        with which it will be associated.
-   *        Only used for deprecated eagerly loaded actors.
-   *      In case of object:
-   *        First argument of RegisteredActorFactory constructor.
-   *        See the it's definition for more info.
-   *
-   * @param name string [optional]
-   *        The name of the new request type. If this is not present, the
-   *        actorPrefix property of the constructor prototype is used.
+   * @param actor object
+   *        - constructorName: (required)
+   *          name of actor constructor, which is also used when removing the actor.
+   *        One of the following:
+   *          - id:
+   *            module ID that contains the actor
+   *          - constructorFun:
+   *            a function to construct the actor
+   * @param name string
+   *        The name of the new request type.
    */
-  addTabActor(actor, name = actor.prototype.actorPrefix) {
+  addTabActor(actor, name) {
+    if (!name) {
+      throw Error("addTabActor requires the `name` argument");
+    }
     if (["title", "url", "actor"].includes(name)) {
       throw Error(name + " is not allowed");
     }
@@ -1258,24 +1255,35 @@ var DebuggerServer = {
    * When unregistering an existing tab actor remove related tab factory
    * as well as all existing instances of the actor.
    *
-   * @param actor function, object
-   *      In case of function:
-   *        The constructor function for this request type.
-   *      In case of object:
-   *        Same object being given to related addTabActor call.
+   * @param actor object, string
+   *        In case of object:
+   *          The `actor` object being given to related addTabActor call.
+   *        In case of string:
+   *          The `name` string being given to related addTabActor call.
    */
-  removeTabActor(actor) {
-    for (const name in DebuggerServer.tabActorFactories) {
-      const handler = DebuggerServer.tabActorFactories[name];
-      if ((handler.name && handler.name == actor.name) ||
-          (handler.id && handler.id == actor.id)) {
-        delete DebuggerServer.tabActorFactories[name];
-        for (const connID of Object.getOwnPropertyNames(this._connections)) {
-          // DebuggerServerConnection in child process don't have rootActor
-          if (this._connections[connID].rootActor) {
-            this._connections[connID].rootActor.removeActorByName(name);
-          }
+  removeTabActor(actorOrName) {
+    let name;
+    if (typeof actorOrName == "string") {
+      name = actorOrName;
+    } else {
+      const actor = actorOrName;
+      for (const factoryName in DebuggerServer.tabActorFactories) {
+        const handler = DebuggerServer.tabActorFactories[factoryName];
+        if ((handler.name && handler.name == actor.name) ||
+            (handler.id && handler.id == actor.id)) {
+          name = factoryName;
+          break;
         }
+      }
+    }
+    if (!name) {
+      return;
+    }
+    delete DebuggerServer.tabActorFactories[name];
+    for (const connID of Object.getOwnPropertyNames(this._connections)) {
+      // DebuggerServerConnection in child process don't have rootActor
+      if (this._connections[connID].rootActor) {
+        this._connections[connID].rootActor.removeActorByName(name);
       }
     }
   },
@@ -1288,22 +1296,21 @@ var DebuggerServer = {
    * properties, like 'from', 'tabs' or 'selected', since that would break the
    * protocol.
    *
-   * @param actor function, object
-   *      In case of function:
-   *        The constructor function for this request type. This expects to be
-   *        called as a constructor (i.e. with 'new'), and passed two
-   *        arguments: the DebuggerServerConnection, and the BrowserRootActor
-   *        with which it will be associated.
-   *        Only used for deprecated eagerly loaded actors.
-   *      In case of object:
-   *        First argument of RegisteredActorFactory constructor.
-   *        See the it's definition for more info.
-   *
-   * @param name string [optional]
-   *        The name of the new request type. If this is not present, the
-   *        actorPrefix property of the constructor prototype is used.
+   * @param actor object
+   *        - constructorName: (required)
+   *          name of actor constructor, which is also used when removing the actor.
+   *        One of the following:
+   *          - id:
+   *            module ID that contains the actor
+   *          - constructorFun:
+   *            a function to construct the actor
+   * @param name string
+   *        The name of the new request type.
    */
-  addGlobalActor(actor, name = actor.prototype.actorPrefix) {
+  addGlobalActor(actor, name) {
+    if (!name) {
+      throw Error("addGlobalActor requires the `name` argument");
+    }
     if (["from", "tabs", "selected"].includes(name)) {
       throw Error(name + " is not allowed");
     }
@@ -1319,21 +1326,35 @@ var DebuggerServer = {
    * When unregistering an existing global actor remove related global factory
    * as well as all existing instances of the actor.
    *
-   * @param actor function, object
-   *      In case of function:
-   *        The constructor function for this request type.
-   *      In case of object:
-   *        Same object being given to related addGlobalActor call.
+   * @param actor object, string
+   *        In case of object:
+   *          The `actor` object being given to related addGlobalActor call.
+   *        In case of string:
+   *          The `name` string being given to related addGlobalActor call.
    */
-  removeGlobalActor(actor) {
-    for (const name in DebuggerServer.globalActorFactories) {
-      const handler = DebuggerServer.globalActorFactories[name];
-      if ((handler.name && handler.name == actor.name) ||
-          (handler.id && handler.id == actor.id)) {
-        delete DebuggerServer.globalActorFactories[name];
-        for (const connID of Object.getOwnPropertyNames(this._connections)) {
-          this._connections[connID].rootActor.removeActorByName(name);
+  removeGlobalActor(actorOrName) {
+    let name;
+    if (typeof actorOrName == "string") {
+      name = actorOrName;
+    } else {
+      const actor = actorOrName;
+      for (const factoryName in DebuggerServer.globalActorFactories) {
+        const handler = DebuggerServer.globalActorFactories[factoryName];
+        if ((handler.name && handler.name == actor.name) ||
+            (handler.id && handler.id == actor.id)) {
+          name = factoryName;
+          break;
         }
+      }
+    }
+    if (!name) {
+      return;
+    }
+    delete DebuggerServer.globalActorFactories[name];
+    for (const connID of Object.getOwnPropertyNames(this._connections)) {
+      // DebuggerServerConnection in child process don't have rootActor
+      if (this._connections[connID].rootActor) {
+        this._connections[connID].rootActor.removeActorByName(name);
       }
     }
   },
@@ -1650,7 +1671,7 @@ DebuggerServerConnection.prototype = {
   },
 
   /**
-   * Passes a set of options to the BrowserAddonActors for the given ID.
+   * Passes a set of options to the AddonTargetActors for the given ID.
    *
    * @param id string
    *        The ID of the add-on to pass the options to
@@ -1663,8 +1684,8 @@ DebuggerServerConnection.prototype = {
     if (!addonList) {
       return Promise.resolve();
     }
-    return addonList.getList().then((addonActors) => {
-      for (const actor of addonActors) {
+    return addonList.getList().then((addonTargetActors) => {
+      for (const actor of addonTargetActors) {
         if (actor.id != id) {
           continue;
         }

@@ -71,17 +71,6 @@ public:
      */
     const nsTArray<RefPtr<nsXULPrototypePI> >& GetProcessingInstructions() const;
 
-    /**
-     * Access the array of style overlays for this document.
-     *
-     * Style overlays are stylesheets that need to be applied to the
-     * document, but are not referenced from within the document. They
-     * are currently obtained from the chrome registry via
-     * nsIXULOverlayProvider::getStyleOverlays.)
-     */
-    void AddStyleSheetReference(nsIURI* aStyleSheet);
-    const nsCOMArray<nsIURI>& GetStyleSheetReferences() const;
-
     nsIPrincipal *DocumentPrincipal();
     void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
@@ -113,7 +102,6 @@ protected:
     nsCOMPtr<nsIURI> mURI;
     RefPtr<nsXULPrototypeElement> mRoot;
     nsTArray<RefPtr<nsXULPrototypePI> > mProcessingInstructions;
-    nsCOMArray<nsIURI> mStyleSheetReferences;
 
     bool mLoaded;
     nsTArray< RefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;

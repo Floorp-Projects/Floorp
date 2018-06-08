@@ -5106,7 +5106,13 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   // this display item).
   FrameMetrics::ViewID scrollId = mScrollTarget.valueOrFrom(
       [&]() -> FrameMetrics::ViewID {
-          if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
+          const ActiveScrolledRoot* asr = GetActiveScrolledRoot();
+          Maybe<FrameMetrics::ViewID> fixedTarget =
+              aBuilder.GetContainingFixedPosScrollTarget(asr);
+          if (fixedTarget) {
+            return *fixedTarget;
+          }
+          if (asr) {
             return asr->GetViewId();
           }
           return FrameMetrics::NULL_SCROLL_ID;
@@ -7334,10 +7340,12 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
                                                nsDisplayList* aList,
-                                               const ActiveScrolledRoot* aActiveScrolledRoot)
+                                               const ActiveScrolledRoot* aActiveScrolledRoot,
+                                               const ActiveScrolledRoot* aContainerASR)
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot)
   , mIndex(0)
   , mIsFixedBackground(false)
+  , mContainerASR(aContainerASR)
 {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7350,6 +7358,7 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aBuilder->CurrentActiveScrolledRoot())
   , mIndex(aIndex)
   , mIsFixedBackground(true)
+  , mContainerASR(nullptr) // XXX maybe this should be something?
 {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7422,16 +7431,50 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+ViewID
+nsDisplayFixedPosition::GetScrollTargetId()
+{
+  if (mContainerASR && !nsLayoutUtils::IsReallyFixedPos(mFrame)) {
+    return mContainerASR->GetViewId();
+  }
+  return nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext());
+}
+
+bool
+nsDisplayFixedPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                const StackingContextHelper& aSc,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // We install this RAII scrolltarget tracker so that any
+  // nsDisplayCompositorHitTestInfo items inside this fixed-pos item (and that
+  // share the same ASR as this item) use the correct scroll target. That way
+  // attempts to scroll on those items will scroll the root scroll frame.
+  mozilla::wr::DisplayListBuilder::FixedPosScrollTargetTracker tracker(
+      aBuilder,
+      GetActiveScrolledRoot(),
+      GetScrollTargetId());
+  return nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
+      aManager, aDisplayListBuilder);
+}
+
 bool
 nsDisplayFixedPosition::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                          mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
   if (aLayerData) {
-    FrameMetrics::ViewID id = nsLayoutUtils::ScrollIdForRootScrollFrame(
-        Frame()->PresContext());
-    aLayerData->SetFixedPositionScrollContainerId(id);
+    aLayerData->SetFixedPositionScrollContainerId(GetScrollTargetId());
   }
   return nsDisplayOwnLayer::UpdateScrollData(aData, aLayerData) | true;
+}
+
+void
+nsDisplayFixedPosition::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << nsPrintfCString(" (containerASR %s) (scrolltarget %" PRIu64 ")",
+      ActiveScrolledRoot::ToString(mContainerASR).get(),
+      GetScrollTargetId()).get();
 }
 
 TableType

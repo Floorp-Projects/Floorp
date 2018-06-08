@@ -252,7 +252,7 @@ var DebuggerController = {
     DebuggerView.destroy();
     this.StackFrames.disconnect();
     this.ThreadState.disconnect();
-    if (this._target.isTabActor) {
+    if (this._target.isBrowsingContext) {
       this.Workers.disconnect();
     }
 
@@ -309,7 +309,7 @@ var DebuggerController = {
       }
     });
 
-    if (this._target.isTabActor) {
+    if (this._target.isBrowsingContext) {
       this.Workers.connect();
     }
     this.ThreadState.connect();
@@ -501,17 +501,17 @@ Workers.prototype = {
         workerForms[worker.actor] = worker;
       }
 
-      for (let workerActor in this._workerForms) {
-        if (!(workerActor in workerForms)) {
-          DebuggerView.Workers.removeWorker(this._workerForms[workerActor]);
-          delete this._workerForms[workerActor];
+      for (let workerTargetActor in this._workerForms) {
+        if (!(workerTargetActor in workerForms)) {
+          DebuggerView.Workers.removeWorker(this._workerForms[workerTargetActor]);
+          delete this._workerForms[workerTargetActor];
         }
       }
 
-      for (let workerActor in workerForms) {
-        if (!(workerActor in this._workerForms)) {
-          let workerForm = workerForms[workerActor];
-          this._workerForms[workerActor] = workerForm;
+      for (let workerTargetActor in workerForms) {
+        if (!(workerTargetActor in this._workerForms)) {
+          let workerForm = workerForms[workerTargetActor];
+          this._workerForms[workerTargetActor] = workerForm;
           DebuggerView.Workers.addWorker(workerForm);
         }
       }

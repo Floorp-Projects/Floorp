@@ -24,7 +24,7 @@ function toggleAllTools(state) {
   }
 }
 
-function getChromeActors(callback) {
+function getParentProcessActors(callback) {
   const { DebuggerServer } = require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 

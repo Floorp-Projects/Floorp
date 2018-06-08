@@ -293,13 +293,13 @@ var testSpec = protocol.generateActorSpec({
 });
 
 var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
-  initialize: function(conn, tabActor, options) {
+  initialize: function(conn, targetActor, options) {
     this.conn = conn;
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
   },
 
   get content() {
-    return this.tabActor.window;
+    return this.targetActor.window;
   },
 
   /**
@@ -532,7 +532,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     return new Promise(resolve => {
       // Wait for DOMWindowCreated first, as listening on the current outerwindow
       // doesn't allow receiving test-page-processing-done.
-      this.tabActor.chromeEventHandler.addEventListener("DOMWindowCreated", () => {
+      this.targetActor.chromeEventHandler.addEventListener("DOMWindowCreated", () => {
         this.content.addEventListener(
           "test-page-processing-done", resolve, { once: true }
         );

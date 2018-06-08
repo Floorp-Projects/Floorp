@@ -23,12 +23,4 @@ interface nsIXULOverlayProvider : nsISupports
      * @return      An enumerator of nsIURI for the overlays of this URI 
      */
     nsISimpleEnumerator /*nsIURI*/ getXULOverlays(in nsIURI aURI);
-
-    /**
-     * Get the style overlays for a particular chrome URI.
-     *
-     * @param aURI  The URI being loaded
-     * @return      An enumerator of nsIURI for the overlays of this URI 
-     */
-    nsISimpleEnumerator /*nsIURI*/ getStyleOverlays(in nsIURI aURI);
 };

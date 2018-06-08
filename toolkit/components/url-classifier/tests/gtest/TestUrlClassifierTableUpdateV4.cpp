@@ -127,9 +127,9 @@ GenerateUpdateData(bool fullUpdate,
                    PrefixStringMap& add,
                    nsTArray<uint32_t>* removal,
                    nsCString* checksum,
-                   nsTArray<TableUpdate*>& tableUpdates)
+                   TableUpdateArray& tableUpdates)
 {
-  TableUpdateV4* tableUpdate = new TableUpdateV4(GTEST_TABLE);
+  RefPtr<TableUpdateV4> tableUpdate = new TableUpdateV4(GTEST_TABLE);
   tableUpdate->SetFullUpdate(fullUpdate);
 
   for (auto iter = add.ConstIter(); !iter.Done(); iter.Next()) {
@@ -188,7 +188,7 @@ Clear()
 }
 
 static void
-testUpdateFail(nsTArray<TableUpdate*>& tableUpdates)
+testUpdateFail(TableUpdateArray& tableUpdates)
 {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
@@ -196,12 +196,12 @@ testUpdateFail(nsTArray<TableUpdate*>& tableUpdates)
   UniquePtr<Classifier> classifier(new Classifier());
   classifier->Open(*file);
 
-  nsresult rv = SyncApplyUpdates(classifier.get(), &tableUpdates);
+  nsresult rv = SyncApplyUpdates(classifier.get(), tableUpdates);
   ASSERT_TRUE(NS_FAILED(rv));
 }
 
 static void
-testUpdate(nsTArray<TableUpdate*>& tableUpdates,
+testUpdate(TableUpdateArray& tableUpdates,
            PrefixStringMap& expected)
 {
   nsCOMPtr<nsIFile> file;
@@ -220,7 +220,7 @@ testUpdate(nsTArray<TableUpdate*>& tableUpdates,
   UniquePtr<Classifier> classifier(new Classifier());
   classifier->Open(*file);
 
-  nsresult rv = SyncApplyUpdates(classifier.get(), &tableUpdates);
+  nsresult rv = SyncApplyUpdates(classifier.get(), tableUpdates);
   ASSERT_TRUE(rv == NS_OK);
   VerifyPrefixSet(expected);
 }
@@ -228,7 +228,7 @@ testUpdate(nsTArray<TableUpdate*>& tableUpdates,
 static void
 testFullUpdate(PrefixStringMap& add, nsCString* checksum)
 {
-  nsTArray<TableUpdate*> tableUpdates;
+  TableUpdateArray tableUpdates;
 
   GenerateUpdateData(true, add, nullptr, checksum, tableUpdates);
 
@@ -241,7 +241,7 @@ testPartialUpdate(PrefixStringMap& add,
                   nsCString* checksum,
                   PrefixStringMap& expected)
 {
-  nsTArray<TableUpdate*> tableUpdates;
+  TableUpdateArray tableUpdates;
   GenerateUpdateData(false, add, removal, checksum, tableUpdates);
 
   testUpdate(tableUpdates, expected);
@@ -255,11 +255,12 @@ testOpenLookupCache()
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
   RunTestInNewThread([&] () -> void {
-    LookupCacheV4 cache(nsCString(GTEST_TABLE), EmptyCString(), file);
-    nsresult rv = cache.Init();
+    RefPtr<LookupCacheV4> cache = new LookupCacheV4(nsCString(GTEST_TABLE),
+                                                    EmptyCString(), file);
+    nsresult rv = cache->Init();
     ASSERT_EQ(rv, NS_OK);
 
-    rv = cache.Open();
+    rv = cache->Open();
     ASSERT_EQ(rv, NS_OK);
   });
 }
@@ -300,7 +301,7 @@ TEST(UrlClassifierTableUpdateV4, VariableLenghtPSetFullUpdate)
 // This test contain both variable length prefix set and fixed-length prefix set
 TEST(UrlClassifierTableUpdateV4, MixedPSetFullUpdate)
 {
-   _PrefixArray array;
+  _PrefixArray array;
   PrefixStringMap map;
   nsCString checksum;
 
@@ -420,7 +421,7 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist)
   {
     _PrefixArray pArray;
     PrefixStringMap pMap;
-    nsTArray<TableUpdate*> tableUpdates;
+    TableUpdateArray tableUpdates;
 
     // Pick one prefix from full update prefix and add it to partial update.
     // This should result a failure when call ApplyUpdates.
@@ -497,7 +498,7 @@ TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates)
   PrefixStringMap fMap, pMap, mergedMap;
   nsCString checksum;
 
-  nsTArray<TableUpdate*> tableUpdates;
+  TableUpdateArray tableUpdates;
 
   // Generate first full udpate
   CreateRandomSortedPrefixArray(10000, 4, 4, fArray);
@@ -569,7 +570,7 @@ TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates)
     PrefixStringMap pMap, mergedMap;
     nsCString checksum;
     nsTArray<uint32_t> removal;
-    nsTArray<TableUpdate*> tableUpdates;
+    TableUpdateArray tableUpdates;
 
     // Generate first partial update
     CreateRandomSortedPrefixArray(3000, 4, 4, pArray);
@@ -636,7 +637,7 @@ TEST(UrlClassifierTableUpdateV4, RemovalIndexTooLarge)
     _PrefixArray pArray;
     PrefixStringMap pMap;
     nsTArray<uint32_t> removal;
-    nsTArray<TableUpdate*> tableUpdates;
+    TableUpdateArray tableUpdates;
 
     CreateRandomSortedPrefixArray(200, 4, 32, pArray);
     RemoveIntersection(fArray, pArray);
@@ -673,7 +674,7 @@ TEST(UrlClassifierTableUpdateV4, ChecksumMismatch)
     _PrefixArray pArray;
     PrefixStringMap pMap;
     nsCString checksum;
-    nsTArray<TableUpdate*> tableUpdates;
+    TableUpdateArray tableUpdates;
 
     CreateRandomSortedPrefixArray(200, 4, 32, pArray);
     PrefixArrayToPrefixStringMap(pArray, pMap);
@@ -795,10 +796,10 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate)
 TEST(UrlClassifierTableUpdateV4, EmptyUpdate2)
 {
   // Setup LookupCache with initial data
-   _PrefixArray array;
+  _PrefixArray array;
   CreateRandomSortedPrefixArray(100, 4, 4, array);
   CreateRandomSortedPrefixArray(10, 5, 32, array);
-  UniquePtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
+  RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
 
   // Setup TableUpdate object with only checksum from previous update(initial data).
   nsCString checksum;
@@ -806,7 +807,7 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate2)
   std::string stdChecksum;
   stdChecksum.assign(const_cast<char*>(checksum.BeginReading()), checksum.Length());
 
-  UniquePtr<TableUpdateV4> tableUpdate = MakeUnique<TableUpdateV4>(GTEST_TABLE);
+  RefPtr<TableUpdateV4> tableUpdate = new TableUpdateV4(GTEST_TABLE);
   tableUpdate->NewChecksum(stdChecksum);
 
   // Apply update directly through LookupCache interface

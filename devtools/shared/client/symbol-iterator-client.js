@@ -14,7 +14,7 @@ const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
  *        The debugger client parent.
  * @param grip Object
  *        A SymbolIteratorActor grip returned by the protocol via
- *        TabActor.enumSymbols request.
+ *        BrowsingContextTargetActor.enumSymbols request.
  */
 function SymbolIteratorClient(client, grip) {
   this._grip = grip;

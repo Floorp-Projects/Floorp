@@ -29,7 +29,7 @@ function test_index_is_alphabetically_sorted() {
 function test_specs() {
   for (const type of Types) {
     for (const typeName of type.types) {
-      ok(getType(typeName), `${typeName} spec is defined`);
+      ok(!!getType(typeName), `${typeName} spec is defined`);
     }
   }
   ok(true, "Specs are all accessible");
@@ -43,7 +43,7 @@ function test_fronts() {
     for (const typeName of item.types) {
       lazyLoadFront(typeName);
       const type = getType(typeName);
-      ok(type, `Front for ${typeName} has a spec`);
+      ok(!!type, `Front for ${typeName} has a spec`);
       ok(type.frontClass, `${typeName} has a front correctly defined`);
     }
   }

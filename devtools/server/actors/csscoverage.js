@@ -62,10 +62,10 @@ const l10n = exports.l10n = {
  *     });
  */
 var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
-    this._tabActor = tabActor;
+    this._targetActor = targetActor;
     this._running = false;
 
     this._onTabLoad = this._onTabLoad.bind(this);
@@ -75,7 +75,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
   },
 
   destroy: function() {
-    this._tabActor = undefined;
+    this._targetActor = undefined;
 
     delete this._onTabLoad;
     delete this._onChange;
@@ -117,16 +117,16 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       destroy: () => {}
     };
 
-    this._progress = this._tabActor.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    this._progress = this._targetActor.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                             .getInterface(Ci.nsIWebProgress);
     this._progress.addProgressListener(this._progressListener, this._notifyOn);
 
     if (noreload) {
       // If we're not starting by reloading the page, then pretend that onload
       // has just happened.
-      this._onTabLoad(this._tabActor.window.document);
+      this._onTabLoad(this._targetActor.window.document);
     } else {
-      this._tabActor.window.location.reload();
+      this._targetActor.window.location.reload();
     }
 
     this.emit("state-change", { isRunning: true });
@@ -167,8 +167,8 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
     this._visitedPages = new Set();
     this._knownRules = new Map();
 
-    this._populateKnownRules(this._tabActor.window.document);
-    this._updateUsage(this._tabActor.window.document, false);
+    this._populateKnownRules(this._targetActor.window.document);
+    this._updateUsage(this._targetActor.window.document, false);
   },
 
   /**

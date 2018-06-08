@@ -36,15 +36,15 @@ function promiseWebExtensionStartup() {
 
 async function findAddonInRootList(client, addonId) {
   const result = await client.listAddons();
-  const addonActor = result.addons.filter(addon => addon.id === addonId)[0];
-  ok(addonActor, `Found add-on actor for ${addonId}`);
-  return addonActor;
+  const addonTargetActor = result.addons.filter(addon => addon.id === addonId)[0];
+  ok(addonTargetActor, `Found add-on actor for ${addonId}`);
+  return addonTargetActor;
 }
 
-async function reloadAddon(client, addonActor) {
+async function reloadAddon(client, addonTargetActor) {
   // The add-on will be re-installed after a successful reload.
   const onInstalled = promiseAddonEvent("onInstalled");
-  await client.request({to: addonActor.actor, type: "reload"});
+  await client.request({to: addonTargetActor.actor, type: "reload"});
   await onInstalled;
 }
 
@@ -55,7 +55,7 @@ function getSupportFile(path) {
 
 add_task(async function testReloadExitedAddon() {
   const client = await new Promise(resolve => {
-    get_chrome_actors(client => resolve(client));
+    get_parent_process_actors(client => resolve(client));
   });
 
   // Install our main add-on to trigger reloads on.
@@ -72,10 +72,10 @@ add_task(async function testReloadExitedAddon() {
     promiseWebExtensionStartup(),
   ]);
 
-  const addonActor = await findAddonInRootList(client, installedAddon.id);
+  const addonTargetActor = await findAddonInRootList(client, installedAddon.id);
 
   await Promise.all([
-    reloadAddon(client, addonActor),
+    reloadAddon(client, addonTargetActor),
     promiseWebExtensionStartup(),
   ]);
 
@@ -87,10 +87,10 @@ add_task(async function testReloadExitedAddon() {
   // Try to re-list all add-ons after a reload.
   // This was throwing an exception because of the exited actor.
   const newAddonActor = await findAddonInRootList(client, installedAddon.id);
-  equal(newAddonActor.id, addonActor.id);
+  equal(newAddonActor.id, addonTargetActor.id);
 
   // The actor id should be the same after the reload
-  equal(newAddonActor.actor, addonActor.actor);
+  equal(newAddonActor.actor, addonTargetActor.actor);
 
   const onAddonListChanged = new Promise((resolve) => {
     client.addListener("addonListChanged", function listener() {
@@ -111,9 +111,9 @@ add_task(async function testReloadExitedAddon() {
 
   // re-list all add-ons after an upgrade.
   const upgradedAddonActor = await findAddonInRootList(client, upgradedAddon.id);
-  equal(upgradedAddonActor.id, addonActor.id);
+  equal(upgradedAddonActor.id, addonTargetActor.id);
   // The actor id should be the same after the upgrade.
-  equal(upgradedAddonActor.actor, addonActor.actor);
+  equal(upgradedAddonActor.actor, addonTargetActor.actor);
 
   // The addon metadata has been updated.
   equal(upgradedAddonActor.name, "Test Addons Actor Upgrade");

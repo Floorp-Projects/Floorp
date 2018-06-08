@@ -127,17 +127,17 @@ const GridActor = ActorClassWithSpec(gridSpec, {
  * The CSS layout actor provides layout information for the given document.
  */
 const LayoutActor = ActorClassWithSpec(layoutSpec, {
-  initialize(conn, tabActor, walker) {
+  initialize(conn, targetActor, walker) {
     Actor.prototype.initialize.call(this, conn);
 
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
     this.walker = walker;
   },
 
   destroy() {
     Actor.prototype.destroy.call(this);
 
-    this.tabActor = null;
+    this.targetActor = null;
     this.walker = null;
   },
 

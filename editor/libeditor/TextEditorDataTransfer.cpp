@@ -163,7 +163,7 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 }
 
 nsresult
-TextEditor::InsertFromDrop(DragEvent* aDropEvent)
+TextEditor::OnDrop(DragEvent* aDropEvent)
 {
   CommitComposition();
 

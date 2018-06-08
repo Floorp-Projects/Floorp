@@ -12,12 +12,12 @@ const { createSystem } = require("gcli/system");
  * Manage remote connections that want to talk to GCLI
  */
 const GcliActor = ActorClassWithSpec(gcliSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
 
     this._commandsChanged = this._commandsChanged.bind(this);
 
-    this._tabActor = tabActor;
+    this._targetActor = targetActor;
     // see _getRequisition()
     this._requisitionPromise = undefined;
   },
@@ -28,7 +28,7 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
     // If _getRequisition has not been called, just bail quickly
     if (this._requisitionPromise == null) {
       this._commandsChanged = undefined;
-      this._tabActor = undefined;
+      this._targetActor = undefined;
       return Promise.resolve();
     }
 
@@ -40,7 +40,7 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
       this._system = undefined;
 
       this._requisitionPromise = undefined;
-      this._tabActor = undefined;
+      this._targetActor = undefined;
 
       this._commandsChanged = undefined;
     });
@@ -170,7 +170,7 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
    * Lazy init for a Requisition
    */
   _getRequisition: function() {
-    if (this._tabActor == null) {
+    if (this._targetActor == null) {
       throw new Error("GcliActor used post-destroy");
     }
 
@@ -179,7 +179,7 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
     }
 
     const Requisition = require("gcli/cli").Requisition;
-    const tabActor = this._tabActor;
+    const targetActor = this._targetActor;
 
     this._system = createSystem({ location: "server" });
     this._system.commands.onCommandsChange.add(this._commandsChanged);
@@ -203,11 +203,11 @@ const GcliActor = ActorClassWithSpec(gcliSpec, {
         },
 
         get window() {
-          return tabActor.window;
+          return targetActor.window;
         },
 
         get document() {
-          return tabActor.window && tabActor.window.document;
+          return targetActor.window && targetActor.window.document;
         }
       };
 

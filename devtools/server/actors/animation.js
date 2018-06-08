@@ -605,28 +605,28 @@ exports.AnimationPlayerActor = AnimationPlayerActor;
  * The Animations actor lists animation players for a given node.
  */
 exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
 
     this.onWillNavigate = this.onWillNavigate.bind(this);
     this.onNavigate = this.onNavigate.bind(this);
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
 
     this.allAnimationsPaused = false;
-    this.tabActor.on("will-navigate", this.onWillNavigate);
-    this.tabActor.on("navigate", this.onNavigate);
+    this.targetActor.on("will-navigate", this.onWillNavigate);
+    this.targetActor.on("navigate", this.onNavigate);
 
     this.animationCreatedTimeMap = new Map();
   },
 
   destroy: function() {
     Actor.prototype.destroy.call(this);
-    this.tabActor.off("will-navigate", this.onWillNavigate);
-    this.tabActor.off("navigate", this.onNavigate);
+    this.targetActor.off("will-navigate", this.onWillNavigate);
+    this.targetActor.off("navigate", this.onNavigate);
 
     this.stopAnimationPlayerUpdates();
-    this.tabActor = this.observer = this.actors = this.walker = null;
+    this.targetActor = this.observer = this.actors = this.walker = null;
 
     this.animationCreatedTimeMap.clear();
     this.animationCreatedTimeMap = null;
@@ -792,7 +792,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
 
     let animations = [];
-    for (const {document} of this.tabActor.windows) {
+    for (const {document} of this.targetActor.windows) {
       animations = [...animations, ...document.getAnimations({subtree: true})];
     }
     return animations;
@@ -811,27 +811,27 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   },
 
   /**
-   * Pause all animations in the current tabActor's frames.
+   * Pause all animations in the current targetActor's frames.
    */
   pauseAll: function() {
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
     for (const player of
-         this.getAllAnimations(this.tabActor.window.document, true)) {
+         this.getAllAnimations(this.targetActor.window.document, true)) {
       this.pauseSync(player);
     }
     this.allAnimationsPaused = true;
   },
 
   /**
-   * Play all animations in the current tabActor's frames.
+   * Play all animations in the current targetActor's frames.
    * This method only returns when animations have left their pending states.
    */
   playAll: function() {
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
     for (const player of
-      this.getAllAnimations(this.tabActor.window.document, true)) {
+      this.getAllAnimations(this.targetActor.window.document, true)) {
       this.playSync(player);
     }
     this.allAnimationsPaused = false;
@@ -966,7 +966,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * Update all animation created time map.
    */
   updateAllAnimationsCreatedTime() {
-    const currentAnimations = this.getAllAnimations(this.tabActor.window.document);
+    const currentAnimations = this.getAllAnimations(this.targetActor.window.document);
 
     // Remove invalid animations.
     for (const previousAnimation of this.animationCreatedTimeMap.keys()) {

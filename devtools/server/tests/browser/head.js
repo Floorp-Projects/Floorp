@@ -139,9 +139,10 @@ function waitUntilClientConnected(client) {
 
 /**
  * Connect a debugger client.
+ *
  * @param {DebuggerClient}
- * @return {Promise} Resolves to the selected tabActor form when the client is
- * connected.
+ * @return {Promise} Resolves to the targetActor form for the selected tab when the client
+ *         is connected.
  */
 function connectDebuggerClient(client) {
   return client.connect()
@@ -188,20 +189,6 @@ function forceCollections() {
   Cu.forceGC();
   Cu.forceCC();
   Cu.forceShrinkingGC();
-}
-
-/**
- * Get a mock tabActor from a given window.
- * This is sometimes useful to test actors or classes that use the tabActor in
- * isolation.
- * @param {DOMWindow} win
- * @return {Object}
- */
-function getMockTabActor(win) {
-  return {
-    window: win,
-    isRootActor: true
-  };
 }
 
 registerCleanupFunction(function tearDown() {

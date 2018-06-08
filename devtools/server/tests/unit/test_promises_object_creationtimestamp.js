@@ -23,13 +23,13 @@ add_task(async function() {
   });
 
   const client = await startTestDebuggerServer("promises-object-test");
-  const chromeActors = await getChromeActors(client);
+  const parentProcessActors = await getParentProcessActors(client);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
-  // We have to attach the chrome TabActor before playing with the PromiseActor
-  await attachTab(client, chromeActors);
-  await testPromiseCreationTimestamp(client, chromeActors, v => {
+  // We have to attach the chrome target actor before playing with the PromiseActor
+  await attachTab(client, parentProcessActors);
+  await testPromiseCreationTimestamp(client, parentProcessActors, v => {
     return new Promise(resolve => resolve(v));
   });
 

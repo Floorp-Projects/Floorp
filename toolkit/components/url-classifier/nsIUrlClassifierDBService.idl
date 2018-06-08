@@ -7,11 +7,9 @@
 %{C++
 #include "Entries.h"
 #include "LookupCache.h"
-class nsUrlClassifierLookupResult;
+#include "mozilla/UniquePtr.h"
 %}
-[ptr] native ResultArray(nsTArray<mozilla::safebrowsing::LookupResult>);
-[ptr] native CacheCompletionArray(nsTArray<mozilla::safebrowsing::CacheResult>);
-[ptr] native PrefixArray(mozilla::safebrowsing::PrefixArray);
+native ResultArray(mozilla::UniquePtr<mozilla::safebrowsing::LookupResultArray>);
 
 interface nsIUrlClassifierHashCompleter;
 interface nsIPrincipal;

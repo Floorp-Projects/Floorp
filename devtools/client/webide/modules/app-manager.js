@@ -241,7 +241,7 @@ var AppManager = exports.AppManager = {
 
   getTarget: function() {
     if (this.selectedProject.type == "mainProcess") {
-      // Fx >=39 exposes a ChromeActor to debug the main process
+      // Fx >=39 exposes a ParentProcessTargetActor to debug the main process
       if (this.connection.client.mainRoot.traits.allowChromeProcess) {
         return this.connection.client.getProcess()
                    .then(aResponse => {
@@ -252,12 +252,12 @@ var AppManager = exports.AppManager = {
                      });
                    });
       }
-        // Fx <39 exposes tab actors on the root actor
+      // Fx <39 exposes chrome target actors on the root actor
       return TargetFactory.forRemoteTab({
           form: this._listTabsResponse,
           client: this.connection.client,
           chrome: true,
-          isTabActor: false
+          isBrowsingContext: false
       });
     }
 
@@ -273,7 +273,7 @@ var AppManager = exports.AppManager = {
     return (async function() {
       // Once we asked the app to launch, the app isn't necessary completely loaded.
       // launch request only ask the app to launch and immediatly returns.
-      // We have to keep trying to get app tab actors required to create its target.
+      // We have to keep trying to get app target actors required to create its target.
 
       for (let i = 0; i < 10; i++) {
         try {
@@ -495,7 +495,7 @@ var AppManager = exports.AppManager = {
   },
 
   isMainProcessDebuggable: function() {
-    // Fx <39 exposes chrome tab actors on RootActor
+    // Fx <39 exposes chrome target actors on RootActor
     // Fx >=39 exposes a dedicated actor via getProcess request
     return this.connection.client &&
            this.connection.client.mainRoot &&

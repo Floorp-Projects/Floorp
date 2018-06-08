@@ -91,7 +91,7 @@ class AddonsPanel extends Component {
       .then(({addons}) => {
         const extensions = addons.filter(addon => addon.debuggable).map(addon => {
           return {
-            addonActor: addon.actor,
+            addonTargetActor: addon.actor,
             addonID: addon.id,
             // Forward the whole addon actor form for potential remote debugging.
             form: addon,

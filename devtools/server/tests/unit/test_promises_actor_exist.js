@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Test that the PromisesActor exists in the TabActors and ChromeActors.
+ * Test that the PromisesActor exists in the TabActors and ParentProcessTargetActors.
  */
 
 add_task(async function() {
@@ -15,12 +15,12 @@ add_task(async function() {
   const targetTab = findTab(response.tabs, "promises-actor-test");
   Assert.ok(targetTab, "Found our target tab.");
 
-  // Attach to the TabActor and check the response
+  // Attach to the BrowsingContextTargetActor and check the response
   await new Promise(resolve => {
     client.request({ to: targetTab.actor, type: "attach" }, response => {
       Assert.ok(!("error" in response), "Expect no error in response.");
       Assert.equal(response.from, targetTab.actor,
-        "Expect the target TabActor in response form field.");
+        "Expect the target BrowsingContextTargetActor in response form field.");
       Assert.equal(response.type, "tabAttached",
         "Expect tabAttached in the response type.");
       Assert.ok(typeof response.promisesActor === "string",
@@ -29,7 +29,7 @@ add_task(async function() {
     });
   });
 
-  const chromeActors = await getChromeActors(client);
-  Assert.ok(typeof chromeActors.promisesActor === "string",
+  const parentProcessActors = await getParentProcessActors(client);
+  Assert.ok(typeof parentProcessActors.promisesActor === "string",
     "Should have a chrome context PromisesActor.");
 });

@@ -124,10 +124,10 @@ exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
   // any draw calls were called for a recording.
   _animationContainsDrawCall: false,
 
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
-    this._webGLPrimitiveCounter = new WebGLPrimitiveCounter(tabActor);
+    this.targetActor = targetActor;
+    this._webGLPrimitiveCounter = new WebGLPrimitiveCounter(targetActor);
     this._onContentFunctionCall = this._onContentFunctionCall.bind(this);
   },
   destroy: function(conn) {
@@ -142,13 +142,13 @@ exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
   setup: function({ reload }) {
     if (this._initialized) {
       if (reload) {
-        this.tabActor.window.location.reload();
+        this.targetActor.window.location.reload();
       }
       return;
     }
     this._initialized = true;
 
-    this._callWatcher = new CallWatcherActor(this.conn, this.tabActor);
+    this._callWatcher = new CallWatcherActor(this.conn, this.targetActor);
     this._callWatcher.onCall = this._onContentFunctionCall;
     this._callWatcher.setup({
       tracedGlobals: CANVAS_CONTEXTS,

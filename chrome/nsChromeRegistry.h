@@ -130,8 +130,6 @@ public:
                             char *const * argv, int flags) = 0;
   virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, int flags) = 0;
-  virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                             char *const * argv, int flags) = 0;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, int flags) = 0;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,

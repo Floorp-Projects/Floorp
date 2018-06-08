@@ -91,8 +91,8 @@ RootClient.prototype = {
   listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
 
   /**
-   * Retrieve all service worker registrations as well as workers from the parent
-   * and child processes. Listing service workers involves merging information coming from
+   * Retrieve all service worker registrations as well as workers from the parent and
+   * content processes. Listing service workers involves merging information coming from
    * registrations and workers, this method will combine this information to present a
    * unified array of serviceWorkers. If you are only interested in other workers, use
    * listWorkers.
@@ -101,9 +101,9 @@ RootClient.prototype = {
    *         - {Array} service
    *           array of form-like objects for serviceworkers
    *         - {Array} shared
-   *           Array of WorkerActor forms, containing shared workers.
+   *           Array of WorkerTargetActor forms, containing shared workers.
    *         - {Array} other
-   *           Array of WorkerActor forms, containing other workers.
+   *           Array of WorkerTargetActor forms, containing other workers.
    */
   listAllWorkers: async function() {
     let registrations = [];
@@ -157,7 +157,7 @@ RootClient.prototype = {
       const worker = {
         name: form.url,
         url: form.url,
-        workerActor: form.actor
+        workerTargetActor: form.actor
       };
       switch (form.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
@@ -168,7 +168,7 @@ RootClient.prototype = {
             if (!registration.url) {
               registration.name = registration.url = form.url;
             }
-            registration.workerActor = form.actor;
+            registration.workerTargetActor = form.actor;
           } else {
             worker.fetch = form.fetch;
 
@@ -193,7 +193,7 @@ RootClient.prototype = {
   },
 
   /**
-   * Fetch the TabActor for the currently selected tab, or for a specific
+   * Fetch the target actor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
    * @param [optional] object filter
@@ -241,7 +241,7 @@ RootClient.prototype = {
   },
 
   /**
-   * Fetch the WindowActor for a specific window, like a browser window in
+   * Fetch the ChromeWindowTargetActor for a specific window, like a browser window in
    * Firefox, but it can be used to reach any window in the process.
    *
    * @param number outerWindowID

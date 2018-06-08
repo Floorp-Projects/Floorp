@@ -6,7 +6,7 @@
 
 const {
   WebExtensionInspectedWindowFront
-} = require("devtools/shared/fronts/webextension-inspected-window");
+} = require("devtools/shared/fronts/addon/webextension-inspected-window");
 
 const TEST_RELOAD_URL = `${MAIN_DOMAIN}/inspectedwindow-reload-target.sjs`;
 

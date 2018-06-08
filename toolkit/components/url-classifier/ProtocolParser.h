@@ -48,11 +48,9 @@ public:
   // parsing is not supported, for example in V4.
   virtual void End() = 0;
 
-  // Forget the table updates that were created by this pass.  It
-  // becomes the caller's responsibility to free them.  This is shitty.
-  TableUpdate *GetTableUpdate(const nsACString& aTable);
+  RefPtr<TableUpdate> GetTableUpdate(const nsACString& aTable);
   void ForgetTableUpdates() { mTableUpdates.Clear(); }
-  nsTArray<TableUpdate*> &GetTableUpdates() { return mTableUpdates; }
+  const TableUpdateArray& GetTableUpdates() { return mTableUpdates; }
 
   // These are only meaningful to V2. Since they were originally public,
   // moving them to ProtocolParserV2 requires a dymamic cast in the call
@@ -63,13 +61,13 @@ public:
   const nsTArray<nsCString>& TablesToReset() const { return mTablesToReset; }
 
 protected:
-  virtual TableUpdate* CreateTableUpdate(const nsACString& aTableName) const = 0;
+  virtual RefPtr<TableUpdate> CreateTableUpdate(const nsACString& aTableName) const = 0;
 
   nsCString mPending;
   nsresult mUpdateStatus;
 
   // Keep track of updates to apply before passing them to the DBServiceWorkers.
-  nsTArray<TableUpdate*> mTableUpdates;
+  TableUpdateArray mTableUpdates;
 
   nsTArray<ForwardedUpdate> mForwards;
 
@@ -81,9 +79,6 @@ protected:
 
   // How long we should wait until the next update.
   uint32_t mUpdateWaitSec;
-
-private:
-  void CleanupUpdates();
 };
 
 /**
@@ -108,7 +103,7 @@ public:
 #endif
 
 private:
-  virtual TableUpdate* CreateTableUpdate(const nsACString& aTableName) const override;
+  virtual RefPtr<TableUpdate> CreateTableUpdate(const nsACString& aTableName) const override;
 
   nsresult ProcessControl(bool* aDone);
   nsresult ProcessExpirations(const nsCString& aLine);
@@ -161,7 +156,7 @@ private:
   ChunkState mChunkState;
 
   // Updates to apply to the current table being parsed.
-  TableUpdateV2 *mTableUpdate;
+  RefPtr<TableUpdateV2> mTableUpdate;
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   nsCString mRawUpdate; // Keep a copy of mPending before it's processed.
@@ -184,7 +179,7 @@ public:
 private:
   virtual ~ProtocolParserProtobuf();
 
-  virtual TableUpdate* CreateTableUpdate(const nsACString& aTableName) const override;
+  virtual RefPtr<TableUpdate> CreateTableUpdate(const nsACString& aTableName) const override;
 
   // For parsing update info.
   nsresult ProcessOneResponse(const ListUpdateResponse& aResponse,

@@ -327,17 +327,17 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a tab actor.
+   * Attach to a tab's target actor.
    *
-   * @param string tabActor
-   *        The actor ID for the tab to attach.
+   * @param string targetActor
+   *        The target actor ID for the tab to attach.
    * @param function onResponse
    *        Called with the response packet and a TabClient
    *        (which will be undefined on error).
    */
-  attachTab: function(tabActor, onResponse = noop) {
-    if (this._clients.has(tabActor)) {
-      const cachedTab = this._clients.get(tabActor);
+  attachTab: function(targetActor, onResponse = noop) {
+    if (this._clients.has(targetActor)) {
+      const cachedTab = this._clients.get(targetActor);
       const cachedResponse = {
         cacheDisabled: cachedTab.cacheDisabled,
         javascriptEnabled: cachedTab.javascriptEnabled,
@@ -348,7 +348,7 @@ DebuggerClient.prototype = {
     }
 
     const packet = {
-      to: tabActor,
+      to: targetActor,
       type: "attach"
     };
     return this.request(packet).then(response => {
@@ -362,8 +362,8 @@ DebuggerClient.prototype = {
     });
   },
 
-  attachWorker: function(workerActor, onResponse = noop) {
-    let workerClient = this._clients.get(workerActor);
+  attachWorker: function(workerTargetActor, onResponse = noop) {
+    let workerClient = this._clients.get(workerTargetActor);
     if (workerClient !== undefined) {
       const response = {
         from: workerClient.actor,
@@ -374,7 +374,7 @@ DebuggerClient.prototype = {
       return promise.resolve([response, workerClient]);
     }
 
-    return this.request({ to: workerActor, type: "attach" }).then(response => {
+    return this.request({ to: workerTargetActor, type: "attach" }).then(response => {
       if (response.error) {
         onResponse(response, null);
         return [response, null];
@@ -388,23 +388,23 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to an addon actor.
+   * Attach to an addon target actor.
    *
-   * @param string addonActor
+   * @param string addonTargetActor
    *        The actor ID for the addon to attach.
    * @param function onResponse
    *        Called with the response packet and a AddonClient
    *        (which will be undefined on error).
    */
-  attachAddon: function(addonActor, onResponse = noop) {
+  attachAddon: function(addonTargetActor, onResponse = noop) {
     const packet = {
-      to: addonActor,
+      to: addonTargetActor,
       type: "attach"
     };
     return this.request(packet).then(response => {
       let addonClient;
       if (!response.error) {
-        addonClient = new AddonClient(this, addonActor);
+        addonClient = new AddonClient(this, addonTargetActor);
         this.registerClient(addonClient);
         this.activeAddon = addonClient;
       }
@@ -514,8 +514,8 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Fetch the ChromeActor for the main process or ChildProcessActor for a
-   * a given child process ID.
+   * Fetch the ParentProcessTargetActor for the main process or
+   * ContentProcessTargetActor for a given content process ID.
    *
    * @param number id
    *        The ID for the process to attach (returned by `listProcesses`).

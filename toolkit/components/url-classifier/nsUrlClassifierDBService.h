@@ -25,6 +25,7 @@
 
 #include "Entries.h"
 #include "LookupCache.h"
+#include "HashStore.h"
 
 // GCC < 6.1 workaround, see bug 1329593
 #if defined(XP_WIN) && defined(__MINGW32__)
@@ -73,7 +74,6 @@ namespace mozilla {
 namespace safebrowsing {
 class Classifier;
 class ProtocolParser;
-class TableUpdate;
 
 nsresult
 TablesToResponse(const nsACString& tables);
@@ -107,7 +107,7 @@ public:
   bool CanComplete(const nsACString &tableName);
   bool GetCompleter(const nsACString& tableName,
                     nsIUrlClassifierHashCompleter** completer);
-  nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray *results);
+  nsresult CacheCompletions(const mozilla::safebrowsing::ConstCacheResultArray& results);
 
   static nsIThread* BackgroundThread();
 
@@ -145,10 +145,6 @@ private:
 
   // Close db connection and join the background thread if it exists.
   nsresult Shutdown();
-
-  // Check if the key is on a known-clean host.
-  nsresult CheckClean(const nsACString &lookupKey,
-                      bool *clean);
 
   nsresult ReadTablesFromPrefs();
 
@@ -215,7 +211,7 @@ public:
   // either the main thread or the worker thread.
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,
-                         LookupResultArray* results);
+                         LookupResultArray& results);
 
   // Open the DB connection
   nsresult GCC_MANGLING_WORKAROUND OpenDb();
@@ -225,7 +221,7 @@ public:
 
   nsresult GCC_MANGLING_WORKAROUND PreShutdown();
 
-  nsresult CacheCompletions(CacheResultArray * aEntries);
+  nsresult CacheCompletions(const ConstCacheResultArray& aEntries);
 
   // Used to probe the state of the worker thread. When the update begins,
   // mUpdateObserver will be set. When the update finished, mUpdateObserver
@@ -270,10 +266,10 @@ private:
                     uint32_t aCount,
                     LookupResultArray& results);
 
-  nsresult CacheResultToTableUpdate(CacheResult* aCacheResult,
-                                    TableUpdate* aUpdate);
+  nsresult CacheResultToTableUpdate(RefPtr<const CacheResult> aCacheResult,
+                                    RefPtr<TableUpdate> aUpdate);
 
-  bool IsSameAsLastResults(CacheResultArray& aResult);
+  bool IsSameAsLastResults(const ConstCacheResultArray& aResult) const;
 
   nsAutoPtr<mozilla::safebrowsing::Classifier> mClassifier;
   // The class that actually parses the update chunks.
@@ -284,14 +280,12 @@ private:
 
   RefPtr<nsUrlClassifierDBService> mDBService;
 
-  // XXX: maybe an array of autoptrs.  Or maybe a class specifically
-  // storing a series of updates.
-  nsTArray<mozilla::safebrowsing::TableUpdate*> mTableUpdates;
+  TableUpdateArray mTableUpdates;
 
   uint32_t mUpdateWaitSec;
 
   // Stores the last results that triggered a table update.
-  nsAutoPtr<CacheResultArray> mLastResults;
+  ConstCacheResultArray mLastResults;
 
   nsresult mUpdateStatus;
   nsTArray<nsCString> mUpdateTables;

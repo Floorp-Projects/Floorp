@@ -6,7 +6,7 @@ Tab actors are the most common types of actors. That's the type of actors you wi
 
 Tab actors target a document, this could be a tab in Firefox or a remote document in Firefox for Android.
 
-Global actors however are for the rest, for things not related to any particular document but instead for things global to the whole Firefox/Chrome/Safari intance the toolbox is connected to (e.g. the preference actor).
+Global actors however are for the rest, for things not related to any particular document but instead for things global to the whole Firefox/Chrome/Safari instance the toolbox is connected to (e.g. the preference actor).
 
 ## The DebuggerServer.registerModule function
 
@@ -23,7 +23,7 @@ DebuggerServer.registerModule("devtools/server/actors/webconsole", {
 To register a global actor:
 
 ```
-DebuggerServer.registerModule("devtools/server/actors/addons", {
+DebuggerServer.registerModule("devtools/server/actors/addon/addons", {
   prefix: "addons",
   constructor: "AddonsActor",
   type: { global: true }

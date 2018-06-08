@@ -281,12 +281,6 @@ protected:
     bool                           mRestrictPersistence;
     nsTHashtable<nsStringHashKey>  mPersistenceIds;
 
-    /**
-     * An array of style sheets, that will be added (preserving order) to the
-     * document after all of them are loaded (in DoneWalking).
-     */
-    nsTArray<RefPtr<StyleSheet>> mOverlaySheets;
-
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     uint32_t mPendingSheets;
@@ -398,12 +392,6 @@ protected:
      */
     char16_t* mOffThreadCompileStringBuf;
     size_t mOffThreadCompileStringLength;
-
-    /**
-     * Add the current prototype's style sheets (currently it's just
-     * style overlays from the chrome registry) to the document.
-     */
-    nsresult AddPrototypeSheets();
 
 
 protected:

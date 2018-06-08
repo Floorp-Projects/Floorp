@@ -99,18 +99,18 @@ async function attachAddon(addonId) {
   await client.connect();
 
   const {addons} = await client.mainRoot.listAddons();
-  const addonActor = addons.filter(actor => actor.id === addonId).pop();
+  const addonTargetActor = addons.filter(actor => actor.id === addonId).pop();
 
-  if (!addonActor) {
+  if (!addonTargetActor) {
     client.close();
     throw new Error(`No WebExtension Actor found for ${addonId}`);
   }
 
   const addonTarget = await TargetFactory.forRemoteTab({
-    form: addonActor,
+    form: addonTargetActor,
     client,
     chrome: true,
-    isTabActor: true,
+    isBrowsingContext: true,
   });
 
   return addonTarget;
@@ -118,15 +118,15 @@ async function attachAddon(addonId) {
 
 async function reloadAddon({client}, addonId) {
   const {addons} = await client.mainRoot.listAddons();
-  const addonActor = addons.filter(actor => actor.id === addonId).pop();
+  const addonTargetActor = addons.filter(actor => actor.id === addonId).pop();
 
-  if (!addonActor) {
+  if (!addonTargetActor) {
     client.close();
     throw new Error(`No WebExtension Actor found for ${addonId}`);
   }
 
   await client.request({
-    to: addonActor.actor,
+    to: addonTargetActor.actor,
     type: "reload",
   });
 }

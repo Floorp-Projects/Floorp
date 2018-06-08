@@ -37,11 +37,11 @@ function test() {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-    testChromeActor();
+    testParentProcessTargetActor();
   });
 }
 
-function testChromeActor() {
+function testParentProcessTargetActor() {
   gClient.getProcess().then(aResponse => {
     gClient.addListener("newGlobal", onNewGlobal);
 

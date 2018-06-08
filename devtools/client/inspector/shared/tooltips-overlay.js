@@ -84,7 +84,7 @@ TooltipsOverlay.prototype = {
 
     this._isStarted = true;
 
-    // For now, preview tooltip has to be instanciated on startup in order to
+    // For now, preview tooltip has to be instantiated on startup in order to
     // call tooltip.startTogglingOnHover. Ideally startTogglingOnHover wouldn't be part
     // of HTMLTooltip and offer a way to lazy load this tooltip.
     this.getTooltip("previewTooltip");
