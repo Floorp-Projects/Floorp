@@ -1,10 +1,10 @@
 [
 {
-"size": 408169671,
+"size": 408178881,
 "visibility": "public",
-"digest": "c916abc1c0e59328cc7c3de5faee120cb8ab1092fdd8730f5a81a7ca94fa46e8dd310774654d38d00dd01aeed3d919240bfb73b212451313704515cb6aed8edb",
+"digest": "7d6a138946e4a45d846bc35f362567871cbb473b19baf2c49dd04cd7c35f0e5299cb98a8995be0f0b54a1b4c241110562a7b863225839a5a5a9d75ee0138ba03",
 "algorithm": "sha512",
-"filename": "AVDs-arm64v8a-android-7.0-build-2017-03-14.tar.gz",
+"filename": "AVDs-arm64v8a-android-7.0-build-2018-06-07.tar.gz",
 "unpack": true
 }
 ]
