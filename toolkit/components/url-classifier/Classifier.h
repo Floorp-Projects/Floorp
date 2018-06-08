@@ -25,8 +25,9 @@ namespace safebrowsing {
  */
 class Classifier {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Classifier);
+
   Classifier();
-  ~Classifier();
 
   nsresult Open(nsIFile& aCacheDirectory);
   void Close();
@@ -123,6 +124,8 @@ public:
                     nsIUrlClassifierCacheInfo** aCache);
 
 private:
+  ~Classifier();
+
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
 
