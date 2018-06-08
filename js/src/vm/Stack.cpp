@@ -17,6 +17,7 @@
 #include "vm/Opcodes.h"
 
 #include "jit/JSJitFrameIter-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"

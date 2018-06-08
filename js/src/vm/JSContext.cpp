@@ -53,6 +53,7 @@
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 
+#include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"

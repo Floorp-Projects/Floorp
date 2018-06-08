@@ -46,6 +46,7 @@
 
 #include "gc/GC-inl.h"
 #include "vm/BytecodeUtil-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
