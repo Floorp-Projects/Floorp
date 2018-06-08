@@ -138,7 +138,7 @@ load 1228789-1.html
 load 1230408-1.html
 load 1233135-1.html
 load 1233135-2.html
-load 1236398.xhtml
+# load 1236398.xhtml bug 1467917
 load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html
