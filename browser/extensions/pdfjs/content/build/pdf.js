@@ -29,7 +29,7 @@
 		exports["pdfjs-dist/build/pdf"] = factory();
 	else
 		root["pdfjs-dist/build/pdf"] = root.pdfjsLib = factory();
-})(typeof self !== 'undefined' ? self : this, function() {
+})(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -68,12 +68,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__w_pdfjs_require__.d = function(exports, name, getter) {
 /******/ 		if(!__w_pdfjs_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__w_pdfjs_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__w_pdfjs_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __w_pdfjs_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__w_pdfjs_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __w_pdfjs_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -91,8 +111,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// __webpack_public_path__
 /******/ 	__w_pdfjs_require__.p = "";
 /******/
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 5);
+/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -102,14 +123,63 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
+var pdfjsVersion = '2.0.550';
+var pdfjsBuild = '76337fdc';
+var pdfjsSharedUtil = __w_pdfjs_require__(1);
+var pdfjsDisplayAPI = __w_pdfjs_require__(6);
+var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
+var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(19);
+var pdfjsDisplayDOMUtils = __w_pdfjs_require__(7);
+var pdfjsDisplaySVG = __w_pdfjs_require__(20);
+let pdfjsDisplayWorkerOptions = __w_pdfjs_require__(12);
+let pdfjsDisplayAPICompatibility = __w_pdfjs_require__(9);
+;
+exports.build = pdfjsDisplayAPI.build;
+exports.version = pdfjsDisplayAPI.version;
+exports.getDocument = pdfjsDisplayAPI.getDocument;
+exports.LoopbackPort = pdfjsDisplayAPI.LoopbackPort;
+exports.PDFDataRangeTransport = pdfjsDisplayAPI.PDFDataRangeTransport;
+exports.PDFWorker = pdfjsDisplayAPI.PDFWorker;
+exports.renderTextLayer = pdfjsDisplayTextLayer.renderTextLayer;
+exports.AnnotationLayer = pdfjsDisplayAnnotationLayer.AnnotationLayer;
+exports.createPromiseCapability = pdfjsSharedUtil.createPromiseCapability;
+exports.PasswordResponses = pdfjsSharedUtil.PasswordResponses;
+exports.InvalidPDFException = pdfjsSharedUtil.InvalidPDFException;
+exports.MissingPDFException = pdfjsSharedUtil.MissingPDFException;
+exports.SVGGraphics = pdfjsDisplaySVG.SVGGraphics;
+exports.NativeImageDecoding = pdfjsSharedUtil.NativeImageDecoding;
+exports.UnexpectedResponseException = pdfjsSharedUtil.UnexpectedResponseException;
+exports.OPS = pdfjsSharedUtil.OPS;
+exports.VerbosityLevel = pdfjsSharedUtil.VerbosityLevel;
+exports.UNSUPPORTED_FEATURES = pdfjsSharedUtil.UNSUPPORTED_FEATURES;
+exports.createValidAbsoluteUrl = pdfjsSharedUtil.createValidAbsoluteUrl;
+exports.createObjectURL = pdfjsSharedUtil.createObjectURL;
+exports.removeNullCharacters = pdfjsSharedUtil.removeNullCharacters;
+exports.shadow = pdfjsSharedUtil.shadow;
+exports.createBlob = pdfjsSharedUtil.createBlob;
+exports.Util = pdfjsSharedUtil.Util;
+exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledException;
+exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
+exports.LinkTarget = pdfjsDisplayDOMUtils.LinkTarget;
+exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
+exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
+exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
-__w_pdfjs_require__(6);
+__w_pdfjs_require__(2);
 
-var _streams_polyfill = __w_pdfjs_require__(7);
+var _streams_polyfill = __w_pdfjs_require__(4);
 
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 const NativeImageDecoding = {
@@ -788,87 +858,6 @@ var Util = function UtilClosure() {
   };
   return Util;
 }();
-var PageViewport = function PageViewportClosure() {
-  function PageViewport(viewBox, scale, rotation, offsetX, offsetY, dontFlip) {
-    this.viewBox = viewBox;
-    this.scale = scale;
-    this.rotation = rotation;
-    this.offsetX = offsetX;
-    this.offsetY = offsetY;
-    var centerX = (viewBox[2] + viewBox[0]) / 2;
-    var centerY = (viewBox[3] + viewBox[1]) / 2;
-    var rotateA, rotateB, rotateC, rotateD;
-    rotation = rotation % 360;
-    rotation = rotation < 0 ? rotation + 360 : rotation;
-    switch (rotation) {
-      case 180:
-        rotateA = -1;
-        rotateB = 0;
-        rotateC = 0;
-        rotateD = 1;
-        break;
-      case 90:
-        rotateA = 0;
-        rotateB = 1;
-        rotateC = 1;
-        rotateD = 0;
-        break;
-      case 270:
-        rotateA = 0;
-        rotateB = -1;
-        rotateC = -1;
-        rotateD = 0;
-        break;
-      default:
-        rotateA = 1;
-        rotateB = 0;
-        rotateC = 0;
-        rotateD = -1;
-        break;
-    }
-    if (dontFlip) {
-      rotateC = -rotateC;
-      rotateD = -rotateD;
-    }
-    var offsetCanvasX, offsetCanvasY;
-    var width, height;
-    if (rotateA === 0) {
-      offsetCanvasX = Math.abs(centerY - viewBox[1]) * scale + offsetX;
-      offsetCanvasY = Math.abs(centerX - viewBox[0]) * scale + offsetY;
-      width = Math.abs(viewBox[3] - viewBox[1]) * scale;
-      height = Math.abs(viewBox[2] - viewBox[0]) * scale;
-    } else {
-      offsetCanvasX = Math.abs(centerX - viewBox[0]) * scale + offsetX;
-      offsetCanvasY = Math.abs(centerY - viewBox[1]) * scale + offsetY;
-      width = Math.abs(viewBox[2] - viewBox[0]) * scale;
-      height = Math.abs(viewBox[3] - viewBox[1]) * scale;
-    }
-    this.transform = [rotateA * scale, rotateB * scale, rotateC * scale, rotateD * scale, offsetCanvasX - rotateA * scale * centerX - rotateC * scale * centerY, offsetCanvasY - rotateB * scale * centerX - rotateD * scale * centerY];
-    this.width = width;
-    this.height = height;
-    this.fontScale = scale;
-  }
-  PageViewport.prototype = {
-    clone: function PageViewPort_clone(args) {
-      args = args || {};
-      var scale = 'scale' in args ? args.scale : this.scale;
-      var rotation = 'rotation' in args ? args.rotation : this.rotation;
-      return new PageViewport(this.viewBox.slice(), scale, rotation, this.offsetX, this.offsetY, args.dontFlip);
-    },
-    convertToViewportPoint: function PageViewport_convertToViewportPoint(x, y) {
-      return Util.applyTransform([x, y], this.transform);
-    },
-    convertToViewportRectangle: function PageViewport_convertToViewportRectangle(rect) {
-      var tl = Util.applyTransform([rect[0], rect[1]], this.transform);
-      var br = Util.applyTransform([rect[2], rect[3]], this.transform);
-      return [tl[0], tl[1], br[0], br[1]];
-    },
-    convertToPdfPoint: function PageViewport_convertToPdfPoint(x, y) {
-      return Util.applyInverseTransform([x, y], this.transform);
-    }
-  };
-  return PageViewport;
-}();
 var PDFStringTranslateTable = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2D8, 0x2C7, 0x2C6, 0x2D9, 0x2DD, 0x2DB, 0x2DA, 0x2DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2022, 0x2020, 0x2021, 0x2026, 0x2014, 0x2013, 0x192, 0x2044, 0x2039, 0x203A, 0x2212, 0x2030, 0x201E, 0x201C, 0x201D, 0x2018, 0x2019, 0x201A, 0x2122, 0xFB01, 0xFB02, 0x141, 0x152, 0x160, 0x178, 0x17D, 0x131, 0x142, 0x153, 0x161, 0x17E, 0, 0x20AC];
 function stringToPDFString(str) {
   var i,
@@ -948,384 +937,6 @@ var createObjectURL = function createObjectURLClosure() {
     return buffer;
   };
 }();
-function resolveCall(fn, args, thisArg = null) {
-  if (!fn) {
-    return Promise.resolve(undefined);
-  }
-  return new Promise((resolve, reject) => {
-    resolve(fn.apply(thisArg, args));
-  });
-}
-function wrapReason(reason) {
-  if (typeof reason !== 'object') {
-    return reason;
-  }
-  switch (reason.name) {
-    case 'AbortException':
-      return new AbortException(reason.message);
-    case 'MissingPDFException':
-      return new MissingPDFException(reason.message);
-    case 'UnexpectedResponseException':
-      return new UnexpectedResponseException(reason.message, reason.status);
-    default:
-      return new UnknownErrorException(reason.message, reason.details);
-  }
-}
-function makeReasonSerializable(reason) {
-  if (!(reason instanceof Error) || reason instanceof AbortException || reason instanceof MissingPDFException || reason instanceof UnexpectedResponseException || reason instanceof UnknownErrorException) {
-    return reason;
-  }
-  return new UnknownErrorException(reason.message, reason.toString());
-}
-function resolveOrReject(capability, success, reason) {
-  if (success) {
-    capability.resolve();
-  } else {
-    capability.reject(reason);
-  }
-}
-function finalize(promise) {
-  return Promise.resolve(promise).catch(() => {});
-}
-function MessageHandler(sourceName, targetName, comObj) {
-  this.sourceName = sourceName;
-  this.targetName = targetName;
-  this.comObj = comObj;
-  this.callbackId = 1;
-  this.streamId = 1;
-  this.postMessageTransfers = true;
-  this.streamSinks = Object.create(null);
-  this.streamControllers = Object.create(null);
-  let callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
-  let ah = this.actionHandler = Object.create(null);
-  this._onComObjOnMessage = event => {
-    let data = event.data;
-    if (data.targetName !== this.sourceName) {
-      return;
-    }
-    if (data.stream) {
-      this._processStreamMessage(data);
-    } else if (data.isReply) {
-      let callbackId = data.callbackId;
-      if (data.callbackId in callbacksCapabilities) {
-        let callback = callbacksCapabilities[callbackId];
-        delete callbacksCapabilities[callbackId];
-        if ('error' in data) {
-          callback.reject(wrapReason(data.error));
-        } else {
-          callback.resolve(data.data);
-        }
-      } else {
-        throw new Error(`Cannot resolve callback ${callbackId}`);
-      }
-    } else if (data.action in ah) {
-      let action = ah[data.action];
-      if (data.callbackId) {
-        let sourceName = this.sourceName;
-        let targetName = data.sourceName;
-        Promise.resolve().then(function () {
-          return action[0].call(action[1], data.data);
-        }).then(result => {
-          comObj.postMessage({
-            sourceName,
-            targetName,
-            isReply: true,
-            callbackId: data.callbackId,
-            data: result
-          });
-        }, reason => {
-          comObj.postMessage({
-            sourceName,
-            targetName,
-            isReply: true,
-            callbackId: data.callbackId,
-            error: makeReasonSerializable(reason)
-          });
-        });
-      } else if (data.streamId) {
-        this._createStreamSink(data);
-      } else {
-        action[0].call(action[1], data.data);
-      }
-    } else {
-      throw new Error(`Unknown action from worker: ${data.action}`);
-    }
-  };
-  comObj.addEventListener('message', this._onComObjOnMessage);
-}
-MessageHandler.prototype = {
-  on(actionName, handler, scope) {
-    var ah = this.actionHandler;
-    if (ah[actionName]) {
-      throw new Error(`There is already an actionName called "${actionName}"`);
-    }
-    ah[actionName] = [handler, scope];
-  },
-  send(actionName, data, transfers) {
-    var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      action: actionName,
-      data
-    };
-    this.postMessage(message, transfers);
-  },
-  sendWithPromise(actionName, data, transfers) {
-    var callbackId = this.callbackId++;
-    var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      action: actionName,
-      data,
-      callbackId
-    };
-    var capability = createPromiseCapability();
-    this.callbacksCapabilities[callbackId] = capability;
-    try {
-      this.postMessage(message, transfers);
-    } catch (e) {
-      capability.reject(e);
-    }
-    return capability.promise;
-  },
-  sendWithStream(actionName, data, queueingStrategy, transfers) {
-    let streamId = this.streamId++;
-    let sourceName = this.sourceName;
-    let targetName = this.targetName;
-    return new _streams_polyfill.ReadableStream({
-      start: controller => {
-        let startCapability = createPromiseCapability();
-        this.streamControllers[streamId] = {
-          controller,
-          startCall: startCapability,
-          isClosed: false
-        };
-        this.postMessage({
-          sourceName,
-          targetName,
-          action: actionName,
-          streamId,
-          data,
-          desiredSize: controller.desiredSize
-        });
-        return startCapability.promise;
-      },
-      pull: controller => {
-        let pullCapability = createPromiseCapability();
-        this.streamControllers[streamId].pullCall = pullCapability;
-        this.postMessage({
-          sourceName,
-          targetName,
-          stream: 'pull',
-          streamId,
-          desiredSize: controller.desiredSize
-        });
-        return pullCapability.promise;
-      },
-      cancel: reason => {
-        let cancelCapability = createPromiseCapability();
-        this.streamControllers[streamId].cancelCall = cancelCapability;
-        this.streamControllers[streamId].isClosed = true;
-        this.postMessage({
-          sourceName,
-          targetName,
-          stream: 'cancel',
-          reason,
-          streamId
-        });
-        return cancelCapability.promise;
-      }
-    }, queueingStrategy);
-  },
-  _createStreamSink(data) {
-    let self = this;
-    let action = this.actionHandler[data.action];
-    let streamId = data.streamId;
-    let desiredSize = data.desiredSize;
-    let sourceName = this.sourceName;
-    let targetName = data.sourceName;
-    let capability = createPromiseCapability();
-    let sendStreamRequest = ({ stream, chunk, transfers, success, reason }) => {
-      this.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        streamId,
-        chunk,
-        success,
-        reason
-      }, transfers);
-    };
-    let streamSink = {
-      enqueue(chunk, size = 1, transfers) {
-        if (this.isCancelled) {
-          return;
-        }
-        let lastDesiredSize = this.desiredSize;
-        this.desiredSize -= size;
-        if (lastDesiredSize > 0 && this.desiredSize <= 0) {
-          this.sinkCapability = createPromiseCapability();
-          this.ready = this.sinkCapability.promise;
-        }
-        sendStreamRequest({
-          stream: 'enqueue',
-          chunk,
-          transfers
-        });
-      },
-      close() {
-        if (this.isCancelled) {
-          return;
-        }
-        this.isCancelled = true;
-        sendStreamRequest({ stream: 'close' });
-        delete self.streamSinks[streamId];
-      },
-      error(reason) {
-        if (this.isCancelled) {
-          return;
-        }
-        this.isCancelled = true;
-        sendStreamRequest({
-          stream: 'error',
-          reason
-        });
-      },
-      sinkCapability: capability,
-      onPull: null,
-      onCancel: null,
-      isCancelled: false,
-      desiredSize,
-      ready: null
-    };
-    streamSink.sinkCapability.resolve();
-    streamSink.ready = streamSink.sinkCapability.promise;
-    this.streamSinks[streamId] = streamSink;
-    resolveCall(action[0], [data.data, streamSink], action[1]).then(() => {
-      sendStreamRequest({
-        stream: 'start_complete',
-        success: true
-      });
-    }, reason => {
-      sendStreamRequest({
-        stream: 'start_complete',
-        success: false,
-        reason
-      });
-    });
-  },
-  _processStreamMessage(data) {
-    let sourceName = this.sourceName;
-    let targetName = data.sourceName;
-    let streamId = data.streamId;
-    let sendStreamResponse = ({ stream, success, reason }) => {
-      this.comObj.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        success,
-        streamId,
-        reason
-      });
-    };
-    let deleteStreamController = () => {
-      Promise.all([this.streamControllers[data.streamId].startCall, this.streamControllers[data.streamId].pullCall, this.streamControllers[data.streamId].cancelCall].map(function (capability) {
-        return capability && finalize(capability.promise);
-      })).then(() => {
-        delete this.streamControllers[data.streamId];
-      });
-    };
-    switch (data.stream) {
-      case 'start_complete':
-        resolveOrReject(this.streamControllers[data.streamId].startCall, data.success, wrapReason(data.reason));
-        break;
-      case 'pull_complete':
-        resolveOrReject(this.streamControllers[data.streamId].pullCall, data.success, wrapReason(data.reason));
-        break;
-      case 'pull':
-        if (!this.streamSinks[data.streamId]) {
-          sendStreamResponse({
-            stream: 'pull_complete',
-            success: true
-          });
-          break;
-        }
-        if (this.streamSinks[data.streamId].desiredSize <= 0 && data.desiredSize > 0) {
-          this.streamSinks[data.streamId].sinkCapability.resolve();
-        }
-        this.streamSinks[data.streamId].desiredSize = data.desiredSize;
-        resolveCall(this.streamSinks[data.streamId].onPull).then(() => {
-          sendStreamResponse({
-            stream: 'pull_complete',
-            success: true
-          });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'pull_complete',
-            success: false,
-            reason
-          });
-        });
-        break;
-      case 'enqueue':
-        assert(this.streamControllers[data.streamId], 'enqueue should have stream controller');
-        if (!this.streamControllers[data.streamId].isClosed) {
-          this.streamControllers[data.streamId].controller.enqueue(data.chunk);
-        }
-        break;
-      case 'close':
-        assert(this.streamControllers[data.streamId], 'close should have stream controller');
-        if (this.streamControllers[data.streamId].isClosed) {
-          break;
-        }
-        this.streamControllers[data.streamId].isClosed = true;
-        this.streamControllers[data.streamId].controller.close();
-        deleteStreamController();
-        break;
-      case 'error':
-        assert(this.streamControllers[data.streamId], 'error should have stream controller');
-        this.streamControllers[data.streamId].controller.error(wrapReason(data.reason));
-        deleteStreamController();
-        break;
-      case 'cancel_complete':
-        resolveOrReject(this.streamControllers[data.streamId].cancelCall, data.success, wrapReason(data.reason));
-        deleteStreamController();
-        break;
-      case 'cancel':
-        if (!this.streamSinks[data.streamId]) {
-          break;
-        }
-        resolveCall(this.streamSinks[data.streamId].onCancel, [wrapReason(data.reason)]).then(() => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
-            success: true
-          });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
-            success: false,
-            reason
-          });
-        });
-        this.streamSinks[data.streamId].sinkCapability.reject(wrapReason(data.reason));
-        this.streamSinks[data.streamId].isCancelled = true;
-        delete this.streamSinks[data.streamId];
-        break;
-      default:
-        throw new Error('Unexpected stream case');
-    }
-  },
-  postMessage(message, transfers) {
-    if (transfers && this.postMessageTransfers) {
-      this.comObj.postMessage(message, transfers);
-    } else {
-      this.comObj.postMessage(message);
-    }
-  },
-  destroy() {
-    this.comObj.removeEventListener('message', this._onComObjOnMessage);
-  }
-};
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 exports.OPS = OPS;
@@ -1340,12 +951,10 @@ exports.ImageKind = ImageKind;
 exports.CMapCompressionType = CMapCompressionType;
 exports.AbortException = AbortException;
 exports.InvalidPDFException = InvalidPDFException;
-exports.MessageHandler = MessageHandler;
 exports.MissingDataException = MissingDataException;
 exports.MissingPDFException = MissingPDFException;
 exports.NativeImageDecoding = NativeImageDecoding;
 exports.NotImplementedException = NotImplementedException;
-exports.PageViewport = PageViewport;
 exports.PasswordException = PasswordException;
 exports.PasswordResponses = PasswordResponses;
 exports.StreamType = StreamType;
@@ -1394,224 +1003,14 @@ exports.warn = warn;
 exports.unreachable = unreachable;
 
 /***/ }),
-/* 1 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
-
-var _util = __w_pdfjs_require__(0);
-
-const DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
-const SVG_NS = 'http://www.w3.org/2000/svg';
-class DOMCanvasFactory {
-  create(width, height) {
-    if (width <= 0 || height <= 0) {
-      throw new Error('invalid canvas size');
-    }
-    let canvas = document.createElement('canvas');
-    let context = canvas.getContext('2d');
-    canvas.width = width;
-    canvas.height = height;
-    return {
-      canvas,
-      context
-    };
-  }
-  reset(canvasAndContext, width, height) {
-    if (!canvasAndContext.canvas) {
-      throw new Error('canvas is not specified');
-    }
-    if (width <= 0 || height <= 0) {
-      throw new Error('invalid canvas size');
-    }
-    canvasAndContext.canvas.width = width;
-    canvasAndContext.canvas.height = height;
-  }
-  destroy(canvasAndContext) {
-    if (!canvasAndContext.canvas) {
-      throw new Error('canvas is not specified');
-    }
-    canvasAndContext.canvas.width = 0;
-    canvasAndContext.canvas.height = 0;
-    canvasAndContext.canvas = null;
-    canvasAndContext.context = null;
-  }
-}
-class DOMCMapReaderFactory {
-  constructor({ baseUrl = null, isCompressed = false }) {
-    this.baseUrl = baseUrl;
-    this.isCompressed = isCompressed;
-  }
-  fetch({ name }) {
-    if (!this.baseUrl) {
-      return Promise.reject(new Error('The CMap "baseUrl" parameter must be specified, ensure that ' + 'the "cMapUrl" and "cMapPacked" API parameters are provided.'));
-    }
-    if (!name) {
-      return Promise.reject(new Error('CMap name must be specified.'));
-    }
-    return new Promise((resolve, reject) => {
-      let url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
-      let request = new XMLHttpRequest();
-      request.open('GET', url, true);
-      if (this.isCompressed) {
-        request.responseType = 'arraybuffer';
-      }
-      request.onreadystatechange = () => {
-        if (request.readyState !== XMLHttpRequest.DONE) {
-          return;
-        }
-        if (request.status === 200 || request.status === 0) {
-          let data;
-          if (this.isCompressed && request.response) {
-            data = new Uint8Array(request.response);
-          } else if (!this.isCompressed && request.responseText) {
-            data = (0, _util.stringToBytes)(request.responseText);
-          }
-          if (data) {
-            resolve({
-              cMapData: data,
-              compressionType: this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE
-            });
-            return;
-          }
-        }
-        reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
-      };
-      request.send(null);
-    });
-  }
-}
-class DOMSVGFactory {
-  create(width, height) {
-    (0, _util.assert)(width > 0 && height > 0, 'Invalid SVG dimensions');
-    let svg = document.createElementNS(SVG_NS, 'svg:svg');
-    svg.setAttribute('version', '1.1');
-    svg.setAttribute('width', width + 'px');
-    svg.setAttribute('height', height + 'px');
-    svg.setAttribute('preserveAspectRatio', 'none');
-    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-    return svg;
-  }
-  createElement(type) {
-    (0, _util.assert)(typeof type === 'string', 'Invalid SVG element type');
-    return document.createElementNS(SVG_NS, type);
-  }
-}
-var RenderingCancelledException = function RenderingCancelledException() {
-  function RenderingCancelledException(msg, type) {
-    this.message = msg;
-    this.type = type;
-  }
-  RenderingCancelledException.prototype = new Error();
-  RenderingCancelledException.prototype.name = 'RenderingCancelledException';
-  RenderingCancelledException.constructor = RenderingCancelledException;
-  return RenderingCancelledException;
-}();
-const LinkTarget = {
-  NONE: 0,
-  SELF: 1,
-  BLANK: 2,
-  PARENT: 3,
-  TOP: 4
-};
-const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
-function addLinkAttributes(link, { url, target, rel } = {}) {
-  link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
-  if (url) {
-    const LinkTargetValues = Object.values(LinkTarget);
-    let targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
-    link.target = LinkTargetStringMap[targetIndex];
-    link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
-  }
-}
-function getFilenameFromUrl(url) {
-  var anchor = url.indexOf('#');
-  var query = url.indexOf('?');
-  var end = Math.min(anchor > 0 ? anchor : url.length, query > 0 ? query : url.length);
-  return url.substring(url.lastIndexOf('/', end) + 1, end);
-}
-class StatTimer {
-  constructor(enable = true) {
-    this.enabled = !!enable;
-    this.started = Object.create(null);
-    this.times = [];
-  }
-  time(name) {
-    if (!this.enabled) {
-      return;
-    }
-    if (name in this.started) {
-      (0, _util.warn)('Timer is already running for ' + name);
-    }
-    this.started[name] = Date.now();
-  }
-  timeEnd(name) {
-    if (!this.enabled) {
-      return;
-    }
-    if (!(name in this.started)) {
-      (0, _util.warn)('Timer has not been started for ' + name);
-    }
-    this.times.push({
-      'name': name,
-      'start': this.started[name],
-      'end': Date.now()
-    });
-    delete this.started[name];
-  }
-  toString() {
-    let times = this.times;
-    let out = '',
-        longest = 0;
-    for (let i = 0, ii = times.length; i < ii; ++i) {
-      let name = times[i]['name'];
-      if (name.length > longest) {
-        longest = name.length;
-      }
-    }
-    for (let i = 0, ii = times.length; i < ii; ++i) {
-      let span = times[i];
-      let duration = span.end - span.start;
-      out += `${span['name'].padEnd(longest)} ${duration}ms\n`;
-    }
-    return out;
-  }
-}
-class DummyStatTimer {
-  constructor() {
-    (0, _util.unreachable)('Cannot initialize DummyStatTimer.');
-  }
-  static time(name) {}
-  static timeEnd(name) {}
-  static toString() {
-    return '';
-  }
-}
-exports.RenderingCancelledException = RenderingCancelledException;
-exports.addLinkAttributes = addLinkAttributes;
-exports.getFilenameFromUrl = getFilenameFromUrl;
-exports.LinkTarget = LinkTarget;
-exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
-exports.DOMCanvasFactory = DOMCanvasFactory;
-exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
-exports.DOMSVGFactory = DOMSVGFactory;
-exports.StatTimer = StatTimer;
-exports.DummyStatTimer = DummyStatTimer;
-
-/***/ }),
 /* 2 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
 
 
-module.exports = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
+const globalScope = __w_pdfjs_require__(3);
+;
 
 /***/ }),
 /* 3 */
@@ -1620,86 +1019,10 @@ module.exports = typeof window !== 'undefined' && window.Math === Math ? window 
 "use strict";
 
 
-let compatibilityParams = Object.create(null);
-;
-exports.apiCompatibilityParams = Object.freeze(compatibilityParams);
+module.exports = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-const GlobalWorkerOptions = Object.create(null);
-GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? null : GlobalWorkerOptions.workerPort;
-GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? '' : GlobalWorkerOptions.workerSrc;
-exports.GlobalWorkerOptions = GlobalWorkerOptions;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-var pdfjsVersion = '2.0.536';
-var pdfjsBuild = '5053d02b';
-var pdfjsSharedUtil = __w_pdfjs_require__(0);
-var pdfjsDisplayAPI = __w_pdfjs_require__(9);
-var pdfjsDisplayTextLayer = __w_pdfjs_require__(17);
-var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(18);
-var pdfjsDisplayDOMUtils = __w_pdfjs_require__(1);
-var pdfjsDisplaySVG = __w_pdfjs_require__(19);
-let pdfjsDisplayWorkerOptions = __w_pdfjs_require__(4);
-let pdfjsDisplayAPICompatibility = __w_pdfjs_require__(3);
-;
-exports.build = pdfjsDisplayAPI.build;
-exports.version = pdfjsDisplayAPI.version;
-exports.getDocument = pdfjsDisplayAPI.getDocument;
-exports.LoopbackPort = pdfjsDisplayAPI.LoopbackPort;
-exports.PDFDataRangeTransport = pdfjsDisplayAPI.PDFDataRangeTransport;
-exports.PDFWorker = pdfjsDisplayAPI.PDFWorker;
-exports.renderTextLayer = pdfjsDisplayTextLayer.renderTextLayer;
-exports.AnnotationLayer = pdfjsDisplayAnnotationLayer.AnnotationLayer;
-exports.createPromiseCapability = pdfjsSharedUtil.createPromiseCapability;
-exports.PasswordResponses = pdfjsSharedUtil.PasswordResponses;
-exports.InvalidPDFException = pdfjsSharedUtil.InvalidPDFException;
-exports.MissingPDFException = pdfjsSharedUtil.MissingPDFException;
-exports.SVGGraphics = pdfjsDisplaySVG.SVGGraphics;
-exports.NativeImageDecoding = pdfjsSharedUtil.NativeImageDecoding;
-exports.UnexpectedResponseException = pdfjsSharedUtil.UnexpectedResponseException;
-exports.OPS = pdfjsSharedUtil.OPS;
-exports.VerbosityLevel = pdfjsSharedUtil.VerbosityLevel;
-exports.UNSUPPORTED_FEATURES = pdfjsSharedUtil.UNSUPPORTED_FEATURES;
-exports.createValidAbsoluteUrl = pdfjsSharedUtil.createValidAbsoluteUrl;
-exports.createObjectURL = pdfjsSharedUtil.createObjectURL;
-exports.removeNullCharacters = pdfjsSharedUtil.removeNullCharacters;
-exports.shadow = pdfjsSharedUtil.shadow;
-exports.createBlob = pdfjsSharedUtil.createBlob;
-exports.Util = pdfjsSharedUtil.Util;
-exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledException;
-exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
-exports.LinkTarget = pdfjsDisplayDOMUtils.LinkTarget;
-exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
-exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
-exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-const globalScope = __w_pdfjs_require__(2);
-;
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -1719,11 +1042,11 @@ if (typeof ReadableStream !== 'undefined') {
 if (isReadableStreamSupported) {
   exports.ReadableStream = ReadableStream;
 } else {
-  exports.ReadableStream = __w_pdfjs_require__(8).ReadableStream;
+  exports.ReadableStream = __w_pdfjs_require__(5).ReadableStream;
 }
 
 /***/ }),
-/* 8 */
+/* 5 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4739,7 +4062,7 @@ if (isReadableStreamSupported) {
 }]));
 
 /***/ }),
-/* 9 */
+/* 6 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4750,27 +4073,29 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.build = exports.version = exports.setPDFNetworkStreamFactory = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFWorker = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.getDocument = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
-var _dom_utils = __w_pdfjs_require__(1);
+var _dom_utils = __w_pdfjs_require__(7);
 
-var _font_loader = __w_pdfjs_require__(10);
+var _font_loader = __w_pdfjs_require__(8);
 
-var _api_compatibility = __w_pdfjs_require__(3);
+var _api_compatibility = __w_pdfjs_require__(9);
 
-var _canvas = __w_pdfjs_require__(11);
+var _canvas = __w_pdfjs_require__(10);
 
-var _global_scope = __w_pdfjs_require__(2);
+var _global_scope = __w_pdfjs_require__(3);
 
 var _global_scope2 = _interopRequireDefault(_global_scope);
 
-var _worker_options = __w_pdfjs_require__(4);
+var _worker_options = __w_pdfjs_require__(12);
 
-var _metadata = __w_pdfjs_require__(13);
+var _message_handler = __w_pdfjs_require__(13);
 
-var _transport_stream = __w_pdfjs_require__(15);
+var _metadata = __w_pdfjs_require__(14);
 
-var _webgl = __w_pdfjs_require__(16);
+var _transport_stream = __w_pdfjs_require__(16);
+
+var _webgl = __w_pdfjs_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4906,7 +4231,7 @@ function getDocument(src) {
           disableStream: params.disableStream
         });
       }
-      var messageHandler = new _util.MessageHandler(docId, workerId, worker.port);
+      var messageHandler = new _message_handler.MessageHandler(docId, workerId, worker.port);
       messageHandler.postMessageTransfers = worker.postMessageTransfers;
       var transport = new WorkerTransport(messageHandler, task, networkStream, params, CMapReaderFactory);
       task._transport = transport;
@@ -4925,7 +4250,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.536',
+    apiVersion: '2.0.550',
     source: {
       data: source.data,
       url: source.url,
@@ -5128,7 +4453,12 @@ var PDFPageProxy = function PDFPageProxyClosure() {
       return this.pageInfo.view;
     },
     getViewport(scale, rotate = this.rotate, dontFlip = false) {
-      return new _util.PageViewport(this.view, scale, rotate, 0, 0, dontFlip);
+      return new _dom_utils.PageViewport({
+        viewBox: this.view,
+        scale,
+        rotation: rotate,
+        dontFlip
+      });
     },
     getAnnotations: function PDFPageProxy_getAnnotations(params) {
       var intent = params && params.intent || null;
@@ -5340,7 +4670,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
   return PDFPageProxy;
 }();
 class LoopbackPort {
-  constructor(defer) {
+  constructor(defer = true) {
     this._listeners = [];
     this._defer = defer;
     this._deferred = Promise.resolve(undefined);
@@ -5479,7 +4809,7 @@ var PDFWorker = function PDFWorkerClosure() {
     },
     _initializeFromPort: function PDFWorker_initializeFromPort(port) {
       this._port = port;
-      this._messageHandler = new _util.MessageHandler('main', 'worker', port);
+      this._messageHandler = new _message_handler.MessageHandler('main', 'worker', port);
       this._messageHandler.on('ready', function () {});
       this._readyCapability.resolve();
     },
@@ -5488,7 +4818,7 @@ var PDFWorker = function PDFWorkerClosure() {
         var workerSrc = getWorkerSrc();
         try {
           var worker = new Worker(workerSrc);
-          var messageHandler = new _util.MessageHandler('main', 'worker', worker);
+          var messageHandler = new _message_handler.MessageHandler('main', 'worker', worker);
           var terminateEarly = () => {
             worker.removeEventListener('error', onWorkerError);
             messageHandler.destroy();
@@ -5571,9 +4901,9 @@ var PDFWorker = function PDFWorkerClosure() {
         var port = new LoopbackPort(isTypedArraysPresent);
         this._port = port;
         var id = 'fake' + nextFakeWorkerId++;
-        var workerHandler = new _util.MessageHandler(id + '_worker', id, port);
+        var workerHandler = new _message_handler.MessageHandler(id + '_worker', id, port);
         WorkerMessageHandler.setup(workerHandler, port);
-        var messageHandler = new _util.MessageHandler(id, id + '_worker', port);
+        var messageHandler = new _message_handler.MessageHandler(id, id + '_worker', port);
         this._messageHandler = messageHandler;
         this._readyCapability.resolve();
       });
@@ -6254,8 +5584,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.536';
-  exports.build = build = '5053d02b';
+  exports.version = version = '2.0.550';
+  exports.build = build = '76337fdc';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -6268,7 +5598,300 @@ exports.version = version;
 exports.build = build;
 
 /***/ }),
-/* 10 */
+/* 7 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = exports.PageViewport = undefined;
+
+var _util = __w_pdfjs_require__(1);
+
+const DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+class DOMCanvasFactory {
+  create(width, height) {
+    if (width <= 0 || height <= 0) {
+      throw new Error('invalid canvas size');
+    }
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
+    canvas.width = width;
+    canvas.height = height;
+    return {
+      canvas,
+      context
+    };
+  }
+  reset(canvasAndContext, width, height) {
+    if (!canvasAndContext.canvas) {
+      throw new Error('canvas is not specified');
+    }
+    if (width <= 0 || height <= 0) {
+      throw new Error('invalid canvas size');
+    }
+    canvasAndContext.canvas.width = width;
+    canvasAndContext.canvas.height = height;
+  }
+  destroy(canvasAndContext) {
+    if (!canvasAndContext.canvas) {
+      throw new Error('canvas is not specified');
+    }
+    canvasAndContext.canvas.width = 0;
+    canvasAndContext.canvas.height = 0;
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
+  }
+}
+class DOMCMapReaderFactory {
+  constructor({ baseUrl = null, isCompressed = false }) {
+    this.baseUrl = baseUrl;
+    this.isCompressed = isCompressed;
+  }
+  fetch({ name }) {
+    if (!this.baseUrl) {
+      return Promise.reject(new Error('The CMap "baseUrl" parameter must be specified, ensure that ' + 'the "cMapUrl" and "cMapPacked" API parameters are provided.'));
+    }
+    if (!name) {
+      return Promise.reject(new Error('CMap name must be specified.'));
+    }
+    return new Promise((resolve, reject) => {
+      let url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
+      let request = new XMLHttpRequest();
+      request.open('GET', url, true);
+      if (this.isCompressed) {
+        request.responseType = 'arraybuffer';
+      }
+      request.onreadystatechange = () => {
+        if (request.readyState !== XMLHttpRequest.DONE) {
+          return;
+        }
+        if (request.status === 200 || request.status === 0) {
+          let data;
+          if (this.isCompressed && request.response) {
+            data = new Uint8Array(request.response);
+          } else if (!this.isCompressed && request.responseText) {
+            data = (0, _util.stringToBytes)(request.responseText);
+          }
+          if (data) {
+            resolve({
+              cMapData: data,
+              compressionType: this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE
+            });
+            return;
+          }
+        }
+        reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
+      };
+      request.send(null);
+    });
+  }
+}
+class DOMSVGFactory {
+  create(width, height) {
+    (0, _util.assert)(width > 0 && height > 0, 'Invalid SVG dimensions');
+    let svg = document.createElementNS(SVG_NS, 'svg:svg');
+    svg.setAttribute('version', '1.1');
+    svg.setAttribute('width', width + 'px');
+    svg.setAttribute('height', height + 'px');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    return svg;
+  }
+  createElement(type) {
+    (0, _util.assert)(typeof type === 'string', 'Invalid SVG element type');
+    return document.createElementNS(SVG_NS, type);
+  }
+}
+class PageViewport {
+  constructor({ viewBox, scale, rotation, offsetX = 0, offsetY = 0, dontFlip = false }) {
+    this.viewBox = viewBox;
+    this.scale = scale;
+    this.rotation = rotation;
+    this.offsetX = offsetX;
+    this.offsetY = offsetY;
+    let centerX = (viewBox[2] + viewBox[0]) / 2;
+    let centerY = (viewBox[3] + viewBox[1]) / 2;
+    let rotateA, rotateB, rotateC, rotateD;
+    rotation = rotation % 360;
+    rotation = rotation < 0 ? rotation + 360 : rotation;
+    switch (rotation) {
+      case 180:
+        rotateA = -1;
+        rotateB = 0;
+        rotateC = 0;
+        rotateD = 1;
+        break;
+      case 90:
+        rotateA = 0;
+        rotateB = 1;
+        rotateC = 1;
+        rotateD = 0;
+        break;
+      case 270:
+        rotateA = 0;
+        rotateB = -1;
+        rotateC = -1;
+        rotateD = 0;
+        break;
+      default:
+        rotateA = 1;
+        rotateB = 0;
+        rotateC = 0;
+        rotateD = -1;
+        break;
+    }
+    if (dontFlip) {
+      rotateC = -rotateC;
+      rotateD = -rotateD;
+    }
+    let offsetCanvasX, offsetCanvasY;
+    let width, height;
+    if (rotateA === 0) {
+      offsetCanvasX = Math.abs(centerY - viewBox[1]) * scale + offsetX;
+      offsetCanvasY = Math.abs(centerX - viewBox[0]) * scale + offsetY;
+      width = Math.abs(viewBox[3] - viewBox[1]) * scale;
+      height = Math.abs(viewBox[2] - viewBox[0]) * scale;
+    } else {
+      offsetCanvasX = Math.abs(centerX - viewBox[0]) * scale + offsetX;
+      offsetCanvasY = Math.abs(centerY - viewBox[1]) * scale + offsetY;
+      width = Math.abs(viewBox[2] - viewBox[0]) * scale;
+      height = Math.abs(viewBox[3] - viewBox[1]) * scale;
+    }
+    this.transform = [rotateA * scale, rotateB * scale, rotateC * scale, rotateD * scale, offsetCanvasX - rotateA * scale * centerX - rotateC * scale * centerY, offsetCanvasY - rotateB * scale * centerX - rotateD * scale * centerY];
+    this.width = width;
+    this.height = height;
+  }
+  clone({ scale = this.scale, rotation = this.rotation, dontFlip = false } = {}) {
+    return new PageViewport({
+      viewBox: this.viewBox.slice(),
+      scale,
+      rotation,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+      dontFlip
+    });
+  }
+  convertToViewportPoint(x, y) {
+    return _util.Util.applyTransform([x, y], this.transform);
+  }
+  convertToViewportRectangle(rect) {
+    let tl = _util.Util.applyTransform([rect[0], rect[1]], this.transform);
+    let br = _util.Util.applyTransform([rect[2], rect[3]], this.transform);
+    return [tl[0], tl[1], br[0], br[1]];
+  }
+  convertToPdfPoint(x, y) {
+    return _util.Util.applyInverseTransform([x, y], this.transform);
+  }
+}
+var RenderingCancelledException = function RenderingCancelledException() {
+  function RenderingCancelledException(msg, type) {
+    this.message = msg;
+    this.type = type;
+  }
+  RenderingCancelledException.prototype = new Error();
+  RenderingCancelledException.prototype.name = 'RenderingCancelledException';
+  RenderingCancelledException.constructor = RenderingCancelledException;
+  return RenderingCancelledException;
+}();
+const LinkTarget = {
+  NONE: 0,
+  SELF: 1,
+  BLANK: 2,
+  PARENT: 3,
+  TOP: 4
+};
+const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
+function addLinkAttributes(link, { url, target, rel } = {}) {
+  link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
+  if (url) {
+    const LinkTargetValues = Object.values(LinkTarget);
+    let targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
+    link.target = LinkTargetStringMap[targetIndex];
+    link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
+  }
+}
+function getFilenameFromUrl(url) {
+  var anchor = url.indexOf('#');
+  var query = url.indexOf('?');
+  var end = Math.min(anchor > 0 ? anchor : url.length, query > 0 ? query : url.length);
+  return url.substring(url.lastIndexOf('/', end) + 1, end);
+}
+class StatTimer {
+  constructor(enable = true) {
+    this.enabled = !!enable;
+    this.started = Object.create(null);
+    this.times = [];
+  }
+  time(name) {
+    if (!this.enabled) {
+      return;
+    }
+    if (name in this.started) {
+      (0, _util.warn)('Timer is already running for ' + name);
+    }
+    this.started[name] = Date.now();
+  }
+  timeEnd(name) {
+    if (!this.enabled) {
+      return;
+    }
+    if (!(name in this.started)) {
+      (0, _util.warn)('Timer has not been started for ' + name);
+    }
+    this.times.push({
+      'name': name,
+      'start': this.started[name],
+      'end': Date.now()
+    });
+    delete this.started[name];
+  }
+  toString() {
+    let times = this.times;
+    let out = '',
+        longest = 0;
+    for (let i = 0, ii = times.length; i < ii; ++i) {
+      let name = times[i]['name'];
+      if (name.length > longest) {
+        longest = name.length;
+      }
+    }
+    for (let i = 0, ii = times.length; i < ii; ++i) {
+      let span = times[i];
+      let duration = span.end - span.start;
+      out += `${span['name'].padEnd(longest)} ${duration}ms\n`;
+    }
+    return out;
+  }
+}
+class DummyStatTimer {
+  constructor() {
+    (0, _util.unreachable)('Cannot initialize DummyStatTimer.');
+  }
+  static time(name) {}
+  static timeEnd(name) {}
+  static toString() {
+    return '';
+  }
+}
+exports.PageViewport = PageViewport;
+exports.RenderingCancelledException = RenderingCancelledException;
+exports.addLinkAttributes = addLinkAttributes;
+exports.getFilenameFromUrl = getFilenameFromUrl;
+exports.LinkTarget = LinkTarget;
+exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
+exports.DOMCanvasFactory = DOMCanvasFactory;
+exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
+exports.DOMSVGFactory = DOMSVGFactory;
+exports.StatTimer = StatTimer;
+exports.DummyStatTimer = DummyStatTimer;
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -6279,7 +5902,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FontLoader = exports.FontFaceObject = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
 function FontLoader(docId) {
   this.docId = docId;
@@ -6391,7 +6014,18 @@ exports.FontFaceObject = FontFaceObject;
 exports.FontLoader = FontLoader;
 
 /***/ }),
-/* 11 */
+/* 9 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+let compatibilityParams = Object.create(null);
+;
+exports.apiCompatibilityParams = Object.freeze(compatibilityParams);
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -6402,9 +6036,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CanvasGraphics = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
-var _pattern_helper = __w_pdfjs_require__(12);
+var _pattern_helper = __w_pdfjs_require__(11);
 
 var MIN_FONT_SIZE = 16;
 var MAX_FONT_SIZE = 100;
@@ -8132,7 +7766,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
 exports.CanvasGraphics = CanvasGraphics;
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8143,7 +7777,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TilingPattern = exports.getShadingPatternFromIR = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
 var ShadingIRs = {};
 ShadingIRs.RadialAxial = {
@@ -8514,7 +8148,416 @@ exports.getShadingPatternFromIR = getShadingPatternFromIR;
 exports.TilingPattern = TilingPattern;
 
 /***/ }),
+/* 12 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const GlobalWorkerOptions = Object.create(null);
+GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? null : GlobalWorkerOptions.workerPort;
+GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? '' : GlobalWorkerOptions.workerSrc;
+exports.GlobalWorkerOptions = GlobalWorkerOptions;
+
+/***/ }),
 /* 13 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MessageHandler = undefined;
+
+var _util = __w_pdfjs_require__(1);
+
+function resolveCall(fn, args, thisArg = null) {
+  if (!fn) {
+    return Promise.resolve(undefined);
+  }
+  return new Promise((resolve, reject) => {
+    resolve(fn.apply(thisArg, args));
+  });
+}
+function wrapReason(reason) {
+  if (typeof reason !== 'object') {
+    return reason;
+  }
+  switch (reason.name) {
+    case 'AbortException':
+      return new _util.AbortException(reason.message);
+    case 'MissingPDFException':
+      return new _util.MissingPDFException(reason.message);
+    case 'UnexpectedResponseException':
+      return new _util.UnexpectedResponseException(reason.message, reason.status);
+    default:
+      return new _util.UnknownErrorException(reason.message, reason.details);
+  }
+}
+function makeReasonSerializable(reason) {
+  if (!(reason instanceof Error) || reason instanceof _util.AbortException || reason instanceof _util.MissingPDFException || reason instanceof _util.UnexpectedResponseException || reason instanceof _util.UnknownErrorException) {
+    return reason;
+  }
+  return new _util.UnknownErrorException(reason.message, reason.toString());
+}
+function resolveOrReject(capability, success, reason) {
+  if (success) {
+    capability.resolve();
+  } else {
+    capability.reject(reason);
+  }
+}
+function finalize(promise) {
+  return Promise.resolve(promise).catch(() => {});
+}
+function MessageHandler(sourceName, targetName, comObj) {
+  this.sourceName = sourceName;
+  this.targetName = targetName;
+  this.comObj = comObj;
+  this.callbackId = 1;
+  this.streamId = 1;
+  this.postMessageTransfers = true;
+  this.streamSinks = Object.create(null);
+  this.streamControllers = Object.create(null);
+  let callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
+  let ah = this.actionHandler = Object.create(null);
+  this._onComObjOnMessage = event => {
+    let data = event.data;
+    if (data.targetName !== this.sourceName) {
+      return;
+    }
+    if (data.stream) {
+      this._processStreamMessage(data);
+    } else if (data.isReply) {
+      let callbackId = data.callbackId;
+      if (data.callbackId in callbacksCapabilities) {
+        let callback = callbacksCapabilities[callbackId];
+        delete callbacksCapabilities[callbackId];
+        if ('error' in data) {
+          callback.reject(wrapReason(data.error));
+        } else {
+          callback.resolve(data.data);
+        }
+      } else {
+        throw new Error(`Cannot resolve callback ${callbackId}`);
+      }
+    } else if (data.action in ah) {
+      let action = ah[data.action];
+      if (data.callbackId) {
+        let sourceName = this.sourceName;
+        let targetName = data.sourceName;
+        Promise.resolve().then(function () {
+          return action[0].call(action[1], data.data);
+        }).then(result => {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            isReply: true,
+            callbackId: data.callbackId,
+            data: result
+          });
+        }, reason => {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            isReply: true,
+            callbackId: data.callbackId,
+            error: makeReasonSerializable(reason)
+          });
+        });
+      } else if (data.streamId) {
+        this._createStreamSink(data);
+      } else {
+        action[0].call(action[1], data.data);
+      }
+    } else {
+      throw new Error(`Unknown action from worker: ${data.action}`);
+    }
+  };
+  comObj.addEventListener('message', this._onComObjOnMessage);
+}
+MessageHandler.prototype = {
+  on(actionName, handler, scope) {
+    var ah = this.actionHandler;
+    if (ah[actionName]) {
+      throw new Error(`There is already an actionName called "${actionName}"`);
+    }
+    ah[actionName] = [handler, scope];
+  },
+  send(actionName, data, transfers) {
+    var message = {
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      action: actionName,
+      data
+    };
+    this.postMessage(message, transfers);
+  },
+  sendWithPromise(actionName, data, transfers) {
+    var callbackId = this.callbackId++;
+    var message = {
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      action: actionName,
+      data,
+      callbackId
+    };
+    var capability = (0, _util.createPromiseCapability)();
+    this.callbacksCapabilities[callbackId] = capability;
+    try {
+      this.postMessage(message, transfers);
+    } catch (e) {
+      capability.reject(e);
+    }
+    return capability.promise;
+  },
+  sendWithStream(actionName, data, queueingStrategy, transfers) {
+    let streamId = this.streamId++;
+    let sourceName = this.sourceName;
+    let targetName = this.targetName;
+    return new _util.ReadableStream({
+      start: controller => {
+        let startCapability = (0, _util.createPromiseCapability)();
+        this.streamControllers[streamId] = {
+          controller,
+          startCall: startCapability,
+          isClosed: false
+        };
+        this.postMessage({
+          sourceName,
+          targetName,
+          action: actionName,
+          streamId,
+          data,
+          desiredSize: controller.desiredSize
+        });
+        return startCapability.promise;
+      },
+      pull: controller => {
+        let pullCapability = (0, _util.createPromiseCapability)();
+        this.streamControllers[streamId].pullCall = pullCapability;
+        this.postMessage({
+          sourceName,
+          targetName,
+          stream: 'pull',
+          streamId,
+          desiredSize: controller.desiredSize
+        });
+        return pullCapability.promise;
+      },
+      cancel: reason => {
+        let cancelCapability = (0, _util.createPromiseCapability)();
+        this.streamControllers[streamId].cancelCall = cancelCapability;
+        this.streamControllers[streamId].isClosed = true;
+        this.postMessage({
+          sourceName,
+          targetName,
+          stream: 'cancel',
+          reason,
+          streamId
+        });
+        return cancelCapability.promise;
+      }
+    }, queueingStrategy);
+  },
+  _createStreamSink(data) {
+    let self = this;
+    let action = this.actionHandler[data.action];
+    let streamId = data.streamId;
+    let desiredSize = data.desiredSize;
+    let sourceName = this.sourceName;
+    let targetName = data.sourceName;
+    let capability = (0, _util.createPromiseCapability)();
+    let sendStreamRequest = ({ stream, chunk, transfers, success, reason }) => {
+      this.postMessage({
+        sourceName,
+        targetName,
+        stream,
+        streamId,
+        chunk,
+        success,
+        reason
+      }, transfers);
+    };
+    let streamSink = {
+      enqueue(chunk, size = 1, transfers) {
+        if (this.isCancelled) {
+          return;
+        }
+        let lastDesiredSize = this.desiredSize;
+        this.desiredSize -= size;
+        if (lastDesiredSize > 0 && this.desiredSize <= 0) {
+          this.sinkCapability = (0, _util.createPromiseCapability)();
+          this.ready = this.sinkCapability.promise;
+        }
+        sendStreamRequest({
+          stream: 'enqueue',
+          chunk,
+          transfers
+        });
+      },
+      close() {
+        if (this.isCancelled) {
+          return;
+        }
+        this.isCancelled = true;
+        sendStreamRequest({ stream: 'close' });
+        delete self.streamSinks[streamId];
+      },
+      error(reason) {
+        if (this.isCancelled) {
+          return;
+        }
+        this.isCancelled = true;
+        sendStreamRequest({
+          stream: 'error',
+          reason
+        });
+      },
+      sinkCapability: capability,
+      onPull: null,
+      onCancel: null,
+      isCancelled: false,
+      desiredSize,
+      ready: null
+    };
+    streamSink.sinkCapability.resolve();
+    streamSink.ready = streamSink.sinkCapability.promise;
+    this.streamSinks[streamId] = streamSink;
+    resolveCall(action[0], [data.data, streamSink], action[1]).then(() => {
+      sendStreamRequest({
+        stream: 'start_complete',
+        success: true
+      });
+    }, reason => {
+      sendStreamRequest({
+        stream: 'start_complete',
+        success: false,
+        reason
+      });
+    });
+  },
+  _processStreamMessage(data) {
+    let sourceName = this.sourceName;
+    let targetName = data.sourceName;
+    let streamId = data.streamId;
+    let sendStreamResponse = ({ stream, success, reason }) => {
+      this.comObj.postMessage({
+        sourceName,
+        targetName,
+        stream,
+        success,
+        streamId,
+        reason
+      });
+    };
+    let deleteStreamController = () => {
+      Promise.all([this.streamControllers[data.streamId].startCall, this.streamControllers[data.streamId].pullCall, this.streamControllers[data.streamId].cancelCall].map(function (capability) {
+        return capability && finalize(capability.promise);
+      })).then(() => {
+        delete this.streamControllers[data.streamId];
+      });
+    };
+    switch (data.stream) {
+      case 'start_complete':
+        resolveOrReject(this.streamControllers[data.streamId].startCall, data.success, wrapReason(data.reason));
+        break;
+      case 'pull_complete':
+        resolveOrReject(this.streamControllers[data.streamId].pullCall, data.success, wrapReason(data.reason));
+        break;
+      case 'pull':
+        if (!this.streamSinks[data.streamId]) {
+          sendStreamResponse({
+            stream: 'pull_complete',
+            success: true
+          });
+          break;
+        }
+        if (this.streamSinks[data.streamId].desiredSize <= 0 && data.desiredSize > 0) {
+          this.streamSinks[data.streamId].sinkCapability.resolve();
+        }
+        this.streamSinks[data.streamId].desiredSize = data.desiredSize;
+        resolveCall(this.streamSinks[data.streamId].onPull).then(() => {
+          sendStreamResponse({
+            stream: 'pull_complete',
+            success: true
+          });
+        }, reason => {
+          sendStreamResponse({
+            stream: 'pull_complete',
+            success: false,
+            reason
+          });
+        });
+        break;
+      case 'enqueue':
+        (0, _util.assert)(this.streamControllers[data.streamId], 'enqueue should have stream controller');
+        if (!this.streamControllers[data.streamId].isClosed) {
+          this.streamControllers[data.streamId].controller.enqueue(data.chunk);
+        }
+        break;
+      case 'close':
+        (0, _util.assert)(this.streamControllers[data.streamId], 'close should have stream controller');
+        if (this.streamControllers[data.streamId].isClosed) {
+          break;
+        }
+        this.streamControllers[data.streamId].isClosed = true;
+        this.streamControllers[data.streamId].controller.close();
+        deleteStreamController();
+        break;
+      case 'error':
+        (0, _util.assert)(this.streamControllers[data.streamId], 'error should have stream controller');
+        this.streamControllers[data.streamId].controller.error(wrapReason(data.reason));
+        deleteStreamController();
+        break;
+      case 'cancel_complete':
+        resolveOrReject(this.streamControllers[data.streamId].cancelCall, data.success, wrapReason(data.reason));
+        deleteStreamController();
+        break;
+      case 'cancel':
+        if (!this.streamSinks[data.streamId]) {
+          break;
+        }
+        resolveCall(this.streamSinks[data.streamId].onCancel, [wrapReason(data.reason)]).then(() => {
+          sendStreamResponse({
+            stream: 'cancel_complete',
+            success: true
+          });
+        }, reason => {
+          sendStreamResponse({
+            stream: 'cancel_complete',
+            success: false,
+            reason
+          });
+        });
+        this.streamSinks[data.streamId].sinkCapability.reject(wrapReason(data.reason));
+        this.streamSinks[data.streamId].isCancelled = true;
+        delete this.streamSinks[data.streamId];
+        break;
+      default:
+        throw new Error('Unexpected stream case');
+    }
+  },
+  postMessage(message, transfers) {
+    if (transfers && this.postMessageTransfers) {
+      this.comObj.postMessage(message, transfers);
+    } else {
+      this.comObj.postMessage(message);
+    }
+  },
+  destroy() {
+    this.comObj.removeEventListener('message', this._onComObjOnMessage);
+  }
+};
+exports.MessageHandler = MessageHandler;
+
+/***/ }),
+/* 14 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8525,9 +8568,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Metadata = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
-var _xml_parser = __w_pdfjs_require__(14);
+var _xml_parser = __w_pdfjs_require__(15);
 
 class Metadata {
   constructor(data) {
@@ -8611,7 +8654,7 @@ class Metadata {
 exports.Metadata = Metadata;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8939,7 +8982,7 @@ class SimpleXMLParser extends XMLParserBase {
 exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8950,7 +8993,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFDataTransportStream = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
 var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
   function PDFDataTransportStream(params, pdfDataRangeTransport) {
@@ -9179,7 +9222,7 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
 exports.PDFDataTransportStream = PDFDataTransportStream;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9190,7 +9233,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.WebGLContext = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
 class WebGLContext {
   constructor({
@@ -9562,7 +9605,7 @@ var WebGLUtils = function WebGLUtilsClosure() {
 exports.WebGLContext = WebGLContext;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9573,9 +9616,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.renderTextLayer = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
-var _global_scope = __w_pdfjs_require__(2);
+var _global_scope = __w_pdfjs_require__(3);
 
 var _global_scope2 = _interopRequireDefault(_global_scope);
 
@@ -10105,7 +10148,7 @@ var renderTextLayer = function renderTextLayerClosure() {
 exports.renderTextLayer = renderTextLayer;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10116,9 +10159,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.AnnotationLayer = undefined;
 
-var _dom_utils = __w_pdfjs_require__(1);
+var _dom_utils = __w_pdfjs_require__(7);
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
 class AnnotationElementFactory {
   static create(parameters) {
@@ -10820,7 +10863,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10831,11 +10874,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.SVGGraphics = undefined;
 
-var _util = __w_pdfjs_require__(0);
+var _util = __w_pdfjs_require__(1);
 
-var _dom_utils = __w_pdfjs_require__(1);
+var _dom_utils = __w_pdfjs_require__(7);
 
-var _is_node = __w_pdfjs_require__(20);
+var _is_node = __w_pdfjs_require__(21);
 
 var _is_node2 = _interopRequireDefault(_is_node);
 
@@ -10848,7 +10891,7 @@ var SVGGraphics = function () {
 exports.SVGGraphics = SVGGraphics;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
