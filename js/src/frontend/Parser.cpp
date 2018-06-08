@@ -1788,40 +1788,41 @@ FreshlyInitializeBindings(BindingName* cursor, const Vector<BindingName>& bindin
 Maybe<GlobalScope::Data*>
 NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-
-    Vector<BindingName> funs(context);
     Vector<BindingName> vars(context);
     Vector<BindingName> lets(context);
     Vector<BindingName> consts(context);
 
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-        BindingName binding(bi.name(), allBindingsClosedOver || bi.closedOver());
+        bool closedOver = allBindingsClosedOver || bi.closedOver();
+
         switch (bi.kind()) {
-          case BindingKind::Var:
-            if (bi.declarationKind() == DeclarationKind::BodyLevelFunction) {
-                if (!funs.append(binding))
-                    return Nothing();
-            } else {
-                if (!vars.append(binding))
-                    return Nothing();
-            }
+          case BindingKind::Var: {
+            bool isTopLevelFunction = bi.declarationKind() == DeclarationKind::BodyLevelFunction;
+            BindingName binding(bi.name(), closedOver, isTopLevelFunction);
+            if (!vars.append(binding))
+                return Nothing();
             break;
-          case BindingKind::Let:
+          }
+          case BindingKind::Let: {
+            BindingName binding(bi.name(), closedOver);
             if (!lets.append(binding))
                 return Nothing();
             break;
-          case BindingKind::Const:
+          }
+          case BindingKind::Const: {
+            BindingName binding(bi.name(), closedOver);
             if (!consts.append(binding))
                 return Nothing();
             break;
+          }
           default:
             MOZ_CRASH("Bad global scope BindingKind");
         }
     }
 
     GlobalScope::Data* bindings = nullptr;
-    uint32_t numBindings = funs.length() + vars.length() + lets.length() + consts.length();
+    uint32_t numBindings = vars.length() + lets.length() + consts.length();
 
     if (numBindings > 0) {
         bindings = NewEmptyBindingData<GlobalScope>(context, alloc, numBindings);
@@ -1832,9 +1833,6 @@ NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& al
         BindingName* start = bindings->trailingNames.start();
         BindingName* cursor = start;
 
-        cursor = FreshlyInitializeBindings(cursor, funs);
-
-        bindings->varStart = cursor - start;
         cursor = FreshlyInitializeBindings(cursor, vars);
 
         bindings->letStart = cursor - start;
@@ -1928,25 +1926,20 @@ ParserBase::newModuleScopeData(ParseContext::Scope& scope)
 Maybe<EvalScope::Data*>
 NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> funs(context);
     Vector<BindingName> vars(context);
 
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
         // Eval scopes only contain 'var' bindings. Make all bindings aliased
         // for now.
         MOZ_ASSERT(bi.kind() == BindingKind::Var);
-        BindingName binding(bi.name(), true);
-        if (bi.declarationKind() == DeclarationKind::BodyLevelFunction) {
-            if (!funs.append(binding))
-                return Nothing();
-        } else {
-            if (!vars.append(binding))
-                return Nothing();
-        }
+        bool isTopLevelFunction = bi.declarationKind() == DeclarationKind::BodyLevelFunction;
+        BindingName binding(bi.name(), true, isTopLevelFunction);
+        if (!vars.append(binding))
+            return Nothing();
     }
 
     EvalScope::Data* bindings = nullptr;
-    uint32_t numBindings = funs.length() + vars.length();
+    uint32_t numBindings = vars.length();
 
     if (numBindings > 0) {
         bindings = NewEmptyBindingData<EvalScope>(context, alloc, numBindings);
@@ -1956,11 +1949,6 @@ NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& allo
         BindingName* start = bindings->trailingNames.start();
         BindingName* cursor = start;
 
-        // Keep track of what vars are functions. This is only used in BCE to omit
-        // superfluous DEFVARs.
-        cursor = FreshlyInitializeBindings(cursor, funs);
-
-        bindings->varStart = cursor - start;
         cursor = FreshlyInitializeBindings(cursor, vars);
 
         bindings->length = numBindings;

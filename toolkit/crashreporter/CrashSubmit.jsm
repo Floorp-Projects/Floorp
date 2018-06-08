@@ -6,7 +6,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
-Cu.importGlobalProperties(["File", "FormData", "XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["File", "FormData", "XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");

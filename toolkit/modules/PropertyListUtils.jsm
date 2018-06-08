@@ -57,8 +57,9 @@
 
 var EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
-Cu.importGlobalProperties(["DOMParser", "File", "FileReader"]);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "File", "FileReader"]);
 
 ChromeUtils.defineModuleGetter(this, "ctypes",
                                "resource://gre/modules/ctypes.jsm");

@@ -562,16 +562,14 @@ FuzzyEqualsMultiplicative(T aValue1, T aValue2,
 }
 
 /**
- * Returns true if the given value can be losslessly represented as an IEEE-754
- * single format number, false otherwise.  All NaN values are considered
- * representable (notwithstanding that the exact bit pattern of a double format
- * NaN value can't be exactly represented in single format).
- *
- * This function isn't inlined to avoid buggy optimizations by MSVC.
+ * Returns true if |aValue| can be losslessly represented as an IEEE-754 single
+ * precision number, false otherwise.  All NaN values are considered
+ * representable (even though the bit patterns of double precision NaNs can't
+ * all be exactly represented in single precision).
  */
 MOZ_MUST_USE
 extern MFBT_API bool
-IsFloat32Representable(double aFloat32);
+IsFloat32Representable(double aValue);
 
 } /* namespace mozilla */
 

@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 
-Cu.importGlobalProperties(["crypto"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const CRYPT_ALGO        = "AES-CBC";
 const CRYPT_ALGO_LENGTH = 256;

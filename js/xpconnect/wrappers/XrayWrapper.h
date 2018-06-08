@@ -61,9 +61,6 @@ public:
         return target;
     }
 
-    virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
-                                       JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) = 0;
     // NB: resolveOwnProperty may decide whether or not to cache what it finds
     // on the holder. If the result is not cached, the lookup will happen afresh
     // for each access, which is the right thing for things like dynamic NodeList
@@ -145,21 +142,6 @@ public:
 
     static const XrayType Type = XrayForDOMObject;
 
-    virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
-                                       JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
-    {
-        // Xrays for DOM binding objects have a prototype chain that consists of
-        // Xrays for the prototypes of the DOM binding object (ignoring changes
-        // in the prototype chain made by script, plugins or XBL). All properties for
-        // these Xrays are really own properties, either of the instance object or
-        // of the prototypes.
-        // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1072482
-        //       This should really be:
-        // MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
-        //       but we can't do that yet because XrayUtils::HasNativeProperty calls this.
-        return true;
-    }
     virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
@@ -196,13 +178,6 @@ class JSXrayTraits : public XrayTraits
 {
 public:
     static const XrayType Type = XrayForJSObject;
-
-    virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
-                                       JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
-    {
-        MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
-    }
 
     virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
@@ -310,13 +285,6 @@ class OpaqueXrayTraits : public XrayTraits
 {
 public:
     static const XrayType Type = XrayForOpaqueObject;
-
-    virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
-                                       JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
-    {
-        MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
-    }
 
     virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,

@@ -1689,19 +1689,7 @@ HasNativeProperty(JSContext* cx, HandleObject wrapper, HandleId id, bool* hasPro
     }
 
     // Try the holder.
-    bool found = false;
-    if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
-        return false;
-    if (found) {
-        *hasProp = true;
-        return true;
-    }
-
-    // Try resolveNativeProperty.
-    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, &desc))
-        return false;
-    *hasProp = !!desc.object();
-    return true;
+    return JS_AlreadyHasOwnPropertyById(cx, holder, id, hasProp);
 }
 
 } // namespace XrayUtils
@@ -1758,9 +1746,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
     // depending on how ephemeral it decides the property is. This means that we have to
     // first check the result of resolveOwnProperty, and _then_, if that comes up blank,
     // check the holder for any cached native properties.
-    //
-    // Finally, we call resolveNativeProperty, which checks non-own properties,
-    // and unconditionally caches what it finds on the holder.
 
     // Check resolveOwnProperty.
     if (!Traits::singleton.resolveOwnProperty(cx, wrapper, target, holder, id, desc))
@@ -1774,16 +1759,12 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
         return true;
     }
 
-    // Nothing in the cache. Call through, and cache the result.
-    if (!Traits::singleton.resolveNativeProperty(cx, wrapper, holder, id, desc))
-        return false;
-
     // We need to handle named access on the Window somewhere other than
     // Traits::resolveOwnProperty, because per spec it happens on the Global
     // Scope Polluter and thus the resulting properties are non-|own|. However,
-    // we're set up (above) to cache (on the holder) anything that comes out of
-    // resolveNativeProperty, which we don't want for something dynamic like
-    // named access. So we just handle it separately here.  Note that this is
+    // we're set up (above) to cache (on the holder),
+    // which we don't want for something dynamic like named access.
+    // So we just handle it separately here.  Note that this is
     // only relevant for CrossOriginXrayWrapper, which calls
     // getPropertyDescriptor from getOwnPropertyDescriptor.
     nsGlobalWindowInner* win = nullptr;
@@ -1806,17 +1787,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
         }
     }
 
-    // If we still have nothing, we're done.
-    if (!desc.object())
-        return true;
-
-    if (!JS_DefinePropertyById(cx, holder, id, desc) ||
-        !JS_GetOwnPropertyDescriptorById(cx, holder, id, desc))
-    {
-        return false;
-    }
-    MOZ_ASSERT(desc.object());
-    desc.object().set(wrapper);
+    // We found nothing, we're done.
+    MOZ_ASSERT(!desc.object());
     return true;
 }
 

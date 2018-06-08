@@ -5,18 +5,21 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* A vector of pointers space-optimized for a small number of elements. */
+
 #ifndef mozilla_SmallPointerArray_h
 #define mozilla_SmallPointerArray_h
 
 #include "mozilla/Assertions.h"
+
 #include <algorithm>
 #include <iterator>
+#include <new>
 #include <vector>
 
 namespace mozilla {
 
-// Array class for situations where a small number of elements (<= 2) is
-// expected, a large number of elements must be accomodated if necessary,
+// Array class for situations where a small number of NON-NULL elements (<= 2)
+// is expected, a large number of elements must be accomodated if necessary,
 // and the size of the class must be minimal. Typical vector implementations
 // will fulfill the first two requirements by simply adding inline storage
 // alongside the rest of their member variables. While this strategy works,
@@ -36,30 +39,28 @@ class SmallPointerArray
 public:
   SmallPointerArray()
   {
-    mInlineElements[0] = mInlineElements[1] = nullptr;
-    static_assert(sizeof(SmallPointerArray<T>) == (2 * sizeof(void*)),
-      "SmallPointerArray must compile to the size of 2 pointers");
-    static_assert(offsetof(SmallPointerArray<T>, mArray) ==
-                  offsetof(SmallPointerArray<T>, mInlineElements) + sizeof(T*),
-      "mArray and mInlineElements[1] are expected to overlap in memory");
-    static_assert(offsetof(SmallPointerArray<T>, mPadding) ==
-      offsetof(SmallPointerArray<T>, mInlineElements),
-      "mPadding and mInlineElements[0] are expected to overlap in memory");
+    // List-initialization would be nicer, but it only lets you initialize the
+    // first union member.
+    mArray[0].mValue = nullptr;
+    mArray[1].mVector = nullptr;
   }
+
   ~SmallPointerArray()
   {
-    if (!mInlineElements[0] && mArray) {
-      delete mArray;
+    if (!first()) {
+      delete maybeVector();
     }
   }
 
   void Clear() {
-    if (!mInlineElements[0] && mArray) {
-      delete mArray;
-      mArray = nullptr;
+    if (first()) {
+      first() = nullptr;
+      new (&mArray[1].mValue) std::vector<T*>*(nullptr);
       return;
     }
-    mInlineElements[0] = mInlineElements[1] = nullptr;
+
+    delete maybeVector();
+    mArray[1].mVector = nullptr;
   }
 
   void AppendElement(T* aElement) {
@@ -69,32 +70,30 @@ public:
     // In addition to this we assert in debug builds to point out mistakes to
     // users of the class.
     MOZ_ASSERT(aElement != nullptr);
-    if (!mInlineElements[0]) {
-      if (!mArray) {
-        mInlineElements[0] = aElement;
-        // Harmless if aElement == nullptr;
+    if (aElement == nullptr) {
+      return;
+    }
+
+    if (!first()) {
+      auto* vec = maybeVector();
+      if (!vec) {
+        first() = aElement;
+        new (&mArray[1].mValue) T*(nullptr);
         return;
       }
 
-      if (!aElement) {
-        return;
-      }
-
-      mArray->push_back(aElement);
+      vec->push_back(aElement);
       return;
     }
 
-    if (!aElement) {
+    if (!second()) {
+      second() = aElement;
       return;
     }
 
-    if (!mInlineElements[1]) {
-      mInlineElements[1] = aElement;
-      return;
-    }
-
-    mArray = new std::vector<T*>({ mInlineElements[0], mInlineElements[1], aElement });
-    mInlineElements[0] = nullptr;
+    auto* vec = new std::vector<T*>({ first(), second(), aElement });
+    first() = nullptr;
+    new (&mArray[1].mVector) std::vector<T*>*(vec);
   }
 
   bool RemoveElement(T* aElement) {
@@ -103,25 +102,31 @@ public:
       return false;
     }
 
-    if (mInlineElements[0] == aElement) {
-      // Expectected case.
-      mInlineElements[0] = mInlineElements[1];
-      mInlineElements[1] = nullptr;
+    if (first() == aElement) {
+      // Expected case.
+      T* maybeSecond = second();
+      first() = maybeSecond;
+      if (maybeSecond) {
+        second() = nullptr;
+      } else {
+        new (&mArray[1].mVector) std::vector<T*>*(nullptr);
+      }
+
       return true;
     }
 
-    if (mInlineElements[0]) {
-      if (mInlineElements[1] == aElement) {
-        mInlineElements[1] = nullptr;
+    if (first()) {
+      if (second() == aElement) {
+        second() = nullptr;
         return true;
       }
       return false;
     }
 
-    if (mArray) {
-      for (auto iter = mArray->begin(); iter != mArray->end(); iter++) {
+    if (auto* vec = maybeVector()) {
+      for (auto iter = vec->begin(); iter != vec->end(); iter++) {
         if (*iter == aElement) {
-          mArray->erase(iter);
+          vec->erase(iter);
           return true;
         }
       }
@@ -135,35 +140,25 @@ public:
       return false;
     }
 
-    if (mInlineElements[0] == aElement) {
-      return true;
+    if (T* v = first()) {
+      return v == aElement || second() == aElement;
     }
 
-    if (mInlineElements[0]) {
-      if (mInlineElements[1] == aElement) {
-        return true;
-      }
-      return false;
+    if (auto* vec = maybeVector()) {
+      return std::find(vec->begin(), vec->end(), aElement) != vec->end();
     }
 
-    if (mArray) {
-      return std::find(mArray->begin(), mArray->end(), aElement) != mArray->end();
-    }
     return false;
-
   }
 
   size_t Length() const
   {
-    if (mInlineElements[0]) {
-      if (!mInlineElements[1]) {
-        return 1;
-      }
-      return 2;
+    if (first()) {
+      return second() ? 2 : 1;
     }
 
-    if (mArray) {
-      return mArray->size();
+    if (auto* vec = maybeVector()) {
+      return vec->size();
     }
 
     return 0;
@@ -171,11 +166,13 @@ public:
 
   T* ElementAt(size_t aIndex) const {
     MOZ_ASSERT(aIndex < Length());
-    if (mInlineElements[0]) {
-      return mInlineElements[aIndex];
+    if (first()) {
+      return mArray[aIndex].mValue;
     }
 
-    return (*mArray)[aIndex];
+    auto* vec = maybeVector();
+    MOZ_ASSERT(vec, "must have backing vector if accessing an element");
+    return (*vec)[aIndex];
   }
 
   T* operator[](size_t aIndex) const
@@ -183,8 +180,8 @@ public:
     return ElementAt(aIndex);
   }
 
-  typedef T**                        iterator;
-  typedef const T**                  const_iterator;
+  using iterator = T**;
+  using const_iterator = const T**;
 
   // Methods for range-based for loops. Manipulation invalidates these.
   iterator begin() {
@@ -204,37 +201,71 @@ public:
 
 private:
   T** beginInternal() const {
-    if (mInlineElements[0] || !mArray) {
-      return const_cast<T**>(&mInlineElements[0]);
+    if (first()) {
+      static_assert(sizeof(T*) == sizeof(Element),
+                    "pointer ops on &first() must produce adjacent "
+                    "Element::mValue arms");
+      return &first();
     }
 
-    if (mArray->empty()) {
+    auto* vec = maybeVector();
+    if (!vec) {
+      return &first();
+    }
+
+    if (vec->empty()) {
       return nullptr;
     }
 
-    return &(*mArray)[0];
+    return &(*vec)[0];
   }
 
-  // mArray and mInlineElements[1] share the same area in memory.
+  // Accessors for |mArray| element union arms.
+
+  T*& first() const {
+    return const_cast<T*&>(mArray[0].mValue);
+  }
+
+  T*& second() const {
+    MOZ_ASSERT(first(), "first() must be non-null to have a T* second pointer");
+    return const_cast<T*&>(mArray[1].mValue);
+  }
+
+  std::vector<T*>* maybeVector() const {
+    MOZ_ASSERT(!first(),
+               "function must only be called when this is either empty or has "
+               "std::vector-backed elements");
+    return mArray[1].mVector;
+  }
+
+  // In C++ active-union-arm terms:
   //
-  // When !mInlineElements[0] && !mInlineElements[1] the array is empty.
+  //   - mArray[0].mValue is always active: a possibly null T*;
+  //   - if mArray[0].mValue is null, mArray[1].mVector is active: a possibly
+  //     null std::vector<T*>*; if mArray[0].mValue isn't null, mArray[1].mValue
+  //     is active: a possibly null T*.
   //
-  // When mInlineElements[0] && !mInlineElements[1], mInlineElements[0]
-  // contains the first element. The array is of size 1.
+  // SmallPointerArray begins empty, with mArray[1].mVector active and null.
+  // Code that makes mArray[0].mValue non-null, i.e. assignments to first(),
+  // must placement-new mArray[1].mValue with the proper value; code that goes
+  // the opposite direction, making mArray[0].mValue null, must placement-new
+  // mArray[1].mVector with the proper value.
   //
-  // When mInlineElements[0] && mInlineElements[1], mInlineElements[0]
-  // contains the first element and mInlineElements[1] the second. The
-  // array is of size 2.
+  // When !mArray[0].mValue && !mArray[1].mVector, the array is empty.
   //
-  // When !mInlineElements[0] && mArray, mArray contains the full contents
-  // of the array and is of arbitrary size.
-  union {
-    T* mInlineElements[2];
-    struct {
-      void* mPadding;
-      std::vector<T*>* mArray;
-    };
-  };
+  // When mArray[0].mValue && !mArray[1].mValue, the array has size 1 and
+  // contains mArray[0].mValue.
+  //
+  // When mArray[0] && mArray[1], the array has size 2 and contains
+  // mArray[0].mValue and mArray[1].mValue.
+  //
+  // When !mArray[0].mValue && mArray[1].mVector, mArray[1].mVector contains
+  // the contents of an array of arbitrary size (even less than two if it ever
+  // contained three elements and elements were removed).
+  union Element {
+    T* mValue;
+    std::vector<T*>* mVector;
+  } mArray[2];
 };
 
 } // namespace mozilla

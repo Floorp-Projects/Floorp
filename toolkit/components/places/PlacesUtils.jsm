@@ -5,10 +5,10 @@
 
 var EXPORTED_SYMBOLS = ["PlacesUtils"];
 
-Cu.importGlobalProperties(["URL"]);
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",

@@ -28,7 +28,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
-Cu.importGlobalProperties(["FileReader"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
