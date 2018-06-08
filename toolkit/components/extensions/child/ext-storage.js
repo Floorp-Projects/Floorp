@@ -7,8 +7,13 @@ ChromeUtils.defineModuleGetter(this, "ExtensionStorageIDB",
 ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
                                "resource://gre/modules/TelemetryStopwatch.jsm");
 
+// Telemetry histogram keys for the JSONFile backend.
 const storageGetHistogram = "WEBEXT_STORAGE_LOCAL_GET_MS";
 const storageSetHistogram = "WEBEXT_STORAGE_LOCAL_SET_MS";
+// Telemetry  histogram keys for the IndexedDB backend.
+const storageGetIDBHistogram = "WEBEXT_STORAGE_LOCAL_IDB_GET_MS";
+const storageSetIDBHistogram = "WEBEXT_STORAGE_LOCAL_IDB_SET_MS";
+
 
 // Wrap a storage operation in a TelemetryStopWatch.
 async function measureOp(histogram, fn) {
@@ -56,13 +61,13 @@ this.storage = class extends ExtensionAPI {
 
     return {
       get(keys) {
-        return measureOp(storageGetHistogram, async () => {
+        return measureOp(storageGetIDBHistogram, async () => {
           const db = await dbPromise;
           return db.get(keys);
         });
       },
       set(items) {
-        return measureOp(storageSetHistogram, async () => {
+        return measureOp(storageSetIDBHistogram, async () => {
           const db = await dbPromise;
           const changes = await db.set(items, {
             serialize: ExtensionStorage.serialize,

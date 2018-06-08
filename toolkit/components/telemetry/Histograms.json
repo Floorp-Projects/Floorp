@@ -13446,7 +13446,7 @@
     "releaseChannelCollection": "opt-out",
     "high": 50000,
     "n_buckets": 100,
-    "description": "The amount of time it takes to perform a get via storage.local."
+    "description": "The amount of time it takes to perform a get via storage.local using the JSONFile backend."
   },
   "WEBEXT_STORAGE_LOCAL_SET_MS": {
     "record_in_processes": ["main", "content"],
@@ -13457,7 +13457,29 @@
     "releaseChannelCollection": "opt-out",
     "high": 50000,
     "n_buckets": 100,
-    "description": "The amount of time it takes to perform a set via storage.local."
+    "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend."
+  },
+    "WEBEXT_STORAGE_LOCAL_IDB_GET_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1465120],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a get via storage.local using the IndexedDB backend."
+  },
+  "WEBEXT_STORAGE_LOCAL_IDB_SET_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1465120],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a set via storage.local using the IndexedDB backend."
   },
   "EXTENSION_UPDATE_TYPE": {
     "record_in_processes": ["main"],
