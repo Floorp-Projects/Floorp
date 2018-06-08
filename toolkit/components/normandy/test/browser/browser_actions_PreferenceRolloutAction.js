@@ -427,3 +427,47 @@ decorate_task(
     );
   },
 );
+
+// New rollouts that are no-ops should send errors
+decorate_task(
+  PreferenceRollouts.withTestMock,
+  withStub(TelemetryEnvironment, "setExperimentActive"),
+  withSendEventStub,
+  async function no_op_new_recipe(setExperimentActiveStub, sendEventStub) {
+    Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
+
+    const recipe = {
+      id: 1,
+      arguments: {
+        slug: "test-rollout",
+        preferences: [{preferenceName: "test.pref", value: 1}],
+      },
+    };
+
+    const action = new PreferenceRolloutAction();
+    await action.runRecipe(recipe);
+    await action.finalize();
+
+    is(Services.prefs.getIntPref("test.pref"), 1, "pref should not change");
+
+    // start up pref isn't set
+    is(Services.prefs.getPrefType(
+      "app.normandy.startupRolloutPrefs.test.pref"),
+      Services.prefs.PREF_INVALID,
+      "startup pref1 should not be set",
+    );
+
+    // rollout was not stored
+    Assert.deepEqual(await PreferenceRollouts.getAll(), [], "Rollout should not be stored in db");
+
+    Assert.deepEqual(
+      sendEventStub.args,
+      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "would-be-no-op"}]],
+      "an enrollment failure event should be sent"
+    );
+    Assert.deepEqual(setExperimentActiveStub.args, [], "a telemetry experiment should not be activated");
+
+    // Cleanup
+    Services.prefs.getDefaultBranch("").deleteBranch("test.pref");
+  },
+);
