@@ -17,7 +17,7 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::gc;

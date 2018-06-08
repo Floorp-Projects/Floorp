@@ -15,8 +15,8 @@
 #include "gc/DeletePolicy.h"
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
+#include "vm/Realm.h"
 
 namespace js {
 

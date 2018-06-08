@@ -11,8 +11,8 @@
 #include "jit/IonCode.h"
 #include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 namespace js {
 namespace jit {

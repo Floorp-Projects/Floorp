@@ -19,7 +19,7 @@
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using namespace js;

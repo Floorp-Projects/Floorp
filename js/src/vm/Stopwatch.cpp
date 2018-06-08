@@ -16,7 +16,7 @@
 
 #include "gc/PublicIterators.h"
 #include "util/Windows.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vm/Runtime.h"
 
 namespace js {

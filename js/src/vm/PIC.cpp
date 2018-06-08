@@ -9,9 +9,9 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
 #include "vm/JSObject-inl.h"

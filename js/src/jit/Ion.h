@@ -12,8 +12,8 @@
 
 #include "jit/CompileWrappers.h"
 #include "jit/JitOptions.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 namespace js {
 namespace jit {

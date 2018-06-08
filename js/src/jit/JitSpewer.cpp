@@ -24,7 +24,7 @@
 #include "vm/HelperThreads.h"
 #include "vm/MutexIDs.h"
 
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 
 #ifndef JIT_SPEW_DIR
 # if defined(_WIN32)

@@ -27,9 +27,9 @@
 #include "vm/Xdr.h"
 
 #include "gc/AtomMarking-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 #include "vm/StringType-inl.h"
 
 using namespace js;

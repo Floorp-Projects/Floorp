@@ -25,8 +25,8 @@
 #include "vm/SymbolType.h"
 
 #include "gc/GC-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/ObjectGroup-inl.h"
+#include "vm/Realm-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using namespace js;

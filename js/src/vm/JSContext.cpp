@@ -47,10 +47,10 @@
 #include "vm/HelperThreads.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/Realm.h"
 #include "vm/Shape.h"
 
 #include "vm/JSObject-inl.h"

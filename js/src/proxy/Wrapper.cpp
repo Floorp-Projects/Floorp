@@ -10,9 +10,9 @@
 
 #include "js/Proxy.h"
 #include "vm/ErrorObject.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/ProxyObject.h"
+#include "vm/Realm.h"
 #include "vm/RegExpObject.h"
 #include "vm/WrapperObject.h"
 

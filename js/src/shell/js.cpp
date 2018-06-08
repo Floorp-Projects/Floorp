@@ -116,8 +116,8 @@
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/Interpreter-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
