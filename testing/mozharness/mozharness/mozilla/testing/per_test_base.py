@@ -92,35 +92,37 @@ class SingleTestMixin(object):
             # automation-relevance uses posixpath.sep
             file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
-            if entry:
-                if gpu and entry[1] not in ['gpu', 'webgl']:
-                    continue
-                elif not gpu and entry[1] in ['gpu', 'webgl']:
-                    continue
+            if not entry:
+                continue
 
-                self.info("Per-test run found test %s" % file)
-                subsuite_mapping = {
-                    ('browser-chrome', 'clipboard'): 'browser-chrome-clipboard',
-                    ('chrome', 'clipboard'): 'chrome-clipboard',
-                    ('plain', 'clipboard'): 'plain-clipboard',
-                    ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
-                    ('browser-chrome', 'screenshots'): 'browser-chrome-screenshots',
-                    ('plain', 'media'): 'mochitest-media',
-                    # below should be on test-verify-gpu job
-                    ('browser-chrome', 'gpu'): 'browser-chrome-gpu',
-                    ('chrome', 'gpu'): 'chrome-gpu',
-                    ('plain', 'gpu'): 'plain-gpu',
-                    ('plain', 'webgl'): 'mochitest-gl',
-                }
-                if entry in subsuite_mapping:
-                    suite = subsuite_mapping[entry]
-                else:
-                    suite = entry[0]
-                suite_files = self.suites.get(suite)
-                if not suite_files:
-                    suite_files = []
-                suite_files.append(file)
-                self.suites[suite] = suite_files
+            if gpu and entry[1] not in ['gpu', 'webgl']:
+                continue
+            elif not gpu and entry[1] in ['gpu', 'webgl']:
+                continue
+
+            self.info("Per-test run found test %s (%s)" % (file, entry[0]))
+            subsuite_mapping = {
+                ('browser-chrome', 'clipboard'): 'browser-chrome-clipboard',
+                ('chrome', 'clipboard'): 'chrome-clipboard',
+                ('plain', 'clipboard'): 'plain-clipboard',
+                ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
+                ('browser-chrome', 'screenshots'): 'browser-chrome-screenshots',
+                ('plain', 'media'): 'mochitest-media',
+                # below should be on test-verify-gpu job
+                ('browser-chrome', 'gpu'): 'browser-chrome-gpu',
+                ('chrome', 'gpu'): 'chrome-gpu',
+                ('plain', 'gpu'): 'plain-gpu',
+                ('plain', 'webgl'): 'mochitest-gl',
+            }
+            if entry in subsuite_mapping:
+                suite = subsuite_mapping[entry]
+            else:
+                suite = entry[0]
+            suite_files = self.suites.get(suite)
+            if not suite_files:
+                suite_files = []
+            suite_files.append(file)
+            self.suites[suite] = suite_files
 
     def _find_wpt_tests(self, dirs, changed_files):
         # Setup sys.path to include all the dependencies required to import
@@ -199,7 +201,7 @@ class SingleTestMixin(object):
 
         if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
-        elif self.config.get('gpu_required'):
+        elif self.config.get('gpu_required', 'False') != 'False':
             self._find_misc_tests(dirs, changed_files, gpu=True)
         else:
             self._find_misc_tests(dirs, changed_files)
