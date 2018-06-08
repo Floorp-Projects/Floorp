@@ -27,7 +27,7 @@ macosx64-clang:
         tooltool-downloads: internal
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-macosx64.json'
+            - 'build/build-clang/clang-6-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
