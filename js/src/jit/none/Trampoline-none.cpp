@@ -42,5 +42,3 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter, Invalidati
     MOZ_CRASH();
 }
 
-bool ICCompare_Int32::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH(); }
-bool ICCompare_Double::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH(); }
