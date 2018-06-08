@@ -44,6 +44,11 @@ function ToolboxHostManager(target, hostType, hostOptions) {
 
   if (!hostType) {
     hostType = Services.prefs.getCharPref(LAST_HOST);
+    if (!Hosts[hostType]) {
+      // If the preference value is unexpected, restore to the default value.
+      Services.prefs.clearUserPref(LAST_HOST);
+      hostType = Services.prefs.getCharPref(LAST_HOST);
+    }
   }
   this.host = this.createHost(hostType, hostOptions);
   this.hostType = hostType;
