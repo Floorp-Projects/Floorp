@@ -350,16 +350,14 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   , mRemoteFrame(aRemoteFrame)
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
-  if (aBuilder->IsBuildingLayerEventRegions()) {
-    bool frameIsPointerEventsNone =
-      aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame) ==
-        NS_STYLE_POINTER_EVENTS_NONE;
-    if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
-      mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
-    }
-    if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresShell())) {
-      mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
-    }
+  bool frameIsPointerEventsNone =
+    aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame) ==
+      NS_STYLE_POINTER_EVENTS_NONE;
+  if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
+    mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
+  }
+  if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresShell())) {
+    mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 }
 
