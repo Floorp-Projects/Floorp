@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1078374
+Display template tag content in inspector.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  let gWalker = null;
+
+  addAsyncTest(async function setup() {
+    const url = document.getElementById("inspectorContent").href;
+
+    const {client, tab} = await new Promise(resolve => {
+      attachURL(url, function(err, _client, _tab, doc) {
+        resolve({ client: _client, tab: _tab });
+      });
+    });
+
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspector = InspectorFront(client, tab);
+    gWalker = await inspector.getWalker();
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function testWalker() {
+    const nodeFront = await gWalker.querySelector(gWalker.rootNode, "template");
+
+    let children = await gWalker.children(nodeFront);
+    is(children.nodes.length, 1, "Found one child under the template element");
+
+    const docFragment = children.nodes[0];
+    is(docFragment.nodeName, "#document-fragment",
+      "First child under <template> is a document-fragment");
+
+    children = await gWalker.children(docFragment);
+    is(children.nodes.length, 1, "Found one child under the template element");
+
+    const p = children.nodes[0];
+    is(p.nodeName, "P",
+      "First child under the document-fragment is a p element");
+
+    runNextTest();
+  });
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-template.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
