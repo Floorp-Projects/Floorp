@@ -98,3 +98,7 @@ for var in ('LINKER', 'OPTIMIZE'):
 if CONFIG['HOST_OS_ARCH'] == 'Linux' and CONFIG['OS_ARCH'] == 'Darwin':
     # Don't pass OSX linker arguments.
     LINK_FLAGS['FIX_LINK_PATHS'] = []
+
+# Avoid -DDEBUG=1 on the command line, which conflicts with a #define
+# DEBUG(...) in llvm headers.
+DEFINES['DEBUG'] = False
