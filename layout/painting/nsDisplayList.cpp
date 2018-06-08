@@ -1035,8 +1035,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
-  mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting() &&
-    (gfxVars::UseWebRender() || gfxPrefs::SimpleEventRegionItems());
+  mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
   mLessEventRegionItems = gfxPrefs::LessEventRegionItems();
 
