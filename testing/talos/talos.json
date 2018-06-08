@@ -1,5 +1,8 @@
 {
     "suites": {
+        "bcv-e10s": {
+            "tests": ["basic_compositor_video"]
+        },
         "chromez-e10s": {
             "tests": ["about_preferences_basic", "tresize"]
         },
@@ -28,7 +31,7 @@
             "tests": ["dromaeo_dom"]
         },
         "g4-e10s": {
-            "tests": ["basic_compositor_video", "glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
+            "tests": ["glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
         },
         "g5-e10s": {
             "tests": ["ts_paint_webext", "tp5o_webext"],

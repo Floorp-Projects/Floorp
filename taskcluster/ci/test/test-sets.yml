@@ -58,6 +58,7 @@ opt-only-tests:
     - mochitest-valgrind
 
 talos:
+    - talos-bcv
     - talos-chrome
     - talos-damp
     - talos-dromaeojs
@@ -103,6 +104,7 @@ linux-qr-tests:
     - xpcshell
 
 linux-talos-profiling:
+    - talos-bcv-profiling
     - talos-chrome-profiling
     - talos-damp-profiling
     - talos-dromaeojs-profiling
@@ -171,6 +173,7 @@ windows-tests:
     - xpcshell
 
 windows-talos:
+    - talos-bcv
     - talos-chrome
     - talos-damp
     - talos-dromaeojs
@@ -190,6 +193,7 @@ windows-talos:
     - talos-h1
 
 windows-talos-profiling:
+    - talos-bcv-profiling
     - talos-chrome-profiling
     - talos-damp-profiling
     - talos-dromaeojs-profiling
@@ -235,6 +239,7 @@ macosx64-tests:
     - xpcshell
 
 macosx64-talos:
+    - talos-bcv
     - talos-chrome
     - talos-damp
     - talos-dromaeojs
@@ -254,6 +259,7 @@ macosx64-talos:
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx64-talos-profiling:
+    - talos-bcv-profiling
     - talos-chrome-profiling
     - talos-damp-profiling
     - talos-dromaeojs-profiling
